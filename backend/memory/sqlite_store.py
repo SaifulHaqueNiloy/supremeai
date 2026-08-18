@@ -63,8 +63,64 @@ class SQLiteMemoryStore:
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS kv_store (
+                collection TEXT,
+                id TEXT,
+                data TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (collection, id)
+            )
+        """)
+
         conn.commit()
         self._close_connection(conn)
+
+    async def save(self, collection: str, record_id: str, data: dict[str, Any]) -> bool:
+        """Persist a JSON record into the KV store."""
+        import json
+
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO kv_store (collection, id, data, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) "
+            "ON CONFLICT(collection, id) DO UPDATE SET data=excluded.data, updated_at=CURRENT_TIMESTAMP",
+            (collection, record_id, json.dumps(data)),
+        )
+        conn.commit()
+        self._close_connection(conn)
+        return True
+
+    async def get(self, collection: str, record_id: str) -> dict[str, Any] | None:
+        """Retrieve a JSON record from the KV store."""
+        import json
+
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT data FROM kv_store WHERE collection = ? AND id = ?",
+            (collection, record_id),
+        )
+        row = cursor.fetchone()
+        self._close_connection(conn)
+        if row and row[0]:
+            try:
+                return json.loads(row[0])
+            except Exception:
+                return None
+        return None
+
+    async def delete(self, collection: str, record_id: str) -> bool:
+        """Delete a JSON record from the KV store."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM kv_store WHERE collection = ? AND id = ?",
+            (collection, record_id),
+        )
+        conn.commit()
+        self._close_connection(conn)
+        return True
 
     def log_task(
         self,
@@ -116,3 +172,8 @@ class SQLiteMemoryStore:
         result = [dict(r) for r in rows]
         self._close_connection(conn)
         return result
+
+
+# Clean alias for UnifiedDBManager and external consumers
+SQLiteStore = SQLiteMemoryStore
+

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlparse
 
 from memory.sqlite_store import SQLiteMemoryStore
@@ -184,11 +185,42 @@ class SupabaseStore(SQLiteMemoryStore):
                     for row in result.data
                 ]
             except Exception as e:
-                try:
-                    from loguru import logger
+                from loguru import logger
 
-                    logger.error(f"Fallback search failed: {e}")
-                except ImportError:
-                    pass
+                logger.error(f"Fallback search failed: {e}")
                 return []
         return []
+
+    async def insert(self, collection: str, data: dict[str, Any]) -> bool:
+        """Insert or upsert a record into collection table."""
+        record_id = str(data.get("id", ""))
+        if self._provider == "supabase":
+            try:
+                client = self._get_supabase_client()
+                client.table(collection).upsert(data).execute()
+                return True
+            except Exception as e:
+                from loguru import logger
+
+                logger.warning(f"Supabase insert failed for {collection}:{record_id}, using sqlite: {e}")
+                return await self.save(collection, record_id, data)
+        else:
+            return await self.save(collection, record_id, data)
+
+    async def fetch_by_id(self, collection: str, record_id: str) -> dict[str, Any] | None:
+        """Fetch record by ID from collection table."""
+        if self._provider == "supabase":
+            try:
+                client = self._get_supabase_client()
+                res = client.table(collection).select("*").eq("id", record_id).execute()
+                if res.data:
+                    return res.data[0]
+                return None
+            except Exception as e:
+                from loguru import logger
+
+                logger.warning(f"Supabase fetch_by_id failed for {collection}:{record_id}: {e}")
+                return await self.get(collection, record_id)
+        else:
+            return await self.get(collection, record_id)
+

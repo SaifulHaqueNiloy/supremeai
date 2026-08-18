@@ -17,11 +17,19 @@ class CloudPostgresStore:
     Uses Supabase or Cloud SQL connection string.
     """
 
-    def __init__(self):
-        self.conn_string = os.getenv("DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL", ""))
-        self._init_tables()
+    def __init__(self, conn_string: str | None = None):
+        self.conn_string = conn_string or os.getenv("DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL", ""))
+        self._connected = False
+        if self.conn_string:
+            try:
+                self._init_tables()
+                self._connected = True
+            except Exception as e:
+                logger.debug(f"CloudPostgresStore init tables skipped (offline/test mode): {e}")
 
     def _get_conn(self):
+        if not self.conn_string:
+            raise RuntimeError("Postgres connection string is empty.")
         return psycopg2.connect(self.conn_string, cursor_factory=RealDictCursor)
 
     def _init_tables(self):

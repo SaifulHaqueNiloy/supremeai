@@ -115,6 +115,9 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.pr_review_api", ""),
     # Added telemetry router for performance monitoring and system health
     ("api.v1.telemetry", "/api"),
+    # বাংলা মন্তব্ব্য: Self-Evolving Memory Storage (out_of_box.md আইটেম-১) — মেমরি
+    # ক্লাস্টারিং, ডুপ্লিকেট ও প্রুনিং এন্ডপয়েন্ট। অপশনাল যাতে ব্যর্থ হলে অ্যাপ ক্র্যাশ না করে।
+    ("api.routes.self_evolve", "/api"),
 ]
 
 

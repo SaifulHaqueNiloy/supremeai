@@ -6,7 +6,10 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from memory.self_evolve_service import ReorganizeResult, SelfEvolveService
 
 from memory.chromadb_store import ChromaDBStore
 from memory.cloud_postgres_store import CloudPostgresStore
@@ -34,6 +37,7 @@ class UnifiedDBManager:
         self.sqlite = sqlite_store or SQLiteStore()
         self.chroma = chroma_store or ChromaDBStore()
         self.postgres = postgres_store or CloudPostgresStore()
+        self._self_evolve_service = None
 
     async def save_record(
         self,
@@ -121,6 +125,99 @@ class UnifiedDBManager:
 
         return None
 
+    async def delete_record(self, collection: str, record_id: str) -> dict[str, bool]:
+        """Delete record across underlying database engines."""
+        results = {
+            "sqlite": False,
+            "supabase": False,
+            "postgres": False,
+        }
+
+        # 1. Delete from SQLite
+        try:
+            results["sqlite"] = await self.sqlite.delete(collection, record_id)
+        except Exception as e:
+            logger.warning(f"[UnifiedDB] SQLite delete failed for {collection}:{record_id}: {e}")
+
+        # 2. Delete from Supabase
+        try:
+            if getattr(self.supabase, "_provider", "") == "supabase":
+                client = self.supabase._get_supabase_client()
+                client.table(collection).delete().eq("id", record_id).execute()
+                results["supabase"] = True
+            else:
+                results["supabase"] = results["sqlite"]
+        except Exception as e:
+            logger.warning(f"[UnifiedDB] Supabase delete failed for {collection}:{record_id}: {e}")
+
+        # 3. Delete from Postgres
+        try:
+            if not _VALID_COLLECTION_PATTERN.match(collection):
+                raise ValueError(f"Invalid collection name: {collection!r}")
+            await self.postgres.execute_query(
+                f"DELETE FROM {collection} WHERE id = $1",
+                record_id,
+            )
+            results["postgres"] = True
+        except Exception as e:
+            logger.debug(f"[UnifiedDB] Postgres delete skipped: {e}")
+
+        return results
+
+    # ------------------------------------------------------------------
+    # Self-Evolving Memory integration
+    # ------------------------------------------------------------------
+    def get_self_evolve_service(self) -> SelfEvolveService:
+        """Lazily construct the SelfEvolveService bound to this manager."""
+        from memory.self_evolve_service import SelfEvolveService
+
+        if self._self_evolve_service is None:
+            self._self_evolve_service = SelfEvolveService(manager=self)
+        return self._self_evolve_service
+
+    async def evolve_reorganize(
+        self, max_age_days: int = 90, min_access: int = 1
+    ) -> ReorganizeResult:
+        """Convenience wrapper: run the full self-evolution cycle on this manager."""
+        service = self.get_self_evolve_service()
+        return await service.reorganize_storage(max_age_days=max_age_days, min_access=min_access)
+
+    async def health_check(self) -> dict[str, Any]:
+        """Verify connectivity and status across active storage layers."""
+        health = {
+            "status": "healthy",
+            "sqlite": False,
+            "supabase": False,
+            "chroma": False,
+            "postgres": False,
+        }
+
+        # Check SQLite
+        try:
+            await self.sqlite.save("_health", "ping", {"status": "ok"})
+            ping = await self.sqlite.get("_health", "ping")
+            if ping is not None:
+                health["sqlite"] = True
+        except Exception as e:
+            logger.warning(f"[UnifiedDB] SQLite health check failed: {e}")
+
+        # Check Supabase
+        try:
+            if getattr(self.supabase, "_provider", "") == "supabase":
+                client = self.supabase._get_supabase_client()
+                if client is not None:
+                    health["supabase"] = True
+            else:
+                health["supabase"] = health["sqlite"]
+        except Exception as e:
+            logger.debug(f"[UnifiedDB] Supabase health check failed: {e}")
+
+        # Overall status evaluation
+        if not health["sqlite"] and not health["supabase"]:
+            health["status"] = "degraded"
+
+        return health
+
 
 # Global singleton instance
 unified_db = UnifiedDBManager()
@@ -129,3 +226,4 @@ unified_db = UnifiedDBManager()
 def get_db() -> UnifiedDBManager:
     """FastAPI Dependency Injection provider for UnifiedDBManager."""
     return unified_db
+

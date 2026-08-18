@@ -126,7 +126,10 @@ class ChromaDBStore:
                 self._collection.upsert(ids=ids, documents=texts, metadatas=metadatas)
                 return
             except Exception as e:
+                # বাংলা মন্তব্য: রিয়েল ChromaDB upsert ব্যর্থ হলে (embedding/model সমস্যা)
+                # ডেটা হারানো যাবে না — ফলব্যাক লোকাল স্টোরেজে সেভ করে (self-healing)।
                 _logger.warning(f"ChromaDB upsert failed, falling back to local storage: {e}")
+        # Local TF-IDF fallback path (used when ChromaDB is unavailable OR failed above).
         for doc in documents:
             doc_id = doc.get("id") or str(uuid.uuid4())
             text = doc.get("text") or doc.get("content") or ""
@@ -213,6 +216,39 @@ class ChromaDBStore:
                 _logger.warning(f"ChromaDB count failed: {e}")
                 return -1  # -1 indicates failure, 0 means empty - distinct states
         return len(self._fallback_docs)
+
+    def get_all_documents(self) -> list[dict[str, Any]]:
+        """Return every indexed document (id, text, metadata) regardless of backend.
+
+        বাংলা মন্তব্য: স্ব-উদ্ভাবন (self-evolve) সার্ভিস ক্লাস্টারিং/ডুপ্লিকেট খুঁজতে
+        সমস্ত ডকুমেন্ট একসাথে লোড করে। ChromaDB না থাকলে ফলব্যাক ডিকশনারি ব্যবহার হয়।
+        """
+        merged: dict[str, dict[str, Any]] = {}
+        if self._collection is not None:
+            try:
+                result = self._collection.get(include=["documents", "metadatas"])
+                ids = result.get("ids") or []
+                documents = result.get("documents") or []
+                metadatas = result.get("metadatas") or []
+                for idx, doc_id in enumerate(ids):
+                    merged[doc_id] = {
+                        "id": doc_id,
+                        "text": documents[idx] if idx < len(documents) else "",
+                        "metadata": metadatas[idx] if idx < len(metadatas) else {},
+                    }
+            except Exception as e:
+                _logger.warning(f"ChromaDB get_all_documents failed, falling back: {e}")
+        # Always merge the local fallback so data is never invisible after an upsert failure.
+        for doc_id, data in self._fallback_docs.items():
+            merged.setdefault(
+                doc_id,
+                {
+                    "id": doc_id,
+                    "text": data.get("text", ""),
+                    "metadata": data.get("metadata", {}),
+                },
+            )
+        return list(merged.values())
 
     def get_document(self, doc_id: str) -> dict[str, Any] | None:
         if self._collection is not None:

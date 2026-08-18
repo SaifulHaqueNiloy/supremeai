@@ -8,7 +8,7 @@ within SupremeAI, abstracting the underlying implementations:
 - Task state persistence: CheckpointManager
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 # Import the underlying services
@@ -34,7 +34,7 @@ class UnifiedMemoryInterface:
         agent_type: str,
         task_type: str,
         content: str,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: dict[str, Any] | None = None
     ) -> bool:
         """Store information in the long-term 'Eternal Brain' memory."""
         try:
@@ -62,8 +62,8 @@ class UnifiedMemoryInterface:
         self,
         query: str,
         top_k: int = 5,
-        session_id: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+        session_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """Query the long-term 'Eternal Brain' memory."""
         try:
             return self.long_term_memory.query_context(prompt=query, top_k=top_k, session_id=session_id)
@@ -75,9 +75,9 @@ class UnifiedMemoryInterface:
         self,
         query: str,
         top_k: int = 5,
-        session_id: Optional[str] = None,
+        session_id: str | None = None,
         needles_count: int = 3
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Multi-hop cross-reference context retrieval across long-term memory.
 
         Filters out irrelevant 'haystack' noise by evaluating semantic coherence
@@ -113,7 +113,7 @@ class UnifiedMemoryInterface:
         self,
         session_id: str,
         limit: int = 20
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve information from the short-term conversation context."""
         try:
             return self.short_term_memory.recall(session_id=session_id, limit=limit)
@@ -126,7 +126,7 @@ class UnifiedMemoryInterface:
         self,
         task_id: str,
         step_index: int,
-        state: Dict[str, Any]
+        state: dict[str, Any]
     ) -> bool:
         """Save the current state of a task."""
         try:
@@ -138,7 +138,7 @@ class UnifiedMemoryInterface:
     def load_checkpoint(
         self,
         task_id: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Load the state of a task."""
         try:
             cp_obj = self.checkpoint_manager.load(task_id=task_id)
