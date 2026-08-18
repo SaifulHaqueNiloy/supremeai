@@ -33,9 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: |
       startsWith(github.ref, 'refs/tags/v') ||
-      github.event_name == 'push' ||
-      github.event.inputs.target_platform == 'ALL' ||
-      github.event.inputs.target_platform == matrix.target
+      github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -56,14 +54,14 @@ jobs:
       # 📱 1. FLUTTER APK BUILD (Android Arm64)
       # ----------------------------------------------------
       - name: Setup Flutter
-        if: matrix.target == 'APK'
+        if: matrix.target == 'APK' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'APK')
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - name: Cache Gradle & Pub Packages
-        if: matrix.target == 'APK'
+        if: matrix.target == 'APK' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'APK')
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
@@ -74,7 +72,7 @@ jobs:
             ${{ runner.os }}-flutter-
 
       - name: Build APK (Arm64 for Latest Devices)
-        if: matrix.target == 'APK'
+        if: matrix.target == 'APK' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'APK')
         working-directory: apps/mobile
         run: |
           flutter pub get
@@ -82,7 +80,7 @@ jobs:
           flutter build apk --release --target-platform android-arm64
 
       - name: Upload APK Artifact
-        if: matrix.target == 'APK'
+        if: matrix.target == 'APK' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'APK')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-mobile-apk
@@ -93,19 +91,19 @@ jobs:
       # 🧩 2. VS CODE EXTENSION BUILD (VSIX)
       # ----------------------------------------------------
       - name: Setup Node & PNPM
-        if: matrix.target == 'VSIX' || matrix.target == 'EXE'
+        if: (matrix.target == 'VSIX' || matrix.target == 'EXE') && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == matrix.target)
         uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
         with:
           version: 9.0.0
       - name: Setup Node caching
-        if: matrix.target == 'VSIX' || matrix.target == 'EXE'
+        if: (matrix.target == 'VSIX' || matrix.target == 'EXE') && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == matrix.target)
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
 
       - name: Build VSIX
-        if: matrix.target == 'VSIX'
+        if: matrix.target == 'VSIX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'VSIX')
         run: |
           pnpm install --frozen-lockfile
           pnpm turbo run build --filter=supremeai-vscode
@@ -113,7 +111,7 @@ jobs:
           npx @vscode/vsce package --no-dependencies
 
       - name: Upload VSIX Artifact
-        if: matrix.target == 'VSIX'
+        if: matrix.target == 'VSIX' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'VSIX')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-vscode-vsix
@@ -124,18 +122,18 @@ jobs:
       # 🪟 3. WINDOWS DESKTOP BUILD (Tauri — apps/desktop)
       # ----------------------------------------------------
       - name: Install Rust toolchain
-        if: matrix.target == 'EXE'
+        if: matrix.target == 'EXE' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'EXE')
         # বাংলা: Tauri Rust বিল্ডের জন্য stable toolchain দরকার
         uses: dtolnay/rust-toolchain@stable # TODO(AUDIT-006): SHA-pin করুন
 
       - name: Rust cache
-        if: matrix.target == 'EXE'
+        if: matrix.target == 'EXE' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'EXE')
         uses: swatinem/rust-cache@v2 # TODO(AUDIT-006): SHA-pin করুন
         with:
           workspaces: apps/desktop/src-tauri -> target
 
       - name: Build Windows Desktop (Tauri)
-        if: matrix.target == 'EXE'
+        if: matrix.target == 'EXE' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'EXE')
         run: |
           pnpm install --frozen-lockfile --prefer-offline
           pnpm --filter @supremeai/desktop-app tauri build
@@ -143,7 +141,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload EXE Artifact
-        if: matrix.target == 'EXE'
+        if: matrix.target == 'EXE' && (github.event_name != 'workflow_dispatch' || github.event.inputs.target_platform == 'ALL' || github.event.inputs.target_platform == 'EXE')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: supremeai-desktop-windows
