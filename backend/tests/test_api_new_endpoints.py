@@ -14,18 +14,24 @@ import pytest
 
 
 from api.dependencies import get_current_user_token, get_tenant_db
+from database.session import get_db_session
 
 @pytest.fixture(autouse=True)
 def setup_token():
     os.environ["SUPREMEAI_API_KEY"] = "test-token"
     mock_db = AsyncMock()
+    async def _mock_db_session():
+        yield mock_db
+
     app.dependency_overrides[get_tenant_db] = lambda: mock_db
+    app.dependency_overrides[get_db_session] = _mock_db_session
     app.dependency_overrides[get_current_user_token] = lambda: {"sub": "test-user-123", "role": "admin"}
     try:
         yield
     finally:
         os.environ.pop("SUPREMEAI_API_KEY", None)
         app.dependency_overrides.pop(get_tenant_db, None)
+        app.dependency_overrides.pop(get_db_session, None)
         app.dependency_overrides.pop(get_current_user_token, None)
 
 

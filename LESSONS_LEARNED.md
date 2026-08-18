@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🌐 Phase 5 M5.2: Context Graph Engine, Fast Targeted Pytest & FastAPI Dependency Overrides
+- **সমস্যা:** (1) `out_of_box.md` ও `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md`-এর প্রস্তাবিত মাল্টি-হপ রিলেশনশিপ ইঞ্জিন (Session -> Agent -> Skill -> File -> Memory) কোডবেসে অপূর্ণ ছিল; (2) `admin_brain.py`-এর টেস্টে হার্ডকোডেড `X-Admin-Token` হেডার ব্যবহার করায় `require_admin_token` ডিপেন্ডেন্সির Bearer JWT ভ্যালিডেশন ৪০১ আনঅথরাইজড এরর দিচ্ছিল; (3) `backend/pyproject.toml`-এ ডিফল্ট `addopts` পুরো কোরের কভারেজ পরিমাপ করায় সিঙ্গেল টেস্ট রান অনেক সময় নিচ্ছিল।
+- **ফিক্স:** (1) `backend/memory/context_graph_service.py` তৈরি করে $0-cost ইন-মেমোরি ও SQLite টেবিল-বেসড গ্রাফ, মাল্টি-হপ BFS সাবগ্রাফ এবং শর্টেস্ট পাথ ইঞ্জিন ইমপ্লিমেন্ট করা হয়েছে; (2) `admin_brain.py`-এ `/graph`, `/nodes/{id}/neighbors`, `/nodes/{id}/subgraph`, `/traverse` এন্ডপয়েন্ট যুক্ত হয়েছে; (3) টেস্টে `app.dependency_overrides` দিয়ে সিকিউরিটি মক করে ১০০% ডিটারমিনিস্টিক করা হয়েছে এবং `-o addopts=""` দিয়ে দ্রুত টেস্ট এক্সিকিউশন নিশ্চিত করা হয়েছে।
+- **লেসন:** (1) ইন্টিগ্রেশন টেস্টে সিকিউরিটি নির্ভরতা টেস্ট করতে সরাসরি এনভায়রনমেন্ট ভ্যারিয়েবলের চেয়ে FastAPI-এর `dependency_overrides` ব্যবহার করা অনেক বেশি বিশ্বস্ত ও ফল্ট-টলারেন্ট; (2) গ্লোবাল টেস্ট কভারেজ ফ্ল্যাগ বড় কোডবেসে ডেভেলপমেন্ট টেস্ট ধীর করে দেয়, স্পেসিফিক মডিউল টেস্টের সময় `-o addopts=""` দ্রুত ফিডব্যাক প্রদান করে।
+
 ## 2026-08-19 — 🔭 Phase 3: Error-Bus Telemetry, Coverage Gate & Windows cp1252 Pitfall
 - **সমস্যা:** (1) `core.observability.telemetry_events.py` non-recording/mocked OpenTelemetry span-এর `trace_id` int না হলে `format(span_ctx.trace_id, "032x")` `ValueError` দিয়ে crash করত; (2) `scripts/ci/check_coverage_gate.py` এমোজি (✅/⚠️/❌) print করলে Windows cp1252 কনসোলে `UnicodeEncodeError` দিয়ে গেটই crash করত; (3) CI-তে coverage JSON না থাকলে গেট crash করত (missing return)।
 - **ফিক্স:** (1) `trace_id`/`span_id` extract-এ `isinstance(..., int)` guard + try/except; (2) এমোজি সরিয়ে ASCII marker ([OK]/[WARN]/[FAIL]/[SEED]/[ALERT]/[INFO]) ব্যবহার; (3) coverage.json না থাকলে early `return 0` (skip); (4) টেস্ট SDK-independent করতে `FakeTracer`/`FakeSpan` inject।
@@ -31,27 +36,3 @@
   (3) test-এর `_load_pipeline()`-এ loguru stub injection + `agents.ide` package hierarchy sys.modules-এ যোগ করা হয়।
 - **লেসন:** importlib-এ সম্পূর্ণ package hierarchy sys.modules-এ inject করলে lazy `from agents.ide.trio_adapters import ...` কাজ করে;
   shadow learning (cache.set) test env-তে graceful exception handling বাধ্যতন্নয়ী — `_shadow_learn` try/except করে কখনোই পাইপলাইনকে ব্লক করে না।
-
-## 2026-08-19 — 🗄️ Memory Layer Encapsulation & Eager DB Connection Guard
-- **সমস্যা:** `memory/cloud_postgres_store.py` ক্লাসের `__init__`-এ সরাসরি eager `_init_tables()` কল
-  করা হয়েছিল যা লোকাল ডেভেলপমেন্ট বা টেস্ট এনভায়রনমেন্টে PostgreSQL সার্ভার অনুপস্থিত থাকলে ইমপোর্ট টাইমে
-  ক্র্যাশ ঘটাত (`psycopg2.OperationalError: connection refused`)। এছাড়া `UnifiedDBManager`-এ ডিলিট ও
-  হেলথ চেক মেথডের অভাব ছিল।
-- **ফিক্স:** (A) `cloud_postgres_store.py`-তে কানেকশন স্ট্রিং চেক ও `try/except` রেজিলিয়েন্ট গার্ড যোগ
-  করা হয়েছে যাতে অফলাইন/টেস্ট মোডে কোনো ক্র্যাশ না হয়; (B) `UnifiedDBManager`-এ `delete_record()` এবং
-  `health_check()` মেথড যোগ করা হয়েছে; (C) `sqlite_store.py`-তে অ্যাসিঙ্ক KV persistence ও `SQLiteStore`
-  অ্যালিয়াস যোগ করা হয়েছে; (D) `memory/__init__.py`-তে সেন্ট্রাল এক্সপোর্ট ডিফাইন করা হয়েছে।
-- **লেসন:** ডাটাবেস অ্যাডাপ্টারের `__init__`-এ কখনোই আনগার্ডেড নেটওয়ার্ক কল বা টেবিল ইনিট করবেন না;
-  কানেকশন গার্ড ও ফলব্যাক মেকানিজম যুক্ত করে সিস্টেমকে ফল্ট-টলারেন্ট ও $0-cost অফলাইন ফ্রেন্ডলি রাখুন।
-
-## 2026-08-19 — 🎯 Zustand Store Consolidation: 9 stores into unified slice pattern with zero regressions
-- **সমস্যা:** Frontend-এ ৯টি ভিন্ন ভিন্ন Zustand স্টোর (`authStore`, `dashboardStore`, `customerStore`,
-  `sessionCockpitStore`, `useIdeStore`, `useStore`, `adminStore`, `useWorkspaceStore`, `useSupremeStore`)
-  বিচ্ছিন্নভাবে স্টেট মেইনটেইন করছিল, যার ফলে ইন্টার-ট্যাব ডাটা সিঙ্ক নষ্ট হচ্ছিল এবং টাইপিং মিসম্যাচ তৈরি হচ্ছিল।
-- **ফিক্স:** `frontend/src/store/slices/` ফোল্ডারে প্রতিটি ডোমেনের স্লাইস (`dashboardSlice`, `customerSlice`,
-  `sessionCockpitSlice`, `ideSlice`, `coreSlice`, `authSlice`) পূর্ণাঙ্গভাবে সমৃদ্ধ করে `useSupremeStore`-এ
-  মার্জ করা হয়। পুরোনো স্টোর ফাইলগুলোকে টাইপ-সেফ backward-compatible shim-এ রূপান্তর করা হয় যাতে কোনো
-  কনজ্যুমার কম্পোনেন্ট না ভাঙে।
-- **লেসন:** মনোলিথিক স্টেট রিফ্যাক্টরিং করার সময় একবারে সব কনজ্যুমার আপডেট না করে, আগে প্রতিটি স্লাইসের
-  শেপ এবং মেথড এক্সপ্যান্ড করে পুরোনো ফাইলগুলোকে backward-compatible shim বানিয়ে মাইগ্রেশন সম্পন্ন করলে
-  জিরো-ব্রেকিং এবং ১০০% টাইপ-সেফটি বজায় থাকে।
