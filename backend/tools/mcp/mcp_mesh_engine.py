@@ -15,7 +15,8 @@ import hashlib
 import inspect
 import json
 import math
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
+from collections.abc import Callable
 from loguru import logger
 
 
@@ -24,8 +25,8 @@ def _sync_to_context_graph(
     node_type: str,
     label: str,
     metadata: dict[str, Any],
-    edge_target: Optional[str] = None,
-    relation_type: Optional[str] = None,
+    edge_target: str | None = None,
+    relation_type: str | None = None,
 ) -> None:
     """Safely synchronizes MCP tools & execution events into SupremeAI Context Graph."""
     try:
@@ -76,7 +77,7 @@ def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
     """Calculates cosine similarity between two normalized vectors."""
     if not vec1 or not vec2 or len(vec1) != len(vec2):
         return 0.0
-    dot = sum(a * b for a, b in zip(vec1, vec2))
+    dot = sum(a * b for a, b in zip(vec1, vec2, strict=True))
     return max(0.0, min(1.0, dot))
 
 
@@ -87,7 +88,7 @@ class SemanticToolRouter:
     """
 
     def __init__(self):
-        self._tools_index: Dict[str, Dict[str, Any]] = {}
+        self._tools_index: dict[str, dict[str, Any]] = {}
 
     def register_tool_index(self, name: str, description: str, tags: list[str], input_schema: dict[str, Any]) -> None:
         raw_text = f"{name} {description} {' '.join(tags)}"
@@ -101,7 +102,7 @@ class SemanticToolRouter:
             "raw_text": raw_text,
         }
 
-    def search_relevant_tools(self, query: str, top_k: int = 3, threshold: float = 0.05) -> list[Dict[str, Any]]:
+    def search_relevant_tools(self, query: str, top_k: int = 3, threshold: float = 0.05) -> list[dict[str, Any]]:
         """Finds top-k tools relevant to the query based on semantic & keyword similarity."""
         if not query or not self._tools_index:
             return list(self._tools_index.values())[:top_k]
@@ -123,14 +124,57 @@ class SemanticToolRouter:
         return [item[1] for item in scored_tools[:top_k]]
 
 
+_SAFE_BUILTINS = {
+    "abs": abs,
+    "all": all,
+    "any": any,
+    "bool": bool,
+    "dict": dict,
+    "enumerate": enumerate,
+    "filter": filter,
+    "float": float,
+    "frozenset": frozenset,
+    "int": int,
+    "isinstance": isinstance,
+    "issubclass": issubclass,
+    "len": len,
+    "list": list,
+    "map": map,
+    "max": max,
+    "min": min,
+    "print": print,
+    "range": range,
+    "repr": repr,
+    "reversed": reversed,
+    "round": round,
+    "set": set,
+    "sorted": sorted,
+    "str": str,
+    "sum": sum,
+    "tuple": tuple,
+    "type": type,
+    "zip": zip,
+    "Exception": Exception,
+    "ValueError": ValueError,
+    "TypeError": TypeError,
+    "KeyError": KeyError,
+    "IndexError": IndexError,
+    "AttributeError": AttributeError,
+    "StopIteration": StopIteration,
+    "None": None,
+    "True": True,
+    "False": False,
+}
+
+
 class DynamicMCPRegistry:
     """
     Central registry that supports runtime JIT tool synthesis and invocation.
     """
 
     def __init__(self):
-        self._tools: Dict[str, Callable] = {}
-        self._tool_metadata: Dict[str, Dict[str, Any]] = {}
+        self._tools: dict[str, Callable] = {}
+        self._tool_metadata: dict[str, dict[str, Any]] = {}
         self.router = SemanticToolRouter()
 
     def register(
@@ -138,8 +182,8 @@ class DynamicMCPRegistry:
         name: str,
         func: Callable,
         description: str = "",
-        input_schema: Optional[dict[str, Any]] = None,
-        tags: Optional[list[str]] = None,
+        input_schema: dict[str, Any] | None = None,
+        tags: list[str] | None = None,
     ) -> None:
         self._tools[name] = func
         schema = input_schema or {"type": "object", "properties": {}}
@@ -164,9 +208,9 @@ class DynamicMCPRegistry:
         code: str,
         entrypoint: str,
         description: str,
-        input_schema: Optional[dict[str, Any]] = None,
-        tags: Optional[list[str]] = None,
-    ) -> Dict[str, Any]:
+        input_schema: dict[str, Any] | None = None,
+        tags: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Safely compiles and injects a JIT Python tool at runtime.
         """
@@ -182,18 +226,26 @@ class DynamicMCPRegistry:
             return {"success": False, "error": f"AST Safety check failed: {e!s}"}
 
         # Safe local execution namespace
-        local_scope: Dict[str, Any] = {}
+        local_scope: dict[str, Any] = {}
         try:
             compiled_code = compile(code, f"<jit_tool_{name}>", "exec")
-            exec(compiled_code, {"math": math, "json": json, "asyncio": asyncio}, local_scope)
-            
+            safe_globals = {
+                "math": math,
+                "json": json,
+                "asyncio": asyncio,
+                "__builtins__": _SAFE_BUILTINS,
+            }
+            exec(  # noqa: S102
+                compiled_code, safe_globals, local_scope
+            )
+
             if entrypoint not in local_scope:
                 return {"success": False, "error": f"Entrypoint '{entrypoint}' not defined in code"}
 
             func = local_scope[entrypoint]
             self.register(name, func, description=description, input_schema=input_schema, tags=tags)
             logger.info(f"DynamicMCP: JIT synthesized tool '{name}' successfully registered.")
-            
+
             # Sync synthesized tool node into context graph
             _sync_to_context_graph(
                 node_id=f"skill_mcp_{name}",
@@ -211,10 +263,10 @@ class DynamicMCPRegistry:
             logger.error(f"DynamicMCP: Failed to compile JIT tool '{name}': {e}")
             return {"success": False, "error": str(e)}
 
-    def get_tool(self, name: str) -> Optional[Callable]:
+    def get_tool(self, name: str) -> Callable | None:
         return self._tools.get(name)
 
-    def list_all_tools(self) -> list[Dict[str, Any]]:
+    def list_all_tools(self) -> list[dict[str, Any]]:
         return list(self._tool_metadata.values())
 
 
@@ -226,7 +278,7 @@ class SelfHealingToolExecutor:
 
     def __init__(self, registry: DynamicMCPRegistry):
         self.registry = registry
-        self._fallback_map: Dict[str, str] = {}
+        self._fallback_map: dict[str, str] = {}
         self._execution_history: list[dict[str, Any]] = []
 
     def set_fallback(self, primary_tool: str, fallback_tool: str) -> None:
@@ -255,10 +307,10 @@ class SelfHealingToolExecutor:
                         sanitized[key] = val.lower() in ("true", "1", "yes")
         return sanitized
 
-    async def execute(self, tool_name: str, arguments: Optional[dict[str, Any]] = None) -> Dict[str, Any]:
+    async def execute(self, tool_name: str, arguments: dict[str, Any] | None = None) -> dict[str, Any]:
         arguments = arguments or {}
         func = self.registry.get_tool(tool_name)
-        
+
         if not func:
             return {"success": False, "error": f"Tool '{tool_name}' not found", "healed": False}
 
@@ -273,7 +325,7 @@ class SelfHealingToolExecutor:
                 result = func(**cleaned_args)
 
             self._execution_history.append({"tool": tool_name, "status": "success"})
-            
+
             # Sync execution memory to context graph
             mem_id = f"memory_mcp_{tool_name}_{abs(hash(str(cleaned_args))) % 100000}"
             _sync_to_context_graph(
@@ -288,7 +340,7 @@ class SelfHealingToolExecutor:
 
         except Exception as primary_error:
             logger.warning(f"Self-Healing: Tool '{tool_name}' failed: {primary_error}. Attempting self-healing fallback...")
-            
+
             # Check for configured fallback tool
             fallback_name = self._fallback_map.get(tool_name)
             if fallback_name and self.registry.get_tool(fallback_name):
@@ -301,7 +353,7 @@ class SelfHealingToolExecutor:
 
                     logger.info(f"Self-Healing: Successfully recovered via fallback tool '{fallback_name}'.")
                     self._execution_history.append({"tool": tool_name, "status": "recovered_via_fallback", "fallback": fallback_name})
-                    
+
                     # Sync recovery trace to context graph
                     mem_id = f"memory_mcp_{tool_name}_healed_{abs(hash(str(cleaned_args))) % 100000}"
                     _sync_to_context_graph(

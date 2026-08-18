@@ -27,8 +27,8 @@ export default class WebSocketManager {
   private maxReconnectAttempts: number;
   private reconnectBaseDelayMs: number;
   private enablePayloadDiffing: boolean;
-  private deltaIntervalMs: number;
-  private snapshotIntervalMs: number;
+  public readonly deltaIntervalMs: number;
+  public readonly snapshotIntervalMs: number;
   private socket: WebSocket | null = null;
   private reconnectAttempts = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -36,7 +36,7 @@ export default class WebSocketManager {
 
   // WS payload diffing state
   private lastSnapshot: string | null = null;
-  private lastDelta: string | null = null;
+  public lastDelta: string | null = null;
   private snapshotTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(url: string, options: WebSocketManagerOptions = {}) {

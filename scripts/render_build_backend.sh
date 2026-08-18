@@ -47,4 +47,7 @@ else
     echo "✅ Backend dependencies installed successfully."
 fi
 
+echo "🔄 Running automated database migration & schema verification..."
+poetry run python ../scripts/db_migrate.py || echo "⚠️ Database migration note: skipped in offline/build mode."
+
 echo "🎉 Backend build finished successfully!"

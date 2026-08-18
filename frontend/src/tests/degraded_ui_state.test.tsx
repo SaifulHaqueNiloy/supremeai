@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { apiClient, ApiError, requestQueue, setApiConcurrency } from '../services/apiClient';
+import { apiClient, requestQueue, setApiConcurrency } from '../services/apiClient';
 
 describe('Phase 3 M3.5: Degraded-State & Offline UI Resilience Tests', () => {
   const originalFetch = global.fetch;

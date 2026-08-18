@@ -1,12 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
 import { axe } from 'vitest-axe';
+import * as matchers from 'vitest-axe/matchers';
+import type { AxeMatchers } from 'vitest-axe';
 import { BrowserRouter } from 'react-router-dom';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
 import { QuickPresets } from '../components/customer/QuickPresets';
 import { DashboardShell } from '../components/dashboard/DashboardShell';
 import { ChatPanel } from '../components/customer/ChatPanel';
+import type { ChatMessage } from '../types';
+
+declare module 'vitest' {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
+  export interface Assertion<T = any> extends AxeMatchers {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  export interface AsymmetricMatchersContaining extends AxeMatchers {}
+}
+
+expect.extend(matchers);
 
 // Mock dependencies
 vi.mock('../store/authStore', () => ({
@@ -86,8 +98,8 @@ describe('Phase 3 M3.5: axe-core Automated Accessibility Audits', () => {
   });
 
   it('ChatPanel interface should have zero accessibility violations', async () => {
-    const mockMessages = [
-      { id: '1', sender: 'assistant', text: 'Hello! How can I assist you?', timestamp: '12:00' },
+    const mockMessages: ChatMessage[] = [
+      { id: '1', sender: 'ai', text: 'Hello! How can I assist you?', timestamp: '12:00' },
       { id: '2', sender: 'user', text: 'Run synthetic benchmark', timestamp: '12:01' },
     ];
     const { container } = render(

@@ -4,8 +4,7 @@ Live Brain Visualizer Bridge & WebSocket Stream
 Exposes real-time graph events and WebSocket stream for the 3D Brain Visualizer in Frontend.
 """
 
-import asyncio
-from typing import Any, Dict
+from typing import Any
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from loguru import logger
 

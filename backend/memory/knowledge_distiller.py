@@ -13,7 +13,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 from loguru import logger
 
 from memory.context_graph_service import context_graph_service
@@ -112,7 +112,7 @@ class KnowledgeDistiller:
         Distills a working solution into an invariant pattern node and memory record.
         """
         canonical_ast, ast_fingerprint = ASTCanonicalizer.canonicalize_python(solution_code)
-        pattern_hash = hashlib.sha256(f"{task_intent}:{ast_fingerprint}".encode("utf-8")).hexdigest()[:12]
+        pattern_hash = hashlib.sha256(f"{task_intent}:{ast_fingerprint}".encode()).hexdigest()[:12]
         node_id = f"distilled_knowledge_{pattern_hash}"
 
         distilled_data = {
@@ -145,7 +145,7 @@ class KnowledgeDistiller:
 
         return distilled_data
 
-    def find_distilled_match(self, query: str, tenant_id: str = "default") -> Optional[dict[str, Any]]:
+    def find_distilled_match(self, query: str, tenant_id: str = "default") -> dict[str, Any] | None:
         """
         Fast textual/intent lookup of previously distilled solutions.
         """
@@ -157,7 +157,7 @@ class KnowledgeDistiller:
                     return item
         return None
 
-    def find_structural_ast_match(self, code_sample: str, tenant_id: str = "default") -> Optional[dict[str, Any]]:
+    def find_structural_ast_match(self, code_sample: str, tenant_id: str = "default") -> dict[str, Any] | None:
         """
         Structural AST invariant lookup regardless of variable, function, or parameter naming differences.
         """

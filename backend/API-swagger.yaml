@@ -3324,20 +3324,6 @@ paths:
           content:
             application/json:
               schema: {}
-  /admin-api/logs/stream:
-    get:
-      tags:
-      - admin-dashboard
-      summary: Logs Stream
-      operationId: logs_stream_admin_api_logs_stream_get
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-      security:
-      - HTTPBearer: []
   /admin-api/costs:
     get:
       tags:
@@ -3353,11 +3339,46 @@ paths:
               schema: {}
       security:
       - HTTPBearer: []
+  /admin-api/skills:
+    get:
+      tags:
+      - admin-dashboard
+      summary: Get Admin Skills
+      description: "\u09AC\u09BE\u0982\u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\
+        \u09AF: CommandCenter-\u098F\u09B0 Skills \u09AE\u09A1\u09BF\u0989\u09B2\u09C7\
+        \u09B0 \u099C\u09A8\u09CD\u09AF \u2014 \u09B8\u09CD\u0995\u09BF\u09B2 \u09AE\
+        \u09CD\u09AF\u09BE\u09A8\u09BF\u09AB\u09C7\u09B8\u09CD\u099F\u0997\u09C1\u09B2\
+        \u09CB\u0995\u09C7\nCommandCenter Skill \u099F\u09BE\u0987\u09AA\u09C7\u09B0\
+        \ shape-\u098F (id, name, version, installed, enabled, source) \u09B0\u09BF\
+        \u099F\u09BE\u09B0\u09CD\u09A8 \u0995\u09B0\u09C7\u0964\n\u09AE\u09CD\u09AF\
+        \u09BE\u09A8\u09BF\u09AB\u09C7\u09B8\u09CD\u099F\u0997\u09C1\u09B2\u09CB /api/skills/catalog\
+        \ \u09A5\u09C7\u0995\u09C7 \u09B8\u09CD\u0995\u09CD\u09AF\u09BE\u09A8 \u0995\
+        \u09B0\u09C7\u0964"
+      operationId: get_admin_skills_admin_api_skills_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  additionalProperties: true
+                  type: object
+                type: array
+                title: Response Get Admin Skills Admin Api Skills Get
+      security:
+      - HTTPBearer: []
   /admin-api/health-map:
     get:
       tags:
       - admin-dashboard
       summary: Get Health Map
+      description: "\u09AC\u09BE\u0982\u09B2\u09BE \u09AE\u09A8\u09CD\u09A4\u09AC\u09CD\
+        \u09AF: \u09B0\u09BF\u09DF\u09C7\u09B2 \u0987\u09A8\u09AB\u09CD\u09B0\u09BE\
+        \ \u09B9\u09C7\u09B2\u09CD\u09A5 \u2014 \u0995\u09CB\u09A8\u09CB hardcoded\
+        \ latency/SLA \u09A8\u09C7\u0987\u0964\ncore.health_check.health_checker.check_all()\
+        \ \u09A5\u09C7\u0995\u09C7 \u0986\u09B8\u09B2 status + response_time_ms \u09A8\
+        \u09C7\u0993\u09DF\u09BE \u09B9\u09DF\u0964"
       operationId: get_health_map_admin_api_health_map_get
       responses:
         '200':
@@ -4098,6 +4119,394 @@ paths:
           content:
             application/json:
               schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /admin-api/logs/stream:
+    get:
+      tags:
+      - admin-dashboard-sse
+      summary: Logs Stream
+      operationId: logs_stream_admin_api_logs_stream_get
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Admin JWT token from query parameter (EventSource-compatible
+            auth)
+          title: Token
+        description: Admin JWT token from query parameter (EventSource-compatible
+          auth)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /admin-api/events/stream:
+    get:
+      tags:
+      - admin-dashboard-sse
+      summary: Events Stream
+      description: "SSE stream for real-time dashboard events \u2014 mirrors the /admin-api/events\
+        \ HTTP endpoint."
+      operationId: events_stream_admin_api_events_stream_get
+      parameters:
+      - name: token
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Admin JWT token from query parameter (EventSource-compatible
+            auth)
+          title: Token
+        description: Admin JWT token from query parameter (EventSource-compatible
+          auth)
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /admin-api/brain/visual-graph:
+    get:
+      tags:
+      - admin-brain
+      summary: Get Brain Visual Graph
+      description: 'Returns nodes, synapses (links), clusters, and current metrics
+
+        for the 2D/3D Neural Brain Visualizer.'
+      operationId: get_brain_visual_graph_admin_api_brain_visual_graph_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Get Brain Visual Graph Admin Api Brain Visual Graph
+                  Get
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/stats:
+    get:
+      tags:
+      - admin-brain
+      summary: Get Brain Stats
+      description: Returns high-level statistics regarding SupremeAI's knowledge retention
+        and learning velocity.
+      operationId: get_brain_stats_admin_api_brain_stats_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Get Brain Stats Admin Api Brain Stats Get
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/simulate-recall:
+    post:
+      tags:
+      - admin-brain
+      summary: Simulate Memory Recall
+      description: 'Simulates semantic search across all brain nodes, returning cosine
+        similarity
+
+        weights so the UI can illuminate activated synapses and memory pathways.'
+      operationId: simulate_memory_recall_admin_api_brain_simulate_recall_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecallSimulateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Simulate Memory Recall Admin Api Brain Simulate Recall
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/inject-memory:
+    post:
+      tags:
+      - admin-brain
+      summary: Inject Admin Memory
+      description: Allows administrators to manually inject an extreme creative logic
+        or rule into the Eternal Brain.
+      operationId: inject_admin_memory_admin_api_brain_inject_memory_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemoryInjectRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Inject Admin Memory Admin Api Brain Inject Memory
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/graph:
+    get:
+      tags:
+      - admin-brain
+      summary: Get Context Graph
+      description: 'Returns the complete Context Graph topology from ContextGraphService.
+
+        If the graph is currently empty, blends the foundational seeds to ensure visual
+        continuity.'
+      operationId: get_context_graph_admin_api_brain_graph_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ALL
+          title: Tenant Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 150
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Context Graph Admin Api Brain Graph Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /admin-api/brain/nodes/{node_id}/neighbors:
+    get:
+      tags:
+      - admin-brain
+      summary: Get Node Neighbors
+      description: Returns direct neighbor nodes and connected edges for a specific
+        graph entity.
+      operationId: get_node_neighbors_admin_api_brain_nodes__node_id__neighbors_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Node Id
+      - name: direction
+        in: query
+        required: false
+        schema:
+          type: string
+          default: both
+          title: Direction
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Node Neighbors Admin Api Brain Nodes  Node Id  Neighbors
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /admin-api/brain/nodes/{node_id}/subgraph:
+    get:
+      tags:
+      - admin-brain
+      summary: Get Node Subgraph
+      description: Returns multi-hop subgraph context around a given root node up
+        to max_depth.
+      operationId: get_node_subgraph_admin_api_brain_nodes__node_id__subgraph_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: node_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Node Id
+      - name: max_depth
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 2
+          title: Max Depth
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Node Subgraph Admin Api Brain Nodes  Node Id  Subgraph
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /admin-api/brain/traverse:
+    post:
+      tags:
+      - admin-brain
+      summary: Traverse Graph Path
+      description: Calculates the shortest relational path between two entities in
+        the Context Graph.
+      operationId: traverse_graph_path_admin_api_brain_traverse_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TraverseRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Traverse Graph Path Admin Api Brain Traverse Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/nodes:
+    post:
+      tags:
+      - admin-brain
+      summary: Add Graph Node
+      description: Adds or updates an entity node in the Context Graph.
+      operationId: add_graph_node_admin_api_brain_nodes_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGraphNodeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Add Graph Node Admin Api Brain Nodes Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /admin-api/brain/edges:
+    post:
+      tags:
+      - admin-brain
+      summary: Add Graph Edge
+      description: Creates a directed relationship (edge) between two nodes in the
+        Context Graph.
+      operationId: add_graph_edge_admin_api_brain_edges_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGraphEdgeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Add Graph Edge Admin Api Brain Edges Post
         '422':
           description: Validation Error
           content:
@@ -5433,12 +5842,51 @@ paths:
                 type: array
                 title: Response Get Active Skill Catalog Api Skills Catalog Get
   /api/skills/search:
+    get:
+      tags:
+      - Skill Catalog Infrastructure
+      - Skill Catalog Infrastructure
+      summary: Search Skills Get
+      description: Search skill manifests by keyword query (GET).
+      operationId: search_skills_get_api_skills_search_get
+      parameters:
+      - name: query
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ''
+          title: Query
+      - name: installed_only
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Installed Only
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                title: Response Search Skills Get Api Skills Search Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
     post:
       tags:
       - Skill Catalog Infrastructure
       - Skill Catalog Infrastructure
       summary: Search Skills
-      description: Search skill manifests by keyword query.
+      description: Search skill manifests by keyword query (POST).
       operationId: search_skills_api_skills_search_post
       parameters:
       - name: query
@@ -6299,6 +6747,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /cdc/webhook:
+    post:
+      tags:
+      - cdc
+      summary: Handle Cdc Webhook
+      operationId: handle_cdc_webhook_cdc_webhook_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /cdc/health:
+    get:
+      tags:
+      - cdc
+      summary: Cdc Health
+      operationId: cdc_health_cdc_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
   /api/v1/workspace/task/execute:
     post:
       tags:
@@ -6856,6 +7328,124 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/aod/create-project:
+    post:
+      tags:
+      - aod-engine
+      summary: Create Aod Project
+      description: 'Initiates autonomous Agent-Oriented Development (AOD) workflow
+        for a specified goal.
+
+        Decomposes goal, acquires skills, spawns sub-agents, and produces synthesized
+        deliverables.'
+      operationId: create_aod_project_api_aod_create_project_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Create Aod Project Api Aod Create Project Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/aod/projects/{project_id}:
+    get:
+      tags:
+      - aod-engine
+      summary: Get Aod Project Status
+      description: Returns the full execution status, DAG tasks, and final deliverables
+        of an AOD project.
+      operationId: get_aod_project_status_api_aod_projects__project_id__get
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Aod Project Status Api Aod Projects  Project Id  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/aod/projects:
+    get:
+      tags:
+      - aod-engine
+      summary: List Aod Projects
+      description: Lists recent AOD projects executed on the platform.
+      operationId: list_aod_projects_api_aod_projects_get
+      parameters:
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: default
+          title: Tenant Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response List Aod Projects Api Aod Projects Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/aod/skills:
+    get:
+      tags:
+      - aod-engine
+      summary: List Aod Skills
+      description: Returns the catalog of discoverable skills for dynamic sub-agent
+        acquisition.
+      operationId: list_aod_skills_api_aod_skills_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response List Aod Skills Api Aod Skills Get
   /llm-gateway/health:
     get:
       tags:
@@ -8499,6 +9089,505 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/clusters:
+    get:
+      tags:
+      - self-evolving-memory
+      summary: Get Clusters
+      operationId: get_clusters_api_self_evolve_clusters_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Clusters Api Self Evolve Clusters Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/duplicates:
+    get:
+      tags:
+      - self-evolving-memory
+      summary: Get Duplicates
+      operationId: get_duplicates_api_self_evolve_duplicates_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Duplicates Api Self Evolve Duplicates Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/prune:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Prune
+      operationId: prune_api_self_evolve_prune_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PruneRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Prune Api Self Evolve Prune Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/reorganize:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Reorganize
+      operationId: reorganize_api_self_evolve_reorganize_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReorganizeRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Reorganize Api Self Evolve Reorganize Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/deduplicate:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Deduplicate
+      description: "Merge near-duplicate memories into one synthesized memory (BLUEPRINT-MEM-001\
+        \ \xA73.1)."
+      operationId: deduplicate_api_self_evolve_deduplicate_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeduplicateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Deduplicate Api Self Evolve Deduplicate Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/decay-report:
+    get:
+      tags:
+      - self-evolving-memory
+      summary: Decay Report
+      description: "Weakest-retention memories first (R = e^(-t/S)) \u2014 the GC\
+        \ candidate queue."
+      operationId: decay_report_api_self_evolve_decay_report_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 50
+          title: Limit
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Decay Report Api Self Evolve Decay Report Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/decay-prune:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Decay Prune
+      description: Garbage-collect forgotten memories using the Ebbinghaus decay curve.
+      operationId: decay_prune_api_self_evolve_decay_prune_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecayPruneRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Decay Prune Api Self Evolve Decay Prune Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/assign-clusters:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Assign Clusters
+      description: Persist cluster_id metadata so retrieval can probe clusters instead
+        of full scans.
+      operationId: assign_clusters_api_self_evolve_assign_clusters_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Assign Clusters Api Self Evolve Assign Clusters Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/search:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Hierarchical Search
+      description: "Cluster-probe (IVF-style) retrieval \u2014 reports how much of\
+        \ the corpus was skipped."
+      operationId: hierarchical_search_api_self_evolve_search_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HierarchicalSearchRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Hierarchical Search Api Self Evolve Search Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/auto-loop/status:
+    get:
+      tags:
+      - self-evolving-memory
+      summary: Auto Loop Status
+      operationId: auto_loop_status_api_self_evolve_auto_loop_status_get
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Auto Loop Status Api Self Evolve Auto Loop Status
+                  Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/auto-loop/start:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Auto Loop Start
+      operationId: auto_loop_start_api_self_evolve_auto_loop_start_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Auto Loop Start Api Self Evolve Auto Loop Start Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/auto-loop/stop:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Auto Loop Stop
+      operationId: auto_loop_stop_api_self_evolve_auto_loop_stop_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Auto Loop Stop Api Self Evolve Auto Loop Stop Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-evolve/auto-loop/run-once:
+    post:
+      tags:
+      - self-evolving-memory
+      summary: Auto Loop Run Once
+      description: Trigger a single evolution cycle immediately (uses the loop's configuration).
+      operationId: auto_loop_run_once_api_self_evolve_auto_loop_run_once_post
+      parameters:
+      - name: x-admin-token
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Admin-Token
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Auto Loop Run Once Api Self Evolve Auto Loop Run Once
+                  Post
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/self-assemble:
+    post:
+      tags:
+      - Autonomous Self-Assembly
+      summary: Trigger Self Assemble
+      description: Trigger end-to-end autonomous software assembly pipeline.
+      operationId: trigger_self_assemble_api_self_assemble_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfAssembleRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelfAssembleResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/brain-visualizer/snapshot:
+    get:
+      tags:
+      - Brain Visualizer
+      summary: Get Graph Snapshot
+      description: Returns full graph snapshot formatted for 3D visualizer canvas.
+      operationId: get_graph_snapshot_api_brain_visualizer_snapshot_get
+      parameters:
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ALL
+          title: Tenant Id
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 200
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/byoc/credentials:
     post:
       tags:
@@ -8613,6 +9702,66 @@ components:
       required:
       - message
       title: ActionStreamRequest
+    AddGraphEdgeRequest:
+      properties:
+        source_id:
+          type: string
+          minLength: 1
+          title: Source Id
+        target_id:
+          type: string
+          minLength: 1
+          title: Target Id
+        relation_type:
+          type: string
+          title: Relation Type
+          default: RECALLS
+        weight:
+          type: number
+          maximum: 10.0
+          minimum: 0.0
+          title: Weight
+          default: 1.0
+        metadata:
+          additionalProperties: true
+          type: object
+          title: Metadata
+        tenant_id:
+          type: string
+          title: Tenant Id
+          default: default
+      type: object
+      required:
+      - source_id
+      - target_id
+      title: AddGraphEdgeRequest
+    AddGraphNodeRequest:
+      properties:
+        id:
+          type: string
+          minLength: 1
+          title: Id
+        node_type:
+          type: string
+          title: Node Type
+          default: Memory
+        label:
+          type: string
+          minLength: 1
+          title: Label
+        metadata:
+          additionalProperties: true
+          type: object
+          title: Metadata
+        tenant_id:
+          type: string
+          title: Tenant Id
+          default: default
+      type: object
+      required:
+      - id
+      - label
+      title: AddGraphNodeRequest
     AdminFirebaseLoginRequest:
       properties:
         id_token:
@@ -9333,6 +10482,28 @@ components:
       - user_id
       - name
       title: CreateAPIKeyRequest
+    CreateProjectRequest:
+      properties:
+        goal:
+          type: string
+          maxLength: 2000
+          minLength: 5
+          title: Goal
+          description: High-level user goal or project objective
+        project_name:
+          anyOf:
+          - type: string
+            maxLength: 150
+          - type: 'null'
+          title: Project Name
+        tenant_id:
+          type: string
+          title: Tenant Id
+          default: default
+      type: object
+      required:
+      - goal
+      title: CreateProjectRequest
     CreateSandboxRequest:
       properties:
         spec:
@@ -9370,6 +10541,28 @@ components:
       - username
       - password
       title: CredentialRequest
+    DecayPruneRequest:
+      properties:
+        retention_threshold:
+          type: number
+          maximum: 1.0
+          exclusiveMinimum: 0.0
+          title: Retention Threshold
+          description: Prune below this Ebbinghaus retention value
+          default: 0.15
+        min_age_days:
+          type: integer
+          minimum: 1.0
+          title: Min Age Days
+          description: Hard safety floor before any GC
+          default: 30
+        dry_run:
+          type: boolean
+          title: Dry Run
+          description: Preview GC without deleting anything
+          default: true
+      type: object
+      title: DecayPruneRequest
     DecisionRequest:
       properties:
         approved:
@@ -9379,6 +10572,23 @@ components:
       required:
       - approved
       title: DecisionRequest
+    DeduplicateRequest:
+      properties:
+        threshold:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Threshold
+          description: Similarity cutoff (defaults to service setting)
+        dry_run:
+          type: boolean
+          title: Dry Run
+          description: Preview merges without mutating memory
+          default: true
+      type: object
+      title: DeduplicateRequest
     DefconPayload:
       properties:
         level:
@@ -9853,6 +11063,28 @@ components:
       - agent_ids
       title: HealthRequest
       description: Request model for agent health check.
+    HierarchicalSearchRequest:
+      properties:
+        query:
+          type: string
+          minLength: 1
+          title: Query
+        n_results:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: N Results
+          default: 5
+        cluster_probe:
+          type: integer
+          maximum: 50.0
+          minimum: 1.0
+          title: Cluster Probe
+          default: 3
+      type: object
+      required:
+      - query
+      title: HierarchicalSearchRequest
     ImapAuthRequest:
       properties:
         host:
@@ -10020,6 +11252,35 @@ components:
       - user_id
       - role
       title: MeResponse
+    MemoryInjectRequest:
+      properties:
+        task_type:
+          type: string
+          title: Task Type
+          default: architecture
+        agent_type:
+          type: string
+          title: Agent Type
+          default: BrainBooster
+        summary:
+          type: string
+          minLength: 5
+          title: Summary
+        importance:
+          type: number
+          maximum: 1.0
+          minimum: 0.1
+          title: Importance
+          default: 0.95
+        tags:
+          items:
+            type: string
+          type: array
+          title: Tags
+      type: object
+      required:
+      - summary
+      title: MemoryInjectRequest
     MetricRecordRequest:
       properties:
         agent_name:
@@ -10460,6 +11721,22 @@ components:
           default: openid profile email
       type: object
       title: ProviderSSORequest
+    PruneRequest:
+      properties:
+        max_age_days:
+          type: integer
+          minimum: 1.0
+          title: Max Age Days
+          description: Days since last access before pruning
+          default: 90
+        min_access:
+          type: integer
+          minimum: 0.0
+          title: Min Access
+          description: Minimum access count to be retained
+          default: 1
+      type: object
+      title: PruneRequest
     PublicConfigResponse:
       properties:
         adminEmail:
@@ -10514,6 +11791,23 @@ components:
       required:
       - skill_name
       title: QuarantineRequest
+    RecallSimulateRequest:
+      properties:
+        query:
+          type: string
+          maxLength: 500
+          minLength: 1
+          title: Query
+        limit:
+          type: integer
+          maximum: 20.0
+          minimum: 1.0
+          title: Limit
+          default: 8
+      type: object
+      required:
+      - query
+      title: RecallSimulateRequest
     RegisterRequest:
       properties:
         username:
@@ -10532,6 +11826,35 @@ components:
       - username
       - password
       title: RegisterRequest
+    ReorganizeRequest:
+      properties:
+        max_age_days:
+          type: integer
+          minimum: 1.0
+          title: Max Age Days
+          default: 90
+        min_access:
+          type: integer
+          minimum: 0.0
+          title: Min Access
+          default: 1
+        merge_duplicates:
+          type: boolean
+          title: Merge Duplicates
+          description: Merge near-duplicate memories into one synthesized memory
+          default: false
+        apply_decay:
+          type: boolean
+          title: Apply Decay
+          description: Garbage-collect memories whose Ebbinghaus retention decayed
+          default: false
+        persist_clusters:
+          type: boolean
+          title: Persist Clusters
+          description: Write cluster_id into memory metadata for hierarchical retrieval
+          default: false
+      type: object
+      title: ReorganizeRequest
     RepoCreate:
       properties:
         id:
@@ -10832,6 +12155,59 @@ components:
       required:
       - query
       title: SearchRequest
+    SelfAssembleRequest:
+      properties:
+        prompt:
+          type: string
+          title: Prompt
+          description: High-level project or feature description
+        tenant_id:
+          type: string
+          title: Tenant Id
+          description: Tenant ID
+          default: default
+      type: object
+      required:
+      - prompt
+      title: SelfAssembleRequest
+    SelfAssembleResponse:
+      properties:
+        session_id:
+          type: string
+          title: Session Id
+        prompt:
+          type: string
+          title: Prompt
+        status:
+          type: string
+          title: Status
+        task_count:
+          type: integer
+          title: Task Count
+        agents_involved:
+          items:
+            type: string
+          type: array
+          title: Agents Involved
+        execution_results:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Execution Results
+        graph_synced:
+          type: boolean
+          title: Graph Synced
+      type: object
+      required:
+      - session_id
+      - prompt
+      - status
+      - task_count
+      - agents_involved
+      - execution_results
+      - graph_synced
+      title: SelfAssembleResponse
     SelfHealingRequest:
       properties:
         filePath:
@@ -11552,6 +12928,21 @@ components:
       - source_lang
       - target_lang
       title: TranslationRequest
+    TraverseRequest:
+      properties:
+        source_id:
+          type: string
+          minLength: 1
+          title: Source Id
+        target_id:
+          type: string
+          minLength: 1
+          title: Target Id
+      type: object
+      required:
+      - source_id
+      - target_id
+      title: TraverseRequest
     UploadRequest:
       properties:
         file_name:

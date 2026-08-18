@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🎨 Frontend TypeScript & Full Test Suite Zero-Warning Hardening
+- **সমস্যা:** Frontend typecheck-এ `useAuth` স্টোর টাইপিং মিসম্যাচ (`setCustomerUser`), `useVirtualList` আনইউজড ভ্যারিয়েবল, `WebSocketManager` প্রাইভেট আনরিড ফিল্ডস, `ui-components` আনইউজড রিয়্যাক্ট ইমপোর্টস এবং `vitest-axe` টাইপ মডিউল অগমেন্টেশন মিসিং থাকার কারণে `tsc -p tsconfig.app.json` টাইপচেক ফেইল করছিল।
+- **ফিক্স:** (1) `useAuth.ts`-এ `useCustomerStore` থেকে টাইপ-সেইফ `setCustomerUser` সিলেক্টর ব্যবহার করা হয়েছে; (2) `useVirtualList.ts`, `WebSocketManager.ts`, `DashboardShell.tsx` ও `LiveSujonBackground.tsx` থেকে আনইউজড ভ্যারিয়েবল ও ডিক্লারেশন ক্লিন করা হয়েছে; (3) `accessibility.test.tsx`-এ `vitest-axe` Assertion অগমেন্টেশন এবং `ChatMessage` ইন্টারফেস ইমপোর্ট করা হয়েছে; (4) `tsc --noEmit` এবং ১৪টি টেস্ট ফাইলের ৯৮/৯৮ টেস্ট ১০০% গ্রিন পাস করেছে এবং `dist-admin` ও `dist-user` প্রোডাকশন বান্ডল সফলভাবে বিল্ড হয়েছে।
+- **লেসন:** ফ্রন্টএন্ড স্লাইস স্টোর বা টেস্ট সুইট আপডেট করার সাথে সাথে গ্লোবাল টাইপচেক (`tsc -p tsconfig.app.json --noEmit`) রান করে টাইপ ইনটিগ্রিটি বজায় রাখা আবশ্যক, যাতে কোনো রিগ্রেশন প্রোডাকশনে না পৌঁছায়।
+
 ## 2026-08-19 — 🛡️ Long-Term Autonomous Governance & Self-Tracking Matrix
 - **সমস্যা:** দীর্ঘমেয়াদে কোডবেস বড় হলে আনডকুমেন্টেড "Ghost" এনভায়রনমেন্ট ভ্যারিয়েবল, Pydantic ও TypeScript টাইপ ডিসিঙ্ক, এবং আনমনিটরড মেমোরি ব্লোটের কারণে সিস্টেম আনপ্রেডিক্টেবল হয়ে পড়ত।
 - **ফিক্স:** ৪টি প্রোঅ্যাক্টিভ ইঞ্জিন তৈরি ও ভেরিফাই করা হয়েছে: (1) `scripts/audit_env_drift.py` ও `docs/ENV_AND_SECRET_REGISTRY.md` (০% Ghost Env), (2) `scripts/sync_contracts.py` (FastAPI to TypeScript টাইপ সিঙ্ক), (3) `scripts/ai/compact_brain_memory.py` (লগারিদমিক ডিকে ও AST ডুপ্লিকেট মার্জিং), এবং (4) `scripts/canary_health_probe.py` ($0 কস্ট ক্যানারি মনিটরিং)।
@@ -30,8 +35,3 @@
 - **সমস্যা:** (1) সিঙ্গেল-প্রম্পটে পুরো অ্যাপ তৈরির জন্য আলাদা আলাদা সাবসিস্টেম (AOD, MCP Mesh, Context Graph) কানেক্টেড ছিল না; (2) ৩য় পক্ষ মডেলের উত্তরের উপর সিস্টেম দীর্ঘমেয়াদে নির্ভরশীল ছিল; (3) লাইভ ব্রেইন অ্যাক্টিভিটি ফ্রন্টএন্ডে রিয়েল-টাইম স্ট্রিমিং হতো না; (4) লাইটওয়েট কোড টেস্টের জন্য হেভি স্যান্ডবক্সিং সেটআপের প্রয়োজন হতো।
 - **ফিক্স:** (1) `self_assembling_orchestrator.py` ও `/api/self-assemble` তৈরি করে এন্ড-টু-এন্ড সিঙ্গেল প্রম্পট অ্যাপ পাইপলাইন কার্যকর করা হয়েছে; (2) `knowledge_distiller.py` দিয়ে সফল লজিক ও সলিউশন মেমোরি ও কনটেক্সট গ্রাফে ডিস্টিল করে $0-cost ইন্ডিপেন্ডেন্স দেওয়া হয়েছে; (3) `brain_visualizer_bridge.py` ও `LiveBrainVisualizer.tsx` দিয়ে রিয়েল-টাইম WebSocket ব্রেইন পালস স্ট্রিমিং তৈরি করা হয়েছে; (4) `micro_runtime_sandbox.py` দিয়ে 0ms স্পিন-আপ ও জিরো-ডিপেন্ডেন্সি সেইফ ইন-মেমোরি এক্সিকিউশন নিশ্চিত করা হয়েছে; (5) `test_improvised_matrix.py` দিয়ে ৪/৪ টেস্ট ১০০% গ্রিন নিশ্চিত করা হয়েছে।
 - **লেসন:** সেন্ট্রাল অর্কেস্ট্রেশনের সাথে নলেজ ডিস্টিলেশন যুক্ত করলে সিস্টেম নিজে থেকেই প্রতি সেশনে আরও বেশি বুদ্ধিমান ও স্বয়ংসম্পূর্ণ হয়ে ওঠে।
-
-## 2026-08-19 — 🛠️ Audit Action Items: pgvector Production Bridge & Feature Fuse Map
-- **সমস্যা:** (1) অডিট রিপোর্টে পাওয়া গিয়েছিল যে `ai_memory` (pgvector) টেবিলে `cluster_id` এবং `is_synthesized` কলাম প্রোডাকশন ব্রিজের অভাবে মিসিং ছিল, যার কারণে মেমোরি ইভোলিউশন আটকে ছিল। (2) Render-এ এনভায়রনমেন্ট কি-মিসিং হওয়ার কারণে ফিচার সাইলেন্টলি ফেইল করত। (3) কনসোল প্রিন্টে ইমোজি ব্যবহার করায় Windows `cp1252` এনকোডিং ক্র্যাশ হচ্ছিল।
-- **ফিক্স:** (1) `memory_service.py`-তে `ALTER TABLE` যোগ করে `ai_memory` স্কিমা এক্সটেন্ড করা হয়েছে এবং `self_evolve_service.py`-তে `pooled_pg` ব্যবহার করে প্রোডাকশন ডেটাবেস আপডেট করার ব্রিজ তৈরি করা হয়েছে। (2) `scripts/feature_fuse_map.py` তৈরি করা হয়েছে, যা `.env` স্ক্যান করে মিসিং কি-এর কারণে কোন ফিচার ডাউন (BLOWN FUSE) তা বলে দেয়। (3) স্ক্রিপ্ট থেকে ইমোজি (🔌, ✅, ❌) সরিয়ে ASCII মার্কার ([INFO], [OK], [FAIL]) ব্যবহার করা হয়েছে।
-- **লেসন:** (1) ভেক্টর ডেটাবেসের মেটাডেটাতে ডেটা রাখা আর মূল রিলেশনাল ডেটাবেসে সিঙ্ক করার মধ্যে পার্থক্য বুঝতে হবে; প্রোডাকশন ব্রিজের জন্য সরাসরি `pooled_pg` ব্যবহার কার্যকরী। (2) Windows এনভায়রনমেন্টে রান করার স্ক্রিপ্টে ইমোজি ব্যবহার করলে `UnicodeEncodeError` হতে পারে, তাই সব সময় ASCII মার্কার ব্যবহার করা নিরাপদ।

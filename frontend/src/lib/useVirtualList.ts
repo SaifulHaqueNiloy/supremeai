@@ -25,7 +25,6 @@ export function useVirtualList(
   useEffect(() => {
     if (containerRef.current) {
       const containerHeight = containerRef.current.clientHeight;
-      const totalHeight = items.length * itemHeight;
       const scrollTop = containerRef.current.scrollTop;
 
       // Calculate visible range

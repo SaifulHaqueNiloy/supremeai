@@ -41,7 +41,8 @@ function mapFirebaseUser(firebaseUser: User): UserProfile {
 }
 
 export function useAuth(): UseAuthReturn {
-  const { user, setUser } = useCustomerStore();
+  const user = useCustomerStore((s) => s.user);
+  const setCustomerUser = useCustomerStore((s) => s.setCustomerUser);
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,25 +58,26 @@ export function useAuth(): UseAuthReturn {
           if (cancelled) return;
           setFirebaseUser(fbUser);
           if (fbUser) {
-            setUser(mapFirebaseUser(fbUser));
+            setCustomerUser(mapFirebaseUser(fbUser));
           } else {
-            setUser(null);
+            setCustomerUser(null);
           }
           setAuthReady(true);
           setLoading(false);
         });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        if (!cancelled) {
-          console.warn('Firebase auth initialization failed:', err.message);
-          setAuthReady(true);
-          setLoading(false);
-        }
+      } catch (err: unknown) {
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : 'Auth initialization failed.';
+        setError(msg);
+        setAuthReady(true);
+        setLoading(false);
       }
     })();
 
-    return () => { cancelled = true; };
-  }, [setUser]);
+    return () => {
+      cancelled = true;
+    };
+  }, [setCustomerUser]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     setError(null);
@@ -84,7 +86,7 @@ export function useAuth(): UseAuthReturn {
       const auth = await getFirebaseAuth();
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const profile = mapFirebaseUser(credential.user);
-      setUser(profile);
+      setCustomerUser(profile);
       setFirebaseUser(credential.user);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -98,7 +100,7 @@ export function useAuth(): UseAuthReturn {
     } finally {
       setLoading(false);
     }
-  }, [setUser]);
+  }, [setCustomerUser]);
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     setError(null);
@@ -111,7 +113,7 @@ export function useAuth(): UseAuthReturn {
         username,
         role: 'developer',
       };
-      setUser(profile);
+      setCustomerUser(profile);
       setFirebaseUser(credential.user);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -125,24 +127,24 @@ export function useAuth(): UseAuthReturn {
     } finally {
       setLoading(false);
     }
-  }, [setUser]);
+  }, [setCustomerUser]);
 
   const signOut = useCallback(async () => {
     setError(null);
     try {
       const auth = await getFirebaseAuth();
       await firebaseSignOut(auth);
-      setUser(null);
+      setCustomerUser(null);
       setFirebaseUser(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Sign out failed.');
       throw err;
     }
-  }, [setUser]);
+  }, [setCustomerUser]);
 
   return {
-    user,
+    user: (user as unknown as UserProfile | null),
     firebaseUser,
     loading: loading || !authReady,
     error,

@@ -141,7 +141,7 @@ function formatProgressLines(result: TrioPipelineResult | undefined): string[] {
   } else {
     const costNote = result.iterations > 1
       ? `Self-healed in ${result.iterations} iteration(s) — token cost optimized`
-      : `Single-pass generation`;
+      : 'Single-pass generation';
     lines.push(`  💰 Cost: ${costNote}`);
     lines.push(`  🧠 Shadow training: ${result.iterations > 1 ? 'Active' : 'No repair needed'}`);
   }

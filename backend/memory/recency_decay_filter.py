@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import math
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 
 class RecencyDecayFilter:
@@ -50,7 +50,7 @@ class RecencyDecayFilter:
             base_score = float(mem.get("similarity", 0.8))
             created_at = float(mem.get("created_at", current_time))
             adjusted = self.calculate_decayed_score(base_score, created_at, now=current_time)
-            
+
             item = dict(mem)
             item["adjusted_score"] = adjusted
             scored_candidates.append(item)

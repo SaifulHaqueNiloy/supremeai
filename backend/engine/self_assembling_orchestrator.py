@@ -15,11 +15,11 @@ from __future__ import annotations
 import asyncio
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
+from collections.abc import Callable
 from loguru import logger
 
 from agents.meta_project_manager_agent import MetaProjectManager, ProjectExecutionRecord
-from memory.context_graph_service import context_graph_service
 
 
 @dataclass
@@ -43,7 +43,7 @@ class SelfAssemblingOrchestrator:
         self,
         user_prompt: str,
         tenant_id: str = "default",
-        progress_callback: Optional[Callable[[AssemblyStepEvent], Any]] = None,
+        progress_callback: Callable[[AssemblyStepEvent], Any] | None = None,
     ) -> dict[str, Any]:
         """
         Executes the full end-to-end self-assembling software synthesis pipeline.

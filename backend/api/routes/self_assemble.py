@@ -4,8 +4,8 @@ Self-Assemble API Route
 REST & WebSocket endpoints for trigger-driven autonomous software assembly.
 """
 
-from typing import Any, Dict
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from typing import Any
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from engine.self_assembling_orchestrator import self_assembling_orchestrator
@@ -43,4 +43,4 @@ async def trigger_self_assemble(req: SelfAssembleRequest):
         )
         return report
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Self-assembly failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Self-assembly failed: {e!s}")
