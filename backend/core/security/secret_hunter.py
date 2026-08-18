@@ -36,14 +36,14 @@ if sys.platform == "win32":
     except AttributeError:
         pass
 
-# --- Path Setup ---
 try:
     from core.config import settings
-    from core.llm.llm_gateway import llm_gateway
 except ImportError:
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-    from core.config import settings
-    from core.llm.llm_gateway import llm_gateway
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+        from core.config import settings
+    except Exception:
+        settings = None
 
 logger = logging.getLogger(__name__)
 
@@ -293,13 +293,21 @@ Respond in JSON format:
 }}
 """
 
-    def __init__(self) -> None:
+    def __init__(self, gateway: Any = None) -> None:
         """Initialize the AI analyzer."""
-        self.gateway = llm_gateway
+        self.gateway = gateway
 
     async def analyze_finding(self, finding: SecretFinding, code_context: str) -> SecretFinding:
         """Analyze a finding with AI to reduce false positives."""
+        if self.gateway is None:
+            try:
+                from core.llm.llm_gateway import llm_gateway
+                self.gateway = llm_gateway
+            except Exception:
+                return finding
+
         try:
+            model_name = getattr(settings, "gemini_model_name", "gemini-1.5-pro") if settings else "gemini-1.5-pro"
             prompt = self.ANALYSIS_PROMPT.format(
                 file_path=finding.file_path,
                 line_number=finding.line_number,
@@ -309,7 +317,7 @@ Respond in JSON format:
             )
 
             response = await self.gateway.acompletion(
-                model=settings.gemini_model_name,
+                model=model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.1,
             )

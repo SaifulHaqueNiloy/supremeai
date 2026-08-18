@@ -42,11 +42,11 @@ if str(backend_dir) not in sys.path:
 
 try:
     from core.security.secret_hunter import SecretHunter
-except ImportError:
+except Exception:
     try:
         from backend.core.security.secret_hunter import SecretHunter
-    except ImportError:
-        print("⚠️  Could not import SecretHunter. Ensure dependencies are installed.")
+    except Exception as exc:
+        print(f"⚠️  Could not import SecretHunter: {exc}")
         SecretHunter = None
 
 

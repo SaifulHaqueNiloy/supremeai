@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 23:36 UTC
+- **Date:** 2026-08-18 23:45 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,21 +10,18 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/supreme-core-ci.yml`
-  - `backend/alembic/versions/__init__.py`
-  - `REAL_TESTING_LOG.md`
-  - `backend/alembic/__init__.py`
-  - `backend/tests/conftest.py`
-  - `packages/shared-types/.type_checksums.json`
-  - `packages/shared-types/src/dart/SkillGovernance.dart`
-  - `packages/shared-types/src/typescript/SkillGovernance.d.ts`
-  - `AGENTS.md`
-  - `backend/tools/sandbox/micro_runtime_sandbox.py`
-  - `.github/workflows/supreme-release-builds.yml`
-  - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
+  - `backend/tests/test_cognitive_cache.py`
+  - `backend/core/cache/autocache_proxy.py`
+  - `frontend/public/_headers`
+  - `backend/core/app_builder.py`
+  - `backend/core/security/secret_hunter.py`
   - `CHECKPOINT.md`
-  - `backend/tests/test_perf_indexes.py`
-  - `.agents/AGENTS.md`
+  - `.github/workflows/supreme-release-builds.yml`
+  - `backend/core/middleware/cache_control_middleware.py`
+  - `scripts/devops/secret_scan_ci.py`
+  - `vercel.json`
+  - `REAL_TESTING_LOG.md`
+  - `backend/tests/test_cache_control_middleware.py`
 
 ## Pending (Carry Forward)
 - **Phase 3 (Next):** VS Code extension thin client packaging & packaging verification (`npx @vscode/vsce package`).

@@ -187,7 +187,12 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         expose_headers=["*"],
     )
 
-    # 15. Response standardization - Last to standardize all responses
+    from core.middleware.cache_control_middleware import CacheControlMiddleware
+
+    # 15. Cache Control - Injects deterministic Split-Brain Cache-Control headers
+    app.add_middleware(CacheControlMiddleware)
+
+    # 16. Response standardization - Last to standardize all responses
     app.add_middleware(ResponseStandardizationMiddleware)
 
     # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
