@@ -86,6 +86,15 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
 auth = get_firebase_auth()
 
 
+def _resolve_firebase_auth():
+    """বাংলা মন্তব্য: লেজি রিজলভ — import time-এ credentials না থাকলেও runtime-এ কাজ করবে।
+
+    module-level `auth` শুধু import-এর সময় একবার সেট হয়; runtime-এ credential যোগ হলে
+    সেটা ধরা পড়ত না। এই helper প্রতি রিকোয়েস্টে আবার চেষ্টা করে।
+    """
+    return get_firebase_auth()
+
+
 # বাংলা মন্তব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
 
 
@@ -108,7 +117,7 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
             logger.warning(f"Bypassing verification using mock token mode. Token: {id_token[:20]}...")
-        elif auth:
+        elif (auth := _resolve_firebase_auth()):
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
             email = decoded_token.get("email", "")
@@ -116,7 +125,11 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
         else:
             raise HTTPException(
                 status_code=401,
-                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+                detail=(
+                    "Firebase Admin SDK is unavailable. Cannot authenticate. "
+                    "Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH "
+                    "(or GOOGLE_APPLICATION_CREDENTIALS) in .env, then restart the backend."
+                ),
             )
     except HTTPException:
         raise
@@ -175,14 +188,18 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
                 )
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
-        elif auth:
+        elif (auth := _resolve_firebase_auth()):
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
             email = decoded_token.get("email", "")
         else:
             raise HTTPException(
                 status_code=401,
-                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+                detail=(
+                    "Firebase Admin SDK is unavailable. Cannot authenticate. "
+                    "Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH "
+                    "(or GOOGLE_APPLICATION_CREDENTIALS) in .env, then restart the backend."
+                ),
             )
     except HTTPException:
         raise
@@ -218,13 +235,17 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                     detail="Mock tokens are strictly forbidden in production.",
                 )
             uid = "mock-admin-uid"
-        elif auth:
+        elif (auth := _resolve_firebase_auth()):
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
         else:
             raise HTTPException(
                 status_code=401,
-                detail="Firebase Admin SDK is unavailable. Cannot authenticate.",
+                detail=(
+                    "Firebase Admin SDK is unavailable. Cannot authenticate. "
+                    "Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH "
+                    "(or GOOGLE_APPLICATION_CREDENTIALS) in .env, then restart the backend."
+                ),
             )
     except HTTPException:
         raise

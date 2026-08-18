@@ -7,7 +7,6 @@ existing Playwright path. They do NOT require a real browser or network.
 
 from __future__ import annotations
 
-import os
 from unittest.mock import AsyncMock
 
 import pytest

@@ -31,7 +31,7 @@ def stagehand_enabled() -> bool:
         import stagehand  # noqa: F401
 
         return True
-    except Exception as exc:  # pragma: no cover - optional dependency
+    except Exception as exc:  # noqa: BLE001 # pragma: no cover - optional dependency
         logger.warning(f"Stagehand enabled but SDK unavailable ({exc}); falling back to Playwright.")
         return False
 

@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 14:04 UTC
+- **Date:** 2026-08-18 14:19 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,15 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/poetry.lock`
+  - `backend/core/llm/llm_gateway.py`
+  - `LESSONS_LEARNED.md`
+  - `.env.example`
+  - `backend/core/admin_routes.py`
+  - `backend/services/scraper/tests/test_stagehand.py`
   - `CHECKPOINT.md`
-  - `backend/pyproject.toml`
+  - `scripts/audit_gitignores.py`
+  - `backend/services/scraper/stagehand_agent.py`
+  - `backend/services/scraper/tests/test_scraper_service.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).
@@ -23,9 +29,9 @@
 - **P2:** Add logging to bare `except Exception:` clauses (QUAL-001) — 4 clauses pending.
 
 ## Recent Lessons Learned
+  - 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
   - 2026-08-18 — 📋 Feature Feasibility Audit: 16 Features Assessed
   - 2026-08-18 — 🔴 Tier 0 Confidence Gate: Consolidation Over Duplication
-  - 2026-08-18 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.

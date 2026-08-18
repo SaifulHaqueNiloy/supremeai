@@ -78,6 +78,17 @@ TASK_MODEL_MAP: dict[str, str] = {
     "general": "gemini/gemini-1.5-flash",
 }
 
+# বাংলা মন্তব্ব: ইমেজ/ভিশন কনটেন্ট রাউটিং। টেক্সট-ওনলি মডেলে ইমেজ পাঠালে
+# "does not support image input" এরর হয়। তাই ইমেজ থাকলে এই vision-capable মডেলগুলো
+# কল চেইনের সামনে নিয়ে আসা হয়।
+_VISION_CAPABLE_MODELS: list[str] = [
+    "gemini/gemini-1.5-flash",
+    "gemini/gemini-1.5-pro",
+    "openai/gpt-4o",
+    "openai/gpt-4o-mini",
+    "openrouter/openai/gpt-4o",
+]
+
 
 class LLMGateway:
     """
@@ -344,6 +355,38 @@ class LLMGateway:
         # Use the centralized circuit breaker manager
         return self._circuit_breaker_manager(current_model)
 
+    @staticmethod
+    def _messages_contain_image(messages: list[dict[str, Any]] | None) -> bool:
+        """বাংলা মন্তব্ব: messages-এ image_url / base64 image কনটেন্ট আছে কিনা চেক করে।
+
+        ইমেজ থাকলে টেক্সট-ওনলি মডেলে পাঠানো হলে "does not support image input" এরর হয়।
+        """
+        if not isinstance(messages, list):
+            return False
+        for msg in messages:
+            if not isinstance(msg, dict):
+                continue
+            content = msg.get("content")
+            if isinstance(content, list):
+                for part in content:
+                    if not isinstance(part, dict):
+                        continue
+                    if part.get("type") in ("image_url", "image", "input_image"):
+                        return True
+                    if isinstance(part.get("image_url"), dict):
+                        return True
+            elif isinstance(content, str) and "data:image/" in content:
+                return True
+        return False
+
+    def _ensure_vision_model(self, call_chain: list[str]) -> list[str]:
+        """বাংলা মন্তব্ব: ইমেজ কনটেন্ট থাকলে vision-capable মডেলগুলো চেইনের সামনে নিয়ে আসে।
+
+        যাতে টেক্সট-ওনলি মডেলে ইমেজ না যায়।
+        """
+        missing_vision = [m for m in _VISION_CAPABLE_MODELS if m not in call_chain]
+        return missing_vision + call_chain
+
     async def _handle_rate_limit_error(self, current_model: str, exc: httpx.HTTPStatusError) -> bool:
         """Handle 429 rate limit errors by reading Retry-After header and pausing appropriately."""
         if exc.response.status_code == 429:
@@ -505,6 +548,13 @@ class LLMGateway:
 
         # Apply OmniRoute Caveman-lite compression to save tokens
         messages_payload = compress_prompt_messages(messages_payload)
+
+        # বাংলা মন্তব্ব: ইমেজ কনটেন্ট থাকলে vision-capable মডেল নিশ্চিত করো —
+        # text-only মডেলে ইমেজ পাঠালে "does not support image input" এরর হত।
+        if self._messages_contain_image(messages_payload):
+            call_chain = self._ensure_vision_model(call_chain)
+            if task_type.lower() != "vision":
+                task_type = "vision"
 
         if stream:
             return self._stream_completion(messages_payload, call_chain, timeout)
