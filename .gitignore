@@ -34,6 +34,7 @@ infrastructure/zero_cost/config.env
 .secrets/
 # Local CI virtualenv artifact
 .venv_ci/
+.local/
 
 # ---------- RENDER API / DEPLOYMENT SECRETS (AUDIT-2026-08) ----------
 # These contained REAL credentials in git history. Rotate in Infisical/Render.

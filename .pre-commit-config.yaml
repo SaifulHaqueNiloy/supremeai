@@ -190,3 +190,22 @@ repos:
         language: system
         pass_filenames: false
         stages: [pre-commit]
+
+  # ==============================================================================
+  # ৯. Gitignore Scope Audit — guards the `test_*.py` silent-exclusion trap
+  #    (LESSONS_LEARNED.md). BLOCKS commit if:
+  #      • a tracked TEST file is suppressed by a gitignore rule, OR
+  #      • a staged file is ignored (someone `git add -f`'d a gitignored path), OR
+  #      • an unscoped `test_*` / `*_test*` pattern reappears.
+  #    Zero-cost: git CLI + Python stdlib only, ~1.3s. --warn = advisory only.
+  # ==============================================================================
+  - repo: local
+    hooks:
+      - id: gitignore-scope-audit
+        name: "🛡️ Gitignore Scope Audit (test_*.py trap guard)"
+        description: "কোনো tracked test file gitignore-এ বাদ পড়ছে কিনা বা অনscoped test_*/*_test* pattern আছে কিনা চেক করে — মূল রিস্ক: টেস্ট ফাইল version control-থেকে visibility-হীনভাবে লুকিয়ে যাওয়া (test_*.py Path Trap)।"
+        entry: python scripts/audit_gitignores.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]

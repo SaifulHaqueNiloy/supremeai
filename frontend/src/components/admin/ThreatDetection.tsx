@@ -11,10 +11,27 @@ const severityConfig: Record<string, { variant: 'danger' | 'warning' | 'info' | 
   low: { variant: 'info', icon: Shield },
 };
 
+interface SecurityFinding {
+  severity?: string;
+  item?: string;
+  title?: string;
+  source?: string;
+  timestamp?: string;
+  message?: string;
+  description?: string;
+}
+
+interface SecurityScanResponse {
+  findings?: SecurityFinding[];
+  total_findings?: number;
+  status?: string;
+  scan_time?: string;
+}
+
 export function ThreatDetection() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<SecurityScanResponse>({
     queryKey: ['dashboard', 'security-scan'],
-    queryFn: () => apiClient.get<any>('/admin-api/security-scan'),
+    queryFn: () => apiClient.get<SecurityScanResponse>('/admin-api/security-scan'),
     enabled: !!adminTokenStore.getDecodedToken(),
     refetchInterval: 30_000,
   });
@@ -22,8 +39,8 @@ export function ThreatDetection() {
   const findings = Array.isArray(data?.findings) ? data.findings : [];
   const total = data?.total_findings ?? findings.length;
   const threats = findings
-    .filter((f: any) => f.severity === 'critical' || f.severity === 'high' || f.severity === 'medium')
-    .map((f: any, i: number) => ({
+    .filter((f: SecurityFinding) => f.severity === 'critical' || f.severity === 'high' || f.severity === 'medium')
+    .map((f: SecurityFinding, i: number) => ({
       id: i + 1,
       type: f.item ? String(f.item).replace(/_/g, ' ') : (f.title || 'Threat'),
       severity: f.severity,

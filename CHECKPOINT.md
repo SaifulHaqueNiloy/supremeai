@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 14:39 UTC
+- **Date:** 2026-08-18 14:50 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,12 +10,14 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/supreme-core-ci.yml`
-  - `backend/API-swagger.yaml`
-  - `CHECKPOINT.md`
-  - `.pre-commit-config.yaml`
-  - `scripts/audit_gitignores.py`
   - `LESSONS_LEARNED.md`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `scripts/audit_gitignores.py`
+  - `CHECKPOINT.md`
+  - `.gitignore`
+  - `frontend/src/components/admin/Dashboard.tsx`
+  - `.pre-commit-config.yaml`
+  - `frontend/src/components/admin/ThreatDetection.tsx`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).

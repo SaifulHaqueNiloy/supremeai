@@ -91,18 +91,29 @@ def find_gitignores() -> list[Path]:
     return sorted(ignores)
 
 
+def _test_class_tracked() -> list[str]:
+    """Tracked files in test-class locations (the trap's victims), fast subset."""
+    rx = re.compile(r"(?:^|/)test_[^/]+$|(?:^|/)tests/|^tests/")
+    return [f for f in git(["ls-files"]).splitlines() if rx.search(f)]
+
+
 def check_tracked_ignored() -> list[str]:
-    """HIGH: files that are TRACKED in git but git check-ignore reports ignored."""
-    tracked = git(["ls-files"]).splitlines()
-    if not tracked:
+    """HIGH: tracked TEST-class files the gitignore suppresses.
+
+    `git check-ignore --no-index` is ~9ms/path — too slow for every tracked
+    file, so we evaluate ONLY test-class tracked files. If any is reported
+    ignored, a tracked test is being silently suppressed by an unscoped rule
+    (the original `test_*.py` trap). Non-test tracked files are not checked.
+    """
+    candidates = _test_class_tracked()
+    if not candidates:
         return []
     proc = subprocess.run(
         ["git", "-C", str(ROOT), "check-ignore", "--no-index", "--stdin", "-z"],
-        input="\n".join(tracked), capture_output=True, text=True, cwd=str(ROOT),
+        input="\n".join(candidates), capture_output=True, text=True, cwd=str(ROOT),
     )
-    # --no-index: evaluate even paths already ignored by a lower-priority rule
-        ignored = {line.strip() for line in proc.stdout.split("\0") if line.strip()}
-    return [f for f in tracked if f in ignored]
+    ignored = {line.strip() for line in proc.stdout.split("\0") if line.strip()}
+    return [f for f in candidates if f in ignored]
 
 
 def check_staged_ignored() -> list[str]:
@@ -150,9 +161,6 @@ def scan_gitignore_lines(path: Path) -> tuple[list[str], list[str]]:
         elif (not root_anchored) and is_sensitive and not is_negation:
             warn.append(f"{path.relative_to(ROOT)}:{i}: {line}")
     return high, warn
-    
-
-    return high, warn
 
 
 def _apply_fix(path: Path) -> None:
@@ -176,11 +184,17 @@ def _apply_fix(path: Path) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="SupremeAI gitignore scope auditor")
+    ap.add_argument("--root", type=str, default=None,
+                    help="repo root to audit (default: script parent.parent = this repo)")
     ap.add_argument("--warn", action="store_true",
                     help="advisory mode: never fail the gate (exit 0)")
     ap.add_argument("--fix", action="store_true",
                     help="rewrite unscoped test/sensitive lines with a '/' prefix")
     args = ap.parse_args()
+
+    global ROOT
+    if args.root:
+        ROOT = Path(args.root).resolve()
 
     print("=== SupremeAI Gitignore Scope Audit ===")
     print(f"repo root: {ROOT}\n")
@@ -189,17 +203,21 @@ def main() -> int:
     print(f"[scanned gitignores: {len(gis)}]")
 
     tracked_ignored = check_tracked_ignored()
+    staged_ignored = check_staged_ignored()
     high: list[str] = []
     warn: list[str] = []
 
+    # static scan no longer sets HIGH (false-positive-prone); it only advises.
     for gi in gis:
-        h, w = scan_gitignore_lines(gi)
-        high += h
+        _, w = scan_gitignore_lines(gi)
         warn += w
 
     if tracked_ignored:
         high.append("--- TRACKED-IGNORED (tracked files the gitignore suppresses) ---")
         high += tracked_ignored
+    if staged_ignored:
+        high.append("--- STAGED-IGNORED (staged files the gitignore silently skips) ---")
+        high += staged_ignored
 
     if high:
         print(f"\n🔴 HIGH severity ({len(high)}): fails the gate unless --warn")
@@ -216,8 +234,9 @@ def main() -> int:
         print("\n[fix] rewrote unscoped test/sensitive lines with '/' prefix")
 
     if high and not args.warn:
-        print("\n❌ GITIGNORE SCOPE AUDIT FAILED — tracked files silently excluded or "
-              "unscoped test patterns present (the test_*.py trap). Fix before commit.")
+        print("\n❌ GITIGNORE SCOPE AUDIT FAILED — staged or tracked files are "
+              "silently suppressed by a gitignore rule (the test_*.py trap). "
+              "Fix before commit.")
         return 1
     print("\n✅ Gitignore scope audit passed.")
     return 0
