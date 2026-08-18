@@ -205,8 +205,9 @@ After verifying actual code state, **many previously reported issues are already
 - **File:** `backend/poetry.lock`
 - **Severity:** P1
 - **Category:** Dependency — Security
-- **Description:** 54 known CVEs in 9 packages (aiohttp, cryptography, ecdsa, httplib2, litellm, pillow, pyasn1, pydantic-settings, python-dotenv).
-- **Recommendation:** Upgrade affected packages.
+- **Description:** Originally reported (2026-08-07) as 54 CVEs in 9 packages (aiohttp, cryptography, ecdsa, httplib2, litellm, pillow, pyasn1, pydantic-settings, python-dotenv). Re-audited 2026-08-19 against the current `poetry.lock`: those 8 packages are already at patched versions; the only remaining CVE was `h2 4.3.0` (PYSEC-2026-3628, fix 4.4.1).
+- **Resolution:** `poetry update h2` bumped `h2 4.3.0 -> 4.4.1` in `backend/poetry.lock`. Fresh `pip-audit` over the full export now reports **No known vulnerabilities found**. DEP-001 is CLOSED.
+- **Recommendation:** None remaining. Keep `poetry.lock` regenerated on dependency changes so CVE drift is caught early.
 
 **[SCRIPT-001] Hardcoded Paths in Scripts**
 - **Files:** `backend/scripts/*.py`
