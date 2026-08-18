@@ -21,8 +21,22 @@ on:
         description: 'Run Performance E2E'
         type: boolean
         default: true
+      deploy_target:
+        description: 'Select Deploy Target (Render/Cloud)'
+        type: choice
+        options:
+          - 'AUTO'
+          - 'ALL_SERVICES'
+          - 'CUSTOMER_BACKEND_ONLY'
+          - 'ADMIN_BACKEND_ONLY'
+          - 'NONE'
+        default: 'AUTO'
       run_deploy_render:
         description: 'Run Deploy to Render'
+        type: boolean
+        default: true
+      run_health_audit:
+        description: 'Run Environment Health & Secret Drift Audit'
         type: boolean
         default: true
       ignore_dependencies:
@@ -72,8 +86,8 @@ jobs:
       user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
       dependencies: ${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
-      admin_backend_changed: ${{ steps.filter.outputs.admin_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
-      customer_backend_changed: ${{ steps.filter.outputs.customer_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
+      admin_backend_changed: ${{ github.event.inputs.deploy_target != 'NONE' && ((github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'ADMIN_BACKEND_ONLY')) || steps.filter.outputs.admin_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1) }}
+      customer_backend_changed: ${{ github.event.inputs.deploy_target != 'NONE' && ((github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'CUSTOMER_BACKEND_ONLY')) || steps.filter.outputs.customer_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1) }}
       trivial_change: ${{ steps.gate-logic.outputs.trivial_change }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

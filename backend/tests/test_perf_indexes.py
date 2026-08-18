@@ -132,75 +132,57 @@ def test_migration_runs_upgrade_and_downgrade_on_sqlite() -> None:
     ⚠️ `backend/alembic/` ডিরেক্টরি (migrations dir) একটি namespace/package এবং এটি
     real alembic-কে shadow করে। তাই import করার আগে sys.path থেকে backend সরিয়ে
     নেওয়া হয়, পরে ফেরত দেওয়া হয়।"""
-    import sys
-    from pathlib import Path as _Path
+    from alembic import op as _alembic_op
+    from alembic.operations import Operations
+    from alembic.runtime.migration import MigrationContext
 
-    # বাংলা মন্তব্য: backend/alembic/ ডিরেক্টরি real alembic-কে shadow করে —
-    # sys.path থেকে backend (absolute + '.'/'') সরিয়ে তারপর real alembic import
-    # করা হয়। sys.modules-এ cached হওয়ায় পরে migration-এর `from alembic import op`
-    # ও real alembic-ই পায়।
-    _backend = _Path(__file__).resolve().parent.parent
-    _removed: list[str] = []
-    for _p in list(sys.path):
-        if not _p:
-            _resolved = str(_Path.cwd().resolve())
-        else:
-            try:
-                _resolved = str(_Path(_p).resolve())
-            except Exception:
-                continue
-        if _resolved == str(_backend.resolve()):
-            _removed.append(_p)
-    for _p in _removed:
-        sys.path.remove(_p)
-    try:
-        from alembic.operations import Operations
-        from alembic.runtime.migration import MigrationContext
-    finally:
-        for _p in _removed:
-            sys.path.insert(0, _p)
-
-    # সাপেক্ষে migration module import
     spec = importlib.util.spec_from_file_location(
-        "perf_indexes_migration", MIGRATIONS_DIR / MIGRATION_FILE
+        "perf_indexes_migration", str(MIGRATIONS_DIR / MIGRATION_FILE)
     )
     assert spec and spec.loader, "cannot load migration module"
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
 
-    engine = create_engine("sqlite:///:memory:")
+    from sqlalchemy.pool import StaticPool
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     from sqlalchemy import text as _text
 
-    with engine.begin() as conn:
-        ctx = MigrationContext.configure(conn)
-
+    with engine.connect() as conn:
         # টেবিলগুলো আগে তৈরি করা হয় (migration কেবল index যোগ করে)
         for ddl in _CREATE_TABLES_SQL.values():
             conn.execute(_text(ddl))
+        conn.commit()
 
-        # বাংলা মন্তব্য: Operations.context-এর ভেতরে global `op` proxy active থাকে —
-        # migration-এর upgrade()/downgrade() তখনই op.get_bind()/op.execute() চালাতে পারে।
+        ctx = MigrationContext.configure(conn)
         with Operations.context(ctx):
             mod.upgrade()
+        conn.commit()
 
-        insp = inspect(conn)
-        for table, indexes in EXPECTED_INDEXES.items():
-            if not insp.has_table(table):
-                continue
-            actual = {ix["name"] for ix in insp.get_indexes(table)}
-            for idx in indexes:
-                assert idx in actual, f"upgrade() should create {idx} on {table}"
+        with engine.connect() as check_conn:
+            insp = inspect(check_conn)
+            for table, indexes in EXPECTED_INDEXES.items():
+                if not insp.has_table(table):
+                    continue
+                actual = {ix["name"] for ix in insp.get_indexes(table)}
+                for idx in indexes:
+                    assert idx in actual, f"upgrade() should create {idx} on {table}"
 
         with Operations.context(ctx):
             mod.downgrade()
+        conn.commit()
 
-        insp = inspect(conn)
-        for table, indexes in EXPECTED_INDEXES.items():
-            if not insp.has_table(table):
-                continue
-            actual = {ix["name"] for ix in insp.get_indexes(table)}
-            for idx in indexes:
-                assert idx not in actual, f"downgrade() should drop {idx} on {table}"
+        with engine.connect() as check_conn:
+            insp = inspect(check_conn)
+            for table, indexes in EXPECTED_INDEXES.items():
+                if not insp.has_table(table):
+                    continue
+                actual = {ix["name"] for ix in insp.get_indexes(table)}
+                for idx in indexes:
+                    assert idx not in actual, f"downgrade() should drop {idx} on {table}"
 
 
 

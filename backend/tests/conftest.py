@@ -191,13 +191,18 @@ sys.modules["sentry_sdk"] = create_mock_module("sentry_sdk")
 sys.modules["sentry_sdk.integrations"] = create_mock_module("sentry_sdk.integrations", is_package=True)
 sys.modules["sentry_sdk.integrations.loguru"] = create_mock_module("sentry_sdk.integrations.loguru")
 sys.modules["supabase"] = create_mock_module("supabase", is_package=True)
-sys.modules["supabase.client"] = create_mock_module("supabase.client")
-sys.modules["alembic"] = create_mock_module("alembic", is_package=True)
-sys.modules["alembic.config"] = create_mock_module("alembic.config")
-sys.modules["alembic.migration"] = create_mock_module("alembic.migration", is_package=True)
-sys.modules["alembic.operations"] = create_mock_module("alembic.operations")
-sys.modules["alembic.runtime"] = create_mock_module("alembic.runtime", is_package=True)
-sys.modules["alembic.runtime.migration"] = create_mock_module("alembic.runtime.migration")
+try:
+    import alembic
+    import alembic.config
+    import alembic.operations
+    import alembic.runtime.migration
+except ImportError:
+    sys.modules["alembic"] = create_mock_module("alembic", is_package=True)
+    sys.modules["alembic.config"] = create_mock_module("alembic.config")
+    sys.modules["alembic.migration"] = create_mock_module("alembic.migration", is_package=True)
+    sys.modules["alembic.operations"] = create_mock_module("alembic.operations")
+    sys.modules["alembic.runtime"] = create_mock_module("alembic.runtime", is_package=True)
+    sys.modules["alembic.runtime.migration"] = create_mock_module("alembic.runtime.migration")
 sys.modules["redis"] = create_mock_module("redis", is_package=True)
 sys.modules["redis.asyncio"] = create_mock_module("redis.asyncio", is_package=True)
 sys.modules["redis.exceptions"] = create_mock_module("redis.exceptions")

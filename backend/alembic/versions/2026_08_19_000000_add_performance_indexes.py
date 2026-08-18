@@ -43,7 +43,10 @@ def _table_exists(bind, table_name: str) -> bool:
         return True
     try:
         insp = sa.inspect(bind)
-        return (table_name in set(insp.get_table_names())) or insp.has_table(table_name)
+        names = set(insp.get_table_names())
+        if not names:
+            return True
+        return (table_name in names) or insp.has_table(table_name)
     except Exception as exc:
         logger.warning(f"Table inspection check failed for {table_name}: {exc}")
         return True

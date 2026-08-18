@@ -89,6 +89,8 @@ class MicroRuntimeSandbox:
             )
 
         # Step 2: Prepare isolated sandbox environment
+        stdout_buf = io.StringIO()
+
         def _sandbox_print(*args: Any, sep: str = " ", end: str = "\n", **_kwargs: Any) -> None:
             stdout_buf.write(sep.join(str(arg) for arg in args) + end)
 

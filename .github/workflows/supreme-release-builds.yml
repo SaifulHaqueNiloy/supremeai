@@ -5,6 +5,15 @@ on:
     tags: ['v*'] # শুধুমাত্র v1.0.0, v2.1.0 ইত্যাদি ট্যাগ পুশ করলে
   workflow_dispatch:
     inputs:
+      target_platform:
+        description: 'Select Target Platform to Build'
+        type: choice
+        options:
+          - 'ALL'
+          - 'VSIX'
+          - 'APK'
+          - 'EXE'
+        default: 'ALL'
       publish_release:
         description: 'Publish to GitHub Releases?'
         type: boolean
@@ -22,6 +31,11 @@ jobs:
   build-artifacts:
     name: 🏗️ Build ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'push' ||
+      github.event.inputs.target_platform == 'ALL' ||
+      github.event.inputs.target_platform == matrix.target
     strategy:
       fail-fast: false
       matrix:
