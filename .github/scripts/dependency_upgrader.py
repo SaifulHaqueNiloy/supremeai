@@ -91,9 +91,8 @@ def main():
         summary.append(upgrade_python_deps())
 
     # Node (Frontend)
-    if os.path.exists("apps/studio-client"):
-        summary.append("\n**Frontend (pnpm):**")
-        summary.append(upgrade_node_deps("apps/studio-client", "Frontend"))
+    if os.path.exists('frontend'):
+        summary.append('\n**Frontend (pnpm):**')
 
     summary_text = "\n".join(summary)
     print(summary_text) # Output to stdout for redirection
