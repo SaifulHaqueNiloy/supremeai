@@ -4,7 +4,7 @@
 
 import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+import { useSupremeStore } from '../../store/useSupremeStore';
 import { NavRail } from './NavRail';
 import { CommandBar } from './CommandBar';
 import { WorkspaceSkeleton } from '../common/Skeleton';
@@ -15,7 +15,7 @@ const LiveSimulator = React.lazy(() => import('../simulator/LiveSimulator'));
 const ChatInterface = React.lazy(() => import('../chat/ChatInterface'));
 
 export const DashboardShell: React.FC = () => {
-  const { notifications, isSimulatorActive, removeNotification } = useWorkspaceStore();
+  const { notifications, isSimulatorActive, removeNotification } = useSupremeStore();
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-900 text-white">

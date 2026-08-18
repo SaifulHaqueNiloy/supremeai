@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Brain,
@@ -8,20 +8,14 @@ import {
   Sparkles,
   RefreshCw,
   PlusCircle,
-  Activity,
-  Layers,
   ZoomIn,
   ZoomOut,
   Maximize2,
   Database,
   Cpu,
-  Clock,
-  Send,
   X,
-  ExternalLink,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-import { Card, Badge } from '../ui';
 
 interface BrainNode {
   id: string;
@@ -82,9 +76,9 @@ export function BrainVisualizer() {
   const [isSimulating, setIsSimulating] = useState(false);
   const [zoom, setZoom] = useState(1.0);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [draggedNode, setDraggedNode] = useState<BrainNode | null>(null);
+   const [isDraggingCanvas, setIsDraggingCanvas] = useState(false);
+   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+   const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null);
   const [showInjectModal, setShowInjectModal] = useState(false);
 
   // Form states for manual injection
@@ -107,7 +101,7 @@ export function BrainVisualizer() {
   // Initialize physics nodes when data loads
   useEffect(() => {
     if (graphData?.nodes) {
-      physicsNodesRef.current = graphData.nodes.map((node, i) => {
+      physicsNodesRef.current = graphData.nodes.map((node) => {
         const existing = physicsNodesRef.current.find((n) => n.id === node.id);
         const radius = Math.max(14, Math.round(node.importance * 22));
         return {
@@ -218,11 +212,9 @@ export function BrainVisualizer() {
       // Simple physics step: gentle center gravity + node repulsion
       for (let i = 0; i < nodes.length; i++) {
         const n1 = nodes[i];
-        if (draggedNode && draggedNode.id === n1.id) continue;
+        if (draggedNodeId && draggedNodeId === n1.id) continue;
 
         // Center spring
-        const targetX = n1.x;
-        const targetY = n1.y;
         n1.vx = (n1.vx || 0) * 0.92;
         n1.vy = (n1.vy || 0) * 0.92;
 
@@ -288,7 +280,7 @@ export function BrainVisualizer() {
       ctx.restore();
 
       // Draw Nodes
-      nodes.forEach((node, i) => {
+      nodes.forEach((node) => {
         const nx = centerX + node.x * zoom;
         const ny = centerY + node.y * zoom;
         const baseRadius = (node.radius || 16) * zoom;
@@ -365,7 +357,7 @@ export function BrainVisualizer() {
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [graphData, zoom, pan, selectedNode, selectedCluster, activeRecallMatches, draggedNode]);
+  }, [graphData, zoom, pan, selectedNode, selectedCluster, activeRecallMatches, draggedNodeId]);
 
   // Handle Resize
   useEffect(() => {
@@ -402,7 +394,7 @@ export function BrainVisualizer() {
 
     if (clicked) {
       setSelectedNode(clicked);
-      setDraggedNode(clicked);
+       setDraggedNodeId(clicked?.id ?? null);
     } else {
       setIsDraggingCanvas(true);
       setDragStart({ x: mouseX - pan.x, y: mouseY - pan.y });
@@ -416,6 +408,7 @@ export function BrainVisualizer() {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
+    const draggedNode = draggedNodeId ? physicsNodesRef.current.find((n) => n.id === draggedNodeId) : null;
     if (draggedNode) {
       const centerX = canvas.width / 2 + pan.x;
       const centerY = canvas.height / 2 + pan.y;
@@ -431,7 +424,7 @@ export function BrainVisualizer() {
 
   const handleMouseUp = () => {
     setIsDraggingCanvas(false);
-    setDraggedNode(null);
+    setDraggedNodeId(null);
   };
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {

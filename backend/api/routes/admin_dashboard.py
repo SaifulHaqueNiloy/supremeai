@@ -21,7 +21,7 @@ from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-from api.routes.admin_auth import admin_rate_limit, require_admin_token
+from api.routes.admin_auth import admin_rate_limit, require_admin_token, validate_sse_token
 
 
 
@@ -32,6 +32,12 @@ router = APIRouter(
     prefix="/admin-api",
     tags=["admin-dashboard"],
     dependencies=[Depends(require_admin_token), Depends(admin_rate_limit)],
+)
+
+sse_router = APIRouter(
+    prefix="/admin-api",
+    tags=["admin-dashboard-sse"],
+    dependencies=[Depends(validate_sse_token), Depends(admin_rate_limit)],
 )
 
 
@@ -80,7 +86,7 @@ def save_users(users: list[dict[str, Any]]):
         json.dump(users, f, indent=4)
 
 
-@router.get("/logs/stream")
+@sse_router.get("/logs/stream")
 def logs_stream():
     async def log_generator():
         log_file = "logs/supremeai.log"
@@ -126,6 +132,74 @@ def logs_stream():
 
     return StreamingResponse(
         log_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@sse_router.get("/events/stream")
+def events_stream():
+    """SSE stream for real-time dashboard events — mirrors the /admin-api/events HTTP endpoint."""
+    events_log_path = "data/dashboard_events.jsonl"
+    if not os.path.exists(events_log_path):
+        events_log_path = "/app/data/dashboard_events.jsonl"
+
+    async def event_generator():
+        if os.path.exists(events_log_path):
+            try:
+                with open(events_log_path, encoding="utf-8") as f:
+                    lines = f.readlines()[-10:]
+                    for line in lines:
+                        line = line.strip()
+                        if line:
+                            try:
+                                json.loads(line)
+                                yield f"data: {line}\n\n"
+                            except json.JSONDecodeError:
+                                continue
+            except Exception as e:
+                yield f"data: Error reading events: {e}\n\n"
+
+        file_obj = None
+        try:
+            if os.path.exists(events_log_path):
+                file_obj = open(events_log_path, encoding="utf-8")
+                file_obj.seek(0, os.SEEK_END)
+
+            while True:
+                if file_obj:
+                    line = file_obj.readline()
+                    if line:
+                        line = line.strip()
+                        if line:
+                            try:
+                                json.loads(line)
+                                yield f"data: {line}\n\n"
+                            except json.JSONDecodeError:
+                                await asyncio.sleep(0.1)
+                    else:
+                        await asyncio.sleep(1.0)
+                else:
+                    if os.path.exists(events_log_path):
+                        file_obj = open(events_log_path, encoding="utf-8")
+                        file_obj.seek(0, os.SEEK_END)
+                    await asyncio.sleep(1.0)
+        except asyncio.CancelledError:
+            logger.info("Event stream client disconnected")
+            raise
+        finally:
+            if file_obj:
+                try:
+                    file_obj.close()
+                except Exception as exc:
+                    logger.exception(f"Failed to close event stream file: {exc}")
+
+    return StreamingResponse(
+        event_generator(),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache, no-transform",

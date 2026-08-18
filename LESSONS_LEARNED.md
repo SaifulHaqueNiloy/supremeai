@@ -7,6 +7,15 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 📋 Roadmap Metric Validation: Codebase drift in DEVELOPMENT_ROADMAP.md
+- **সমস্যা:** `DEVELOPMENT_ROADMAP.md`-এর সবচেয়ে বড় সমস্যা ছিল রোডম্যাপের মেট্রিকগুলো কোডবেসের সঙ্গে sync নয়।
+  Store count 11 (actual 9 — themeStore deleted + useWorkspaceSettingsStore merged), test file 282
+  (actual 373), route files 84 (actual 85 incl. `__init__.py`), client paths `apps/mobile`+`apps/desktop`
+  (actual: `tools/mobile`+`tools/desktop`)।
+- **ফিক্স:** কোডবেস স্ক্যান করে সব মেট্রিক সরাসরি verify করে রোডম্যাপ আপডেটেড।
+- **লেসন:** রোডম্যাপ/ডকুমেন্ট আপডেটের সময় অবশ্যই `Get-ChildItem` / `grep` দিয়ে live metric
+  cross-check করুন — ডকুমেন্টের ওপর ভিত্তি করে প্ল্যান বানালে ভুল ধারণা হয়।
+
 ## 2026-08-18 — 🐛 Admin Session Fix: 3 frontend/backend bugs causing forced-logout & 405 on Skills tab
 
 - **সমস্যা:** (A) Admin পেজ রিফ্রেশ করলে সেশন হারায় — `adminStore.ts`-এ কোনো session restore নেই,

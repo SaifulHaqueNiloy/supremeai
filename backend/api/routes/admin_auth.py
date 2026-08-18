@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import secrets
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Query, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
 from loguru import logger
@@ -44,6 +44,18 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         if expected and secrets.compare_digest(token, expected):
             return {"uid": "admin", "role": "admin"}
         raise HTTPException(status_code=401, detail="Authentication failed.") from err
+
+
+def validate_sse_token(token: str = Query(..., description="Admin JWT token from query parameter (EventSource-compatible auth)")):
+    """SSE/WebSocket-compatible auth — validates JWT from query param instead of Authorization header."""
+    try:
+        decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        if decoded.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
+        return decoded
+    except Exception:
+        logger.warning("SSE/WebSocket token validation failed", exc_info=True)
+        raise HTTPException(status_code=401, detail="Authentication failed.")
 
 
 def admin_rate_limit(request: Request):

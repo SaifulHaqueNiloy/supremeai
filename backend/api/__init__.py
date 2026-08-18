@@ -41,6 +41,9 @@ def register_router(
         if router is None:
             raise AttributeError(f"Module {router_module!r} has no 'router' attribute.")
         app.include_router(router, prefix=prefix)
+        sse_router = getattr(module, "sse_router", None)
+        if sse_router is not None:
+            app.include_router(sse_router, prefix=prefix)
         logger.debug(f"Router registered: {router_module!r} -> prefix={prefix!r}")
     except ImportError as exc:
         msg = f"Optional router {router_module!r} not found: {exc}"

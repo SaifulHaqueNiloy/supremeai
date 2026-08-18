@@ -29,10 +29,11 @@ export const apiInterceptor = async <T = unknown>(response: Response): Promise<T
 // ইউজার-ফেসিং API-এর 401/403 (যেমন লাইসেন্স/API-কী সংক্রেত) অ্যাডমিন সেশন না ভাঙায়।
 const ADMIN_API_PATH_PREFIXES = ['/api/admin', '/api/skills'];
 
-function isAdminApiPath(url: string | URL): boolean {
+function isAdminApiPath(url: string | URL | Request): boolean {
   let pathname: string;
   try {
-    pathname = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost').pathname;
+    const urlStr = typeof url === 'string' ? url : url instanceof URL ? url.href : (url as Request).url;
+    pathname = new URL(urlStr, typeof window !== 'undefined' ? window.location.origin : 'http://localhost').pathname;
   } catch {
     pathname = typeof url === 'string' ? url : '';
   }

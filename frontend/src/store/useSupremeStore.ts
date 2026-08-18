@@ -56,6 +56,8 @@ export const useSupremeStore = create<SupremeStore>()(
         settings: state.settings,
         isAuthenticated: state.isAuthenticated,
         user: state.user,
+        activeIntegrations: state.activeIntegrations,
+        integrations: state.integrations,
       }),
     },
   ),

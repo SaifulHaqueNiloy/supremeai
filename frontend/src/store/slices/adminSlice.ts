@@ -8,7 +8,7 @@ import { getFirebaseAuth } from '../../firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import type { SupremeStore } from '../useSupremeStore';
 import type { User, Role, Permission } from './types';
-import { buildProvisioningUri, isTokenExpired, restoreAdminSession } from './adminAuthHelpers';
+import { buildProvisioningUri, decodeJwt, restoreAdminSession } from './adminAuthHelpers';
 
 export interface AdminSlice {
   adminAuthenticated: boolean;
@@ -132,7 +132,7 @@ export const createAdminSlice: StateCreator<SupremeStore, [], [], AdminSlice> = 
   },
 
   handleAdminLogin: async (password?: string) => {
-    const { adminEmail, otpRequired, adminOtp, totpSetupRequired } = get();
+    const { adminEmail, otpRequired, adminOtp } = get();
     const cleanEmail = adminEmail.trim();
     const cleanPassword = password?.trim() || '';
 

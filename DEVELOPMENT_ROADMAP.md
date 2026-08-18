@@ -8,9 +8,9 @@
 ## 1. Executive Summary (কারেন্ট অবস্থা)
 
 SupremeAI 2.0 হলো একটি **self-learning AI infrastructure** (Universal Agent Platform) যার
-কোর আর্কিটেকচার এখন solid: unified **FastAPI backend (~318 routes)** + **React/Vite Studio
-frontend** (admin + user portal), **VS Code Extension (100% thin client)**, ছোট `apps/mobile`
-(Flutter) ও `apps/desktop` (Electron) client, এবং **$0-cost** infra (Render + Firebase +
+কোর আর্কিটেকচার এখন solid: unified **FastAPI backend (~318 routes, 85 route files)** + **React/Vite Studio
+frontend** (admin + user portal), **VS Code Extension (100% thin client)**, ছোট `tools/mobile`
+(Flutter) ও `tools/desktop` (Electron) client, এবং **$0-cost** infra (Render + Firebase +
 Supabase/pgvector + Redis + Infisical + Cloudflare)।
 
 **যা সম্পন্ন (Done):**
@@ -58,7 +58,7 @@ Cloudflare Workers / Firebase        → edge cache, pings
 |---|---|---|
 | Entry | `backend/main.py`, `core/app.py`, `core/app_builder.py` | env bootstrap, graceful shutdown, lazy app factory |
 | Config | `core/config*.py`, `core/universal_rules.py`, `core/feature_flags.py` | Pydantic Settings, secrets, global rules (~24KB) |
-| Routing | `api/routers.py`, `api/routes/` (84 file), `api/v1/` | 318+ route |
+| Routing | `api/routers.py`, `api/routes/` (85 files incl. __init__), `api/v1/` | 318+ routes |
 | Security | `core/security/*`, `core/cost_guard.py`, `core/autonoguard_engine.py` | JWT/RBAC, cost enforcement, anti-hacking |
 | LLM | `core/llm_gateway.py`, `core/advanced_model_router.py`, `services/llm/` | LiteLLM multi-provider, tier-0 fast-path, semantic cache |
 | Memory | `memory/` → supabase_store, sqlite_store, chromadb_store, cloud_postgres_store, unified_db_manager, rag_pipeline | vector memory (pgvector) |
@@ -84,12 +84,13 @@ Cloudflare Workers / Firebase        → edge cache, pings
 - **VS Code Extension** (`tools/vscode-extension/`) — providers/services AI routing শুধু backend-এর
   মাধ্যমে; কোনো 3rd-party LLM key client-এ নেই (OpenRouter fallback রিমুভড)। ⚠️ root-এ
   dead **Java** files (`AdminMetricsController.java` ইত্যাদি, 22টি) পড়ে আছে → M1.5 cleanup দরকার।
-- **Mobile (Flutter)** (`tools/mobile/` — root এ `apps/mobile/` ছিল, সরিয়ে নেওয়া হয়েছে) — খুব thin;
-  direct Gemini call রিমুভড, এখন backend route-এর মাধ্যমে। Overall আর্কাইভ-কাছাকাছি।
-- **Desktop (Electron)** (`tools/desktop/` — root এ `apps/desktop/` ছিল, সরিয়ে নেওয়া হয়েছে;
+- **Mobile (Flutter)** (`apps/mobile/` — thin client; direct Gemini call রিমুভড,
+  এখন backend route-এর মাধ্যমে) — Overall আর্কাইভ-কাছাকাছি, low priority। ⚠️ CI workflow
+  still references `apps/mobile/` path。
+- **Desktop (Electron)** (`apps/desktop/` — root এ `apps/desktop/` ছিল, সরিয়ে নেওয়া হয়েছে;
   `frontend/main.js` + `preload.cjs`) — `electron:build` script + electron-builder config আছে;
   live backend REST/WS wiring প্রায় না থাকায় partial।
-- **Apps directory** — `apps/` ফোল্ডার বর্তমানে খালি; mobile/desktop client `tools/`-এ সরিয়ে নেওয়া হয়েছে।
+- **Apps directory** — `apps/` ফোল্ডারে `desktop/`, `mobile/`, `docs/` সাবডিরেক্টরি আছে; mobile/desktop client `tools/`-এ সরিয়ে নেওয়া হয়েছে।
 
 ---
 ---
@@ -207,19 +208,24 @@ migration tests, CI drift check step (deterministic gen), OpenAPI generation scr
 docs/spec in sync (drift gate green); repo clean; backend + frontend builds && tests green।
 
 ---
-7. **Bare `except Exception:`** — অনেক স্থানে unstructured error handle; structured logging/
-   error bus-এ মাইগ্রেট করা দরকার।
+7. **Bare `except Exception:`** — 95টি bare `except Exception:` (QUAL-001); structured logging/
+   error bus-এ মাইগ্রেট করা দরকার। *(M1.2 pending — 4 clauses per CHECKPOINT)*
 8. **API-swagger.yaml grossly incomplete** — শুধু `/health` documented (60+ routers-এর বিরুদ্ধে);
-   OpenAPI drift gate নেই।
+   OpenAPI drift gate নেই। *(✅ PARTIAL — drift gate CI job live)*
 9. **Docs ↔ code drift** — cost_guard docstring-এ tier routing overstatement; type-gen
-   determinism ঠিক হয়েছে কিন্তু CI auto-check এখনো নেই।
+   determinism ঠিক হয়েছে কিন্তু CI auto-check এখনো নেই। *(✅ PARTIAL — CI drift check via M1.4)*
 10. **VS Code extension root-এ dead Java files** — 22টি `.java` ফাইল → (M1.5) cleanup +
     `.gitignore`/`.vscodeignore` সঠিক। *(pending)*
 
 ### 🟡 P3 — Low-priority / housekeeping
-11. **Mobile (Flutter) ও Desktop (Electron)** — মূলত un-wired; partial thin client।
-12. **`python-jose` deprecated** → PyJWT migration banc (pyproject-এ commented TODO)।
-13. **Accepted-risk CVEs** — `ecdsa` (no upstream fix), litellm python cap hack; প্রতিটি
+11. **Mobile (Flutter) + Desktop (Electron)** — apps/ → tools/ সরিয়ে নেওয়া হয়েছে;
+    মূলত un-wired; partial thin client। *(M4.x queued)*
+12. **`.gitignore` trap** — `.gitignore`-এ `/` prefix ছাড়া `test_*.py` → nested test সিলেক্টিভলি
+    ইগনোর্ড হয় (ফিক্সড: root-scope `/test_*.py`)। `git ls-files` দিয়ে যাচাই করতে হবে।
+13. **Missing `docs/audit_reports/AUDIT_FIX_TRACKER.md`** — AGENTS.md-এর 4-এজেন্ট পাইপলাইনের
+    জন্য এই ফাইলটি রেফারেন্স করা হয়েছে কিন্তু এটি তৈরি হয়নি → অগ্রাধিকার রয়েছে।
+14. **`python-jose` deprecated** → PyJWT migration banc (pyproject-এ commented TODO)।
+15. **Accepted-risk CVEs** — `ecdsa` (no upstream fix), litellm python cap hack; প্রতিটি
     audit cycle-এ re-check।
 ---
 
@@ -233,7 +239,8 @@ docs/spec in sync (drift gate green); repo clean; backend + frontend builds && t
 - M2.2: Large lists virtualization (extend DataTable to all >50-row tables); WS payload
   diffing (2s delta, 30s full snapshot)। (~2d)
 - M2.3: Backend query optimization — key-table indexing, pgvector index (IVFFlat/HNSW),
-  N+1 elimination; Redis cache for hot read paths + semantic cache। (~3d)
+  N+1 elimination; Redis cache for hot read paths + semantic cache। (~3d) *(pending — 6টি alembic
+  migration version exists; indexes not yet added)*
 - M2.4: Async/queue hardening — task route, circuit breakers, retry with exponential
   backoff, DB connection pooling (asyncpg + pgbouncer)। (~3d)
 - M2.5: Uvicorn multi-worker (config-driven) + graceful shutdown verification; startup_time
@@ -261,7 +268,7 @@ hit-rate measurable; zero regressions in full suite।
 **লক্ষ্য:** Confidence বাড়ানো — coverage, e2e, observability, failover।
 
 **Milestones:**
-- M3.1: Backend coverage → **80% target** (baseline ~15% subset / 244 pass); CI coverage gate। (~4d)
+- M3.1: Backend coverage → **80% target** (baseline ~15% / 244 pass + 2 skip, 373 test files); CI coverage gate। (~4d)
 - M3.2: High-value integration/e2e — auth→OTP→deck→module, session streaming, cost guard
   hard test, admin login (Playwright)। (~3d)
 - M3.3: OpenTelemetry standardized logging/tracing; error bus full telemetry events। (~2d)
@@ -339,29 +346,32 @@ Phase 0 (Foundation) ──► Phase 1 (Refactor) ──► Phase 2 (Performance
 
 | Metric | কারেন্ট | Phase 0 target | Final Production Target |
 |---|---|---|---|
-| Backend suites in CI | আংশিক (244 pass) | Full green | 80%+ coverage |
+| Backend suites in CI | আংশিক (244 pass + 2 skip, 373 test file) | Full green | 80%+ coverage |
 | Admin mock data | ~70% | 0% | 0% |
-| Zustand stores | 11 files | 1 unified | 1 unified |
+| Zustand stores | 9 files (2 consolidated) | 1 unified | 1 unified |
 | CI workflows | 6 (SHA-pinned) | stay green | green + E2E |
 | Bundle (initial gz) | baseline | <250KB | <250KB |
 | Cost | $0 | $0 | $0 |
-| Docs/spec drift | manual | CI gate | CI gate |
+| Docs/spec drift | CI gate live (M1.4 done) | CI gate | CI gate |
 
 ---
 
 ## 8. Immediate Next Steps (7 Tasks)
 
-1. **M0.4** — Render missing keys + Infisical 401 (prod-health visibility)।
-2. **M0.1** — wire highest-traffic admin panel (Command Deck) to live endpoint।
-3. **M0.2** — consolidate top 3 stores into `useSupremeStore`।
-4. **M0.3** — bridge SwarmPubSub→WebSocket for live logs/metrics।
-5. **M0.5** — quarantine + fix flaky backend tests; full suite green in CI।
-6. **M2.3** — add missing DB indexes (alembic) for top query paths।
-7. **M1.4** — add OpenAPI + type-gen drift CI gate (prevents silent breaks)।
+1. **M0.4** — Render missing keys + Infisical 401 (prod-health visibility) — *(আংশিক: env drift gate live,
+  but 90 keys still missing + Infisical 401 active per KNOWN_ISSUES)*
+2. **M0.1** — wire highest-traffic admin panel (Command Deck) to live endpoint — *(আংশিক: Admin Session
+  Restore + Skills 405 fix সম্পন্ন; মোক panels এখনো বাকি)*
+3. **M0.2** — consolidate remaining 6 stores into `useSupremeStore` — *(2টি সম্পন্ন: themeStore deleted,
+  useWorkspaceSettingsStore merged; 6টি API-shape mismatch জন্য deferred)*
+4. **M0.3** — bridge SwarmPubSub→WebSocket for live logs/metrics — *(pending)*
+5. **M0.5** — quarantine + fix flaky backend tests; full suite green in CI — *(pending; 373 test file)*
+6. **M2.3** — add missing DB indexes (alembic, 6 versions exist) for top query paths — *(pending)*
+7. ✅ **M1.4** — OpenAPI + type-gen drift CI gate — **DONE** (drift gate CI job live)
 
 ---
 
-*Generated: 2026-08-18 | Next review: end of Phase 0 | Owner: Principal AI Engineer (monorepo)*
+*Generated: 2026-08-19 | Next review: end of Phase 0 | Owner: Principal AI Engineer (monorepo)*
 - ⚠️ Coverage gate blocking merging → start "fail-on-degradation" slow (warning → hard)।
 - ⚠️ Flaky E2E in CI → retry policy + trace artifacts + quarantine list।
 - ⚠️ Over-instrumenting → payload/overhead → sampled telemetry।
@@ -370,9 +380,11 @@ Phase 0 (Foundation) ──► Phase 1 (Refactor) ──► Phase 2 (Performance
 observability dashboards live; axe 0 issues।
 
 ---
-14. **Repo hygiene** — root-এ `.secrets/`, `.venv_ci`, `__pycache__`, `.coverage`, htmlcov
-    ইত্যাদি artifact; `.gitignore` + cleanup দরকার।
-15. **Frontend bundle/quality gates absent** — code-splitting, virtualization, WS payload
-    diffing, axe-core, Playwright smoke বাকি (commandcenter TODO P9)।
+14. **Repo hygiene** — root-এ `.secrets/` (allowlisted), `.venv_ci`, `__pycache__`, `.coverage`,
+    `htmlcov`, `playwright-report/`, `test-results/`, `.mypy_cache/`, `.ruff_cache/` ইত্যাদি
+    artifact; `.gitignore` + cleanup (M1.6) দরকার। ২২টি dead Java file (tools/vscode-extension/) cleanup।
+15. **Frontend bundle/quality gates absent** — code-splitting (✅ via `WorkspaceViewport.tsx`
+    `React.lazy`), virtualization (`@tanstack/react-virtual` যোগ দরকার), WS payload
+    diffing, axe-core, Playwright smoke (implementation_plan.md রেফারেন্স)।
 
 ---

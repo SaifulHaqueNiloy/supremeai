@@ -3,7 +3,7 @@
 // বাংলা মন্তব্য: dnd-kit ড্র্যাগ-অ্যান্ড-ড্রপ এবং ডাইনামিক ইন্টিগ্রেশন কন্ট্রোল করে।
 
 import React from 'react';
-import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+import { useSupremeStore } from '../../store/useSupremeStore';
 
 interface IntegrationItemProps {
   id: string;
@@ -26,7 +26,7 @@ const IntegrationItem: React.FC<IntegrationItemProps> = ({ id, name, active, onT
 );
 
 export const DynamicActionDock: React.FC = () => {
-  const { activeIntegrations, toggleIntegration } = useWorkspaceStore();
+  const { activeIntegrations, toggleIntegration } = useSupremeStore();
 
   const availableIntegrations = [
     { id: 'github', name: 'GitHub' },
