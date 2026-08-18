@@ -68,9 +68,7 @@ export const ChatInterface: React.FC = () => {
           // This would typically rehydrate the zustand store or backend context
           addMessage({ role: 'assistant', content: `Restoring context: ${dna.summary}` });
         }}
-        onDismiss={() => {
-          console.log('Session restore dismissed');
-        }}
+        onDismiss={() => {}}
       />
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">

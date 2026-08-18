@@ -16,7 +16,8 @@
         "dist/**",
         "dist-admin/**",
         "dist-user/**",
-        "build/**"
+        "build/**",
+        "out/**"
       ]
     },
     "test": {

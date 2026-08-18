@@ -12,7 +12,7 @@ import { useVirtualList } from './useVirtualList';
  * @param props.className - Optional CSS class
  */
 interface VirtualTableProps {
-  data: any[];
+  data: Record<string, unknown>[];
   columns: { key: string; label: string; className?: string }[];
   rowHeight?: number;
   className?: string;

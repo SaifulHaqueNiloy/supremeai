@@ -34,7 +34,7 @@ export const LiveBrainVisualizer: React.FC = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.nodes) {
-          const initializedNodes = data.nodes.map((n: any, idx: number) => ({
+          const initializedNodes = data.nodes.map((n: Node, idx: number) => ({
             ...n,
             x: 200 + Math.cos(idx) * 150 + (Math.random() - 0.5) * 50,
             y: 200 + Math.sin(idx) * 150 + (Math.random() - 0.5) * 50,
@@ -71,7 +71,7 @@ export const LiveBrainVisualizer: React.FC = () => {
         if (payload.event === "NODE_PULSE") {
           setActiveNode(payload.data);
         }
-      } catch (e) {
+      } catch {
         // ignore malformed ws messages
       }
     };

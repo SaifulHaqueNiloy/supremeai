@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * Virtual list hook for efficient rendering of large datasets.
@@ -9,32 +9,34 @@ import { useEffect, useRef } from 'react';
  * @param viewportHeight - Visible area height in pixels
  * @returns Object with visible range and ref to attach to container
  */
-export function useVirtualList(
-  items: any[],
+export function useVirtualList<T = unknown>(
+  items: T[],
   itemHeight: number = 40,
   viewportHeight: number = 600
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const visibleStartRef = useRef(0);
-  const visibleEndRef = useRef(0);
+  const [scrollTop, setScrollTop] = useState(0);
 
-  const visibleStart = Math.max(0, visibleStartRef.current);
-  const visibleEnd = Math.min(items.length, visibleEndRef.current);
-
-  // Calculate visible range based on container height
-  useEffect(() => {
+  const handleScroll = useCallback(() => {
     if (containerRef.current) {
-      const containerHeight = containerRef.current.clientHeight;
-      const scrollTop = containerRef.current.scrollTop;
-
-      // Calculate visible range
-      visibleStartRef.current = Math.max(0, Math.floor(scrollTop / itemHeight) - 1);
-      visibleEndRef.current = Math.min(
-        items.length,
-        Math.ceil((scrollTop + containerHeight) / itemHeight) + 1
-      );
+      setScrollTop(containerRef.current.scrollTop);
     }
-  }, [items.length, itemHeight, viewportHeight]);
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+    };
+  }, [handleScroll]);
+
+  const visibleStart = Math.max(0, Math.floor(scrollTop / itemHeight) - 1);
+  const visibleEnd = Math.min(
+    items.length,
+    Math.ceil((scrollTop + viewportHeight) / itemHeight) + 1
+  );
 
   return {
     containerRef,
