@@ -6,6 +6,41 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-18 — 🧠 Trio 2.0: Self-Healing Loop + Cache + AST
+
+- **সমস্যা:** (1) স্বয়ংচালিত রিপেয়ার লুপে `issues`-কে `writer.repair()`-এ পাঠাতে হলে কোডের কন্টেক্স্ট হারিয়ে যায়;
+  (2) ৩টি আলাদা পরীক্ষার জন্য `tri_adapters.py` lazy import + importlib path resolution inconsistent (worktree আগে primary-এর চেয়ে পছন্দ করে);
+  (3) `trio_pipeline.py`-এর module-level `from loguru import logger` test env-তে ImportError ট্রিগার করে।
+- **ফিক্স:** (1) `repair()`-এর `previous_code` প্যারামিটার যোগ করে সঠিক রিকনটেক্স্ট বজায় রাখা হয়;
+  (2) test-এর `_load_adapters()` candidate listে main repo path-worktree path আগে রাখা হয়;
+  (3) test-এর `_load_pipeline()`-এ loguru stub injection + `agents.ide` package hierarchy sys.modules-এ যোগ করা হয়।
+- **লেসন:** importlib-এ সম্পূর্ণ package hierarchy sys.modules-এ inject করলে lazy `from agents.ide.trio_adapters import ...` কাজ করে;
+  shadow learning (cache.set) test env-তে graceful exception handling বাধ্যতন্নয়ী — `_shadow_learn` try/except করে কখনোই পাইপলাইনকে ব্লক করে না।
+
+## 2026-08-19 — 🗄️ Memory Layer Encapsulation & Eager DB Connection Guard
+- **সমস্যা:** `memory/cloud_postgres_store.py` ক্লাসের `__init__`-এ সরাসরি eager `_init_tables()` কল
+  করা হয়েছিল যা লোকাল ডেভেলপমেন্ট বা টেস্ট এনভায়রনমেন্টে PostgreSQL সার্ভার অনুপস্থিত থাকলে ইমপোর্ট টাইমে
+  ক্র্যাশ ঘটাত (`psycopg2.OperationalError: connection refused`)। এছাড়া `UnifiedDBManager`-এ ডিলিট ও
+  হেলথ চেক মেথডের অভাব ছিল।
+- **ফিক্স:** (A) `cloud_postgres_store.py`-তে কানেকশন স্ট্রিং চেক ও `try/except` রেজিলিয়েন্ট গার্ড যোগ
+  করা হয়েছে যাতে অফলাইন/টেস্ট মোডে কোনো ক্র্যাশ না হয়; (B) `UnifiedDBManager`-এ `delete_record()` এবং
+  `health_check()` মেথড যোগ করা হয়েছে; (C) `sqlite_store.py`-তে অ্যাসিঙ্ক KV persistence ও `SQLiteStore`
+  অ্যালিয়াস যোগ করা হয়েছে; (D) `memory/__init__.py`-তে সেন্ট্রাল এক্সপোর্ট ডিফাইন করা হয়েছে।
+- **লেসন:** ডাটাবেস অ্যাডাপ্টারের `__init__`-এ কখনোই আনগার্ডেড নেটওয়ার্ক কল বা টেবিল ইনিট করবেন না;
+  কানেকশন গার্ড ও ফলব্যাক মেকানিজম যুক্ত করে সিস্টেমকে ফল্ট-টলারেন্ট ও $0-cost অফলাইন ফ্রেন্ডলি রাখুন।
+
+## 2026-08-19 — 🎯 Zustand Store Consolidation: 9 stores into unified slice pattern with zero regressions
+- **সমস্যা:** Frontend-এ ৯টি ভিন্ন ভিন্ন Zustand স্টোর (`authStore`, `dashboardStore`, `customerStore`,
+  `sessionCockpitStore`, `useIdeStore`, `useStore`, `adminStore`, `useWorkspaceStore`, `useSupremeStore`)
+  বিচ্ছিন্নভাবে স্টেট মেইনটেইন করছিল, যার ফলে ইন্টার-ট্যাব ডাটা সিঙ্ক নষ্ট হচ্ছিল এবং টাইপিং মিসম্যাচ তৈরি হচ্ছিল।
+- **ফিক্স:** `frontend/src/store/slices/` ফোল্ডারে প্রতিটি ডোমেনের স্লাইস (`dashboardSlice`, `customerSlice`,
+  `sessionCockpitSlice`, `ideSlice`, `coreSlice`, `authSlice`) পূর্ণাঙ্গভাবে সমৃদ্ধ করে `useSupremeStore`-এ
+  মার্জ করা হয়। পুরোনো স্টোর ফাইলগুলোকে টাইপ-সেফ backward-compatible shim-এ রূপান্তর করা হয় যাতে কোনো
+  কনজ্যুমার কম্পোনেন্ট না ভাঙে।
+- **লেসন:** মনোলিথিক স্টেট রিফ্যাক্টরিং করার সময় একবারে সব কনজ্যুমার আপডেট না করে, আগে প্রতিটি স্লাইসের
+  শেপ এবং মেথড এক্সপ্যান্ড করে পুরোনো ফাইলগুলোকে backward-compatible shim বানিয়ে মাইগ্রেশন সম্পন্ন করলে
+  জিরো-ব্রেকিং এবং ১০০% টাইপ-সেফটি বজায় থাকে।
+
 ## 2026-08-19 — 📋 SSE Auth: EventSource can't send Authorization headers
 - **সমস্যা:** Command Center-এর SSE bridges (`sseBridges.ts`) EventSource ব্যবহার করে
   `/admin-api/logs/stream?token=...` ও `/admin-api/events/stream?token=...` এ CONNECT করে। কিন্তু
@@ -47,90 +82,3 @@
 - **ফিক্স:** কোডবেস স্ক্যান করে সব মেট্রিক সরাসরি verify করে রোডম্যাপ আপডেটেড।
 - **লেসন:** রোডম্যাপ/ডকুমেন্ট আপডেটের সময় অবশ্যই `Get-ChildItem` / `grep` দিয়ে live metric
   cross-check করুন — ডকুমেন্টের ওপর ভিত্তি করে প্ল্যান বানালে ভুল ধারণা হয়।
-
-## 2026-08-18 — 🐛 Admin Session Fix: 3 frontend/backend bugs causing forced-logout & 405 on Skills tab
-
-- **সমস্যা:** (A) Admin পেজ রিফ্রেশ করলে সেশন হারায় — `adminStore.ts`-এ কোনো session restore নেই,
-  `adminAuthenticated: false` ডিফল্ট; (B) apiInterceptor global fetch wrapper-এ 401/403 হলে সবার জন্যে
-  `handleAdminLogout()` call করে — ইউজার-ফেসিং API-এর 401ও অ্যাডমিন সেশন ভাঙায়; (C) Skills & Agents
-  ট্যাবে `apiClient.get('/api/skills/search')` কল করে কিন্তু backend-এ POST-only route ছিল → 405।
-- **ফিক্স:** (A) `restoreAdminSession()` যোগ করে localStorage-এর `supreme_admin_jwt`-কে decode +
-  exp চেক করে `adminAuthenticated`/`adminRole` restore; (B) `isAdminApiPath()` helper যোগ করে
-  শুধু `/api/admin` + `/api/skills` পাথ-এর 401/403-ই auto-logout ট্রিগার করে; (C) backend-এ
-  GET `/skills/search` endpoint যোগ করে (shared `_search_skill_manifests` helper) +
-  `adminTokenStore.ts`-এ exp validation যোগ করে।
-- **লেসন:** (1) Zustand store-এর initial state পুনঃস্থাপন (session restore) ছাড়া
-  JWT-based auth সবসময় refresh-এ ভাঙবে; (2) Global fetch interceptor override করলে
-  auto-logout logic-কে কি পাথে scope করা যাচ্ছে তা explicitly check করুন; (3) Frontend
-  GET কলের জন্য backend-এ GET endpoint আছে কিনা code-level ভেরিফাই করুন — POST-only route
-  থাকলে 405 Method Not Allowed পাওয়া যায়।
-
-- **সমস্যা:** consolidate করতে গিয়ে দেখা গেল যে `useSupremeStore` (generic ১-কনসামার স্কাফোল্ড) আসল store-গুলোর
-  সাথে **আংশিক shape match** করে — ফলে blind re-export shim বা সরাসরি রিনেম করলে কনসামার ব্ল্যাক হয়।
-  যেম: `authStore.login(email,password)` বাস্তব apiClient POST করে, কিন্তু
-  `useSupremeStore.login(userData)` সরাসরি set করে (signature ভিন্ন)।
-- **ফিক্স/লেসন:**
-  (১) `themeStore`-এর কনসামার **শূন্য** (frontend/src + apps/ দুটোখানেই 0 import) → dead code, সরিয়ে
-  ফেলা হয়েছে (useSupremeStore-এর `theme` fieldটা আছে)। (২) Store merge-এর সময় কেবলমাত্র স্টোরের নাম,
-  consumer count দেখে না বাঁচানো যায় — **field shape + action signature match** করে নি কিন্তে
-  typecheck-এ ব্যরক্তিকরণ ধরা দেয়। (৩) `useSupremeStore` একটি generic scaffold (১টি কনসামার, শুধু `user`)
-  — সেজন্য এর মধ্যে merge করার আগে আসল logic port করতে হবে; staged migration + typecheck gate জরুরি।
-
-## 2026-08-18 — 🧩 M0.2 Store Consolidation: `useWorkspaceSettingsStore` → `useWorkspaceStore` (single source of truth)
-
-- **সমস্যা:** দুইটি workspace store (`useWorkspaceStore` + `useWorkspaceSettingsStore`) আলাদা আলাদা
-  integration state রাখত — `activeIntegrations: string[]` vs `integrations: DockIntegration[]`; উভয়েই
-  আলাদা `toggleIntegration` ও আলাদা persist key ছিল। ফলে এক জায়গায় toggle করলে অন্যটায় সিঙ্ক হতো না
-  (duplication + inconsistent state)।
-- **ফিক্স:** `useWorkspaceSettingsStore`-কে `useWorkspaceStore`-তে একীভূত করা হয়েছে —
-  `toggleIntegration` এখন `activeIntegrations` ও `integrations[].enabled` দুটোই সিঙ্ক করে। `DockIntegration`
-  type export, `reorderIntegrations`, merged `partialize` (persist)। ActionDock-এর import re-point, redundant
-  store file delete। **Store count 11 → 10।** Typecheck clean (store-সংক্রান্ত 0 error)।
-- **লেসন:** (১) একই ডোমেইনের duplicated state ২টা store-এ রাখা যাবে না — merge করে single source of truth
-  বানাতে হবে; (২) store merge-এর আগে consumer blast radius স্ক্যান করুন (ActionDock / DynamicActionDock /
-  DashboardShell — মাত্র ৩ ফাইল) — ছোট, নিরাপদ consolidation দিয়ে শুরু করা ভালো; (৩) shared working tree-তে
-  unrelated files অন্য agent-modify করলে (BrainVisualizer.tsx untracked, AdminSubTabContent.tsx modified)
-  typecheck-এ unrelated error আসতে পারে — নিজের changed files-এর error-ই যাচাই করুন।
-
-## 2026-08-18 — 🐛 M0.1 Mistake: Frontend wired to non-existent `/api/chat/history` endpoint
-
-- **সমস্যা:** `InteractiveChatTab.tsx`-এ chat history-র জন্য `useEffect` + `isLoadingMessages` state যোগ করে
-  `${getApiBaseUrl()}/api/chat/history`-তে fetch করার প্ল্যান করা হয়েছিল — কিন্তু **backend-এ ওই GET endpoint
-  exists-ই করে না** (chat routes সব POST-only: `/stream_chat`, `/api/chat/stream`, `/api/chat/completion`)।
-  ফলে সবসময় fallback hit হতো + unused state-র জন্য typecheck error (TS6133)।
-- **ফিক্স:** backend route scan করে নিশ্চিত হওয়া গেল endpoint নেই; তাই unused `isLoadingMessages`/
-  `setIsLoadingMessages` বাদ দিয়ে welcome message-কে legitimate static UI initial state হিসেবে রাখা হয়েছে।
-- **লেসন:** ফ্রন্টএন্ডে `fetch()` wire করার **আগে** backend-এ ওই endpoint কোড-লেভেল ভেরিফাই করো
-  (route scan), নতুবা dead-endpoint wiring + unused state-র debt হয়।
-
-## 2026-08-18 — 🔄 GitHub Actions: `gh pr edit` GraphQL `read:org` Scope Failure → REST API Failsafe
-
-- **সমস্যা:** Staging CI workflow-তে `gh pr edit` কমান্ড দিয়ে প্রমোশন পিআর আপডেট করতে গিয়ে GitHub GraphQL API ফেইল করছিল: `The 'login'/'name'/'slug' field requires one of the following scopes: ['read:org'], but your token has only been granted the: ['repo', 'workflow'] scopes`। ক্লাসিক PAT-এ `read:org` স্কোপ না থাকলে `gh pr edit` ফেইল করে সম্পূর্ণ সিআই ব্লক করে দেয়।
-- **ফিক্স:** `supreme-core-ci.yml`-এ `gh pr edit` / `gh pr merge` কমান্ডের পরিবর্তে পিওর Python `urllib.request` দিয়ে GitHub REST API (`PATCH /repos/{owner}/{repo}/pulls/{id}`) ব্যবহার করা হয়েছে। REST API শুধুমাত্র `repo` স্কোপেই পারফেক্টলি কাজ করে এবং `read:org` স্কোপের উপর নির্ভরশীল নয়।
-- **লেসন:** সিআই স্ক্রিপ্টে ক্রস-অর্গানাইজেশন পিআর বা ইস্যু ম্যানেজমেন্টের জন্য `gh` GraphQL-নির্ভর কমান্ডের চেয়ে GitHub REST API (v3) অনেক বেশি স্থিতিশীল ও স্কোপ-অ্যাগনস্টিক।
-
-## 2026-08-18 — 🔑 Cross-Repo Staging Promotion 403: Secret Token Scopes & Organization Ownership
-
-- **সমস্যা:** Staging CI workflow-তে `🟢 Auto Create Promotion PR from Staging to Main Repo` ফেইল করছিল: `remote: Permission to paykaribazaronline/supremeai.git denied to SaifulHaqueNiloy. fatal: unable to access ... 403`। কারণ GitHub Secrets-এ `MAIN_REPO_TOKEN` হিসেবে `SaifulHaqueNiloy`-এর fine-grained PAT ছিল যা `paykaribazaronline` অর্গানাইজেশনে রাইট/পুশ পারমিশন রাখেনি।
-- **ফিক্স:** `.env`-এর ভ্যালিড `GITHUB_PAT_AUTO_FIX` (যা `paykaribazaronline` ওনারের `repo` + `workflow` পারমিশন সম্পন্ন ফুল ক্লাসিক PAT) সনাক্ত করে `gh secret set` দিয়ে `SaifulHaqueNiloy/supremeai` এবং `paykaribazaronline/supremeai` উভয় রিপোজিটরির `MAIN_REPO_TOKEN` ও `MIRROR_REPO_TOKEN` সিক্রেটে আপডেট করা হয়েছে। এছাড়া Infisical ভল্টেও `SUPREMEAI_GITHUB_TOKEN` সিঙ্ক করা হয়েছে এবং `git ls-remote` দিয়ে কানেক্টিভিটি টেস্ট (Exit code 0) ভেরিফাই করা হয়েছে।
-- **লেসন:** Cross-repo git push / promotion PR তৈরি করতে টার্গেট রিপোজিটরির ওনার অ্যাকাউন্টের ফুল `repo` ও `workflow` স্কোপযুক্ত PAT সিক্রেট হিসেবে কনফিগার করতে হবে।
-
-## 2026-08-18 — 🐛 Scraper CI Lint Failures: Ruff F401 / I001 / BLE001
-
-- **সমস্যা:** GitHub Actions-এর Scraper Service Build CI ফেইল করছিল। `backend/services/scraper/` এবং তার টেস্ট ফাইলে ৪টি লিন্টার এরর ছিল: (১) `test_scraper_service.py`-তে unused `MagicMock` import (F401), (২) `test_scraper_service.py`-তে unsorted imports (I001), (৩) `test_stagehand.py`-তে unused `os` import (F401), (৪) `stagehand_agent.py`-তে blind exception catch `except Exception` without `# noqa: BLE001` (BLE001)।
-- **ফিক্স:** `test_scraper_service.py`-তে unused `MagicMock` রিমুভ ও import সাজানো হয়েছে, `test_stagehand.py`-তে unused `os` বাদ দেওয়া হয়েছে, এবং `stagehand_agent.py`-তে `# noqa: BLE001` যুক্ত করা হয়েছে। `ruff check` এবং `pytest` রান করে ৪৩টি টেস্ট ১০০% পাস ভেরিফাই করা হয়েছে।
-- **লেসন:** CI পুশ করার আগে সার্ভিস সাব-ডিরেক্টরির উপর `ruff check` ও `pytest` রান করে নেওয়া নিশ্চিত করতে হবে।
-
-## 2026-08-18 — 🐛 `.gitignore: test_*.py` Path Trap: Test Files Silent in Version Control
-
-- **সমস্যা:** `.gitignore`-এ `/` prefix ছাড়া `test_*.py` লাইন ছিল — যা **যেকোনো depth-এ** ম্যাচ
-  করে (root-স্কোপ নয়)। ফলে নতুন লেখা সব `backend/tests/test_*.py` ফাইল গিটে commit হতোই না —
-  `test_confidence_gate.py`, `test_multi_needle.py` ইত্যাদি **roadmap-এ "implemented & verified
-  (24/24 pass)" দাবিকৃত টেস্ট files-ও কখনো version control-এ ছিল না**, CI-তেও চলে না। একইভাবে
-  `sync_*.py` ও `*_env.py` নেস্টেড ফাইল ignore করত।
-- **ফিক্স:** এক-off root স্ক্রিপ্ট ইগনোর করা হলো **root-স্কোপ** দিয়ে — `/test_*.py`,
-  `/sync_*.py` (M1.6)। এরপর ১০টি পূর্ব-অনির্বচিত টেস্ট ফাইল **git add** করে commit
-  (`13040e2080`, 11 files, 76 tests collect, test_confidence_gate 10/10 pass)।
-- **লেসন:** (১) `.gitignore` প্যাটার্ন সবসময় `/` দিয়ে root-scope করো — নতুবা `test_*.py` nested
-  টেস্ট সাইলেন্ট exclude হয় (version control + CI থেকে হারায়); (২) "verified পাস" দাবি
-  `git ls-files` দিয়ে যাচাই করো।

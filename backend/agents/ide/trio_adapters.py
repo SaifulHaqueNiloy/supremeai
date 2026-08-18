@@ -10,6 +10,7 @@ Each adapter wraps its respective IDE AI tool and exposes a standardized
 
 from __future__ import annotations
 
+import ast
 import json
 import shutil
 import subprocess
@@ -163,6 +164,207 @@ class GeminiWriter:
                 output=f"[ERROR] Gemini failed: {exc}",
                 confidence=0.0,
                 issues=[{"type": "error", "message": str(exc), "severity": "error"}],
+            )
+
+    async def repair(
+        self,
+        prompt: str,
+        language: str = "python",
+        context: dict[str, Any] | None = None,
+        issues: list[dict[str, Any]] | None = None,
+        previous_code: str = "",
+    ) -> TrioAgentResult:
+        """Targeted re-generation focused on fixing specific flagged issues.
+
+        Instead of re-generating from scratch, this method packages the
+        reviewer/checker issues as actionable repair context, so the writer
+        focuses only on the broken parts while preserving the working code.
+        """
+        logger.info("[GeminiWriter.repair] Re-generating code targeting {} issue(s) ...".format(len(issues or [])))
+
+        from core.llm.llm_gateway import get_llm_gateway
+
+        llm = get_llm_gateway()
+
+        if not issues:
+            return await self.run(prompt=prompt, language=language, context=context)
+
+        issue_lines = []
+        for idx, issue in enumerate(issues or [], 1):
+            issue_lines.append(
+                f"  {idx}. [{issue.get('severity', 'warning').upper()}] "
+                f"[{issue.get('type', 'issue')}] "
+                f"L{issue.get('line', '?')}: {issue.get('message', '')}"
+            )
+        issues_block = "\n".join(issue_lines)
+
+        repair_prompt = (
+            f"REPAIR TASK — Fix ONLY the issues listed below. "
+            f"Do NOT change the overall structure or logic. "
+            f"If the original code is correct for a given issue, leave it as-is.\n\n"
+            f"Original prompt: {prompt}\n\n"
+            f"Previous code:\n{previous_code}\n\n"
+            f"Issues to fix:\n{issues_block}\n\n"
+            f"Return the COMPLETE repaired code (not just the diff)."
+        )
+
+        system_prompt = (
+            f"You are an expert {language} developer. "
+            f"Fix the specific issues identified in the review. "
+            f"Return only the complete repaired code."
+        )
+
+        model = self.model or self.GEMINI_MODELS[0]
+
+        try:
+            response = await llm.acompletion(
+                prompt=repair_prompt,
+                system_prompt=system_prompt,
+                model=model,
+                task_type="coding",
+                timeout=30.0,
+            )
+            code = response.get("text") or response.get("content", "")
+
+            if not code:
+                for fallback_model in self.GEMINI_MODELS[1:]:
+                    try:
+                        response = await llm.acompletion(
+                            prompt=repair_prompt,
+                            system_prompt=system_prompt,
+                            model=fallback_model,
+                            task_type="coding",
+                            timeout=30.0,
+                        )
+                        code = response.get("text") or response.get("content", "")
+                        if code:
+                            model = fallback_model
+                            break
+                    except Exception:
+                        logger.warning("Repair fallback model {} failed", fallback_model)
+                        continue
+
+            confidence = response.get("confidence", 0.85) if isinstance(response, dict) else 0.85
+
+            return TrioAgentResult(
+                role=self.role,
+                agent=self.agent_name,
+                output=code,
+                confidence=confidence,
+                metadata={
+                    "model": model,
+                    "language": language,
+                    "repaired": True,
+                    "issues_addressed": len(issues or []),
+                },
+                suggestions=[f"Repaired {len(issues or [])} issue(s) using {model}"],
+            )
+
+        except Exception as exc:
+            logger.error(f"[GeminiWriter.repair] Error: {exc}")
+            return TrioAgentResult(
+                role=self.role,
+                agent=self.agent_name,
+                output=f"[ERROR] Repair failed: {exc}",
+                confidence=0.0,
+                issues=[{"type": "repair_error", "message": str(exc), "severity": "error"}],
+            )
+
+
+class MultiModelWriter:
+    """Stage 1b: Parallel multi-model code generation using free-tier providers.
+
+    Fan-outs the same prompt to multiple free LLM providers (Gemini Flash,
+    Groq, OpenRouter) concurrently, then collects all drafts. The Trio
+    pipeline's reviewer layer scores each draft and selects the winner,
+    enabling a 'Parallel Draft Parliament' where the best free output wins.
+
+    All providers used are free-tier eligible (Groq 30RPM, Gemini Flash,
+    OpenRouter free pool) — no paid API keys required on the client side.
+    """
+
+    FREE_TIER_MODELS = [
+        "gemini/gemini-1.5-flash",
+        "groq/llama-3.3-70b-versatile",
+        "openrouter/deepseek/deepseek-coder-v2:free",
+    ]
+
+    def __init__(self, models: list[str] | None = None) -> None:
+        self.role = "writer"
+        self.agent_name = "multi-model"
+        self.models = models or self.FREE_TIER_MODELS
+        self._writers: list[GeminiWriter] = [GeminiWriter(model=m) for m in self.models]
+
+    async def run(
+        self,
+        prompt: str,
+        language: str = "python",
+        context: dict[str, Any] | None = None,
+    ) -> TrioAgentResult:
+        """Generate code by fanning out to all writers concurrently."""
+        import asyncio
+
+        logger.info("[MultiModelWriter] Fanning out to {} model(s): {}".format(len(self._writers), self.models))
+
+        tasks = [
+            self._safe_run(w, prompt=prompt, language=language, context=context)
+            for w in self._writers
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        drafts: list[dict[str, Any]] = []
+        best_confidence = 0.0
+        best_output = ""
+
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.warning("[MultiModelWriter] Model {} raised: {}", i, result)
+                continue
+            if result.confidence > 0 and result.output:
+                drafts.append({
+                    "model": self.models[i],
+                    "output": result.output,
+                    "confidence": result.confidence,
+                    "issues": result.issues,
+                })
+                if result.confidence > best_confidence:
+                    best_confidence = result.confidence
+                    best_output = result.output
+
+        if not drafts:
+            return TrioAgentResult(
+                role=self.role,
+                agent=self.agent_name,
+                output="[ERROR] All multi-model writers failed",
+                confidence=0.0,
+                issues=[{"type": "all_models_failed", "message": "No writer produced valid output", "severity": "error"}],
+            )
+
+        return TrioAgentResult(
+            role=self.role,
+            agent=self.agent_name,
+            output=best_output,
+            confidence=best_confidence,
+            metadata={
+                "language": language,
+                "models_used": list(self.models),
+                "drafts": drafts,
+                "draft_count": len(drafts),
+            },
+            suggestions=[f"Generated via {len(drafts)} parallel model(s); best={self.models[next(d['model'] for d in drafts if d['output'] == best_output)][:40]}"],
+        )
+
+    async def _safe_run(self, writer: GeminiWriter, **kwargs) -> TrioAgentResult:
+        try:
+            return await writer.run(**kwargs)
+        except Exception as exc:
+            logger.warning("[MultiModelWriter] Writer {} failed: {}", writer.model, exc)
+            return TrioAgentResult(
+                role=self.role,
+                agent=writer.agent_name,
+                output=f"[ERROR] {writer.model}: {exc}",
+                confidence=0.0,
+                issues=[{"type": "writer_error", "message": str(exc), "severity": "error"}],
             )
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -444,6 +646,25 @@ class ClineChecker:
                     "source": "cline-local-check",
                 })
 
+        # Strategy 3: AST syntax & import validation (non-execution sandbox)
+        ast_result = self._run_ast_validation(code, language)
+        checks.append({
+            "check": "ast_syntax_validation",
+            "result": "passed" if ast_result["passed"] else "failed",
+            "details": ast_result.get("output", ""),
+        })
+        if ast_result["passed"]:
+            passed_checks.append("ast_syntax_validation")
+        else:
+            for ast_issue in ast_result.get("issues", []):
+                issues.append({
+                    "type": ast_issue.get("type", "syntax_error"),
+                    "message": ast_issue["message"],
+                    "severity": ast_issue.get("severity", "high"),
+                    "line": ast_issue.get("line", 0),
+                    "source": ast_issue.get("source", "ast-validator"),
+                })
+
         confidence = 0.85 if len(passed_checks) >= len(checks) * 0.7 else 0.5
 
         report_lines = [
@@ -577,3 +798,101 @@ class ClineChecker:
             }
 
         return results
+
+    def _run_ast_validation(
+        self, code: str, language: str
+    ) -> dict[str, Any]:
+        """AST syntax & import validation — non-execution sandbox.
+
+        Uses the language's native parser to catch syntax errors, undefined
+        names, and dangerous imports BEFORE the code reaches any runtime.
+        For Python, uses the stdlib ``ast`` module (no execution).
+        For JavaScript/TypeScript, falls back to a ``node`` syntax check if available.
+        """
+        import re
+
+        result: dict[str, Any] = {"passed": True, "output": "", "issues": []}
+        issues: list[dict[str, Any]] = []
+        messages: list[str] = []
+
+        if language in ("python", "py"):
+            try:
+                tree = ast.parse(code, filename="<trio_check>")
+            except SyntaxError as exc:
+                result["passed"] = False
+                issues.append({
+                    "type": "syntax_error",
+                    "message": f"SyntaxError: {exc.msg} (line {exc.lineno}, col {exc.offset})",
+                    "severity": "high",
+                    "line": exc.lineno or 0,
+                    "source": "ast-validator",
+                })
+                result["output"] = "\n".join(i["message"] for i in issues)
+                result["issues"] = issues
+                return result
+
+            messages.append("✅ Syntax valid (ast.parse)")
+
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name.startswith(("os", "subprocess", "sys", "shutil")):
+                            issues.append({
+                                "type": "dangerous_import",
+                                "message": f"Potentially dangerous import: {alias.name}",
+                                "severity": "medium",
+                                "line": node.lineno,
+                                "source": "ast-validator",
+                            })
+                elif isinstance(node, ast.ImportFrom):
+                    if node.module and node.module.startswith(("os", "subprocess", "sys")):
+                        issues.append({
+                            "type": "dangerous_import",
+                            "message": f"Potentially dangerous import: from {node.module}",
+                            "severity": "medium",
+                            "line": node.lineno,
+                            "source": "ast-validator",
+                        })
+
+            if issues:
+                result["passed"] = False
+            else:
+                messages.append("✅ No dangerous imports detected")
+
+        elif language in ("javascript", "js", "typescript", "ts"):
+            node_bin = shutil.which("node")
+            if node_bin:
+                try:
+                    proc = subprocess.run(
+                        [node_bin, "--check", "-"],
+                        input=code,
+                        capture_output=True,
+                        text=True,
+                        timeout=10,
+                    )
+                    if proc.returncode == 0:
+                        messages.append("✅ JS/TS syntax valid (node --check)")
+                    else:
+                        result["passed"] = False
+                        err_line = 0
+                        match = re.search(r"line (\d+)", proc.stderr)
+                        if match:
+                            err_line = int(match.group(1))
+                        issues.append({
+                            "type": "syntax_error",
+                            "message": proc.stderr.strip()[:500],
+                            "severity": "high",
+                            "line": err_line,
+                            "source": "ast-validator-node",
+                        })
+                except (FileNotFoundError, subprocess.TimeoutExpired):
+                    messages.append("⚠️ Node.js not available for syntax check — skipped")
+            else:
+                messages.append("⚠️ Node.js not installed — AST check skipped")
+
+        else:
+            messages.append(f"⚠️ AST validation not implemented for language: {language}")
+
+        result["output"] = "\n".join(messages)
+        result["issues"] = issues
+        return result

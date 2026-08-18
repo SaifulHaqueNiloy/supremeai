@@ -27,11 +27,26 @@ class TrioExecuteRequest(BaseModel):
     filePath: str | None = Field(None, description="Optional file path for context")
     existingCode: str | None = Field(None, description="Existing code snippet")
     projectContext: str | None = Field(None, description="Optional project-level context")
+    max_iterations: int = Field(
+        default=3,
+        ge=1,
+        le=5,
+        description="Maximum self-healing repair iterations (default: 3)",
+    )
+    enable_cache: bool = Field(
+        default=True,
+        description="Check pre-cognitive semantic cache before generating (default: True)",
+    )
 
 
 @router.post("/execute")
 async def execute_trio(request: TrioExecuteRequest) -> dict[str, Any]:
-    """Run the Gemini → Kilo → Cline pipeline and return the full result."""
+    """Run the Gemini → Kilo → Cline pipeline with self-healing loop.
+
+    Supports closed-loop auto-patching (max_iterations), pre-cognitive
+    semantic cache lookup (enable_cache), and returns detailed iteration
+    statistics, diff history, and self-healing logs.
+    """
     try:
         from core.orchestration.trio_pipeline import TrioPipeline
 
@@ -48,6 +63,8 @@ async def execute_trio(request: TrioExecuteRequest) -> dict[str, Any]:
             prompt=request.prompt,
             language=request.language,
             context=context,
+            max_iterations=request.max_iterations,
+            enable_cache=request.enable_cache,
         )
         return result
 
