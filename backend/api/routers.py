@@ -57,6 +57,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.health", "/api/v1"),
     ("api.routes.api_keys", ""),
     ("api.routes.ci_webhooks", ""),
+    ("api.routes.cdc_webhooks", ""),
     ("api.routes.task_workspace", "/api/v1"),
     ("api.routes.websocket_agent", ""),
     ("api.routes.agent_workspace", "/api/v1"),
