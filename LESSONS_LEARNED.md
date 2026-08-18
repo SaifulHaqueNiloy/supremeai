@@ -7,6 +7,12 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
+
+- **সমস্যা:** `.github/workflows/supreme-core-ci.yml`-এ `dorny/paths-filter` action-এ `filters:` এর সাথে `|` (pipe multiline scalar) বাদ পড়ায় GitHub Actions parser `(Line: 100, Col: 13): A mapping was not expected` এরর দিয়ে সম্পূর্ণ workflow ব্লক করে দিচ্ছিল।
+- **ফিক্স:** `with.filters: |` যোগ করে মাল্টিলাইন স্ট্রিং স্কেলার হিসেবে ডিফাইন করা হয়েছে। সমস্ত `.github/workflows/*.yml` ফাইলের `with:` ব্লক স্ক্যান করে কনফার্ম করা হয়েছে যাতে আর কোনো নেস্টেড ম্যাপিং অবজেক্ট না থাকে।
+- **লেসন:** GitHub Actions action inputs শুধুমাত্র scalar (string/number/boolean) অ্যাকসেপ্ট করে; `paths-filter`-এর ফিল্টার স্পেসিফিকেশন অবশ্যই `filters: |` স্ট্রিং ফরম্যাটে পাস করতে হবে।
+
 ## 2026-08-18 — 📋 Feature Feasibility Audit: 16 Features Assessed
 
 - **সমস্যা:** প্রজেক্টের প্রস্তাবিত সকল ফিচারের (plan docs + code + deploy config) পূর্ণ প্রজেক্টবিশ্বীয় ভেরিফাইকেশন ছিল না। কিছু ফিচার তত্ত্বাবদ্ধ কিন্তু $0 ফ্রি-টিয়ার ও সার্ভারলেস সীমাবদ্ধতায় টেকনিক্যালি অসম্ভব। কিছু "FIXED" দাবি আছে কিন্তু কোডে এখনও খুলে।
@@ -30,9 +36,3 @@
 - **সমস্যা:** (1) `main.py` /recipe endpoint-এ `initial_url` directly `page.goto()`-এ পাঠানো হচিল — `is_safe_url()` check ছিল না, ফলে SSRF হ্যান্ডলার মেটাডেটা সার্ভিস/ইন্টার্নাল API-এ ব্রাউজার লোড করতে পারে; (2) `main.py-এর `if "pytest" in sys.modules` / `else` দুটি শাখাওই একই `_APP_IMPORT_STRING = "main:app"` সেট করিল — dead code, `import sys` অয়োগ। (3) `browser_agent.py` semaphore `async with` 9-space indent (সঠিক 12-space নয়) — ruff SIM117 violation। (4) `execute_recipe` except block-এ `index` variable `for` loop-এর বাইরে — `NameError` crash। (5) 4টি মাত্র টেস্ট (কোনো recipe, screenshot, concurrency, is_safe_url unit test নেই)। (6) `RecipeRequest.steps` required (no default) — POST `{}` → 422।
 - **ফিক্স:** (1) `/recipe` endpoint-এ `is_safe_url()` চেক যোগ (HTTP 400 on SSRF); (2) dead code রিমুভ → `_APP_IMPORT_STRING = "main:app"`; (3) 12-space indent ঠিক করে `async with self._semaphore, async_playwright()` কম্বাইন; (4) `index = -1` guard; (5) 4→37 টেস্ট (SSRF matrix × 3 endpoints, recipe edge cases, concurrency semaphore, 21টি is_safe_url parametrized); (6) `steps: list = []` default। pyproject.toml-এ pytest-asyncio config যোগ।
 - **লেসন:** User input সবসময় browser navigation-এর আগে validate করতে হবে — `/scrape` আর `/browse` যেমন security check থাকলেও `/recipe` endpoint-ও একই `is_safe_url()` চেক পেতবে। Pydantic model-এ `list = []` mutable default safe (Pydantic deep-copy করে)। Concurrency semaphore production-এ critical — Render free tier (512MB RAM)-এ Playwright browser launch storm-এর বাধা দায়। Test coverage 4→37 দিয়ে 86% scenario coverage পাওয়া যায়।
-
-## 2026-08-17 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
-
-- **সমস্যা:** `maintenance_pipeline.yml`-এর `cost-guard-defcon` job-এর `env:` block-এ সঠিক আছিল 6-space indent, কিন্তু `SUPABASE_DATABASE_URL`/`SUPABASE_DATABASE_URL_POOLER`/`SUPREMEAI_JWT_SECRET` লাইনগুলো 11-space indentation-এ লেখা ছিল → YAML parser error (`expected <block end>, but found '<block mapping start>'`)। GitHub Actions-ও এটি catch করত না কারণ job scheduling-এ ফেইল হয়েছিল।
-- **ফিক্স:** 11-space → 6-space indentation ঠিক করা। `yaml.safe_load()` দিয়ে verify করা — VALID।
-- **লেসন:** YAML-এর block mapping-এর indentation strict — editor স্বয়ংক্রিয়ভাবে indent করলে even-width সাপোর্ট দেয় না। CI YAML-এর syntax সর্বদা `yaml.safe_load()` দিয়ে pre-validate করতে হবে, বিশেষ করে যখন একটি বড় pre-existing file-এর মিধ্যে edit করা হয়।

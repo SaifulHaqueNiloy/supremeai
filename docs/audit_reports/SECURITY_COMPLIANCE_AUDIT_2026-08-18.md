@@ -24,6 +24,23 @@
 
 ---
 
+> ## 🔄 CODE RE-VERIFICATION ADDENDUM (2026-08-18 — after fix commits `8baca9fab6` & `96f625af49`)
+> The findings below were written from a read-only snapshot. Subsequent commits resolved several
+> P0/P1 items at the code level. Re-verified state (actual code takes precedence per this doc's own method):
+> - **FIND-001** (specialized-agents 500): ✅ **RESOLVED** — `agents.py` imports real `tools.ai_agents.*`; unimplemented → 501, errors → 503 (no 500).
+> - **FIND-002** (stub `/execute`): ✅ **RESOLVED** — `agent.py` is an empty shell; real impl mounted in `agent_tasks.py:69`.
+> - **FIND-003** (hardcoded secrets): ✅ **RESOLVED** — `rnd_S0H7...` no longer in `scripts/`; admin password removed from `config_validation.py:79`. (Live `.env` secrets remain gitignored — hygiene only.)
+> - **FIND-004** (WS contract/token leak): ✅ **RESOLVED** — mobile connects `/ws/chat` with **no token in URL**; auth via first JSON message.
+> - **FIND-005** (direct Gemini): ✅ **RESOLVED** — mobile routes via backend orchestrator; no direct `GenerativeModel` call.
+> - **AUDIT-015** (CostGuard): ✅ **RESOLVED** — `validate_budget()` wired in `task_router.py:76`.
+> - **AUDIT-006** (SHA-pinning): ✅ **RESOLVED** — **0 `@v` refs** remain across all workflows.
+> - **SEC-001 / SEC-002 / AUDIT-018 / AUDIT-003**: ✅ **RESOLVED** (consistent with below).
+>
+> **Still OPEN:** **AUDIT-014 — 54 CVEs in `backend/poetry.lock`** (only remaining P0/P1 security gap).
+> Full gate reconciliation in `PROJECT_REVIEW_AND_ROADMAP.md` §5.
+
+---
+
 ## 🧩 রেফারেন্স অডিট বনাম বর্তমান কোড — ডিসক্রিপেন্সি টেবিল
 
 | ID | রেফারেন্স অডিটের দাবি | বর্তমান কোডে অবস্থা | মূল্যায়ন |
