@@ -15,6 +15,7 @@ from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.security.rbac import RoleBasedAccessControl
 
 agent_router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
+router = agent_router
 
 model_router = ModelRouter()
 orchestrator = SupremeOrchestrator()

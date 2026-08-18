@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 23:05 UTC
+- **Date:** 2026-08-18 23:07 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,36 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
-  - `baselines/test-model_baseline.pkl`
-  - `backend/api/routes/brain_visualizer_bridge.py`
-  - `backend/engine/self_assembling_orchestrator.py`
-  - `frontend/src/hooks/useAuth.ts`
-  - `backend/baselines/test-model_baseline.pkl`
-  - `backend/memory/recency_decay_filter.py`
-  - `CHECKPOINT.md`
-  - `tools/vscode-extension/src/services/SwarmPipelineProvider.ts`
-  - `backend/alembic/versions/2026_08_19_043607_add_ai_memory_evolution_columns.py`
-  - `frontend/src/tests/accessibility.test.tsx`
-  - `backend/tools/mcp/mcp_mesh_engine.py`
-  - `scripts/db_migrate.py`
-  - `backend/memory/knowledge_distiller.py`
-  - `packages/ui-components/src/components/DashboardShell.tsx`
-  - `frontend/src/services/realtime/WebSocketManager.ts`
-  - `backend/API-swagger.yaml`
-  - `apps/desktop/src-tauri/tauri.conf.json`
-  - `frontend/src/tests/degraded_ui_state.test.tsx`
-  - `turbo.json`
-  - `backend/api/routes/self_assemble.py`
-  - `AGENTS.md`
-  - `LESSONS_LEARNED.md`
-  - `frontend/src/lib/VirtualTable.tsx`
-  - `packages/ui-components/src/components/LiveSujonBackground.tsx`
-  - `.agents/AGENTS.md`
-  - `frontend/src/components/chat/ChatInterface.tsx`
   - `frontend/src/lib/useVirtualList.ts`
-  - `REAL_TESTING_LOG.md`
-  - `scripts/render_build_backend.sh`
+  - `turbo.json`
+  - `frontend/src/lib/VirtualTable.tsx`
+  - `CHECKPOINT.md`
+  - `frontend/src/tests/accessibility.test.tsx`
+  - `backend/API-swagger.yaml`
+  - `frontend/src/components/chat/ChatInterface.tsx`
+  - `AGENTS.md`
   - `frontend/src/components/BrainVisualizer/LiveBrainVisualizer.tsx`
+  - `.agents/AGENTS.md`
+  - `backend/api/routes/agent_tasks.py`
 
 ## Pending (Carry Forward)
 - **Phase 4 (Active):** M4.2 VS Code extension production hardening; desktop Playwright `_electron` E2E hard-test; `electron-builder` release build CI gate

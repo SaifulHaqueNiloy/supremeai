@@ -8753,6 +8753,85 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/v1/agents/execute:
+    post:
+      tags:
+      - agents
+      summary: Execute Agent
+      operationId: execute_agent_api_v1_agents_execute_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentExecuteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExecuteResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /api/v1/agents/roles:
+    get:
+      tags:
+      - agents
+      summary: List Agent Roles
+      operationId: list_agent_roles_api_v1_agents_roles_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/agents/monitor/latency:
+    get:
+      tags:
+      - agents
+      summary: Agent Latency Summary
+      operationId: agent_latency_summary_api_v1_agents_monitor_latency_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/v1/agents/swarm/execute:
+    post:
+      tags:
+      - agents
+      summary: Execute Swarm
+      description: 'Executes the multi-agent swarm logic (Architecture -> Code ->
+        QA)
+
+        and returns the final workspace state.'
+      operationId: execute_swarm_api_v1_agents_swarm_execute_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwarmExecuteRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /api/v1/maintenance/status:
     get:
       tags:
@@ -9797,6 +9876,79 @@ components:
       - id_token
       - otp
       title: AdminFirebaseTotpVerifyRequest
+    AgentExecuteRequest:
+      properties:
+        task:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Task
+        instruction:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Instruction
+        task_type:
+          type: string
+          title: Task Type
+          default: general
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+        department:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Department
+        autonomous:
+          type: boolean
+          title: Autonomous
+          default: false
+        user_context:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: User Context
+      type: object
+      title: AgentExecuteRequest
+    AgentExecuteResponse:
+      properties:
+        success:
+          type: boolean
+          title: Success
+        output:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Output
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+        provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+        cost:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Cost
+        errors:
+          anyOf:
+          - items: {}
+            type: array
+          - type: 'null'
+          title: Errors
+      type: object
+      required:
+      - success
+      title: AgentExecuteResponse
     AgentStatsResponse:
       properties:
         agent_name:
@@ -12487,6 +12639,24 @@ components:
       required:
       - paper
       title: SummarizeRequest
+    SwarmExecuteRequest:
+      properties:
+        task:
+          type: string
+          title: Task
+        session_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Id
+        user_id:
+          type: string
+          title: User Id
+          default: default_user
+      type: object
+      required:
+      - task
+      title: SwarmExecuteRequest
     SymptomRequest:
       properties:
         symptoms:
