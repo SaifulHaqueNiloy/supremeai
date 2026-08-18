@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🔭 Phase 3: Error-Bus Telemetry, Coverage Gate & Windows cp1252 Pitfall
+- **সমস্যা:** (1) `core.observability.telemetry_events.py` non-recording/mocked OpenTelemetry span-এর `trace_id` int না হলে `format(span_ctx.trace_id, "032x")` `ValueError` দিয়ে crash করত; (2) `scripts/ci/check_coverage_gate.py` এমোজি (✅/⚠️/❌) print করলে Windows cp1252 কনসোলে `UnicodeEncodeError` দিয়ে গেটই crash করত; (3) CI-তে coverage JSON না থাকলে গেট crash করত (missing return)।
+- **ফিক্স:** (1) `trace_id`/`span_id` extract-এ `isinstance(..., int)` guard + try/except; (2) এমোজি সরিয়ে ASCII marker ([OK]/[WARN]/[FAIL]/[SEED]/[ALERT]/[INFO]) ব্যবহার; (3) coverage.json না থাকলে early `return 0` (skip); (4) টেস্ট SDK-independent করতে `FakeTracer`/`FakeSpan` inject।
+- **লেসন:** CI/logging-এ এমোজি ব্যবহার এড়িয়ে চলুন — Windows runner/cp1252-এ `UnicodeEncodeError` হয়; non-UTF-8 কনসোল-সেইফ হতে ASCII marker ব্যবহার করুন। OpenTelemetry span context সবসময় int হয় না (mocked/non-recording) — extract-এর আগে type check বাধ্যতামূলক।
+
 ## 2026-08-19 — 🚀 Phase 2 Implementation: Index Deployment, Retry, Bundle Optimization
 - **সমস্যা:** (1) `vite.config.ts`-এর `chunkSizeWarningLimit: 600` ছিল 600KB — Phase 2 target ছিল <250KB gz initial; (2) `task.py`-এর `model_router.async_route_and_generate()`-এর কোনো retry/কোর্ট ব্রেকার ছিল না — upstream LLM provider timeout-এ পুরো task ব্লক হচ্ছিল; (3) WebSocket payload-এ ফুল স্ন্যাপশট 2s ইন্টার্যালে স্ট্রিম হয়েছিল — ক্লায়েন্টের bandwidth 90% পর্যন্ত বর্জ্য হচ্ছিল; (4) `main.py`-এ graceful shutdown timeout config ছিল না — SIGTERM পাওয়ার পর connection drop হয়।
 - **ফিক্স:** (1) `chunkSizeWarningLimit: 250`, `minify: 'esbuild'`, `pure/console.drop` esbuild config; (2) `retry_with_exponential_backoff()` utility যোগ করে `task.py`-এর model routing-এ ব্যবহার (max_retries=3, base_delay=0.5s, jitter); (3) `WebSocketManager`-এ delta diffing ইম্প্লিমেন্ট করে শুধু পরিবর্তিত মেসেজ পাঠানো; (4) `timeout_graceful_shutdown` env config যোগ; (5) `2026_08_19_000000_add_performance_indexes.py` migration রান করে 10টি hot-query index Supabase PG-এ লাইভ; (6) `VirtualTable` + `useVirtualList` hook যোগ করে >50-row table-এর virtualization; (7) `load_test.py` স্ক্রিপ্ট তৈরি (RPS/p95/error-rate পরিমাপ)।

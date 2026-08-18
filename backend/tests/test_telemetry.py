@@ -25,10 +25,18 @@ from core.observability.telemetry import (
     setup_tracing,
     trace_span,
 )
+import core.observability.telemetry as tel_module
 
 # বাংলা মন্তব্য: সব patch target core.observability.telemetry-তে করা হচ্ছে
 # কারণ setup_tracing, trace_span, get_tracer এই module-এ define করা আছে।
 _TEL = "core.observability.telemetry"
+
+
+@pytest.fixture(autouse=True)
+def reset_tracer():
+    tel_module._tracer = None
+    yield
+    tel_module._tracer = None
 
 
 def test_setup_tracing_noop():
