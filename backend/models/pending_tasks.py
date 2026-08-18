@@ -55,6 +55,15 @@ def _get_conn():
             reason TEXT
         )
         """)
+    # বাংলা মন্তব্য (M2.3): `list_pending()` ও admin dashboard-তে `WHERE status = ?` /
+    # `ORDER BY created_at DESC` query প্রতি সেকেন্ডে চলে; status ও created_at-এ
+    # index না থাকলে পূর্ণ টেবিল স্ক্যান হয়। IF NOT EXISTS-এ idempotent।
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pending_tasks_status ON pending_tasks(status)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_pending_tasks_created_at ON pending_tasks(created_at DESC)"
+    )
     return conn
 
 
