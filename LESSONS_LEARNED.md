@@ -7,6 +7,20 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-18 — 🐛 `.gitignore: test_*.py` Path Trap: Test Files Silent in Version Control
+
+- **সমস্যা:** `.gitignore`-এ `/` prefix ছাড়া `test_*.py` লাইন ছিল — যা **যেকোনো depth-এ** ম্যাচ
+  করে (root-স্কোপ নয়)। ফলে নতুন লেখা সব `backend/tests/test_*.py` ফাইল গিটে commit হতোই না —
+  `test_confidence_gate.py`, `test_multi_needle.py` ইত্যাদি **roadmap-এ "implemented & verified
+  (24/24 pass)" দাবিকৃত টেস্ট files-ও কখনো version control-এ ছিল না**, CI-তেও চলে না। একইভাবে
+  `sync_*.py` ও `*_env.py` নেস্টেড ফাইল ignore করত।
+- **ফিক্স:** এক-off root স্ক্রিপ্ট ইগনোর করা হলো **root-স্কোপ** দিয়ে — `/test_*.py`,
+  `/sync_*.py` (M1.6)। এরপর ১০টি পূর্ব-অনির্বচিত টেস্ট ফাইল **git add** করে commit
+  (`13040e2080`, 11 files, 76 tests collect, test_confidence_gate 10/10 pass)।
+- **লেসন:** (১) `.gitignore` প্যাটার্ন সবসময় `/` দিয়ে root-scope করো — নতুবা `test_*.py` nested
+  টেস্ট সাইলেন্ট exclude হয় (version control + CI থেকে হারায়); (২) "verified পাস" দাবি
+  `git ls-files` দিয়ে যাচাই করো।
+
 ## 2026-08-18 — 🐛 PyJWT Migration: `JWTError` → `PyJWTError` (Systemic Import Break)
 
 - **সমস্যা:** python-jose → PyJWT মাইগ্রেশনের সময় `from jwt.exceptions import JWTError` লেখা
@@ -19,12 +33,10 @@
   fallback assignment): `api/dependencies.py`, `api/routes/auth.py`, `api/routes/sso.py`,
   `core/security/auth_middleware.py`, `tools/sso_integrator.py`, `tests/test_auth_middleware.py`।
   `py_compile` + `TestApiDeps` + `test_invalid_jwt_token` (PyJWTError side-effect) pass।
-- **লেসন:** (১) PyJWT-এ catch-all exception class-এর নাম **`PyJWTError`** — পুরোনো jose-র
-  `JWTError` 2.10+ থেকে নেই। (২) `try/except ImportError` fallback import failure-কে
-  সাইলেন্ট করে — ভুল import নাম থাকলে module নীরবে নিষ্ক্রিয় হয়; import failure সবসময়
-  loud হওয়া উচিত (test বাধ্যতামূলক)। (৩) Shared working tree-তে একাধিক agent কাজ করলে
-  `git status`/`git diff HEAD` দিয়ে কোন পরিবর্তন কার তা চেক করে এগোতে হবে।
+- **লেসন:** (১) PyJWT-এ base exception **`PyJWTError`** (jose-র `JWTError` 2.10+ নেই); (২) `try/except ImportError` fallback import-ফেইলকে quiet করে — import error সবসময় loud হওয়া উচিত (test বাধ্যতামূলক); (৩) shared working tree-তে multiple agent হলে `git diff HEAD` দিয়ে পরিবর্তনের মালিকানা চেক করো।
 
+
+## 2026-08-18 — 🐛 GitHub Actions YAML Error: `dorny/paths-filter` mapping scalar syntax
 
 - **সমস্যা:** `.github/workflows/supreme-core-ci.yml`-এ `dorny/paths-filter` action-এ `filters:` এর সাথে `|` (pipe multiline scalar) বাদ পড়ায় GitHub Actions parser `(Line: 100, Col: 13): A mapping was not expected` এরর দিয়ে সম্পূর্ণ workflow ব্লক করে দিচ্ছিল।
 - **ফিক্স:** `with.filters: |` যোগ করে মাল্টিলাইন স্ট্রিং স্কেলার হিসেবে ডিফাইন করা হয়েছে। সমস্ত `.github/workflows/*.yml` ফাইলের `with:` ব্লক স্ক্যান করে কনফার্ম করা হয়েছে যাতে আর কোনো নেস্টেড ম্যাপিং অবজেক্ট না থাকে।
@@ -40,7 +52,7 @@
 
 - **সমস্যা:** Needle 2 প্ল্যানটি 4রা স্ট্যান্ডঅ্যালোন `CloudConfidenceGate` ক্লাস প্রস্তাব করে, যাকে `AdvancedModelRouter` + `LatencyAwareWeightedRouter` + `PerformanceOptimizer`-এর সাথে ডুপ্লিকেট। একই routing logic তিন জায়গায় — রক্ষণাবেক্ষণযোগ্য নয়। কাল্পনিক 0.85 threshold কোনো ক্যালিব্রেশন ছাড়া।
 - **ফিক্স:** `route_with_confidence()` পদ্ধতিটি `AdvancedModelRouter`-এ যুক্ত করে `analyze_prompt_complexity()`-এর `overall` স্কোরকে কনফিডেন্স ইনপুট হিসেবে পুনরায় ব্যবহার করা হয়েছে। Tier0Dispatcher-এর 4টি প্যাটার্ন (pypi_search, list_files, regex_format, schema_lookup) pure-Python stdlib-এ ভিত্তি করে — কোনো LLM কল নেই। LLMGateway.acompletion()-এ semantic cache-check এবং cost-guard-এর মধ্যবর্তীতে hook সন্নিবেশ করে, litellm কল একদম বাদ যায়।
-- **লেসন:** Needle 2-এর "confidence score" কনসেপ্টটি আগে থেকেই `analyze_prompt_complexity()`-এ আছে — নতুন ক্লাস না বানিয়ে বিদ্যমান স্কোরকে কালিয়ান্ট ব্যবহার করা উচিত। Hash-vectorize fallback (pure Python feature hashing) 384-ডাইমেনশনাল embedding দেয় কিন্তু sentence-transformers না থাকলে সিমিলারিটি স্কোর 0-0.22 পর্যন্ত খুব কম হয় — মাল্টি-নিডেল cross-score-এর থ্রেশহোল্ড আপেক্ষিক (needle_avg * 0.3) হওয়া দরকার। স্কিমা validation-এর জন্য BaseSkill দুই রকম import path আছে (`core.skills.base` এবং `core.base`) — দুটোতেরাই `parameters` আর `validate_args()` যোগ করা প্রয়োগ। SQLite `ON CONFLICT(file_path)`-এ একই `file_path` দিয়ে store করলে overwrite হয় — টেস্টে আলাদা `file_path` ব্যবহার করতে হবে।
+- **লেসন:** Needle 2-এর "confidence score" কনসেপ্টটি আগে থেকেই `analyze_prompt_complexity()`-এ আছে — নতুন ক্লাস না বানিয়ে বিদ্যমান স্কোরকে কালিয়ান্ট ব্যবহার করা উচিত। SQLite `ON CONFLICT(file_path)`-এ একই `file_path` দিয়ে store করলে overwrite হয় — টেস্টে আলাদা `file_path` ব্যবহার করতে হবে।
 
 ## 2026-08-18 — 🐛 Pre-existing YAML Indentation Bug in maintenance_pipeline.yml (cost-guard-defcon job)
 
