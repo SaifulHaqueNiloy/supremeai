@@ -13,7 +13,6 @@
   - `backend/poetry.lock`
   - `CHECKPOINT.md`
   - `backend/pyproject.toml`
-  - `LESSONS_LEARNED.md`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active:** Replace mock data in Admin Dashboard components with live backend API endpoints (M0.1).
