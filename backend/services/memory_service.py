@@ -50,7 +50,16 @@ _PG_SCHEMA = """
         embedding TEXT, -- Store as JSON string
         metadata JSONB DEFAULT '{}',
         created_at TIMESTAMPTZ DEFAULT NOW()
-    )
+    );
+
+    ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS cluster_id TEXT;
+    ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS access_count INT DEFAULT 1;
+    ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS last_accessed_at TIMESTAMPTZ DEFAULT NOW();
+    ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS importance_score FLOAT DEFAULT 1.0;
+    ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS is_synthesized BOOLEAN DEFAULT FALSE;
+
+    CREATE INDEX IF NOT EXISTS idx_ai_memory_cluster ON ai_memory (cluster_id);
+    CREATE INDEX IF NOT EXISTS idx_ai_memory_decay ON ai_memory (last_accessed_at, importance_score);
 """
 
 

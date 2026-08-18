@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from memory.context_graph_service import ContextGraphService
+    from memory.memory_evolution_loop import MemoryEvolutionLoop
     from memory.self_evolve_service import ReorganizeResult, SelfEvolveService
 
 from memory.chromadb_store import ChromaDBStore
@@ -93,12 +94,20 @@ class UnifiedDBManager:
         # 4. Embed into ChromaDB Vector Store if text provided
         if text_content:
             try:
-                await self.chroma.add_document(  # type: ignore
-                    document_id=record_id,
+                # বাংলা মন্তব্য: BUGFIX — আগে `document_id=` কীওয়ার্ড ও `await` ব্যবহার হচ্ছিল,
+                # কিন্তু ChromaDBStore.add_document সিঙ্ক্রোনাস এবং প্যারামিটার `doc_id`।
+                # ফলে প্রতিটি কল TypeError দিয়ে চুপচাপ ব্যর্থ হতো — কোনো embedding সেভ হতো না।
+                self.chroma.add_document(
+                    doc_id=record_id,
                     text=text_content,
                     metadata={"collection": collection, **data},
                 )
                 results["chroma"] = True
+                # Register the memory so the decay evaluator knows its birth time.
+                try:
+                    self.get_self_evolve_service().register_memory(record_id)
+                except Exception as exc:
+                    logger.debug(f"[UnifiedDB] memory registration skipped for {record_id}: {exc}")
             except Exception as e:
                 logger.warning(f"[UnifiedDB] ChromaDB embedding skipped: {e}")
 
@@ -108,11 +117,14 @@ class UnifiedDBManager:
         """Retrieve record with fallback strategy (SQLite -> Supabase -> Postgres).
 
         বাংলা মন্তব্য: ফাইলটের ওপর ভিত্তি করে পর্যায়ক্রমে লোকাল সিঙ্ক থেকে ডাটা ফেচ করে।
+        প্রতিটি সফল রিড self-evolve access-stats-এ রেকর্ড হয়, যাতে decay/prune সিদ্ধান্ত
+        বাস্তব ব্যবহারের ওপর ভিত্তি করে নেওয়া যায়।
         """
         # Primary lookup: Local SQLite
         try:
             record = await self.sqlite.get(collection, record_id)
             if record:
+                self._record_memory_access(record_id)
                 return record
         except Exception as e:
             logger.warning(f"[UnifiedDB] SQLite lookup failed for {record_id}, falling back: {e}")
@@ -121,11 +133,19 @@ class UnifiedDBManager:
         try:
             record = await self.supabase.fetch_by_id(collection, record_id)
             if record:
+                self._record_memory_access(record_id)
                 return record
         except Exception as e:
             logger.warning(f"[UnifiedDB] Supabase lookup failed for {record_id}: {e}")
 
         return None
+
+    def _record_memory_access(self, record_id: str) -> None:
+        """Best-effort access telemetry — must never break a read path."""
+        try:
+            self.get_self_evolve_service().record_access(record_id)
+        except Exception as exc:
+            logger.debug(f"[UnifiedDB] access telemetry skipped for {record_id}: {exc}")
 
     async def delete_record(self, collection: str, record_id: str) -> dict[str, bool]:
         """Delete record across underlying database engines."""
@@ -179,18 +199,41 @@ class UnifiedDBManager:
 
     def get_context_graph_service(self) -> ContextGraphService:
         """Lazily construct or retrieve the ContextGraphService."""
-        from memory.context_graph_service import ContextGraphService, context_graph_service
+        from memory.context_graph_service import context_graph_service
 
         if self._context_graph_service is None:
             self._context_graph_service = context_graph_service
         return self._context_graph_service
 
     async def evolve_reorganize(
-        self, max_age_days: int = 90, min_access: int = 1
+        self,
+        max_age_days: int = 90,
+        min_access: int = 1,
+        merge_duplicates: bool = False,
+        apply_decay: bool = False,
+        persist_clusters: bool = False,
     ) -> ReorganizeResult:
-        """Convenience wrapper: run the full self-evolution cycle on this manager."""
+        """Convenience wrapper: run the full self-evolution cycle on this manager.
+
+        Destructive stages are opt-in; `MemoryEvolutionLoop` enables them for the
+        autonomous background cycle.
+        """
         service = self.get_self_evolve_service()
-        return await service.reorganize_storage(max_age_days=max_age_days, min_access=min_access)
+        return await service.reorganize_storage(
+            max_age_days=max_age_days,
+            min_access=min_access,
+            merge_duplicates=merge_duplicates,
+            apply_decay=apply_decay,
+            persist_clusters=persist_clusters,
+        )
+
+    def get_evolution_loop(self) -> MemoryEvolutionLoop:
+        """Return the shared autonomous memory-evolution loop bound to this manager."""
+        from memory.memory_evolution_loop import memory_evolution_loop
+
+        if memory_evolution_loop._service is None:
+            memory_evolution_loop._service = self.get_self_evolve_service()
+        return memory_evolution_loop
 
     async def health_check(self) -> dict[str, Any]:
         """Verify connectivity and status across active storage layers."""

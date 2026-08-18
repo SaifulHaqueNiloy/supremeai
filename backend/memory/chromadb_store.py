@@ -205,9 +205,12 @@ class ChromaDBStore:
         if self._collection is not None:
             try:
                 self._collection.delete(ids=[doc_id])
-                return
             except Exception as e:
                 _logger.warning(f"ChromaDB delete failed, falling back to local: {e}")
+        # বাংলা মন্তব্য: BUGFIX — add_documents সবসময় ফলব্যাক মিরর-এ লেখে, তাই delete-ও
+        # সবসময় মিরর থেকে মুছতে হবে। আগে রিয়েল ChromaDB delete সফল হলে ফলব্যাক কপি
+        # থেকে যেত এবং get_all_documents() মার্জ করার সময় মুছে ফেলা ডকুমেন্ট আবার
+        # ফিরে আসত (prune/dedup কার্যত অকার্যকর হয়ে যেত)।
         self._fallback_docs.pop(doc_id, None)
         self._save_fallback()
 

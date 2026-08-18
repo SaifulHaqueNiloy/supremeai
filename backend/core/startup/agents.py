@@ -114,6 +114,35 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
+    # বাংলা মন্তব্য: Self-Evolving Memory auto-loop (BLUEPRINT-MEM-001 / M5.1) —
+    # সেম্যান্টিক ক্লাস্টারিং, ডুপ্লিকেট মার্জ ও Ebbinghaus decay GC ব্যাকগ্রাউন্ডে চালায়।
+    try:
+        from memory.memory_evolution_loop import (
+            memory_evolution_loop,
+            start_memory_evolution_loop,
+        )
+
+        if memory_evolution_loop.is_enabled():
+            await agent_supervisor.start_agent(
+                "memory-evolution",
+                start_memory_evolution_loop,
+                health_check_interval=300,
+                max_restarts=5,
+                restart_delay=30.0,
+            )
+            app.state.memory_evolution_loop = memory_evolution_loop
+            logger.info(
+                f"✅ Self-Evolving Memory loop started "
+                f"(interval={memory_evolution_loop.interval_seconds}s, "
+                f"dry_run={memory_evolution_loop.dry_run})."
+            )
+        else:
+            app.state.memory_evolution_loop = None
+            logger.info("ℹ️ Self-Evolving Memory loop disabled (ENABLE_MEMORY_EVOLUTION=false).")
+    except Exception as exc:
+        logger.warning(f"⚠️ Self-Evolving Memory loop failed to start: {exc}")
+        app.state.memory_evolution_loop = None
+
     # বাংলা মন্তব্ব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
     try:
         if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":

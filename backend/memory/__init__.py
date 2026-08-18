@@ -26,6 +26,11 @@ from memory.context_graph_service import (
     context_graph_service,
 )
 from memory.self_evolve_service import SelfEvolveService
+from memory.memory_evolution_loop import (
+    EvolutionLoopStats,
+    MemoryEvolutionLoop,
+    memory_evolution_loop,
+)
 from memory.unified_db_manager import UnifiedDBManager, get_db, unified_db
 from memory.vector_store_config import VectorStoreConfig, get_vector_store_config
 
@@ -34,22 +39,25 @@ __all__ = [
     "CloudPostgresStore",
     "ContextGraphService",
     "EpisodicMemory",
+    "EvolutionLoopStats",
     "GraphEdge",
     "GraphNode",
     "LongTermMemory",
+    "MemoryEvolutionLoop",
     "MemoryManager",
     "MultiHopSubgraph",
     "RAGPipeline",
     "SQLiteMemoryStore",
     "SQLiteStore",
+    "SelfEvolveService",
     "SlidingWindowConfig",
     "SlidingWindowMemory",
     "SupabaseStore",
     "UnifiedDBManager",
-    "SelfEvolveService",
     "VectorStoreConfig",
     "context_graph_service",
     "get_db",
     "get_vector_store_config",
+    "memory_evolution_loop",
     "unified_db",
 ]
