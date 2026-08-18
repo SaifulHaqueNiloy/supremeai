@@ -18,6 +18,13 @@ from memory.rag_pipeline import RAGPipeline
 from memory.sliding_window import SlidingWindowConfig, SlidingWindowMemory
 from memory.sqlite_store import SQLiteMemoryStore, SQLiteStore
 from memory.supabase_store import SupabaseStore
+from memory.context_graph_service import (
+    ContextGraphService,
+    GraphEdge,
+    GraphNode,
+    MultiHopSubgraph,
+    context_graph_service,
+)
 from memory.self_evolve_service import SelfEvolveService
 from memory.unified_db_manager import UnifiedDBManager, get_db, unified_db
 from memory.vector_store_config import VectorStoreConfig, get_vector_store_config
@@ -25,9 +32,13 @@ from memory.vector_store_config import VectorStoreConfig, get_vector_store_confi
 __all__ = [
     "CheckpointResume",
     "CloudPostgresStore",
+    "ContextGraphService",
     "EpisodicMemory",
+    "GraphEdge",
+    "GraphNode",
     "LongTermMemory",
     "MemoryManager",
+    "MultiHopSubgraph",
     "RAGPipeline",
     "SQLiteMemoryStore",
     "SQLiteStore",
@@ -37,6 +48,7 @@ __all__ = [
     "UnifiedDBManager",
     "SelfEvolveService",
     "VectorStoreConfig",
+    "context_graph_service",
     "get_db",
     "get_vector_store_config",
     "unified_db",

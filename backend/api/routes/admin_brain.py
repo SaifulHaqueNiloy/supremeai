@@ -18,6 +18,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
+from memory.context_graph_service import context_graph_service
 from services.memory_service import CascadeMemoryService, hash_vectorize
 
 router = APIRouter(
@@ -367,6 +368,22 @@ async def inject_admin_memory(req: MemoryInjectRequest) -> dict[str, Any]:
             task_type=req.task_type,
             metadata={"importance": req.importance, "tags": req.tags, "injected_by": "admin"},
         )
+
+        # Mirror node into ContextGraphService
+        context_graph_service.add_entity_node(
+            node_id=session_id,
+            node_type="Memory",
+            label=req.summary[:30] + ("..." if len(req.summary) > 30 else ""),
+            metadata={
+                "summary": req.summary,
+                "importance": req.importance,
+                "tags": req.tags,
+                "agent_type": req.agent_type,
+                "task_type": req.task_type,
+                "session_id": session_id,
+            },
+        )
+
         return {
             "status": "success",
             "message": "Memory node successfully forged in SupremeAI Brain.",
@@ -378,3 +395,125 @@ async def inject_admin_memory(req: MemoryInjectRequest) -> dict[str, Any]:
             "status": "error",
             "message": str(e),
         }
+
+
+# =====================================================================
+# Context Graph Engine & Multi-Hop Traversal Endpoints (Blueprint M5.2)
+# =====================================================================
+
+class TraverseRequest(BaseModel):
+    source_id: str = Field(..., min_length=1)
+    target_id: str = Field(..., min_length=1)
+
+
+class AddGraphNodeRequest(BaseModel):
+    id: str = Field(..., min_length=1)
+    node_type: str = Field(default="Memory")
+    label: str = Field(..., min_length=1)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    tenant_id: str = Field(default="default")
+
+
+class AddGraphEdgeRequest(BaseModel):
+    source_id: str = Field(..., min_length=1)
+    target_id: str = Field(..., min_length=1)
+    relation_type: str = Field(default="RECALLS")
+    weight: float = Field(default=1.0, ge=0.0, le=10.0)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    tenant_id: str = Field(default="default")
+
+
+@router.get("/graph")
+async def get_context_graph(tenant_id: str = "ALL", limit: int = 150) -> dict[str, Any]:
+    """
+    Returns the complete Context Graph topology from ContextGraphService.
+    If the graph is currently empty, blends the foundational seeds to ensure visual continuity.
+    """
+    exported = context_graph_service.export_for_visualizer(tenant_id=tenant_id, limit=limit)
+    if not exported["nodes"]:
+        return await get_brain_visual_graph()
+    return exported
+
+
+@router.get("/nodes/{node_id}/neighbors")
+async def get_node_neighbors(node_id: str, direction: str = "both") -> dict[str, Any]:
+    """Returns direct neighbor nodes and connected edges for a specific graph entity."""
+    neighbors = context_graph_service.get_neighbors(node_id=node_id, direction=direction)
+    node = context_graph_service.get_node(node_id)
+    return {
+        "node_id": node_id,
+        "exists": node is not None,
+        "node": node.to_dict() if node else None,
+        "neighbors_count": len(neighbors),
+        "neighbors": neighbors,
+    }
+
+
+@router.get("/nodes/{node_id}/subgraph")
+async def get_node_subgraph(
+    node_id: str, max_depth: int = 2, tenant_id: str | None = None
+) -> dict[str, Any]:
+    """Returns multi-hop subgraph context around a given root node up to max_depth."""
+    subgraph = context_graph_service.get_multi_hop_context(
+        entity_id=node_id, max_depth=max_depth, tenant_id=tenant_id
+    )
+    return {
+        "root_id": subgraph.root_id,
+        "max_depth": subgraph.max_depth,
+        "nodes_count": len(subgraph.nodes),
+        "edges_count": len(subgraph.edges),
+        "nodes": subgraph.nodes,
+        "edges": subgraph.edges,
+        "depth_map": subgraph.depth_map,
+    }
+
+
+@router.post("/traverse")
+async def traverse_graph_path(req: TraverseRequest) -> dict[str, Any]:
+    """Calculates the shortest relational path between two entities in the Context Graph."""
+    result = context_graph_service.find_shortest_path(
+        source_id=req.source_id, target_id=req.target_id
+    )
+    return {
+        "source_id": result.source_id,
+        "target_id": result.target_id,
+        "found": result.found,
+        "path": result.path,
+        "hop_count": max(0, len(result.path) - 1),
+        "edges": result.edges,
+        "total_weight": result.total_weight,
+    }
+
+
+@router.post("/nodes")
+async def add_graph_node(req: AddGraphNodeRequest) -> dict[str, Any]:
+    """Adds or updates an entity node in the Context Graph."""
+    node = context_graph_service.add_entity_node(
+        node_id=req.id,
+        node_type=req.node_type,
+        label=req.label,
+        metadata=req.metadata,
+        tenant_id=req.tenant_id,
+    )
+    return {
+        "status": "success",
+        "node": node.to_dict(),
+    }
+
+
+@router.post("/edges")
+async def add_graph_edge(req: AddGraphEdgeRequest) -> dict[str, Any]:
+    """Creates a directed relationship (edge) between two nodes in the Context Graph."""
+    edge = context_graph_service.create_relationship(
+        source_id=req.source_id,
+        target_id=req.target_id,
+        relation_type=req.relation_type,
+        weight=req.weight,
+        metadata=req.metadata,
+        tenant_id=req.tenant_id,
+    )
+    return {
+        "status": "success",
+        "edge": edge.to_dict(),
+    }
+

@@ -49,8 +49,10 @@ Supabase/pgvector + Redis + Infisical + Cloudflare)।
 - **Phase 5 AI Evolution Blueprints (100% Done):** `BLUEPRINT-SELF-EVOLVING-MEMORY.md` (`BLUEPRINT-MEM-001`)
   এবং `BLUEPRINT-CONTEXT-GRAPH-ORGANIZER.md` (`BLUEPRINT-GRAPH-002`) তৈরি ও রোডম্যাপে সংযুক্ত।
 
+- **Phase 3 M3.2 E2E Integration & Synthetic Benchmark Scenarios (100% Done):** ডেমো এজেন্ট সোয়ার্ম (Swarm DAG, concurrency, circuit breaker trip/recovery), কস্ট গার্ড এক্সিড ব্রিচ সিমুলেশন (multi-tier budget caps, Redis fail-safe $0 cost degradation), এবং JIT OTP পূর্ণাঙ্গ লাইফসাইকেল ভ্যালিডেশন (multi-channel dispatch, email fallback, escalation token, brute-force lock, replay prevention) ইঞ্জিন, CLI রানার এবং Pytest/Vitest স্যুট সম্পন্ন ✅।
+
 **যা চলছে / পরবর্তী ফোকাস:**
-- Phase 3 M3.2: E2E Integration & Synthetic Benchmark Scenarios (Mock Swarm, Cost Guard Breach Simulation, JIT OTP Flow Verification).
+- Phase 3 M3.5: axe-core accessibility (0 known) + degraded-state (WS/SSE fail) UI tests.
 
 ---
 

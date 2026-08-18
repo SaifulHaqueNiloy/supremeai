@@ -45,14 +45,24 @@ def test_traffic_monitor_no_redis(override_admin):
 
 def test_traffic_monitor_with_redis(override_admin):
     mock_redis = MagicMock()
-    mock_redis.lrange = AsyncMock(return_value=['{"status": 200, "duration": 0.05}', '{"status": 500, "duration": 0.12, "error": "Internal"}'])
+    mock_redis.lrange = AsyncMock(side_effect=[
+        [
+            '{"status": 200, "duration": 0.05}',
+            '{"status": 200, "duration": 0.08}',
+            '{"status": 500, "duration": 0.12, "error": "Internal"}',
+            '{"status": 503, "duration": 0.20, "error": "Unavailable"}',
+        ],
+        [],  # previous-minute key has no data
+    ])
     with patch("api.routes.traffic_monitor.redis_manager._client", mock_redis):
         response = client.get("/api/admin/traffic/live", headers={"X-Testing-Bypass-Auth": "true"})
-        if response.status_code == 200:
-            data = response.json()
-            assert data["total_requests"] == 4
-            assert data["error_count"] == 2
-            assert "p95_latency_ms" in data
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] == "success"
+        data = payload["data"]
+        assert data["total_requests_window"] == 4
+        assert data["error_rate_percent"] == 50.0
+        assert "p95_latency_ms" in data
 
 def test_cdc_webhook_event_processing():
     payload = {

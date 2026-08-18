@@ -140,7 +140,7 @@ def attach_error_bus_telemetry() -> bool:
 
         error_event_bus.register_listener("*", _error_bus_sink)
         _attached = True
-        logger.info("📡 Error-bus → OpenTelemetry telemetry sink attached.")
+        logger.info("[telemetry] Error-bus -> OpenTelemetry telemetry sink attached.")
         return True
     except Exception as exc:
         logger.warning(f"[telemetry] could not attach error-bus sink: {exc}")

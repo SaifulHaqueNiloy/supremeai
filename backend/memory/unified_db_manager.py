@@ -9,6 +9,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from memory.context_graph_service import ContextGraphService
     from memory.self_evolve_service import ReorganizeResult, SelfEvolveService
 
 from memory.chromadb_store import ChromaDBStore
@@ -38,6 +39,7 @@ class UnifiedDBManager:
         self.chroma = chroma_store or ChromaDBStore()
         self.postgres = postgres_store or CloudPostgresStore()
         self._self_evolve_service = None
+        self._context_graph_service = None
 
     async def save_record(
         self,
@@ -174,6 +176,14 @@ class UnifiedDBManager:
         if self._self_evolve_service is None:
             self._self_evolve_service = SelfEvolveService(manager=self)
         return self._self_evolve_service
+
+    def get_context_graph_service(self) -> ContextGraphService:
+        """Lazily construct or retrieve the ContextGraphService."""
+        from memory.context_graph_service import ContextGraphService, context_graph_service
+
+        if self._context_graph_service is None:
+            self._context_graph_service = context_graph_service
+        return self._context_graph_service
 
     async def evolve_reorganize(
         self, max_age_days: int = 90, min_access: int = 1

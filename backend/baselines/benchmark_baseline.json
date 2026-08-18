@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-08-19T01:30:00Z",
+  "environment": "production-simulation",
+  "thresholds": {
+    "demo_agent_swarm_simulation": {
+      "max_p95_latency_ms": 400.0,
+      "max_error_rate_pct": 15.0,
+      "min_rps": 20.0
+    },
+    "cost_guard_breach_simulation": {
+      "max_p95_latency_ms": 10.0,
+      "max_error_rate_pct": 0.0,
+      "min_rps": 1000.0
+    },
+    "jit_otp_e2e_validation": {
+      "max_p95_latency_ms": 200.0,
+      "max_error_rate_pct": 0.0,
+      "min_rps": 10.0
+    }
+  },
+  "last_known_metrics": {
+    "demo_agent_swarm_simulation": {
+      "rps": 39.3,
+      "p95_ms": 236.25,
+      "error_rate_pct": 10.0
+    },
+    "cost_guard_breach_simulation": {
+      "rps": 238284.4,
+      "p95_ms": 0.01,
+      "error_rate_pct": 0.0
+    },
+    "jit_otp_e2e_validation": {
+      "rps": 19.2,
+      "p95_ms": 97.52,
+      "error_rate_pct": 0.0
+    }
+  }
+}

@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 19:41 UTC
+- **Date:** 2026-08-18 19:43 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,20 +10,31 @@
   - (see git log for details)
 
 ## Files Changed
-  - `LESSONS_LEARNED.md`
-  - `backend/memory/unified_db_manager.py`
-  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
-  - `backend/core/observability/telemetry_events.py`
-  - `backend/api/routes/admin_brain.py`
-  - `backend/memory/__init__.py`
-  - `FEATURE_TRACKING_LOG.md`
   - `backend/api/routers.py`
+  - `DEVELOPMENT_ROADMAP.md`
+  - `backend/memory/__init__.py`
+  - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
+  - `scripts/benchmark/synthetic_m32_benchmark.py`
+  - `backend/api/routes/admin_brain.py`
+  - `CHECKPOINT.md`
+  - `backend/memory/context_graph_service.py`
+  - `backend/tests/test_context_graph_service.py`
+  - `LESSONS_LEARNED.md`
+  - `backend/tests/test_meta_project_manager_agent.py`
+  - `backend/workers/synthetic_load_benchmark.py`
+  - `backend/baselines/benchmark_baseline.json`
+  - `backend/core/observability/telemetry_events.py`
+  - `backend/tests/test_m32_synthetic_benchmarks.py`
+  - `frontend/src/tests/m32_integration.test.ts`
+  - `backend/tests/api/test_byoc_and_cloud_mesh.py`
   - `REAL_TESTING_LOG.md`
   - `backend/baselines/test-model_baseline.pkl`
-  - `DEVELOPMENT_ROADMAP.md`
-  - `CHECKPOINT.md`
-  - `backend/tests/test_auth_routes.py`
-  - `backend/alembic/versions/2026_08_19_000000_add_performance_indexes.py`
+  - `backend/api/routes/aod.py`
+  - `FEATURE_TRACKING_LOG.md`
+  - `.github/workflows/nightly-synthetic-benchmark.yml`
+  - `scripts/ci/check_benchmark_regression.py`
+  - `backend/memory/unified_db_manager.py`
+  - `backend/agents/meta_project_manager_agent.py`
 
 ## Pending (Carry Forward)
 - **Phase 1 Active (Remaining):**
