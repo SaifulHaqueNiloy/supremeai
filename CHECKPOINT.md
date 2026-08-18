@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-18 13:43 UTC
+- **Date:** 2026-08-18 13:45 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,17 +10,19 @@
   - (see git log for details)
 
 ## Files Changed
-  - `CHECKPOINT.md`
-  - `tools/vscode-extension/AdminMetricsController.java`
-  - `tools/vscode-extension/FeatureDefinition.java`
-  - `tools/vscode-extension/FeatureRegistryController.java`
-  - `tools/vscode-extension/GlobalMetricsService.java`
+  - `backend/services/scraper/tests/test_stagehand.py`
   - `.gitignore`
-  - `tools/vscode-extension/CodebaseAuditService.java`
-  - `tools/vscode-extension/FeatureRegistryService.java`
-  - `backend/models/pending_tasks.py`
-  - `tools/vscode-extension/GlobalMetrics.java`
+  - `backend/tests/llm/test_constrained_decoder.py`
+  - `backend/tests/tools/test_repo_map.py`
   - `backend/tests/test_pending_tasks_indexes.py`
+  - `backend/tests/test_integrations_adapters.py`
+  - `backend/tests/test_confidence_gate.py`
+  - `backend/tests/test_multi_needle.py`
+  - `backend/tests/test_task_router_cost_guard.py`
+  - `backend/tests/tools/test_checkpoint_replay.py`
+  - `backend/tests/test_skill_structured.py`
+  - `CHECKPOINT.md`
+  - `backend/tests/test_audit018_contracts.py`
 
 ## Pending (Carry Forward)
 - **⚠️ Concurrent agent (python-jose→PyJWT migration) active** — same working tree-তে 20+ ফাইল
