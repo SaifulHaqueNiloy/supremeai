@@ -42,12 +42,21 @@ class FreeTierQuotaBalancer:
         self._providers: Dict[str, ProviderQuotaConfig] = {
             "gemini_flash": ProviderQuotaConfig(provider="gemini", model="gemini/gemini-1.5-flash", max_rpm=15, max_tpm=32000),
             "groq_llama": ProviderQuotaConfig(provider="groq", model="groq/llama-3.3-70b-versatile", max_rpm=30, max_tpm=6000),
+            "cloudflare_deepseek": ProviderQuotaConfig(provider="cloudflare", model="@cf/deepseek-ai/deepseek-r1-distill-qwen-32b", max_rpm=50, max_tpm=50000),
+            "cloudflare_llama": ProviderQuotaConfig(provider="cloudflare", model="@cf/meta/llama-3.3-70b-instruct", max_rpm=50, max_tpm=50000),
             "cerebras_llama": ProviderQuotaConfig(provider="cerebras", model="cerebras/llama3.1-70b", max_rpm=30, max_tpm=60000),
             "openrouter_free": ProviderQuotaConfig(provider="openrouter", model="openrouter/auto", max_rpm=20, max_tpm=40000),
         }
         self._metrics: Dict[str, SlidingWindowMetrics] = {
             k: SlidingWindowMetrics() for k in self._providers
         }
+        self._cooldowns: Dict[str, float] = {}
+
+    def report_rate_limit(self, p_key: str, cooldown_seconds: float = 60.0) -> None:
+        """Flags a provider as experiencing 429 rate limit, imposing a cooldown window."""
+        with self._lock:
+            self._cooldowns[p_key] = time.time() + cooldown_seconds
+            logger.warning(f"[QuotaBalancer] Provider '{p_key}' rate-limited. Cooling down for {cooldown_seconds}s.")
 
     def _purge_old_entries(self, p_key: str, now: float) -> None:
         """Purges metric timestamps older than 60 seconds (1 minute sliding window)."""
@@ -100,12 +109,18 @@ class FreeTierQuotaBalancer:
                 if not load["is_throttled"]:
                     return self._providers[preferred_provider].model
 
-            # Otherwise, find the provider with minimum utilization
+            # Otherwise, find the provider with minimum utilization that is not in cooldown
             candidates = []
             for p_key in self._providers:
+                if p_key in self._cooldowns and now < self._cooldowns[p_key]:
+                    continue  # Skip cooling down provider
                 self._purge_old_entries(p_key, now)
                 load = self.get_provider_load(p_key)
                 candidates.append((load["utilization"], p_key, self._providers[p_key].model))
+
+            if not candidates:
+                # If all are cooling down, fallback to least recently cooled
+                return self._providers["gemini_flash"].model
 
             candidates.sort(key=lambda x: x[0])
             best_choice = candidates[0]

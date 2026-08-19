@@ -35,6 +35,7 @@ infrastructure/zero_cost/config.env
 # Local CI virtualenv artifact
 .venv_ci/
 .local/
+scripts/kaggle/artifacts/
 
 # ---------- RENDER API / DEPLOYMENT SECRETS (AUDIT-2026-08) ----------
 # These contained REAL credentials in git history. Rotate in Infisical/Render.

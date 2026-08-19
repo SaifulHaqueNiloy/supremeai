@@ -2,6 +2,13 @@ import urllib.request
 import urllib.error
 import json
 import ssl
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Auto-load root .env
+ROOT_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT_DIR / ".env")
 
 def check_url(url, name, is_json_status=False, json_key_path=None):
     context = ssl._create_unverified_context()
@@ -35,7 +42,6 @@ def check_url(url, name, is_json_status=False, json_key_path=None):
         print(f"[FAIL] {name}: Error {e} ({url})")
 
 def check_infisical_auth():
-    import os
     client_id = os.getenv("INFISICAL_CLIENT_ID")
     client_secret = os.getenv("INFISICAL_CLIENT_SECRET")
     token = os.getenv("INFISICAL_TOKEN")
@@ -54,6 +60,20 @@ def check_infisical_auth():
     else:
         print("[WARN] Infisical Project ID: INFISICAL_PROJECT_ID not set.")
 
+def check_kaggle_cluster():
+    print("\n--- Kaggle 6-Node Compute Cluster (180h GPU Pool) ---")
+    active_tokens = 0
+    for i in range(1, 7):
+        tok = os.getenv(f"KAGGLE_API_TOKEN_{i}") or os.getenv(f"KAGGLE_USER_{i}")
+        if tok:
+            active_tokens += 1
+    if active_tokens == 6:
+        print(f"[OK] Kaggle 6-Node Pool: 6 / 6 Nodes Configured (180.0 Hours/Week GPU Available)")
+    elif active_tokens > 0:
+        print(f"[WARN] Kaggle Cluster Partial: {active_tokens} / 6 Nodes Configured ({active_tokens * 30}.0 Hours/Week)")
+    else:
+        print("[WARN] Kaggle Cluster: No active tokens configured.")
+
 def main():
     print("======================================")
     print(" SupremeAI Environment Health Check")
@@ -69,6 +89,9 @@ def main():
 
     # Infisical Auth Status
     check_infisical_auth()
+
+    # Kaggle 6-Node Cluster Status
+    check_kaggle_cluster()
 
     # External Dependencies
     print("\n--- External Dependencies ---")

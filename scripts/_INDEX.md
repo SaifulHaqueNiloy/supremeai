@@ -49,6 +49,8 @@
 | File | কী করে |
 |---|---|
 | `ai/` | AI-specific scripts (memory, model, bias detection) |
+| `kaggle/pipeline_orchestrator.py` | Kaggle 6-Node 180h GPU cluster orchestrator |
+| `kaggle/account_pool_rotator.py` | Kaggle multi-account quota & failover manager |
 | `knowledge_indexer.py` | ChromaDB codebase indexer |
 | `supreme_context_builder.py` | Full codebase XML context generator |
 | `generate_smart_docs.py` | Auto-generate documentation |
