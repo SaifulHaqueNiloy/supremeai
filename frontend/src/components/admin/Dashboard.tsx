@@ -210,27 +210,27 @@ const Dashboard: React.FC = () => {
         // ==========================================
         <div className="w-full h-screen bg-gradient-to-br from-gray-50 to-slate-100 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
 
-          {/* Header with beautiful gradient */}
-          <div className="flex justify-between items-center border-b border-slate-200 pb-5 mb-6 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-1">
-            <div className="bg-white rounded-xl p-5 w-full">
+          {/* Compact Header */}
+          <div className="flex justify-between items-center border border-indigo-200/60 pb-3 mb-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-0.5 shadow-sm">
+            <div className="bg-white rounded-lg px-4 py-2.5 w-full flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="text-indigo-600 animate-pulse" size={24} />
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Executive Command Bridge</h1>
+                <Sparkles className="text-indigo-600 animate-pulse" size={18} />
+                <h1 className="text-base font-extrabold text-slate-900 tracking-tight">Executive Command Bridge</h1>
               </div>
-              <p className="text-sm text-slate-500 mt-2">
-                সিস্টেমের গতিবিধি পর্যবেক্ষণ ও সাধারণ ইউজারদের জন্য সহজ ড্যাশবোর্ড ইন্টারফেস।
+              <p className="text-xs text-slate-500 hidden sm:block">
+                সিস্টেমের গতিবিধি পর্যবেক্ষণ ও লাইভ ড্যাশবোর্ড ওভারভিউ।
               </p>
             </div>
           </div>
 
-          {/* Beautiful Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Ultra Compact Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3.5 mb-5">
 
             {/* System Health Card */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-lg p-3 shadow-xs hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100">
@@ -243,12 +243,12 @@ const Dashboard: React.FC = () => {
                 <p className="text-xl font-bold text-emerald-600">
                   {health?.gcp?.status === 'healthy' ? 'Excellent' : health?.gcp?.status === 'degraded' ? 'Degraded' : health?.gcp?.status ? 'Critical' : 'Operational'}
                 </p>
-                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
                   {health?.gcp?.uptime_sla || '99.9%'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">All core services online</p>
-              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <p className="text-[10px] text-slate-400 mt-0.5">All core services online</p>
+              <div className="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
@@ -261,30 +261,30 @@ const Dashboard: React.FC = () => {
 
             {/* Threat Card */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-lg p-3 shadow-xs hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className={`p-2 rounded-lg border ${threats && threats.total_findings > 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                  <Shield size={18} className={threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'} />
+              <div className="flex items-center justify-between mb-1.5">
+                <div className={`p-1.5 rounded-lg border ${threats && threats.total_findings > 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                  <Shield size={16} className={threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'} />
                 </div>
-                <span className={`w-2.5 h-2.5 rounded-full ${threats && threats.total_findings > 0 ? 'bg-amber-500 shadow-[0_0_6px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_6px_#10b981]'}`}></span>
+                <span className={`w-2 h-2 rounded-full ${threats && threats.total_findings > 0 ? 'bg-amber-500 shadow-[0_0_6px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_6px_#10b981]'}`}></span>
               </div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Security Status</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <p className={`text-xl font-bold ${threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Security Status</span>
+              <div className="flex items-baseline justify-between mt-0.5">
+                <p className={`text-lg font-bold ${threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
                   {threats && threats.total_findings > 0 ? 'At Risk' : 'Secure'}
                 </p>
-                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${threats && threats.total_findings > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
+                <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${threats && threats.total_findings > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
                   {threats ? `${threats.total_findings} Threat${threats.total_findings === 1 ? '' : 's'}` : '0 Threat'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[10px] text-slate-400 mt-0.5">
                 {threats && threats.total_findings > 0 ? `${threats.total_findings} items require review` : 'No active threats detected'}
               </p>
-              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
@@ -297,32 +297,32 @@ const Dashboard: React.FC = () => {
 
             {/* AI Agents Card */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-lg p-3 shadow-xs hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <Users size={18} className="text-indigo-600" />
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="p-1.5 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <Users size={16} className="text-indigo-600" />
                 </div>
-                <span className="text-[11px] font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                <span className="text-[10px] font-mono font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full border border-indigo-100">
                   {metrics?.active_agents ?? 0} Active
                 </span>
               </div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">AI Agents</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <p className="text-xl font-bold text-indigo-600">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">AI Agents</span>
+              <div className="flex items-baseline justify-between mt-0.5">
+                <p className="text-lg font-bold text-indigo-600">
                   {metrics && (metrics.active_agents ?? 0) > 0 ? 'Active' : 'Inactive'}
                 </p>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[9px] font-mono text-slate-500">
                   {metrics?.requests_per_second ? `${metrics.requests_per_second} req/s` : 'Standby'}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">
+              <p className="text-[10px] text-slate-400 mt-0.5">
                 {metrics ? `${metrics.active_agents ?? 0} agents processing tasks` : 'Task workers ready'}
               </p>
-              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div className="mt-2 h-1 bg-slate-100 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                   style={{ width: `${metrics ? Math.max(Math.min((metrics.active_agents ?? 0) * 20, 100), 10) : 15}%` }}
@@ -332,25 +332,25 @@ const Dashboard: React.FC = () => {
 
             {/* Cost Efficiency Card */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-lg p-3 shadow-xs hover:shadow-sm transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-2">
-                <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100">
-                  <DollarSign size={18} className="text-emerald-600" />
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="p-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <DollarSign size={16} className="text-emerald-600" />
                 </div>
-                <span className="text-[11px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-100">
                   ${metrics ? (metrics.cost_per_hour ?? 0.01).toFixed(2) : '0.01'}/h
                 </span>
               </div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Cost Efficiency</span>
-              <div className="flex items-baseline justify-between mt-1">
-                <p className="text-xl font-bold text-emerald-600">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">Cost Efficiency</span>
+              <div className="flex items-baseline justify-between mt-0.5">
+                <p className="text-lg font-bold text-emerald-600">
                   {metrics && (metrics.cost_per_hour ?? 0.01) < 0.5 ? 'Efficient' : metrics && (metrics.cost_per_hour ?? 0.01) < 1.0 ? 'Moderate' : 'High Cost'}
                 </p>
-                <span className="text-[10px] font-mono text-slate-500">
+                <span className="text-[9px] font-mono text-slate-500">
                   ${metrics?.cost_projected_monthly ? Math.round(metrics.cost_projected_monthly) : 7}/mo est.
                 </span>
               </div>
