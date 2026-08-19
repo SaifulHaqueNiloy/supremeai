@@ -7,7 +7,7 @@ class NeuralStreamService {
 
   // প্রোডাকশন (Release) এবং লোকাল (Debug) মোডের জন্য ডায়নামিক URL
   final String wsUrl = kReleaseMode
-      ? 'wss://api.supremeai.dev/ws/chat'
+      ? 'wss://supremeai-backend-docker.onrender.com/ws/chat'
       : 'ws://10.0.2.2:8000/ws/chat';
 
   // ব্রডকাস্ট স্ট্রিম কন্ট্রোলার (মাল্টিপল লিসেনার এবং রিকানেকশনের জন্য)

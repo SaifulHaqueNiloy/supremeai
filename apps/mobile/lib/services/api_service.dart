@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 class ApiService {
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://supremeai-a.web.app',
+    defaultValue: 'https://supremeai-backend-docker.onrender.com',
   );
 
   static const _secureStorage = FlutterSecureStorage();
@@ -26,7 +26,7 @@ class ApiService {
     try {
       final response = await client
           .post(
-            Uri.parse('$_baseUrl/api/auth/firebase-login'),
+            Uri.parse('$_baseUrl/api/admin/firebase-login'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({'idToken': idToken}),
           )
@@ -52,7 +52,7 @@ class ApiService {
     try {
       final response = await client
           .post(
-            Uri.parse('$_baseUrl/api/auth/register'),
+            Uri.parse('$_baseUrl/api/v1/auth/register'),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'email': email,
@@ -76,7 +76,7 @@ class ApiService {
       final token = await getToken();
       final response = await client
           .get(
-            Uri.parse('$_baseUrl/api/auth/profile'),
+            Uri.parse('$_baseUrl/api/v1/auth/me'),
             headers: {
               'Content-Type': 'application/json',
               if (token != null) 'Authorization': 'Bearer $token',

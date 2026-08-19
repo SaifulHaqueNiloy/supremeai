@@ -14,7 +14,7 @@ export interface HealthStatus {
 }
 
 export async function fetchHealth(signal?: AbortSignal): Promise<HealthStatus> {
-  const res = await fetch(`${BACKEND_URL}/health`, { signal });
+  const res = await fetch(`${BACKEND_URL}/api/v1/health`, { signal });
   if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
   return (await res.json()) as HealthStatus;
 }
@@ -29,7 +29,7 @@ export interface DashboardWsHandlers {
 
 // বাংলা: ব্যাকএন্ড /dashboard WebSocket-এ কানেক্ট (token query param)
 export function connectDashboardWs(token: string, handlers: DashboardWsHandlers): () => void {
-  const ws = new WebSocket(`${getWebSocketBaseUrl()}/dashboard?token=${encodeURIComponent(token)}`);
+  const ws = new WebSocket(`${getWebSocketBaseUrl()}/ws/dashboard?token=${encodeURIComponent(token)}`);
   ws.onopen = () => handlers.onStatus?.('open');
   ws.onclose = () => handlers.onStatus?.('closed');
   ws.onerror = () => handlers.onError?.(new Error('Dashboard WebSocket error'));

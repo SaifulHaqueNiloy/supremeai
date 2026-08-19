@@ -19,7 +19,7 @@ class _ApiKeysScreenState extends State<ApiKeysScreen> {
 
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://supremeai-a.web.app',
+    defaultValue: 'https://supremeai-backend-docker.onrender.com',
   );
 
   @override

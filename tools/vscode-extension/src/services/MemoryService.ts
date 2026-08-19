@@ -12,11 +12,12 @@ export class MemoryService {
 
   /**
    * ভেক্টর মেমোরিতে ফাইল সিঙ্ক করার ফাংশন
-   * POST /api/memory/ingest
+   * POST /memory/ingest
+   * বাংলা মন্তব্য: ব্যাকএন্ড মেমরি রাউটারের prefix "/memory" (কোনো "/api" নেই)।
    */
   async syncFileToMemory(filePath: string, content: string, language: string): Promise<any> {
     try {
-      const response = await this.client.post('/api/memory/ingest', {
+      const response = await this.client.post('/memory/ingest', {
         filePath,
         content,
         language,
@@ -32,7 +33,7 @@ export class MemoryService {
 
   async saveCheckpoint(taskId: string, stepIndex: number, state: Record<string, any>): Promise<boolean> {
     try {
-      const response = await this.client.post('/api/memory/checkpoint', {
+      const response = await this.client.post('/memory/checkpoint', {
         task_id: taskId,
         step_index: stepIndex,
         state,
@@ -47,7 +48,7 @@ export class MemoryService {
 
   async loadCheckpoint(taskId: string): Promise<any | null> {
     try {
-      const response = await this.client.get(`/api/memory/checkpoint/${taskId}`);
+      const response = await this.client.get(`/memory/checkpoint/${taskId}`);
       return response.data ?? null;
     } catch (error: any) {
       console.error(`[SupremeAI] Failed to load checkpoint: ${error.message}`);
@@ -57,7 +58,7 @@ export class MemoryService {
 
   async buildMemoryContext(documents: string[], query: string, sessionId: string, budget = 4000): Promise<string> {
     try {
-      const response = await this.client.post('/api/memory/context', {
+      const response = await this.client.post('/memory/context', {
         documents,
         query,
         session_id: sessionId,

@@ -67,8 +67,13 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
 
 # ⚡ ২. Fully Async Streaming Generator
 @router.post("/stream_chat")
+@router.post("/stream")
 async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
-    """High-Concurrency Async SSE Streamer"""
+    """High-Concurrency Async SSE Streamer.
+
+    বাংলা মন্তব্য: ক্লায়েন্টরা /api/chat/stream_chat এবং /api/chat/stream — দুটিই কল করে,
+    তাই উভয় পাথেই স্ট্রিমিং সাপোর্ট করা হলো (alias)।
+    """
     logger.info(f"🌊 SSE Stream Initiated for tenant: {db.tenant_id}")
 
     async def async_generator():
@@ -88,6 +93,19 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
 
     # ইভেন্ট লুপ ব্লক না করে স্ট্রিমিং রেসপন্স থ্রো করা
     return StreamingResponse(async_generator(), media_type="text/event-stream")
+
+
+# ⚡ ২.৫. Non-streaming message endpoint (used by VS Code extension primary path)
+@router.post("/message")
+async def chat_message(payload: ChatPayload, db=Depends(get_tenant_db)):
+    """Single-shot chat completion (mirrors /get_completion response shape)."""
+    try:
+        response = await llm_gateway.acompletion(prompt=payload.prompt, task_type="chat", stream=False)
+        response_text = response.get("text", "") if isinstance(response, dict) else str(response)
+        return {"success": True, "response": response_text, "cached": False}
+    except Exception as e:
+        logger.error(f"Chat message error: {e!s}")
+        raise HTTPException(status_code=500, detail="AI Gateway Timeout.") from e
 
 # ⚡ ৩. Session Intelligence: Get Session DNA
 @router.get("/session-dna")

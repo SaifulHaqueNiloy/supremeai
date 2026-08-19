@@ -75,7 +75,7 @@ export class AuthService {
       }, async () => {
         try {
           const baseUrl = this.resolveBaseUrl();
-          const response = await fetch(`${baseUrl}/auth/verify`, {
+          const response = await fetch(`${baseUrl}/api/v1/auth/verify`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${apiKey}` }
           });
@@ -110,7 +110,7 @@ export class AuthService {
   public async register(username: string, password: string): Promise<boolean> {
     try {
       const baseUrl = this.resolveBaseUrl();
-      const response = await fetch(`${baseUrl}/auth/register`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -181,7 +181,7 @@ export class AuthService {
   public async verifyToken(token: string): Promise<boolean> {
     try {
       const baseUrl = this.resolveBaseUrl();
-      const response = await fetch(`${baseUrl}/auth/verify`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/verify`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -197,7 +197,7 @@ export class AuthService {
   public async fetchUserProfile(token: string): Promise<any | null> {
     try {
       const baseUrl = this.resolveBaseUrl();
-      const response = await fetch(`${baseUrl}/auth/me`, {
+      const response = await fetch(`${baseUrl}/api/v1/auth/me`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

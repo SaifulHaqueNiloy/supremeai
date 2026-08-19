@@ -2,7 +2,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ScreenApiService {
-  static const String _baseUrl = 'https://supremeai-a.web.app/api';
+  static const String _baseUrl = 'https://supremeai-backend-docker.onrender.com/api';
 
   Future<Map<String, dynamic>> ping(String screen) async {
     try {

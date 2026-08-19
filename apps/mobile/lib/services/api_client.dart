@@ -9,7 +9,7 @@ class ApiClient {
   // risk)। এখন একই --dart-define=API_BASE_URL কনভেনশন অনুসরণ করা হচ্ছে।
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://supremeai-a.web.app',
+    defaultValue: 'https://supremeai-backend-docker.onrender.com',
   );
 
   static const _secureStorage = FlutterSecureStorage();

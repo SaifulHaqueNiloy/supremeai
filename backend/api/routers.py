@@ -84,12 +84,20 @@ core_routers: list[tuple[str, str]] = [
     # Added real-time dashboard WebSocket endpoint for Phase 2.1 of roadmap
     ("api.routes.realtime_dashboard", ""),
     ("api.routes.aod", ""),
+    # বাংলা মন্তব্ব্য: কোর চ্যাট রাউটার আগে কোথাও register-ই করা হয়নি — ফলে ওয়েব/মোবাইল/ডেস্কটপ/
+    # এক্সটেনশন সব ক্লায়েন্টের চ্যাট 404 দিত। রাউটারের নিজস্ব prefix="/api/chat"।
+    ("api.routes.chat", ""),
 ]
 
 optional_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
     # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।
     ("api.routes.llm_gateway", ""),
+    # বাংলা মন্তব্ব্য: AUDIT FIX — সুপার-অ্যাডমিন Studio-এর LlmGatewayPage সরাসরি /api/admin/llm/*
+    # কল করত, কিন্তু ব্যাকএন্ডে সেই পাথ ছিল না (শুধু /llm-gateway/* ছিল) — পেজ সবসময় 404 পেত।
+    # এই রাউটারটি গেটওয়ে স্টেট থেকে প্রভাইডার/রাউটার ডেটা বিল্ড করে। অপশনাল যাতে গেটওয়ে
+    # ইম্পোর্ট ফেইল করলে অ্যাপ ক্র্যাশ না করে।
+    ("api.routes.llm_gateway_admin", ""),
     # বাংলা মন্তব্ব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
     ("api.routes.knowledge", "/api"),
     ("api.routes.dock_actions", "/api"),
@@ -122,6 +130,11 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.self_evolve", "/api"),
     ("api.routes.self_assemble", "/api"),
     ("api.routes.brain_visualizer_bridge", "/api"),
+    # বাংলা মন্তব্: selector-healing প্যানেল এন্ডপয়েন্ট আগে register ছিল না (prefix="/api/admin/selector-healing")।
+    # অপশনাল রাখা হলো যাতে ইম্পোর্ট ফেইল করলে অ্যাপ ক্র্যাশ না করে।
+    ("api.routes.selector_healing", ""),
+    # বাংলা মন্তব্: workspaces bind-target এন্ডপয়েন্ট আগে register ছিল না (prefix="/admin-api/workspaces")।
+    ("api.routes.workspaces_route", ""),
 ]
 
 

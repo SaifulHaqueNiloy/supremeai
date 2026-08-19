@@ -87,7 +87,7 @@ class OrchestrationProvider with ChangeNotifier {
   Map<String, dynamic> activeAgentMetrics = {};
 
   void initRealTimeTaskStream(String taskId, String authToken) {
-    final url = Uri.parse('https://supremeai-api-lhlwyikwlq-uc.a.run.app/api/task/stream/$taskId');
+    final url = Uri.parse('https://supremeai-backend-docker.onrender.com/api/task/stream/$taskId');
 
     final request = http.Request('GET', url)
       ..headers['Authorization'] = 'Bearer $authToken'
@@ -121,7 +121,7 @@ class OrchestrationProvider with ChangeNotifier {
 
   static const String _baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://supremeai-a.web.app',
+    defaultValue: 'https://supremeai-backend-docker.onrender.com',
   );
 
   static const String _scrapeChatUrl = String.fromEnvironment(

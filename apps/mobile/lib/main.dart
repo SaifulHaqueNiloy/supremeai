@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
       // No token in URL; auth sent as the first JSON {"type":"auth","token":...} message.
       const apiBase = String.fromEnvironment(
         'API_BASE_URL',
-        defaultValue: 'https://supremeai-a.web.app',
+        defaultValue: 'https://supremeai-backend-docker.onrender.com',
       );
       final wsBase = apiBase.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
       final wsUri = Uri.parse('$wsBase/ws/chat');

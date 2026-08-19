@@ -249,3 +249,11 @@ class SettingsFieldsMixin:
     enable_stagehand: bool = Field(default=False, validation_alias="ENABLE_STAGEHAND")
     # Media microservic-এর URL (Cloud Run)
     media_service_url: str = Field(default="", validation_alias="MEDIA_SERVICE_URL")
+
+    # বাংলা মন্তব্য: GitHub OAuth রিডাইরেক্ট বিল্ড করতে ব্যবহৃত ফ্রন্টএন্ড বেস URL।
+    # integrations.py এর আগে settings.frontend_base_url অনুপস্থিত থাকায় AttributeError দিয়েছিল।
+    # এখন env-driven; ডিফল্ট প্রোডাকশন ফ্রন্টএন্ড (override করা যায় FRONTEND_BASE_URL দিয়ে)।
+    frontend_base_url: str = Field(
+        default="https://supremeai-frontend-6nwi.onrender.com",
+        validation_alias="FRONTEND_BASE_URL",
+    )
