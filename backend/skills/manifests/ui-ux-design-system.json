@@ -1,0 +1,12 @@
+{
+  "id": "ui-ux-design-system",
+  "name": "Design System & Component Architect (skills.sh)",
+  "version": "3.0.0",
+  "description": "Comprehensive design system builder for tokens, glassmorphism palettes, accessible color contrasts, and reusable React/Tailwind component architectures.",
+  "dependencies": "tailwind-merge, clsx, radix-ui",
+  "installed": true,
+  "source": "skills.sh/official",
+  "category": "Design & UI/UX",
+  "author": "skills.sh Verified Developer",
+  "rating": 4.99
+}

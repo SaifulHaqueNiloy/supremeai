@@ -1,0 +1,12 @@
+{
+  "id": "frontend-taste",
+  "name": "Frontend Taste & Aesthetic Heuristics (skills.sh)",
+  "version": "1.5.0",
+  "description": "Strict heuristics and anti-pattern enforcement to ensure AI-generated UIs have premium taste, custom typography (Outfit, Manrope), layered micro-animations, and fluid responsive layouts.",
+  "dependencies": "framer-motion, lucide-react, google-fonts",
+  "installed": true,
+  "source": "skills.sh/community",
+  "category": "Design & UI/UX",
+  "author": "SupremeAI Core",
+  "rating": 4.96
+}

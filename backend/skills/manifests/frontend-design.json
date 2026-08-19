@@ -1,0 +1,12 @@
+{
+  "id": "frontend-design",
+  "name": "Frontend Design Orchestrator (skills.sh)",
+  "version": "2.1.0",
+  "description": "Design distinctive, production-grade frontend interfaces, glassmorphic UI mockups, and modern web application pages following strict design taste and aesthetic heuristics.",
+  "dependencies": "html5, vanilla-css, tailwindcss, react, lucide-react",
+  "installed": true,
+  "source": "skills.sh/official",
+  "category": "Design & UI/UX",
+  "author": "SupremeAI Core & skills.sh Community",
+  "rating": 4.98
+}
