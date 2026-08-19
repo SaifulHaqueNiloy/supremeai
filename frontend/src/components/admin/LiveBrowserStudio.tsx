@@ -35,9 +35,11 @@ interface BrowserActionLog {
 
 function getProxiedUrl(targetUrl: string): string {
   if (/^https?:\/\//i.test(targetUrl)) {
-    const baseUrl = getApiBaseUrl();
+    const baseUrl = getApiBaseUrl().replace(/\/+$/, '');
     const token = getRawToken() || '';
-    return `${baseUrl}/api/browser/render?url=${encodeURIComponent(targetUrl)}&token=${encodeURIComponent(token)}`;
+    // If baseUrl already ends with /api, append /browser/render, else /api/browser/render
+    const renderPath = baseUrl.endsWith('/api') ? '/browser/render' : '/api/browser/render';
+    return `${baseUrl}${renderPath}?url=${encodeURIComponent(targetUrl)}&token=${encodeURIComponent(token)}`;
   }
   return targetUrl;
 }
