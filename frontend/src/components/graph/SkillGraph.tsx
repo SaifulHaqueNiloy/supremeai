@@ -1,6 +1,7 @@
 // src/components/graph/SkillGraph.tsx
 import { useEffect, useCallback } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Background,
   Controls,
   MiniMap,
@@ -8,9 +9,9 @@ import ReactFlow, {
   useEdgesState,
   addEdge,
   MarkerType
-} from 'reactflow';
-import type { Connection, Edge } from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import type { Connection, Edge } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
 // বাংলা মন্তব্য: এপিআই থেকে আসা ডেটার টাইপ ডিফাইন করা হচ্ছে
 interface GraphData {

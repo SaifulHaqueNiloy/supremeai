@@ -25,10 +25,10 @@ jobs:
 
       - name: Install Rust toolchain
         # বাংলা: Tauri Rust বিল্ডের জন্য stable toolchain দরকার
-        uses: dtolnay/rust-toolchain@stable # TODO(AUDIT-006): SHA-pin করুন
+        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456a2dd12403627792fc8ea # stable
 
       - name: Rust cache
-        uses: swatinem/rust-cache@v2 # TODO(AUDIT-006): SHA-pin করুন
+        uses: swatinem/rust-cache@82a92a6e8fbeee089604d5308cdfcc26289ba7af # v2.x
         with:
           workspaces: apps/desktop/src-tauri -> target
 

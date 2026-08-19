@@ -18,6 +18,8 @@ from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 logger = logging.getLogger("SupremeAI.API")
 
 
+from typing import Any
+
 @with_error_bus("register_router")
 def register_router(
     app: FastAPI,
@@ -25,6 +27,7 @@ def register_router(
     prefix: str = "",
     *,
     optional: bool = False,
+    dependencies: list[Any] | None = None,
 ) -> None:
     """Lazy-load a router module and include it on the FastAPI app.
 
@@ -34,16 +37,17 @@ def register_router(
         prefix: URL prefix for the router.
         optional: If True, missing/optional routers are logged as warnings
                   instead of crashing the process.
+        dependencies: Optional list of FastAPI dependencies for the router.
     """
     try:
         module = importlib.import_module(router_module)
         router = getattr(module, "router", None)
         if router is None:
             raise AttributeError(f"Module {router_module!r} has no 'router' attribute.")
-        app.include_router(router, prefix=prefix)
+        app.include_router(router, prefix=prefix, dependencies=dependencies or [])
         sse_router = getattr(module, "sse_router", None)
         if sse_router is not None:
-            app.include_router(sse_router, prefix=prefix)
+            app.include_router(sse_router, prefix=prefix, dependencies=dependencies or [])
         logger.debug(f"Router registered: {router_module!r} -> prefix={prefix!r}")
     except ImportError as exc:
         msg = f"Optional router {router_module!r} not found: {exc}"

@@ -10,12 +10,7 @@ class AiProvidersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final apiService = ApiService();
 
-    final defaultProviders = [
-      {'name': 'OpenAI', 'status': 'providers.online'.tr(), 'model': 'gpt-4o-mini', 'color': Colors.greenAccent},
-      {'name': 'SupremeAI Light', 'status': 'providers.online'.tr(), 'model': 'supremeai-1.5-flash', 'color': Colors.greenAccent},
-      {'name': 'Anthropic', 'status': 'providers.online'.tr(), 'model': 'claude-3-5-haiku', 'color': Colors.greenAccent},
-      {'name': 'Groq', 'status': 'providers.online'.tr(), 'model': 'llama3-8b-8192', 'color': Colors.greenAccent},
-    ];
+    final fallbackProviders = <Map<String, dynamic>>[];
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -33,7 +28,7 @@ class AiProvidersScreen extends StatelessWidget {
           }
 
           final fetchedList = snapshot.data ?? [];
-          final displayProviders = fetchedList.isEmpty ? defaultProviders : fetchedList.map((p) {
+          final displayProviders = fetchedList.isEmpty ? fallbackProviders : fetchedList.map((p) {
             final active = p['status']?.toString().toLowerCase() == 'active' || p['status']?.toString().toLowerCase() == 'online';
             return {
               'name': p['name']?.toString() ?? 'Unknown',

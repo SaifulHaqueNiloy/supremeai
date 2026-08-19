@@ -311,14 +311,6 @@ class OrchestrationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  String _extractJson(String text) {
-    final start = text.indexOf('{');
-    final end = text.lastIndexOf('}');
-    if (start != -1 && end != -1) {
-      return text.substring(start, end + 1);
-    }
-    return '{}';
-  }
 
   Future<void> generateProject(String token) async {
     if (_lastResult == null) {

@@ -17,7 +17,7 @@ def verify_deployment_gate():
             logger.warning(
                 "⚠️ Deploy gate status document not found. Defaulting to SAFE/UNLOCKED."
             )
-            sys.exit(0)
+            sys.exit(1)
 
         gate_data = doc.to_dict()
         status = gate_data.get("status", "UNLOCKED").upper()

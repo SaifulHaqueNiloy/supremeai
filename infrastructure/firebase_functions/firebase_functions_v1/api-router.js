@@ -8,9 +8,9 @@ const axios = require('axios');
 const app = express();
 
 const allowedOrigins = [
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5000',
+  'https://supremeai-a.web.app',
+  'https://supremeai-admin.web.app',
+  'http://localhost:5173',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5000',
@@ -18,7 +18,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || origin.includes('supremeai')) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));

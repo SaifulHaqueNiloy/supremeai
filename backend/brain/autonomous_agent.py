@@ -88,7 +88,7 @@ class AutonomousAgent:
                 )
                 break
 
-        time.time() - start_time
+
 
         self.history.append(
             {

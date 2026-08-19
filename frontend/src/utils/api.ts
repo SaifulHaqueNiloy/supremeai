@@ -3,16 +3,13 @@
 // Firebase hosting external rewrite proxy সাপোর্ট করে না, তাই Firebase-এ সরাসরি backend URL ব্যবহার হয় (CORS allow)।
 // Vercel-এ relative path ('') রাখা হয় কারণ Vercel external rewrite proxy সাপোর্ট করে।
 
+import { ENDPOINTS } from '../config/endpoints';
+
 /** Admin portal-এর canonical backend URL (build-time resolved) */
-export const ADMIN_BACKEND_URL: string =
-  import.meta.env.VITE_ADMIN_BACKEND || 'https://supremeai-backend-docker.onrender.com';
+export const ADMIN_BACKEND_URL: string = ENDPOINTS.adminBackend;
 
 /** User portal-এর canonical backend URL (build-time resolved) */
-export const USER_BACKEND_URL: string =
-  import.meta.env.VITE_USER_BACKEND ||
-  import.meta.env.VITE_API_BASE ||
-  import.meta.env.VITE_API_URL ||
-  'https://supremeai-backend-docker.onrender.com';
+export const USER_BACKEND_URL: string = ENDPOINTS.userBackend;
 
 /**
  * বর্তমান portal-এর canonical backend URL — heartbeat ও অন্যান্য সার্ভিস এটিই ব্যবহার করে।

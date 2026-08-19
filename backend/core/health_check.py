@@ -144,25 +144,34 @@ class ComprehensiveHealthChecker:
             )
 
     async def check_database(self) -> HealthCheckResult:
-        """Check database connectivity (placeholder - implement based on your DB setup)."""
+        """Check database connectivity using a real probe."""
         try:
             start_time = time.time()
-            # Placeholder - replace with actual database connectivity check
-            # For now, just simulate a healthy check
-            response_time = (time.time() - start_time) * 1000
-
-            return HealthCheckResult(
-                status=HealthStatus.HEALTHY,
-                message="Database connectivity OK",
-                response_time_ms=response_time,
-                details={
-                    "connected": True,
-                    "type": "supabase/postgres",  # Replace with actual DB type
-                    "response_time_ms": response_time,
-                },
-            )
+            from backend.database.session import get_db_session_context
+            from sqlalchemy import text
+            
+            async with get_db_session_context() as session:
+                result = await session.execute(text("SELECT 1"))
+                if result.scalar() == 1:
+                    response_time = (time.time() - start_time) * 1000
+                    return HealthCheckResult(
+                        status=HealthStatus.HEALTHY,
+                        message="Database is responsive",
+                        response_time_ms=response_time,
+                        details={
+                            "connected": True,
+                            "type": "postgres",
+                            "response_time_ms": response_time,
+                        },
+                    )
+                else:
+                    return HealthCheckResult(
+                        status=HealthStatus.UNHEALTHY,
+                        message="Database probe returned unexpected result",
+                        details={"connected": False},
+                    )
         except Exception as e:
-            logger.error(f"Database health check failed: {e}")
+            logger.error(f"DB probe failed: {e}")
             return HealthCheckResult(
                 status=HealthStatus.UNHEALTHY,
                 message=f"Database health check failed: {e!s}",

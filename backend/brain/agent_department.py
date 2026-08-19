@@ -117,8 +117,11 @@ class AgentDepartment:
             "qa": QAAgent(model_router),
         }
 
-    def run(self, department: str, task: str, context: str = "") -> dict[str, Any]:
+    def execute(self, department: str, task: str, task_type: str = "general", context: str = "") -> dict[str, Any]:
         agent = self.agents.get(department)
         if not agent:
             return {"success": False, "error": f"Unknown department: {department}"}
         return agent.execute(description=task, context=context)
+
+    def list_roles(self) -> list[str]:
+        return list(self.agents.keys())

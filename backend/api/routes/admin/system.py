@@ -34,47 +34,42 @@ def get_metrics():
         active_providers = ["ollama"]
         distribution = {"ollama": 100}
 
-    # বাংলা মন্তব্য: psutil ব্যবহার করে সার্ভারের রিয়েল CPU এবং Memory ব্যবহারের পারসেন্টেজ সংগ্রহ করা হচ্ছে।
-    cpu_usage = 0.0
-    memory_usage = 0.0
-    gpu_usage = 0.0
+    cpu_usage = None
+    memory_usage = None
+    gpu_usage = None
     try:
-        import sys
+        import psutil
+        cpu_usage = psutil.cpu_percent(interval=0.5)
+        memory_usage = psutil.virtual_memory().percent
 
-        psutil = sys.modules.get("psutil")
-        if psutil is None:
-            import psutil
+        try:
+            import pynvml
+            pynvml.nvmlInit()
+            gpu_handles = [pynvml.nvmlDeviceGetHandleByIndex(i) for i in range(pynvml.nvmlDeviceGetCount())]
+            gpu_usages = [pynvml.nvmlDeviceGetUtilizationRates(h).gpu for h in gpu_handles]
+            if gpu_usages:
+                gpu_usage = sum(gpu_usages) / len(gpu_usages)
+        except Exception:
+            gpu_usage = None
 
-        raw_cpu = psutil.cpu_percent(interval=None)
-        cpu_usage = float(raw_cpu) if raw_cpu is not None else 15.2
-        if cpu_usage == 0.0:
-            cpu_usage = 15.2
-        raw_mem = psutil.virtual_memory().percent
-        memory_usage = float(raw_mem) if raw_mem is not None else 40.5
-        if memory_usage == 0.0:
-            memory_usage = 40.5
-
-        gpu_usage = min(90.0, float(cpu_usage * 0.8 + 10.0))
     except Exception as exc:
         logger.warning(f"Failed to fetch system metrics via psutil: {exc}")
-        cpu_usage = 22.4
-        memory_usage = 45.2
-        gpu_usage = 12.0
 
+    # For now returning None for Prometheus metrics until fully integrated
     return {
-        "requests_per_second": 12,
-        "latency_p50_ms": 180,
-        "latency_p95_ms": 320,
-        "latency_p99_ms": 650,
-        "error_rate": 0.00,
-        "total_requests_24h": 124,
-        "cost_per_hour": 0.01,
-        "cost_projected_monthly": 7.20,
+        "requests_per_second": None,
+        "latency_p50_ms": None,
+        "latency_p95_ms": None,
+        "latency_p99_ms": None,
+        "error_rate": None,
+        "total_requests_24h": None,
+        "cost_per_hour": None,
+        "cost_projected_monthly": None,
         "active_providers": active_providers,
         "model_call_distribution": distribution,
-        "cpu_usage_percent": round(cpu_usage, 1),
-        "gpu_usage_percent": round(gpu_usage, 1),
-        "memory_usage_percent": round(memory_usage, 1),
+        "cpu_usage_percent": round(cpu_usage, 1) if cpu_usage is not None else None,
+        "gpu_usage_percent": round(gpu_usage, 1) if gpu_usage is not None else None,
+        "memory_usage_percent": round(memory_usage, 1) if memory_usage is not None else None,
     }
 
 

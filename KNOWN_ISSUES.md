@@ -20,5 +20,14 @@ Agents should refer to this list when looking for optimization opportunities or 
 ## Technical Debt
 - [ ] Example Tech Debt: E.g., refactor this component to use a newer library version.
 
+## Client/Backend API Path Audit (2026-08-19)
+- [x] **Core chat router never registered** — `api.routes.chat` now registered (`/api/chat/*`); `/stream` alias + `/message` endpoint added.
+- [x] **Admin API package (`api.routes.admin`) is live** via `admin_dashboard` shim (routers.py:32). Core admin endpoints now reachable: `/admin-api/metrics`, `/costs`, `/health-map`, `/ci-logs`, `/users`, `/roles`, `/permissions`, `/deploy`, `/emergency-deploy`, `/config`, `/settings`, `/workspaces`, `/customers`, `/sessions`, `/providers`, `/model-router`, `/feature-flags`, `/backups`, `/security-scan`, `/events`, `/logs/stream`, `/events/stream`, `/skills`, `/reports`, `/cost-caps`, `/gate/override`, `/data-export`, `/codebase/export`.
+- [x] **LLM Gateway admin page (`/api/admin/llm/*`) had NO backend** — added `api.routes.llm_gateway_admin.py` serving `/providers`, `/router`, `/rules` (GET) + `/router/override`, `/rules` (POST) from real gateway state (override/rules in-memory).
+- [x] **VSCode MemoryService wrong prefix** — `/api/memory/*` → `/memory/*` (checkpoint/context now resolve; `/memory/ingest` still 404 = missing backend feature).
+- [x] **Frontend command-center wrong-prefix calls** — `/admin-api/memory`→`/memory`, `/admin-api/knowledge`→`/api/knowledge`, `/admin-api/agents`→`/api/v1/agents`, `/admin-api/swarm`→`/api/v1/evolution/swarm-graph`.
+- [ ] **Genuinely MISSING backend endpoints (frontend calls them, backend has none):** `/admin-api/deploy-status/{id}`, `/admin-api/rules`, `/admin-api/security/tasks`, `/admin-api/security/memory`, `/admin-api/tenant-limits`, `/admin-api/budget-caps`, `/admin-api/approvals`, `/admin-api/rate-limits`, `/admin-api/secrets-health`, `/admin-api/deploy-gate`, `/admin-api/impersonate`, `/admin-api/tenants/{id}/reset`, `/admin-api/alerts/acknowledge`, `/admin-api/security-scan/findings`, `/admin-api/audit`, `/admin-api/audit-logs`. These are unbuilt features, not path bugs.
+- [ ] **VSCode features pointing at non-existent backends (different contracts):** `LearningService` (`/api/knowledge/learn|failure|feedback|analysis|stats`), `SupremeAIService.getInlineCompletions` (`/api/chat/completion`), `CrossAiObserverService` (`/api/evolution/learn`), `ChatService` (`/api/chat/history`). Build the backend features or remove the calls.
+
 ---
 *(Check items off `[x]` as they are resolved and add new ones at the top of their respective sections)*

@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, model_validator
 
 from api.dependencies import verify_autonomous_agent_token
-from brain.agent_departments import AgentDepartment
+from brain.agent_department import AgentDepartment
 from brain.autonomous_agent import AutonomousAgent
 from brain.langgraph_agent import SupremeOrchestrator
 from brain.model_router import ModelRouter
@@ -75,14 +75,10 @@ async def execute_agent(
 ):
     _user_context(request)
     if body.autonomous:
-        run = autonomous_agent.run(body.task, body.task_type)
-        monitor.track_agent_call(prompt=body.task, provider="autonomous")
-        return AgentExecuteResponse(
-            success=run.get("run", {}).get("success", False),
-            output=run.get("run", {}).get("output"),
-            role="autonomous",
-            cost=0.0,
-            errors=run.get("run", {}).get("errors") or [],
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=501,
+            detail="Autonomous agent mode is not yet implemented. Use manual mode."
         )
 
     if body.department:

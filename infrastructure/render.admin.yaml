@@ -33,20 +33,6 @@ services:
       - key: PORT
         value: 8080
       - key: ENV
-        value: production
-      # বাংলা মন্তব্য: এই একটি ফ্ল্যাগই core/app_admin.py লোড করায় (main.py) and
-      # database/session.py-কে min=1/max=3 PgBouncer pool limit-এ পাঠায়।
-      - key: SERVICE_ROLE
-        value: admin
-      # বাংলা মন্তব্য: Alert-only ডিফল্ট — false-positive rate যাচাই না হওয়া পর্যন্ত ব্লক করবে না।
-      - key: ENFORCE_ANTI_HACKING
-        value: false
-      # বাকি সিক্রেটগুলো ড্যাশবোর্ড থেকে সিঙ্ক হবে (Upstash & Supabase — same DB/Redis as User instance)
-      - key: REDIS_URL
-        sync: false
-      - key: UPSTASH_REDIS_REST_URL
-        sync: false
-      - key: UPSTASH_REDIS_REST_TOKEN
         sync: false
       - key: SUPABASE_URL
         sync: false

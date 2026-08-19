@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo, useRef } from 'react';
-import ReactFlow, {
+import { ReactFlow,
   Background,
   useNodesState,
   useEdgesState,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import './AethelCoreStyles.css';
 import {
   Cpu,
@@ -60,6 +60,7 @@ export function CommandCenter() {
   const [terminalInput, setTerminalInput] = useState('');
   const [browserUrl, setBrowserUrl] = useState('https://supremeai-a.web.app');
   const setAdminSubTab = useAdminStore(state => state.setAdminSubTab);
+  const handleAdminLogout = useAdminStore(state => state.handleAdminLogout);
   const { theme, toggleTheme } = useTheme();
 
   // Audio Engine State
@@ -283,7 +284,7 @@ export function CommandCenter() {
         </div>
         <div className="flex items-center gap-4 text-[10px] text-[var(--accent-primary)] font-bold">
           <span
-            onClick={useAdminStore(state => state.handleAdminLogout)}
+            onClick={handleAdminLogout}
             className="cursor-pointer hover:opacity-80 transition-opacity"
             title="Return to Login"
           >

@@ -4,7 +4,7 @@ import os
 
 # বাংলা মন্তব্য: ব্যাকআপ অ্যাকাউন্টের API Key এবং সঠিক সার্ভিস আইডি সেট করা হলো
 api_key = os.environ.get("RENDER_API_KEY_BACKUP", "")
-service = "srv-d9e4q5rrjlhs73bnh71g"
+service = os.environ.get('RENDER_BACKUP_ADMIN_SERVICE_ID')
 headers = {
     "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",

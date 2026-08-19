@@ -235,26 +235,7 @@ export class ChatService {
     }
   }
 
-  /** Generate a fully offline fallback response when backend is unreachable. */
-  generateFallbackResponse(message: string): string {
-    const lowerMsg = message.toLowerCase();
-    if (lowerMsg.includes('bangla') || lowerMsg.includes('বাংলা')) {
-      return 'হ্যাঁ, আমি বাংলায় কথা বলতে পারি! আমি আপনার সুপ্রিমএআই (SupremeAI) অ্যাসিস্ট্যান্ট। আমি আপনাকে কোডিং, বাগ ফিক্সিং এবং কোড রিফ্যাক্টরিংয়ে সাহায্য করতে পারি।';
-    }
-    if (lowerMsg.includes('hello') || lowerMsg.includes('hi') || lowerMsg.includes('hey')) {
-      return 'Hello! I\'m your SupremeAI assistant. How can I help you with your code today?';
-    }
-    if (lowerMsg.includes('bug') || lowerMsg.includes('error') || lowerMsg.includes('fix')) {
-      return 'I can help you debug! Please share the error message or the problematic code, and I\'ll analyze it for you.';
-    }
-    if (lowerMsg.includes('refactor') || lowerMsg.includes('improve') || lowerMsg.includes('optimize')) {
-      return 'I can help refactor your code! Please share the code you\'d like to improve, and I\'ll suggest optimizations.';
-    }
-    return (
-      'I\'m here to help with your coding needs! You can ask me to:\n' +
-      '• Explain code\n• Fix bugs\n• Refactor code\n• Review code\n• Answer programming questions\n\nPlease share your code or question!'
-    );
-  }
+
 
   private getWsBaseUrl(): string {
     const base = (this.config.backendUrl || '').replace(/\/$/, '');

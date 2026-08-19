@@ -51,6 +51,8 @@ class SettingsSecretsMixin:
         "CI_WEBHOOK_SECRET",
         "SUPABASE_URL",
         "SUPABASE_KEY",
+        "SUPABASE_DATABASE_URL",
+        "SUPABASE_DATABASE_URL_POOLER",
         "SUPREMEAI_API_KEY",
         "NEO4J_URI",
         "NEO4J_USER",

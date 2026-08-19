@@ -5,10 +5,14 @@ import 'package:flutter/foundation.dart'; // kReleaseMode-এর জন্য
 class NeuralStreamService {
   WebSocketChannel? _channel;
 
-  // প্রোডাকশন (Release) এবং লোকাল (Debug) মোডের জন্য ডায়নামিক URL
-  final String wsUrl = kReleaseMode
-      ? 'wss://supremeai-backend-docker.onrender.com/ws/chat'
-      : 'ws://10.0.2.2:8000/ws/chat';
+  final String apiBase = const String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'https://supremeai-backend-docker.onrender.com',
+  );
+  
+  late final String wsUrl = (apiBase
+      .replaceFirst('https://', 'wss://')
+      .replaceFirst('http://', 'ws://')) + '/ws/chat';
 
   // ব্রডকাস্ট স্ট্রিম কন্ট্রোলার (মাল্টিপল লিসেনার এবং রিকানেকশনের জন্য)
   final StreamController<dynamic> _streamController = StreamController.broadcast();

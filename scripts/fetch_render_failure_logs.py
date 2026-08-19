@@ -4,13 +4,16 @@ import json
 import re
 import os
 
-env_text = open('.env', encoding='utf-8').read()
-k1 = re.search(r'RENDER_API_KEY="([^"]+)"', env_text).group(1)
-k2 = re.search(r'RENDER_API_KEY_BACKUP="([^"]+)"', env_text).group(1)
+import os
+
+k1 = os.environ.get('RENDER_API_KEY')
+k2 = os.environ.get('RENDER_API_KEY_BACKUP')
+if not k1:
+    raise SystemExit("Error: RENDER_API_KEY env var not set. Set it via GitHub Actions secrets.")
 
 services = [
-    ("User Backend", "srv-d9d3n58js32c738n79k0", k1),
-    ("Admin Backend", "srv-d9fg48bh523c73f63bb0", k2)
+    ("User Backend", os.environ.get('RENDER_USER_BACKEND_SERVICE_ID'), k1),
+    ("Admin Backend", os.environ.get('RENDER_ADMIN_BACKEND_SERVICE_ID'), k2)
 ]
 
 for name, sid, key in services:

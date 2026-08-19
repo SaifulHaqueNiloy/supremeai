@@ -19,8 +19,8 @@ if not api_key or not api_key_backup:
 # প্রতিটি সার্ভিস আইডিকে তার নিজ নিজ অ্যাকাউন্টের API Key-র সাথে ম্যাপ করা হচ্ছে
 # বাংলা মন্তব্য: User Backend ও Admin Backend-এর সঠিক সার্ভিস আইডি
 service_mappings = [
-    {"name": "User Backend", "sid": "srv-d9d3n58js32c738n79k0", "key": api_key},
-    {"name": "Admin Backend", "sid": "srv-d9fg48bh523c73f63bb0", "key": api_key_backup}
+    {"name": "User Backend", "sid": os.environ.get('RENDER_USER_BACKEND_SERVICE_ID'), "key": api_key},
+    {"name": "Admin Backend", "sid": os.environ.get('RENDER_ADMIN_BACKEND_SERVICE_ID'), "key": api_key_backup}
 ]
 
 for service in service_mappings:

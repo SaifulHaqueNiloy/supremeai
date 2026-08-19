@@ -21,9 +21,9 @@ if not key_primary:
     sys.exit(1)
 
 SERVICES = [
-    {"name": "User Backend (Primary)", "service_id": "srv-d9d3n58js32c738n79k0"},
-    {"name": "Admin Backend (Backup)", "service_id": "srv-d9fg48bh523c73f63bb0"},
-    {"name": "Studio Client (Frontend)", "service_id": "srv-d9d3pgvavr4c738a46mg"}
+    {"name": "User Backend (Primary)", "service_id": os.environ.get('RENDER_USER_BACKEND_SERVICE_ID')},
+    {"name": "Admin Backend (Backup)", "service_id": os.environ.get('RENDER_ADMIN_BACKEND_SERVICE_ID')},
+    {"name": "Studio Client (Frontend)", "service_id": os.environ.get('RENDER_STUDIO_CLIENT_SERVICE_ID')}
 ]
 
 valid_key_pattern = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_.-]*$')

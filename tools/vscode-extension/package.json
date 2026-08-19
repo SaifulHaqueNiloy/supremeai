@@ -122,7 +122,7 @@
       },
       {
         "command": "supremeai.trioPipeline",
-        "title": "Run Trio Pipeline (Gemini -> Kilo -> Cline)",
+        "title": "Run Trio Pipeline",
         "category": "SupremeAI"
       },
       {

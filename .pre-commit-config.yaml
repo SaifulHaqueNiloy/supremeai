@@ -8,7 +8,7 @@ repos:
   # ১. বেসিক ফাইল হেলথ চেক (File Integrity Gate & Gatekeepers)
   # ══════════════════════════════════════════════════════════════
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c # v4.6.0
     hooks:
       - id: check-yaml
         name: 📄 YAML Syntactical Validator
@@ -67,9 +67,9 @@ repos:
     hooks:
       - id: ruff
         name: ⚡ Ruff Linter (Matching CI Iron Curtain Gate)
-        entry: poetry -C backend run python -m ruff check backend --config=backend/pyproject.toml --extend-ignore=S101,S110,S603,S607,S104,S105,S107,S108,S306,S310,S311,S314,S608,E501,E402
+        entry: poetry -C backend run python -m ruff check --config=backend/pyproject.toml --extend-ignore=S101,S110,S607,S104,S107,S108,S306,S310,S311,S314,E501,E402
         language: system
-        pass_filenames: false
+        pass_filenames: true
         types_or: [python, pyi]
       - id: ruff-format
         name: 🎨 Ruff Formatter (PEP 8 Enforcer)

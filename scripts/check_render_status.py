@@ -4,13 +4,16 @@ import re
 import urllib.request
 
 # .env থেকে Render API keys পড়া
-content = open('.env', encoding='utf-8').read()
-key = re.search(r'RENDER_API_KEY="([^"]+)"', content).group(1)
-key2 = re.search(r'RENDER_API_KEY_BACKUP="([^"]+)"', content).group(1)
+import os
+
+key = os.environ.get('RENDER_API_KEY')
+key2 = os.environ.get('RENDER_API_KEY_BACKUP')
+if not key:
+    raise SystemExit("Error: RENDER_API_KEY env var not set. Set it via GitHub Actions secrets.")
 
 services = [
-    ('srv-d9d3n58js32c738n79k0', 'User Backend', key),
-    ('srv-d9fg48bh523c73f63bb0', 'Admin Backend', key2),
+    (os.environ.get('RENDER_USER_BACKEND_SERVICE_ID'), 'User Backend', key),
+    (os.environ.get('RENDER_ADMIN_BACKEND_SERVICE_ID'), 'Admin Backend', key2),
 ]
 
 for svc_id, name, k in services:

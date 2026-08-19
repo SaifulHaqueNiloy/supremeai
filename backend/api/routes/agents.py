@@ -109,10 +109,6 @@ async def medical_symptoms(payload: SymptomRequest):
         raise HTTPException(status_code=503, detail=f"Medical analysis service unavailable: {exc}") from exc
 
 
-@router.post("/medical/drug-interactions")
-async def medical_drug_interactions(payload: DrugInteractionRequest):
-    return _not_implemented("medical/drug-interactions")
-
 
 @router.post("/trading/analyze")
 async def trading_analyze(symbol: str):
@@ -124,33 +120,3 @@ async def trading_analyze(symbol: str):
         return {"success": True, "result": result}
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Trading analysis service unavailable: {exc}") from exc
-
-
-@router.post("/trading/buy")
-async def trading_buy(payload: TradeRequest):
-    return _not_implemented("trading/buy")
-
-
-@router.post("/trading/sell")
-async def trading_sell(payload: TradeRequest):
-    return _not_implemented("trading/sell")
-
-
-@router.get("/trading/portfolio")
-async def trading_portfolio():
-    return _not_implemented("trading/portfolio")
-
-
-@router.post("/research/search")
-async def research_search(payload: ResearchRequest):
-    return _not_implemented("research/search")
-
-
-@router.post("/research/summarize")
-async def research_summarize(payload: SummarizeRequest):
-    return _not_implemented("research/summarize")
-
-
-@router.post("/research/cite")
-async def research_cite(payload: SummarizeRequest):
-    return _not_implemented("research/cite")

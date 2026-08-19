@@ -1,8 +1,8 @@
 import React from 'react';
 import { Home, Server, Shield, Activity, Settings, Cpu, HardDrive, DollarSign, Database, GitBranch, Sparkles, RefreshCw, Layout, Users, TrendingUp, Clock, CheckCircle, ArrowUpRight, Zap, Lock } from 'lucide-react';
-import ReactFlow, { Background, Controls, useNodesState, useEdgesState } from 'reactflow';
+import { ReactFlow, Background, Controls, useNodesState, useEdgesState } from '@xyflow/react';
 import { motion } from 'framer-motion';
-import 'reactflow/dist/style.css';
+import '@xyflow/react/dist/style.css';
 import './AethelCoreStyles.css';
 import { useMetrics, useHealthMap, useThreatScan, useCIReports, useDashboardEvents, useDashboardReports } from '../../hooks/useDashboardData';
 import { useQueryClient } from '@tanstack/react-query';

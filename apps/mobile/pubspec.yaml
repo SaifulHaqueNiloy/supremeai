@@ -22,7 +22,9 @@ dependencies:
   flutter_secure_storage: ^9.0.0
   google_sign_in: ^6.2.1
   connectivity_plus: ^6.0.3
-  google_generative_ai: ^0.4.0
+  go_router: ^14.0.0
+  firebase_messaging: ^15.0.0
+  flutter_local_notifications: ^17.0.0
   # বাংলা মন্তব্য: payment_gateway_bridge.dart ফাইলে url_launcher প্যাকেজ ব্যবহার করা হয়েছে, যা pubspec-এ না থাকায় CI ফেইল করছিল। তাই এটি যুক্ত করা হলো।
   url_launcher: ^6.2.5
 

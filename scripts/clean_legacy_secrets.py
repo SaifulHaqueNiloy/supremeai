@@ -136,8 +136,8 @@ def clean_vercel(project_id, token):
 
 print("🚀 Starting Master Legacy Cleanup & Integration...")
 
-clean_render("srv-d9d3n58js32c738n79k0", RENDER_API_KEY, "Backend")
-clean_render("srv-d9fg48bh523c73f63bb0", RENDER_API_KEY_BACKUP or RENDER_API_KEY, "Admin")
+clean_render(os.environ.get('RENDER_USER_BACKEND_SERVICE_ID'), RENDER_API_KEY, "Backend")
+clean_render(os.environ.get('RENDER_ADMIN_BACKEND_SERVICE_ID'), RENDER_API_KEY_BACKUP or RENDER_API_KEY, "Admin")
 
 clean_github("SaifulHaqueNiloy/supremeai", GH_TOKEN)
 

@@ -7,6 +7,7 @@ import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
 import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { ToastProvider } from './components/ui/Toast';
+import { MockSwarmProvider } from './providers/MockSwarmProvider';
 
 // Pages (Core Layouts & Auth)
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage').then(m => ({ default: m.LoginPage })));
@@ -153,7 +154,8 @@ const AppContent: React.FC = () => {
               <div className="animate-pulse">Loading Workspace...</div>
             </div>
           }>
-            <Routes>
+            <MockSwarmProvider>
+              <Routes>
               {PORTAL_TYPE === 'admin' ? (
                 /* =========================================
                    ADMIN PORTAL
@@ -254,6 +256,7 @@ const AppContent: React.FC = () => {
                 </>
               )}
             </Routes>
+            </MockSwarmProvider>
           </React.Suspense>
         </GlobalConfigInitializer>
       </QueryClientProvider>

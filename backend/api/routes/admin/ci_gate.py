@@ -35,6 +35,14 @@ async def get_ci_logs(limit: int = 20):
     try:
         reports = await get_recent_ci_reports(limit)
         return reports
+    except RuntimeError as e:
+        # DB পুল স্টার্টআপে ইনিশিয়ালাইজ না হলে (degraded mode) 500-এর বদলে খালি লিস্ট রিটার্ন করি,
+        # যাতে ড্যাশবোর্ড ক্র্যাশ না করে এবং অন্য ফিচার ঠিক থাকে।
+        if "DB pool was accessed before app startup" in str(e):
+            logger.warning(f"⚠️ CI logs requested but DB pool is unavailable (degraded mode): {e!s}")
+            return []
+        logger.error(f"❌ Failed to fetch CI logs: {e!s}")
+        raise HTTPException(status_code=500, detail=f"Database query failure: {e!s}") from e
     except Exception as e:
         logger.error(f"❌ Failed to fetch CI logs: {e!s}")
         raise HTTPException(status_code=500, detail=f"Database query failure: {e!s}") from e

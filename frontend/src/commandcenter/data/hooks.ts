@@ -275,7 +275,7 @@ export function useSkills() {
 export function useMemoryStats() {
   return useQuery({
     queryKey: cmdKeys.memory,
-    queryFn: () => apiClient.get<MemoryStats>('/admin-api/memory'),
+    queryFn: () => apiClient.get<MemoryStats>('/memory'),
     enabled: hasToken(),
     staleTime: 30_000,
   });
@@ -284,7 +284,7 @@ export function useMemoryStats() {
 export function useKnowledgeStats() {
   return useQuery({
     queryKey: cmdKeys.knowledge,
-    queryFn: () => apiClient.get<KnowledgeStats>('/admin-api/knowledge'),
+    queryFn: () => apiClient.get<KnowledgeStats>('/api/knowledge'),
     enabled: hasToken(),
     staleTime: 30_000,
   });
@@ -294,7 +294,7 @@ export function useKnowledgeStats() {
 export function useAgents(refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: cmdKeys.agents,
-    queryFn: () => apiClient.get<Agent[]>('/admin-api/agents'),
+    queryFn: () => apiClient.get<Agent[]>('/api/v1/agents'),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: 15_000,
@@ -304,7 +304,7 @@ export function useAgents(refetchIntervalMs?: number | false) {
 export function useSwarm() {
   return useQuery({
     queryKey: cmdKeys.swarm,
-    queryFn: () => apiClient.get<{ nodes: SwarmNode[]; edges: SwarmEdge[] }>('/admin-api/swarm'),
+    queryFn: () => apiClient.get<{ nodes: SwarmNode[]; edges: SwarmEdge[] }>('/api/v1/evolution/swarm-graph'),
     enabled: hasToken(),
     staleTime: 15_000,
   });

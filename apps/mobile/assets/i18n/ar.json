@@ -68,7 +68,7 @@
     "z_architect": "وكيل Z-Architect",
     "z_architect_desc": "يتعامل مع التنفيذ الفني",
     "agents_voting": "يستخدم الوكلاء ",
-    "across": "عبر مزودي ذكاء اصطناعي متعددين (OpenAI, Anthropic, Gemini, إلخ) لاتخاذ قرارات أفضل.",
+    "across": "عبر مزودي ذكاء اصطناعي متعددين (frontier, value, free tiers) لاتخاذ قرارات أفضل.",
     "dashboard_title": "مركز قيادتك",
     "dashboard_desc": "تمنحك لوحة التحكم رؤية في الوقت الفعلي لـ:",
     "system_health": "صحة النظام",

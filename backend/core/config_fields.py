@@ -141,6 +141,8 @@ class SettingsFieldsMixin:
             "/api/v1/markdown",
             "/api/config/public",
             "/api/task/stream",
+            "/api/preferences",
+            "/api/v1/preferences",
             "/api/preferences/default/stream",
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",

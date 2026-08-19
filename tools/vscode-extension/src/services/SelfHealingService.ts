@@ -34,61 +34,7 @@ export class SelfHealingService extends BaseDisposable {
         // Disabled automatic background scanning for zero-lag editing.
     }
 
-    private async processDiagnostics(uris: readonly vscode.Uri[]) {
-        // Find the first active text editor with errors
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) return;
 
-        const uri = editor.document.uri;
-        if (!uris.some(u => u.toString() === uri.toString())) return;
-
-        const diagnostics = vscode.languages.getDiagnostics(uri);
-        const errors = diagnostics.filter(d => d.severity === vscode.DiagnosticSeverity.Error);
-
-        if (errors.length === 0) return;
-
-        // Process only the first error for now
-        const primaryError = errors[0];
-        const stateManager = HealingStateManager.getInstance();
-
-        stateManager.setState(HealingState.ANALYZING_ERROR);
-
-        // Gather Context
-        const line = primaryError.range.start.line;
-        const semanticContext = await getSemanticContext(editor.document, line);
-
-        const payload = {
-            filePath: uri.fsPath,
-            message: primaryError.message,
-            lineNumber: line + 1,
-            codeContext: semanticContext,
-            languageId: editor.document.languageId
-        };
-
-        this.isHealing = true;
-        stateManager.setState(HealingState.GENERATING_PATCH);
-
-        try {
-            const fixResponse = await this.supremeService.requestSelfHealing(payload);
-
-            if (fixResponse && fixResponse.fixedCode) {
-                stateManager.setState(HealingState.APPLYING_DIFF);
-
-                // Track for Telemetry
-                TelemetryTracker.trackProposedPatch(uri.fsPath, `error-${Date.now()}`, fixResponse.fixedCode);
-
-                await this.showDiffView(uri, editor.document.getText(), fixResponse.fixedCode);
-                stateManager.setState(HealingState.SUCCESS);
-            } else {
-                stateManager.setState(HealingState.FAILED, 'No fix returned from backend.');
-            }
-        } catch (err: any) {
-            console.error('Self-healing failed', err);
-            stateManager.setState(HealingState.FAILED, err.message);
-        } finally {
-            this.isHealing = false;
-        }
-    }
 
     private async showDiffView(originalUri: vscode.Uri, originalText: string, fixedCode: string) {
         // Create an in-memory document for the fixed code

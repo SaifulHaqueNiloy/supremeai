@@ -38,7 +38,6 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.repos", ""),
     ("api.routes.tools_ops", ""),
     ("api.routes.agents", ""),
-    ("api.routes.agent", ""),
     ("api.routes.admin_core", ""),
     ("api.routes.tools_registry", ""),
     # বাংলা মন্তব্য: AUDIT-018 ফিক্স — এই router-টা আগে কোথাও register-ই করা হয়নি,
@@ -52,6 +51,7 @@ core_routers: list[tuple[str, str]] = [
     # সহ safely implement করে register করা হলো।
     ("api.routes.files", "/api"),
     ("api.routes.preferences", "/api"),
+    ("api.routes.preferences", "/api/v1"),
     ("api.routes.usage_metrics", ""),
     ("api.routes.sso", ""),
     ("api.routes.health", "/api/v1"),
@@ -87,6 +87,7 @@ core_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্ব্য: কোর চ্যাট রাউটার আগে কোথাও register-ই করা হয়নি — ফলে ওয়েব/মোবাইল/ডেস্কটপ/
     # এক্সটেনশন সব ক্লায়েন্টের চ্যাট 404 দিত। রাউটারের নিজস্ব prefix="/api/chat"।
     ("api.routes.chat", ""),
+    ("api.routes.agent_tasks", ""),
 ]
 
 optional_routers: list[tuple[str, str]] = [
@@ -117,9 +118,7 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.cloud_mesh", ""),
     ("api.routes.events", "/api"),
     ("api.routes.payments", ""),
-    # বাংলা মন্তব্য: AUDIT FIX — real /api/v1/agents/execute (agent_tasks.py) optional-রেজিস্টার।
-    # ব্যর্থ হলে optional-loader warn করে, app crash করে না।
-    ("api.routes.agent_tasks", ""),
+    # বাংলা মন্তব্য: AUDIT FIX — real /api/v1/agents/execute (agent_tasks.py) now in core_routers
     ("api.routes.maintenance", "/api/v1"),
     ("api.routes.sandbox_api", ""),
     ("api.routes.pr_review_api", ""),
@@ -213,10 +212,13 @@ def include_user_routers(app: FastAPI) -> None:
         register_router(app, "api.routes.byoc_api", "", optional=True)
 
 
+from fastapi import Depends
+from api.dependencies import get_current_admin
+
 def include_admin_routers(app: FastAPI) -> None:
     """Register all admin-facing routers on the FastAPI app."""
     for router_path, prefix in ADMIN_ROUTERS:
-        register_router(app, router_path, prefix=prefix, optional=True)
+        register_router(app, router_path, prefix=prefix, optional=True, dependencies=[Depends(get_current_admin)])
 
 
 __all__ = [

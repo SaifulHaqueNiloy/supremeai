@@ -2,11 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
+import { ENDPOINTS } from './src/config/endpoints';
+
 // বাংলা মন্তব্য: Portal-ভিত্তিক local dev proxy target — admin dev server কখনোই user backend-এ
 // (এবং উল্টোটাও) route করবে না, যাতে dev/prod আচরণ একই থাকে (সম্পূর্ণ আইসোলেশন)।
 const IS_ADMIN_PORTAL = process.env.VITE_PORTAL_TYPE === 'admin'
-const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || 'https://supremeai-backend-docker.onrender.com'
-const USER_BACKEND = process.env.VITE_USER_BACKEND || process.env.VITE_API_URL || 'https://supremeai-backend.onrender.com'
+const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || ENDPOINTS.adminBackend
+const USER_BACKEND = process.env.VITE_USER_BACKEND || process.env.VITE_API_URL || ENDPOINTS.userBackend
 const PORTAL_BACKEND = IS_ADMIN_PORTAL ? ADMIN_BACKEND : USER_BACKEND
 
 const devProxy = {
@@ -56,29 +58,13 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
+        // বাংলা মন্তব্য: সব vendor লাইব্রেরি একই চাঙ্কে রাখি যাতে react ↔ reactflow-এর
+        // মতো সাইক্লিক চাঙ্ক-ডিপেন্ডেন্সি তৈরি না হয়। আলাদা চাঙ্কে ভাগ করলে
+        // মডিউল-ইনিশিয়ালাইজেশনের সময় `pe.Activity = …` এর মতো ক্র্যাশ হয়
+        // (supremeai-admin.web.app বুট হত না)।
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('react/') || id.includes('react-dom/') || id.includes('react-router-dom/')) {
-              return 'vendor-react';
-            }
-            if (id.includes('@tanstack/react-query')) {
-              return 'vendor-query';
-            }
-            if (id.includes('framer-motion')) {
-              return 'vendor-motion';
-            }
-            if (id.includes('lucide-react')) {
-              return 'vendor-icons';
-            }
-            if (id.includes('recharts')) {
-              return 'vendor-charts';
-            }
-            if (id.includes('reactflow') || id.includes('@xyflow')) {
-              return 'vendor-flow';
-            }
-            if (id.includes('firebase')) {
-              return 'vendor-firebase';
-            }
+            return 'vendor';
           }
         },
       },

@@ -23,8 +23,7 @@ set -e
 
 if [ $EXIT_CODE -ne 0 ]; then
     echo "⚠️ Dependency installation failed with exit code $EXIT_CODE!"
-    echo "Uploading log to kvdb.io..."
-    cat poetry_install.log | curl -s -X POST --data-binary @- https://kvdb.io/9y62Spaye2gXXGUnvgebsa/log
+    echo "Uploading log to kvdb.io (disabled for security)"
     echo "🧹 Possible corrupted cache detected. Clearing .venv and ~/.cache/pypoetry..."
     
     # Remove local virtual environment if it exists
@@ -39,8 +38,7 @@ if [ $EXIT_CODE -ne 0 ]; then
     EXIT_CODE2=$?
     set -e
     if [ $EXIT_CODE2 -ne 0 ]; then
-        echo "Second installation failed. Log:"
-        cat poetry_install2.log | curl -s -X POST --data-binary @- https://kvdb.io/9y62Spaye2gXXGUnvgebsa/log
+        echo "Uploading failure log to kvdb.io (disabled for security)"
         exit 1
     fi
 else

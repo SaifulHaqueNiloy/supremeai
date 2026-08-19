@@ -68,7 +68,7 @@
     "z_architect": "Z-Architect 代理",
     "z_architect_desc": "处理技术实现",
     "agents_voting": "代理使用 ",
-    "across": "跨多个 AI 提供商（OpenAI、Anthropic、Gemini 等）以做出更好的决策。",
+    "across": "跨多个 AI 提供商 (frontier, value, free tiers) 以做出更好的决策。",
     "dashboard_title": "您的指挥中心",
     "dashboard_desc": "仪表板为您提供以下方面的实时可见性：",
     "system_health": "系统健康",

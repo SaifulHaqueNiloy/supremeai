@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import ReactFlow, {
+import { ReactFlow,
   Node,
   Edge,
   Background,
@@ -8,8 +8,8 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   MarkerType,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { useHealthMap, useProviders } from '../../data/hooks';
 import { HealthNode, Provider } from '../../data/types';
 

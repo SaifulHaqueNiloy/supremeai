@@ -15,7 +15,7 @@ def trigger_backup():
     timestamp = utc_now().strftime("%Y%m%d_%H%M%S")
     backup_dir = f"backups/backup_{timestamp}"
     os.makedirs(backup_dir, exist_ok=True)
-    for fname in [".env", "data/constitutional_rules.db", "data/users.json"]:
+    for fname in ["data/constitutional_rules.db", "data/users.json"]:
         if os.path.exists(fname):
             try:
                 shutil.copy2(fname, os.path.join(backup_dir, os.path.basename(fname)))

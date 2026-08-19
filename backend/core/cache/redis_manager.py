@@ -69,8 +69,14 @@ class SecureRedisManager:
                     socket_connect_timeout=5.0,
                     decode_responses=True,
                 )
-                self._client = aioredis.Redis(connection_pool=pool)
-                logger.info("⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20).")
+                client = aioredis.Redis(connection_pool=pool)
+                try:
+                    await client.ping()
+                    self._client = client
+                    logger.info("⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20).")
+                except Exception as e:
+                    logger.warning(f"Redis fallback activated (connection failed): {e}")
+                    self._client = None
             else:
                 logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
             self._initialized = True

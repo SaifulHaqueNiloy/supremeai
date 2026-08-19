@@ -27,11 +27,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY . .
+# Copy specific application code directories
+COPY pyproject.toml poetry.lock ./
+COPY core ./core
+COPY api ./api
+COPY agents ./agents
+COPY brain ./brain
+
+# Setup non-root user for security
+RUN useradd -m -u 1001 appuser
+USER 1001
 
 # Expose port
 EXPOSE 8080
 
 # Start command
-CMD uvicorn core.app:app --host 0.0.0.0 --port ${PORT}
+CMD ["uvicorn", "core.app:app", "--host", "0.0.0.0", "--port", "8080"]

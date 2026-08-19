@@ -1,6 +1,8 @@
 // Simple health + stats endpoints for emulator stability
 
 const allowedOrigins = [
+  'https://supremeai-a.web.app',
+  'https://supremeai-admin.web.app',
   'https://supremeai-dashboard.web.app',
   'http://localhost:5173',
   'https://studio.supremeai.com',
@@ -8,7 +10,7 @@ const allowedOrigins = [
 
 const getAllowedOrigin = (req) => {
   const origin = req.get('origin');
-  return origin && (allowedOrigins.includes(origin) || origin.includes('supremeai'))
+  return origin && allowedOrigins.includes(origin)
     ? origin
     : 'https://supremeai-dashboard.web.app';
 };
