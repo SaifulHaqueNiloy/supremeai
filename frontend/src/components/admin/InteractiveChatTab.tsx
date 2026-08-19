@@ -245,7 +245,15 @@ export function InteractiveChatTab({
       return;
     }
 
-    const newHistory = [...terminalHistory, `supremeai-user$ ${cmd}`];
+    // 🛡️ DESTRUCTION HARD-BLOCK CHECK: Permanent Safeguard
+    const dangerousPatterns = /delete\s+(our\s+)?(whole\s+)?system|drop\s+database|rm\s+-rf|wipe\s+memory|destroy\s+(instance|cluster|server|all)|format\s+drive|clear\s+all\s+data/i;
+    if (dangerousPatterns.test(cmd)) {
+      const output = '⛔ ACCESS DENIED: System destruction & dangerous commands are hard-blocked by SupremeAI Core Security Policy.\n   Human-in-the-Loop (HITL) Policy: No automated or manual agent is authorized to wipe production infrastructure.';
+      setTerminalHistory([...newHistory, output, '']);
+      setTerminalInput('');
+      return;
+    }
+
     const args = cmd.toLowerCase().split(' ');
     const primaryCmd = args[0];
     let output: string;

@@ -47,8 +47,21 @@ export const AdminTopNav: React.FC<AdminTopNavProps> = ({
         </div>
       </div>
 
-      {/* ডান পাশ: নোটিফিকেশন বেল, ইউজার ইনফো ও লগআউট বাটন */}
-      <div className="flex items-center gap-4">
+      {/* ডান পাশ: HITL পেন্ডিং অ্যাপটুভালস, নোটিফিকেশন বেল, ইউজার ইনফো ও লগআউট বাটন */}
+      <div className="flex items-center gap-3">
+        {/* Pending Approvals HITL Center */}
+        <button
+          onClick={() => {
+            const event = new CustomEvent('navigate-subtab', { detail: 'threats' });
+            window.dispatchEvent(event);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(245,158,11,0.15)] cursor-pointer"
+          title="Open HITL Pending Approvals & Security Center"
+        >
+          <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          <span>APPROVALS CENTER</span>
+        </button>
+
         {/* নোটিফিকেশন বেল */}
         <button className="relative p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-900/50 transition-all border border-transparent hover:border-slate-800">
           <Bell size={18} />

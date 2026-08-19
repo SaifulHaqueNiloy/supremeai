@@ -66,7 +66,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
 
-  // Cmd+K to open Command Palette
+  // Cmd+K to open Command Palette & Custom SubTab Navigation Event Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -77,9 +77,21 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
         setIsPaletteOpen(false);
       }
     };
+
+    const handleCustomNav = (e: Event) => {
+      const customEvt = e as CustomEvent<AdminSubTab>;
+      if (customEvt.detail) {
+        setAdminSubTab(customEvt.detail);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPaletteOpen]);
+    window.addEventListener('navigate-subtab', handleCustomNav);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('navigate-subtab', handleCustomNav);
+    };
+  }, [isPaletteOpen, setAdminSubTab]);
 
   const sidebarItems = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={16} /> },
