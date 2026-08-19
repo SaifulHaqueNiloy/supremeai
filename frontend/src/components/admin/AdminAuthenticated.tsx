@@ -15,7 +15,8 @@ import {
   BrainCircuit,
   HardDrive,
   Bell,
-  Globe
+  Globe,
+  Scale
 } from 'lucide-react';
 
 interface AuthenticatedViewProps {
@@ -95,6 +96,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
 
   const sidebarItems = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={16} /> },
+    { id: 'rules', label: 'AI LAWS & RULES', icon: <Scale size={16} /> },
     { id: 'browser-studio', label: 'BROWSER STUDIO', icon: <Globe size={16} /> },
     { id: 'alerts', label: 'SYSTEM ALERTS', icon: <Bell size={16} /> },
     { id: 'model-router', label: 'AI CORE', icon: <BrainCircuit size={16} /> },
