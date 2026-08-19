@@ -1,0 +1,86 @@
+name: 🌐 Reusable Deploy Frontend
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+      event_name:
+        required: true
+        type: string
+      deploy_target:
+        required: false
+        type: string
+      ignore_dependencies:
+        required: false
+        type: string
+        default: 'false'
+
+jobs:
+  deploy-user-vercel:
+    name: 🚀 Deploy User Portal (Vercel)
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'VERCEL_FRONTEND_ONLY'))
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install pnpm & Vercel CLI
+        run: |
+          npm install -g pnpm vercel@latest
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          pnpm install
+          pnpm --dir frontend run build:user
+          pnpm exec vercel deploy --prod --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes
+
+      - name: 🔍 Post-Deploy Live Web Studio Probe
+        run: |
+          sleep 10
+          curl -s -f --retry 2 --retry-delay 3 https://supremeai-frontend-6nwi.onrender.com/workspace || echo "Web Studio warming up..."
+
+  deploy-admin-firebase:
+    name: 🚀 Deploy Admin Portal (Firebase)
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'FIREBASE_ADMIN_ONLY'))
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Build & Deploy Admin Portal
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        run: |
+          pnpm install
+          pnpm --dir frontend run build:admin
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
+        continue-on-error: true
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A || secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: supremeai-a
+          channelId: live
+          target: admin

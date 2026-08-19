@@ -1,0 +1,47 @@
+name: 🪟 Reusable Build EXE
+
+on:
+  workflow_call:
+
+jobs:
+  build-exe:
+    name: 🪟 Build Windows Desktop (Tauri)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          lfs: true
+
+      - name: Setup Node & PNPM
+        uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
+        with:
+          version: 9.0.0
+          
+      - name: Setup Node caching
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install Rust toolchain
+        # বাংলা: Tauri Rust বিল্ডের জন্য stable toolchain দরকার
+        uses: dtolnay/rust-toolchain@stable # TODO(AUDIT-006): SHA-pin করুন
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2 # TODO(AUDIT-006): SHA-pin করুন
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+
+      - name: Build Windows Desktop (Tauri)
+        run: |
+          pnpm install --frozen-lockfile --prefer-offline
+          pnpm --filter @supremeai/desktop-app tauri build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload EXE Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: supremeai-desktop-windows
+          path: apps/desktop/src-tauri/target/release/bundle/**/*
+          retention-days: 7

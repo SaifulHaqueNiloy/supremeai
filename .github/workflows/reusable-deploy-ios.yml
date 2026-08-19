@@ -1,0 +1,61 @@
+name: Reusable Deploy iOS
+
+on:
+  workflow_call:
+    secrets:
+      APP_STORE_CONNECT_API_KEY_CONTENT:
+        required: true
+      APP_STORE_CONNECT_API_KEY_ID:
+        required: true
+      APP_STORE_CONNECT_API_ISSUER_ID:
+        required: true
+
+jobs:
+  deploy-ios:
+    name: 🍏 Build & Deploy iOS (TestFlight)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Get Flutter Dependencies
+        working-directory: apps/mobile
+        run: |
+          flutter clean
+          flutter pub get
+
+      - name: Setup Ruby for Fastlane
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: gem install fastlane
+
+      - name: Setup App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          if [ -n "$APP_STORE_CONNECT_API_KEY_CONTENT" ] && [ -n "$APP_STORE_CONNECT_API_KEY_ID" ]; then
+            mkdir -p ~/.appstoreconnect/private_keys/
+            echo "$APP_STORE_CONNECT_API_KEY_CONTENT" > ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+            chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_API_KEY_ID}.p8
+            echo "✅ App Store API Key setup successful"
+          else
+            echo "⚠️ Skipping App Store API Key setup (secret not found)"
+          fi
+
+      - name: Fastlane Deploy to TestFlight
+        working-directory: apps/mobile/ios
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: fastlane deploy
