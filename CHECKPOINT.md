@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 01:08 UTC
+- **Date:** 2026-08-19 01:09 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,14 +10,23 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/reusable-deploy.yml`
   - `CHECKPOINT.md`
   - `.github/workflows/reusable-frontend.yml`
-  - `.github/actions/setup-node-env/action.yml`
-  - `.github/workflows/reusable-audit.yml`
-  - `.github/actions/setup-python-env/action.yml`
   - `.github/workflows/supreme-core-ci.yml`
+  - `backend/tests/mcp/test_cloud_deploy_mcp.py`
+  - `backend/tests/mcp/conftest.py`
+  - `backend/tests/mcp/test_protocol_sync.py`
+  - `backend/tests/mcp/test_github_cicd_mcp.py`
+  - `_scratch_splitter.py`
+  - `_scratch_mcp_split.py`
+  - `.github/workflows/reusable-audit.yml`
   - `.github/workflows/reusable-backend.yml`
+  - `.github/actions/setup-node-env/action.yml`
+  - `.github/actions/setup-python-env/action.yml`
+  - `.github/workflows/reusable-deploy.yml`
+  - `backend/tests/mcp/test_supabase_mcp.py`
+  - `_scratch_cat.py`
+  - `backend/tests/mcp/test_workspace_mcp.py`
 
 ## Pending (Carry Forward)
 - (none) — All milestones, CI matrix architecture, and phases 100% completed and green.
