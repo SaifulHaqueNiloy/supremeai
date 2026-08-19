@@ -38,7 +38,7 @@ jobs:
       - uses: ./.github/actions/setup-python-env
       - name: Run Synthetic Health Probes & Benchmark
         run: |
-          pip install requests httpx pydantic loguru
+          pip install requests httpx pydantic pydantic-settings loguru fastapi redis starlette-context pybreaker
           python scripts/canary_health_probe.py
           python scripts/benchmark/synthetic_m32_benchmark.py --all --requests 5 --concurrency 2
 
