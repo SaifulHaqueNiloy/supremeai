@@ -15,8 +15,9 @@ import { CICDVisualizer } from './CICDVisualizer';
 import { GithubIntegration } from './GithubIntegration';
 import { BackupRestore } from './BackupRestore';
 import { SecurityDashboard } from './SecurityDashboard';
-// বাংলা মন্তব্য: রিডিজাইনকৃত ককপিট ড্যাশবোর্ড ইম্পোর্ট করা হলো
+// বাংলা মন্তব্য: রিডিজাইনকৃত ককপিট ড্যাশবোর্ড ও লাইভ ব্রাউজার স্টুডিও ইম্পোর্ট করা হলো
 import Dashboard from './Dashboard';
+import { LiveBrowserStudio } from './LiveBrowserStudio';
 
 import { BrainVisualizer } from './BrainVisualizer';
 
@@ -40,4 +41,5 @@ export {
   BackupRestore,
   SecurityDashboard,
   Dashboard,
+  LiveBrowserStudio,
 };

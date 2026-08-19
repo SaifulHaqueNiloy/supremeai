@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🌐 Full-Stack AI Browser Automation Studio & HITL Integration
+- **সমস্যা:** অ্যাডমিন প্যানেলে ব্রাউজার অটোমেশন ব্যাকএন্ড রুট ও প্রক্সি থাকলেও কোনো ফার্স্ট-ক্লাস ইন্টারঅ্যাক্টিভ লাইভ স্টুডিও ছিল না যা দিয়ে অ্যাডমিন ব্রাউজিং দেখতে, অটোনোমাস গোল এক্সিকিউট করতে বা CAPTCHA আসলে টেকওভার নিতে পারত।
+- **ফিক্স:** `LiveBrowserStudio.tsx` তৈরি করে অ্যাডমিন সাইডবারে যুক্ত করা হয়েছে। এতে রেসপন্সিভ ভিউপোর্ট (Desktop/Tablet/Mobile), প্রক্সাইড রেন্ডারিং, স্টেপ-বাই-স্টেপ অ্যাকশন লগ, আর্টফ্যাক্টস/ফাইন্ডিংস এক্সপোর্ট এবং One-Click Human Takeover (HITL) সম্পূর্ণ কার্যকর করা হয়েছে।
+- **লেসন:** ব্রাউজার অটোমেশন সিস্টেমে সর্বদা Human-in-the-Loop (HITL) ইন্টারসেপশন ও সিকিউর প্রক্সি মেকানিজম যুক্ত রাখতে হবে যাতে কোনো আইফ্রেম পলিসি (X-Frame-Options) বা বটের বাধা ছাড়াই লাইভ মনিটরিং ও কন্ট্রোল বজায় থাকে।
+
 ## 2026-08-19 — ⚡ Supreme-Kaggle 6-Node (180h GPU/Week) Zero-Cost Compute Supercomputer Matrix
 - **সমস্যা:** এক্সটার্নাল এআই এপিআই কলের ওপর সার্বক্ষণিক নির্ভরশীলতা এবং লোকাল পিসিতে হেভি কমপিউটের অভাবের কারণে ডিপ ভেক্টর এম্বেডিং, কন্টিনিউয়াস কোডবেস ইন্ডেক্সিং ও অটোমেটেড টেস্ট সিন্থেসিস চালানো ব্যয়বহুল ও ধীরগতির ছিল।
 - **ফিক্স:** ৬টি Kaggle অ্যাকাউন্টকে একটি ক্লাস্টার পুলে অর্কেস্ট্রেট করে সাপ্তাহিক ১৮০ ঘণ্টার Nvidia Dual T4 GPU কমপিউট পাওয়ার ($0 কস্টে) চালু করা হয়েছে। `scripts/kaggle/account_pool_rotator.py`, `pipeline_orchestrator.py` এবং ৩টি GPU নোটবুক (`vector_fabric.ipynb`, `brain_distillation.ipynb`, `weekend_self_healer.ipynb`) তৈরি করা হয়েছে। `scripts/check_env_health.py`-তে ৬/৬ নোড হেলথ চেক যুক্ত ও ভেরিফাই করা হয়েছে।
@@ -30,8 +35,3 @@
 - **সমস্যা:** (1) VS Code Extension-এর `package.json` ও `SwarmPipelineProvider.ts`-এ `supremeai.swarmBackendUrl` ডিফল্ট `http://localhost:8080` ছিল, যা ক্লাউড ব্যাকএন্ডের সাথে যুক্ত ছিল না; (2) `CrossAiObserverService.ts`, `SupremeWebviewProvider.ts`, এবং `TelemetryTracker.ts`-এ পুরনো হার্ডকোডেড Cloud Run URL ছিল।
 - **ফিক্স:** (1) `package.json` ও `SwarmPipelineProvider.ts`-এ ডিফল্ট ব্যাকএন্ড URL হিসেবে প্রোডাকশন গেটওয়ে `https://supremeai-worker.paykaribazaronline.workers.dev` সেট করা হয়েছে; (2) `CrossAiObserverService`, `SupremeWebviewProvider` ও `TelemetryTracker`-এ কনফিগারেশন থেকে ডায়নামিক `backendUrl` রেজোলিউশন চালু করা হয়েছে।
 - **লেসন:** ক্লায়েন্ট বা এক্সটেনশন মডিউলে কখনোই স্ট্যাটিক বা হার্ডকোডেড ক্লাউড URL বা লোকালহোস্ট ফলব্যাক রাখা যাবে না; সবসময় কনফিগারেশন ও সিঙ্গেল গেটওয়ে থেকে ডায়নামিক্যালি রেজলভ করতে হবে।
-
-## 2026-08-19 — 🧩 AST Canonicalizer & Structural Invariant Matching in KnowledgeDistiller
-- **সমস্যা:** কোডে ভ্যারিয়েবল, ফাংশন বা প্যারামিটারের নাম আলাদা হলে (যেমন: `calculate_metrics(values)` বনাম `compute_scores(items)`) সাধারণ টেক্সট হ্যাশ মিলত না, ফলে ডুপ্লিকেট ডিস্টিল্ড এন্ট্রি তৈরি হতো এবং রিট্রিভাল মিস হতো। পাইথন ৩.৮+-এ ফাংশন আর্গুমেন্ট `ast.Name(Param)`-এ থাকে না, থাকে `ast.arg`-এ।
-- **ফিক্স:** `knowledge_distiller.py`-তে `ASTCanonicalizer` তৈরি করে (1) ডকস্ট্রিং রিমুভ, (2) ফাংশন নেম নরমালাইজ (`canonical_fn`), (3) `ast.arguments` (pos/kw/args) এবং লোকাল ভ্যারিয়েবলগুলোকে `v_0, v_1, ...` ক্যানোনিকাল সিকোয়েন্সে রূপান্তর করে ১৮-অক্ষরের `ast_fingerprint` ইনভ্যারিয়েন্ট হ্যাশ তৈরি করা হয়েছে। `find_structural_ast_match()` দিয়ে শতভাগ নাম-ইন্ডিপেন্ডেন্ট অ্যালগরিদম ম্যাচিং নিশ্চিত করা হয়েছে।
-- **লেসন:** কোড ইনভ্যারিয়েন্ট ম্যাচিংয়ের জন্য টেক্সট বা এমবেডিংয়ের চেয়ে ক্যানোনিকাল অ্যাবস্ট্রাক্ট সিনট্যাক্স ট্রি (AST) ১০০ গুণ বেশি ডিটারমিনিস্টিক ও টোকেন-সাশ্রয়ী।

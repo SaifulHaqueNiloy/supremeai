@@ -14,7 +14,8 @@ import {
   Shield,
   BrainCircuit,
   HardDrive,
-  Bell
+  Bell,
+  Globe
 } from 'lucide-react';
 
 interface AuthenticatedViewProps {
@@ -59,17 +60,6 @@ interface AuthenticatedViewProps {
   toggleTheme: () => void;
 }
 
-/**
- * Supreme God Mode - Authenticated Layout (Redesigned)
- * This component implements the vision from the SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md,
- * featuring a top navigation bar, a multi-module sidebar, and a main content panel.
- * It also integrates a command palette for quick navigation.
- *
- * বাংলা মন্তব্য: সুপ্রিম গড মোড অথেনটিকেটেড লেআউট (পুনঃডিজাইনকৃত)
- * এই কম্পোনেন্টটি SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md-এর পরিকল্পনাকে বাস্তবায়ন করে।
- * এতে একটি টপ নেভিগেশন বার, একাধিক মডিউলসহ সাইডবার এবং মূল কন্টেন্ট প্যানেল রয়েছে।
- * দ্রুত নেভিগেশনের জন্য একটি কমান্ড প্যালেটও যুক্ত করা হয়েছে।
- */
 export function AuthenticatedView(props: AuthenticatedViewProps) {
   const { adminSubTab, setAdminSubTab, handleAdminLogout } = props;
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
@@ -90,9 +80,9 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPaletteOpen]);
 
-  // As per SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md, the sidebar is module-driven.
   const sidebarItems = [
     { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={16} /> },
+    { id: 'browser-studio', label: 'BROWSER STUDIO', icon: <Globe size={16} /> },
     { id: 'alerts', label: 'SYSTEM ALERTS', icon: <Bell size={16} /> },
     { id: 'model-router', label: 'AI CORE', icon: <BrainCircuit size={16} /> },
     { id: 'skills', label: 'SKILLS & AGENTS', icon: <Users size={16} /> },
@@ -105,9 +95,9 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
     { id: 'interactive-chat', label: 'TERMINAL', icon: <Terminal size={16} /> },
   ];
 
-  // কমান্ড প্যালেট অপশনসমূহ
   const navigationOptions = [
     { id: 'dashboard', label: 'Dashboard Overview' },
+    { id: 'browser-studio', label: '🌐 AI Browser Automation Studio' },
     { id: 'alerts', label: 'System Alerts & Diagnostics' },
     { id: 'interactive-chat', label: 'Interactive Chat (Browser & Terminal)' },
     { id: 'command-center', label: 'SupremeAI Nexus (Canvas)' },
@@ -196,7 +186,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
               <input
                 autoFocus
                 type="text"
-                placeholder="Navigate to... (e.g. Cost Auditor)"
+                placeholder="Navigate to... (e.g. Browser Studio)"
                 className="flex-1 bg-transparent border-none outline-none text-white font-mono placeholder:text-slate-400"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -204,7 +194,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
               <span className="text-xs text-slate-400 font-mono">ESC to close</span>
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-2">
-              {filteredOptions.map((opt, i) => (
+              {filteredOptions.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => {
@@ -212,17 +202,12 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
                     setIsPaletteOpen(false);
                     setSearchQuery('');
                   }}
-                  className={`w-full text-left px-4 py-3 rounded-lg font-mono transition-colors flex items-center gap-3 ${i === 0 && searchQuery ? 'bg-[#00f3ff]/10 text-[#00f3ff]' : 'hover:bg-white/5 text-slate-300'
-                    }`}
+                  className="w-full text-left px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-[#00f3ff]/10 hover:text-[#00f3ff] transition-all font-mono flex items-center justify-between group"
                 >
-                  {opt.label}
+                  <span>{opt.label}</span>
+                  <span className="text-xs text-slate-600 group-hover:text-[#00f3ff]/60">Jump &rarr;</span>
                 </button>
               ))}
-              {filteredOptions.length === 0 && (
-                <div className="px-4 py-8 text-center text-slate-400 font-mono">
-                  No modules found.
-                </div>
-              )}
             </div>
           </div>
         </div>

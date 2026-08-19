@@ -2,7 +2,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import type { AdminSubTab, ChatMessage } from '../../types';
-import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, BrainVisualizer, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard } from '.';
+import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEditor, ModelRouter, EnhancedSkillMarketplace, BrainVisualizer, CloudOrchestrator, ObservabilityDashboard, ThreatDetection, VisualRulesBuilder, CICDVisualizer, GithubIntegration, BackupRestore, SecurityDashboard, Dashboard, LiveBrowserStudio } from '.';
 import { RateLimitManager } from './RateLimitManager';
 import { InteractiveChatTab } from './InteractiveChatTab';
 import { AdminAlertsTab } from './AdminAlertsTab';
@@ -44,6 +44,7 @@ interface SubTabContentProps {
  
 const MODULE_MAP: Record<string, React.FC<any>> = {
   'dashboard': Dashboard,
+  'browser-studio': LiveBrowserStudio,
   'alerts': AdminAlertsTab,
   'command-center': CommandCenter,
   'sandbox': SandboxView,
