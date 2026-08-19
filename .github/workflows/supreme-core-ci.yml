@@ -81,9 +81,9 @@ jobs:
     outputs:
       backend: ${{ steps.filter.outputs.backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1 }}
       docker_build: ${{ steps.filter.outputs.docker_build == 'true' || steps.detect.outputs.force_docker_build == 'true' || github.run_attempt > 1 }}
-      frontend: ${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
-      admin_needed: ${{ steps.filter.outputs.admin == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
-      user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || github.run_attempt > 1 }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.run_frontend_core == true)) || github.run_attempt > 1 }}
+      admin_needed: ${{ steps.filter.outputs.admin == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.run_frontend_core == true)) || github.run_attempt > 1 }}
+      user_needed: ${{ steps.filter.outputs.user == 'true' || steps.filter.outputs.shared == 'true' || steps.detect.outputs.force_frontend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.run_frontend_core == true)) || github.run_attempt > 1 }}
       dependencies: ${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
       admin_backend_changed: ${{ github.event.inputs.deploy_target != 'NONE' && ((github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'ADMIN_BACKEND_ONLY')) || steps.filter.outputs.admin_backend == 'true' || steps.filter.outputs.shared_backend == 'true' || steps.detect.outputs.force_backend == 'true' || github.run_attempt > 1) }}
@@ -1694,7 +1694,7 @@ jobs:
     # Trigger if frontend files changed AND running in main repo
     if: |
       always() &&
-      github.repository == 'paykaribazaronline/supremeai' &&
+      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
       needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -1725,7 +1725,7 @@ jobs:
     # Trigger if frontend files changed AND running in main repo
     if: |
       always() &&
-      github.repository == 'paykaribazaronline/supremeai' &&
+      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
       needs.changes.outputs.frontend == 'true' &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
