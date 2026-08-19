@@ -259,3 +259,12 @@ tmp_*.yml
 !**/requirements*.txt
 *.ini
 *.bak
+
+# ---------- SCRATCH & UNTRACKED UTILS ----------
+ERROR_FINDINGS.md
+backend/verify_prefs_test.py
+check_db_conn.py
+mint_token.py
+pin_actions.py
+scratch.py
+uncommitted_changes.diff
