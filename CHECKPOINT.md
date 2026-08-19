@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 11:22 UTC
+- **Date:** 2026-08-19 11:26 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,14 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/components/admin/Dashboard.tsx`
+  - `frontend/src/components/admin/InteractiveChatTab.tsx`
   - `CHECKPOINT.md`
+  - `frontend/src/components/admin/Dashboard.tsx`
+  - `frontend/src/components/admin/AdminSubTabContent.tsx`
 
 ## Pending (Carry Forward)
 - Phase 2: Auth consolidation (`auth_dependency.py`), Multi-tenant RLS, and Async non-blocking conversions
+- Continuous monitoring via `canary_health_probe.py` and `audit_env_drift.py`
 
 ## Recent Lessons Learned
   - 2026-08-19 — ⚡ Supreme-Kaggle 6-Node (180h GPU/Week) Zero-Cost Compute Supercomputer Matrix

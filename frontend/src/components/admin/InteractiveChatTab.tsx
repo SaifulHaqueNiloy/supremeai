@@ -301,7 +301,7 @@ export function InteractiveChatTab({
   };
 
   return (
-    <div className={`w-full h-full flex-1 flex flex-col overflow-hidden transition-all duration-500 ${isSimple ? 'text-slate-800' : 'text-slate-200'}`}>
+    <div className={`w-full flex-1 min-h-0 h-full flex flex-col overflow-hidden transition-all duration-500 ${isSimple ? 'text-slate-800' : 'text-slate-200'}`}>
 
       {/* কন্ট্রোল প্যানেল — অ্যাডভান্সড মোডে */}
       {!isSimple && (

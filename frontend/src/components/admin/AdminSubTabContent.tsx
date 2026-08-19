@@ -134,12 +134,11 @@ export function SubTabContent(props: SubTabContentProps) {
         </div>
       )}
 
-      <div className="flex-1 overflow-auto relative z-10 flex flex-col">
+      <div className="flex-1 min-h-0 h-full overflow-hidden relative z-10 flex flex-col">
         {/* বাংলা মন্তব্য: শুধুমাত্র নির্বাচিত মডিউলটি মাউন্ট হবে, আগেরগুলো আনমাউন্ট হয়ে যাবে */}
-<ModuleErrorBoundary key={adminSubTab}>
+        <ModuleErrorBoundary key={adminSubTab}>
           <SelectedModule {...props} />
         </ModuleErrorBoundary>
-        
       </div>
     </div>
   );
