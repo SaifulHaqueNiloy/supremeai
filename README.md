@@ -12,7 +12,7 @@ SupremeAI is built to work out-of-the-box across all your devices with **Zero Co
 
 | Platform | Access / Download | Description |
 | :--- | :--- | :--- |
-| 🌐 **Web Studio** | [Open Web App](https://supremeai-studio-client.vercel.app) | Full-featured cloud workspace & user dashboard |
+| 🌐 **Web Studio (Workspace)** | [Launch Web Studio](https://supremeai-frontend-6nwi.onrender.com/workspace) | Full-featured cloud workspace & interactive AI studio |
 | 🔌 **VS Code Extension** | [Download .vsix](https://github.com/paykaribazaronline/supremeai/releases) | Autonomous thin-client assistant right inside your editor |
 | 🖥️ **Desktop Studio** | [Download Windows (.exe)](https://github.com/paykaribazaronline/supremeai/releases) | High-performance native workspace powered by Tauri & Rust |
 | 📱 **Mobile App** | [Download Android (.apk)](https://github.com/paykaribazaronline/supremeai/releases) | Native on-the-go AI intelligence client (Flutter Arm64) |

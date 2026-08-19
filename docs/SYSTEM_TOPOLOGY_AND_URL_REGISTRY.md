@@ -10,8 +10,9 @@
 | :--- | :--- | :--- | :--- |
 | **Cloudflare Worker Gateway** | `https://supremeai-worker.paykaribazaronline.workers.dev` | HTTPS / WSS | আল্ট্রা-ফাস্ট এজ রাউটার, ব্যান্ডউইথ অপটিমাইজার ও মেইন এপিআই গেটওয়ে |
 | **Render Docker Backend (Primary)** | `https://supremeai-backend-docker.onrender.com` | HTTPS / WSS | FastAPI কোর ব্যাকএন্ড, পাইপলাইন, ডাটাবেস হ্যান্ডলার ও এআই অরকেস্ট্রেটর |
+| **Render Frontend Workspace** | `https://supremeai-frontend-6nwi.onrender.com/workspace` | HTTPS | লাইভ ক্লাউড ফ্রন্টএন্ড ওয়েব স্টুডিও ও ওয়ার্কস্পেস |
 | **Admin Portal (Firebase)** | `https://supremeai-admin.web.app` | HTTPS | সুপ্রিমএআই সুপার-অ্যাডমিন ড্যাশবোর্ড |
-| **User Web App (Firebase)** | `https://supremeai-a.web.app` | HTTPS | ইউজার ওয়েব ক্লায়েন্ট |
+| **User Web App (Firebase / Vercel)** | `https://supremeai-a.web.app` | HTTPS | ইউজার ওয়েব ক্লায়েন্ট |
 | **Offline Supporting Hand** | `http://localhost:11434` | HTTP REST | লোকাল Ollama (শুধুমাত্র অফলাইন ফলব্যাকের জন্য অনুমোদিত) |
 
 ---
