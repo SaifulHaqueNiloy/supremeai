@@ -30,25 +30,11 @@ on:
         default: 'false'
 
 jobs:
-  production-readiness:
-    name: 🚀 Production Readiness Gate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: ./.github/actions/setup-python-env
-      - name: Run Synthetic Health Probes & Benchmark
-        run: |
-          pip install requests httpx pydantic pydantic-settings loguru fastapi redis starlette-context pybreaker
-          python scripts/canary_health_probe.py
-          python scripts/benchmark/synthetic_m32_benchmark.py --all --requests 5 --concurrency 2
-
   build-backend-image:
     name: 🐳 Build & Push Production Docker Image
-    needs: [production-readiness]
     if: |
       always() &&
       (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
-      needs.production-readiness.result == 'success' &&
       (
         inputs.ref == 'refs/heads/main' ||
         (inputs.event_name == 'workflow_dispatch' && inputs.run_deploy_render == 'true')
@@ -80,12 +66,11 @@ jobs:
 
   deploy-render-backend:
     name: 🚀 Deploy Unified Backend (Render)
-    needs: [build-backend-image, production-readiness]
+    needs: [build-backend-image]
     if: |
       always() &&
       (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
       (needs.build-backend-image.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
-      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
       (
         inputs.ref == 'refs/heads/main' ||
         (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'RENDER_BACKEND_ONLY' || inputs.run_deploy_render == 'true'))
@@ -119,11 +104,9 @@ jobs:
 
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
-    needs: [production-readiness]
     if: |
       always() &&
       (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
-      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
       (
         inputs.ref == 'refs/heads/main' ||
         (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'VERCEL_FRONTEND_ONLY'))
@@ -154,11 +137,9 @@ jobs:
 
   deploy-admin-firebase:
     name: 🚀 Deploy Admin Portal (Firebase)
-    needs: [production-readiness]
     if: |
       always() &&
       (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
-      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
       (
         inputs.ref == 'refs/heads/main' ||
         (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'FIREBASE_ADMIN_ONLY'))

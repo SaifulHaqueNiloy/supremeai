@@ -1,0 +1,23 @@
+name: 🚀 Reusable Readiness Gate
+
+on:
+  workflow_call:
+    inputs:
+      trivial_change:
+        required: false
+        type: string
+        default: 'false'
+
+jobs:
+  production-readiness:
+    name: 🚀 Production Readiness Gate
+    if: inputs.trivial_change != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Run Synthetic Health Probes & Benchmark
+        run: |
+          pip install requests httpx pydantic pydantic-settings loguru fastapi redis starlette-context pybreaker
+          python scripts/canary_health_probe.py
+          python scripts/benchmark/synthetic_m32_benchmark.py --all --requests 5 --concurrency 2

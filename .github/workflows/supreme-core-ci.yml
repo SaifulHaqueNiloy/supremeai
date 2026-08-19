@@ -154,10 +154,18 @@ jobs:
       is_workflow_dispatch: ${{ github.event_name == 'workflow_dispatch' }}
     secrets: inherit
 
+  readiness:
+    name: 🚦 Readiness Gate
+    needs: [changes, audit]
+    uses: ./.github/workflows/reusable-readiness.yml
+    with:
+      trivial_change: ${{ needs.changes.outputs.trivial_change }}
+    secrets: inherit
+
   deploy:
     name: 🚀 Deployment Matrix
-    needs: [backend, frontend]
-    if: always() && needs.backend.result != 'failure' && needs.frontend.result != 'failure' && needs.backend.result != 'cancelled' && needs.frontend.result != 'cancelled'
+    needs: [backend, frontend, readiness]
+    if: always() && needs.backend.result != 'failure' && needs.frontend.result != 'failure' && needs.readiness.result != 'failure' && needs.backend.result != 'cancelled' && needs.frontend.result != 'cancelled' && needs.readiness.result != 'cancelled'
     uses: ./.github/workflows/reusable-deploy.yml
     with:
       repository: ${{ github.repository }}
@@ -194,6 +202,7 @@ jobs:
       - audit
       - backend
       - frontend
+      - readiness
       - deploy
     if: always()
     runs-on: ubuntu-latest
