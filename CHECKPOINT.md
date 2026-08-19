@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 11:00 UTC
+- **Date:** 2026-08-19 11:05 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,42 +10,41 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/models/admin.py`
-  - `backend/core/idempotency_middleware.py`
-  - `backend/core/config_secrets.py`
-  - `frontend/src/components/admin/AdminLogin.tsx`
-  - `backend/api/routes/admin/system.py`
-  - `backend/api/routes/admin_auth.py`
-  - `backend/core/security/auth_middleware.py`
-  - `CHECKPOINT.md`
-  - `LESSONS_LEARNED.md`
   - `.lingma/rules/Agents.md`
-  - `backend/core/pgbouncer_pool.py`
-  - `backend/core/admin_routes.py`
-  - `backend/core/embeddings.py`
   - `frontend/src/components/admin/AdminAuthenticated.tsx`
-  - `.github/workflows/reusable-frontend.yml`
+  - `backend/Dockerfile`
+  - `backend/core/context_pruner.py`
+  - `frontend/src/components/admin/AdminLogin.tsx`
+  - `CHECKPOINT.md`
   - `frontend/src/store/slices/adminSlice.ts`
-  - `backend/api/routes/billing_api.py`
-  - `backend/api/routes/browser.py`
+  - `backend/core/security/auth_middleware.py`
   - `frontend/src/components/admin/InteractiveChatTab.tsx`
+  - `backend/core/embeddings.py`
+  - `backend/tools/mcp/mcp_jcode_adapter.py`
+  - `backend/core/admin_routes.py`
+  - `backend/core/tenant_db.py`
+  - `backend/models/admin.py`
+  - `backend/core/pgbouncer_pool.py`
+  - `backend/api/dependencies.py`
   - `frontend/src/components/admin/LiveBrowserStudio.tsx`
+  - `backend/core/config_secrets.py`
+  - `backend/api/routes/billing_api.py`
+  - `LESSONS_LEARNED.md`
+  - `frontend/src/components/admin/DynamicPanel.tsx`
+  - `backend/api/routes/browser.py`
+  - `backend/api/routes/admin_auth.py`
+  - `frontend/src/components/admin/Dashboard.tsx`
   - `frontend/src/components/admin/ThreatDetection.tsx`
   - `backend/api/routes/sso.py`
-  - `frontend/src/components/admin/CloudOrchestrator.tsx`
-  - `backend/api/dependencies.py`
-  - `backend/Dockerfile`
-  - `backend/core/tenant_db.py`
-  - `frontend/src/components/admin/DynamicPanel.tsx`
-  - `frontend/src/components/admin/Dashboard.tsx`
+  - `backend/core/idempotency_middleware.py`
 
 ## Pending (Carry Forward)
 - Phase 2: Auth consolidation (`auth_dependency.py`), Multi-tenant RLS, and Async non-blocking conversions
 
 ## Recent Lessons Learned
+  - 2026-08-19 — ⚡ Supreme-Kaggle 6-Node (180h GPU/Week) Zero-Cost Compute Supercomputer Matrix
   - 2026-08-19 — 🛠️ CI/CD Full Pipeline Stabilization & Alembic Package Shadowing Resolution
   - 2026-08-19 — 🛡️ Long-Term Autonomous Governance & Self-Tracking Matrix
-  - 2026-08-19 — 🗺️ Central Topology Registry & Automated URL Auditor
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.
