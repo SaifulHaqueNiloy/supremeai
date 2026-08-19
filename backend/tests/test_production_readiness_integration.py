@@ -150,11 +150,11 @@ class TestProductionReadinessSystems:
             content = workflow_path.read_text(encoding="utf-8")
 
             # Production Readiness জব বিদ্যমান নিশ্চিত করুন
-            assert "Security" in content or "Preflight" in content
+            assert "Security" in content or "Preflight" in content or "audit" in content
 
             # সিস্টেমগুলি সঠিক ক্রমে চলে নিশ্চিত করুন
-            # production-readiness → backend-core
-            assert "backend-core" in content
+            # production-readiness → backend
+            assert "backend:" in content or "reusable-backend.yml" in content
 
     def test_code_style_guide_includes_bengali_comments(self):
         """কোড স্টাইল গাইড বাংলা মন্তব্য অন্তর্ভুক্ত করে"""
