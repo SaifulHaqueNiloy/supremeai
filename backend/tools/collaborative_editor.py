@@ -139,7 +139,7 @@ class CollaborativeEditor:
         """বাংলা মন্তব্য: Freebuff বা AI মডেলকে দিয়ে কোড লিখিয়ে এডিটরে পুশ করা হবে।"""
         try:
             # আমরা এখানে CloudSandboxOrchestrator ব্যবহার করছি Freebuff কে কল করার জন্য
-            from tools.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
+            from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
 
             orchestrator = CloudSandboxOrchestrator()
 

@@ -19,6 +19,11 @@ from core.config_proxy import DynamicConfigProxy
 from core.health.self_healer import SelfHealerService
 from utils.firestore_helpers import get_firestore_db
 
+# বাংলা মন্তব্য: PersistentSandbox + SandboxSession এই মডিউল থেকে re-export করা হয় —
+# `api/routes/sandbox_api.py` ও `tests/tools/test_cloud_sandbox_full.py` উভয়েই
+# এই পাথ ব্যবহার করে। কোর (cloud VM) লজিক অপরিবর্তিত থাকে।
+from core.orchestration.persistent_sandbox import PersistentSandbox, SandboxSession  # noqa: F401
+
 
 class CloudSandboxOrchestrator:
     """

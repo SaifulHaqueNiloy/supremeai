@@ -10,7 +10,12 @@ try:
 except ImportError:
     psycopg2 = None
 from loguru import logger
-from supabase import Client, create_client
+
+try:
+    from supabase import Client, create_client
+except ImportError:
+    Client = None
+    create_client = None
 
 from core.config import settings
 

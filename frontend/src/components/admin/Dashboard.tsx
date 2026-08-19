@@ -208,20 +208,35 @@ const Dashboard: React.FC = () => {
 
       {isSimple ? (
         // ==========================================
-        // 🌟 GORGEOUS SIMPLE MODE (User-Friendly Cockpit View)
+        // 🌟 LUXURIOUS SUPREMEAI COMMAND COCKPIT (skills.sh Glassmorphic Design)
         // ==========================================
-        <div className="w-full h-screen bg-gradient-to-br from-gray-50 to-slate-100 text-slate-800 relative overflow-y-auto font-sans p-6 transition-colors duration-500">
+        <div className="w-full h-screen bg-[#030712] text-slate-100 relative overflow-y-auto font-sans p-6 transition-colors duration-500 selection:bg-[#00f3ff]/30">
 
-          {/* Compact Header */}
-          <div className="flex justify-between items-center border border-indigo-200/60 pb-3 mb-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-0.5 shadow-sm">
-            <div className="bg-white rounded-lg px-4 py-2.5 w-full flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="text-indigo-600 animate-pulse" size={18} />
-                <h1 className="text-base font-extrabold text-slate-900 tracking-tight">Executive Command Bridge</h1>
+          {/* Glowing Background Blur Effects */}
+          <div className="fixed top-0 left-1/4 w-96 h-96 bg-[#00f3ff]/10 blur-[120px] pointer-events-none rounded-full" />
+          <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-purple-600/10 blur-[120px] pointer-events-none rounded-full" />
+
+          {/* Bespoke Glassmorphic Header */}
+          <div className="flex justify-between items-center border border-[#00f3ff]/20 mb-5 bg-[#090d1a]/80 backdrop-blur-xl rounded-2xl p-4 shadow-[0_0_30px_rgba(0,243,255,0.08)]">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#00f3ff]/10 rounded-xl border border-[#00f3ff]/30 text-[#00f3ff] shadow-[0_0_15px_rgba(0,243,255,0.3)]">
+                  <Sparkles className="animate-pulse" size={20} />
+                </div>
+                <div>
+                  <h1 className="text-lg font-black text-white tracking-wider uppercase font-mono bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-[#00f3ff]">
+                    SupremeAI Executive Command Cockpit
+                  </h1>
+                  <p className="text-xs text-slate-400 font-sans mt-0.5">
+                    Autonomous Neural Engine • Global Infrastructure Mesh • Real-Time Telemetry
+                  </p>
+                </div>
               </div>
-              <p className="text-xs text-slate-500 hidden sm:block">
-                সিস্টেমের গতিবিধি পর্যবেক্ষণ ও লাইভ ড্যাশবোর্ড ওভারভিউ।
-              </p>
+              <div className="hidden md:flex items-center gap-3">
+                <span className="text-[10px] font-mono text-[#00ff66] bg-[#00ff66]/10 px-3 py-1 rounded-full border border-[#00ff66]/30 font-bold">
+                  AUTONOMOUS AGENTS ACTIVE
+                </span>
+              </div>
             </div>
           </div>
 
