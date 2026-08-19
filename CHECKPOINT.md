@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 00:03 UTC
+- **Date:** 2026-08-19 00:06 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,10 @@
   - (see git log for details)
 
 ## Files Changed
+  - `README.md`
   - `docs/SYSTEM_TOPOLOGY_AND_URL_REGISTRY.md`
   - `CHECKPOINT.md`
-  - `README.md`
+  - `backend/core/security/secret_hunter.py`
 
 ## Pending (Carry Forward)
 - (none) — All milestones and phases 100% completed and green.

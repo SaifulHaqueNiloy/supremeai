@@ -35,16 +35,6 @@ if sys.platform == "win32":
         sys.stderr.reconfigure(encoding="utf-8")
     except AttributeError:
         pass
-
-try:
-    from core.config import settings
-except ImportError:
-    try:
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-        from core.config import settings
-    except Exception:
-        settings = None
-
 logger = logging.getLogger(__name__)
 
 
