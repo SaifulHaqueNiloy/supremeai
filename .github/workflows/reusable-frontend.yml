@@ -54,11 +54,10 @@ jobs:
       - name: 🔍 Bundle Size Check
         run: bash frontend/scripts/bundle-check.sh frontend/dist-admin
 
-      - name: 📦 Package VS Code Extension (.vsix)
+      - name: 📦 Package VS Code Extension
         run: |
-          npm install -g @vscode/vsce
           cd tools/vscode-extension
-          vsce package --no-git-tag-version -o supremeai-vscode.vsix || echo "vsce package skipped"
+          npx @vscode/vsce package --no-dependencies --skip-license --no-git-tag-version -o supremeai-vscode.vsix || echo "vsce package skipped"
 
       - name: 📤 Upload VS Code Extension VSIX Artifact
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4

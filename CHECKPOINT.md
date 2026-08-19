@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 09:15 UTC
+- **Date:** 2026-08-19 09:20 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,27 +10,16 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/kaggle/pipeline_orchestrator.py`
-  - `frontend/src/components/admin/AdminAuthenticated.tsx`
-  - `scripts/_INDEX.md`
-  - `scripts/kaggle/notebooks/brain_distillation.ipynb`
-  - `frontend/src/components/admin/AdminSubTabContent.tsx`
-  - `frontend/src/types.ts`
-  - `scripts/kaggle/kaggle_config.py`
-  - `backend/core/llm/free_tier_quota_balancer.py`
-  - `.gitignore`
-  - `frontend/src/components/admin/LiveBrowserStudio.tsx`
-  - `scripts/check_env_health.py`
-  - `frontend/src/components/admin/index.ts`
-  - `scripts/kaggle/notebooks/vector_fabric.ipynb`
-  - `backend/tests/test_zero_cost_10k_defense.py`
-  - `LESSONS_LEARNED.md`
-  - `backend/core/llm/zero_cost_gateway.py`
-  - `scripts/kaggle/account_pool_rotator.py`
-  - `docs/KAGGLE_6_NODE_CLUSTER_GUIDE.md`
   - `CHECKPOINT.md`
-  - `backend/core/llm/distilled_cache_resolver.py`
-  - `scripts/kaggle/notebooks/weekend_self_healer.ipynb`
+  - `frontend/src/components/admin/AdminSubTabContent.tsx`
+  - `frontend/src/components/admin/AdminAuthenticated.tsx`
+  - `backend/api/routes/admin/system.py`
+  - `frontend/src/components/admin/LiveBrowserStudio.tsx`
+  - `frontend/src/components/admin/index.ts`
+  - `.github/workflows/reusable-frontend.yml`
+  - `LESSONS_LEARNED.md`
+  - `frontend/src/components/admin/CloudOrchestrator.tsx`
+  - `frontend/src/types.ts`
 
 ## Pending (Carry Forward)
 - `pnpm turbo run build --filter=supremeai-vscode` → TypeScript build verify (run on CI)
