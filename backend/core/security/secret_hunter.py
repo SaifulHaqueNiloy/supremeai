@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -297,7 +298,7 @@ Respond in JSON format:
                 return finding
 
         try:
-            model_name = getattr(settings, "gemini_model_name", "gemini-1.5-pro") if settings else "gemini-1.5-pro"
+            model_name = os.environ.get("GEMINI_MODEL_NAME", "gemini-1.5-pro")
             prompt = self.ANALYSIS_PROMPT.format(
                 file_path=finding.file_path,
                 line_number=finding.line_number,

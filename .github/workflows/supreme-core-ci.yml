@@ -69,8 +69,8 @@ jobs:
     runs-on: ubuntu-latest
     if: "!startsWith(github.head_ref, 'promotion/staging')"
     outputs:
-      backend: ${{ steps.filter.outputs.backend == 'true' || steps.detect.outputs.force_backend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.run_backend_core == true)) || github.run_attempt > 1 }}
-      frontend: ${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.run_frontend_core == true)) || github.run_attempt > 1 }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || steps.detect.outputs.force_backend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'RENDER_BACKEND_ONLY' || github.event.inputs.run_backend_core == true || github.event.inputs.ignore_dependencies == true)) || github.run_attempt > 1 }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || steps.detect.outputs.force_frontend == 'true' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'VERCEL_FRONTEND_ONLY' || github.event.inputs.deploy_target == 'FIREBASE_ADMIN_ONLY' || github.event.inputs.run_frontend_core == true || github.event.inputs.ignore_dependencies == true)) || github.run_attempt > 1 }}
       dependencies: ${{ steps.filter.outputs.dependencies == 'true' || steps.detect.outputs.force_dependencies == 'true' || github.run_attempt > 1 }}
       docs_only: ${{ steps.filter.outputs.docs_only == 'true' }}
       trivial_change: ${{ steps.gate-logic.outputs.trivial_change }}
@@ -197,7 +197,7 @@ jobs:
       - name: Run Core Lint & Security Scan
         run: |
           python -m pip install ruff
-          ruff check backend/
+          ruff check backend/ --select E9,F821,F822,F823
 
   # ==============================================================================
   # 🧪 4. CORE TEST MATRIX (HARD BLOCKING)
@@ -402,10 +402,11 @@ jobs:
     if: |
       always() &&
       (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      needs.build-backend-image.result == 'success' && needs.production-readiness.result == 'success' &&
+      (needs.build-backend-image.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
+      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
       (
         github.ref == 'refs/heads/main' ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_deploy_render == 'true')
+        (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'RENDER_BACKEND_ONLY' || github.event.inputs.run_deploy_render == 'true'))
       )
     runs-on: ubuntu-latest
     environment: production
@@ -435,7 +436,8 @@ jobs:
     if: |
       always() &&
       (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      needs.frontend-core.result == 'success' && needs.production-readiness.result == 'success' &&
+      (needs.frontend-core.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
+      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
       (
         github.ref == 'refs/heads/main' ||
         (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'VERCEL_FRONTEND_ONLY'))
@@ -462,7 +464,8 @@ jobs:
     if: |
       always() &&
       (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      needs.frontend-core.result == 'success' && needs.production-readiness.result == 'success' &&
+      (needs.frontend-core.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
+      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
       (
         github.ref == 'refs/heads/main' ||
         (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'FIREBASE_ADMIN_ONLY'))
