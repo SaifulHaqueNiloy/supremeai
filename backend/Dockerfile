@@ -27,12 +27,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy specific application code directories
+# Copy application code directories
 COPY pyproject.toml poetry.lock ./
 COPY core ./core
 COPY api ./api
 COPY agents ./agents
 COPY brain ./brain
+COPY database ./database
+COPY models ./models
+COPY services ./services
+COPY tools ./tools
+COPY config ./config
+COPY middleware ./middleware
+COPY alembic ./alembic
 
 # Setup non-root user for security
 RUN useradd -m -u 1001 appuser

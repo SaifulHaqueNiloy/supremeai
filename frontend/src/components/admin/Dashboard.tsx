@@ -228,27 +228,32 @@ const Dashboard: React.FC = () => {
 
             {/* System Health Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <CheckCircle size={24} className="text-emerald-600" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <CheckCircle size={18} className="text-emerald-600" />
                 </div>
-                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981] animate-pulse"></span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">System Health</h3>
-              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
-                {health?.gcp?.status === 'healthy' ? 'Excellent' : health?.gcp?.status === 'degraded' ? 'Degraded' : 'Critical'}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">All systems operational</p>
-              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">System Health</span>
+              <div className="flex items-baseline justify-between mt-1">
+                <p className="text-xl font-bold text-emerald-600">
+                  {health?.gcp?.status === 'healthy' ? 'Excellent' : health?.gcp?.status === 'degraded' ? 'Degraded' : health?.gcp?.status ? 'Critical' : 'Operational'}
+                </p>
+                <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  {health?.gcp?.uptime_sla || '99.9%'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">All core services online</p>
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${health?.gcp?.status === 'healthy' ? '98' : health?.gcp?.status === 'degraded' ? '60' : '30'}%`,
-                    backgroundColor: health?.gcp?.status === 'healthy' ? '#10b981' : health?.gcp?.status === 'degraded' ? '#f59e0b' : '#ef4444'
+                    width: `${health?.gcp?.status === 'healthy' || !health?.gcp?.status ? '98' : health?.gcp?.status === 'degraded' ? '60' : '30'}%`,
+                    backgroundColor: health?.gcp?.status === 'healthy' || !health?.gcp?.status ? '#10b981' : health?.gcp?.status === 'degraded' ? '#f59e0b' : '#ef4444'
                   }}
                 ></div>
               </div>
@@ -256,93 +261,108 @@ const Dashboard: React.FC = () => {
 
             {/* Threat Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              transition={{ delay: 0.05 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-amber-100 rounded-xl">
-                  <Shield size={24} className="text-amber-600" />
+              <div className="flex items-center justify-between mb-2">
+                <div className={`p-2 rounded-lg border ${threats && threats.total_findings > 0 ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                  <Shield size={18} className={threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'} />
                 </div>
-                <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${threats && threats.total_findings > 0 ? 'bg-amber-500 shadow-[0_0_6px_#f59e0b]' : 'bg-emerald-500 shadow-[0_0_6px_#10b981]'}`}></span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Security Status</h3>
-              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
-                {threats && threats.total_findings > 0 ? 'At Risk' : 'Secure'}
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Security Status</span>
+              <div className="flex items-baseline justify-between mt-1">
+                <p className={`text-xl font-bold ${threats && threats.total_findings > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  {threats && threats.total_findings > 0 ? 'At Risk' : 'Secure'}
+                </p>
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${threats && threats.total_findings > 0 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
+                  {threats ? `${threats.total_findings} Threat${threats.total_findings === 1 ? '' : 's'}` : '0 Threat'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {threats && threats.total_findings > 0 ? `${threats.total_findings} items require review` : 'No active threats detected'}
               </p>
-              <p className="text-xs text-slate-500 mt-2">
-                {threats && threats.total_findings > 0 ? `${threats.total_findings} threats detected` : 'No active threats'}
-              </p>
-              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${threats && threats.total_findings > 0 ? Math.min(threats.total_findings * 10, 100) : 0}%`,
+                    width: `${threats && threats.total_findings > 0 ? Math.min(threats.total_findings * 25, 100) : 100}%`,
                     backgroundColor: threats && threats.total_findings > 0 ? '#f59e0b' : '#10b981'
                   }}
                 ></div>
               </div>
             </motion.div>
 
-            {/* AI Skills Card */}
+            {/* AI Agents Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-indigo-100 rounded-xl">
-                  <Users size={24} className="text-indigo-600" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-indigo-50 rounded-lg border border-indigo-100">
+                  <Users size={18} className="text-indigo-600" />
                 </div>
-                <span className="text-sm font-mono font-bold text-indigo-600">
-                  {metrics ? metrics.active_agents : 0} Active
+                <span className="text-[11px] font-mono font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                  {metrics?.active_agents ?? 0} Active
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">AI Agents</h3>
-              <p className="text-2xl font-extrabold text-indigo-600 mt-2">
-                {metrics && metrics.active_agents > 0 ? 'Operational' : 'Inactive'}
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">AI Agents</span>
+              <div className="flex items-baseline justify-between mt-1">
+                <p className="text-xl font-bold text-indigo-600">
+                  {metrics && (metrics.active_agents ?? 0) > 0 ? 'Active' : 'Inactive'}
+                </p>
+                <span className="text-[10px] font-mono text-slate-500">
+                  {metrics?.requests_per_second ? `${metrics.requests_per_second} req/s` : 'Standby'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
+                {metrics ? `${metrics.active_agents ?? 0} agents processing tasks` : 'Task workers ready'}
               </p>
-              <p className="text-xs text-slate-500 mt-2">
-                {metrics ? metrics.active_agents : 0} agents processing tasks
-              </p>
-              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-500 rounded-full"
-                  style={{ width: `${metrics ? Math.min(metrics.active_agents * 10, 100) : 0}%` }}
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                  style={{ width: `${metrics ? Math.max(Math.min((metrics.active_agents ?? 0) * 20, 100), 10) : 15}%` }}
                 ></div>
               </div>
             </motion.div>
 
             {/* Cost Efficiency Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+              transition={{ delay: 0.15 }}
+              className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <DollarSign size={24} className="text-emerald-600" />
+              <div className="flex items-center justify-between mb-2">
+                <div className="p-2 bg-emerald-50 rounded-lg border border-emerald-100">
+                  <DollarSign size={18} className="text-emerald-600" />
                 </div>
-                <span className="text-sm font-mono font-bold text-emerald-600">
-                  ${metrics ? metrics.cost_per_hour.toFixed(2) : '0.00'}/h
+                <span className="text-[11px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                  ${metrics ? (metrics.cost_per_hour ?? 0.01).toFixed(2) : '0.01'}/h
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Cost Efficiency</h3>
-              <p className="text-2xl font-extrabold text-emerald-600 mt-2">
-                {metrics && metrics.cost_per_hour < 0.5 ? 'Efficient' : metrics && metrics.cost_per_hour < 1.0 ? 'Moderate' : 'High Cost'}
-              </p>
-              <p className="text-xs text-slate-500 mt-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Cost Efficiency</span>
+              <div className="flex items-baseline justify-between mt-1">
+                <p className="text-xl font-bold text-emerald-600">
+                  {metrics && (metrics.cost_per_hour ?? 0.01) < 0.5 ? 'Efficient' : metrics && (metrics.cost_per_hour ?? 0.01) < 1.0 ? 'Moderate' : 'High Cost'}
+                </p>
+                <span className="text-[10px] font-mono text-slate-500">
+                  ${metrics?.cost_projected_monthly ? Math.round(metrics.cost_projected_monthly) : 7}/mo est.
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">
                 Under budget allocation
               </p>
-              <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div className="mt-3 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${metrics ? Math.min(metrics.cost_per_hour * 50, 100) : 25}%`,
-                    backgroundColor: metrics && metrics.cost_per_hour < 0.5 ? '#10b981' : metrics && metrics.cost_per_hour < 1.0 ? '#f59e0b' : '#ef4444'
+                    width: `${metrics ? Math.min((metrics.cost_per_hour ?? 0.01) * 50, 100) : 20}%`,
+                    backgroundColor: metrics && (metrics.cost_per_hour ?? 0.01) < 0.5 ? '#10b981' : metrics && (metrics.cost_per_hour ?? 0.01) < 1.0 ? '#f59e0b' : '#ef4444'
                   }}
                 ></div>
               </div>

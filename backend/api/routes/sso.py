@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import secrets
 import time
+import uuid
 
 from fastapi import APIRouter, HTTPException
 from loguru import logger
@@ -132,11 +134,17 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
     if result.get("status") != "success":
         raise HTTPException(status_code=401, detail=result.get("message", "OIDC authentication failed"))
     primary_role = (result.get("roles") or ["viewer"])[0]
+    now = datetime.now(timezone.utc)
     token_data = {
         "sub": result.get("user_id", "unknown"),
         "role": primary_role,
         "email": result.get("email", ""),
         "method": result.get("method", f"oidc:{provider}"),
+        "exp": now + timedelta(minutes=15),
+        "iat": now,
+        "jti": str(uuid.uuid4()),
+        "iss": "supremeai",
+        "aud": "supremeai-api",
     }
     if jwt is None:
         raise HTTPException(status_code=503, detail="JWT library is unavailable")

@@ -458,7 +458,14 @@ class SettingsSecretsMixin:
         if val:
             return SecretStr(val)
 
-        # Fallback: Generate a valid Fernet key from any available LLM API key
+        # In production mode, require explicit ENCRYPTION_KEY (fail-closed)
+        if getattr(self, "environment", "development").lower() == "production":
+            raise ValueError(
+                "ENCRYPTION_KEY environment variable is mandatory in production mode. "
+                "Hardcoded or fallback encryption keys are strictly prohibited."
+            )
+
+        # Local development fallback: Derive a valid Fernet key from available API keys
         import base64
         import hashlib
         fallback_material = (
@@ -467,13 +474,15 @@ class SettingsSecretsMixin:
             or self._get_cached_secret("GROQ_API_KEY")
             or self._get_cached_secret("DEEPSEEK_API_KEY")
             or self._get_cached_secret("OPENAI_API_KEY")
-            or "supremeai-default-fallback-encryption-key-2026-v2"
         )
         if fallback_material:
             digest = hashlib.sha256(fallback_material.encode("utf-8")).digest()
             fernet_key = base64.urlsafe_b64encode(digest).decode("utf-8")
             return SecretStr(fernet_key)
-        return SecretStr("")
+        
+        # Safe ephemeral key for local development run if no API key is set
+        ephemeral = hashlib.sha256(f"local-dev-{os.getpid()}".encode("utf-8")).digest()
+        return SecretStr(base64.urlsafe_b64encode(ephemeral).decode("utf-8"))
 
     # ── Stripe Credentials — Infisical-backed ────────────────────────────────
     # বাংলা মন্তব্য: Stripe এপিআই এবং ওয়েবহুক সিক্রেটসমূহের জন্য Infisical lazy fetching নিশ্চিত করা হলো,

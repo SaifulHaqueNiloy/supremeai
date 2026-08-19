@@ -674,7 +674,14 @@ def render_proxy(url: str):
     if _host_is_blocked(parsed.hostname):
         raise HTTPException(status_code=400, detail="Blocked or unresolvable host.")
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "SupremeAI-Browser/1.0"})
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webkit,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+            }
+        )
         with urllib.request.urlopen(req, timeout=20) as resp:
             ctype = resp.headers.get("Content-Type", "") or ""
             data = resp.read()

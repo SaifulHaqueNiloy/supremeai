@@ -206,14 +206,14 @@ class AuthMiddleware:
             )
             return
 
-        # API Key validation for system components / testing
-        # বাংলা মন্তব্য: ব্যাকএন্ড/সিস্টেম কল ভ্যালিডেশনের জন্য API কী চেক করা হচ্ছে।
+        # Service Account API Key validation for automated background services
         if settings.supremeai_api_token and hmac.compare_digest(
             token.encode("utf-8"), settings.supremeai_api_token.encode("utf-8")
         ):
+            logger.info("Authenticated system component via service account token.")
             user_data = {
-                "sub": "system_api_key",
-                "role": "admin",
+                "sub": "system_service_account",
+                "role": "service",
                 "tenant_id": None,
             }
             scope["user"] = user_data

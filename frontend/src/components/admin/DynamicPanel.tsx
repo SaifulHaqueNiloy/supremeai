@@ -94,6 +94,15 @@ export const DynamicPanel = () => {
             transition={{ type: 'spring', damping: 20, stiffness: 100 }}
             className="fixed right-0 top-0 h-full w-96 sci-fi-glass-panel p-6 z-50 shadow-2xl flex flex-col"
           >
+            {/* Middle Toggle Button for Right Side Panel */}
+            <button
+              onClick={() => setActivePanel(null)}
+              title="Hide Right Panel"
+              className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-10 bg-[#091124] hover:bg-[#00f3ff] text-[#00f3ff] hover:text-black border border-[#00f3ff]/40 rounded-l-md flex items-center justify-center shadow-[0_0_10px_rgba(0,243,255,0.3)] transition-all z-50 group cursor-pointer"
+            >
+              <span className="text-xs group-hover:scale-125 transition-transform">▶</span>
+            </button>
+
             <div className="flex items-center justify-between border-b border-[rgba(0,243,255,0.2)] pb-4 mb-4">
               <h3 className="text-base font-mono font-bold text-white uppercase tracking-widest">
                 {activePanel} Terminal

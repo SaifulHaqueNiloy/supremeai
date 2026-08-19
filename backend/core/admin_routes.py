@@ -167,9 +167,28 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
 
-    # বাংলা মন্তব্য: Frontend (frontend/src/store/adminStore.ts) `otp_required` অনুযায়ী
-    # status check করে OTP স্ক্রিনে যায়। Backend আগে `totp_required` পাঠাত যা frontend দিয়ে
-    # মেল করত না — ফলে valid token-এর পরেও UI login gate-এ আটকে থাকত। Contract match করানো হলো।
+    # 🛡️ TRUSTED BROWSER OTP BYPASS (30-Day Window)
+    # Check if incoming request presents a valid, unexpired trusted browser token
+    if payload.trusted_device_token:
+        try:
+            import jwt
+            decoded_device = jwt.decode(payload.trusted_device_token, settings.jwt_secret, algorithms=["HS256"])
+            if decoded_device.get("uid") == uid and decoded_device.get("type") == "trusted_browser":
+                logger.info(f"🔓 [TRUSTED BROWSER]: OTP bypassed for admin uid={uid}")
+                now = int(time.time())
+                jwt_payload = {
+                    "sub": uid,
+                    "uid": uid,
+                    "role": "admin",
+                    "exp": now + 3600 * 24,
+                    "iat": now,
+                    "jti": uuid.uuid4().hex,
+                }
+                token = jwt.encode(jwt_payload, settings.jwt_secret, algorithm="HS256")
+                return {"status": "success", "token": token, "trusted_browser": True}
+        except Exception as device_err:
+            logger.debug(f"Trusted device token verification skipped/failed: {device_err}")
+
     return {"status": "otp_required", "uid": uid}
 
 
@@ -345,7 +364,22 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     jwt_secret = settings.jwt_secret
     token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
 
-    return {"status": "success", "token": token}
+    response_payload = {"status": "success", "token": token}
+
+    # 🛡️ Issue 30-day trusted browser device token if requested
+    if payload.trust_device:
+        device_payload = {
+            "uid": uid,
+            "type": "trusted_browser",
+            "exp": now + (3600 * 24 * 30),  # 30 days validity
+            "iat": now,
+            "jti": uuid.uuid4().hex,
+        }
+        trusted_device_token = jwt.encode(device_payload, jwt_secret, algorithm="HS256")
+        response_payload["trusted_device_token"] = trusted_device_token
+        logger.info(f"🔐 [TRUSTED BROWSER]: Issued 30-day trust token for admin uid={uid}")
+
+    return response_payload
 
 
 @router.get("/admin/cloud-distribution")

@@ -227,22 +227,37 @@ export function LoginView({
           )}
 
           {otpRequired && (
-            <div>
-              <label htmlFor="admin-otp" className="sr-only">Enter 6-digit OTP</label>
-              <input
-                id="admin-otp"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                placeholder="Enter 6-digit OTP"
-                value={adminOtp}
-                onChange={e => setAdminOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full text-center bg-[#07090f] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#00f3ff] transition-all font-mono tracking-widest"
-                required
-                aria-required="true"
-                aria-invalid={localError ? 'true' : 'false'}
-              />
+            <div className="flex flex-col gap-3">
+              <div>
+                <label htmlFor="admin-otp" className="sr-only">Enter 6-digit OTP</label>
+                <input
+                  id="admin-otp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={adminOtp}
+                  onChange={e => setAdminOtp(e.target.value.replace(/\D/g, ''))}
+                  className="w-full text-center bg-[#07090f] border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#00f3ff] transition-all font-mono tracking-widest"
+                  required
+                  aria-required="true"
+                  aria-invalid={localError ? 'true' : 'false'}
+                />
+              </div>
+
+              {/* 🛡️ Trusted Browser 30-Day Checkbox */}
+              <label className="flex items-center justify-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-slate-200 select-none">
+                <input
+                  type="checkbox"
+                  defaultChecked={true}
+                  onChange={(e) => {
+                    localStorage.setItem('supreme_trust_browser_preference', e.target.checked ? 'true' : 'false');
+                  }}
+                  className="w-4 h-4 accent-[#00f3ff] rounded cursor-pointer"
+                />
+                <span className="font-mono text-[11px]">Trust this browser for 30 days (Bypass OTP)</span>
+              </label>
             </div>
           )}
 

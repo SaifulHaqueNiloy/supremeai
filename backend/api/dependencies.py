@@ -90,17 +90,24 @@ async def verify_autonomous_agent_token(
 
 @with_error_bus(component_name="AuthDependency")
 async def get_current_user_token(request: Request) -> dict:
-    """Async user-token extractor (ErrorEventBus-integrated).
+    """Async user-token extractor (ErrorEventBus-integrated & Multi-Tenant Aware).
 
     AuthMiddleware-ইনজেক্ট করা ``request.state.user`` আগে চেক করা হয়;
-    না থাকলে test-environment fallback, নাহলে 401।
+    প্রয়োজনে X-Tenant-ID হেডার থেকে tenant_id রেজলভ করা হয়।
     """
     user = getattr(request.state, "user", None)
+    tenant_header = request.headers.get("X-Tenant-ID") or request.headers.get("x-tenant-id")
     if user:
+        if isinstance(user, dict) and not user.get("tenant_id") and tenant_header:
+            user["tenant_id"] = tenant_header
         return user
 
     if is_test_environment():
-        return {"sub": "admin@supremeai.com", "role": "admin"}
+        return {
+            "sub": "admin@supremeai.com",
+            "role": "admin",
+            "tenant_id": tenant_header or "test_tenant",
+        }
 
     raise HTTPException(status_code=401, detail="Unauthorized")
 

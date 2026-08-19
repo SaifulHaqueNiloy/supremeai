@@ -154,16 +154,30 @@ export const createAdminSlice: StateCreator<SupremeStore, [], [], AdminSlice> = 
           return;
         }
 
+        const trustedDeviceToken = localStorage.getItem('supreme_trusted_device_token') || '';
         const res = await fetch(`${API_BASE}/api/admin/firebase-login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id_token: idToken }),
+          body: JSON.stringify({
+            id_token: idToken,
+            trusted_device_token: trustedDeviceToken || undefined
+          }),
         });
         const data = await res.json();
 
         if (res.ok) {
-          if (data.status === 'otp_required') {
+          if (data.status === 'success' && data.token) {
+            // 🔓 Trusted browser bypassed OTP
+            localStorage.setItem('supreme_admin_jwt', data.token);
+            localStorage.setItem('adminToken', data.token);
+            const decoded = decodeJwt(data.token);
+            if (decoded && typeof decoded.role === 'string') {
+              set({ adminRole: decoded.role });
+            }
+            set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false });
+            return;
+          } else if (data.status === 'otp_required') {
             set({ otpRequired: true });
           } else if (data.status === 'totp_setup_required') {
             const setupRes = await fetch(`${API_BASE}/api/admin/firebase-totp-setup`, {
@@ -195,11 +209,17 @@ export const createAdminSlice: StateCreator<SupremeStore, [], [], AdminSlice> = 
         }
         idToken = await user.getIdToken();
 
+        const trustDevice = localStorage.getItem('supreme_trust_browser_preference') === 'true';
+
         const res = await fetch(`${API_BASE}/api/admin/firebase-totp-verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ id_token: idToken, otp: adminOtp.trim() }),
+          body: JSON.stringify({
+            id_token: idToken,
+            otp: adminOtp.trim(),
+            trust_device: trustDevice
+          }),
         });
 
         if (res.ok) {
@@ -211,6 +231,10 @@ export const createAdminSlice: StateCreator<SupremeStore, [], [], AdminSlice> = 
             if (decoded && typeof decoded.role === 'string') {
               set({ adminRole: decoded.role });
             }
+          }
+          if (data.trusted_device_token) {
+            // Store 30-day device trust token
+            localStorage.setItem('supreme_trusted_device_token', data.trusted_device_token);
           }
           set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '' });
         } else {

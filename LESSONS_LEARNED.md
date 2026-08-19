@@ -6,6 +6,11 @@
 > 3. DO NOT delete or overwrite past historical entries.
 > 4. Keep it concise and technical.
 
+## 2026-08-19 — 🛡️ P0 Critical Vulnerability Remediation & Deep Forensic Audit Alignment
+- **সমস্যা:** কোডবেস অডিট রিপোর্টে চিহ্নিত C-BOOT-01 (Deprecation Shim ModuleNotFoundError), C-SEC-01 (Master API Token Admin Backdoor), C-SEC-02 (Unexpired SSO JWT), C-PAY-01 (Stripe Webhook Secret Unwrapping), C-EMB-01 (Randomized Process Hashing), এবং C-ENC-01 (Hardcoded Encryption Fallback) অ্যাপ্লিকেশন বুট এবং সিকিউরিটিকে ঝুঁকিতে ফেলেছিল।
+- **ফিক্স:** (1) `core/` শিমসগুলোতে Dual-path import resolution যোগ করা হয়েছে; (2) static token fallback সম্পূর্ণ মুছে দিয়ে service accounts-কে down-scope করা হয়েছে; (3) SSO JWT-তে exp, jti, iss, aud ক্লেইমস বাধ্যতামূলক করা হয়েছে; (4) Stripe webhook secret unwrapping সহ deterministic SHA-256 embedding hashing ও fail-closed encryption চালু করা হয়েছে; (5) Dockerfile-এ প্রয়োজনীয় সমস্ত মডিউল ডিরেক্টরি কপি করা হয়েছে।
+- **লেসন:** ব্যাকএন্ড রিফ্যাক্টরিং বা ডিপ্রিকেশন শিম তৈরির সময় ডায়নামিক ইম্পোর্ট পাথ স্যানিটাইজেশন নিশ্চিত করতে হবে এবং নিরাপত্তার ক্ষেত্রে কখনোই হার্ডকোডেড ফলব্যাক স্ট্রিং বা গ্লোবাল বাইপাস লজিক রাখা যাবে না।
+
 ## 2026-08-19 — 🌐 Full-Stack AI Browser Automation Studio & HITL Integration
 - **সমস্যা:** অ্যাডমিন প্যানেলে ব্রাউজার অটোমেশন ব্যাকএন্ড রুট ও প্রক্সি থাকলেও কোনো ফার্স্ট-ক্লাস ইন্টারঅ্যাক্টিভ লাইভ স্টুডিও ছিল না যা দিয়ে অ্যাডমিন ব্রাউজিং দেখতে, অটোনোমাস গোল এক্সিকিউট করতে বা CAPTCHA আসলে টেকওভার নিতে পারত।
 - **ফিক্স:** `LiveBrowserStudio.tsx` তৈরি করে অ্যাডমিন সাইডবারে যুক্ত করা হয়েছে। এতে রেসপন্সিভ ভিউপোর্ট (Desktop/Tablet/Mobile), প্রক্সাইড রেন্ডারিং, স্টেপ-বাই-স্টেপ অ্যাকশন লগ, আর্টফ্যাক্টস/ফাইন্ডিংস এক্সপোর্ট এবং One-Click Human Takeover (HITL) সম্পূর্ণ কার্যকর করা হয়েছে।
@@ -30,8 +35,3 @@
 - **সমস্যা:** কোডবেসের বিভিন্ন মডিউল বা প্যাকেজে স্ট্যাটিক ফলব্যাক URL ছড়িয়ে থাকলে ক্লাউড মাইগ্রেশনের সময় ব্রোকেন রেফারেন্স তৈরি হতো।
 - **ফিক্স:** `docs/SYSTEM_TOPOLOGY_AND_URL_REGISTRY.md` (SSOT) তৈরি করা হয়েছে এবং `scripts/audit_topology_urls.py` স্বয়ংক্রিয় অডিটর তৈরি করে ৩৯৬টি সোর্স ফাইল স্ক্যান ও ভ্যালিডেট করা হয়েছে। `AGENTS.md`-এ রুল অন্তর্ভুক্ত করা হয়েছে।
 - **লেসন:** সেন্ট্রাল রেজিস্ট্রি ও সিআই ভ্যালিডেটর স্ক্রিপ্ট নিশ্চিত করে যে ভবিষ্যতে কোনো ডেভেলপার বা AI ভুল করে কোনো হার্ডকোডেড বা আউটডেটেড অ্যান্ডপয়েন্ট লিখলে তা সাথে সাথে ধরা পড়বে।
-
-## 2026-08-19 — 🌐 VS Code Extension Production Gateway Alignment
-- **সমস্যা:** (1) VS Code Extension-এর `package.json` ও `SwarmPipelineProvider.ts`-এ `supremeai.swarmBackendUrl` ডিফল্ট `http://localhost:8080` ছিল, যা ক্লাউড ব্যাকএন্ডের সাথে যুক্ত ছিল না; (2) `CrossAiObserverService.ts`, `SupremeWebviewProvider.ts`, এবং `TelemetryTracker.ts`-এ পুরনো হার্ডকোডেড Cloud Run URL ছিল।
-- **ফিক্স:** (1) `package.json` ও `SwarmPipelineProvider.ts`-এ ডিফল্ট ব্যাকএন্ড URL হিসেবে প্রোডাকশন গেটওয়ে `https://supremeai-worker.paykaribazaronline.workers.dev` সেট করা হয়েছে; (2) `CrossAiObserverService`, `SupremeWebviewProvider` ও `TelemetryTracker`-এ কনফিগারেশন থেকে ডায়নামিক `backendUrl` রেজোলিউশন চালু করা হয়েছে।
-- **লেসন:** ক্লায়েন্ট বা এক্সটেনশন মডিউলে কখনোই স্ট্যাটিক বা হার্ডকোডেড ক্লাউড URL বা লোকালহোস্ট ফলব্যাক রাখা যাবে না; সবসময় কনফিগারেশন ও সিঙ্গেল গেটওয়ে থেকে ডায়নামিক্যালি রেজলভ করতে হবে।

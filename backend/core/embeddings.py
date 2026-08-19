@@ -43,16 +43,21 @@ def get_local_encoder():
     return _encoder
 
 
+def _deterministic_hash(word: str) -> int:
+    return int.from_bytes(hashlib.sha256(word.encode("utf-8")).digest()[:4], "big")
+
+
 def hash_vectorize(text: str, size: int = _LOCAL_DIM) -> list[float]:
-    """Pure-Python feature hashing fallback — zero-cost, fully offline."""
+    """Pure-Python feature hashing fallback — zero-cost, fully offline, deterministic."""
     vector = [0.0] * size
     words = [w.lower() for w in text.split() if len(w) > 1]
     if not words:
         vector[0] = 1.0
         return vector
     for word in words:
-        h = abs(hash(word)) % size
-        sign = 1 if (abs(hash(word)) // size) % 2 == 0 else -1
+        h_val = _deterministic_hash(word)
+        h = abs(h_val) % size
+        sign = 1 if (abs(h_val) // size) % 2 == 0 else -1
         vector[h] += sign
     norm = math.sqrt(sum(x * x for x in vector))
     if norm > 0:

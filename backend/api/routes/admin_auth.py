@@ -40,9 +40,6 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         return decoded
     except Exception as err:
         logger.warning("Admin token validation failed", exc_info=True)
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token, expected):
-            return {"uid": "admin", "role": "admin"}
         raise HTTPException(status_code=401, detail="Authentication failed.") from err
 
 

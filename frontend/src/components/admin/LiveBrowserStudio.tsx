@@ -51,6 +51,7 @@ export const LiveBrowserStudio: React.FC = () => {
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [reloadCounter, setReloadCounter] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'stream' | 'findings' | 'logs'>('stream');
+  const [useDirectUrl, setUseDirectUrl] = useState<boolean>(false);
 
   const [logs, setLogs] = useState<BrowserActionLog[]>([
     {
@@ -239,19 +240,30 @@ export const LiveBrowserStudio: React.FC = () => {
           {/* Browser Iframe Canvas */}
           <div className="flex-1 bg-[#02040a] flex items-center justify-center p-2 overflow-auto relative">
             
-            {/* Live Indicator Overlay */}
-            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1 rounded-full border border-slate-800 text-[10px] font-mono text-slate-300">
+            {/* Live Indicator Overlay & Direct/Proxy Toggle */}
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2 bg-slate-950/90 backdrop-blur-md px-3 py-1 rounded-full border border-slate-800 text-[10px] font-mono text-slate-300 shadow-lg">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE PROXY FEED
+              <span>LIVE PROXY FEED</span>
+              <button
+                onClick={() => setUseDirectUrl(prev => !prev)}
+                className="ml-2 px-2 py-0.5 rounded bg-[#00f3ff]/15 text-[#00f3ff] hover:bg-[#00f3ff]/30 transition-all font-mono font-bold"
+                title="Toggle between Server Proxy Render & Direct Web Frame"
+              >
+                {useDirectUrl ? 'MODE: DIRECT' : 'MODE: PROXY'}
+              </button>
             </div>
 
             <iframe
               ref={iframeRef}
-              key={reloadCounter}
-              src={getProxiedUrl(currentUrl)}
+              key={reloadCounter + (useDirectUrl ? '_direct' : '_proxy')}
+              src={useDirectUrl ? currentUrl : getProxiedUrl(currentUrl)}
               className={`${getViewportStyles()} transition-all duration-300 border border-slate-800/80 bg-white`}
-              sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+              sandbox="allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads"
               title="SupremeAI Live Browser"
+              onError={() => {
+                // If proxy fails, automatically fallback to direct URL
+                if (!useDirectUrl) setUseDirectUrl(true);
+              }}
             />
           </div>
         </div>

@@ -64,6 +64,7 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   const { adminSubTab, setAdminSubTab, handleAdminLogout } = props;
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLeftSidebarCollapsed, setIsLeftSidebarCollapsed] = useState(false);
 
   // Cmd+K to open Command Palette
   useEffect(() => {
@@ -132,16 +133,31 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
       {/* নিচের অংশ: সাইডবার + মূল কন্টেন্ট */}
       <div className="flex-1 flex overflow-hidden relative">
 
-        {/* ২. বাম পাশের নেভিগেশন সাইডবার */}
-        <aside className="w-56 bg-[#040814]/55 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between py-6 font-sans text-slate-400 select-none z-20">
-          <div className="space-y-1 px-3">
+        {/* ২. বাম পাশের নেভিগেশন সাইডবার (Hide/Unhide Middle Button সহ) */}
+        <aside className={`relative ${isLeftSidebarCollapsed ? 'w-16' : 'w-56'} transition-all duration-300 bg-[#040814]/55 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between py-6 font-sans text-slate-400 select-none z-20`}>
+          
+          {/* Middle Toggle Button for Left Sidebar */}
+          <button
+            onClick={() => setIsLeftSidebarCollapsed(!isLeftSidebarCollapsed)}
+            title={isLeftSidebarCollapsed ? "Expand Left Sidebar" : "Collapse Left Sidebar"}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-10 bg-[#091124] hover:bg-[#00f3ff] text-slate-400 hover:text-black border border-[#00f3ff]/30 rounded-r-md flex items-center justify-center shadow-[0_0_10px_rgba(0,243,255,0.2)] transition-all z-30 group cursor-pointer"
+          >
+            {isLeftSidebarCollapsed ? (
+              <span className="text-xs group-hover:scale-125 transition-transform">▶</span>
+            ) : (
+              <span className="text-xs group-hover:scale-125 transition-transform">◀</span>
+            )}
+          </button>
+
+          <div className="space-y-1 px-2">
             {sidebarItems.map(item => {
               const isActive = adminSubTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setAdminSubTab(item.id as AdminSubTab)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold tracking-wider transition-all duration-300 ${isActive
+                  title={isLeftSidebarCollapsed ? item.label : undefined}
+                  className={`w-full flex items-center ${isLeftSidebarCollapsed ? 'justify-center px-0' : 'gap-3 px-4'} py-3 rounded-lg text-xs font-semibold tracking-wider transition-all duration-300 ${isActive
                       ? 'bg-[#00f3ff]/10 text-[#00f3ff] border-l-2 border-[#00f3ff] shadow-[inset_0_0_12px_rgba(0,243,255,0.05)]'
                       : 'hover:bg-slate-900/50 hover:text-slate-200'
                     }`}
@@ -149,25 +165,28 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
                   <span className={isActive ? 'text-[#00f3ff]' : 'text-slate-400'}>
                     {item.icon}
                   </span>
-                  <span>{item.label}</span>
+                  {!isLeftSidebarCollapsed && <span>{item.label}</span>}
                 </button>
               );
             })}
           </div>
 
-          {/* অতিরিক্ত অ্যাডমিন টুলস (অরবিট ক্যানভাস লিঙ্ক) */}
-          <div className="px-6 border-t border-slate-900 pt-4">
+          {/* অতিরিক্ত অ্যাডমিন টুলস */}
+          <div className={`${isLeftSidebarCollapsed ? 'px-2' : 'px-6'} border-t border-slate-900 pt-4`}>
             <button
               onClick={() => setAdminSubTab('command-center')}
-              className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded border border-[#00f3ff]/30 text-[#00f3ff] hover:bg-[#00f3ff]/10 text-xs font-mono font-bold tracking-widest uppercase transition-all duration-300 ${adminSubTab === 'command-center' ? 'bg-[#00f3ff]/20' : ''
+              title={isLeftSidebarCollapsed ? "Core Canvas" : undefined}
+              className={`w-full flex items-center justify-center gap-2 ${isLeftSidebarCollapsed ? 'px-1' : 'px-3'} py-2 rounded border border-[#00f3ff]/30 text-[#00f3ff] hover:bg-[#00f3ff]/10 text-xs font-mono font-bold tracking-widest uppercase transition-all duration-300 ${adminSubTab === 'command-center' ? 'bg-[#00f3ff]/20' : ''
                 }`}
             >
               <Terminal size={14} />
-              <span>Core Canvas</span>
+              {!isLeftSidebarCollapsed && <span>Core Canvas</span>}
             </button>
-            <div className="text-[9px] text-slate-600 text-center mt-3 font-mono">
-              CTRL+K for command menu
-            </div>
+            {!isLeftSidebarCollapsed && (
+              <div className="text-[9px] text-slate-600 text-center mt-3 font-mono">
+                CTRL+K for command menu
+              </div>
+            )}
           </div>
         </aside>
 

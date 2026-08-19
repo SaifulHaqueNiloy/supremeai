@@ -27,7 +27,13 @@ token_deductor = TokenDeductor()
 
 _raw_stripe_key = settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
 stripe.api_key = _raw_stripe_key
-STRIPE_WEBHOOK_SECRET = getattr(settings, "stripe_webhook_secret", None)
+_raw_webhook_secret = getattr(settings, "stripe_webhook_secret", None)
+if _raw_webhook_secret and hasattr(_raw_webhook_secret, "get_secret_value"):
+    STRIPE_WEBHOOK_SECRET = _raw_webhook_secret.get_secret_value()
+elif isinstance(_raw_webhook_secret, str):
+    STRIPE_WEBHOOK_SECRET = _raw_webhook_secret
+else:
+    STRIPE_WEBHOOK_SECRET = None
 
 SSLCOMMERZ_VALIDATION_URL = "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php"
 SSLCOMMERZ_STORE_ID = getattr(settings, "sslcommerz_store_id", None)

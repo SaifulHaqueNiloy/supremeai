@@ -301,7 +301,7 @@ export function InteractiveChatTab({
   };
 
   return (
-    <div className={`w-full h-[calc(100vh-140px)] flex flex-col transition-all duration-500 ${isSimple ? 'text-slate-800' : 'text-slate-200'}`}>
+    <div className={`w-full h-full flex-1 flex flex-col overflow-hidden transition-all duration-500 ${isSimple ? 'text-slate-800' : 'text-slate-200'}`}>
 
       {/* কন্ট্রোল প্যানেল — অ্যাডভান্সড মোডে */}
       {!isSimple && (
@@ -344,8 +344,8 @@ export function InteractiveChatTab({
             : `${!chatTabTerminalOpen && !chatTabBrowserOpen ? 'col-span-12' : (chatTabTerminalOpen && chatTabBrowserOpen ? 'col-span-6' : 'col-span-9')} bg-[#05070c]/50 text-slate-200`
         }`}>
           {/* চ্যাট হেডার */}
-          <div className={`h-10 border-b flex items-center justify-between px-4 ${isSimple ? 'bg-slate-100 border-slate-200' : 'bg-[#080a10] border-slate-800'}`}>
-            <span data-testid="chat-header" className={`text-xs font-bold uppercase tracking-wider ${isSimple ? 'text-indigo-600' : 'text-slate-200'}`}>
+          <div className={`h-10 border-b flex items-center justify-between px-4 ${isSimple ? 'bg-slate-900 border-slate-800 text-white' : 'bg-[#080a10] border-slate-800'}`}>
+            <span data-testid="chat-header" className={`text-xs font-bold uppercase tracking-wider ${isSimple ? 'text-[#00f3ff]' : 'text-slate-200'}`}>
               Unified Command Portal
             </span>
             <div className="flex items-center gap-2">
@@ -354,8 +354,8 @@ export function InteractiveChatTab({
             </div>
           </div>
 
-          {/* চ্যატ */}
-          <div className={`flex-1 p-4 overflow-y-auto flex flex-col gap-4 ${isSimple ? 'bg-indigo-50/20' : 'bg-[#030509]/30'}`}>
+          {/* চ্যাাট */}
+          <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-4 bg-[#030509]">
             {activeMessages.map((msg) => (
               <UnifiedChatBubble
                 key={msg.id}

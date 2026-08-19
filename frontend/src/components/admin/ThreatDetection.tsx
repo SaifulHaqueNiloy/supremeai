@@ -118,6 +118,38 @@ export function ThreatDetection() {
           )}
         </div>
       </Card>
+
+      {/* 🛡️ Trusted Browser Device Manager */}
+      <div className="mt-6">
+        <Card title="Active Device Trust (30-Day OTP Bypass)">
+          <div className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900/40">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-[#00f3ff]/10 rounded-lg text-[#00f3ff] border border-[#00f3ff]/30">
+                <Shield size={18} />
+              </div>
+              <div>
+                <div className="text-xs font-mono font-bold text-white">Current Browser Device Status</div>
+                <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                  {localStorage.getItem('supreme_trusted_device_token')
+                    ? '🔒 TRUSTED — 2FA/OTP Bypassed for 30 Days'
+                    : '⚠️ UNTRUSTED — 2FA/OTP Required on Next Login'}
+                </div>
+              </div>
+            </div>
+            {localStorage.getItem('supreme_trusted_device_token') && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('supreme_trusted_device_token');
+                  window.location.reload();
+                }}
+                className="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/40 rounded text-xs font-mono font-bold transition-all"
+              >
+                Revoke Trust
+              </button>
+            )}
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
