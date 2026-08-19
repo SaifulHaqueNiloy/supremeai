@@ -10,8 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/supreme-core-ci.yml`
   - `CHECKPOINT.md`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `scripts/devops/secret_scan_ci.py`
 
 ## Pending (Carry Forward)
 - (none) — All milestones and phases 100% completed and green.
