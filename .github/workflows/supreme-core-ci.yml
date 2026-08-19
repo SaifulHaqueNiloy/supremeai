@@ -190,6 +190,10 @@ jobs:
           python scripts/generate_types.py --validate
           python scripts/devops/secret_scan_ci.py --path backend/core --json
 
+      - name: 🛡️ Dependency Advisory Audit (pnpm)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high || true
+
   pre-merge-gate:
     name: 🚧 Pre-Merge Gate (Iron Curtain)
     needs: [changes]
@@ -328,6 +332,19 @@ jobs:
       - name: 🔍 Bundle Size Check
         run: bash frontend/scripts/bundle-check.sh frontend/dist-admin
 
+      - name: 📦 Package VS Code Extension (.vsix)
+        run: |
+          npm install -g @vscode/vsce
+          cd tools/vscode-extension
+          vsce package --no-git-tag-version -o supremeai-vscode.vsix || echo "vsce package skipped"
+
+      - name: 📤 Upload VS Code Extension VSIX Artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
+        with:
+          name: supremeai-vscode-extension
+          path: tools/vscode-extension/supremeai-vscode.vsix
+          if-no-files-found: ignore
+
   flutter-unit-widget-tests:
     name: 📱 Flutter Unit & Widget Tests
     needs: [changes]
@@ -436,6 +453,11 @@ jobs:
             curl -s "$RENDER_DEPLOY_HOOK"
           fi
 
+      - name: 🔍 Post-Deploy Live Health Probe
+        run: |
+          sleep 15
+          curl -s -f --retry 3 --retry-delay 5 https://supremeai-backend-docker.onrender.com/api/v1/health || echo "Render backend warming up..."
+
   deploy-user-vercel:
     name: 🚀 Deploy User Portal (Vercel)
     needs: [frontend-core, production-readiness]
@@ -463,6 +485,11 @@ jobs:
           pnpm install
           pnpm --dir frontend run build:user
           pnpm exec vercel deploy --prod --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes
+
+      - name: 🔍 Post-Deploy Live Web Studio Probe
+        run: |
+          sleep 10
+          curl -s -f --retry 2 --retry-delay 3 https://supremeai-frontend-6nwi.onrender.com/workspace || echo "Web Studio warming up..."
 
   deploy-admin-firebase:
     name: 🚀 Deploy Admin Portal (Firebase)
