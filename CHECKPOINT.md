@@ -10,9 +10,8 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/components/admin/LiveBrowserStudio.tsx`
-  - `frontend/src/components/admin/Dashboard.tsx`
   - `CHECKPOINT.md`
+  - `frontend/src/components/admin/Dashboard.tsx`
 
 ## Pending (Carry Forward)
 - Phase 2: Auth consolidation (`auth_dependency.py`), Multi-tenant RLS, and Async non-blocking conversions
