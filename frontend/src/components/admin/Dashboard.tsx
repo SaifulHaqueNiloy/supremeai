@@ -53,6 +53,8 @@ const Dashboard: React.FC = () => {
   const [restartStatus, setRestartStatus] = React.useState('');
   const [isScanning, setIsScanning] = React.useState(false);
   const [scanStatus, setScanStatus] = React.useState('');
+  const [isActivityFeedOpen, setIsActivityFeedOpen] = React.useState(false);
+  const [isReportsOpen, setIsReportsOpen] = React.useState(false);
 
   const runSmartOptimization = React.useCallback(async () => {
     setIsOptimizing(true);
@@ -572,158 +574,170 @@ const Dashboard: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
-              className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+              className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm self-start transition-all"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Activity size={20} className="text-indigo-500" />
-                  System Activity Feed
-                </h2>
-                <button className="text-xs text-indigo-600 font-semibold hover:underline transition-colors">
-                  View All
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Activity size={18} className="text-indigo-500" />
+                  <h2 className="text-sm font-bold text-slate-900">System Activity Feed</h2>
+                  <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {events?.length || 0} Events
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsActivityFeedOpen((prev) => !prev)}
+                  className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  {isActivityFeedOpen ? 'Minimize ▲' : 'Expand View ▼'}
                 </button>
               </div>
 
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                {events && events.length > 0 ? (
-                  events.map((evt, idx) => {
-                    const isError = evt.level?.toLowerCase() === 'error' || evt.level?.toLowerCase() === 'critical';
-                    const isWarn = evt.level?.toLowerCase() === 'warning' || evt.level?.toLowerCase() === 'warn';
-                    const iconColor = isError ? 'text-rose-600 bg-rose-50' : (isWarn ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
-                    const iconStr = isError ? '🚨' : (isWarn ? '⚠️' : 'ℹ️');
-                    const bgColor = isError ? 'bg-rose-50 border-rose-100' : (isWarn ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100');
+              {isActivityFeedOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="space-y-3 max-h-[360px] overflow-y-auto pr-2 mt-5 border-t border-slate-100 pt-4"
+                >
+                  {events && events.length > 0 ? (
+                    events.map((evt, idx) => {
+                      const isError = evt.level?.toLowerCase() === 'error' || evt.level?.toLowerCase() === 'critical';
+                      const isWarn = evt.level?.toLowerCase() === 'warning' || evt.level?.toLowerCase() === 'warn';
+                      const iconColor = isError ? 'text-rose-600 bg-rose-50' : (isWarn ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
+                      const iconStr = isError ? '🚨' : (isWarn ? '⚠️' : 'ℹ️');
+                      const bgColor = isError ? 'bg-rose-50 border-rose-100' : (isWarn ? 'bg-amber-50 border-amber-100' : 'bg-emerald-50 border-emerald-100');
 
-                    return (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className={`flex items-start gap-4 p-4 rounded-xl border ${bgColor} hover:bg-white transition-colors`}
-                      >
-                        <span className={`p-3 rounded-xl ${iconColor} text-sm font-mono`}>{iconStr}</span>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center">
-                            <p className="text-sm font-bold text-slate-800">{evt.source || 'SYSTEM'}</p>
-                            <span className="text-xs text-slate-400 font-mono">{evt.timestamp}</span>
+                      return (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.03 }}
+                          className={`flex items-start gap-3 p-3 rounded-xl border ${bgColor} hover:bg-white transition-colors`}
+                        >
+                          <span className={`p-2 rounded-lg ${iconColor} text-xs font-mono`}>{iconStr}</span>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-center">
+                              <p className="text-xs font-bold text-slate-800">{evt.source || 'SYSTEM'}</p>
+                              <span className="text-[10px] text-slate-400 font-mono">{evt.timestamp}</span>
+                            </div>
+                            <p className="text-xs text-slate-600 mt-0.5">{evt.message}</p>
                           </div>
-                          <p className="text-sm text-slate-600 mt-1">{evt.message}</p>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-12">
-                    <Activity size={48} className="mx-auto text-slate-300 mb-4" />
-                    <p className="text-slate-400 font-medium">No recent activity</p>
-                    <p className="text-xs text-slate-400 mt-1">Events will appear here in real-time</p>
-                  </div>
-                )}
-              </div>
+                        </motion.div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8">
+                      <Activity size={36} className="mx-auto text-slate-300 mb-2" />
+                      <p className="text-xs text-slate-400 font-medium">No recent activity</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Events will appear here in real-time</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Quick Actions & Performance */}
-            <div className="space-y-8">
+            <div className="space-y-6">
 
               {/* Quick Actions */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
-                className="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+                className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm"
               >
-                <h2 className="text-lg font-bold text-slate-900 mb-6">Quick Actions</h2>
+                <h2 className="text-sm font-bold text-slate-900 mb-4">Quick Actions</h2>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <button
                     onClick={runSmartOptimization}
                     disabled={isOptimizing}
-                    className="w-full flex items-center justify-between p-4 rounded-xl border border-indigo-100 hover:bg-indigo-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-indigo-100 hover:bg-indigo-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
-                        <Zap size={18} className="text-indigo-600" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                        <Zap size={16} className="text-indigo-600" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-800">System Optimization</span>
-                        <span className="block text-xs text-slate-500">Clean memory and reset processes</span>
+                        <span className="text-xs font-bold text-slate-800">System Optimization</span>
+                        <span className="block text-[10px] text-slate-500">Clean memory and reset processes</span>
                       </div>
                     </div>
                     {isOptimizing ? (
-                      <RefreshCw size={18} className="text-indigo-600 animate-spin" />
+                      <RefreshCw size={16} className="text-indigo-600 animate-spin" />
                     ) : (
-                      <ArrowUpRight size={18} className="text-indigo-600" />
+                      <ArrowUpRight size={16} className="text-indigo-600" />
                     )}
                   </button>
 
                   {optimizeStatus && (
-                    <div className="text-xs text-indigo-600 px-1">{optimizeStatus}</div>
+                    <div className="text-[10px] text-indigo-600 px-1">{optimizeStatus}</div>
                   )}
 
                   <button
                     onClick={() => setActivePanel('Reports')}
-                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
-                        <HardDrive size={18} className="text-slate-600" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <HardDrive size={16} className="text-slate-600" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-800">Generate Report</span>
-                        <span className="block text-xs text-slate-500">View performance & analytics</span>
+                        <span className="text-xs font-bold text-slate-800">Generate Report</span>
+                        <span className="block text-[10px] text-slate-500">View performance & analytics</span>
                       </div>
                     </div>
-                    <ArrowUpRight size={18} className="text-slate-400" />
+                    <ArrowUpRight size={16} className="text-slate-400" />
                   </button>
 
                   <button
                     onClick={restartServices}
                     disabled={isRestarting}
-                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
-                        <Server size={18} className="text-slate-600" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <Server size={16} className="text-slate-600" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-800">Restart Services</span>
-                        <span className="block text-xs text-slate-500">Gracefully restart core services</span>
+                        <span className="text-xs font-bold text-slate-800">Restart Services</span>
+                        <span className="block text-[10px] text-slate-500">Gracefully restart core services</span>
                       </div>
                     </div>
                     {isRestarting ? (
-                      <RefreshCw size={18} className="text-slate-600 animate-spin" />
+                      <RefreshCw size={16} className="text-slate-600 animate-spin" />
                     ) : (
-                      <ArrowUpRight size={18} className="text-slate-400" />
+                      <ArrowUpRight size={16} className="text-slate-400" />
                     )}
                   </button>
 
                   {restartStatus && (
-                    <div className="text-xs text-slate-500 px-1">{restartStatus}</div>
+                    <div className="text-[10px] text-slate-500 px-1">{restartStatus}</div>
                   )}
 
                   <button
                     onClick={runSecurityScan}
                     disabled={isScanning}
-                    className="w-full flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-between p-3 rounded-xl border border-slate-100 hover:bg-slate-50 text-left transition-all group disabled:opacity-75 disabled:cursor-not-allowed"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
-                        <Lock size={18} className="text-slate-600" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-1.5 bg-slate-100 rounded-lg group-hover:bg-slate-200 transition-colors">
+                        <Lock size={16} className="text-slate-600" />
                       </div>
                       <div>
-                        <span className="text-sm font-bold text-slate-800">Security Scan</span>
-                        <span className="block text-xs text-slate-500">Run comprehensive threat detection</span>
+                        <span className="text-xs font-bold text-slate-800">Security Scan</span>
+                        <span className="block text-[10px] text-slate-500">Run comprehensive threat detection</span>
                       </div>
                     </div>
                     {isScanning ? (
-                      <RefreshCw size={18} className="text-slate-600 animate-spin" />
+                      <RefreshCw size={16} className="text-slate-600 animate-spin" />
                     ) : (
-                      <ArrowUpRight size={18} className="text-slate-400" />
+                      <ArrowUpRight size={16} className="text-slate-400" />
                     )}
                   </button>
 
                   {scanStatus && (
-                    <div className="text-xs text-slate-500 px-1">{scanStatus}</div>
+                    <div className="text-[10px] text-slate-500 px-1">{scanStatus}</div>
                   )}
                 </div>
               </motion.div>
@@ -733,19 +747,19 @@ const Dashboard: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.6 }}
-                className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl p-6 text-white shadow-lg"
+                className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-sm"
               >
-                <h2 className="text-lg font-bold mb-4">Performance Overview</h2>
+                <h2 className="text-sm font-bold mb-3">Performance Overview</h2>
 
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">CPU Usage</span>
-                      <span className="text-sm font-bold">
+                      <span className="text-xs font-medium">CPU Usage</span>
+                      <span className="text-xs font-bold">
                         {Math.round(safeCpu)}%
                       </span>
                     </div>
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-white rounded-full"
                         style={{ width: `${Math.min(safeCpu, 100)}%` }}
@@ -755,12 +769,12 @@ const Dashboard: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Memory Usage</span>
-                      <span className="text-sm font-bold">
+                      <span className="text-xs font-medium">Memory Usage</span>
+                      <span className="text-xs font-bold">
                         {Math.round(safeMem)}%
                       </span>
                     </div>
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-white rounded-full"
                         style={{ width: `${Math.min(safeMem, 100)}%` }}
@@ -770,12 +784,12 @@ const Dashboard: React.FC = () => {
 
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Network</span>
-                      <span className="text-sm font-bold">
+                      <span className="text-xs font-medium">Network</span>
+                      <span className="text-xs font-bold">
                         {metrics ? metrics.requests_per_second : 0}/sec
                       </span>
                     </div>
-                    <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-emerald-300 rounded-full"
                         style={{ width: `${Math.min((metrics ? metrics.requests_per_second : 0) / 100 * 100, 100)}%` }}
@@ -787,24 +801,33 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Detailed Reports Section */}
+          {/* Collapsible Detailed Reports Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7 }}
-            className="bg-white border border-slate-200 rounded-3xl p-6 shadow-lg"
+            className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm mb-6"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <TrendingUp size={20} className="text-indigo-500" />
-                System Reports & Analytics
-              </h2>
-              <button className="text-xs text-indigo-600 font-semibold hover:underline transition-colors">
-                Export Data
-              </button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={18} className="text-indigo-500" />
+                <h2 className="text-sm font-bold text-slate-900">System Reports & Analytics</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="text-xs text-indigo-600 font-semibold hover:underline">
+                  Export Data
+                </button>
+                <button
+                  onClick={() => setIsReportsOpen((prev) => !prev)}
+                  className="text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  {isReportsOpen ? 'Minimize ▲' : 'Expand View ▼'}
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {isReportsOpen && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-5 border-t border-slate-100 pt-4">
               {/* Report List */}
               <div className="md:col-span-1 border-r border-slate-200 pr-6">
                 <h3 className="text-sm font-bold text-slate-700 mb-4">Available Reports</h3>
@@ -865,10 +888,9 @@ const Dashboard: React.FC = () => {
                       <p className="text-slate-400 font-medium">Select a report to view details</p>
                       <p className="text-sm text-slate-400 mt-1">Reports will display analytics and insights</p>
                     </div>
-                  </div>
                 )}
               </div>
-            </div>
+            )}
           </motion.div>
 
           {/* Mode Switcher Button */}
