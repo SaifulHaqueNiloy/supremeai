@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 11:26 UTC
+- **Date:** 2026-08-19 11:27 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,10 +10,10 @@
   - (see git log for details)
 
 ## Files Changed
+  - `frontend/src/components/dashboard/SettingsPage.tsx`
+  - `frontend/src/components/admin/AdminSubTabContent.tsx`
   - `frontend/src/components/admin/InteractiveChatTab.tsx`
   - `CHECKPOINT.md`
-  - `frontend/src/components/admin/Dashboard.tsx`
-  - `frontend/src/components/admin/AdminSubTabContent.tsx`
 
 ## Pending (Carry Forward)
 - Phase 2: Auth consolidation (`auth_dependency.py`), Multi-tenant RLS, and Async non-blocking conversions

@@ -162,6 +162,41 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
           </label>
         </div>
 
+        {/* 🛡️ Trusted Device Management */}
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <h2 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+            <span>Trusted Browser & Device Security</span>
+          </h2>
+          <div className="flex items-center justify-between p-3 rounded-lg border border-white/10 bg-black/30">
+            <div>
+              <p className="text-xs font-semibold text-slate-200">Current Device Trust Status</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {localStorage.getItem('supreme_trusted_device_token')
+                  ? '🔒 Trusted (OTP Bypassed for 30 Days)'
+                  : '⚠️ Untrusted (OTP verification required)'}
+              </p>
+            </div>
+            {localStorage.getItem('supreme_trusted_device_token') ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Remove trust for this browser? You will need 2FA/OTP code on your next login.")) {
+                    localStorage.removeItem('supreme_trusted_device_token');
+                    window.location.reload();
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-medium transition-colors"
+              >
+                Revoke / Remove Device
+              </button>
+            ) : (
+              <span className="text-[10px] text-slate-500 font-mono px-2 py-1 bg-white/5 rounded border border-white/10">
+                No active trust token
+              </span>
+            )}
+          </div>
+        </div>
+
         <div className="flex items-center gap-3">
           <button
             data-testid="settings-save-btn"
