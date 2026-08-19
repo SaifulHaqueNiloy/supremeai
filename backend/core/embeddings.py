@@ -11,6 +11,7 @@ Supabase-এর মতো ১৫৩৬-ডাইম pgvector কলামের 
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import logging
 import math
