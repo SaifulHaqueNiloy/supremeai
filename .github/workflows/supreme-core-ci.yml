@@ -118,416 +118,62 @@ jobs:
             echo "trivial_change=false" >> $GITHUB_OUTPUT
           fi
 
-  service-preflight:
-    name: 🔌 Service Preflight (Gateway Ping)
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Warning mode on staging/preview
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
-      - name: Run Service Preflight Check
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A || secrets.FIREBASE_SERVICE_ACCOUNT }}
-          MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
-        run: python .github/scripts/service_preflight_check.py
-
-      - name: 📊 Check Render Free-Tier Build Minutes Quota
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
-        run: python .github/scripts/check-render-quota.py || true
-
   # ==============================================================================
-  # 🔐 2. ENV & SECRET DRIFT AUDIT MATRIX (Warning-Only Advisory)
+  # 🔐 2. CALL REUSABLE WORKFLOWS
   # ==============================================================================
-  env-secret-drift-matrix:
-    name: 🔑 Drift Audit (${{ matrix.target }})
+  audit:
+    name: 🔍 Audit & Preflight
     needs: [changes]
-    if: "!cancelled() && (needs.changes.outputs.trivial_change != 'true' || github.event_name == 'workflow_dispatch')"
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Warning-Only — does not block core pipeline
-    strategy:
-      fail-fast: false
-      matrix:
-        target: [vercel-frontend, firebase-gcp, github-actions, render-backend]
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
-      - name: Run Drift Audit
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
-        run: |
-          if [ "${{ matrix.target }}" == "render-backend" ]; then
-            python scripts/verify_render_env.py --env render-backend --service-id "$RENDER_PRIMARY_SVC_ID" || true
-          else
-            python scripts/audit_env_drift.py --env ${{ matrix.target }} || true
-          fi
+    uses: ./.github/workflows/reusable-audit.yml
+    with:
+      trivial_change: ${{ needs.changes.outputs.trivial_change }}
+    secrets: inherit
 
-  # ==============================================================================
-  # 🔄 3. QUALITY, SCHEMA & SECURITY GATE (HARD BLOCKING)
-  # ==============================================================================
-  schema-and-types-gate:
-    name: 🔄 Schema & Type Sync Check
-    needs: [changes]
-    if: "!cancelled() && needs.changes.outputs.trivial_change != 'true'"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
-      - name: Validate Generated Types & Secret Scans
-        run: |
-          pip install pydantic pyyaml
-          python scripts/generate_types.py --validate
-          python scripts/devops/secret_scan_ci.py --path backend/core --json
+  backend:
+    name: 🐍 Backend Pipeline
+    needs: [changes, audit]
+    uses: ./.github/workflows/reusable-backend.yml
+    with:
+      backend_changed: ${{ needs.changes.outputs.backend }}
+      dependencies_changed: ${{ needs.changes.outputs.dependencies }}
+      run_backend_core: ${{ github.event.inputs.run_backend_core }}
+      run_attempt: ${{ github.run_attempt }}
+      is_workflow_dispatch: ${{ github.event_name == 'workflow_dispatch' }}
+    secrets: inherit
 
-      - name: 🛡️ Dependency Advisory Audit (pnpm)
-        continue-on-error: true
-        run: pnpm audit --audit-level=high || true
+  frontend:
+    name: 🌐 Frontend Pipeline
+    needs: [changes, audit]
+    uses: ./.github/workflows/reusable-frontend.yml
+    with:
+      frontend_changed: ${{ needs.changes.outputs.frontend }}
+      dependencies_changed: ${{ needs.changes.outputs.dependencies }}
+      docs_only_changed: ${{ needs.changes.outputs.docs_only }}
+      run_frontend_core: ${{ github.event.inputs.run_frontend_core }}
+      run_attempt: ${{ github.run_attempt }}
+      is_workflow_dispatch: ${{ github.event_name == 'workflow_dispatch' }}
+    secrets: inherit
 
-  pre-merge-gate:
-    name: 🚧 Pre-Merge Gate (Iron Curtain)
-    needs: [changes]
-    if: "!cancelled() && (needs.changes.outputs.trivial_change != 'true' || github.event_name == 'workflow_dispatch')"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
-      - name: Run Core Lint & Security Scan
-        run: |
-          python -m pip install ruff
-          ruff check backend/ --select E9,F821,F822,F823
-
-  # ==============================================================================
-  # 🧪 4. CORE TEST MATRIX (HARD BLOCKING)
-  # ==============================================================================
-  backend-core:
-    name: 🐍 Backend (Test & Migrations)
-    needs: [changes, schema-and-types-gate]
-    if: |
-      !failure() && !cancelled() &&
-      (
-        needs.changes.outputs.backend == 'true' ||
-        needs.changes.outputs.dependencies == 'true' ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_backend_core == 'true') ||
-        github.run_attempt > 1
-      )
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: supreme_test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U test_user -d supreme_test_db"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      PYTHONPATH: ${{ github.workspace }}/backend
-      SUPABASE_DATABASE_URL: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
-      REDIS_URL: "redis://127.0.0.1:6379/0"
-      SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
-      ADMIN_AUTHORIZED: "true"
-      ALLOW_TEST_AUTH_BYPASS: "true"
-      ALLOW_TEST_ORIGIN_BYPASS: "true"
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: "3.11"
-
-      - name: 📦 Install Poetry
-        run: |
-          pip install poetry
-          poetry config virtualenvs.create true
-          poetry config virtualenvs.in-project true
-
-      - name: ⚙️ Setup Poetry Cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: |
-            ~/.cache/pypoetry
-            ~/.cache/pip
-            backend/.venv
-          key: ${{ runner.os }}-poetry-v4-py3.11-${{ hashFiles('backend/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-poetry-v4-py3.11-
-            ${{ runner.os }}-poetry-v4-
-
-      - name: 📦 Install Backend Dependencies
-        working-directory: backend
-        run: poetry install --with dev
-
-      - name: 🧪 Run Pytest Suite
-        working-directory: backend
-        run: poetry run pytest -n auto --dist=loadfile --timeout=120 tests/ -k "not chaos"
-
-  frontend-core:
-    name: 🌐 Frontend Monorepo (Turbo & Tests)
-    runs-on: ubuntu-latest
-    needs: [changes, schema-and-types-gate]
-    if: |
-      !failure() && !cancelled() &&
-      (
-        needs.changes.outputs.frontend == 'true' ||
-        needs.changes.outputs.dependencies == 'true' ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_frontend_core == 'true') ||
-        github.run_attempt > 1
-      )
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
-        with:
-          version: 9.0.0
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: ⚙️ Setup Pnpm Cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ~/.pnpm-store
-          key: deps:${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            deps:${{ runner.os }}-pnpm-
-
-      - name: 📦 Install Pnpm Dependencies
-        run: |
-          pnpm config set store-dir ~/.pnpm-store
-          pnpm install --frozen-lockfile
-
-      - name: Build & Lint Monorepo
-        env:
-          VITE_PORTAL_TYPE: 'admin'
-        run: pnpm turbo run build lint --filter=supremeai-studio-client --filter=supremeai-vscode
-
-      - name: Run Vitest Unit Tests
-        run: pnpm --dir frontend exec vitest run
-
-      - name: 🔍 Bundle Size Check
-        run: bash frontend/scripts/bundle-check.sh frontend/dist-admin
-
-      - name: 📦 Package VS Code Extension (.vsix)
-        run: |
-          npm install -g @vscode/vsce
-          cd tools/vscode-extension
-          vsce package --no-git-tag-version -o supremeai-vscode.vsix || echo "vsce package skipped"
-
-      - name: 📤 Upload VS Code Extension VSIX Artifact
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
-        with:
-          name: supremeai-vscode-extension
-          path: tools/vscode-extension/supremeai-vscode.vsix
-          if-no-files-found: ignore
-
-  flutter-unit-widget-tests:
-    name: 📱 Flutter Unit & Widget Tests
-    needs: [changes]
-    if: "!cancelled() && needs.changes.outputs.docs_only != 'true' && (needs.changes.outputs.frontend == 'true' || github.event_name == 'workflow_dispatch')"
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Warning mode — non-blocking for web/backend releases
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          flutter-version: '3.29.0'
-          channel: 'stable'
-          cache: true
-      - name: Run Flutter Tests
-        run: |
-          cd apps/mobile
-          flutter pub get
-          flutter test --coverage
-
-  # ==============================================================================
-  # 🚀 5. PRODUCTION READINESS GATE (HARD BLOCKING)
-  # ==============================================================================
-  production-readiness:
-    name: 🚀 Production Readiness Gate
-    needs: [backend-core, frontend-core]
-    if: always() && needs.backend-core.result == 'success' && needs.frontend-core.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
-        with:
-          python-version: '3.11'
-      - name: Run Synthetic Health Probes & Benchmark
-        run: |
-          pip install requests httpx pydantic
-          python scripts/canary_health_probe.py
-          python scripts/benchmark/synthetic_m32_benchmark.py --all --requests 5 --concurrency 2
-
-  build-backend-image:
-    name: 🐳 Build & Push Production Docker Image
-    needs: [backend-core, production-readiness]
-    if: |
-      always() &&
-      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      needs.backend-core.result == 'success' && needs.production-readiness.result == 'success' &&
-      (
-        github.ref == 'refs/heads/main' ||
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.run_deploy_render == 'true')
-      )
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Log in to GHCR
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-      - name: Build & Push Image
-        run: |
-          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
-          docker build -t "$IMAGE_URL" -t "ghcr.io/${OWNER_LOWER}/supremeai-backend:latest" -f ./backend/Dockerfile .
-          docker push "$IMAGE_URL"
-          docker push "ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"
-
-  # ==============================================================================
-  # 🚀 6. MULTI-CLOUD DEPLOYMENT MATRIX (HARD BLOCKING ON DEPLOY TARGETS)
-  # ==============================================================================
-  deploy-render-backend:
-    name: 🚀 Deploy Unified Backend (Render)
-    needs: [build-backend-image, production-readiness]
-    if: |
-      always() &&
-      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      (needs.build-backend-image.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (
-        github.ref == 'refs/heads/main' ||
-        (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'RENDER_BACKEND_ONLY' || github.event.inputs.run_deploy_render == 'true'))
-      )
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Trigger Render Deploy
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
-          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ github.sha }}"
-          echo "🚀 Deploying unified backend: $IMAGE_URL"
-          if [ -n "$RENDER_API_KEY" ]; then
-            curl -s -X POST "https://api.render.com/v1/services/$RENDER_PRIMARY_SVC_ID/deploys" \
-              -H "Authorization: Bearer $RENDER_API_KEY" \
-              -H "Content-Type: application/json" \
-              -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}"
-          elif [ -n "$RENDER_DEPLOY_HOOK" ]; then
-            curl -s "$RENDER_DEPLOY_HOOK"
-          fi
-
-      - name: 🔍 Post-Deploy Live Health Probe
-        run: |
-          sleep 15
-          curl -s -f --retry 3 --retry-delay 5 https://supremeai-backend-docker.onrender.com/api/v1/health || echo "Render backend warming up..."
-
-  deploy-user-vercel:
-    name: 🚀 Deploy User Portal (Vercel)
-    needs: [frontend-core, production-readiness]
-    if: |
-      always() &&
-      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      (needs.frontend-core.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (
-        github.ref == 'refs/heads/main' ||
-        (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'VERCEL_FRONTEND_ONLY'))
-      )
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Install pnpm & Vercel CLI
-        run: |
-          npm install -g pnpm vercel@latest
-      - name: Deploy to Vercel
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          pnpm install
-          pnpm --dir frontend run build:user
-          pnpm exec vercel deploy --prod --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes
-
-      - name: 🔍 Post-Deploy Live Web Studio Probe
-        run: |
-          sleep 10
-          curl -s -f --retry 2 --retry-delay 3 https://supremeai-frontend-6nwi.onrender.com/workspace || echo "Web Studio warming up..."
-
-  deploy-admin-firebase:
-    name: 🚀 Deploy Admin Portal (Firebase)
-    needs: [frontend-core, production-readiness]
-    if: |
-      always() &&
-      (github.repository == 'paykaribazaronline/supremeai' || github.repository == 'SaifulHaqueNiloy/supremeai') &&
-      (needs.frontend-core.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (needs.production-readiness.result == 'success' || (github.event_name == 'workflow_dispatch' && github.event.inputs.ignore_dependencies == true)) &&
-      (
-        github.ref == 'refs/heads/main' ||
-        (github.event_name == 'workflow_dispatch' && (github.event.inputs.deploy_target == 'ALL_SERVICES' || github.event.inputs.deploy_target == 'FIREBASE_ADMIN_ONLY'))
-      )
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Install pnpm
-        run: npm install -g pnpm
-      - name: Build & Deploy Admin Portal
-        env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-        run: |
-          pnpm install
-          pnpm --dir frontend run build:admin
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
-        continue-on-error: true
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A || secrets.FIREBASE_SERVICE_ACCOUNT }}'
-          projectId: supremeai-a
-          channelId: live
-          target: admin
+  deploy:
+    name: 🚀 Deployment Matrix
+    needs: [backend, frontend]
+    if: always() && needs.backend.result != 'failure' && needs.frontend.result != 'failure' && needs.backend.result != 'cancelled' && needs.frontend.result != 'cancelled'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      repository: ${{ github.repository }}
+      repository_owner: ${{ github.repository_owner }}
+      ref: ${{ github.ref }}
+      sha: ${{ github.sha }}
+      event_name: ${{ github.event_name }}
+      deploy_target: ${{ github.event.inputs.deploy_target }}
+      run_deploy_render: ${{ github.event.inputs.run_deploy_render }}
+      ignore_dependencies: ${{ github.event.inputs.ignore_dependencies }}
+    secrets: inherit
 
   staging-pr-promotion:
     name: 🟢 Auto Promotion PR (Staging → Main)
-    needs: [production-readiness]
-    if: always() && github.repository == 'SaifulHaqueNiloy/supremeai' && github.ref == 'refs/heads/main' && needs.production-readiness.result == 'success'
+    needs: [deploy]
+    if: always() && github.repository == 'SaifulHaqueNiloy/supremeai' && github.ref == 'refs/heads/main' && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     continue-on-error: true  # Advisory
     steps:
@@ -545,14 +191,10 @@ jobs:
     name: 🧠 Smart Pipeline Summary
     needs:
       - changes
-      - service-preflight
-      - schema-and-types-gate
-      - backend-core
-      - frontend-core
-      - production-readiness
-      - deploy-render-backend
-      - deploy-user-vercel
-      - deploy-admin-firebase
+      - audit
+      - backend
+      - frontend
+      - deploy
     if: always()
     runs-on: ubuntu-latest
     steps:

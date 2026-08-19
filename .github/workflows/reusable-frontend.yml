@@ -1,0 +1,86 @@
+name: 🌐 Reusable Frontend Workflow
+
+on:
+  workflow_call:
+    inputs:
+      frontend_changed:
+        required: true
+        type: string
+      dependencies_changed:
+        required: true
+        type: string
+      docs_only_changed:
+        required: true
+        type: string
+      run_frontend_core:
+        required: false
+        type: string
+      run_attempt:
+        required: true
+        type: string
+      is_workflow_dispatch:
+        required: true
+        type: string
+
+jobs:
+  frontend-core:
+    name: 🌐 Frontend Monorepo (Turbo & Tests)
+    if: |
+      !failure() && !cancelled() &&
+      (
+        inputs.frontend_changed == 'true' ||
+        inputs.dependencies_changed == 'true' ||
+        (inputs.is_workflow_dispatch == 'true' && inputs.run_frontend_core == 'true') ||
+        inputs.run_attempt > '1'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      
+      - name: ⚙️ Setup Node & PNPM
+        uses: ./.github/actions/setup-node-env
+        with:
+          node-version: '24'
+          install-deps: 'true'
+
+      - name: Build & Lint Monorepo
+        env:
+          VITE_PORTAL_TYPE: 'admin'
+        run: pnpm turbo run build lint --filter=supremeai-studio-client --filter=supremeai-vscode
+
+      - name: Run Vitest Unit Tests
+        run: pnpm --dir frontend exec vitest run
+
+      - name: 🔍 Bundle Size Check
+        run: bash frontend/scripts/bundle-check.sh frontend/dist-admin
+
+      - name: 📦 Package VS Code Extension (.vsix)
+        run: |
+          npm install -g @vscode/vsce
+          cd tools/vscode-extension
+          vsce package --no-git-tag-version -o supremeai-vscode.vsix || echo "vsce package skipped"
+
+      - name: 📤 Upload VS Code Extension VSIX Artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4
+        with:
+          name: supremeai-vscode-extension
+          path: tools/vscode-extension/supremeai-vscode.vsix
+          if-no-files-found: ignore
+
+  flutter-unit-widget-tests:
+    name: 📱 Flutter Unit & Widget Tests
+    if: "!cancelled() && inputs.docs_only_changed != 'true' && (inputs.frontend_changed == 'true' || inputs.is_workflow_dispatch == 'true')"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+      - name: Run Flutter Tests
+        run: |
+          cd apps/mobile
+          flutter pub get
+          flutter test --coverage

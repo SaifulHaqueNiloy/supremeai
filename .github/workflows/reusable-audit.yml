@@ -1,0 +1,91 @@
+name: 🧠 Reusable Audit Workflow
+
+on:
+  workflow_call:
+    inputs:
+      trivial_change:
+        required: true
+        type: string
+
+jobs:
+  service-preflight:
+    name: 🔌 Service Preflight (Gateway Ping)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Run Service Preflight Check
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A || secrets.FIREBASE_SERVICE_ACCOUNT }}
+          MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
+        run: python .github/scripts/service_preflight_check.py
+
+      - name: 📊 Check Render Free-Tier Build Minutes Quota
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
+        run: python .github/scripts/check-render-quota.py || true
+
+  env-secret-drift-matrix:
+    name: 🔑 Drift Audit (${{ matrix.target }})
+    if: "!cancelled() && (inputs.trivial_change != 'true' || github.event_name == 'workflow_dispatch')"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [vercel-frontend, firebase-gcp, github-actions, render-backend]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Run Drift Audit
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
+        run: |
+          if [ "${{ matrix.target }}" == "render-backend" ]; then
+            python scripts/verify_render_env.py --env render-backend --service-id "$RENDER_PRIMARY_SVC_ID" || true
+          else
+            python scripts/audit_env_drift.py --env ${{ matrix.target }} || true
+          fi
+
+  schema-and-types-gate:
+    name: 🔄 Schema & Type Sync Check
+    if: "!cancelled() && inputs.trivial_change != 'true'"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Validate Generated Types & Secret Scans
+        run: |
+          pip install pydantic pyyaml
+          python scripts/generate_types.py --validate
+          python scripts/devops/secret_scan_ci.py --path backend/core --json
+
+      - name: 🛡️ Dependency Advisory Audit (pnpm)
+        continue-on-error: true
+        run: pnpm audit --audit-level=high || true
+
+  pre-merge-gate:
+    name: 🚧 Pre-Merge Gate (Iron Curtain)
+    if: "!cancelled() && (inputs.trivial_change != 'true' || github.event_name == 'workflow_dispatch')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Run Core Lint & Security Scan
+        run: |
+          python -m pip install ruff
+          ruff check backend/ --select E9,F821,F822,F823

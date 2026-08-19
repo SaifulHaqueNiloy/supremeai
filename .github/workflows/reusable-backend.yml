@@ -1,0 +1,79 @@
+name: 🐍 Reusable Backend Workflow
+
+on:
+  workflow_call:
+    inputs:
+      backend_changed:
+        required: true
+        type: string
+      dependencies_changed:
+        required: true
+        type: string
+      run_backend_core:
+        required: false
+        type: string
+      run_attempt:
+        required: true
+        type: string
+      is_workflow_dispatch:
+        required: true
+        type: string
+
+jobs:
+  backend-core:
+    name: 🐍 Backend (Test & Migrations)
+    if: |
+      !failure() && !cancelled() &&
+      (
+        inputs.backend_changed == 'true' ||
+        inputs.dependencies_changed == 'true' ||
+        (inputs.is_workflow_dispatch == 'true' && inputs.run_backend_core == 'true') ||
+        inputs.run_attempt > '1'
+      )
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: supreme_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d supreme_test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PYTHONPATH: ${{ github.workspace }}/backend
+      SUPABASE_DATABASE_URL: "postgresql+asyncpg://test_user:test_password@127.0.0.1:5432/supreme_test_db"
+      REDIS_URL: "redis://127.0.0.1:6379/0"
+      SUPREMEAI_JWT_SECRET: "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
+      ADMIN_AUTHORIZED: "true"
+      ALLOW_TEST_AUTH_BYPASS: "true"
+      ALLOW_TEST_ORIGIN_BYPASS: "true"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      
+      - name: ⚙️ Setup Python & Poetry
+        uses: ./.github/actions/setup-python-env
+        with:
+          install-poetry: 'true'
+
+      - name: 📦 Install Backend Dependencies
+        working-directory: backend
+        run: poetry install --with dev
+
+      - name: 🧪 Run Pytest Suite
+        working-directory: backend
+        run: poetry run pytest -n auto --dist=loadfile --timeout=120 tests/ -k "not chaos"

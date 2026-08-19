@@ -1,0 +1,186 @@
+name: 🚀 Reusable Deploy Workflow
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+      repository_owner:
+        required: true
+        type: string
+      ref:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
+      event_name:
+        required: true
+        type: string
+      deploy_target:
+        required: false
+        type: string
+      run_deploy_render:
+        required: false
+        type: string
+      ignore_dependencies:
+        required: false
+        type: string
+        default: 'false'
+
+jobs:
+  production-readiness:
+    name: 🚀 Production Readiness Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: ./.github/actions/setup-python-env
+      - name: Run Synthetic Health Probes & Benchmark
+        run: |
+          pip install requests httpx pydantic
+          python scripts/canary_health_probe.py
+          python scripts/benchmark/synthetic_m32_benchmark.py --all --requests 5 --concurrency 2
+
+  build-backend-image:
+    name: 🐳 Build & Push Production Docker Image
+    needs: [production-readiness]
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      needs.production-readiness.result == 'success' &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && inputs.run_deploy_render == 'true')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        
+      - name: Build & Push Image
+        run: |
+          OWNER_LOWER=$(echo "${{ inputs.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ inputs.sha }}"
+          docker build -t "$IMAGE_URL" -t "ghcr.io/${OWNER_LOWER}/supremeai-backend:latest" -f ./backend/Dockerfile .
+          docker push "$IMAGE_URL"
+          docker push "ghcr.io/${OWNER_LOWER}/supremeai-backend:latest"
+
+  deploy-render-backend:
+    name: 🚀 Deploy Unified Backend (Render)
+    needs: [build-backend-image, production-readiness]
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      (needs.build-backend-image.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
+      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'RENDER_BACKEND_ONLY' || inputs.run_deploy_render == 'true'))
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Trigger Render Deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          OWNER_LOWER=$(echo "${{ inputs.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_URL="ghcr.io/${OWNER_LOWER}/supremeai-backend:sha-${{ inputs.sha }}"
+          echo "🚀 Deploying unified backend: $IMAGE_URL"
+          if [ -n "$RENDER_API_KEY" ]; then
+            curl -s -X POST "https://api.render.com/v1/services/$RENDER_PRIMARY_SVC_ID/deploys" \
+              -H "Authorization: Bearer $RENDER_API_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"clearCache\":\"do_not_clear\",\"imageUrl\":\"$IMAGE_URL\"}"
+          elif [ -n "$RENDER_DEPLOY_HOOK" ]; then
+            curl -s "$RENDER_DEPLOY_HOOK"
+          fi
+
+      - name: 🔍 Post-Deploy Live Health Probe
+        run: |
+          sleep 15
+          curl -s -f --retry 3 --retry-delay 5 https://supremeai-backend-docker.onrender.com/api/v1/health || echo "Render backend warming up..."
+
+  deploy-user-vercel:
+    name: 🚀 Deploy User Portal (Vercel)
+    needs: [production-readiness]
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'VERCEL_FRONTEND_ONLY'))
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      
+      - name: Install pnpm & Vercel CLI
+        run: |
+          npm install -g pnpm vercel@latest
+          
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          pnpm install
+          pnpm --dir frontend run build:user
+          pnpm exec vercel deploy --prod --token=$VERCEL_TOKEN --scope=$VERCEL_ORG_ID --yes
+
+      - name: 🔍 Post-Deploy Live Web Studio Probe
+        run: |
+          sleep 10
+          curl -s -f --retry 2 --retry-delay 3 https://supremeai-frontend-6nwi.onrender.com/workspace || echo "Web Studio warming up..."
+
+  deploy-admin-firebase:
+    name: 🚀 Deploy Admin Portal (Firebase)
+    needs: [production-readiness]
+    if: |
+      always() &&
+      (inputs.repository == 'paykaribazaronline/supremeai' || inputs.repository == 'SaifulHaqueNiloy/supremeai') &&
+      (needs.production-readiness.result == 'success' || (inputs.event_name == 'workflow_dispatch' && inputs.ignore_dependencies == 'true')) &&
+      (
+        inputs.ref == 'refs/heads/main' ||
+        (inputs.event_name == 'workflow_dispatch' && (inputs.deploy_target == 'ALL_SERVICES' || inputs.deploy_target == 'FIREBASE_ADMIN_ONLY'))
+      )
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pnpm
+        run: npm install -g pnpm
+      - name: Build & Deploy Admin Portal
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+        run: |
+          pnpm install
+          pnpm --dir frontend run build:admin
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0
+        continue-on-error: true
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_SUPREMEAI_A || secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: supremeai-a
+          channelId: live
+          target: admin

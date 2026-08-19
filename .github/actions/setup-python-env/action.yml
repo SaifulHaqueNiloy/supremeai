@@ -1,0 +1,36 @@
+name: "Setup Python Env"
+description: "Checks out code, sets up Python 3.11, and optionally installs Poetry and caches dependencies"
+
+inputs:
+  install-poetry:
+    description: "Whether to install poetry and cache dependencies"
+    required: false
+    default: "false"
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+      with:
+        python-version: "3.11"
+
+    - name: 📦 Install Poetry
+      if: inputs.install-poetry == 'true'
+      shell: bash
+      run: |
+        pip install poetry
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+
+    - name: ⚙️ Setup Poetry Cache
+      if: inputs.install-poetry == 'true'
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+      with:
+        path: |
+          ~/.cache/pypoetry
+          ~/.cache/pip
+          backend/.venv
+        key: ${{ runner.os }}-poetry-v4-py3.11-${{ hashFiles('backend/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-poetry-v4-py3.11-
+          ${{ runner.os }}-poetry-v4-
