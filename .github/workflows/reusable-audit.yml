@@ -51,6 +51,7 @@ jobs:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
         run: |
+          pip install pyyaml requests || true
           if [ "${{ matrix.target }}" == "render-backend" ]; then
             python scripts/verify_render_env.py --env render-backend --service-id "$RENDER_PRIMARY_SVC_ID" || true
           else

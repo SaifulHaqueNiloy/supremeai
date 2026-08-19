@@ -2,6 +2,7 @@
 # বাংলা মন্তব্য: Cloud Deploy MCP (Render/Railway/Oracle) টেস্ট
 # --- test_mcp_servers_integration.py থেকে স্প্লিট করা হয়েছে ---
 
+import importlib
 import json
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -72,6 +73,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RENDER_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
+        import importlib
         importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
@@ -90,6 +92,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RAILWAY_TOKEN", "")
         import tools.mcp.mcp_cloud_deploy
 
+        import importlib
         importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
@@ -108,6 +111,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
+        import importlib
         importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,
@@ -220,6 +224,7 @@ class TestCloudDeployMCPExtended:
         monkeypatch.setenv("RENDER_API_KEY", "")
         import tools.mcp.mcp_cloud_deploy
 
+        import importlib
         importlib.reload(tools.mcp.mcp_cloud_deploy)
         from tools.mcp.mcp_cloud_deploy import (
             CloudProvider,

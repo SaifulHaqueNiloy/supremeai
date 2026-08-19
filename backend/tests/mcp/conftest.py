@@ -2,6 +2,8 @@
 # বাংলা মন্তব্য: MCP টেস্ট-সাবপ্যাকেজের শেয়ার্ড ফিক্সচার (test_mcp_servers_integration.py থেকে স্থানান্তরিত)
 import pytest
 
+
+@pytest.fixture(autouse=True)
 def mock_env_vars(monkeypatch):
     env_vars = {
         "SUPABASE_DATABASE_URL": "postgres://localhost/mydb",

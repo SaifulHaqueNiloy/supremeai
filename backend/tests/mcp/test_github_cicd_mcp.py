@@ -2,6 +2,7 @@
 # বাংলা মন্তব্য: GitHub CICD MCP টেস্ট
 # --- test_mcp_servers_integration.py থেকে স্প্লিট করা হয়েছে ---
 
+import importlib
 import json
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -71,6 +72,7 @@ class TestGithubCICDMCPExtended:
         monkeypatch.setenv("GITHUB_TOKEN", "")
         import tools.mcp.mcp_github_cicd
 
+        import importlib
         importlib.reload(tools.mcp.mcp_github_cicd)
         from tools.mcp.mcp_github_cicd import CreatePRInput, github_create_pull_request
 
