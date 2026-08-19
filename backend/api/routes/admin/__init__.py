@@ -6,6 +6,7 @@ Usage (in api/routes/admin_dashboard.py or main router registration):
 from fastapi import APIRouter, Depends
 
 from api.routes.admin_auth import admin_rate_limit, require_admin_token, validate_sse_token
+from api.dependencies import get_current_admin
 
 # Sub-modules
 from api.routes.admin import (
@@ -50,4 +51,4 @@ sse_router = APIRouter(
 
 sse_router.include_router(streams.router)  # /logs/stream + /events/stream
 
-__all__ = ["router", "sse_router"]
+__all__ = ["router", "sse_router", "get_current_admin"]
