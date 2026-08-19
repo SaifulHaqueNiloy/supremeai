@@ -136,6 +136,12 @@ jobs:
           MIRROR_REPO_TOKEN: ${{ secrets.MIRROR_REPO_TOKEN }}
         run: python .github/scripts/service_preflight_check.py
 
+      - name: 📊 Check Render Free-Tier Build Minutes Quota
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID || vars.RENDER_PRIMARY_SVC_ID || 'srv-da07ogmgekts739amqa0' }}
+        run: python .github/scripts/check-render-quota.py || true
+
   # ==============================================================================
   # 🔐 2. ENV & SECRET DRIFT AUDIT MATRIX (Warning-Only Advisory)
   # ==============================================================================

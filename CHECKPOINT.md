@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 00:48 UTC
+- **Date:** 2026-08-19 00:55 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,12 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/scripts/bundle-check.sh`
-  - `.github/scripts/service_preflight_check.py`
-  - `.github/scripts/ci_error_report.py`
-  - `.github/workflows/supreme-core-ci.yml`
-  - `.github/scripts/ci_smart_summary.py`
   - `backend/core/security/secret_hunter.py`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `.github/scripts/service_preflight_check.py`
   - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
