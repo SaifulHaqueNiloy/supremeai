@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-19 02:39 UTC
+- **Date:** 2026-08-19 02:54 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,12 +10,14 @@
   - (see git log for details)
 
 ## Files Changed
-  - `CHECKPOINT.md`
   - `backend/core/config_secrets.py`
+  - `CHECKPOINT.md`
   - `backend/core/llm/llm_gateway.py`
+  - `backend/api/routes/admin_core.py`
+  - `backend/tests/api/test_admin.py`
   - `.agents/skills/frontend-taste/SKILL.md`
-  - `backend/api/routes/admin/__init__.py`
-  - `backend/api/routes/admin_dashboard.py`
+  - `backend/tests/test_admin_dashboard_full.py`
+  - `backend/api/routers.py`
 
 ## Pending (Carry Forward)
 - `pnpm turbo run build --filter=supremeai-vscode` → TypeScript build verify (run on CI)

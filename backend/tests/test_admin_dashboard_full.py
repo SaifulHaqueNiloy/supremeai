@@ -24,31 +24,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from api.routes.admin_dashboard import (
-    RouterOverrideRequest,
-    UserUpdate,
-    _acquire_env_lock,
-    _release_env_lock,
-    create_user,
-    delete_user,
-    get_codebase_export,
-    get_cost_caps,
-    get_costs,
-    get_env_etag,
-    get_health_map,
-    get_metrics,
-    get_model_router,
-    get_providers,
-    get_users,
-    load_cost_caps,
-    load_users,
-    logs_stream,
-    save_cost_caps,
-    save_users,
-    set_router_override,
-    trigger_deploy,
-    update_cost_caps,
-)
+from api.routes.admin.costs import get_cost_caps, get_costs, update_cost_caps
+from api.routes.admin.deploy import trigger_deploy
+from api.routes.admin.providers import RouterOverrideRequest, get_model_router, get_providers, set_router_override
+from api.routes.admin.streams import logs_stream
+from api.routes.admin.system import get_codebase_export, get_health_map, get_metrics
+from api.routes.admin.users import create_user, delete_user, get_users
+from api.routes.admin._helpers import UserUpdate, _acquire_env_lock, _release_env_lock, get_env_etag, load_cost_caps, load_users, save_cost_caps, save_users
 
 # ── Helpers ────────────────────────────────────────────────────────────
 
@@ -56,7 +38,7 @@ from api.routes.admin_dashboard import (
 @pytest.fixture
 def temp_users_file(tmp_path, monkeypatch):
     """Redirect USERS_FILE to a temp directory."""
-    import api.routes.admin_dashboard as mod
+    import api.routes.admin._helpers as mod
 
     users_file = str(tmp_path / "users.json")
     monkeypatch.setattr(mod, "USERS_FILE", users_file)
@@ -66,7 +48,7 @@ def temp_users_file(tmp_path, monkeypatch):
 @pytest.fixture
 def temp_cost_caps_file(tmp_path, monkeypatch):
     """Redirect COST_CAPS_FILE to a temp directory."""
-    import api.routes.admin_dashboard as mod
+    import api.routes.admin._helpers as mod
 
     caps_file = str(tmp_path / "cost_caps.json")
     monkeypatch.setattr(mod, "COST_CAPS_FILE", caps_file)
@@ -167,7 +149,7 @@ class TestUserCRUD:
 class TestGetCosts:
     def test_get_costs_no_report_file(self, tmp_path, monkeypatch):
         """CostAuditor returns no text_report → returns unavailable message."""
-        with patch("api.routes.admin_dashboard.CostAuditor") as mock_cls:
+        with patch("api.routes.admin.costs.CostAuditor") as mock_cls:
             mock_auditor = MagicMock()
             mock_auditor.generate_report.return_value = {"text_report": str(tmp_path / "nonexistent.md")}
             mock_cls.return_value = mock_auditor
@@ -179,7 +161,7 @@ class TestGetCosts:
         """CostAuditor returns a valid report path → reads and returns content."""
         report_file = tmp_path / "cost_report.md"
         report_file.write_text("# Cost Report\nSome content")
-        with patch("api.routes.admin_dashboard.CostAuditor") as mock_cls:
+        with patch("api.routes.admin.costs.CostAuditor") as mock_cls:
             mock_auditor = MagicMock()
             mock_auditor.generate_report.return_value = {"text_report": str(report_file)}
             mock_cls.return_value = mock_auditor
@@ -189,7 +171,7 @@ class TestGetCosts:
 
     def test_get_costs_exception(self):
         """CostAuditor raises → returns error status."""
-        with patch("api.routes.admin_dashboard.CostAuditor") as mock_cls:
+        with patch("api.routes.admin.costs.CostAuditor") as mock_cls:
             mock_auditor = MagicMock()
             mock_auditor.generate_report.side_effect = RuntimeError("DB error")
             mock_cls.return_value = mock_auditor
@@ -362,7 +344,7 @@ class TestCodebaseExport:
     async def test_export_success(self):
         """Export succeeds → returns markdown."""
         with patch(
-            "tools.knowledge.codebase_exporter.export_codebase_to_markdown",
+            "api.routes.admin.system.export_codebase_to_markdown",
             new_callable=AsyncMock,
         ) as mock_export:
             mock_export.return_value = "# Codebase\nSome markdown"
@@ -375,7 +357,7 @@ class TestCodebaseExport:
         """Export fails → raises HTTPException 500."""
         # বাংলা মন্তব্য: admin_dashboard এ সরাসরি import করা হয়েছে, তাই local namespace patch করতে হবে।
         with patch(
-            "api.routes.admin_dashboard.export_codebase_to_markdown",
+            "api.routes.admin.system.export_codebase_to_markdown",
             new_callable=AsyncMock,
         ) as mock_export:
             mock_export.side_effect = RuntimeError("Export failed")
@@ -601,7 +583,7 @@ class TestLogsStream:
 
     def test_logs_stream_log_generator_cancellation(self, tmp_path):
         """Log generator handles CancelledError."""
-        import api.routes.admin_dashboard as mod
+        import api.routes.admin.streams as mod
 
         async def mock_generator():
             yield "data: test\n\n"

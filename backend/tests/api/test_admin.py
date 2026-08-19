@@ -20,7 +20,7 @@ def mock_admin_token():
 
 @pytest.fixture
 def mock_healer():
-    with patch("api.routes.admin.get_healer_service") as mock:
+    with patch("api.routes.admin_core.get_healer_service") as mock:
         service = MagicMock()
         service.apply_fix = AsyncMock(return_value=True)
         mock.return_value = service
@@ -29,7 +29,7 @@ def mock_healer():
 
 @pytest.fixture
 def mock_firestore():
-    with patch("api.routes.admin.get_firestore_db") as mock:
+    with patch("api.routes.admin_core.get_firestore_db") as mock:
         db = MagicMock()
         mock.return_value = db
         yield db
@@ -92,8 +92,8 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
     app.dependency_overrides = {}
 
 
-@patch("api.routes.admin.god_layer")
-@patch("api.routes.admin.redis_manager")
+@patch("api.routes.admin_core.god_layer")
+@patch("api.routes.admin_core.redis_manager")
 @patch("database.session.get_db_session")
 @patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
@@ -166,7 +166,7 @@ def test_quick_actions_success(
             app.dependency_overrides = {}
 
 
-@patch("api.routes.admin.god_layer")
+@patch("api.routes.admin_core.god_layer")
 @patch("api.dependencies.get_current_user_token")
 @patch("core.security.auth_middleware._decode_jwt")
 def test_quick_action_unknown_returns_404(mock_decode_jwt, mock_token, mock_god_layer):
