@@ -40,6 +40,7 @@ def fetch_json(url: str, token: str) -> dict:
 
 def fetch_text(url: str, token: str) -> str:
     """Fetch raw text/logs from GitHub API using urllib.request with redirect auth stripping."""
+    import time
     req = urllib.request.Request(
         url,
         headers={
@@ -48,11 +49,20 @@ def fetch_text(url: str, token: str) -> str:
             "User-Agent": "SupremeAI-CI-Summary-Bot",
         },
     )
-    try:
-        with log_opener.open(req, timeout=15) as resp:
-            return resp.read().decode("utf-8", errors="replace")
-    except (HTTPError, URLError, OSError) as e:
-        print(f"⚠️ Log fetch error for {url}: {e}")
+    for attempt in range(2):
+        try:
+            with log_opener.open(req, timeout=15) as resp:
+                return resp.read().decode("utf-8", errors="replace")
+        except HTTPError as e:
+            if e.code == 404:
+                if attempt == 0:
+                    time.sleep(2)
+                    continue
+                # Suppress noisy 404 if blob is still finalizing
+                return ""
+            print(f"⚠️ Log fetch error for {url}: {e}")
+        except (URLError, OSError) as e:
+            print(f"⚠️ Log fetch error for {url}: {e}")
     return ""
 
 

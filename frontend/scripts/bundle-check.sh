@@ -9,8 +9,22 @@ MAX_INITIAL_KB=250
 MAX_TOTAL_KB=900
 
 if [ ! -d "$DIST_DIR" ]; then
-  echo "ERROR: $DIST_DIR not found. Run build first."
-  exit 1
+  if [ -d "frontend/dist" ]; then
+    DIST_DIR="frontend/dist"
+  elif [ -d "frontend/dist-user" ]; then
+    DIST_DIR="frontend/dist-user"
+  elif [ -d "frontend/dist-admin" ]; then
+    DIST_DIR="frontend/dist-admin"
+  elif [ -d "dist" ]; then
+    DIST_DIR="dist"
+  elif [ -d "dist-user" ]; then
+    DIST_DIR="dist-user"
+  elif [ -d "dist-admin" ]; then
+    DIST_DIR="dist-admin"
+  else
+    echo "ERROR: $DIST_DIR not found. Run build first."
+    exit 1
+  fi
 fi
 
 # Find all .js/.css files and compute gzip size
