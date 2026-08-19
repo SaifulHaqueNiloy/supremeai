@@ -63,6 +63,8 @@ class SettingsSecretsMixin:
         "FIREBASE_SERVICE_ACCOUNT_JSON",
         "LANGFUSE_PUBLIC_KEY",
         "LANGFUSE_SECRET_KEY",
+        "CLOUDFLARE_API_KEY",
+        "GITHUB_MODELS_API_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -232,6 +234,22 @@ class SettingsSecretsMixin:
     @property
     def firecrawl_api_key(self) -> str:
         return self._get_cached_secret("FIRECRAWL_API_KEY")
+
+    @property
+    def cloudflare_api_key(self) -> str:
+        return self._get_cached_secret("CLOUDFLARE_API_KEY")
+
+    @cloudflare_api_key.setter
+    def cloudflare_api_key(self, value: str) -> None:
+        self._set_cached_secret("CLOUDFLARE_API_KEY", value)
+
+    @property
+    def github_models_api_key(self) -> str:
+        return self._get_cached_secret("GITHUB_MODELS_API_KEY")
+
+    @github_models_api_key.setter
+    def github_models_api_key(self, value: str) -> None:
+        self._set_cached_secret("GITHUB_MODELS_API_KEY", value)
 
     @property
     def langfuse_public_key(self) -> str:
@@ -507,6 +525,9 @@ class SettingsSecretsMixin:
             "supabase_key",
             "langfuse_public_key",
             "langfuse_secret_key",
+            "cloudflare_api_key",
+            "github_models_api_key",
+            "GITHUB_MODELS_API_KEY",
         ]:
             result[key_field] = redacted
         # Include non-secret properties

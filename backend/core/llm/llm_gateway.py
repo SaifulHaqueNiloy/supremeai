@@ -62,6 +62,8 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "together": "TOGETHER_API_KEY",
     "ollama": "OLLAMA_API_KEY",
     "hf_space": "HF_API_KEY",
+    "cloudflare": "cloudflare_api_key",
+    "github": "github_models_api_key",
 }
 
 # বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
@@ -107,8 +109,11 @@ class LLMGateway:
         # Use centralized circuit breaker manager instead of local dict
         self._circuit_breaker_manager = get_shared_circuit_breaker
 
-        # বাংলা: Circular import এড়ানোর জন্য performance_optimizer lazy-load করা হবে
+        # Circular import guard: performance_enhancer lazy-load
         self._performance_optimizer = None
+
+        # API Key Round-Robin pooling counters
+        self._key_counters: dict[str, int] = {}
 
         # Performance tracking
         self._request_count = 0
@@ -219,14 +224,22 @@ class LLMGateway:
         """
         বাংলা মন্তব্ব: Model string থেকে provider identify করে settings থেকে key নেওয়া।
         os.environ নয় — settings._get_cached_secret() থেকে।
+        একাধিক Key থাকলে (কমা দিয়ে আলাদা করা), Round-Robin পদ্ধতিতে Key রিটার্ন করা হয়।
         """
         if not model:
             return None
         model_lower = model.lower()
         for prefix, attr_name in _MODEL_KEY_MAP.items():
             if prefix in model_lower:
-                key = getattr(settings, attr_name, None)
-                return key or None
+                raw_key = getattr(settings, attr_name, None)
+                if raw_key and "," in raw_key:
+                    keys = [k.strip() for k in raw_key.split(",") if k.strip()]
+                    if keys:
+                        index = self._key_counters.get(attr_name, 0)
+                        selected_key = keys[index % len(keys)]
+                        self._key_counters[attr_name] = index + 1
+                        return selected_key
+                return raw_key or None
         return None
 
     def _setup_callbacks(self) -> None:
