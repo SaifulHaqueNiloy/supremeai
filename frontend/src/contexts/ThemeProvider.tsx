@@ -13,9 +13,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     // বাংলা মন্তব্য: Race Condition এড়াতে AbortController ব্যবহার করা হয়েছে
     const controller = new AbortController();
-    const token = adminTokenStore.getDecodedToken();
+    const rawToken = adminTokenStore.getRawToken();
 
-    if (!token) return;
+    if (!rawToken) return;
 
     // বাংলা মন্তব্য: set-state-in-effect ফিক্স — থিম লোডিং async ফাংশনের ভেতরে করা হয়েছে
     const loadTheme = async () => {
@@ -30,7 +30,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try {
         const res = await fetch(`${API_BASE}/api/v1/preferences`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${rawToken}`
           },
           signal: controller.signal
         });
@@ -73,12 +73,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // ব্যাকএন্ডে async সিঙ্ক করা
     const API_BASE = getApiBaseUrl();
-    const token = adminTokenStore.getDecodedToken();
+    const rawToken = adminTokenStore.getRawToken();
     fetch(`${API_BASE}/api/v1/preferences`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${rawToken}`
       },
       body: JSON.stringify({ theme: newTheme })
     }).catch(err => console.error('Failed to sync theme to DB:', err));
