@@ -284,15 +284,19 @@ async def get_rules(admin_user: dict = Depends(get_current_admin)):
     return {"rules": rules}
 
 
+from fastapi import Header
+from sqlalchemy import select, update
+
+from database.session import get_db_session
+
 # 🚨 System Alerts Endpoints
 from models.system_alert import SystemAlert
-from database.session import get_db_session
-from sqlalchemy import select, update
-from fastapi import Header
+
 
 class AlertCreate(BaseModel):
     level: str
     message: str
+
 
 @router.get("/alerts")
 async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
@@ -303,11 +307,9 @@ async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
         alerts = result.scalars().all()
         return {"alerts": alerts}
 
+
 @router.post("/alerts")
-async def create_system_alert(
-    payload: AlertCreate,
-    x_api_key: str = Header(None)
-):
+async def create_system_alert(payload: AlertCreate, x_api_key: str = Header(None)):
     """Create a new system alert (Used by internal AI Log Analyzer)."""
     from core.config import settings
 
@@ -317,22 +319,19 @@ async def create_system_alert(
 
     async for session in get_db_session():
         import uuid
-        new_alert = SystemAlert(
-            id=str(uuid.uuid4()),
-            level=payload.level,
-            message=payload.message
-        )
+
+        new_alert = SystemAlert(id=str(uuid.uuid4()), level=payload.level, message=payload.message)
         session.add(new_alert)
         await session.commit()
         return {"status": "success", "id": new_alert.id}
+
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_current_admin)):
     """Mark an alert as resolved."""
     async for session in get_db_session():
-        stmt = update(SystemAlert).where(SystemAlert.id == alert_id).values(
-            resolved=True,
-            resolved_at=datetime.now(UTC)
+        stmt = (
+            update(SystemAlert).where(SystemAlert.id == alert_id).values(resolved=True, resolved_at=datetime.now(UTC))
         )
         await session.execute(stmt)
         await session.commit()

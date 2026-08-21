@@ -19,8 +19,7 @@ Supports optional Redis persistence for multi-worker environments.
 
 import time
 from collections import deque
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from typing import Any
 
 from loguru import logger

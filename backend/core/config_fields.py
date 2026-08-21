@@ -43,11 +43,21 @@ class SettingsFieldsMixin:
 
     # বাংলা মন্তব্য: রোল-ভিত্তিক CORS সেটিংস এবং সিকিউরিটি টগল
     user_cors_origins: str | list[str] = Field(
-        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app"],
+        default=[
+            "https://supremeai-lac.vercel.app",
+            "https://supremeai-a.firebaseapp.com",
+            "https://supremeai-a.web.app",
+        ],
         validation_alias="USER_CORS_ORIGINS",
     )
     admin_cors_origins: str | list[str] = Field(
-        default=["https://supremeai-lac.vercel.app", "https://supremeai-a.firebaseapp.com", "https://supremeai-a.web.app", "https://supremeai-admin.web.app", "https://supremeai-admin.firebaseapp.com"],
+        default=[
+            "https://supremeai-lac.vercel.app",
+            "https://supremeai-a.firebaseapp.com",
+            "https://supremeai-a.web.app",
+            "https://supremeai-admin.web.app",
+            "https://supremeai-admin.firebaseapp.com",
+        ],
         validation_alias="ADMIN_CORS_ORIGINS",
     )
     enforce_anti_hacking: bool = Field(
@@ -64,18 +74,10 @@ class SettingsFieldsMixin:
     # flag false বা dependency absent থাকলে সিস্টেম zero-cost fallback দিয়ে চলে।
     mem0_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_MEM0_ENABLED")
     graphiti_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_GRAPHITI_ENABLED")
-    browser_use_enabled: bool = Field(
-        default=False, validation_alias="SUPREMEAI_BROWSER_USE_ENABLED"
-    )
+    browser_use_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_BROWSER_USE_ENABLED")
     e2b_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_E2B_ENABLED")
-    openhands_enabled: bool = Field(
-        default=False, validation_alias="SUPREMEAI_OPENHANDS_ENABLED"
-    )
-    openhands_server_url: str = Field(
-        default="", validation_alias="OPENHANDS_SERVER_URL"
-    )
-
-
+    openhands_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_OPENHANDS_ENABLED")
+    openhands_server_url: str = Field(default="", validation_alias="OPENHANDS_SERVER_URL")
 
     # বাংলা মন্তব্য: JIT OTP over-saturation protection — প্রতি admin প্রতি এই সেকেন্ডে সর্বোচ্চ ১টি OTP।
     otp_cooldown_seconds: int = Field(default=60, validation_alias="OTP_COOLDOWN_SECONDS")

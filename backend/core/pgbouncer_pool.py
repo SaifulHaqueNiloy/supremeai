@@ -7,16 +7,19 @@ import warnings
 _DEPRECATED_TARGET = "database.pgbouncer_pool"
 _warned = False
 
+
 def __getattr__(name):
     global _warned
     if not _warned:
         warnings.warn(
             "backend.core.pgbouncer_pool is deprecated; import from database.pgbouncer_pool",
-            DeprecationWarning, stacklevel=2,
+            DeprecationWarning,
+            stacklevel=2,
         )
         _warned = True
     mod = importlib.import_module(_DEPRECATED_TARGET)
     return getattr(mod, name)
+
 
 def __dir__():
     return list(importlib.import_module(_DEPRECATED_TARGET).__dict__.keys())

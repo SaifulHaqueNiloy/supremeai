@@ -11,7 +11,6 @@ from typing import Any
 
 from loguru import logger
 
-
 # বাংলা মন্তব্ট: টিয়ার 0 deterministic টাস্ক প্যাটার্ন — pure-Python, শূন্য টোকেন খরচ।
 _DETERMINISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("pypi_search", re.compile(r"search\s+(?:pypi|pypi\s+for|package\s+index)\s+", re.I)),
@@ -83,12 +82,14 @@ class Tier0Dispatcher:
         try:
             with os.scandir(target_dir) as entries:
                 for entry in entries:
-                    files.append({
-                        "name": entry.name,
-                        "path": entry.path,
-                        "is_dir": entry.is_dir(),
-                        "size_bytes": entry.stat().st_size if entry.is_file() else None,
-                    })
+                    files.append(
+                        {
+                            "name": entry.name,
+                            "path": entry.path,
+                            "is_dir": entry.is_dir(),
+                            "size_bytes": entry.stat().st_size if entry.is_file() else None,
+                        }
+                    )
             return {"directory": target_dir, "count": len(files), "files": files[:50]}
         except Exception as exc:
             logger.warning(f"[Tier0Dispatcher] File listing failed for '{target_dir}': {exc}")
@@ -127,7 +128,11 @@ class Tier0Dispatcher:
         text_lower = prompt.lower()
         for entity in entities:
             if entity in text_lower:
-                return {"entity": entity, "status": "schema_available", "note": f"Query Supabase for '{entity}' table schema via information_schema."}
+                return {
+                    "entity": entity,
+                    "status": "schema_available",
+                    "note": f"Query Supabase for '{entity}' table schema via information_schema.",
+                }
         return {"error": "No known entity found in query", "suggested_entities": entities}
 
 

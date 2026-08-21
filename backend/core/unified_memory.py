@@ -9,11 +9,13 @@ within SupremeAI, abstracting the underlying implementations:
 """
 
 from typing import Any, Dict, List, Optional
+
 from loguru import logger
+
+from memory.sliding_window import SlidingWindowMemory
 
 # Import the underlying services
 from services.memory_service import CascadeMemoryService
-from memory.sliding_window import SlidingWindowMemory
 from tools.checkpoint_manager import CheckpointManager
 
 
@@ -29,29 +31,24 @@ class UnifiedMemoryInterface:
 
     # --- Long-term Memory (Eternal Brain) ---
     def store_long_term_memory(
-        self,
-        session_id: str,
-        agent_type: str,
-        task_type: str,
-        content: str,
-        metadata: Optional[Dict[str, Any]] = None
+        self, session_id: str, agent_type: str, task_type: str, content: str, metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
         """Store information in the long-term 'Eternal Brain' memory."""
         try:
             # Parse content and extract summary/structure using the service's built-in logic
             # This might need adjustment based on how content is passed
             # For now, assuming it's called from an agent context where summary is pre-made
-            summary = content[:200] # Placeholder
-            structure = "{}" # Placeholder
+            summary = content[:200]  # Placeholder
+            structure = "{}"  # Placeholder
             self.long_term_memory.store_memory(
-                file_path=session_id, # Map session_id to file_path for now
+                file_path=session_id,  # Map session_id to file_path for now
                 content=content,
                 summary=summary,
                 structure=structure,
                 session_id=session_id,
                 agent_type=agent_type,
                 task_type=task_type,
-                metadata=metadata or {}
+                metadata=metadata or {},
             )
             return True
         except Exception as e:
@@ -59,10 +56,7 @@ class UnifiedMemoryInterface:
             return False
 
     def query_long_term_memory(
-        self,
-        query: str,
-        top_k: int = 5,
-        session_id: Optional[str] = None
+        self, query: str, top_k: int = 5, session_id: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """Query the long-term 'Eternal Brain' memory."""
         try:
@@ -72,11 +66,7 @@ class UnifiedMemoryInterface:
             return []
 
     # --- Short-term Memory (Context Window) ---
-    def store_short_term_memory(
-        self,
-        session_id: str,
-        text: str
-    ) -> bool:
+    def store_short_term_memory(self, session_id: str, text: str) -> bool:
         """Store information in the short-term conversation context."""
         try:
             self.short_term_memory.chunk(text=text, session_id=session_id)
@@ -85,11 +75,7 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to store short-term memory: {e}")
             return False
 
-    def get_short_term_memory(
-        self,
-        session_id: str,
-        limit: int = 20
-    ) -> List[Dict[str, Any]]:
+    def get_short_term_memory(self, session_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Retrieve information from the short-term conversation context."""
         try:
             return self.short_term_memory.recall(session_id=session_id, limit=limit)
@@ -98,12 +84,7 @@ class UnifiedMemoryInterface:
             return []
 
     # --- Task Checkpointing ---
-    def save_checkpoint(
-        self,
-        task_id: str,
-        step_index: int,
-        state: Dict[str, Any]
-    ) -> bool:
+    def save_checkpoint(self, task_id: str, step_index: int, state: Dict[str, Any]) -> bool:
         """Save the current state of a task."""
         try:
             return self.checkpoint_manager.save(task_id=task_id, step_index=step_index, state=state)
@@ -111,10 +92,7 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to save checkpoint: {e}")
             return False
 
-    def load_checkpoint(
-        self,
-        task_id: str
-    ) -> Optional[Dict[str, Any]]:
+    def load_checkpoint(self, task_id: str) -> Optional[Dict[str, Any]]:
         """Load the state of a task."""
         try:
             cp_obj = self.checkpoint_manager.load(task_id=task_id)
@@ -123,7 +101,7 @@ class UnifiedMemoryInterface:
                     "task_id": cp_obj.task_id,
                     "step_index": cp_obj.step_index,
                     "state": cp_obj.state,
-                    "resumed": cp_obj.resumed
+                    "resumed": cp_obj.resumed,
                 }
             return None
         except Exception as e:

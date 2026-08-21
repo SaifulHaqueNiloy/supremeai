@@ -9,6 +9,7 @@ Supabase-এর মতো ১৫৩৬-ডাইম pgvector কলামের 
 শূন্য প্যাডিং ডট-প্রোডাক্ট বা নর্ম পরিবর্তন করে না। এতে লাইভ ডেটাবেজ মাইগ্রেশন
 ছাড়াই $0 এমবেডিং সম্ভব।
 """
+
 from __future__ import annotations
 
 import importlib.util
