@@ -298,8 +298,10 @@ class SettingsValidationMixin:
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
         if not value or value is None:
-            return "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
-        # বাংলা: Production-এ JWT secret কমপক্ষে 64 bytes হতে হবে — brute-force attack ঠেকাতে
+            # Generate a secure random JWT secret instead of using hardcoded string
+            import secrets
+            return secrets.token_urlsafe(64)
+        # বাংলা মন্তব্য: প্রোডাকশনে JWT secret কমপক্ষে 64 bytes হতে হবে — brute-force attack ঠেকাতে
         if env == "production" and len(str(value)) < 64:
             raise ValueError("JWT secret must be at least 64 bytes long in production")
         return str(value)

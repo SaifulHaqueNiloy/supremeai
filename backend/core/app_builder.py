@@ -249,7 +249,18 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             },
         }
 
+    from fastapi.responses import JSONResponse
+    from core.exceptions import SupremeAIException
+
+    @app.exception_handler(SupremeAIException)
+    async def supremeai_exception_handler(request, exc: SupremeAIException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.to_dict(),
+        )
+
     return app
+
 
 
 # Backward-compatibility alias for legacy tests

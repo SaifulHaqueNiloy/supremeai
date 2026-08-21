@@ -494,8 +494,17 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
     internet_monitor_router = None
 
-# বাংলা মন্তব্য: নিচের ৫টা router (voice, websocket_voice, integrations, swarm,
-# internet_monitor) আগে explicit list-এও duplicate ছিল, অথচ এগুলো ইতিমধ্যে
-# উপরের try/except ব্লকগুলোর মাধ্যমে _safe_imports-এ যোগ হয়ে যায় — dict-এ
-# duplicate key থাকে না, তাই এখানে আলাদা করে আর লেখার দরকার নেই।
+try:
+    from .meta_engine import router as meta_engine_router
+
+    _safe_imports["meta_engine_router"] = meta_engine_router
+except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
+    import traceback
+
+    from loguru import logger
+
+    logger.warning(f"Router import failed for meta_engine_router: {traceback.format_exc()}")
+    meta_engine_router = None
+
 __all__ = list(_safe_imports.keys())
+
