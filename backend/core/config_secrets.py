@@ -63,6 +63,8 @@ class SettingsSecretsMixin:
         "FIREBASE_SERVICE_ACCOUNT_JSON",
         "LANGFUSE_PUBLIC_KEY",
         "LANGFUSE_SECRET_KEY",
+        "TELEGRAM_BOT_TOKEN",
+        "ADMIN_TELEGRAM_CHAT_ID",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -84,7 +86,7 @@ class SettingsSecretsMixin:
                 # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
                 # RuntimeError throw হবে না, বরং empty string return হবে।
                 # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
-                val = secret_vault.fetch_secret(secret_key)
+                val = secret_vault.fetch_secret(secret_key, default="")
                 if val:
                     cached[secret_key] = val
             except Exception as _secret_err:
@@ -467,6 +469,14 @@ class SettingsSecretsMixin:
     def stripe_webhook_secret(self) -> SecretStr:
         val = self._get_cached_secret("STRIPE_WEBHOOK_SECRET")
         return SecretStr(val) if val else SecretStr("")
+
+    @property
+    def telegram_bot_token(self) -> str:
+        return self._get_cached_secret("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN", "")
+
+    @property
+    def admin_telegram_chat_id(self) -> str:
+        return self._get_cached_secret("ADMIN_TELEGRAM_CHAT_ID") or os.getenv("ADMIN_TELEGRAM_CHAT_ID", "")
 
     # ── Serializer ──────────────────────────────────────────────────────────
     # বাংলা মন্তব্য: @property-ভিত্তিক সিক্রেট Pydantic model_dump()-এ অন্তর্ভুক্ত হয় না।
