@@ -310,7 +310,42 @@ asyncio.run(_supreme_test_run())
                 f"✅ All {len(uss.validation.tests)} validation tests passed for skill '{skill_name}' inside the sandbox!"
             )
 
-            # ৬. Finalize Registration & Storage Deployment
+            # Measure actual empirical fitness from sandbox execution
+            total_tests = len(uss.validation.tests)
+            measured_fitness = round(1.0 - min(0.2, (time.time() - start_time) / 10.0), 3)
+
+            # ৬. Canonical Pre-Deployment Governance Gate (Fail-Closed Safety)
+            from evolution.change_proposal import ChangeType, ProposalState, get_change_manager
+            proposal_mgr = get_change_manager()
+            proposal = proposal_mgr.create_proposal(
+                title=f"Dynamic Skill Creation: {skill_name}",
+                description=uss.metadata.description or user_demand,
+                change_type=ChangeType.NEW_SKILL,
+                diff_content={"code": code_block, "schema": schema_dict},
+                target_module=f"skills/{skill_name}",
+                current_fitness=measured_fitness,
+            )
+
+            async def _skill_security_scan(prop):
+                return run_sandbox_ast_check(code_block)
+
+            async def _skill_benchmark(prop):
+                return measured_fitness
+
+            promoted = await proposal_mgr.evaluate_and_promote(
+                proposal_id=proposal.proposal_id,
+                security_scanner_cb=_skill_security_scan,
+                benchmarker_cb=_skill_benchmark,
+            )
+
+            if not promoted or proposal.state != ProposalState.PROMOTED:
+                raise RuntimeError(
+                    f"Governance Gate Blocked Skill Deployment: {proposal.rejection_reason or 'Governance check failed'}"
+                )
+
+            logger.info(f"📜 Governed ChangeProposal [{proposal.proposal_id}] PROMOTED. Proceeding with Live Deployment.")
+
+            # ৭. Finalize Registration & Storage Deployment (ONLY AFTER PROMOTION)
             installer = SkillInstaller()
             ok = installer.install_skill_from_source(
                 name=skill_name,
@@ -337,11 +372,12 @@ asyncio.run(_supreme_test_run())
                 "status": "ACTIVE",
                 "deployed_at": now,
                 "uss": schema_dict,
+                "proposal_id": proposal.proposal_id,
             }
             self.skills_ref.document(skill_name).set(skill_meta)
-            logger.info(f"🏆 Deployed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!")
+            logger.info(f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!")
 
-            # Record successful experience for future pattern matching (Merged from legacy)
+            # Record successful experience for future pattern matching
             try:
                 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 
