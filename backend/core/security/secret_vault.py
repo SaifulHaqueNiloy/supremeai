@@ -141,6 +141,14 @@ class ProductionSecretVault:
         if cached and cached.is_expired:
             del self._cache[secret_id]
 
+        # বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবল ভল্টের উপরে প্রাধান্য পায় (12-factor)।
+        # এতে Render-এর env কনফিগ দিয়ে সিক্রেট ইমারজেন্সি-ফিক্স/ওভাররাইড করা যায়
+        # ইনফিসিক্যাল স্পর্শ না করেই। শুধু তখনই প্রযোজ্য যখন ভ্যারিয়েবল সেট থাকে।
+        env_override = os.getenv(secret_id)
+        if env_override:
+            self._cache[secret_id] = _CacheEntry(env_override)
+            return env_override
+
         if not self.client or not self.project_id:
             return self._fallback_to_env(secret_id, default)
 
