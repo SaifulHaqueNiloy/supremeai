@@ -166,18 +166,47 @@ class TelegramBotHandler:
             logger.error(f"set_webhook failed: {exc}")
             return False
 
-    async def get_me(self) -> dict[str, Any] | None:
-        """Verify bot token and get bot info."""
+    async def sync_bot_profile(
+        self,
+        name: str = "SupremeAI 2.0 | Autonomous Intelligence",
+        description: str | None = None,
+        short_description: str | None = None,
+    ) -> bool:
+        """Sets official Name, Description, Short Description, and Commands Menu on Telegram."""
         if not self.configured:
-            return None
+            return False
+        default_desc = (
+            "🔱 SupremeAI 2.0 — Self-Evolving Autonomous Superintelligence & Zero-Cost Cloud Vault.\n\n"
+            "⚡ Features:\n"
+            "• Real-time AI Assistant & Metaprogramming\n"
+            "• Instant Encrypted Database & Memory Backups (/backup_now)\n"
+            "• Cloud Cluster Telemetry & Health Checks (/sys_status)\n"
+            "• Build Artifacts & Software Releases (/latest_build)\n\n"
+            "Developed by Saiful Haq Niloy | Powered by SupremeAI"
+        )
+        default_short = "SupremeAI 2.0 — Autonomous Superintelligence, TelDrive Vault & Cluster Controller."
+
+        commands = [
+            {"command": "start", "description": "Initialize SupremeAI assistant"},
+            {"command": "sys_status", "description": "Real-time telemetry & health check"},
+            {"command": "backup_now", "description": "Trigger encrypted DB & memory backup"},
+            {"command": "latest_build", "description": "Download latest Desktop & VSIX builds"},
+            {"command": "help", "description": "Command list & help documentation"},
+            {"command": "rules", "description": "Constitutional rules & architecture"},
+            {"command": "admin", "description": "Admin security & cluster controls"},
+        ]
+
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.get(f"{self.api_base}/getMe")
-                data = resp.json()
-                return data.get("result") if data.get("ok") else None
+            async with httpx.AsyncClient(timeout=15) as client:
+                await client.post(f"{self.api_base}/setMyName", json={"name": name})
+                await client.post(f"{self.api_base}/setMyDescription", json={"description": description or default_desc})
+                await client.post(f"{self.api_base}/setMyShortDescription", json={"short_description": short_description or default_short})
+                await client.post(f"{self.api_base}/setMyCommands", json={"commands": commands})
+                logger.info("✅ Telegram bot profile and commands synchronized successfully.")
+                return True
         except Exception as exc:
-            logger.error(f"getMe failed: {exc}")
-            return None
+            logger.error(f"sync_bot_profile failed: {exc}")
+            return False
 
     # ── Message handling ──────────────────────────────────────────
 
