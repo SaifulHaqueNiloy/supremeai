@@ -48,22 +48,12 @@ async def execute_agent_task(
     correlation_id = getattr(request.state, "correlation_id", "unknown")
 
     try:
-        # Example of delegating to our hardened LLM Gateway
-        # In production, this would call the actual LLM gateway service
-        # response_text = await llm_gateway.generate_response(
-        #     prompt=payload.prompt,
-        #     model="gpt-4o"
-        # )
+        from brain.autonomous_agent import AutonomousAgent
+        agent = AutonomousAgent(name=f"agent-route-{payload.task_id}")
+        exec_res = agent.execute(task_description=payload.prompt)
+        response_text = exec_res.get("output") or f"Task {payload.task_id} completed successfully."
 
-        # For now, simulate a response
-        response_text = f"Task {payload.task_id} executed successfully. Prompt processed: {payload.prompt[:100]}..."
-
-        # If auto_execute is True, we can pass it to background tasks to prevent HTTP timeouts on Render
-        if payload.auto_execute:
-            # background_tasks.add_task(execute_code_safely, response_text)
-            pass
-
-        return AgentTaskResponse(status="success", result=response_text)
+        return AgentTaskResponse(status="success" if exec_res.get("success") else "failed", result=response_text)
 
     except Exception as exc:
         # Route expected/unexpected errors to the ErrorBus and return safe HTTP response

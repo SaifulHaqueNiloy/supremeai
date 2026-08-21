@@ -190,12 +190,12 @@ class SelfEvolutionAgent:
         metadata: dict | None = None,
     ) -> bool:
         """
-        Zero-Gap Pipeline for evaluating and integrating AI-generated code.
+        Zero-Gap Pipeline for evaluating and integrating AI-generated code atomically.
         """
         proposal_id = f"prop-{uuid.uuid4().hex[:8]}"
         metadata = metadata or {}
 
-        # Step 1: Record Proposal (Atomic Transaction)
+        # Step 1: Record Proposal
         async with session.begin():
             proposal = CodeProposal(
                 proposal_id=proposal_id,
@@ -205,32 +205,37 @@ class SelfEvolutionAgent:
                 metadata_json=metadata,
             )
             session.add(proposal)
+            await session.flush()
 
-        logger.info(f"New skill proposal recorded: {proposal_id} for {skill_name}")
+            # Step 2: Strict AST Security Scan
+            res = self.scanner.scan_code(generated_code)
+            if not res["safe"]:
+                logger.critical(f"AST Scanner BLOCKED proposal {proposal_id}: {res.get('error', 'unsafe code')}")
+                proposal.status = "rejected_by_ast"
+                proposal.ast_validated = False
+                return False
 
-        # Step 2: Strict AST Security Scan
-        # scan_code will check using ASTSecurityScanner under the hood
-        res = self.scanner.scan_code(generated_code)
-        if not res["safe"]:
-            logger.critical(f"AST Scanner BLOCKED proposal {proposal_id}: {res['error']}")
-            await self._update_proposal_status(session, proposal_id, "rejected_by_ast")
-            return False
+            proposal.status = "ast_validated"
+            proposal.ast_validated = True
+            logger.success(f"Proposal {proposal_id} passed AST Security Scan.")
 
-        # If we reach here, AST is safe. Update state.
-        await self._update_proposal_status(session, proposal_id, "ast_validated", ast_validated=True)
-        logger.success(f"Proposal {proposal_id} passed AST Security Scan.")
-
-        # Step 3: CI/CD Dry Run (MicroVM / Sandbox Execution)
+        # Step 3: CI/CD Real Dry Run (Isolated Sandbox Execution)
         ci_passed = await self._run_ci_cd_dry_run(proposal_id, skill_name, generated_code)
 
-        if not ci_passed:
-            logger.error(f"CI/CD dry-run FAILED for proposal {proposal_id}")
-            await self._update_proposal_status(session, proposal_id, "rejected_by_ci")
-            return False
+        async with session.begin():
+            result = await session.execute(select(CodeProposal).where(CodeProposal.proposal_id == proposal_id))
+            p = result.scalars().first()
+            if p:
+                if not ci_passed:
+                    logger.error(f"CI/CD dry-run FAILED for proposal {proposal_id}")
+                    p.status = "rejected_by_ci"
+                    p.ci_passed = False
+                    return False
 
-        # Step 4: Final Approval for Merge/Apply
-        await self._update_proposal_status(session, proposal_id, "ci_passed", ci_passed=True)
-        logger.success(f"Evolution successful: {skill_name} ({proposal_id}) passed all zero-gap gates.")
+                # Step 4: Final Approval for Merge/Apply
+                p.status = "ci_passed"
+                p.ci_passed = True
+                logger.success(f"Evolution successful: {skill_name} ({proposal_id}) passed all zero-gap gates.")
 
         return True
 
@@ -248,13 +253,23 @@ class SelfEvolutionAgent:
 
     async def _run_ci_cd_dry_run(self, proposal_id: str, skill_name: str, code: str) -> bool:
         """
-        Simulates a sandboxed test run.
+        Executes isolated sandbox verification for evolved skill.
         """
-        logger.info(f"Triggering Sandbox/CI dry run for {proposal_id}...")
+        logger.info(f"Triggering Sandbox/CI dry run for {proposal_id} ({skill_name})...")
         try:
-            compile(code, f"<supremeai_sandbox_{skill_name}>", "exec")
-            await asyncio.sleep(1)  # Network/Sandbox latency mock
+            from tools.code.local_code_executor import LocalCodeExecutor
+            sandbox = LocalCodeExecutor()
+            test_harness = (
+                f"{code}\n\n"
+                f"import sys\n"
+                f"if {skill_name!r} not in globals():\n"
+                f"    sys.exit(1)\n"
+            )
+            res = await sandbox.execute_local_code(test_harness, timeout=10)
+            if not res.get("success"):
+                logger.error(f"Sandbox dry-run failed for {proposal_id}: {res.get('error', res.get('stderr'))}")
+                return False
             return True
-        except SyntaxError as e:
-            logger.error(f"Syntax Error in AI generated code: {e}")
+        except Exception as e:
+            logger.error(f"Sandbox error in AI generated code: {e}")
             return False

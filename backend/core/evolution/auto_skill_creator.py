@@ -258,19 +258,29 @@ class AutoSkillCreator:
                     f"Running validation test case {idx + 1}/{len(uss.validation.tests)} inside the secure sandbox..."
                 )
 
+                # Sanitize skill_name to prevent code injection via name
+                import re as _re
+                safe_skill_name = _re.sub(r"[^a-zA-Z0-9_]", "", skill_name)
+                if not safe_skill_name:
+                    raise SecurityError("Invalid skill name detected.")
+
+                input_json_str = json.dumps(test.input)
                 # Construct executable script to evaluate inputs and output results to stdout as JSON
-                sandbox_script = f"""
-{code_block}
+                sandbox_script = f"""{code_block}
 
 import json
 import asyncio
 
-async def run():
-    instance = {skill_name}()
-    res = await instance.execute({test.input!r})
+async def _supreme_test_run():
+    test_data = json.loads({input_json_str!r})
+    target_cls = globals().get({safe_skill_name!r})
+    if not target_cls:
+        raise ValueError(f"Skill class '{{safe_skill_name}}' not found in executed code.")
+    instance = target_cls()
+    res = await instance.execute(test_data)
     print("RESULT:" + json.dumps(res))
 
-asyncio.run(run())
+asyncio.run(_supreme_test_run())
 """
                 is_safe_test = run_sandbox_ast_check(sandbox_script)
                 if not is_safe_test:
