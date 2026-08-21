@@ -1,10 +1,11 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from api.dependencies import get_current_user_token
 from brain.agent_departments import AgentDepartment
 from brain.autonomous_agent import AutonomousAgent
 from brain.langgraph_agent import SupremeOrchestrator
@@ -13,7 +14,11 @@ from core.generation_monitor import GenerationMonitor
 from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.security.rbac import RoleBasedAccessControl
 
-agent_router = APIRouter(prefix="/api/v1/agents", tags=["agents"])
+agent_router = APIRouter(
+    prefix="/api/v1/agents",
+    tags=["agents"],
+    dependencies=[Depends(get_current_user_token)],
+)
 
 model_router = ModelRouter()
 orchestrator = SupremeOrchestrator()

@@ -39,11 +39,23 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             "latency_ms": cached_result.get("latency_ms", 0),
         }
 
-    # Cache miss - generate response from AI model
-    logger.info("❌ CACHE MISS: Generating new response from AI model")
+    # Cache miss - generate response from AI model with memory context
+    logger.info("❌ CACHE MISS: Generating new response from AI model with memory recall")
     try:
+        # Retrieve long-term memory facts for tenant/user context
+        memory_ctx = ""
+        try:
+            from memory.long_term_memory import LongTermMemory
+            ltm = LongTermMemory(session_id=session_id or "default")
+            mem_facts = ltm.build_context()
+            if mem_facts and mem_facts != "No memory available.":
+                memory_ctx = f"[Relevant Memory Context:\n{mem_facts}]\n\n"
+        except Exception as mem_err:
+            logger.debug(f"Memory retrieval bypassed: {mem_err}")
+
+        enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
         # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-        response = await llm_gateway.acompletion(prompt=payload.prompt, task_type="chat", stream=False)
+        response = await llm_gateway.acompletion(prompt=enriched_prompt, task_type="chat", stream=False)
         response_text = response.get("text", "") if isinstance(response, dict) else str(response)
 
         # Store response in multi-layer cache for future requests

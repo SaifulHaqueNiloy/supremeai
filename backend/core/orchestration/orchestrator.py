@@ -218,8 +218,16 @@ class Orchestrator:
             logger.info("Orchestrator tick cancelled.")
             raise
         except ExceptionGroup as eg:
+            halt_signals = []
             for exc in eg.exceptions:
-                logger.error(f"Error in orchestrator task group loop: {exc}")
+                if isinstance(exc, RuntimeError) and "Halting orchestrator" in str(exc):
+                    halt_signals.append(exc)
+                else:
+                    logger.error(f"Error in orchestrator task group loop: {exc}")
+            if halt_signals:
+                logger.critical(f"🛑 BUDGET GUARDIAN HALT: {halt_signals[0]}")
+                self._running = False
+                raise halt_signals[0]
 
     def status(self) -> dict:
         return {"running": self._running, "next_interval_secs": self.interval}
