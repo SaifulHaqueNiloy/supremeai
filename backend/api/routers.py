@@ -112,6 +112,8 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.pr_review_api", ""),
     # Added telemetry router for performance monitoring and system health
     ("api.v1.telemetry", "/api"),
+    ("tools.social.telegram_bot", "/api/v1"),
+    ("tools.social.telegram_bot", ""),
 ]
 
 
@@ -195,11 +197,11 @@ def include_admin_routers(app: FastAPI) -> None:
 
 
 __all__ = [
-    "register_all_routers",
-    "include_user_routers",
-    "include_admin_routers",
-    "core_routers",
-    "optional_routers",
-    "USER_ROUTERS",
     "ADMIN_ROUTERS",
+    "USER_ROUTERS",
+    "core_routers",
+    "include_admin_routers",
+    "include_user_routers",
+    "optional_routers",
+    "register_all_routers",
 ]
