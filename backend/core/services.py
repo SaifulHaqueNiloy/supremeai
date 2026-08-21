@@ -4,8 +4,6 @@
 """
 
 import asyncio
-import logging
-import os
 from collections.abc import Callable
 from typing import Any
 
@@ -132,32 +130,5 @@ def _get_service_attr(name: str) -> Any:
                 pass
         if hasattr(reg, "_services") and name in reg._services:
             return reg._services[name]
-
-    if os.getenv("ENV", "local").lower() in ("test", "testing", "ci"):
-        logging.getLogger(__name__).warning(
-            f"⚠️ Service '{name}' is missing and is being mock injected dynamically in test environment!"
-        )
-        try:
-            from core.messaging.event_bus import (
-                ErrorContext,
-                ErrorEvent,
-                error_event_bus,
-            )
-
-            error_event_bus.emit(
-                ErrorEvent(
-                    module="services_registry",
-                    error_type="MOCK_SERVICE_INJECTED",
-                    message=f"Missing service '{name}' was mock injected in test environment.",
-                    severity="WARNING",
-                    structured_context=ErrorContext(module="services_registry"),
-                )
-            )
-        except Exception as exc:
-            logging.getLogger(__name__).debug("ErrorEvent emit bypassed: %s", exc)
-
-        from unittest.mock import MagicMock
-
-        return MagicMock()
 
     raise AttributeError(f"Module 'core.services' has no attribute '{name}'")

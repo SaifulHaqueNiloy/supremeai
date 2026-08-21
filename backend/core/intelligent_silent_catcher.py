@@ -66,20 +66,19 @@ def thread_target_wrapper(target):
     return wrapper
 
 
-original_thread_init = threading.Thread.__init__
-
-
-def patched_thread_init(self, *args, **kwargs):
-    original_thread_init(self, *args, **kwargs)
-    if hasattr(self, "_target") and self._target:
-        self._target = thread_target_wrapper(self._target)
+def _thread_excepthook(args: threading.ExceptHookArgs) -> None:
+    """Python 3.8+ stdlib thread excepthook for unhandled thread exceptions."""
+    if args.exc_type in (SystemExit, KeyboardInterrupt):
+        return
+    handle_unhandled_exception(args.exc_type, args.exc_value, args.exc_traceback)
 
 
 def install_excepthook():
-    """Install the custom exception hook to catch all unhandled exceptions."""
+    """Install the custom exception hook to catch all unhandled exceptions without side effects."""
     sys.excepthook = handle_unhandled_exception
-    threading.Thread.__init__ = patched_thread_init
-    logger.info("🛡️ Intelligent Silent Catcher hooks installed.")
+    # Python 3.8+ stdlib API — cleanly intercepts uncaught thread exceptions
+    threading.excepthook = _thread_excepthook
+    logger.info("🛡️ Intelligent Silent Catcher hooks installed via stdlib excepthooks.")
 
 
 # Alias for backward-compatibility

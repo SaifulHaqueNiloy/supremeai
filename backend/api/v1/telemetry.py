@@ -117,12 +117,22 @@ async def get_detailed_status():
     return JSONResponse(content=status)
 
 
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর GlobalErrorBoundary.tsx-এর
-# /api/telemetry/frontend-error কল এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+from pydantic import BaseModel, Field
+
+
+class FrontendErrorReport(BaseModel):
+    message: str = Field(..., max_length=2000)
+    stack: str | None = Field(None, max_length=4000)
+    url: str | None = Field(None, max_length=500)
+    user_agent: str | None = Field(None, max_length=500)
+
+
+# বাংলা মন্তব্য: AUDIT-018 ফিক্স — Studio Client-এর GlobalErrorBoundary.tsx-এর
+# /api/telemetry/frontend-error কল এখন ব্যাকএন্ডে আছে
 @router.post("/frontend-error", tags=["telemetry"])
-async def report_frontend_error(payload: dict):
-    """Receive and log frontend error reports from the Studio Client."""
+async def report_frontend_error(payload: FrontendErrorReport):
+    """Receive and log frontend error reports safely from the Studio Client."""
     import logging
     logger = logging.getLogger("supremeai.telemetry.frontend")
-    logger.error(f"Frontend error report: {payload}")
+    logger.error(f"Frontend error report: message={payload.message[:200]} url={payload.url}")
     return {"status": "logged", "message": "Frontend error report received"}

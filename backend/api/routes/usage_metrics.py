@@ -1,9 +1,14 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
+from api.dependencies import get_current_user_token
 from database.supabase_client import db
 
-router = APIRouter(prefix="/metrics/usage", tags=["usage-metrics"])
+router = APIRouter(
+    prefix="/metrics/usage",
+    tags=["usage-metrics"],
+    dependencies=[Depends(get_current_user_token)],
+)
 
 
 class UsageMetricUpsert(BaseModel):
@@ -21,6 +26,7 @@ async def get_usage_metrics(
     start: str | None = None,
     end: str | None = None,
     limit: int = Query(default=30, le=365),
+    user: dict = Depends(get_current_user_token),
 ):
     if not db.client:
         return {"items": [], "total": 0}
@@ -37,7 +43,10 @@ async def get_usage_metrics(
 
 
 @router.post("/")
-async def upsert_usage_metric(payload: UsageMetricUpsert):
+async def upsert_usage_metric(
+    payload: UsageMetricUpsert,
+    user: dict = Depends(get_current_user_token),
+):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
     try:
