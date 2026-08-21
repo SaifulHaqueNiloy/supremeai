@@ -82,7 +82,10 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.swarm", "/api/v1/swarm"),
     # Added real-time dashboard WebSocket endpoint for Phase 2.1 of roadmap
     ("api.routes.realtime_dashboard", ""),
+    # Unified Meta-Engine Router (DeerFlow + Medusa + Gitea + Strapi + Keycloak)
+    ("api.routes.meta_engine", "/api/v1"),
 ]
+
 
 optional_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
