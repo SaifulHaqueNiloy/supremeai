@@ -14,12 +14,42 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.cache.redis_manager import redis_manager
+from core.config import settings
 from core.pgbouncer_pool import get_db_pool
 from core.rate_limiter import AsyncRateLimiter
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.security import API_KEY_PREFIX, hash_api_key, mask_api_key
 from models.api_key import record_api_key_usage
 from utils.environment import is_test_environment
+
+
+def _extract_client_ip(request: Request) -> str:
+    """বাংলা: ক্লায়েন্টের আসল IP এক্সট্র্যাক্ট করে।
+
+    শুধু request.client.host ব্যবহার করলে X-Forwarded-For স্পুফিং-এ প্রতারিত হওয়া যায়।
+    নিরাপদ পদ্ধতি: settings.trusted_proxy_count পরিচিত প্রক্সি চেইন থাকলে শেষ
+    প্রক্সি-এর আগের IP নেওয়া হয় (সবচেয়ে নির্ভরযোগ্য)। না থাকলে raw client.host।
+    """
+    raw_host = request.client.host if request.client else "unknown"
+    if raw_host == "unknown":
+        return "unknown"
+
+    # বাংলা: trusted proxy chain কনফিগার করা থাকলেই XFF থেকে আসল IP নেওয়া হবে —
+    # নাহলে যেকোনো ক্লায়েন্ট XFF স্পুফ করে rate limit বাইপাস করতে পারবে।
+    trusted_proxy_count = int(getattr(settings, "trusted_proxy_count", 0) or 0)
+    if trusted_proxy_count <= 0:
+        return raw_host
+
+    xff = request.headers.get("x-forwarded-for", "")
+    if not xff:
+        return raw_host
+
+    # বাংলা: XFF ফরম্যাট: "client, proxy1, proxy2, ..."। শেষ trusted_proxy_count
+    # সংখ্যক এন্ট্রি বাদ দিয়ে তার আগের IP টাই আসল ক্লায়েন্ট।
+    parts = [p.strip() for p in xff.split(",") if p.strip()]
+    if len(parts) <= trusted_proxy_count:
+        return raw_host
+    return parts[-trusted_proxy_count - 1]
 
 
 class APIKeyAuthMiddleware(BaseHTTPMiddleware):
@@ -87,7 +117,8 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # IP-based sliding window rate limiter check
-        client_ip = request.client.host if request.client else "unknown"
+        # বাংলা: X-Forwarded-For স্পুফিং-সহনশীল IP এক্সট্র্যাকশন ব্যবহার করা হলো।
+        client_ip = _extract_client_ip(request)
         if not await self.limiter.acquire(f"ip:{client_ip}", limit=100, window=60):
             logger.warning(f"IP rate limit exceeded: {client_ip}")
             return JSONResponse(status_code=429, content={"detail": "IP rate limit exceeded"})
