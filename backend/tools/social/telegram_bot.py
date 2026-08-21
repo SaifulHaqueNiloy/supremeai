@@ -54,8 +54,7 @@ class TelegramBotHandler:
     }
 
     def __init__(self, task_processor_interface=None) -> None:
-        # বাংলা মন্তব্য: settings থেকে না পাওয়া গেলে os.environ থেকে fallback রিড করা হবে, যা টেস্ট কেসগুলোর জন্য সুবিধাজনক।
-        self.bot_token: str = getattr(settings, "telegram_bot_token", None) or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+        self.bot_token: str = str(getattr(settings, "telegram_bot_token", "") or os.environ.get("TELEGRAM_BOT_TOKEN", "") or "").strip()
         self.api_base: str = f"https://api.telegram.org/bot{self.bot_token}"
         self.processor = task_processor_interface
 
@@ -68,15 +67,19 @@ class TelegramBotHandler:
 
     # ── Telegram API helpers ──────────────────────────────────────
 
-    async def send_message(self, chat_id: int | str, text: str, parse_mode: str = "Markdown") -> bool:
+    async def send_message(self, chat_id: int | str, text: str, parse_mode: str | None = "HTML") -> bool:
         if not self.configured:
             return False
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post(
-                    f"{self.api_base}/sendMessage",
-                    json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
-                )
+                body = {"chat_id": chat_id, "text": text}
+                if parse_mode:
+                    body["parse_mode"] = parse_mode
+                resp = await client.post(f"{self.api_base}/sendMessage", json=body)
+                if resp.is_error and parse_mode:
+                    # Fallback without parse_mode if formatting caused a 400
+                    body.pop("parse_mode", None)
+                    resp = await client.post(f"{self.api_base}/sendMessage", json=body)
                 resp.raise_for_status()
                 return True
         except Exception as exc:
