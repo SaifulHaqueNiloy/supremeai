@@ -361,8 +361,58 @@ class TelegramBotHandler:
 
         logger.info(f"Telegram message from @{username} ({user_id}): '{text}'")
 
-        # Command handling
+        from tools.social.telegram_security import security_guard
+
+        # ── Step A: Anti-Hacking & Prompt Injection Guardrail ─────────
+        injected, _inj_reason = security_guard.detect_prompt_injection(text)
+        if injected:
+            logger.warning(f"🚨 Security Alert: Prompt injection attempt from @{username} ({user_id}): '{text}'")
+            await self.send_message(
+                chat_id,
+                "🛡️ <b>Security Alert: AutonoGuard Triggered</b>\n\n"
+                "আপনার বার্তায় প্রম্পট ইঞ্জেকশন বা সিকিউরিটি বাইপাস প্যাটার্ন শনাক্ত হয়েছে।\n"
+                "সুপ্রিমএআই-এর সাংবিধানিক নিরাপত্তা নীতি অনুসারে এই রিকোয়েস্টটি বাতিল করা হলো।"
+            )
+            return
+
+        # ── Step B: TOTP 2FA Verification Flow ────────────────────────
         command = text.split(maxsplit=1)[0].lower() if text.startswith("/") else None
+        is_verify_cmd = command in ("/verify", "/auth", "/totp", "/otp")
+        raw_digits = text.strip()
+
+        if is_verify_cmd or (security_guard.has_pending_challenge(chat_id) and raw_digits.isdigit() and len(raw_digits) == 6):
+            otp_code = text.split()[1] if is_verify_cmd and len(text.split()) > 1 else raw_digits
+            ok, msg, challenge = security_guard.verify_challenge(chat_id, otp_code)
+            await self.send_message(chat_id, msg)
+            if ok and challenge:
+                await self._execute_authorized_critical_action(chat_id, challenge)
+            return
+
+        # ── Step C: Critical / Destructive Instruction Interceptor ────
+        is_crit, action_type, action_desc = security_guard.detect_critical_action(text)
+        if is_crit:
+            if not self.is_admin(chat_id):
+                await self.send_message(
+                    chat_id,
+                    "🔒 <b>Access Denied:</b> This destructive/privileged system instruction is restricted to System Administrators."
+                )
+                return
+
+            chal_id = security_guard.create_challenge(chat_id, action_type, action_desc, text)
+            crit_msg = (
+                "🛡️ <b>CRITICAL SYSTEM INSTRUCTION INTERCEPTED</b>\n\n"
+                f"🎯 <b>Target Action:</b> <code>{action_desc}</code>\n"
+                f"⚠️ <b>Risk Level:</b> <code>HIGH / PRIVILEGED</code>\n"
+                f"🆔 <b>Challenge ID:</b> <code>{chal_id}</code>\n"
+                f"⏳ <b>Validity:</b> 5 Minutes\n\n"
+                "🔐 <b>TOTP 2FA Verification Required:</b>\n"
+                "এই স্পর্শকাতর অ্যাকশনটি অনুমোদন করতে Authenticator অ্যাপের ৬ ডিজিটের OTP কোডটি পাঠান:\n"
+                "👉 <code>/verify 123456</code> অথবা সরাসরি ৬ ডিজিট রিপ্লাই করুন।"
+            )
+            await self.send_message(chat_id, crit_msg)
+            return
+
+        # ── Step D: Standard Command Handling ─────────────────────────
         if command:
             if command in ("/start", "/help"):
                 if self.is_admin(chat_id):
@@ -415,10 +465,43 @@ class TelegramBotHandler:
                     await self.send_message(chat_id, reply)
                 return
 
-        # AI conversational reply for everyone (Admin & General Users)
+        # ── Step E: AI Conversational Engine ──────────────────────────
         await self.send_typing(chat_id)
         ai_response = await self._ai_response(text, user_id)
         await self.send_message(chat_id, ai_response)
+
+    async def _execute_authorized_critical_action(self, chat_id: int | str, challenge: dict[str, Any]) -> None:
+        """Execute a privileged critical action after successful TOTP 2FA verification."""
+        action_type = challenge.get("action_type", "")
+        original_command = challenge.get("original_command", "")
+
+        logger.info(f"Executing authorized critical action: {action_type} for chat_id={chat_id}")
+        await self.send_message(chat_id, f"⚙️ <i>Executing authorized action:</i> <code>{challenge.get('action_desc')}</code>...")
+
+        if action_type == "DATABASE_DESTRUCTION":
+            await self.send_message(
+                chat_id,
+                "🛡️ <b>Safety Guard:</b> Direct destructive table dropping via Telegram is intercepted. "
+                "Creating emergency safety backup snapshot first before executing migration workflow..."
+            )
+            await self._handle_backup_now(chat_id)
+        elif action_type == "SECRET_MUTATION":
+            await self.send_message(
+                chat_id,
+                "🔐 <b>Secret Mutation Approved:</b> Please use the Admin Web Console (https://supremeai-admin.web.app) "
+                "or Infisical CLI to commit new encrypted secrets to the cluster."
+            )
+        else:
+            # Route to autonomous agent orchestrator for safe supervised execution
+            if self.processor:
+                try:
+                    loop = asyncio.get_event_loop()
+                    res = await loop.run_in_executor(None, lambda: self.processor.execute_task(original_command, "admin"))
+                    await self.send_message(chat_id, f"✅ <b>Execution Result:</b>\n{res.get('result', 'Executed successfully.')}")
+                except Exception as exc:
+                    await self.send_message(chat_id, f"❌ <b>Execution Failed:</b> {exc}")
+            else:
+                await self.send_message(chat_id, "✅ <b>Action Authorized:</b> Task logged in System Audit Trail.")
 
     async def _handle_status(self, chat_id: int | str) -> None:
         import time as _time
