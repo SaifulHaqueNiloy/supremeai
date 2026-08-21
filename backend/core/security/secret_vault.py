@@ -287,9 +287,8 @@ class ProductionSecretVault:
                     env_fallback = default
                 elif secret_id == "SUPREMEAI_JWT_SECRET":
                     # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
-                    env_fallback = (
-                        "supremeai_secure_jwt_secret_value_at_least_64_bytes_long_test_string_pad_pad_pad_pad"
-                    )
+                    import secrets
+                    env_fallback = secrets.token_urlsafe(64)
                 elif secret_id == "SUPABASE_URL":
                     env_fallback = "https://mock.supabase.co"
                 elif secret_id == "SUPABASE_KEY":

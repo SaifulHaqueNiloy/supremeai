@@ -6,8 +6,9 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from api.routes.admin import get_current_admin
+from api.dependencies import get_current_admin
 from database.session import get_db_session
+
 from models.execution_policy import ExecutionPolicy
 
 router = APIRouter(
