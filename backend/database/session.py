@@ -87,7 +87,15 @@ def init_engine() -> None:
 
     DATABASE_URL = settings.supabase_database_url
     if not DATABASE_URL:
-        logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Database operations will fail.")
+        # বাংলা: production-এ missing DB URL = fail-fast। test/CI-এ SQLite fallback।
+        current_env = (getattr(settings, "env", "") or "").lower()
+        if current_env in ("production", "prod"):
+            logger.critical(
+                "FATAL: SUPABASE_DATABASE_URL_POOLER missing in PRODUCTION. "
+                "Refusing to boot with SQLite fallback (data loss risk)."
+            )
+            raise RuntimeError("Production environment requires SUPABASE_DATABASE_URL_POOLER")
+        logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Falling back to SQLite in-memory (test/dev only).")
 
     _async_url = get_async_url(DATABASE_URL or "")
     engine_kwargs = _build_engine_kwargs(_async_url)
@@ -101,7 +109,11 @@ def init_engine() -> None:
             autoflush=False,
         )
     except Exception as exc:
-        # বাংলা মন্তব্য: engine creation ব্যর্থ হলে SQLite in-memory fallback
+        # বাংলা: production-ে ফেইল-ফাস্ট, test/staging-এ SQLite fallback।
+        current_env = (getattr(settings, "env", "") or "").lower()
+        if current_env in ("production", "prod"):
+            logger.critical(f"FATAL: Failed to create DB engine in PRODUCTION: {exc}")
+            raise RuntimeError(f"Production DB engine creation failed: {exc}") from exc
         logger.error(f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory.")
         fallback_url = "sqlite+aiosqlite:///:memory:"
         _engine_instance = create_async_engine(
