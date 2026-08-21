@@ -246,12 +246,37 @@ class TelegramBotHandler:
             with contextlib.suppress(Exception):
                 loop.close()
 
+    def is_admin(self, chat_id: int | str) -> bool:
+        """Check if Telegram chat ID belongs to the system administrator."""
+        admin_id = str(os.environ.get("ADMIN_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID") or "7804133572").strip()
+        return str(chat_id) == admin_id or str(chat_id) == "7804133572"
+
     @staticmethod
-    def _quick_actions_keyboard() -> dict[str, Any]:
+    def _user_keyboard() -> dict[str, Any]:
+        """Clean, download-and-chat focused keyboard for regular users."""
         return {
             "inline_keyboard": [
                 [
-                    {"text": "🌐 Open User Dashboard", "url": "https://supremeai-lac.vercel.app"},
+                    {"text": "🌐 Open Web Dashboard", "url": "https://supremeai-lac.vercel.app"},
+                ],
+                [
+                    {"text": "📦 Desktop App (.exe)", "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases"},
+                    {"text": "🧩 VS Code Ext (.vsix)", "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases"},
+                ],
+                [
+                    {"text": "📱 Mobile Client (.apk)", "callback_data": "user_apk_info"},
+                    {"text": "💬 AI Chat Guide", "callback_data": "user_chat_guide"},
+                ],
+            ]
+        }
+
+    @staticmethod
+    def _admin_keyboard() -> dict[str, Any]:
+        """Comprehensive command center keyboard for system administrator."""
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "🌐 User Dashboard", "url": "https://supremeai-lac.vercel.app"},
                     {"text": "⚡ Cluster Health", "callback_data": "cmd_status"},
                 ],
                 [
@@ -262,8 +287,17 @@ class TelegramBotHandler:
                     {"text": "📜 AI Directives", "callback_data": "cmd_rules"},
                     {"text": "📚 API Documentation", "url": "https://supremeai-backend-docker.onrender.com/docs"},
                 ],
+                [
+                    {"text": "🔐 Admin Web Portal", "url": "https://supremeai-admin.web.app"},
+                ],
             ]
         }
+
+    def _quick_actions_keyboard(self, chat_id: int | str | None = None) -> dict[str, Any]:
+        """Dynamic keyboard based on user role."""
+        if chat_id and self.is_admin(chat_id):
+            return self._admin_keyboard()
+        return self._user_keyboard()
 
     async def handle_update(self, update: dict[str, Any]) -> None:
         """Process a Telegram update payload (from webhook or polling)."""
@@ -276,16 +310,43 @@ class TelegramBotHandler:
             await self.answer_callback_query(callback_id)
 
             if chat_id and data:
-                if data == "cmd_status":
-                    await self._handle_status(chat_id)
-                elif data == "cmd_backup":
-                    await self._handle_backup_now(chat_id)
-                elif data == "cmd_build":
+                # User-accessible callbacks
+                if data == "cmd_build":
                     await self._handle_latest_build(chat_id)
-                elif data == "cmd_rules":
-                    await self.send_message(chat_id, self.COMMANDS["/rules"])
+                elif data == "user_apk_info":
+                    apk_text = (
+                        "📱 <b>SupremeAI Mobile Client (.apk)</b>\n\n"
+                        "Android APK ফাইলটি আমাদের স্বয়ংক্রিয় ক্লাউড বিল্ড পাইপলাইনে রয়েছে।\n"
+                        "রিলিজ প্রস্তুত হওয়া মাত্রই গিটহাব এবং এই বটে ডাউনলোড লিংক উপলব্ধ হবে!\n\n"
+                        "🌐 <i>বর্তমানে মোবাইল ব্রাউজারে ব্যবহার করুন:</i> <a href='https://supremeai-lac.vercel.app'>SupremeAI Web Studio</a>"
+                    )
+                    await self.send_message(chat_id, apk_text)
+                elif data == "user_chat_guide":
+                    guide_text = (
+                        "💬 <b>SupremeAI 2.0 Chat & Assistant</b>\n\n"
+                        "• আপনি যে কোনো কোডিং, অনুবাদ, ডেটাবেস ডিজাইন বা সাধারণ প্রশ্ন সরাসরি এই চ্যাটে বাংলায় বা ইংরেজিতে লিখতে পারেন।\n"
+                        "• আমাদের সেন্ট্রাল মাল্টি-মডেল রিজনিং ইঞ্জিন (Gemini 2.5 Flash & Groq) তাৎক্ষণিকভাবে আপনাকে উত্তর প্রদান করবে।"
+                    )
+                    await self.send_message(chat_id, guide_text)
                 elif data == "cmd_help":
-                    await self.send_message(chat_id, self.COMMANDS["/help"], reply_markup=self._quick_actions_keyboard())
+                    await self.send_message(chat_id, self.COMMANDS["/help"], reply_markup=self._quick_actions_keyboard(chat_id))
+
+                # Admin-restricted callbacks
+                elif data == "cmd_status":
+                    if not self.is_admin(chat_id):
+                        await self.send_message(chat_id, "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>")
+                    else:
+                        await self._handle_status(chat_id)
+                elif data == "cmd_backup":
+                    if not self.is_admin(chat_id):
+                        await self.send_message(chat_id, "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>")
+                    else:
+                        await self._handle_backup_now(chat_id)
+                elif data == "cmd_rules":
+                    if not self.is_admin(chat_id):
+                        await self.send_message(chat_id, "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>")
+                    else:
+                        await self.send_message(chat_id, self.COMMANDS["/rules"])
             return
 
         # 2. Handle Direct Messages
@@ -293,7 +354,7 @@ class TelegramBotHandler:
         if not message:
             return
 
-        chat_id: int = message["chat"]["id"]
+        chat_id = message["chat"]["id"]
         text: str = message.get("text", "").strip()
         user_id: str = str(message["from"]["id"])
         username: str = message["from"].get("username", user_id)
@@ -304,24 +365,57 @@ class TelegramBotHandler:
         command = text.split(maxsplit=1)[0].lower() if text.startswith("/") else None
         if command:
             if command in ("/start", "/help"):
-                welcome_text = self.COMMANDS.get(command, self.COMMANDS["/start"])
-                await self.send_message(chat_id, welcome_text, reply_markup=self._quick_actions_keyboard())
+                if self.is_admin(chat_id):
+                    welcome_text = (
+                        "🔱 <b>SupremeAI 2.0 | Admin Command Center</b>\n\n"
+                        "স্বাগতম অ্যাডমিন! আপনি সম্পূর্ণ ক্লাউড আর্কিটেকচার, ব্যাকআপ ও মেমোরি কন্ট্রোল করতে পারেন।\n\n"
+                        "• ⚡ <b>Cluster Telemetry:</b> /sys_status\n"
+                        "• 💾 <b>Instant Vault Backup:</b> /backup_now\n"
+                        "• 🚀 <b>Build Releases:</b> /latest_build\n"
+                        "• 🌐 <b>Dashboard:</b> <a href='https://supremeai-lac.vercel.app'>supremeai-lac.vercel.app</a>\n\n"
+                        "<i>যেকোনো প্রশ্ন বা কমান্ড পাঠিয়ে এআই অ্যাসিস্ট্যান্স শুরু করুন।</i>"
+                    )
+                    await self.send_message(chat_id, welcome_text, reply_markup=self._admin_keyboard())
+                else:
+                    user_welcome = (
+                        "🤖 <b>Welcome to SupremeAI 2.0</b>\n\n"
+                        "আপনার স্ব-বিবর্তনশীল কৃত্রিম বুদ্ধিমত্তা সহকারী।\n\n"
+                        "✨ <b>আপনার জন্য সহজ সুবিধাগুলো:</b>\n"
+                        "• যেকোনো প্রশ্ন বা কোডিং সহায়তা সরাসরি এই চ্যাটে বাংলায় বা ইংরেজিতে লিখুন।\n"
+                        "• ব্রাউজার থেকে আমাদের Web Dashboard ব্যবহার করুন।\n"
+                        "• Desktop Installer (.exe), VS Code Extension (.vsix) ও Mobile (.apk) ডাউনলোড করুন।\n\n"
+                        "🚀 <i>শুরু করতে নিচে যেকোনো অপশন সিলেক্ট করুন বা সরাসরি বার্তা পাঠান!</i>"
+                    )
+                    await self.send_message(chat_id, user_welcome, reply_markup=self._user_keyboard())
                 return
+
             if command in ("/status", "/sys_status"):
-                await self._handle_status(chat_id)
+                if not self.is_admin(chat_id):
+                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+                else:
+                    await self._handle_status(chat_id)
                 return
+
             if command == "/backup_now":
-                await self._handle_backup_now(chat_id)
+                if not self.is_admin(chat_id):
+                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+                else:
+                    await self._handle_backup_now(chat_id)
                 return
+
             if command == "/latest_build":
                 await self._handle_latest_build(chat_id)
                 return
+
             reply = self.COMMANDS.get(command)
             if reply:
-                await self.send_message(chat_id, reply)
+                if command in ("/admin", "/rules") and not self.is_admin(chat_id):
+                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+                else:
+                    await self.send_message(chat_id, reply)
                 return
 
-        # AI fallback
+        # AI conversational reply for everyone (Admin & General Users)
         await self.send_typing(chat_id)
         ai_response = await self._ai_response(text, user_id)
         await self.send_message(chat_id, ai_response)
