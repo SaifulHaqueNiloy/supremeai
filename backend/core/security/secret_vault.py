@@ -243,6 +243,8 @@ class ProductionSecretVault:
                     "NEO4J_URI",
                     "NEO4J_USER",
                     "NEO4J_PASSWORD",
+                    "TELEGRAM_BOT_TOKEN",
+                    "ADMIN_TELEGRAM_CHAT_ID",
                 }
                 HARD_REQUIRED_SECRETS = {
                     "SUPABASE_DATABASE_URL_POOLER",
