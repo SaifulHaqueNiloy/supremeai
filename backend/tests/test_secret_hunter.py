@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
 from core.security.secret_hunter import (
     GitleaksRunner,
     SecretFinding,

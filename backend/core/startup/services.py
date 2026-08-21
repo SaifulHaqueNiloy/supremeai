@@ -1,14 +1,13 @@
 import asyncio
 
 from loguru import logger
+
 from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.config_cache import config_cache
 from core.maintenance_pipeline import maintenance_pipeline
-from core.messaging.event_bus import ErrorEvent, ErrorContext
-from core.messaging.event_bus import error_event_bus
-from core.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool
-from core.pgbouncer_pool import init_db_pool
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool, init_db_pool
 from core.reliability_controller import ReliabilityController
 from core.startup.api_key_tables import ensure_api_key_tables as _ensure_api_key_tables
 
@@ -18,6 +17,7 @@ async def initialize_independent_services(app):
         """Initialize OpenTelemetry tracing in a thread to avoid blocking."""
         try:
             from core.observability.telemetry import setup_tracing
+
             await asyncio.to_thread(setup_tracing)
             logger.info("✅ OpenTelemetry tracing provider successfully initialized.")
         except Exception as exc:
@@ -72,9 +72,11 @@ async def initialize_independent_services(app):
                     try:
                         pool = await _try_connect_and_check(_neon_url)
                         logger.warning("⚠️ Primary DB failed! Fallback to Secondary DB (Neon.tech) successful!")
-                        app.state.subsystem_status["db"] = "degraded" # Mark as degraded since we are on fallback
+                        app.state.subsystem_status["db"] = "degraded"  # Mark as degraded since we are on fallback
                     except Exception as secondary_exc:
-                        raise Exception(f"Both Primary and Secondary DBs failed. Primary: {primary_exc}, Secondary: {secondary_exc}")
+                        raise Exception(
+                            f"Both Primary and Secondary DBs failed. Primary: {primary_exc}, Secondary: {secondary_exc}"
+                        )
 
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()
@@ -185,4 +187,3 @@ async def initialize_independent_services(app):
             logger.error(f"Startup initialization failed for component {idx}: {result}")
     # Start SupremeAI Immune System zero-cost background probing
     maintenance_pipeline.start_monitoring()
-

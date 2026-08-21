@@ -1,4 +1,5 @@
 """Pytest configuration for the standalone scraper microservice."""
+
 import sys
 from pathlib import Path
 

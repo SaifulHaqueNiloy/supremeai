@@ -1,5 +1,7 @@
 import asyncio
+
 from loguru import logger
+
 from core import services
 from core.agent_supervisor import agent_supervisor
 
@@ -92,6 +94,7 @@ async def start_background_services(app):
             from core.evolution.daily_learner import DailyLearner
 
             _daily_learner = DailyLearner()
+
             async def _daily_learner_loop() -> None:
                 while True:
                     try:
@@ -101,6 +104,7 @@ async def start_background_services(app):
                     except Exception as _exc:
                         logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
                     await asyncio.sleep(86400)
+
             await agent_supervisor.start_agent(
                 "daily-learner",
                 lambda: _daily_learner_loop(),

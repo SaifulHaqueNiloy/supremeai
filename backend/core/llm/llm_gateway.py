@@ -29,8 +29,10 @@ from ..messaging.event_bus import (  # Fixed import path - using relative import
     error_event_bus,
 )
 from ..prompt_handler import (
-    compress_prompt_messages,
     normalize_prompt,  # Fixed import path - using relative import
+)
+from ..prompt_handler import (
+    compress_prompt_messages,
 )
 from ..resilience.circuit_breaker import (
     CircuitBreaker,  # Fixed import path - using relative import
@@ -159,6 +161,7 @@ class LLMGateway:
 
             # Setup Redis Cache for LiteLLM built-in cache/rate-limiting
             from ..config import settings
+
             if getattr(settings, "redis_url", None):
                 litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
         except ImportError:
@@ -215,6 +218,7 @@ class LLMGateway:
 
         # Integrate Langfuse Observability
         from ..config import settings
+
         if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(settings, "LANGFUSE_SECRET_KEY", None):
             callbacks_success.append("langfuse")
             callbacks_failure.append("langfuse")
@@ -351,7 +355,9 @@ class LLMGateway:
 
             # Fail-fast OmniRoute logic: If pause is too long, skip to next model
             if pause_seconds > 3:
-                logger.warning(f"[LLMGateway] Rate limit pause ({pause_seconds}s) is too long for {current_model}. Skipping to next model in combo.")
+                logger.warning(
+                    f"[LLMGateway] Rate limit pause ({pause_seconds}s) is too long for {current_model}. Skipping to next model in combo."
+                )
                 return False
 
             # Apply jittered backoff to avoid thundering herd
@@ -443,6 +449,7 @@ class LLMGateway:
         # ConfidenceGatedDispatcher (reusing AdvancedModelRouter) evaluates prompt confidence;
         # if >= threshold and pattern-matched, returns immediately with zero token cost.
         from core.llm.advanced_model_router import get_advanced_router
+
         decision = get_advanced_router().route_with_confidence(prompt_text, task_type)
         if decision.is_deterministic and decision.deterministic_result:
             logger.info(

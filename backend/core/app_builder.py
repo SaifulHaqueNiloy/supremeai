@@ -91,6 +91,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     """
 
     # বাংলা মন্তব্ব্য: লেজি ইম্পোর্ট — মিডলওয়্যার ক্লাস শুধু create_app() কল করলেই লোড হবে
+    from fastapi.middleware.cors import CORSMiddleware
+
     from api.middleware import (
         RequestIdMiddleware,
         ResponseStandardizationMiddleware,
@@ -106,7 +108,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     from core.security.autonoguard_middleware import AutonoGuardMiddleware
     from core.security.honeypot_middleware import HoneypotMiddleware
     from core.security.origin_validator import TrustedOriginMiddleware
-    from fastapi.middleware.cors import CORSMiddleware
     from middleware.chaos_injector import ChaosInjectorMiddleware
 
     @asynccontextmanager
@@ -171,7 +172,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 14. CORS: Re-added for unified app architecture.
     origins = list(set(settings.user_cors_origins + settings.admin_cors_origins))
     if not origins:
-        origins = ["*"] # Fallback if empty, though origin_validator will still guard
+        origins = ["*"]  # Fallback if empty, though origin_validator will still guard
 
     app.add_middleware(
         CORSMiddleware,
