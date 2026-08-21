@@ -494,17 +494,6 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for internet_monitor_router: {traceback.format_exc()}")
     internet_monitor_router = None
 
-try:
-    from .meta_engine import router as meta_engine_router
-
-    _safe_imports["meta_engine_router"] = meta_engine_router
-except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
-    import traceback
-
-    from loguru import logger
-
-    logger.warning(f"Router import failed for meta_engine_router: {traceback.format_exc()}")
-    meta_engine_router = None
-
 __all__ = list(_safe_imports.keys())
+
 
