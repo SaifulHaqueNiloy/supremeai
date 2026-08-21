@@ -15,7 +15,6 @@ import importlib.util
 import logging
 import math
 import os
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +107,7 @@ def embed_query(text: str) -> list[float] | None:
 
 
 class EmbeddingEngine:
-    """Singleton wrapper providing unified asynchronous embedding and vector search."""
+    """Singleton embedding engine for local-first zero-cost semantic search."""
 
     _instance: EmbeddingEngine | None = None
 
@@ -119,21 +118,31 @@ class EmbeddingEngine:
         return cls._instance
 
     async def embed(self, text: str) -> list[float]:
+        """Compute embedding vector asynchronously."""
         vec = embed_query(text)
-        return vec if vec is not None else hash_vectorize(text)
+        if vec is None:
+            vec = hash_vectorize(text)
+        return vec
 
-    async def vector_search(
-        self,
-        collection: str,
-        vector: list[float],
-        top_k: int = 5,
-    ) -> list[dict[str, Any]]:
-        """Perform similarity search over vector store or in-memory corpus."""
-        try:
-            from services.memory_service import CascadeMemoryService
-            mem = CascadeMemoryService()
-            hits = mem.query_context(prompt="", top_k=top_k)
-            return [{"id": h.get("id"), "text": h.get("summary", ""), "score": 0.9} for h in hits]
-        except Exception:
-            return []
+    def cosine(self, v1: list[float], v2: list[float]) -> float:
+        """Compute cosine similarity between two vectors."""
+        if not v1 or not v2 or len(v1) != len(v2):
+            return 0.0
+        dot = sum(a * b for a, b in zip(v1, v2))
+        norm1 = math.sqrt(sum(a * a for a in v1))
+        norm2 = math.sqrt(sum(b * b for b in v2))
+        if norm1 <= 0 or norm2 <= 0:
+            return 0.0
+        return dot / (norm1 * norm2)
+
+    async def vector_search(self, query: str, corpus: list[dict], top_k: int = 5) -> list[dict]:
+        """Search top-k matching documents using cosine similarity."""
+        q_vec = await self.embed(query)
+        scored = []
+        for doc in corpus:
+            doc_vec = doc.get("vector") or await self.embed(doc.get("text", ""))
+            score = self.cosine(q_vec, doc_vec)
+            scored.append((score, doc))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [dict(doc, score=score) for score, doc in scored[:top_k]]
 
