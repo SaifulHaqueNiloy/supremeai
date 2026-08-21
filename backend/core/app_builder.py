@@ -206,9 +206,23 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         redis_ok = True
         if redis_queue.configured:
             try:
+                # বাংলা: UpstashRedisQueue এর set/get সিঙ্ক্রোনাস (httpx ক্লায়েন্ট)।
+                # আগে সরাসরি কল করা হতো — event loop ব্লক হতো। এখন to_thread দিয়ে
+                # thread pool-এ অফলোড করা হলো। ৩ সেকেন্ড টাইমআউট সহ।
+                import asyncio as _asyncio
+
                 probe_key = "__health_check_probe__"
-                redis_queue.set(probe_key, "1", ex=30)
-                redis_queue.get(probe_key)
+                await _asyncio.wait_for(
+                    _asyncio.to_thread(redis_queue.set, probe_key, "1", 30),
+                    timeout=3.0,
+                )
+                await _asyncio.wait_for(
+                    _asyncio.to_thread(redis_queue.get, probe_key),
+                    timeout=3.0,
+                )
+            except TimeoutError:
+                logger.warning("Redis health check timed out (>3s)")
+                redis_ok = False
             except Exception as e:
                 logger.warning(f"Redis health check failed: {e}")
                 redis_ok = False

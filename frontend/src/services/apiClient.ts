@@ -15,8 +15,13 @@ export class ApiError extends Error {
   }
 }
 
-// Dynamic concurrency queue
-export const requestQueue = new PQueue({ concurrency: 3 }); // Default to 3, can be updated via config
+// Dynamic concurrency queue — env-configurable (VITE_API_CONCURRENCY) with safe default of 3.
+// বাংলা: কনকারেন্সি এখন env var দিয়ে কনফিগারযোগ্য — প্রোডাকশনে আরও বেশি রিকোয়েস্ট সমান্তরালে।
+const DEFAULT_CONCURRENCY = Number(import.meta.env.VITE_API_CONCURRENCY ?? 3);
+const _concurrency = Number.isFinite(DEFAULT_CONCURRENCY) && DEFAULT_CONCURRENCY > 0
+  ? DEFAULT_CONCURRENCY
+  : 3;
+export const requestQueue = new PQueue({ concurrency: _concurrency });
 
 export const setApiConcurrency = (concurrency: number) => {
   requestQueue.concurrency = concurrency;
@@ -26,6 +31,20 @@ let cachedToken: string | null = null;
 
 export const updateTokenCache = (token: string | null) => {
   cachedToken = token;
+};
+
+// বাংলা: লগআউট/সেশন মেয়াদোত্তীর্ণ হলে cachedToken ও localStorage উভয় জায়গা থেকে
+// টোকেন মুছে ফেলতে হবে। নাহলে পরবর্তী রিকোয়েস্টে পুরোনো টোকেন ব্যবহার হতো।
+export const clearAuthToken = (): void => {
+  cachedToken = null;
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.removeItem('supremeai_auth_token');
+      localStorage.removeItem('supreme_admin_jwt');
+    } catch {
+      // বাংলা: localStorage অনুপস্থিত (incognito / SSR) — নীরবে বাদ দেওয়া।
+    }
+  }
 };
 
 // বাংলা মন্তব্য: SSE (EventSource) হেডার পাঠাতে পারে না, তাই টোকেন query param হিসেবে পাঠাতে হয়।
@@ -127,6 +146,11 @@ const handleResponse = async (res: Response) => {
     }
     if (res.status === 401 || res.status === 403) {
       if (isDev()) console.warn("Authorization failure (401/403). Session invalidated.");
+      // বাংলা: 401/403 হলে টোকেন অবৈধ — পরবর্তী রিকোয়েস্টে পুরোনো টোকেন ব্যবহার রোধে ক্লিয়ার করি।
+      // শুধু 401 হলেই ক্লিয়ার করি — 403 মানে অথেনটিকেটেড কিন্তু অনুমতি নেই, টোকেন এখনও বৈধ।
+      if (res.status === 401) {
+        clearAuthToken();
+      }
       throw new ApiError(errMsg, res.status);
     }
     throw new ApiError(errMsg, res.status);
