@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Integer
+from sqlalchemy import JSON, DateTime, Enum, ForeignKey, Index, Integer
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -26,7 +26,12 @@ class ExecutionLog(Base):
     """
 
     __tablename__ = "execution_logs"
-    __table_args__ = ({"postgresql_partition_by": "RANGE (ts)"},)
+    __table_args__ = (
+        Index("idx_exec_session_ts", "session_id", "ts"),
+        Index("idx_exec_log_type_ts", "log_type", "ts"),
+        {"postgresql_partition_by": "RANGE (ts)"},
+    )
+
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # Partitions require the partition key to be part of the PK in some dialects, but let's stick to standard SQLAlchemy partitioned tables.

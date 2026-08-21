@@ -46,6 +46,18 @@ class FileWriteRequest(BaseModel):
     content: str = Field(..., description="Full file content to write")
 
 
+class FileWriteResponse(BaseModel):
+    path: str = Field(..., description="Relative file path within workspace")
+    bytes_written: int = Field(..., description="Number of bytes written")
+    status: str = Field("saved", description="Operation status")
+
+
+class FileReadResponse(BaseModel):
+    path: str = Field(..., description="Relative file path within workspace")
+    content: str = Field(..., description="Decoded UTF-8 content of the file")
+
+
+
 def _get_tenant_root(tenant_id: str) -> Path:
     """তেনান্টের জন্য isolated workspace root বানায় ও রিটার্ন করে।"""
     if not _TENANT_ID_PATTERN.match(tenant_id):
@@ -98,7 +110,7 @@ def _resolve_safe_path(root: Path, relative_path: str) -> Path:
     return resolved
 
 
-@router.put("/{file_path:path}")
+@router.put("/{file_path:path}", response_model=FileWriteResponse)
 async def write_file(file_path: str, payload: FileWriteRequest, token: dict = Depends(get_current_user_token)):
     """
     বাংলা মন্তব্য: IDE editor থেকে save — শুধুমাত্র caller-এর নিজের tenant-scoped
@@ -122,10 +134,10 @@ async def write_file(file_path: str, payload: FileWriteRequest, token: dict = De
         logger.error(f"Failed to write workspace file '{file_path}' for tenant '{tenant_id}': {e}")
         raise HTTPException(status_code=500, detail="Failed to write file") from e
 
-    return {"path": file_path, "bytes_written": len(content_bytes), "status": "saved"}
+    return FileWriteResponse(path=file_path, bytes_written=len(content_bytes), status="saved")
 
 
-@router.get("/{file_path:path}")
+@router.get("/{file_path:path}", response_model=FileReadResponse)
 async def read_file(file_path: str, token: dict = Depends(get_current_user_token)):
     """বাংলা মন্তব্য: write_file-এর সঙ্গী GET — একই safety boundary পুনর্ব্যবহার করে।"""
     tenant_id = token.get("sub") or token.get("tenant_id")
@@ -146,4 +158,5 @@ async def read_file(file_path: str, token: dict = Depends(get_current_user_token
         logger.error(f"Failed to read workspace file '{file_path}' for tenant '{tenant_id}': {e}")
         raise HTTPException(status_code=500, detail="Failed to read file") from e
 
-    return {"path": file_path, "content": content}
+    return FileReadResponse(path=file_path, content=content)
+
