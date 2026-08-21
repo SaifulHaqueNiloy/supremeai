@@ -246,3 +246,7 @@ class SettingsFieldsMixin:
     scraper_service_url: str = Field(default="", validation_alias="SCRAPER_SERVICE_URL")
     # Media microservic-এর URL (Cloud Run)
     media_service_url: str = Field(default="", validation_alias="MEDIA_SERVICE_URL")
+
+    # ── Telegram Bot & Alerts Config ──────────────────────────────────────────
+    telegram_bot_token: str = Field(default="", validation_alias="TELEGRAM_BOT_TOKEN")
+    admin_telegram_chat_id: str = Field(default="", validation_alias="ADMIN_TELEGRAM_CHAT_ID")
