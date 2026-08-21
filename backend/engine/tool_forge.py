@@ -23,10 +23,11 @@ class ToolForge:
         Synthesize and register a dynamic helper tool.
         """
         try:
-            # Validate safety (no destructive OS commands)
-            dangerous = ["os.system", "subprocess", "rm -rf", "shutil.rmtree"]
-            if any(d in code_snippet for d in dangerous):
-                logger.error(f"Tool Forge rejected unsafe code for tool '{tool_name}'")
+            from core.security.ast_sandbox_scanner import ASTSandboxScanner
+            scanner = ASTSandboxScanner()
+            scan_res = scanner.scan(code_snippet)
+            if not scan_res.is_safe:
+                logger.error(f"Tool Forge rejected unsafe code for tool '{tool_name}': {scan_res.violations}")
                 return False
 
             self._synthesized_tools[tool_name] = {
@@ -34,7 +35,7 @@ class ToolForge:
                 "description": task_description,
                 "code": code_snippet,
             }
-            logger.info(f"Tool Forge successfully synthesized dynamic tool: '{tool_name}'")
+            logger.info(f"Tool Forge successfully synthesized and verified dynamic tool: '{tool_name}'")
             return True
         except Exception as e:
             logger.error(f"Failed to synthesize tool '{tool_name}': {e}")
