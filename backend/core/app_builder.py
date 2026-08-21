@@ -115,8 +115,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         async with app_lifespan(app):
             yield
 
-    docs_url = "/docs" if settings.env == "local" or settings.debug else None
-    redoc_url = "/redoc" if settings.env == "local" or settings.debug else None
+    docs_url = "/docs" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
+    redoc_url = "/redoc" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
     openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
