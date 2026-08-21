@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from core.messaging.event_bus import ErrorContext
 
 """
 SupremeAI 2.0 — Telegram Bot Handler (Production-Ready)
@@ -404,52 +403,53 @@ class TelegramBotHandler:
     # ── Polling mode (dev/local) ─────────────────────────────────
 
     async def run_polling(self) -> None:
-        """Long-polling loop — use only in local/dev mode."""
+        """Long-polling loop — receives updates and callback queries in real time."""
         if not self.configured:
             logger.warning("Telegram bot not configured — skipping polling.")
             return
 
+        # Delete any conflicting webhook so getUpdates works cleanly
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                await client.post(f"{self.api_base}/deleteWebhook")
+                logger.info("Cleared Telegram Webhook for polling mode.")
+        except Exception as e:
+            logger.warning(f"deleteWebhook notice: {e}")
+
+        logger.info("🤖 SupremeAI Telegram long-polling loop active...")
+        offset = 0
+        while True:
+            try:
+                async with httpx.AsyncClient(timeout=35) as client:
+                    resp = await client.get(
+                        f"{self.api_base}/getUpdates",
+                        params={"offset": offset, "timeout": 25, "allowed_updates": ["message", "callback_query"]},
+                    )
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        updates = data.get("result", [])
+                        for update in updates:
+                            offset = update["update_id"] + 1
+                            asyncio.create_task(self.handle_update(update))
+            except Exception as exc:
+                logger.error(f"Telegram polling error: {exc}")
+                await asyncio.sleep(2)
+
     async def start_webhook(self, webhook_url: str):
-        """বাংলা মন্তব্য: while True: sleep() পোলিং লুপ বাদ দিয়ে Event-Driven Webhook মডেলে মাইগ্রেট করা হলো।"""
+        """Register Telegram Webhook to point to live backend endpoint."""
         if not self.bot_token:
             return
 
         url = f"https://api.telegram.org/bot{self.bot_token}/setWebhook"
         try:
-            import httpx
-
-            from core.messaging.event_bus import ErrorEvent, error_event_bus
-
-            # সংশোধন: Explicit timeout যোগ করা হয়েছে
-            async with httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=5.0)) as client:
-                resp = await client.post(url, json={"url": webhook_url})
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post(url, json={"url": webhook_url, "allowed_updates": ["message", "callback_query"]})
                 if resp.status_code == 200:
                     logger.info(f"Successfully registered Telegram Webhook to {webhook_url}")
                 else:
                     logger.error(f"Failed to register webhook: {resp.text}")
-                    error_event_bus.emit(
-                        ErrorEvent(
-                            module="telegram_bot",
-                            error_type="WEBHOOK_FAILED",
-                            message=resp.text[:200],
-                            severity="ERROR",
-                            structured_context=ErrorContext(module="auto_fixed"),
-                        )
-                    )
         except Exception as e:
             logger.error(f"Webhook setup exception: {e}")
-            from core.messaging.event_bus import ErrorEvent, error_event_bus
-
-            error_event_bus.emit(
-                ErrorEvent(
-                    module="telegram_bot",
-                    error_type="WEBHOOK_EXCEPTION",
-                    message=str(e)[:200],
-                    severity="ERROR",
-                    structured_context=ErrorContext(module="auto_fixed"),
-                )
-            )
-            raise RuntimeError("Failed to setup Telegram webhook.") from e
 
 
 # ── FastAPI webhook endpoint helper ──────────────────────────────
@@ -460,12 +460,6 @@ def create_telegram_router(handler: TelegramBotHandler):
     from fastapi import APIRouter, Request, Response
 
     router = APIRouter(prefix="/telegram", tags=["telegram"])
-
-    # বাংলা মন্তব্য (RUF006 fix): প্রতিটা webhook request-এ create_task() করা হয়,
-    # কিন্তু রিটার্ন ভ্যালু কোথাও রাখা না হলে event loop শুধু weak reference
-    # রাখে — GC যেকোনো সময় চলমান task mid-execution-এ collect করে ফেলতে পারে,
-    # ফলে user-এর message silently না-প্রসেস হয়ে যেতে পারত। module-level set-এ
-    # strong reference রাখা হলো, done হলে নিজে থেকেই set থেকে সরে যায়।
     _webhook_background_tasks: set[asyncio.Task] = set()
 
     @router.post("/webhook")
@@ -482,6 +476,10 @@ def create_telegram_router(handler: TelegramBotHandler):
         return {"configured": handler.configured, "bot": me}
 
     return router
+
+
+# Module-level router exported for FastAPI auto-discovery
+router = create_telegram_router(TelegramBotHandler())
 
 
 # ── Standalone entrypoint ─────────────────────────────────────────

@@ -105,11 +105,21 @@ def _is_public_path(path: str) -> bool:
 
     বাংলা: পাথটি পাবলিক কিনা চেক করে (কোনো অথের প্রয়োজন নেই)।
     """
-    if getattr(settings, "docs_auth_enabled", True) is False and path in (
+    # Allow Swagger docs & OpenAPI definitions unconditionally
+    if path in (
         "/docs",
         "/redoc",
         "/openapi.json",
         f"{settings.API_V1_STR}/openapi.json",
+    ):
+        return True
+
+    # Allow Telegram Bot Webhook & Health endpoints
+    if path in (
+        "/telegram/webhook",
+        "/telegram/health",
+        f"{settings.API_V1_STR}/telegram/webhook",
+        f"{settings.API_V1_STR}/telegram/health",
     ):
         return True
 
