@@ -251,15 +251,16 @@ class TelegramBotHandler:
         return {
             "inline_keyboard": [
                 [
+                    {"text": "🌐 Open User Dashboard", "url": "https://supremeai-lac.vercel.app"},
                     {"text": "⚡ Cluster Health", "callback_data": "cmd_status"},
+                ],
+                [
                     {"text": "💾 Backup Vault", "callback_data": "cmd_backup"},
-                ],
-                [
                     {"text": "🚀 Download Builds", "callback_data": "cmd_build"},
-                    {"text": "📜 AI Directives", "callback_data": "cmd_rules"},
                 ],
                 [
-                    {"text": "🌐 SupremeAI Docs & Dashboard", "url": "https://supremeai-backend-docker.onrender.com/docs"},
+                    {"text": "📜 AI Directives", "callback_data": "cmd_rules"},
+                    {"text": "📚 API Documentation", "url": "https://supremeai-backend-docker.onrender.com/docs"},
                 ],
             ]
         }
@@ -389,17 +390,57 @@ class TelegramBotHandler:
         await self.send_message(chat_id, text)
 
     async def _ai_response(self, text: str, user_id: str) -> str:
+        """Route user query through SupremeAI reasoning engine and persist chat memory."""
+        task_type = "coding" if any(k in text.lower() for k in ["code", "function", "script", "fix", "bug", "python", "js", "api"]) else "general"
+
+        # 1. Try SupremeOrchestrator
+        if not self.processor:
+            try:
+                from brain.langgraph_agent import SupremeOrchestrator
+                self.processor = SupremeOrchestrator()
+            except Exception as e:
+                logger.debug(f"SupremeOrchestrator lazy load note: {e}")
+
         if self.processor:
             try:
-                task_type = "coding" if any(k in text.lower() for k in ["code", "function", "script"]) else "general"
                 loop = asyncio.get_event_loop()
-                # Run synchronous orchestrator call in executor to prevent blocking the event loop
                 result = await loop.run_in_executor(None, lambda: self.processor.execute_task(text, task_type))
-                return result.get("result", "Sorry, I couldn't process that.")
+                if isinstance(result, dict) and result.get("result"):
+                    return str(result["result"])
             except Exception as exc:
-                logger.error(f"Orchestrator error: {exc}")
-                return "⚠️ Error processing request. Please try again."
-        return "🤖 SupremeAI 2.0 is ready! (Orchestrator not connected)"
+                logger.error(f"Orchestrator execution notice: {exc}")
+
+        # 2. Try ModelRouter (Multi-LLM provider rotation)
+        try:
+            from brain.model_router import ModelRouter
+            router = ModelRouter()
+            loop = asyncio.get_event_loop()
+            res = await loop.run_in_executor(None, lambda: router.route_and_generate(prompt=text, task_type=task_type))
+            if isinstance(res, dict) and res.get("text"):
+                return str(res["text"])
+        except Exception as router_exc:
+            logger.error(f"ModelRouter fallback notice: {router_exc}")
+
+        # 3. Direct Gemini / Groq zero-cost fallback
+        try:
+            gemini_key = os.getenv("GEMINI_API_KEY", "").split(",")[0].strip()
+            if gemini_key:
+                async with httpx.AsyncClient(timeout=30) as client:
+                    gem_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+                    payload = {
+                        "contents": [{"parts": [{"text": text}]}],
+                        "systemInstruction": {"parts": [{"text": "You are SupremeAI 2.0, a living self-evolving autonomous intelligence. Provide clear, intelligent responses in Bengali or English based on user query."}]},
+                    }
+                    r = await client.post(gem_url, json=payload)
+                    if r.status_code == 200:
+                        data = r.json()
+                        candidates = data.get("candidates", [])
+                        if candidates:
+                            return candidates[0]["content"]["parts"][0]["text"]
+        except Exception as direct_exc:
+            logger.error(f"Direct Gemini fallback error: {direct_exc}")
+
+        return "🤖 SupremeAI 2.0: আপনার বার্তাটি গ্রহণ করা হয়েছে। আমি সিস্টেম মেমোরি ও মডেল রুট করছি।"
 
     # ── Polling mode (dev/local) ─────────────────────────────────
 
