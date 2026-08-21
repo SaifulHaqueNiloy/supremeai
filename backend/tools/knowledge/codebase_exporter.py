@@ -156,9 +156,7 @@ def _get_git_changed_files(root_dir: str, since: str | None = None, until: str |
         cmd.append(f"--until={until}")
 
     try:
-        output = subprocess.check_output(cmd, cwd=root_dir, stderr=subprocess.DEVNULL).decode(
-            "utf-8", errors="ignore"
-        )
+        output = subprocess.check_output(cmd, cwd=root_dir, stderr=subprocess.DEVNULL).decode("utf-8", errors="ignore")
         files = {line.strip().replace("\\", "/") for line in output.split("\n") if line.strip()}
         return files
     except Exception as e:
@@ -178,9 +176,7 @@ def _get_git_diff_summary(root_dir: str, since: str | None = None, until: str | 
         cmd.append(f"--until={until}")
 
     try:
-        output = subprocess.check_output(cmd, cwd=root_dir, stderr=subprocess.DEVNULL).decode(
-            "utf-8", errors="ignore"
-        )
+        output = subprocess.check_output(cmd, cwd=root_dir, stderr=subprocess.DEVNULL).decode("utf-8", errors="ignore")
         if not output.strip():
             return "No changes recorded in this time range."
         commits = output.strip().split("\n")

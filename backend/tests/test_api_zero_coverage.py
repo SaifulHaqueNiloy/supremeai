@@ -92,6 +92,3 @@ class TestAPIRouteImports:
         from api.routes.simulator_admin import router
 
         assert router is not None
-
-
-

@@ -94,8 +94,7 @@ class CascadeMemoryService:
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                """
+            cursor.execute("""
                 CREATE TABLE IF NOT EXISTS file_memories (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     file_path TEXT UNIQUE,
@@ -104,8 +103,7 @@ class CascadeMemoryService:
                     structure TEXT,
                     embedding TEXT
                 )
-                """
-            )
+                """)
             conn.commit()
 
     def _embed(self, text: str) -> list[float]:
@@ -181,11 +179,11 @@ class CascadeMemoryService:
         file_path: str,  # Could map to session_id or task_id
         content: str,
         summary: str,
-        structure: str, # Could map to metadata
+        structure: str,  # Could map to metadata
         session_id: str = "",
         agent_type: str = "unknown",
         task_type: str = "general",
-        metadata: dict[str, Any] = None
+        metadata: dict[str, Any] = None,
     ) -> None:
         """Stores or updates a memory entry in the database.
 
@@ -238,9 +236,14 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 if session_id:
-                     rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s", (session_id,))
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        (session_id,),
+                    )
                 else:
-                     rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory")
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                    )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
                 rows = []
@@ -251,8 +254,8 @@ class CascadeMemoryService:
                         "agent_type": row["agent_type"],
                         "task_type": row["task_type"],
                         "summary": row["summary"],
-                        "embedding": row["embedding"], # This is a JSON string
-                        "metadata": row["metadata"], # This is a dict
+                        "embedding": row["embedding"],  # This is a JSON string
+                        "metadata": row["metadata"],  # This is a dict
                         "created_at": row["created_at"],
                     }
                 )
@@ -331,9 +334,14 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 if session_id:
-                    rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s", (session_id,))
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        (session_id,),
+                    )
                 else:
-                    rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory")
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                    )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
                 rows = []
@@ -347,14 +355,16 @@ class CascadeMemoryService:
                             "agent_type": row["agent_type"],
                             "task_type": row["task_type"],
                             "summary": row["summary"],
-                            "embedding": row["embedding"], # JSON string
-                            "metadata": row["metadata"], # Dict
+                            "embedding": row["embedding"],  # JSON string
+                            "metadata": row["metadata"],  # Dict
                             "created_at": row["created_at"],
                             "score": score,
                         }
                     )
                 except Exception as e:
-                    logger.warning(f"Error calculating similarity for {row.get('session_id', row.get('file_path', 'unknown'))}: {e}")
+                    logger.warning(
+                        f"Error calculating similarity for {row.get('session_id', row.get('file_path', 'unknown'))}: {e}"
+                    )
             results.sort(key=lambda x: x["score"], reverse=True)
             return results[:top_k]
 

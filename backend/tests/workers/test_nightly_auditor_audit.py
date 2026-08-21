@@ -39,9 +39,11 @@ async def test_audit_passes_when_safe():
     payloads = [("print('hello')", {"risk": "low"}), ("x = 1", {})]
     async_client = _make_async_client(status_code=200)
 
-    with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
-        "workers.chaos_worker.run_sandbox_ast_check", return_value=False
-    ), patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client):
+    with (
+        patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads),
+        patch("workers.chaos_worker.run_sandbox_ast_check", return_value=False),
+        patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client),
+    ):
         result = await auditor.execute_audit_sequence()
 
     assert result is True
@@ -54,9 +56,11 @@ async def test_audit_locks_on_sandbox_breach():
     payloads = [("import os; os.system('rm -rf /')", {"risk": "high"})]
     async_client = _make_async_client(status_code=200)
 
-    with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
-        "workers.chaos_worker.run_sandbox_ast_check", return_value=True
-    ), patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client):
+    with (
+        patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads),
+        patch("workers.chaos_worker.run_sandbox_ast_check", return_value=True),
+        patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client),
+    ):
         result = await auditor.execute_audit_sequence()
 
     assert result is False
@@ -68,9 +72,11 @@ async def test_audit_locks_on_runtime_server_error():
     payloads = [("print('ok')", {})]
     async_client = _make_async_client(status_code=503)  # SERVER_ERROR_THRESHOLD (500) এর ওপরে
 
-    with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(
-        "workers.chaos_worker.run_sandbox_ast_check", return_value=False
-    ), patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client):
+    with (
+        patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads),
+        patch("workers.chaos_worker.run_sandbox_ast_check", return_value=False),
+        patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client),
+    ):
         result = await auditor.execute_audit_sequence()
 
     assert result is False
@@ -82,9 +88,11 @@ async def test_audit_locks_when_fuzz_unavailable():
     async_client = _make_async_client(status_code=200)
 
     # বাংলা: fuzz_sandbox আনঅভেইলেবল হলে ImportError → LOCKED (False)
-    with patch("workers.chaos_worker.generate_fuzz_payloads", None), patch(
-        "workers.chaos_worker.run_sandbox_ast_check", None
-    ), patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client):
+    with (
+        patch("workers.chaos_worker.generate_fuzz_payloads", None),
+        patch("workers.chaos_worker.run_sandbox_ast_check", None),
+        patch("workers.chaos_worker.httpx.AsyncClient", return_value=async_client),
+    ):
         result = await auditor.execute_audit_sequence()
 
     assert result is False

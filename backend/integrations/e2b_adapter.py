@@ -59,7 +59,12 @@ class E2BAdapter:
             try:
                 sbx = self._sandbox.create()  # type: ignore[union-attr]
                 result = sbx.commands.run(command)
-                return {"status": "ok", "engine": "upstream", "stdout": str(result.stdout), "stderr": str(result.stderr)}
+                return {
+                    "status": "ok",
+                    "engine": "upstream",
+                    "stdout": str(result.stdout),
+                    "stderr": str(result.stderr),
+                }
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning(f"E2BAdapter: upstream run failed: {exc}")
                 return {"status": "error", "engine": "upstream", "error": str(exc)}
@@ -88,7 +93,12 @@ class E2BAdapter:
                 "elapsed_s": round(time.time() - started, 3),
             }
         except subprocess.TimeoutExpired as exc:
-            return {"status": "error", "engine": "fallback", "error": f"timeout after {self.timeout}s", "stdout": str(exc.stdout or "")[-_MAX_OUTPUT_BYTES:]}
+            return {
+                "status": "error",
+                "engine": "fallback",
+                "error": f"timeout after {self.timeout}s",
+                "stdout": str(exc.stdout or "")[-_MAX_OUTPUT_BYTES:],
+            }
         except Exception as exc:  # pragma: no cover - defensive
             return {"status": "error", "engine": "fallback", "error": str(exc)}
 

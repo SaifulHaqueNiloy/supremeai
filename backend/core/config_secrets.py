@@ -406,12 +406,7 @@ class SettingsSecretsMixin:
             # এখন শুধু scheme (https://) validate করা হয় — operator-configured যেকোনো domain গ্রহণযোগ্য।
             validated_origins = []
             for origin in origins:
-                if (
-                    origin.startswith("https://")
-                    or "localhost" in origin
-                    or "127.0.0.1" in origin
-                    or is_test_or_ci
-                ):
+                if origin.startswith("https://") or "localhost" in origin or "127.0.0.1" in origin or is_test_or_ci:
                     validated_origins.append(origin)
                 else:
                     logger.warning(f"Rejecting non-HTTPS CORS origin in production: {origin}")
@@ -424,8 +419,7 @@ class SettingsSecretsMixin:
                         else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
                     )
                 raise RuntimeError(
-                    "No valid CORS origins provided. "
-                    "Ensure CORS_ORIGINS env var contains https:// origins."
+                    "No valid CORS origins provided. " "Ensure CORS_ORIGINS env var contains https:// origins."
                 )
 
             return validated_origins
@@ -441,6 +435,7 @@ class SettingsSecretsMixin:
         # Fallback: Generate a valid Fernet key from any available LLM API key
         import base64
         import hashlib
+
         fallback_material = (
             self._get_cached_secret("GEMINI_API_KEY")
             or self._get_cached_secret("OPENROUTER_API_KEY")

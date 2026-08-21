@@ -9,7 +9,6 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 from loguru import logger
-
 from security import is_safe_url
 
 

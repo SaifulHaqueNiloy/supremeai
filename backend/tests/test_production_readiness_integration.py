@@ -107,7 +107,9 @@ class TestProductionReadinessSystems:
         """Autocache Proxy সিমান্টিক ম্যাচিং করে"""
         try:
             from core.cache.autocache_proxy import AutocacheProxy
-            from core.cache.semantic_cache import SemanticCache  # noqa: F401 -- শুধু importability probe
+            from core.cache.semantic_cache import (  # noqa: F401 -- শুধু importability probe
+                SemanticCache,
+            )
         except ImportError:
             pytest.skip("autocache modules not available")
 

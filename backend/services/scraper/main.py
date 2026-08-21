@@ -15,10 +15,9 @@ from __future__ import annotations
 
 import os
 
+from browser_agent import BrowserAgent, BrowseRequest
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
-from browser_agent import BrowserAgent, BrowseRequest
 from security import is_safe_url
 from web_scraper import WebScraper
 
@@ -44,6 +43,7 @@ class ScrapeRequest(BaseModel):
 async def health_check():
     try:
         import playwright.async_api as _pw
+
         playwright_ok = callable(getattr(_pw, "async_playwright", None))
     except ImportError:
         playwright_ok = False
