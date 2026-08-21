@@ -6,7 +6,6 @@ advanced spine (model_router, adaptive_engine, semantic_cache, ErrorPatternDB, e
 """
 
 import pytest
-import pytest_asyncio
 
 
 @pytest.mark.asyncio
