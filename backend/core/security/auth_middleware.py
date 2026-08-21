@@ -71,7 +71,10 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
     বাংলা: JWT টোকেন ডিকোড এবং ভ্যালিডেট করে।
 
     Returns:
-        Decoded payload dict, or None if invalid/expired.
+        Decoded payload dict, or None if invalid/expired/revoked.
+
+    Note: এই ফাংশন sync — jti revocation চেক করে না। সেটি AuthMiddleware.__call__
+    এ async ভাবে করা হয় (নিচে দেখুন)।
     """
     if not settings.jwt_secret:
         logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
@@ -84,6 +87,10 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
             algorithms=["HS256"],
             options={"verify_exp": True},
         )
+        # বাংলা: access type চেক — refresh টোকেন অ্যাক্সেস হিসেবে ব্যবহার রোধ।
+        if payload.get("type") == "refresh":
+            logger.warning("Refresh token used as access token — rejected")
+            return None
         return payload
     except ExpiredSignatureError:
         logger.warning("JWT token has expired")

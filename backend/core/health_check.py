@@ -144,22 +144,50 @@ class ComprehensiveHealthChecker:
             )
 
     async def check_database(self) -> HealthCheckResult:
-        """Check database connectivity (placeholder - implement based on your DB setup)."""
+        """বাংলা: আসল ডেটাবেস পিং — `SELECT 1` দিয়ে।
+
+        আগে এই মেথডটি placeholder হিসেবে সবসময় "healthy" রিটার্ন করত — যা monitoring-এর
+        জন্য বিপজ্জনক false positive। এখন আসলে SQLAlchemy engine দিয়ে `SELECT 1`
+        চালায়। Engine না থাকলে বা কুয়েরি ফেইল করলে UNHEALTHY রিপোর্ট করে।
+        """
         try:
             start_time = time.time()
-            # Placeholder - replace with actual database connectivity check
-            # For now, just simulate a healthy check
-            response_time = (time.time() - start_time) * 1000
+            from sqlalchemy import text
 
+            from database.session import _engine_instance, init_engine
+
+            # বাংলা: engine lazy-init হয় — নিশ্চিত করি এটা আছে।
+            if _engine_instance is None:
+                init_engine()
+            engine = _engine_instance
+            if engine is None:
+                return HealthCheckResult(
+                    status=HealthStatus.UNHEALTHY,
+                    message="Database engine not initialized",
+                    details={"connected": False, "error": "engine is None"},
+                )
+
+            # বাংলা: ৩ সেকেন্ডের টাইমআউট সহ SELECT 1 — দীর্ঘস্থায়ী স্টল রোধে।
+            async with engine.connect() as conn:
+                await asyncio.wait_for(conn.execute(text("SELECT 1")), timeout=3.0)
+
+            response_time = (time.time() - start_time) * 1000
             return HealthCheckResult(
                 status=HealthStatus.HEALTHY,
                 message="Database connectivity OK",
                 response_time_ms=response_time,
                 details={
                     "connected": True,
-                    "type": "supabase/postgres",  # Replace with actual DB type
+                    "type": "supabase/postgres",
                     "response_time_ms": response_time,
                 },
+            )
+        except TimeoutError:
+            logger.error("Database health check timed out after 3s")
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message="Database health check timed out (>3s)",
+                details={"error": "timeout", "connected": False},
             )
         except Exception as e:
             logger.error(f"Database health check failed: {e}")

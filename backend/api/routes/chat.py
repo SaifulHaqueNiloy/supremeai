@@ -68,12 +68,17 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
 # ⚡ ২. Fully Async Streaming Generator
 @router.post("/stream_chat")
 async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
-    """High-Concurrency Async SSE Streamer"""
+    """High-Concurrency Async SSE Streamer.
+
+    বাংলা: SSE-এর জন্য ক্রিটিক্যাল হেডার যোগ করা হলো (Cache-Control: no-cache,
+    X-Accel-Buffering: no) যাতে nginx/CDN/proxy স্ট্রিম বাফার না করে। ক্লায়েন্ট
+    ডিসকানেক্ট হলে generator বন্ধ হবে।
+    """
     logger.info(f"🌊 SSE Stream Initiated for tenant: {db.tenant_id}")
 
     async def async_generator():
         try:
-            # বাংলা মন্তব্য: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
+            # বাংলা: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
             response_stream = await llm_gateway.acompletion(prompt=payload.prompt, task_type="chat", stream=True)
 
             async for chunk in response_stream:
@@ -86,5 +91,14 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             logger.error(f"Stream broken: {e!s}")
             yield f"data: [ERROR] {e!s}\n\n"
 
-    # ইভেন্ট লুপ ব্লক না করে স্ট্রিমিং রেসপন্স থ্রো করা
-    return StreamingResponse(async_generator(), media_type="text/event-stream")
+    # বাংলা: SSE হেডার — proxy/CDN বাফারিং রোধে ক্রিটিক্যাল।
+    return StreamingResponse(
+        async_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # nginx বাফারিং রোধে
+            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প্রয়োজন
+        },
+    )
