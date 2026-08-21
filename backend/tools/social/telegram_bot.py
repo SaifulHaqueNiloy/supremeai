@@ -198,15 +198,16 @@ class TelegramBotHandler:
         if not self.configured:
             return False
         default_desc = (
-            "🔱 SupremeAI 2.0 — Self-Evolving Autonomous Superintelligence & Zero-Cost Cloud Vault.\n\n"
-            "⚡ Features:\n"
-            "• Real-time AI Assistant & Metaprogramming\n"
-            "• Instant Encrypted Database & Memory Backups (/backup_now)\n"
-            "• Cloud Cluster Telemetry & Health Checks (/sys_status)\n"
-            "• Build Artifacts & Software Releases (/latest_build)\n\n"
-            "Developed by Saiful Haq Niloy | Powered by SupremeAI"
+            "🔱 SupremeAI 2.0 — Living Self-Evolving Superintelligence\n\n"
+            "Built with 100% Zero-Cost Infrastructure & Continuous Learning Matrix.\n\n"
+            "⚡ Core Capabilities:\n"
+            "• Autonomous AI Pair Programmer & Metaprogramming\n"
+            "• TelDrive Encrypted DB & Memory Vault (/backup_now)\n"
+            "• Real-time Cluster Telemetry & Health (/sys_status)\n"
+            "• Instant Desktop (.exe) & VSIX Build Delivery (/latest_build)\n\n"
+            "Created by Saiful Haq Niloy | Powered by SupremeAI"
         )
-        default_short = "SupremeAI 2.0 — Autonomous Superintelligence, TelDrive Vault & Cluster Controller."
+        default_short = "🔱 SupremeAI 2.0: Self-evolving autonomous intelligence, $0-cost cloud vault & AI developer powerhouse."
 
         commands = [
             {"command": "start", "description": "Initialize SupremeAI assistant"},
