@@ -1024,3 +1024,79 @@ def update_config(payload: dict):
     config.update(payload)
     _save_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), config)
     return {"status": "success", "message": "Configuration updated"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# বাংলা মন্তব্য: Command Center — Agents / Swarm / Deploy Gate endpoints
+# ফ্রন্টএন্ড (commandcenter/data/hooks.ts) এই পাথগুলো কল করে কিন্তু ব্যাকএন্ডে
+# route ছিল না → 404। Admin tab গুলো render না করে error দেখাত। এখানে যোগ করা হলো।
+# ═══════════════════════════════════════════════════════════════════════════
+
+@router.get("/agents")
+async def list_command_agents(admin: dict = Depends(get_current_admin)):
+    """List runtime agents for the Command Center Agents/Tasks tabs.
+
+    বাংলা: বর্তমানে autonomous agent runtime থেকে লাইভ ডেটা না থাকায় খালি লিস্ট
+    রিটার্ন করে (frontend graceful-ভাবে 'no agents' দেখায়)। এটি 404 error-এর বদলে
+    সঠিক 200 রেস্পন্স দেয়।"""
+    return []
+
+
+@router.get("/swarm")
+async def get_command_swarm(admin: dict = Depends(get_current_admin)):
+    """Swarm topology for the Command Center Swarm tab."""
+    return {"nodes": [], "edges": []}
+
+
+@router.get("/deploy-gate")
+async def get_deploy_gate(admin: dict = Depends(get_current_admin)):
+    """Read the current deployment gate status from Firestore."""
+    try:
+        db = firestore.Client()
+        doc_ref = db.collection("deploy_gate").document("status")
+        doc = doc_ref.get()
+        if doc.exists:
+            data = doc.to_dict()
+            return {
+                "status": data.get("status", "UNLOCKED"),
+                "reason": data.get("reason"),
+                "updated_by": data.get("updated_by"),
+                "updated_at": str(data.get("updated_at")) if data.get("updated_at") else None,
+            }
+        return {"status": "UNLOCKED", "reason": "No override set"}
+    except Exception as e:
+        logger.warning(f"deploy-gate read failed (returning default): {e}")
+        return {"status": "UNLOCKED", "reason": "Unable to read gate status"}
+
+
+class DeployGateToggle(BaseModel):
+    status: str
+    reason: str
+
+
+@router.post("/deploy-gate")
+async def toggle_deploy_gate(payload: DeployGateToggle, admin: dict = Depends(get_current_admin)):
+    """Toggle the deployment gate (LOCKED/UNLOCKED) and persist to Firestore."""
+    requested_status = (payload.status or "").upper()
+    if requested_status not in ["UNLOCKED", "LOCKED"]:
+        raise HTTPException(status_code=400, detail="status must be 'UNLOCKED' or 'LOCKED'")
+
+    try:
+        db = firestore.Client()
+        doc_ref = db.collection("deploy_gate").document("status")
+        now = utc_now()
+        doc_ref.set({
+            "status": requested_status,
+            "reason": payload.reason,
+            "updated_by": admin.get("uid") or admin.get("sub") or "admin",
+            "updated_at": now,
+        })
+        return {
+            "status": requested_status,
+            "reason": payload.reason,
+            "updated_at": now.isoformat() if hasattr(now, "isoformat") else str(now),
+            "message": f"Deploy gate set to {requested_status}",
+        }
+    except Exception as e:
+        logger.error(f"deploy-gate update failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to update deploy gate: {e!s}") from e

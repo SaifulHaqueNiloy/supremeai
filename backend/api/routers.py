@@ -62,6 +62,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.integrations", "/api/v1"),
     ("api.routes.public_config", "/api"),
     ("api.routes.traffic_monitor", ""),
+    ("api.routes.admin_v1", ""),
     ("api.routes.agent_action", "/api/v1"),
     ("api.routes.websocket_hitl", ""),
     ("api.routes.syncguard", "/api/v1"),
