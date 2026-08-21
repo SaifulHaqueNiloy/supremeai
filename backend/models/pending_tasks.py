@@ -39,7 +39,7 @@ DB_PATH = Path(__file__).resolve().parent.parent / "data" / "pending_tasks.db"
 
 
 def _get_conn():
-    # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ইনিশিয়ালাইজেশন
+    # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ও ইনডেক্স ইনিশিয়ালাইজেশন
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
@@ -55,7 +55,11 @@ def _get_conn():
             reason TEXT
         )
         """)
+    conn.execute("""
+        CREATE INDEX IF NOT EXISTS idx_pending_status_time ON pending_tasks(status, created_at)
+        """)
     return conn
+
 
 
 def create_pending_task(task_type: TaskType, payload: dict, created_by: str = "system") -> PendingTask:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
 from core.llm.llm_gateway import llm_gateway
@@ -9,28 +9,38 @@ router = APIRouter(prefix="/workspace/task", tags=["Supreme Workspace Tasks"])
 
 
 # ==========================================
-# ⚙️ PYDANTIC MODELS (Payload Validation)
+# ⚙️ PYDANTIC MODELS (Payload & Response Validation)
 # ==========================================
 class ChatMessage(BaseModel):
-    role: str
-    content: str
+    role: str = Field(..., description="Role of the speaker (user/assistant)")
+    content: str = Field(..., min_length=1, max_length=20000, description="Message content")
 
 
 class TaskPayload(BaseModel):
-    task: str
-    task_type: str = "general"
-    messages: list[ChatMessage] = []
+    task: str = Field(..., min_length=1, max_length=10000, description="Task prompt description")
+    task_type: str = Field("general", description="Category or type of task")
+    messages: list[ChatMessage] = Field(default_factory=list, description="Recent conversation history")
+
+
+class TaskExecuteResponse(BaseModel):
+    result: str = Field(..., description="Generated execution output or answer")
+    status: str = Field("success", description="Status of the task execution")
+
+
+class TaskQuotaResponse(BaseModel):
+    remaining: int = Field(..., description="Remaining token quota for tenant")
 
 
 # ==========================================
 # 🚀 ROUTE: /task/execute
 # ==========================================
-@router.post("/execute")
+@router.post("/execute", response_model=TaskExecuteResponse)
 async def execute_task(
     payload: TaskPayload,
     background_tasks: BackgroundTasks,
     token_payload: dict = Depends(get_current_user_token),
 ):
+
     """
     Handles user prompts from the Vanilla JS Customer Dashboard.
     Integrates Redis rate limiting, RAM conversation history, and Supabase persistent storage.
@@ -79,8 +89,9 @@ async def execute_task(
 # ==========================================
 # 📊 ROUTE: /task/quota
 # ==========================================
-@router.get("/quota")
+@router.get("/quota", response_model=TaskQuotaResponse)
 async def get_quota(token_payload: dict = Depends(get_current_user_token)):
+
     """
     Fetch the current token quota from Redis for the UI.
     """
