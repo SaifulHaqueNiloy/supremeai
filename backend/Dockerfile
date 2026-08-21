@@ -30,8 +30,15 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy application code
 COPY . .
 
+# Create and use non-root user for security compliance
+RUN addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \
+    && chown -R supremeai:supremeai /app
+
+USER supremeai
+
 # Expose port
 EXPOSE 8080
 
 # Start command
 CMD uvicorn core.app:app --host 0.0.0.0 --port ${PORT}
+
