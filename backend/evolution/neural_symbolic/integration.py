@@ -604,37 +604,38 @@ class MathematicalReasoningEngine:
 # Example usage and testing
 def demo_neural_symbolic_integration():
     """Demonstrate neural-symbolic integration capabilities."""
-    print("Initializing Neural-Symbolic Integration System...")
+    logger.info("Initializing Neural-Symbolic Integration System...")
 
     config = NeuralSymbolicConfig()
     integrator = NeuralSymbolicIntegrator(config)
 
-    print("\nTesting symbolic reasoning...")
+    logger.info("Testing symbolic reasoning...")
 
     # Test mathematical reasoning
     math_expr = "x**2 + 2*x + 1"
     variables = {"x": 3.0}
 
     results = integrator.neural_symbolic_reasoning(math_expr, variables)
-    print(f"Mathematical reasoning results: {results}")
+    logger.info(f"Mathematical reasoning results: {results}")
 
     # Test equation solving
-    print("\nTesting equation solving...")
+    logger.info("Testing equation solving...")
     engine = MathematicalReasoningEngine(config)
 
     equation_result = engine.solve_equation("x**2 - 5*x + 6 = 0", "x")
-    print(f"Equation solving result: {equation_result}")
+    logger.info(f"Equation solving result: {equation_result}")
 
     # Test calculus
-    print("\nTesting calculus operations...")
+    logger.info("Testing calculus operations...")
     calc_result = engine.perform_calculus_operation("x**3 + 2*x**2 + x", "differentiate", "x")
-    print(f"Differentiation result: {calc_result}")
+    logger.info(f"Differentiation result: {calc_result}")
 
     # Test logical reasoning
-    print("\nTesting logical reasoning...")
+    logger.info("Testing logical reasoning...")
     logic_result = integrator.solve_mathematical_problem("x**2 > 4", constraints=["x > 0"])
-    print(f"Logical reasoning result: {logic_result}")
+    logger.info(f"Logical reasoning result: {logic_result}")
 
 
 if __name__ == "__main__":
     demo_neural_symbolic_integration()
+
