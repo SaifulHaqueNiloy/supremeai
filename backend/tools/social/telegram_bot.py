@@ -68,7 +68,13 @@ class TelegramBotHandler:
 
     # ── Telegram API helpers ──────────────────────────────────────
 
-    async def send_message(self, chat_id: int | str, text: str, parse_mode: str | None = "HTML") -> bool:
+    async def send_message(
+        self,
+        chat_id: int | str,
+        text: str,
+        parse_mode: str | None = "HTML",
+        reply_markup: dict[str, Any] | None = None,
+    ) -> bool:
         if not self.configured:
             return False
         try:
@@ -76,6 +82,9 @@ class TelegramBotHandler:
                 body: dict[str, Any] = {"chat_id": str(chat_id), "text": text}
                 if parse_mode:
                     body["parse_mode"] = parse_mode
+                if reply_markup:
+                    body["reply_markup"] = reply_markup
+
                 resp = await client.post(f"{self.api_base}/sendMessage", json=body)
                 if resp.is_error and parse_mode:
                     # Fallback without parse_mode if formatting caused a 400
@@ -85,6 +94,20 @@ class TelegramBotHandler:
                 return True
         except Exception as exc:
             logger.error(f"Telegram sendMessage failed: {exc}")
+            return False
+
+    async def answer_callback_query(self, callback_query_id: str, text: str | None = None) -> bool:
+        if not self.configured:
+            return False
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                payload: dict[str, Any] = {"callback_query_id": callback_query_id}
+                if text:
+                    payload["text"] = text
+                resp = await client.post(f"{self.api_base}/answerCallbackQuery", json=payload)
+                return bool(resp.status_code == 200)
+        except Exception as e:
+            logger.error(f"answerCallbackQuery error: {e}")
             return False
 
     async def send_document(
@@ -223,8 +246,48 @@ class TelegramBotHandler:
             with contextlib.suppress(Exception):
                 loop.close()
 
+    @staticmethod
+    def _quick_actions_keyboard() -> dict[str, Any]:
+        return {
+            "inline_keyboard": [
+                [
+                    {"text": "⚡ Cluster Health", "callback_data": "cmd_status"},
+                    {"text": "💾 Backup Vault", "callback_data": "cmd_backup"},
+                ],
+                [
+                    {"text": "🚀 Download Builds", "callback_data": "cmd_build"},
+                    {"text": "📜 AI Directives", "callback_data": "cmd_rules"},
+                ],
+                [
+                    {"text": "🌐 SupremeAI Docs & Dashboard", "url": "https://supremeai-backend-docker.onrender.com/docs"},
+                ],
+            ]
+        }
+
     async def handle_update(self, update: dict[str, Any]) -> None:
         """Process a Telegram update payload (from webhook or polling)."""
+        # 1. Handle Inline Callback Queries
+        callback_query = update.get("callback_query")
+        if callback_query:
+            callback_id = callback_query["id"]
+            data = callback_query.get("data", "")
+            chat_id = callback_query.get("message", {}).get("chat", {}).get("id")
+            await self.answer_callback_query(callback_id)
+
+            if chat_id and data:
+                if data == "cmd_status":
+                    await self._handle_status(chat_id)
+                elif data == "cmd_backup":
+                    await self._handle_backup_now(chat_id)
+                elif data == "cmd_build":
+                    await self._handle_latest_build(chat_id)
+                elif data == "cmd_rules":
+                    await self.send_message(chat_id, self.COMMANDS["/rules"])
+                elif data == "cmd_help":
+                    await self.send_message(chat_id, self.COMMANDS["/help"], reply_markup=self._quick_actions_keyboard())
+            return
+
+        # 2. Handle Direct Messages
         message = update.get("message")
         if not message:
             return
@@ -239,6 +302,10 @@ class TelegramBotHandler:
         # Command handling
         command = text.split(maxsplit=1)[0].lower() if text.startswith("/") else None
         if command:
+            if command in ("/start", "/help"):
+                welcome_text = self.COMMANDS.get(command, self.COMMANDS["/start"])
+                await self.send_message(chat_id, welcome_text, reply_markup=self._quick_actions_keyboard())
+                return
             if command in ("/status", "/sys_status"):
                 await self._handle_status(chat_id)
                 return
