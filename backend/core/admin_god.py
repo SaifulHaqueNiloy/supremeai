@@ -36,11 +36,15 @@ import secrets as _secrets
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
+from loguru import logger
+
 
 try:
     import bcrypt
-except Exception:  # pragma: no cover - optional fallback
+except Exception as e:  # pragma: no cover - optional fallback
+    logger.warning(f"bcrypt module unavailable: {e}")
     bcrypt = None
+
 
 from .security.rbac import PermissionDeniedError, RoleBasedAccessControl, UserContext
 from .universal_rules import UniversalRulesEngine

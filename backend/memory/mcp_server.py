@@ -70,43 +70,44 @@ try:
 except ImportError:
     _MCP_AVAILABLE = False
 
-# বাংলা মন্তব্য: মেমোরি লেয়ার সমূহ import করা হচ্ছে — ব্যর্থ হলে graceful degradation
+logger = logging.getLogger("supremeai.memory.mcp")
+
+# বাংলা মন্তব্য: মেমোরি লেয়ার সমূহ import করা হচ্ছে — ব্যর্থ হলে graceful degradation ও স্পষ্ট লগিং
 try:
     from memory.chromadb_store import ChromaDBStore
-
     _CHROMA_OK = True
-except Exception:
+except Exception as e:
+    logger.debug(f"ChromaDB store not available: {e}")
     _CHROMA_OK = False
 
 try:
     from memory.episodic_memory import EpisodicMemory
-
     _EPISODIC_OK = True
-except Exception:
+except Exception as e:
+    logger.debug(f"EpisodicMemory store not available: {e}")
     _EPISODIC_OK = False
 
 try:
     from memory.sliding_window import SlidingWindowConfig, SlidingWindowMemory
-
     _SLIDING_OK = True
-except Exception:
+except Exception as e:
+    logger.debug(f"SlidingWindowMemory not available: {e}")
     _SLIDING_OK = False
 
 try:
     from memory.supabase_store import SupabaseStore
-
     _SUPABASE_OK = True
-except Exception:
+except Exception as e:
+    logger.debug(f"SupabaseStore not available: {e}")
     _SUPABASE_OK = False
 
 try:
     from memory.rag_pipeline import RAGPipeline
-
     _RAG_OK = True
-except Exception:
+except Exception as e:
+    logger.debug(f"RAGPipeline not available: {e}")
     _RAG_OK = False
 
-logger = logging.getLogger("supremeai.memory.mcp")
 
 # =============================================================================
 # Knowledge Graph Storage (Official MCP-compatible)
