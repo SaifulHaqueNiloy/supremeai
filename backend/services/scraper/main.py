@@ -97,5 +97,5 @@ _APP_IMPORT_STRING = "main:app"
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("PORT", "8081"))
+    port = int(os.getenv("PORT", "8080"))
     uvicorn.run(_APP_IMPORT_STRING, host="0.0.0.0", port=port)

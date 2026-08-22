@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-22 16:08 UTC
+- **Date:** 2026-08-22 16:27 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,39 +10,41 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/components/admin/index.ts`
-  - `frontend/src/components/admin/auth/UserManager.tsx`
-  - `frontend/src/components/admin/infra/DeploymentModal.tsx`
-  - `frontend/src/components/admin/infra/ObservabilityDashboard.tsx`
-  - `frontend/src/components/admin/shared/ActionCard.tsx`
-  - `frontend/src/components/customer/BrowserPreview.tsx`
-  - `frontend/src/components/admin/shared/DynamicPanel.tsx`
-  - `frontend/src/components/admin/ci/Badge.tsx`
-  - `frontend/src/components/admin/shared/AdminSubTabContent.tsx`
-  - `frontend/src/components/admin/CICDVisualizer.tsx`
-  - `frontend/src/components/admin/infra/CloudOrchestrator.tsx`
-  - `frontend/src/components/admin/security/RulesEnginePanel.tsx`
-  - `frontend/src/components/admin/infra/ServiceHealthMonitor.tsx`
-  - `frontend/src/components/admin/security/ThreatDetection.tsx`
-  - `frontend/src/components/admin/ci/EmptyState.tsx`
-  - `frontend/src/components/admin/Dashboard.tsx`
-  - `frontend/src/components/admin/security/SecurityDashboard.tsx`
+  - `frontend/src/components/admin/infra/ServiceHealthMetrics.tsx`
+  - `frontend/src/components/admin/ci/JobRow.tsx`
+  - `frontend/src/components/admin/data/CrownJewelBrowser.tsx`
   - `frontend/src/components/admin/AdminConsole.tsx`
   - `frontend/src/components/admin/ci/AnimatedStatus.tsx`
-  - `CHECKPOINT.md`
-  - `frontend/src/components/admin/ci/InsightCard.tsx`
-  - `frontend/src/components/admin/infra/ServiceHealthMetrics.tsx`
-  - `frontend/src/components/admin/ci/CIDashboard.tsx`
   - `frontend/src/components/admin/ci/ScoreCircle.tsx`
-  - `frontend/src/components/admin/data/CrownJewelBrowser.tsx`
-  - `frontend/src/components/admin/ci/JobRow.tsx`
-  - `frontend/src/components/admin/auth/AdminAuthenticated.tsx`
-  - `frontend/src/components/admin/security/RateLimitManager.tsx`
-  - `frontend/src/components/admin/CommandCenter.tsx`
+  - `frontend/src/components/admin/infra/ServiceHealthMonitor.tsx`
   - `frontend/src/components/admin/ci/ProgressBar.tsx`
-  - `frontend/src/components/admin/ScreencastViewer.tsx`
+  - `CHECKPOINT.md`
+  - `frontend/src/components/admin/security/ThreatDetection.tsx`
+  - `frontend/src/components/admin/shared/AdminSubTabContent.tsx`
+  - `frontend/src/components/admin/auth/UserManager.tsx`
+  - `.github/workflows/supreme-core-ci.yml`
+  - `frontend/src/components/admin/security/RulesEnginePanel.tsx`
+  - `frontend/src/components/admin/security/RateLimitManager.tsx`
+  - `frontend/src/components/admin/ci/InsightCard.tsx`
   - `frontend/src/components/admin/infra/ServiceTopologyGraph.tsx`
+  - `frontend/src/components/admin/CommandCenter.tsx`
+  - `frontend/src/components/admin/ci/EmptyState.tsx`
+  - `frontend/src/components/admin/index.ts`
+  - `frontend/src/components/admin/CICDVisualizer.tsx`
+  - `frontend/src/components/admin/infra/ObservabilityDashboard.tsx`
   - `frontend/src/components/admin/auth/AdminLogin.tsx`
+  - `backend/services/scraper/main.py`
+  - `frontend/src/components/admin/infra/CloudOrchestrator.tsx`
+  - `frontend/src/components/admin/Dashboard.tsx`
+  - `frontend/src/components/admin/shared/DynamicPanel.tsx`
+  - `frontend/src/components/admin/ci/Badge.tsx`
+  - `frontend/src/components/admin/ScreencastViewer.tsx`
+  - `frontend/src/components/admin/security/SecurityDashboard.tsx`
+  - `frontend/src/components/admin/ci/CIDashboard.tsx`
+  - `frontend/src/components/customer/BrowserPreview.tsx`
+  - `frontend/src/components/admin/auth/AdminAuthenticated.tsx`
+  - `frontend/src/components/admin/shared/ActionCard.tsx`
+  - `frontend/src/components/admin/infra/DeploymentModal.tsx`
 
 ## Pending (Carry Forward)
 - **MED:** Supabase `ai_memory` টেবিলে ভেক্টর স্কিমা ভ্যালিডেশন এবং `memory_write.py` লাইভ ভেক্টর ইনসার্ট টেস্ট।
