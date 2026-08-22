@@ -91,6 +91,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
 # পিন করে `poetry lock` রিজেনারেট করা।
 pydantic-ai = "^2.31.0"
 langfuse = "^4.14.4"
+packaging = "^26.3"
 [tool.poetry.group.ml]
 optional = true
 
