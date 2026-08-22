@@ -5,8 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 // বাংলা মন্তব্য: Portal-ভিত্তিক local dev proxy target — admin dev server কখনোই user backend-এ
 // (এবং উল্টোটাও) route করবে না, যাতে dev/prod আচরণ একই থাকে (সম্পূর্ণ আইসোলেশন)।
 const IS_ADMIN_PORTAL = process.env.VITE_PORTAL_TYPE === 'admin'
-const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || 'https://supremeai-backend-docker.onrender.com'
-const USER_BACKEND = process.env.VITE_USER_BACKEND || process.env.VITE_API_URL || 'https://supremeai-backend.onrender.com'
+
+// Fixed: Use environment variables with fallbacks - supports multiple deployment targets
+const RENDER_BACKEND_URL = process.env.RENDER_BACKEND_URL || 'https://supremeai-backend-docker.onrender.com'
+const FALLBACK_USER_BACKEND = process.env.FALLBACK_USER_BACKEND || 'https://supremeai-backend.onrender.com'
+
+const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || RENDER_BACKEND_URL
+const USER_BACKEND = process.env.VITE_USER_BACKEND || process.env.VITE_API_URL || RENDER_BACKEND_URL || FALLBACK_USER_BACKEND
 const PORTAL_BACKEND = IS_ADMIN_PORTAL ? ADMIN_BACKEND : USER_BACKEND
 
 const devProxy = {
@@ -41,10 +46,13 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', '@tanstack/react-query']
   },
   server: {
-    headers: {
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    },
+      // Fixed: Changed COOP/COEP headers to allow cross-origin resource sharing
+      // Previous values (require-corp/same-origin) were blocking CDN resources and iframes
+      'Cross-Origin-Embedder-Policy': 'cross-origin',
+      'Cross-Origin-Opener-Policy': 'unsafe-none',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     // বাংলা মন্তব্য: প্রোডাকশন-গ্রেড ক্লাউড ব্যাকএন্ড টার্গেট সিঙ্ক (Render Admin/User Service)
     proxy: devProxy
   },

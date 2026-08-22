@@ -20,12 +20,36 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/admin-api/**", "destination": "https://supremeai-backend-docker.onrender.com/admin-api/**" },
-        { "source": "/api/v1/**", "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**" },
-        { "source": "/api/config/public", "destination": "https://supremeai-backend-docker.onrender.com/api/config/public" },
-        { "source": "/api/task/stream", "destination": "https://supremeai-backend-docker.onrender.com/api/task/stream" },
-        { "source": "/api/preferences/**", "destination": "https://supremeai-backend-docker.onrender.com/api/preferences/**" },
-        { "source": "/api/**", "destination": "https://supremeai-backend-docker.onrender.com/api/**" },
+        { 
+          "source": "/admin-api/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/admin-api/**",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/v1/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/config/public", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/config/public",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/task/stream", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/task/stream",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/preferences/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/preferences/**",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/**",
+          "region": "us-central1"
+        },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
@@ -34,11 +58,11 @@
           "headers": [
             {
               "key": "Cross-Origin-Embedder-Policy",
-              "value": "require-corp"
+              "value": "cross-origin"
             },
             {
               "key": "Cross-Origin-Opener-Policy",
-              "value": "same-origin"
+              "value": "unsafe-none"
             }
           ]
         },
@@ -78,8 +102,16 @@
         "package-lock.json"
       ],
       "rewrites": [
-        { "source": "/api/v1/**", "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**" },
-        { "source": "/api/**", "destination": "https://supremeai-backend-docker.onrender.com/api/**" },
+        { 
+          "source": "/api/v1/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**",
+          "region": "us-central1"
+        },
+        { 
+          "source": "/api/**", 
+          "destination": "https://supremeai-backend-docker.onrender.com/api/**",
+          "region": "us-central1"
+        },
         { "source": "**", "destination": "/index.html" }
       ],
       "headers": [
@@ -88,11 +120,11 @@
           "headers": [
             {
               "key": "Cross-Origin-Embedder-Policy",
-              "value": "require-corp"
+              "value": "cross-origin"
             },
             {
               "key": "Cross-Origin-Opener-Policy",
-              "value": "same-origin"
+              "value": "unsafe-none"
             }
           ]
         },

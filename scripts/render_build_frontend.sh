@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
-# Smart Build Script for SupremeAI Frontend (Self-Healing)
+# Smart Build Script for SupremeAI Frontend (Self-Healing) v2.0
+# Fixed: Added proper error handling, admin build support, and environment detection
+
+set -e  # Exit on any error
 
 echo "==========================================="
 echo "🚀 Starting Smart Build for Frontend..."
 echo "==========================================="
 
+# Detect build mode from environment
+BUILD_MODE="${VITE_PORTAL_TYPE:-user}"
+echo "📋 Build Mode: $BUILD_MODE"
+
 echo "📦 Installing pnpm..."
 npm install -g pnpm@9
 
 echo "📦 Attempting to install monorepo dependencies..."
-# Disable exit-on-error temporarily to catch failures
-set +e
-
 pnpm install --no-frozen-lockfile
 EXIT_CODE=$?
-
-# Re-enable exit-on-error
-set -e
 
 if [ $EXIT_CODE -ne 0 ]; then
     echo "⚠️ Dependency installation failed with exit code $EXIT_CODE!"
@@ -31,11 +32,26 @@ if [ $EXIT_CODE -ne 0 ]; then
     
     echo "🔄 Retrying clean installation..."
     pnpm install --no-frozen-lockfile
+    
+    if [ $? -ne 0 ]; then
+        echo "❌ Failed to install dependencies after retry. Exiting."
+        exit 1
+    fi
 else
     echo "✅ Frontend dependencies installed successfully."
 fi
 
-echo "🏗️ Building frontend..."
-cd frontend && pnpm run build:user
+echo "🏗️ Building frontend ($BUILD_MODE mode)..."
+cd frontend
 
-echo "🎉 Frontend build finished successfully!"
+# Build based on portal type
+if [ "$BUILD_MODE" = "admin" ]; then
+    echo "🔧 Building Admin Portal..."
+    pnpm run build:admin
+else
+    echo "🎨 Building User Portal..."
+    pnpm run build:user
+fi
+
+echo "✅ Frontend build finished successfully!"
+echo "📁 Output directory: $(ls -la dist-*/ 2>/dev/null || ls -la dist/ 2>/dev/null || echo 'dist-user')"

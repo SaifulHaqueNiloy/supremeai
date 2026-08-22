@@ -102,6 +102,29 @@ service cloud.firestore {
       allow write: if isAISystem();
     }
 
+    // ─── Users & Tasks ───────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow write: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated();
+    }
+
+    match /users/{userId}/tasks/{taskId} {
+      allow read, write: if isOwner(userId);
+      allow create: if isOwner(userId);
+    }
+
+    // ─── Public Config ───────────────────────────────────────────
+    match /config/public {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ─── Admin Only ──────────────────────────────────────────────
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     // ─── Default: Deny everything else ───────────────────────────
     // Firebase default is deny, but this is explicit for clarity
     match /{document=**} {
