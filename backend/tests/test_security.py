@@ -30,7 +30,6 @@ async def test_jwt_secret_persistence():
         settings.env = original_env
 
 
-
 @pytest.mark.asyncio
 async def test_cors_origin_validation():
     """Test CORS origin validation in production/staging.
@@ -48,10 +47,7 @@ async def test_cors_origin_validation():
             _ = settings.cors_origins
 
         # বাংলা মন্তব্য: যেকোনো https:// origin এখন গ্রহণযোগ্য (onrender.com, vercel.app, web.app)
-        os.environ["CORS_ORIGINS"] = (
-            "https://supremeai-studio-client.onrender.com,"
-            "https://supremeai-lac.vercel.app"
-        )
+        os.environ["CORS_ORIGINS"] = "https://supremeai-studio-client.onrender.com," "https://supremeai-lac.vercel.app"
         origins = settings.cors_origins
         assert "https://supremeai-studio-client.onrender.com" in origins
         assert "https://supremeai-lac.vercel.app" in origins
@@ -59,7 +55,6 @@ async def test_cors_origin_validation():
         settings.env = original_env
         os.environ.pop("CORS_ORIGINS", None)
         os.environ.pop("STRICT_CORS_TEST", None)
-
 
 
 @pytest.mark.asyncio

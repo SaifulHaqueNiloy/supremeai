@@ -155,6 +155,7 @@ class ComprehensiveHealthChecker:
         try:
             start_time = time.time()
             from sqlalchemy import text
+
             import database.session as session_module
 
             session_module.init_engine()
@@ -196,7 +197,9 @@ class ComprehensiveHealthChecker:
                 supa_key = getattr(settings, "supabase_key", "")
                 if supa_url and supa_key:
                     async with httpx.AsyncClient(timeout=4) as client:
-                        r = await client.get(f"{supa_url}/rest/v1/", headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"})
+                        r = await client.get(
+                            f"{supa_url}/rest/v1/", headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"}
+                        )
                         if r.status_code in (200, 404):
                             return HealthCheckResult(
                                 status=HealthStatus.HEALTHY,
@@ -366,6 +369,7 @@ class ComprehensiveHealthChecker:
         """ADVANCED: Predict failures before they occur by correlating with historical ErrorPatternDB."""
         try:
             from core.errors.error_pattern_db import ErrorPatternDB
+
             db = ErrorPatternDB()
             # Analyze if any critical hallucination or error pattern is recurring
             strategy = db.get_prevention_strategy(model=service, task_type=service)
@@ -454,4 +458,3 @@ class ComprehensiveHealthChecker:
 
 # Global instance
 health_checker = ComprehensiveHealthChecker()
-

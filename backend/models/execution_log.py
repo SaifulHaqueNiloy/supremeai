@@ -32,7 +32,6 @@ class ExecutionLog(Base):
         {"postgresql_partition_by": "RANGE (ts)"},
     )
 
-
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # Partitions require the partition key to be part of the PK in some dialects, but let's stick to standard SQLAlchemy partitioned tables.
     session_id: Mapped[uuid.UUID] = mapped_column(

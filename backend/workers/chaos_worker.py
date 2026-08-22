@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import dataclass, field
-from datetime import datetime, UTC
 import os
 import time
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -114,7 +114,9 @@ class NightlyChaosAuditor:
                 # করা fail-open আচরণ। এর বদলে fail-closed: audit-কে failure হিসেবে গণ্য করা।
                 tests_run += 1
                 failures.append("fuzz_sandbox tooling unavailable — sandbox integrity check could not run")
-                logger.error("🚨 [FAIL-CLOSED] fuzz_sandbox unavailable — treating chaos audit as failed, not skipping.")
+                logger.error(
+                    "🚨 [FAIL-CLOSED] fuzz_sandbox unavailable — treating chaos audit as failed, not skipping."
+                )
 
             # 🧪 টেস্ট ২: রানটাইম স্ট্রেস চেক
             async with httpx.AsyncClient(timeout=5.0) as client:
@@ -140,7 +142,11 @@ class NightlyChaosAuditor:
                 if self.gate_ref:
                     await asyncio.to_thread(
                         self.gate_ref.set,
-                        {"status": "UNLOCKED", "reason": "All self-testing gates green.", "updated_at": datetime.now(UTC)},
+                        {
+                            "status": "UNLOCKED",
+                            "reason": "All self-testing gates green.",
+                            "updated_at": datetime.now(UTC),
+                        },
                     )
                 return True
             else:
@@ -150,14 +156,20 @@ class NightlyChaosAuditor:
                 if self.gate_ref:
                     await asyncio.to_thread(
                         self.gate_ref.set,
-                        {"status": "LOCKED", "reason": f"Audit failed: {len(failures)} anomalies.", "updated_at": datetime.now(UTC)},
+                        {
+                            "status": "LOCKED",
+                            "reason": f"Audit failed: {len(failures)} anomalies.",
+                            "updated_at": datetime.now(UTC),
+                        },
                     )
                 return False
 
         except Exception as global_err:
             self.circuit_breaker.record_failure()
             self.stats["failed"] += 1
-            logger.critical(f"⚠️ Auditor crashed internally: {global_err!s}. Circuit state: {self.circuit_breaker.state}")
+            logger.critical(
+                f"⚠️ Auditor crashed internally: {global_err!s}. Circuit state: {self.circuit_breaker.state}"
+            )
             if self.gate_ref:
                 await asyncio.to_thread(
                     self.gate_ref.set,

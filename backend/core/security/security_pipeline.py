@@ -9,7 +9,9 @@ conditional loading based on application configuration.
 from __future__ import annotations
 
 import time
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
+
 from fastapi import FastAPI, Request, Response
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -64,6 +66,7 @@ class SecurityPipelineManager:
         if enable_origin_validation:
             try:
                 from core.security.origin_validator import OriginValidatorMiddleware
+
                 app.add_middleware(OriginValidatorMiddleware)
                 logger.info("Security Pipeline: OriginValidatorMiddleware enabled.")
             except ImportError as exc:
@@ -72,6 +75,7 @@ class SecurityPipelineManager:
         if enable_rate_limiter:
             try:
                 from core.security.api_key_limiter import APIKeyLimiter
+
                 app.add_middleware(APIKeyLimiter)
                 logger.info("Security Pipeline: APIKeyLimiter enabled.")
             except ImportError as exc:

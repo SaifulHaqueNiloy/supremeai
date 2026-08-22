@@ -439,6 +439,7 @@ class LearningLoop:
         if self.experience_db:
             try:
                 from adaptive_engine.experience_db import Experience
+
                 exp = Experience(
                     user_id=user_id,
                     action_taken=signal_type,
@@ -456,17 +457,21 @@ class LearningLoop:
         suggestions: list[dict[str, Any]] = []
         insights = self.get_insights(unresolved_only=True)
         for insight in insights[:3]:
-            suggestions.append({
-                "type": insight.category,
-                "suggestion": insight.suggested_action or insight.description,
-                "confidence": insight.confidence,
-            })
+            suggestions.append(
+                {
+                    "type": insight.category,
+                    "suggestion": insight.suggested_action or insight.description,
+                    "confidence": insight.confidence,
+                }
+            )
         if not suggestions:
-            suggestions.append({
-                "type": "general",
-                "suggestion": "System operating optimally with zero detected drift.",
-                "confidence": 1.0,
-            })
+            suggestions.append(
+                {
+                    "type": "general",
+                    "suggestion": "System operating optimally with zero detected drift.",
+                    "confidence": 1.0,
+                }
+            )
         return suggestions
 
     async def personalize_flow(
@@ -517,9 +522,10 @@ class LearningLoop:
         if persona == "developer":
             base_steps.insert(2, {"id": "cli_setup", "title": "Install Antigravity CLI", "required": False})
         elif persona == "business":
-            base_steps.insert(2, {"id": "billing_overview", "title": "Review Cost Guard ($0 Zero-Cost)", "required": False})
+            base_steps.insert(
+                2, {"id": "billing_overview", "title": "Review Cost Guard ($0 Zero-Cost)", "required": False}
+            )
         return base_steps
-
 
 
 # Convenience factory for lifespan.py integration

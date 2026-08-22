@@ -1,11 +1,13 @@
 # backend/tests/evolution/test_fitness_and_benchmark.py
 """Tests for FitnessEvaluator, BenchmarkRunner, and ArtifactIntegrityGate."""
 
-import pytest
-from evolution.artifact_integrity import ArtifactIntegrityGate, canonical_artifact_hash
-from evolution.benchmark_runner import BenchmarkRunner, PromotionDecision, get_benchmark_runner
+
+from evolution.artifact_integrity import ArtifactIntegrityGate
+from evolution.benchmark_runner import (
+    get_benchmark_runner,
+)
 from evolution.change_proposal import ChangeProposalManager, ChangeType, ProposalState
-from evolution.fitness_evaluator import FitnessEvaluator, get_fitness_evaluator
+from evolution.fitness_evaluator import get_fitness_evaluator
 
 
 def test_fitness_evaluator_multi_factor():
@@ -99,7 +101,10 @@ def test_artifact_integrity_gate():
     )
 
     # 1. Blocked when not promoted
-    assert ArtifactIntegrityGate.verify_and_authorize(proposal.proposal_id, code, schema, proposal_manager=proposal_mgr) is False
+    assert (
+        ArtifactIntegrityGate.verify_and_authorize(proposal.proposal_id, code, schema, proposal_manager=proposal_mgr)
+        is False
+    )
 
     # 2. Advance to PROMOTED
     proposal.advance_state(ProposalState.VALIDATED)
@@ -109,8 +114,16 @@ def test_artifact_integrity_gate():
     proposal.advance_state(ProposalState.PROMOTED)
 
     # 3. Authorized with exact match
-    assert ArtifactIntegrityGate.verify_and_authorize(proposal.proposal_id, code, schema, proposal_manager=proposal_mgr) is True
+    assert (
+        ArtifactIntegrityGate.verify_and_authorize(proposal.proposal_id, code, schema, proposal_manager=proposal_mgr)
+        is True
+    )
 
     # 4. Tampered code blocked
     tampered_code = "def add(a, b): return a - b"
-    assert ArtifactIntegrityGate.verify_and_authorize(proposal.proposal_id, tampered_code, schema, proposal_manager=proposal_mgr) is False
+    assert (
+        ArtifactIntegrityGate.verify_and_authorize(
+            proposal.proposal_id, tampered_code, schema, proposal_manager=proposal_mgr
+        )
+        is False
+    )

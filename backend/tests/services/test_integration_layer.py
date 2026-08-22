@@ -47,7 +47,9 @@ async def test_supremeai_integrator_process_business():
 @pytest.mark.asyncio
 async def test_supremeai_integrator_process_ux():
     integrator = await get_integrator()
-    result = await integrator.process("Create accessible modern high-converting checkout user flow with WCAG compliance")
+    result = await integrator.process(
+        "Create accessible modern high-converting checkout user flow with WCAG compliance"
+    )
     assert result.success is True
     assert result.confidence > 0.5
 

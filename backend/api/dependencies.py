@@ -10,9 +10,9 @@ Provides:
 
 from __future__ import annotations
 
+import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
 from loguru import logger
 
 from core.config import settings
@@ -36,12 +36,14 @@ def get_fitness_engine() -> FitnessEngine:
 async def get_rate_limiter():
     """FastAPI dependency that returns the singleton rate limiter."""
     from core.provider_rate_limiter import get_provider_rate_limiter
+
     return get_provider_rate_limiter()
 
 
 async def get_ai_integrator():
     """FastAPI dependency for the production-wired AI integrator."""
     from core.factory import get_factory
+
     factory = get_factory()
     if getattr(factory, "_integrator", None) is None:
         await factory.create_production_instance()

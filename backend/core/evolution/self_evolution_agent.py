@@ -258,13 +258,9 @@ class SelfEvolutionAgent:
         logger.info(f"Triggering Sandbox/CI dry run for {proposal_id} ({skill_name})...")
         try:
             from tools.code.local_code_executor import LocalCodeExecutor
+
             sandbox = LocalCodeExecutor()
-            test_harness = (
-                f"{code}\n\n"
-                f"import sys\n"
-                f"if {skill_name!r} not in globals():\n"
-                f"    sys.exit(1)\n"
-            )
+            test_harness = f"{code}\n\n" f"import sys\n" f"if {skill_name!r} not in globals():\n" f"    sys.exit(1)\n"
             res = await sandbox.execute_local_code(test_harness, timeout=10)
             if not res.get("success"):
                 logger.error(f"Sandbox dry-run failed for {proposal_id}: {res.get('error', res.get('stderr'))}")

@@ -57,7 +57,6 @@ class FileReadResponse(BaseModel):
     content: str = Field(..., description="Decoded UTF-8 content of the file")
 
 
-
 def _get_tenant_root(tenant_id: str) -> Path:
     """তেনান্টের জন্য isolated workspace root বানায় ও রিটার্ন করে।"""
     if not _TENANT_ID_PATTERN.match(tenant_id):
@@ -159,4 +158,3 @@ async def read_file(file_path: str, token: dict = Depends(get_current_user_token
         raise HTTPException(status_code=500, detail="Failed to read file") from e
 
     return FileReadResponse(path=file_path, content=content)
-

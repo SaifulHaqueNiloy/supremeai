@@ -17,6 +17,7 @@ from typing import Any
 @dataclass
 class CompressionResult:
     """Result of a TokenJuice compression pass."""
+
     original_text: str
     compressed_text: str
     original_chars: int
@@ -34,7 +35,9 @@ class TokenJuice:
     ANSI_ESCAPE_RE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
     # Progress bars / spinners regex
-    PROGRESS_BAR_RE = re.compile(r"(\r?\[[=\-#\s>]+\]|\r?\d+%\s*\|\s*[█▉▊▋▌▍▎▏\s]+\||\r?\s*\d+/\d+\s*\[[0-9:\.\s<]+,\s*[0-9\.\w/]+\])")
+    PROGRESS_BAR_RE = re.compile(
+        r"(\r?\[[=\-#\s>]+\]|\r?\d+%\s*\|\s*[█▉▊▋▌▍▎▏\s]+\||\r?\s*\d+/\d+\s*\[[0-9:\.\s<]+,\s*[0-9\.\w/]+\])"
+    )
 
     def __init__(self, char_per_token_estimate: float = 3.8):
         self.char_per_token_estimate = char_per_token_estimate
@@ -92,9 +95,13 @@ class TokenJuice:
     def detect_content_type(self, text: str) -> str:
         """Detect whether text is HTML, JSON, Git Diff, Terminal Log, or plain text."""
         stripped = text.strip()
-        if (stripped.startswith("<") and ("</html>" in text.lower() or "</div>" in text.lower() or "<body" in text.lower())):
+        if stripped.startswith("<") and (
+            "</html>" in text.lower() or "</div>" in text.lower() or "<body" in text.lower()
+        ):
             return "html"
-        if (stripped.startswith("{") and stripped.endswith("}")) or (stripped.startswith("[") and stripped.endswith("]")):
+        if (stripped.startswith("{") and stripped.endswith("}")) or (
+            stripped.startswith("[") and stripped.endswith("]")
+        ):
             try:
                 json.loads(stripped)
                 return "json"
@@ -102,7 +109,13 @@ class TokenJuice:
                 pass
         if stripped.startswith("diff --git") or "--- a/" in stripped or "+++ b/" in stripped:
             return "git_diff"
-        if "\x1b[" in text or "Traceback (most recent call last):" in text or "npm ERR!" in text or "ERROR:" in text or "[INFO]" in text:
+        if (
+            "\x1b[" in text
+            or "Traceback (most recent call last):" in text
+            or "npm ERR!" in text
+            or "ERROR:" in text
+            or "[INFO]" in text
+        ):
             return "terminal"
         return "generic"
 
@@ -112,11 +125,13 @@ class TokenJuice:
         cleaned = re.sub(r"<!--[\s\S]*?-->", "", html)
 
         # 2. Strip noise tags: script, style, svg, noscript, link, meta, path
-        cleaned = re.sub(r"<(script|style|noscript|svg|meta|link)[^>]*>[\s\S]*?<\/\1>", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(
+            r"<(script|style|noscript|svg|meta|link)[^>]*>[\s\S]*?<\/\1>", "", cleaned, flags=re.IGNORECASE
+        )
         cleaned = re.sub(r"<(svg|path|circle|rect|polygon)[^>]*\/>", "", cleaned, flags=re.IGNORECASE)
 
         # 3. Strip data URIs and inline base64 images
-        cleaned = re.sub(r'data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+', '[img-data-omitted]', cleaned)
+        cleaned = re.sub(r"data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+", "[img-data-omitted]", cleaned)
 
         # 4. Remove heavy presentation attributes (e.g., style="...", onclick="...", etc.) but keep id, role, aria, testid, href, class
         def clean_attributes(match: re.Match) -> str:
@@ -132,13 +147,38 @@ class TokenJuice:
                 val = attr_match.group(3) if attr_match.group(3) is not None else ""
 
                 # Relevant agent attributes
-                if name in ("id", "name", "role", "type", "href", "src", "placeholder", "title", "value") or name.startswith("aria-") or name.startswith("data-test"):
+                if (
+                    name in ("id", "name", "role", "type", "href", "src", "placeholder", "title", "value")
+                    or name.startswith("aria-")
+                    or name.startswith("data-test")
+                ):
                     val_clean = val[:100]  # truncate overly long attribute strings
                     kept_attrs.append(f'{name}="{val_clean}"')
                 elif name == "class":
                     # Keep important class keywords (btn, nav, modal, error, input, form, card)
                     classes = val.split()
-                    important = [c for c in classes if any(k in c.lower() for k in ["btn", "nav", "modal", "error", "alert", "form", "input", "item", "header", "footer", "card", "active", "hidden"])]
+                    important = [
+                        c
+                        for c in classes
+                        if any(
+                            k in c.lower()
+                            for k in [
+                                "btn",
+                                "nav",
+                                "modal",
+                                "error",
+                                "alert",
+                                "form",
+                                "input",
+                                "item",
+                                "header",
+                                "footer",
+                                "card",
+                                "active",
+                                "hidden",
+                            ]
+                        )
+                    ]
                     if important:
                         kept_attrs.append(f'class="{" ".join(important[:4])}"')
 
@@ -146,15 +186,15 @@ class TokenJuice:
                 return f"<{tag_name} {' '.join(kept_attrs)}>"
             return f"<{tag_name}>"
 
-        cleaned = re.sub(r'<([a-zA-Z0-9]+)\s+([^>]+)>', clean_attributes, cleaned)
+        cleaned = re.sub(r"<([a-zA-Z0-9]+)\s+([^>]+)>", clean_attributes, cleaned)
 
         # 5. Remove empty container tags repeatedly
         for _ in range(2):
-            cleaned = re.sub(r'<(div|span|section|p|li)\s*><\/\1>', '', cleaned)
+            cleaned = re.sub(r"<(div|span|section|p|li)\s*><\/\1>", "", cleaned)
 
         # 6. Normalize whitespace
-        cleaned = re.sub(r'[ \t]+', ' ', cleaned)
-        cleaned = re.sub(r'\n\s*\n+', '\n', cleaned)
+        cleaned = re.sub(r"[ \t]+", " ", cleaned)
+        cleaned = re.sub(r"\n\s*\n+", "\n", cleaned)
 
         return cleaned.strip()
 
@@ -224,7 +264,10 @@ class TokenJuice:
                 last_line = trimmed
 
                 # Check for critical keywords
-                is_critical = any(k in trimmed.lower() for k in ["error", "fail", "exception", "traceback", "warning", "fatal", "passed", "done", "status"])
+                is_critical = any(
+                    k in trimmed.lower()
+                    for k in ["error", "fail", "exception", "traceback", "warning", "fatal", "passed", "done", "status"]
+                )
                 if is_critical or len(filtered_lines) < 20 or len(lines) - len(filtered_lines) <= max_tail_lines:
                     filtered_lines.append(trimmed)
 
@@ -254,7 +297,19 @@ class TokenJuice:
                     skipped_count = 0
 
                 # Check if lockfile or asset
-                if any(lock in line for lock in ["pnpm-lock.yaml", "package-lock.json", "poetry.lock", "yarn.lock", ".png", ".svg", ".jpg", ".min.js"]):
+                if any(
+                    lock in line
+                    for lock in [
+                        "pnpm-lock.yaml",
+                        "package-lock.json",
+                        "poetry.lock",
+                        "yarn.lock",
+                        ".png",
+                        ".svg",
+                        ".jpg",
+                        ".min.js",
+                    ]
+                ):
                     skipping_binary_or_lock = True
                     result.append(line + " [COMPRESSED FILE SUMMARY]")
                     continue
@@ -274,6 +329,6 @@ class TokenJuice:
 
     def compress_generic_text(self, text: str) -> str:
         """Generic whitespace and deduplication compression."""
-        cleaned = re.sub(r'[ \t]+', ' ', text)
-        cleaned = re.sub(r'\n\s*\n+', '\n\n', cleaned)
+        cleaned = re.sub(r"[ \t]+", " ", text)
+        cleaned = re.sub(r"\n\s*\n+", "\n\n", cleaned)
         return cleaned.strip()

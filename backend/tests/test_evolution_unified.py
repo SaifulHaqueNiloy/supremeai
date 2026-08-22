@@ -6,17 +6,19 @@
 import sys
 from unittest.mock import MagicMock
 
-import pytest
 
 # Import guard: evolution modules may transitively import optional google.genai.
 sys.modules.setdefault("google", MagicMock())
 sys.modules.setdefault("google.genai", MagicMock())
 
-from core.evolution.agent_breeder import AgentBreeder  # noqa: E402
-from core.evolution.daily_learner import DailyLearner, PriorityScorer  # noqa: E402
-from core.evolution.evolution_react_agent import EvolutionReActAgent  # noqa: E402
-from core.evolution.fitness_engine import AutomatedFitnessEngine, FitnessEngine  # noqa: E402
-from core.evolution.skill_graph import EvolutionSkillGraph  # noqa: E402
+from core.evolution.agent_breeder import AgentBreeder
+from core.evolution.daily_learner import DailyLearner, PriorityScorer
+from core.evolution.evolution_react_agent import EvolutionReActAgent
+from core.evolution.fitness_engine import (
+    AutomatedFitnessEngine,
+    FitnessEngine,
+)
+from core.evolution.skill_graph import EvolutionSkillGraph
 
 
 def test_evolution_core_modules_importable():

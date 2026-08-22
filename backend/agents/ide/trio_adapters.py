@@ -33,10 +33,10 @@ except ImportError:  # pragma: no cover
 class TrioAgentResult:
     """Standardized result returned by every IDE adapter."""
 
-    role: str            # "writer" | "reviewer" | "checker"
-    agent: str           # "gemini" | "kilo" | "cline"
-    output: str          # full text response
-    confidence: float    # 0.0 - 1.0
+    role: str  # "writer" | "reviewer" | "checker"
+    agent: str  # "gemini" | "kilo" | "cline"
+    output: str  # full text response
+    confidence: float  # 0.0 - 1.0
     issues: list[dict[str, Any]] = field(default_factory=list)
     suggestions: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -165,6 +165,7 @@ class GeminiWriter:
                 issues=[{"type": "error", "message": str(exc), "severity": "error"}],
             )
 
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  Stage 2 - Code Reviewer  (Kilo Code)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -222,12 +223,14 @@ class KiloReviewer:
                 if feedback:
                     review_notes.append(f"Guardian feedback: {feedback}")
                     if "violation" in feedback.lower() or "issue" in feedback.lower():
-                        issues.append({
-                            "type": "guardian_violation",
-                            "message": feedback[:500],
-                            "severity": "warning",
-                            "source": "kilo-guardian",
-                        })
+                        issues.append(
+                            {
+                                "type": "guardian_violation",
+                                "message": feedback[:500],
+                                "severity": "warning",
+                                "source": "kilo-guardian",
+                            }
+                        )
                     else:
                         suggestions.append(feedback)
             except Exception as exc:
@@ -264,10 +267,7 @@ class KiloReviewer:
         else:
             review_output = (
                 f"## Review Summary ({len(issues)} issue(s))\n\n"
-                + "\n".join(
-                    f"- **{i.get('severity', 'warning').upper()}**: {i['message']}"
-                    for i in issues
-                )
+                + "\n".join(f"- **{i.get('severity', 'warning').upper()}**: {i['message']}" for i in issues)
                 + "\n\n"
                 + "\n\n".join(review_notes)
             )
@@ -286,9 +286,7 @@ class KiloReviewer:
             },
         )
 
-    async def _try_kilocode_cli(
-        self, code: str, language: str, filepath: str
-    ) -> dict[str, Any] | None:
+    async def _try_kilocode_cli(self, code: str, language: str, filepath: str) -> dict[str, Any] | None:
         """Attempt to run the ``kilocode`` CLI for a review."""
         kilocode_bin = shutil.which("kilocode")
         if not kilocode_bin:
@@ -317,9 +315,7 @@ class KiloReviewer:
 
         return None
 
-    def _basic_review(
-        self, code: str, language: str, filepath: str
-    ) -> tuple[list[dict[str, Any]], list[str]]:
+    def _basic_review(self, code: str, language: str, filepath: str) -> tuple[list[dict[str, Any]], list[str]]:
         """Lightweight local rule-based review (always available)."""
         import re
 
@@ -339,54 +335,66 @@ class KiloReviewer:
 
             # Security: hardcoded secrets
             if secret_re.search(stripped) and not stripped.startswith(comment_prefixes):
-                issues.append({
-                    "type": "hardcoded_secret",
-                    "message": f"Potential hardcoded secret on line {i}",
-                    "severity": "high",
-                    "line": i,
-                    "source": "kilo-basic-review",
-                })
+                issues.append(
+                    {
+                        "type": "hardcoded_secret",
+                        "message": f"Potential hardcoded secret on line {i}",
+                        "severity": "high",
+                        "line": i,
+                        "source": "kilo-basic-review",
+                    }
+                )
 
             if "eval(" in stripped and not stripped.startswith("#"):
-                issues.append({
-                    "type": "eval_usage",
-                    "message": f"Usage of eval() on line {i} - potential security risk",
-                    "severity": "high",
-                    "line": i,
-                    "source": "kilo-basic-review",
-                })
+                issues.append(
+                    {
+                        "type": "eval_usage",
+                        "message": f"Usage of eval() on line {i} - potential security risk",
+                        "severity": "high",
+                        "line": i,
+                        "source": "kilo-basic-review",
+                    }
+                )
 
             if ("console.log" in stripped or "print(" in stripped) and "logger" not in stripped:
-                issues.append({
-                    "type": "debug_statement",
-                    "message": f"Debug statement on line {i}",
-                    "severity": "low",
-                    "line": i,
-                    "source": "kilo-basic-review",
-                })
+                issues.append(
+                    {
+                        "type": "debug_statement",
+                        "message": f"Debug statement on line {i}",
+                        "severity": "low",
+                        "line": i,
+                        "source": "kilo-basic-review",
+                    }
+                )
 
             if stripped.upper().startswith(("TODO", "FIXME")):
-                issues.append({
-                    "type": "todo_comment",
-                    "message": f"TODO/FIXME on line {i}",
-                    "severity": "info",
-                    "line": i,
-                    "source": "kilo-basic-review",
-                })
+                issues.append(
+                    {
+                        "type": "todo_comment",
+                        "message": f"TODO/FIXME on line {i}",
+                        "severity": "info",
+                        "line": i,
+                        "source": "kilo-basic-review",
+                    }
+                )
 
             if "except:" in stripped:
-                issues.append({
-                    "type": "bare_except",
-                    "message": f"Bare 'except:' on line {i} - catches all exceptions",
-                    "severity": "medium",
-                    "line": i,
-                    "source": "kilo-basic-review",
-                })
+                issues.append(
+                    {
+                        "type": "bare_except",
+                        "message": f"Bare 'except:' on line {i} - catches all exceptions",
+                        "severity": "medium",
+                        "line": i,
+                        "source": "kilo-basic-review",
+                    }
+                )
 
         if not issues:
             suggestions.append("Code follows basic best practices for the detected patterns.")
 
         return issues, suggestions
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  Stage 3 - Production Checker  (Cline)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -429,20 +437,24 @@ class ClineChecker:
         # Strategy 2: Local production checks
         local_results = await self._run_local_checks(code, language, filepath)
         for check_name, result in local_results.items():
-            checks.append({
-                "check": check_name,
-                "result": "passed" if result["passed"] else "failed",
-                "details": result.get("output", ""),
-            })
+            checks.append(
+                {
+                    "check": check_name,
+                    "result": "passed" if result["passed"] else "failed",
+                    "details": result.get("output", ""),
+                }
+            )
             if result["passed"]:
                 passed_checks.append(check_name)
             else:
-                issues.append({
-                    "type": f"prod_check_{check_name}",
-                    "message": result.get("output", "Check failed"),
-                    "severity": "medium",
-                    "source": "cline-local-check",
-                })
+                issues.append(
+                    {
+                        "type": f"prod_check_{check_name}",
+                        "message": result.get("output", "Check failed"),
+                        "severity": "medium",
+                        "source": "cline-local-check",
+                    }
+                )
 
         confidence = 0.85 if len(passed_checks) >= len(checks) * 0.7 else 0.5
 
@@ -487,9 +499,7 @@ class ClineChecker:
             },
         )
 
-    async def _try_cline_cli(
-        self, code: str, language: str, filepath: str
-    ) -> str | None:
+    async def _try_cline_cli(self, code: str, language: str, filepath: str) -> str | None:
         """Attempt to run the ``cline`` CLI for production checks."""
         cline_cmd = shutil.which("cline")
 
@@ -527,9 +537,7 @@ class ClineChecker:
 
         return None
 
-    async def _run_local_checks(
-        self, code: str, language: str, filepath: str
-    ) -> dict[str, dict[str, Any]]:
+    async def _run_local_checks(self, code: str, language: str, filepath: str) -> dict[str, dict[str, Any]]:
         """Run local production-readiness checks as fallback."""
         import re
 
@@ -573,7 +581,9 @@ class ClineChecker:
             has_type_hints = any(t in code for t in ("->", ": str", ": int", ": bool", ": list", ": dict"))
             results["type_hints"] = {
                 "passed": has_type_hints,
-                "output": "Type hints present" if has_type_hints else "No type hints found - recommended for production",
+                "output": (
+                    "Type hints present" if has_type_hints else "No type hints found - recommended for production"
+                ),
             }
 
         return results

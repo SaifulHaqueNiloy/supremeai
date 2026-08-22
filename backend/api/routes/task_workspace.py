@@ -40,7 +40,6 @@ async def execute_task(
     background_tasks: BackgroundTasks,
     token_payload: dict = Depends(get_current_user_token),
 ):
-
     """
     Handles user prompts from the Vanilla JS Customer Dashboard.
     Integrates Redis rate limiting, RAM conversation history, and Supabase persistent storage.
@@ -91,7 +90,6 @@ async def execute_task(
 # ==========================================
 @router.get("/quota", response_model=TaskQuotaResponse)
 async def get_quota(token_payload: dict = Depends(get_current_user_token)):
-
     """
     Fetch the current token quota from Redis for the UI.
     """

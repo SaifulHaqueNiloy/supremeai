@@ -15,20 +15,14 @@ from fastapi.websockets import WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
+from api.dependencies import get_current_admin
+from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.config import settings
 from core.error_bus import with_error_bus
 from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-from api.routes.admin_auth import admin_rate_limit, require_admin_token
-from api.dependencies import get_current_admin
-
-
-
-
-
-
 
 router = APIRouter(
     prefix="/admin-api",
@@ -165,6 +159,7 @@ def get_costs():
 @router.get("/health-map")
 def get_health_map():
     import time
+
     from core.health_check import health_checker
 
     gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
@@ -1010,6 +1005,7 @@ def get_customers():
 def get_config():
     """Get environment configuration for the admin dashboard."""
     import os
+
     config = {}
     for key in ["ENV", "DEBUG", "LOG_LEVEL", "REDIS_URL", "DATABASE_URL"]:
         val = os.environ.get(key, "")
@@ -1022,6 +1018,7 @@ def get_config():
 def update_config(payload: dict):
     """Update environment configuration (writes to settings.json)."""
     import os
+
     config = _load_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), {})
     config.update(payload)
     _save_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), config)
@@ -1033,6 +1030,7 @@ def update_config(payload: dict):
 # ফ্রন্টএন্ড (commandcenter/data/hooks.ts) এই পাথগুলো কল করে কিন্তু ব্যাকএন্ডে
 # route ছিল না → 404। Admin tab গুলো render না করে error দেখাত। এখানে যোগ করা হলো।
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 @router.get("/agents")
 async def list_command_agents(admin: dict = Depends(get_current_admin)):
@@ -1087,12 +1085,14 @@ async def toggle_deploy_gate(payload: DeployGateToggle, admin: dict = Depends(ge
         db = firestore.Client()
         doc_ref = db.collection("deploy_gate").document("status")
         now = utc_now()
-        doc_ref.set({
-            "status": requested_status,
-            "reason": payload.reason,
-            "updated_by": admin.get("uid") or admin.get("sub") or "admin",
-            "updated_at": now,
-        })
+        doc_ref.set(
+            {
+                "status": requested_status,
+                "reason": payload.reason,
+                "updated_by": admin.get("uid") or admin.get("sub") or "admin",
+                "updated_at": now,
+            }
+        )
         return {
             "status": requested_status,
             "reason": payload.reason,

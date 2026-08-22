@@ -46,8 +46,7 @@ class OpenHandsAdapter:
                 logger.warning(f"OpenHandsAdapter: requests unavailable: {exc}")
         else:
             logger.info(
-                "OpenHandsAdapter: inactive (flag=%s, server_url=%s) — autonomous coding "
-                "skips to fallback.",
+                "OpenHandsAdapter: inactive (flag=%s, server_url=%s) — autonomous coding " "skips to fallback.",
                 flag(_ENABLED_FLAG),
                 bool(self.server_url),
             )
@@ -109,9 +108,7 @@ class OpenHandsAdapter:
         msg = ev.get("message") or {}
         return str(msg.get("event", "")).lower() in {"done", "error"}
 
-    def run_coding_task(
-        self, task: str, workspace: str | None = None, max_steps: int = 50
-    ) -> dict[str, Any]:
+    def run_coding_task(self, task: str, workspace: str | None = None, max_steps: int = 50) -> dict[str, Any]:
         """Ask the autonomous coding agent to complete a coding task."""
         if not self._active:
             return {

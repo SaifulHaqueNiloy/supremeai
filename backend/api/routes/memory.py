@@ -169,6 +169,7 @@ class SessionSaveRequest(BaseModel):
 async def vector_recall(req: VectorRecallRequest):
     """Semantic-search the Eternal Brain for relevant past memories."""
     from services.memory_service import recall_memories
+
     memories = await recall_memories(
         task_description=req.task_description,
         limit=req.limit,
@@ -181,6 +182,7 @@ async def vector_recall(req: VectorRecallRequest):
 async def vector_save(req: VectorSaveRequest):
     """Store a vector memory entry into Supabase/pgvector or cascade fallback."""
     from services.memory_service import save_memory
+
     result = await save_memory(
         session_id=req.session_id,
         summary=req.summary,
@@ -195,6 +197,7 @@ async def vector_save(req: VectorSaveRequest):
 async def save_session(req: SessionSaveRequest):
     """Summarize a full chat session via LLM, then save as vector memory."""
     from services.memory_service import summarize_and_save_session
+
     result = await summarize_and_save_session(
         session_id=req.session_id,
         messages=req.messages,

@@ -7,9 +7,9 @@ that module for backwards compatibility.
 
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-import json
 from enum import StrEnum
 from typing import Any, Protocol
 
@@ -22,6 +22,7 @@ from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 
 logger = get_logger(__name__)
 
+
 class Provider(StrEnum):
     """Supported AI model providers."""
 
@@ -33,11 +34,13 @@ class Provider(StrEnum):
     HUGGINGFACE_SPACE = "hf_space"
     OPENAI = "openai"  # বাংলা মন্তব্য: OpenAI প্রোভাইডার সাপোর্টের জন্য যোগ করা হয়েছে
 
+
 @dataclass
 class StreamChunk:
     content: str
     is_finished: bool = False
     provider: Provider | None = None
+
 
 class LLMProvider(Protocol):
     """Protocol for LLM provider implementations."""
@@ -55,6 +58,7 @@ class LLMProvider(Protocol):
     ) -> str | AsyncGenerator[StreamChunk, None]: ...
 
     async def health_check(self) -> bool: ...
+
 
 class MoonshotProvider:
     """Moonshot AI (Kimi K2.5) — Primary for Bengali & complex reasoning."""
@@ -129,6 +133,7 @@ class MoonshotProvider:
             logger.debug(f"MoonshotProvider health check failed: {exc}")
             return False
 
+
 class DeepSeekProvider:
     """DeepSeek V3 — Fallback for code and cost-efficient tasks."""
 
@@ -199,6 +204,7 @@ class DeepSeekProvider:
             logger.debug(f"DeepSeekProvider health check failed: {exc}")
             return False
 
+
 class TogetherProvider:
     """Together AI — Backup for high availability."""
 
@@ -267,6 +273,7 @@ class TogetherProvider:
             logger.debug(f"TogetherProvider health check failed: {exc}")
             return False
 
+
 class GeminiProvider:
     """Google Gemini Provider — Free tier (gemini-2.0-flash / 1.5-flash)."""
 
@@ -313,6 +320,7 @@ class GeminiProvider:
 
     async def health_check(self) -> bool:
         return bool(self.api_key)
+
 
 class OllamaProvider:
     """Local Ollama — Offline/privacy mode. Optional, completely free."""
@@ -383,6 +391,7 @@ class OllamaProvider:
             # Ollama না চললে এটা সাধারণ — debug স্তরে লগ করা হয়েছে।
             logger.debug(f"OllamaProvider health check failed (local provider may be offline): {exc}")
             return False
+
 
 class HuggingFaceSpaceProvider:
     """HuggingFace Space - Supreme Hybrid 8B model (Bengali/Coder/Math merged)."""
@@ -473,6 +482,7 @@ class HuggingFaceSpaceProvider:
                 logger.debug(f"HuggingFaceSpaceProvider health check failed: {health_exc}")
                 return False
 
+
 class BengaliNormalizer:
     """Normalize Bengali text for consistent LLM processing."""
 
@@ -514,4 +524,3 @@ class BengaliNormalizer:
         elif ratio > 0.1:  # ০.১ এর উপরে বাংলা থাকলে mixed
             return "mixed"
         return "roman"
-

@@ -1,7 +1,9 @@
 """Tests for TokenJuice Context & Tool Output Compression Engine."""
 
 import json
+
 import pytest
+
 from backend.engine.compression.token_juice import TokenJuice
 
 
@@ -39,7 +41,7 @@ def test_compress_dom_html(juice):
     assert res.compression_ratio > 0.35  # At least 35% reduction on raw HTML
     assert "SupremeAI Dashboard" in res.compressed_text
     assert "btn-deploy" in res.compressed_text
-    assert "data-testid=\"deploy-btn\"" in res.compressed_text
+    assert 'data-testid="deploy-btn"' in res.compressed_text
     assert "<script" not in res.compressed_text
     assert "<style" not in res.compressed_text
     assert "Header comment" not in res.compressed_text
@@ -62,11 +64,11 @@ def test_compress_json_payload(juice):
                 {"id": 6, "name": "Frank", "role": "devops"},
                 {"id": 7, "name": "Grace", "role": "security"},
             ]
-        }
+        },
     }
     raw_str = json.dumps(raw_payload, indent=2)
     res = juice.compress(raw_str, content_type="json")
-    
+
     assert res.content_type == "json"
     assert res.compression_ratio > 0.3
     # Check that nulls and metadata fields were pruned

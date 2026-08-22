@@ -24,6 +24,7 @@ class ToolForge:
         """
         try:
             from core.security.ast_sandbox_scanner import ASTSandboxScanner
+
             scanner = ASTSandboxScanner()
             scan_res = scanner.scan(code_snippet)
             if not scan_res.is_safe:

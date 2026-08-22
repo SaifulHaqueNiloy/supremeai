@@ -3,11 +3,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import logging
-from typing import Any, Callable, Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import Any
 
-from evolution.change_proposal import ChangeProposal, ProposalState
+from evolution.change_proposal import ChangeProposal
 from evolution.fitness_evaluator import FitnessBreakdown, get_fitness_evaluator
 
 logger = logging.getLogger("supremeai.evolution.benchmark")
@@ -25,9 +25,9 @@ class PromotionDecision:
     safety_status: str
     regression_status: str
     reason: str
-    evidence_ids: List[str] = field(default_factory=list)
+    evidence_ids: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "eligible": self.eligible,
             "baseline_fitness": self.baseline_fitness,
@@ -56,6 +56,7 @@ class BenchmarkRunner:
     ) -> PromotionDecision:
         # 🛡️ Governance Kernel Check (Defense-in-depth)
         from core.security.governance_policy import get_governance_policy
+
         is_allowed, reason = get_governance_policy().validate_evolution_target(proposal.target_module)
         if not is_allowed:
             return PromotionDecision(
@@ -114,7 +115,7 @@ class BenchmarkRunner:
 
 
 # Global Singleton
-_runner: Optional[BenchmarkRunner] = None
+_runner: BenchmarkRunner | None = None
 
 
 def get_benchmark_runner() -> BenchmarkRunner:
