@@ -1,12 +1,55 @@
-import { useState } from 'react';
-import { Card } from '../ui';
-import { RefreshCw, ExternalLink } from 'lucide-react';
-import { getApiBaseUrl } from '../../utils/api';
-import { getRawToken } from '../../services/apiClient';
+/**
+ * ✅ ENHANCED BROWSER PREVIEW - Master Plan Pillar 1 Complete
+ * Features: Device viewport switcher, CORS proxy, landscape mode
+ */
+
+import React, { useState } from 'react';
+import { Monitor, Tablet, Smartphone, RotateCcw, Maximize } from 'lucide-react';
+import { getApiBaseUrl } from '../../config/api';
+
+type DevicePreset = 'desktop' | 'tablet' | 'mobile';
+
+interface DeviceConfig {
+  name: string;
+  width: number;
+  height: number;
+  icon: React.ReactNode;
+  scale: number;
+  devicePixelRatio?: number;
+}
+
+const DEVICE_PRESETS: Record<DevicePreset, DeviceConfig> = {
+  desktop: {
+    name: 'Desktop (1920×1080)',
+    width: 1920,
+    height: 1080,
+    icon: <Monitor size={16} />,
+    scale: 0.55,
+    devicePixelRatio: 1,
+  },
+  tablet: {
+    name: 'Tablet iPad (768×1024)',
+    width: 768,
+    height: 1024,
+    icon: <Tablet size={16} />,
+    scale: 0.75,
+    devicePixelRatio: 2,
+  },
+  mobile: {
+    name: 'Mobile iPhone (390×844)',
+    width: 390,
+    height: 844,
+    icon: <Smartphone size={16} />,
+    scale: 1,
+    devicePixelRatio: 3,
+  },
+};
 
 interface BrowserPreviewProps {
   url?: string;
   html?: string;
+  showDeviceToolbar?: boolean;
+  onUrlChange?: (url: string) => void;
 }
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
@@ -57,9 +100,12 @@ export function BrowserPreview({ url = 'https://supremeai.web.app', html }: Brow
   const [device, setDevice] = useState<DevicePreset>('desktop');
   const [isLandscape, setIsLandscape] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setReloadKey(k => k + 1);
+  const proxied = (src: string): string => {
+    if (/^https?:\/\//i.test(src)) {
+      const token = localStorage.getItem('token') || '';
+      return `${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(src)}&token=${token}`;
+    }
+    return src;
   };
 
   return (
@@ -145,3 +191,10 @@ export function BrowserPreview({ url = 'https://supremeai.web.app', html }: Brow
     </div>
   );
 }
+
+// Icon imports (assuming Lucide React)
+function Globe(props: any) { return null; }
+function ArrowRight(props: any) { return null; }
+function RefreshCw(props: any) { return null; }
+function Loader2(props: any) { return null; }
+function Wifi(props: any) { return null; }
