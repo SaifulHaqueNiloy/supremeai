@@ -88,6 +88,16 @@ core_routers: list[tuple[str, str]] = [
 
 
 
+# 🔴 CRITICAL ROUTERS: These are functionally required for core features.
+# They live in optional_routers for historical reasons (test compatibility),
+# but MUST fail-fast in production if they can't load.
+# Migration path: Move these to core_routers when test dependencies are fixed.
+_CRITICAL_ROUTERS = {
+    "api.routes.llm_gateway",      # Required: AI chat/LLM functionality
+    "api.routes.knowledge",        # Required: RAG/Knowledge base features  
+    "api.routes.billing_api",      # Required: Payment processing
+}
+
 optional_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
     # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।
@@ -97,8 +107,8 @@ optional_routers: list[tuple[str, str]] = [
     ("api.routes.dock_actions", "/api"),
     ("api.routes.websocket_voice", ""),
     ("tools.collaborative_editor", "/api/v1"),
-    ("tools.image_to_code", ""),
-    ("tools.style_learner", "/api"),
+    ("tools.code.image_to_code", ""),
+    ("tools.learning.style_learner", "/api"),
     ("api.routes.codeflow", ""),
     ("api.routes.feedback", ""),
     ("tools.media.multilingual_tts", "/api"),
@@ -179,7 +189,13 @@ def register_all_routers(app: FastAPI) -> None:
     for router_path, prefix in core_routers:
         register_router(app, router_path, prefix=prefix)
     for router_path, prefix in optional_routers:
-        register_router(app, router_path, prefix=prefix, optional=True)
+        # 🔴 FAIL-FAST: Critical routers must load successfully in production
+        is_critical = router_path in _CRITICAL_ROUTERS
+        if is_critical:
+            logger.info(f"Loading critical router: {router_path}")
+            register_router(app, router_path, prefix=prefix, optional=False)  # Fail-fast!
+        else:
+            register_router(app, router_path, prefix=prefix, optional=True)
     if settings.encryption_key and settings.encryption_key.get_secret_value():
         register_router(app, "api.routes.byoc_api", "", optional=True)
     else:
