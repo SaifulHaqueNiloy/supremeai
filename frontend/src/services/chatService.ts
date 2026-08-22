@@ -1,7 +1,7 @@
 // Chat API Service for SupremeAI 2.0
 // বাংলা মонтаব্য: চ্যাট ইন্টারফেস ও স্ট্রিমিং এপিআই এর সাথে যোগাযোগের জন্য ব্যবহৃত সার্ভিস। Prompt-to-Action সাপোর্ট সহ।
 
-import { apiClient } from './apiClient';
+import { apiClient, getAuthHeaders } from './apiClient';
 import { getApiBaseUrl } from '../utils/api';
 
 export interface ChatMessage {
@@ -43,10 +43,16 @@ export async function sendMessageStream(
   abortSignal?: AbortSignal,
 ): Promise<void> {
   const API_BASE = getApiBaseUrl();
+  const authHeaders = await getAuthHeaders();  // 🔒 Get JWT/CSRF/Fingerprint headers
+  
   try {
+    // 🔒 SECURITY FIX: Now includes authentication headers (previously missing)
     const res = await fetch(`${API_BASE}/api/chat/stream`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...authHeaders,  // Spread auth headers into request
+      },
       body: JSON.stringify({ message }),
       signal: abortSignal,
     });
@@ -91,9 +97,13 @@ export async function sendMessageStream(
 
     // Prompt-to-Action metadata fallback (legacy path only)
     try {
+      const actionHeaders = await getAuthHeaders();  // 🔒 Auth for action endpoint too
       const actionRes = await fetch(`${API_BASE}/api/chat/prompt-action`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...actionHeaders,  // 🔒 Include auth headers
+        },
         body: JSON.stringify({ message }),
       });
       if (actionRes.ok) {
