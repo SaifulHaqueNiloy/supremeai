@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-22 16:39 UTC
+- **Date:** 2026-08-22 16:57 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,24 @@
   - (see git log for details)
 
 ## Files Changed
+  - `frontend/src/components/admin/ci/AnimatedStatus.tsx`
+  - `frontend/src/components/admin/ci/InsightCard.tsx`
+  - `frontend/src/components/admin/ci/ProgressBar.tsx`
+  - `frontend/src/components/admin/CICDVisualizer.tsx`
   - `.github/workflows/maintenance_pipeline.yml`
-  - `CHECKPOINT.md`
+  - `frontend/src/hooks/useEventBus.ts`
+  - `frontend/src/lib/llm.router.ts`
   - `.github/workflows/supreme-release-builds.yml`
-  - `.github/workflows/supreme-core-ci.yml`
+  - `frontend/src/components/admin/ci/EmptyState.tsx`
+  - `frontend/src/services/healthStream.ts`
+  - `frontend/src/components/admin/data/CrownJewelBrowser.tsx`
+  - `frontend/src/components/admin/ci/CIDashboard.tsx`
   - `.github/workflows/release-builds.yml`
+  - `frontend/src/components/admin/ci/JobRow.tsx`
+  - `frontend/src/components/ErrorBoundary.tsx`
+  - `frontend/src/components/admin/ci/ScoreCircle.tsx`
+  - `CHECKPOINT.md`
+  - `frontend/src/components/admin/ci/Badge.tsx`
 
 ## Pending (Carry Forward)
 - **MED:** Supabase `ai_memory` টেবিলে ভেক্টর স্কিমা ভ্যালিডেশন এবং `memory_write.py` লাইভ ভেক্টর ইনসার্ট টেস্ট।

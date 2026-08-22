@@ -144,7 +144,7 @@ export class LLMSmartRouter {
     
     // Call the provider
     let response: string;
-    let actualProvider = provider;
+    const actualProvider = provider;
     
     try {
       response = await this.callProvider(provider, model, prompt);

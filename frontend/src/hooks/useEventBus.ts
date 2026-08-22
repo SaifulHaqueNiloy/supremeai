@@ -3,7 +3,7 @@
  * Provides easy subscription management with automatic cleanup
  */
 
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { eventBus, Events, type EventCallback } from '../lib/eventBus';
 
 interface UseEventBusReturn {
@@ -24,7 +24,11 @@ export function useEventBus<T = any>(
   deps: React.DependencyList = []
 ): UseEventBusReturn {
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useLayoutEffect(() => {
+    callbackRef.current = callback;
+  });
 
   useEffect(() => {
     const unsubscribe = eventBus.subscribe<T>(event, (data) => {
@@ -35,9 +39,9 @@ export function useEventBus<T = any>(
   }, [event, ...deps]);
 
   return {
-    emit: useCallback(eventBus.emit, []),
-    subscribe: useCallback(eventBus.subscribe, []),
-    getListenerCount: useCallback(eventBus.getListenerCount, []),
+    emit: eventBus.emit,
+    subscribe: eventBus.subscribe,
+    getListenerCount: eventBus.getListenerCount,
   };
 }
 

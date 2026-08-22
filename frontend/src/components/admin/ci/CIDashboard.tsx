@@ -66,7 +66,7 @@ import { convertToCSV } from './utils';
  * ====================================================================================
  */
 
-'use client';
+// client side component
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
@@ -538,7 +538,7 @@ export function CIDashboard({
     ];
   }, [data?.trends]);
   
-  const severityPieData = useMemo(() => {
+  const severityPieData = (() => {
     if (!data?.errors?.by_severity) return [];
     
     return Object.entries(data.errors.by_severity).map(([name, value]) => ({
@@ -546,7 +546,7 @@ export function CIDashboard({
       value,
       color: name === 'P0' ? COLORS.failure : name === 'P1' ? '#f97316' : name === 'P2' ? COLORS.warning : COLORS.success,
     }));
-  }, [data?.errors?.by_severity]);
+  })();
   
   // Fetch data
   const fetchData = useCallback(async () => {
