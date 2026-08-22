@@ -1,5 +1,4 @@
-// src/services/realtime/WebSocketManager.ts
-// Minimal reconnecting WebSocket wrapper used by real-time dashboard widgets.
+import { BaseWebSocketManager, BaseWebSocketManagerOptions } from '@supremeai/shared-services';
 
 export interface WebSocketManagerHandlers {
   onOpen?: (event: Event) => void;
@@ -8,94 +7,42 @@ export interface WebSocketManagerHandlers {
   onError?: (event: Event) => void;
 }
 
-export interface WebSocketManagerOptions extends WebSocketManagerHandlers {
-  /** Max number of automatic reconnect attempts. Default: 5 */
-  maxReconnectAttempts?: number;
-  /** Base delay (ms) for exponential backoff between reconnects. Default: 1000 */
-  reconnectBaseDelayMs?: number;
-}
+export interface WebSocketManagerOptions extends BaseWebSocketManagerOptions, WebSocketManagerHandlers {}
 
-export default class WebSocketManager {
+export default class WebSocketManager extends BaseWebSocketManager {
   private url: string;
   private handlers: WebSocketManagerHandlers;
-  private maxReconnectAttempts: number;
-  private reconnectBaseDelayMs: number;
-  private socket: WebSocket | null = null;
-  private reconnectAttempts = 0;
-  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private manuallyClosed = false;
 
   constructor(url: string, options: WebSocketManagerOptions = {}) {
+    super(options);
     this.url = url;
-    const { maxReconnectAttempts, reconnectBaseDelayMs, ...handlers } = options;
+    
+    // We pass only handlers to store them
+    const { maxReconnectAttempts, reconnectBaseDelayMs, heartbeatIntervalMs, ...handlers } = options;
     this.handlers = handlers;
-    this.maxReconnectAttempts = maxReconnectAttempts ?? 5;
-    this.reconnectBaseDelayMs = reconnectBaseDelayMs ?? 1000;
   }
 
-  connect(): void {
-    this.manuallyClosed = false;
-    this.openSocket();
+  protected getUrl(): string {
+    return this.url;
   }
 
-  private openSocket(): void {
-    try {
-      this.socket = new WebSocket(this.url);
-    } catch (err) {
-      console.error('WebSocketManager: failed to create socket', err);
-      this.scheduleReconnect();
-      return;
-    }
-
-    this.socket.onopen = (event) => {
-      this.reconnectAttempts = 0;
-      this.handlers.onOpen?.(event);
-    };
-
-    this.socket.onclose = (event) => {
-      this.handlers.onClose?.(event);
-      if (!this.manuallyClosed) {
-        this.scheduleReconnect();
-      }
-    };
-
-    this.socket.onmessage = (event) => {
-      this.handlers.onMessage?.(event);
-    };
-
-    this.socket.onerror = (event) => {
-      this.handlers.onError?.(event);
-    };
+  protected onOpen(event: Event): void {
+    super.onOpen(event);
+    this.handlers.onOpen?.(event);
   }
 
-  private scheduleReconnect(): void {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      return;
-    }
-    const delay = this.reconnectBaseDelayMs * Math.pow(2, this.reconnectAttempts);
-    this.reconnectAttempts += 1;
-    this.reconnectTimer = setTimeout(() => {
-      if (!this.manuallyClosed) {
-        this.openSocket();
-      }
-    }, delay);
+  protected onClose(event: CloseEvent): void {
+    super.onClose(event);
+    this.handlers.onClose?.(event);
   }
 
-  send(data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
-    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.socket.send(data);
-    } else {
-      console.warn('WebSocketManager: cannot send, socket is not open');
-    }
+  protected onMessage(event: MessageEvent): void {
+    super.onMessage(event);
+    this.handlers.onMessage?.(event);
   }
 
-  disconnect(): void {
-    this.manuallyClosed = true;
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    this.socket?.close();
-    this.socket = null;
+  protected onError(event: Event): void {
+    super.onError(event);
+    this.handlers.onError?.(event);
   }
 }
