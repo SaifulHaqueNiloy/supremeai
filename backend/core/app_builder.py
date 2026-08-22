@@ -98,6 +98,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         TenantExtractionMiddleware,
     )
     from core.idempotency_middleware import IdempotencyMiddleware
+    from core.middleware.security import (
+        SecurityHeadersMiddleware,
+        RequestValidationMiddleware,
+    )
+    from core.rate_limit import RateLimitMiddleware
     from core.lifespan import app_lifespan
     from core.observability.observability_middleware import ObservabilityMiddleware
     from core.request_context import RequestContextMiddleware
@@ -138,7 +143,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 3. RequestIdMiddleware - Track requests
     app.add_middleware(RequestIdMiddleware)
 
-    # 4. TrustedOriginMiddleware - Validate trusted origins before processing
+    # 4. SecurityHeadersMiddleware - Add security headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # 4.1 RequestValidationMiddleware - SQLi/XSS check
+    app.add_middleware(RequestValidationMiddleware)
+
+    # 4.2 TrustedOriginMiddleware - Validate trusted origins before processing
     app.add_middleware(TrustedOriginMiddleware)
 
     # 5. SupremeContextMiddleware - Set up application context
@@ -167,6 +178,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 13. Idempotency middleware - After authentication to ensure idempotency per user
     app.add_middleware(IdempotencyMiddleware)
+
+    # 14. Rate Limiting
+    app.add_middleware(RateLimitMiddleware)
 
     # 14. CORS: Re-added for unified app architecture.
     origins = list(set(settings.user_cors_origins + settings.admin_cors_origins))

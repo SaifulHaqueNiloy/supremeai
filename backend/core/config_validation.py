@@ -11,7 +11,35 @@ from pydantic import SecretStr, ValidationInfo, field_validator, model_validator
 
 
 class SettingsValidationMixin:
+    # ── Variable format patterns for validation ──
+    FORMAT_PATTERNS = {
+        "supabase_url": r"^https?://.*\.supabase\.(co|com)$",
+        "redis_url": r"^redis://[^:]+:\d+$|^rediss://.*$",
+        "database_url": r"^postgresql(ql)?://[^:]+:[^@]+@[^:/]+:\d+/[^/]+$",
+    }
+    
+    # ── Fix suggestions for common issues ──
+    FIX_SUGGESTIONS = {
+        "supabase_database_url": "Set SUPABASE_DATABASE_URL in Render dashboard. Format: postgresql://postgres.[project-ref]:[password]@aws-0-[region].pool.supabase.com:6543/postgres",
+        "redis_url": "Set REDIS_URL for Upstash Redis. Get URL from: https://console.upstash.io/redis",
+        "openai_api_key": "Set OPENAI_API_KEY for OpenAI integration. Get key from: https://platform.openai.com/api-keys",
+    }
+
     # ── Validators ───────────────────────────────────────────────────────────
+
+    @field_validator("*", mode="before")
+    @classmethod
+    def validate_env_vars(cls, value: Any, info: ValidationInfo) -> Any:
+        import re
+        if value is None:
+            return value
+        var_name = info.field_name
+        if var_name in cls.FORMAT_PATTERNS:
+            pattern = cls.FORMAT_PATTERNS[var_name]
+            if isinstance(value, str) and not re.match(pattern, value):
+                suggestion = cls.FIX_SUGGESTIONS.get(var_name, "Check format.")
+                raise ValueError(f"Invalid format for {var_name}. Expected {pattern}. {suggestion}")
+        return value
 
     @field_validator(
         "user_cors_origins",
