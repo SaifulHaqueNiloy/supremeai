@@ -493,7 +493,7 @@ class AdversarialTrainer:
 # Example usage and testing
 def demo_adversarial_defense():
     """Demonstrate adversarial defense capabilities."""
-    print("Initializing Adversarial Defense System...")
+    logger.info("Initializing Adversarial Defense System...")
 
     # Create a simple model for demonstration
     class SimpleClassifier(nn.Module):
@@ -519,7 +519,7 @@ def demo_adversarial_defense():
     config = DefenseConfig()
     defense_system = AdversarialDefenseSystem(config)
 
-    print("Testing defense system...")
+    logger.info("Testing defense system...")
 
     # Create dummy input
     dummy_input = torch.randn(4, 1, 28, 28)  # Batch of 4, 1x28x28 images
@@ -527,16 +527,16 @@ def demo_adversarial_defense():
     # Apply defense
     processed_input, detection_results = defense_system.detect_and_respond(dummy_input, model)
 
-    print(f"Original input shape: {dummy_input.shape}")
-    print(f"Processed input shape: {processed_input.shape}")
-    print(f"Detection results: {detection_results}")
+    logger.info(f"Original input shape: {dummy_input.shape}")
+    logger.info(f"Processed input shape: {processed_input.shape}")
+    logger.info(f"Detection results: {detection_results}")
 
     # Get defense statistics
     stats = defense_system.get_defense_statistics()
-    print(f"Defense statistics: {stats}")
+    logger.info(f"Defense statistics: {stats}")
 
     # Test adversarial trainer
-    print("\nTesting adversarial training...")
+    logger.info("\nTesting adversarial training...")
     trainer = AdversarialTrainer(model, defense_system, config)
 
     # Create dummy data loader
@@ -546,7 +546,7 @@ def demo_adversarial_defense():
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     losses = trainer.train_step_with_adversarial_regularization(dummy_dataset[0][0], dummy_dataset[0][1], optimizer)
 
-    print(f"Training losses: {losses}")
+    logger.info(f"Training losses: {losses}")
 
 
 if __name__ == "__main__":

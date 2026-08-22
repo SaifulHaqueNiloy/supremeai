@@ -455,7 +455,7 @@ if __name__ == "__main__":
 
         # Using logger instead of print for structured output
         logger.info("Execution completed", success=True, result=result)
-        print(json.dumps({{"success": True, "result": result}}, default=str))  # Keep for external consumption
+        logger.info(json.dumps({{"success": True, "result": result}}, default=str))  # Keep for external consumption
     except Exception as e:
         error_details = {{
             "success": False,
@@ -464,7 +464,7 @@ if __name__ == "__main__":
         }}
         # Using logger instead of print for structured error reporting
         logger.error("Execution failed", error=str(e), traceback=traceback.format_exc())
-        print(json.dumps(error_details))
+        logger.info(json.dumps(error_details))
         sys.exit(1)
 """
         return wrapper

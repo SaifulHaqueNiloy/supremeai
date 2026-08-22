@@ -621,15 +621,15 @@ if __name__ == "__main__":
 
     async def test_mapper():
         topology = await discover_system_topology()
-        print(f"Discovered topology with {topology['summary']['total_services']} services")
+        logger.info(f"Discovered topology with {topology['summary']['total_services']} services")
 
         # Test impact analysis
         impact = await get_topology_mapper().get_impact_analysis("llm_router")
-        print(f"Impact analysis for llm_router: {impact['impact_level']} impact")
+        logger.info(f"Impact analysis for llm_router: {impact['impact_level']} impact")
 
         # Test dependency chain
         deps = await get_topology_mapper().get_dependency_chain("api_gateway")
-        print(f"Dependency chain for api_gateway: {deps['total_dependencies']} dependencies found")
+        logger.info(f"Dependency chain for api_gateway: {deps['total_dependencies']} dependencies found")
 
     # Run the test
     asyncio.run(test_mapper())

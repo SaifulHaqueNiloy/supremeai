@@ -275,8 +275,8 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                                 k: v for k, v in data.items() 
                                 if k in ["status", "version", "uptime", "latency"]
                             }
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to parse health endpoint JSON: {e}")
                     
             elif response.status_code >= 500:
                 status = ServiceStatus.UNHEALTHY

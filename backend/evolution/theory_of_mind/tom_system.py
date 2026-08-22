@@ -1,3 +1,4 @@
+from loguru import logger
 """
 SupremeAI Theory of Mind System
 ===============================
@@ -778,7 +779,7 @@ class TheoryOfMindSystem:
 # Example usage and testing
 def demo_theory_of_mind():
     """Demonstrate Theory of Mind system capabilities."""
-    print("Initializing Theory of Mind System...")
+    logger.info("Initializing Theory of Mind System...")
 
     # Create system
     config = ToMConfig()
@@ -791,39 +792,39 @@ def demo_theory_of_mind():
         ("Charlie", "Alice said the meeting is at 2 PM", {"context": "conversation", "topic": "meeting"}),
     ]
 
-    print("\nProcessing interactions...")
+    logger.info("\nProcessing interactions...")
     for speaker, message, context in interactions:
         result = tom_system.process_interaction(speaker, message, context)
-        print(f"Processed: {speaker} said '{message}'")
-        print(f"  ToM Level: {result['speaker_tom_level'].value}")
-        print(f"  Predicted Behavior: {result['predictions']['predicted_behavior']}")
-        print()
+        logger.info(f"Processed: {speaker} said '{message}'")
+        logger.info(f"  ToM Level: {result['speaker_tom_level'].value}")
+        logger.info(f"  Predicted Behavior: {result['predictions']['predicted_behavior']}")
+        logger.info()
 
     # Analyze social dynamics
-    print("Analyzing social dynamics...")
+    logger.info("Analyzing social dynamics...")
     agents = ["Alice", "Bob", "Charlie"]
     dynamics = tom_system.analyze_social_dynamics(agents)
 
-    print(f"Individual ToM levels: {dynamics['individual_tom_levels']}")
-    print(f"Group dynamics: {dynamics['group_dynamics']}")
+    logger.info(f"Individual ToM levels: {dynamics['individual_tom_levels']}")
+    logger.info(f"Group dynamics: {dynamics['group_dynamics']}")
 
     # Generate insights
-    print("\nGenerating insights...")
+    logger.info("\nGenerating insights...")
     for agent in agents:
         insight = tom_system.generate_insight(agent, "beliefs")
-        print(f"  {agent} belief insight: {insight}")
+        logger.info(f"  {agent} belief insight: {insight}")
 
     # Test false belief reasoning
-    print("\nTesting false belief reasoning...")
+    logger.info("\nTesting false belief reasoning...")
     false_belief_reasoner = FalseBeliefReasoner()
     scenario = false_belief_reasoner.generate_false_belief_scenario("Alice", "Bob", "drawer")
-    print(f"False belief scenario: {scenario['question']}")
-    print(f"Expected answer: {scenario['correct_answer']}")
+    logger.info(f"False belief scenario: {scenario['question']}")
+    logger.info(f"Expected answer: {scenario['correct_answer']}")
 
     # Test recursive reasoning
-    print("\nTesting recursive reasoning...")
+    logger.info("\nTesting recursive reasoning...")
     recursive_result = tom_system.reasoner.recursive_reasoning("Alice", "Bob", depth=1)
-    print(f"Recursive reasoning result: {recursive_result}")
+    logger.info(f"Recursive reasoning result: {recursive_result}")
 
 
 if __name__ == "__main__":

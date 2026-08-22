@@ -285,7 +285,7 @@ async def _supreme_test_run():
         raise ValueError(f"Skill class '{{safe_skill_name}}' not found in executed code.")
     instance = target_cls()
     res = await instance.execute(test_data)
-    print("RESULT:" + json.dumps(res))
+    logger.info("RESULT:" + json.dumps(res))
 
 asyncio.run(_supreme_test_run())
 """

@@ -367,8 +367,8 @@ def _get_last_learning_time() -> Optional[str]:
             db_conn.close()
             
             return result
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to get max pattern date: {e}")
     return None
 
 

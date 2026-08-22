@@ -795,7 +795,7 @@ class QASuite:
 # Example usage and testing
 async def demo_qa_suite():
     """Demonstrate QA suite capabilities."""
-    print("Initializing QA Suite...")
+    logger.info("Initializing QA Suite...")
 
     qa_suite = QASuite()
 
@@ -803,20 +803,20 @@ async def demo_qa_suite():
     # Using a mock URL since we don't have a real server running
     results = await qa_suite.run_full_qa_suite("http://localhost:8000")
 
-    print("\nQA Suite Results:")
-    print(f"Unit Tests Passing: {results['summary']['unit_tests_passing']}")
-    print(f"Integration Tests Passing: {results['summary']['integration_tests_passing']}")
-    print(f"Performance Acceptable: {results['summary']['performance_acceptable']}")
-    print(f"Security Passing: {results['summary']['security_passing']}")
-    print(f"Resilience Verified: {results['summary']['resilience_verified']}")
-    print(f"Overall Status: {'PASS' if results['summary']['overall_status'] else 'FAIL'}")
+    logger.info("\nQA Suite Results:")
+    logger.info(f"Unit Tests Passing: {results['summary']['unit_tests_passing']}")
+    logger.info(f"Integration Tests Passing: {results['summary']['integration_tests_passing']}")
+    logger.info(f"Performance Acceptable: {results['summary']['performance_acceptable']}")
+    logger.info(f"Security Passing: {results['summary']['security_passing']}")
+    logger.info(f"Resilience Verified: {results['summary']['resilience_verified']}")
+    logger.info(f"Overall Status: {'PASS' if results['summary']['overall_status'] else 'FAIL'}")
 
-    print("\nDetailed Results:")
-    print(f"- Unit Tests: {results['unit_tests']['summary']}")
-    print(f"- Integration: {results['integration_tests']['all_passed']}")
-    print(f"- Performance: {results['performance_tests']['is_performing_well']}")
-    print(f"- Security: {results['security_tests']['is_secure']}")
-    print(f"- Resilience: {results['chaos_tests']['system_resilient']}")
+    logger.info("\nDetailed Results:")
+    logger.info(f"- Unit Tests: {results['unit_tests']['summary']}")
+    logger.info(f"- Integration: {results['integration_tests']['all_passed']}")
+    logger.info(f"- Performance: {results['performance_tests']['is_performing_well']}")
+    logger.info(f"- Security: {results['security_tests']['is_secure']}")
+    logger.info(f"- Resilience: {results['chaos_tests']['system_resilient']}")
 
 
 if __name__ == "__main__":

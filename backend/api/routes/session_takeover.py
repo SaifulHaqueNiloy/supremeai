@@ -92,9 +92,9 @@ class ScreencastStreamer:
                     await asyncio.sleep(target_frame_time - frame_time)
                     
         except WebSocketDisconnect:
-            print("Screencast client disconnected")
+            logger.info("Screencast client disconnected")
         except Exception as e:
-            print(f"Screencast error: {e}")
+            logger.error(f"Screencast error: {e}")
             await self.websocket.send_json({
                 "channel": "screencast",
                 "type": "error",

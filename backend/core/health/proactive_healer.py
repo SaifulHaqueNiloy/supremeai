@@ -84,8 +84,8 @@ class ProactiveHealer:
                     logger.info(f"✅ L1 healed on attempt {attempt + 1}")
                     self._stats["successful_heals"] += 1
                     return HealingOutcome.SUCCESS
-                except Exception:
-                    pass
+                except Exception as e:
+            logger.debug(f"Error: {e}")
         
         logger.warning(f"⚠️ L1 retry exhausted, escalating to L2")
         return await self._heal_l2_failover(error, context)

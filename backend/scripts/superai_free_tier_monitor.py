@@ -1,3 +1,4 @@
+from loguru import logger
 #!/usr/bin/env python3
 """
 ╔═══════════════════════════════════════════════════════════════════╗
@@ -272,8 +273,8 @@ class SupabaseChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("estimated_size_mb", 150)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         return 180  # Default estimate
     
     @staticmethod
@@ -285,8 +286,8 @@ class SupabaseChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("monthly_gb", 0.3)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         return 0.25
     
     @staticmethod
@@ -299,8 +300,8 @@ class SupabaseChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("mau", 120)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         return 85  # Conservative default
     
     @staticmethod
@@ -407,8 +408,8 @@ class UpstashChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("today_count", 2800)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         
         return 3500
     
@@ -421,8 +422,8 @@ class UpstashChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("used_mb", 45)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         return 52  # Default estimate
 
 
@@ -592,8 +593,8 @@ class GitHubActionsChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("minutes_used", 380), data.get("is_public", False)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         
         return 480, False
 
@@ -674,8 +675,8 @@ class LLMAPIChecker:
                 with open(tracker_path) as f:
                     data = json.load(f)
                     return data.get("estimated_monthly_usd", 8.50)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         return 12.0  # Default estimate
     
     @classmethod
@@ -776,9 +777,9 @@ class FreeTierMonitor:
         total_percentage_sum = 0
         configured_count = 0
         
-        print("\n" + "="*70)
-        print("🔍 Checking all services...")
-        print("="*70 + "\n")
+        logger.info("\n" + "="*70)
+        logger.info("🔍 Checking all services...")
+        logger.info("="*70 + "\n")
         
         for checker_class in self.CHECKERS:
             checker_name = checker_class.NAME
@@ -789,7 +790,7 @@ class FreeTierMonitor:
                     time.sleep(0.3)  # Brief pause for visual effect
                     status = checker_class.check(self.env_vars)
             else:
-                print(f"{checker_class.ICON} Checking {checker_name}...")
+                logger.info(f"{checker_class.ICON} Checking {checker_name}...")
                 status = checker_class.check(self.env_vars)
             
             services[checker_name.lower().replace(" ", "_")] = status
@@ -929,34 +930,34 @@ class FreeTierMonitor:
     
     def display_text_dashboard(self):
         """Fallback text-based dashboard"""
-        print("\n" + "="*70)
-        print("🆓 SUPERAI FREE-TIER MONITOR REPORT")
-        print("="*70)
-        print(f"\nGenerated: {self.report.generated_at}")
-        print(f"\nOverall Survival Score: {self.report.total_score}/100")
-        print("-"*70)
+        logger.info("\n" + "="*70)
+        logger.info("🆓 SUPERAI FREE-TIER MONITOR REPORT")
+        logger.info("="*70)
+        logger.info(f"\nGenerated: {self.report.generated_at}")
+        logger.info(f"\nOverall Survival Score: {self.report.total_score}/100")
+        logger.info("-"*70)
         
         for service_key, service in self.report.services.items():
             status_str = "✅" if service.is_configured else "❌"
-            print(f"\n{service.icon} {service.name} [{status_str}]")
-            print(f"   Overall Usage: {service.overall_percentage:.1f}%")
+            logger.info(f"\n{service.icon} {service.name} [{status_str}]")
+            logger.info(f"   Overall Usage: {service.overall_percentage:.1f}%")
             
             for limit in service.limits:
                 severity_icon = {"safe": "✓", "info": "i", "warning": "!", "critical": "!!!"}[limit.severity.value]
                 bar = self._text_bar(limit.percentage)
-                print(f"   {severity_icon} {limit.name}: {bar} {limit.current_value:.1f}/{limit.max_limit:.1f} {limit.unit}")
+                logger.info(f"   {severity_icon} {limit.name}: {bar} {limit.current_value:.1f}/{limit.max_limit:.1f} {limit.unit}")
             
             if service.errors:
                 for error in service.errors[:2]:
-                    print(f"   ⚠ Error: {error}")
+                    logger.info(f"   ⚠ Error: {error}")
         
         if self.report.alerts:
-            print("\n" + "-"*70)
-            print("🚨 ALERTS:")
+            logger.info("\n" + "-"*70)
+            logger.info("🚨 ALERTS:")
             for alert in self.report.alerts[:5]:
-                print(f"   • {alert['service']} - {alert['metric']}: {alert['percentage']}%")
+                logger.info(f"   • {alert['service']} - {alert['metric']}: {alert['percentage']}%")
         
-        print("\n" + "="*70)
+        logger.info("\n" + "="*70)
     
     def _text_bar(self, percentage: float, width: int = 20) -> str:
         """Generate text-based progress bar"""
@@ -1137,8 +1138,8 @@ class UsageTracker:
             try:
                 with open(file) as f:
                     data = json.load(f)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         
         if data.get("date") != today:
             data = {"date": today, "count": 0}
@@ -1158,8 +1159,8 @@ class UsageTracker:
             try:
                 with open(file) as f:
                     data = json.load(f)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         
         if data.get("month") != month:
             data = {"month": month, "total_cost": 0, "by_provider": {}}
@@ -1180,8 +1181,8 @@ class UsageTracker:
             try:
                 with open(file) as f:
                     data = json.load(f)
-            except:
-                pass
+            except Exception as e:
+            logger.debug(f"Error: {e}")
         
         if data.get("date") != today:
             data = {"date": today, "calls": {}, "bandwidth_kb": 0}
@@ -1235,15 +1236,15 @@ Examples:
         if args.track == 'redis':
             tracker.track_redis_command()
             if not args.quiet:
-                print("✅ Redis command tracked")
+                logger.info("✅ Redis command tracked")
         elif args.track == 'llm':
             tracker.track_llm_request(args.llm_provider)
             if not args.quiet:
-                print(f"✅ LLM request tracked ({args.llm_provider})")
+                logger.info(f"✅ LLM request tracked ({args.llm_provider})")
         elif args.track == 'api':
             tracker.track_api_call("manual")
             if not args.quiet:
-                print("✅ API call tracked")
+                logger.info("✅ API call tracked")
         return
     
     # Run monitor
@@ -1255,14 +1256,14 @@ Examples:
         output_path = args.json if isinstance(args.json, str) else None
         result = monitor.export_json(output_path)
         if output_path:
-            print(f"✅ JSON report saved to: {output_path}")
+            logger.info(f"✅ JSON report saved to: {output_path}")
         else:
-            print(result)
+            logger.info(result)
     elif args.html:
         output_path = args.html if isinstance(args.html, str) else 'free_tier_report.html'
         output_path = f"/home/z/my-project/download/{output_path}"
         monitor.generate_html_report(output_path)
-        print(f"✅ HTML report saved to: {output_path}")
+        logger.info(f"✅ HTML report saved to: {output_path}")
     elif args.report:
         monitor.display_text_dashboard()
     else:

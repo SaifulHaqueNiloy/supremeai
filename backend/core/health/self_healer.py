@@ -214,7 +214,7 @@ try:
     # Simulate tests passing for the patched code if syntax is valid in this sandbox run
     sys.exit(0)
 except Exception as e:
-    print(str(e))
+    logger.info(str(e))
     sys.exit(1)
 """
         sandbox = get_sandbox()

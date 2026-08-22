@@ -1,3 +1,4 @@
+from loguru import logger
 """
 SupremeAI Temporal Abstraction System
 =====================================
@@ -810,7 +811,7 @@ class TemporalAbstractionSystem:
 # Example usage and testing
 def demo_temporal_abstraction():
     """Demonstrate temporal abstraction system capabilities."""
-    print("Initializing Temporal Abstraction System...")
+    logger.info("Initializing Temporal Abstraction System...")
 
     # Create system
     config = TemporalAbstractionConfig()
@@ -857,48 +858,48 @@ def demo_temporal_abstraction():
     )
     temp_system.process_event(anomalous_event)
 
-    print(f"Processed {len(temp_system.temporal_memory.events)} events")
+    logger.info(f"Processed {len(temp_system.temporal_memory.events)} events")
 
     # Get detected patterns
-    print("\nDetecting temporal patterns...")
+    logger.info("\nDetecting temporal patterns...")
     patterns = temp_system.get_temporal_patterns()
-    print(f"Detected {len(patterns)} patterns:")
+    logger.info(f"Detected {len(patterns)} patterns:")
     for i, pattern in enumerate(patterns):
-        print(
+        logger.info(
             f"  {i+1}. {pattern.description} (strength: {pattern.strength:.2f}, confidence: {pattern.confidence:.2f})"
         )
 
     # Get predictions
-    print("\nMaking predictions...")
+    logger.info("\nMaking predictions...")
     predictions = temp_system.predict_future_events(3600)  # Next hour
-    print(f"Predicted {len(predictions)} events in the next hour:")
+    logger.info(f"Predicted {len(predictions)} events in the next hour:")
     for pred in predictions:
-        print(f"  - {pred['event_type']} at {pred['predicted_time']} (confidence: {pred['confidence']:.2f})")
+        logger.info(f"  - {pred['event_type']} at {pred['predicted_time']} (confidence: {pred['confidence']:.2f})")
 
     # Create abstractions
-    print("\nCreating temporal abstractions...")
+    logger.info("\nCreating temporal abstractions...")
     hourly_abstractions = temp_system.create_temporal_abstraction(TemporalGranularity.HOUR)
-    print(f"Created {len(hourly_abstractions)} hourly abstractions")
+    logger.info(f"Created {len(hourly_abstractions)} hourly abstractions")
 
     # Print first few abstractions
     for i, abst in enumerate(hourly_abstractions[:3]):
-        print(f"  {i+1}. {abst['time_period']}: {abst['event_count']} events, complexity: {abst['complexity']:.2f}")
+        logger.info(f"  {i+1}. {abst['time_period']}: {abst['event_count']} events, complexity: {abst['complexity']:.2f}")
 
     # Get comprehensive insights
-    print("\nGetting temporal insights...")
+    logger.info("\nGetting temporal insights...")
     insights = temp_system.get_temporal_insights()
 
-    print(f"Time span: {insights['time_span']['duration_hours']:.1f} hours")
-    print(f"Total events: {insights['event_statistics']['total_events']}")
-    print(f"Event types: {list(insights['event_statistics']['event_types'].keys())}")
-    print(f"Detected patterns: {insights['detected_patterns']['total_patterns']}")
-    print(f"Strong patterns: {len(insights['detected_patterns']['strong_patterns'])}")
+    logger.info(f"Time span: {insights['time_span']['duration_hours']:.1f} hours")
+    logger.info(f"Total events: {insights['event_statistics']['total_events']}")
+    logger.info(f"Event types: {list(insights['event_statistics']['event_types'].keys())}")
+    logger.info(f"Detected patterns: {insights['detected_patterns']['total_patterns']}")
+    logger.info(f"Strong patterns: {len(insights['detected_patterns']['strong_patterns'])}")
 
     # Get temporal hierarchy
-    print("\nGetting temporal hierarchy...")
+    logger.info("\nGetting temporal hierarchy...")
     hierarchy = temp_system.get_temporal_hierarchy()
     for granularity, abstractions in hierarchy.items():
-        print(f"{granularity.capitalize()} level: {len(abstractions)} abstractions")
+        logger.info(f"{granularity.capitalize()} level: {len(abstractions)} abstractions")
 
 
 if __name__ == "__main__":

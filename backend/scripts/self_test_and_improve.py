@@ -1,3 +1,4 @@
+from loguru import logger
 # backend/scripts/self_test_and_improve.py
 """SupremeAI Self-Test & Auto-Improve Runner.
 
@@ -28,24 +29,24 @@ from core.self_benchmark import BenchmarkCategory, SelfBenchmarkEngine
 
 async def run_self_test_cycle(ai_system: Any, benchmarker: SelfBenchmarkEngine, optimizer: AdaptiveOptimizer, quick_mode: bool = False) -> dict:
     """Run one complete self-test and improvement cycle."""
-    print("\n" + "=" * 70)
-    print(f"🧪 SUPREMEAI SELF-TEST CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 70)
+    logger.info("\n" + "=" * 70)
+    logger.info(f"🧪 SUPREMEAI SELF-TEST CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("=" * 70)
 
     categories = [BenchmarkCategory.PERFORMANCE, BenchmarkCategory.ACCURACY] if quick_mode else None
     benchmark_report = await benchmarker.run_full_benchmark(categories=categories)
 
-    print(f"\n📈 BENCHMARK RESULTS:")
-    print(f"   Overall Score: {benchmark_report.overall_score:.1%} (Grade: {benchmark_report.grade})")
-    print(f"   Tests Passed: {benchmark_report.summary['tests_passed']}/{benchmark_report.summary['tests_total']}")
-    print(f"   Weaknesses: {benchmark_report.summary['weakness_count']} found")
+    logger.info(f"\n📈 BENCHMARK RESULTS:")
+    logger.info(f"   Overall Score: {benchmark_report.overall_score:.1%} (Grade: {benchmark_report.grade})")
+    logger.info(f"   Tests Passed: {benchmark_report.summary['tests_passed']}/{benchmark_report.summary['tests_total']}")
+    logger.info(f"   Weaknesses: {benchmark_report.summary['weakness_count']} found")
 
     optimization_result = None
     if benchmark_report.improvements_needed or benchmark_report.overall_score < 0.95:
-        print("\n🔧 PHASE 2: Running Auto-Optimization...")
+        logger.info("\n🔧 PHASE 2: Running Auto-Optimization...")
         optimization_result = await optimizer.optimize_based_on_benchmark(benchmark_report)
-        print(f"   Actions Applied: {len(optimization_result.actions_taken)}")
-        print(f"   Overall Improvement: {optimization_result.overall_improvement:+.1%}")
+        logger.info(f"   Actions Applied: {len(optimization_result.actions_taken)}")
+        logger.info(f"   Overall Improvement: {optimization_result.overall_improvement:+.1%}")
 
     return {
         "benchmark": benchmark_report,
@@ -61,7 +62,7 @@ async def main() -> None:
     parser.add_argument("--max-cycles", type=int, default=1, help="Maximum number of cycles")
     args = parser.parse_args()
 
-    print("🧠 SUPREMEAI SELF-TEST & AUTO-IMPROVE SYSTEM")
+    logger.info("🧠 SUPREMEAI SELF-TEST & AUTO-IMPROVE SYSTEM")
     ai_system = SupremeAIIntegrator()
     await ai_system.initialize()
 

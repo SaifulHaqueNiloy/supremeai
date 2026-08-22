@@ -1,3 +1,4 @@
+from loguru import logger
 #!/usr/bin/env python3
 """
 ╔═══════════════════════════════════════════════════════════════════╗
@@ -1338,58 +1339,58 @@ class MultiLLMRouter:
 async def demonstrate_competitive_advantages():
     """Show off all our competitive advantages!"""
     
-    print("\n" + "="*70)
-    print("🏆 SUPERAI COMPETITIVE ADVANTAGE DEMONSTRATION")
-    print("="*70)
+    logger.info("\n" + "="*70)
+    logger.info("🏆 SUPERAI COMPETITIVE ADVANTAGE DEMONSTRATION")
+    logger.info("="*70)
     
     # 1. Show Personality System
-    print("\n🎭 1. PERSONALITY ENGINE (No competitor has this!)")
-    print("-"*50)
+    logger.info("\n🎭 1. PERSONALITY ENGINE (No competitor has this!)")
+    logger.info("-"*50)
     engine = PersonalityEngine()
     
     for personality in list(PersonalityType)[:3]:
         config = engine.set_personality(personality)
-        print(f"\n{config.emoji} {config.name}:")
-        print(f"   Sample: {config.response_style['greeting']}")
+        logger.info(f"\n{config.emoji} {config.name}:")
+        logger.info(f"   Sample: {config.response_style['greeting']}")
     
     # 2. Show Tunable Safety
-    print("\n\n🛡️ 2. TUNABLE SAFETY LAYER (Exploits ChatGPT's censorship!)")
-    print("-"*50)
+    logger.info("\n\n🛡️ 2. TUNABLE SAFETY LAYER (Exploits ChatGPT's censorship!)")
+    logger.info("-"*50)
     safety = TunableSafetyLayer(SafetyLevel.PROFESSIONAL)
     
     test_content = "This is some sample content to check"
     result = safety.check_content(test_content)
-    print(f"Safety Level: {safety.current_level.value}")
-    print(f"Content Allowed: {result['allowed']}")
-    print(f"Confidence: {result['confidence']}")
+    logger.info(f"Safety Level: {safety.current_level.value}")
+    logger.info(f"Content Allowed: {result['allowed']}")
+    logger.info(f"Confidence: {result['confidence']}")
     
     # Show different levels
-    print("\nAvailable Safety Levels:")
+    logger.info("\nAvailable Safety Levels:")
     for level in SafetyLevel:
         config = SAFETY_CONFIGS[level]
-        print(f"  • {level.value}: {(config['strictness']*100):.0f}% strict")
+        logger.info(f"  • {level.value}: {(config['strictness']*100):.0f}% strict")
     
     # 3. Show Confidence Scoring
-    print("\n\n📊 3. CONFIDENCE SCORING (Exploits hallucination problem!)")
-    print("-"*50)
+    logger.info("\n\n📊 3. CONFIDENCE SCORING (Exploits hallucination problem!)")
+    logger.info("-"*50)
     scorer = ConfidenceScorer()
     
     sample_query = "What is quantum computing?"
     sample_response = """Quantum computing is a revolutionary technology that harnesses quantum mechanical phenomena. According to research published in Nature 2024, quantum computers can solve certain problems exponentially faster than classical computers. IBM, Google, and startups like IonQ are leading development."""
     
     confidence = scorer.score_response(sample_query, sample_response)
-    print(f"Overall Confidence: {confidence.overall*100:.0f}%")
-    print(f"\nBreakdown:")
+    logger.info(f"Overall Confidence: {confidence.overall*100:.0f}%")
+    logger.info(f"\nBreakdown:")
     for metric, value in confidence.breakdown.items():
         bar = "█" * int(value * 10) + "░" * (10 - int(value * 10))
-        print(f"  {metric}: {bar} {value*100:.0f}%")
-    print(f"\nSuggestions:")
+        logger.info(f"  {metric}: {bar} {value*100:.0f}%")
+    logger.info(f"\nSuggestions:")
     for suggestion in confidence.suggestions[:3]:
-        print(f"  • {suggestion}")
+        logger.info(f"  • {suggestion}")
     
     # 4. Show Smart Context
-    print("\n\n🧠 4. SMART CONTEXT MANAGER (Beats Claude's 200K limit!)")
-    print("-"*50)
+    logger.info("\n\n🧠 4. SMART CONTEXT MANAGER (Beats Claude's 200K limit!)")
+    logger.info("-"*50)
     context_manager = SmartContextManager(max_active_tokens=1000)
     
     # Simulate long conversation
@@ -1400,14 +1401,14 @@ async def demonstrate_competitive_advantages():
         )
     
     summary = context_manager.get_full_context_summary()
-    print(f"Active Messages: {summary['active_messages']}")
-    print(f"Archived Fragments: {summary['archived_fragments']}")
-    print(f"Total Tokens Ever Used: {summary['total_tokens_ever']:.0f}")
-    print(f"Compression Ratio: {summary['compression_ratio']:.1f}x")
+    logger.info(f"Active Messages: {summary['active_messages']}")
+    logger.info(f"Archived Fragments: {summary['archived_fragments']}")
+    logger.info(f"Total Tokens Ever Used: {summary['total_tokens_ever']:.0f}")
+    logger.info(f"Compression Ratio: {summary['compression_ratio']:.1f}x")
     
     # 5. Show Multi-LLM Routing
-    print("\n\n🔄 5. MULTI-LLM ROUTER (Uses competitors as muscle!)")
-    print("-"*50)
+    logger.info("\n\n🔄 5. MULTI-LLM ROUTER (Uses competitors as muscle!)")
+    logger.info("-"*50)
     router = MultiLLMRouter()
     
     # Simulate various requests
@@ -1420,25 +1421,25 @@ async def demonstrate_competitive_advantages():
     
     for prompt, task_type in tasks:
         result = await router.route_request(prompt, task_type=task_type)
-        print(f"\nTask: {task_type}")
-        print(f"  Routed to: {result['provider']}/{result['model']}")
-        print(f"  Cost: ${result['cost']:.4f}")
-        print(f"  Latency: {result['latency_ms']}ms")
-        print(f"  Cached: {'Yes ✓' if result['cached'] else 'No'}")
+        logger.info(f"\nTask: {task_type}")
+        logger.info(f"  Routed to: {result['provider']}/{result['model']}")
+        logger.info(f"  Cost: ${result['cost']:.4f}")
+        logger.info(f"  Latency: {result['latency_ms']}ms")
+        logger.info(f"  Cached: {'Yes ✓' if result['cached'] else 'No'}")
     
     # Final stats
-    print("\n\n📈 USAGE STATISTICS:")
+    logger.info("\n\n📈 USAGE STATISTICS:")
     stats = router.get_usage_stats()
-    print(f"Total Requests: {stats['total_requests']}")
-    print(f"Total Cost: ${stats['total_cost_usd']:.4f}")
-    print(f"vs OpenAI Only: ${stats['savings_vs_openai_only']:.2f} saved!")
-    print(f"\nBy Provider:")
+    logger.info(f"Total Requests: {stats['total_requests']}")
+    logger.info(f"Total Cost: ${stats['total_cost_usd']:.4f}")
+    logger.info(f"vs OpenAI Only: ${stats['savings_vs_openai_only']:.2f} saved!")
+    logger.info(f"\nBy Provider:")
     for provider, data in stats['by_provider'].items():
-        print(f"  {provider}: {data['requests']} req ({data['percentage']}%)")
+        logger.info(f"  {provider}: {data['requests']} req ({data['percentage']}%)")
     
-    print("\n" + "="*70)
-    print("✅ Competitive advantage demonstration complete!")
-    print("="*70 + "\n")
+    logger.info("\n" + "="*70)
+    logger.info("✅ Competitive advantage demonstration complete!")
+    logger.info("="*70 + "\n")
 
 
 # CLI Entry Point
@@ -1457,7 +1458,7 @@ if __name__ == "__main__":
     if args.demo:
         asyncio.run(demonstrate_competitive_advantages())
     else:
-        print("""
+        logger.info("""
 ╔═══════════════════════════════════════════════════════════════════╗
 ║       SuperAI Competitive Advantage Implementation Kit            ║
 ╠═══════════════════════════════════════════════════════════════════╣

@@ -11,7 +11,7 @@ from core.messaging.event_bus import error_event_bus
 
 
 async def main():
-    print("Mocking an error trigger...")
+    logger.info("Mocking an error trigger...")
     event = ErrorEvent(
         module="mock.module",
         error_type="MockError",
@@ -26,7 +26,7 @@ async def main():
 
     # Wait a bit for the async listener to finish
     await asyncio.sleep(0.5)
-    print("Mock error triggered successfully.")
+    logger.info("Mock error triggered successfully.")
 
 
 if __name__ == "__main__":

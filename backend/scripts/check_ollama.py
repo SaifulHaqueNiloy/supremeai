@@ -32,7 +32,7 @@ RESET = "\033[0m"
 
 def bprint(msg: str, color: str = "") -> None:
     """বাংলা/ইংলিশ মিক্সড প্রিন্ট"""
-    print(f"{color}{msg}{RESET}")
+    logger.info(f"{color}{msg}{RESET}")
 
 
 # ──────────────────────────────────────────────

@@ -217,8 +217,8 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         # We simulate it with empty string for now in streaming
                         # In production we'd collect chunks
                         pass
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Failed to collect full response text: {e}")
                         
                     return
                 except Exception as e:

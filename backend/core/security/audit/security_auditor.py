@@ -423,8 +423,8 @@ class SecurityAuditor:
                 min_ver = v.parse(range_spec[2:].strip())
                 return current >= min_ver
                 
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Version parse error: {e}")
         
         return False
     
@@ -462,8 +462,8 @@ class SecurityAuditor:
                                         # Get base module name
                                         base_module = imp.split('.')[0].lower()
                                         imported_modules.add(base_module)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            logger.debug(f"Error parsing imports: {e}")
             
             # Compare with installed packages
             for dep_name, dep_info in self.dependencies.items():
@@ -655,26 +655,26 @@ def run_security_audit(project_root: Optional[str] = None) -> Dict[str, Any]:
 
 def print_security_report(report: Dict[str, Any]) -> None:
     """Pretty-print security report to console"""
-    print("\n" + "="*70)
-    print("🔒 SUPREMEAI SECURITY AUDIT REPORT")
-    print("="*70)
+    logger.info("\n" + "="*70)
+    logger.info("🔒 SUPREMEAI SECURITY AUDIT REPORT")
+    logger.info("="*70)
     
-    print(f"\n📊 Overall Score: {report['score']}/100 (Grade: {report['grade']})")
-    print(f"   Timestamp: {report['timestamp']}")
+    logger.info(f"\n📊 Overall Score: {report['score']}/100 (Grade: {report['grade']})")
+    logger.info(f"   Timestamp: {report['timestamp']}")
     
     summary = report['summary']
-    print(f"\n📋 Summary:")
-    print(f"   Total Vulnerabilities: {summary['total_vulnerabilities']}")
-    print(f"   🚨 Critical: {summary['critical']}")
-    print(f"   ⚠️  High: {summary['high']}")
-    print(f"   📋 Medium: {summary['medium']}")
-    print(f"   ℹ️  Low: {summary['low']}")
-    print(f"   Dependencies Scanned: {summary['dependencies_scanned']}")
-    print(f"   Unused Dependencies: {summary['unused_dependencies']}")
+    logger.info(f"\n📋 Summary:")
+    logger.info(f"   Total Vulnerabilities: {summary['total_vulnerabilities']}")
+    logger.info(f"   🚨 Critical: {summary['critical']}")
+    logger.info(f"   ⚠️  High: {summary['high']}")
+    logger.info(f"   📋 Medium: {summary['medium']}")
+    logger.info(f"   ℹ️  Low: {summary['low']}")
+    logger.info(f"   Dependencies Scanned: {summary['dependencies_scanned']}")
+    logger.info(f"   Unused Dependencies: {summary['unused_dependencies']}")
     
     if report['vulnerabilities']:
-        print(f"\n🐛 Vulnerabilities Found:")
-        print("-"*70)
+        logger.info(f"\n🐛 Vulnerabilities Found:")
+        logger.info("-" * 70)
         
         for vuln in report['vulnerabilities'][:20]:  # Show top 20
             severity_icon = {
@@ -685,25 +685,25 @@ def print_security_report(report: Dict[str, Any]) -> None:
                 'INFO': '💡'
             }.get(vuln['severity'], '❓')
             
-            print(f"\n{severity_icon} [{vuln['severity']}] {vuln['title']}")
-            print(f"   Location: {vuln['location']}")
-            print(f"   Issue: {vuln['description']}")
-            print(f"   Fix: {vuln['remediation']}")
+            logger.info(f"\n{severity_icon} [{vuln['severity']}] {vuln['title']}")
+            logger.info(f"   Location: {vuln['location']}")
+            logger.info(f"   Issue: {vuln['description']}")
+            logger.info(f"   Fix: {vuln['remediation']}")
     
     if report['recommendations']:
-        print(f"\n💡 Recommendations:")
+        logger.info(f"\n💡 Recommendations:")
         for rec in report['recommendations']:
-            print(f"   • {rec}")
+            logger.info(f"   • {rec}")
     
-    print("\n" + "="*70 + "\n")
+    logger.info("\n" + "="*70 + "\n")
 
 
 # CLI entry point
 if __name__ == '__main__':
     import sys
     
-    print("🔍 Running SupremeAI Security Audit...")
-    print("=" * 60)
+    logger.info("🔍 Running SupremeAI Security Audit...")
+    logger.info("=" * 60)
     
     project = sys.argv[1] if len(sys.argv) > 1 else None
     

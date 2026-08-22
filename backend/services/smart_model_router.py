@@ -952,8 +952,8 @@ if __name__ == '__main__':
     import asyncio
     
     async def test_router():
-        print("🧪 Testing SupremeAI Smart Router")
-        print("=" * 60)
+        logger.info("🧪 Testing SupremeAI Smart Router")
+        logger.info("=" * 60)
         
         router = SmartRouter()
         
@@ -965,15 +965,15 @@ if __name__ == '__main__':
             ("Hi there!", "Chat"),
         ]
         
-        print("\n📋 Routing Decisions:\n")
+        logger.info("\n📋 Routing Decisions:\n")
         for query, description in test_queries:
             decision = router.route(query)
-            print(f"Query: {query[:50]}...")
-            print(f"Type:  {description}")
-            print(f"Route: {decision.reason}")
-            print(f"Cost:  ${decision.estimated_cost_usd:.6f}")
-            print("-" * 60)
+            logger.info(f"Query: {query[:50]}...")
+            logger.info(f"Type:  {description}")
+            logger.info(f"Route: {decision.reason}")
+            logger.info(f"Cost:  ${decision.estimated_cost_usd:.6f}")
+            logger.info("-" * 60)
         
-        print("\n✅ Router test complete!")
+        logger.info("\n✅ Router test complete!")
     
     asyncio.run(test_router())

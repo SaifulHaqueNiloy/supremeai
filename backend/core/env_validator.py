@@ -364,35 +364,35 @@ class EnvironmentValidator:
     
     def print_report(self, result: ValidationResult) -> None:
         """Print validation report to console"""
-        print('\n' + '='*70)
-        print('🔍 SUPREMEAI ENVIRONMENT VALIDATION REPORT')
-        print('='*70)
-        print(f'\n📊 Health Score: {result.score}/100')
-        print(f'   Status: {"✅ PASS" if result.is_valid else "❌ FAIL"}\n')
+        logger.info('\n' + '='*70)
+        logger.info('🔍 SUPREMEAI ENVIRONMENT VALIDATION REPORT')
+        logger.info('='*70)
+        logger.info(f'\n📊 Health Score: {result.score}/100')
+        logger.info(f'   Status: {"✅ PASS" if result.is_valid else "❌ FAIL"}\n')
         
         if result.errors:
-            print('🚨 CRITICAL ERRORS (Must Fix):')
-            print('-'*70)
+            logger.info('🚨 CRITICAL ERRORS (Must Fix):')
+            logger.info('-'*70)
             for i, error in enumerate(result.errors, 1):
-                print(f'\n{i}. {error["variable"]}')
-                print(f'   {error["message"]}')
+                logger.info(f'\n{i}. {error["variable"]}')
+                logger.info(f'   {error["message"]}')
                 if 'description' in error:
-                    print(f'   📖 {error["description"]}')
+                    logger.info(f'   📖 {error["description"]}')
         
         if result.warnings:
-            print('\n⚠️  WARNINGS (Recommended):')
-            print('-'*70)
+            logger.info('\n⚠️  WARNINGS (Recommended):')
+            logger.info('-'*70)
             for i, warning in enumerate(result.warnings, 1):
-                print(f'\n{i}. {warning["variable"]}')
-                print(f'   {warning["message"]}')
+                logger.info(f'\n{i}. {warning["variable"]}')
+                logger.info(f'   {warning["message"]}')
         
         if result.info:
-            print('\nℹ️  INFORMATION:')
-            print('-'*70)
+            logger.info('\nℹ️  INFORMATION:')
+            logger.info('-'*70)
             for info in result.info[:5]:  # Show first 5
-                print(f'  • {info["variable"]}: {info["message"]}')
+                logger.info(f'  • {info["variable"]}: {info["message"]}')
         
-        print('\n' + '='*70 + '\n')
+        logger.info('\n' + '='*70 + '\n')
 
 
 def validate_environment(strict: bool = False) -> bool:
@@ -421,8 +421,8 @@ def validate_environment(strict: bool = False) -> bool:
 if __name__ == '__main__':
     import json
     
-    print("🔍 SupremeAI Environment Validator")
-    print("=" * 50)
+    logger.info("🔍 SupremeAI Environment Validator")
+    logger.info("=" * 50)
     
     validator = EnvironmentValidator()
     result = validator.validate()
@@ -441,7 +441,7 @@ if __name__ == '__main__':
         }
     }
     
-    print('\n📋 JSON Output (for CI/CD):')
-    print(json.dumps(output, indent=2))
+    logger.info('\n📋 JSON Output (for CI/CD):')
+    logger.info(json.dumps(output, indent=2))
     
     sys.exit(0 if result.is_valid else 1)
