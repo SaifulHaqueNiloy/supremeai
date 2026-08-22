@@ -1,16 +1,16 @@
-from datetime import UTC, datetime
-from typing import Any
-
-from fastapi import APIRouter, Depends, HTTPException, Response
-from loguru import logger
-from pydantic import BaseModel
 import hashlib
 import ipaddress
 import json
 import socket
 import urllib.error
 import urllib.request
+from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlparse
+
+from fastapi import APIRouter, Depends, HTTPException, Response
+from loguru import logger
+from pydantic import BaseModel
 
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
@@ -503,13 +503,14 @@ def delete_session(session_id: str):
     return {"success": True}
 
 
-from tools.ai_agents.browser_agent import BrowseRequest
-
 from pydantic import BaseModel
+
+from tools.ai_agents.browser_agent import BrowseRequest
 
 
 class ScrapeRequest(BaseModel):
     url: str
+
 
 # বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
 # এখন ব্রাউজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
@@ -517,8 +518,8 @@ class ScrapeRequest(BaseModel):
 # Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
 
 import httpx
-from core.config import settings
 
+from core.config import settings
 
 _SCRAPER_URL = settings.scraper_service_url.rstrip("/") if settings.scraper_service_url else None
 
@@ -538,6 +539,7 @@ async def _proxy_to_scraper(endpoint: str, payload: dict) -> dict:
     if not _SCRAPER_URL:
         # Fallback: use local BrowserAgent (for local dev / when scraper service is not deployed)
         from tools.ai_agents.browser_agent import BrowserAgent
+
         agent = BrowserAgent()
         return await agent.navigate_and_interact(**payload)
     try:
@@ -580,8 +582,13 @@ async def browse(request: BrowseRequest):
     if request.action in ("click", "type", "scroll", "screenshot"):
         result = await _proxy_to_scraper(
             "browse",
-            {"url": request.url, "action": request.action, "selector": request.selector,
-             "text": request.text, "wait_for": request.wait_for},
+            {
+                "url": request.url,
+                "action": request.action,
+                "selector": request.selector,
+                "text": request.text,
+                "wait_for": request.wait_for,
+            },
         )
         return result
 
@@ -693,6 +700,7 @@ def render_proxy(url: str):
 # 🌐 SUPREMEBROWSER ADVANCED COGNITIVE SUITE (L1 — L5)
 # ═════════════════════════════════════════════════════════════════════════════
 
+
 class SemanticClickRequest(BaseModel):
     target: str
     context: str = ""
@@ -707,10 +715,16 @@ class SwarmExploreRequest(BaseModel):
 async def semantic_click(req: SemanticClickRequest):
     """L4: Click by meaning — matches natural language intent to dynamic DOM embeddings."""
     from browser.semantic_dom import SemanticDOM
+
     sdom = SemanticDOM(page=None)
     await sdom.build_index()
     el = await sdom.query(req.target)
-    return {"status": "clicked", "matched_text": el.get("text"), "xpath": el.get("xpath"), "confidence": el.get("semantic_confidence")}
+    return {
+        "status": "clicked",
+        "matched_text": el.get("text"),
+        "xpath": el.get("xpath"),
+        "confidence": el.get("semantic_confidence"),
+    }
 
 
 @router.post("/smart-click")
@@ -744,6 +758,7 @@ async def smart_click(req: SemanticClickRequest):
 async def run_autonomous_goal(req: GoalRequest):
     """L5: Execute natural language browsing goal with reasoning, replanning, and memory."""
     from browser.autonomous_browser import AutonomousBrowserAgent
+
     agent = AutonomousBrowserAgent(session=None)
     result = await agent.achieve(req.goal)
     return result
@@ -753,7 +768,7 @@ async def run_autonomous_goal(req: GoalRequest):
 async def explore_swarm(req: SwarmExploreRequest):
     """L5+: Deploy parallel agent swarm across web sub-goals and synthesize multi-agent findings."""
     from browser.swarm_browser import SwarmBrowser
+
     swarm = SwarmBrowser()
     result = await swarm.explore(req.site, req.sub_goals)
     return result
-

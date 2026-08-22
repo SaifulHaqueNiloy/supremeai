@@ -1,6 +1,7 @@
 """Tests for Hierarchical Memory Tree Engine."""
 
 import pytest
+
 from backend.memory.hierarchical_tree import HierarchicalMemoryTree
 
 
@@ -38,7 +39,10 @@ def test_memory_tree_lifecycle_and_rollup(memory_tree):
     branch_node = memory_tree.nodes[dev_branch.id]
     assert "CommandCenter Store Refactor" in branch_node.summary
     assert "Playwright E2E Canvas Test" in branch_node.summary
-    assert "Frontend Improvements" in memory_tree.root.summary or "CommandCenter Store Refactor" in memory_tree.root.summary
+    assert (
+        "Frontend Improvements" in memory_tree.root.summary
+        or "CommandCenter Store Refactor" in memory_tree.root.summary
+    )
 
 
 def test_search_and_subtree(memory_tree):

@@ -3,11 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
-from typing import Any, Dict, Optional
 
-from core.task_contract import TaskBudget, TaskContract
+from core.task_contract import TaskContract
 
 logger = logging.getLogger("supremeai.runtime.budget")
 
@@ -34,9 +32,7 @@ class BudgetGuard:
                 f"Cost budget exhausted: ${budget.cost_incurred:.4f} >= ${budget.max_cost_usd:.4f}"
             )
         if budget.tool_calls_count >= budget.max_tool_calls:
-            raise BudgetExceededError(
-                f"Tool call limit reached: {budget.tool_calls_count}/{budget.max_tool_calls}"
-            )
+            raise BudgetExceededError(f"Tool call limit reached: {budget.tool_calls_count}/{budget.max_tool_calls}")
 
     @staticmethod
     def record_and_enforce(
@@ -61,6 +57,4 @@ class BudgetGuard:
                 f"Cost limit exceeded during execution: ${budget.cost_incurred:.4f} > ${budget.max_cost_usd:.4f}"
             )
         if budget.tool_calls_count > budget.max_tool_calls:
-            raise BudgetExceededError(
-                f"Tool call limit exceeded: {budget.tool_calls_count} > {budget.max_tool_calls}"
-            )
+            raise BudgetExceededError(f"Tool call limit exceeded: {budget.tool_calls_count} > {budget.max_tool_calls}")

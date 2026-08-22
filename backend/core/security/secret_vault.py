@@ -33,6 +33,7 @@ try:
     )
 except ImportError as e:
     import logging
+
     logging.getLogger("core.security").warning(f"Failed to import infisical_client: {e}")
     InfisicalClient = None  # type: ignore[assignment]
 
@@ -89,7 +90,9 @@ class ProductionSecretVault:
             try:
                 self._init_infisical_client()
             except Exception as e:
-                logger.error(f"Infisical initialization failed (invalid token/credentials): {e}. Bypassing Cloud Vault.")
+                logger.error(
+                    f"Infisical initialization failed (invalid token/credentials): {e}. Bypassing Cloud Vault."
+                )
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
 
@@ -187,7 +190,9 @@ class ProductionSecretVault:
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             self._circuit_breaker_open = True
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -201,7 +206,9 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:
             self._circuit_breaker_open = True
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -288,6 +295,7 @@ class ProductionSecretVault:
                 elif secret_id == "SUPREMEAI_JWT_SECRET":
                     # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
                     import secrets
+
                     env_fallback = secrets.token_urlsafe(64)
                 elif secret_id == "SUPABASE_URL":
                     env_fallback = "https://mock.supabase.co"

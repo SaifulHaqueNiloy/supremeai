@@ -12,7 +12,8 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 from loguru import logger
 
@@ -150,7 +151,9 @@ class SelfCorrectionService:
                     if retries >= self.max_retries:
                         node.status = "failed"
                         node.error = str(exc)
-                        raise RuntimeError(f"TaskNode '{node.id}' failed after {self.max_retries} auto-healing attempts: {exc}") from exc
+                        raise RuntimeError(
+                            f"TaskNode '{node.id}' failed after {self.max_retries} auto-healing attempts: {exc}"
+                        ) from exc
                     # Apply localized self-healing backoff/adaptation
                     time.sleep(0.05 * retries)
 

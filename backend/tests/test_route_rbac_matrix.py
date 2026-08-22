@@ -13,8 +13,8 @@ import pytest
 sys.modules.setdefault("google", MagicMock())
 sys.modules.setdefault("google.genai", MagicMock())
 
-from fastapi import APIRouter  # noqa: E402
-from fastapi.security import HTTPAuthorizationCredentials  # noqa: E402
+from fastapi import APIRouter
+from fastapi.security import HTTPAuthorizationCredentials
 
 
 def _collect_auth_dependency_names(route) -> set[str]:
@@ -123,9 +123,7 @@ def test_public_auth_login_not_admin_guarded():
     from api.routes import auth as auth_routes
 
     router = auth_routes.router
-    login_routes = [
-        r for r in router.routes if "login" in getattr(r, "path", "")
-    ]
+    login_routes = [r for r in router.routes if "login" in getattr(r, "path", "")]
     assert login_routes, "Expected at least one login route"
     for route in login_routes:
         deps = _collect_auth_dependency_names(route)

@@ -27,7 +27,11 @@ class TelDriveCrypto:
     def _get_fernet() -> Fernet:
         raw_key = ""
         try:
-            raw_key = settings.encryption_key.get_secret_value() if hasattr(settings.encryption_key, "get_secret_value") else str(settings.encryption_key)
+            raw_key = (
+                settings.encryption_key.get_secret_value()
+                if hasattr(settings.encryption_key, "get_secret_value")
+                else str(settings.encryption_key)
+            )
         except Exception as exc:
             logger.debug(f"Could not read encryption_key from settings: {exc}")
         if not raw_key:
@@ -140,8 +144,9 @@ class TelDriveStorage:
     async def create_and_upload_backup(self, chat_id: int | str | None = None) -> bool:
         """Collects database tables, AI memory & system configuration, then archives to Telegram."""
         try:
-            from database.session import get_db_session
             from sqlalchemy import text
+
+            from database.session import get_db_session
         except Exception:
             get_db_session = None
 
@@ -168,9 +173,11 @@ class TelDriveStorage:
                         try:
                             res = await session.execute(text(f"SELECT * FROM {tbl} LIMIT 500"))
                             rows = [dict(r._mapping) for r in res]
+
                             # Serialize non-json types (datetime, UUID)
                             def _json_serial(obj):
                                 return str(obj)
+
                             backup_payload["tables"][tbl] = json.loads(json.dumps(rows, default=_json_serial))
                         except Exception as e:
                             logger.debug(f"Table {tbl} skipped during backup: {e}")

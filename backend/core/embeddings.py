@@ -9,6 +9,7 @@ Supabase-এর মতো ১৫৩৬-ডাইম pgvector কলামের 
 শূন্য প্যাডিং ডট-প্রোডাক্ট বা নর্ম পরিবর্তন করে না। এতে লাইভ ডেটাবেজ মাইগ্রেশন
 ছাড়াই $0 এমবেডিং সম্ভব।
 """
+
 from __future__ import annotations
 
 import importlib.util
@@ -128,7 +129,7 @@ class EmbeddingEngine:
         """Compute cosine similarity between two vectors."""
         if not v1 or not v2 or len(v1) != len(v2):
             return 0.0
-        dot = sum(a * b for a, b in zip(v1, v2))
+        dot = sum(a * b for a, b in zip(v1, v2, strict=False))
         norm1 = math.sqrt(sum(a * a for a in v1))
         norm2 = math.sqrt(sum(b * b for b in v2))
         if norm1 <= 0 or norm2 <= 0:
@@ -145,4 +146,3 @@ class EmbeddingEngine:
             scored.append((score, doc))
         scored.sort(key=lambda x: x[0], reverse=True)
         return [dict(doc, score=score) for score, doc in scored[:top_k]]
-

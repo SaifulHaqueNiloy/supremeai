@@ -80,7 +80,7 @@ class SyncGuardAgent:
             agent_type="SyncGuard",
             task_type="System_Audit",
             content=json.dumps(audit_report, indent=2),  # Store the full report
-            metadata={"status": audit_report["status"]}
+            metadata={"status": audit_report["status"]},
         )
         if success:
             logger.info(f"💾 [{self.name}] Audit report saved to Eternal Brain.")
@@ -91,4 +91,5 @@ class SyncGuardAgent:
 
     def _get_timestamp(self):
         from datetime import datetime
+
         return datetime.now().strftime("%Y%m%d_%H%M%S")

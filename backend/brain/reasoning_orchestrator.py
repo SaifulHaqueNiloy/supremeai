@@ -111,7 +111,6 @@ class ReasoningOrchestrator:
             "reasoning_trace": reasoning_trace,
         }
 
-
     _instance: ReasoningOrchestrator | None = None
 
     @classmethod
@@ -146,4 +145,3 @@ class ReasoningOrchestrator:
             "summary": f"Successfully synthesized {len(findings)} agent reports.",
             "consolidated": findings,
         }
-

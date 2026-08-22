@@ -1,20 +1,32 @@
 # backend/tests/learning/test_pattern_and_hypothesis.py
 """Tests for PatternDetector, EvidenceAnalyzer, and HypothesisEngine."""
 
-import pytest
+
 from evolution.change_proposal import ChangeProposalManager, ChangeType, ProposalState
 from learning.evidence_analyzer import EvidenceAnalyzer
 from learning.experience import ExperienceRecord, ExperienceStore
-from learning.hypothesis_engine import HypothesisEngine, ImprovementHypothesis
+from learning.hypothesis_engine import HypothesisEngine
 from learning.pattern_detector import PatternDetector
 
 
 def test_pattern_detector_identifies_syntax_and_timeout_failures():
     store = ExperienceStore()
-    store.record(ExperienceRecord(task_id="t1", goal="write code", verified=False, failures=["AST Syntax Error at line 12"]))
-    store.record(ExperienceRecord(task_id="t2", goal="write code", verified=False, failures=["Invalid syntax token: EOF"]))
-    store.record(ExperienceRecord(task_id="to1", goal="scrape web", verified=False, failures=["Task execution timed out after 30s"]))
-    store.record(ExperienceRecord(task_id="to2", goal="scrape web", verified=False, failures=["Execution timeout: latency exceeded"]))
+    store.record(
+        ExperienceRecord(task_id="t1", goal="write code", verified=False, failures=["AST Syntax Error at line 12"])
+    )
+    store.record(
+        ExperienceRecord(task_id="t2", goal="write code", verified=False, failures=["Invalid syntax token: EOF"])
+    )
+    store.record(
+        ExperienceRecord(
+            task_id="to1", goal="scrape web", verified=False, failures=["Task execution timed out after 30s"]
+        )
+    )
+    store.record(
+        ExperienceRecord(
+            task_id="to2", goal="scrape web", verified=False, failures=["Execution timeout: latency exceeded"]
+        )
+    )
 
     detector = PatternDetector(store=store)
     patterns = detector.analyze_patterns(min_support=2)
@@ -28,7 +40,11 @@ def test_evidence_analyzer_statistical_significance():
     analyzer = EvidenceAnalyzer()
     store = ExperienceStore()
     for i in range(10):
-        store.record(ExperienceRecord(task_id=f"syn_{i}", goal="gen code", verified=False, failures=["Syntax Error: unexpected EOF"]))
+        store.record(
+            ExperienceRecord(
+                task_id=f"syn_{i}", goal="gen code", verified=False, failures=["Syntax Error: unexpected EOF"]
+            )
+        )
 
     detector = PatternDetector(store=store)
     patterns = detector.analyze_patterns(min_support=2)
@@ -41,8 +57,17 @@ def test_evidence_analyzer_statistical_significance():
 
 def test_hypothesis_engine_generates_and_converts_proposal():
     store = ExperienceStore()
-    store.record(ExperienceRecord(task_id="b1", goal="multi-agent query", verified=False, failures=["BudgetExceededError: max token cost exceeded"]))
-    store.record(ExperienceRecord(task_id="b2", goal="multi-agent query", verified=False, failures=["Token budget exhausted"]))
+    store.record(
+        ExperienceRecord(
+            task_id="b1",
+            goal="multi-agent query",
+            verified=False,
+            failures=["BudgetExceededError: max token cost exceeded"],
+        )
+    )
+    store.record(
+        ExperienceRecord(task_id="b2", goal="multi-agent query", verified=False, failures=["Token budget exhausted"])
+    )
 
     detector = PatternDetector(store=store)
     analyzer = EvidenceAnalyzer()

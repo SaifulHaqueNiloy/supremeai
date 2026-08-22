@@ -39,6 +39,7 @@ async def health_check(request: Request, response: Response):
     # ── DB Health Check ──
     try:
         from database.session import check_engine_health
+
         db_healthy = await check_engine_health()
         subsystems["database"] = "up" if db_healthy else "degraded"
     except Exception:
@@ -47,6 +48,7 @@ async def health_check(request: Request, response: Response):
     # ── Core Factory & Runtime Health ──
     try:
         from core.factory import get_factory
+
         factory = get_factory()
         factory_hc = factory.health_check()
         subsystems["factory"] = factory_hc.get("status", "healthy")

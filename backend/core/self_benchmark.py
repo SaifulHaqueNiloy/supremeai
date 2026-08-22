@@ -14,18 +14,20 @@ Comprehensive testing framework for self-evaluation and limit detection:
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
 import os
 import random
 import statistics
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
 from typing import Any
+
 from loguru import logger
 
 try:
     import psutil
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
@@ -404,14 +406,18 @@ class SelfBenchmarkEngine:
             return "D"
         return "F"
 
-    def _generate_optimization_plan(self, weaknesses: list[WeaknessReport], limits: list[LimitDetection]) -> dict[str, Any]:
+    def _generate_optimization_plan(
+        self, weaknesses: list[WeaknessReport], limits: list[LimitDetection]
+    ) -> dict[str, Any]:
         return {
             "priority_actions": [w.area for w in weaknesses],
             "parameter_adjustments": {limit.metric_name: limit.max_sustainable for limit in limits},
             "estimated_improvement": 0.15,
         }
 
-    def _generate_summary(self, results: list[BenchmarkResult], overall_score: float, grade: str, weaknesses: list[WeaknessReport]) -> dict[str, Any]:
+    def _generate_summary(
+        self, results: list[BenchmarkResult], overall_score: float, grade: str, weaknesses: list[WeaknessReport]
+    ) -> dict[str, Any]:
         passed = sum(1 for r in results if r.passed)
         total = len(results)
         return {

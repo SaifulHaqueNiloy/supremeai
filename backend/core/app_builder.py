@@ -91,6 +91,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     """
 
     # বাংলা মন্তব্ব্য: লেজি ইম্পোর্ট — মিডলওয়্যার ক্লাস শুধু create_app() কল করলেই লোড হবে
+    from fastapi.middleware.cors import CORSMiddleware
+
     from api.middleware import (
         RequestIdMiddleware,
         ResponseStandardizationMiddleware,
@@ -106,7 +108,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     from core.security.autonoguard_middleware import AutonoGuardMiddleware
     from core.security.honeypot_middleware import HoneypotMiddleware
     from core.security.origin_validator import TrustedOriginMiddleware
-    from fastapi.middleware.cors import CORSMiddleware
     from middleware.chaos_injector import ChaosInjectorMiddleware
 
     @asynccontextmanager
@@ -116,7 +117,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             yield
 
     docs_url = "/docs" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
-    redoc_url = "/redoc" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
+    redoc_url = (
+        "/redoc" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
+    )
     openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
@@ -171,7 +174,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 14. CORS: Re-added for unified app architecture.
     origins = list(set(settings.user_cors_origins + settings.admin_cors_origins))
     if not origins:
-        origins = ["*"] # Fallback if empty, though origin_validator will still guard
+        origins = ["*"]  # Fallback if empty, though origin_validator will still guard
 
     app.add_middleware(
         CORSMiddleware,
@@ -250,6 +253,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         }
 
     from fastapi.responses import JSONResponse
+
     from core.exceptions import SupremeAIException
 
     @app.exception_handler(SupremeAIException)
@@ -260,7 +264,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         )
 
     return app
-
 
 
 # Backward-compatibility alias for legacy tests

@@ -17,6 +17,7 @@ from core.embeddings import EmbeddingEngine
 
 class ElementNotFoundSemantically(Exception):
     """Raised when no element matches the query with sufficient confidence (triggers L4 Vision Grounding fallback)."""
+
     pass
 
 
@@ -31,7 +32,7 @@ class SemanticDOM:
         """Compute cosine similarity between two vectors."""
         if not v1 or not v2 or len(v1) != len(v2):
             return 0.0
-        dot = sum(a * b for a, b in zip(v1, v2))
+        dot = sum(a * b for a, b in zip(v1, v2, strict=False))
         norm1 = math.sqrt(sum(a * a for a in v1))
         norm2 = math.sqrt(sum(b * b for b in v2))
         if norm1 <= 0 or norm2 <= 0:
@@ -98,9 +99,10 @@ class SemanticDOM:
         scored.sort(key=lambda x: x[0], reverse=True)
 
         if not scored or scored[0][0] < threshold:
-            raise ElementNotFoundSemantically(f"No element matching '{natural_language}' found (best score: {scored[0][0] if scored else 0:.2f})")
+            raise ElementNotFoundSemantically(
+                f"No element matching '{natural_language}' found (best score: {scored[0][0] if scored else 0:.2f})"
+            )
 
         best_match = scored[0][1].copy()
         best_match["semantic_confidence"] = scored[0][0]
         return best_match
-

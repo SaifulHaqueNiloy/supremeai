@@ -153,7 +153,9 @@ class DynamicPlanningEngine:
 
         # Ensure DAG validity
         dag.topological_sort()
-        logger.info(f"DynamicPlanningEngine: Generated DAG '{dag_id}' with {len(dag.nodes)} nodes for goal '{intent.ultimate_goal[:50]}'")
+        logger.info(
+            f"DynamicPlanningEngine: Generated DAG '{dag_id}' with {len(dag.nodes)} nodes for goal '{intent.ultimate_goal[:50]}'"
+        )
         return dag
 
     def _build_action_nodes(self, dag_id: str, intent: IntentAnalysis, parent_id: str) -> list[TaskNode]:

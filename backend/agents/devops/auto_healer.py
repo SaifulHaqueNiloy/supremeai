@@ -153,8 +153,7 @@ class CircuitBreaker:
                 "failure_rates": self.failure_rates,
                 "last_failure": {k: v.isoformat() for k, v in self.last_failure_time.items()},
                 "failure_timestamps": {
-                    svc: [ts.isoformat() for ts in timestamps]
-                    for svc, timestamps in self.failure_timestamps.items()
+                    svc: [ts.isoformat() for ts in timestamps] for svc, timestamps in self.failure_timestamps.items()
                 },
             }
             STATE_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -185,8 +184,7 @@ class CircuitBreaker:
         # Keep only recent failures (last 10 minutes) for rate calculation
         recent_window = datetime.timedelta(minutes=10)
         self.failure_timestamps[service_name] = [
-            ts for ts in self.failure_timestamps[service_name]
-            if (now - ts) <= recent_window
+            ts for ts in self.failure_timestamps[service_name] if (now - ts) <= recent_window
         ]
 
         # Calculate failure rate
@@ -217,7 +215,9 @@ class CircuitBreaker:
 
         if self.failures[service_name] >= current_threshold:
             self.state[service_name] = CircuitState.OPEN
-            logger.warning(f"🔒 Circuit breaker OPEN for {service_name} ({self.failures[service_name]} failures, threshold: {current_threshold})")
+            logger.warning(
+                f"🔒 Circuit breaker OPEN for {service_name} ({self.failures[service_name]} failures, threshold: {current_threshold})"
+            )
         else:
             self.state[service_name] = CircuitState.CLOSED
 
@@ -261,7 +261,7 @@ class HealthChecker:
                     self.health_indicators[service_key] = {
                         "response_times": [],
                         "status_codes": [],
-                        "last_check": datetime.datetime.now(datetime.UTC)
+                        "last_check": datetime.datetime.now(datetime.UTC),
                     }
 
                 # Store metrics
@@ -270,10 +270,12 @@ class HealthChecker:
 
                 # Keep only recent metrics (last 10 checks)
                 if len(self.health_indicators[service_key]["response_times"]) > 10:
-                    self.health_indicators[service_key]["response_times"] = \
-                        self.health_indicators[service_key]["response_times"][-10:]
-                    self.health_indicators[service_key]["status_codes"] = \
-                        self.health_indicators[service_key]["status_codes"][-10:]
+                    self.health_indicators[service_key]["response_times"] = self.health_indicators[service_key][
+                        "response_times"
+                    ][-10:]
+                    self.health_indicators[service_key]["status_codes"] = self.health_indicators[service_key][
+                        "status_codes"
+                    ][-10:]
 
                 # Define health based on response status and response time
                 is_healthy = resp.status_code < 500
@@ -323,7 +325,7 @@ class HealthChecker:
             "recent_status_codes": recent_status_codes,
             "degraded_performance": avg_response_time > 3.0,
             "last_check": indicators["last_check"].isoformat(),
-            "sample_size": len(indicators["response_times"])
+            "sample_size": len(indicators["response_times"]),
         }
 
 
@@ -502,7 +504,7 @@ class AutoHealer:
             "healing_attempts": 0,
             "successful_healings": 0,
             "failed_healings": 0,
-            "circuit_breaker_blocks": 0
+            "circuit_breaker_blocks": 0,
         }
 
     def heal_service(self, service: ServiceConfig) -> HealingRecord:
@@ -610,7 +612,11 @@ class AutoHealer:
         """Analyze failure pattern to inform healing decisions."""
         failure_analysis = {
             "error_type": "connection" if error and "Connection" in error else "http" if status_code else "timeout",
-            "severity": "critical" if status_code and status_code >= 500 else "moderate" if status_code and status_code >= 400 else "minor",
+            "severity": (
+                "critical"
+                if status_code and status_code >= 500
+                else "moderate" if status_code and status_code >= 400 else "minor"
+            ),
             "previous_failures": self.circuit_breaker.failures.get(service_name, 0),
         }
         return failure_analysis

@@ -9,7 +9,6 @@ Autonomous intent interpretation:
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -116,14 +115,16 @@ class IntentDecipheringService:
             methodology = "profile_bottlenecks_and_apply_caching"
 
         # Pattern: Bug Fix / Crash / Debugging
-        elif any(w in lowered for w in ["fix", "bug", "crash", "error", "সমস্যা", "ভাঙা", "ইস্যু", "বাগ", "ত্রুটি", "সমাধান"]):
+        elif any(
+            w in lowered for w in ["fix", "bug", "crash", "error", "সমস্যা", "ভাঙা", "ইস্যু", "বাগ", "ত্রুটি", "সমাধান"]
+        ):
             ultimate_goal = f"Identify root cause and eliminate defect: {request}"
             invariants.append("all_test_suites_must_pass")
             methodology = "reproduce_localize_ast_patch_and_verify"
 
         # Pattern: Refactor / Consolidation / Structural Cleanup
         elif any(w in lowered for w in ["refactor", "cleanup", "consolidate", "একীভূত", "মুছে", "remove duplicate"]):
-            ultimate_goal = f"Unify redundant abstractions and remove duplicate code while maintaining parity"
+            ultimate_goal = "Unify redundant abstractions and remove duplicate code while maintaining parity"
             invariants.append("strict_backward_compatibility")
             methodology = "single_source_of_truth_migration_with_facades"
 

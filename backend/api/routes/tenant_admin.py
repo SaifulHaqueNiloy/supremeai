@@ -16,10 +16,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
+
 from api.dependencies import get_current_admin
 
 router = APIRouter(
-
     prefix="/admin/tenant-limits",
     tags=["tenant-admin"],
     dependencies=[Depends(get_current_admin)],

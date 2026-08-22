@@ -132,4 +132,3 @@ class SemanticCache:
 
 # Singleton instance
 semantic_cache = SemanticCache()
-

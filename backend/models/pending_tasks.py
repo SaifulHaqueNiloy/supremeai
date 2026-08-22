@@ -61,7 +61,6 @@ def _get_conn():
     return conn
 
 
-
 def create_pending_task(task_type: TaskType, payload: dict, created_by: str = "system") -> PendingTask:
     task = PendingTask(
         task_id=str(uuid.uuid4()),

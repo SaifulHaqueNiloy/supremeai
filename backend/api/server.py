@@ -11,11 +11,11 @@ Production-ready HTTP interface for SupremeAI:
 from __future__ import annotations
 
 import asyncio
+import time
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-import time
 from typing import Any
-import uuid
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +43,7 @@ async def lifespan(app: FastAPI):
         await factory.graceful_shutdown()
     try:
         from database.session import dispose_engine
+
         await dispose_engine()
     except Exception as e:
         logger.debug(f"Engine disposal error: {e}")
@@ -128,9 +129,7 @@ async def check_rate_limit(client_id: str = "anonymous", max_requests: int = 60,
     if client_id not in rate_limit_store:
         rate_limit_store[client_id] = []
 
-    rate_limit_store[client_id] = [
-        t for t in rate_limit_store[client_id] if now - t < window_seconds
-    ]
+    rate_limit_store[client_id] = [t for t in rate_limit_store[client_id] if now - t < window_seconds]
 
     if len(rate_limit_store[client_id]) >= max_requests:
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
@@ -139,6 +138,7 @@ async def check_rate_limit(client_id: str = "anonymous", max_requests: int = 60,
 
 
 # ==================== ENDPOINTS ====================
+
 
 @app.get("/", tags=["Root"])
 async def root() -> dict[str, Any]:
@@ -298,7 +298,9 @@ async def trigger_consolidation(_token: dict = Depends(get_current_user_token)) 
     return {
         "message": "Consolidation completed",
         "success": result.success,
-        "action_taken": result.action_taken.value if hasattr(result.action_taken, "value") else str(result.action_taken),
+        "action_taken": (
+            result.action_taken.value if hasattr(result.action_taken, "value") else str(result.action_taken)
+        ),
         "blocks_affected": result.blocks_affected,
         "memory_freed_bytes": result.memory_freed_bytes,
         "time_ms": result.time_ms,

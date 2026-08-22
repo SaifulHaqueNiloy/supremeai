@@ -9,7 +9,6 @@ Dynamic on-the-fly Python tool synthesis with zero-RCE AST isolation:
 
 from __future__ import annotations
 
-import ast
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -155,11 +154,7 @@ class ToolForgeService:
             exec(tool.compiled_code, sandbox_globals, sandbox_locals)
 
             # Target function matching spec.name or 'main' or 'run' or the only callable
-            func = (
-                sandbox_locals.get(tool.spec.name)
-                or sandbox_locals.get("run")
-                or sandbox_locals.get("main")
-            )
+            func = sandbox_locals.get(tool.spec.name) or sandbox_locals.get("run") or sandbox_locals.get("main")
 
             if not func:
                 callables = [v for v in sandbox_locals.values() if callable(v)]

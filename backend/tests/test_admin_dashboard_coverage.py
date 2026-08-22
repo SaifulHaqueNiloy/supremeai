@@ -64,7 +64,9 @@ class TestRequireAdminToken:
     def test_invalid_token_raises_401(self):
         """Malformed token should raise 401."""
         with pytest.raises(HTTPException) as exc_info:
-            asyncio.run(require_admin_token(HTTPAuthorizationCredentials(credentials="not-a-valid-token", scheme="Bearer")))
+            asyncio.run(
+                require_admin_token(HTTPAuthorizationCredentials(credentials="not-a-valid-token", scheme="Bearer"))
+            )
         assert exc_info.value.status_code == 401
 
     def test_fallback_api_token_auth(self):
@@ -76,7 +78,9 @@ class TestRequireAdminToken:
             pytest.skip("supremeai_api_token not configured")
 
         with patch("api.routes.admin_auth.jwt.decode", side_effect=Exception("bad")):
-            result = asyncio.run(require_admin_token(HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer")))
+            result = asyncio.run(
+                require_admin_token(HTTPAuthorizationCredentials(credentials=expected, scheme="Bearer"))
+            )
         assert result["role"] == "admin"
 
 

@@ -6,8 +6,8 @@ from pydantic import BaseModel
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
 from core.cache.multi_layer_cache import multi_layer_cache
-from core.llm.llm_gateway import llm_gateway
 from core.circuit_breaker import RedisCircuitBreaker
+from core.llm.llm_gateway import llm_gateway
 
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(name="llm_gateway", failure_threshold=3, recovery_timeout=30.0)
@@ -51,6 +51,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         memory_ctx = ""
         try:
             from memory.long_term_memory import LongTermMemory
+
             ltm = LongTermMemory(session_id=session_id or "default")
             mem_facts = ltm.build_context()
             if mem_facts and mem_facts != "No memory available.":
@@ -61,6 +62,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         # Retrieve System Knowledge Base (Cold-Start RAG)
         try:
             from services.memory_service import recall_memories
+
             rag_results = await recall_memories(task_description=payload.prompt, limit=3, threshold=0.55)
             if rag_results:
                 rag_facts = []
@@ -75,7 +77,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             logger.debug(f"RAG Retrieval bypassed: {rag_err}")
 
         enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
-        
+
         if await main_llm_circuit.should_attempt_external():
             try:
                 # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
@@ -96,7 +98,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     "response": response_text,
                     "cached": False,
                     "cache_source": "L5_AI_MODEL",
-                    "source": "external"
+                    "source": "external",
                 }
             except Exception as e:
                 logger.warning(f"External LLM API fail: {e!s} — falling back")
@@ -106,32 +108,33 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         # --- Fallback Path ---
         try:
             from services.memory_service import recall_memories
+
             fallback_results = await recall_memories(task_description=payload.prompt, limit=1, threshold=0.75)
             if fallback_results:
                 best = fallback_results[0]
                 metadata = best.get("metadata", {})
                 answer = metadata.get("content", best.get("summary", ""))
-                
+
                 similarity = best.get("similarity", 0.8)
                 disclaimer = " (এই উত্তরটি সম্পূর্ণ নিশ্চিত নাও হতে পারে।)" if similarity < 0.8 else ""
-                
+
                 response_text = answer + disclaimer
                 return {
                     "success": True,
                     "response": response_text,
                     "cached": False,
                     "cache_source": "KNOWLEDGE_BASE_FALLBACK",
-                    "source": "knowledge_base"
+                    "source": "knowledge_base",
                 }
         except Exception as e:
             logger.exception(f"Knowledge base fallback query failed: {e}")
-            
+
         return {
             "success": True,
             "response": "দুঃখিত, এই মুহূর্তে আপনার প্রশ্নের উত্তর দিতে পারছি না। একটু পরে আবার চেষ্টা করুন।",
             "cached": False,
             "cache_source": "FALLBACK_NO_MATCH",
-            "source": "no_match"
+            "source": "no_match",
         }
     except Exception as e:
         logger.error(f"Async LLM Error: {e!s}")
@@ -155,6 +158,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             memory_ctx = ""
             try:
                 from services.memory_service import recall_memories
+
                 rag_results = await recall_memories(task_description=payload.prompt, limit=3, threshold=0.55)
                 if rag_results:
                     rag_facts = []
@@ -167,13 +171,15 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         memory_ctx = "[System Knowledge Base:\n" + "\n".join(rag_facts) + "]\n\n"
             except Exception as rag_err:
                 logger.debug(f"RAG Retrieval bypassed in stream: {rag_err}")
-                
+
             enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
 
             if await main_llm_circuit.should_attempt_external():
                 try:
                     # বাংলা: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
-                    response_stream = await llm_gateway.acompletion(prompt=enriched_prompt, task_type="chat", stream=True)
+                    response_stream = await llm_gateway.acompletion(
+                        prompt=enriched_prompt, task_type="chat", stream=True
+                    )
 
                     async for chunk in response_stream:
                         if chunk:
@@ -186,26 +192,27 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                 except Exception as e:
                     logger.warning(f"External LLM API stream fail: {e!s} — falling back")
                     await main_llm_circuit.record_failure()
-                    
+
             # --- Fallback Path ---
             try:
                 from services.memory_service import recall_memories
+
                 fallback_results = await recall_memories(task_description=payload.prompt, limit=1, threshold=0.75)
                 if fallback_results:
                     best = fallback_results[0]
                     metadata = best.get("metadata", {})
                     answer = metadata.get("content", best.get("summary", ""))
-                    
+
                     similarity = best.get("similarity", 0.8)
                     disclaimer = " (এই উত্তরটি সম্পূর্ণ নিশ্চিত নাও হতে পারে।)" if similarity < 0.8 else ""
-                    
+
                     response_text = answer + disclaimer
                     yield f"data: {response_text}\n\n"
                     yield "data: [DONE]\n\n"
                     return
             except Exception as e:
                 logger.exception(f"Knowledge base stream fallback failed: {e}")
-                
+
             yield "data: দুঃখিত, এই মুহূর্তে আপনার প্রশ্নের উত্তর দিতে পারছি না। একটু পরে আবার চেষ্টা করুন।\n\n"
             yield "data: [DONE]\n\n"
         except Exception as e:

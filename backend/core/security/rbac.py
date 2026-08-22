@@ -274,4 +274,3 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
 def get_current_admin(request: Any = None) -> dict[str, Any]:
     """Enforce admin role for admin-facing endpoints."""
     return get_current_user_token(request)
-

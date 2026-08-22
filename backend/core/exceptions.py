@@ -80,7 +80,9 @@ class ExecutionError(SupremeAIException):
         details: dict[str, Any] | None = None,
         original_error: Exception | None = None,
     ) -> None:
-        super().__init__(message=message, error_code=error_code, status_code=500, details=details, original_error=original_error)
+        super().__init__(
+            message=message, error_code=error_code, status_code=500, details=details, original_error=original_error
+        )
 
 
 class RateLimitError(SupremeAIException):
