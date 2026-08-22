@@ -127,7 +127,6 @@ optional_routers: list[tuple[str, str]] = [
     # Added telemetry router for performance monitoring and system health
     ("api.v1.telemetry", "/api"),
     ("tools.social.telegram_bot", "/api/v1"),
-    ("tools.social.telegram_bot", ""),
 ]
 
 
