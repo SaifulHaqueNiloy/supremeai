@@ -13,8 +13,23 @@ if not os.getenv("ENV"):
 
 # Initialize global silent catcher before any other imports that might spawn threads
 from core.intelligent_silent_catcher import setup_silent_catcher
-
 setup_silent_catcher()
+
+# ----------------- SUPERAI ENV VALIDATION -----------------
+try:
+    from core.env_validator import EnvironmentValidator
+    validator = EnvironmentValidator()
+    result = validator.validate()
+    if not result.is_valid:
+        print("CRITICAL: Environment validation failed! Missing required variables.")
+        import sys
+        sys.exit(1)
+    else:
+        print(f"SUCCESS: Environment validated successfully (Score: {result.score}/100)")
+except ImportError:
+    pass
+# ----------------------------------------------------------
+
 
 import uvicorn
 from loguru import logger
