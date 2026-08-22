@@ -4,6 +4,34 @@
 # Phase 3: Edge gateway on Cloudflare Worker (free tier)
 services:
 
+  # ── MAIN BACKEND SERVICE (CRITICAL - was missing) ───────────────────
+  # This is the primary backend API service that powers both admin and user portals
+  - type: web
+    name: supremeai-backend-docker
+    env: docker
+    rootDir: backend
+    dockerfilePath: Dockerfile
+    region: singapore
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: false  # CI pipeline is the single deploy authority
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: ENV
+        value: production
+      - key: SERVICE_ROLE
+        value: "admin"
+      - key: CORS_ORIGINS
+        value: '["https://supremeai-admin.web.app","https://supremeai-a.web.app","https://supremeai-studio-client.onrender.com"]'
+      - key: ALLOWED_HOSTS
+        value: "supremeai-backend-docker.onrender.com,supremeai-admin.web.app,supremeai-a.web.app"
+    # Disk and instance settings for free tier optimization
+    disk:
+      name: data
+      mountPath: /app/data
+      sizeGB: 1
+
   # Phase 1: Scraper/Browser Automation Service (decoupled from main backend)
   # Docker runtime: the Python buildpack runs non-root and `playwright install
   # --with-deps` fails with `su: Authentication failure`. The Dockerfile installs
@@ -19,7 +47,7 @@ services:
     autoDeploy: false  # CI pipeline is the single deploy authority
     envVars:
       - key: PORT
-        value: 8081
+        value: "8080"
       - key: ENV
         value: production
       - key: SCRAPER_MAX_CONCURRENCY
@@ -45,6 +73,10 @@ services:
         value: "https://supremeai-backend-docker.onrender.com"
       - key: VITE_USER_BACKEND
         value: "https://supremeai-backend-docker.onrender.com"
+      - key: VITE_API_URL
+        value: "https://supremeai-backend-docker.onrender.com"
+      - key: VITE_PORTAL_TYPE
+        value: "user"
     routes:
       - type: rewrite
         source: /*
@@ -52,7 +84,7 @@ services:
     headers:
       - path: /*
         name: Cross-Origin-Embedder-Policy
-        value: require-corp
+        value: cross-origin
       - path: /*
         name: Cross-Origin-Opener-Policy
-        value: same-origin
+        value: unsafe-none

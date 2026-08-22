@@ -12,6 +12,12 @@ from core.health_check import health_checker
 logger = logging.getLogger(__name__)
 app = create_app()
 
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Render and load balancers"""
+    import os
+    return {"status": "healthy", "environment": os.getenv("ENV", "unknown")}
+
 
 @app.get("/health/aggregated")
 async def aggregated_health_check():

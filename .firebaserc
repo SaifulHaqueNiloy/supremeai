@@ -5,14 +5,14 @@
   "targets": {
     "supremeai-a": {
       "hosting": {
-        "admin-hosting": [
-          "supremeai-a"
-        ],
         "admin": [
           "supremeai-admin"
         ],
         "user": [
           "supremeai-a"
+        ],
+        "admin-hosting": [
+          "supremeai-admin"
         ]
       }
     }
