@@ -75,7 +75,7 @@ jobs:
         if: matrix.target == 'VSIX'
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6
         with:
-          version: 9.0.0
+          version: 10.15.0
 
       - name: Setup Node caching
         if: matrix.target == 'VSIX'
@@ -110,7 +110,7 @@ jobs:
 
       - name: Install pnpm for Desktop
         if: matrix.target == 'EXE'
-        run: npm install -g pnpm@9.0.0
+        run: npm install -g pnpm@10.15.0
 
       - name: Setup Rust
         if: matrix.target == 'EXE'

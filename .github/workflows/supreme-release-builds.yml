@@ -82,7 +82,7 @@ jobs:
         if: matrix.target == 'VSIX' || matrix.target == 'EXE'
         uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3
         with:
-          version: 9.0.0
+          version: 10.15.0
       - name: Setup Node caching
         if: matrix.target == 'VSIX' || matrix.target == 'EXE'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

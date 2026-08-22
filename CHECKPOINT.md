@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-22 16:31 UTC
+- **Date:** 2026-08-22 16:39 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,11 @@
   - (see git log for details)
 
 ## Files Changed
+  - `.github/workflows/maintenance_pipeline.yml`
   - `CHECKPOINT.md`
-  - `backend/services/scraper/main.py`
+  - `.github/workflows/supreme-release-builds.yml`
   - `.github/workflows/supreme-core-ci.yml`
+  - `.github/workflows/release-builds.yml`
 
 ## Pending (Carry Forward)
 - **MED:** Supabase `ai_memory` টেবিলে ভেক্টর স্কিমা ভ্যালিডেশন এবং `memory_write.py` লাইভ ভেক্টর ইনসার্ট টেস্ট।
