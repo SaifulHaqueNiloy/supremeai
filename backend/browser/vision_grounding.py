@@ -15,6 +15,7 @@ from loguru import logger
 
 class LowConfidenceGrounding(Exception):
     """Raised when VLM visual confidence falls below required threshold (triggers HITL takeover)."""
+
     pass
 
 
@@ -38,10 +39,11 @@ class VisionGrounding:
         # Grounding via VLM / ModelRouter
         try:
             from brain.model_router import ModelRouter
+
             router = ModelRouter()
             prompt = (
                 f"Identify the (x, y) click coordinates for '{target}' on the screen.\n"
-                f"Return JSON format: {{\"x\": 250, \"y\": 320, \"confidence\": 0.88}}"
+                f'Return JSON format: {{"x": 250, "y": 320, "confidence": 0.88}}'
             )
             res = router.route_and_generate(prompt=prompt, task_type="general", max_cost=0.01)
             raw = res.get("text", "{}").strip()
@@ -49,6 +51,7 @@ class VisionGrounding:
                 lines = raw.splitlines()
                 raw = "\n".join(lines[1:-1] if lines[-1].startswith("```") else lines[1:])
             import json
+
             data = json.loads(raw)
             conf = float(data.get("confidence", 0.85))
             if conf < min_confidence:

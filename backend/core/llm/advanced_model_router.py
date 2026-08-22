@@ -14,9 +14,9 @@ from __future__ import annotations
 import json
 import re
 import urllib.request
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypedDict
+from typing import Any
 
 from loguru import logger
 
@@ -34,9 +34,9 @@ _TIER0_CONFIDENCE_THRESHOLD = 0.85
 # ── Domain & Expert Classification (MoE) ───────────────────────────────────
 class ExpertType(str, Enum):
     BENGALI = "bengali"  # Bangla language, Banglish, BD context
-    CODER = "coder"      # Programming, DevOps, API, Technical
-    REASONER = "reasoner"# Math, Logic, Analysis, Strategy
-    CREATIVE = "creative"# Writing, Brainstorming, Marketing
+    CODER = "coder"  # Programming, DevOps, API, Technical
+    REASONER = "reasoner"  # Math, Logic, Analysis, Strategy
+    CREATIVE = "creative"  # Writing, Brainstorming, Marketing
     GENERAL = "general"  # General conversation
 
 
@@ -44,25 +44,76 @@ class DomainExpertAnalyzer:
     """Classifies prompts into specialized expert domains with zero-cost keyword matching."""
 
     BENGALI_KEYWORDS = [
-        "বাংলা", "bangla", "bangladesh", "dhaka", "ki", "kemon", "acho",
-        "kemon acho", "apni", "tumi", "ami", "কি", "কেন", "কিভাবে",
-        "ব্যাখ্যা করো", "ধন্যবাদ", "হ্যালো", "করুন", "বলুন"
+        "বাংলা",
+        "bangla",
+        "bangladesh",
+        "dhaka",
+        "ki",
+        "kemon",
+        "acho",
+        "kemon acho",
+        "apni",
+        "tumi",
+        "ami",
+        "কি",
+        "কেন",
+        "কিভাবে",
+        "ব্যাখ্যা করো",
+        "ধন্যবাদ",
+        "হ্যালো",
+        "করুন",
+        "বলুন",
     ]
 
     CODER_KEYWORDS = [
-        "code", "python", "javascript", "typescript", "bug", "error",
-        "function", "api", "docker", "deploy", "class", "async", "def",
-        "return", "import", "const", "let", "sql", "fastapi", "react", "endpoint"
+        "code",
+        "python",
+        "javascript",
+        "typescript",
+        "bug",
+        "error",
+        "function",
+        "api",
+        "docker",
+        "deploy",
+        "class",
+        "async",
+        "def",
+        "return",
+        "import",
+        "const",
+        "let",
+        "sql",
+        "fastapi",
+        "react",
+        "endpoint",
     ]
 
     REASONING_KEYWORDS = [
-        "calculate", "math", "logic", "prove", "analyze", "compare",
-        "optimize", "algorithm", "equation", "theorem", "deduce", "evaluate"
+        "calculate",
+        "math",
+        "logic",
+        "prove",
+        "analyze",
+        "compare",
+        "optimize",
+        "algorithm",
+        "equation",
+        "theorem",
+        "deduce",
+        "evaluate",
     ]
 
     CREATIVE_KEYWORDS = [
-        "write a story", "poem", "marketing", "slogan", "creative",
-        "brainstorm", "compose", "draft", "fiction"
+        "write a story",
+        "poem",
+        "marketing",
+        "slogan",
+        "creative",
+        "brainstorm",
+        "compose",
+        "draft",
+        "fiction",
     ]
 
     @classmethod
@@ -77,7 +128,9 @@ class DomainExpertAnalyzer:
             return ExpertType.BENGALI
 
         # 2. Coder domain check
-        if any(w in words for w in cls.CODER_KEYWORDS) or any(k in p_lower for k in ["def ", "import ", "async ", "fix docker", "connection error"]):
+        if any(w in words for w in cls.CODER_KEYWORDS) or any(
+            k in p_lower for k in ["def ", "import ", "async ", "fix docker", "connection error"]
+        ):
             return ExpertType.CODER
 
         # 3. Reasoning check
@@ -96,10 +149,10 @@ class TaskComplexityAnalyzer:
     """Analyzes prompt complexity and token volume to determine execution tier."""
 
     COMPLEXITY_THRESHOLDS = {
-        "simple": 500,    # < 500 tokens -> Fast/Local
-        "medium": 2000,   # 500-2000 -> Managed Balanced
+        "simple": 500,  # < 500 tokens -> Fast/Local
+        "medium": 2000,  # 500-2000 -> Managed Balanced
         "complex": 5000,  # 2000-5000 -> Advanced / High Context
-        "extreme": float("inf"), # > 5000 -> Frontier Reasoning
+        "extreme": float("inf"),  # > 5000 -> Frontier Reasoning
     }
 
     KEYWORDS = {
@@ -170,18 +223,21 @@ class Tier0Dispatcher:
     @staticmethod
     def _list_files(prompt: str) -> dict[str, Any]:
         import os
+
         match = re.search(r"(?:in|under|at|from)\s+(.+)", prompt, re.I)
         target_dir = match.group(1).strip() if match else "."
         files: list[dict[str, Any]] = []
         try:
             with os.scandir(target_dir) as entries:
                 for entry in entries:
-                    files.append({
-                        "name": entry.name,
-                        "path": entry.path,
-                        "is_dir": entry.is_dir(),
-                        "size_bytes": entry.stat().st_size if entry.is_file() else None,
-                    })
+                    files.append(
+                        {
+                            "name": entry.name,
+                            "path": entry.path,
+                            "is_dir": entry.is_dir(),
+                            "size_bytes": entry.stat().st_size if entry.is_file() else None,
+                        }
+                    )
             return {"directory": target_dir, "count": len(files), "files": files[:50]}
         except Exception as exc:
             logger.warning(f"[Tier0Dispatcher] File listing failed for '{target_dir}': {exc}")
@@ -353,8 +409,16 @@ class AdvancedModelRouter:
 
         length_score = min(len(prompt) / 1000.0, 1.0)
         complexity_indicators = [
-            "analyze", "compare", "evaluate", "summarize", "synthesize",
-            "reason", "think step by step", "examine", "code", "algorithm"
+            "analyze",
+            "compare",
+            "evaluate",
+            "summarize",
+            "synthesize",
+            "reason",
+            "think step by step",
+            "examine",
+            "code",
+            "algorithm",
         ]
         indicator_score = sum(1 for ind in complexity_indicators if ind in prompt.lower())
         indicator_score = min(indicator_score / 5.0, 1.0)
@@ -377,13 +441,7 @@ class AdvancedModelRouter:
         health = self.provider_health.get(provider.lower(), {"latency_ms": 300})
         return float(round(health.get("latency_ms", 300) / 1000.0, 3))
 
-    def calculate_model_score(
-        self,
-        provider: str,
-        model: str,
-        task_type: str,
-        complexity: dict[str, float]
-    ) -> float:
+    def calculate_model_score(self, provider: str, model: str, task_type: str, complexity: dict[str, float]) -> float:
         """Calculates multi-factor composite priority score (lower is better in raw score, converted to priority)."""
         health = self.provider_health.get(provider.lower(), {"status": "ok", "latency_ms": 300})
         if health.get("status") == "down":
@@ -397,7 +455,11 @@ class AdvancedModelRouter:
         norm_quality_inv = 1.0 - ((quality - 1.0) / 9.0)
 
         # Weighted penalty score
-        penalty = (norm_latency * self.latency_weight) + (norm_cost * self.cost_weight) + (norm_quality_inv * self.quality_weight)
+        penalty = (
+            (norm_latency * self.latency_weight)
+            + (norm_cost * self.cost_weight)
+            + (norm_quality_inv * self.quality_weight)
+        )
         priority_score = max(0.01, 1.0 - penalty)
 
         # Apply runtime performance metrics if available

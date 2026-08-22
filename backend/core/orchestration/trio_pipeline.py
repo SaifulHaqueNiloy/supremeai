@@ -53,9 +53,7 @@ class TrioPipeline:
             - ready_for_production
             - summary
         """
-        pipeline_id = hashlib.sha256(
-            f"{prompt}:{language}:{datetime.now(UTC).isoformat()}".encode()
-        ).hexdigest()[:16]
+        pipeline_id = hashlib.sha256(f"{prompt}:{language}:{datetime.now(UTC).isoformat()}".encode()).hexdigest()[:16]
 
         logger.info(f"[TrioPipeline] Starting pipeline {pipeline_id}: {prompt[:100]}")
 
@@ -110,11 +108,7 @@ class TrioPipeline:
         review_issue_count = len(reviewer_result.issues)
         check_issue_count = len(checker_result.issues)
         status = (
-            "ready"
-            if ready and review_issue_count == 0
-            else "needs_review"
-            if review_issue_count > 0
-            else "reviewed"
+            "ready" if ready and review_issue_count == 0 else "needs_review" if review_issue_count > 0 else "reviewed"
         )
 
         summary = (

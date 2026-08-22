@@ -20,17 +20,11 @@ class InputSanitizer:
             r"impersonate real person",
         ]
         # বাংলা: ইমেইল RFC 5322 সামঞ্জস্যপূর্ণ সরলীকৃত প্যাটার্ন — plus-addressing সাপোর্ট।
-        self.email_pattern = re.compile(
-            r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,24}\b"
-        )
+        self.email_pattern = re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,24}\b")
         # বাংলা: IPv4 — প্রতিটি অক্টেট 0-255 চেক সহ (পুরোনো \d{1,3} প্যাটার্ন ছিল অতিরিক্ত loose)।
-        self.ip_pattern = re.compile(
-            r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b"
-        )
+        self.ip_pattern = re.compile(r"\b(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}(?:25[0-5]|2[0-4]\d|1?\d?\d)\b")
         # বাংলা: ফোন নম্বর — E.164 + সাধারণ ফরম্যাট, ন্যূনতম ৭ ডিজিট।
-        self.phone_pattern = re.compile(
-            r"(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?)\d{3,4}[-.\s]?\d{3,4}\b"
-        )
+        self.phone_pattern = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?)\d{3,4}[-.\s]?\d{3,4}\b")
         # বাংলা: US SSN — XXX-XX-XXXX ফরম্যাট।
         self.ssn_pattern = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
         # বাংলা: ক্রেডিট কার্ড — 13-19 ডিজিট, Luhn ভ্যালিডেশন সাপোর্ট।

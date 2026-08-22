@@ -67,7 +67,13 @@ class SelfReflectionLoop:
                         json={"contents": [{"parts": [{"text": reflection_prompt}]}]},
                     )
                     if resp.status_code == 200:
-                        analysis = resp.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        analysis = (
+                            resp.json()
+                            .get("candidates", [{}])[0]
+                            .get("content", {})
+                            .get("parts", [{}])[0]
+                            .get("text", "")
+                        )
                         reflection["deep_analysis"] = analysis
             elif groq_key:
                 async with httpx.AsyncClient(timeout=10) as client:

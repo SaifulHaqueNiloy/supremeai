@@ -6,21 +6,23 @@ model, task_type, latency_ms, tokens (if available), cost, success.
 
 This is the data source for future self-evolving routing policies.
 """
+
 from __future__ import annotations
 
 import contextlib
 import json
 import time
-from contextlib import asynccontextmanager
-from dataclasses import dataclass, field, asdict
-from datetime import datetime, UTC
-from typing import Any
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime
+from typing import Any
 
 try:
     from loguru import logger
 except ImportError:
     import logging
+
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
     logger = logging.getLogger("llm_telemetry")
 
@@ -29,9 +31,7 @@ except ImportError:
 class LLMCallRecord:
     """Immutable record of a single LLM gateway call."""
 
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(UTC).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     session_id: str = ""
     provider: str = ""
     model: str = ""

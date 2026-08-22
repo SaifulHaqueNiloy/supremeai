@@ -7,7 +7,6 @@ Chunks markdown documents by headings (#, ##, ###) and indexes them using Embedd
 
 from __future__ import annotations
 
-import os
 import re
 from pathlib import Path
 from typing import Any
@@ -36,7 +35,7 @@ class MarkdownIndexer:
     def _chunk_file(self, file_path: Path) -> list[dict[str, Any]]:
         """Split a markdown file into chunks delimited by markdown headings."""
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
         except Exception as e:
             logger.debug(f"[MarkdownIndexer] Failed to read {file_path}: {e}")
@@ -52,13 +51,15 @@ class MarkdownIndexer:
                 if current_body:
                     snippet = "\n".join(current_body).strip()
                     if snippet:
-                        chunks.append({
-                            "file": str(file_path.name),
-                            "path": str(file_path),
-                            "heading": current_heading,
-                            "snippet": snippet[:400],
-                            "text": f"{file_path.name} | {current_heading} | {snippet[:300]}",
-                        })
+                        chunks.append(
+                            {
+                                "file": str(file_path.name),
+                                "path": str(file_path),
+                                "heading": current_heading,
+                                "snippet": snippet[:400],
+                                "text": f"{file_path.name} | {current_heading} | {snippet[:300]}",
+                            }
+                        )
                 current_heading = line.lstrip("#").strip()
                 current_body = []
             else:
@@ -67,13 +68,15 @@ class MarkdownIndexer:
         if current_body:
             snippet = "\n".join(current_body).strip()
             if snippet:
-                chunks.append({
-                    "file": str(file_path.name),
-                    "path": str(file_path),
-                    "heading": current_heading,
-                    "snippet": snippet[:400],
-                    "text": f"{file_path.name} | {current_heading} | {snippet[:300]}",
-                })
+                chunks.append(
+                    {
+                        "file": str(file_path.name),
+                        "path": str(file_path),
+                        "heading": current_heading,
+                        "snippet": snippet[:400],
+                        "text": f"{file_path.name} | {current_heading} | {snippet[:300]}",
+                    }
+                )
 
         return chunks
 
@@ -91,13 +94,15 @@ class MarkdownIndexer:
 
         if not self.chunks:
             # Fallback default snippets if no markdown files are found
-            self.chunks.append({
-                "file": "README.md",
-                "heading": "SupremeAI Architecture",
-                "snippet": "SupremeAI is a self-evolving multi-model agentic operating system.",
-                "text": "SupremeAI architecture overview and multi-model agent system",
-                "vector": await self.engine.embed("SupremeAI architecture overview and multi-model agent system"),
-            })
+            self.chunks.append(
+                {
+                    "file": "README.md",
+                    "heading": "SupremeAI Architecture",
+                    "snippet": "SupremeAI is a self-evolving multi-model agentic operating system.",
+                    "text": "SupremeAI architecture overview and multi-model agent system",
+                    "vector": await self.engine.embed("SupremeAI architecture overview and multi-model agent system"),
+                }
+            )
 
         logger.info(f"[MarkdownIndexer] Indexed {len(self.chunks)} markdown chunks.")
         return len(self.chunks)

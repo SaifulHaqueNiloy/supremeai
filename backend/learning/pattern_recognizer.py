@@ -10,11 +10,12 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from collections.abc import Callable
+
 from loguru import logger
 
 
@@ -226,21 +227,27 @@ class PatternRecognizer:
             "hash": hash(str(data)) % 10000,
         }
         if isinstance(data, str):
-            features.update({
-                "length": len(data),
-                "word_count": len(data.split()),
-                "has_numbers": any(c.isdigit() for c in data),
-            })
+            features.update(
+                {
+                    "length": len(data),
+                    "word_count": len(data.split()),
+                    "has_numbers": any(c.isdigit() for c in data),
+                }
+            )
         elif isinstance(data, list | tuple):
-            features.update({
-                "element_count": len(data),
-                "element_types": list(set(type(x).__name__ for x in data)),
-            })
+            features.update(
+                {
+                    "element_count": len(data),
+                    "element_types": list(set(type(x).__name__ for x in data)),
+                }
+            )
         elif isinstance(data, dict):
-            features.update({
-                "keys": list(data.keys()),
-                "key_count": len(data),
-            })
+            features.update(
+                {
+                    "keys": list(data.keys()),
+                    "key_count": len(data),
+                }
+            )
         return features
 
     def _generate_signature(self, features: dict[str, Any]) -> str:
@@ -283,7 +290,9 @@ class PatternRecognizer:
 
     def _should_create_new_pattern(self, features: dict[str, Any]) -> bool:
         similar_count = sum(
-            1 for p in self.known_patterns.values() if p.metadata.get("features", {}).get("type") == features.get("type")
+            1
+            for p in self.known_patterns.values()
+            if p.metadata.get("features", {}).get("type") == features.get("type")
         )
         return similar_count < 20
 

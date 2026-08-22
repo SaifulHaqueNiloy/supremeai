@@ -29,7 +29,7 @@ from learning.pattern_recognizer import PatternMatch, PatternRecognizer
 from services.dynamic_planner import DynamicPlanningEngine, TaskDAG, TaskNode
 from services.intent_deciphering import IntentAnalysis, IntentDecipheringService
 from services.memory_service import CascadeMemoryService
-from services.self_correction import SelfCorrectionService, VerificationResult
+from services.self_correction import SelfCorrectionService
 from services.tool_forge import ToolForgeService, ToolSpec
 
 
@@ -67,6 +67,7 @@ class SolutionResult:
 
 # ── Domain Adapters Bridge ─────────────────────────────────────────────────────
 
+
 class BaseDomainAdapter:
     """Base domain execution adapter."""
 
@@ -85,11 +86,24 @@ class DevDomainAdapter(BaseDomainAdapter):
         res = await self.adapter.adapt(node.description or node.name, context)
 
         if capability == "probe_system_state":
-            return {"probed_files": ["backend/core", "backend/api"], "contract_status": "valid", "adaptation": res.domain_specific_metadata}
+            return {
+                "probed_files": ["backend/core", "backend/api"],
+                "contract_status": "valid",
+                "adaptation": res.domain_specific_metadata,
+            }
         elif capability == "ast_localize_defect":
-            return {"defect_location": "backend/api/routes", "ast_nodes_affected": 3, "analysis": res.domain_specific_metadata.get("analysis", {})}
+            return {
+                "defect_location": "backend/api/routes",
+                "ast_nodes_affected": 3,
+                "analysis": res.domain_specific_metadata.get("analysis", {}),
+            }
         elif capability == "apply_safe_code_patch":
-            return {"patch_applied": True, "syntax_valid": True, "regression_risk": "zero", "solution": res.adapted_solution}
+            return {
+                "patch_applied": True,
+                "syntax_valid": True,
+                "regression_risk": "zero",
+                "solution": res.adapted_solution,
+            }
         return {"status": "executed", "node_id": node.id, "capability": capability, "result": res.adapted_solution}
 
 
@@ -104,7 +118,11 @@ class BusinessDomainAdapter(BaseDomainAdapter):
         res = await self.adapter.adapt(node.description or node.name, context)
 
         if capability == "probe_system_state":
-            return {"active_infrastructure_costs": 0.0, "free_tier_status": "optimal", "metrics": res.domain_specific_metadata}
+            return {
+                "active_infrastructure_costs": 0.0,
+                "free_tier_status": "optimal",
+                "metrics": res.domain_specific_metadata,
+            }
         elif capability == "profile_latency_and_throughput":
             return {"p99_latency_ms": 42.0, "cache_hit_rate": 0.94, "report": res.adapted_solution}
         elif capability == "optimize_cache_layers":
@@ -132,6 +150,7 @@ class UXDomainAdapter(BaseDomainAdapter):
 
 
 # ── Living Engine Orchestrator ─────────────────────────────────────────────────
+
 
 class LivingEngineOrchestrator:
     """Master orchestrator for unpredictable user demands with full Phase 2 intelligence."""
@@ -207,7 +226,9 @@ class LivingEngineOrchestrator:
             async def step_executor(node: TaskNode, step_ctx: dict[str, Any]) -> Any:
                 if node.capability == "execute_dynamic_action":
                     spec = ToolSpec(name=f"dynamic_{node.id}", description=node.description)
-                    code = f"def dynamic_{node.id}(): return {{'status': 'completed', 'goal': '{intent.ultimate_goal}'}}"
+                    code = (
+                        f"def dynamic_{node.id}(): return {{'status': 'completed', 'goal': '{intent.ultimate_goal}'}}"
+                    )
                     tool = self.tool_forge.forge_tool(spec, code)
                     return self.tool_forge.execute_tool(tool, {})
                 return await adapter.execute_node(node, step_ctx)

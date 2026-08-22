@@ -58,11 +58,13 @@ class AutonomousBrowserAgent:
                 outcome = {"status": "error", "error": str(exc)}
 
             # 3. RECORD & REPLAN
-            self._trace.append({
-                "step": step,
-                "plan": action_plan,
-                "outcome": outcome,
-            })
+            self._trace.append(
+                {
+                    "step": step,
+                    "plan": action_plan,
+                    "outcome": outcome,
+                }
+            )
 
             # Record site interaction memory
             current_url = getattr(self.session, "url", "https://supremeai.dev")

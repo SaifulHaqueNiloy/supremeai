@@ -569,4 +569,3 @@ get_digital_twin_simulator = get_impact_simulator
 
 if __name__ == "__main__":
     asyncio.run(run_sample_simulations())
-

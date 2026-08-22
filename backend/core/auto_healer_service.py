@@ -9,9 +9,9 @@ database, Redis, এবং LLM provider-এর health continuously monitor ক�
 
 from __future__ import annotations
 
-from collections import deque
 import asyncio
 import time
+from collections import deque
 from typing import Any
 
 from loguru import logger
@@ -83,11 +83,13 @@ class AutoHealerService:
             return_exceptions=True,
         )
         duration_ms = round((time.monotonic() - start_t) * 1000, 2)
-        self._history.append({
-            "timestamp": time.time(),
-            "duration_ms": duration_ms,
-            "results": [str(r) if isinstance(r, Exception) else "ok" for r in results],
-        })
+        self._history.append(
+            {
+                "timestamp": time.time(),
+                "duration_ms": duration_ms,
+                "results": [str(r) if isinstance(r, Exception) else "ok" for r in results],
+            }
+        )
 
     # ── Database Healing ───────────────────────────────────────────────────────
 

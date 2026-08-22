@@ -37,11 +37,13 @@ class SwarmBrowser:
             if isinstance(res, dict):
                 successful_results.append(res)
             else:
-                successful_results.append({
-                    "goal": sub_goals[i],
-                    "achieved": False,
-                    "error": str(res),
-                })
+                successful_results.append(
+                    {
+                        "goal": sub_goals[i],
+                        "achieved": False,
+                        "error": str(res),
+                    }
+                )
 
         return await self._synthesize(site, sub_goals, successful_results)
 
@@ -67,6 +69,7 @@ class SwarmBrowser:
         logger.info(f"[SwarmBrowser] Dry-running flow of {len(flow)} steps for site: {site}")
         try:
             from core.evolution.digital_twin.simulator import DigitalTwinSimulator
+
             twin = DigitalTwinSimulator()
             # Simulation verification
             return {

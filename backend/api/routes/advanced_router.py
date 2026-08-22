@@ -7,7 +7,9 @@ from pydantic import BaseModel
 from core.llm.advanced_model_router import AdvancedModelRouter
 from core.security.rbac import get_current_user_token
 
-router = APIRouter(prefix="/api/v1/router", tags=["Advanced Model Router"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/api/v1/router", tags=["Advanced Model Router"], dependencies=[Depends(get_current_user_token)]
+)
 
 global_router = AdvancedModelRouter()
 

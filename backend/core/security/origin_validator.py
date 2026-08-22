@@ -30,7 +30,7 @@ USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
 ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
     {
         "https://supremeai-admin.web.app",
-         "https://supremeai-backend-docker.onrender.com",
+        "https://supremeai-backend-docker.onrender.com",
     }
 )
 
@@ -155,7 +155,9 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             allowed_hosts.add("testserver")
             allowed_hosts.add("localhost")
             allowed_hosts.add("127.0.0.1")
-            is_allowed = host_header_no_port in allowed_hosts or any(host_header_no_port.endswith("." + h) for h in allowed_hosts)
+            is_allowed = host_header_no_port in allowed_hosts or any(
+                host_header_no_port.endswith("." + h) for h in allowed_hosts
+            )
 
         if host_header and not is_allowed:
             logger.critical(f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}")

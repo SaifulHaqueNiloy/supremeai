@@ -8,18 +8,20 @@ and generates smart multi-severity alerts with trend analysis.
 from __future__ import annotations
 
 import asyncio
+import statistics
 import time
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-import statistics
 from typing import Any
-from collections.abc import Callable
+
 from loguru import logger
 
 try:
     import psutil
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
@@ -220,17 +222,51 @@ class PerformanceMonitor:
             if HAS_PSUTIL:
                 cpu_percent = psutil.cpu_percent(interval=None)
                 mem = psutil.virtual_memory()
-                metrics.extend([
-                    MetricPoint(name="system.cpu.usage_percent", metric_type=MetricType.GAUGE, value=cpu_percent, timestamp=timestamp, unit="%"),
-                    MetricPoint(name="system.memory.used_mb", metric_type=MetricType.GAUGE, value=mem.used / 1024 / 1024, timestamp=timestamp, unit="MB"),
-                    MetricPoint(name="system.memory.percent", metric_type=MetricType.GAUGE, value=mem.percent, timestamp=timestamp, unit="%"),
-                ])
+                metrics.extend(
+                    [
+                        MetricPoint(
+                            name="system.cpu.usage_percent",
+                            metric_type=MetricType.GAUGE,
+                            value=cpu_percent,
+                            timestamp=timestamp,
+                            unit="%",
+                        ),
+                        MetricPoint(
+                            name="system.memory.used_mb",
+                            metric_type=MetricType.GAUGE,
+                            value=mem.used / 1024 / 1024,
+                            timestamp=timestamp,
+                            unit="MB",
+                        ),
+                        MetricPoint(
+                            name="system.memory.percent",
+                            metric_type=MetricType.GAUGE,
+                            value=mem.percent,
+                            timestamp=timestamp,
+                            unit="%",
+                        ),
+                    ]
+                )
             else:
                 # Synthetic baseline metrics
-                metrics.extend([
-                    MetricPoint(name="system.cpu.usage_percent", metric_type=MetricType.GAUGE, value=15.0, timestamp=timestamp, unit="%"),
-                    MetricPoint(name="system.memory.percent", metric_type=MetricType.GAUGE, value=35.0, timestamp=timestamp, unit="%"),
-                ])
+                metrics.extend(
+                    [
+                        MetricPoint(
+                            name="system.cpu.usage_percent",
+                            metric_type=MetricType.GAUGE,
+                            value=15.0,
+                            timestamp=timestamp,
+                            unit="%",
+                        ),
+                        MetricPoint(
+                            name="system.memory.percent",
+                            metric_type=MetricType.GAUGE,
+                            value=35.0,
+                            timestamp=timestamp,
+                            unit="%",
+                        ),
+                    ]
+                )
         except Exception as e:
             logger.debug(f"System metric collection error: {e}")
         return metrics
@@ -270,13 +306,15 @@ class PerformanceMonitor:
         triggers: list[dict[str, Any]] = []
         for alert in self.active_alerts.values():
             if not alert.resolved:
-                triggers.append({
-                    "source": "performance_monitor",
-                    "type": "performance_degradation",
-                    "severity": alert.severity.value,
-                    "metric": alert.metric_name,
-                    "data": {"alert": alert, "value": alert.current_value},
-                })
+                triggers.append(
+                    {
+                        "source": "performance_monitor",
+                        "type": "performance_degradation",
+                        "severity": alert.severity.value,
+                        "metric": alert.metric_name,
+                        "data": {"alert": alert, "value": alert.current_value},
+                    }
+                )
         return triggers
 
     def generate_report(self, period_minutes: int = 60) -> PerformanceReport:

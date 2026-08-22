@@ -11,6 +11,8 @@ from unittest.mock import patch
 import pytest
 
 from core.llm.advanced_model_router import (
+    _DETERMINISTIC_PATTERNS,
+    _TIER0_CONFIDENCE_THRESHOLD,
     AdvancedModelRouter,
     ConfidenceDecision,
     DomainExpertAnalyzer,
@@ -19,8 +21,6 @@ from core.llm.advanced_model_router import (
     RouteDecision,
     TaskComplexityAnalyzer,
     Tier0Dispatcher,
-    _DETERMINISTIC_PATTERNS,
-    _TIER0_CONFIDENCE_THRESHOLD,
     get_advanced_router,
 )
 
@@ -206,9 +206,7 @@ def test_calculate_model_score_down_provider_zero():
 def test_calculate_model_score_success_rate_modifier():
     router = AdvancedModelRouter()
     base = router.calculate_model_score("groq", "llama-3.3-70b-versatile", "general", {})
-    router.performance_metrics["groq/llama-3.3-70b-versatile"] = type(
-        "M", (), {"success_rate": 0.5}
-    )()
+    router.performance_metrics["groq/llama-3.3-70b-versatile"] = type("M", (), {"success_rate": 0.5})()
     degraded = router.calculate_model_score("groq", "llama-3.3-70b-versatile", "general", {})
     assert degraded < base
     assert degraded == round(base * 0.5, 4)
@@ -319,7 +317,9 @@ def test_route_with_confidence_deterministic_pypi():
                 return False
 
             def read(self):
-                return json.dumps({"info": {"name": "numpy", "version": "1.0", "summary": "s", "home_page": ""}}).encode()
+                return json.dumps(
+                    {"info": {"name": "numpy", "version": "1.0", "summary": "s", "home_page": ""}}
+                ).encode()
 
         mock_urlopen.return_value = FakeResp()
         decision = router.route_with_confidence("search pypi for numpy")
@@ -331,7 +331,7 @@ def test_route_with_confidence_deterministic_pypi():
 
 def test_route_with_confidence_deterministic_format():
     router = AdvancedModelRouter()
-    decision = router.route_with_confidence("format as json for {\"k\": 1}")
+    decision = router.route_with_confidence('format as json for {"k": 1}')
     assert decision.is_deterministic is True
     assert decision.matched_pattern == "regex_format"
     assert decision.deterministic_result["result"] == {"k": 1}

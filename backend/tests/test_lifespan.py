@@ -42,9 +42,7 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     )
     # setup_tracing locally imported — সঠিক patch path ব্যবহার করতে হবে
     stack.enter_context(patch("core.observability.telemetry.setup_tracing", return_value=None))
-    mocks["init_db_pool"] = stack.enter_context(
-        patch("core.startup.services.init_db_pool", new_callable=AsyncMock)
-    )
+    mocks["init_db_pool"] = stack.enter_context(patch("core.startup.services.init_db_pool", new_callable=AsyncMock))
     mocks["config_refresh"] = stack.enter_context(
         patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock)
     )
@@ -63,9 +61,7 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     mocks["services_shutdown"] = stack.enter_context(patch("core.shutdown.services", create=True))
 
     # Mock httpx.AsyncClient so it doesn't create real connections
-    mocks["httpx_client"] = stack.enter_context(
-        patch("core.lifespan.httpx.AsyncClient", return_value=AsyncMock())
-    )
+    mocks["httpx_client"] = stack.enter_context(patch("core.lifespan.httpx.AsyncClient", return_value=AsyncMock()))
 
     # Services HTTP client mock (legacy, but keep for compatibility)
     mocks["services_lifespan"].global_http_client = mocks["httpx_client"].return_value

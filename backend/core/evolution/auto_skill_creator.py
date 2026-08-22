@@ -228,6 +228,7 @@ class AutoSkillCreator:
             # ৪. USS Pydantic Schema Validation
             # 🛡️ Governance Gate Pre-Validation
             from core.security.governance_policy import get_governance_policy
+
             is_valid, reason = get_governance_policy().validate_evolution_target(f"skills/{skill_name}")
             if not is_valid:
                 logger.critical(f"🚨 Skill target 'skills/{skill_name}' blocked by governance policy: {reason}")
@@ -267,6 +268,7 @@ class AutoSkillCreator:
 
                 # Sanitize skill_name to prevent code injection via name
                 import re as _re
+
                 safe_skill_name = _re.sub(r"[^a-zA-Z0-9_]", "", skill_name)
                 if not safe_skill_name:
                     raise SecurityError("Invalid skill name detected.")
@@ -318,10 +320,17 @@ asyncio.run(_supreme_test_run())
             )
 
             # 1. Multi-factor Evidence-Backed Fitness Evaluation
-            from evolution.fitness_evaluator import get_fitness_evaluator
+            from evolution.artifact_integrity import (
+                ArtifactIntegrityGate,
+                canonical_artifact_hash,
+            )
             from evolution.benchmark_runner import get_benchmark_runner
-            from evolution.artifact_integrity import ArtifactIntegrityGate, canonical_artifact_hash
-            from evolution.change_proposal import ChangeType, ProposalState, get_change_manager
+            from evolution.change_proposal import (
+                ChangeType,
+                ProposalState,
+                get_change_manager,
+            )
+            from evolution.fitness_evaluator import get_fitness_evaluator
 
             elapsed_ms = (time.time() - start_time) * 1000.0
             fitness_eval = get_fitness_evaluator().evaluate_skill_execution(
@@ -378,7 +387,9 @@ asyncio.run(_supreme_test_run())
                 schema_to_deploy=schema_dict,
             )
             if not authorized:
-                raise RuntimeError(f"Artifact Integrity Violation for Proposal [{proposal.proposal_id}]. Deployment Aborted.")
+                raise RuntimeError(
+                    f"Artifact Integrity Violation for Proposal [{proposal.proposal_id}]. Deployment Aborted."
+                )
 
             logger.info(f"📜 Governed ChangeProposal [{proposal.proposal_id}] PROMOTED with Verified Integrity.")
 
@@ -412,7 +423,9 @@ asyncio.run(_supreme_test_run())
                 "proposal_id": proposal.proposal_id,
             }
             self.skills_ref.document(skill_name).set(skill_meta)
-            logger.info(f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!")
+            logger.info(
+                f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!"
+            )
 
             # Record successful experience for future pattern matching
             try:

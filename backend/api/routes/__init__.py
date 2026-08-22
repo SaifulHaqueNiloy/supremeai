@@ -495,5 +495,3 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     internet_monitor_router = None
 
 __all__ = list(_safe_imports.keys())
-
-

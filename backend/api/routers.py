@@ -87,7 +87,6 @@ core_routers: list[tuple[str, str]] = [
 ]
 
 
-
 optional_routers: list[tuple[str, str]] = [
     # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
     # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।

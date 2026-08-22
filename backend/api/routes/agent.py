@@ -49,6 +49,7 @@ async def execute_agent_task(
 
     try:
         from brain.autonomous_agent import AutonomousAgent
+
         agent = AutonomousAgent(name=f"agent-route-{payload.task_id}")
         exec_res = agent.execute(task_description=payload.prompt)
         response_text = exec_res.get("output") or f"Task {payload.task_id} completed successfully."

@@ -56,11 +56,9 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 from .config_fields import SettingsFieldsMixin
 from .config_secrets import SettingsSecretsMixin
 from .config_validation import SettingsValidationMixin
-
 
 # বাংলা মন্তব্য: pytest environment-এ .env load করা হয় না — test isolation নিশ্চিত।
 if "pytest" not in sys.modules:
@@ -110,6 +108,7 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
         if current_env in ("production", "prod"):
             return False
         return self.allow_test_origin_bypass
+
 
 try:
     settings = Settings()

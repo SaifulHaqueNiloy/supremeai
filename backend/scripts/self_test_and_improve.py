@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime
 import os
 import sys
+from datetime import datetime
 
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -26,7 +26,9 @@ from core.integration_layer import SupremeAIIntegrator
 from core.self_benchmark import BenchmarkCategory, SelfBenchmarkEngine
 
 
-async def run_self_test_cycle(ai_system: Any, benchmarker: SelfBenchmarkEngine, optimizer: AdaptiveOptimizer, quick_mode: bool = False) -> dict:
+async def run_self_test_cycle(
+    ai_system: Any, benchmarker: SelfBenchmarkEngine, optimizer: AdaptiveOptimizer, quick_mode: bool = False
+) -> dict:
     """Run one complete self-test and improvement cycle."""
     print("\n" + "=" * 70)
     print(f"🧪 SUPREMEAI SELF-TEST CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -35,7 +37,7 @@ async def run_self_test_cycle(ai_system: Any, benchmarker: SelfBenchmarkEngine, 
     categories = [BenchmarkCategory.PERFORMANCE, BenchmarkCategory.ACCURACY] if quick_mode else None
     benchmark_report = await benchmarker.run_full_benchmark(categories=categories)
 
-    print(f"\n📈 BENCHMARK RESULTS:")
+    print("\n📈 BENCHMARK RESULTS:")
     print(f"   Overall Score: {benchmark_report.overall_score:.1%} (Grade: {benchmark_report.grade})")
     print(f"   Tests Passed: {benchmark_report.summary['tests_passed']}/{benchmark_report.summary['tests_total']}")
     print(f"   Weaknesses: {benchmark_report.summary['weakness_count']} found")

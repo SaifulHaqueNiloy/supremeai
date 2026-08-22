@@ -111,19 +111,23 @@ async def audit_selectors(
 ):
     """ADVANCED: Predict which selectors are at risk of breaking before deployments."""
     from datetime import UTC, datetime
+
     at_risk = []
     try:
         from core.errors.error_pattern_db import ErrorPatternDB
+
         db = ErrorPatternDB()
         # Evaluate historical pattern confidence
         strat = db.get_prevention_strategy(model="selector_engine", task_type=payload.site)
         if strat and "No historical data" not in strat:
-            at_risk.append({
-                "selector": "//button[@class='dynamic-btn-xyz']",
-                "risk": 0.78,
-                "strategy": strat,
-                "semantic_fallback": "registered",
-            })
+            at_risk.append(
+                {
+                    "selector": "//button[@class='dynamic-btn-xyz']",
+                    "risk": 0.78,
+                    "strategy": strat,
+                    "semantic_fallback": "registered",
+                }
+            )
     except Exception as e:
         logger.debug(f"Selector risk prediction error: {e}")
 
@@ -133,4 +137,3 @@ async def audit_selectors(
         "at_risk": at_risk,
         "audited_at": datetime.now(UTC).isoformat(),
     }
-

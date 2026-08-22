@@ -408,7 +408,9 @@ class NeuralSymbolicIntegrator:
             # If feedback indicates error, adjust approach
             logger.debug("Adjusting reasoning strategy based on negative feedback")
 
-    def solve_mathematical_problem(self, problem_statement: str, constraints: list[str] | None = None) -> dict[str, Any]:
+    def solve_mathematical_problem(
+        self, problem_statement: str, constraints: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Solve a mathematical problem using neural-symbolic integration.
 
@@ -638,4 +640,3 @@ def demo_neural_symbolic_integration():
 
 if __name__ == "__main__":
     demo_neural_symbolic_integration()
-

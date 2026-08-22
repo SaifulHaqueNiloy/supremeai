@@ -108,9 +108,7 @@ async def inject_roadmap_to_memory():
     # 2. Store Individual Steps for Granular Vector Search
     for s in roadmap_steps:
         step_summary = (
-            f"[CI TRIAGE STEP {s['step']}] {s['title']}\n"
-            f"Command: {s['command']}\n"
-            f"Action: {s['description']}"
+            f"[CI TRIAGE STEP {s['step']}] {s['title']}\n" f"Command: {s['command']}\n" f"Action: {s['description']}"
         )
         mem.store_memory(
             file_path=f"docs/devops/CI_DEBUGGING_ROADMAP.md#step-{s['step']}",

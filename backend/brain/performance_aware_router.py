@@ -8,7 +8,6 @@ from __future__ import annotations
 from typing import Any, TypedDict
 
 from core.llm.advanced_model_router import (
-    AdvancedModelRouter,
     get_advanced_router,
 )
 

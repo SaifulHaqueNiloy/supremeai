@@ -17,10 +17,10 @@ from evolution.auto_evolution_controller import AutoEvolutionController, Evoluti
 from evolution.auto_tuner import AutoTuner
 from evolution.memory_consolidator import MemoryConsolidator, MemoryTier
 from evolution.performance_monitor import MetricPoint, MetricType, PerformanceMonitor
-from evolution.strategy_optimizer import StrategyOptimizer, StrategyType
-
+from evolution.strategy_optimizer import StrategyOptimizer
 
 # ── 1. Performance Monitor & Anomaly Tests ────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_performance_monitor_recording_and_reports():
@@ -36,19 +36,35 @@ async def test_performance_monitor_recording_and_reports():
 
 def test_anomaly_detector_z_score():
     from evolution.performance_monitor import AnomalyDetector
+
     detector = AnomalyDetector(config={"std_dev_threshold": 2.0})
 
     # Feed normal distribution
     for i in range(15):
-        detector.detect(MetricPoint(name="cpu", metric_type=MetricType.GAUGE, value=20.0 + (i % 3), timestamp=pytest.importorskip("datetime").datetime.now()))
+        detector.detect(
+            MetricPoint(
+                name="cpu",
+                metric_type=MetricType.GAUGE,
+                value=20.0 + (i % 3),
+                timestamp=pytest.importorskip("datetime").datetime.now(),
+            )
+        )
 
     # Trigger spike
-    anomaly = detector.detect(MetricPoint(name="cpu", metric_type=MetricType.GAUGE, value=99.0, timestamp=pytest.importorskip("datetime").datetime.now()))
+    anomaly = detector.detect(
+        MetricPoint(
+            name="cpu",
+            metric_type=MetricType.GAUGE,
+            value=99.0,
+            timestamp=pytest.importorskip("datetime").datetime.now(),
+        )
+    )
     assert anomaly is not None
     assert anomaly["z_score"] > 2.0
 
 
 # ── 2. Memory Consolidator Tests ──────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_memory_consolidator_tiered_lifecycle():
@@ -73,6 +89,7 @@ async def test_memory_consolidator_tiered_lifecycle():
 
 # ── 3. Auto-Tuner Tests ───────────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_auto_tuner_performance_tuning():
     tuner = AutoTuner()
@@ -86,6 +103,7 @@ async def test_auto_tuner_performance_tuning():
 
 
 # ── 4. Strategy Optimizer Tests ───────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_strategy_optimizer_ucb_selection():
@@ -101,6 +119,7 @@ async def test_strategy_optimizer_ucb_selection():
 
 # ── 5. Advanced Evolution Engine Tests ────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_advanced_evolution_engine():
     engine = AdvancedEvolutionEngine()
@@ -111,6 +130,7 @@ async def test_advanced_evolution_engine():
 
 
 # ── 6. Auto-Evolution Controller End-to-End Tests ─────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_auto_evolution_controller_full_cycle():
@@ -135,9 +155,11 @@ async def test_auto_evolution_controller_full_cycle():
 
 # ── 7. Safety & Rollback Manager Tests ────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_safety_rollback_manager():
     from core.resilience.safety_rollback_manager import SafetyRollbackManager
+
     manager = SafetyRollbackManager()
 
     # Create backup
@@ -162,9 +184,11 @@ async def test_safety_rollback_manager():
 
 # ── 8. Distributed Scaling Manager Tests ──────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_distributed_scaling_manager():
     from scaling.distributed_manager import DistributedScalingManager, TaskPriority
+
     scaling_mgr = DistributedScalingManager()
 
     # Submit task
@@ -182,4 +206,3 @@ async def test_distributed_scaling_manager():
 
     status = scaling_mgr.get_cluster_status()
     assert status["total_nodes"] >= 1
-
