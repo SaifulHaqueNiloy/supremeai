@@ -149,4 +149,18 @@ export const ServiceTopologyGraph: React.FC<ServiceTopologyGraphProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <div className={
+      <div className="flex items-center justify-center p-8 text-gray-500">
+        <Activity className="w-6 h-6 animate-pulse mr-2" />
+        <span>Analyzing topology...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full bg-white border border-gray-200 rounded-lg flex items-center justify-center p-8">
+      <span className="text-gray-500">Service Topology Graph</span>
+    </div>
+  );
+};
+
+export default ServiceTopologyGraph;
