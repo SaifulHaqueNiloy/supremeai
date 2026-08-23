@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from core.messaging.event_bus import ErrorContext
-
 """
 token_budget.py
 ===============
@@ -18,6 +14,7 @@ Key features:
 - Usage statistics
 """
 
+from __future__ import annotations
 
 import re
 import time
@@ -26,7 +23,7 @@ from typing import Any
 
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 # ---------------------------------------------------------------------------
 # Per-provider max token budgets (conservative — leaves headroom for system prompts)

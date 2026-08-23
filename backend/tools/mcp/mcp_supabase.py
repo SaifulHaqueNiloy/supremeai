@@ -1,5 +1,3 @@
-from loguru import logger
-
 """
 MCP Server for Supabase/Postgres Database Integration in SupremeAI 2.0.
 
@@ -15,6 +13,7 @@ from enum import StrEnum
 from typing import Any
 
 import psycopg2
+from loguru import logger
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
 

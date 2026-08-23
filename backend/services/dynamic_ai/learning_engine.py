@@ -1,5 +1,3 @@
-from loguru import logger
-
 # backend/services/dynamic_ai/learning_engine.py
 """
 Self-Learning AI Router
@@ -12,6 +10,8 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+
+from loguru import logger
 
 
 class TaskType(Enum):

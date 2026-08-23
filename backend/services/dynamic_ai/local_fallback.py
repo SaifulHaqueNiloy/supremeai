@@ -1,5 +1,3 @@
-from loguru import logger
-
 # backend/services/dynamic_ai/local_fallback.py
 """
 Local Fallback using Ollama
@@ -13,6 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import httpx
+from loguru import logger
 
 
 class OllamaModelStatus(Enum):

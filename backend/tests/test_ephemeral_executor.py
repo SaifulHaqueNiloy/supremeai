@@ -1,5 +1,3 @@
-from loguru import logger
-
 # tests/test_ephemeral_executor.py
 """Tests for EphemeralExecutor - secure code execution with cleanup."""
 
@@ -7,6 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from loguru import logger
 
 
 class TestEphemeralExecutorSecurity:

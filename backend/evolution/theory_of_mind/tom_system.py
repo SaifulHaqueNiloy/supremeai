@@ -1,5 +1,3 @@
-from loguru import logger
-
 """
 SupremeAI Theory of Mind System
 ===============================
@@ -29,6 +27,7 @@ from typing import Any
 import numpy as np
 import torch
 import torch.nn as nn
+from loguru import logger
 
 
 class MentalStateType(Enum):

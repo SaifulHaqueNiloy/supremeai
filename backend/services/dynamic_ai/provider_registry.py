@@ -1,5 +1,3 @@
-from loguru import logger
-
 # backend/services/dynamic_ai/provider_registry.py
 """
 SupremeAI Dynamic Provider Registry
@@ -10,6 +8,8 @@ import os
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+
+from loguru import logger
 
 
 class ProviderStatus(Enum):

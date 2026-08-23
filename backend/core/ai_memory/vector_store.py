@@ -1,12 +1,12 @@
-from loguru import logger
-
 """
 Optimized Vector Store for Free Tier
 Reduces memory usage while maintaining search quality.
 """
+
 import asyncio
 from typing import Any
 
+from loguru import logger
 from supabase import create_client
 
 
