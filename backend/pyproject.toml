@@ -246,7 +246,6 @@ ignore = [
     "B007",   # Unused loop variable (style, not a bug)
     "N802",   # Function name casing (external API/schema compatibility)
     "N811", "N812", "N813", "N817",  # Import aliasing casing (external API idioms, e.g. ET/jwt-style)
-    "SIM115", # Context manager for file open (large surface, tracked separately)
     "F811",   # Redefinition (a few intentional re-exports/overloads)
     "F401",   # Unused import (mostly try/except optional-dependency availability checks)
     "W291", "W293",  # Trailing whitespace (cosmetic, formatter handles new code)

@@ -95,7 +95,7 @@ def logs_stream():
         file_obj = None
         try:
             if os.path.exists(log_file):
-                file_obj = open(log_file)
+                file_obj = open(log_file)  # noqa: SIM115 - handle persists across generator yields, closed in finally
                 file_obj.seek(0, os.SEEK_END)
 
             while True:
@@ -107,7 +107,7 @@ def logs_stream():
                         await asyncio.sleep(0.5)
                 else:
                     if os.path.exists(log_file):
-                        file_obj = open(log_file)
+                        file_obj = open(log_file)  # noqa: SIM115 - handle persists across generator yields, closed in finally
                         file_obj.seek(0, os.SEEK_END)
                     await asyncio.sleep(1.0)
         except asyncio.CancelledError:
