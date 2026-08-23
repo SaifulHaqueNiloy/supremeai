@@ -155,10 +155,7 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
 try:
     settings = Settings()
 except Exception as _boot_exc:
-    logger.critical(
-        f"🔥 FATAL CONFIG ERROR: {_boot_exc}\nServer startup ABORTED (Fail-Fast applied). Fix the configuration."
-    )
-    sys.exit(1)
+    raise _boot_exc
 
 
 def get_production_env(var_name: str, default: str | None = None) -> str:
