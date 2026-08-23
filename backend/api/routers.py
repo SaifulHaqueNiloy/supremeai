@@ -91,6 +91,7 @@ core_routers: list[tuple[str, str]] = [
     # Living, Self-Evolving Autonomous Engine Orchestrator
     ("api.routes.living_engine", ""),
     ("api.routes.living_brain", ""),
+    ("api.routes.scraper", "/api/v1"),
 ]
 
 
