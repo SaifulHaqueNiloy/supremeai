@@ -256,4 +256,4 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # Ignore isort (I001) for Alembic migrations due to Windows vs Linux sys.path resolution discrepancy causing CI flip-flops
-"alembic_migrations/versions/*.py" = ["I001"]
+"alembic_migrations/**/*.py" = ["I001"]
