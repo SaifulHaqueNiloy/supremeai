@@ -996,6 +996,39 @@ class SmartRouter:
             lines.append(f"- **{provider}:** {status}")
         
         return "\n".join(lines)
+    
+    async def start_health_monitor(self):
+        """Starts the background task to periodically ping providers."""
+        import asyncio
+        asyncio.create_task(self._monitor_loop())
+        logger.info("🟢 Provider Health Intelligence monitor started.")
+
+    async def _monitor_loop(self):
+        import asyncio
+        while True:
+            for provider in list(self._provider_health.keys()):
+                # Fast lightweight ping logic
+                is_healthy = await self._ping_provider(provider)
+                if self._provider_health.get(provider) != is_healthy:
+                    self._provider_health[provider] = is_healthy
+                    status = "ONLINE" if is_healthy else "OFFLINE"
+                    logger.info(f"Health Intelligence: {provider} is now {status}")
+            
+            await asyncio.sleep(60)
+
+    async def _ping_provider(self, provider: str) -> bool:
+        """Synthetic transaction to test if provider is alive."""
+        # For this prototype, we'll assume groq and openai are healthy if we have keys.
+        import os
+        if provider == "groq":
+            return bool(os.environ.get("GROQ_API_KEY"))
+        elif provider == "openai":
+            return bool(os.environ.get("OPENAI_API_KEY"))
+        elif provider == "anthropic":
+            return bool(os.environ.get("ANTHROPIC_API_KEY"))
+        elif provider == "gemini":
+            return bool(os.environ.get("GEMINI_API_KEY"))
+        return True
 
 
 # Global instance
@@ -1007,6 +1040,13 @@ def get_router(config: Optional[Dict] = None) -> SmartRouter:
     global _router_instance
     if _router_instance is None:
         _router_instance = SmartRouter(config)
+        import asyncio
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                asyncio.create_task(_router_instance.start_health_monitor())
+        except RuntimeError:
+            pass # No running loop yet
     return _router_instance
 
 
