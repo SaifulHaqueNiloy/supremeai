@@ -13,19 +13,30 @@ if not os.getenv("ENV"):
 
 # Initialize global silent catcher before any other imports that might spawn threads
 from core.intelligent_silent_catcher import setup_silent_catcher
+
 setup_silent_catcher()
 
 # ----------------- SUPERAI ENV VALIDATION -----------------
 try:
     from core.env_validator import EnvironmentValidator
+
     validator = EnvironmentValidator()
     result = validator.validate()
     if not result.is_valid:
-        import logging; logging.getLogger(__name__).info("CRITICAL: Environment validation failed! Missing required variables.")
+        import logging
+
+        logging.getLogger(__name__).info(
+            "CRITICAL: Environment validation failed! Missing required variables."
+        )
         import sys
+
         sys.exit(1)
     else:
-        import logging; logging.getLogger(__name__).info(f"SUCCESS: Environment validated successfully (Score: {result.score}/100)")
+        import logging
+
+        logging.getLogger(__name__).info(
+            f"SUCCESS: Environment validated successfully (Score: {result.score}/100)"
+        )
 except ImportError:
     pass
 # ----------------------------------------------------------
@@ -75,7 +86,9 @@ def _handle_sigterm(signum: int, frame: object) -> None:
     SupremeAI FastAPI shutdown is handled by Uvicorn + `lifespan.app_lifespan`.
     This handler must NOT force `sys.exit()` because that can bypass lifespan teardown.
     """
-    logger.info(f"🚨 Signal received ({signum}). Initiating graceful shutdown via Uvicorn/FastAPI lifespan...")
+    logger.info(
+        f"🚨 Signal received ({signum}). Initiating graceful shutdown via Uvicorn/FastAPI lifespan..."
+    )
     # Best-effort observability: let operators know shutdown intent was triggered.
     os.environ["UVICORN_SHUTDOWN_REQUESTED"] = "1"
     # Do not block here; return control to Uvicorn so it can run shutdown hooks.
@@ -128,7 +141,9 @@ def run_server() -> None:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
     except OSError as exc:
-        logger.critical(f"Server failed to start (port/bind error on {settings.host}:{port}): {exc}")
+        logger.critical(
+            f"Server failed to start (port/bind error on {settings.host}:{port}): {exc}"
+        )
         if settings.sentry_dsn:
             try:
                 import sentry_sdk

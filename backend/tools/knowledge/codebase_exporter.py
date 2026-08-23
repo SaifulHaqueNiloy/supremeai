@@ -144,7 +144,9 @@ def _read_file(path: str) -> str:
         return f.read()
 
 
-def _get_git_changed_files(root_dir: str, since: str | None = None, until: str | None = None) -> set[str] | None:
+def _get_git_changed_files(
+    root_dir: str, since: str | None = None, until: str | None = None
+) -> set[str] | None:
     """Gets the list of files changed in Git within the specified time range."""
     if not os.path.exists(os.path.join(root_dir, ".git")):
         return None
@@ -253,7 +255,9 @@ async def export_codebase_to_markdown(
         else:
             header += "- **Source**: Local Workspace\n"
         if time_since or time_until:
-            header += f"- **Time Range**: {time_since or 'Beginning'} to {time_until or 'Present'}\n"
+            header += (
+                f"- **Time Range**: {time_since or 'Beginning'} to {time_until or 'Present'}\n"
+            )
         if git_summary:
             header += f"\n## 📈 Git Changes Summary\n```text\n{git_summary}\n```\n"
 

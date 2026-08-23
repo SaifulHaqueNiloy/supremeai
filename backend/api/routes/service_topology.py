@@ -8,17 +8,16 @@ Author: SupremeAI Audit Patch
 Version: 2.0.0
 """
 
-import os
 import asyncio
+import os
 import time
-import json
-from typing import Dict, List, Optional, Any
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from dataclasses import dataclass, field, asdict
 from enum import Enum
+from typing import Any
 
 import httpx
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
@@ -42,24 +41,24 @@ class ServiceConfig:
     critical: bool = False
     timeout: float = 10.0
     expected_status: int = 200
-    headers: Dict[str, str] = field(default_factory=dict)
+    headers: dict[str, str] = field(default_factory=dict)
     check_type: str = "http"  # http, api, dns, tcp
 
 
-@dataclass 
+@dataclass
 class ServiceHealthResult:
     name: str
     display_name: str
     category: str
     status: ServiceStatus
     response_time_ms: float
-    status_code: Optional[int] = None
-    error: Optional[str] = None
-    details: Dict[str, Any] = field(default_factory=dict)
+    status_code: int | None = None
+    error: str | None = None
+    details: dict[str, Any] = field(default_factory=dict)
     checked_at: datetime = field(default_factory=datetime.utcnow)
     url: str = ""
     critical: bool = False
-    
+
     def to_dict(self) -> dict:
         return {
             **asdict(self),
@@ -72,7 +71,7 @@ class ServiceHealthResult:
 # COMPLETE SERVICE REGISTRY (12+ Services)
 # ══════════════════════════════════════════════════════════════════════════════
 
-COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
+COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
     # ─── CORE INFRASTRUCTURE ──────────────────────────────────────────────
     ServiceConfig(
         name="render_backend",
@@ -86,7 +85,7 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
     ServiceConfig(
         name="render_admin",
         display_name="Render Admin API",
-        category="infrastructure", 
+        category="infrastructure",
         url="https://supremeai-admin.onrender.com",
         health_endpoint="/api/v1/health",
         critical=True,
@@ -101,7 +100,6 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         critical=False,
         timeout=10.0,
     ),
-    
     # ─── DATABASE & STORAGE ──────────────────────────────────────────────
     ServiceConfig(
         name="supabase_db",
@@ -112,8 +110,8 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         critical=True,
         timeout=8.0,
         headers={
-            "apikey": os.environ.get("SUPABASE_ANON_KEY", ""), 
-            "Authorization": f"Bearer {os.environ.get('SUPABASE_ANON_KEY', '')}"
+            "apikey": os.environ.get("SUPABASE_ANON_KEY", ""),
+            "Authorization": f"Bearer {os.environ.get('SUPABASE_ANON_KEY', '')}",
         },
         check_type="api",
     ),
@@ -137,7 +135,6 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         timeout=8.0,
         check_type="api",
     ),
-    
     # ─── EDGE & CDN ───────────────────────────────────────────────────────
     ServiceConfig(
         name="cloudflare_worker",
@@ -158,7 +155,6 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         timeout=5.0,
         check_type="dns",
     ),
-    
     # ─── CI/CD & REPOSITORY ──────────────────────────────────────────────
     ServiceConfig(
         name="github_api",
@@ -191,7 +187,6 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         timeout=8.0,
         check_type="api",
     ),
-    
     # ─── MONITORING & OBSERVABILITY ───────────────────────────────────────
     ServiceConfig(
         name="krogger_monitoring",
@@ -213,7 +208,6 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         timeout=6.0,
         check_type="api",
     ),
-    
     # ─── SECRETS & CONFIGURATION ─────────────────────────────────────────
     ServiceConfig(
         name="infisical_secrets",
@@ -232,6 +226,7 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
 # HEALTH CHECK ENGINE
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
     """
     Perform comprehensive health check on a single service.
@@ -239,7 +234,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
     """
     start_time = time.time()
     full_url = f"{service.url}{service.health_endpoint}"
-    
+
     try:
         async with httpx.AsyncClient(timeout=service.timeout) as client:
             if service.check_type == "dns":
@@ -254,17 +249,17 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                     headers=service.headers,
                     follow_redirects=True,
                 )
-            
+
             response_time_ms = (time.time() - start_time) * 1000
-            
+
             # Determine status based on response
             if response.status_code == service.expected_status:
                 status = ServiceStatus.HEALTHY
-                
+
                 # Check for degraded performance
                 if response_time_ms > 2000:
                     status = ServiceStatus.DEGRADED
-                    
+
                 # Try to extract additional details
                 details = {}
                 try:
@@ -272,12 +267,15 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                         data = response.json()
                         if isinstance(data, dict):
                             details = {
-                                k: v for k, v in data.items() 
+                                k: v
+                                for k, v in data.items()
                                 if k in ["status", "version", "uptime", "latency"]
                             }
                 except:
-                    import logging; logging.warning('Ignored exception')
-                    
+                    import logging
+
+                    logging.warning("Ignored exception")
+
             elif response.status_code >= 500:
                 status = ServiceStatus.UNHEALTHY
                 details = {"error": f"HTTP {response.status_code}"}
@@ -287,7 +285,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
             else:
                 status = ServiceStatus.DEGRADED
                 details = {"error": f"Unexpected status: {response.status_code}"}
-                
+
             return ServiceHealthResult(
                 name=service.name,
                 display_name=service.display_name,
@@ -299,7 +297,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                 url=service.url,
                 critical=service.critical,
             )
-            
+
     except httpx.TimeoutException:
         return ServiceHealthResult(
             name=service.name,
@@ -311,7 +309,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
             url=service.url,
             critical=service.critical,
         )
-        
+
     except httpx.ConnectError as e:
         return ServiceHealthResult(
             name=service.name,
@@ -323,7 +321,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
             url=service.url,
             critical=service.critical,
         )
-        
+
     except Exception as e:
         return ServiceHealthResult(
             name=service.name,
@@ -337,39 +335,41 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
         )
 
 
-async def probe_all_services() -> List[ServiceHealthResult]:
+async def probe_all_services() -> list[ServiceHealthResult]:
     """Probe all services concurrently."""
     tasks = [probe_service(svc) for svc in COMPLETE_SERVICE_REGISTRY]
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     services = []
     for i, result in enumerate(results):
         if isinstance(result, BaseException):
             svc = COMPLETE_SERVICE_REGISTRY[i]
-            services.append(ServiceHealthResult(
-                name=svc.name,
-                display_name=svc.display_name,
-                category=svc.category,
-                status=ServiceStatus.UNKNOWN,
-                response_time_ms=0,
-                error=str(result),
-                url=svc.url,
-                critical=svc.critical,
-            ))
+            services.append(
+                ServiceHealthResult(
+                    name=svc.name,
+                    display_name=svc.display_name,
+                    category=svc.category,
+                    status=ServiceStatus.UNKNOWN,
+                    response_time_ms=0,
+                    error=str(result),
+                    url=svc.url,
+                    critical=svc.critical,
+                )
+            )
         else:
             services.append(result)
-            
+
     return services
 
 
-def calculate_topology_data(services: List[ServiceHealthResult]) -> Dict[str, Any]:
+def calculate_topology_data(services: list[ServiceHealthResult]) -> dict[str, Any]:
     """
     Calculate topology graph data showing service dependencies and connections.
     Returns nodes and edges for visualization.
     """
     nodes = []
     edges = []
-    
+
     # Category positions for layout
     category_positions = {
         "infrastructure": {"x": 400, "y": 200},
@@ -380,23 +380,25 @@ def calculate_topology_data(services: List[ServiceHealthResult]) -> Dict[str, An
         "monitoring": {"x": 400, "y": 450},
         "secrets": {"x": 100, "y": 450},
     }
-    
+
     # Create nodes
     for svc in services:
         pos = category_positions.get(svc.category, {"x": 300, "y": 300})
-        nodes.append({
-            "id": svc.name,
-            "label": svc.display_name,
-            "category": svc.category,
-            "status": svc.status.value,
-            "critical": svc.critical,
-            "responseTime": svc.response_time_ms,
-            "position": {
-                "x": pos["x"] + (len([s for s in services if s.category == svc.category]) * 80),
-                "y": pos["y"],
-            },
-        })
-    
+        nodes.append(
+            {
+                "id": svc.name,
+                "label": svc.display_name,
+                "category": svc.category,
+                "status": svc.status.value,
+                "critical": svc.critical,
+                "responseTime": svc.response_time_ms,
+                "position": {
+                    "x": pos["x"] + (len([s for s in services if s.category == svc.category]) * 80),
+                    "y": pos["y"],
+                },
+            }
+        )
+
     # Define edges (dependencies)
     edge_definitions = [
         ("render_backend", "supabase_db"),
@@ -410,15 +412,17 @@ def calculate_topology_data(services: List[ServiceHealthResult]) -> Dict[str, An
         ("krogger_monitoring", "render_backend"),
         ("infisical_secrets", "render_backend"),
     ]
-    
+
     for source, target in edge_definitions:
         if any(s.name == source for s in services) and any(s.name == target for s in services):
-            edges.append({
-                "source": source,
-                "target": target,
-                "type": "dependency",
-            })
-            
+            edges.append(
+                {
+                    "source": source,
+                    "target": target,
+                    "type": "dependency",
+                }
+            )
+
     return {
         "nodes": nodes,
         "edges": edges,
@@ -430,13 +434,14 @@ def calculate_topology_data(services: List[ServiceHealthResult]) -> Dict[str, An
 # REST API ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 class TopologyResponse(BaseModel):
     timestamp: datetime
     overall_status: str
-    services: List[Dict]
-    topology: Dict[str, Any]
-    summary: Dict[str, int]
-    alerts: List[str]
+    services: list[dict]
+    topology: dict[str, Any]
+    summary: dict[str, int]
+    alerts: list[str]
 
 
 @router.get("/service-topology", response_model=TopologyResponse)
@@ -447,33 +452,37 @@ async def get_service_topology():
     """
     services = await probe_all_services()
     topology = calculate_topology_data(services)
-    
+
     # Calculate summary
     summary = {"healthy": 0, "degraded": 0, "unhealthy": 0, "unknown": 0, "maintenance": 0}
     for svc in services:
         summary[svc.status.value] = summary.get(svc.status.value, 0) + 1
-    
+
     # Determine overall status
     critical_unhealthy = any(
         svc.critical and svc.status in [ServiceStatus.UNHEALTHY, ServiceStatus.UNKNOWN]
         for svc in services
     )
-    
+
     if critical_unhealthy or summary["unhealthy"] > 0:
         overall = "unhealthy"
     elif summary["degraded"] > 0:
         overall = "degraded"
     else:
         overall = "healthy"
-    
+
     # Generate alerts
     alerts = []
     for svc in services:
         if svc.critical and svc.status in [ServiceStatus.UNHEALTHY, ServiceStatus.UNKNOWN]:
-            alerts.append(f"🚨 CRITICAL: {svc.display_name} is {svc.status.value.upper()} - {svc.error}")
+            alerts.append(
+                f"🚨 CRITICAL: {svc.display_name} is {svc.status.value.upper()} - {svc.error}"
+            )
         elif svc.status == ServiceStatus.DEGRADED:
-            alerts.append(f"⚠️ WARNING: {svc.display_name} is degraded ({svc.response_time_ms:.0f}ms)")
-            
+            alerts.append(
+                f"⚠️ WARNING: {svc.display_name} is degraded ({svc.response_time_ms:.0f}ms)"
+            )
+
     return TopologyResponse(
         timestamp=datetime.utcnow(),
         overall_status=overall,
@@ -491,7 +500,7 @@ async def ping_all_services():
     Simplified response for dashboard widgets.
     """
     services = await probe_all_services()
-    
+
     return {
         "timestamp": datetime.utcnow().isoformat(),
         "count": len(services),
@@ -509,21 +518,16 @@ async def ping_all_services():
 
 
 @router.get("/ping-service")
-async def ping_single_service(
-    service_name: str = Query(..., description="Service name to ping")
-):
+async def ping_single_service(service_name: str = Query(..., description="Service name to ping")):
     """
     Ping a specific service by name.
     Useful for debugging from admin panel.
     """
-    service = next(
-        (s for s in COMPLETE_SERVICE_REGISTRY if s.name == service_name), 
-        None
-    )
-    
+    service = next((s for s in COMPLETE_SERVICE_REGISTRY if s.name == service_name), None)
+
     if not service:
         return {"error": f"Service '{service_name}' not found in registry"}
-        
+
     result = await probe_service(service)
     return result.to_dict()
 
@@ -538,13 +542,15 @@ async def get_service_categories():
     for svc in COMPLETE_SERVICE_REGISTRY:
         if svc.category not in categories:
             categories[svc.category] = []
-        categories[svc.category].append({
-            "name": svc.name,
-            "display": svc.display_name,
-            "critical": svc.critical,
-            "url": svc.url,
-        })
-        
+        categories[svc.category].append(
+            {
+                "name": svc.name,
+                "display": svc.display_name,
+                "critical": svc.critical,
+                "url": svc.url,
+            }
+        )
+
     return categories
 
 
@@ -552,20 +558,21 @@ async def get_service_categories():
 # WEBSOCKET ENDPOINT - Real-time Health Stream
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 class ConnectionManager:
     """Manage WebSocket connections for real-time health updates."""
-    
+
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-        
+        self.active_connections: list[WebSocket] = []
+
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
         self.active_connections.append(websocket)
-        
+
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-            
+
     async def broadcast_health(self, data: dict):
         """Send health update to all connected clients."""
         for connection in self.active_connections[:]:
@@ -585,38 +592,42 @@ async def health_stream_websocket(websocket: WebSocket):
     Clients connect and receive updates every 10 seconds.
     """
     await manager.connect(websocket)
-    
+
     try:
         # Send initial full state
         services = await probe_all_services()
         topology = calculate_topology_data(services)
-        
-        await websocket.send_json({
-            "type": "full_state",
-            "data": {
-                "services": [s.to_dict() for s in services],
-                "topology": topology,
-                "timestamp": datetime.utcnow().isoformat(),
+
+        await websocket.send_json(
+            {
+                "type": "full_state",
+                "data": {
+                    "services": [s.to_dict() for s in services],
+                    "topology": topology,
+                    "timestamp": datetime.utcnow().isoformat(),
+                },
             }
-        })
-        
+        )
+
         # Send updates every 10 seconds
         while True:
             await asyncio.sleep(10)
-            
+
             services = await probe_all_services()
-            
+
             # Only send changed services
             changes = [s.to_dict() for s in services if s.status != ServiceStatus.HEALTHY]
-            
-            await websocket.send_json({
-                "type": "update",
-                "data": {
-                    "services": [s.to_dict() for s in services],
-                    "changes": changes,
-                    "timestamp": datetime.utcnow().isoformat(),
+
+            await websocket.send_json(
+                {
+                    "type": "update",
+                    "data": {
+                        "services": [s.to_dict() for s in services],
+                        "changes": changes,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
                 }
-            })
-            
+            )
+
     except WebSocketDisconnect:
         manager.disconnect(websocket)

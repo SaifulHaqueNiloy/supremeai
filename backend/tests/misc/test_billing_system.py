@@ -118,8 +118,12 @@ async def test_token_deductor_deducts_main_balance(mock_db_session):
 
     with patch.object(token_deductor, "_acquire_lock", new=AsyncMock(return_value=True)):
         with patch.object(token_deductor, "_release_lock", new=AsyncMock(return_value=True)):
-            with patch.object(token_deductor.redis_client, "get_cache", new=AsyncMock(return_value="100000")):
-                with patch.object(token_deductor.redis_client, "set_cache", new=AsyncMock(return_value=True)):
+            with patch.object(
+                token_deductor.redis_client, "get_cache", new=AsyncMock(return_value="100000")
+            ):
+                with patch.object(
+                    token_deductor.redis_client, "set_cache", new=AsyncMock(return_value=True)
+                ):
                     res = await token_deductor.deduct_tokens("test_user", 1000, "tx_12345")
                     assert res.value in ("success", "double_spending_prevention")
 
@@ -131,8 +135,12 @@ async def test_token_deductor_insufficient_funds(mock_db_session):
     with patch.object(token_deductor, "_acquire_lock", new=AsyncMock(return_value=True)):
         with patch.object(token_deductor, "_release_lock", new=AsyncMock(return_value=True)):
             # First call for transaction_key returns None, second call for balance returns "10"
-            with patch.object(token_deductor.redis_client, "get_cache", new=AsyncMock(side_effect=[None, "10"])):
-                res = await token_deductor.deduct_tokens("test_user", 1000000, "tx_insufficient_999")
+            with patch.object(
+                token_deductor.redis_client, "get_cache", new=AsyncMock(side_effect=[None, "10"])
+            ):
+                res = await token_deductor.deduct_tokens(
+                    "test_user", 1000000, "tx_insufficient_999"
+                )
                 assert res.value in ("insufficient_balance", "system_error")
 
 

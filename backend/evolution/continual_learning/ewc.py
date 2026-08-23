@@ -141,11 +141,14 @@ class EWC:
                 if n in fisher_current:
                     # Combine current Fisher with previous importance (with decay)
                     self.params_importance[n] = (
-                        self.config.gamma * self.params_importance[n] + (1 - self.config.gamma) * fisher_current[n]
+                        self.config.gamma * self.params_importance[n]
+                        + (1 - self.config.gamma) * fisher_current[n]
                     )
 
         # Store current parameters
-        self.params_prev = {n: p.clone().detach() for n, p in self.model.named_parameters() if p.requires_grad}
+        self.params_prev = {
+            n: p.clone().detach() for n, p in self.model.named_parameters() if p.requires_grad
+        }
 
         # Increment task counter
         self.task_count += 1
@@ -209,7 +212,9 @@ class EWC:
         # বাংলা: task_id ফাইল পাথে বসানোর আগে sanitize করা হলো, যাতে path-traversal
         # (যেমন task_id="../../etc/passwd") সম্ভব না হয়।
         safe_task_id = re.sub(r"[^A-Za-z0-9_.-]", "_", str(task_id))
-        checkpoint_path = os.path.join(self.config.save_dir, f"ewc_checkpoint_task_{safe_task_id}.pkl")
+        checkpoint_path = os.path.join(
+            self.config.save_dir, f"ewc_checkpoint_task_{safe_task_id}.pkl"
+        )
 
         if not os.path.exists(checkpoint_path):
             logger.warning(f"No EWC checkpoint found for task {task_id}")
@@ -219,7 +224,9 @@ class EWC:
         # ডেটা না — তাই এখানে untrusted deserialization ঝুঁকি নেই, কিন্তু ভবিষ্যতে যদি
         # multi-tenant শেয়ার্ড স্টোরেজে যায়, তাহলে এটা torch.save/load বা JSON-এ migrate করা উচিত।
         with open(checkpoint_path, "rb") as f:
-            checkpoint = pickle.load(f)  # -- trusted, self-written checkpoint file (see comment above)
+            checkpoint = pickle.load(
+                f
+            )  # -- trusted, self-written checkpoint file (see comment above)
 
         self.task_count = checkpoint["task_count"]
         self.params_prev = checkpoint["params_prev"]
@@ -253,7 +260,9 @@ class OnlineEWC(EWC):
         self.online_fisher: dict[str, torch.Tensor] | None = None
         self.samples_seen = 0
 
-    def update_online_fisher(self, inputs: torch.Tensor, targets: torch.Tensor, criterion: nn.Module):
+    def update_online_fisher(
+        self, inputs: torch.Tensor, targets: torch.Tensor, criterion: nn.Module
+    ):
         """
         Update Fisher matrix incrementally with new data.
         """
@@ -284,7 +293,9 @@ class OnlineEWC(EWC):
                 else:
                     # Moving average update
                     alpha = 1.0 / (self.samples_seen + 1)
-                    self.online_fisher[n] = (1 - alpha) * self.online_fisher[n] + alpha * p.grad.data.pow(2)
+                    self.online_fisher[n] = (1 - alpha) * self.online_fisher[
+                        n
+                    ] + alpha * p.grad.data.pow(2)
 
         self.samples_seen += inputs.size(0)
 
@@ -310,11 +321,14 @@ class OnlineEWC(EWC):
             for n in self.params_importance:
                 if n in self.online_fisher:
                     self.params_importance[n] = (
-                        self.config.gamma * self.params_importance[n] + (1 - self.config.gamma) * self.online_fisher[n]
+                        self.config.gamma * self.params_importance[n]
+                        + (1 - self.config.gamma) * self.online_fisher[n]
                     )
 
         # Store current parameters
-        self.params_prev = {n: p.clone().detach() for n, p in self.model.named_parameters() if p.requires_grad}
+        self.params_prev = {
+            n: p.clone().detach() for n, p in self.model.named_parameters() if p.requires_grad
+        }
 
         # Increment task counter
         self.task_count += 1
@@ -325,7 +339,13 @@ class EWCTrainer:
     Trainer class that incorporates EWC into the training loop.
     """
 
-    def __init__(self, model: nn.Module, ewc_config: EWCConfig, optimizer: optim.Optimizer, ewc_enabled: bool = True):
+    def __init__(
+        self,
+        model: nn.Module,
+        ewc_config: EWCConfig,
+        optimizer: optim.Optimizer,
+        ewc_enabled: bool = True,
+    ):
         self.model = model
         self.ewc = EWC(model, ewc_config) if not ewc_config.online else OnlineEWC(model, ewc_config)
         self.optimizer = optimizer
@@ -391,7 +411,7 @@ class EWCTrainer:
                 num_batches += 1
 
             avg_loss = epoch_loss / num_batches
-            logger.info(f"Task {task_id}, Epoch {epoch+1}/{epochs}, Avg Loss: {avg_loss:.4f}")
+            logger.info(f"Task {task_id}, Epoch {epoch + 1}/{epochs}, Avg Loss: {avg_loss:.4f}")
 
         # Update importance weights after training
         if self.ewc_enabled:

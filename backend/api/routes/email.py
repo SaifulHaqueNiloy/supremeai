@@ -4,7 +4,9 @@ from pydantic import BaseModel
 from core.security.authentication.rbac import get_current_user_token
 from tools.social.email_agent import EmailAgent
 
-router = APIRouter(prefix="/integrations/email", tags=["email"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/integrations/email", tags=["email"], dependencies=[Depends(get_current_user_token)]
+)
 email_agent = EmailAgent()
 
 
@@ -40,7 +42,9 @@ async def gmail_auth(payload: GmailAuthRequest):
 @router.post("/imap")
 async def imap_auth(payload: ImapAuthRequest):
     try:
-        success = email_agent.connect_imap(payload.host, payload.port, payload.username, payload.app_password)
+        success = email_agent.connect_imap(
+            payload.host, payload.port, payload.username, payload.app_password
+        )
         if success:
             return {"status": "success", "message": "Connected generic IMAP"}
         raise HTTPException(status_code=400, detail="Failed to connect generic IMAP")

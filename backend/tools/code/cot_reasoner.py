@@ -182,7 +182,9 @@ class ChainOfThoughtReasoner:
 
     def verify(self, answer: str, expected: str | None = None) -> dict[str, Any]:
         if expected is not None:
-            math_matches = __import__("re").findall(r"(\d+[\+\-\*\/\(\)\d\s]+?)\s*=\s*(\S+)", answer)
+            math_matches = __import__("re").findall(
+                r"(\d+[\+\-\*\/\(\)\d\s]+?)\s*=\s*(\S+)", answer
+            )
             for expr, claimed in math_matches:
                 mv = verify_symbolic_math(expr, claimed)
                 if not mv.get("is_verified"):
@@ -244,12 +246,16 @@ class ChainOfThoughtReasoner:
                 best_branch = [thought.content]
             if depth > 1:
                 self.build_prompt(f"{thought.content}\nContinue reasoning.", context)
-                ext_raw = f"<thought>{thought.content} - continued</thought><answer>{problem}</answer>"
+                ext_raw = (
+                    f"<thought>{thought.content} - continued</thought><answer>{problem}</answer>"
+                )
                 ext_parsed = self.parse(ext_raw)
                 ext_thoughts = ext_parsed.get("thoughts", [])
                 if ext_thoughts:
                     ext = ext_thoughts[0]
-                    child = thought.add_child(ext, score=self.evaluate_thought(Thought(ext), context))
+                    child = thought.add_child(
+                        ext, score=self.evaluate_thought(Thought(ext), context)
+                    )
                     total_score = thought.score + child.score
                     if total_score > best_score:
                         best_score = total_score
@@ -315,7 +321,9 @@ class ChainOfThoughtReasoner:
             "simulations": simulations,
         }
 
-    def refine_loop(self, problem: str, context: str | None = None, expected: str | None = None) -> dict[str, Any]:
+    def refine_loop(
+        self, problem: str, context: str | None = None, expected: str | None = None
+    ) -> dict[str, Any]:
         last_output: dict[str, Any] = {"thoughts": [], "exec_results": []}
         for iteration in range(self.max_iterations):
             prompt = self.build_prompt(problem, context)
@@ -359,7 +367,10 @@ class DeepReasoningChain:
             critique = self.self_critique(current)
             refined_prompt = (
                 "Given the critique, refine the previous answer. "
-                "Keep reasoning concise.\n\nCurrent Answer:\n" + current + "\n\nCritique:\n" + critique
+                "Keep reasoning concise.\n\nCurrent Answer:\n"
+                + current
+                + "\n\nCritique:\n"
+                + critique
             )
             current = refined_prompt
         return current

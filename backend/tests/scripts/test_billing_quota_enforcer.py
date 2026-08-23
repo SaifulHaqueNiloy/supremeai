@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts" / "billing"))
 
-from quota_enforcer import QuotaEnforcer, QuotaStatus, EnforcementReport  # noqa: E402
+from quota_enforcer import QuotaEnforcer, QuotaStatus  # noqa: E402
 
 
 @pytest.fixture
@@ -68,7 +68,15 @@ class TestQuotaEnforcerInit:
 class TestQuotaEnforcerContextManager:
     @pytest.mark.asyncio
     async def test_aenter_without_services(self):
-        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "REDIS_URL": "", "SLACK_WEBHOOK_URL": ""}):
+        with patch.dict(
+            os.environ,
+            {
+                "DATABASE_URL": "",
+                "GOOGLE_CLOUD_PROJECT": "",
+                "REDIS_URL": "",
+                "SLACK_WEBHOOK_URL": "",
+            },
+        ):
             enforcer = QuotaEnforcer()
             async with enforcer:
                 assert enforcer.firestore_client is None
@@ -97,7 +105,15 @@ class TestQuotaEnforcerContextManager:
 
     @pytest.mark.asyncio
     async def test_aexit_closes_resources(self, mock_db_session, mock_redis):
-        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "REDIS_URL": "", "SLACK_WEBHOOK_URL": ""}):
+        with patch.dict(
+            os.environ,
+            {
+                "DATABASE_URL": "",
+                "GOOGLE_CLOUD_PROJECT": "",
+                "REDIS_URL": "",
+                "SLACK_WEBHOOK_URL": "",
+            },
+        ):
             enforcer = QuotaEnforcer()
             enforcer.db_session = mock_db_session
             enforcer._redis_lock = mock_redis
@@ -168,6 +184,7 @@ class TestQuotaEnforcerWallet:
     @pytest.mark.asyncio
     async def test_get_wallet_found(self, mock_db_session):
         from models.wallet import UserWallet
+
         wallet = UserWallet(
             user_id="t1",
             balance_usd=Decimal("50.0"),
@@ -205,6 +222,7 @@ class TestQuotaEnforcerUsage:
     @pytest.mark.asyncio
     async def test_get_current_usage_with_data(self, mock_db_session):
         from models.wallet import TransactionLedgerEntry
+
         entry = TransactionLedgerEntry(
             transaction_id="tx1",
             user_id="t1",
@@ -269,6 +287,7 @@ class TestQuotaEnforcerEnforcement:
     @pytest.mark.asyncio
     async def test_check_tenant_quota_within_quota(self, mock_db_session, pricing_tiers_path):
         from models.wallet import UserWallet
+
         wallet = UserWallet(
             user_id="t1",
             balance_usd=Decimal("50.0"),
@@ -291,8 +310,8 @@ class TestQuotaEnforcerEnforcement:
 
     @pytest.mark.asyncio
     async def test_check_tenant_quota_over_quota(self, mock_db_session, pricing_tiers_path):
-        from models.wallet import UserWallet
-        from models.wallet import TransactionLedgerEntry
+        from models.wallet import TransactionLedgerEntry, UserWallet
+
         wallet = UserWallet(
             user_id="t1",
             balance_usd=Decimal("150.0"),
@@ -326,6 +345,7 @@ class TestQuotaEnforcerEnforcement:
     @pytest.mark.asyncio
     async def test_enforce_all_dry_run(self, mock_db_session, pricing_tiers_path):
         from models.wallet import UserWallet
+
         wallet = UserWallet(
             user_id="t1",
             balance_usd=Decimal("50.0"),
@@ -371,7 +391,9 @@ class TestQuotaEnforcerFirestore:
 
     @pytest.mark.asyncio
     async def test_suspend_tenant_error(self, mock_firestore):
-        mock_firestore.collection.return_value.document.return_value.update.side_effect = Exception("firestore error")
+        mock_firestore.collection.return_value.document.return_value.update.side_effect = Exception(
+            "firestore error"
+        )
         enforcer = QuotaEnforcer()
         enforcer.firestore_client = mock_firestore
         result = await enforcer.suspend_tenant("t1")

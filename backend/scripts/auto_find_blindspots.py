@@ -32,7 +32,9 @@ class BlindspotFinder:
                 for filepath, file_stats in files.items():
                     cover_pct = file_stats.get("summary", {}).get("percent_covered", 100)
                     if cover_pct < 40.0:
-                        self.report["low_coverage_files"].append({"file": filepath, "coverage": f"{cover_pct:.2f}%"})
+                        self.report["low_coverage_files"].append(
+                            {"file": filepath, "coverage": f"{cover_pct:.2f}%"}
+                        )
                         if cover_pct < 25.0:
                             self.fail_build = True
         except Exception as e:
@@ -60,7 +62,11 @@ class BlindspotFinder:
                 content = "".join(lines)
                 tree = ast.parse(content, filename=str(filepath))
                 for node in ast.walk(tree):
-                    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "eval":
+                    if (
+                        isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Name)
+                        and node.func.id == "eval"
+                    ):
                         self.report["security_hotspots"].append(
                             {
                                 "file": str(filepath.relative_to(self.base_dir)),
@@ -110,7 +116,9 @@ class BlindspotFinder:
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(md))
 
-        logger.info(f"📊 Quality intelligence report persistence successfully saved to {output_path}")
+        logger.info(
+            f"📊 Quality intelligence report persistence successfully saved to {output_path}"
+        )
 
 
 if __name__ == "__main__":
@@ -120,6 +128,8 @@ if __name__ == "__main__":
     finder.generate_markdown_summary("blindspots-report.md")
 
     if finder.fail_build:
-        logger.critical("❌ Pre-Merge Gate Blocked: Critical blindspots or code-vulnerabilities discovered.")
+        logger.critical(
+            "❌ Pre-Merge Gate Blocked: Critical blindspots or code-vulnerabilities discovered."
+        )
         sys.exit(1)
     logger.info("🏆 Iron Curtain validation approved. Code quality within enterprise threshold.")

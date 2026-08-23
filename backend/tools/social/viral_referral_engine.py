@@ -79,7 +79,12 @@ class ViralReferralEngine:
         out = []
         if db.client:
             try:
-                res = db.client.table("referral_codes").select("*").eq("referrer_id", user_id).execute()
+                res = (
+                    db.client.table("referral_codes")
+                    .select("*")
+                    .eq("referrer_id", user_id)
+                    .execute()
+                )
                 out = res.data or []
             except Exception as exc:
                 logger.debug(f"Failed to list codes: {exc}")
@@ -142,9 +147,9 @@ class ViralReferralEngine:
         if db.client:
             try:
                 db.client.table("referral_redemptions").insert(redemption).execute()
-                db.client.table("referral_codes").update({"redeemed_count": record.get("redeemed_count", 0) + 1}).eq(
-                    "code", referral_code
-                ).execute()
+                db.client.table("referral_codes").update(
+                    {"redeemed_count": record.get("redeemed_count", 0) + 1}
+                ).eq("code", referral_code).execute()
             except Exception as exc:
                 logger.debug(f"Referral redemption persistence failed: {exc}")
         else:
@@ -168,13 +173,20 @@ class ViralReferralEngine:
         history: list[dict[str, Any]] = []
         if db.client:
             try:
-                res = db.client.table("referral_redemptions").select("*").eq("referrer_id", referrer_id).execute()
+                res = (
+                    db.client.table("referral_redemptions")
+                    .select("*")
+                    .eq("referrer_id", referrer_id)
+                    .execute()
+                )
                 history = res.data or []
             except Exception as exc:
                 logger.debug(f"Fraud history lookup failed: {exc}")
         else:
             data = self._load_local()
-            history = [r for r in data.get("redemptions", []) if r.get("referrer_id") == referrer_id]
+            history = [
+                r for r in data.get("redemptions", []) if r.get("referrer_id") == referrer_id
+            ]
 
         recent_same_ip = 0
         recent_same_device = 0
@@ -185,10 +197,15 @@ class ViralReferralEngine:
             rm = r.get("metadata") or {}
             if meta.get("ip_address") and rm.get("ip_address") == meta.get("ip_address"):
                 recent_same_ip += 1
-            if meta.get("device_fingerprint") and rm.get("device_fingerprint") == meta.get("device_fingerprint"):
+            if meta.get("device_fingerprint") and rm.get("device_fingerprint") == meta.get(
+                "device_fingerprint"
+            ):
                 recent_same_device += 1
 
-        if recent_same_ip >= FRAUD_INDICATOR_THRESHOLD or recent_same_device >= FRAUD_INDICATOR_THRESHOLD:
+        if (
+            recent_same_ip >= FRAUD_INDICATOR_THRESHOLD
+            or recent_same_device >= FRAUD_INDICATOR_THRESHOLD
+        ):
             logger.warning(
                 f"Fraud indicators for referrer {referrer_id}: same_ip={recent_same_ip}, same_device={recent_same_device}"
             )
@@ -215,7 +232,9 @@ class ViralReferralEngine:
                 logger.debug(f"Reward tier count failed: {exc}")
         else:
             data = self._load_local()
-            count = len([r for r in data.get("redemptions", []) if r.get("referrer_id") == referrer_id])
+            count = len(
+                [r for r in data.get("redemptions", []) if r.get("referrer_id") == referrer_id]
+            )
 
         tier = REWARD_TIERS[0]
         for t in REWARD_TIERS:
@@ -351,7 +370,9 @@ class ViralReferralEngine:
             "deep_link": self.generate_deep_link(referral_code, platform),
         }
 
-    def _stripe_payout(self, user_id: str, amount_cents: int, currency: str = "usd") -> dict[str, Any]:
+    def _stripe_payout(
+        self, user_id: str, amount_cents: int, currency: str = "usd"
+    ) -> dict[str, Any]:
         """Create a Stripe payout for a user's referral earnings."""
         if not settings.stripe_api_key:
             logger.debug("Stripe API key not configured; skipping payout")

@@ -4,7 +4,6 @@ import asyncio
 import json
 import os
 import time
-from functools import wraps
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
@@ -34,7 +33,7 @@ class SupabaseStore(SQLiteMemoryStore):
             "total_queries": 0,
         }
         super().__init__(str(self.local_path))
-        
+
         # Initialize provider status
         self._check_provider_status()
 
@@ -50,15 +49,18 @@ class SupabaseStore(SQLiteMemoryStore):
                     if self._pgvector_available:
                         self._provider = "supabase"
                         from loguru import logger
+
                         logger.info("✅ Supabase pgvector connection established successfully")
                         return
             except Exception as e:
                 from loguru import logger
+
                 logger.warning(f"⚠️ Supabase init failed, using SQLite fallback: {e}")
-        
+
         # Fall back to SQLite
         self._provider = "sqlite"
         from loguru import logger
+
         logger.info("📦 Using SQLite as memory backend")
 
     def _is_supabase_url(self, url: str) -> bool:
@@ -67,7 +69,7 @@ class SupabaseStore(SQLiteMemoryStore):
             parsed = urlparse(url)
             hostname = parsed.hostname or ""
             return hostname.endswith("supabase.co") or "supabase" in hostname.lower()
-        except Exception as e:
+        except Exception:
             return False
 
     def _verify_pgvector_schema(self, client) -> bool:
@@ -86,6 +88,7 @@ class SupabaseStore(SQLiteMemoryStore):
             return True
         except Exception as e:
             from loguru import logger
+
             logger.warning(f"⚠️ pgvector schema verification failed: {e}")
             return False
 
@@ -96,10 +99,12 @@ class SupabaseStore(SQLiteMemoryStore):
     def _get_supabase_client(self):
         # Health check cache - don't recheck too often
         current_time = time.time()
-        if self._supabase_client is None or (current_time - self._last_health_check > self._health_check_interval):
+        if self._supabase_client is None or (
+            current_time - self._last_health_check > self._health_check_interval
+        ):
             self._last_health_check = current_time
             self._supabase_client = None  # Force reconnection
-            
+
             try:
                 from supabase import create_client
 
@@ -128,26 +133,35 @@ class SupabaseStore(SQLiteMemoryStore):
                 if callable(create_client):
                     client = create_client(url, key)
                     # Verify client is usable
-                    if hasattr(client, 'table') and hasattr(client, 'rpc'):
+                    if hasattr(client, "table") and hasattr(client, "rpc"):
                         self._supabase_client = client
                     else:
                         from loguru import logger
+
                         logger.error("❌ Supabase client created but missing required methods")
                         return None
                 else:
                     from loguru import logger
-                    logger.error("❌ supabase.create_client is not callable - module may be corrupted")
+
+                    logger.error(
+                        "❌ supabase.create_client is not callable - module may be corrupted"
+                    )
                     return None
-                    
+
             except Exception as exc:
                 from loguru import logger
+
                 logger.error(f"❌ Supabase client initialization failed: {exc}")
                 return None
         return self._supabase_client
 
     def get_stats(self) -> dict:
         """Get memory store statistics."""
-        return {**self._stats, "provider": self._provider, "pgvector_enabled": self._pgvector_available}
+        return {
+            **self._stats,
+            "provider": self._provider,
+            "pgvector_enabled": self._pgvector_available,
+        }
 
     def save_conversation(self, session_id: str, messages: list) -> None:
         if self._provider == "supabase":
@@ -169,7 +183,12 @@ class SupabaseStore(SQLiteMemoryStore):
     def get_conversation(self, session_id: str) -> list:
         if self._provider == "supabase":
             client = self._get_supabase_client()
-            result = client.table("conversations").select("messages").eq("session_id", session_id).execute()
+            result = (
+                client.table("conversations")
+                .select("messages")
+                .eq("session_id", session_id)
+                .execute()
+            )
             rows = result.data
             if rows:
                 return json.loads(rows[0]["messages"])
@@ -179,7 +198,7 @@ class SupabaseStore(SQLiteMemoryStore):
     def _generate_embedding(self, text: str) -> list[float] | None:
         # Generate embeddings for pgvector semantic search
         self._stats["embeddings_generated"] += 1
-        
+
         try:
             from core.embeddings import embed_for_pgvector
 
@@ -189,31 +208,33 @@ class SupabaseStore(SQLiteMemoryStore):
             try:
                 # Fallback 1: sentence-transformers local
                 from sentence_transformers import SentenceTransformer
-                model = SentenceTransformer('all-MiniLM-L6-v2')
+
+                model = SentenceTransformer("all-MiniLM-L6-v2")
                 embedding = model.encode(text, normalize_embeddings=True)
                 # Pad to 1536 dimensions for pgvector compatibility
                 if len(embedding) < 1536:
                     embedding = list(embedding) + [0.0] * (1536 - len(embedding))
                 return embedding[:1536]
-            except Exception as e:
+            except Exception:
                 import logging
-                logging.getLogger(__name__).warning('Ignored exception')
-                
+
+                logging.getLogger(__name__).warning("Ignored exception")
+
             try:
                 # Fallback 2: LiteLLM with OpenAI
                 import litellm
-                response = litellm.embedding(
-                    model="text-embedding-3-small",
-                    input=text
-                )
+
+                response = litellm.embedding(model="text-embedding-3-small", input=text)
                 return response.data[0]["embedding"]
-            except Exception as e:
+            except Exception:
                 import logging
-                logging.getLogger(__name__).warning('Ignored exception')
-                
+
+                logging.getLogger(__name__).warning("Ignored exception")
+
             # All methods failed
             try:
                 from loguru import logger
+
                 logger.error(f"Embedding generation failed: {e}")
             except ImportError:
                 pass
@@ -239,7 +260,7 @@ class SupabaseStore(SQLiteMemoryStore):
         if self._provider == "supabase":
             try:
                 self._stats["total_queries"] += 1
-                
+
                 content_text = fact.get("content", fact.get("text", ""))
                 embedding = self._generate_embedding(content_text)
 
@@ -264,7 +285,9 @@ class SupabaseStore(SQLiteMemoryStore):
                     self._stats["sqlite_fallback"] += 1
                     self._save_learned_fact_sqlite(fact_id, fact)
                 except Exception as fallback_error:
-                    logger.error(f"SQLite fallback also failed — fact '{fact_id}' was NOT persisted: {fallback_error}")
+                    logger.error(
+                        f"SQLite fallback also failed — fact '{fact_id}' was NOT persisted: {fallback_error}"
+                    )
                     raise
         else:
             # SQLite path
@@ -278,7 +301,7 @@ class SupabaseStore(SQLiteMemoryStore):
 
     def search_facts(self, query: str) -> list:
         self._stats["total_queries"] += 1
-        
+
         if self._provider == "supabase":
             try:
                 self._stats["pgvector_success"] += 1
@@ -296,7 +319,11 @@ class SupabaseStore(SQLiteMemoryStore):
                     ).execute()
                     if response.data:
                         return [
-                            (json.loads(row["content"]) if isinstance(row["content"], str) else row["content"])
+                            (
+                                json.loads(row["content"])
+                                if isinstance(row["content"], str)
+                                else row["content"]
+                            )
                             for row in response.data
                         ]
             except Exception as e:
@@ -310,9 +337,18 @@ class SupabaseStore(SQLiteMemoryStore):
 
             try:
                 client = self._get_supabase_client()
-                result = client.table("learned_facts").select("content").ilike("content", f"%{query}%").execute()
+                result = (
+                    client.table("learned_facts")
+                    .select("content")
+                    .ilike("content", f"%{query}%")
+                    .execute()
+                )
                 return [
-                    (json.loads(row["content"]) if isinstance(row["content"], str) else row["content"])
+                    (
+                        json.loads(row["content"])
+                        if isinstance(row["content"], str)
+                        else row["content"]
+                    )
                     for row in result.data
                 ]
             except Exception as e:
@@ -330,7 +366,7 @@ class SupabaseStore(SQLiteMemoryStore):
         success_count = 0
         failed_count = 0
         errors = []
-        
+
         for fact in facts:
             try:
                 self.save_learned_fact(fact)
@@ -338,7 +374,7 @@ class SupabaseStore(SQLiteMemoryStore):
             except Exception as e:
                 failed_count += 1
                 errors.append(str(e))
-        
+
         return {"success": success_count, "failed": failed_count, "errors": errors}
 
     def similarity_search(self, query: str, threshold: float = 0.3, limit: int = 5) -> list:
@@ -358,13 +394,18 @@ class SupabaseStore(SQLiteMemoryStore):
                     ).execute()
                     if response.data:
                         return [
-                            (json.loads(row["content"]) if isinstance(row["content"], str) else row["content"])
+                            (
+                                json.loads(row["content"])
+                                if isinstance(row["content"], str)
+                                else row["content"]
+                            )
                             for row in response.data
                         ]
             except Exception as e:
                 from loguru import logger
+
                 logger.warning(f"Similarity search failed: {e}")
-        
+
         # Fallback to basic search
         return self.search_facts(query)
 

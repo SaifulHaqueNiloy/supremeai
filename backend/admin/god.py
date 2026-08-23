@@ -42,7 +42,9 @@ class AdminGodLayer:
         try:
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
         except (PermissionError, OSError) as e:
-            logger.warning(f"Permission denied creating directory for {self.db_path}: {e}. Falling back to /tmp/data.")
+            logger.warning(
+                f"Permission denied creating directory for {self.db_path}: {e}. Falling back to /tmp/data."
+            )
             self.db_path = Path("/tmp/data") / self.db_path.name
             self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.sqlite_lock = threading.Lock()
@@ -54,10 +56,14 @@ class AdminGodLayer:
             try:
                 self._init_db()
             except Exception as e:
-                logger.warning(f"Failed to initialize Firestore for AdminGodLayer: {e}. Falling back to SQLite.")
+                logger.warning(
+                    f"Failed to initialize Firestore for AdminGodLayer: {e}. Falling back to SQLite."
+                )
                 self._db = None
         else:
-            logger.warning("Firestore unavailable or in test mode. AdminGodLayer using local SQLite fallback.")
+            logger.warning(
+                "Firestore unavailable or in test mode. AdminGodLayer using local SQLite fallback."
+            )
 
         self._init_sqlite_db()
 
@@ -80,7 +86,9 @@ class AdminGodLayer:
         # বাংলা মন্তব্য: নিরাপত্তার জন্য প্রথমবার চালানোর সময় সকল অ্যাডমিন অথরাইজেশন ডিফল্টভাবে 'false' রাখা হচ্ছে এবং সতর্কতা লগ করা হচ্ছে।
         if not self.get_rule("admin_authorized"):
             self.set_rule("admin_authorized", "false")
-            logger.warning("Defaulting 'admin_authorized' to 'false' for security. Please configure explicitly.")
+            logger.warning(
+                "Defaulting 'admin_authorized' to 'false' for security. Please configure explicitly."
+            )
         if not self.get_rule("autofix_authorized"):
             self.set_rule("autofix_authorized", "false")
             logger.warning("Defaulting 'autofix_authorized' to 'false' for security.")
@@ -101,7 +109,9 @@ class AdminGodLayer:
             autofix_ref = self._db.collection(self.collection_name).document("autofix_authorized")
             if not autofix_ref.get().exists:
                 self.set_rule("autofix_authorized", "false")
-                logger.warning("Firestore: Defaulting 'autofix_authorized' to 'false' for security.")
+                logger.warning(
+                    "Firestore: Defaulting 'autofix_authorized' to 'false' for security."
+                )
         except Exception as e:
             logger.error(f"Error initializing AdminGodLayer DB: {e}")
 
@@ -160,4 +170,6 @@ class AdminGodLayer:
 
     def enforce(self, action: str) -> None:
         if not self.is_admin_action_allowed(action):
-            raise PermissionError("Action blocked by constitutional rules. Admin authorization required.")
+            raise PermissionError(
+                "Action blocked by constitutional rules. Admin authorization required."
+            )

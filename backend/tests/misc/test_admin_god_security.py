@@ -55,7 +55,9 @@ class TestAdminGodSecurity:
 
     def test_update_default_duration(self):
         """Test update with default duration."""
-        session_id = GodModeAuditLog.record(actor="test_user", action="ACTIVATED", resource="system", reason="test")
+        session_id = GodModeAuditLog.record(
+            actor="test_user", action="ACTIVATED", resource="system", reason="test"
+        )
         GodModeAuditLog.update(session_id, "TERMINATED")
         assert GodModeAuditLog._entries[1]["duration_ms"] == 0.0
 

@@ -29,7 +29,9 @@ def test_morphic_adapter_sanitizes_code_fences(monkeypatch):
     mock_genai = MagicMock()
     mock_client = MagicMock()
     mock_resp = MagicMock()
-    mock_resp.text = "```python\ndef execute_tool(payload: dict) -> dict:\n    return {'success': True}\n```"
+    mock_resp.text = (
+        "```python\ndef execute_tool(payload: dict) -> dict:\n    return {'success': True}\n```"
+    )
     mock_client.models.generate_content = MagicMock(return_value=mock_resp)
     mock_genai.Client = MagicMock(return_value=mock_client)
 

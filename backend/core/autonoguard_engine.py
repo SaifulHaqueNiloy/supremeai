@@ -115,7 +115,9 @@ class AutonoGuardEngine:
         এটি Malware Immunity (DNA #5) এর অংশ।
         """
         if not redis_manager or not redis_manager.client:
-            return ChurnDetection(is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0)
+            return ChurnDetection(
+                is_churn=False, previous_ips=[], first_seen=time.time(), churn_count=0
+            )
 
         key = f"{_ip_churn_prefix}{admin_id}"
         now = time.time()
@@ -204,7 +206,11 @@ class AutonoGuardEngine:
         Redis-এ OTP-এর sha256 হ্যাশ হিসেবে স্টোর করা হয় যাতে verify_jit_otp deterministic থাকে।
         """
         requested_key = f"{_redis_key_prefix}{admin_id}:requested"
-        last_request = await redis_manager.get_cache(requested_key) if redis_manager and redis_manager.client else None
+        last_request = (
+            await redis_manager.get_cache(requested_key)
+            if redis_manager and redis_manager.client
+            else None
+        )
 
         if last_request:
             return False  # Cooldown active
@@ -262,7 +268,9 @@ class AutonoGuardEngine:
 
         churn = await self.detect_ip_churn(admin_id, ip)
         if churn.is_churn:
-            logger.warning(f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)")
+            logger.warning(
+                f"🚨 IP Churn detected for admin {admin_id} ({churn.churn_count} IPs in 1h)"
+            )
             return False
 
         return True
@@ -390,7 +398,9 @@ class AutonoGuardEngine:
                 logger.info(f"✅ Self-heal cycle COMPLETE for {fingerprint[:16]}")
                 return fix
             else:
-                logger.warning(f"⚠️ Self-heal fix applied but verification failed for {fingerprint[:16]}")
+                logger.warning(
+                    f"⚠️ Self-heal fix applied but verification failed for {fingerprint[:16]}"
+                )
                 # Verification failure-এ circuit breaker mark_failure করে না —
                 # কারণ fix নিজে সঠিক ছিল কিন্তু verification mechanism এ সমস্যা।
                 self._circuit_breaker.mark_success()
@@ -422,7 +432,9 @@ class AutonoGuardEngine:
         if ANTI_HACKING_ENABLED:
             bypass_key = f"{_redis_key_prefix}{admin_id}:bypass"
             bypass_verified = (
-                await redis_manager.get_cache(bypass_key) if redis_manager and redis_manager.client else None
+                await redis_manager.get_cache(bypass_key)
+                if redis_manager and redis_manager.client
+                else None
             )
 
             if not bypass_verified and not otp_code:
@@ -441,7 +453,9 @@ class AutonoGuardEngine:
 
                 # Mark session bypass
                 if redis_manager and redis_manager.client:
-                    await redis_manager.set_cache(bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2)
+                    await redis_manager.set_cache(
+                        bypass_key, "1", ex_seconds=OTP_COOLDOWN_SECONDS * 2
+                    )
             elif not bypass_verified:
                 # বাংলা মন্তব্ব্য: bypass_verified False এবং otp_code ও নেই এমন কোনো অবস্থা
                 # এখানে থাকা উচিত নয় — defense-in-depth fail-closed guard।

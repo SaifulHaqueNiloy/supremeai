@@ -110,7 +110,9 @@ class TestAuthMiddleware:
         }
         send = AsyncMock()
         # বাংলা মন্তব্য: allow_test_auth_bypass False থাকলে bypass হবে না, middleware block করবে
-        with patch("core.security.authentication.auth_middleware.settings.allow_test_auth_bypass", False):
+        with patch(
+            "core.security.authentication.auth_middleware.settings.allow_test_auth_bypass", False
+        ):
             await middleware(scope, MagicMock(), send)
         assert mock_app.called is False
         send.assert_called()
@@ -137,7 +139,9 @@ class TestAuthMiddleware:
         }
         send = AsyncMock()
         # বাংলা মন্তব্য: allow_test_auth_bypass False থাকলে missing token 401 return করবে
-        with patch("core.security.authentication.auth_middleware.settings.allow_test_auth_bypass", False):
+        with patch(
+            "core.security.authentication.auth_middleware.settings.allow_test_auth_bypass", False
+        ):
             await middleware(scope, MagicMock(), send)
         mock_app.assert_not_called()
         send.assert_called()

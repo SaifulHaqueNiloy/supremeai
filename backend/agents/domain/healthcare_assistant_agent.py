@@ -136,12 +136,12 @@ class HealthcareAssistantAgent:
 
         if value < lower * 0.8 or value > upper * 1.2:
             status = "critical"
-            recommendation = (
-                f"Immediate attention needed: {metric.value} is critically outside normal range ({lower}-{upper})"
-            )
+            recommendation = f"Immediate attention needed: {metric.value} is critically outside normal range ({lower}-{upper})"
         elif value < lower or value > upper:
             status = "attention"
-            recommendation = f"Monitor {metric.value}: value ({value}) is outside normal range ({lower}-{upper})"
+            recommendation = (
+                f"Monitor {metric.value}: value ({value}) is outside normal range ({lower}-{upper})"
+            )
         else:
             status = "normal"
             recommendation = f"{metric.value} is within normal range"
@@ -181,7 +181,10 @@ class HealthcareAssistantAgent:
                 task_type="reasoning",
                 max_tokens=200,
             )
-            return result.get("content", "Maintain a balanced lifestyle with regular exercise and proper nutrition.")
+            return result.get(
+                "content",
+                "Maintain a balanced lifestyle with regular exercise and proper nutrition.",
+            )
         except Exception as e:
             logger.error("Failed to generate wellness tip: %s", e)
             return "Maintain a balanced lifestyle with regular exercise and proper nutrition."

@@ -64,7 +64,9 @@ class EmailAgent:
         }
         self.auth_method = "imap"
         self.connected = True
-        logger.info(f"IMAP connection verified and credentials stored (encrypted) for {username}@{host}:{port}")
+        logger.info(
+            f"IMAP connection verified and credentials stored (encrypted) for {username}@{host}:{port}"
+        )
         return True
 
     def receive_otp(self, website: str, lookback: int = 10) -> str:
@@ -72,7 +74,9 @@ class EmailAgent:
         কোনো লাইভ কানেকশন না থাকলে বা OTP না পাওয়া গেলে খালি স্ট্রিং রিটার্ন করে — কখনো fabricate করে না।
         """
         if self.auth_method != "imap" or not self._imap_config or not self.connected:
-            logger.warning("receive_otp() called without a live IMAP connection — cannot fetch a real OTP.")
+            logger.warning(
+                "receive_otp() called without a live IMAP connection — cannot fetch a real OTP."
+            )
             return ""
 
         cfg = self._imap_config
@@ -124,11 +128,15 @@ class EmailAgent:
     def _extract_body(msg) -> str:
         if msg.is_multipart():
             for part in msg.walk():
-                if part.get_content_type() == "text/plain" and "attachment" not in str(part.get("Content-Disposition")):
+                if part.get_content_type() == "text/plain" and "attachment" not in str(
+                    part.get("Content-Disposition")
+                ):
                     try:
                         payload = part.get_payload(decode=True)
                         if payload:
-                            return payload.decode(part.get_content_charset() or "utf-8", errors="ignore")
+                            return payload.decode(
+                                part.get_content_charset() or "utf-8", errors="ignore"
+                            )
                     except Exception as exc:
                         # বাংলা মন্তব্য: এক MIME part decode fail করলেও পরবর্তী part-এ চেষ্টা
                         # চালিয়ে যাওয়া উচিত, কিন্তু আগে সম্পূর্ণ silent ছিল -- এখন
@@ -138,8 +146,12 @@ class EmailAgent:
             return ""
         try:
             payload = msg.get_payload(decode=True)
-            return payload.decode(msg.get_content_charset() or "utf-8", errors="ignore") if payload else ""
-        except Exception as e:
+            return (
+                payload.decode(msg.get_content_charset() or "utf-8", errors="ignore")
+                if payload
+                else ""
+            )
+        except Exception:
             return ""
 
     def extract_otp(self, email_body: str) -> str:

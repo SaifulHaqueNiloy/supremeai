@@ -25,8 +25,6 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
-from services.dynamic_ai.orchestrator import get_ai_orchestrator
-
 
 # Internal core imports
 from core.cache import get_redis_client
@@ -38,6 +36,7 @@ from core.logging import get_logger
 from core.metrics import counter, timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from services.dynamic_ai.orchestrator import get_ai_orchestrator
 from services.llm.providers import (
     BengaliNormalizer,
     DeepSeekProvider,
@@ -50,9 +49,6 @@ from services.llm.providers import (
     StreamChunk,
     TogetherProvider,
 )
-
-
-
 
 # বাংলা মন্তব্য: Provider enum -> free_tier_tracker স্ট্রিং-কী ম্যাপিং
 _FREE_TIER_TRACKED: dict[Provider, str] = {
@@ -148,11 +144,36 @@ FALLBACK_CHAINS: dict[TaskType, list[Provider]] = {
         Provider.GEMINI,
         Provider.OLLAMA,
     ],
-    TaskType.CODE: [Provider.DEEPSEEK, Provider.HUGGINGFACE_SPACE, Provider.GEMINI, Provider.OLLAMA],
-    TaskType.BENGALI: [Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.GEMINI, Provider.OLLAMA],
-    TaskType.SUMMARIZE: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
-    TaskType.TRANSLATE: [Provider.MOONSHOT, Provider.GEMINI, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
-    TaskType.CLASSIFY: [Provider.DEEPSEEK, Provider.MOONSHOT, Provider.HUGGINGFACE_SPACE, Provider.OLLAMA],
+    TaskType.CODE: [
+        Provider.DEEPSEEK,
+        Provider.HUGGINGFACE_SPACE,
+        Provider.GEMINI,
+        Provider.OLLAMA,
+    ],
+    TaskType.BENGALI: [
+        Provider.MOONSHOT,
+        Provider.HUGGINGFACE_SPACE,
+        Provider.GEMINI,
+        Provider.OLLAMA,
+    ],
+    TaskType.SUMMARIZE: [
+        Provider.DEEPSEEK,
+        Provider.MOONSHOT,
+        Provider.HUGGINGFACE_SPACE,
+        Provider.OLLAMA,
+    ],
+    TaskType.TRANSLATE: [
+        Provider.MOONSHOT,
+        Provider.GEMINI,
+        Provider.HUGGINGFACE_SPACE,
+        Provider.OLLAMA,
+    ],
+    TaskType.CLASSIFY: [
+        Provider.DEEPSEEK,
+        Provider.MOONSHOT,
+        Provider.HUGGINGFACE_SPACE,
+        Provider.OLLAMA,
+    ],
     TaskType.EMBEDDING: [Provider.GEMINI, Provider.OLLAMA],  # Prefer free/OSS
 }
 
@@ -197,11 +218,6 @@ class RouteResult:
 # ── Concrete Providers ────────────────────────────────────────────────────────
 
 
-
-
-
-
-
 # ── Bengali Text Utilities ────────────────────────────────────────────────────
 
 
@@ -227,13 +243,14 @@ class LLMRouter:
             Provider.GEMINI: GeminiProvider(),
             Provider.HUGGINGFACE_SPACE: HuggingFaceSpaceProvider(),
         }
-        
+
         try:
             from services.llm.providers import GroqProvider
+
             _candidate_providers[Provider.GROQ] = GroqProvider()
         except Exception as e:
             logger.debug(f"llm_router_groq_skipped: {e}")
-        
+
         try:
             _candidate_providers[Provider.OLLAMA] = OllamaProvider()
         except NotImplementedError as e:
@@ -244,10 +261,13 @@ class LLMRouter:
             if p == Provider.OLLAMA:
                 # Ollama is special - include always, let health_check decide availability
                 self.providers[p] = prov
-            elif hasattr(prov, 'api_key') and prov.api_key:
+            elif hasattr(prov, "api_key") and prov.api_key:
                 self.providers[p] = prov
         if not self.providers:
-            logger.warning("llm_router_no_providers", msg="কোনো LLM provider configured নেই — সব request fail করবে!")
+            logger.warning(
+                "llm_router_no_providers",
+                msg="কোনো LLM provider configured নেই — সব request fail করবে!",
+            )
         else:
             logger.info("llm_router_providers_loaded", providers=[p.value for p in self.providers])
         self.budget = budget or TokenBudget()
@@ -287,7 +307,9 @@ class LLMRouter:
 
         # Add fallback chain - শুধু ফ্রি/ওপেন সোর্স প্রথমে আনা হবে
         # বাংলা মন্তব্য: টেস্ট পাসের সুবিধার্থে ওলামা ডিফল্ট চেইনে ফেরত আনা হলো
-        for provider in FALLBACK_CHAINS.get(task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]):
+        for provider in FALLBACK_CHAINS.get(
+            task_type, [Provider.MOONSHOT, Provider.GEMINI, Provider.OLLAMA]
+        ):
             if provider not in chain and task_type in PROVIDER_CAPABILITIES.get(provider, []):
                 chain.append(provider)
 
@@ -303,7 +325,11 @@ class LLMRouter:
         # বাংলা মন্তব্ব: free-tier ট্র্যাকার দিয়ে real RPM/TPM/RPD budget চেক করে
         # exhausted প্রোভাইডার চেইন থেকে বাদ দেওয়া হচ্ছে
         tracker = get_tracker()
-        chain = [p for p in chain if _FREE_TIER_TRACKED.get(p) is None or tracker.is_available(_FREE_TIER_TRACKED[p])]
+        chain = [
+            p
+            for p in chain
+            if _FREE_TIER_TRACKED.get(p) is None or tracker.is_available(_FREE_TIER_TRACKED[p])
+        ]
 
         return chain
 
@@ -337,14 +363,14 @@ class LLMRouter:
                 max_tokens=max_tokens,
                 temperature=temperature,
                 prefer_free_tier=cost_sensitive,
-                **kwargs
+                **kwargs,
             )
             if v5_result.success:
                 try:
                     prov_enum = Provider(v5_result.provider_used)
                 except ValueError:
-                    prov_enum = Provider.OLLAMA # Fallback mapping
-                    
+                    prov_enum = Provider.OLLAMA  # Fallback mapping
+
                 return RouteResult(
                     provider=prov_enum,
                     content=v5_result.text or "",
@@ -352,7 +378,7 @@ class LLMRouter:
                     cost_usd=v5_result.cost_usd,
                     latency_ms=v5_result.latency_ms,
                     cached=False,
-                    fallback_used=v5_result.was_fallback
+                    fallback_used=v5_result.was_fallback,
                 )
 
         """
@@ -379,7 +405,9 @@ class LLMRouter:
             logger.debug("bengali_normalized", original_length=len(prompt))
 
         # Check cache - AI-094: Semantic Caching
-        cache_key = self._cache_key(prompt, task.value, max_tokens=max_tokens, temperature=temperature)
+        cache_key = self._cache_key(
+            prompt, task.value, max_tokens=max_tokens, temperature=temperature
+        )
         if use_cache and not stream and self.cache is not None:
             cached_result = await self.cache.get(cache_key)
             if cached_result:
@@ -446,7 +474,9 @@ class LLMRouter:
                 )
 
                 if stream:
-                    return self._stream_with_fallback(provider, prompt, max_tokens, temperature, chain, **kwargs)
+                    return self._stream_with_fallback(
+                        provider, prompt, max_tokens, temperature, chain, **kwargs
+                    )
 
                 result = await provider.acompletion(
                     prompt,
@@ -460,7 +490,9 @@ class LLMRouter:
                 if isinstance(result, dict):
                     result = result.get("text") or result.get("content") or str(result)
                 elif not isinstance(result, str):
-                    raise LLMProviderError(message=f"{provider_name.value} returned non-str for non-stream request")
+                    raise LLMProviderError(
+                        message=f"{provider_name.value} returned non-str for non-stream request"
+                    )
 
                 # AGENT-104: Check for hallucination policy
                 if self.rules:
@@ -511,7 +543,9 @@ class LLMRouter:
 
             except Exception as exc:
                 last_error = exc
-                is_rate_limited = isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
+                is_rate_limited = (
+                    isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 429
+                )
                 logger.warning(
                     "provider_failed",
                     provider=provider_name.value,
@@ -565,7 +599,9 @@ class LLMRouter:
         try:
             # Call astream if available, else acompletion
             if hasattr(primary, "astream") and callable(primary.astream):
-                stream_gen = await primary.astream(prompt, max_tokens=max_tokens, temperature=temperature, **kwargs)
+                stream_gen = await primary.astream(
+                    prompt, max_tokens=max_tokens, temperature=temperature, **kwargs
+                )
             else:
                 stream_gen = await primary.acompletion(
                     prompt,
@@ -631,11 +667,11 @@ class LLMRouter:
             max_tokens=max_tokens,
             temperature=temperature,
             prefer_free_tier=True,
-            **kwargs
+            **kwargs,
         )
-        
+
         provider_name = result.provider_used or "unknown"
-        
+
         return {
             "text": result.text or "",
             "provider": provider_name,
@@ -660,7 +696,9 @@ class LLMRouter:
                 "used_today": self.budget.used_today,
                 "remaining": self.budget.daily_limit - self.budget.used_today,
             },
-            "provider_costs": {p.value: {"input": c[0], "output": c[1]} for p, c in PROVIDER_COSTS.items()},
+            "provider_costs": {
+                p.value: {"input": c[0], "output": c[1]} for p, c in PROVIDER_COSTS.items()
+            },
             "rules_enforced": (self.rules.validate_critical_rules() if self.rules else []),
         }
 
@@ -836,21 +874,31 @@ class HFSwarmRouter:
         prompt_lower = prompt.lower()
 
         # Vision / Image Task Detection
-        if any(kw in prompt_lower for kw in ["image", "photo", "picture", "screenshot", "diagram", "ocr"]):
+        if any(
+            kw in prompt_lower
+            for kw in ["image", "photo", "picture", "screenshot", "diagram", "ocr"]
+        ):
             return "vision"
 
         # Coding Task Detection
         if any(
-            kw in prompt_lower for kw in ["code", "python", "def ", "function", "bug", "sql", "javascript", "class "]
+            kw in prompt_lower
+            for kw in ["code", "python", "def ", "function", "bug", "sql", "javascript", "class "]
         ):
             return "coding"
 
         # Logic / Reasoning / Math Task Detection
-        if any(kw in prompt_lower for kw in ["solve", "math", "equation", "logic", "calculate", "proof", "reason"]):
+        if any(
+            kw in prompt_lower
+            for kw in ["solve", "math", "equation", "logic", "calculate", "proof", "reason"]
+        ):
             return "reasoning"
 
         # Creative Task Detection
-        if any(kw in prompt_lower for kw in ["story", "poem", "song", "lyrics", "script", "creative", "write a story"]):
+        if any(
+            kw in prompt_lower
+            for kw in ["story", "poem", "song", "lyrics", "script", "creative", "write a story"]
+        ):
             return "creative"
 
         # Fast Draft Speculative Decoding Detection
@@ -863,23 +911,36 @@ class HFSwarmRouter:
 
         return "general"
 
-    def route_and_generate(self, prompt: str, parameters: dict[str, Any] | None = None) -> dict[str, Any]:
+    def route_and_generate(
+        self, prompt: str, parameters: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """বাংলা মন্তব্য: ডিটেক্টেড মডেল এবং রোটেশন এপিআই কী ব্যবহার করে ইনফ্যারেন্স সম্পন্ন করে।"""
         task_type = self.classify_task(prompt)
         target_model = self.model_map.get(task_type, self.model_map["general"])
 
         active_key = key_rotator.get_key()
-        headers = {"Authorization": f"Bearer {active_key}" if active_key else "", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {active_key}" if active_key else "",
+            "Content-Type": "application/json",
+        }
 
         endpoint = f"{self.base_url}{target_model}"
-        payload = {"inputs": prompt, "parameters": parameters or {"max_new_tokens": 512, "temperature": 0.7}}
+        payload = {
+            "inputs": prompt,
+            "parameters": parameters or {"max_new_tokens": 512, "temperature": 0.7},
+        }
 
         logger.info(f"🔀 [Router] Task: '{task_type}' | Target Model: '{target_model}'")
 
         try:
             response = requests.post(endpoint, headers=headers, json=payload, timeout=30)
             response.raise_for_status()
-            return {"status": "success", "task": task_type, "model": target_model, "output": response.json()}
+            return {
+                "status": "success",
+                "task": task_type,
+                "model": target_model,
+                "output": response.json(),
+            }
         except Exception as e:
             logger.error(f"❌ Inference error for model {target_model}: {e!s}")
             return {"status": "error", "task": task_type, "model": target_model, "error": str(e)}

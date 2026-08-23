@@ -1,10 +1,9 @@
 # backend/tests/evolution/test_canary_and_evolution_bridge.py
 """Tests for EvolutionBridge and CanaryRolloutController."""
 
-import pytest
-from evolution.canary_manager import CanaryRolloutController, get_canary_controller
+from evolution.canary_manager import CanaryRolloutController
 from evolution.change_proposal import ChangeProposalManager, ChangeType, ProposalState
-from learning.evolution_bridge import EvolutionBridge, get_evolution_bridge
+from learning.evolution_bridge import get_evolution_bridge
 from learning.experience import ExperienceRecord
 
 
@@ -50,7 +49,9 @@ def test_canary_controller_rollout_and_promotion():
         canary_ctrl.record_observation(proposal.proposal_id, success=True, latency_ms=50.0)
 
     # 3. Evaluate and promote
-    promoted = canary_ctrl.evaluate_and_promote(proposal.proposal_id, min_trials=5, min_success_rate=0.80)
+    promoted = canary_ctrl.evaluate_and_promote(
+        proposal.proposal_id, min_trials=5, min_success_rate=0.80
+    )
     assert promoted is True
     assert proposal.state == ProposalState.PROMOTED
 

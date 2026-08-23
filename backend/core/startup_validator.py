@@ -70,9 +70,13 @@ class StartupValidator:
                 warnings.append("SUPABASE_DATABASE_URL is missing — DB-dependent features disabled")
 
             # 5. Redis URL validation
-            cls._validation_results["redis_url"] = bool(settings.redis_url or os.getenv("REDIS_URL"))
+            cls._validation_results["redis_url"] = bool(
+                settings.redis_url or os.getenv("REDIS_URL")
+            )
             if not cls._validation_results["redis_url"]:
-                warnings.append("REDIS_URL is missing — caching and rate limiting will use in-memory fallback")
+                warnings.append(
+                    "REDIS_URL is missing — caching and rate limiting will use in-memory fallback"
+                )
 
             # 6. CORS validation for production
             if settings.env == "production":
@@ -85,13 +89,19 @@ class StartupValidator:
             # Store results
             cls._validation_results["errors"] = errors
             cls._validation_results["warnings"] = warnings
-            cls._validation_results["duration_ms"] = round((time.monotonic() - cls._start_time) * 1000, 2)
+            cls._validation_results["duration_ms"] = round(
+                (time.monotonic() - cls._start_time) * 1000, 2
+            )
 
             if errors:
                 error_msg = "; ".join(errors)
-                logger.error(f"❌ Startup validation failed with {len(errors)} error(s): {error_msg}")
+                logger.error(
+                    f"❌ Startup validation failed with {len(errors)} error(s): {error_msg}"
+                )
                 if warnings:
-                    logger.warning(f"⚠️  Additionally, {len(warnings)} warning(s): {'; '.join(warnings)}")
+                    logger.warning(
+                        f"⚠️  Additionally, {len(warnings)} warning(s): {'; '.join(warnings)}"
+                    )
                 cls._last_status = {
                     "validated": True,
                     "success": False,
@@ -100,7 +110,9 @@ class StartupValidator:
                 raise ValueError(error_msg)
 
             if warnings:
-                logger.warning(f"⚠️  Startup validation passed with {len(warnings)} warning(s): {'; '.join(warnings)}")
+                logger.warning(
+                    f"⚠️  Startup validation passed with {len(warnings)} warning(s): {'; '.join(warnings)}"
+                )
 
             logger.info(
                 f"✅ Startup validations passed successfully in {cls._validation_results['duration_ms']}ms. "

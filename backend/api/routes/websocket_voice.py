@@ -76,7 +76,9 @@ async def handle_intent(transcript: str, websocket: WebSocket, start_time: float
 
     # Check if it's a command
     if transcript_clean.startswith("/"):
-        supremeai_response = f"Executing system command: {transcript_clean}... Authorization confirmed."
+        supremeai_response = (
+            f"Executing system command: {transcript_clean}... Authorization confirmed."
+        )
     else:
         # Natural Language Processing (Simulating conversational Groq/LLM)
         supremeai_response = f"Hello! You said: '{transcript_clean}'. I am Aethel, your SupremeAI orchestrator. How can I assist you with the cluster today?"
@@ -91,7 +93,9 @@ async def handle_intent(transcript: str, websocket: WebSocket, start_time: float
             latency_ms=latency_ms,
         )
         try:
-            db.client.table("voice_interactions").insert(log_entry.dict(exclude_none=True)).execute()
+            db.client.table("voice_interactions").insert(
+                log_entry.dict(exclude_none=True)
+            ).execute()
         except Exception as db_err:
             logger.info(f"⚠️ [DB Logging Error]: {db_err}")
 
@@ -143,7 +147,9 @@ async def websocket_voice_endpoint(
                             continue
 
                         # 1. Process STT using Groq
-                        logger.info(f"🎙️ [WS] Processing audio buffer ({len(audio_buffer)} bytes)...")
+                        logger.info(
+                            f"🎙️ [WS] Processing audio buffer ({len(audio_buffer)} bytes)..."
+                        )
                         transcript = await process_audio_with_groq(bytes(audio_buffer))
                         logger.info(f"🗣️ [User Voice]: {transcript}")
 

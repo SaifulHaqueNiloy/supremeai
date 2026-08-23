@@ -9,14 +9,18 @@ from typing import Any
 from loguru import logger
 from pydantic import PrivateAttr, SecretStr, model_serializer
 
-
 from .security.secret_vault import secret_vault
+
 
 class SettingsSecretsMixin:
     def _is_test_environment(self) -> bool:
         if os.getenv("ENV", "").lower() in {"production", "staging"}:
             return False
-        return "pytest" in sys.modules or os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
+        return (
+            "pytest" in sys.modules
+            or os.getenv("CI") == "true"
+            or os.getenv("GITHUB_ACTIONS") == "true"
+        )
 
     # বাংলা মন্তব্য: Pydantic v2-এ Mixin-এর ভেতরে PrivateAttr ব্যবহার করলে
     # instance-level private attr initialize নাও হতে পারে (ModelPrivateAttr iterable error)।
@@ -87,7 +91,7 @@ class SettingsSecretsMixin:
         if state["_secrets_batch_loaded"]:
             return
         cached = state["_cached_secrets"]
-        
+
         # 1. OPTIMIZED FETCH: Try loading grouped JSON blobs first
         try:
             llm_keys = secret_vault.fetch_json_secret("LLM_PROVIDER_KEYS", default={})
@@ -105,14 +109,14 @@ class SettingsSecretsMixin:
                 cached["SUPABASE_DATABASE_URL_POOLER"] = db_config.get("pooler_url", "")
                 cached["SUPABASE_URL"] = db_config.get("supabase_url", "")
                 cached["SUPABASE_KEY"] = db_config.get("supabase_key", "")
-                
+
             auth_keys = secret_vault.fetch_json_secret("AUTH_KEYS", default={})
             if auth_keys:
                 cached["SUPREMEAI_JWT_SECRET"] = auth_keys.get("jwt_secret", "")
                 cached["ENCRYPTION_KEY"] = auth_keys.get("encryption_key", "")
                 cached["SUPREMEAI_API_KEY"] = auth_keys.get("supremeai_api_key", "")
                 cached["SUPREMEAI_ADMIN_PASSWORD_HASH"] = auth_keys.get("admin_password_hash", "")
-                
+
         except Exception as e:
             logger.debug(f"JSON blob fetch failed, falling back to individual: {e}")
 
@@ -120,14 +124,14 @@ class SettingsSecretsMixin:
         for secret_key in self._BATCH_SECRET_KEYS:
             if cached.get(secret_key):
                 continue  # Skip if already loaded from JSON blob!
-                
+
             try:
                 val = secret_vault.fetch_secret(secret_key, default="")
                 if val:
                     cached[secret_key] = val
             except Exception as _secret_err:
                 logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
-                
+
         state["_secrets_batch_loaded"] = True
 
     def _get_cached_secret(self, key: str) -> str:
@@ -145,9 +149,13 @@ class SettingsSecretsMixin:
         cached = self._get_private_state()["_cached_secrets"]
         if key not in cached:
             if self._is_test_environment():
-                logger.debug(f"Secret '{key}' not found in cache after batch load - returning empty string")
+                logger.debug(
+                    f"Secret '{key}' not found in cache after batch load - returning empty string"
+                )
             else:
-                logger.warning(f"Secret '{key}' not found in cache after batch load - returning empty string")
+                logger.warning(
+                    f"Secret '{key}' not found in cache after batch load - returning empty string"
+                )
         return cached.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
@@ -167,7 +175,7 @@ class SettingsSecretsMixin:
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception as e:
+        except Exception:
             url = ""
         return SecretStr(url) if url else None
 
@@ -300,7 +308,7 @@ class SettingsSecretsMixin:
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception as e:
+        except Exception:
             return ""
 
     @property
@@ -433,7 +441,11 @@ class SettingsSecretsMixin:
             env_origins = env_origins.strip()
             try:
                 parsed = json.loads(env_origins)
-                origins = [str(o).strip() for o in parsed if str(o).strip()] if isinstance(parsed, list) else []
+                origins = (
+                    [str(o).strip() for o in parsed if str(o).strip()]
+                    if isinstance(parsed, list)
+                    else []
+                )
             except json.JSONDecodeError:
                 origins = [o.strip() for o in env_origins.split(",") if o.strip()]
         else:
@@ -476,7 +488,11 @@ class SettingsSecretsMixin:
                     return (
                         origins
                         if origins
-                        else ["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"]
+                        else [
+                            "http://localhost:3000",
+                            "http://localhost:5173",
+                            "http://localhost:8000",
+                        ]
                     )
                 raise RuntimeError(
                     "No valid CORS origins provided. "
@@ -496,6 +512,7 @@ class SettingsSecretsMixin:
         # Fallback: Generate a valid Fernet key from any available LLM API key
         import base64
         import hashlib
+
         fallback_material = (
             self._get_cached_secret("GEMINI_API_KEY")
             or self._get_cached_secret("OPENROUTER_API_KEY")
@@ -529,7 +546,9 @@ class SettingsSecretsMixin:
 
     @property
     def admin_telegram_chat_id(self) -> str:
-        return self._get_cached_secret("ADMIN_TELEGRAM_CHAT_ID") or os.getenv("ADMIN_TELEGRAM_CHAT_ID", "")
+        return self._get_cached_secret("ADMIN_TELEGRAM_CHAT_ID") or os.getenv(
+            "ADMIN_TELEGRAM_CHAT_ID", ""
+        )
 
     # ── Serializer ──────────────────────────────────────────────────────────
     # বাংলা মন্তব্য: @property-ভিত্তিক সিক্রেট Pydantic model_dump()-এ অন্তর্ভুক্ত হয় না।

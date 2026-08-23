@@ -102,14 +102,22 @@ class AutoSkillCreator:
         # Initialize FitnessEngine for telemetry
         self.fitness_engine = FitnessEngine(db=self.db)
 
-    def analyze_demand_patterns(self, task_history: list[dict[str, Any]], rules_engine: Any = None) -> list[str]:
+    def analyze_demand_patterns(
+        self, task_history: list[dict[str, Any]], rules_engine: Any = None
+    ) -> list[str]:
         """
         Merged from legacy: Analyze task history and rules to find repeating patterns or failures.
         """
         pattern_source = []
         if rules_engine and hasattr(rules_engine, "rules"):
             pattern_source.extend(rules_engine.rules.get("patterns", {}).get("repeated_tasks", []))
-        failed = list({str(t.get("task")) for t in task_history if t.get("success") is False and t.get("task")})
+        failed = list(
+            {
+                str(t.get("task"))
+                for t in task_history
+                if t.get("success") is False and t.get("task")
+            }
+        )
         return list(set(pattern_source + failed))
 
     async def generate_and_deploy_skill(self, user_demand: str, skill_name: str) -> dict:
@@ -120,10 +128,13 @@ class AutoSkillCreator:
 
         start_time = time.time()
 
-        from core.llm.llm_gateway import llm_gateway
         from skills.schema import UniversalSkillSchema
 
-        logger.info(f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'")
+        from core.llm.llm_gateway import llm_gateway
+
+        logger.info(
+            f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'"
+        )
 
         trace_id = uuid.uuid4().hex
         generation_timestamp = datetime.now(UTC).isoformat()
@@ -187,7 +198,9 @@ class AutoSkillCreator:
         try:
             # ২. অন-দি-ফ্লাই কোড জেনারেশন
             # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-            response = await llm_gateway.acompletion(prompt=system_prompt, task_type="coding", stream=False)
+            response = await llm_gateway.acompletion(
+                prompt=system_prompt, task_type="coding", stream=False
+            )
             raw_content = response.get("text", "") if isinstance(response, dict) else str(response)
             raw_content = raw_content.strip()
 
@@ -205,10 +218,14 @@ class AutoSkillCreator:
             schema_dict = data.get("schema", {})
 
             # Traceability enhancements
-            schema_dict["metadata"]["tags"] = [*schema_dict["metadata"].get("tags", []), f"trace_id:{trace_id}"]
+            schema_dict["metadata"]["tags"] = [
+                *schema_dict["metadata"].get("tags", []),
+                f"trace_id:{trace_id}",
+            ]
             schema_dict["metadata"]["author"] = f"supremeai_agent_id:{trace_id}"
             schema_dict["metadata"]["description"] = (
-                schema_dict["metadata"].get("description", "") + f" (Generated at {generation_timestamp})"
+                schema_dict["metadata"].get("description", "")
+                + f" (Generated at {generation_timestamp})"
             )
 
             # 🛡️ ৩. দ্য আলটিমেট স্যান্ডবক্স গেটকিপার ভ্যালিডেশন (The Iron Cage Check)
@@ -228,9 +245,14 @@ class AutoSkillCreator:
             # ৪. USS Pydantic Schema Validation
             # 🛡️ Governance Gate Pre-Validation
             from core.security.governance_policy import get_governance_policy
-            is_valid, reason = get_governance_policy().validate_evolution_target(f"skills/{skill_name}")
+
+            is_valid, reason = get_governance_policy().validate_evolution_target(
+                f"skills/{skill_name}"
+            )
             if not is_valid:
-                logger.critical(f"🚨 Skill target 'skills/{skill_name}' blocked by governance policy: {reason}")
+                logger.critical(
+                    f"🚨 Skill target 'skills/{skill_name}' blocked by governance policy: {reason}"
+                )
                 raise SecurityError(f"Governance violation: {reason}")
 
             try:
@@ -267,6 +289,7 @@ class AutoSkillCreator:
 
                 # Sanitize skill_name to prevent code injection via name
                 import re as _re
+
                 safe_skill_name = _re.sub(r"[^a-zA-Z0-9_]", "", skill_name)
                 if not safe_skill_name:
                     raise SecurityError("Invalid skill name detected.")
@@ -295,13 +318,17 @@ asyncio.run(_supreme_test_run())
                 run_res = await sandbox.execute_local_code(sandbox_script)
                 if not run_res.get("success"):
                     err_msg = run_res.get("error", run_res.get("stderr"))
-                    raise ValueError(f"Validation test {idx + 1} crashed or timed out in sandbox. Error: {err_msg}")
+                    raise ValueError(
+                        f"Validation test {idx + 1} crashed or timed out in sandbox. Error: {err_msg}"
+                    )
 
                 # In execute_local_code, standard output is usually under 'output' not 'stdout'
                 run_res["stdout"] = run_res.get("output", "")
 
                 # Parse stdout logs for output result
-                output_line = [line for line in run_res["stdout"].splitlines() if line.startswith("RESULT:")]
+                output_line = [
+                    line for line in run_res["stdout"].splitlines() if line.startswith("RESULT:")
+                ]
                 if not output_line:
                     raise ValueError(
                         f"Validation test {idx + 1} did not produce executable result in sandbox. Stdout: {run_res['stdout']}"
@@ -318,10 +345,10 @@ asyncio.run(_supreme_test_run())
             )
 
             # 1. Multi-factor Evidence-Backed Fitness Evaluation
-            from evolution.fitness_evaluator import get_fitness_evaluator
-            from evolution.benchmark_runner import get_benchmark_runner
             from evolution.artifact_integrity import ArtifactIntegrityGate, canonical_artifact_hash
+            from evolution.benchmark_runner import get_benchmark_runner
             from evolution.change_proposal import ChangeType, ProposalState, get_change_manager
+            from evolution.fitness_evaluator import get_fitness_evaluator
 
             elapsed_ms = (time.time() - start_time) * 1000.0
             fitness_eval = get_fitness_evaluator().evaluate_skill_execution(
@@ -378,9 +405,13 @@ asyncio.run(_supreme_test_run())
                 schema_to_deploy=schema_dict,
             )
             if not authorized:
-                raise RuntimeError(f"Artifact Integrity Violation for Proposal [{proposal.proposal_id}]. Deployment Aborted.")
+                raise RuntimeError(
+                    f"Artifact Integrity Violation for Proposal [{proposal.proposal_id}]. Deployment Aborted."
+                )
 
-            logger.info(f"📜 Governed ChangeProposal [{proposal.proposal_id}] PROMOTED with Verified Integrity.")
+            logger.info(
+                f"📜 Governed ChangeProposal [{proposal.proposal_id}] PROMOTED with Verified Integrity."
+            )
 
             # 4. Finalize Registration & Storage Deployment (ONLY AFTER PROMOTION & INTEGRITY GATE)
             installer = SkillInstaller()
@@ -412,14 +443,18 @@ asyncio.run(_supreme_test_run())
                 "proposal_id": proposal.proposal_id,
             }
             self.skills_ref.document(skill_name).set(skill_meta)
-            logger.info(f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!")
+            logger.info(
+                f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!"
+            )
 
             # Record successful experience for future pattern matching
             try:
                 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 
                 exp_db = ExperienceDatabase()
-                exp_db.record_experience(Experience(request=user_demand, generated_code=code_block, result="success"))
+                exp_db.record_experience(
+                    Experience(request=user_demand, generated_code=code_block, result="success")
+                )
             except Exception as exp_e:
                 logger.warning(f"Failed to record verified skill experience: {exp_e}")
 

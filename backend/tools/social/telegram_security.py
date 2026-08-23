@@ -69,20 +69,64 @@ class TelegramSecurityGuard:
 
         # Anti-Hacking & Prompt Injection signatures
         self.injection_patterns = [
-            re.compile(r"ignore\s+(all\s+)?(previous|prior)\s+(instructions|directives|rules)", re.I),
-            re.compile(r"(reveal|print|show|dump|leak|exfiltrate)\s+(all\s+)?(api[_\s]?keys?|secrets?|\.env|passwords?|tokens?)", re.I),
-            re.compile(r"you\s+are\s+now\s+(in\s+)?(dan\s+mode|unrestricted|god\s+mode|jailbreak)", re.I),
+            re.compile(
+                r"ignore\s+(all\s+)?(previous|prior)\s+(instructions|directives|rules)", re.I
+            ),
+            re.compile(
+                r"(reveal|print|show|dump|leak|exfiltrate)\s+(all\s+)?(api[_\s]?keys?|secrets?|\.env|passwords?|tokens?)",
+                re.I,
+            ),
+            re.compile(
+                r"you\s+are\s+now\s+(in\s+)?(dan\s+mode|unrestricted|god\s+mode|jailbreak)", re.I
+            ),
             re.compile(r"bypass\s+(safety|security|guardrails|auth|totp|verification)", re.I),
-            re.compile(r"override\s+(all\s+)?(constitutional\s+rules|core\s+directives|agents\.md)", re.I),
+            re.compile(
+                r"override\s+(all\s+)?(constitutional\s+rules|core\s+directives|agents\.md)", re.I
+            ),
         ]
 
         # Critical / Destructive Action keywords
         self.critical_actions = [
-            (re.compile(r"\b(drop|truncate|delete\s+from|wipe|destroy)\s+(table|database|db|postgres|schema|ai_memory)\b", re.I), "DATABASE_DESTRUCTION", "Destructive Database Modification / Wipe"),
-            (re.compile(r"\b(rotate|change|update|delete)\s+(api[_\s]?keys?|secrets?|admin\s+password|jwt_secret)\b", re.I), "SECRET_MUTATION", "Critical Secret / API Key Rotation"),
-            (re.compile(r"\b(disable|turn\s+off|remove)\s+(auth|security|guardrails|firewall|rate_limit)\b", re.I), "SECURITY_DEGRADATION", "Security Guardrail Degradation"),
-            (re.compile(r"\b(force\s+push|hard\s+reset|delete\s+branch)\s+(main|master|prod|production)\b", re.I), "GIT_DESTRUCTIVE", "Destructive Git Operation on Production Branch"),
-            (re.compile(r"\b(shutdown|reboot|terminate|destroy)\s+(cluster|backend|container|server|render)\b", re.I), "INFRA_TEARDOWN", "Cloud Infrastructure Teardown / Reboot"),
+            (
+                re.compile(
+                    r"\b(drop|truncate|delete\s+from|wipe|destroy)\s+(table|database|db|postgres|schema|ai_memory)\b",
+                    re.I,
+                ),
+                "DATABASE_DESTRUCTION",
+                "Destructive Database Modification / Wipe",
+            ),
+            (
+                re.compile(
+                    r"\b(rotate|change|update|delete)\s+(api[_\s]?keys?|secrets?|admin\s+password|jwt_secret)\b",
+                    re.I,
+                ),
+                "SECRET_MUTATION",
+                "Critical Secret / API Key Rotation",
+            ),
+            (
+                re.compile(
+                    r"\b(disable|turn\s+off|remove)\s+(auth|security|guardrails|firewall|rate_limit)\b",
+                    re.I,
+                ),
+                "SECURITY_DEGRADATION",
+                "Security Guardrail Degradation",
+            ),
+            (
+                re.compile(
+                    r"\b(force\s+push|hard\s+reset|delete\s+branch)\s+(main|master|prod|production)\b",
+                    re.I,
+                ),
+                "GIT_DESTRUCTIVE",
+                "Destructive Git Operation on Production Branch",
+            ),
+            (
+                re.compile(
+                    r"\b(shutdown|reboot|terminate|destroy)\s+(cluster|backend|container|server|render)\b",
+                    re.I,
+                ),
+                "INFRA_TEARDOWN",
+                "Cloud Infrastructure Teardown / Reboot",
+            ),
         ]
 
     def detect_prompt_injection(self, text: str) -> tuple[bool, str]:
@@ -148,12 +192,18 @@ class TelegramSecurityGuard:
             return self._pending_challenges.get(str(chat_id))
         return None
 
-    def verify_challenge(self, chat_id: int | str, otp_code: str) -> tuple[bool, str, dict[str, Any] | None]:
+    def verify_challenge(
+        self, chat_id: int | str, otp_code: str
+    ) -> tuple[bool, str, dict[str, Any] | None]:
         """Verify the 6-digit TOTP code against the pending challenge."""
         cid = str(chat_id)
         locked, rem = self.is_locked_out(cid)
         if locked:
-            return False, f"🔒 2FA verification is locked due to multiple failed attempts. Try again in {rem} seconds.", None
+            return (
+                False,
+                f"🔒 2FA verification is locked due to multiple failed attempts. Try again in {rem} seconds.",
+                None,
+            )
 
         challenge = self.get_pending_challenge(cid)
         if not challenge:
@@ -163,31 +213,52 @@ class TelegramSecurityGuard:
             # Success: reset attempts and consume challenge
             self._failed_attempts[cid] = 0
             self._pending_challenges.pop(cid, None)
-            logger.info(f"✅ TOTP 2FA authorization verified for action '{challenge['action_type']}' by chat_id={cid}")
-            return True, f"✅ Authorization verified for: <b>{challenge['action_desc']}</b>", challenge
+            logger.info(
+                f"✅ TOTP 2FA authorization verified for action '{challenge['action_type']}' by chat_id={cid}"
+            )
+            return (
+                True,
+                f"✅ Authorization verified for: <b>{challenge['action_desc']}</b>",
+                challenge,
+            )
         else:
             attempts = self._failed_attempts.get(cid, 0) + 1
             self._failed_attempts[cid] = attempts
             if attempts >= 3:
                 self._lockouts[cid] = time.time() + 600  # 10 minutes lockout
                 self._pending_challenges.pop(cid, None)
-                logger.warning(f"🚨 Multiple failed TOTP attempts on chat_id={cid}. Locked for 10 minutes.")
-                return False, "🚨 <b>Authentication Failed:</b> 3 incorrect OTP attempts. Security lock applied for 10 minutes.", None
-            return False, f"❌ <b>Invalid OTP code.</b> ({3 - attempts} attempts remaining before temporary lockout).", None
+                logger.warning(
+                    f"🚨 Multiple failed TOTP attempts on chat_id={cid}. Locked for 10 minutes."
+                )
+                return (
+                    False,
+                    "🚨 <b>Authentication Failed:</b> 3 incorrect OTP attempts. Security lock applied for 10 minutes.",
+                    None,
+                )
+            return (
+                False,
+                f"❌ <b>Invalid OTP code.</b> ({3 - attempts} attempts remaining before temporary lockout).",
+                None,
+            )
 
-    def validate_webapp_init_data(self, init_data: str, bot_token: str) -> tuple[bool, dict[str, str]]:
+    def validate_webapp_init_data(
+        self, init_data: str, bot_token: str
+    ) -> tuple[bool, dict[str, str]]:
         """Validate Telegram WebApp initData string using bot token HMAC-SHA256."""
         if not init_data or not bot_token:
             return False, {}
         try:
             from urllib.parse import parse_qsl
+
             parsed = dict(parse_qsl(init_data, keep_blank_values=True))
             if "hash" not in parsed:
                 return False, {}
             received_hash = parsed.pop("hash")
             data_check_string = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
             secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
-            computed_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+            computed_hash = hmac.new(
+                secret_key, data_check_string.encode(), hashlib.sha256
+            ).hexdigest()
             if hmac.compare_digest(computed_hash, received_hash):
                 return True, parsed
             return False, {}
@@ -198,4 +269,3 @@ class TelegramSecurityGuard:
 
 # Global singleton instance
 security_guard = TelegramSecurityGuard()
-

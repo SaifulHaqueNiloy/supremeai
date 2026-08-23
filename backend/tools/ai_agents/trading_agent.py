@@ -4,7 +4,9 @@ from loguru import logger
 
 
 class TradingAgent:
-    async def generate_strategy(self, prompt: str, risk_profile: str = "moderate") -> dict[str, Any]:
+    async def generate_strategy(
+        self, prompt: str, risk_profile: str = "moderate"
+    ) -> dict[str, Any]:
         logger.info(f"Generating trading strategy for: {prompt} ({risk_profile})")
         try:
             from brain.model_router import ModelRouter

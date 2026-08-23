@@ -70,7 +70,9 @@ class ModelRouter:
             return self.performance_optimizer.get_circuit_breaker(f"router_task_{task_type}")
 
         if task_type not in self._breakers:
-            self._breakers[task_type] = self.performance_optimizer.get_circuit_breaker(f"router_task_{task_type}")
+            self._breakers[task_type] = self.performance_optimizer.get_circuit_breaker(
+                f"router_task_{task_type}"
+            )
         return self._breakers[task_type]
 
     def route_and_generate_with_cot(
@@ -87,7 +89,9 @@ class ModelRouter:
             except Exception as exc:
                 logger.warning(f"CoT reasoner failed (null-safe guard): {exc}")
         type_name = type(reasoning_res).__name__
-        if type_name == "MagicMock" or (hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)):
+        if type_name == "MagicMock" or (
+            hasattr(reasoning_res, "__dict__") and not isinstance(reasoning_res, dict)
+        ):
             # Fallback mock dict structure
             reasoning_res = {
                 "iterations": 1,
@@ -113,7 +117,9 @@ class ModelRouter:
             "cot_verification": verification_res,
         }
 
-    def route_and_generate(self, prompt: str, task_type: str = "general", max_cost: float = 0.01) -> dict[str, Any]:
+    def route_and_generate(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
         res = None
         async_func = getattr(self, "async_route_and_generate", None)
@@ -135,7 +141,9 @@ class ModelRouter:
             # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
             # as success:True. async_route_and_generate now always returns a dict, so this
             # path should not occur in practice — but if it ever does, report it honestly.
-            error_msg = "route_and_generate: no response obtained (async_route_and_generate returned None)."
+            error_msg = (
+                "route_and_generate: no response obtained (async_route_and_generate returned None)."
+            )
             logger.error(f"[ModelRouter] {error_msg}")
             res = {
                 "success": False,
@@ -233,13 +241,17 @@ class ModelRouter:
                 if "messages" in prompt:
                     normalized_prompt = prompt["messages"]
                 else:
-                    normalized_prompt = str(prompt.get("prompt", prompt.get("content", str(prompt))))
+                    normalized_prompt = str(
+                        prompt.get("prompt", prompt.get("content", str(prompt)))
+                    )
             else:
                 normalized_prompt = str(prompt)
 
             breaker = self._get_breaker(task_type)
             if not breaker.allow_request():
-                logger.warning(f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request.")
+                logger.warning(
+                    f"[ModelRouter] Circuit Breaker OPEN for task_type='{task_type}'. Blocking request."
+                )
                 return {
                     "success": False,
                     "text": "{}",
@@ -247,19 +259,25 @@ class ModelRouter:
                 }
 
             if get_tracker is None:
-                logger.warning("[ModelRouter] free_tier_tracker unavailable, using default provider")
+                logger.warning(
+                    "[ModelRouter] free_tier_tracker unavailable, using default provider"
+                )
                 best_provider = "gemini"
             else:
                 tracker = get_tracker()
                 best_provider = tracker.get_best_provider(["gemini", "groq", "openrouter"])
 
             if not best_provider:
-                logger.warning("[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock).")
+                logger.warning(
+                    "[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock)."
+                )
                 return {
                     "success": True,
                     "model": "eco_mode_offline",
                     "eco_mode": True,  # Flag to be converted to X-SupremeAI-Status: Eco-Mode header
-                    "text": json.dumps({"response": "System is running in Eco-Mode. Minimal response generated."}),
+                    "text": json.dumps(
+                        {"response": "System is running in Eco-Mode. Minimal response generated."}
+                    ),
                     "cost": 0.0,
                 }
 

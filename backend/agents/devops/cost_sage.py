@@ -183,7 +183,9 @@ class UsageTracker:
         self._save_db()
         logger.info(f"💰 Recorded: {provider}/{model_or_service} — ${cost_usd:.4f}")
 
-    def _calculate_cost(self, provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
+    def _calculate_cost(
+        self, provider: str, model: str, input_tokens: int, output_tokens: int
+    ) -> float:
         rates = DEFAULT_COST_RATES.get(provider, {})
         model_rates = rates.get(model, {})
         if not model_rates:
@@ -199,7 +201,9 @@ class UsageTracker:
 
         total_cost = sum(r.cost_usd for r in recent)
         by_provider = defaultdict(float)
-        by_model = defaultdict(lambda: {"cost": 0.0, "calls": 0, "input_tokens": 0, "output_tokens": 0})
+        by_model = defaultdict(
+            lambda: {"cost": 0.0, "calls": 0, "input_tokens": 0, "output_tokens": 0}
+        )
 
         for r in recent:
             by_provider[r.provider] += r.cost_usd
@@ -329,10 +333,14 @@ class OptimizationEngine:
 
         by_provider = summary["by_provider"]
         if by_provider.get("render", 0) > 20:
-            suggestions.append("☁️ **Render Optimization**: Consider auto-suspend for dev/staging services.")
+            suggestions.append(
+                "☁️ **Render Optimization**: Consider auto-suspend for dev/staging services."
+            )
 
         if not suggestions:
-            suggestions.append("✅ Cost usage is optimized. No major savings opportunities detected.")
+            suggestions.append(
+                "✅ Cost usage is optimized. No major savings opportunities detected."
+            )
         return suggestions
 
     def _find_cheaper_alternative(self, model: str) -> str | None:
@@ -365,7 +373,9 @@ class CostReporter:
             trend = "📊 First period — establishing baseline."
 
         return CostReport(
-            period_start=(datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=days)).isoformat(),
+            period_start=(
+                datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=days)
+            ).isoformat(),
             period_end=datetime.datetime.now(datetime.UTC).isoformat(),
             total_cost_usd=summary["total_cost_usd"],
             breakdown_by_provider=summary["by_provider"],
@@ -392,7 +402,10 @@ class CostReporter:
             lines.append(f"   {i}. {s}")
 
         lines.append(
-            f"\n📈 Trend: {report.trend_analysis}\n\n" + "=" * 60 + "\n💰 সুপ্রিমএআই খরচ রিপোর্ট — কস্টসেজ\n" + "=" * 60
+            f"\n📈 Trend: {report.trend_analysis}\n\n"
+            + "=" * 60
+            + "\n💰 সুপ্রিমএআই খরচ রিপোর্ট — কস্টসেজ\n"
+            + "=" * 60
         )
         lines.append(f"📅 সময়কাল: {report.period_start[:10]} → {report.period_end[:10]}")
         lines.append(f"💵 মোট খরচ: ${report.total_cost_usd:.2f}\n\n📊 প্রভাইডার ভিত্তিক খরচ:")
@@ -418,7 +431,9 @@ class CostSage:
     ):
         self.tracker.record_usage(provider, model, input_tokens, output_tokens, metadata=metadata)
 
-    def record_infrastructure_cost(self, provider: str, service: str, cost_usd: float, metadata: dict | None = None):
+    def record_infrastructure_cost(
+        self, provider: str, service: str, cost_usd: float, metadata: dict | None = None
+    ):
         self.tracker.record_usage(provider, service, cost_usd=cost_usd, metadata=metadata)
 
     def get_report(self, days: int = 30) -> str:

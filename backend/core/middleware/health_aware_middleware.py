@@ -53,7 +53,9 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                 return response
             else:
                 # For critical endpoints in degraded state, potentially limit functionality
-                logger.warning(f"Critical endpoint {request.url.path} accessed during degraded system state")
+                logger.warning(
+                    f"Critical endpoint {request.url.path} accessed during degraded system state"
+                )
 
         # Normal processing
         start_time = time.time()
@@ -220,7 +222,9 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
             try:
                 # Track average response time over time
                 await redis_manager.client.lpush("metrics:response_times", response_time)
-                await redis_manager.client.ltrim("metrics:response_times", 0, 99)  # Keep last 100 samples
+                await redis_manager.client.ltrim(
+                    "metrics:response_times", 0, 99
+                )  # Keep last 100 samples
             except Exception as e:
                 logger.warning(f"Could not update response time metric: {e!s}")
 

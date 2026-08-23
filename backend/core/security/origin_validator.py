@@ -1,11 +1,10 @@
-from loguru import logger
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ট্রাস্টেড অরিজিন ভ্যালিডেশন মিডলওয়্যার।
 # এটি ওয়াইল্ডকার্ড CORS বাইপাস রোধ করে এবং শুধুমাত্র অনুমোদিত ডোমেইন থেকে এপিআই অ্যাক্সেস নিশ্চিত করে।
-
 import os
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
@@ -31,7 +30,7 @@ USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
 ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
     {
         "https://supremeai-admin.web.app",
-         "https://supremeai-backend-docker.onrender.com",
+        "https://supremeai-backend-docker.onrender.com",
     }
 )
 
@@ -49,13 +48,17 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             return str(self._portal_role_override).lower()
         try:
             role = str(getattr(settings, "service_role", "user") or "user").lower()
-        except Exception as e:
+        except Exception:
             role = "user"
         return "admin" if role == "admin" else "user"
 
     @property
     def _default_origins(self) -> set[str]:
-        return set(ADMIN_DEFAULT_TRUSTED_ORIGINS if self.portal_role == "admin" else USER_DEFAULT_TRUSTED_ORIGINS)
+        return set(
+            ADMIN_DEFAULT_TRUSTED_ORIGINS
+            if self.portal_role == "admin"
+            else USER_DEFAULT_TRUSTED_ORIGINS
+        )
 
     @property
     def allowed_origins(self) -> set[str]:
@@ -83,11 +86,17 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             env = str(getattr(settings, "env", "local") or "local").lower()
             if env not in {"production", "staging"}:
                 allowed = allowed.union(
-                    {o for o in (settings.cors_origins or []) if "localhost" in o or "127.0.0.1" in o}
+                    {
+                        o
+                        for o in (settings.cors_origins or [])
+                        if "localhost" in o or "127.0.0.1" in o
+                    }
                 )
         except Exception as exc:
             # Defensive: never let a settings/parse error turn an OPTIONS preflight into a 500
-            logger.warning(f"⚠️ TrustedOriginMiddleware failed to read CORS origins, using defaults only: {exc}")
+            logger.warning(
+                f"⚠️ TrustedOriginMiddleware failed to read CORS origins, using defaults only: {exc}"
+            )
 
         # বাংলা মন্তব্য: Denylist থেকে ছেঁকে ফেলা হচ্ছে
         denylist = USER_ORIGIN_DENYLIST.union(ADMIN_ORIGIN_DENYLIST)
@@ -133,7 +142,11 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # বাংলা মন্তব্য: dynamic __import__("core.config") তুলে দিয়ে সরাসরি ইম্পোর্টেড settings অবজেক্ট ব্যবহার করা হলো, যাতে unit test-এর patching সঠিকভাবে কার্যকর থাকে।
-        if getattr(settings, "is_origin_bypass_allowed", False) or _env in {"test", "testing", "ci"}:
+        if getattr(settings, "is_origin_bypass_allowed", False) or _env in {
+            "test",
+            "testing",
+            "ci",
+        }:
             pass
         elif origin and origin not in allowed:
             client_ip = request.client.host if request.client else "unknown"
@@ -156,10 +169,14 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             allowed_hosts.add("testserver")
             allowed_hosts.add("localhost")
             allowed_hosts.add("127.0.0.1")
-            is_allowed = host_header_no_port in allowed_hosts or any(host_header_no_port.endswith("." + h) for h in allowed_hosts)
+            is_allowed = host_header_no_port in allowed_hosts or any(
+                host_header_no_port.endswith("." + h) for h in allowed_hosts
+            )
 
         if host_header and not is_allowed:
-            logger.critical(f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}")
+            logger.critical(
+                f"🚨 Security Intrusion: Host Header Tampering Detected -> {host_header}"
+            )
             return JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "Host verification failure."},

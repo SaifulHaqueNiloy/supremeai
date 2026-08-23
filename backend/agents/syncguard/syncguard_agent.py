@@ -66,13 +66,17 @@ class SyncGuardAgent:
                 redis_url = os.getenv("REDIS_URL")
                 if redis_url:
                     redis_client = redis.from_url(redis_url)
-                    await redis_client.publish("supremeai:alerts:syncguard", json.dumps(audit_report))
+                    await redis_client.publish(
+                        "supremeai:alerts:syncguard", json.dumps(audit_report)
+                    )
                     await redis_client.aclose()
                     logger.info(f"📡 [{self.name}] Broadcasted SYNC_FAILED alert to Swarm.")
             except Exception as e:
                 logger.warning(f"⚠️ [{self.name}] Failed to broadcast alert: {e}")
         else:
-            logger.info(f"✅ [{self.name}] AUDIT PASSED. System is 100% synchronized and ready for scaling.")
+            logger.info(
+                f"✅ [{self.name}] AUDIT PASSED. System is 100% synchronized and ready for scaling."
+            )
 
         # Store the audit report in long-term memory
         success = unified_memory.store_long_term_memory(
@@ -80,7 +84,7 @@ class SyncGuardAgent:
             agent_type="SyncGuard",
             task_type="System_Audit",
             content=json.dumps(audit_report, indent=2),  # Store the full report
-            metadata={"status": audit_report["status"]}
+            metadata={"status": audit_report["status"]},
         )
         if success:
             logger.info(f"💾 [{self.name}] Audit report saved to Eternal Brain.")
@@ -91,4 +95,5 @@ class SyncGuardAgent:
 
     def _get_timestamp(self):
         from datetime import datetime
+
         return datetime.now().strftime("%Y%m%d_%H%M%S")

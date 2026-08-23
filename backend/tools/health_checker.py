@@ -130,7 +130,9 @@ class HealthChecker:
             return False
         lines = ["Anomaly Detection Alert"]
         for anomaly in anomalies:
-            lines.append("[" + anomaly["severity"] + "] " + anomaly["type"] + ": " + anomaly["details"])
+            lines.append(
+                "[" + anomaly["severity"] + "] " + anomaly["type"] + ": " + anomaly["details"]
+            )
         text = "\n".join(lines)
         if not self.telegram_bot_token or not self.admin_chat_id:
             logger.warning("Telegram credentials not configured; anomaly report not sent")

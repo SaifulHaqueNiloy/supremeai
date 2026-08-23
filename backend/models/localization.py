@@ -28,12 +28,18 @@ class TranslationCache(Base):
     source_lang: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     target_lang: Mapped[str] = mapped_column(String(10), nullable=False, index=True)
     translated_text: Mapped[str] = mapped_column(Text, nullable=False)
-    context_hash: Mapped[str] = mapped_column(String(64), nullable=False, default="")  # SHA-256 of context metadata
-    quality_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)  # 0.0-1.0, user feedback or BLEU
+    context_hash: Mapped[str] = mapped_column(
+        String(64), nullable=False, default=""
+    )  # SHA-256 of context metadata
+    quality_score: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )  # 0.0-1.0, user feedback or BLEU
     usage_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -59,6 +65,10 @@ class VoiceSession(Base):
     error_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # JSONB for flexible metadata: device info, noise level, regional accent, etc.
-    metadata_json: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=True)
+    metadata_json: Mapped[dict | None] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=True
+    )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )

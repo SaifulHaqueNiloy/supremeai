@@ -17,9 +17,9 @@ except ImportError:
 
 from loguru import logger
 from pydantic import BaseModel
+from web_scraper import WebScraper
 
 from core.security import is_safe_url
-from web_scraper import WebScraper
 
 # 🔧 DYNAMIC BROWSER CONFIG: All values from environment variables
 _BROWSER_VIEWPORT_W = int(os.getenv("BROWSER_VIEWPORT_WIDTH", "1280"))
@@ -29,7 +29,7 @@ _BROWSER_SELECTOR_TIMEOUT = int(os.getenv("BROWSER_SELECTOR_TIMEOUT_MS", "10000"
 _BROWSER_NETWORK_TIMEOUT = int(os.getenv("BROWSER_NETWORK_IDLE_TIMEOUT_MS", "10000"))
 _BROWSER_USER_AGENT = os.getenv(
     "BROWSER_USER_AGENT",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 )
 
 try:
@@ -179,7 +179,10 @@ class BrowserAgent:
                 ],
             )
             context = await browser.new_context(
-                viewport={"width": _BROWSER_VIEWPORT_W, "height": _BROWSER_VIEWPORT_H},  # 🔧 DYNAMIC
+                viewport={
+                    "width": _BROWSER_VIEWPORT_W,
+                    "height": _BROWSER_VIEWPORT_H,
+                },  # 🔧 DYNAMIC
                 user_agent=_BROWSER_USER_AGENT,  # 🔧 DYNAMIC
             )
             page = await context.new_page()

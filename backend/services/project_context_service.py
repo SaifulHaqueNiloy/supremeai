@@ -166,7 +166,9 @@ class ProjectContextService:
 
         # Filter by relevance to query
         query_terms = set(re.findall(r"[a-zA-Z_]+", query.lower()))
-        relevant = [e for e in entries if any(term in e.name.lower() for term in query_terms)][:max_entries]
+        relevant = [e for e in entries if any(term in e.name.lower() for term in query_terms)][
+            :max_entries
+        ]
 
         # Format context
         context_lines = []

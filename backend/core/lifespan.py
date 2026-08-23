@@ -38,15 +38,11 @@ from loguru import logger
 
 from core import services
 from core.config import settings
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector
 from core.orchestration.orchestrator import Orchestrator
 from core.reliability_controller import ReliabilityController
 from core.startup_validator import StartupValidator
-
-
-
 
 
 @asynccontextmanager
@@ -72,13 +68,19 @@ async def app_lifespan(app):
 
     # Update metrics with subsystem status
     await metrics_collector.set_gauge(
-        "subsystem_db_status", 1 if app.state.subsystem_status["db"] == "up" else 0, {"subsystem": "db"}
+        "subsystem_db_status",
+        1 if app.state.subsystem_status["db"] == "up" else 0,
+        {"subsystem": "db"},
     )
     await metrics_collector.set_gauge(
-        "subsystem_redis_status", 1 if app.state.subsystem_status["redis"] == "up" else 0, {"subsystem": "redis"}
+        "subsystem_redis_status",
+        1 if app.state.subsystem_status["redis"] == "up" else 0,
+        {"subsystem": "redis"},
     )
     await metrics_collector.set_gauge(
-        "subsystem_config_status", 1 if app.state.subsystem_status["config"] == "up" else 0, {"subsystem": "config"}
+        "subsystem_config_status",
+        1 if app.state.subsystem_status["config"] == "up" else 0,
+        {"subsystem": "config"},
     )
 
     # ── Parallelized Startup Phase 1: Independent services ──────────────────
@@ -132,9 +134,13 @@ async def app_lifespan(app):
             await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
-        logger.warning("Supabase schema bootstrap timed out after 30s — continuing without full schema init.")
+        logger.warning(
+            "Supabase schema bootstrap timed out after 30s — continuing without full schema init."
+        )
     except Exception as exc:
-        logger.warning(f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap.")
+        logger.warning(
+            f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
+        )
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",
@@ -145,7 +151,6 @@ async def app_lifespan(app):
                 context={"component": "supabase"},
             )
         )
-
 
     # Background maintenance and agents are kept in a dedicated startup module.
     from core.startup.agents import start_background_services

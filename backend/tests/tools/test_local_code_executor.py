@@ -34,7 +34,9 @@ async def test_execute_local_code_with_docker_success(MockDockerSandbox):
 @pytest.mark.asyncio
 @patch("tools.code.local_code_executor.DockerSandbox")
 @patch("asyncio.create_subprocess_exec")
-async def test_execute_local_code_docker_fails_fallback_to_subprocess(mock_subprocess, MockDockerSandbox):
+async def test_execute_local_code_docker_fails_fallback_to_subprocess(
+    mock_subprocess, MockDockerSandbox
+):
     """
     বাংলা মন্তব্য: ডকার এক্সিকিউশন ব্যর্থ হলে সিস্টেমটি হোস্ট সাবপ্রসেসে ফলব্যাক করে কিনা তা পরীক্ষা করা হচ্ছে।
     """

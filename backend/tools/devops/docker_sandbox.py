@@ -89,9 +89,9 @@ class DockerSandbox:
             if allow_fallback_str is not None:
                 allow_fallback = allow_fallback_str.lower() == "true"
             else:
-                allow_fallback = getattr(settings, "allow_local_sandbox_fallback", None) == "true" or getattr(
-                    settings, "allow_sandbox_fallback", False
-                )
+                allow_fallback = getattr(
+                    settings, "allow_local_sandbox_fallback", None
+                ) == "true" or getattr(settings, "allow_sandbox_fallback", False)
 
             if env_name in {"production", "staging"} or not allow_fallback:
                 logger.error("Docker is not available and local execution fallback is disabled.")
@@ -100,7 +100,9 @@ class DockerSandbox:
                     "error": "Sandbox execution failed: Docker is not running and local execution is disabled for safety.",
                 }
 
-            logger.warning("Docker is not available. Simulating command execution in local process.")
+            logger.warning(
+                "Docker is not available. Simulating command execution in local process."
+            )
             try:
                 # Security: Use shlex.split to avoid shell injection. Never use shell=True
                 # on any platform — shlex provides safe tokenization.
@@ -160,7 +162,9 @@ class DockerSandbox:
                 self.image,
                 *cmd_parts,
             ]
-            result = subprocess.run(docker_cmd, capture_output=True, text=True, timeout=10, check=True)
+            result = subprocess.run(
+                docker_cmd, capture_output=True, text=True, timeout=10, check=True
+            )
             return {
                 "success": True,
                 "stdout": result.stdout,
@@ -213,7 +217,9 @@ class DockerSandbox:
                     "error": "Docker is not running and local execution is disabled for safety.",
                 }
 
-            logger.warning("Docker unavailable. Running code via secure local subprocess (fallback).")
+            logger.warning(
+                "Docker unavailable. Running code via secure local subprocess (fallback)."
+            )
             try:
                 result = subprocess.run(
                     ["python3", "-c", code],
@@ -242,7 +248,9 @@ class DockerSandbox:
         # Docker path: write code to temp file, mount read-only, execute
         script_path = None
         try:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=".py", delete=False, encoding="utf-8"
+            ) as f:
                 f.write(code)
                 script_path = f.name
 

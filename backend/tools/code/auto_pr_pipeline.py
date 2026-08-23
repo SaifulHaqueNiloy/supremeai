@@ -23,7 +23,9 @@ class AutoPRPipeline:
 
     def __init__(self, github_token: str | None = None, repo_name: str | None = None):
         # বাংলা মন্তব্য: আগে "mock-token" ছিল fallback — এখন token না থাকলে প্রোডাকশনে ব্যর্থ হবে
-        self.github_token = github_token or os.getenv("GITHUB_TOKEN") or os.getenv("GITHUB_PAT_AUTO_FIX", "")
+        self.github_token = (
+            github_token or os.getenv("GITHUB_TOKEN") or os.getenv("GITHUB_PAT_AUTO_FIX", "")
+        )
         self.repo_name = repo_name or os.getenv("GITHUB_REPOSITORY", "paykaribazaronline/supremeai")
 
     async def create_patch_pr(
@@ -39,10 +41,14 @@ class AutoPRPipeline:
         বাংলা মন্তব্য: আগে hash(branch_name) % 1000 দিয়ে fake PR URL তৈরি হতো।
         এখন GitHubAgent-এর real create_pr() এবং commit_changes() ব্যবহার করা হয়।
         """
-        logger.info(f"🛡️ [Auto PR] Validating patch safety for '{file_path}' on branch '{branch_name}'...")
+        logger.info(
+            f"🛡️ [Auto PR] Validating patch safety for '{file_path}' on branch '{branch_name}'..."
+        )
 
         if not self.github_token:
-            logger.error("AutoPRPipeline: No GitHub token configured. Set GITHUB_TOKEN or GITHUB_PAT_AUTO_FIX.")
+            logger.error(
+                "AutoPRPipeline: No GitHub token configured. Set GITHUB_TOKEN or GITHUB_PAT_AUTO_FIX."
+            )
             return {
                 "status": "failed",
                 "reason": "GitHub token not configured. Set GITHUB_TOKEN environment variable.",
@@ -61,7 +67,9 @@ class AutoPRPipeline:
             }
 
         # ── 2. Real GitHub PR via GitHubAgent ────────────────────────────────
-        logger.info(f"🚀 [Auto PR] Creating real branch '{branch_name}' and PR on '{self.repo_name}'...")
+        logger.info(
+            f"🚀 [Auto PR] Creating real branch '{branch_name}' and PR on '{self.repo_name}'..."
+        )
         try:
             from tools.devops.github_agent import GitHubAgent
 

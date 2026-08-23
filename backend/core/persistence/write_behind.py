@@ -109,7 +109,9 @@ class WriteBehindBatcher:
                 # Anti-Silent-Failure: log loudly. Requeue so a transient
                 # Postgres blip (e.g. pooler reconnect) doesn't silently
                 # drop rows — they'll be retried on the next flush cycle.
-                logger.error(f"write_behind[{self.name}]: flush failed ({len(items)} rows), requeueing: {exc}")
+                logger.error(
+                    f"write_behind[{self.name}]: flush failed ({len(items)} rows), requeueing: {exc}"
+                )
                 for item in items:
                     self._queue.put(item)
                 return 0

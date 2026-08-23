@@ -25,8 +25,8 @@ from loguru import logger
 
 from core.cache import get_cache
 from core.error_bus import with_error_bus
-from services.llm.llm_router import LLMRouter
 from database.supabase_client import db
+from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 RECOMMENDATION_CACHE_TTL = 900  # 15 minutes
@@ -77,7 +77,9 @@ class CollaborativeFilter:
             user_id = log.get("user_id", "anonymous")
             skill_id = log.get("skill_id", "")
             count = log.get("usage_count", 1)
-            self.usage_matrix[user_id][skill_id] = self.usage_matrix[user_id].get(skill_id, 0) + count
+            self.usage_matrix[user_id][skill_id] = (
+                self.usage_matrix[user_id].get(skill_id, 0) + count
+            )
 
     def user_similarity(self, user_a: str, user_b: str) -> float:
         """Calculate cosine similarity between two users based on skill usage."""
@@ -113,7 +115,9 @@ class CollaborativeFilter:
 
         return intersection / union if union > 0 else 0.0
 
-    def recommend_by_user(self, user_id: str, top_k: int = MAX_RECOMMENDATIONS) -> list[SkillRecommendation]:
+    def recommend_by_user(
+        self, user_id: str, top_k: int = MAX_RECOMMENDATIONS
+    ) -> list[SkillRecommendation]:
         """Recommend skills based on similar users' preferences."""
         if user_id not in self.usage_matrix:
             return []
@@ -147,7 +151,9 @@ class CollaborativeFilter:
                 reason="Similar users frequently use this skill",
                 estimated_impact="medium",
             )
-            for skill_id, score in sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)[:top_k]
+            for skill_id, score in sorted(
+                candidate_scores.items(), key=lambda x: x[1], reverse=True
+            )[:top_k]
         ]
 
         return recommendations
@@ -230,7 +236,7 @@ class HeuristicScorer:
     @with_error_bus("_semantic_similarity")
     async def _semantic_similarity(self, text_a: str, text_b: str) -> float:
         """Get semantic similarity score using LLM embeddings."""
-        cache_key = f"semantic:{hashlib.sha256((text_a+text_b).encode()).hexdigest()[:16]}"
+        cache_key = f"semantic:{hashlib.sha256((text_a + text_b).encode()).hexdigest()[:16]}"
 
         cached = await self.cache.get(cache_key)
         if cached:
@@ -252,7 +258,7 @@ class HeuristicScorer:
             score = float(result.get("content", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
-        except Exception as e:
+        except Exception:
             return 0.0
 
     def _get_skill_name(self, skill_id: str) -> str:
@@ -377,7 +383,9 @@ class SkillRecommender:
         den = (sum(x * x for x in a) ** 0.5) * (sum(y * y for y in b) ** 0.5)
         return num / den if den > 0 else 0.0
 
-    def record_and_recommend(self, user_id: str, task_description: str, top_k: int = 5) -> dict[str, Any]:
+    def record_and_recommend(
+        self, user_id: str, task_description: str, top_k: int = 5
+    ) -> dict[str, Any]:
         # বাংলা মন্তব্য: ব্যবহারকারীর টাস্ক রেকর্ড করে সেই অনুযায়ী স্কিল রেকমেন্ডেশন প্রদান করা হয়।
         self._record_task(user_id, {"description": task_description, "type": "user_query"})
         self._record_task(user_id, {"description": task_description, "type": "search"})
@@ -403,14 +411,18 @@ class SkillRecommender:
         # বাংলা মন্তব্য: অন্যথায় এটি অ্যাসিনক্রোনাসলি নতুন লজিক রান করাবে।
         return self.recommend_async(user_id, project_context, usage_logs, top_k)
 
-    def _recommend_legacy(self, user_id: str, current_task: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def _recommend_legacy(
+        self, user_id: str, current_task: str, top_k: int = 5
+    ) -> list[dict[str, Any]]:
         # বাংলা মন্তব্য: এটি পূর্বে ব্যবহৃত pgvector কোসাইন সিমিলারিটি ভিত্তিক স্কিল রেকমেন্ডেশন লজিক।
         history = self._get_user_history(user_id)
         current_vec = self._embedding(current_task)
         scored: list[dict[str, Any]] = []
         seen_skills: dict[str, dict[str, Any]] = {}
         for entry in history:
-            task_text = entry.get("task", {}).get("description", "") or entry.get("task", {}).get("text", "")
+            task_text = entry.get("task", {}).get("description", "") or entry.get("task", {}).get(
+                "text", ""
+            )
             skill_id = entry.get("task", {}).get("skill_id")
             if not skill_id:
                 continue
@@ -427,7 +439,12 @@ class SkillRecommender:
         if db.client:
             for item in scored:
                 try:
-                    res = db.client.table("tools_registry").select("*").eq("id", item["skill_id"]).execute()
+                    res = (
+                        db.client.table("tools_registry")
+                        .select("*")
+                        .eq("id", item["skill_id"])
+                        .execute()
+                    )
                     if res.data:
                         enriched.append({**res.data[0], "match_score": round(item["score"], 3)})
                 except Exception as e:
@@ -491,11 +508,13 @@ class SkillRecommender:
         if project_context and usage_logs:
             usage_stats: dict[str, int] = defaultdict(int)
             for log in usage_logs:
-                usage_stats[log.get("skill_id", "")] = usage_stats.get(log.get("skill_id", ""), 0) + log.get(
-                    "usage_count", 1
-                )
+                usage_stats[log.get("skill_id", "")] = usage_stats.get(
+                    log.get("skill_id", ""), 0
+                ) + log.get("usage_count", 1)
 
-            available_skills = project_context.get("available_skills", {}).keys() or list(usage_stats.keys())
+            available_skills = project_context.get("available_skills", {}).keys() or list(
+                usage_stats.keys()
+            )
 
             for skill_id in available_skills:
                 rec = await self.scorer.score(skill_id, project_context, usage_stats)
@@ -508,7 +527,9 @@ class SkillRecommender:
                 for log in usage_logs:
                     usage_stats[log.get("skill_id", "")] += log.get("usage_count", 1)
 
-            for skill_id, count in sorted(usage_stats.items(), key=lambda x: x[1], reverse=True)[:5]:
+            for skill_id, count in sorted(usage_stats.items(), key=lambda x: x[1], reverse=True)[
+                :5
+            ]:
                 all_recommendations.append(
                     SkillRecommendation(
                         skill_id=skill_id,

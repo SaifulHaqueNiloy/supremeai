@@ -19,7 +19,9 @@ class RepoDeepIndexer:
                     source = f.read()
                 tree = ast.parse(source)
                 classes = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
-                functions = [node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+                functions = [
+                    node.name for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+                ]
                 imports = []
                 for node in ast.walk(tree):
                     if isinstance(node, ast.Import):

@@ -160,7 +160,9 @@ class MinIOClient:
 
         try:
             if self._timedelta:  # type: ignore
-                url = client.presigned_get_object(bucket, key, expires=self._timedelta(seconds=expires_seconds))
+                url = client.presigned_get_object(
+                    bucket, key, expires=self._timedelta(seconds=expires_seconds)
+                )
                 await self.cache.set(cache_key, url, ttl=URL_CACHE_TTL)
                 return url
         except Exception as e:

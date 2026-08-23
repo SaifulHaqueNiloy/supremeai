@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from core.adaptive_engine.learning_loop import ExperienceDatabase
+
 from core.cache import get_redis_client
 from core.logging import get_logger
 
@@ -82,7 +83,9 @@ class SelfImprovingAgent:
             areas_to_improve = self.identify_improvement_areas(experience)
 
             # Generate improvement suggestions
-            suggestions = await self.generate_improvement_suggestions(experience, areas_to_improve, feedback_analysis)
+            suggestions = await self.generate_improvement_suggestions(
+                experience, areas_to_improve, feedback_analysis
+            )
 
             # Apply improvements
             for suggestion in suggestions:
@@ -98,7 +101,10 @@ class SelfImprovingAgent:
         # Check for common issues
         if "error" in (experience.get("response") or "").lower():
             areas.append("error_handling")
-        if len(experience.get("response") or "") < 50 and "error" not in (experience.get("response") or "").lower():
+        if (
+            len(experience.get("response") or "") < 50
+            and "error" not in (experience.get("response") or "").lower()
+        ):
             areas.append("response_completeness")
         if (experience.get("feedback") or "").lower().find("slow") != -1:
             areas.append("performance")
@@ -283,7 +289,9 @@ class SelfImprovingAgent:
 
         if len(recent_experiences) >= 10:
             # Analyze patterns
-            avg_rating = sum(float(exp.get("rating", 0)) for exp in recent_experiences) / len(recent_experiences)
+            avg_rating = sum(float(exp.get("rating", 0)) for exp in recent_experiences) / len(
+                recent_experiences
+            )
 
             if avg_rating < 3.5:  # Low average rating
                 # Trigger system-wide improvement process
@@ -396,7 +404,11 @@ class FeedbackAnalyzer:
             "neutral_score": neutral_score,
             "satisfaction_score": satisfaction_score,
             "accuracy_score": accuracy_score,
-            "keyword_counts": {"positive": positive_count, "negative": negative_count, "neutral": neutral_count},
+            "keyword_counts": {
+                "positive": positive_count,
+                "negative": negative_count,
+                "neutral": neutral_count,
+            },
         }
 
 

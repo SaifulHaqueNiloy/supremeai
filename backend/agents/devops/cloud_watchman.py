@@ -133,7 +133,11 @@ class AnomalyDetector:
         lower_bound = q1 - 1.5 * iqr
         upper_bound = q3 + 1.5 * iqr
 
-        is_anomaly = abs(z_score) > ANOMALY_Z_THRESHOLD or snapshot.value < lower_bound or snapshot.value > upper_bound
+        is_anomaly = (
+            abs(z_score) > ANOMALY_Z_THRESHOLD
+            or snapshot.value < lower_bound
+            or snapshot.value > upper_bound
+        )
 
         self.add_value(snapshot)
         self._save_history()
@@ -154,7 +158,9 @@ class AnomalyDetector:
             )
         return None
 
-    def _generate_suggestion(self, source: str, metric: str, value: float, mean: float, upper: float) -> str:
+    def _generate_suggestion(
+        self, source: str, metric: str, value: float, mean: float, upper: float
+    ) -> str:
         if source == "firebase" and "quota" in metric:
             return "🔥 Firebase quota spike detected! Consider enabling Firestore caching or upgrading Blaze plan."
         elif source == "vercel" and "bandwidth" in metric:
@@ -162,7 +168,7 @@ class AnomalyDetector:
         elif source == "gcp" and "billing" in metric:
             return "💰 GCP billing spike! Review recent deployments for resource leaks."
         elif mean > 0 and value > mean * 3:
-            return f"⚠️ Extreme spike: {metric} is {value/mean:.1f}x normal. Immediate investigation needed."
+            return f"⚠️ Extreme spike: {metric} is {value / mean:.1f}x normal. Immediate investigation needed."
         return f"📊 {metric} above expected range. Monitor closely for next 15 minutes."
 
 
@@ -252,7 +258,9 @@ class FirebaseMonitor:
             client = monitoring_v3.MetricServiceClient()
             project_name = f"projects/{GCP_PROJECT_ID}"
             now_sec = int(time.time())
-            interval = monitoring_v3.TimeInterval(end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600})
+            interval = monitoring_v3.TimeInterval(
+                end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600}
+            )
             results = client.list_time_series(
                 request={
                     "name": project_name,
@@ -404,7 +412,9 @@ class GCPMonitor:
             client = monitoring_v3.MetricServiceClient()
             project_name = f"projects/{self.project_id}"
             now_sec = int(time.time())
-            interval = monitoring_v3.TimeInterval(end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600})
+            interval = monitoring_v3.TimeInterval(
+                end_time={"seconds": now_sec}, start_time={"seconds": now_sec - 3600}
+            )
             results = client.list_time_series(
                 request={
                     "name": project_name,

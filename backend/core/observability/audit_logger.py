@@ -18,7 +18,9 @@ _PG_SCHEMA = """
     )
 """
 
-_INSERT_SQL = "INSERT INTO audit_logs (action_type, decision_details, reasoning) VALUES (%s, %s, %s)"
+_INSERT_SQL = (
+    "INSERT INTO audit_logs (action_type, decision_details, reasoning) VALUES (%s, %s, %s)"
+)
 
 
 class AuditLogger:
@@ -42,7 +44,9 @@ class AuditLogger:
         self._use_pg = (not explicit_path) and pooled_pg.is_configured()
         if self._use_pg:
             if AuditLogger._batcher is None:
-                AuditLogger._batcher = WriteBehindBatcher(name="audit_logs", flush_interval=2.0, max_batch=200)
+                AuditLogger._batcher = WriteBehindBatcher(
+                    name="audit_logs", flush_interval=2.0, max_batch=200
+                )
             logger.info("AuditLogger: using pooled Postgres backend (write-behind batched).")
 
         if not self._use_pg:
@@ -53,7 +57,9 @@ class AuditLogger:
                 if memory_db_dir and not os.path.exists(memory_db_dir):
                     os.makedirs(memory_db_dir, exist_ok=True)
                 self.db_path = (
-                    os.path.join(memory_db_dir, "supreme_memory.db") if memory_db_dir else "supreme_memory.db"
+                    os.path.join(memory_db_dir, "supreme_memory.db")
+                    if memory_db_dir
+                    else "supreme_memory.db"
                 )
             else:
                 self.db_path = db_path
@@ -97,20 +103,28 @@ class AuditLogger:
             AuditLogger._schema_initialized = True
             return True
         except Exception as exc:
-            logger.error(f"AuditLogger: Postgres schema lazy initialization failed, falling back to SQLite: {exc}")
+            logger.error(
+                f"AuditLogger: Postgres schema lazy initialization failed, falling back to SQLite: {exc}"
+            )
             self._use_pg = False
             memory_db_dir = getattr(settings, "memory_db_dir", None) or os.path.dirname(
                 os.path.dirname(os.path.abspath(__file__))
             )
             if memory_db_dir and not os.path.exists(memory_db_dir):
                 os.makedirs(memory_db_dir, exist_ok=True)
-            self.db_path = os.path.join(memory_db_dir, "supreme_memory.db") if memory_db_dir else "supreme_memory.db"
+            self.db_path = (
+                os.path.join(memory_db_dir, "supreme_memory.db")
+                if memory_db_dir
+                else "supreme_memory.db"
+            )
             self._init_sqlite()
             return False
 
     def log_decision(self, action_type: str, decision_details: str, reasoning: str):
         """Logs an autonomous decision or rotation details to the tamper-evident audit trail."""
-        logger.info(f"[AUDIT LOG] {action_type} - Details: {decision_details} - Reason: {reasoning}")
+        logger.info(
+            f"[AUDIT LOG] {action_type} - Details: {decision_details} - Reason: {reasoning}"
+        )
         if self._ensure_schema() and AuditLogger._batcher is not None:
             AuditLogger._batcher.submit(_INSERT_SQL, (action_type, decision_details, reasoning))
             return

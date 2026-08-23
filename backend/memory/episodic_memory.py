@@ -122,8 +122,12 @@ class EpisodicMemory:
                 meta.update(metadata)
 
             content_text = f"Prompt: {prompt}\nResponse: {response}"
-            self.vector_store.add_document(doc_id=f"episode_{task_id}", text=content_text, metadata=meta)
-            self.store_episode(event_type="task.completed", context=prompt, outcome=response, importance=5.0)
+            self.vector_store.add_document(
+                doc_id=f"episode_{task_id}", text=content_text, metadata=meta
+            )
+            self.store_episode(
+                event_type="task.completed", context=prompt, outcome=response, importance=5.0
+            )
             logger.info(f"Recorded episodic memory for task: {task_id}")
             return True
         except Exception as e:

@@ -209,7 +209,9 @@ class SentinelAgent:
         health_score -= len(anomalies) * 0.1
         health_score = max(0.0, health_score)
 
-        status = "healthy" if health_score > 0.8 else "degraded" if health_score > 0.5 else "unhealthy"
+        status = (
+            "healthy" if health_score > 0.8 else "degraded" if health_score > 0.5 else "unhealthy"
+        )
 
         # Trigger alerts
         if status != "healthy":

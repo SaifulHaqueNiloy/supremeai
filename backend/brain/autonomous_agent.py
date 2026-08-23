@@ -28,7 +28,7 @@ class AutonomousAgent:
             from core.evolution.auto_skill_creator import AutoSkillCreator
 
             self.skill_creator = AutoSkillCreator()
-        except Exception as e:
+        except Exception:
             self.skill_creator = None  # type: ignore
 
         # Add performance optimizer
@@ -107,7 +107,9 @@ class AutonomousAgent:
             }
         )
         success = all(result.success for result in results)
-        outputs = [result.output for result in results if result.success and result.output is not None]
+        outputs = [
+            result.output for result in results if result.success and result.output is not None
+        ]
         errors = [result.error for result in results if result.error]
 
         # Handle failures with self-healing
@@ -125,7 +127,9 @@ class AutonomousAgent:
                             "task_description": task_description,
                             "context": context,
                             "failed_step": results[-1].name if results else "unknown",
-                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "error": results[-1].error
+                            if results and results[-1].error
+                            else "unknown",
                             "dependency_tree": ["autonomous_agent", self.name],
                         },
                     )
@@ -143,7 +147,9 @@ class AutonomousAgent:
                             "task_description": task_description,
                             "context": context,
                             "failed_step": results[-1].name if results else "unknown",
-                            "error": results[-1].error if results and results[-1].error else "unknown",
+                            "error": results[-1].error
+                            if results and results[-1].error
+                            else "unknown",
                             "dependency_tree": ["autonomous_agent", self.name],
                         },
                     )
@@ -235,7 +241,9 @@ class AutonomousAgent:
             "success": run.get("success", False),
             "completed_steps": run.get("steps", []),
             "failures": failures,
-            "improvements": (["Reduce broad step scope and add explicit verify step."] if failures else []),
+            "improvements": (
+                ["Reduce broad step scope and add explicit verify step."] if failures else []
+            ),
         }
 
     def run(self, task_description: str, context: str | None = None) -> dict[str, Any]:

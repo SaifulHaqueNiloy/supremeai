@@ -1,13 +1,10 @@
-import sys
-
 import pytest
-
 
 try:
     from workers.celery_app import app
 
     HAS_CELERY = app is not None
-except Exception as e:
+except Exception:
     HAS_CELERY = False
 
 

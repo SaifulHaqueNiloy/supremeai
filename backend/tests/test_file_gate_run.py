@@ -1,6 +1,7 @@
 # tests/test_file_gate_run.py
 import logging
 import sys
+
 from backend.sandbox.file_isolation_gate import FileIsolationGate
 
 logging.basicConfig(
@@ -19,9 +20,7 @@ def run_gate_test():
     fake_pdf_bytes = b"SupremeAI Secure Manifesto 2026. Sandbox Enforced Content."
 
     # রান পাইপলাইন
-    res = gate.execute_file_parsing_safely(
-        raw_file_bytes=fake_pdf_bytes, file_extension="pdf"
-    )
+    res = gate.execute_file_parsing_safely(raw_file_bytes=fake_pdf_bytes, file_extension="pdf")
     logger.info(f"Gate Transaction Status: {res.get('success')}")
     logger.info(f"Sandbox Runtime Raw Output: {res.get('sandbox_output')}")
 

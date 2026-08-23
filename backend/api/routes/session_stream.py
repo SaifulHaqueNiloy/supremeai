@@ -87,6 +87,7 @@ async def auto_save_session_memory(session_id: str, task_type: str = "general") 
         return
     try:
         from services.memory_service import summarize_and_save_session
+
         result = await summarize_and_save_session(
             session_id=session_id,
             messages=messages,
@@ -98,4 +99,3 @@ async def auto_save_session_memory(session_id: str, task_type: str = "general") 
             logger.warning(f"Auto-save session memory non-critical notice: {result.get('error')}")
     except Exception as exc:
         logger.debug(f"Auto-save session memory exception (non-blocking): {exc}")
-

@@ -41,7 +41,9 @@ class MCPClient:
             return True
         self._terminate()
         try:
-            logger.info(f"Connecting to MCP Server '{self.server_name}' using command: {self.command}")
+            logger.info(
+                f"Connecting to MCP Server '{self.server_name}' using command: {self.command}"
+            )
             self.process = subprocess.Popen(
                 self.command,
                 stdin=subprocess.PIPE,
@@ -91,7 +93,9 @@ class MCPClient:
             logger.error(f"Error querying MCP tools: {exc}")
             return []
 
-    def call_tool(self, name: str, arguments: dict[str, Any], timeout: int = DEFAULT_TIMEOUT) -> dict[str, Any]:
+    def call_tool(
+        self, name: str, arguments: dict[str, Any], timeout: int = DEFAULT_TIMEOUT
+    ) -> dict[str, Any]:
         if not self.connect():
             return {"error": "Server not connected"}
         request = {

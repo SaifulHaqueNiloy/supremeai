@@ -7,30 +7,29 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
-import time
-import asyncio
 import logging
-from typing import Optional
+import time
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from core.cache import get_cache
-from core.rate_limit import RateLimiter
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 class HealthStatus(BaseModel):
     """Health check response model."""
+
     status: str
     timestamp: str
     version: str
     uptime_seconds: float
     services: dict
-    cache_stats: Optional[dict] = None
+    cache_stats: dict | None = None
 
 
 _start_time = time.time()
@@ -42,7 +41,7 @@ async def health_check():
     Comprehensive health check endpoint.
     """
     cache = get_cache()
-    
+
     return HealthStatus(
         status="healthy",
         timestamp=datetime.utcnow().isoformat(),
@@ -51,9 +50,9 @@ async def health_check():
         services={
             "database": await _check_database(),
             "redis": await _check_redis(),
-            "cache": "connected" if cache.enabled else "disabled"
+            "cache": "connected" if cache.enabled else "disabled",
         },
-        cache_stats=cache.get_stats() if cache else None
+        cache_stats=cache.get_stats() if cache else None,
     )
 
 
@@ -76,6 +75,7 @@ async def _check_database() -> str:
     """Check database connectivity."""
     try:
         from database.session import engine
+
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return "healthy"

@@ -39,7 +39,9 @@ class Orchestrator:
         self._task: asyncio.Task | None = None
         self._running: bool = False
         self.fitness_engine = FitnessEngine()
-        self.self_evolution = SelfEvolutionAgent(fitness_engine=self.fitness_engine, interval_seconds=interval_seconds)
+        self.self_evolution = SelfEvolutionAgent(
+            fitness_engine=self.fitness_engine, interval_seconds=interval_seconds
+        )
         self._tasks: list[Callable[[], Any]] = [
             self._run_fitness_scoring,
             self.self_evolution._tick,
@@ -63,7 +65,9 @@ class Orchestrator:
                     )
                 )
                 if not os.path.exists(script_path):
-                    logger.warning(f"[Orchestrator] Budget guardian script not found at {script_path}. Skipping.")
+                    logger.warning(
+                        f"[Orchestrator] Budget guardian script not found at {script_path}. Skipping."
+                    )
                     return
 
                 result = subprocess.run(
@@ -82,11 +86,17 @@ class Orchestrator:
                     )
                 logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
             except subprocess.TimeoutExpired:
-                logger.critical("[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed.")
-                raise RuntimeError("Budget guardian timed out. Halting orchestrator to prevent financial bleed.")
+                logger.critical(
+                    "[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed."
+                )
+                raise RuntimeError(
+                    "Budget guardian timed out. Halting orchestrator to prevent financial bleed."
+                )
             except Exception as exc:
                 logger.critical(f"🔥 CRITICAL: Budget guardian failed! Error: {exc}")
-                raise RuntimeError("Budget Guardian failure. Halting orchestrator to prevent financial bleed.") from exc
+                raise RuntimeError(
+                    "Budget Guardian failure. Halting orchestrator to prevent financial bleed."
+                ) from exc
 
         self._tasks.append(_run_budget_guardian)
         logger.info("Budget guardian task added to orchestrator")
@@ -136,9 +146,7 @@ class Orchestrator:
                     # Accept both shapes:
                     # 1) {"trigger_failure": True}
                     # 2) {"data": {"trigger_failure": True}}
-                    if current_data.get("trigger_failure") is True:
-                        has_trigger = True
-                    elif (
+                    if current_data.get("trigger_failure") is True or (
                         isinstance(current_data.get("data"), dict)
                         and current_data["data"].get("trigger_failure") is True
                     ):
@@ -148,9 +156,11 @@ class Orchestrator:
                     # {"processed_by": <skill>, "data": <previous_current_data>}
                     if not has_trigger and isinstance(current_data.get("data"), dict):
                         inner = current_data["data"]
-                        if inner.get("trigger_failure") is True:
-                            has_trigger = True
-                        elif isinstance(inner.get("data"), dict) and inner["data"].get("trigger_failure") is True:
+                        if (
+                            inner.get("trigger_failure") is True
+                            or isinstance(inner.get("data"), dict)
+                            and inner["data"].get("trigger_failure") is True
+                        ):
                             has_trigger = True
 
                 if skill == "Skill_B" and has_trigger:
@@ -165,7 +175,9 @@ class Orchestrator:
                     self.skill_graph.update_edge_weight(executed_skills[-2], skill, success=True)
 
             except Exception as e:
-                logger.error(f"Skill execution failed for '{skill}': {e}. Triggering rollback/fallback.")
+                logger.error(
+                    f"Skill execution failed for '{skill}': {e}. Triggering rollback/fallback."
+                )
                 # Feedback loop: penalize weight of failed edge
                 if len(executed_skills) > 1:
                     self.skill_graph.update_edge_weight(executed_skills[-2], skill, success=False)

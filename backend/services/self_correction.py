@@ -11,8 +11,9 @@ Features:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 from loguru import logger
 
@@ -139,18 +140,26 @@ class SelfCorrectionService:
             while retries < self.max_retries and not success:
                 try:
                     # Execute atomic node
-                    res = await step_executor(node, execution_results) if callable(step_executor) else None
+                    res = (
+                        await step_executor(node, execution_results)
+                        if callable(step_executor)
+                        else None
+                    )
                     node.output = res
                     node.status = "completed"
                     execution_results[node.id] = res
                     success = True
                 except Exception as exc:
                     retries += 1
-                    logger.warning(f"TaskNode '{node.id}' attempt {retries} failed: {exc}. Attempting auto-healing...")
+                    logger.warning(
+                        f"TaskNode '{node.id}' attempt {retries} failed: {exc}. Attempting auto-healing..."
+                    )
                     if retries >= self.max_retries:
                         node.status = "failed"
                         node.error = str(exc)
-                        raise RuntimeError(f"TaskNode '{node.id}' failed after {self.max_retries} auto-healing attempts: {exc}") from exc
+                        raise RuntimeError(
+                            f"TaskNode '{node.id}' failed after {self.max_retries} auto-healing attempts: {exc}"
+                        ) from exc
                     # Apply localized self-healing backoff/adaptation
                     time.sleep(0.05 * retries)
 
@@ -193,6 +202,8 @@ class SelfCorrectionService:
                 task_type=dag.intent.domain,
                 metadata={"fitness_score": fitness_score, "invariants": dag.intent.invariants},
             )
-            logger.info(f"SelfCorrection: Consolidated learning trajectory into ai_memory (Fitness: {fitness_score})")
+            logger.info(
+                f"SelfCorrection: Consolidated learning trajectory into ai_memory (Fitness: {fitness_score})"
+            )
         except Exception as exc:
             logger.warning(f"Memory consolidation skipped on error: {exc}")

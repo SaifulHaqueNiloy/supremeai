@@ -324,7 +324,7 @@ def performance_monitor(func: Callable) -> Callable:
 
         try:
             result = await func(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             raise
         finally:
             end_time = time.time()
@@ -356,7 +356,7 @@ def performance_monitor(func: Callable) -> Callable:
 
         try:
             result = func(*args, **kwargs)
-        except Exception as e:
+        except Exception:
             raise
         finally:
             end_time = time.time()
@@ -390,9 +390,13 @@ class PerformanceOptimizer:
         self.level = level
         self.cache = AsyncLRUCache(maxsize=1000 if level == OptimizationLevel.AGGRESSIVE else 500)
         self.query_optimizer = QueryOptimizer()
-        self.pool_manager = AsyncPoolManager(max_connections=20 if level == OptimizationLevel.AGGRESSIVE else 10)
+        self.pool_manager = AsyncPoolManager(
+            max_connections=20 if level == OptimizationLevel.AGGRESSIVE else 10
+        )
         self.metrics = PerfMetrics()
-        self.executor = ThreadPoolExecutor(max_workers=4 if level == OptimizationLevel.AGGRESSIVE else 2)
+        self.executor = ThreadPoolExecutor(
+            max_workers=4 if level == OptimizationLevel.AGGRESSIVE else 2
+        )
 
         # System monitoring
         self.monitoring_task = None
@@ -430,7 +434,8 @@ class PerformanceOptimizer:
                 # Log metrics periodically
                 if self.metrics.request_count % 100 == 0:
                     logger.info(
-                        f"System metrics - CPU: {self.metrics.cpu_usage}%, " f"Memory: {self.metrics.memory_usage}%"
+                        f"System metrics - CPU: {self.metrics.cpu_usage}%, "
+                        f"Memory: {self.metrics.memory_usage}%"
                     )
 
                 await asyncio.sleep(5)  # Monitor every 5 seconds
@@ -526,7 +531,8 @@ class PerformanceOptimizer:
             "current_metrics": {
                 "request_count": self.metrics.request_count,
                 "avg_response_time": self.metrics.avg_response_time,
-                "cache_hit_rate": self.metrics.cache_hits / max(1, self.metrics.cache_hits + self.metrics.cache_misses),
+                "cache_hit_rate": self.metrics.cache_hits
+                / max(1, self.metrics.cache_hits + self.metrics.cache_misses),
                 "db_avg_time": self.metrics.db_avg_time,
                 "cpu_usage": self.metrics.cpu_usage,
                 "memory_usage": self.metrics.memory_usage,
@@ -555,7 +561,9 @@ class PerformanceOptimizer:
             if key in self.cache.access_order:
                 del self.cache.access_order[key]
 
-    async def batch_process(self, items: list[Any], processor: Callable, batch_size: int = 10) -> list[Any]:
+    async def batch_process(
+        self, items: list[Any], processor: Callable, batch_size: int = 10
+    ) -> list[Any]:
         """Process items in batches for better performance."""
         results: list[dict[str, Any]] = []
 
@@ -563,7 +571,9 @@ class PerformanceOptimizer:
             batch = items[i : i + batch_size]
 
             # Process batch concurrently
-            batch_results = await asyncio.gather(*[processor(item) for item in batch], return_exceptions=True)
+            batch_results = await asyncio.gather(
+                *[processor(item) for item in batch], return_exceptions=True
+            )
 
             for idx, result in enumerate(batch_results):
                 if isinstance(result, BaseException):
@@ -579,7 +589,9 @@ class PerformanceOptimizer:
 _performance_optimizer: PerformanceOptimizer | None = None
 
 
-def get_performance_optimizer(level: OptimizationLevel = OptimizationLevel.MODERATE) -> PerformanceOptimizer:
+def get_performance_optimizer(
+    level: OptimizationLevel = OptimizationLevel.MODERATE,
+) -> PerformanceOptimizer:
     """Get or create the global performance optimizer instance."""
     global _performance_optimizer
     if _performance_optimizer is None:
@@ -613,7 +625,7 @@ async def demo_performance_optimization():
 
     logger.debug(f"First call: {first_call_time:.4f}s, Result: {result1}")
     logger.debug(f"Second call (cached): {second_call_time:.4f}s, Result: {result2}")
-    logger.debug(f"Speed improvement: {first_call_time/second_call_time:.2f}x")
+    logger.debug(f"Speed improvement: {first_call_time / second_call_time:.2f}x")
 
     # Demonstrate query optimization
     logger.debug("\nTesting query optimization...")

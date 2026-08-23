@@ -23,14 +23,18 @@ class BandwidthOptimizer:
         logger.debug(f"Compressed prompt from {original_len} to {len(compressed)} chars")
         return compressed
 
-    def generate_delta_update(self, old_state: dict[str, Any], new_state: dict[str, Any]) -> dict[str, Any]:
+    def generate_delta_update(
+        self, old_state: dict[str, Any], new_state: dict[str, Any]
+    ) -> dict[str, Any]:
         delta: dict[str, Any] = {}
         for k, v in new_state.items():
             if k not in old_state or old_state[k] != v:
                 delta[k] = v
         return delta
 
-    def optimize_request(self, method: str, url: str, headers: dict[str, Any] | None = None) -> dict[str, Any]:
+    def optimize_request(
+        self, method: str, url: str, headers: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         return {"method": method, "url": url, "headers": headers or {}}
 
     def cache_response(self, url: str, data: Any):

@@ -38,7 +38,9 @@ class CreateAPIKeyRequest(BaseModel):
     user_id: str = Field(..., min_length=1, description="Owner user ID (email or uid)")
     name: str = Field(..., min_length=1, max_length=255)
     rate_limit_rps: int = Field(default=6, ge=1, le=1000)
-    expires_in_days: int | None = Field(default=None, ge=1, description="Expires in N days, null = no expiry")
+    expires_in_days: int | None = Field(
+        default=None, ge=1, description="Expires in N days, null = no expiry"
+    )
 
     @field_validator("user_id", "name", mode="before")
     @classmethod

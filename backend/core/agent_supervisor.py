@@ -278,7 +278,9 @@ class AgentSupervisor:
 
                 # Check max restarts
                 if restart_count >= max_restarts:
-                    logger.critical(f"🔥 Agent '{name}' exceeded max restarts ({max_restarts}). Giving up permanently.")
+                    logger.critical(
+                        f"🔥 Agent '{name}' exceeded max restarts ({max_restarts}). Giving up permanently."
+                    )
                     health.status = "failed_permanent"
                     try:
                         error_event_bus.emit(
@@ -302,7 +304,8 @@ class AgentSupervisor:
                 # Exponential backoff before restart
                 delay = min(restart_delay * (2 ** (restart_count - 1)), 30.0)
                 logger.info(
-                    f"🔄 Restarting agent '{name}' in {delay:.1f}s " f"(attempt {restart_count}/{max_restarts})..."
+                    f"🔄 Restarting agent '{name}' in {delay:.1f}s "
+                    f"(attempt {restart_count}/{max_restarts})..."
                 )
                 await asyncio.sleep(delay)
 
@@ -329,7 +332,10 @@ class AgentSupervisor:
                 if task and task.done() and not task.cancelled():
                     # Task died without triggering our exception handler
                     # (e.g., if the coroutine returned normally but shouldn't have)
-                    logger.warning(f"⚠️ Agent '{name}' task completed unexpectedly. " f"Status was '{health.status}'.")
+                    logger.warning(
+                        f"⚠️ Agent '{name}' task completed unexpectedly. "
+                        f"Status was '{health.status}'."
+                    )
                     health.status = "failed"
                     health.last_error = "Task completed unexpectedly"
 

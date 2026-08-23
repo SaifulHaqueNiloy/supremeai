@@ -160,7 +160,9 @@ class TestAdminRoutes:
     def test_admin_firebase_login_mock_token_non_production(self, client):
         """মক ফায়ারবেস টোকেন লগইন non-production."""
         with patch("core.config.settings.env", "local"):
-            response = client.post("/api/admin/firebase-login", json={"id_token": "mock-test-token"})
+            response = client.post(
+                "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
+            )
             assert response.status_code in [200, 403]
 
     def test_admin_firebase_login_mock_token_production(self, client):
@@ -180,7 +182,9 @@ class TestAdminRoutes:
             patch.object(settings, "_get_cached_secret", side_effect=mock_secret),
             patch("core.rate_limiter.AsyncRateLimiter.acquire", return_value=True),
         ):
-            response = client.post("/api/admin/firebase-login", json={"id_token": "mock-test-token"})
+            response = client.post(
+                "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
+            )
             assert response.status_code == 403
 
     def test_admin_firebase_totp_setup_no_token(self, client):
@@ -212,7 +216,11 @@ class TestAdminRoutes:
             mock_services.get_tracker = MagicMock(return_value=mock_tracker)
             with patch.dict(
                 "sys.modules",
-                {"core.free_tier_tracker": MagicMock(get_tracker=MagicMock(return_value=mock_tracker))},
+                {
+                    "core.free_tier_tracker": MagicMock(
+                        get_tracker=MagicMock(return_value=mock_tracker)
+                    )
+                },
             ):
                 response = client.get("/admin/free-tier-status")
                 assert response.status_code == 200
@@ -260,7 +268,11 @@ class TestAdminRoutes:
 
         with patch.dict(
             "sys.modules",
-            {"core.token_budget": MagicMock(get_budget_manager=MagicMock(return_value=mock_manager))},
+            {
+                "core.token_budget": MagicMock(
+                    get_budget_manager=MagicMock(return_value=mock_manager)
+                )
+            },
         ):
             response = client.get("/admin/token-budget-stats")
             assert response.status_code == 200

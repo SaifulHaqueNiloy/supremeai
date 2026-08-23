@@ -107,7 +107,9 @@ class FinancialServicesAgent:
 
         # Velocity check (if history provided)
         if user_history:
-            recent_count = sum(1 for t in user_history if t.timestamp > datetime.now(UTC) - timedelta(hours=1))
+            recent_count = sum(
+                1 for t in user_history if t.timestamp > datetime.now(UTC) - timedelta(hours=1)
+            )
             if recent_count > 5:
                 flags.append("high_transaction_velocity")
                 risk_score += 0.25
@@ -195,7 +197,9 @@ class FinancialServicesAgent:
 
         return insights
 
-    async def get_currency_exchange_rate(self, from_currency: str, to_currency: str) -> dict[str, Any]:
+    async def get_currency_exchange_rate(
+        self, from_currency: str, to_currency: str
+    ) -> dict[str, Any]:
         """Get exchange rate (simulated - would use external API in production)."""
         # Simulated exchange rates for common pairs
         rates = {

@@ -79,7 +79,9 @@ def _quarantine_and_diagnose(state: HealingState, reason: str):
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    loguru.logger.error(f"[Quarantine] Skill isolated due to {reason}. Diagnostic report saved to {report_file}")
+    loguru.logger.error(
+        f"[Quarantine] Skill isolated due to {reason}. Diagnostic report saved to {report_file}"
+    )
 
 
 async def run_healing_loop(code: str, tests: str, max_retries: int = 3) -> dict[str, Any]:

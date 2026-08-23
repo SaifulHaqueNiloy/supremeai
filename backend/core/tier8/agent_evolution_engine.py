@@ -197,7 +197,9 @@ class AgentEvolutionEngine(BaseSkill):
                 "genome_id": "seed_001",
                 "parent_ids": [],
                 "skills": ["web_search", "code_generation", "summarization"],
-                "prompt_template": ("You are a helpful AI assistant. " "Use available tools when needed."),
+                "prompt_template": (
+                    "You are a helpful AI assistant. Use available tools when needed."
+                ),
                 "temperature": 0.7,
                 "max_tokens": 2048,
                 "tool_allowlist": ["web_search", "code_executor"],
@@ -251,7 +253,7 @@ class AgentEvolutionEngine(BaseSkill):
             used = response.get("usage", {}).get("total_tokens", genome.max_tokens)
             efficiency = 1.0 - (used / genome.max_tokens)
             return min(1.0, max(0.0, score * 0.7 + efficiency * 0.3))
-        except Exception as e:
+        except Exception:
             return 0.0
 
     @trace_span("evolution.breed")
@@ -291,7 +293,9 @@ class AgentEvolutionEngine(BaseSkill):
         child_prompt = a.prompt_template if random.random() < 0.5 else b.prompt_template
 
         return AgentGenome(
-            genome_id=hashlib.sha256(f"{a.genome_id}:{b.genome_id}:{time.time()}".encode()).hexdigest()[:16],
+            genome_id=hashlib.sha256(
+                f"{a.genome_id}:{b.genome_id}:{time.time()}".encode()
+            ).hexdigest()[:16],
             parent_ids=(a.genome_id, b.genome_id),
             skills=tuple(child_skills),
             prompt_template=child_prompt,

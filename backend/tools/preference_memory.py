@@ -52,7 +52,9 @@ class PreferenceMemory:
         # ML implementation would adjust embedding weights here
         prefs[key] = value
         self.save_preferences(user_id)
-        logger.info(f"Updated preference '{key}' to '{value}' for user {user_id} (weight: {weight})")
+        logger.info(
+            f"Updated preference '{key}' to '{value}' for user {user_id} (weight: {weight})"
+        )
 
     def generate_context_prompt(self, user_id: str) -> str:
         """Generates a system prompt modifier based on user preferences."""

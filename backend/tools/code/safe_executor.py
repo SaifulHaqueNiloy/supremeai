@@ -116,12 +116,16 @@ def validate_ast(source: str) -> None:
             if isinstance(node.func, ast.Name):
                 func_name = node.func.id
                 if func_name not in SAFE_BUILTINS:
-                    raise ValueError(f"Security error: Function call '{func_name}' is not in the allowed list")
+                    raise ValueError(
+                        f"Security error: Function call '{func_name}' is not in the allowed list"
+                    )
             else:
                 raise ValueError("Security error: Non-name function calls are not allowed")
 
 
-def run_restricted(source: str, locals_: dict[str, Any] | None = None) -> tuple[bool, dict[str, Any] | str]:
+def run_restricted(
+    source: str, locals_: dict[str, Any] | None = None
+) -> tuple[bool, dict[str, Any] | str]:
     """Execute *source* in a RestrictedPython sandbox after AST validation.
 
     Parameters

@@ -41,5 +41,7 @@ async def test_meta_architect_analyze_codebase_with_files_and_strategic_docs():
 async def test_meta_architect_analyze_codebase_nonexistent_doc():
     architect = MetaArchitect()
     with tempfile.TemporaryDirectory() as tmpdir:
-        result = await architect.analyze_codebase(root_dir=tmpdir, strategic_docs=["/nonexistent/doc.md"])
+        result = await architect.analyze_codebase(
+            root_dir=tmpdir, strategic_docs=["/nonexistent/doc.md"]
+        )
         assert result["metrics"]["total_files"] == 0

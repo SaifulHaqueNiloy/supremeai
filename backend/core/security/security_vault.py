@@ -39,7 +39,9 @@ if strict_enabled:
 else:
     # Normal mode: settings.encryption_key থেকে আসে (computed field via secret_vault)
     ENCRYPTION_KEY = (
-        settings.encryption_key.get_secret_value() if settings.encryption_key else os.environ.get("ENCRYPTION_KEY")
+        settings.encryption_key.get_secret_value()
+        if settings.encryption_key
+        else os.environ.get("ENCRYPTION_KEY")
     )
 
     if not ENCRYPTION_KEY:

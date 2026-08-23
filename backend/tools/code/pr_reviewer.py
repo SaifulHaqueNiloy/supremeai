@@ -110,7 +110,9 @@ class PRReviewer:
                 f"Diff:\n{diff_content[:4000]}"
             )
 
-            result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.03)
+            result = await router.async_route_and_generate(
+                prompt, task_type="coding", max_cost=0.03
+            )
             text = result.get("text", "") if isinstance(result, dict) else str(result)
 
             cleaned = text.strip()
@@ -140,7 +142,9 @@ class PRReviewer:
 
         return issues
 
-    async def check_style_compliance(self, diff_content: str, repo_path: str = "default") -> list[dict[str, Any]]:
+    async def check_style_compliance(
+        self, diff_content: str, repo_path: str = "default"
+    ) -> list[dict[str, Any]]:
         """ব্যবহারকারীর শেখা স্টাইল দিয়ে কমপ্লায়েন্স চেক করে।"""
         issues: list[dict[str, Any]] = []
         try:
@@ -175,7 +179,11 @@ class PRReviewer:
 
             detector = CodeSmellDetector()
             # বাংলা মন্তব্য: ডিফ থেকে শুধু যোগ করা (+) লাইনগুলো নিয়ে অস্থায়ী ফাইল বানিয়ে স্ক্যান করা হচ্ছে।
-            added_lines = [ln[1:] for ln in diff_content.split("\n") if ln.startswith("+") and not ln.startswith("+++")]
+            added_lines = [
+                ln[1:]
+                for ln in diff_content.split("\n")
+                if ln.startswith("+") and not ln.startswith("+++")
+            ]
             with tempfile.NamedTemporaryFile(suffix=".py", delete=False, mode="w") as tmp:
                 tmp.write("\n".join(added_lines))
                 tmp_path = tmp.name
@@ -232,8 +240,14 @@ class PRReviewer:
             if comments:
                 summary_lines = ["### 🤖 AI Code Review Findings", ""]
                 for c in comments:
-                    sev_icon = "🔴" if c["severity"] == "critical" else ("🟡" if c["severity"] == "high" else "🔵")
-                    summary_lines.append(f"- {sev_icon} **[{c['severity'].upper()}]** in `{c['path']}`: {c['body']}")
+                    sev_icon = (
+                        "🔴"
+                        if c["severity"] == "critical"
+                        else ("🟡" if c["severity"] == "high" else "🔵")
+                    )
+                    summary_lines.append(
+                        f"- {sev_icon} **[{c['severity'].upper()}]** in `{c['path']}`: {c['body']}"
+                    )
 
                 await self._post_pr_comment(repo_full_name, pr_number, "\n".join(summary_lines))
 
@@ -263,7 +277,9 @@ class PRReviewer:
             logger.error(f"Auto-approve failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def _post_pr_comment(self, repo_full_name: str, pr_number: int, comment_body: str) -> dict[str, Any]:
+    async def _post_pr_comment(
+        self, repo_full_name: str, pr_number: int, comment_body: str
+    ) -> dict[str, Any]:
         """Posts a comment on a pull request."""
         # বাংলা মন্তব্য: গিটহাব এপিআই দিয়ে পিআর-এ রিভিউ কমেন্ট পোস্ট করা হচ্ছে।
         if not self.gh:

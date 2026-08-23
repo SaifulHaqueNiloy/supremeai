@@ -62,8 +62,12 @@ class ResourceGuard:
                 continue
 
         if not allowed:
-            logger.critical(f"[ResourceGuard] Unauthorized access attempt to external path: {resolved_path}")
-            raise PermissionError(f"Access to path '{resolved_path}' is denied. Outside of allowed scopes.")
+            logger.critical(
+                f"[ResourceGuard] Unauthorized access attempt to external path: {resolved_path}"
+            )
+            raise PermissionError(
+                f"Access to path '{resolved_path}' is denied. Outside of allowed scopes."
+            )
 
         return resolved_path
 

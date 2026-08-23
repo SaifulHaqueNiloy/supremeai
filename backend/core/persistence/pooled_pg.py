@@ -76,7 +76,9 @@ def _get_pool() -> Any:
             )
             return None
         try:
-            _pool = psycopg2.pool.ThreadedConnectionPool(_MIN_CONN, _MAX_CONN, dsn, connect_timeout=10)
+            _pool = psycopg2.pool.ThreadedConnectionPool(
+                _MIN_CONN, _MAX_CONN, dsn, connect_timeout=10
+            )
             logger.info(f"persistence.pooled_pg: initialized (max={_MAX_CONN} connections).")
         except Exception as exc:
             logger.error(f"persistence.pooled_pg: failed to initialize pool: {exc}")
@@ -107,7 +109,7 @@ def execute(sql: str, params: tuple = ()) -> None:
         try:
             cur.execute(sql, params)
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
             raise
         finally:
@@ -123,7 +125,7 @@ def executemany(sql: str, params_list: list[tuple]) -> None:
         try:
             cur.executemany(sql, params_list)
             conn.commit()
-        except Exception as e:
+        except Exception:
             conn.rollback()
             raise
         finally:

@@ -55,7 +55,7 @@ from pydantic import BaseModel
 
 try:
     from brain.model_router import ModelRouter
-except Exception as e:
+except Exception:
 
     class ModelRouter:
         pass
@@ -86,7 +86,9 @@ class SelfPlanner:
             f"Objective: {objective}"
         )
         try:
-            result = await model_router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.05)
+            result = await model_router.async_route_and_generate(
+                prompt, task_type="reasoning", max_cost=0.05
+            )
         except Exception as e:
             # ✅ FIXED: LLM planning failures now propagate as real errors instead of
             # being masked by a hardcoded fallback plan. A caller must know planning failed.
@@ -197,7 +199,9 @@ class SelfPlanner:
         """Cancels all currently active running planner tasks."""
         if not self.active_tasks:
             return
-        logger.warning(f"Shutting down SelfPlanner. Cancelling {len(self.active_tasks)} active tasks...")
+        logger.warning(
+            f"Shutting down SelfPlanner. Cancelling {len(self.active_tasks)} active tasks..."
+        )
         for task in list(self.active_tasks):
             if not task.done():
                 task.cancel()
@@ -212,7 +216,7 @@ class SelfPlanner:
         """Backward-compatible alias for basic validation."""
         try:
             return bool(nx.is_directed_acyclic_graph(graph))
-        except Exception as e:
+        except Exception:
             return False
 
     async def execute_plan(self, graph: Any) -> list[dict[str, Any]]:

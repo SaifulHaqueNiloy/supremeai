@@ -11,24 +11,27 @@ Tests:
 7. LivingEngineOrchestrator End-to-End integration
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from adapters.business_adapter import BusinessAdapter
-from adapters.dev_adapter import DevAdapter, DevelopmentTask
-from adapters.ux_adapter import DesignPlatform, UXAdapter
-from core.advanced_reasoning import AdvancedReasoningEngine, ReasoningType
+from adapters.dev_adapter import DevAdapter
+from adapters.ux_adapter import UXAdapter
+from core.advanced_reasoning import AdvancedReasoningEngine
 from core.evolution_module import EvolutionModule
-from learning.pattern_recognizer import PatternRecognizer, PatternType
+from learning.pattern_recognizer import PatternRecognizer
 from services.living_engine import LivingEngineOrchestrator
 
-
 # ── 1. Advanced Reasoning Tests ───────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_advanced_reasoning_deductive():
     engine = AdvancedReasoningEngine()
-    chain = await engine.reason("Prove that the database connection pool invariant holds if transactions are isolated")
+    chain = await engine.reason(
+        "Prove that the database connection pool invariant holds if transactions are isolated"
+    )
     assert chain.chain_id.startswith("reason_")
     assert chain.overall_confidence >= 0.5
     assert len(chain.steps) > 0
@@ -38,12 +41,15 @@ async def test_advanced_reasoning_deductive():
 @pytest.mark.asyncio
 async def test_advanced_reasoning_abductive_and_causal():
     engine = AdvancedReasoningEngine()
-    chain = await engine.reason("Why did the memory usage spike during peak load? Explain root cause")
+    chain = await engine.reason(
+        "Why did the memory usage spike during peak load? Explain root cause"
+    )
     assert chain.final_conclusion is not None
     assert chain.overall_confidence > 0.6
 
 
 # ── 2. Domain Adapters Tests ──────────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_dev_adapter_debugging():
@@ -75,7 +81,9 @@ async def test_business_adapter_analysis_and_roi():
 @pytest.mark.asyncio
 async def test_ux_adapter_accessibility_and_code():
     adapter = UXAdapter()
-    res = await adapter.adapt("Design a dark mode responsive analytics dashboard in React with high accessibility")
+    res = await adapter.adapt(
+        "Design a dark mode responsive analytics dashboard in React with high accessibility"
+    )
     assert res.success is True
     assert res.domain_specific_metadata["accessibility_compliant"] is True
     assert "specification" in res.adapted_solution
@@ -83,6 +91,7 @@ async def test_ux_adapter_accessibility_and_code():
 
 
 # ── 3. Pattern Recognition Tests ──────────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_pattern_recognizer_discovery_and_learning():
@@ -101,6 +110,7 @@ async def test_pattern_recognizer_discovery_and_learning():
 
 # ── 4. Evolution Module Tests ─────────────────────────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_evolution_module_genetic_algorithm():
     evo = EvolutionModule(config={"population_size": 10, "max_generations": 3})
@@ -109,12 +119,18 @@ async def test_evolution_module_genetic_algorithm():
         return 0.95
 
     initial_solution = {"cache_size": 100, "timeout_ms": 500}
-    res = await evo.evolve(problem="Optimize cache parameters", current_solution=initial_solution, fitness_func=dummy_fitness, generations=3)
+    res = await evo.evolve(
+        problem="Optimize cache parameters",
+        current_solution=initial_solution,
+        fitness_func=dummy_fitness,
+        generations=3,
+    )
     assert res.generations_passed == 3
     assert res.time_evolved_ms >= 0
 
 
 # ── 5. Living Engine Integration Tests ────────────────────────────────────────
+
 
 @pytest.mark.asyncio
 async def test_living_engine_full_phase2_pipeline():

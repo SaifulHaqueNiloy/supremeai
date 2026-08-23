@@ -84,7 +84,9 @@ class InputSanitizer:
         return torch.clamp(x, min_val, max_val)
 
     @staticmethod
-    def gaussian_smoothing(x: torch.Tensor, kernel_size: int = 3, sigma: float = 1.0) -> torch.Tensor:
+    def gaussian_smoothing(
+        x: torch.Tensor, kernel_size: int = 3, sigma: float = 1.0
+    ) -> torch.Tensor:
         """Apply Gaussian smoothing to reduce high-frequency noise."""
         # Create Gaussian kernel
         coords = torch.arange(kernel_size, dtype=torch.float32)
@@ -163,7 +165,9 @@ class AdversarialDetector:
         self.anomaly_detector = AnomalyDetector(config)
         self.attack_signatures = {}  # Known attack signatures
 
-    def detect_perturbation_norm(self, original: torch.Tensor, perturbed: torch.Tensor) -> dict[str, float]:
+    def detect_perturbation_norm(
+        self, original: torch.Tensor, perturbed: torch.Tensor
+    ) -> dict[str, float]:
         """Detect perturbations using different norm measures."""
         diff = perturbed - original
 
@@ -216,7 +220,8 @@ class AdversarialDetector:
             center_x, center_y = magnitude.shape[0] // 2, magnitude.shape[1] // 2
             crop_size = min(magnitude.shape) // 4
             center_region = magnitude[
-                center_x - crop_size : center_x + crop_size, center_y - crop_size : center_y + crop_size
+                center_x - crop_size : center_x + crop_size,
+                center_y - crop_size : center_y + crop_size,
             ]
             total_energy = np.sum(magnitude)
             center_energy = np.sum(center_region)
@@ -227,7 +232,9 @@ class AdversarialDetector:
 
         return np.mean(noise_levels)
 
-    def detect_adversarial(self, original: torch.Tensor, processed: torch.Tensor, model: nn.Module) -> dict[str, Any]:
+    def detect_adversarial(
+        self, original: torch.Tensor, processed: torch.Tensor, model: nn.Module
+    ) -> dict[str, Any]:
         """
         Comprehensive adversarial detection.
 
@@ -258,8 +265,12 @@ class AdversarialDetector:
             conf_change = abs(orig_conf - proc_conf)
 
             # Calculate prediction entropy change
-            orig_entropy = torch.sum(-orig_probs * torch.log(orig_probs + 1e-8), dim=-1).mean().item()
-            proc_entropy = torch.sum(-proc_probs * torch.log(proc_probs + 1e-8), dim=-1).mean().item()
+            orig_entropy = (
+                torch.sum(-orig_probs * torch.log(orig_probs + 1e-8), dim=-1).mean().item()
+            )
+            proc_entropy = (
+                torch.sum(-proc_probs * torch.log(proc_probs + 1e-8), dim=-1).mean().item()
+            )
             entropy_change = abs(orig_entropy - proc_entropy)
 
         # Aggregate detection results
@@ -270,7 +281,9 @@ class AdversarialDetector:
         is_high_conf_change = conf_change > 0.2  # Heuristic threshold
 
         # Ensemble decision
-        num_indicators = sum([is_adv_l2, is_adv_linf, is_low_corr, is_high_noise, is_high_conf_change])
+        num_indicators = sum(
+            [is_adv_l2, is_adv_linf, is_low_corr, is_high_noise, is_high_conf_change]
+        )
 
         is_adversarial = num_indicators >= 3  # At least 3 indicators
 
@@ -312,7 +325,9 @@ class AdversarialDefenseSystem:
         x = self.input_sanitizer.gaussian_smoothing(x)
         return x
 
-    def detect_and_respond(self, original_input: torch.Tensor, model: nn.Module) -> tuple[torch.Tensor, dict[str, Any]]:
+    def detect_and_respond(
+        self, original_input: torch.Tensor, model: nn.Module
+    ) -> tuple[torch.Tensor, dict[str, Any]]:
         """
         Detect adversarial inputs and respond appropriately.
 
@@ -323,10 +338,14 @@ class AdversarialDefenseSystem:
         processed_input = self.preprocess_input(original_input)
 
         # Detect adversarial examples
-        detection_results = self.adversarial_detector.detect_adversarial(original_input, processed_input, model)
+        detection_results = self.adversarial_detector.detect_adversarial(
+            original_input, processed_input, model
+        )
 
         if detection_results["is_adversarial"] and self.config.defense_logging:
-            logger.warning(f"Adversarial input detected with score {detection_results['detection_score']:.3f}")
+            logger.warning(
+                f"Adversarial input detected with score {detection_results['detection_score']:.3f}"
+            )
 
             # Log attack for future analysis
             self.attack_history.append(
@@ -368,9 +387,9 @@ class AdversarialDefenseSystem:
                     # Apply bilateral filter to each channel separately
                     channel = x_np[i, c]
                     filtered = (
-                        cv2.bilateralFilter((channel * 255).astype(np.uint8), d=3, sigmaColor=50, sigmaSpace=50).astype(
-                            np.float32
-                        )
+                        cv2.bilateralFilter(
+                            (channel * 255).astype(np.uint8), d=3, sigmaColor=50, sigmaSpace=50
+                        ).astype(np.float32)
                         / 255.0
                     )
                     x_np[i, c] = filtered
@@ -414,12 +433,16 @@ class AdversarialTrainer:
     Trainer that incorporates adversarial training for improved robustness.
     """
 
-    def __init__(self, model: nn.Module, defense_system: AdversarialDefenseSystem, config: DefenseConfig):
+    def __init__(
+        self, model: nn.Module, defense_system: AdversarialDefenseSystem, config: DefenseConfig
+    ):
         self.model = model
         self.defense_system = defense_system
         self.config = config
 
-    def generate_fgsm_adversarial(self, x: torch.Tensor, y: torch.Tensor, eps: float = 0.03) -> torch.Tensor:
+    def generate_fgsm_adversarial(
+        self, x: torch.Tensor, y: torch.Tensor, eps: float = 0.03
+    ) -> torch.Tensor:
         """Generate FGSM adversarial examples for training."""
         self.model.eval()
         x_adv = x.clone().detach().requires_grad_(True)
@@ -464,7 +487,11 @@ class AdversarialTrainer:
         total_loss.backward()
         optimizer.step()
 
-        return {"clean_loss": clean_loss.item(), "adversarial_loss": adv_loss.item(), "total_loss": total_loss.item()}
+        return {
+            "clean_loss": clean_loss.item(),
+            "adversarial_loss": adv_loss.item(),
+            "total_loss": total_loss.item(),
+        }
 
     def train_epoch_with_adversarial_augmentation(
         self, data_loader, optimizer: torch.optim.Optimizer
@@ -544,7 +571,9 @@ def demo_adversarial_defense():
 
     # Simulate one training step
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    losses = trainer.train_step_with_adversarial_regularization(dummy_dataset[0][0], dummy_dataset[0][1], optimizer)
+    losses = trainer.train_step_with_adversarial_regularization(
+        dummy_dataset[0][0], dummy_dataset[0][1], optimizer
+    )
 
     logger.debug(f"Training losses: {losses}")
 

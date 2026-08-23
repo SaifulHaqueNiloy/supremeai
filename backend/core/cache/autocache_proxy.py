@@ -31,13 +31,22 @@ class AutoCacheProxy:
         Infer query category from prompt content for dynamic TTL allocation.
         """
         prompt_lower = prompt.lower()
-        if any(w in prompt_lower for w in ["doc", "documentation", "guide", "tutorial", "readme", "manifest"]):
+        if any(
+            w in prompt_lower
+            for w in ["doc", "documentation", "guide", "tutorial", "readme", "manifest"]
+        ):
             return "static_docs"
         elif any(w in prompt_lower for w in ["skill", "catalog", "tools", "capabilities"]):
             return "skills_catalog"
-        elif any(w in prompt_lower for w in ["def ", "class ", "function", "code", "import ", "bug", "refactor"]):
+        elif any(
+            w in prompt_lower
+            for w in ["def ", "class ", "function", "code", "import ", "bug", "refactor"]
+        ):
             return "code_gen"
-        elif any(w in prompt_lower for w in ["dashboard", "balance", "profile", "account", "wallet", "realtime"]):
+        elif any(
+            w in prompt_lower
+            for w in ["dashboard", "balance", "profile", "account", "wallet", "realtime"]
+        ):
             return "user_dashboard"
         return "ai_chat"
 
@@ -54,7 +63,9 @@ class AutoCacheProxy:
         cat = category or self.infer_category_from_prompt(prompt)
         return self.get_ttl_for_category(cat)
 
-    async def get_or_compute(self, key: str, category: str, compute_fn: Any, *args, **kwargs) -> Any:
+    async def get_or_compute(
+        self, key: str, category: str, compute_fn: Any, *args, **kwargs
+    ) -> Any:
         """
         ক্যাশ চেক করা এবং মিস হলে ডাইনামিক টিটিএল সহ মান হিসাব করে সঞ্চয় করা।
         """

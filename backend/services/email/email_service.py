@@ -53,7 +53,9 @@ class EmailService:
         return os.getenv("RESEND_FROM_EMAIL", "noreply@supremeai.dev")
 
     @with_error_bus("_send_email")
-    async def _send_email(self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs) -> bool:
+    async def _send_email(
+        self, to_email: str = "", subject: str = "", html_body: str = "", **kwargs
+    ) -> bool:
         to_email = to_email or kwargs.get("to", "") or kwargs.get("to_email", "")
         html_body = html_body or kwargs.get("body", "") or kwargs.get("html_body", "")
         s = self._get_settings()
@@ -81,7 +83,9 @@ class EmailService:
                         "html": html_body,
                     },
                 )
-                if getattr(response, "is_success", False) or getattr(response, "status_code", 0) in (200, 201):
+                if getattr(response, "is_success", False) or getattr(
+                    response, "status_code", 0
+                ) in (200, 201):
                     logger.info(f"Email sent successfully to {to_email}")
                     return True
                 else:
@@ -115,7 +119,9 @@ class EmailService:
             )
             return False
 
-    async def send_welcome_email(self, user_email: str = "", user_name: str = "Developer", **kwargs) -> Any:
+    async def send_welcome_email(
+        self, user_email: str = "", user_name: str = "Developer", **kwargs
+    ) -> Any:
         to_email = user_email or kwargs.get("to_email", "")
         user_name = user_name or kwargs.get("user_name", "Developer")
         subject = "Welcome to SupremeAI 2.0 🚀"
@@ -132,7 +138,9 @@ class EmailService:
         """
         return await self._send_email(to_email, subject, html)
 
-    async def send_password_reset(self, user_email: str = "", reset_link: str = "", **kwargs) -> Any:
+    async def send_password_reset(
+        self, user_email: str = "", reset_link: str = "", **kwargs
+    ) -> Any:
         to_email = user_email or kwargs.get("to_email", "")
         reset_link = reset_link or kwargs.get("reset_link", "")
         subject = "Reset Your SupremeAI Password"
@@ -166,7 +174,6 @@ class EmailService:
         """
         return await self._send_email(to_email, subject, html)
 
-
     async def draft(self, intent: str, context: dict[str, Any] | None = None) -> dict[str, str]:
         """ADVANCED: Generate smart AI-drafted email content using ModelRouter."""
         context = context or {}
@@ -178,6 +185,7 @@ class EmailService:
         )
         try:
             from brain.model_router import ModelRouter
+
             router = ModelRouter()
             res = router.route_and_generate(prompt=prompt, task_type="general", max_cost=0.01)
             raw = res.get("text", "{}").strip()
@@ -185,6 +193,7 @@ class EmailService:
                 lines = raw.splitlines()
                 raw = "\n".join(lines[1:-1] if lines[-1].startswith("```") else lines[1:])
             import json
+
             data = json.loads(raw)
             return {
                 "subject": data.get("subject", f"SupremeAI Notification: {intent}"),
@@ -201,6 +210,7 @@ class EmailService:
         """ADVANCED: Compute the optimal send hour for user engagement (default 10 AM)."""
         try:
             from core.cache.semantic_cache import semantic_cache
+
             cached = await semantic_cache.get(f"email_optimal_hour::{user_email}")
             if cached and isinstance(cached, int | str):
                 return int(cached)
@@ -210,4 +220,3 @@ class EmailService:
 
 
 email_service = EmailService()
-

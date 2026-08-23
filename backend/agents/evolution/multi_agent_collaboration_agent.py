@@ -77,7 +77,11 @@ class MultiAgentCollaborationAgent:
     def register_agent_capability(self, capability: AgentCapability) -> None:
         """Register an agent's capabilities for collaboration."""
         self._agents[capability.agent_id] = capability
-        logger.info("Registered agent %s with capabilities: %s", capability.agent_name, capability.capabilities)
+        logger.info(
+            "Registered agent %s with capabilities: %s",
+            capability.agent_name,
+            capability.capabilities,
+        )
 
     def unregister_agent(self, agent_id: str) -> None:
         """Remove an agent from the collaboration pool."""
@@ -85,7 +89,9 @@ class MultiAgentCollaborationAgent:
 
     async def decompose_task(self, task_description: str) -> TaskDecomposition:
         """Decompose a complex task into subtasks suitable for multi-agent execution."""
-        cache_key = self._cache_key("decompose", hashlib.sha256(task_description.encode()).hexdigest()[:12])
+        cache_key = self._cache_key(
+            "decompose", hashlib.sha256(task_description.encode()).hexdigest()[:12]
+        )
         cached = await self.cache.get(cache_key)
         if cached:
             return TaskDecomposition(**cached)
@@ -94,7 +100,9 @@ class MultiAgentCollaborationAgent:
             f"Decompose this task into subtasks suitable for multi-agent execution:\n\n"
             f"{task_description}\n\n"
             f"Available agents with capabilities:\n"
-            + "\n".join(f"- {a.agent_name}: {', '.join(a.capabilities)}" for a in self._agents.values())
+            + "\n".join(
+                f"- {a.agent_name}: {', '.join(a.capabilities)}" for a in self._agents.values()
+            )
             + "\n\nReturn as JSON with: subtasks (list of {{id, description, required_capability, estimated_effort}}), "
             "dependencies (list of [subtask_id, depends_on_id]), estimated_complexity (simple/medium/complex), "
             "recommended_agents (list of agent names)"
@@ -144,11 +152,16 @@ class MultiAgentCollaborationAgent:
 
         return decomposition
 
-    def find_collaborators(self, required_capability: str, min_load: float = 0.0) -> list[AgentCapability]:
+    def find_collaborators(
+        self, required_capability: str, min_load: float = 0.0
+    ) -> list[AgentCapability]:
         """Find agents with a specific capability and available capacity."""
         candidates = []
         for agent in self._agents.values():
-            if required_capability in agent.capabilities or required_capability in agent.specialties:
+            if (
+                required_capability in agent.capabilities
+                or required_capability in agent.specialties
+            ):
                 if agent.current_load < agent.max_concurrent_tasks:
                     candidates.append(agent)
         return sorted(candidates, key=lambda a: a.current_load)
@@ -157,7 +170,9 @@ class MultiAgentCollaborationAgent:
         """Execute a collaborative task by decomposing and delegating to agents."""
         decomposition = await self.decompose_task(task_description)
 
-        task_id = hashlib.sha256(f"{task_description}:{datetime.now(UTC).isoformat()}".encode()).hexdigest()[:12]
+        task_id = hashlib.sha256(
+            f"{task_description}:{datetime.now(UTC).isoformat()}".encode()
+        ).hexdigest()[:12]
         assigned_agents = []
 
         for subtask in decomposition.subtasks:

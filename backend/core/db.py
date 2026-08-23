@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Generator
 
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
@@ -32,24 +32,25 @@ POOL_RECYCLE = int(__import__("os").getenv("DB_POOL_RECYCLE", "3600"))  # 1 hour
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+
     pass
 
 
 def _get_database_url() -> str:
     """Get database URL from environment with validation."""
     import os
-    
+
     url = os.getenv("DATABASE_URL", "")
     if not url:
         logger.warning("DATABASE_URL not set, using SQLite fallback")
         return "sqlite+aiosqlite:///./local.db"
-    
+
     # Convert postgres:// to postgresql+asyncpg:// for async
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    
+
     return url
 
 
@@ -57,7 +58,7 @@ def _get_database_url() -> str:
 def get_engine():
     """
     Create async database engine with optimized connection pool.
-    
+
     Pool Settings:
       - pool_size: Number of permanent connections (default: 10)
       - max_overflow: Extra connections beyond pool_size (default: 5)
@@ -72,30 +73,26 @@ def get_engine():
         pool_pre_ping=True,  # Detect stale connections
         echo=os.getenv("DB_ECHO", "false").lower() == "true",
     )
-    
+
     # Register slow query listener
     @event.listens_for(engine.sync_engine, "before_cursor_execute")
-    def receive_before_cursor_execute(
-        conn, cursor, statement, parameters, context, executemany
-    ):
+    def receive_before_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         context._query_start_time = time.monotonic()
-    
+
     @event.listens_for(engine.sync_engine, "after_cursor_execute")
-    def receive_after_cursor_execute(
-        conn, cursor, statement, parameters, context, executemany
-    ):
+    def receive_after_cursor_execute(conn, cursor, statement, parameters, context, executemany):
         total = (time.monotonic() - context._query_start_time) * 1000
         if total > SLOW_QUERY_THRESHOLD_MS:
             stmt_preview = statement[:100] + "..." if len(statement) > 100 else statement
             logger.warning(
                 f"🐌 SLOW QUERY ({total:.0f}ms > {SLOW_QUERY_THRESHOLD_MS}ms): {stmt_preview}"
             )
-    
+
     logger.info(
         f"Database engine created (pool={POOL_SIZE}, overflow={MAX_OVERFLOW}, "
         f"slow_query_threshold={SLOW_QUERY_THRESHOLD_MS}ms)"
     )
-    
+
     return engine
 
 
@@ -115,7 +112,7 @@ async def get_db() -> Generator[AsyncSession, None, None]:
         try:
             yield session
             await session.commit()
-        except Exception as e:
+        except Exception:
             await session.rollback()
             raise
         finally:
@@ -136,7 +133,7 @@ async def check_db_health() -> dict[str, bool | str]:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         latency_ms = (time.monotonic() - start) * 1000
-        
+
         return {
             "healthy": True,
             "latency_ms": round(latency_ms, 2),

@@ -17,6 +17,7 @@ from core.embeddings import EmbeddingEngine
 
 class ElementNotFoundSemantically(Exception):
     """Raised when no element matches the query with sufficient confidence (triggers L4 Vision Grounding fallback)."""
+
     pass
 
 
@@ -90,16 +91,42 @@ class SemanticDOM:
         if not elements:
             # Fallback mock elements for headless or decoupled mode
             elements = [
-                {"tag": "button", "text": "Submit Checkout", "role": "button", "xpath": "//button[@type='submit']", "is_shadow": False},
-                {"tag": "a", "text": "View Cart", "role": "link", "xpath": "//a[@href='/cart']", "is_shadow": False},
-                {"tag": "input", "text": "Search Products", "role": "searchbox", "xpath": "//input[@name='q']", "is_shadow": False},
-                {"tag": "button", "text": "Login", "role": "button", "xpath": "//button[@id='login']", "is_shadow": False},
+                {
+                    "tag": "button",
+                    "text": "Submit Checkout",
+                    "role": "button",
+                    "xpath": "//button[@type='submit']",
+                    "is_shadow": False,
+                },
+                {
+                    "tag": "a",
+                    "text": "View Cart",
+                    "role": "link",
+                    "xpath": "//a[@href='/cart']",
+                    "is_shadow": False,
+                },
+                {
+                    "tag": "input",
+                    "text": "Search Products",
+                    "role": "searchbox",
+                    "xpath": "//input[@name='q']",
+                    "is_shadow": False,
+                },
+                {
+                    "tag": "button",
+                    "text": "Login",
+                    "role": "button",
+                    "xpath": "//button[@id='login']",
+                    "is_shadow": False,
+                },
             ]
-            
+
         # ✅ NEW: Enforce Token Budget (~500 tokens / 4 tokens per item avg = max 125 elements)
         # Prioritize important interactive elements
-        priority = {'button': 5, 'a': 4, 'input': 3, 'select': 2, 'textarea': 2}
-        elements.sort(key=lambda e: priority.get(e.get("tag", "").replace("shadow:", ""), 1), reverse=True)
+        priority = {"button": 5, "a": 4, "input": 3, "select": 2, "textarea": 2}
+        elements.sort(
+            key=lambda e: priority.get(e.get("tag", "").replace("shadow:", ""), 1), reverse=True
+        )
         elements = elements[:125]
 
         for el in elements:
@@ -109,7 +136,9 @@ class SemanticDOM:
 
         return len(self._vectors)
 
-    async def query(self, natural_language: str, top_k: int = 3, threshold: float = 0.45) -> dict[str, Any]:
+    async def query(
+        self, natural_language: str, top_k: int = 3, threshold: float = 0.45
+    ) -> dict[str, Any]:
         """Resolve a natural language intent ('the checkout button') to an element match."""
         if not self._vectors:
             await self.build_index()
@@ -132,13 +161,14 @@ class SemanticDOM:
         scored.sort(key=lambda x: x[0], reverse=True)
 
         if not scored or scored[0][0] < threshold:
-            raise ElementNotFoundSemantically(f"No element matching '{natural_language}' found (best score: {scored[0][0] if scored else 0:.2f})")
+            raise ElementNotFoundSemantically(
+                f"No element matching '{natural_language}' found (best score: {scored[0][0] if scored else 0:.2f})"
+            )
 
         best_match = scored[0][1].copy()
         best_match["semantic_confidence"] = scored[0][0]
-        
+
         # ✅ NEW: Add token and shadow DOM metadata
         best_match["is_shadow"] = best_match.get("is_shadow", False)
-        
-        return best_match
 
+        return best_match

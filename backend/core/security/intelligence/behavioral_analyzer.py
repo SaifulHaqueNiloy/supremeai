@@ -192,7 +192,9 @@ class AnomalyDetector:
 
         return None
 
-    def detect_rapid_actions(self, user_id: str, action: str, window_seconds: int = 60) -> AnomalyAlert | None:
+    def detect_rapid_actions(
+        self, user_id: str, action: str, window_seconds: int = 60
+    ) -> AnomalyAlert | None:
         """Detect rapid repeated actions (potential automation/bot).
 
         Args:
@@ -205,7 +207,9 @@ class AnomalyDetector:
         """
         cutoff = time.time() - window_seconds
         action_count = sum(
-            1 for e in self.tracker.events if e.user_id == user_id and e.action == action and e.timestamp > cutoff
+            1
+            for e in self.tracker.events
+            if e.user_id == user_id and e.action == action and e.timestamp > cutoff
         )
 
         # Threshold: more than 10 actions in 1 minute
@@ -261,7 +265,9 @@ class BehavioralAnalyzer:
         self.detector = AnomalyDetector(self.tracker)
         self.alert_handlers: list[callable] = []
 
-    def record_event(self, user_id: str, ip_address: str, action: str, metadata: dict[str, Any] | None = None) -> None:
+    def record_event(
+        self, user_id: str, ip_address: str, action: str, metadata: dict[str, Any] | None = None
+    ) -> None:
         """Record a behavior event and check for anomalies.
 
         Args:

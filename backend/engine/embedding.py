@@ -22,7 +22,9 @@ class EmbeddingService:
         """Generates a vector embedding for a single text string (local-first)."""
         return await asyncio.to_thread(embed_for_pgvector, text, pg_dim)
 
-    async def generate_embeddings_batch(self, texts: list[str], pg_dim: int = 1536) -> list[list[float]]:
+    async def generate_embeddings_batch(
+        self, texts: list[str], pg_dim: int = 1536
+    ) -> list[list[float]]:
         """Generates vector embeddings for a batch of texts (local-first)."""
         return [await self.generate_embedding(t, pg_dim) for t in texts]
 

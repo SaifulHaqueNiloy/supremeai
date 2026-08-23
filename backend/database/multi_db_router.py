@@ -106,7 +106,9 @@ class MultiDBRouter:
         if not candidates:
             # Fallback to any healthy DB
             candidates = {
-                name: cfg for name, cfg in self.databases.items() if not self._circuit_breakers.get(name, False)
+                name: cfg
+                for name, cfg in self.databases.items()
+                if not self._circuit_breakers.get(name, False)
             }
 
         if not candidates:

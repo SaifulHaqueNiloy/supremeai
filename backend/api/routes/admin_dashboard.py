@@ -15,20 +15,14 @@ from fastapi.websockets import WebSocketDisconnect
 from loguru import logger
 from pydantic import BaseModel
 
+from api.dependencies import get_current_admin
+from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.config import settings
 from core.error_bus import with_error_bus
 from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
-from api.routes.admin_auth import admin_rate_limit, require_admin_token
-from api.dependencies import get_current_admin
-
-
-
-
-
-
 
 router = APIRouter(
     prefix="/admin-api",
@@ -72,7 +66,7 @@ def load_users() -> list[dict[str, Any]]:
     try:
         with open(USERS_FILE) as f:
             return json.load(f)
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         return []
 
@@ -168,26 +162,38 @@ def get_costs_breakdown():
     auditor = CostAuditor()
     try:
         tasks = auditor.store.get_task_history()
-        
+
         # Default structured values if no tasks exist
         spent = sum(t.get("cost", 0.0) for t in tasks) if tasks else 0.0
-        
+
         # Calculate provider usage
         # Provider mapping based on task_type or description
         providers = {
             "Google Gemini": {"spent": 0.0, "quota": 50.00, "color": "from-[#1a73e8] to-[#8ab4f8]"},
-            "OpenRouter (DeepSeek)": {"spent": 0.0, "quota": 40.00, "color": "from-[#ff6b6b] to-[#ff8787]"},
-            "Hugging Face Hub": {"spent": 0.0, "quota": 30.00, "color": "from-[#ffd43b] to-[#ffe066]"},
-            "Groq (Llama 3)": {"spent": 0.0, "quota": 30.00, "color": "from-[#20c997] to-[#38d9a9]"},
+            "OpenRouter (DeepSeek)": {
+                "spent": 0.0,
+                "quota": 40.00,
+                "color": "from-[#ff6b6b] to-[#ff8787]",
+            },
+            "Hugging Face Hub": {
+                "spent": 0.0,
+                "quota": 30.00,
+                "color": "from-[#ffd43b] to-[#ffe066]",
+            },
+            "Groq (Llama 3)": {
+                "spent": 0.0,
+                "quota": 30.00,
+                "color": "from-[#20c997] to-[#38d9a9]",
+            },
         }
-        
+
         recent_charges = []
-        
+
         for t in tasks:
             cost = t.get("cost", 0.0)
             t_type = t.get("task_type", "").lower()
             desc = t.get("task_description", "").lower()
-            
+
             # Categorize provider
             target_provider = "Google Gemini"
             if "deepseek" in t_type or "openrouter" in t_type or "deepseek" in desc:
@@ -196,30 +202,34 @@ def get_costs_breakdown():
                 target_provider = "Hugging Face Hub"
             elif "groq" in t_type or "llama" in t_type or "groq" in desc:
                 target_provider = "Groq (Llama 3)"
-                
+
             providers[target_provider]["spent"] += cost
-            
+
             # Construct charge entry
-            recent_charges.append({
-                "time": str(t.get("timestamp", utc_now())),
-                "user": "system",
-                "model": t.get("task_type", "unknown"),
-                "tokens": int(cost * 500000) if cost > 0 else 0, # Estimate tokens based on cost
-                "cost": cost
-            })
-            
+            recent_charges.append(
+                {
+                    "time": str(t.get("timestamp", utc_now())),
+                    "user": "system",
+                    "model": t.get("task_type", "unknown"),
+                    "tokens": int(cost * 500000)
+                    if cost > 0
+                    else 0,  # Estimate tokens based on cost
+                    "cost": cost,
+                }
+            )
+
         provider_costs_list = [
             {"name": name, "spent": p["spent"], "quota": p["quota"], "color": p["color"]}
             for name, p in providers.items()
         ]
-        
+
         return {
             "status": "ok",
             "spent": spent,
             "limit": 150.00,
             "percentage": min((spent / 150.00) * 100, 100) if spent > 0 else 0,
             "providerCosts": provider_costs_list,
-            "recentCharges": recent_charges[:10] # limit to last 10
+            "recentCharges": recent_charges[:10],  # limit to last 10
         }
     except Exception as e:
         logger.error(f"Failed to generate structured cost breakdown: {e}")
@@ -230,18 +240,22 @@ def get_costs_breakdown():
             "percentage": 0.0,
             "providerCosts": [],
             "recentCharges": [],
-            "error": str(e)
+            "error": str(e),
         }
 
 
 @router.get("/health-map")
 def get_health_map():
     import time
+
     from core.health_check import health_checker
 
-    gcp_configured = bool(getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID"))
+    gcp_configured = bool(
+        getattr(settings, "gcp_project_id", None) or settings._get_cached_secret("GCP_PROJECT_ID")
+    )
     redis_configured = bool(
-        getattr(settings, "upstash_redis_rest_url", None) or settings._get_cached_secret("UPSTASH_REDIS_REST_URL")
+        getattr(settings, "upstash_redis_rest_url", None)
+        or settings._get_cached_secret("UPSTASH_REDIS_REST_URL")
     )
     db_configured = bool(
         getattr(settings, "supabase_database_url", None)
@@ -352,7 +366,7 @@ def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
         return True
     except FileExistsError:
         return False
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         return False
 
@@ -527,7 +541,9 @@ class RouterOverrideRequest(BaseModel):
 
 @router.post("/model-router/override")
 def set_router_override(payload: RouterOverrideRequest):
-    logger.info(f"Router override set: {payload.provider}/{payload.model} for {payload.remaining_requests} requests")
+    logger.info(
+        f"Router override set: {payload.provider}/{payload.model} for {payload.remaining_requests} requests"
+    )
     return {
         "status": "success",
         "override": {
@@ -647,7 +663,9 @@ def get_backups():
                 # Parse timestamp from name
                 ts = b_name.replace("backup_", "")
                 if len(ts) == 15:  # YYYYMMDD_HHMMSS
-                    ts_formatted = f"{ts[0:4]}-{ts[4:6]}-{ts[6:8]} {ts[9:11]}:{ts[11:13]}:{ts[13:15]}"
+                    ts_formatted = (
+                        f"{ts[0:4]}-{ts[4:6]}-{ts[6:8]} {ts[9:11]}:{ts[11:13]}:{ts[13:15]}"
+                    )
                 else:
                     ts_formatted = "Unknown"
 
@@ -829,7 +847,9 @@ async def execute_manual_gate_override(payload: GateOverridePayload):
     """
     # 🛡️ ১. স্ট্রিক্ট সিকিউরিটি গেটকিপার (Master Token Cross-Matching)
     if payload.admin_secret != settings.jwt_secret:
-        logger.critical("🚨 [SECURITY BREACH ATTEMPT] Unauthorized attempt to access God-Mode Override Endpoint!")
+        logger.critical(
+            "🚨 [SECURITY BREACH ATTEMPT] Unauthorized attempt to access God-Mode Override Endpoint!"
+        )
         raise HTTPException(
             status_code=401,
             detail="Access Denied: Invalid Administrative Secret Key Key.",
@@ -858,7 +878,9 @@ async def execute_manual_gate_override(payload: GateOverridePayload):
         # ট্রানজেকশনাল রাইট ট্রিগার
         gate_ref.set(override_context)
 
-        logger.warning(f"🔱 [GOD-MODE OVERRIDE] Admin has manually forced deploy_gate status to {requested_status}.")
+        logger.warning(
+            f"🔱 [GOD-MODE OVERRIDE] Admin has manually forced deploy_gate status to {requested_status}."
+        )
 
         return {
             "success": True,
@@ -902,7 +924,9 @@ async def receive_ci_report(report: CIReportPayload, request: Request):
 
     # Optional: Verify the request is coming from GitHub Actions
     # This could be improved with a shared secret or webhook signature validation
-    if "github.com" not in request.headers.get("host", "") and "localhost" not in request.headers.get("host", ""):
+    if "github.com" not in request.headers.get(
+        "host", ""
+    ) and "localhost" not in request.headers.get("host", ""):
         logger.warning(f"CI Report received from non-GitHub host: {request.headers.get('host')}")
 
     try:
@@ -994,7 +1018,7 @@ def _load_json_data(file_path: str, default_data: Any) -> Any:
     try:
         with open(file_path, encoding="utf-8") as f:
             return json.load(f)
-    except Exception as e:
+    except Exception:
         return default_data
 
 
@@ -1005,7 +1029,11 @@ def _save_json_data(file_path: str, data: Any):
 
 @router.get("/roles")
 def get_roles():
-    return [{"id": "1", "name": "God"}, {"id": "2", "name": "Operator"}, {"id": "3", "name": "Viewer"}]
+    return [
+        {"id": "1", "name": "God"},
+        {"id": "2", "name": "Operator"},
+        {"id": "3", "name": "Viewer"},
+    ]
 
 
 @router.get("/permissions")
@@ -1016,7 +1044,8 @@ def get_permissions():
 @router.get("/workspaces")
 def get_workspaces():
     return _load_json_data(
-        WORKSPACES_FILE, [{"id": "ws_1", "name": "Default Workspace", "description": "System default workspace"}]
+        WORKSPACES_FILE,
+        [{"id": "ws_1", "name": "Default Workspace", "description": "System default workspace"}],
     )
 
 
@@ -1053,7 +1082,9 @@ def delete_workspace(ws_id: str):
 
 @router.get("/settings")
 def get_settings():
-    return _load_json_data(SETTINGS_FILE, {"theme": "dark", "notifications_enabled": True, "max_concurrent_tasks": 5})
+    return _load_json_data(
+        SETTINGS_FILE, {"theme": "dark", "notifications_enabled": True, "max_concurrent_tasks": 5}
+    )
 
 
 @router.post("/settings")
@@ -1066,13 +1097,16 @@ def update_settings(payload: dict):
 
 @router.get("/sessions")
 def get_sessions():
-    return _load_json_data(SESSIONS_FILE, [{"id": "sess_1", "name": "Initial Boot Session", "status": "active"}])
+    return _load_json_data(
+        SESSIONS_FILE, [{"id": "sess_1", "name": "Initial Boot Session", "status": "active"}]
+    )
 
 
 @router.get("/customers")
 def get_customers():
     return _load_json_data(
-        CUSTOMERS_FILE, [{"id": "cust_1", "name": "Acme Corp", "email": "admin@acme.com", "billing_tier": "pro"}]
+        CUSTOMERS_FILE,
+        [{"id": "cust_1", "name": "Acme Corp", "email": "admin@acme.com", "billing_tier": "pro"}],
     )
 
 
@@ -1082,6 +1116,7 @@ def get_customers():
 def get_config():
     """Get environment configuration for the admin dashboard."""
     import os
+
     config = {}
     for key in ["ENV", "DEBUG", "LOG_LEVEL", "REDIS_URL", "DATABASE_URL"]:
         val = os.environ.get(key, "")
@@ -1094,9 +1129,14 @@ def get_config():
 def update_config(payload: dict):
     """Update environment configuration (writes to settings.json)."""
     import os
-    config = _load_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), {})
+
+    config = _load_json_data(
+        os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), {}
+    )
     config.update(payload)
-    _save_json_data(os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), config)
+    _save_json_data(
+        os.path.join(os.path.dirname(__file__), "..", "..", "data", "settings.json"), config
+    )
     return {"status": "success", "message": "Configuration updated"}
 
 
@@ -1105,6 +1145,7 @@ def update_config(payload: dict):
 # ফ্রন্টএন্ড (commandcenter/data/hooks.ts) এই পাথগুলো কল করে কিন্তু ব্যাকএন্ডে
 # route ছিল না → 404। Admin tab গুলো render না করে error দেখাত। এখানে যোগ করা হলো।
 # ═══════════════════════════════════════════════════════════════════════════
+
 
 @router.get("/agents")
 async def list_command_agents(admin: dict = Depends(get_current_admin)):
@@ -1159,12 +1200,14 @@ async def toggle_deploy_gate(payload: DeployGateToggle, admin: dict = Depends(ge
         db = firestore.Client()
         doc_ref = db.collection("deploy_gate").document("status")
         now = utc_now()
-        doc_ref.set({
-            "status": requested_status,
-            "reason": payload.reason,
-            "updated_by": admin.get("uid") or admin.get("sub") or "admin",
-            "updated_at": now,
-        })
+        doc_ref.set(
+            {
+                "status": requested_status,
+                "reason": payload.reason,
+                "updated_by": admin.get("uid") or admin.get("sub") or "admin",
+                "updated_at": now,
+            }
+        )
         return {
             "status": requested_status,
             "reason": payload.reason,

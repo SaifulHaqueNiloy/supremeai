@@ -43,5 +43,5 @@ def is_safe_url(url: str) -> bool:
                 return False
 
         return True
-    except Exception as e:  # noqa: BLE001
+    except Exception:  # noqa: BLE001
         return False

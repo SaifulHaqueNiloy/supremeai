@@ -55,7 +55,9 @@ class SkillGarbageCollector:
                     # timestamp-এর শেষের আসল সংখ্যাও মুছে দিতে পারত (যেমন ...T00:00:00+00:00)।
                     # সঠিক ফিক্স: শুধু "Z" suffix-টা "+00:00" দিয়ে replace করা, বাড়তি strip না করে।
                     last_used = datetime.fromisoformat(
-                        last_used_raw[:-1] + "+00:00" if last_used_raw.endswith("Z") else last_used_raw
+                        last_used_raw[:-1] + "+00:00"
+                        if last_used_raw.endswith("Z")
+                        else last_used_raw
                     )
                 except ValueError:
                     # Parse করতে না পারলে খুব পুরনো ধরে নাও
@@ -92,7 +94,9 @@ class SkillGarbageCollector:
                             json.dump(global_index, f, indent=4)
 
                     purged_skills.append(skill_id)
-                    logger.info(f"✨ [GC PURGE] Stale asset '{skill_id}' successfully archived and cleared.")
+                    logger.info(
+                        f"✨ [GC PURGE] Stale asset '{skill_id}' successfully archived and cleared."
+                    )
 
         return purged_skills
 

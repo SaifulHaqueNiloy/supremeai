@@ -208,7 +208,9 @@ class TestAuditCycle:
 
                     # OOM error + kill failure error — 2 error logs
                     error_calls = [
-                        c for c in mock_logger.error.call_args_list if "OOM" in c[0][0] or "Failed to kill" in c[0][0]
+                        c
+                        for c in mock_logger.error.call_args_list
+                        if "OOM" in c[0][0] or "Failed to kill" in c[0][0]
                     ]
                     assert len(error_calls) >= 1
 
@@ -247,7 +249,10 @@ class TestAuditCycle:
             with patch("core.container_auditor.logger") as mock_logger:
                 await auditor.audit_cycle()
                 mock_logger.error.assert_called_once()
-                assert "Error in container audit cycle: Unexpected" in mock_logger.error.call_args[0][0]
+                assert (
+                    "Error in container audit cycle: Unexpected"
+                    in mock_logger.error.call_args[0][0]
+                )
                 # Logger may or may not be called depending on implementation
                 # The exception is raised, which is the important part
 

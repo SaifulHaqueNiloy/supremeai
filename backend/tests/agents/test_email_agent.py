@@ -45,7 +45,9 @@ def test_connect_imap_success_stores_encrypted_credentials():
         mock_imap.__exit__.return_value = False
 
         with patch("tools.social.email_agent.imaplib.IMAP4_SSL", return_value=mock_imap):
-            result = agent.connect_imap("imap.example.com", 993, "test@example.com", "correct-password")
+            result = agent.connect_imap(
+                "imap.example.com", 993, "test@example.com", "correct-password"
+            )
 
         assert result is True
         assert agent.connected is True

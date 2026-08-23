@@ -26,7 +26,9 @@ async def test_webhook_endpoint_receives_pr_event():
         "repository": {"full_name": "owner/repo"},
     }
 
-    with patch.object(reviewer, "review_pr", return_value={"status": "success", "comments": []}) as mock_review:
+    with patch.object(
+        reviewer, "review_pr", return_value={"status": "success", "comments": []}
+    ) as mock_review:
         result = await reviewer.review_pr(pr_event)
 
         assert result["status"] == "success"
@@ -97,4 +99,6 @@ async def test_security_vulnerability_scan():
     comments = await reviewer.analyze_diff(diff)
 
     assert len(comments) >= 1
-    assert any("password" in c.get("body", "").lower() or c.get("severity") == "critical" for c in comments)
+    assert any(
+        "password" in c.get("body", "").lower() or c.get("severity") == "critical" for c in comments
+    )

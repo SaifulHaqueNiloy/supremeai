@@ -31,7 +31,9 @@ def mock_fitness_engine():
 @pytest.fixture
 def mock_auto_skill_creator():
     creator = MagicMock()
-    creator.generate_and_deploy_skill = AsyncMock(return_value={"success": True, "skill_name": "Skill_A_v2"})
+    creator.generate_and_deploy_skill = AsyncMock(
+        return_value={"success": True, "skill_name": "Skill_A_v2"}
+    )
     return creator
 
 

@@ -1,4 +1,5 @@
 from loguru import logger
+
 # backend/scripts/self_test_and_improve.py
 """SupremeAI Self-Test & Auto-Improve Runner.
 
@@ -15,9 +16,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime
 import os
 import sys
+from datetime import datetime
 
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,7 +28,12 @@ from core.integration_layer import SupremeAIIntegrator
 from core.self_benchmark import BenchmarkCategory, SelfBenchmarkEngine
 
 
-async def run_self_test_cycle(ai_system: Any, benchmarker: SelfBenchmarkEngine, optimizer: AdaptiveOptimizer, quick_mode: bool = False) -> dict:
+async def run_self_test_cycle(
+    ai_system: Any,
+    benchmarker: SelfBenchmarkEngine,
+    optimizer: AdaptiveOptimizer,
+    quick_mode: bool = False,
+) -> dict:
     """Run one complete self-test and improvement cycle."""
     logger.debug("\n" + "=" * 70)
     logger.debug(f"🧪 SUPREMEAI SELF-TEST CYCLE - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -36,9 +42,13 @@ async def run_self_test_cycle(ai_system: Any, benchmarker: SelfBenchmarkEngine, 
     categories = [BenchmarkCategory.PERFORMANCE, BenchmarkCategory.ACCURACY] if quick_mode else None
     benchmark_report = await benchmarker.run_full_benchmark(categories=categories)
 
-    logger.debug(f"\n📈 BENCHMARK RESULTS:")
-    logger.debug(f"   Overall Score: {benchmark_report.overall_score:.1%} (Grade: {benchmark_report.grade})")
-    logger.debug(f"   Tests Passed: {benchmark_report.summary['tests_passed']}/{benchmark_report.summary['tests_total']}")
+    logger.debug("\n📈 BENCHMARK RESULTS:")
+    logger.debug(
+        f"   Overall Score: {benchmark_report.overall_score:.1%} (Grade: {benchmark_report.grade})"
+    )
+    logger.debug(
+        f"   Tests Passed: {benchmark_report.summary['tests_passed']}/{benchmark_report.summary['tests_total']}"
+    )
     logger.debug(f"   Weaknesses: {benchmark_report.summary['weakness_count']} found")
 
     optimization_result = None
@@ -58,7 +68,9 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description="SupremeAI Self-Test & Auto-Improve")
     parser.add_argument("--quick", action="store_true", help="Run quick benchmark")
     parser.add_argument("--continuous", action="store_true", help="Run continuous improvement loop")
-    parser.add_argument("--interval", type=int, default=30, help="Interval between cycles in minutes")
+    parser.add_argument(
+        "--interval", type=int, default=30, help="Interval between cycles in minutes"
+    )
     parser.add_argument("--max-cycles", type=int, default=1, help="Maximum number of cycles")
     args = parser.parse_args()
 

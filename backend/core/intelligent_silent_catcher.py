@@ -49,8 +49,10 @@ def handle_unhandled_exception(exc_type, exc_value, exc_tb):
 
     # 🚀 Send to Sentry Error Bus
     try:
-        import sentry_sdk
         import os
+
+        import sentry_sdk
+
         dsn = os.getenv("SENTRY_DSN")
         if dsn:
             if not sentry_sdk.Hub.current.client:

@@ -111,7 +111,9 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "runway"},
                     )
-                raise RuntimeError(f"Runway generation failed and no fallback succeeded: {exc}") from exc
+                raise RuntimeError(
+                    f"Runway generation failed and no fallback succeeded: {exc}"
+                ) from exc
 
         if provider == "kling":
             if not self.kling_api_key:
@@ -133,6 +135,8 @@ class VideoGenerator:
                         output_path=output_path,
                         tried={*tried, "kling"},
                     )
-                raise RuntimeError(f"Kling generation failed and no fallback succeeded: {exc}") from exc
+                raise RuntimeError(
+                    f"Kling generation failed and no fallback succeeded: {exc}"
+                ) from exc
 
         raise ValueError(f"Unknown provider: {provider!r}. Use 'runway', 'kling', or 'auto'.")

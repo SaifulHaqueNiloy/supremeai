@@ -85,7 +85,9 @@ class CheckpointManager:
             self.mode = "sqlite"
             self.db_path = "checkpoints.db"
             self._init_sqlite()
-            logger.warning(f"Initialized SQLite CheckpointManager at {self.db_path} — NOT durable across restarts.")
+            logger.warning(
+                f"Initialized SQLite CheckpointManager at {self.db_path} — NOT durable across restarts."
+            )
 
     def _init_sqlite(self):
         conn = sqlite3.connect(self.db_path)
@@ -109,7 +111,9 @@ class CheckpointManager:
                 # `resumed` intentionally not reset here — ON CONFLICT preserves
                 # whatever value is already in the row, matching prior SQLite semantics
                 # where an existing row's `resumed` flag was read-then-reused.
-                CheckpointManager._batcher.submit(_UPSERT_SQL, (task_id, step_index, json.dumps(state), False))
+                CheckpointManager._batcher.submit(
+                    _UPSERT_SQL, (task_id, step_index, json.dumps(state), False)
+                )
                 return True
             except Exception as exc:
                 logger.error(f"Failed to save Postgres checkpoint: {exc}")

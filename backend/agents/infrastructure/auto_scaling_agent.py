@@ -11,11 +11,11 @@ from datetime import datetime
 from typing import Any
 
 import psutil  # This may need to be installed separately
+from core.monitoring.metrics_collector import MetricsCollector
 
 from core.cache.redis_manager import redis_manager
 from core.error_bus import with_error_bus
 from core.llm.token_deductor import TokenDeductor
-from core.monitoring.metrics_collector import MetricsCollector
 from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,12 @@ class AutoScalingAgent:
         }
 
         # Scaling thresholds
-        self.scale_up_thresholds = {"cpu": 80.0, "memory": 85.0, "response_time": 1000.0, "rps": 150.0}
+        self.scale_up_thresholds = {
+            "cpu": 80.0,
+            "memory": 85.0,
+            "response_time": 1000.0,
+            "rps": 150.0,
+        }
 
         self.scale_down_thresholds = {"cpu": 30.0, "memory": 40.0, "rps": 30.0}
 
@@ -131,7 +136,7 @@ class AutoScalingAgent:
                         requests_per_second = app_metrics.get("requests_per_second", 0)
                         average_response_time = app_metrics.get("avg_response_time", 0)
                         error_rate = app_metrics.get("error_rate", 0)
-            except Exception as e:
+            except Exception:
                 # If metrics collector is not available, use simulated values
                 active_connections = 10
                 requests_per_second = 50
@@ -241,7 +246,10 @@ class AutoScalingAgent:
                     f"Memory usage ({current_metrics.memory_usage}%) below threshold ({policies['scale_down_thresholds']['memory']}%)"
                 )
 
-            if current_metrics.average_response_time > policies["scale_up_thresholds"]["response_time"]:
+            if (
+                current_metrics.average_response_time
+                > policies["scale_up_thresholds"]["response_time"]
+            ):
                 reasons.append(
                     f"Response time ({current_metrics.average_response_time}ms) exceeds threshold ({policies['scale_up_thresholds']['response_time']}ms)"
                 )
@@ -255,7 +263,11 @@ class AutoScalingAgent:
                     f"Requests per second ({current_metrics.requests_per_second}) below threshold ({policies['scale_down_thresholds']['rps']})"
                 )
 
-            reason = "; ".join(reasons) if reasons else "Resource usage patterns indicate scaling opportunity"
+            reason = (
+                "; ".join(reasons)
+                if reasons
+                else "Resource usage patterns indicate scaling opportunity"
+            )
 
             # Calculate estimated cost impact
             cost_impact = self._estimate_cost_impact(current_resources, recommended_resources)
@@ -290,7 +302,10 @@ class AutoScalingAgent:
             last_scaling_time = await self._get_last_scaling_time()
             cooldown_period = (await self._get_policies()).get("cooldown_period", 300)  # 5 minutes
 
-            if last_scaling_time and (datetime.utcnow() - last_scaling_time).seconds < cooldown_period:
+            if (
+                last_scaling_time
+                and (datetime.utcnow() - last_scaling_time).seconds < cooldown_period
+            ):
                 logger.info("Skipping scaling action due to cooldown period")
                 return False
 
@@ -302,7 +317,9 @@ class AutoScalingAgent:
             if scaling_successful:
                 # Record scaling action
                 await self._record_scaling_action(recommendation)
-                logger.info(f"Successfully scaled resources: {recommendation.recommended_resources}")
+                logger.info(
+                    f"Successfully scaled resources: {recommendation.recommended_resources}"
+                )
             else:
                 logger.warning(f"Failed to scale resources: {recommendation.recommended_resources}")
 
@@ -337,7 +354,11 @@ class AutoScalingAgent:
             return 0
 
     def _calculate_resource_adjustment(
-        self, current_resources: dict[str, float], metrics: ResourceMetrics, direction: int, policies: dict
+        self,
+        current_resources: dict[str, float],
+        metrics: ResourceMetrics,
+        direction: int,
+        policies: dict,
     ) -> dict[str, float]:
         """Calculate the recommended resource adjustment."""
         recommended = current_resources.copy()
@@ -347,7 +368,9 @@ class AutoScalingAgent:
             # Increase instances by 1 or by 20% of current, whichever is greater
             current_instances = recommended.get("instances", 1)
             increase_by = max(1, int(current_instances * 0.2))
-            new_instances = min(current_instances + increase_by, policies["resource_limits"]["max_instances"])
+            new_instances = min(
+                current_instances + increase_by, policies["resource_limits"]["max_instances"]
+            )
             recommended["instances"] = new_instances
 
             # Potentially increase other resources too
@@ -360,7 +383,9 @@ class AutoScalingAgent:
             # Decrease instances by 1 or by 20% of current, whichever is greater, but respect minimum
             current_instances = recommended.get("instances", 1)
             decrease_by = max(1, int(current_instances * 0.2))
-            new_instances = max(current_instances - decrease_by, policies["resource_limits"]["min_instances"])
+            new_instances = max(
+                current_instances - decrease_by, policies["resource_limits"]["min_instances"]
+            )
             recommended["instances"] = new_instances
 
             # Potentially decrease other resources too
@@ -405,7 +430,9 @@ class AutoScalingAgent:
             return False
 
     @with_error_bus("_estimate_cost_impact")
-    def _estimate_cost_impact(self, current: dict[str, float], recommended: dict[str, float]) -> float:
+    def _estimate_cost_impact(
+        self, current: dict[str, float], recommended: dict[str, float]
+    ) -> float:
         """Estimate the cost impact of scaling action."""
         try:
             # Simplified cost estimation
@@ -413,7 +440,7 @@ class AutoScalingAgent:
             recommended_cost = sum(recommended.values())  # Simplified calculation
 
             return recommended_cost - current_cost
-        except Exception as e:
+        except Exception:
             return 0.0
 
     @with_error_bus("_calculate_scaling_confidence")
@@ -429,18 +456,24 @@ class AutoScalingAgent:
             if direction == 1:  # Scale up
                 cpu_factor = min(1.0, (metrics.cpu_usage - 70.0) / 30.0)  # Max at 100%
                 mem_factor = min(1.0, (metrics.memory_usage - 75.0) / 25.0)  # Max at 100%
-                resp_factor = min(1.0, (metrics.average_response_time - 500.0) / 1000.0)  # Max at 1500ms
+                resp_factor = min(
+                    1.0, (metrics.average_response_time - 500.0) / 1000.0
+                )  # Max at 1500ms
                 confidence_factors.extend([cpu_factor, mem_factor, resp_factor])
             else:  # Scale down
-                cpu_factor = min(1.0, (30.0 - metrics.cpu_usage) / 30.0)  # Higher confidence when much lower
+                cpu_factor = min(
+                    1.0, (30.0 - metrics.cpu_usage) / 30.0
+                )  # Higher confidence when much lower
                 mem_factor = min(1.0, (40.0 - metrics.memory_usage) / 40.0)
                 rps_factor = min(1.0, (30.0 - metrics.requests_per_second) / 30.0)
                 confidence_factors.extend([cpu_factor, mem_factor, rps_factor])
 
             # Average the factors and ensure it's between 0.5 and 1.0
-            avg_confidence = sum(confidence_factors) / len(confidence_factors) if confidence_factors else 0.5
+            avg_confidence = (
+                sum(confidence_factors) / len(confidence_factors) if confidence_factors else 0.5
+            )
             return max(0.5, min(1.0, avg_confidence))
-        except Exception as e:
+        except Exception:
             return 0.7  # Default confidence
 
     @with_error_bus("_get_last_scaling_time")
@@ -451,7 +484,7 @@ class AutoScalingAgent:
             if last_time_str:
                 return datetime.fromisoformat(last_time_str)
             return None
-        except Exception as e:
+        except Exception:
             return None
 
     async def _record_scaling_action(self, recommendation: ScalingRecommendation):

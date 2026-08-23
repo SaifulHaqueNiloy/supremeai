@@ -160,6 +160,7 @@ class LLMGateway:
 
             # Setup Redis Cache for LiteLLM built-in cache/rate-limiting
             from ..config import settings
+
             if getattr(settings, "redis_url", None):
                 litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
         except ImportError:
@@ -172,7 +173,9 @@ class LLMGateway:
             if os.path.exists(_POLICY_PATH):
                 with open(_POLICY_PATH, encoding="utf-8") as f:
                     return json.load(f)
-            logger.warning(f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config.")
+            logger.warning(
+                f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config."
+            )
         except Exception as exc:
             logger.opt(exception=True).error(f"[LLMGateway] Error loading routing policy: {exc}")
             error_event_bus.emit(
@@ -216,7 +219,10 @@ class LLMGateway:
 
         # Integrate Langfuse Observability
         from ..config import settings
-        if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(settings, "LANGFUSE_SECRET_KEY", None):
+
+        if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(
+            settings, "LANGFUSE_SECRET_KEY", None
+        ):
             callbacks_success.append("langfuse")
             callbacks_failure.append("langfuse")
 
@@ -243,10 +249,14 @@ class LLMGateway:
             model = kwargs.get("model", "unknown")
             try:
                 delta = end_time - start_time
-                duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
-            except Exception as e:
+                duration = (
+                    delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
+                )
+            except Exception:
                 duration = 0.0
-            logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
+            logger.error(
+                f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s"
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="llm_gateway",
@@ -278,8 +288,12 @@ class LLMGateway:
         elif any(kw in task_type.lower() for kw in ("agent", "analysis")):
             difficulty = "medium"
 
-        model_candidates: list[str] = self.routing_policy.get("complexity_rules", {}).get(difficulty, [])
-        fallbacks: list[str] = self.routing_policy.get("fallback_chain", list(_DEFAULT_FALLBACK_MODELS))
+        model_candidates: list[str] = self.routing_policy.get("complexity_rules", {}).get(
+            difficulty, []
+        )
+        fallbacks: list[str] = self.routing_policy.get(
+            "fallback_chain", list(_DEFAULT_FALLBACK_MODELS)
+        )
 
         call_chain: list[str] = []
         if model:
@@ -311,10 +325,14 @@ class LLMGateway:
         # Use the centralized circuit breaker manager
         return self._circuit_breaker_manager(current_model)
 
-    async def _handle_rate_limit_error(self, current_model: str, exc: httpx.HTTPStatusError) -> bool:
+    async def _handle_rate_limit_error(
+        self, current_model: str, exc: httpx.HTTPStatusError
+    ) -> bool:
         """Handle 429 rate limit errors by reading Retry-After header and pausing appropriately."""
         if exc.response.status_code == 429:
-            logger.warning(f"[LLMGateway] Rate limit hit for {current_model}, reading Retry-After header...")
+            logger.warning(
+                f"[LLMGateway] Rate limit hit for {current_model}, reading Retry-After header..."
+            )
 
             # Extract Retry-After header
             retry_after = exc.response.headers.get("Retry-After")
@@ -337,7 +355,9 @@ class LLMGateway:
                 # Default pause if no Retry-After header
                 pause_seconds = 60
 
-            logger.info(f"[LLMGateway] Pausing {current_model} for {pause_seconds}s due to rate limit")
+            logger.info(
+                f"[LLMGateway] Pausing {current_model} for {pause_seconds}s due to rate limit"
+            )
 
             # Update free tier tracker to mark rate limit
             try:
@@ -345,27 +365,37 @@ class LLMGateway:
 
                 tracker = get_tracker()
                 # Map model name to provider key for the tracker
-                provider_key = current_model.split("/")[0] if "/" in current_model else current_model
+                provider_key = (
+                    current_model.split("/")[0] if "/" in current_model else current_model
+                )
                 tracker.mark_rate_limited(provider_key, pause_seconds=pause_seconds)
             except Exception as tracker_exc:
-                logger.warning(f"[LLMGateway] Could not update tracker for rate limit: {tracker_exc}")
+                logger.warning(
+                    f"[LLMGateway] Could not update tracker for rate limit: {tracker_exc}"
+                )
 
             # Fail-fast OmniRoute logic: If pause is too long, skip to next model
             if pause_seconds > 3:
-                logger.warning(f"[LLMGateway] Rate limit pause ({pause_seconds}s) is too long for {current_model}. Skipping to next model in combo.")
+                logger.warning(
+                    f"[LLMGateway] Rate limit pause ({pause_seconds}s) is too long for {current_model}. Skipping to next model in combo."
+                )
                 return False
 
             # Apply jittered backoff to avoid thundering herd
             jitter = random.uniform(0.1, 0.3) * pause_seconds  # Add 10-30% jitter
             backoff_time = pause_seconds + jitter
-            logger.info(f"[LLMGateway] Applying backoff with jitter: {backoff_time:.2f}s for {current_model}")
+            logger.info(
+                f"[LLMGateway] Applying backoff with jitter: {backoff_time:.2f}s for {current_model}"
+            )
             await asyncio.sleep(backoff_time)
             return True
         return False
 
     async def async_generate(self, prompt: str, use_moe: bool = False, **kwargs) -> dict[str, Any]:
         """Backward-compatible helper alias for acompletion & MoE integration."""
-        if (use_moe or getattr(self._router, "route", None) is not None) and hasattr(self._router, "route"):
+        if (use_moe or getattr(self._router, "route", None) is not None) and hasattr(
+            self._router, "route"
+        ):
             try:
                 route_res = await self._router.route(prompt, **kwargs)
                 if route_res is not None:
@@ -374,7 +404,9 @@ class LLMGateway:
                         "success": True,
                         "text": content,
                         "content": content,
-                        "provider": getattr(getattr(route_res, "provider", None), "value", "moonshot"),
+                        "provider": getattr(
+                            getattr(route_res, "provider", None), "value", "moonshot"
+                        ),
                         "cost": 0.0,
                     }
             except Exception as e:
@@ -436,7 +468,7 @@ class LLMGateway:
 
                     tokens = estimate_tokens(prompt_text)
                     estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
-                except Exception as e:  # Safe fallback cost on token estimate failure
+                except Exception:  # Safe fallback cost on token estimate failure
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 
@@ -444,6 +476,7 @@ class LLMGateway:
         # ConfidenceGatedDispatcher (reusing AdvancedModelRouter) evaluates prompt confidence;
         # if >= threshold and pattern-matched, returns immediately with zero token cost.
         from core.llm.advanced_model_router import get_advanced_router
+
         decision = get_advanced_router().route_with_confidence(prompt_text, task_type)
         if decision.is_deterministic and decision.deterministic_result:
             logger.info(
@@ -461,7 +494,9 @@ class LLMGateway:
 
         # Use performance optimizer to select best model if not specified
         if not model:
-            model = await self.performance_optimizer.optimize_model_selection(task_type, prompt_text)
+            model = await self.performance_optimizer.optimize_model_selection(
+                task_type, prompt_text
+            )
 
         call_chain = self._build_call_chain(model, provider, task_type)
 
@@ -481,7 +516,9 @@ class LLMGateway:
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
-                logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
+                logger.warning(
+                    f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping..."
+                )
                 continue
 
             try:
@@ -532,7 +569,9 @@ class LLMGateway:
                     handled = await self._handle_rate_limit_error(current_model, exc)
                     if handled:
                         # Retry the same model after backoff instead of moving to next in chain
-                        logger.info(f"[LLMGateway] Retrying {current_model} after rate limit backoff...")
+                        logger.info(
+                            f"[LLMGateway] Retrying {current_model} after rate limit backoff..."
+                        )
                         try:
                             response = await litellm.acompletion(
                                 model=current_model,
@@ -554,7 +593,9 @@ class LLMGateway:
                                 ),
                             }
                         except Exception as retry_exc:
-                            logger.warning(f"[LLMGateway] Retry failed for {current_model}: {retry_exc}")
+                            logger.warning(
+                                f"[LLMGateway] Retry failed for {current_model}: {retry_exc}"
+                            )
                             # Continue to next model in chain if retry also fails
 
                 # Handle other HTTP errors (5xx, etc.) with specific backoff
@@ -587,7 +628,9 @@ class LLMGateway:
                 continue
 
         # বাংলা মন্তব্ব: সব fallbacks exhausted — self healer trigger এবং error emit
-        final_exception = last_exception or RuntimeError("All routing models failed to produce a completion.")
+        final_exception = last_exception or RuntimeError(
+            "All routing models failed to produce a completion."
+        )
         if tenant_id:
             db = get_firestore_db()
             if db:
@@ -627,7 +670,9 @@ class LLMGateway:
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
-                logger.warning(f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping...")
+                logger.warning(
+                    f"[LLMGateway] Circuit breaker OPEN for {current_model}. Skipping..."
+                )
                 continue
 
             try:
@@ -656,7 +701,9 @@ class LLMGateway:
                     # Handle rate limit in streaming case too
                     handled = await self._handle_rate_limit_error(current_model, exc)
                     if handled:
-                        logger.info(f"[LLMGateway] Retrying streaming {current_model} after rate limit backoff...")
+                        logger.info(
+                            f"[LLMGateway] Retrying streaming {current_model} after rate limit backoff..."
+                        )
                         try:
                             api_key = self._get_api_key_for_model(current_model)
                             response_stream = await litellm.acompletion(
@@ -673,15 +720,21 @@ class LLMGateway:
                             cb.mark_success()
                             return
                         except Exception as retry_exc:
-                            logger.warning(f"[LLMGateway] Retry failed for streaming {current_model}: {retry_exc}")
+                            logger.warning(
+                                f"[LLMGateway] Retry failed for streaming {current_model}: {retry_exc}"
+                            )
                 last_exception = exc
                 cb.mark_failure()
-                logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
+                logger.opt(exception=True).warning(
+                    f"[LLMGateway] Stream model {current_model} failed."
+                )
                 continue
             except Exception as exc:
                 last_exception = exc
                 cb.mark_failure()
-                logger.opt(exception=True).warning(f"[LLMGateway] Stream model {current_model} failed.")
+                logger.opt(exception=True).warning(
+                    f"[LLMGateway] Stream model {current_model} failed."
+                )
                 continue
 
         raise last_exception or RuntimeError("All streaming fallback options failed.")

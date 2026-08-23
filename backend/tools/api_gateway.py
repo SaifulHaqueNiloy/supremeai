@@ -97,7 +97,9 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
     headers.setdefault("X-Source", source)
 
     # API Key Rotation & Free Tier Tracking Integration
-    if any(endpoint in normalized for endpoint in ["chat/completion", "chat/stream", "chat/message"]):
+    if any(
+        endpoint in normalized for endpoint in ["chat/completion", "chat/stream", "chat/message"]
+    ):
         try:
             from core.llm.free_tier_tracker import get_tracker
             from tools.security_tools.multi_account_rotator import TaskType, get_rotator
@@ -162,7 +164,9 @@ async def api_dispatch(capability: str, payload: dict[str, Any]) -> JSONResponse
 
 
 @router.post("/n8n")
-async def trigger_n8n(webhook_path: str = "", payload: dict[str, Any] | None = None) -> JSONResponse:
+async def trigger_n8n(
+    webhook_path: str = "", payload: dict[str, Any] | None = None
+) -> JSONResponse:
     if payload is None:
         payload = {}
     internal = InternalGateway()
@@ -172,7 +176,9 @@ async def trigger_n8n(webhook_path: str = "", payload: dict[str, Any] | None = N
 
 
 @router.post("/make")
-async def trigger_make(webhook_url: str = "", payload: dict[str, Any] | None = None) -> JSONResponse:
+async def trigger_make(
+    webhook_url: str = "", payload: dict[str, Any] | None = None
+) -> JSONResponse:
     if payload is None:
         payload = {}
     internal = InternalGateway()

@@ -38,7 +38,9 @@ class CostGuard:
         এসিঙ্ক কানেক্ট গেটওয়ে মেথড যুক্ত করা হলো।
         """
         try:
-            logger.info("💰 CostGuard: Initializing resource budget guardian connection protocol...")
+            logger.info(
+                "💰 CostGuard: Initializing resource budget guardian connection protocol..."
+            )
             logger.info("✅ CostGuard: Budget guardian layer attached and armed successfully.")
             return self
         except Exception as e:
@@ -68,7 +70,9 @@ class CostGuard:
                 snapshot = doc_ref.get()
 
             if not snapshot.exists:
-                raise HTTPException(status_code=402, detail="Payment Required: No budget configured.")
+                raise HTTPException(
+                    status_code=402, detail="Payment Required: No budget configured."
+                )
 
             data = snapshot.to_dict()
             monthly_limit = float(data.get("monthly_limit", 0.0))
@@ -106,7 +110,9 @@ class CostGuard:
         নতুন মেthod: টাস্ক রাউটারের ৮০/১৫/৫ মাল্টি-টিয়ার ফলব্যাক চেইনের বাজেট ভ্যালিডেশনের জন্য।
         এটি চেক করবে ওই নির্দিষ্ট টিয়ারের কোটা এপিআই কলের জন্য খালি আছে কিনা।
         """
-        logger.info(f"[CostGuard] Validating execution safety gate for AI tier: '{tier}' for tenant: '{tenant_id}'")
+        logger.info(
+            f"[CostGuard] Validating execution safety gate for AI tier: '{tier}' for tenant: '{tenant_id}'"
+        )
 
         max_task_cost = self.tier_limits.get(tier)
         if max_task_cost is None or max_task_cost <= 0.0:
@@ -146,7 +152,9 @@ class CostGuard:
 
         # Check 2: Will this task push it over?
         if spent + max_task_cost > cap:
-            logger.warning(f"[CostGuard] Tier '{tier}' task budget would exceed quota for {tenant_id}")
+            logger.warning(
+                f"[CostGuard] Tier '{tier}' task budget would exceed quota for {tenant_id}"
+            )
             return False
 
         return True

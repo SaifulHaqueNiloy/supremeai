@@ -30,8 +30,12 @@ class BlockchainAgent:
                 f"{standard} contract implementing: {description}. Use Solidity 0.8.x, OpenZeppelin patterns, "
                 "and include NatSpec comments. Return ONLY the Solidity code, no markdown."
             )
-            result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.04)
-            code = result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            result = await router.async_route_and_generate(
+                prompt, task_type="coding", max_cost=0.04
+            )
+            code = (
+                result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            )
             return {
                 "status": "success",
                 "standard": standard,
@@ -111,8 +115,12 @@ class BlockchainAgent:
                 "Return ONLY the optimized Solidity code, no markdown.\n\n"
                 f"{solidity_code[:4000]}"
             )
-            result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.04)
-            code = result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            result = await router.async_route_and_generate(
+                prompt, task_type="coding", max_cost=0.04
+            )
+            code = (
+                result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            )
             return {
                 "status": "success",
                 "optimized_contract": code.strip(),
@@ -134,8 +142,12 @@ class BlockchainAgent:
                 "Return ONLY the JavaScript test code, no markdown.\n\n"
                 f"{contract_code[:4000]}"
             )
-            result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.04)
-            code = result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            result = await router.async_route_and_generate(
+                prompt, task_type="coding", max_cost=0.04
+            )
+            code = (
+                result.get("text", "") if isinstance(result, dict) else getattr(result, "text", "")
+            )
             return {
                 "status": "success",
                 "test_framework": "hardhat",

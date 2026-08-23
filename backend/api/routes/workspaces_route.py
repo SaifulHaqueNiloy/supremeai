@@ -43,7 +43,8 @@ class BindTargetRequest(BaseModel):
     url: str = Field(..., description="Git repository URL or Cloud endpoint")
     branch: str = Field(default="main", description="Git branch name")
     scope: PermissionScope = Field(
-        default=PermissionScope.FULL_CONTROL, description="Permission scope (READ_ONLY / FULL_CONTROL)"
+        default=PermissionScope.FULL_CONTROL,
+        description="Permission scope (READ_ONLY / FULL_CONTROL)",
     )
     credentials_token: str = Field(default="", description="Secret access token or PAT (Optional)")
     metadata: dict[str, Any] = Field(default_factory=dict)

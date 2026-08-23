@@ -27,9 +27,7 @@ def test_mcp_client_tool_execution():
     client.connect = MagicMock(return_value=True)
     client.process = MagicMock()
 
-    mock_response = (
-        '{"jsonrpc": "2.0", "result": {"content": [{"type": "text", "text": "Scrape result data"}]}, "id": 2}\n'
-    )
+    mock_response = '{"jsonrpc": "2.0", "result": {"content": [{"type": "text", "text": "Scrape result data"}]}, "id": 2}\n'
     client.process.stdout.readline.return_value = mock_response
 
     result = client.call_tool("web_scrape", {"url": "http://example.com"})
@@ -74,7 +72,9 @@ class SwarmOrchestrator:
         self.agents = agents
 
     def execute_swarm(self, tasks):
-        return {task.description: task.agent.model_router.route_and_generate()["text"] for task in tasks}
+        return {
+            task.description: task.agent.model_router.route_and_generate()["text"] for task in tasks
+        }
 
 
 def test_swarm_orchestrator():

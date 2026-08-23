@@ -70,9 +70,13 @@ class SecureRedisManager:
                     decode_responses=True,
                 )
                 self._client = aioredis.Redis(connection_pool=pool)
-                logger.info("⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20).")
+                logger.info(
+                    "⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20)."
+                )
             else:
-                logger.critical("🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state.")
+                logger.critical(
+                    "🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state."
+                )
             self._initialized = True
 
     async def get_client_async(self) -> Any:
@@ -312,7 +316,9 @@ class MultiLevelCache:
     Optimization: L1 TTL L2 TTL-এর চেয়ে ছোট — stale data পড়ার রিস্ক কম
     """
 
-    def __init__(self, redis_mgr: SecureRedisManager | None = None, l1_ttl: int = 60, l2_ttl: int = 3600):
+    def __init__(
+        self, redis_mgr: SecureRedisManager | None = None, l1_ttl: int = 60, l2_ttl: int = 3600
+    ):
         self._l1_cache = TTLCacheDict(default_ttl=l1_ttl, maxsize=2000)
         self._l2_ttl = l2_ttl
         self.redis_cache = redis_mgr or redis_manager

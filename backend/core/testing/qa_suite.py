@@ -161,7 +161,10 @@ class TestSuite:
 
                 results.append(
                     TestResultDetail(
-                        test_case=test_case, result=TestResult.PASSED, duration=duration, timestamp=start_time
+                        test_case=test_case,
+                        result=TestResult.PASSED,
+                        duration=duration,
+                        timestamp=start_time,
                     )
                 )
             except Exception as e:
@@ -197,7 +200,10 @@ class TestSuite:
                 duration = time.time() - start_time
 
                 return TestResultDetail(
-                    test_case=test_case, result=TestResult.PASSED, duration=duration, timestamp=start_time
+                    test_case=test_case,
+                    result=TestResult.PASSED,
+                    duration=duration,
+                    timestamp=start_time,
                 )
             except Exception as e:
                 duration = time.time() - start_time
@@ -229,7 +235,9 @@ class TestSuite:
         skipped = len([r for r in self.results if r.result == TestResult.SKIPPED])
         errors = len([r for r in self.results if r.result == TestResult.ERROR])
 
-        total_duration = (self.end_time - self.start_time) if self.end_time and self.start_time else 0
+        total_duration = (
+            (self.end_time - self.start_time) if self.end_time and self.start_time else 0
+        )
 
         return {
             "suite_name": self.name,
@@ -240,7 +248,9 @@ class TestSuite:
             "errors": errors,
             "pass_rate": passed / total_tests if total_tests > 0 else 0,
             "total_duration": total_duration,
-            "average_duration": sum(r.duration for r in self.results) / len(self.results) if self.results else 0,
+            "average_duration": sum(r.duration for r in self.results) / len(self.results)
+            if self.results
+            else 0,
         }
 
 
@@ -362,7 +372,12 @@ class SecurityTester:
             "' OR 1=1--",
         ]
 
-        results: dict[str, Any] = {"endpoint": endpoint, "param_name": param_name, "vulnerable_inputs": [], "is_vulnerable": False}
+        results: dict[str, Any] = {
+            "endpoint": endpoint,
+            "param_name": param_name,
+            "vulnerable_inputs": [],
+            "is_vulnerable": False,
+        }
 
         for payload in vulnerable_inputs:
             try:
@@ -383,7 +398,9 @@ class SecurityTester:
         # In a real implementation, you'd make requests with payloads
         # and analyze responses for signs of vulnerability
         # For demo, we'll return a random result
-        return random.choice([True, False, False, False])  # Low probability of vulnerability in demo
+        return random.choice(
+            [True, False, False, False]
+        )  # Low probability of vulnerability in demo
 
     def test_xss(self, endpoint: str, param_name: str) -> dict[str, Any]:
         """Test for XSS vulnerabilities."""
@@ -395,7 +412,12 @@ class SecurityTester:
             "'><script>alert('XSS')</script>",
         ]
 
-        results: dict[str, Any] = {"endpoint": endpoint, "param_name": param_name, "xss_payloads": [], "is_vulnerable": False}
+        results: dict[str, Any] = {
+            "endpoint": endpoint,
+            "param_name": param_name,
+            "xss_payloads": [],
+            "is_vulnerable": False,
+        }
 
         for payload in xss_payloads:
             try:
@@ -419,7 +441,11 @@ class SecurityTester:
 
     def test_auth_bypass(self, auth_endpoint: str) -> dict[str, Any]:
         """Test for authentication bypass vulnerabilities."""
-        results: dict[str, Any] = {"endpoint": auth_endpoint, "bypass_methods": [], "is_vulnerable": False}
+        results: dict[str, Any] = {
+            "endpoint": auth_endpoint,
+            "bypass_methods": [],
+            "is_vulnerable": False,
+        }
 
         # Test various bypass techniques
         bypass_techniques = [
@@ -497,7 +523,9 @@ class PerformanceTester:
         index = int(len(sorted_data) * percentile / 100)
         return sorted_data[min(index, len(sorted_data) - 1)] if sorted_data else 0.0
 
-    async def test_concurrent_load(self, url: str, num_concurrent: int = 10, duration: int = 60) -> dict[str, Any]:
+    async def test_concurrent_load(
+        self, url: str, num_concurrent: int = 10, duration: int = 60
+    ) -> dict[str, Any]:
         """Test concurrent load handling."""
         start_time = time.time()
         end_time = start_time + duration
@@ -512,7 +540,11 @@ class PerformanceTester:
                         async with session.get(url) as resp:
                             response_time = time.time() - request_start
                             results.append(
-                                {"status": resp.status, "response_time": response_time, "timestamp": time.time()}
+                                {
+                                    "status": resp.status,
+                                    "response_time": response_time,
+                                    "timestamp": time.time(),
+                                }
                             )
                 except Exception as e:
                     results.append(
@@ -576,7 +608,9 @@ class ChaosEngineer:
             "recovery_time": random.randint(5, 30),  # Simulated recovery time
         }
 
-    async def inject_cpu_spikes(self, target_service: str, cpu_percent: int = 80, duration: int = 30) -> dict[str, Any]:
+    async def inject_cpu_spikes(
+        self, target_service: str, cpu_percent: int = 80, duration: int = 30
+    ) -> dict[str, Any]:
         """Inject CPU spikes to test resilience."""
         logger.info(f"Injecting {cpu_percent}% CPU load to {target_service} for {duration}s")
 
@@ -704,14 +738,21 @@ class QASuite:
 
         results = self.unit_tests.run_tests(parallel=True)
 
-        return {"results": [r.result.value for r in results], "summary": self.unit_tests.get_summary()}
+        return {
+            "results": [r.result.value for r in results],
+            "summary": self.unit_tests.get_summary(),
+        }
 
     async def _run_integration_tests(self, target_url: str) -> dict[str, Any]:
         """Run integration tests."""
         # Run integration tests
-        db_result = await self.integration_runner.test_database_integration("postgresql://localhost/test")
+        db_result = await self.integration_runner.test_database_integration(
+            "postgresql://localhost/test"
+        )
         api_result = await self.integration_runner.test_api_integration(target_url)
-        cache_result = await self.integration_runner.test_cache_integration("redis://localhost:6379")
+        cache_result = await self.integration_runner.test_cache_integration(
+            "redis://localhost:6379"
+        )
 
         return {
             "database_integration": db_result,
@@ -722,8 +763,12 @@ class QASuite:
 
     async def _run_performance_tests(self, target_url: str) -> dict[str, Any]:
         """Run performance tests."""
-        response_time_results = await self.performance_tester.test_response_time(f"{target_url}/health", 50)
-        load_test_results = await self.performance_tester.test_concurrent_load(f"{target_url}/api/data", 10, 30)
+        response_time_results = await self.performance_tester.test_response_time(
+            f"{target_url}/health", 50
+        )
+        load_test_results = await self.performance_tester.test_concurrent_load(
+            f"{target_url}/api/data", 10, 30
+        )
 
         return {
             "response_time": response_time_results,
@@ -736,7 +781,9 @@ class QASuite:
 
     async def _run_security_tests(self, target_url: str) -> dict[str, Any]:
         """Run security tests."""
-        sql_test_results = self.security_tester.test_sql_injection(f"{target_url}/api/search", "query")
+        sql_test_results = self.security_tester.test_sql_injection(
+            f"{target_url}/api/search", "query"
+        )
         xss_test_results = self.security_tester.test_xss(f"{target_url}/api/echo", "message")
         auth_test_results = self.security_tester.test_auth_bypass(f"{target_url}/api/protected")
 

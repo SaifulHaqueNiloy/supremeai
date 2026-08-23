@@ -1,4 +1,3 @@
-
 """
 permission_cache.py - Tiered Permission Cache for Pillar 0
 """
@@ -43,6 +42,7 @@ class PermissionResult:
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
             "is_temp_grant_active": self.is_temp_grant_active,
         }
+
 
 class PermissionCache:
     """Tiered (L1->L2->L3) permission cache with fail-closed semantics."""

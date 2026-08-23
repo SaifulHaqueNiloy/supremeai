@@ -118,7 +118,9 @@ class TestCommentThreadAI:
         ai = CommentThreadAI(github_token="")
 
         with patch.object(ai, "_llm", new_callable=AsyncMock) as mock_llm:
-            mock_llm.return_value = "**Fix:**\n```python\ndef fixed(): pass\n```\n**Reason:** Fixed the bug"
+            mock_llm.return_value = (
+                "**Fix:**\n```python\ndef fixed(): pass\n```\n**Reason:** Fixed the bug"
+            )
             result = await ai.handle_pr_comment(
                 repo_full_name="owner/repo",
                 pr_number=42,
@@ -184,7 +186,9 @@ class TestCommentThreadAI:
 
         ai = CommentThreadAI(github_token="ghp_test")
 
-        old_date = (datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        old_date = (datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=10)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         with patch.object(ai, "_gh_get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = [
                 {
@@ -358,7 +362,10 @@ class TestTenantAdminAPI:
         assert "starter" in TIER_DEFAULTS
         assert "pro" in TIER_DEFAULTS
         assert "enterprise" in TIER_DEFAULTS
-        assert TIER_DEFAULTS["enterprise"]["requests_per_minute"] > TIER_DEFAULTS["free"]["requests_per_minute"]
+        assert (
+            TIER_DEFAULTS["enterprise"]["requests_per_minute"]
+            > TIER_DEFAULTS["free"]["requests_per_minute"]
+        )
 
     @pytest.mark.anyio
     async def test_list_tenants_empty(self):
@@ -394,7 +401,9 @@ class TestTenantAdminAPI:
                 # May fail on tier cache — check local store directly
                 import logging
 
-                logging.warning(f"Tenant creation failed in test, checking local store fallback. Error: {e}")
+                logging.warning(
+                    f"Tenant creation failed in test, checking local store fallback. Error: {e}"
+                )
 
         # Verify in local store
         tenants = _local_store.get("tenants", [])
@@ -436,7 +445,10 @@ class TestTenantAdminAPI:
                 payload = TenantLimitUpdate(billing_tier="pro")
                 result = await update_tenant("my-org", payload)
                 assert result["tenant"]["billing_tier"] == "pro"
-                assert result["tenant"]["requests_per_minute"] == TIER_DEFAULTS["pro"]["requests_per_minute"]
+                assert (
+                    result["tenant"]["requests_per_minute"]
+                    == TIER_DEFAULTS["pro"]["requests_per_minute"]
+                )
             except Exception as e:
                 logger.warning(f"Exception suppressed: {e}")  # Redis cache failure OK
 

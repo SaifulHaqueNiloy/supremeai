@@ -9,6 +9,7 @@ from loguru import logger
 from core.metrics_collector import record_db_operation
 from core.pgbouncer_pool import get_db_pool
 
+
 async def ensure_api_key_tables() -> None:
     """Ensure API key database tables exist."""
     pool = await get_db_pool()
@@ -66,11 +67,13 @@ async def ensure_api_key_tables() -> None:
                 """
             )
             await conn.execute("CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash)")
-            await conn.execute("ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60")
+            await conn.execute(
+                "ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS rate_limit_window INTEGER DEFAULT 60"
+            )
             await conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
             )
-    except Exception as e:
+    except Exception:
         success = False
         raise
     finally:

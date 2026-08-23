@@ -96,15 +96,14 @@ core_routers: list[tuple[str, str]] = [
 ]
 
 
-
 # 🔴 CRITICAL ROUTERS: These are functionally required for core features.
 # They live in optional_routers for historical reasons (test compatibility),
 # but MUST fail-fast in production if they can't load.
 # Migration path: Move these to core_routers when test dependencies are fixed.
 _CRITICAL_ROUTERS = {
-    "api.routes.llm_gateway",      # Required: AI chat/LLM functionality
-    "api.routes.knowledge",        # Required: RAG/Knowledge base features  
-    "api.routes.billing_api",      # Required: Payment processing
+    "api.routes.llm_gateway",  # Required: AI chat/LLM functionality
+    "api.routes.knowledge",  # Required: RAG/Knowledge base features
+    "api.routes.billing_api",  # Required: Payment processing
 }
 
 optional_routers: list[tuple[str, str]] = [
@@ -192,7 +191,9 @@ ADMIN_ROUTERS: list[tuple[str, str]] = [
 
 # USER_ROUTERS is all other routers
 # বাংলা মন্তব্ব্য: ইউজার এপিআই রাউটারসমূহ
-USER_ROUTERS: list[tuple[str, str]] = [r for r in (core_routers + optional_routers) if r[0] not in _admin_paths]
+USER_ROUTERS: list[tuple[str, str]] = [
+    r for r in (core_routers + optional_routers) if r[0] not in _admin_paths
+]
 
 
 def register_all_routers(app: FastAPI) -> None:

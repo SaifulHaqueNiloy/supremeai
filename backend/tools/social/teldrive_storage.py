@@ -27,7 +27,11 @@ class TelDriveCrypto:
     def _get_fernet() -> Fernet:
         raw_key = ""
         try:
-            raw_key = settings.encryption_key.get_secret_value() if hasattr(settings.encryption_key, "get_secret_value") else str(settings.encryption_key)
+            raw_key = (
+                settings.encryption_key.get_secret_value()
+                if hasattr(settings.encryption_key, "get_secret_value")
+                else str(settings.encryption_key)
+            )
         except Exception as exc:
             logger.debug(f"Could not read encryption_key from settings: {exc}")
         if not raw_key:
@@ -117,7 +121,7 @@ class TelDriveStorage:
         meta_caption = (
             f"📦 <b>SupremeAI TelDrive Vault</b> {hashtag}\n"
             f"📁 <b>File:</b> <code>{upload_filename}</code>\n"
-            f"📊 <b>Size:</b> {final_size_kb:.1f} KB (Original: {raw_size/1024:.1f} KB)\n"
+            f"📊 <b>Size:</b> {final_size_kb:.1f} KB (Original: {raw_size / 1024:.1f} KB)\n"
             f"🔑 <b>SHA256:</b> <code>{sha256_hash}</code>\n"
             f"{enc_tag}\n"
             f"🕒 <b>Archived:</b> {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}\n"
@@ -140,9 +144,10 @@ class TelDriveStorage:
     async def create_and_upload_backup(self, chat_id: int | str | None = None) -> bool:
         """Collects database tables, AI memory & system configuration, then archives to Telegram."""
         try:
-            from database.session import get_db_session
             from sqlalchemy import text
-        except Exception as e:
+
+            from database.session import get_db_session
+        except Exception:
             get_db_session = None
 
         backup_payload: dict[str, Any] = {
@@ -166,13 +171,17 @@ class TelDriveStorage:
                 async with get_db_session() as session:
                     for tbl in target_tables:
                         try:
-                            query = "SELECT * FROM {} LIMIT 500".format(tbl)  # nosec
+                            query = f"SELECT * FROM {tbl} LIMIT 500"  # nosec
                             res = await session.execute(text(query))
                             rows = [dict(r._mapping) for r in res]
+
                             # Serialize non-json types (datetime, UUID)
                             def _json_serial(obj):
                                 return str(obj)
-                            backup_payload["tables"][tbl] = json.loads(json.dumps(rows, default=_json_serial))
+
+                            backup_payload["tables"][tbl] = json.loads(
+                                json.dumps(rows, default=_json_serial)
+                            )
                         except Exception as e:
                             logger.debug(f"Table {tbl} skipped during backup: {e}")
             except Exception as db_err:

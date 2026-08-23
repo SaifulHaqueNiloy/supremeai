@@ -9,18 +9,20 @@ Supabase-এর মতো ১৫৩৬-ডাইম pgvector কলামের 
 শূন্য প্যাডিং ডট-প্রোডাক্ট বা নর্ম পরিবর্তন করে না। এতে লাইভ ডেটাবেজ মাইগ্রেশন
 ছাড়াই $0 এমবেডিং সম্ভব।
 """
+
 from __future__ import annotations
 
 import importlib.util
 import logging
 import math
 import os
-import json
 
 logger = logging.getLogger(__name__)
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-_HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
+_HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "sentence_transformers"
+) is not None
 
 _LOCAL_MODEL_NAME = "all-MiniLM-L6-v2"
 _LOCAL_DIM = 384
@@ -31,6 +33,7 @@ _encoder = None
 _embedding_cache: dict[str, list[float]] = {}
 _cache_hits = 0
 _cache_misses = 0
+
 
 def get_cache_stats() -> dict[str, int]:
     """Return embedding cache hit/miss statistics."""
@@ -101,20 +104,20 @@ def embed_for_pgvector(text: str, pg_dim: int = _REMOTE_DIM) -> list[float] | No
     if cache_key in _embedding_cache:
         _cache_hits += 1
         return _embedding_cache[cache_key].copy()
-    
+
     _cache_misses += 1
-    
+
     local = local_embed(text)
     if local is not None:
         padded = _pad_to_dim(local, pg_dim)
         _embedding_cache[cache_key] = padded
-        
+
         # Prevent unbounded memory growth
         if len(_embedding_cache) > 5000:
             _embedding_cache.clear()
-            
+
         return padded.copy()
-        
+
     try:
         import litellm
 
@@ -171,4 +174,3 @@ class EmbeddingEngine:
             scored.append((score, doc))
         scored.sort(key=lambda x: x[0], reverse=True)
         return [dict(doc, score=score) for score, doc in scored[:top_k]]
-

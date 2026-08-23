@@ -185,7 +185,9 @@ class ComplianceRuleEngine:
                 fw = ComplianceFramework(r.get("framework", "custom"))
                 self.rules.setdefault(fw, []).append(ComplianceRule(**r))
 
-    def check_content(self, content: str, framework: ComplianceFramework) -> list[ComplianceViolation]:
+    def check_content(
+        self, content: str, framework: ComplianceFramework
+    ) -> list[ComplianceViolation]:
         """Check content against compliance rules for a framework."""
         violations = []
         for rule in self.rules.get(framework, []):
@@ -277,7 +279,11 @@ class ComplianceMonitorAgent:
             total_rules_checked=len(rules),
             violations=violations,
             pass_rate=round(pass_rate, 2),
-            overall_status="pass" if pass_rate >= 0.9 else "warning" if pass_rate >= 0.7 else "fail",
+            overall_status="pass"
+            if pass_rate >= 0.9
+            else "warning"
+            if pass_rate >= 0.7
+            else "fail",
             generated_at=datetime.now(UTC),
         )
 
@@ -311,7 +317,9 @@ class ComplianceMonitorAgent:
     def record_violation(self, violation: ComplianceViolation) -> None:
         """Record a compliance violation."""
         self._violations_history.append(violation)
-        logger.warning("Compliance violation recorded: %s - %s", violation.rule_id, violation.description)
+        logger.warning(
+            "Compliance violation recorded: %s - %s", violation.rule_id, violation.description
+        )
 
 
 # Singleton

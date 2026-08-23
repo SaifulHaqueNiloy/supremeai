@@ -24,7 +24,9 @@ def test_ingest_success():
     client = TestClient(_build_client())
     with patch("api.routes.feedback._feedback_loop") as loop:
         loop.handle_feedback.return_value = {"stored": True}
-        resp = client.post("/api/feedback/ingest", json={"event_type": "edit", "payload": {"file": "a.py"}})
+        resp = client.post(
+            "/api/feedback/ingest", json={"event_type": "edit", "payload": {"file": "a.py"}}
+        )
         assert resp.status_code == 200
         assert resp.json()["success"] is True
 

@@ -33,7 +33,9 @@ class LocalLogInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    log_filename: str = Field(default="app.log", description="লগ ফাইলের নাম (যেমন: app.log, error.log)")
+    log_filename: str = Field(
+        default="app.log", description="লগ ফাইলের নাম (যেমন: app.log, error.log)"
+    )
     lines: int = Field(default=50, description="ফাইলের শেষ থেকে কত লাইন আনবে", ge=5, le=200)
 
 
@@ -124,7 +126,8 @@ async def observability_tail_local_logs(params: LocalLogInput) -> str:
     target_log = LOG_DIR / params.log_filename
     if not target_log.exists():
         return json.dumps(
-            {"error": f"Log file '{params.log_filename}' does not exist in logs directory."}, ensure_ascii=False
+            {"error": f"Log file '{params.log_filename}' does not exist in logs directory."},
+            ensure_ascii=False,
         )
 
     try:
@@ -132,7 +135,8 @@ async def observability_tail_local_logs(params: LocalLogInput) -> str:
         tail_lines = content_lines[-params.lines :]
 
         return json.dumps(
-            {"log_file": str(target_log), "total_lines": len(content_lines), "tail": tail_lines}, ensure_ascii=False
+            {"log_file": str(target_log), "total_lines": len(content_lines), "tail": tail_lines},
+            ensure_ascii=False,
         )
     except Exception as e:
         return json.dumps({"error": f"Failed to read log file: {e}"}, ensure_ascii=False)

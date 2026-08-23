@@ -1,4 +1,5 @@
 from loguru import logger
+
 """
 SupremeAI Temporal Abstraction System
 =====================================
@@ -241,7 +242,10 @@ class TemporalPatternDetector:
             period_estimate = (bin_edges[dominant_bin_idx] + bin_edges[dominant_bin_idx + 1]) / 2
 
             # Verify periodicity
-            if len([i for i in intervals if abs(i - period_estimate) < period_estimate * 0.2]) >= len(intervals) * 0.6:
+            if (
+                len([i for i in intervals if abs(i - period_estimate) < period_estimate * 0.2])
+                >= len(intervals) * 0.6
+            ):
                 # Calculate pattern strength (how regular the intervals are)
                 std_dev = np.std(intervals)
                 mean_interval = np.mean(intervals)
@@ -279,7 +283,9 @@ class TemporalPatternDetector:
 
         current_time = start_time
         while current_time < end_time:
-            window_events = [e for e in sorted_events if current_time <= e.timestamp < current_time + window_size]
+            window_events = [
+                e for e in sorted_events if current_time <= e.timestamp < current_time + window_size
+            ]
 
             windows.append(
                 {
@@ -454,7 +460,9 @@ class TemporalPredictor:
         self.config = config
         self.pattern_detector = TemporalPatternDetector(config)
 
-    def predict_next_event(self, events: list[TemporalEvent], event_type: str) -> tuple[float | None, float]:
+    def predict_next_event(
+        self, events: list[TemporalEvent], event_type: str
+    ) -> tuple[float | None, float]:
         """
         Predict when the next event of a specific type will occur.
 
@@ -499,7 +507,10 @@ class TemporalPredictor:
 
         # If no patterns, use simple average interval
         sorted_events = sorted(filtered_events, key=lambda e: e.timestamp)
-        intervals = [sorted_events[i].timestamp - sorted_events[i - 1].timestamp for i in range(1, len(sorted_events))]
+        intervals = [
+            sorted_events[i].timestamp - sorted_events[i - 1].timestamp
+            for i in range(1, len(sorted_events))
+        ]
 
         if intervals:
             avg_interval = np.mean(intervals)
@@ -550,7 +561,9 @@ class TemporalAbstractionLayer:
         self.config = config
         self.abstraction_levels = {}
 
-    def create_abstraction(self, events: list[TemporalEvent], granularity: TemporalGranularity) -> list[dict[str, Any]]:
+    def create_abstraction(
+        self, events: list[TemporalEvent], granularity: TemporalGranularity
+    ) -> list[dict[str, Any]]:
         """
         Create temporal abstractions at the specified granularity.
 
@@ -667,7 +680,10 @@ class TemporalAbstractionLayer:
 
         # Calculate temporal irregularity
         sorted_events = sorted(events, key=lambda e: e.timestamp)
-        intervals = [sorted_events[i].timestamp - sorted_events[i - 1].timestamp for i in range(1, len(sorted_events))]
+        intervals = [
+            sorted_events[i].timestamp - sorted_events[i - 1].timestamp
+            for i in range(1, len(sorted_events))
+        ]
 
         if not intervals:
             return 0.0
@@ -718,7 +734,9 @@ class TemporalAbstractionSystem:
         """Get temporal patterns in the specified time window."""
         if time_window:
             current_time = time.time()
-            events = self.temporal_memory.get_events_in_range(current_time - time_window, current_time)
+            events = self.temporal_memory.get_events_in_range(
+                current_time - time_window, current_time
+            )
         else:
             events = self.temporal_memory.events
 
@@ -726,7 +744,9 @@ class TemporalAbstractionSystem:
 
     def predict_future_events(self, horizon_seconds: int) -> list[dict[str, Any]]:
         """Predict events in the future."""
-        predictions = self.predictor.predict_event_sequence(self.temporal_memory.events, horizon_seconds)
+        predictions = self.predictor.predict_event_sequence(
+            self.temporal_memory.events, horizon_seconds
+        )
 
         return [
             {
@@ -744,7 +764,9 @@ class TemporalAbstractionSystem:
         """Create temporal abstractions at the specified granularity."""
         if time_window:
             current_time = time.time()
-            events = self.temporal_memory.get_events_in_range(current_time - time_window, current_time)
+            events = self.temporal_memory.get_events_in_range(
+                current_time - time_window, current_time
+            )
         else:
             events = self.temporal_memory.events
 
@@ -801,7 +823,11 @@ class TemporalAbstractionSystem:
         """Get temporal hierarchy across different granularities."""
         hierarchy = {}
 
-        for granularity in [TemporalGranularity.HOUR, TemporalGranularity.DAY, TemporalGranularity.WEEK]:
+        for granularity in [
+            TemporalGranularity.HOUR,
+            TemporalGranularity.DAY,
+            TemporalGranularity.WEEK,
+        ]:
             abstraction = self.create_temporal_abstraction(granularity)
             hierarchy[granularity.value] = abstraction
 
@@ -866,7 +892,7 @@ def demo_temporal_abstraction():
     logger.debug(f"Detected {len(patterns)} patterns:")
     for i, pattern in enumerate(patterns):
         logger.debug(
-            f"  {i+1}. {pattern.description} (strength: {pattern.strength:.2f}, confidence: {pattern.confidence:.2f})"
+            f"  {i + 1}. {pattern.description} (strength: {pattern.strength:.2f}, confidence: {pattern.confidence:.2f})"
         )
 
     # Get predictions
@@ -874,7 +900,9 @@ def demo_temporal_abstraction():
     predictions = temp_system.predict_future_events(3600)  # Next hour
     logger.debug(f"Predicted {len(predictions)} events in the next hour:")
     for pred in predictions:
-        logger.debug(f"  - {pred['event_type']} at {pred['predicted_time']} (confidence: {pred['confidence']:.2f})")
+        logger.debug(
+            f"  - {pred['event_type']} at {pred['predicted_time']} (confidence: {pred['confidence']:.2f})"
+        )
 
     # Create abstractions
     logger.debug("\nCreating temporal abstractions...")
@@ -883,7 +911,9 @@ def demo_temporal_abstraction():
 
     # Print first few abstractions
     for i, abst in enumerate(hourly_abstractions[:3]):
-        logger.debug(f"  {i+1}. {abst['time_period']}: {abst['event_count']} events, complexity: {abst['complexity']:.2f}")
+        logger.debug(
+            f"  {i + 1}. {abst['time_period']}: {abst['event_count']} events, complexity: {abst['complexity']:.2f}"
+        )
 
     # Get comprehensive insights
     logger.debug("\nGetting temporal insights...")

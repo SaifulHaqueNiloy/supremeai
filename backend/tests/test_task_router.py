@@ -12,8 +12,9 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestCostGuardBudgetLimits:
@@ -25,7 +26,7 @@ class TestCostGuardBudgetLimits:
         from decimal import Decimal
 
         # Mock budget service to show exceeded budget
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             mock_budget.get_monthly_spend = AsyncMock(return_value=Decimal("100.00"))
             mock_budget.get_budget_limit = AsyncMock(return_value=Decimal("50.00"))
             mock_budget.is_budget_exceeded = AsyncMock(return_value=True)
@@ -45,13 +46,12 @@ class TestCostGuardBudgetLimits:
     @pytest.mark.unit
     async def test_within_budget_allows_task(self, client, admin_headers):
         """When within budget, tasks proceed normally."""
-        from decimal import Decimal
 
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             mock_budget.is_budget_exceeded = AsyncMock(return_value=False)
             mock_budget.track_cost = AsyncMock()
 
-            with patch('api.routes.task_router.task_queue') as mock_queue:
+            with patch("api.routes.task_router.task_queue") as mock_queue:
                 mock_queue.enqueue = AsyncMock(return_value="task-123")
 
                 response = await client.post(
@@ -72,7 +72,7 @@ class TestCostGuardRateLimiting:
     @pytest.mark.unit
     async def test_gemini_rate_limit_enforced(self, client, admin_headers):
         """Gemini RPM limit should be enforced."""
-        with patch('api.routes.task_router.rate_limiter') as mock_rl:
+        with patch("api.routes.task_router.rate_limiter") as mock_rl:
             # Simulate rate limit hit
             mock_rl.is_rate_limited = AsyncMock(return_value=True)
             mock_rl.get_retry_after = MagicMock(return_value=60)
@@ -89,7 +89,7 @@ class TestCostGuardRateLimiting:
     @pytest.mark.unit
     async def test_groq_rate_limit_enforced(self, client, admin_headers):
         """Groq RPM limit should be enforced."""
-        with patch('api.routes.task_router.rate_limiter') as mock_rl:
+        with patch("api.routes.task_router.rate_limiter") as mock_rl:
             mock_rl.is_rate_limited = AsyncMock(return_value=True)
 
             response = await client.post(
@@ -109,11 +109,11 @@ class TestCostGuardCostTracking:
         """Cost should be tracked when task completes."""
         from decimal import Decimal
 
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             mock_budget.track_cost = AsyncMock()
 
             # Mock successful task execution
-            with patch('api.routes.task_router.execute_task') as mock_exec:
+            with patch("api.routes.task_router.execute_task") as mock_exec:
                 mock_exec.return_value = {
                     "id": "task-123",
                     "status": "completed",
@@ -133,10 +133,10 @@ class TestCostGuardCostTracking:
     @pytest.mark.unit
     async def test_zero_cost_on_error(self, client, admin_headers):
         """No cost tracked when task fails."""
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             mock_budget.track_cost = AsyncMock()
 
-            with patch('api.routes.task_router.execute_task') as mock_exec:
+            with patch("api.routes.task_router.execute_task") as mock_exec:
                 mock_exec.side_effect = Exception("LLM Error")
 
                 response = await client.post(
@@ -155,9 +155,8 @@ class TestCostGuardAdminOverride:
     @pytest.mark.unit
     async def test_admin_can_override_soft_limit(self, client, admin_headers):
         """Admin users can exceed soft limits but not hard limits."""
-        from decimal import Decimal
 
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             # Soft limit exceeded, hard limit not
             mock_budget.is_budget_exceeded = AsyncMock(return_value=False)
             mock_budget.is_soft_limit_exceeded = AsyncMock(return_value=True)
@@ -175,7 +174,7 @@ class TestCostGuardAdminOverride:
     @pytest.mark.unit
     async def test_hard_limit_blocks_everyone(self, client, admin_headers):
         """Hard limit blocks even admins."""
-        with patch('api.routes.task_router.budget_service') as mock_budget:
+        with patch("api.routes.task_router.budget_service") as mock_budget:
             mock_budget.is_hard_limit_exceeded = AsyncMock(return_value=True)
 
             response = await client.post(

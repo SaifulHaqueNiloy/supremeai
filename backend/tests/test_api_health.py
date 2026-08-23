@@ -5,8 +5,9 @@ v4.0: Verifies /health endpoints work correctly
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 
 class TestHealthEndpoint:
@@ -15,7 +16,7 @@ class TestHealthEndpoint:
     @pytest.mark.unit
     async def test_health_returns_200_when_healthy(self, client):
         """Health endpoint returns 200 when all checks pass."""
-        with patch('core.health._run_check') as mock_check:
+        with patch("core.health._run_check") as mock_check:
             from core.health import HealthResult, HealthStatus
 
             mock_result = HealthResult(
@@ -36,7 +37,7 @@ class TestHealthEndpoint:
     @pytest.mark.unit
     async def test_health_returns_503_when_unhealthy(self, client):
         """Health endpoint returns 503 when critical check fails."""
-        with patch('core.health._run_check') as mock_check:
+        with patch("core.health._run_check") as mock_check:
             from core.health import HealthResult, HealthStatus
 
             mock_result = HealthResult(

@@ -10,11 +10,12 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from collections.abc import Callable
+
 from loguru import logger
 
 
@@ -83,7 +84,9 @@ class PatternRecognizer:
         # Initialize built-in canonical patterns
         self._initialize_builtin_patterns()
 
-    async def recognize(self, data: Any, context: dict[str, Any] | None = None) -> list[PatternMatch]:
+    async def recognize(
+        self, data: Any, context: dict[str, Any] | None = None
+    ) -> list[PatternMatch]:
         """Main recognition entry point - identifies all patterns in given data."""
         start_time = datetime.now()
         matches: list[PatternMatch] = []
@@ -104,7 +107,10 @@ class PatternRecognizer:
             for result in results:
                 if isinstance(result, list):
                     for match in result:
-                        if isinstance(match, PatternMatch) and match.match_score >= self.min_confidence_threshold:
+                        if (
+                            isinstance(match, PatternMatch)
+                            and match.match_score >= self.min_confidence_threshold
+                        ):
                             matches.append(match)
 
             matches.sort(key=lambda x: x.match_score, reverse=True)
@@ -117,7 +123,9 @@ class PatternRecognizer:
 
         return matches
 
-    async def learn_from_example(self, example: Any, outcome: Any, success: bool = True) -> Pattern | None:
+    async def learn_from_example(
+        self, example: Any, outcome: Any, success: bool = True
+    ) -> Pattern | None:
         """Learn new patterns from examples."""
         features = self._extract_features(example)
         signature = self._generate_signature(features)
@@ -132,7 +140,9 @@ class PatternRecognizer:
 
         return None
 
-    async def _recognize_sequence_patterns(self, data: Any, context: dict[str, Any]) -> list[PatternMatch]:
+    async def _recognize_sequence_patterns(
+        self, data: Any, context: dict[str, Any]
+    ) -> list[PatternMatch]:
         matches: list[PatternMatch] = []
         if isinstance(data, list | str):
             sequences = self._extract_sequences(data)
@@ -151,7 +161,9 @@ class PatternRecognizer:
                         )
         return matches
 
-    async def _recognize_structural_patterns(self, data: Any, context: dict[str, Any]) -> list[PatternMatch]:
+    async def _recognize_structural_patterns(
+        self, data: Any, context: dict[str, Any]
+    ) -> list[PatternMatch]:
         matches: list[PatternMatch] = []
         if hasattr(data, "__dict__") or isinstance(data, dict):
             structure = self._extract_structure(data)
@@ -169,7 +181,9 @@ class PatternRecognizer:
                     )
         return matches
 
-    async def _recognize_temporal_patterns(self, data: Any, context: dict[str, Any]) -> list[PatternMatch]:
+    async def _recognize_temporal_patterns(
+        self, data: Any, context: dict[str, Any]
+    ) -> list[PatternMatch]:
         matches: list[PatternMatch] = []
         timestamps = self._extract_timestamps(data, context)
         if timestamps and len(timestamps) > 1:
@@ -185,12 +199,18 @@ class PatternRecognizer:
                 )
         return matches
 
-    async def _recognize_semantic_patterns(self, data: Any, context: dict[str, Any]) -> list[PatternMatch]:
+    async def _recognize_semantic_patterns(
+        self, data: Any, context: dict[str, Any]
+    ) -> list[PatternMatch]:
         matches: list[PatternMatch] = []
         text = self._extract_text(data)
         if text:
             for pattern in self.pattern_index[PatternType.SEMANTIC]:
-                score = 0.88 if any(w in text.lower() for w in ["database", "fix", "optimize", "ui", "rbac"]) else 0.70
+                score = (
+                    0.88
+                    if any(w in text.lower() for w in ["database", "fix", "optimize", "ui", "rbac"])
+                    else 0.70
+                )
                 if score >= self.min_confidence_threshold:
                     matches.append(
                         PatternMatch(
@@ -203,7 +223,9 @@ class PatternRecognizer:
                     )
         return matches
 
-    async def _recognize_behavioral_patterns(self, data: Any, context: dict[str, Any]) -> list[PatternMatch]:
+    async def _recognize_behavioral_patterns(
+        self, data: Any, context: dict[str, Any]
+    ) -> list[PatternMatch]:
         matches: list[PatternMatch] = []
         actions = self._extract_actions(data, context)
         if actions:
@@ -226,21 +248,27 @@ class PatternRecognizer:
             "hash": hash(str(data)) % 10000,
         }
         if isinstance(data, str):
-            features.update({
-                "length": len(data),
-                "word_count": len(data.split()),
-                "has_numbers": any(c.isdigit() for c in data),
-            })
+            features.update(
+                {
+                    "length": len(data),
+                    "word_count": len(data.split()),
+                    "has_numbers": any(c.isdigit() for c in data),
+                }
+            )
         elif isinstance(data, list | tuple):
-            features.update({
-                "element_count": len(data),
-                "element_types": list(set(type(x).__name__ for x in data)),
-            })
+            features.update(
+                {
+                    "element_count": len(data),
+                    "element_types": list(set(type(x).__name__ for x in data)),
+                }
+            )
         elif isinstance(data, dict):
-            features.update({
-                "keys": list(data.keys()),
-                "key_count": len(data),
-            })
+            features.update(
+                {
+                    "keys": list(data.keys()),
+                    "key_count": len(data),
+                }
+            )
         return features
 
     def _generate_signature(self, features: dict[str, Any]) -> str:
@@ -254,7 +282,9 @@ class PatternRecognizer:
                 return pattern
         return None
 
-    def _create_pattern(self, features: dict[str, Any], signature: str, example: Any, outcome: Any) -> Pattern:
+    def _create_pattern(
+        self, features: dict[str, Any], signature: str, example: Any, outcome: Any
+    ) -> Pattern:
         pattern_type = self._determine_pattern_type(features)
         pattern = Pattern(
             id=f"pat_{datetime.now().strftime('%Y%m%d%H%M%S')}_{signature[:8]}",
@@ -278,12 +308,16 @@ class PatternRecognizer:
         pattern.frequency += 1
         pattern.last_seen = datetime.now()
         alpha = 0.1
-        pattern.success_rate = alpha * (1.0 if success else 0.0) + (1 - alpha) * pattern.success_rate
+        pattern.success_rate = (
+            alpha * (1.0 if success else 0.0) + (1 - alpha) * pattern.success_rate
+        )
         pattern.confidence = min(1.0, pattern.confidence + 0.05)
 
     def _should_create_new_pattern(self, features: dict[str, Any]) -> bool:
         similar_count = sum(
-            1 for p in self.known_patterns.values() if p.metadata.get("features", {}).get("type") == features.get("type")
+            1
+            for p in self.known_patterns.values()
+            if p.metadata.get("features", {}).get("type") == features.get("type")
         )
         return similar_count < 20
 

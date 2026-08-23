@@ -169,7 +169,9 @@ class TestGetCosts:
         """CostAuditor returns no text_report → returns unavailable message."""
         with patch("api.routes.admin_dashboard.CostAuditor") as mock_cls:
             mock_auditor = MagicMock()
-            mock_auditor.generate_report.return_value = {"text_report": str(tmp_path / "nonexistent.md")}
+            mock_auditor.generate_report.return_value = {
+                "text_report": str(tmp_path / "nonexistent.md")
+            }
             mock_cls.return_value = mock_auditor
             result = get_costs()
         assert result["status"] == "ok"
@@ -328,7 +330,9 @@ class TestModelRouter:
 
     def test_set_router_override(self):
         """Sets override and returns success."""
-        payload = RouterOverrideRequest(provider="openrouter", model="gpt-4o", remaining_requests=100)
+        payload = RouterOverrideRequest(
+            provider="openrouter", model="gpt-4o", remaining_requests=100
+        )
         result = set_router_override(payload)
         assert result["status"] == "success"
         assert result["override"]["provider"] == "openrouter"
@@ -561,23 +565,25 @@ class TestLogsStream:
         """Log file exists → yields log lines."""
         log_file = tmp_path / "app.log"
         log_file.write_text("line1\nline2\nline3\n")
-        with patch(
-            "os.path.exists",
-            side_effect=lambda p: p == str(log_file) or p == "logs/app.log",
+        with (
+            patch(
+                "os.path.exists",
+                side_effect=lambda p: p == str(log_file) or p == "logs/app.log",
+            ),
+            patch("builtins.open", create=True) as mock_open,
         ):
-            with patch("builtins.open", create=True) as mock_open:
-                mock_open.return_value = MagicMock(
-                    __enter__=MagicMock(
-                        return_value=MagicMock(
-                            readlines=MagicMock(return_value=["line1\n", "line2\n", "line3\n"]),
-                            readline=MagicMock(return_value=""),
-                            seek=MagicMock(),
-                            close=MagicMock(),
-                        )
-                    ),
-                    __exit__=MagicMock(return_value=False),
-                )
-                result = logs_stream()
+            mock_open.return_value = MagicMock(
+                __enter__=MagicMock(
+                    return_value=MagicMock(
+                        readlines=MagicMock(return_value=["line1\n", "line2\n", "line3\n"]),
+                        readline=MagicMock(return_value=""),
+                        seek=MagicMock(),
+                        close=MagicMock(),
+                    )
+                ),
+                __exit__=MagicMock(return_value=False),
+            )
+            result = logs_stream()
         assert result is not None
 
     def test_logs_stream_log_generator_cancellation(self, tmp_path):

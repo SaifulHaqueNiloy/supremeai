@@ -36,7 +36,9 @@ async def log_security_event(
     }
 
     # Structured log output
-    logger.bind(event_type=event_type, severity=severity).info(f"🛡️ Security Event: {event_type} | User: {user_id}")
+    logger.bind(event_type=event_type, severity=severity).info(
+        f"🛡️ Security Event: {event_type} | User: {user_id}"
+    )
 
     # Redis persistence
     if redis_manager and getattr(redis_manager, "client", None):
@@ -55,6 +57,8 @@ async def log_security_event(
         except Exception as exc:
             # বাংলা মন্তব্য: সিকিউরিটি গার্ড — সিকিউরিটি অডিট ইভেন্ট পারসিস্ট না হলে সাইলেন্ট ফেলিয়ার প্রতিরোধে এরর রেইজ করা হচ্ছে
             logger.error(f"⚠️ Failed to persist security audit event {event_id}: {exc}")
-            raise RuntimeError(f"Audit logger persistence failed for event {event_id}: {exc}") from exc
+            raise RuntimeError(
+                f"Audit logger persistence failed for event {event_id}: {exc}"
+            ) from exc
 
     return event_id

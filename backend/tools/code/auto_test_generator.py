@@ -262,9 +262,13 @@ class AutoTestGenerator:
         # Get style guidelines
         # Assumes file_path is relative to a repo root that can be analyzed.
         repo_root_for_style = "."  # Use current directory as a proxy for the repo root.
-        style_guidelines = self.style_learner.generate_style_prompt(repo_root_for_style, detected_stack)
+        style_guidelines = self.style_learner.generate_style_prompt(
+            repo_root_for_style, detected_stack
+        )
 
-        fn_count = len(symbols.get("functions", []) + symbols.get("async_functions", [])) if symbols else 0
+        fn_count = (
+            len(symbols.get("functions", []) + symbols.get("async_functions", [])) if symbols else 0
+        )
 
         prompt = _build_prompt(
             source_code=source_code,
@@ -278,7 +282,9 @@ class AutoTestGenerator:
             style_guidelines=style_guidelines,
         )
 
-        logger.info(f"Generating tests: {file_path} | stack={detected_stack} | framework={detected_framework}")
+        logger.info(
+            f"Generating tests: {file_path} | stack={detected_stack} | framework={detected_framework}"
+        )
         test_code = await self._llm(prompt)
 
         if not test_code:
@@ -389,7 +395,9 @@ class AutoTestGenerator:
             if save:
                 r = await self.generate_and_save(path)
             else:
-                code = pathlib.Path(path).read_text(encoding="utf-8") if os.path.exists(path) else ""
+                code = (
+                    pathlib.Path(path).read_text(encoding="utf-8") if os.path.exists(path) else ""
+                )
                 r = await self.generate(source_code=code, file_path=path)
             results.append({"path": path, **r})
         return {

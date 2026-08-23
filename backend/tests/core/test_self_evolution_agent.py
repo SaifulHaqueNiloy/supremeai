@@ -25,7 +25,9 @@ def mock_fitness_engine():
 @pytest.fixture
 def mock_auto_skill_creator():
     creator = MagicMock()
-    creator.generate_and_deploy_skill = AsyncMock(return_value={"success": True, "skill_name": "Skill_A_v2"})
+    creator.generate_and_deploy_skill = AsyncMock(
+        return_value={"success": True, "skill_name": "Skill_A_v2"}
+    )
     return creator
 
 
@@ -80,7 +82,9 @@ async def test_register_missing_path_triggers_generation(agent, mock_auto_skill_
     agent._register_missing_path("some demand", "NewSkill")
     await asyncio.sleep(0)
     await agent._process_demand({"task_demand": "some demand", "skill_name": "NewSkill"})
-    mock_auto_skill_creator.generate_and_deploy_skill.assert_called_once_with("some demand", "NewSkill")
+    mock_auto_skill_creator.generate_and_deploy_skill.assert_called_once_with(
+        "some demand", "NewSkill"
+    )
 
 
 @pytest.mark.anyio

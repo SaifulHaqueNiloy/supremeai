@@ -30,7 +30,12 @@ def test_send_telegram_alert():
 def test_telegram_callback_approve():
     response = client.post(
         "/api/v1/webhooks/telegram/callback",
-        json={"callback_id": "cb_001", "user_id": "dev_user_99", "action": "approve_pr", "pr_id": "PR-102"},
+        json={
+            "callback_id": "cb_001",
+            "user_id": "dev_user_99",
+            "action": "approve_pr",
+            "pr_id": "PR-102",
+        },
     )
     assert response.status_code == 200
     data = response.json()
@@ -41,7 +46,12 @@ def test_telegram_callback_approve():
 def test_telegram_callback_reject():
     response = client.post(
         "/api/v1/webhooks/telegram/callback",
-        json={"callback_id": "cb_002", "user_id": "dev_user_99", "action": "reject_pr", "pr_id": "PR-102"},
+        json={
+            "callback_id": "cb_002",
+            "user_id": "dev_user_99",
+            "action": "reject_pr",
+            "pr_id": "PR-102",
+        },
     )
     assert response.status_code == 200
     data = response.json()

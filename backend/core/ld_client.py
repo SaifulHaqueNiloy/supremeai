@@ -39,7 +39,9 @@ def init_ld_client() -> "LDAIClient | None":
 
     sdk_key = os.getenv("LAUNCHDARKLY_SDK_KEY")
     if not sdk_key:
-        logger.warning("LAUNCHDARKLY_SDK_KEY is not set in environment. LaunchDarkly integration disabled.")
+        logger.warning(
+            "LAUNCHDARKLY_SDK_KEY is not set in environment. LaunchDarkly integration disabled."
+        )
         return None
 
     try:

@@ -67,6 +67,7 @@ async def search_knowledge(
     """Search the knowledge base for relevant documents matching the query."""
     import json
     from pathlib import Path
+
     manifest_dir = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
     results = []
     if manifest_dir.exists():
@@ -80,7 +81,9 @@ async def search_knowledge(
             except Exception as e:
                 # বাংলা মন্তব্য: আগে এখানে exception সম্পূর্ণ silent-এ swallow হতো —
                 # কোনো manifest file corrupt/malformed হলে debug করা কঠিন হতো।
-                logger.warning(f"[knowledge-search] Skipping malformed manifest '{json_file.name}': {e}")
+                logger.warning(
+                    f"[knowledge-search] Skipping malformed manifest '{json_file.name}': {e}"
+                )
                 continue
     return {"results": results, "total": len(results), "query": request.question}
 
@@ -93,7 +96,15 @@ async def seed_knowledge(
     """Seed initial knowledge documents into the knowledge base."""
     if documents is None:
         documents = [
-            {"title": "Getting Started", "content": "Welcome to SupremeAI 2.0 knowledge base.", "category": "general"},
+            {
+                "title": "Getting Started",
+                "content": "Welcome to SupremeAI 2.0 knowledge base.",
+                "category": "general",
+            },
         ]
     seeded = sum(1 for doc in documents if isinstance(doc, dict) and "content" in doc)
-    return {"status": "success", "seeded": seeded, "message": f"Seeded {seeded} knowledge documents"}
+    return {
+        "status": "success",
+        "seeded": seeded,
+        "message": f"Seeded {seeded} knowledge documents",
+    }

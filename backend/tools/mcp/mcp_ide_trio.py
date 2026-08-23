@@ -44,7 +44,9 @@ class PipelineInput(BaseModel):
     prompt: str = Field(..., description="Natural-language description of the coding task")
     language: str = Field("python", description="Target programming language")
     file_path: str | None = Field(None, description="Optional file path for context")
-    existing_code: str | None = Field(None, description="Existing code snippet (refactor/review mode)")
+    existing_code: str | None = Field(
+        None, description="Existing code snippet (refactor/review mode)"
+    )
     project_context: str | None = Field(None, description="Optional project-level context")
 
 

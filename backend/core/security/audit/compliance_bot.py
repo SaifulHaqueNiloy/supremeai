@@ -182,7 +182,9 @@ class GDPRChecker:
             )
         return None
 
-    def check_data_minimization(self, data_fields: list[str], purpose: str) -> ComplianceViolation | None:
+    def check_data_minimization(
+        self, data_fields: list[str], purpose: str
+    ) -> ComplianceViolation | None:
         """Check data minimization principle."""
         excessive_fields = self._identify_excessive_fields(data_fields, purpose)
         if excessive_fields:
@@ -196,7 +198,9 @@ class GDPRChecker:
             )
         return None
 
-    def check_retention_limit(self, data_age_days: int, data_type: str) -> ComplianceViolation | None:
+    def check_retention_limit(
+        self, data_age_days: int, data_type: str
+    ) -> ComplianceViolation | None:
         """Check if data is retained beyond necessary period."""
         limits = {
             "session_logs": 30,
@@ -243,7 +247,11 @@ class GDPRChecker:
                     consent_type=ConsentType(data["consent_type"]),
                     granted=data["granted"],
                     granted_at=datetime.fromisoformat(data["granted_at"]),
-                    expires_at=(datetime.fromisoformat(data["expires_at"]) if data.get("expires_at") else None),
+                    expires_at=(
+                        datetime.fromisoformat(data["expires_at"])
+                        if data.get("expires_at")
+                        else None
+                    ),
                     version=data.get("version", "1.0"),
                 )
         except Exception as e:
@@ -405,7 +413,9 @@ class ConsentManager:
         )
 
         # Store in Firestore
-        self.db.collection("consents").document(f"{user_id}_{consent_type.value}").set(record.to_dict())
+        self.db.collection("consents").document(f"{user_id}_{consent_type.value}").set(
+            record.to_dict()
+        )
 
         logger.info(f"Consent recorded: {user_id} - {consent_type.value} = {granted}")
         return record
@@ -460,7 +470,11 @@ class DataRetentionPolicy:
         cutoff_date = datetime.now(UTC) - timedelta(days=retention_days)
         count = 0
         try:
-            docs = self.db.collection(data_type).where("created_at", "<", cutoff_date.isoformat()).stream()
+            docs = (
+                self.db.collection(data_type)
+                .where("created_at", "<", cutoff_date.isoformat())
+                .stream()
+            )
             for doc in docs:
                 doc.reference.delete()
                 count += 1

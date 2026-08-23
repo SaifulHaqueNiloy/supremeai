@@ -170,7 +170,8 @@ class TechnologyRadarAgent:
             AdoptionPriority.HOLD: 3,
         }
         sorted_techs = sorted(
-            self._technologies, key=lambda t: (priority_order.get(t.adoption_priority, 3), -t.impact_score)
+            self._technologies,
+            key=lambda t: (priority_order.get(t.adoption_priority, 3), -t.impact_score),
         )
 
         return [

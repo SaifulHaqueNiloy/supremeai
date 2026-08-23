@@ -67,7 +67,9 @@ class SwarmOrchestrator:
         }
         # বাংলা মন্তব্য: ফেজ ১ - MCP-Hub ইন্টিগ্রেশন। এটি বাইরের জগতের সাথে সংযোগ স্থাপন করবে।
         self.mcp_client = MCPRegistryClient()
-        self.circuit_breaker = CircuitBreaker(name="swarm_orch", failure_threshold=3, recovery_timeout=30.0)
+        self.circuit_breaker = CircuitBreaker(
+            name="swarm_orch", failure_threshold=3, recovery_timeout=30.0
+        )
         # বাংলা মন্তব্য: হাইব্রিড মডেলের জন্য ডাইনামিক ফ্যাক্টরি ইনিশিয়ালাইজ করা হলো।
         # এখানে কোনো DB সেশন পাস করা হচ্ছে না, কারণ ফ্যাক্টরি আপাতত stateless।
         self.agent_factory = DynamicAgentFactory()
@@ -134,7 +136,9 @@ class SwarmOrchestrator:
             return synthesized_capability
         return None
 
-    async def execute_task(self, prompt: str, user_id: str = "default_user_session") -> ExecutionResult:
+    async def execute_task(
+        self, prompt: str, user_id: str = "default_user_session"
+    ) -> ExecutionResult:
         task_id = str(uuid.uuid4())
         workspace = SharedWorkspace(task_id=task_id, original_prompt=prompt)
         workspace.log(f"SwarmOrchestrator: Initialized swarm DAG for task {task_id}")
@@ -162,12 +166,16 @@ class SwarmOrchestrator:
         # 2. Universal Glue: MCP থেকে টুলস ডিসকভার করা
         domain = workspace.intent
         available_mcp_tools = await self.mcp_client.discover_tools(domain)
-        workspace.log(f"SwarmOrchestrator: Discovered MCP tools for domain '{domain}': {available_mcp_tools}")
+        workspace.log(
+            f"SwarmOrchestrator: Discovered MCP tools for domain '{domain}': {available_mcp_tools}"
+        )
         workspace.work_product["available_tools"] = available_mcp_tools
 
         # 3. Dynamic Synthesis: যদি টুল না পাওয়া যায়, তবে নতুন টুল তৈরি করা
         if not available_mcp_tools or "generic_tool" in available_mcp_tools:
-            workspace.log("SwarmOrchestrator: No specific tool found. Attempting Zero-Shot Synthesis...")
+            workspace.log(
+                "SwarmOrchestrator: No specific tool found. Attempting Zero-Shot Synthesis..."
+            )
             new_tool = await self._synthesize_tool(workspace.intent, user_id)
             if new_tool:
                 workspace.work_product["available_tools"].append(new_tool)
@@ -199,7 +207,9 @@ class SwarmOrchestrator:
                 # /api/v1/swarm/halt কল হলে চলমান নতুন ব্যাচ শুরু হবে না, workspace-এ
                 # স্পষ্ট এরর লগ হবে (silent hang নয়)।
                 if await swarm_streamer.is_halted():
-                    workspace.log("SwarmOrchestrator: Execution halted by emergency stop (swarm:halt:global).")
+                    workspace.log(
+                        "SwarmOrchestrator: Execution halted by emergency stop (swarm:halt:global)."
+                    )
                     raise RuntimeError("Swarm execution halted by emergency stop")
 
                 ready_tasks = [
@@ -223,10 +233,16 @@ class SwarmOrchestrator:
                 coros = [self.agents[task].run(workspace, user_id) for task in runnable]
                 results = await asyncio.gather(*coros, return_exceptions=True)
 
-                failures = [(task, r) for task, r in zip(runnable, results, strict=False) if isinstance(r, Exception)]
+                failures = [
+                    (task, r)
+                    for task, r in zip(runnable, results, strict=False)
+                    if isinstance(r, Exception)
+                ]
                 if failures:
                     failed_names = ", ".join(f"{t}: {e}" for t, e in failures)
-                    raise RuntimeError(f"SwarmOrchestrator: task(s) failed in this batch — {failed_names}")
+                    raise RuntimeError(
+                        f"SwarmOrchestrator: task(s) failed in this batch — {failed_names}"
+                    )
 
                 completed_tasks.update(runnable)  # শুধু যেগুলো সত্যিই সফলভাবে রান হয়েছে
 
@@ -237,7 +253,9 @@ class SwarmOrchestrator:
                 coder_agent = self.agents.get("coder")
 
                 if not guardian_agent or not coder_agent:
-                    workspace.log("SwarmOrchestrator: Guardian or Coder agent missing for code generation loop.")
+                    workspace.log(
+                        "SwarmOrchestrator: Guardian or Coder agent missing for code generation loop."
+                    )
                 else:
                     for i in range(max_refinements):
                         workspace.log(
@@ -248,10 +266,14 @@ class SwarmOrchestrator:
                         is_approved, feedback = await guardian_agent.validate(workspace, user_id)
 
                         if is_approved:
-                            workspace.log("SwarmOrchestrator: Code APPROVED by Guardian. Exiting refinement loop.")
+                            workspace.log(
+                                "SwarmOrchestrator: Code APPROVED by Guardian. Exiting refinement loop."
+                            )
                             break
 
-                        workspace.log("SwarmOrchestrator: Code FAILED Guardian validation. Triggering refinement.")
+                        workspace.log(
+                            "SwarmOrchestrator: Code FAILED Guardian validation. Triggering refinement."
+                        )
 
                         # Refinement by CodeGeneratorAgent
                         await coder_agent.refine(workspace, feedback, user_id)
@@ -292,7 +314,9 @@ class SwarmOrchestrator:
                 workspace.add_error(str(e))
                 return workspace
 
-            workspace.log(f"SwarmOrchestrator: An unexpected error occurred during DAG execution: {e}")
+            workspace.log(
+                f"SwarmOrchestrator: An unexpected error occurred during DAG execution: {e}"
+            )
             workspace.add_error(str(e))
 
             # বাংলা মন্তব্য: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে, তবে রিফ্লেকশনে এরর হলে তা মেইন ফ্লো কে ব্লক করবে না।
@@ -300,7 +324,9 @@ class SwarmOrchestrator:
                 try:
                     await self.agents["reflection"].reflect_and_persist(workspace, user_id)
                 except Exception as reflection_error:
-                    workspace.log(f"SwarmOrchestrator: Failed to run reflection after error: {reflection_error}")
+                    workspace.log(
+                        f"SwarmOrchestrator: Failed to run reflection after error: {reflection_error}"
+                    )
             return workspace
 
         workspace.log("SwarmOrchestrator: Multi-Agent DAG execution completed successfully.")

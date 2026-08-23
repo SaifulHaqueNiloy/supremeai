@@ -79,7 +79,9 @@ class LocalSearchRAG:
 
                     chroma_dir = self.storage_dir / "chroma"
                     self.chroma_client = chromadb.PersistentClient(path=str(chroma_dir))
-                    self.collection = self.chroma_client.get_or_create_collection(name="local_rag_collection")
+                    self.collection = self.chroma_client.get_or_create_collection(
+                        name="local_rag_collection"
+                    )
                 except ImportError:
                     import loguru
 
@@ -103,7 +105,9 @@ class LocalSearchRAG:
 
                 chroma_dir = self.storage_dir / "chroma"
                 self.chroma_client = chromadb.PersistentClient(path=str(chroma_dir))
-                self.collection = self.chroma_client.get_or_create_collection(name="local_rag_collection")
+                self.collection = self.chroma_client.get_or_create_collection(
+                    name="local_rag_collection"
+                )
             except ImportError:
                 import loguru
 
@@ -242,14 +246,23 @@ class LocalSearchRAG:
                         {
                             "doc_id": doc_id,
                             "title": metadata.get("title", "Untitled"),
-                            "score": float(1.0 - (results["distances"][0][idx] if results.get("distances") else 0.0)),
+                            "score": float(
+                                1.0
+                                - (
+                                    results["distances"][0][idx]
+                                    if results.get("distances")
+                                    else 0.0
+                                )
+                            ),
                         }
                     )
                 return {"status": "ok", "query": query, "matches": matches}
         except Exception as exc:
             import loguru
 
-            loguru.logger.warning(f"ChromaDB semantic search failed: {exc}. Using local TF-IDF fallback.")
+            loguru.logger.warning(
+                f"ChromaDB semantic search failed: {exc}. Using local TF-IDF fallback."
+            )
 
         # Enhanced local TF-IDF fallback - works completely offline
         matches = []
@@ -280,7 +293,9 @@ class LocalSearchRAG:
     def _store_search(self, query: str, docs: dict[str, list[str]]) -> None:
         self._index[query] = [doc for fields in docs.values() for doc in fields]
         with contextlib.suppress(Exception):
-            self.embeddings_path.write_text(json.dumps(self._index, ensure_ascii=False, indent=2), encoding="utf-8")
+            self.embeddings_path.write_text(
+                json.dumps(self._index, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
 
         # Add to ChromaDB if available
         if self.collection is not None:

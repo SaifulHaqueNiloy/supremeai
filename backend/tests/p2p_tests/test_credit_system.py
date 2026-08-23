@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from p2p.credit_system import CreditLedger, ResourceBroker

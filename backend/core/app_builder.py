@@ -91,6 +91,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     """
 
     # বাংলা মন্তব্ব্য: লেজি ইম্পোর্ট — মিডলওয়্যার ক্লাস শুধু create_app() কল করলেই লোড হবে
+    from fastapi.middleware.cors import CORSMiddleware
+
     from api.middleware import (
         RequestIdMiddleware,
         ResponseStandardizationMiddleware,
@@ -98,39 +100,40 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         TenantExtractionMiddleware,
     )
     from core.idempotency_middleware import IdempotencyMiddleware
-    from core.middleware.security import (
-        SecurityHeadersMiddleware,
-        RequestValidationMiddleware,
-    )
-    from core.rate_limit import RateLimitMiddleware
     from core.lifespan import app_lifespan
+    from core.middleware.security import (
+        RequestValidationMiddleware,
+        SecurityHeadersMiddleware,
+    )
     from core.observability.observability_middleware import ObservabilityMiddleware
+    from core.rate_limit import RateLimitMiddleware
     from core.request_context import RequestContextMiddleware
     from core.security.api_key_middleware import APIKeyAuthMiddleware
     from core.security.authentication.auth_middleware import AuthMiddleware
     from core.security.autonoguard_middleware import AutonoGuardMiddleware
-    from core.security.protection.honeypot import HoneypotMiddleware
     from core.security.origin_validator import TrustedOriginMiddleware
-    from fastapi.middleware.cors import CORSMiddleware
+    from core.security.protection.honeypot import HoneypotMiddleware
     from middleware.chaos_injector import ChaosInjectorMiddleware
 
     @asynccontextmanager
     async def _lifespan(app: FastAPI):
         # 🔬 Evolution v3.0: Enhanced lifespan with validation & health checks
-        from core.auto_healer import get_auto_healer
-        from core.health import register_check, set_liveness
-        from core.config_validator import validate_config, print_config_summary
-        from utils.platform_detect import auto_set_platform_env, DETECTED_PLATFORM
         import asyncio
-        
+
+        from core.auto_healer import get_auto_healer
+
+        from core.config_validator import print_config_summary, validate_config
+        from core.health import register_check, set_liveness
+        from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
+
         logger.debug("\n" + "=" * 60)
         logger.debug(f"🚀 SupremeAI Starting on {DETECTED_PLATFORM.platform.value.upper()}...")
         logger.debug("=" * 60)
-        
+
         # Auto-detect platform
         platform = auto_set_platform_env()
         logger.debug(f"📍 Platform: {platform}")
-        
+
         # Validate configuration (Fail-Fast)
         logger.debug("\n🔧 Validating configuration...")
         result = validate_config()
@@ -139,34 +142,38 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             if any(e.severity.value == "error" for e in result.errors):
                 logger.debug("❌ Fatal configuration errors. Exiting.")
                 import sys
+
                 sys.exit(1)
         else:
             logger.debug("✅ Configuration valid.")
-        
+
         # Print summary (masked secrets)
         print_config_summary()
-        
+
         # Register health checks
         logger.debug("\n🏥 Registering health checks...")
-        
+
         async def _check_database() -> bool:
             try:
                 from sqlalchemy import text
+
                 from core.db import engine
+
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
                 return True
-            except Exception as e:
+            except Exception:
                 return False
-                
+
         def _check_memory() -> bool:
             try:
                 import psutil
+
                 mem = psutil.virtual_memory()
                 return mem.percent < 90
             except ImportError:
                 return True
-                
+
         register_check("database", _check_database, critical=True)
         register_check("memory", _check_memory, critical=False)
 
@@ -174,19 +181,27 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         if settings.AUTO_HEALING_ENABLED:
             healer = get_auto_healer()
             monitoring_task = asyncio.create_task(healer.start_monitoring())
-        
+
         async with app_lifespan(app):
             yield
-            
+
         logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
-        
+
         if settings.AUTO_HEALING_ENABLED and monitoring_task:
             healer.stop_monitoring()
             await monitoring_task
 
-    docs_url = "/docs" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
-    redoc_url = "/redoc" if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug else None
+    docs_url = (
+        "/docs"
+        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
+        else None
+    )
+    redoc_url = (
+        "/redoc"
+        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
+        else None
+    )
     openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
@@ -246,14 +261,18 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 14. Rate Limiting
     from core.rate_limit import RateLimiter
+
     app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
 
     # 14. CORS: Re-added for unified app architecture.
     def _ensure_list(v):
         return [v] if isinstance(v, str) else list(v)
-    origins = list(set(_ensure_list(settings.user_cors_origins) + _ensure_list(settings.admin_cors_origins)))
+
+    origins = list(
+        set(_ensure_list(settings.user_cors_origins) + _ensure_list(settings.admin_cors_origins))
+    )
     if not origins:
-        origins = ["*"] # Fallback if empty, though origin_validator will still guard
+        origins = ["*"]  # Fallback if empty, though origin_validator will still guard
 
     app.add_middleware(
         CORSMiddleware,
@@ -273,7 +292,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # বাংলা মন্তব্ব্য: মেট্রিক্স এন্ডপয়েন্ট যোগ করা
     if settings.MONITORING_DETAILED:
         from fastapi.responses import PlainTextResponse
+
         from core.monitoring import get_metrics_collector
+
         @app.get("/metrics", response_class=PlainTextResponse)
         async def metrics_endpoint():
             collector = get_metrics_collector()
@@ -281,44 +302,45 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 🔬 Evolution v3.0: Register health endpoints
     from core.health_routes import router as health_router
+
     app.include_router(health_router, prefix="/health")
 
-
     from fastapi.responses import JSONResponse
-    from core.exceptions import SupremeAIException
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request, exc: Exception):
         """Handle unhandled exceptions with proper response and circuit breaker awareness."""
-        from fastapi import Request
+
         from core.circuit_breaker import CIRCUITS
-        import traceback
-        
+
         status_code = getattr(exc, "status_code", 500)
         error_response = {
             "error": exc.__class__.__name__,
             "detail": str(exc),
         }
-        
+
         if hasattr(exc, "to_dict"):
             error_response.update(exc.to_dict())
-            
+
         exc_lower = str(exc).lower()
         if any(kw in exc_lower for kw in ["timeout", "connection", "refused", "5xx"]):
             cb_stats = {name: cb.stats for name, cb in CIRCUITS.items()}
             if any(s.current_state.value == "open" for s in cb_stats.values()):
                 error_response["circuit_breakers"] = {
                     name: {"state": s.current_state.value, "recovery_in": cb.get_recovery_time()}
-                    for name, cb, s in [(n, CIRCUITS[n], CIRCUITS[n].stats) for n in CIRCUITS if s.current_state.value == "open"]
+                    for name, cb, s in [
+                        (n, CIRCUITS[n], CIRCUITS[n].stats)
+                        for n in CIRCUITS
+                        if s.current_state.value == "open"
+                    ]
                 }
-        
+
         return JSONResponse(
             status_code=status_code,
             content=error_response,
         )
 
     return app
-
 
 
 # Backward-compatibility alias for legacy tests

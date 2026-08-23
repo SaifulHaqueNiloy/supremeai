@@ -338,7 +338,9 @@ class SearchCodeInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    query: str = Field(..., description="সার্চ কোয়েরি (GitHub code search সিনট্যাক্স সাপোর্ট করে)", min_length=1)
+    query: str = Field(
+        ..., description="সার্চ কোয়েরি (GitHub code search সিনট্যাক্স সাপোর্ট করে)", min_length=1
+    )
     per_page: int = Field(default=10, description="প্রতি পেজে কতগুলো রেজাল্ট", ge=1, le=50)
 
 

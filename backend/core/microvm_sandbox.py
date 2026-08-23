@@ -82,7 +82,9 @@ def _validate_sandbox_root(path_str: str) -> Path:
 def _validate_vm_id(vm_id: str) -> str:
     """বাংলা মন্তব্য: vm_id pattern validation — path injection prevent।"""
     if not _VM_ID_PATTERN.match(vm_id):
-        raise ValueError(f"Invalid vm_id '{vm_id}'. Only alphanumeric, hyphen, underscore allowed (max 64 chars).")
+        raise ValueError(
+            f"Invalid vm_id '{vm_id}'. Only alphanumeric, hyphen, underscore allowed (max 64 chars)."
+        )
     return vm_id
 
 
@@ -158,7 +160,9 @@ class MicroVMSandbox:
             return "gvisor"
         return None
 
-    def _create_microvm_config(self, vm_dir: Path, vm_id: str, rootfs_template: str | None = None) -> Path:
+    def _create_microvm_config(
+        self, vm_dir: Path, vm_id: str, rootfs_template: str | None = None
+    ) -> Path:
         """
         বাংলা মন্তব্য: Firecracker config তৈরি — pathlib.Path ব্যবহার।
         """
@@ -170,7 +174,9 @@ class MicroVMSandbox:
             "drives": [
                 {
                     "drive_id": "rootfs",
-                    "path_on_host": str(Path(rootfs_template) if rootfs_template else (vm_dir / "rootfs.ext4")),
+                    "path_on_host": str(
+                        Path(rootfs_template) if rootfs_template else (vm_dir / "rootfs.ext4")
+                    ),
                     "is_root_device": True,
                 }
             ],
@@ -189,12 +195,16 @@ class MicroVMSandbox:
         return config_path
 
     @with_error_bus("execute_async")
-    async def execute_async(self, cmd: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:
+    async def execute_async(
+        self, cmd: str, timeout: int = 30, language: str = "python"
+    ) -> dict[str, Any]:
         """বাংলা মন্তব্য: Secure code execution। Path validation mandatory।"""
         # 🛡️ AST প্রি-এক্সিকিউশন ভ্যালিডেশন — getattr/hasattr বাইপাস প্রতিরোধ
         is_safe, reason = _ast_validate_code(cmd, context=f"execute_async/{language}")
         if not is_safe:
-            logger.critical(f"[MicroVMSandbox] AST validation blocked unsafe code for {language}: {reason}")
+            logger.critical(
+                f"[MicroVMSandbox] AST validation blocked unsafe code for {language}: {reason}"
+            )
             return {
                 "success": False,
                 "error": f"AST sandbox validation failed: {reason}",
@@ -259,12 +269,18 @@ class MicroVMSandbox:
             if self.auto_destroy:
                 self._destroy_vm_dir(vm_dir)
 
-    async def _run_firecracker(self, vm_dir: Path, vm_id: str, cmd: str, timeout: int) -> dict[str, Any]:
+    async def _run_firecracker(
+        self, vm_dir: Path, vm_id: str, cmd: str, timeout: int
+    ) -> dict[str, Any]:
         """বাংলা মন্তব্য: cmd (ইউজারের কোড) এখন সঠিকভাবে VM-এর ভেতরে পৌঁছায় (Patch 3 fix)।"""
         # 🛡️ AST validation before firecracker execution
         is_safe, reason = _ast_validate_code(cmd, context="firecracker")
         if not is_safe:
-            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "firecracker"}
+            return {
+                "success": False,
+                "error": f"AST validation failed: {reason}",
+                "provider": "firecracker",
+            }
 
         rootfs_template = getattr(settings, "firecracker_rootfs_template", None)
         if not rootfs_template or not Path(rootfs_template).exists():
@@ -327,7 +343,11 @@ class MicroVMSandbox:
         # 🛡️ AST validation before gVisor execution
         is_safe, reason = _ast_validate_code(cmd, context="gvisor")
         if not is_safe:
-            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "gvisor"}
+            return {
+                "success": False,
+                "error": f"AST validation failed: {reason}",
+                "provider": "gvisor",
+            }
 
         tmp_path: Path | None = None
         try:
@@ -381,7 +401,11 @@ class MicroVMSandbox:
         # 🛡️ AST validation before Docker execution
         is_safe, reason = _ast_validate_code(cmd, context="docker-fallback")
         if not is_safe:
-            return {"success": False, "error": f"AST validation failed: {reason}", "provider": "docker-fallback"}
+            return {
+                "success": False,
+                "error": f"AST validation failed: {reason}",
+                "provider": "docker-fallback",
+            }
 
         # বাংলা মন্তব্য: _ALLOWED_DOCKER_IMAGES whitelist enforce
         docker_image = _DEFAULT_DOCKER_IMAGE
@@ -483,7 +507,9 @@ def get_sandbox() -> MicroVMSandbox:
     return _sandbox_instance
 
 
-async def execute_code_securely(code: str, timeout: int = 30, language: str = "python") -> dict[str, Any]:
+async def execute_code_securely(
+    code: str, timeout: int = 30, language: str = "python"
+) -> dict[str, Any]:
     """বাংলা মন্তব্য: Public API — sandbox validate করে code execute করে।"""
     # 🛡️ AST pre-execution validation at the public API level
     is_safe, reason = _ast_validate_code(code, context=f"execute_code_securely/{language}")

@@ -169,7 +169,9 @@ async def test_execute_recipe_success(mock_async_playwright, agent):
 
     assert result["status"] == "success"
     assert result["data"]["#result"] == "Extracted Value"
-    mock_page.goto.assert_called_once_with("http://example.com", wait_until="networkidle", timeout=30000)
+    mock_page.goto.assert_called_once_with(
+        "http://example.com", wait_until="networkidle", timeout=30000
+    )
     # HumanBehaviorSimulators মক করা হয়েছে
     # mock_page.click.assert_called_once_with("#button")
     # mock_page.fill.assert_called_once_with("#input", "test")

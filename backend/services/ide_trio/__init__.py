@@ -6,14 +6,14 @@ A multi-agent code generation and review pipeline consisting of:
 3. ClineChecker (Stage 3)
 """
 
+from .cline_checker import ClineChecker
 from .gemini_writer import GeminiWriter
 from .kilo_reviewer import KiloReviewer, ReviewResult, ReviewSeverity
-from .cline_checker import ClineChecker
 
 __all__ = [
     "GeminiWriter",
     "KiloReviewer",
-    "ReviewResult", 
+    "ReviewResult",
     "ReviewSeverity",
     "ClineChecker",
 ]

@@ -85,4 +85,8 @@ async def install_skill(skill: str = ""):
     manifest_path = MANIFEST_DIR / f"{skill}.json"
     if not manifest_path.exists():
         raise HTTPException(status_code=404, detail=f"Skill '{skill}' not found in catalog")
-    return {"status": "installed", "skill": skill, "message": f"Skill '{skill}' installed successfully"}
+    return {
+        "status": "installed",
+        "skill": skill,
+        "message": f"Skill '{skill}' installed successfully",
+    }

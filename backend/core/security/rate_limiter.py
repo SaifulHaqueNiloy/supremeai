@@ -66,7 +66,7 @@ class SlidingWindowRateLimiter:
         if self.script_sha is None:
             try:
                 self.script_sha = await client.script_load(self.lua_script)
-            except Exception as e:  # Fallback to EVAL if SCRIPT LOAD fails
+            except Exception:  # Fallback to EVAL if SCRIPT LOAD fails
                 self.script_sha = None
                 logger.debug("SCRIPT LOAD failed, will fallback to EVAL")
 
@@ -93,7 +93,9 @@ class SlidingWindowRateLimiter:
         if not client:
             # In production, fail-closed: if Redis is unavailable, deny the request
             if settings.env in ["production", "staging"]:
-                logger.warning(f"Redis unavailable, denying request for {identifier} in {limit_type} rate limiter")
+                logger.warning(
+                    f"Redis unavailable, denying request for {identifier} in {limit_type} rate limiter"
+                )
                 return False, 0, 0
             else:
                 # In non-production, allow requests if Redis is down

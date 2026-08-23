@@ -107,13 +107,19 @@ class SandboxService:
                 )
 
             # Execute with timeout
-            output_bytes = await asyncio.wait_for(loop.run_in_executor(None, run_container), timeout=self.timeout)
+            output_bytes = await asyncio.wait_for(
+                loop.run_in_executor(None, run_container), timeout=self.timeout
+            )
 
             execution_time = int((asyncio.get_event_loop().time() - start_time) * 1000)
 
             return {
                 "status": "SUCCESS",
-                "stdout": (output_bytes.decode("utf-8") if isinstance(output_bytes, bytes) else str(output_bytes)),
+                "stdout": (
+                    output_bytes.decode("utf-8")
+                    if isinstance(output_bytes, bytes)
+                    else str(output_bytes)
+                ),
                 "stderr": "",
                 "execution_time_ms": execution_time,
             }

@@ -19,7 +19,9 @@ def test_jwt_secret_validation_production_valid():
 
 def test_jwt_secret_validation_production_invalid():
     with pytest.raises(ValueError, match="JWT secret must be at least 64 bytes long in production"):
-        Settings.set_jwt_secret("short_prod_key", info=type("Info", (), {"data": {"env": "production"}})())
+        Settings.set_jwt_secret(
+            "short_prod_key", info=type("Info", (), {"data": {"env": "production"}})()
+        )
 
 
 @pytest.mark.asyncio

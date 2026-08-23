@@ -167,7 +167,9 @@ class TestPromptInjectionDefender:
         mock_response.choices = [MagicMock()]
         mock_response.choices[
             0
-        ].message.content = '{"is_injection": false, "confidence": 0.9, "technique": "none", "severity": "low"}'
+        ].message.content = (
+            '{"is_injection": false, "confidence": 0.9, "technique": "none", "severity": "low"}'
+        )
 
         async def mock_acomplete(*args, **kwargs):
             return mock_response
@@ -317,7 +319,9 @@ class TestGuardianAI:
                 threats_detected=[],
             )
 
-        with patch.object(guardian.input_sanitizer, "sanitize", side_effect=mock_sanitize) as mock_sanitize:
+        with patch.object(
+            guardian.input_sanitizer, "sanitize", side_effect=mock_sanitize
+        ) as mock_sanitize:
             await guardian.check_input("Hello")
 
         mock_sanitize.assert_called_once()
@@ -363,7 +367,9 @@ class TestGuardianAI:
             )
 
         with patch.object(guardian.input_sanitizer, "sanitize", side_effect=mock_input_sanitize):
-            with patch.object(guardian.output_sanitizer, "sanitize", side_effect=mock_output_sanitize):
+            with patch.object(
+                guardian.output_sanitizer, "sanitize", side_effect=mock_output_sanitize
+            ):
                 result = await guardian.full_pipeline("Hello", "World")
 
         assert result.input_safe is True

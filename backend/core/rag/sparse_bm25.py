@@ -84,7 +84,11 @@ class SparseBM25Index:
                 tf_map[t] = tf_map.get(t, 0) + 1
 
             doc_len = self.doc_len[idx]
-            len_norm = 1.0 - self.b + self.b * (doc_len / self.avg_doc_len if self.avg_doc_len > 0 else 1.0)
+            len_norm = (
+                1.0
+                - self.b
+                + self.b * (doc_len / self.avg_doc_len if self.avg_doc_len > 0 else 1.0)
+            )
 
             score = 0.0
             for q_term in query_tokens:

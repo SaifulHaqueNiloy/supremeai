@@ -24,7 +24,10 @@ class VisionAgent:
         try:
             reader = easyocr.Reader(self.languages, gpu=False)
             raw_results = reader.readtext(image_path, detail=1, paragraph=False)
-            text_lines = [{"text": text, "confidence": confidence} for (_bbox, text, confidence) in raw_results]
+            text_lines = [
+                {"text": text, "confidence": confidence}
+                for (_bbox, text, confidence) in raw_results
+            ]
             full_text = "\n".join(item["text"] for item in text_lines)
             return {
                 "success": True,
@@ -60,7 +63,10 @@ class VisionAgent:
         chart_hints = [
             ln["text"]
             for ln in lines
-            if any(k in ln["text"].lower() for k in ["data", "axis", "value", "x:", "y:", "legend", "label"])
+            if any(
+                k in ln["text"].lower()
+                for k in ["data", "axis", "value", "x:", "y:", "legend", "label"]
+            )
         ]
         structured = dict(result.get("structured", {}))
         structured.update({"chart_hints": chart_hints, "estimated_labels": len(chart_hints)})

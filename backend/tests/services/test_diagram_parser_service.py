@@ -121,7 +121,9 @@ def test_detect_format_fallback_to_image():
 @pytest.mark.anyio
 async def test_parse_mermaid_returns_nodes_edges():
     svc = DiagramParserService()
-    nodes, edges = await svc.parse(content="graph TD\nA[Login]\nB[Validate]\nA-->B\n", filename="d.mmd")
+    nodes, edges = await svc.parse(
+        content="graph TD\nA[Login]\nB[Validate]\nA-->B\n", filename="d.mmd"
+    )
     assert len(nodes) >= 1
     assert any(e.source == "A" and e.target == "B" for e in edges)
 

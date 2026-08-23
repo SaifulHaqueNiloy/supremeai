@@ -12,15 +12,16 @@ Tests:
 """
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
-from api.server import app, ai_integrator
+from api.server import app
 from core.integration_layer import get_integrator
 
 
 @pytest.fixture(autouse=True)
 async def setup_integrator():
     import api.server as server_module
+
     server_module.ai_integrator = await get_integrator()
 
 

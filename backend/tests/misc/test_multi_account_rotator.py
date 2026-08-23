@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from core.utils.time_utils import utc_now
 from tools.security_tools.multi_account_rotator import (
     Account,
     MultiAccountRotator,
@@ -12,7 +13,6 @@ from tools.security_tools.multi_account_rotator import (
     ProviderStatus,
     TaskType,
 )
-from core.utils.time_utils import utc_now
 
 
 # বাংলা মন্তব্য: rotator ইনস্ট্যান্স তৈরি করার জন্য ফিক্সচার
@@ -326,7 +326,9 @@ class TestMultiAccountRotator:
         )
         acc = Account(id="a1", provider="deepseek", email="a@b.com")
         # বাংলা মন্তব্য: রিয়েল নেটওয়ার্ক কল এড়াতে LLMGateway.acompletion মক করা হলো।
-        with patch("core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock) as mock_acompletion:
+        with patch(
+            "core.llm.llm_gateway.LLMGateway.acompletion", new_callable=AsyncMock
+        ) as mock_acompletion:
             mock_acompletion.return_value = {
                 "success": True,
                 "text": "DeepSeek analysis: test response",

@@ -16,9 +16,9 @@ Memory: Starts at ~500MB, grows to ~2-5GB as it learns.
 import hashlib
 import json
 import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from pathlib import Path
 from typing import Any
 
@@ -83,7 +83,7 @@ class SupremeLearningEngine:
             "fallback_answers": 0,
             "self_sufficiency_rate": 0.0,
         }
-        
+
         self._response_callbacks: list[Callable] = []
         self._pre_query_hooks: list[Callable] = []
 
@@ -94,7 +94,7 @@ class SupremeLearningEngine:
     def register_response_callback(self, callback: Callable) -> None:
         """Register a callback to be called after each LLM response."""
         self._response_callbacks.append(callback)
-        
+
     def register_pre_query_hook(self, hook: Callable) -> None:
         """Register a hook to check if we can answer without LLM."""
         self._pre_query_hooks.append(hook)
@@ -234,15 +234,12 @@ class SupremeLearningEngine:
         min_confidence: float = 0.75,
     ) -> dict:
         """Process a chat message with learning integration."""
-        import asyncio
         task_type = self._classify_task_type(query)
-        
+
         can_answer, confidence, pattern = self.can_answer_independently(
-            query=query,
-            task_type=task_type,
-            min_confidence=min_confidence
+            query=query, task_type=task_type, min_confidence=min_confidence
         )
-        
+
         if can_answer and pattern:
             response = self.generate_independent_response(
                 query=query,
@@ -250,7 +247,7 @@ class SupremeLearningEngine:
                 context={
                     "user_id": user_id,
                     "conversation_history": conversation_history,
-                }
+                },
             )
             return {
                 "source": "learned",
@@ -281,8 +278,9 @@ class SupremeLearningEngine:
         cost_usd: float = 0.0,
     ) -> dict:
         import asyncio
+
         task_type = self._classify_task_type(query)
-        
+
         pattern = self.learn_from_interaction(
             query=query,
             response=response,
@@ -290,7 +288,7 @@ class SupremeLearningEngine:
             task_type=task_type,
             user_feedback=user_feedback,
         )
-        
+
         for callback in self._response_callbacks:
             try:
                 if asyncio.iscoroutinefunction(callback):
@@ -299,16 +297,25 @@ class SupremeLearningEngine:
                     callback(pattern, query, response)
             except Exception as e:
                 logger.warning(f"Response callback failed: {e}")
-        
+
         return pattern
 
     def _classify_task_type(self, query: str) -> str:
         query_lower = query.lower()
-        if any(ind in query_lower for ind in ["code", "function", "class", "bug", "error", "debug", "implement", "api"]):
+        if any(
+            ind in query_lower
+            for ind in ["code", "function", "class", "bug", "error", "debug", "implement", "api"]
+        ):
             return "coding"
-        if any(ind in query_lower for ind in ["calculate", "math", "equation", "solve", "probability", "statistics"]):
+        if any(
+            ind in query_lower
+            for ind in ["calculate", "math", "equation", "solve", "probability", "statistics"]
+        ):
             return "math"
-        if any(ind in query_lower for ind in ["analyze", "compare", "difference", "vs", "versus", "pros", "cons"]):
+        if any(
+            ind in query_lower
+            for ind in ["analyze", "compare", "difference", "vs", "versus", "pros", "cons"]
+        ):
             return "analysis"
         if any(char in set("অআইঈউঊঋঌএঐওঔকখগঘঙচছজঝঞটঠডঢণতথদধনপফবভমযরলশষসহ") for char in query):
             return "bangla"
@@ -335,7 +342,9 @@ class SupremeLearningEngine:
             self.stats["self_answers"] += 1
             return True, confidence, pattern
         else:
-            logger.info(f"🤔 Confidence too low ({confidence:.2f} < {min_confidence}) - fallback to external AI")
+            logger.info(
+                f"🤔 Confidence too low ({confidence:.2f} < {min_confidence}) - fallback to external AI"
+            )
             self.stats["fallback_answers"] += 1
             return False, confidence, pattern
 
@@ -349,7 +358,9 @@ class SupremeLearningEngine:
         response = self._fill_template(pattern["response_template"], query, context)
 
         if pattern.get("reasoning_chain"):
-            reasoning = "\n".join([f"{i+1}. {step}" for i, step in enumerate(pattern["reasoning_chain"])])
+            reasoning = "\n".join(
+                [f"{i + 1}. {step}" for i, step in enumerate(pattern["reasoning_chain"])]
+            )
             response = f"{response}\n\n💭 Reasoning:\n{reasoning}"
 
         self._update_pattern_usage(pattern["pattern_id"], success=True)
@@ -364,7 +375,9 @@ class SupremeLearningEngine:
                 signature_words.append("{entity}")
             else:
                 signature_words.append(word)
-        return hashlib.md5(" ".join(signature_words).encode(), usedforsecurity=False).hexdigest()[:16]
+        return hashlib.md5(" ".join(signature_words).encode(), usedforsecurity=False).hexdigest()[
+            :16
+        ]
 
     def _extract_reasoning(self, response: str) -> list[str]:
         reasoning = []
@@ -411,7 +424,9 @@ class SupremeLearningEngine:
         complexity: str,
         feedback: float | None,
     ) -> dict:
-        pattern_id = hashlib.md5(f"{query_sig}:{domain}".encode(), usedforsecurity=False).hexdigest()[:16]
+        pattern_id = hashlib.md5(
+            f"{query_sig}:{domain}".encode(), usedforsecurity=False
+        ).hexdigest()[:16]
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -585,10 +600,15 @@ class SupremeLearningEngine:
             **self.stats,
             "total_patterns_in_db": total_patterns,
             "knowledge_graph_nodes": len(self.knowledge_graph.get("nodes", {})),
-            "data_dir_size_mb": sum(f.stat().st_size for f in self.data_dir.rglob("*") if f.is_file()) / (1024 * 1024),
+            "data_dir_size_mb": sum(
+                f.stat().st_size for f in self.data_dir.rglob("*") if f.is_file()
+            )
+            / (1024 * 1024),
         }
 
+
 _learning_engine_instance: SupremeLearningEngine | None = None
+
 
 def get_learning_engine() -> SupremeLearningEngine:
     global _learning_engine_instance
@@ -596,10 +616,12 @@ def get_learning_engine() -> SupremeLearningEngine:
         _learning_engine_instance = SupremeLearningEngine()
     return _learning_engine_instance
 
+
 async def setup_learning_engine():
     engine = get_learning_engine()
     logger.info("🧠 SupremeLearningEngine initialized for FastAPI app")
     return engine
+
 
 async def teardown_learning_engine():
     global _learning_engine_instance
@@ -608,14 +630,14 @@ async def teardown_learning_engine():
         logger.info(f"🧠 Learning Engine Shutdown Stats: {stats}")
         _learning_engine_instance = None
 
+
 def add_learning_middleware(app):
     from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.requests import Request
-    from starlette.responses import Response
-    
+
     class LearningMiddleware(BaseHTTPMiddleware):
         async def dispatch(self, request: Request, call_next):
             response = await call_next(request)
             return response
-            
+
     app.add_middleware(LearningMiddleware)

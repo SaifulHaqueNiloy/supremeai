@@ -36,7 +36,9 @@ async def test_auto_remediation_success(tmp_path):
     from unittest.mock import patch
 
     async def mock_acompletion(*args, **kwargs):
-        return {"text": "# Secure Patch Applied for: Hardcoded secret detected\npassword = os.getenv('DB_PASSWORD')"}
+        return {
+            "text": "# Secure Patch Applied for: Hardcoded secret detected\npassword = os.getenv('DB_PASSWORD')"
+        }
 
     with (
         patch("core.llm.llm_gateway.llm_gateway.acompletion", new=mock_acompletion),
@@ -81,7 +83,9 @@ def test_rollback_monitor_triggers_rollback(mock_redis):
     # Mock redis increment sequence to simulate 10 requests with 3 errors
     # (3/10 = 30% error rate, which breaches the 10% threshold)
     mock_redis.incr.return_value = 10  # Requests count
-    mock_redis.get.side_effect = lambda k: ("3.0" if "errors" in k else ("10" if "total" in k else "15000.0"))
+    mock_redis.get.side_effect = lambda k: (
+        "3.0" if "errors" in k else ("10" if "total" in k else "15000.0")
+    )
 
     res = monitor.record_metrics_and_check(service, latency_ms=1500.0, is_error=True)
 

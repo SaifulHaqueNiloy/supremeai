@@ -115,7 +115,9 @@ class EvolutionSkillGraph:
         if self.graph is None or nx is None:
             return []
         try:
-            path = nx.shortest_path(self.graph, source=start_skill, target=end_skill, weight="weight")
+            path = nx.shortest_path(
+                self.graph, source=start_skill, target=end_skill, weight="weight"
+            )
             return path
 
         except (nx.NetworkXNoPath, nx.NodeNotFound) as e:

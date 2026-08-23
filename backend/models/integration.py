@@ -19,7 +19,9 @@ class Integration(Base):
     encrypted_access_token: Mapped[str] = mapped_column(String, nullable=False)
     repo_url: Mapped[str] = mapped_column(String, nullable=True)  # Secondary repo or page id
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

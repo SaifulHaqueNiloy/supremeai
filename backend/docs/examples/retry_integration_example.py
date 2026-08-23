@@ -31,7 +31,11 @@ async def database_operation(query: str) -> dict[str, Any]:
 
 # Example: API call retry
 @retry_handler(
-    max_retries=5, delay=1.0, backoff=1.5, exceptions=(ConnectionError, TimeoutError, OSError), use_jitter=True
+    max_retries=5,
+    delay=1.0,
+    backoff=1.5,
+    exceptions=(ConnectionError, TimeoutError, OSError),
+    use_jitter=True,
 )
 async def external_api_call(endpoint: str, payload: dict[str, Any]) -> dict[str, Any]:
     """

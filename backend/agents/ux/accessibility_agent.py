@@ -90,13 +90,17 @@ class HTMLAccessibilityParser(HTMLParser):
                             "category": "cognitive",
                             "description": "Link with non-descriptive text",
                             "wcag_level": "A",
-                            "suggestions": ["Use descriptive link text that makes sense out of context"],
+                            "suggestions": [
+                                "Use descriptive link text that makes sense out of context"
+                            ],
                             "affected_elements": [f"<{tag} {dict(attrs)}>"],
                         }
                     )
 
         # Check for form inputs without labels
-        if (tag in ["input", "textarea", "select"] and "type" not in attrs) or attrs.get("type") != "hidden":
+        if (tag in ["input", "textarea", "select"] and "type" not in attrs) or attrs.get(
+            "type"
+        ) != "hidden":
             if "aria-label" not in attrs and "aria-labelledby" not in attrs:
                 # Check if previous element is a label
                 if "id" in attrs:
@@ -175,7 +179,12 @@ class AccessibilityAgent:
         self.disability_considerations = {
             "visual": {
                 "issues": ["color_dependency", "small_text", "missing_alt_text", "poor_contrast"],
-                "solutions": ["screen_reader_support", "high_contrast_mode", "text_scaling", "audio_alternatives"],
+                "solutions": [
+                    "screen_reader_support",
+                    "high_contrast_mode",
+                    "text_scaling",
+                    "audio_alternatives",
+                ],
             },
             "auditory": {
                 "issues": ["audio_only_content", "missing_captions", "sound_based_feedback"],
@@ -183,15 +192,27 @@ class AccessibilityAgent:
             },
             "motor": {
                 "issues": ["keyboard_dependency", "small_targets", "timed_interactions"],
-                "solutions": ["keyboard_navigation", "voice_control", "customizable_timing", "alternative_inputs"],
+                "solutions": [
+                    "keyboard_navigation",
+                    "voice_control",
+                    "customizable_timing",
+                    "alternative_inputs",
+                ],
             },
             "cognitive": {
                 "issues": ["complex_language", "unexpected_behaviors", "too_much_information"],
-                "solutions": ["simple_language", "consistent_design", "clear_feedback", "distraction_reduction"],
+                "solutions": [
+                    "simple_language",
+                    "consistent_design",
+                    "clear_feedback",
+                    "distraction_reduction",
+                ],
             },
         }
 
-    async def assess_content_accessibility(self, content: str, content_type: str = "html") -> AccessibilityReport:
+    async def assess_content_accessibility(
+        self, content: str, content_type: str = "html"
+    ) -> AccessibilityReport:
         """
         Assess the accessibility of content.
 
@@ -251,7 +272,9 @@ class AccessibilityAgent:
             # Store report in Redis
             await self._store_accessibility_report(report)
 
-            logger.info(f"Accessibility assessment completed. Issues found: {len(issues)}, Score: {score}")
+            logger.info(
+                f"Accessibility assessment completed. Issues found: {len(issues)}, Score: {score}"
+            )
             return report
 
         except Exception as e:
@@ -388,7 +411,9 @@ class AccessibilityAgent:
 
         return list(recommendations)
 
-    async def check_interface_accessibility(self, interface_elements: list[dict[str, Any]]) -> list[AccessibilityIssue]:
+    async def check_interface_accessibility(
+        self, interface_elements: list[dict[str, Any]]
+    ) -> list[AccessibilityIssue]:
         """
         Check interface elements for accessibility issues.
 
@@ -431,7 +456,9 @@ class AccessibilityAgent:
                             category="motor",
                             description=f"Button {i} too small for touch targets",
                             wcag_level="AA",
-                            suggestions=["Make button at least 44x44 pixels or provide equivalent spacing"],
+                            suggestions=[
+                                "Make button at least 44x44 pixels or provide equivalent spacing"
+                            ],
                             affected_elements=[f"Button at index {i} (size: {width}x{height}px)"],
                             timestamp=datetime.utcnow(),
                         )
@@ -439,7 +466,11 @@ class AccessibilityAgent:
 
             # Check form field accessibility
             elif element_type in ["input", "select", "textarea"]:
-                if not props.get("label") and not props.get("aria-label") and not props.get("aria-labelledby"):
+                if (
+                    not props.get("label")
+                    and not props.get("aria-label")
+                    and not props.get("aria-labelledby")
+                ):
                     issues.append(
                         AccessibilityIssue(
                             id=f"field_no_label_{i}_{int(datetime.utcnow().timestamp())}",
@@ -556,7 +587,8 @@ class AccessibilityAgent:
             plan = {
                 "status": "generated",
                 "target_score": target_score,
-                "current_average_score": sum(r.overall_score for r in recent_reports) / len(recent_reports),
+                "current_average_score": sum(r.overall_score for r in recent_reports)
+                / len(recent_reports),
                 "improvement_steps": improvement_steps,
                 "estimated_completion": "2-4 weeks",
                 "success_metrics": [

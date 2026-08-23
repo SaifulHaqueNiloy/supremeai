@@ -98,7 +98,9 @@ class PredictiveMetricsTracker:
 
         # রুল ১: টানা ৫টি বা তার বেশি 5xx এরর হওয়া
         if self.consecutive_errors >= self.error_threshold_consecutive:
-            logger.warning(f"Predictive Anomaly: High consecutive errors ({self.consecutive_errors})")
+            logger.warning(
+                f"Predictive Anomaly: High consecutive errors ({self.consecutive_errors})"
+            )
             return True
 
         # রুল ২: EWMA লেটেন্সি সাধারণ পার্সেন্টাইলের ৩ গুণের চেয়ে বেশি হওয়া এবং মিনিমাম ১০টি স্যাম্পল থাকা

@@ -40,7 +40,9 @@ def test_local_mode_initialization(vault_local):
 
 
 def test_fetch_secret_from_env(vault_local):
-    with patch.dict(os.environ, {"MY_SECRET": "env_value"}, clear=False):  # pragma: allowlist secret
+    with patch.dict(
+        os.environ, {"MY_SECRET": "env_value"}, clear=False
+    ):  # pragma: allowlist secret
         assert vault_local.fetch_secret("MY_SECRET") == "env_value"
 
 

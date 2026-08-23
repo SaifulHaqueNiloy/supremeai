@@ -54,7 +54,8 @@ class LatencyAwareWeightedRouter:
     def __init__(self, providers: dict[str, float] | None = None):
         default_providers = providers or {"openai": 5.0, "anthropic": 3.0, "groq": 2.0}
         self.stats: dict[str, ProviderStats] = {
-            name: ProviderStats(name=name, base_weight=weight) for name, weight in default_providers.items()
+            name: ProviderStats(name=name, base_weight=weight)
+            for name, weight in default_providers.items()
         }
         self._lock = asyncio.Lock()
 
@@ -68,7 +69,9 @@ class LatencyAwareWeightedRouter:
     async def select_provider(self) -> str:
         async with self._lock:
             candidates = [
-                (name, self._effective_weight(s)) for name, s in self.stats.items() if not s.is_circuit_open()
+                (name, self._effective_weight(s))
+                for name, s in self.stats.items()
+                if not s.is_circuit_open()
             ]
             if not candidates:
                 fallback = min(self.stats.values(), key=lambda s: s.circuit_open_until)

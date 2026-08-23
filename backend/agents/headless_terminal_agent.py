@@ -288,7 +288,9 @@ class HeadlessTerminalAgent:
             )
 
             try:
-                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=COMMAND_TIMEOUT)
+                stdout, stderr = await asyncio.wait_for(
+                    process.communicate(), timeout=COMMAND_TIMEOUT
+                )
                 output = (stdout or stderr or b"").decode("utf-8")[:MAX_OUTPUT_SIZE]
                 exit_code = process.returncode or 0
             except TimeoutError:
@@ -348,7 +350,7 @@ class HeadlessTerminalAgent:
     @with_error_bus("explain_output")
     async def explain_output(self, output: str) -> str:
         """Explain command output in natural language."""
-        prompt = "Explain the following command output in 1-2 sentences:\n\n" f"{output[:2000]}"
+        prompt = f"Explain the following command output in 1-2 sentences:\n\n{output[:2000]}"
 
         try:
             result = await self.interpreter.llm.route(

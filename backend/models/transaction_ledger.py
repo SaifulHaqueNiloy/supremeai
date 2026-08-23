@@ -12,6 +12,8 @@ class TransactionLedgerEntry(BaseModel):
     user_id: str = Field(..., description="Target User ID")
     amount_usd: float = Field(..., description="Amount charged (negative) or credited (positive)")
     transaction_type: Literal["token_usage", "byoc_deployment", "topup", "monthly_grant"]
-    description: str = Field(..., description="Context description (e.g. model name, tokens, or invoice ID)")
+    description: str = Field(
+        ..., description="Context description (e.g. model name, tokens, or invoice ID)"
+    )
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     status: Literal["success", "failed", "pending"] = "success"

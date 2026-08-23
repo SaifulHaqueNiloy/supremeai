@@ -70,7 +70,9 @@ async def get_skill_graph(user=Depends(require_auth_token)):
         # রিয়েল ডাটাবেস থেকে ফেচ করার লজিক (Cypher Query)
         graph_svc = get_graph_service()
         async with graph_svc.driver.session() as session:
-            result = await session.run("MATCH (n:Skill) OPTIONAL MATCH (n)-[r]->(m:Skill) RETURN n, r, m LIMIT 100")
+            result = await session.run(
+                "MATCH (n:Skill) OPTIONAL MATCH (n)-[r]->(m:Skill) RETURN n, r, m LIMIT 100"
+            )
             records = await result.data()
 
             nodes_dict = {}

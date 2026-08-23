@@ -31,7 +31,9 @@ class ParallelAgentExecutor:
             f"Initialized ParallelAgentExecutor (Group: {self.execution_group}, Max Tasks: {self.max_concurrent_tasks})"
         )
 
-    async def _execute_agent_task(self, agent_name: str, task_def, *args, **kwargs) -> dict[str, Any]:
+    async def _execute_agent_task(
+        self, agent_name: str, task_def, *args, **kwargs
+    ) -> dict[str, Any]:
         """Wrapper to execute an individual agent's task with optional MCP context."""
         if callable(task_def):
             task_func = task_def
@@ -58,7 +60,9 @@ class ParallelAgentExecutor:
             }
 
         self.active_tasks_count += 1
-        logger.info(f"[Agent: {agent_name}] Starting task... (Active tasks: {self.active_tasks_count})")
+        logger.info(
+            f"[Agent: {agent_name}] Starting task... (Active tasks: {self.active_tasks_count})"
+        )
 
         mcp_clients = {}
         try:
@@ -121,7 +125,9 @@ class ParallelAgentExecutor:
             await self._cleanup_mcp_clients(mcp_clients)
             self.active_tasks_count -= 1
 
-    async def _initialize_mcp_clients(self, agent_name: str, mcp_servers: list[str]) -> dict[str, Any]:
+    async def _initialize_mcp_clients(
+        self, agent_name: str, mcp_servers: list[str]
+    ) -> dict[str, Any]:
         """বাংলা মন্তব্য: এজেন্টের জন্য নির্দিষ্ট MCP সার্ভারগুলোর ক্লায়েন্ট সংযোগ স্থাপন করে।"""
         clients = {}
         for server_name in mcp_servers:
@@ -154,14 +160,18 @@ class ParallelAgentExecutor:
             try:
                 connected = await asyncio.to_thread(_connect)
             except RuntimeError as exc:
-                logger.error(f"[Agent: {agent_name}] MCP server '{server_name}' connection failed: {exc}")
+                logger.error(
+                    f"[Agent: {agent_name}] MCP server '{server_name}' connection failed: {exc}"
+                )
                 connected = False
 
             if connected:
                 clients[server_name] = client
                 logger.info(f"[Agent: {agent_name}] Connected to MCP server: {server_name}")
             else:
-                logger.warning(f"[Agent: {agent_name}] Failed to connect to MCP server: {server_name}")
+                logger.warning(
+                    f"[Agent: {agent_name}] Failed to connect to MCP server: {server_name}"
+                )
 
         return clients
 
@@ -191,9 +201,13 @@ class ParallelAgentExecutor:
             else:
                 redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
         except Exception as e:
-            logger.warning(f"Failed to publish agent state: {e}. Running with local logger fallback.")
+            logger.warning(
+                f"Failed to publish agent state: {e}. Running with local logger fallback."
+            )
 
-    async def run_parallel(self, agent_tasks: dict[str, Callable | dict[str, Any]]) -> dict[str, Any]:
+    async def run_parallel(
+        self, agent_tasks: dict[str, Callable | dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Executes a dictionary of agent tasks in parallel.
         Supports both simple callables and task definitions with MCP servers.
@@ -245,7 +259,9 @@ class AgentDAGScheduler:
     def __init__(self, redis_client=None, max_concurrent_tasks: int = 10):
         self.redis_client = redis_client
         self.max_concurrent_tasks = max_concurrent_tasks
-        self.executor = ParallelAgentExecutor(redis_client=redis_client, max_concurrent_tasks=max_concurrent_tasks)
+        self.executor = ParallelAgentExecutor(
+            redis_client=redis_client, max_concurrent_tasks=max_concurrent_tasks
+        )
         logger.info("Initialized AgentDAGScheduler (dependency-aware scheduling)")
 
     async def broadcast_state(self, channel: str, state: dict[str, Any]) -> None:
@@ -311,7 +327,9 @@ class AgentDAGScheduler:
                     {"node": name, "status": "completed", "result": results.get(name)},
                 )
 
-        aggregated["voted_best"] = self._aggregate_with_voting([n.result for n in task_graph.values()])
+        aggregated["voted_best"] = self._aggregate_with_voting(
+            [n.result for n in task_graph.values()]
+        )
         return aggregated
 
     def _topological_sort(self, task_graph: dict[str, DAGNode]) -> list[list[str]]:
@@ -330,7 +348,9 @@ class AgentDAGScheduler:
             current_level = [n for n, d in remaining.items() if d == 0 and n not in completed]
             if not current_level:
                 # বাংলা মন্তব্য: সাইক্লিক ডিপেন্ডেন্সি থাকলে বাকিগুলো সরাসরি যোগ করা হচ্ছে।
-                logger.warning("Cyclic dependency detected in DAG; forcing remaining nodes into final level.")
+                logger.warning(
+                    "Cyclic dependency detected in DAG; forcing remaining nodes into final level."
+                )
                 current_level = list(remaining.keys())
             for n in current_level:
                 completed.add(n)

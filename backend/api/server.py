@@ -11,11 +11,11 @@ Production-ready HTTP interface for SupremeAI:
 from __future__ import annotations
 
 import asyncio
+import time
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-import time
 from typing import Any
-import uuid
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,6 +43,7 @@ async def lifespan(app: FastAPI):
         await factory.graceful_shutdown()
     try:
         from database.session import dispose_engine
+
         await dispose_engine()
     except Exception as e:
         logger.debug(f"Engine disposal error: {e}")
@@ -122,7 +123,9 @@ class MemoryStatsResponse(BaseModel):
 rate_limit_store: dict[str, list[float]] = {}
 
 
-async def check_rate_limit(client_id: str = "anonymous", max_requests: int = 60, window_seconds: int = 60) -> None:
+async def check_rate_limit(
+    client_id: str = "anonymous", max_requests: int = 60, window_seconds: int = 60
+) -> None:
     """Simple rate limiting check."""
     now = time.time()
     if client_id not in rate_limit_store:
@@ -139,6 +142,7 @@ async def check_rate_limit(client_id: str = "anonymous", max_requests: int = 60,
 
 
 # ==================== ENDPOINTS ====================
+
 
 @app.get("/", tags=["Root"])
 async def root() -> dict[str, Any]:
@@ -226,7 +230,9 @@ async def health_check() -> HealthResponse:
     status_data = ai_integrator.get_system_status()
     return HealthResponse(
         status="healthy" if status_data.get("initialized") else "degraded",
-        uptime_seconds=float(status_data.get("performance_metrics", {}).get("system.cpu.usage_percent", 0.0)),
+        uptime_seconds=float(
+            status_data.get("performance_metrics", {}).get("system.cpu.usage_percent", 0.0)
+        ),
         version="4.0.0",
         components={"integrator": "healthy", "auto_evolution": "healthy"},
         metrics=status_data.get("session_stats", {}),
@@ -242,7 +248,9 @@ async def system_status(_token: dict = Depends(get_current_user_token)) -> dict[
 
 
 @app.get("/api/v1/evolution/status", response_model=EvolutionStatusResponse, tags=["Evolution"])
-async def evolution_status(_token: dict = Depends(get_current_user_token)) -> EvolutionStatusResponse:
+async def evolution_status(
+    _token: dict = Depends(get_current_user_token),
+) -> EvolutionStatusResponse:
     """Get current evolution status and history."""
     if not ai_integrator or not ai_integrator.auto_evolution:
         raise HTTPException(status_code=503, detail="Evolution system not available")
@@ -298,7 +306,9 @@ async def trigger_consolidation(_token: dict = Depends(get_current_user_token)) 
     return {
         "message": "Consolidation completed",
         "success": result.success,
-        "action_taken": result.action_taken.value if hasattr(result.action_taken, "value") else str(result.action_taken),
+        "action_taken": result.action_taken.value
+        if hasattr(result.action_taken, "value")
+        else str(result.action_taken),
         "blocks_affected": result.blocks_affected,
         "memory_freed_bytes": result.memory_freed_bytes,
         "time_ms": result.time_ms,

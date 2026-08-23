@@ -66,7 +66,9 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         self.limiter = AsyncRateLimiter()
         self.prefix = API_KEY_PREFIX
         # Add circuit breaker for database operations
-        self.db_circuit_breaker = CircuitBreaker(name="api_key_db_lookup", failure_threshold=3, recovery_timeout=30)
+        self.db_circuit_breaker = CircuitBreaker(
+            name="api_key_db_lookup", failure_threshold=3, recovery_timeout=30
+        )
 
     async def _get_cached_api_key(self, key_hash: str) -> dict | None:
         """Fetch API key row from Redis cache or PostgreSQL with caching."""
@@ -137,7 +139,9 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         key_hash = hash_api_key(api_key_header)
         row = await self._get_cached_api_key(key_hash)
         if row is None:
-            logger.warning(f"Invalid API key attempt or DB unavailable: {mask_api_key(api_key_header)}")
+            logger.warning(
+                f"Invalid API key attempt or DB unavailable: {mask_api_key(api_key_header)}"
+            )
             return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
         if row["revoked"]:
             logger.warning(f"Revoked API key used: {row['id']}")
@@ -154,7 +158,9 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
             is_allowed = await self.limiter.acquire(key_prefix, limit=rps, window=window)
         except RuntimeError as exc:
             logger.critical(f"Rate limiter failed: {exc}")
-            return JSONResponse(status_code=503, content={"detail": "Rate limiting service unavailable"})
+            return JSONResponse(
+                status_code=503, content={"detail": "Rate limiting service unavailable"}
+            )
 
         if not is_allowed:
             logger.warning(f"Rate limit hit for API key: {row['id']}")
@@ -174,7 +180,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 latency_ms=0.0,
                 ip_address=str(request.client.host) if request.client else None,
             )
-        except Exception as e:
+        except Exception:
             logger.opt(exception=True).warning(f"Failed to record API key usage for {row['id']}")
 
         logger.info(f"API key authenticated: {request.state.api_key['masked']}")

@@ -49,7 +49,9 @@ class ParallelCloudRouter:
         self.redis_client = None
         self.upstash = UpstashRedisQueue()
         self.last_checked = 0.0
-        redis_url = getattr(settings, "redis_url", None) or getattr(settings, "upstash_redis_url", None)
+        redis_url = getattr(settings, "redis_url", None) or getattr(
+            settings, "upstash_redis_url", None
+        )
         if redis_url:
             try:
                 import redis
@@ -96,7 +98,9 @@ class ParallelCloudRouter:
                 return max(0, val)
             except Exception as e:
                 logger.error(f"Redis decr requests failed: {e}")
-        self.PROVIDERS[provider]["current_requests"] = max(0, self.PROVIDERS[provider]["current_requests"] - 1)
+        self.PROVIDERS[provider]["current_requests"] = max(
+            0, self.PROVIDERS[provider]["current_requests"] - 1
+        )
         return self.PROVIDERS[provider]["current_requests"]
 
     def _get_status(self, provider: str) -> str:
@@ -165,7 +169,8 @@ class ParallelCloudRouter:
             return configured[0] if configured else "gcp_cloud_run"
 
         is_latency_sensitive = (
-            task_type in ["completion", "voice", "realtime"] or "realtime" in (task_type or "").lower()
+            task_type in ["completion", "voice", "realtime"]
+            or "realtime" in (task_type or "").lower()
         )
 
         total_weight = 0.0
@@ -226,7 +231,8 @@ class ParallelCloudRouter:
                 "status": self._get_status(name),
                 "current_requests": self._get_current_requests(name),
                 "capacity_remaining": max(0, config["capacity"] - self._get_current_requests(name)),
-                "utilization_pct": (self._get_current_requests(name) / max(config["capacity"], 1)) * 100.0,
+                "utilization_pct": (self._get_current_requests(name) / max(config["capacity"], 1))
+                * 100.0,
                 "latency_ms": config["latency_ms"],
                 "region": config["region"],
             }
@@ -250,7 +256,9 @@ class ParallelCloudRouter:
                 config["weight"] = min(config["weight"] * 1.2, 50.0)
                 logger.info(f"Increased weight for {name} due to low utilization")
 
-        active_provs = [c for name, c in self.PROVIDERS.items() if self._get_status(name) == "active"]
+        active_provs = [
+            c for name, c in self.PROVIDERS.items() if self._get_status(name) == "active"
+        ]
         total = sum(p["weight"] for p in active_provs)
         if total > 0:
             for name, config in self.PROVIDERS.items():

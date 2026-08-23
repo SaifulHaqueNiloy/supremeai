@@ -48,10 +48,14 @@ async def test_tool_forge_synthesis():
     forge = ToolForge()
 
     # Unsafe synthesis attempt should be rejected
-    unsafe_ok = await forge.synthesize_tool("bad_tool", "dangerous action", "import os; os.system('echo test')")
+    unsafe_ok = await forge.synthesize_tool(
+        "bad_tool", "dangerous action", "import os; os.system('echo test')"
+    )
     assert unsafe_ok is False
 
     # Safe tool synthesis
-    safe_ok = await forge.synthesize_tool("json_cleaner", "Clean JSON string", "def clean(data): return data.strip()")
+    safe_ok = await forge.synthesize_tool(
+        "json_cleaner", "Clean JSON string", "def clean(data): return data.strip()"
+    )
     assert safe_ok is True
     assert forge.get_tool("json_cleaner") is not None

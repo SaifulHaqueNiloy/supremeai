@@ -58,6 +58,8 @@ class ChaosInjectorMiddleware(BaseHTTPMiddleware):
             await asyncio.sleep(delay)
             # packet drop after delay (values[1] < threshold triggers drop)
             if random.random() < _DROP_THRESHOLD:
-                return JSONResponse(status_code=504, content={"detail": "Chaos: packet dropped after delay"})
+                return JSONResponse(
+                    status_code=504, content={"detail": "Chaos: packet dropped after delay"}
+                )
 
         return await call_next(request)

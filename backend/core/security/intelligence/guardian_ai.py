@@ -203,7 +203,8 @@ class PromptInjectionDefender:
         },
         {
             "name": "jailbreak_dan",
-            "pattern": r"(?i)(DAN|Do\s+Anything\s+Now|jailbreak|" r"developer\s+mode|ignore\s+ethical)",
+            "pattern": r"(?i)(DAN|Do\s+Anything\s+Now|jailbreak|"
+            r"developer\s+mode|ignore\s+ethical)",
             "severity": ThreatLevel.CRITICAL,
         },
         {
@@ -224,7 +225,8 @@ class PromptInjectionDefender:
         },
         {
             "name": "indirect_injection",
-            "pattern": r"(?i)(summarize\s+the\s+following|translate\s+the\s+following|" r"from\s+now\s+on\s+you\s+are)",
+            "pattern": r"(?i)(summarize\s+the\s+following|translate\s+the\s+following|"
+            r"from\s+now\s+on\s+you\s+are)",
             "severity": ThreatLevel.MEDIUM,
         },
     ]
@@ -233,7 +235,8 @@ class PromptInjectionDefender:
     BANGLA_INJECTION_PATTERNS: list[dict[str, Any]] = [
         {
             "name": "bn_ignore_instructions",
-            "pattern": r"(?:আগের|পূর্ববর্তী|উপরের)\s+(?:সব|সমস্ত)\s+(?:নির্দেশনা|ইনস্ট্রাকশন)" r"\s+(?:ভুলে|বাদ দাও|এড়িয়ে যাও)",
+            "pattern": r"(?:আগের|পূর্ববর্তী|উপরের)\s+(?:সব|সমস্ত)\s+(?:নির্দেশনা|ইনস্ট্রাকশন)"
+            r"\s+(?:ভুলে|বাদ দাও|এড়িয়ে যাও)",
             "severity": ThreatLevel.HIGH,
         },
     ]
@@ -373,7 +376,9 @@ class InputSanitizer:
             sanitized = self.pii_detector.redact(text)
 
         # Determine if input is safe
-        critical_threats = [t for t in threats if t.threat_level in {ThreatLevel.CRITICAL, ThreatLevel.HIGH}]
+        critical_threats = [
+            t for t in threats if t.threat_level in {ThreatLevel.CRITICAL, ThreatLevel.HIGH}
+        ]
         should_block = len(critical_threats) > 0
 
         return GuardianResult(
@@ -433,7 +438,9 @@ class OutputSanitizer:
                     )
                 )
 
-        should_block = any(t.threat_level in {ThreatLevel.CRITICAL, ThreatLevel.HIGH} for t in threats)
+        should_block = any(
+            t.threat_level in {ThreatLevel.CRITICAL, ThreatLevel.HIGH} for t in threats
+        )
         return GuardianResult(
             input_safe=True,
             output_safe=len(threats) == 0,

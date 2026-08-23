@@ -5,7 +5,6 @@ import re
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
-
 _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
 
@@ -36,9 +35,12 @@ class SmartDataRepository:
                 get_target = doc_ref.get
                 if callable(get_target):
                     res = get_target()
-                    if inspect.iscoroutine(res) or (hasattr(asyncio, "isfuture") and asyncio.isfuture(res)):
-                        doc = await res
-                    elif inspect.isawaitable(res) and not isinstance(res, MagicMock | Mock):
+                    if (
+                        inspect.iscoroutine(res)
+                        or (hasattr(asyncio, "isfuture") and asyncio.isfuture(res))
+                        or inspect.isawaitable(res)
+                        and not isinstance(res, MagicMock | Mock)
+                    ):
                         doc = await res
                     else:
                         doc = res
@@ -49,7 +51,9 @@ class SmartDataRepository:
                     return None
                 return doc.to_dict()
             else:
-                raise PrimaryDatabaseDownException("Firebase client not initialized or missing collection method")
+                raise PrimaryDatabaseDownException(
+                    "Firebase client not initialized or missing collection method"
+                )
         except PrimaryDatabaseDownException:
             raise
         except Exception as e:
@@ -63,17 +67,23 @@ class SmartDataRepository:
             raise
 
     # Tier 2: Fallback to Supabase if primary database fails
-    async def get_document_with_fallback(self, table_name: str, doc_id: str) -> dict[str, Any] | None:
+    async def get_document_with_fallback(
+        self, table_name: str, doc_id: str
+    ) -> dict[str, Any] | None:
         try:
             # Try to fetch from Firebase
             return await self._fetch_from_primary(table_name, doc_id)
         except PrimaryDatabaseDownException:
-            logging.critical("🚨 FIREBASE IS DOWN! Circuit Breaker Tripped. Falling back to Supabase.")
+            logging.critical(
+                "🚨 FIREBASE IS DOWN! Circuit Breaker Tripped. Falling back to Supabase."
+            )
             try:
                 # If Supabase client has the execute API (standard Supabase-py)
                 if hasattr(self.supabase, "table"):
                     self._validate_table_name(table_name)
-                    response = self.supabase.table(table_name).select("*").eq("id", doc_id).execute()
+                    response = (
+                        self.supabase.table(table_name).select("*").eq("id", doc_id).execute()
+                    )
                     return response.data[0] if response.data else None
                 # If it's CloudPostgresStore helper
                 elif hasattr(self.supabase, "_execute"):
@@ -86,4 +96,6 @@ class SmartDataRepository:
                     return None
             except Exception as backup_error:
                 logging.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
-                raise ServiceDegradedException("Both primary and fallback databases unavailable") from backup_error
+                raise ServiceDegradedException(
+                    "Both primary and fallback databases unavailable"
+                ) from backup_error

@@ -16,7 +16,9 @@ if nats_messaging.nats is None:
     mock_nats_mod = MagicMock()
     mock_nats_mod.connect = AsyncMock()
     nats_messaging.nats = mock_nats_mod
-elif not hasattr(nats_messaging.nats, "connect") or not isinstance(nats_messaging.nats.connect, AsyncMock):
+elif not hasattr(nats_messaging.nats, "connect") or not isinstance(
+    nats_messaging.nats.connect, AsyncMock
+):
     nats_messaging.nats.connect = AsyncMock()
 
 
@@ -91,7 +93,9 @@ class TestConnect:
         with patch.object(nats_messaging.nats, "connect", mock_connect):
             await nats_client.connect()
 
-            mock_connect.assert_called_once_with(servers=["nats://localhost:4222"], token="test_token")
+            mock_connect.assert_called_once_with(
+                servers=["nats://localhost:4222"], token="test_token"
+            )
             assert nats_client.nc is mock_nc
             assert nats_client.js is mock_js
             assert nats_client.kv_store is mock_kv
@@ -115,7 +119,9 @@ class TestConnect:
             assert "token" not in call_kwargs or call_kwargs.get("token") is None
 
     @pytest.mark.asyncio
-    async def test_connection_creates_kv_store_if_not_exists(self, nats_client, mock_nats_connection):
+    async def test_connection_creates_kv_store_if_not_exists(
+        self, nats_client, mock_nats_connection
+    ):
         """বাংলা মন্তব্য: KV store না থাকলে create_key_value() call হয়।"""
         mock_nc, mock_js = mock_nats_connection
         mock_js.key_value.side_effect = Exception("Bucket not found")
@@ -426,6 +432,7 @@ class TestGlobalInstance:
     def test_global_instance_default_config(self):
         """বাংলা মন্তব্য: Global instance default configuration দিয়ে create করা আছে।"""
         import os
+
         from core.messaging.nats_messaging import nats_client
 
         assert nats_client.url == "nats://localhost:4222"

@@ -182,7 +182,9 @@ class RiderTracker:
         self.events: dict[str, list[dict[str, Any]]] = {}
         logger.info("RiderTracker initialized")
 
-    def track_event(self, user_id: str, event_type: str, data: dict[str, Any] | None = None) -> None:
+    def track_event(
+        self, user_id: str, event_type: str, data: dict[str, Any] | None = None
+    ) -> None:
         """Track user or rider activity event."""
         if user_id not in self.events:
             self.events[user_id] = []

@@ -1,9 +1,6 @@
 # tests/test_core_output_validator.py
 """Tests for output validation and multi-model consensus."""
 
-import pytest
-from unittest.mock import MagicMock, patch
-
 
 class TestOutputValidator:
     """Test output validator functionality."""
@@ -60,8 +57,7 @@ class TestEnhancedConfidenceScorer:
 
         scorer = EnhancedConfidenceScorer()
         result = scorer.score(
-            "The answer is 42. This is well-documented and verified.",
-            {"task_type": "math"}
+            "The answer is 42. This is well-documented and verified.", {"task_type": "math"}
         )
 
         assert isinstance(result, dict)
@@ -73,10 +69,7 @@ class TestEnhancedConfidenceScorer:
         from backend.core.output_validator import EnhancedConfidenceScorer
 
         scorer = EnhancedConfidenceScorer()
-        result = scorer.score(
-            "I think maybe possibly... not sure...",
-            {"task_type": "unclear"}
-        )
+        result = scorer.score("I think maybe possibly... not sure...", {"task_type": "unclear"})
 
         assert isinstance(result, dict)
 
@@ -86,8 +79,7 @@ class TestEnhancedConfidenceScorer:
 
         scorer = EnhancedConfidenceScorer()
         result = scorer.score(
-            "আমি সুপ্রিম এআই ব্যবহার করছি। এটি একটি দ্রুত এআই সিস্টেম।",
-            {"task_type": "general"}
+            "আমি সুপ্রিম এআই ব্যবহার করছি। এটি একটি দ্রুত এআই সিস্টেম।", {"task_type": "general"}
         )
 
         assert isinstance(result, dict)
@@ -115,7 +107,7 @@ class TestMultiAICodeGenerator:
             task="Create a simple function",
             code_kimi="def f(): return 1",
             code_gpt="def f(): return 1",
-            code_claude="def f(): return 1"
+            code_claude="def f(): return 1",
         )
 
         assert isinstance(result, dict)
@@ -132,8 +124,7 @@ class TestHumanReviewPolicy:
 
         # Code output type always requires review
         requires = policy.requires_human_review(
-            output_type="python_code",
-            confidence={"overall": 0.9}
+            output_type="python_code", confidence={"overall": 0.9}
         )
 
         assert requires is True
@@ -145,10 +136,7 @@ class TestHumanReviewPolicy:
         policy = HumanReviewPolicy()
 
         # High confidence output should not require review
-        requires = policy.requires_human_review(
-            output_type="general",
-            confidence={"overall": 0.95}
-        )
+        requires = policy.requires_human_review(output_type="general", confidence={"overall": 0.95})
 
         assert requires is False
 
@@ -159,9 +147,6 @@ class TestHumanReviewPolicy:
         policy = HumanReviewPolicy()
 
         # Low confidence output should require review
-        requires = policy.requires_human_review(
-            output_type="general",
-            confidence={"overall": 0.3}
-        )
+        requires = policy.requires_human_review(output_type="general", confidence={"overall": 0.3})
 
         assert requires is True

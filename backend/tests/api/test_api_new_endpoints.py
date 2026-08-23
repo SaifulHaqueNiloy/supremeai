@@ -70,7 +70,9 @@ def test_api_github_endpoints(mock_get_agent):
             "branch": "supremeai-improvements-1718952000",
         }
     )
-    mock_agent.create_pr = AsyncMock(return_value={"status": "pr_created", "pr_url": "https://github.com/pulls/1"})
+    mock_agent.create_pr = AsyncMock(
+        return_value={"status": "pr_created", "pr_url": "https://github.com/pulls/1"}
+    )
     mock_get_agent.return_value = mock_agent
 
     # test /github/connect
@@ -192,7 +194,11 @@ def test_config_endpoint_admin_control(monkeypatch):
     monkeypatch.setattr(
         config_route.db,
         "get_config",
-        lambda key: (["awesome-selfhosted", "libraries.io"] if key == "marketplace.resource_sources" else None),
+        lambda key: (
+            ["awesome-selfhosted", "libraries.io"]
+            if key == "marketplace.resource_sources"
+            else None
+        ),
     )
     monkeypatch.setattr(config_route.db, "set_config", lambda key, value, category="general": None)
 

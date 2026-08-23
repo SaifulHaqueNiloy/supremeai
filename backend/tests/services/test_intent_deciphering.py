@@ -1,17 +1,30 @@
 # backend/tests/services/test_intent_deciphering.py
-import pytest
 from unittest.mock import MagicMock
 
-from services.intent_deciphering import IntentAnalysis, IntentDecipheringService
+import pytest
+
+from services.intent_deciphering import IntentDecipheringService
 
 
 @pytest.fixture
 def mock_memory_service():
     mock = MagicMock()
     mock.retrieve_memories.return_value = [
-        {"session_id": "s1", "summary": "Fixed memory leak in background worker", "task_type": "bugfix"},
-        {"session_id": "s2", "summary": "Optimized Redis cache TTL and latency", "task_type": "perf"},
-        {"session_id": "s3", "summary": "Hardened JWT authentication middleware", "task_type": "security"},
+        {
+            "session_id": "s1",
+            "summary": "Fixed memory leak in background worker",
+            "task_type": "bugfix",
+        },
+        {
+            "session_id": "s2",
+            "summary": "Optimized Redis cache TTL and latency",
+            "task_type": "perf",
+        },
+        {
+            "session_id": "s3",
+            "summary": "Hardened JWT authentication middleware",
+            "task_type": "security",
+        },
     ]
     return mock
 
@@ -29,7 +42,9 @@ async def test_empty_request_returns_noop_intent():
 @pytest.mark.asyncio
 async def test_performance_intent_separation():
     service = IntentDecipheringService()
-    intent = await service.decipher_intent("The database queries are too slow, speed up API response time")
+    intent = await service.decipher_intent(
+        "The database queries are too slow, speed up API response time"
+    )
     assert "Optimize system throughput" in intent.ultimate_goal
     assert "p99_latency_within_sla" in intent.invariants
     assert intent.suggested_methodology == "profile_bottlenecks_and_apply_caching"
@@ -47,7 +62,9 @@ async def test_bugfix_intent_separation():
 @pytest.mark.asyncio
 async def test_security_intent_separation():
     service = IntentDecipheringService()
-    intent = await service.decipher_intent("Add RBAC security guards to all unauthenticated admin endpoints")
+    intent = await service.decipher_intent(
+        "Add RBAC security guards to all unauthenticated admin endpoints"
+    )
     assert "Harden endpoints with role-based access control" in intent.ultimate_goal
     assert "zero_unauthenticated_admin_access" in intent.invariants
     assert intent.suggested_methodology == "inject_explicit_rbac_guards"
@@ -56,7 +73,9 @@ async def test_security_intent_separation():
 @pytest.mark.asyncio
 async def test_latent_constraints_extraction():
     service = IntentDecipheringService()
-    intent = await service.decipher_intent("Build a fast and safe cache layer with no downtime and clean code")
+    intent = await service.decipher_intent(
+        "Build a fast and safe cache layer with no downtime and clean code"
+    )
     assert "zero_infrastructure_cost" in intent.latent_constraints
     assert "fail_closed_security" in intent.latent_constraints
     assert "low_latency_execution" in intent.latent_constraints

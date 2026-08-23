@@ -41,7 +41,9 @@ class SystemConfig(Base):
     category: Mapped[str] = mapped_column(String(100), nullable=False, default="general")
     is_active: Mapped[bool] = mapped_column(default=True)
     version: Mapped[int] = mapped_column(default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

@@ -206,7 +206,9 @@ class SystemTopologyMapper:
             conn.commit()
             conn.close()
 
-            logger.info(f"Added data flow to topology: {flow.source_node_id} -> {flow.target_node_id}")
+            logger.info(
+                f"Added data flow to topology: {flow.source_node_id} -> {flow.target_node_id}"
+            )
             return True
         except Exception as e:
             logger.error(f"Failed to add data flow to topology: {e}")
@@ -321,7 +323,10 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        upstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
+        upstream_services = [
+            dict(zip([d[0] for d in cursor.description], row, strict=False))
+            for row in cursor.fetchall()
+        ]
 
         # Find services that this service depends on (outgoing edges)
         cursor.execute(
@@ -334,7 +339,10 @@ class SystemTopologyMapper:
             (service_id,),
         )
 
-        downstream_services = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
+        downstream_services = [
+            dict(zip([d[0] for d in cursor.description], row, strict=False))
+            for row in cursor.fetchall()
+        ]
 
         # Calculate impact scores based on flow reliability and volume
         cursor.execute(
@@ -350,12 +358,17 @@ class SystemTopologyMapper:
             (service_id, service_id),
         )
 
-        impact_metrics = [dict(zip([d[0] for d in cursor.description], row, strict=False)) for row in cursor.fetchall()]
+        impact_metrics = [
+            dict(zip([d[0] for d in cursor.description], row, strict=False))
+            for row in cursor.fetchall()
+        ]
 
         conn.close()
 
         # Calculate overall impact score
-        total_reliability = sum(m["avg_reliability"] for m in impact_metrics if m["avg_reliability"])
+        total_reliability = sum(
+            m["avg_reliability"] for m in impact_metrics if m["avg_reliability"]
+        )
         sum(m["total_volume"] for m in impact_metrics if m["total_volume"])
 
         # Impact levels: 0-30% = low, 31-70% = medium, 71-100% = high
@@ -376,10 +389,14 @@ class SystemTopologyMapper:
             "upstream_services": upstream_services,
             "downstream_services": downstream_services,
             "impact_metrics": impact_metrics,
-            "recommendations": self._generate_impact_recommendations(impact_level, downstream_services),
+            "recommendations": self._generate_impact_recommendations(
+                impact_level, downstream_services
+            ),
         }
 
-    def _generate_impact_recommendations(self, impact_level: str, affected_services: list) -> list[str]:
+    def _generate_impact_recommendations(
+        self, impact_level: str, affected_services: list
+    ) -> list[str]:
         """Generate recommendations based on impact level."""
         recommendations = []
 
@@ -403,7 +420,11 @@ class SystemTopologyMapper:
             )
         else:
             recommendations.extend(
-                ["Continue normal monitoring", "Log the event for trend analysis", "No immediate action required"]
+                [
+                    "Continue normal monitoring",
+                    "Log the event for trend analysis",
+                    "No immediate action required",
+                ]
             )
 
         if len(affected_services) > 5:
@@ -629,7 +650,9 @@ if __name__ == "__main__":
 
         # Test dependency chain
         deps = await get_topology_mapper().get_dependency_chain("api_gateway")
-        logger.debug(f"Dependency chain for api_gateway: {deps['total_dependencies']} dependencies found")
+        logger.debug(
+            f"Dependency chain for api_gateway: {deps['total_dependencies']} dependencies found"
+        )
 
     # Run the test
     asyncio.run(test_mapper())

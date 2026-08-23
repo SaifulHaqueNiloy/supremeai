@@ -22,11 +22,15 @@ class TestBrowserAgent:
 
         agent = BrowserAgent()
         with patch("tools.browser_agent.is_safe_url", return_value=True):
-            with patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock) as mock_browser:
+            with patch(
+                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
+            ) as mock_browser:
                 mock_browser.return_value = None
                 with patch("httpx.get") as mock_get:
                     mock_resp = MagicMock()
-                    mock_resp.text = "<html><head><title>Test</title></head><body>Hello World</body></html>"
+                    mock_resp.text = (
+                        "<html><head><title>Test</title></head><body>Hello World</body></html>"
+                    )
                     mock_resp.status_code = 200
                     mock_get.return_value = mock_resp
                     result = await agent.navigate_and_interact("https://example.com")
@@ -41,7 +45,9 @@ class TestBrowserAgent:
 
         agent = BrowserAgent()
         with patch("tools.browser_agent.is_safe_url", return_value=True):
-            with patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock) as mock_browser:
+            with patch(
+                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
+            ) as mock_browser:
                 mock_browser.return_value = None
                 with patch("httpx.get", side_effect=httpx.RequestError("Connection refused")):
                     result = await agent.navigate_and_interact("https://invalid-url.xyz")
@@ -70,7 +76,9 @@ class TestVoiceCoder:
         from tools.code.voice_coder import VoiceCoder
 
         coder = VoiceCoder()
-        with patch.object(coder, "_generate_code_from_instruction", new_callable=AsyncMock) as mock_gen:
+        with patch.object(
+            coder, "_generate_code_from_instruction", new_callable=AsyncMock
+        ) as mock_gen:
             mock_gen.return_value = "def hello(): pass"
             action, code = await coder._classify_and_execute("generate a hello function")
         assert action == "generate_code"

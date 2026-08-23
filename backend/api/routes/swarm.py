@@ -35,7 +35,7 @@ async def stream_swarm_health(request: Request):
                 if await request.is_disconnected():
                     break
                 yield {"data": message}
-        except Exception as e:
+        except Exception:
             logger.exception("Unhandled exception")
             pass
 
@@ -61,8 +61,10 @@ async def _save_telemetry_to_db(data: dict):
             )
             await session.commit()
             logger.info(f"Telemetry persisted to DB: {data.get('patch_id', 'Unknown')}")
-        except Exception as e:
-            logger.exception(f"Failed to persist telemetry for patch {data.get('patch_id', 'Unknown')}")
+        except Exception:
+            logger.exception(
+                f"Failed to persist telemetry for patch {data.get('patch_id', 'Unknown')}"
+            )
             raise
 
 
@@ -147,7 +149,9 @@ async def execute_healing(payload: SelfHealingRequest, request: Request):
     Please fix the error and provide the corrected complete code content.
     """
 
-    orchestrator = SwarmOrchestrator(user_id="vscode_agent", session_id=session_id, task_prompt=task_prompt)  # type: ignore
+    orchestrator = SwarmOrchestrator(
+        user_id="vscode_agent", session_id=session_id, task_prompt=task_prompt
+    )  # type: ignore
 
     # Execute swarm with 0 retries for speed in VS Code context
     workspace = await orchestrator.execute(max_retries=0)
@@ -192,7 +196,9 @@ class FlowEdge(BaseModel):
 
 class ForgePayload(BaseModel):
     name: str = Field(..., description="Name of the custom swarm flow")
-    description: str | None = Field(default="", description="Optional description of the swarm's purpose")
+    description: str | None = Field(
+        default="", description="Optional description of the swarm's purpose"
+    )
     nodes: list[FlowNode]
     edges: list[FlowEdge]
 
@@ -203,7 +209,9 @@ async def save_forge_swarm(payload: ForgePayload):
     Saves the visual swarm layout (nodes and edges) from the Evolution Forge.
     """
     try:
-        logger.info(f"Received Forge payload for Swarm: {payload.name} with {len(payload.nodes)} nodes.")
+        logger.info(
+            f"Received Forge payload for Swarm: {payload.name} with {len(payload.nodes)} nodes."
+        )
 
         return {
             "status": "success",
@@ -216,7 +224,9 @@ async def save_forge_swarm(payload: ForgePayload):
         }
     except Exception as e:
         logger.error(f"Failed to save Forge Swarm: {e!s}")
-        raise HTTPException(status_code=500, detail="Internal server error while saving swarm blueprint") from e
+        raise HTTPException(
+            status_code=500, detail="Internal server error while saving swarm blueprint"
+        ) from e
 
 
 async def run_swarm_execution_async(execution_plan):
@@ -245,7 +255,9 @@ async def run_swarm_execution_async(execution_plan):
 
 
 @router.post("/forge/{flow_id}/execute", status_code=202)
-async def execute_forge_flow(flow_id: str, payload: ForgePayload, background_tasks: BackgroundTasks):
+async def execute_forge_flow(
+    flow_id: str, payload: ForgePayload, background_tasks: BackgroundTasks
+):
     try:
         execution_plan = ForgeCompiler.compile_and_sort(
             [n.model_dump() for n in payload.nodes],

@@ -31,7 +31,9 @@ from api.dependencies import get_current_user_token
 # /{id}/execute বা /{id} DELETE দিয়ে সেগুলোও নিয়ন্ত্রণ/মুছে ফেলতে পারত।
 # router-level auth যোগ করা হলো, বাকি sensitive router (tools_ops.py,
 # admin.py ইত্যাদি) যে প্যাটার্ন ব্যবহার করে ঠিক সেভাবে।
-router = APIRouter(prefix="/api/v1/sandbox", tags=["sandbox"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/api/v1/sandbox", tags=["sandbox"], dependencies=[Depends(get_current_user_token)]
+)
 
 # বাংলা মন্তব্য: অ্যাপ্লিকেশন-স্কোপ স্যান্ডবক্স ম্যানেজার (singleton)।
 _sandbox_manager: Any = None

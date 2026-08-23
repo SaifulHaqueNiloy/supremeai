@@ -1,4 +1,5 @@
 from loguru import logger
+
 """
 SupremeAI Theory of Mind System
 ===============================
@@ -158,7 +159,9 @@ class SocialCognitionModule(nn.Module):
         type_embeds = self.state_type_embedding(state_types)
 
         # Combine embeddings
-        combined_embeds = torch.cat([agent_embeds.unsqueeze(1), type_embeds.unsqueeze(1), context_embeddings], dim=1)
+        combined_embeds = torch.cat(
+            [agent_embeds.unsqueeze(1), type_embeds.unsqueeze(1), context_embeddings], dim=1
+        )
 
         # Apply transformer for reasoning
         attended = self.transformer(combined_embeds)
@@ -200,7 +203,9 @@ class MentalStateManager:
             self.beliefs[belief.holder] = []
 
         # Remove old belief with same content if exists
-        self.beliefs[belief.holder] = [b for b in self.beliefs[belief.holder] if b.content != belief.content]
+        self.beliefs[belief.holder] = [
+            b for b in self.beliefs[belief.holder] if b.content != belief.content
+        ]
 
         # Add new belief
         self.beliefs[belief.holder].append(belief)
@@ -211,7 +216,9 @@ class MentalStateManager:
             self.desires[desire.holder] = []
 
         # Remove old desire with same goal if exists
-        self.desires[desire.holder] = [d for d in self.desires[desire.holder] if d.goal != desire.goal]
+        self.desires[desire.holder] = [
+            d for d in self.desires[desire.holder] if d.goal != desire.goal
+        ]
 
         # Add new desire
         self.desires[desire.holder].append(desire)
@@ -242,7 +249,9 @@ class MentalStateManager:
         # Return beliefs from agent1 that are shared
         return [b for b in self.get_agent_beliefs(agent1) if b.content in shared_contents]
 
-    def infer_mental_state(self, agent_observed: str, observed_behavior: str, context: dict[str, Any]) -> MentalState:
+    def infer_mental_state(
+        self, agent_observed: str, observed_behavior: str, context: dict[str, Any]
+    ) -> MentalState:
         """
         Infer a mental state from observed behavior and context.
 
@@ -291,7 +300,9 @@ class FalseBeliefReasoner:
     def __init__(self):
         self.false_belief_scenarios = []
 
-    def detect_false_belief(self, agent_id: str, believed_content: str, actual_content: str) -> tuple[bool, float]:
+    def detect_false_belief(
+        self, agent_id: str, believed_content: str, actual_content: str
+    ) -> tuple[bool, float]:
         """
         Detect if an agent holds a false belief.
 
@@ -355,7 +366,9 @@ class FalseBeliefReasoner:
         # This is a simplified check
         return False  # Placeholder implementation
 
-    def generate_false_belief_scenario(self, agent_a: str, agent_b: str, object_location: str) -> dict[str, Any]:
+    def generate_false_belief_scenario(
+        self, agent_a: str, agent_b: str, object_location: str
+    ) -> dict[str, Any]:
         """
         Generate a classic false belief scenario (Sally-Anne test variant).
 
@@ -373,7 +386,11 @@ class FalseBeliefReasoner:
                 "object_location": object_location,
                 "who_knows_location": [agent_a],  # Only agent_a knows initial location
             },
-            "intervention": {"actor": agent_b, "action": "moved_object", "new_location": "different_location"},
+            "intervention": {
+                "actor": agent_b,
+                "action": "moved_object",
+                "new_location": "different_location",
+            },
             "post_intervention_state": {
                 "actual_location": "different_location",
                 "agent_a_believes_location": object_location,  # Still believes old location
@@ -412,7 +429,12 @@ class ToMReasoner:
         belief = self.mental_state_manager.get_belief_about_world(agent_id, target_topic)
 
         if not belief:
-            return {"agent": agent_id, "topic": target_topic, "has_belief": False, "confidence": 0.0}
+            return {
+                "agent": agent_id,
+                "topic": target_topic,
+                "has_belief": False,
+                "confidence": 0.0,
+            }
 
         # Check if the belief might be false
         is_false, false_confidence = self.false_belief_reasoner.detect_false_belief(
@@ -445,9 +467,15 @@ class ToMReasoner:
         desires = self.mental_state_manager.get_agent_desires(agent_id)
 
         # Filter for situation-relevant mental states
-        relevant_beliefs = [b for b in beliefs if any(word in b.content.lower() for word in situation.lower().split())]
+        relevant_beliefs = [
+            b
+            for b in beliefs
+            if any(word in b.content.lower() for word in situation.lower().split())
+        ]
 
-        relevant_desires = [d for d in desires if any(word in d.goal.lower() for word in situation.lower().split())]
+        relevant_desires = [
+            d for d in desires if any(word in d.goal.lower() for word in situation.lower().split())
+        ]
 
         # Generate prediction based on goal-directed behavior
         if relevant_desires:
@@ -502,7 +530,11 @@ class ToMReasoner:
 
         # Analyze discrepancy between observer's beliefs and target's actual states
         belief_alignment = len(
-            [b for b in observer_beliefs_about_target if any(tb.content in b.content for tb in target_beliefs)]
+            [
+                b
+                for b in observer_beliefs_about_target
+                if any(tb.content in b.content for tb in target_beliefs)
+            ]
         ) / max(1, len(observer_beliefs_about_target))
 
         # Predict what observer thinks target will do
@@ -542,7 +574,9 @@ class ToMReasoner:
         if depth == 1:
             # Get A's beliefs about B
             a_beliefs_about_b = [
-                b for b in self.mental_state_manager.get_agent_beliefs(agent_a) if agent_b in b.content
+                b
+                for b in self.mental_state_manager.get_agent_beliefs(agent_a)
+                if agent_b in b.content
             ]
 
             # Get B's actual beliefs
@@ -554,7 +588,13 @@ class ToMReasoner:
                 "agent_b": agent_b,
                 "a_beliefs_about_b": [b.content for b in a_beliefs_about_b],
                 "b_actual_beliefs": [b.content for b in b_beliefs],
-                "alignment": len([ab for ab in a_beliefs_about_b if any(bb.content in ab.content for bb in b_beliefs)]),
+                "alignment": len(
+                    [
+                        ab
+                        for ab in a_beliefs_about_b
+                        if any(bb.content in ab.content for bb in b_beliefs)
+                    ]
+                ),
             }
 
         # Recursive case: A believes that B believes that...
@@ -595,7 +635,9 @@ class ToMReasoner:
             )
             if other_mention_count > 0:
                 # Level 2: Understanding different beliefs
-                different_beliefs = any(b.is_true is False for b in beliefs if hasattr(b, "is_true"))
+                different_beliefs = any(
+                    b.is_true is False for b in beliefs if hasattr(b, "is_true")
+                )
                 if different_beliefs:
                     # Level 3: Understanding false beliefs
                     false_belief_scenarios = self.false_belief_reasoner.false_belief_scenarios
@@ -620,7 +662,9 @@ class TheoryOfMindSystem:
         self.reasoner = ToMReasoner(self.config)
         self.conversation_history = []
 
-    def process_interaction(self, speaker: str, message: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    def process_interaction(
+        self, speaker: str, message: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Process an interaction to update mental state attributions.
 
@@ -669,7 +713,9 @@ class TheoryOfMindSystem:
         analysis = {
             "interaction_processed": interaction_record,
             "speaker_tom_level": self.reasoner.assess_tom_level(speaker),
-            "related_beliefs": [b.content for b in self.reasoner.mental_state_manager.get_agent_beliefs(speaker)],
+            "related_beliefs": [
+                b.content for b in self.reasoner.mental_state_manager.get_agent_beliefs(speaker)
+            ],
             "predictions": self.reasoner.predict_behavior(speaker, message),
         }
 
@@ -701,7 +747,9 @@ class TheoryOfMindSystem:
             for j, agent_b in enumerate(agents):
                 if i != j:
                     relationship_key = f"{agent_a}_to_{agent_b}"
-                    perspective = self.reasoner.perspective_taking(agent_a, agent_b, "general interaction")
+                    perspective = self.reasoner.perspective_taking(
+                        agent_a, agent_b, "general interaction"
+                    )
                     dynamics["pairwise_relationships"][relationship_key] = perspective
 
         # Analyze group dynamics
@@ -724,7 +772,9 @@ class TheoryOfMindSystem:
             "total_desires": len(all_desires),
             "unique_beliefs": len(set(belief_contents)),
             "unique_desires": len(set(desire_goals)),
-            "average_belief_confidence": np.mean([b.confidence for b in all_beliefs]) if all_beliefs else 0.0,
+            "average_belief_confidence": np.mean([b.confidence for b in all_beliefs])
+            if all_beliefs
+            else 0.0,
         }
 
         return dynamics
@@ -763,10 +813,14 @@ class TheoryOfMindSystem:
 
         elif focus_area == "relationships":
             # Analyze relationships with other agents
-            other_agents = [aid for aid in self.reasoner.mental_state_manager.beliefs.keys() if aid != agent_id]
+            other_agents = [
+                aid for aid in self.reasoner.mental_state_manager.beliefs.keys() if aid != agent_id
+            ]
             if other_agents:
                 other = other_agents[0]  # Pick first other agent
-                perspective = self.reasoner.perspective_taking(agent_id, other, "general interaction")
+                perspective = self.reasoner.perspective_taking(
+                    agent_id, other, "general interaction"
+                )
                 alignment = perspective["belief_alignment"]
                 return f"Agent {agent_id} has {alignment:.2f} alignment in beliefs with {other}."
             else:
@@ -789,7 +843,11 @@ def demo_theory_of_mind():
     interactions = [
         ("Alice", "I believe the meeting is at 3 PM", {"context": "office", "topic": "meeting"}),
         ("Bob", "I want to finish this project today", {"context": "work", "topic": "project"}),
-        ("Charlie", "Alice said the meeting is at 2 PM", {"context": "conversation", "topic": "meeting"}),
+        (
+            "Charlie",
+            "Alice said the meeting is at 2 PM",
+            {"context": "conversation", "topic": "meeting"},
+        ),
     ]
 
     logger.debug("\nProcessing interactions...")

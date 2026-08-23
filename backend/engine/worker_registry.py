@@ -40,7 +40,9 @@ class WorkerRegistry:
 
                         if delta < 15:
                             if worker_id not in self.active_workers:
-                                logger.info(f"🟢 New Worker Discovered: {worker_id} [{data.get('agent_type')}]")
+                                logger.info(
+                                    f"🟢 New Worker Discovered: {worker_id} [{data.get('agent_type')}]"
+                                )
                             valid_workers[worker_id] = data
                         else:
                             if worker_id in self.active_workers:

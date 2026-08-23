@@ -171,7 +171,9 @@ class TestSubscribe:
             mock_sleep.assert_any_call(0.01)
 
     @pytest.mark.asyncio
-    async def test_subscribe_ignores_subscribe_messages(self, swarm_pubsub, mock_pubsub, mock_redis):
+    async def test_subscribe_ignores_subscribe_messages(
+        self, swarm_pubsub, mock_pubsub, mock_redis
+    ):
         """বাংলা মন্তব্য: Subscribe confirmation messages ignore করা হয়।"""
         swarm_pubsub.redis = mock_redis
         mock_redis.pubsub.return_value = mock_pubsub

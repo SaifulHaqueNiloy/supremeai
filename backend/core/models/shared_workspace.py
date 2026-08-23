@@ -103,7 +103,9 @@ class WorkspaceResource(BaseModel):
 
     resource_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str = Field(..., min_length=1, max_length=255)
-    resource_type: str = Field(..., description="e.g., 'document', 'code', 'agent_config', 'dataset'")
+    resource_type: str = Field(
+        ..., description="e.g., 'document', 'code', 'agent_config', 'dataset'"
+    )
     content: str | None = Field(default=None)
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_by: str = Field(...)
@@ -269,7 +271,9 @@ class SharedWorkspace(BaseModel):
         )
         self.snapshots.append(snapshot)
         self.current_snapshot_id = snapshot.snapshot_id
-        self._log_activity(user_id, "snapshot_created", details={"snapshot_id": snapshot.snapshot_id})
+        self._log_activity(
+            user_id, "snapshot_created", details={"snapshot_id": snapshot.snapshot_id}
+        )
         return snapshot
 
     def restore_snapshot(self, snapshot_id: str, user_id: str) -> None:
@@ -304,7 +308,9 @@ class SharedWorkspace(BaseModel):
 
     def get_stats(self) -> dict[str, Any]:
         """Get workspace statistics."""
-        total_storage = sum(len(r.content or "") for r in self.resources.values()) / (1024 * 1024)  # MB
+        total_storage = sum(len(r.content or "") for r in self.resources.values()) / (
+            1024 * 1024
+        )  # MB
 
         return {
             "workspace_id": self.workspace_id,

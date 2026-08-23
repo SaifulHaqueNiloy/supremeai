@@ -7,9 +7,9 @@ that module for backwards compatibility.
 
 from __future__ import annotations
 
+import json
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass
-import json
 from enum import StrEnum
 from typing import Any, Protocol
 
@@ -21,6 +21,7 @@ from core.metrics import timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 
 logger = get_logger(__name__)
+
 
 class Provider(StrEnum):
     """Supported AI model providers."""
@@ -34,11 +35,13 @@ class Provider(StrEnum):
     OPENAI = "openai"  # বাংলা মন্তব্য: OpenAI প্রোভাইডার সাপোর্টের জন্য যোগ করা হয়েছে
     GROQ = "groq"
 
+
 @dataclass
 class StreamChunk:
     content: str
     is_finished: bool = False
     provider: Provider | None = None
+
 
 class LLMProvider(Protocol):
     """Protocol for LLM provider implementations."""
@@ -61,6 +64,7 @@ class LLMProvider(Protocol):
 # Module-level client cache to prevent memory leaks (Bug #8)
 _http_clients = {}
 
+
 def get_client(base_url: str, headers: dict) -> httpx.AsyncClient:
     # Need to convert dictionary to a string for hashable key
     key = f"{base_url}:{str(headers)}"
@@ -68,12 +72,14 @@ def get_client(base_url: str, headers: dict) -> httpx.AsyncClient:
         _http_clients[key] = httpx.AsyncClient(base_url=base_url, headers=headers)
     return _http_clients[key]
 
+
 class BaseOpenAICompatibleProvider:
     """Shared functionality for OpenAI-compatible API providers."""
-    
+
     async def _stream_completion(self, payload: dict, endpoint: str = "/chat/completions"):
         """Standard SSE stream parser for OpenAI-compatible APIs (Bug #7, #9)."""
         import json
+
         try:
             async with self.client.stream("POST", endpoint, json=payload) as resp:
                 resp.raise_for_status()
@@ -96,6 +102,7 @@ class BaseOpenAICompatibleProvider:
         except Exception as stream_err:
             logger.error(f"Streaming unexpected error: {stream_err}")
             raise
+
 
 class MoonshotProvider(BaseOpenAICompatibleProvider):
     """Moonshot AI (Kimi K2.5) — Primary for Bengali & complex reasoning."""
@@ -143,7 +150,9 @@ class MoonshotProvider(BaseOpenAICompatibleProvider):
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -169,6 +178,7 @@ class MoonshotProvider(BaseOpenAICompatibleProvider):
         except Exception as exc:
             logger.debug(f"MoonshotProvider health check failed: {exc}")
             return False
+
 
 class DeepSeekProvider(BaseOpenAICompatibleProvider):
     """DeepSeek V3 — Fallback for code and cost-efficient tasks."""
@@ -201,7 +211,9 @@ class DeepSeekProvider(BaseOpenAICompatibleProvider):
             "max_tokens": max_tokens,
             "temperature": temperature,
             "stream": stream,
-            "response_format": ({"type": "json_object"} if kwargs.get("json_mode", False) else None),
+            "response_format": (
+                {"type": "json_object"} if kwargs.get("json_mode", False) else None
+            ),
         }
         payload = {k: v for k, v in payload.items() if v is not None}
         payload.update(kwargs)
@@ -214,7 +226,9 @@ class DeepSeekProvider(BaseOpenAICompatibleProvider):
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -239,6 +253,7 @@ class DeepSeekProvider(BaseOpenAICompatibleProvider):
         except Exception as exc:
             logger.debug(f"DeepSeekProvider health check failed: {exc}")
             return False
+
 
 class TogetherProvider(BaseOpenAICompatibleProvider):
     """Together AI — Backup for high availability."""
@@ -282,7 +297,9 @@ class TogetherProvider(BaseOpenAICompatibleProvider):
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -307,6 +324,7 @@ class TogetherProvider(BaseOpenAICompatibleProvider):
         except Exception as exc:
             logger.debug(f"TogetherProvider health check failed: {exc}")
             return False
+
 
 class GeminiProvider:
     """Google Gemini Provider — Free tier (gemini-2.0-flash / 1.5-flash)."""
@@ -357,14 +375,18 @@ class GeminiProvider:
             return False
         try:
             resp = await self.client.post(
-                f"/models/{self.model}:generateContent", 
-                json={"contents": [{"parts": [{"text": "test"}]}], "generationConfig": {"maxOutputTokens": 1}},
-                timeout=5.0
+                f"/models/{self.model}:generateContent",
+                json={
+                    "contents": [{"parts": [{"text": "test"}]}],
+                    "generationConfig": {"maxOutputTokens": 1},
+                },
+                timeout=5.0,
             )
             return resp.status_code == 200
         except Exception as exc:
             logger.debug(f"GeminiProvider health check failed: {exc}")
             return False
+
 
 class OllamaProvider:
     """Local Ollama — Offline/privacy mode. Optional, completely free."""
@@ -372,11 +394,17 @@ class OllamaProvider:
     name = Provider.OLLAMA
 
     def __init__(self) -> None:
-        if (getattr(settings, "env", getattr(settings, "ENV", "local")) or "local").lower() != "local":
-            raise NotImplementedError("Ollama is for local development only and should not be used in cloud environments due to resource constraints.")
-            
+        if (
+            getattr(settings, "env", getattr(settings, "ENV", "local")) or "local"
+        ).lower() != "local":
+            raise NotImplementedError(
+                "Ollama is for local development only and should not be used in cloud environments due to resource constraints."
+            )
+
         raw_url = getattr(settings, "ollama_url", "http://localhost:11434")
-        self.base_url = str(raw_url) if isinstance(raw_url, str | bytes) else "http://localhost:11434"
+        self.base_url = (
+            str(raw_url) if isinstance(raw_url, str | bytes) else "http://localhost:11434"
+        )
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
             timeout=httpx.Timeout(120.0, connect=5.0),
@@ -413,7 +441,9 @@ class OllamaProvider:
         data = resp.json()
         return data.get("response", "")
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/api/generate", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -436,8 +466,11 @@ class OllamaProvider:
         except Exception as exc:
             # বাংলা: Ollama local provider health probe ব্যর্থতা।
             # Ollama না চললে এটা সাধারণ — debug স্তরে লগ করা হয়েছে।
-            logger.debug(f"OllamaProvider health check failed (local provider may be offline): {exc}")
+            logger.debug(
+                f"OllamaProvider health check failed (local provider may be offline): {exc}"
+            )
             return False
+
 
 class HuggingFaceSpaceProvider(BaseOpenAICompatibleProvider):
     """HuggingFace Space - Supreme Hybrid 8B model (Bengali/Coder/Math merged)."""
@@ -447,10 +480,20 @@ class HuggingFaceSpaceProvider(BaseOpenAICompatibleProvider):
     def __init__(self) -> None:
         # বাংলা মন্তব্ব: getattr থেকে আসা value যদি MagicMock বা non-string হয়, তাহলে str() এ convert করা হচ্ছে
         # যাতে httpx.AsyncClient(base_url=...) TypeError না throw করে
-        raw_url = getattr(settings, "hf_space_url", "https://supremeai-hf-space.hf.space/v1/chat/completions")
-        self.api_url = str(raw_url) if raw_url is not None and not isinstance(raw_url, str) else (raw_url or "")
+        raw_url = getattr(
+            settings, "hf_space_url", "https://supremeai-hf-space.hf.space/v1/chat/completions"
+        )
+        self.api_url = (
+            str(raw_url)
+            if raw_url is not None and not isinstance(raw_url, str)
+            else (raw_url or "")
+        )
         raw_key = getattr(settings, "hf_api_key", None)
-        self.api_key = str(raw_key) if raw_key is not None and not isinstance(raw_key, str) else (raw_key or "")
+        self.api_key = (
+            str(raw_key)
+            if raw_key is not None and not isinstance(raw_key, str)
+            else (raw_key or "")
+        )
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
@@ -486,7 +529,11 @@ class HuggingFaceSpaceProvider(BaseOpenAICompatibleProvider):
             "stream": stream,
         }
         payload.update(
-            {k: v for k, v in kwargs.items() if k not in ["messages", "max_tokens", "temperature", "stream"]}
+            {
+                k: v
+                for k, v in kwargs.items()
+                if k not in ["messages", "max_tokens", "temperature", "stream"]
+            }
         )
 
         if stream:
@@ -497,7 +544,9 @@ class HuggingFaceSpaceProvider(BaseOpenAICompatibleProvider):
         data = resp.json()
         return data["choices"][0]["message"]["content"]
 
-    async def _stream_completion(self, payload: dict[str, Any]) -> AsyncGenerator[StreamChunk, None]:
+    async def _stream_completion(
+        self, payload: dict[str, Any]
+    ) -> AsyncGenerator[StreamChunk, None]:
         async with self.client.stream("POST", "/v1/chat/completions", json=payload) as resp:
             resp.raise_for_status()
             async for line in resp.aiter_lines():
@@ -531,12 +580,16 @@ class HuggingFaceSpaceProvider(BaseOpenAICompatibleProvider):
 
 class GroqProvider(BaseOpenAICompatibleProvider):
     """Groq - Ultra-fast free tier inference."""
-    
+
     name = Provider.GROQ
 
     def __init__(self) -> None:
         raw_key = getattr(settings, "groq_api_key", None)
-        self.api_key = str(raw_key) if raw_key is not None and not isinstance(raw_key, str) else (raw_key or "")
+        self.api_key = (
+            str(raw_key)
+            if raw_key is not None and not isinstance(raw_key, str)
+            else (raw_key or "")
+        )
         self.base_url = "https://api.groq.com/openai/v1"
         self.model = "llama-3.3-70b-versatile"
         headers = {
@@ -552,14 +605,14 @@ class GroqProvider(BaseOpenAICompatibleProvider):
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         payload = {
             "model": self.model,
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 4096,
         }
-        
+
         resp = await self.client.post("/chat/completions", json=payload)
         resp.raise_for_status()
         data = resp.json()
@@ -570,7 +623,7 @@ class GroqProvider(BaseOpenAICompatibleProvider):
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         payload = {
             "model": self.model,
             "messages": messages,
@@ -590,6 +643,7 @@ class GroqProvider(BaseOpenAICompatibleProvider):
         except Exception as exc:
             logger.debug(f"GroqProvider health check failed: {exc}")
             return False
+
 
 class BengaliNormalizer:
     """Normalize Bengali text for consistent LLM processing."""
@@ -632,4 +686,3 @@ class BengaliNormalizer:
         elif ratio > 0.1:  # ০.১ এর উপরে বাংলা থাকলে mixed
             return "mixed"
         return "roman"
-

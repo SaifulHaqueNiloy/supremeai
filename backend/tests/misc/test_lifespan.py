@@ -36,7 +36,9 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     """
     mocks = {}
 
-    mocks["validate"] = stack.enter_context(patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock))
+    mocks["validate"] = stack.enter_context(
+        patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock)
+    )
     mocks["reliability"] = stack.enter_context(
         patch("core.lifespan.ReliabilityController.initialize", new_callable=AsyncMock)
     )
@@ -59,7 +61,9 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     stack.enter_context(patch("asyncio.to_thread", side_effect=lambda f, *a, **kw: f()))
 
     mocks["services_lifespan"] = stack.enter_context(patch("core.lifespan.services", create=True))
-    mocks["services_startup"] = stack.enter_context(patch("core.startup.services.services", create=True))
+    mocks["services_startup"] = stack.enter_context(
+        patch("core.startup.services.services", create=True)
+    )
     mocks["services_shutdown"] = stack.enter_context(patch("core.shutdown.services", create=True))
 
     # Mock httpx.AsyncClient so it doesn't create real connections
@@ -159,7 +163,9 @@ class TestAppLifespan:
 
             mock_pool = AsyncMock()
             mock_pool.close = AsyncMock()
-            mock_get_pool = stack.enter_context(patch("core.shutdown.get_db_pool", new_callable=AsyncMock))
+            mock_get_pool = stack.enter_context(
+                patch("core.shutdown.get_db_pool", new_callable=AsyncMock)
+            )
             mock_get_pool.return_value = mock_pool
 
             mock_orch = MagicMock()
@@ -184,7 +190,9 @@ class TestAppLifespan:
 
             mock_pool = AsyncMock()
             mock_pool.close = AsyncMock()
-            mock_get_pool = stack.enter_context(patch("core.shutdown.get_db_pool", new_callable=AsyncMock))
+            mock_get_pool = stack.enter_context(
+                patch("core.shutdown.get_db_pool", new_callable=AsyncMock)
+            )
             mock_get_pool.return_value = mock_pool
 
             mock_orch = MagicMock()
@@ -205,16 +213,22 @@ class TestAppLifespan:
         mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock))
+            stack.enter_context(
+                patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock)
+            )
             stack.enter_context(
                 patch(
                     "core.lifespan.ReliabilityController.initialize",
                     new_callable=AsyncMock,
                 )
             )
-            stack.enter_context(patch("core.observability.telemetry.setup_tracing", return_value=None))
+            stack.enter_context(
+                patch("core.observability.telemetry.setup_tracing", return_value=None)
+            )
             stack.enter_context(patch("core.startup.services.init_db_pool", new_callable=AsyncMock))
-            stack.enter_context(patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock))
+            stack.enter_context(
+                patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock)
+            )
             mock_redis = stack.enter_context(patch("core.startup.services.redis_manager"))
             # Make the ping mock work
             mock_redis.client.ping = AsyncMock()

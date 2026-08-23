@@ -77,7 +77,9 @@ class SelfHealerService:
         ]
         for keyword in dangerous_keywords:
             if keyword in proposed_fix:
-                raise ValueError(f"Dangerous keyword '{keyword}' detected in proposed fix. Rejected by Safety Filter.")
+                raise ValueError(
+                    f"Dangerous keyword '{keyword}' detected in proposed fix. Rejected by Safety Filter."
+                )
 
     @with_error_bus("propose_fix")
     async def propose_fix(
@@ -188,9 +190,13 @@ class RemediationPipeline:
             return await self._reject(tenant_id, proposed_fix, sandbox_result.get("log", ""))
 
         if impact_score <= self.AUTO_APPLY_THRESHOLD and sandbox_result.get("tests_passed"):
-            return await self._apply_and_pr(tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree)
+            return await self._apply_and_pr(
+                tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree
+            )
 
-        return await self.self_healer.propose_fix(tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree)
+        return await self.self_healer.propose_fix(
+            tenant_id, error_pattern, proposed_fix, impact_score, dependency_tree
+        )
 
     async def _run_in_sandbox(self, fix_code: str) -> dict[str, Any]:
         """
@@ -238,9 +244,13 @@ except Exception as e:
         impact_score: float,
         dependency_tree: list[str],
     ) -> str:
-        logger.info(f"Auto-applying fix for {tenant_id} and preparing PR. Impact score: {impact_score}")
+        logger.info(
+            f"Auto-applying fix for {tenant_id} and preparing PR. Impact score: {impact_score}"
+        )
         # Mimic applying the patch and generating a PR (logic from auto_remediation)
-        fix_id = await self.self_healer.propose_fix(tenant_id, error_pattern, fix_code, impact_score, dependency_tree)
+        fix_id = await self.self_healer.propose_fix(
+            tenant_id, error_pattern, fix_code, impact_score, dependency_tree
+        )
         # Apply the logic: update db status to applied
         if self._db:
             doc_ref = self._db.collection(f"tenants/{tenant_id}/fixes").document(fix_id)

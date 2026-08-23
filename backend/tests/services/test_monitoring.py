@@ -52,7 +52,9 @@ def test_cost_auditor_generation():
         except ImportError:
             import logging
 
-            logging.warning("matplotlib not installed, skipping image report check in test_monitoring")
+            logging.warning(
+                "matplotlib not installed, skipping image report check in test_monitoring"
+            )
 
 
 def test_plan_sorter():

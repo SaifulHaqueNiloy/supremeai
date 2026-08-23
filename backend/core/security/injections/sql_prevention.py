@@ -31,12 +31,24 @@ from loguru import logger
 
 # Suspicious patterns that indicate potential SQL injection
 _SUSPICIOUS_PATTERNS: list[dict[str, Any]] = [
-    {"pattern": r'execute\s*\(\s*f["\']', "description": "f-string in execute() — potential SQL injection"},
-    {"pattern": r'execute\s*\(\s*["\'].*\{.*\}.*["\']\s*%', "description": "Format string in execute()"},
+    {
+        "pattern": r'execute\s*\(\s*f["\']',
+        "description": "f-string in execute() — potential SQL injection",
+    },
+    {
+        "pattern": r'execute\s*\(\s*["\'].*\{.*\}.*["\']\s*%',
+        "description": "Format string in execute()",
+    },
     {"pattern": r'execute\s*\(\s*["\']\s*\+', "description": "String concatenation in execute()"},
     {"pattern": r'raw_sql\s*=\s*f["\']', "description": "f-string assigned to raw SQL variable"},
-    {"pattern": r"cursor\.execute\s*\(.*['\"].*%s", "description": "Positional placeholder without params tuple"},
-    {"pattern": r'SELECT.*FROM.*WHERE.*=.*["\']\s*\+', "description": "String concat in WHERE clause"},
+    {
+        "pattern": r"cursor\.execute\s*\(.*['\"].*%s",
+        "description": "Positional placeholder without params tuple",
+    },
+    {
+        "pattern": r'SELECT.*FROM.*WHERE.*=.*["\']\s*\+',
+        "description": "String concat in WHERE clause",
+    },
 ]
 
 # SQL keywords that should never appear in user input
@@ -168,7 +180,9 @@ class InputSanitizer:
             raise ValueError(f"Identifier '{identifier}' contains no valid characters")
 
         if sanitized != identifier:
-            logger.warning(f"Identifier sanitized: '{identifier}' → '{sanitized}'. " "Invalid characters removed.")
+            logger.warning(
+                f"Identifier sanitized: '{identifier}' → '{sanitized}'. Invalid characters removed."
+            )
 
         return sanitized
 
@@ -340,7 +354,7 @@ class ParameterizedQueryBuilder:
         """
         table_safe = InputSanitizer.sanitize_identifier(table)
 
-        columns = ", ".join(InputSanitizer.sanitize_identifier(c) for c in data.keys())
+        columns = ", ".join(InputSanitizer.sanitize_identifier(c) for c in data)
         placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO {table_safe} ({columns}) VALUES ({placeholders})"
@@ -381,7 +395,9 @@ class ParameterizedQueryBuilder:
             where_clauses.append(f"{col_safe} = ?")
             params.append(val)
 
-        query = f"UPDATE {table_safe} " f"SET {', '.join(set_clauses)} " f"WHERE {' AND '.join(where_clauses)}"
+        query = (
+            f"UPDATE {table_safe} SET {', '.join(set_clauses)} WHERE {' AND '.join(where_clauses)}"
+        )
 
         return query, params
 

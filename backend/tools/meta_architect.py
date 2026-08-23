@@ -17,7 +17,9 @@ class MetaArchitect:
     def __init__(self):
         logger.info("Initialized MetaArchitect")
 
-    async def analyze_codebase(self, root_dir: str = ".", strategic_docs: list[str] | None = None) -> dict[str, Any]:
+    async def analyze_codebase(
+        self, root_dir: str = ".", strategic_docs: list[str] | None = None
+    ) -> dict[str, Any]:
         logger.info(f"Analyzing codebase architecture at {root_dir}")
 
         # Load strategic context if provided
@@ -53,7 +55,9 @@ class MetaArchitect:
                         import asyncio
                         from pathlib import Path
 
-                        content = await asyncio.to_thread(Path(file_path).read_text, encoding="utf-8", errors="ignore")
+                        content = await asyncio.to_thread(
+                            Path(file_path).read_text, encoding="utf-8", errors="ignore"
+                        )
                         lines = content.splitlines()
                         metrics["total_lines"] += len(lines)
                         ext = os.path.splitext(file)[1].lower()
@@ -77,7 +81,9 @@ class MetaArchitect:
                 suggestions.append("Break down files larger than 500 lines.")
             py_files = metrics["languages"].get("py", 0)
             if py_files > 200:
-                suggestions.append("Consider adding type hints to Python files for better maintainability.")
+                suggestions.append(
+                    "Consider adding type hints to Python files for better maintainability."
+                )
         except Exception as exc:
             logger.error(f"Codebase analysis failed: {exc}")
             issues.append(f"Analysis error: {exc}")

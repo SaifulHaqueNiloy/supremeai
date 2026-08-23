@@ -64,6 +64,7 @@ class LoggingConfig:
         if settings.env in ["production", "staging"]:
             try:
                 import os
+
                 # Use /tmp/logs for ephemeral environments like Render
                 log_dir = os.environ.get("LOG_DIR", "/tmp/logs")
                 os.makedirs(log_dir, exist_ok=True)

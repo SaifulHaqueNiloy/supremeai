@@ -75,6 +75,7 @@ logger = logging.getLogger("supremeai.memory.mcp")
 # বাংলা মন্তব্য: মেমোরি লেয়ার সমূহ import করা হচ্ছে — ব্যর্থ হলে graceful degradation ও স্পষ্ট লগিং
 try:
     from memory.chromadb_store import ChromaDBStore
+
     _CHROMA_OK = True
 except Exception as e:
     logger.debug(f"ChromaDB store not available: {e}")
@@ -82,6 +83,7 @@ except Exception as e:
 
 try:
     from memory.episodic_memory import EpisodicMemory
+
     _EPISODIC_OK = True
 except Exception as e:
     logger.debug(f"EpisodicMemory store not available: {e}")
@@ -89,6 +91,7 @@ except Exception as e:
 
 try:
     from memory.sliding_window import SlidingWindowConfig, SlidingWindowMemory
+
     _SLIDING_OK = True
 except Exception as e:
     logger.debug(f"SlidingWindowMemory not available: {e}")
@@ -96,6 +99,7 @@ except Exception as e:
 
 try:
     from memory.supabase_store import SupabaseStore
+
     _SUPABASE_OK = True
 except Exception as e:
     logger.debug(f"SupabaseStore not available: {e}")
@@ -103,6 +107,7 @@ except Exception as e:
 
 try:
     from memory.rag_pipeline import RAGPipeline
+
     _RAG_OK = True
 except Exception as e:
     logger.debug(f"RAGPipeline not available: {e}")
@@ -149,7 +154,11 @@ class KnowledgeGraph:
                 self._chroma.add_document(
                     doc_id=f"entity::{name}",
                     text=f"{name} ({record['entityType']}): {obs_text}",
-                    metadata={"type": "entity", "entity_name": name, "entity_type": record["entityType"]},
+                    metadata={
+                        "type": "entity",
+                        "entity_name": name,
+                        "entity_type": record["entityType"],
+                    },
                 )
             created.append(record)
         return created
@@ -161,7 +170,9 @@ class KnowledgeGraph:
             if name in self._entities:
                 del self._entities[name]
                 # বাংলা মন্তব্য: সংশ্লিষ্ট relations-ও সরানো হচ্ছে
-                self._relations = [r for r in self._relations if r["from"] != name and r["to"] != name]
+                self._relations = [
+                    r for r in self._relations if r["from"] != name and r["to"] != name
+                ]
                 if self._chroma:
                     try:
                         self._chroma.delete(f"entity::{name}")
@@ -185,7 +196,11 @@ class KnowledgeGraph:
             self._chroma.add_document(
                 doc_id=f"entity::{entity_name}",
                 text=f"{entity_name} ({ent['entityType']}): {obs_text}",
-                metadata={"type": "entity", "entity_name": entity_name, "entity_type": ent["entityType"]},
+                metadata={
+                    "type": "entity",
+                    "entity_name": entity_name,
+                    "entity_type": ent["entityType"],
+                },
             )
         return new_obs
 
@@ -229,7 +244,9 @@ class KnowledgeGraph:
             r
             for r in self._relations
             if not any(
-                d.get("from") == r["from"] and d.get("to") == r["to"] and d.get("relationType") == r["relationType"]
+                d.get("from") == r["from"]
+                and d.get("to") == r["to"]
+                and d.get("relationType") == r["relationType"]
                 for d in relations
             )
         ]
@@ -328,7 +345,10 @@ def build_server() -> Server:
                                 "type": "object",
                                 "properties": {
                                     "name": {"type": "string", "description": "Unique entity name"},
-                                    "entityType": {"type": "string", "description": "Category/type of entity"},
+                                    "entityType": {
+                                        "type": "string",
+                                        "description": "Category/type of entity",
+                                    },
                                     "observations": {
                                         "type": "array",
                                         "items": {"type": "string"},
@@ -497,7 +517,11 @@ def build_server() -> Server:
                     "type": "object",
                     "properties": {
                         "query": {"type": "string"},
-                        "n_results": {"type": "integer", "default": 5, "description": "Number of results to return"},
+                        "n_results": {
+                            "type": "integer",
+                            "default": 5,
+                            "description": "Number of results to return",
+                        },
                     },
                     "required": ["query"],
                 },
@@ -565,8 +589,14 @@ def build_server() -> Server:
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "event_type": {"type": "string", "description": "Filter by event type (optional)"},
-                        "min_importance": {"type": "number", "description": "Minimum importance threshold"},
+                        "event_type": {
+                            "type": "string",
+                            "description": "Filter by event type (optional)",
+                        },
+                        "min_importance": {
+                            "type": "number",
+                            "description": "Minimum importance threshold",
+                        },
                         "limit": {"type": "integer", "default": 10},
                     },
                 },
@@ -588,8 +618,14 @@ def build_server() -> Server:
                             "description": "New documents to add to the context window",
                         },
                         "session_id": {"type": "string", "default": "default"},
-                        "query": {"type": "string", "description": "Optional query to prioritize relevant chunks"},
-                        "budget": {"type": "integer", "description": "Max token budget (default: 4000)"},
+                        "query": {
+                            "type": "string",
+                            "description": "Optional query to prioritize relevant chunks",
+                        },
+                        "budget": {
+                            "type": "integer",
+                            "description": "Max token budget (default: 4000)",
+                        },
                     },
                     "required": ["documents"],
                 },
@@ -626,7 +662,11 @@ def build_server() -> Server:
                     "type": "object",
                     "properties": {
                         "content": {"type": "string", "description": "Fact content"},
-                        "tags": {"type": "array", "items": {"type": "string"}, "description": "Categorization tags"},
+                        "tags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Categorization tags",
+                        },
                         "id": {"type": "string", "description": "Optional fact ID"},
                     },
                     "required": ["content"],
@@ -662,7 +702,12 @@ def build_server() -> Server:
             return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
         except Exception as exc:
             logger.exception(f"Tool '{name}' failed: {exc}")
-            return [TextContent(type="text", text=json.dumps({"error": str(exc), "tool": name}, ensure_ascii=False))]
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({"error": str(exc), "tool": name}, ensure_ascii=False),
+                )
+            ]
 
     return server
 
@@ -737,7 +782,10 @@ async def _dispatch(
             n_results=args.get("n_results", 5),
         )
         return {
-            "results": [{"doc_id": doc_id, "score": round(score, 4), "data": data} for doc_id, score, data in results]
+            "results": [
+                {"doc_id": doc_id, "score": round(score, 4), "data": data}
+                for doc_id, score, data in results
+            ]
         }
 
     if name == "ingest_document_rag":
@@ -870,7 +918,9 @@ async def main() -> None:
             sse_transport = SseServerTransport("/messages/")
 
             async def handle_sse(request):
-                async with sse_transport.connect_sse(request.scope, request.receive, request._send) as streams:
+                async with sse_transport.connect_sse(
+                    request.scope, request.receive, request._send
+                ) as streams:
                     await server.run(
                         streams[0],
                         streams[1],

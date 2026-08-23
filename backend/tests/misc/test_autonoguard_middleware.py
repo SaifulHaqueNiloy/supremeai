@@ -200,11 +200,14 @@ class TestAutonoGuardMiddleware:
             client = TestClient(app)
 
             resp = client.get(
-                "/api/sensitive/test", headers={"Authorization": "Bearer test_admin_token", "X-JIT-OTP": "invalid"}
+                "/api/sensitive/test",
+                headers={"Authorization": "Bearer test_admin_token", "X-JIT-OTP": "invalid"},
             )
 
             assert resp.status_code == 401
-            assert "OTP" in resp.json().get("detail", "") or "Security" in resp.json().get("title", "")
+            assert "OTP" in resp.json().get("detail", "") or "Security" in resp.json().get(
+                "title", ""
+            )
 
     def test_fallback_to_unknown_for_missing_user(self):
         """Test fallback to 'unknown' when user identity missing."""

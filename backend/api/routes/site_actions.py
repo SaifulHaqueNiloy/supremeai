@@ -176,7 +176,9 @@ async def test_selector(req: TestSelectorRequest):
     For now, it simulates a visual hit.
     """
     with _lock, _conn() as conn:
-        row = conn.execute("SELECT selector FROM site_actions WHERE id = ?", (req.action_id,)).fetchone()
+        row = conn.execute(
+            "SELECT selector FROM site_actions WHERE id = ?", (req.action_id,)
+        ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Action not found")
 

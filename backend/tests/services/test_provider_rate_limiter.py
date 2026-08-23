@@ -2,7 +2,8 @@
 """Tests for IntelligentRateLimiter and CloudDBTester."""
 
 import pytest
-from core.provider_rate_limiter import IntelligentRateLimiter, get_provider_rate_limiter
+
+from core.provider_rate_limiter import get_provider_rate_limiter
 from tests.cloud_db_load_test import CloudDBTester
 
 
@@ -11,7 +12,16 @@ async def test_intelligent_rate_limiter_request():
     limiter = get_provider_rate_limiter()
     res = await limiter.make_request("Explain quicksort in Python")
     assert res["success"] is True
-    assert res["provider_used"] in ["Gemini", "Groq", "OpenRouter", "Ollama Local", "gemini", "groq", "openrouter", "ollama_local"]
+    assert res["provider_used"] in [
+        "Gemini",
+        "Groq",
+        "OpenRouter",
+        "Ollama Local",
+        "gemini",
+        "groq",
+        "openrouter",
+        "ollama_local",
+    ]
 
 
 @pytest.mark.asyncio

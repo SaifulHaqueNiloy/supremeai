@@ -23,7 +23,9 @@ class IntentParser:
     def __init__(self, model_router: ModelRouter):
         self.model_router = model_router
 
-    def parse_intent(self, task: str, history: list[dict[str, str]] | None = None) -> AppSpecification:
+    def parse_intent(
+        self, task: str, history: list[dict[str, str]] | None = None
+    ) -> AppSpecification:
         # Construct the context prompt
         context_str = ""
         if history:

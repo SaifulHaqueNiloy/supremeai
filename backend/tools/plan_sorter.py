@@ -36,7 +36,11 @@ class PlanSorter:
                     categorized[category].append(filename)
 
                     # Move to appropriate subfolder (e.g. status_and_tracking or plans_and_guides)
-                    dest_subfolder = "status_and_tracking" if category in ("Urgent", "Bug") else "plans_and_guides"
+                    dest_subfolder = (
+                        "status_and_tracking"
+                        if category in ("Urgent", "Bug")
+                        else "plans_and_guides"
+                    )
                     dest_dir = os.path.join(self.output_dir, dest_subfolder)
                     os.makedirs(dest_dir, exist_ok=True)
 

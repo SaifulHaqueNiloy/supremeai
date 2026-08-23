@@ -76,7 +76,9 @@ class EnhancedConfidenceScorer:
         is_flagged = any(p in output_lower for p in self.rules.get("hallucination_patterns", []))
 
         # Factual confidence
-        factual_score = self.rules.get("scores", {}).get("factual_penalty", 0.1) if is_flagged else 1.0
+        factual_score = (
+            self.rules.get("scores", {}).get("factual_penalty", 0.1) if is_flagged else 1.0
+        )
 
         # AI reliability score
         ai_reliability = (

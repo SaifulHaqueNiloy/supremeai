@@ -154,7 +154,9 @@ class EscrowService:
             status=status,
             created_at=escrow.created_at,
             expires_at=escrow.expires_at,
-            released_at=(datetime.now(UTC) if status == EscrowStatus.RELEASED else escrow.released_at),
+            released_at=(
+                datetime.now(UTC) if status == EscrowStatus.RELEASED else escrow.released_at
+            ),
         )
         self._escrows[escrow_id] = updated
         return updated

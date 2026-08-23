@@ -23,9 +23,7 @@ class SystemDesignSkill(BaseSkill):
         **kwargs: Any,
     ) -> Any:
         workspace.log(f"{self.name}: Starting system architecture layout analysis...")
-        sys_prompt = (
-            "You are a lead system architect. Define file structures, component breakdown, and database schemas."
-        )
+        sys_prompt = "You are a lead system architect. Define file structures, component breakdown, and database schemas."
         user_prompt = f"Design architecture for task: {workspace.original_prompt}"
 
         messages = [
@@ -53,9 +51,7 @@ class CodeGenerationSkill(BaseSkill):
         **kwargs: Any,
     ) -> Any:
         workspace.log(f"{self.name}: Generating raw code from blueprints...")
-        sys_prompt = (
-            "You are an elite Coder Agent. Write the code implementation based on the architecture blueprint provided."
-        )
+        sys_prompt = "You are an elite Coder Agent. Write the code implementation based on the architecture blueprint provided."
         blueprint = kwargs.get("blueprint", workspace.original_prompt)
         user_prompt = f"Write code for this blueprint:\n{blueprint}"
 
@@ -173,7 +169,9 @@ class ToolExecutionSkill(BaseSkill):
         tool_name = kwargs.get("tool_name", "unknown_tool")
         workspace.log(f"{self.name}: Executing tool {tool_name}...")
         sys_prompt = "You are an Execution Agent. Simulate the output of running a specific tool."
-        user_prompt = f"Simulate execution of tool: {tool_name} with args: {kwargs.get('tool_args', {})}"
+        user_prompt = (
+            f"Simulate execution of tool: {tool_name} with args: {kwargs.get('tool_args', {})}"
+        )
 
         messages = [
             {"role": "system", "content": sys_prompt},

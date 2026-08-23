@@ -155,7 +155,9 @@ class CloudKMSProvider(EncryptionProvider):
             logger.warning("KMS not configured; returning plaintext.")
             return plaintext, None
         try:
-            response = self.kms_client.encrypt(request={"name": self.key_name, "plaintext": plaintext.encode()})
+            response = self.kms_client.encrypt(
+                request={"name": self.key_name, "plaintext": plaintext.encode()}
+            )
             ciphertext = base64.b64encode(response.ciphertext).decode()
             return ciphertext, self.key_name
         except Exception as exc:

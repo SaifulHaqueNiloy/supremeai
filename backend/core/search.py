@@ -4,6 +4,7 @@
 ব্যবহার করে লাইভ ওয়েব সার্চ করে। প্যাকেজটি ইনস্টল না থাকলে ফাংশনগুলো খালি লিস্ট/None রিটার্ন
 করে — কোনো ক্র্যাশ হয় না। প্যাকেজ ইনস্টল: `pip install duckduckgo-search` (বা `ddgs`)।
 """
+
 from __future__ import annotations
 
 import importlib.util

@@ -49,7 +49,12 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
     if not FIRESTORE_AVAILABLE:
         return None
 
-    resolved_project = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT") or "supremeai-a"
+    resolved_project = (
+        project_id
+        or os.getenv("GCP_PROJECT_ID")
+        or os.getenv("GOOGLE_CLOUD_PROJECT")
+        or "supremeai-a"
+    )
 
     # বাংলা মন্তব্য: GCP Cloud Run বা রিয়েল ক্রেডেনশিয়ালস না থাকলে (যেমন Render/Railway/local)
     # google.auth.default() মেটাডাটা সার্ভার (169.254.169.254) ২৩+ সেকেন্ডের জন্য হ্যাং হয়।
@@ -74,11 +79,16 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
 
     try:
         from core.config import settings
+
         credentials = None
-        sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or getattr(settings, "firebase_service_account_json", "")
+        sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or getattr(
+            settings, "firebase_service_account_json", ""
+        )
         if sa_json_str:
             import json
+
             from google.oauth2 import service_account
+
             sa_info = json.loads(sa_json_str)
             credentials = service_account.Credentials.from_service_account_info(sa_info)
 
