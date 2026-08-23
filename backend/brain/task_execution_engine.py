@@ -100,7 +100,7 @@ class TaskExecutionEngine:
 
                     parallel_results = await asyncio.gather(*coroutines, return_exceptions=True)
 
-                    for task_id, result in zip(executable, parallel_results):
+                    for task_id, result in zip(executable, parallel_results, strict=True):
                         if isinstance(result, Exception):
                             failed.add(task_id)
                             errors[task_id] = str(result)

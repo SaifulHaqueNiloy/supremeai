@@ -251,10 +251,8 @@ ignore = [
     "F811",   # Redefinition (a few intentional re-exports/overloads)
     "F401",   # Unused import (mostly try/except optional-dependency availability checks)
     "F841",   # Unused local variable (large surface across codebase, tracked separately)
-    "B905",   # zip() without strict= (behavior-preserving, tracked separately)
     "W291", "W293",  # Trailing whitespace (cosmetic, formatter handles new code)
     "SIM103", "SIM109", "SIM110", "SIM222", "SIM401",  # Style/readability suggestions, not bugs
-    "E712",   # Comparison to True/False in asserts (common pytest style)
     "B028",   # Missing stacklevel in warnings.warn (low-impact, tracked separately)
 ]
 

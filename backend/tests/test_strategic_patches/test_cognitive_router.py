@@ -229,6 +229,6 @@ class TestTaskExecutionEngine:
             )
 
             assert result["status"] == "success"
-            assert result["metadata"]["has_parallelism"] == True
+            assert result["metadata"]["has_parallelism"]
 
     # test_dependency_ordering removed as it was truncated

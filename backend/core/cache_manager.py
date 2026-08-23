@@ -200,7 +200,7 @@ class FreeTierCacheManager:
                 self._track_command()
                 values = await self.redis.mget(redis_keys)
 
-                for key, value in zip(redis_keys, values):
+                for key, value in zip(redis_keys, values, strict=True):
                     if value:
                         if isinstance(value, bytes):
                             value = self._decompress_value(value)
