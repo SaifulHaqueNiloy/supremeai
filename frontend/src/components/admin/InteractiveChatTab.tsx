@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Terminal, Globe, Send, RefreshCw, TerminalSquare, Compass } from 'lucide-react';
 import { useDashboardStore } from '../../store/dashboardStore';
+import { useStore } from '../../store/useStore';
 import { UnifiedChatBubble, TypingIndicator } from '../chat';
 
 // বাংলা মন্তব্য: চ্যাট মেসেজ ইন্টারফেস — Prompt-to-Action আর্কিটেকচার সাপোর্ট সহ
@@ -49,8 +50,11 @@ export function InteractiveChatTab({
     chatTabTerminalOpen,
     chatTabBrowserOpen,
     toggleTerminal,
+    toggleTerminal,
     toggleBrowser,
   } = useDashboardStore();
+
+  const { isServerOnline } = useStore();
 
   // --- চ্যাট স্ট্যাটস ---
   const [internalMessages, setInternalMessages] = useState<Message[]>([
@@ -159,7 +163,19 @@ export function InteractiveChatTab({
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        fullText = `⚠️ Error: ${err.message}. Please try again.`;
+        let errorTitle = 'Network Error';
+        let actionSuggestion = 'Please check your connection and try again.';
+        if (err.message.includes('429')) {
+           errorTitle = 'Rate Limited';
+           actionSuggestion = 'Please wait a few moments before retrying.';
+        } else if (err.message.includes('503')) {
+           errorTitle = 'Circuit Open';
+           actionSuggestion = 'AI providers are currently degraded. Our fallback system is attempting recovery.';
+        } else if (err.message.includes('401')) {
+           errorTitle = 'Unauthorized';
+           actionSuggestion = 'Session expired. Please log in again.';
+        }
+        fullText = `⚠️ **${errorTitle}**: ${actionSuggestion}`;
         setInternalMessages(prev =>
           prev.map(m => m.id === botMsgId ? { ...m, text: fullText } : m)
         );
@@ -349,8 +365,10 @@ export function InteractiveChatTab({
               Unified Command Portal
             </span>
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full bg-emerald-500 ${!isSimple && 'animate-pulse'}`}></span>
-              <span className="text-[10px] font-mono text-emerald-500 font-semibold">SECURE CORRIDOR</span>
+              <span className={`w-2 h-2 rounded-full ${isServerOnline ? 'bg-emerald-500' : 'bg-amber-500'} ${!isSimple && isServerOnline && 'animate-pulse'}`}></span>
+              <span className={`text-[10px] font-mono font-semibold ${isServerOnline ? 'text-emerald-500' : 'text-amber-500'}`}>
+                {isServerOnline ? 'API STABLE' : 'CIRCUIT DEGRADED'}
+              </span>
             </div>
           </div>
 

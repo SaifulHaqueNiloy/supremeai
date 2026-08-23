@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Editor from '@monaco-editor/react';
-import { Terminal } from 'xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { WebContainer } from '@webcontainer/api'; // 🟢 নতুন ইমপোর্ট
+import type { Terminal } from 'xterm';
+import type { FitAddon } from '@xterm/addon-fit';
+import type { WebContainer } from '@webcontainer/api'; // 🟢 নতুন ইমপোর্ট
 import 'xterm/css/xterm.css'; // টার্মিনালের স্টাইল
 import { apiClient } from '../../services/apiClient';
 
@@ -32,6 +32,8 @@ export const AgentWorkspace: React.FC = () => {
     const initTerminalAndWebContainer = async () => {
       if (terminalRef.current && !xtermRef.current) {
         // ১. টার্মিনাল সেটআপ
+        const { Terminal } = await import('xterm');
+        const { FitAddon } = await import('@xterm/addon-fit');
         term = new Terminal({
           theme: { background: '#1e1e1e', foreground: '#d4d4d4' },
           fontFamily: '"Fira Code", monospace',
@@ -50,6 +52,7 @@ export const AgentWorkspace: React.FC = () => {
 
         try {
           // ২. WebContainer বুট করা (Zero-Cost Environment)
+          const { WebContainer } = await import('@webcontainer/api');
           const webcontainerInstance = await WebContainer.boot();
           webcontainerRef.current = webcontainerInstance;
           term.writeln('✅ \x1b[1;32mWebContainer Booted Successfully!\x1b[0m\r\n');
