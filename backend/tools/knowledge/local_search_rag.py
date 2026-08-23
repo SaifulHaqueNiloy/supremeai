@@ -1,5 +1,3 @@
-from loguru import logger
-
 """Provides a local Retrieval Augmented Generation (RAG) system for AI agents.
 
 This module defines the `LocalSearchRAG` class, which integrates web browsing
@@ -14,6 +12,8 @@ import contextlib
 import json
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 # Import BrowserAgent here to handle it separately
 from tools.ai_agents.browser_agent import BrowserAgent

@@ -1,5 +1,3 @@
-from core.messaging.event_bus import ErrorContext
-
 """This module provides a robust, Redis-backed Publish/Subscribe (PubSub) system, `SwarmPubSub`, designed to facilitate real-time event streaming and communication across the SupremeAI ecosystem. It offers a multi-worker safe mechanism for broadcasting and subscribing to a central "swarm_stream" channel, ensuring scalable and decoupled event propagation, with lazy Redis client initialization and comprehensive error handling integrated with the project's central event bus.
 
 Key Components:
@@ -23,7 +21,7 @@ from collections.abc import AsyncGenerator
 import redis.asyncio as aioredis  # type: ignore[import-untyped]
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 # বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
 # RedisURL এখন settings থেকে আসে, hardcode নয়।

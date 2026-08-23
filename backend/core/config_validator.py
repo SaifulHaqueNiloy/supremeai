@@ -1,5 +1,3 @@
-from loguru import logger
-
 """
 SupremeAI Configuration Validator — Fail-Fast at Startup
 🔬 Evolution v3.0: Schema-based environment variable validation
@@ -9,7 +7,7 @@ Provides clear error messages for misconfiguration.
 
 Usage:
     from core.config_validator import validate_config, ConfigValidationResult
-    
+
     result = validate_config()
     if not result.is_valid:
         logger.debug(result.format_errors())
@@ -21,8 +19,10 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Any
+
+from loguru import logger
 
 
 class VarType(StrEnum):

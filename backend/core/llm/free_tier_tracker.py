@@ -1,9 +1,3 @@
-from __future__ import annotations
-
-from ..messaging.event_bus import (
-    ErrorContext,  # Fixed import path - using relative import
-)
-
 """
 free_tier_tracker.py
 ====================
@@ -16,6 +10,7 @@ the best available free provider for each request.
 Supports optional Redis persistence for multi-worker environments.
 """
 
+from __future__ import annotations
 
 import time
 from collections import deque
@@ -26,6 +21,7 @@ from loguru import logger
 
 from ..config import settings  # Fixed import path - using relative import
 from ..messaging.event_bus import (
+    ErrorContext,  # Fixed import path - using relative import
     ErrorEvent,  # Fixed import path - using relative import
     error_event_bus,  # Fixed import path - using relative import
 )

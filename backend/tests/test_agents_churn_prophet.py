@@ -1,11 +1,10 @@
-from loguru import logger
-
 # tests/test_agents_churn_prophet.py
 """Tests for ChurnProphet - user behavior analysis and retention prediction."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from loguru import logger
 
 
 class TestBehavioralScorer:

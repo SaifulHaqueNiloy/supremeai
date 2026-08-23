@@ -1,15 +1,15 @@
-from loguru import logger
-
 """
 Redis Cache Manager - Optimized for Upstash Free Tier (10K commands/day).
 Implements intelligent caching to minimize Redis usage.
 """
+
 import json
 import os
 import zlib
 from typing import Any
 
 import redis.asyncio as redis
+from loguru import logger
 
 
 class FreeTierCacheManager:
