@@ -30,6 +30,15 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy application code
 COPY . .
 
+# Install Playwright and its system dependencies (must be run as root)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget \
+    gnupg \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && playwright install --with-deps chromium
+
 # Create and use non-root user for security compliance
 RUN addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \
     && chown -R supremeai:supremeai /app

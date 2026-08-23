@@ -19,6 +19,13 @@ os.environ.setdefault("ENV", "testing")
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-testing-purpose-minimum-32")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
+os.environ.setdefault("HF_API_KEY", "hf_test_mock_key")
+os.environ.setdefault("DEEPSEEK_API_KEY", "mock_key")
+os.environ.setdefault("GROQ_API_KEY", "mock_key")
+os.environ.setdefault("GEMINI_API_KEY", "mock_key")
+os.environ.setdefault("OPENROUTER_API_KEY", "mock_key")
+
+
 
 # ---------------------------------------------------------------------------
 # Fixtures
