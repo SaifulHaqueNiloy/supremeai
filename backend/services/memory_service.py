@@ -591,6 +591,41 @@ async def recall_memories(
         return []
 
 
+async def get_semantic_cache(prompt: str, threshold: float = 0.95) -> str | None:
+    """Check if a highly similar prompt has been cached in ai_memory."""
+    try:
+        memories = await recall_memories(
+            task_description=prompt,
+            limit=1,
+            threshold=threshold,
+        )
+        for mem in memories:
+            # Only consider memories explicitly marked as semantic_cache
+            if mem.get("task_type") == "semantic_cache":
+                metadata = mem.get("metadata", {})
+                if isinstance(metadata, dict) and "response" in metadata:
+                    logger.info("🧠 Semantic Cache HIT!")
+                    return metadata["response"]
+    except Exception as exc:
+        logger.error(f"Semantic cache lookup failed: {exc}")
+    return None
+
+
+async def set_semantic_cache(prompt: str, response: str, session_id: str = "cache_layer") -> None:
+    """Store a successful LLM response into the semantic cache."""
+    try:
+        await save_memory(
+            session_id=session_id,
+            summary=prompt,
+            task_type="semantic_cache",
+            agent_type="system",
+            metadata={"response": response}
+        )
+        logger.info("🧠 Semantic Cache SET")
+    except Exception as exc:
+        logger.error(f"Failed to set semantic cache: {exc}")
+
+
 async def summarize_and_save_session(
     *,
     session_id: str,
