@@ -1,3 +1,4 @@
+from loguru import logger
 # backend/services/dynamic_ai/circuit_breaker.py
 """
 Circuit Breaker Pattern Implementation
@@ -79,7 +80,7 @@ class CircuitBreakerManager:
                     circuit.state = CircuitState.HALF_OPEN
                     circuit.success_count = 0
                     circuit.last_state_change = current_time
-                    print(f"🔓 Circuit for {provider_id} transitioning to HALF-OPEN (testing)")
+                    logger.debug(f"🔓 Circuit for {provider_id} transitioning to HALF-OPEN (testing)")
                     return True
                 else:
                     # Still in open state - block request
@@ -114,7 +115,7 @@ class CircuitBreakerManager:
                     circuit.failure_count = 0
                     circuit.success_count = 0
                     circuit.last_state_change = time.time()
-                    print(f"Circuit for {provider_id} CLOSED (recovered!)")
+                    logger.debug(f"Circuit for {provider_id} CLOSED (recovered!)")
             
             elif circuit.state == CircuitState.CLOSED:
                 # Reset failure count on success in closed state
@@ -134,14 +135,14 @@ class CircuitBreakerManager:
                     old_state = circuit.state
                     circuit.state = CircuitState.OPEN
                     circuit.last_state_change = time.time()
-                    print(f"🔒 Circuit for {provider_id} OPENED ({circuit.failure_count} failures)")
+                    logger.debug(f"🔒 Circuit for {provider_id} OPENED ({circuit.failure_count} failures)")
             
             elif circuit.state == CircuitState.HALF_OPEN:
                 # Failure in half-open - go back to open
                 circuit.state = CircuitState.OPEN
                 circuit.last_failure_time = time.time()
                 circuit.last_state_change = time.time()
-                print(f"🔒 Circuit for {provider_id} RE-OPENED (half-open test failed)")
+                logger.debug(f"🔒 Circuit for {provider_id} RE-OPENED (half-open test failed)")
     
     def get_all_circuit_states(self) -> Dict[str, dict]:
         """Get status of all circuit breakers"""
@@ -162,4 +163,4 @@ class CircuitBreakerManager:
         """Manually reset a circuit breaker (force closed)"""
         if provider_id in self._circuits:
             self._circuits[provider_id] = CircuitStateInfo()
-            print(f"🔄 Circuit for {provider_id} manually reset")
+            logger.debug(f"🔄 Circuit for {provider_id} manually reset")

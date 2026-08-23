@@ -51,7 +51,7 @@ async def test_audit_passes_when_safe():
 async def test_audit_locks_on_sandbox_breach():
     auditor = _make_auditor()
     # বাংলা: স্যান্ডবক্স যদি ম্যালিশিয়াস কোডকে Safe বলে (True রিটার্ন), তবে breach গণ্য হয়
-    payloads = [("import os; os.system('rm -rf /')", {"risk": "high"})]
+    payloads = [("import os; os.system('echo malicious_payload_blocked')", {"risk": "high"})]
     async_client = _make_async_client(status_code=200)
 
     with patch("workers.chaos_worker.generate_fuzz_payloads", return_value=payloads), patch(

@@ -323,19 +323,19 @@ __all__ = [
 # Example usage
 async def demo_digital_twin():
     """Demonstrate digital twin capabilities."""
-    print("Initializing Digital Twin World Model...")
+    logger.debug("Initializing Digital Twin World Model...")
 
     model = await initialize_digital_twin()
 
-    print("\nRunning comprehensive analysis on LLM Router...")
+    logger.debug("\nRunning comprehensive analysis on LLM Router...")
     analysis = await model.run_comprehensive_analysis("llm_router")
-    print(f"Risk assessment: {analysis['risk_assessment']}")
-    print(f"Recommendations: {len(analysis['recommendations'])}")
+    logger.debug(f"Risk assessment: {analysis['risk_assessment']}")
+    logger.debug(f"Recommendations: {len(analysis['recommendations'])}")
 
-    print("\nGetting system digital twin state...")
+    logger.debug("\nGetting system digital twin state...")
     state = await model.get_system_digital_twin_state()
-    print(f"Overall health: {state['health_summary']['overall_health_percentage']:.1f}%")
-    print(f"Active remediation plans: {state['health_summary']['active_remediation_plans']}")
+    logger.debug(f"Overall health: {state['health_summary']['overall_health_percentage']:.1f}%")
+    logger.debug(f"Active remediation plans: {state['health_summary']['active_remediation_plans']}")
 
     return model
 

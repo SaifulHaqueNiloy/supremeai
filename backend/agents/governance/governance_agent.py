@@ -361,7 +361,7 @@ class GovernanceAgent:
             # In a real implementation, this would fetch from the auth system
             # For demonstration, return 'user' as default
             return "user"
-        except Exception:
+        except Exception as e:
             return "user"
 
     @with_error_bus("_get_user_permissions")
@@ -371,7 +371,7 @@ class GovernanceAgent:
             # In a real implementation, this would fetch from the auth system
             # For demonstration, return some default permissions
             return ["read_profile", "read_dashboard"]
-        except Exception:
+        except Exception as e:
             # বাংলা: পারমিশন ফেচ ফেইল করলে fail-closed (কোনো পারমিশন নেই) — এররটি লগ করা হলো যাতে অদৃশ্য না থাকে
             logger.warning("Failed to fetch user permissions; defaulting to no permissions (fail-closed).", exc_info=True)
             return []

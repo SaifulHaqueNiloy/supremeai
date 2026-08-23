@@ -14,7 +14,7 @@ try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
 
     PUBSUB_AVAILABLE = True
-except Exception:
+except Exception as e:
     PUBSUB_AVAILABLE = False
 
 

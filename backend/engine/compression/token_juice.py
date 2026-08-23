@@ -162,7 +162,7 @@ class TokenJuice:
         """Compress JSON payloads by pruning nulls/empty values and sampling large arrays."""
         try:
             data = json.loads(raw_json)
-        except Exception:
+        except Exception as e:
             return self.compress_generic_text(raw_json)
 
         def prune(obj: Any) -> Any:

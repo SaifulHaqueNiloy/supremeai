@@ -1,3 +1,4 @@
+from loguru import logger
 """
 Redis Cache Manager - Optimized for Upstash Free Tier (10K commands/day).
 Implements intelligent caching to minimize Redis usage.
@@ -135,7 +136,7 @@ class FreeTierCacheManager:
                     return value
                     
             except Exception as e:
-                print(f"Cache get error: {e}")
+                logger.debug(f"Cache get error: {e}")
         
         return None
     
@@ -167,7 +168,7 @@ class FreeTierCacheManager:
                 return True
                 
             except Exception as e:
-                print(f"Cache set error: {e}")
+                logger.debug(f"Cache set error: {e}")
         
         return False
     
@@ -184,7 +185,7 @@ class FreeTierCacheManager:
                 self._track_command()
                 await self.redis.delete(key)
             except Exception as e:
-                print(f"Cache delete error: {e}")
+                logger.debug(f"Cache delete error: {e}")
     
     async def get_many(self, keys: list) -> Dict[str, Any]:
         """Batch get (uses pipeline to save commands)."""
@@ -217,7 +218,7 @@ class FreeTierCacheManager:
                         self._set_l1(key, result[key])
                             
             except Exception as e:
-                print(f"Cache mget error: {e}")
+                logger.debug(f"Cache mget error: {e}")
         
         return result
     

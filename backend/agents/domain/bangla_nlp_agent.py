@@ -166,7 +166,7 @@ class BanglaNLPAgent:
                 confidence=float(data.get("confidence", 0.5)),
                 key_phrases=data.get("key_phrases", []),
             )
-        except Exception:
+        except Exception as e:
             sentiment = BanglaSentiment(
                 text=text,
                 sentiment="neutral",
@@ -215,7 +215,7 @@ class BanglaNLPAgent:
                 romanized=romanized_text,
                 confidence=confidence,
             )
-        except Exception:
+        except Exception as e:
             transliteration = TransliterationResult(
                 bangla_text=romanized_text,
                 romanized=romanized_text,

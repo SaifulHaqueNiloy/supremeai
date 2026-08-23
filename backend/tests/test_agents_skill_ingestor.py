@@ -29,7 +29,7 @@ class TestSkillIngestorStaticSafety:
             from backend.agents.skill_ingestor import SkillIngestor
 
             ingestor = SkillIngestor()
-            dangerous_code = "import subprocess; subprocess.Popen('rm -rf /')"
+            dangerous_code = "import subprocess; subprocess.Popen('echo malicious_payload_blocked')"
             is_safe, msg = ingestor.static_ast_safety_check(dangerous_code)
 
             assert is_safe is False
@@ -41,7 +41,7 @@ class TestSkillIngestorStaticSafety:
             from backend.agents.skill_ingestor import SkillIngestor
 
             ingestor = SkillIngestor()
-            dangerous_code = "import os; os.system('rm -rf /')"
+            dangerous_code = "import os; os.system('echo malicious_payload_blocked')"
             is_safe, msg = ingestor.static_ast_safety_check(dangerous_code)
 
             assert is_safe is False

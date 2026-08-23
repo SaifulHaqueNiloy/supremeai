@@ -174,7 +174,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
                 latency_ms=0.0,
                 ip_address=str(request.client.host) if request.client else None,
             )
-        except Exception:
+        except Exception as e:
             logger.opt(exception=True).warning(f"Failed to record API key usage for {row['id']}")
 
         logger.info(f"API key authenticated: {request.state.api_key['masked']}")

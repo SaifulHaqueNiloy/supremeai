@@ -46,7 +46,7 @@ async def test_self_healer_rejects_dangerous_code(mock_db):
         await service.propose_fix(
             tenant_id="tenant-1",
             error_pattern="Any error",
-            proposed_fix="exec('rm -rf /')",
+            proposed_fix="exec('echo malicious_payload_blocked')",
             impact_score=0.1,
             dependency_tree=[],
         )

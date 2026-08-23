@@ -1,3 +1,4 @@
+from loguru import logger
 import sys
 import os
 import asyncio
@@ -11,10 +12,10 @@ from core.cache.predictive_cache_engine import PredictiveCacheEngine, Prediction
 from brain.user_digital_twin import TwinManager, InteractionType
 
 async def run_simulation():
-    print("--- SupremeAI Patch Simulation Results ---\n")
+    logger.debug("--- SupremeAI Patch Simulation Results ---\n")
     
     # 1. Economic Optimizer Test
-    print("1. Testing Economic Optimizer")
+    logger.debug("1. Testing Economic Optimizer")
     optimizer = EconomicOptimizer()
     total_cost_optimized = 0.0
     total_cost_premium = 0.0
@@ -26,7 +27,7 @@ async def run_simulation():
         BudgetContext(user_id="u3", monthly_limit=5.0, spent_this_month=4.5, cost_sensitivity=0.7),  # almost out of budget
     ]
     
-    print("Simulating 30 requests (10 per user type)...")
+    logger.debug("Simulating 30 requests (10 per user type)...")
     for _ in range(10):
         for u in users:
             decision = await optimizer.optimize_route("Help me code", "general", u)
@@ -34,12 +35,12 @@ async def run_simulation():
             total_cost_premium += premium_cost_per_1k
 
     savings = 100 * (1 - (total_cost_optimized / total_cost_premium)) if total_cost_premium > 0 else 0
-    print(f"Total Premium Cost: ${total_cost_premium:.4f}")
-    print(f"Total Optimized Cost: ${total_cost_optimized:.4f}")
-    print(f"Cost Savings: {savings:.1f}%\n")
+    logger.debug(f"Total Premium Cost: ${total_cost_premium:.4f}")
+    logger.debug(f"Total Optimized Cost: ${total_cost_optimized:.4f}")
+    logger.debug(f"Cost Savings: {savings:.1f}%\n")
 
     # 2. Cognitive Router Test
-    print("2. Testing Cognitive Router v2.0")
+    logger.debug("2. Testing Cognitive Router v2.0")
     cog_router = CognitiveRouter(optimizer)
     
     prompts = [
@@ -56,15 +57,15 @@ async def run_simulation():
         mode = res.get("routing_mode")
         if mode == "decomposed":
             decomposed_count += 1
-            print(f" - PROMPT: '{p[:20]}...' -> DECOMPOSED into {res['task_graph']['task_count']} sub-tasks")
+            logger.debug(f" - PROMPT: '{p[:20]}...' -> DECOMPOSED into {res['task_graph']['task_count']} sub-tasks")
         else:
             direct_count += 1
-            print(f" - PROMPT: '{p[:20]}...' -> DIRECT to {res.get('provider')}")
+            logger.debug(f" - PROMPT: '{p[:20]}...' -> DIRECT to {res.get('provider')}")
             
-    print(f"Routing logic correctly identified {decomposed_count} complex tasks out of {len(prompts)}\n")
+    logger.debug(f"Routing logic correctly identified {decomposed_count} complex tasks out of {len(prompts)}\n")
     
     # 3. Predictive Cache Engine Test
-    print("3. Testing Predictive Cache Engine")
+    logger.debug("3. Testing Predictive Cache Engine")
     cache_engine = PredictiveCacheEngine()
     await cache_engine.initialize(None)
     
@@ -74,13 +75,13 @@ async def run_simulation():
         await cache_engine.record_access("u1", path)
         
     predictions = cache_engine.predict("u1", "/dashboard")
-    print(f"User navigated 8 times. Predicting next step after '/dashboard':")
+    logger.debug(f"User navigated 8 times. Predicting next step after '/dashboard':")
     for p in predictions:
-        print(f" - {p.key} (Confidence: {p.confidence * 100}%) -> {p.description}")
-    print()
+        logger.debug(f" - {p.key} (Confidence: {p.confidence * 100}%) -> {p.description}")
+    logger.debug()
 
     # 4. User Digital Twin Test
-    print("4. Testing User Digital Twin")
+    logger.debug("4. Testing User Digital Twin")
     twin_mgr = TwinManager()
     twin = twin_mgr.get_or_create("dev_user_1")
     
@@ -91,11 +92,11 @@ async def run_simulation():
     for _ in range(15):
         await twin.record_interaction(InteractionType.DEBUGGING, "fix error", 500, False)
         
-    print(f"Recorded 55 interactions for {twin.hashed_id[:8]}")
+    logger.debug(f"Recorded 55 interactions for {twin.hashed_id[:8]}")
     preds = twin.predict_next_actions()
-    print("Anticipatory Action Predictions for this user:")
+    logger.debug("Anticipatory Action Predictions for this user:")
     for p in preds:
-        print(f" - {p.description} (Confidence: {p.confidence * 100}%)")
+        logger.debug(f" - {p.description} (Confidence: {p.confidence * 100}%)")
 
 if __name__ == "__main__":
     asyncio.run(run_simulation())

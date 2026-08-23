@@ -1,3 +1,4 @@
+from loguru import logger
 # backend/services/dynamic_ai/local_fallback.py
 """
 Local Fallback using Ollama
@@ -108,21 +109,21 @@ class OllamaFallback:
         # Block initialization in cloud environments to prevent RAM exhaustion and crashes
         from core.config import settings
         if getattr(settings, "env", getattr(settings, "ENV", "local")).lower() != "local":
-            print("☁️ Cloud environment detected. Disabling Ollama local fallback.")
+            logger.debug("☁️ Cloud environment detected. Disabling Ollama local fallback.")
             self._is_running = False
             self.available_models = []
             return
 
-        print("🏠 Initializing Local Fallback (Ollama)...")
+        logger.debug("🏠 Initializing Local Fallback (Ollama)...")
         
         # Check if Ollama is running
         self._is_running = await self._check_ollama_running()
         
         if not self._is_running:
-            print("Ollama not running. Attempting to start...")
+            logger.debug("Ollama not running. Attempting to start...")
             started = await self._start_ollama()
             if not started:
-                print("Could not start Ollama. Local fallback unavailable.")
+                logger.debug("Could not start Ollama. Local fallback unavailable.")
                 return False
         
         # Create HTTP client
@@ -135,7 +136,7 @@ class OllamaFallback:
         if self.auto_install:
             await self._ensure_models_installed([self.preferred_model])
         
-        print(f"Local Fallback Ready! Available models: {self._available_models}")
+        logger.debug(f"Local Fallback Ready! Available models: {self._available_models}")
         return True
     
     async def _check_ollama_running(self) -> bool:
@@ -162,10 +163,10 @@ class OllamaFallback:
             
             return await self._check_ollama_running()
         except FileNotFoundError:
-            print("Ollama not installed. Visit https://ollama.ai to install.")
+            logger.debug("Ollama not installed. Visit https://ollama.ai to install.")
             return False
         except Exception as e:
-            print(f"Failed to start Ollama: {e}")
+            logger.debug(f"Failed to start Ollama: {e}")
             return False
     
     async def _refresh_available_models(self):
@@ -176,13 +177,13 @@ class OllamaFallback:
                 data = response.json()
                 self._available_models = [m['model'] for m in data.get('models', [])]
         except Exception as e:
-            print(f"Failed to list Ollama models: {e}")
+            logger.debug(f"Failed to list Ollama models: {e}")
     
     async def _ensure_models_installed(self, model_ids: List[str]):
         """Ensure specified models are installed"""
         for model_id in model_ids:
             if model_id not in self._available_models:
-                print(f"📦 Installing Ollama model: {model_id}")
+                logger.debug(f"📦 Installing Ollama model: {model_id}")
                 try:
                     # Pull model (this can take a while for large models)
                     response = await self._client.post("/api/pull", json={
@@ -192,12 +193,12 @@ class OllamaFallback:
                     
                     if response.status_code == 200:
                         self._available_models.append(model_id)
-                        print(f"Model {model_id} installed")
+                        logger.debug(f"Model {model_id} installed")
                     else:
-                        print(f"Failed to install {model_id}")
+                        logger.debug(f"Failed to install {model_id}")
                         
                 except Exception as e:
-                    print(f"Error installing {model_id}: {e}")
+                    logger.debug(f"Error installing {model_id}: {e}")
     
     async def is_available(self) -> bool:
         """Check if local fallback is ready"""

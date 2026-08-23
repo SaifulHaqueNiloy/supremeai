@@ -98,7 +98,7 @@ class SelfEvolutionAgent:
             start = time.time()
             try:
                 await self._tick()
-            except Exception:
+            except Exception as e:
                 logger.exception("Self-evolution tick failed")
             elapsed = time.time() - start
             try:

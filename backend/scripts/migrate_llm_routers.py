@@ -1,3 +1,4 @@
+from loguru import logger
 #!/usr/bin/env python3
 """
 Migration script for consolidating LLM routers to unified approach.
@@ -21,40 +22,40 @@ from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 
 async def validate_migration():
     """Validate that all components are working correctly after migration."""
-    print("🔍 Validating LLM Gateway Migration...")
+    logger.debug("🔍 Validating LLM Gateway Migration...")
 
     # Test enhanced LLM Gateway
-    print("✅ Testing enhanced LLM Gateway...")
+    logger.debug("✅ Testing enhanced LLM Gateway...")
     gateway = get_llm_gateway()
     if not gateway:
-        print("❌ Failed to get LLM Gateway")
+        logger.debug("❌ Failed to get LLM Gateway")
         return False
 
     # Test LLM Router (now using shared components)
-    print("✅ Testing LLM Router with shared components...")
+    logger.debug("✅ Testing LLM Router with shared components...")
     router = get_llm_router()
     if not router:
-        print("❌ Failed to get LLM Router")
+        logger.debug("❌ Failed to get LLM Router")
         return False
 
     # Test learning engine
-    print("✅ Testing learning engine...")
+    logger.debug("✅ Testing learning engine...")
     try:
         learning_engine = get_learning_engine()
         if not learning_engine:
-            print("❌ Failed to get learning engine")
+            logger.debug("❌ Failed to get learning engine")
             return False
     except Exception as e:
-        print(f"⚠️ Learning engine not available: {e}")
+        logger.debug(f"⚠️ Learning engine not available: {e}")
 
     # Test circuit breaker manager
-    print("✅ Testing circuit breaker manager...")
+    logger.debug("✅ Testing circuit breaker manager...")
     cb_manager = get_circuit_breaker_manager()
     if not cb_manager:
-        print("❌ Failed to get circuit breaker manager")
+        logger.debug("❌ Failed to get circuit breaker manager")
         return False
 
-    print("✅ All components validated successfully!")
+    logger.debug("✅ All components validated successfully!")
     return True
 
 
@@ -62,7 +63,7 @@ async def analyze_current_usage():
     """Analyze current usage of different routers in the codebase."""
     import subprocess
 
-    print("\n🔍 Analyzing current router usage...")
+    logger.debug("\n🔍 Analyzing current router usage...")
 
     # Find all imports of the different routers
     try:
@@ -90,17 +91,17 @@ async def analyze_current_usage():
         )
         llm_learning_refs = result.stdout.count("\n") if result.stdout else 0
 
-        print(f"   LLM Gateway references: {llm_gateway_refs}")
-        print(f"   LLM Router references: {llm_router_refs}")
-        print(f"   LLM Learning references: {llm_learning_refs}")
+        logger.debug(f"   LLM Gateway references: {llm_gateway_refs}")
+        logger.debug(f"   LLM Router references: {llm_router_refs}")
+        logger.debug(f"   LLM Learning references: {llm_learning_refs}")
 
     except Exception as e:
-        print(f"⚠️ Could not analyze usage: {e}")
+        logger.debug(f"⚠️ Could not analyze usage: {e}")
 
 
 async def main():
     """Main migration validation function."""
-    print("🚀 Starting LLM Gateway Migration Validation...")
+    logger.debug("🚀 Starting LLM Gateway Migration Validation...")
 
     # Validate components
     success = await validate_migration()
@@ -109,14 +110,14 @@ async def main():
     await analyze_current_usage()
 
     if success:
-        print("\n🎉 Migration validation completed successfully!")
-        print("✅ Enhanced LLM Gateway with shared circuit breakers is ready")
-        print("✅ Consistent provider taxonomy implemented")
-        print("✅ 429 error handling with backoff added")
-        print("✅ Centralized monitoring and health endpoints available")
+        logger.debug("\n🎉 Migration validation completed successfully!")
+        logger.debug("✅ Enhanced LLM Gateway with shared circuit breakers is ready")
+        logger.debug("✅ Consistent provider taxonomy implemented")
+        logger.debug("✅ 429 error handling with backoff added")
+        logger.debug("✅ Centralized monitoring and health endpoints available")
         return 0
     else:
-        print("\n❌ Migration validation failed!")
+        logger.debug("\n❌ Migration validation failed!")
         return 1
 
 

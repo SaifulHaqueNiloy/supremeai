@@ -57,7 +57,7 @@ class StyleLearner:
 
             try:
                 PY_LANG = Language("build/my-languages.so", "python")
-            except Exception:
+            except Exception as e:
                 # বাংলা মন্তব্য: prebuilt language না থাকলে AST বিশ্লেষণ বাদ দেওয়া হচ্ছে।
                 logger.debug("tree-sitter python grammar not compiled; skipping AST analysis.")
                 return patterns
@@ -193,7 +193,7 @@ class StyleLearner:
                         self.learned_styles[repo_path] = parsed
                         await self._persist_style(repo_path, parsed)
                         return parsed
-                except Exception:
+                except Exception as e:
                     logger.warning("Failed to parse style guidelines JSON from LLM.")
             except Exception as e:
                 logger.warning(f"LLM style analysis failed: {e}")

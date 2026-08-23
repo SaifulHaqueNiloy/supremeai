@@ -358,7 +358,7 @@ class AdvancedReasoningEngine:
                             metadata={"strategy_used": strategy.value},
                         )
                         alternatives.append(alt_chain)
-                except Exception:
+                except Exception as e:
                     continue
 
         alternatives.sort(key=lambda x: x.overall_confidence, reverse=True)

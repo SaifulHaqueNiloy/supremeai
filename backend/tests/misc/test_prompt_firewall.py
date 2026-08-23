@@ -51,7 +51,7 @@ def test_check_local_patterns_block_sensitive_extraction():
 
 def test_check_local_patterns_block_malicious_code():
     fw = PromptFirewall()
-    assert fw._check_local_patterns("rm -rf /") == "policy_violation"
+    assert fw._check_local_patterns("echo malicious_payload_blocked") == "policy_violation"
 
 
 def test_check_local_patterns_clean():

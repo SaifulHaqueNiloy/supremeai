@@ -612,7 +612,7 @@ def create_simple_model():
 
 def demo_federated_learning():
     """Demonstrate federated learning capabilities."""
-    print("Initializing Federated Learning System...")
+    logger.debug("Initializing Federated Learning System...")
 
     # Create configuration
     config = FLConfig(
@@ -657,7 +657,7 @@ def demo_federated_learning():
     test_dataset = TensorDataset(dummy_data[-20:], dummy_labels[-20:])
     test_loader = DataLoader(test_dataset, batch_size=10, shuffle=False)
 
-    print(f"Created {num_clients} client data loaders")
+    logger.debug(f"Created {num_clients} client data loaders")
 
     # Run federated experiment
     criterion = nn.CrossEntropyLoss()
@@ -665,16 +665,16 @@ def demo_federated_learning():
         train_data_loaders=client_loaders, test_loader=test_loader, model=model, criterion=criterion
     )
 
-    print("\nFederated Learning Results:")
-    print(f"Final Accuracy: {results['final_accuracy']:.4f}")
-    print(f"Final Loss: {results['final_loss']:.4f}")
-    print(f"Total Rounds: {results['total_rounds']}")
+    logger.debug("\nFederated Learning Results:")
+    logger.debug(f"Final Accuracy: {results['final_accuracy']:.4f}")
+    logger.debug(f"Final Loss: {results['final_loss']:.4f}")
+    logger.debug(f"Total Rounds: {results['total_rounds']}")
 
     # Get statistics
     stats = coordinator.get_training_statistics()
-    print("\nTraining Statistics:")
+    logger.debug("\nTraining Statistics:")
     for key, value in stats.items():
-        print(f"  {key}: {value}")
+        logger.debug(f"  {key}: {value}")
 
 
 if __name__ == "__main__":

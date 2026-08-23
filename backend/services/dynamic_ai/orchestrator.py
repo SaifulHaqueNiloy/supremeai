@@ -67,7 +67,7 @@ class DynamicAIOrchestrator:
     
     async def initialize(self):
         """Initialize all components"""
-        print("Initializing SupremeAI Dynamic AI System...")
+        logger.debug("Initializing SupremeAI Dynamic AI System...")
         
         # 1. Initialize provider registry
         await self.registry.initialize()
@@ -81,16 +81,16 @@ class DynamicAIOrchestrator:
         
         # 4. Validate all API keys (optional, can skip for faster startup)
         if self.auto_validate_keys:
-            print("🔑 Validating API keys...")
+            logger.debug("🔑 Validating API keys...")
             await self.registry.refresh_status()
         
         # 5. Start background health checks
         asyncio.create_task(self._background_health_check_loop())
         
         self._initialized = True
-        print("SupremeAI Dynamic AI System Ready!")
-        print(f"   External providers: {len(self.registry.get_available_providers())} available")
-        print(f"   Local fallback: {'Ready' if await self.local_fallback.is_available() else 'Unavailable'}")
+        logger.debug("SupremeAI Dynamic AI System Ready!")
+        logger.debug(f"   External providers: {len(self.registry.get_available_providers())} available")
+        logger.debug(f"   Local fallback: {'Ready' if await self.local_fallback.is_available() else 'Unavailable'}")
     
     async def generate(
         self,

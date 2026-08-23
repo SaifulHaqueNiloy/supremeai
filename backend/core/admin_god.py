@@ -85,7 +85,7 @@ class GodModeAuditLog:
                 asyncio.get_running_loop().create_task(redis_manager.client.rpush(key, raw))
                 # TTL so infinite growth is bounded without deleting data.
                 asyncio.get_running_loop().create_task(redis_manager.client.expire(key, 86400 * 14))
-        except Exception:  # Anti-silent failure: never crash audit path.
+        except Exception as e:  # Anti-silent failure: never crash audit path.
             return
 
     @classmethod
@@ -164,7 +164,7 @@ class AdminGodLayer:
             else:
                 GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "incorrect password")
             return result
-        except Exception:
+        except Exception as e:
             GodModeAuditLog.record(
                 actor,
                 "VERIFY_ERROR",

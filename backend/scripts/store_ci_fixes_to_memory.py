@@ -1,3 +1,4 @@
+from loguru import logger
 import asyncio
 import json
 import sys
@@ -69,7 +70,7 @@ async def store_fixes():
             task_type="bug_fix_pattern",
             metadata={"category": "ci_failure_recovery", "auto_fixable": True, "date": "2026-08-22"},
         )
-        print(f"[OK] Stored fix pattern in ai_memory: {f['title']}")
+        logger.debug(f"[OK] Stored fix pattern in ai_memory: {f['title']}")
 
 
 if __name__ == "__main__":

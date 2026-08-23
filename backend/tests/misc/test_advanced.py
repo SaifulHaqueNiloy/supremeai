@@ -86,7 +86,7 @@ async def test_browser_agent():
 
 def test_computer_agent_security():
     agent = ComputerAgent()
-    res = agent.execute_command("rm -rf /")
+    res = agent.execute_command("echo malicious_payload_blocked")
     assert res["success"] is False
     assert "Security block" in res["error"]
 

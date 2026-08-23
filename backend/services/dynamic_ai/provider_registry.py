@@ -1,3 +1,4 @@
+from loguru import logger
 # backend/services/dynamic_ai/provider_registry.py
 """
 SupremeAI Dynamic Provider Registry
@@ -116,7 +117,7 @@ class ProviderRegistry:
         Initialize registry with known providers
         This is where we define provider templates (NOT hardcoded keys!)
         """
-        print("🔄 Initializing Dynamic Provider Registry...")
+        logger.debug("🔄 Initializing Dynamic Provider Registry...")
         
         # Define provider templates (keys come from environment!)
         provider_templates = [
@@ -266,7 +267,7 @@ class ProviderRegistry:
             self._providers[config.provider_id] = config
         
         self._initialization_complete = True
-        print(f"Registry initialized with {len(self._providers)} provider templates")
+        logger.debug(f"Registry initialized with {len(self._providers)} provider templates")
     
     async def refresh_status(self):
         """Refresh status of all providers (check keys, update availability)"""
@@ -423,10 +424,10 @@ class ProviderRegistry:
                 if config.consecutive_failures >= 10:
                     # Too many failures - might be invalid key
                     config.status = ProviderStatus.DISABLED_PERMANENT
-                    print(f"⛔ Provider {provider_id} disabled permanently (invalid key?)")
+                    logger.debug(f"⛔ Provider {provider_id} disabled permanently (invalid key?)")
                 else:
                     config.status = ProviderStatus.DISABLED_TEMPORARY
-                    print(f"🔴 Provider {provider_id} temporarily disabled ({config.consecutive_failures} failures)")
+                    logger.debug(f"🔴 Provider {provider_id} temporarily disabled ({config.consecutive_failures} failures)")
     
     def enable_provider(self, provider_id: str):
         """Manually re-enable a provider"""
@@ -435,7 +436,7 @@ class ProviderRegistry:
             config.enabled = True
             config.consecutive_failures = 0
             config.status = ProviderStatus.UNKNOWN  # Will be re-checked on next refresh
-            print(f"Provider {provider_id} re-enabled")
+            logger.debug(f"Provider {provider_id} re-enabled")
     
     def disable_provider(self, provider_id: str, permanent: bool = False):
         """Manually disable a provider"""
@@ -443,7 +444,7 @@ class ProviderRegistry:
         if config:
             config.enabled = False
             config.status = ProviderStatus.DISABLED_PERMANENT if permanent else ProviderStatus.DISABLED_TEMPORARY
-            print(f"🚫 Provider {provider_id} disabled ({'permanent' if permanent else 'temporary'})")
+            logger.debug(f"🚫 Provider {provider_id} disabled ({'permanent' if permanent else 'temporary'})")
     
     def get_status_summary(self) -> dict:
         """Get summary of all provider statuses"""

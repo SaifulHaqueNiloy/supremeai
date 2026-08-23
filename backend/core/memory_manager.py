@@ -128,8 +128,8 @@ class FreeTierMemoryManager:
                 logger.warning(f"  {stat}")
                 
             tracemalloc.stop()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Ignored error: {e}")
 
 
 # Singleton instance

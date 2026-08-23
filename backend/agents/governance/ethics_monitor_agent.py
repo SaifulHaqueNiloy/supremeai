@@ -89,7 +89,7 @@ class EthicsMonitorAgent:
             data = json.loads(content) if isinstance(content, str) else content
             violations = data.get("violations", [])
             score = float(data.get("overall_score", 0.5))
-        except Exception:
+        except Exception as e:
             violations = []
             score = 1.0
 
@@ -149,7 +149,7 @@ class EthicsMonitorAgent:
                 explanation=data.get("explanation", "Insufficient context for evaluation"),
                 reviewed_principles=data.get("reviewed_principles", [principle.value]),
             )
-        except Exception:
+        except Exception as e:
             return EthicsVerdict(
                 verdict="flagged",
                 confidence=0.5,

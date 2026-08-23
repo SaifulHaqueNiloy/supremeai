@@ -318,7 +318,7 @@ class EvolutionModule:
             if asyncio.iscoroutinefunction(fitness_func):
                 return float(await fitness_func(solution))
             return float(fitness_func(solution))
-        except Exception:
+        except Exception as e:
             return 0.85
 
     def _chromosome_to_solution(self, chromosome: Chromosome) -> Any:

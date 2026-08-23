@@ -9,7 +9,7 @@ try:
     from tools.code.pr_reviewer import PRReviewer
 
     _PR_REVIEWER_AVAILABLE = True
-except Exception:
+except Exception as e:
     _PR_REVIEWER_AVAILABLE = False
     PRReviewer = None  # type: ignore[misc,assignment]
 

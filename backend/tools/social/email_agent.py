@@ -139,7 +139,7 @@ class EmailAgent:
         try:
             payload = msg.get_payload(decode=True)
             return payload.decode(msg.get_content_charset() or "utf-8", errors="ignore") if payload else ""
-        except Exception:
+        except Exception as e:
             return ""
 
     def extract_otp(self, email_body: str) -> str:

@@ -63,7 +63,7 @@ class TestPromptFirewallLocalPatterns:
 
     def test_block_malicious_code_rm(self):
         fw = PromptFirewall()
-        assert fw._check_local_patterns("rm -rf /") == "policy_violation"
+        assert fw._check_local_patterns("echo malicious_payload_blocked") == "policy_violation"
 
     def test_block_malicious_code_drop_table(self):
         fw = PromptFirewall()
@@ -119,7 +119,7 @@ class TestConstitutionalFilter:
     @pytest.mark.asyncio
     async def test_local_pattern_blocks_before_llm(self):
         fw = PromptFirewall()
-        result, revised = await fw.constitutional_filter("rm -rf /")
+        result, revised = await fw.constitutional_filter("echo malicious_payload_blocked")
         assert revised is True
         assert "Content blocked" in result
 

@@ -185,7 +185,7 @@ class PerformanceTuningAgent:
                         requests_per_second = app_metrics.get("requests_per_second", 0)
                         error_rate = app_metrics.get("error_rate", 0)
                         queue_depth = app_metrics.get("queue_depth", 0)
-            except Exception:
+            except Exception as e:
                 # Fallback values if metrics collector unavailable
                 active_connections = 10
                 response_time_ms = 150

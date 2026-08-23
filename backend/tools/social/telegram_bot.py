@@ -832,7 +832,7 @@ class TelegramBotHandler:
                 r = await c.get(f"{backend_url}/health")
                 icon = "🟢" if r.status_code == 200 else "🟡"
                 status_lines.append(f"{icon} <b>Render Backend:</b> <code>{r.status_code} OK (Port 8000)</code>")
-        except Exception:
+        except Exception as e:
             status_lines.append("🔴 <b>Render Backend:</b> <code>Degraded/Unreachable</code>")
 
         # Database Health

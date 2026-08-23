@@ -1,3 +1,4 @@
+from loguru import logger
 # backend/services/dynamic_ai/learning_engine.py
 """
 Self-Learning AI Router
@@ -381,10 +382,10 @@ class LearningEngine:
                 await f.write(json.dumps(data, indent=2))
             
             self._last_save = time.time()
-            print(f"💾 Learning data saved ({len(data)} providers)")
+            logger.debug(f"💾 Learning data saved ({len(data)} providers)")
             
         except Exception as e:
-            print(f"Failed to save learning data: {e}")
+            logger.debug(f"Failed to save learning data: {e}")
     
     async def load_learning_data(self):
         """Load persisted learning data"""
@@ -410,9 +411,9 @@ class LearningEngine:
                     )
                     self._performance_data[provider_id][task_type] = perf
             
-            print(f"📂 Learning data loaded ({len(data)} providers)")
+            logger.debug(f"📂 Learning data loaded ({len(data)} providers)")
             
         except FileNotFoundError:
-            print("ℹ️ No existing learning data found, starting fresh")
+            logger.debug("ℹ️ No existing learning data found, starting fresh")
         except Exception as e:
-            print(f"Failed to load learning data: {e}")
+            logger.debug(f"Failed to load learning data: {e}")

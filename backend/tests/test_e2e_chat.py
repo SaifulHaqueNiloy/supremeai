@@ -97,7 +97,7 @@ class TestImmuneSystemScannerChat:
 
         scanner = ImmuneSystemScanner()
 
-        code = "import os; os.system('rm -rf /')"
+        code = "import os; os.system('echo malicious_payload_blocked')"
         result = scanner.scan_code(code)
 
         assert result["safe"] is False

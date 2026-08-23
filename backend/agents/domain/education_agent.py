@@ -171,7 +171,7 @@ class EducationAgent:
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             modules = [LearningModule(**m) for m in data.get("modules", [])]
-        except Exception:
+        except Exception as e:
             modules = [
                 LearningModule(
                     title=f"Introduction to {goal}",

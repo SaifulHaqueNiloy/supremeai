@@ -449,7 +449,7 @@ def create_example_model():
 
 def demo_ewc():
     """Demonstrate EWC functionality."""
-    print("Initializing EWC Demo...")
+    logger.debug("Initializing EWC Demo...")
 
     # Create model and EWC configuration
     model = create_example_model()
@@ -466,7 +466,7 @@ def demo_ewc():
     trainer = EWCTrainer(model, config, optimizer)
 
     # Simulate training on Task 1
-    print("\nTraining on Task 1...")
+    logger.debug("\nTraining on Task 1...")
     [(dummy_data[:50], dummy_targets[:50])]  # Simplified loader
     criterion = nn.CrossEntropyLoss()
 
@@ -479,7 +479,7 @@ def demo_ewc():
     trainer.train_task(dataloader1, criterion, epochs=2, task_id="task1")
 
     # Simulate training on Task 2 (different data distribution)
-    print("\nTraining on Task 2 with EWC protection...")
+    logger.debug("\nTraining on Task 2 with EWC protection...")
     dataset2 = TensorDataset(dummy_data[50:], dummy_targets[50:])  # Different subset
     dataloader2 = DataLoader(dataset2, batch_size=10, shuffle=True)
 
@@ -487,11 +487,11 @@ def demo_ewc():
 
     # Evaluate importance
     importance_stats = trainer.evaluate_importance()
-    print(f"\nParameter importance statistics computed for {len(importance_stats)} layers")
+    logger.debug(f"\nParameter importance statistics computed for {len(importance_stats)} layers")
 
     # Show some importance statistics
     for name, stats in list(importance_stats.items())[:3]:  # Show first 3
-        print(f"Layer {name}: Mean importance = {stats['mean']:.6f}")
+        logger.debug(f"Layer {name}: Mean importance = {stats['mean']:.6f}")
 
 
 if __name__ == "__main__":

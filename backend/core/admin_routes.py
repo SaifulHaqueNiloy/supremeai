@@ -467,7 +467,7 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
             if hmac.compare_digest(code, user_otp):
                 return True
         return False
-    except Exception:
+    except Exception as e:
         return False
 
 

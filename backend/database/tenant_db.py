@@ -87,7 +87,7 @@ class TenantAwareFirestore:
             client = get_firestore_client()
             if client is not None:
                 return client
-        except Exception:
+        except Exception as e:
             logger.debug("get_firestore_client() failed, falling back to direct firestore.Client()")
 
         # বাংলা মন্তব্য: firestore module exists কিনা check করে তবেই কল

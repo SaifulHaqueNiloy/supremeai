@@ -35,7 +35,7 @@ async def stream_swarm_health(request: Request):
                 if await request.is_disconnected():
                     break
                 yield {"data": message}
-        except Exception:
+        except Exception as e:
             logger.exception("Unhandled exception")
             pass
 
@@ -61,7 +61,7 @@ async def _save_telemetry_to_db(data: dict):
             )
             await session.commit()
             logger.info(f"Telemetry persisted to DB: {data.get('patch_id', 'Unknown')}")
-        except Exception:
+        except Exception as e:
             logger.exception(f"Failed to persist telemetry for patch {data.get('patch_id', 'Unknown')}")
             raise
 

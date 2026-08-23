@@ -107,7 +107,7 @@ def execute(sql: str, params: tuple = ()) -> None:
         try:
             cur.execute(sql, params)
             conn.commit()
-        except Exception:
+        except Exception as e:
             conn.rollback()
             raise
         finally:
@@ -123,7 +123,7 @@ def executemany(sql: str, params_list: list[tuple]) -> None:
         try:
             cur.executemany(sql, params_list)
             conn.commit()
-        except Exception:
+        except Exception as e:
             conn.rollback()
             raise
         finally:

@@ -1,3 +1,4 @@
+from loguru import logger
 """
 Optimized Vector Store for Free Tier
 Reduces memory usage while maintaining search quality.
@@ -68,7 +69,7 @@ class FreeTierOptimizedVectorStore:
             return True
             
         except Exception as e:
-            print(f"Batch upsert failed: {e}")
+            logger.debug(f"Batch upsert failed: {e}")
             return False
     
     async def similarity_search(
@@ -112,7 +113,7 @@ class FreeTierOptimizedVectorStore:
             ]
             
         except Exception as e:
-            print(f"Similarity search failed: {e}")
+            logger.debug(f"Similarity search failed: {e}")
             return []
     
     async def delete_old_memories(self, days_old: int = 30, limit: int = 100):
@@ -131,5 +132,5 @@ class FreeTierOptimizedVectorStore:
             return True
             
         except Exception as e:
-            print(f"Delete failed: {e}")
+            logger.debug(f"Delete failed: {e}")
             return False

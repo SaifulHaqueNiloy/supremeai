@@ -244,7 +244,7 @@ class LLMGateway:
             try:
                 delta = end_time - start_time
                 duration = delta.total_seconds() if hasattr(delta, "total_seconds") else float(delta)
-            except Exception:
+            except Exception as e:
                 duration = 0.0
             logger.error(f"[LLMGateway] ❌ Model={model} failed | Error={str(exception_obj)[:200]} | {duration:.2f}s")
             error_event_bus.emit(
@@ -436,7 +436,7 @@ class LLMGateway:
 
                     tokens = estimate_tokens(prompt_text)
                     estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
-                except Exception:  # Safe fallback cost on token estimate failure
+                except Exception as e:  # Safe fallback cost on token estimate failure
                     estimated_cost = 0.01
                 await cost_guard.check_budget(tenant_id, estimated_cost)
 

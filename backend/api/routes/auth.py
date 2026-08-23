@@ -89,7 +89,7 @@ async def optional_current_user(
             role=role,
             email=payload.get("email") if isinstance(payload.get("email"), str) else None,
         )
-    except Exception:
+    except Exception as e:
         logger.exception("Unhandled exception")
         return None
 

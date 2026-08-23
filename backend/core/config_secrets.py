@@ -167,7 +167,7 @@ class SettingsSecretsMixin:
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
             url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
-        except Exception:
+        except Exception as e:
             url = ""
         return SecretStr(url) if url else None
 
@@ -300,7 +300,7 @@ class SettingsSecretsMixin:
     def discord_bot_token(self) -> str:
         try:
             return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
-        except Exception:
+        except Exception as e:
             return ""
 
     @property

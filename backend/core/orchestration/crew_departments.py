@@ -317,7 +317,7 @@ class ReflectionAgent(SwarmAgentBase):
 
             try:
                 parsed = json.loads(analysis)
-            except Exception:
+            except Exception as e:
                 parsed = {
                     "what_worked": [analysis],
                     "what_failed": [],

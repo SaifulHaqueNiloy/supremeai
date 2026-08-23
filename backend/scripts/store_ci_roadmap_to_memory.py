@@ -1,3 +1,4 @@
+from loguru import logger
 import asyncio
 import json
 import sys
@@ -103,7 +104,7 @@ async def inject_roadmap_to_memory():
         task_type="ci_debugging_standard",
         metadata={"category": "ci_standard", "doc_path": "docs/devops/CI_DEBUGGING_ROADMAP.md"},
     )
-    print("[OK] Injected Master CI Debugging Playbook into ai_memory database.")
+    logger.debug("[OK] Injected Master CI Debugging Playbook into ai_memory database.")
 
     # 2. Store Individual Steps for Granular Vector Search
     for s in roadmap_steps:
@@ -122,7 +123,7 @@ async def inject_roadmap_to_memory():
             task_type="ci_debugging_standard",
             metadata={"step": s["step"], "title": s["title"], "category": s["category"]},
         )
-        print(f"[OK] Injected Step {s['step']}: {s['title']}")
+        logger.debug(f"[OK] Injected Step {s['step']}: {s['title']}")
 
 
 if __name__ == "__main__":

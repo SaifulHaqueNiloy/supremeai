@@ -191,7 +191,7 @@ class CircuitBreaker:
         try:
             yield
             await self._on_success()
-        except Exception:
+        except Exception as e:
             await self._on_failure()
             raise
 

@@ -1,3 +1,4 @@
+from loguru import logger
 from typing import Any
 """
 SupremeAI 2.0 Core Components
@@ -278,26 +279,26 @@ def run_complete_system_test():
     """
     Run a comprehensive test of all system components.
     """
-    print("Running Complete System Test...")
+    logger.debug("Running Complete System Test...")
 
     # Get complete system
     system = get_complete_ai_system()
 
-    print("\n✓ Digital Twin System:", type(system["digital_twin"]).__name__)
-    print("✓ Adversarial Defense System:", type(system["defense_system"]).__name__)
-    print("✓ Neural-Symbolic System:", type(system["neural_symbolic"]).__name__)
-    print("✓ Theory of Mind System:", type(system["theory_of_mind"]).__name__)
-    print("✓ Temporal Abstraction System:", type(system["temporal_abstraction"]).__name__)
-    print("✓ Performance Optimizer:", type(system["performance_optimizer"]).__name__)
-    print("✓ Accessibility Engine:", type(system["accessibility_engine"]).__name__)
-    print("✓ QA Suite:", type(system["qa_suite"]).__name__)
-    print("✓ Deployment System:", type(system["deployment_system"]).__name__)
+    logger.debug("\n✓ Digital Twin System:", type(system["digital_twin"]).__name__)
+    logger.debug("✓ Adversarial Defense System:", type(system["defense_system"]).__name__)
+    logger.debug("✓ Neural-Symbolic System:", type(system["neural_symbolic"]).__name__)
+    logger.debug("✓ Theory of Mind System:", type(system["theory_of_mind"]).__name__)
+    logger.debug("✓ Temporal Abstraction System:", type(system["temporal_abstraction"]).__name__)
+    logger.debug("✓ Performance Optimizer:", type(system["performance_optimizer"]).__name__)
+    logger.debug("✓ Accessibility Engine:", type(system["accessibility_engine"]).__name__)
+    logger.debug("✓ QA Suite:", type(system["qa_suite"]).__name__)
+    logger.debug("✓ Deployment System:", type(system["deployment_system"]).__name__)
 
-    print("\n✓ EWC System: Initialized")
-    print("✓ Federated Learning System: Initialized")
+    logger.debug("\n✓ EWC System: Initialized")
+    logger.debug("✓ Federated Learning System: Initialized")
 
-    print("\nAll system components successfully loaded!")
-    print("Complete SupremeAI 2.0 system ready for advanced AI operations.")
+    logger.debug("\nAll system components successfully loaded!")
+    logger.debug("Complete SupremeAI 2.0 system ready for advanced AI operations.")
 
 
 def __getattr__(name: str):

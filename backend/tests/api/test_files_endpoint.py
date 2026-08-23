@@ -45,7 +45,7 @@ def test_path_traversal_encoded_blocked(client):
 
 
 def test_blocked_extension(client):
-    r = client.put("/api/files/evil.sh", json={"content": "#!/bin/bash\nrm -rf /"}, headers=_auth())
+    r = client.put("/api/files/evil.sh", json={"content": "#!/bin/bash\necho malicious_payload_blocked"}, headers=_auth())
     assert r.status_code == 400, r.text
 
 

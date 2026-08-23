@@ -228,7 +228,7 @@ class SelfBenchmarkEngine:
                 )
                 elapsed = (time.perf_counter() - start) * 1000.0
                 times.append(elapsed)
-            except Exception:
+            except Exception as e:
                 times.append(float(self.test_duration_per_query_ms))
 
         avg_time = statistics.mean(times) if times else 200.0

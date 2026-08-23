@@ -1,3 +1,4 @@
+from loguru import logger
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ট্রাস্টেড অরিজিন ভ্যালিডেশন মিডলওয়্যার।
 # এটি ওয়াইল্ডকার্ড CORS বাইপাস রোধ করে এবং শুধুমাত্র অনুমোদিত ডোমেইন থেকে এপিআই অ্যাক্সেস নিশ্চিত করে।
 
@@ -48,7 +49,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             return str(self._portal_role_override).lower()
         try:
             role = str(getattr(settings, "service_role", "user") or "user").lower()
-        except Exception:
+        except Exception as e:
             role = "user"
         return "admin" if role == "admin" else "user"
 

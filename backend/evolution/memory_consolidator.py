@@ -199,5 +199,5 @@ class MemoryConsolidator:
     def _serialize(self, data: Any) -> bytes:
         try:
             return pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
-        except Exception:
+        except Exception as e:
             return str(data).encode("utf-8")
