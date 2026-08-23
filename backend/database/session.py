@@ -234,7 +234,8 @@ async def check_engine_health() -> bool:
     from sqlalchemy import text
 
     try:
-        engine = _get_engine()
+        init_engine()
+        engine = _engine_instance
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return True

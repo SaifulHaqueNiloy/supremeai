@@ -1,6 +1,9 @@
+import logging
 import math
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 try:
     import requests

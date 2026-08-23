@@ -8,7 +8,11 @@ import json
 import logging
 from typing import Any
 
-from evolution.change_proposal import ProposalState, get_change_manager
+from evolution.change_proposal import (
+    ChangeProposalManager,
+    ProposalState,
+    get_change_manager,
+)
 
 logger = logging.getLogger("supremeai.evolution.integrity")
 

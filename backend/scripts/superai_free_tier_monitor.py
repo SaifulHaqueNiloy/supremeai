@@ -26,12 +26,15 @@ Author: SuperAI Team | License: MIT
 
 import argparse
 import json
+import logging
 import os
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 # Try imports with graceful fallbacks
 try:

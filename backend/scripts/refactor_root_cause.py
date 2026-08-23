@@ -1,9 +1,12 @@
 import ast
+import logging
 import os
 import sys
 from pathlib import Path
 
 from core.error_bus import with_error_bus
+
+logger = logging.getLogger(__name__)
 
 
 @with_error_bus("process_file")
