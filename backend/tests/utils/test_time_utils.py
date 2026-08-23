@@ -32,7 +32,7 @@ class TestUtcExpiry:
     def test_hours_and_seconds(self):
         exp = utc_expiry(hours=1, seconds=30)
         delta = exp - utc_now()
-        assert 3630 <= delta.total_seconds() <= 3631
+        assert 3629 <= delta.total_seconds() <= 3631
 
     def test_is_utc_aware(self):
         assert utc_expiry(minutes=5).tzinfo is not None

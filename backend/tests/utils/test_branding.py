@@ -33,7 +33,7 @@ class TestGetModelDisplayName:
         assert get_model_display_name("gpt-4o-2024-05-13") == "SupremeAI Core"
 
     def test_partial_match_prefix(self):
-        assert get_model_display_name("gemini-2.0-flash") == "SupremeAI Vision"
+        assert get_model_display_name("gemini-2.0-flash") == "SupremeAI Vision Flash"
 
     def test_case_insensitive(self):
         assert get_model_display_name("GPT-4O") == "SupremeAI Core"
