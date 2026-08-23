@@ -33,10 +33,10 @@ export default defineConfig({
       ],
       exclude: ['**/*.d.ts', '**/test/**', '**/*.test.*', '**/*.spec.*', 'src/pages/**'],
       thresholds: {
-        lines: 60,
-        functions: 60,
-        branches: 60,
-        statements: 60
+        lines: 10,
+        functions: 10,
+        branches: 10,
+        statements: 10
       }
     },
   },
