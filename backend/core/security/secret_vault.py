@@ -78,6 +78,15 @@ class ProductionSecretVault:
         self._cache: dict[str, _CacheEntry] = {}
         self._circuit_breaker_open: bool = False
 
+        # TTL overrides for smart caching (Infisical API quota optimization)
+        self._ttl_overrides: dict[str, int] = {
+            "FEATURE_FLAGS": 3600,      # 1 hour
+            "PUBLIC_CONFIG": 1800,      # 30 min
+            "API_ENDPOINTS": 900,       # 15 min
+            "LLM_PROVIDER_KEYS": 300,   # 5 min
+            "DATABASE_CONFIG": 300,     # 5 min
+        }
+
         # বাংলা মন্তব্য: PRE_COMMIT=1 বা TESTING=1 থাকলে Infisical init skip করো।
         # এটি pre-commit hook hang প্রতিরোধ করে — network call হবে না।
         _is_precommit = os.getenv("PRE_COMMIT") == "1" or os.getenv("TESTING") == "1"
@@ -141,12 +150,14 @@ class ProductionSecretVault:
         if cached and cached.is_expired:
             del self._cache[secret_id]
 
+        ttl = self._ttl_overrides.get(secret_id, CACHE_TTL_SECONDS)
+
         # বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবল ভল্টের উপরে প্রাধান্য পায় (12-factor)।
         # এতে Render-এর env কনফিগ দিয়ে সিক্রেট ইমার্জেন্সি-ফিক্স/ওভাররাইড করা যায়
         # ইনফিসিক্যাল স্পর্শ না করেই। শুধু তখনই প্রযোজ্য যখন ভ্যারিয়েবল সেট থাকে।
         env_override = os.getenv(secret_id)
         if env_override:
-            self._cache[secret_id] = _CacheEntry(env_override)
+            self._cache[secret_id] = _CacheEntry(env_override, ttl=ttl)
             return env_override
 
         if not self.client or not self.project_id:
@@ -174,7 +185,7 @@ class ProductionSecretVault:
             for attempt in range(max_retries):
                 try:
                     secret_value = self.client.getSecret(options=options).secret_value
-                    self._cache[secret_id] = _CacheEntry(secret_value)
+                    self._cache[secret_id] = _CacheEntry(secret_value, ttl=ttl)
                     return secret_value
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
@@ -316,6 +327,27 @@ class ProductionSecretVault:
         বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।
         """
         return await asyncio.to_thread(self.fetch_secret, secret_id, default)
+
+    @with_error_bus("fetch_json_secret")
+    def fetch_json_secret(self, secret_id: str, default: dict | None = None) -> dict:
+        """Fetch a secret that contains JSON (useful for grouped secrets).
+        
+        বাংলা: JSON সিক্রেট ফেচ করার সুবিধা।
+        """
+        import json
+        raw_val = self.fetch_secret(secret_id, None)
+        if raw_val is None:
+            if default is not None:
+                return default
+            return {}
+        try:
+            return json.loads(raw_val)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON secret '{secret_id}': {e}")
+            return default or {}
+
+    async def fetch_json_secret_async(self, secret_id: str, default: dict | None = None) -> dict:
+        return await asyncio.to_thread(self.fetch_json_secret, secret_id, default)
 
     def invalidate_cache(self, secret_id: str | None = None) -> None:
         """Invalidate cache for a specific secret or clear all.
