@@ -15,6 +15,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from monitoring import track_exception
+
 try:
     import psutil
 except ImportError:
@@ -361,6 +363,14 @@ class IntelligentErrorBus(ErrorEventBus):
     def emit(self, event: ErrorEvent) -> None:
         event.structured_context.system_state = self._get_current_metrics()
         self._check_and_escalate_pattern(event)
+        
+        # Forward severe errors to Sentry via monitoring
+        if event.severity in ["CRITICAL", "ERROR", "HIGH"]:
+            track_exception(
+                Exception(f"[{event.error_type}] {event.message}"),
+                context={"module": event.module, "service": event.service, **event.context, **event.structured_context.model_dump()}
+            )
+            
         super().emit(event)
 
     async def publish(self, event: ErrorEvent) -> ErrorEvent:

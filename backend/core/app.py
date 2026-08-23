@@ -15,8 +15,13 @@ from api.routers import register_all_routers
 from core.admin_routes import router as admin_router
 from core.app_builder import create_app
 from core.health_check import health_checker
+from monitoring import init_observability
 
 logger = logging.getLogger(__name__)
+
+# Initialize observability (Sentry APM & Error Tracking) before creating app
+init_observability()
+
 app = create_app()
 
 # Import and add MemoryAwareMiddleware for Render Free Tier optimization
