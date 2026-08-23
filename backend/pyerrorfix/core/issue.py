@@ -8,11 +8,11 @@ what makes the tool reusable across projects and pipelines.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     """Issue severity, ordered low → high. Inherits str so JSON-serialisable."""
 
     INFO = "info"
@@ -21,7 +21,7 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
-class Category(str, Enum):
+class Category(StrEnum):
     """Top-level error families. Mirrors the user's Bengali taxonomy + added ones."""
 
     CORE_PYTHON = "core-python"
