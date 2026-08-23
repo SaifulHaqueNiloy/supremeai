@@ -13,7 +13,7 @@ import os
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 import httpx
@@ -23,7 +23,7 @@ from pydantic import BaseModel
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
 
 
-class ServiceStatus(str, Enum):
+class ServiceStatus(StrEnum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"

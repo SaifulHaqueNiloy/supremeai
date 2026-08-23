@@ -11,11 +11,11 @@ import random
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class TuningStrategy(str, Enum):
+class TuningStrategy(StrEnum):
     GRID_SEARCH = "grid_search"
     RANDOM_SEARCH = "random_search"
     BAYESIAN_OPTIMIZATION = "bayesian"

@@ -7,7 +7,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from core.task_contract import RiskLevel, TaskContract, VerificationPolicy
@@ -15,7 +15,7 @@ from core.task_contract import RiskLevel, TaskContract, VerificationPolicy
 logger = logging.getLogger("supremeai.runtime.planner")
 
 
-class StepStatus(str, Enum):
+class StepStatus(StrEnum):
     PENDING = "pending"
     EXECUTING = "executing"
     COMPLETED = "completed"

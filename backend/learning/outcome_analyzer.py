@@ -7,7 +7,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from learning.experience import ExperienceRecord
@@ -15,7 +15,7 @@ from learning.experience import ExperienceRecord
 logger = logging.getLogger("supremeai.learning.analyzer")
 
 
-class OutcomeClassification(str, Enum):
+class OutcomeClassification(StrEnum):
     SUCCESS = "success"
     SYNTAX_ERROR = "syntax_error"
     CRITERION_FAILURE = "criterion_failure"

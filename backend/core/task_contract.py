@@ -10,11 +10,11 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     PENDING = "pending"
     PLANNING = "planning"
     EXECUTING = "executing"
@@ -24,20 +24,20 @@ class TaskStatus(str, Enum):
     ROLLED_BACK = "rolled_back"
 
 
-class RiskLevel(str, Enum):
+class RiskLevel(StrEnum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
 
 
-class VerificationPolicy(str, Enum):
+class VerificationPolicy(StrEnum):
     STRICT = "strict"  # Must pass tests, AST scan & deterministic benchmark
     STANDARD = "standard"  # Must pass schema validation & confidence check
     PERMISSIVE = "permissive"  # Fast path for read-only / low-risk queries
 
 
-class CapabilityState(str, Enum):
+class CapabilityState(StrEnum):
     DECLARED = "declared"
     IMPLEMENTED = "implemented"
     VERIFIED = "verified"

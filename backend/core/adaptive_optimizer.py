@@ -15,11 +15,11 @@ import statistics
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class OptimizationType(str, Enum):
+class OptimizationType(StrEnum):
     PARAMETER_TUNING = "parameter_tuning"
     STRATEGY_ADAPTATION = "strategy_adaptation"
     RESOURCE_OPTIMIZATION = "resource_optimization"

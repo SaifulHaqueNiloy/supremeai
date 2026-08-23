@@ -6,13 +6,13 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 logger = logging.getLogger("supremeai.orchestration.master")
 
 
-class CognitiveIntent(str, Enum):
+class CognitiveIntent(StrEnum):
     """Categorical user or system intention."""
 
     REPAIR = "repair"

@@ -8,11 +8,11 @@ Adaptive, and Targeted mutation/crossover modes.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class EvolutionMode(str, Enum):
+class EvolutionMode(StrEnum):
     INCREMENTAL = "incremental"
     RADICAL = "radical"
     ADAPTIVE = "adaptive"

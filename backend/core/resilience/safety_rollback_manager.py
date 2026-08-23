@@ -12,11 +12,11 @@ import hashlib
 import pickle
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class BackupStatus(str, Enum):
+class BackupStatus(StrEnum):
     CREATED = "created"
     CORRUPTED = "corrupted"
     EXPIRED = "expired"

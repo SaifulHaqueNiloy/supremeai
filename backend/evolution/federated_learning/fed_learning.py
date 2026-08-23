@@ -149,7 +149,7 @@ class SecureAggregator:
         aggregated = {}
         total_weight = sum(weights)
 
-        for param_name in client_updates[0].keys():
+        for param_name in client_updates[0]:
             aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
             for update, weight in zip(client_updates, weights, strict=False):
@@ -326,7 +326,7 @@ class FederatedServer:
             aggregated = {}
             total_weight = sum(client_weights)
 
-            for param_name in client_updates[0].keys():
+            for param_name in client_updates[0]:
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
                 for update, weight in zip(client_updates, client_weights, strict=False):
@@ -339,7 +339,7 @@ class FederatedServer:
 
             self.global_model.state_dict()
 
-            for param_name in client_updates[0].keys():
+            for param_name in client_updates[0]:
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
                 for update, weight in zip(client_updates, client_weights, strict=False):
@@ -350,7 +350,7 @@ class FederatedServer:
             aggregated = {}
             total_weight = sum(client_weights)
 
-            for param_name in client_updates[0].keys():
+            for param_name in client_updates[0]:
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
                 for update, weight in zip(client_updates, client_weights, strict=False):
@@ -361,7 +361,7 @@ class FederatedServer:
             aggregated = {}
             total_weight = sum(client_weights)
 
-            for param_name in client_updates[0].keys():
+            for param_name in client_updates[0]:
                 aggregated[param_name] = torch.zeros_like(client_updates[0][param_name])
 
                 for update, weight in zip(client_updates, client_weights, strict=False):

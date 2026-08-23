@@ -19,10 +19,10 @@ from __future__ import annotations
 import os
 import socket
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     RENDER = "render"
     VERCEL = "vercel"
     FIREBASE = "firebase"
