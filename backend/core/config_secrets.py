@@ -81,28 +81,53 @@ class SettingsSecretsMixin:
         """Batch-load all secrets at once into memory cache.
 
         বাংলা: startup-এ একবারে সব সিক্রেট লোড করে singleton dict-এ cache করে।
-        এর ফলে প্রতিটি @property-র জন্য আলাদা vault কল হয় না, cold start latency কমে।
-        বাংলা: default="" পাস করা হচ্ছে যাতে ঐচ্ছিক secrets (যেমন ADMIN_NOTIFICATION_EMAIL)
-        production-এ missing থাকলেও server startup crash না করে।
-        বাংলা: `_get_private_state()` ব্যবহার করা হচ্ছে — Pydantic v2 Mixin-এ PrivateAttr
-        সরাসরি iterable না হওয়ায় `__dict__`-ভিত্তিক state নিশ্চিত করা হয়।
+        V4.1: Optimized to fetch JSON grouped blobs first to save Infisical API calls.
         """
         state = self._get_private_state()
         if state["_secrets_batch_loaded"]:
             return
         cached = state["_cached_secrets"]
+        
+        # 1. OPTIMIZED FETCH: Try loading grouped JSON blobs first
+        try:
+            llm_keys = secret_vault.fetch_json_secret("LLM_PROVIDER_KEYS", default={})
+            if llm_keys:
+                cached["OPENAI_API_KEY"] = llm_keys.get("openai", "")
+                cached["GEMINI_API_KEY"] = llm_keys.get("gemini", "")
+                cached["GROQ_API_KEY"] = llm_keys.get("groq", "")
+                cached["DEEPSEEK_API_KEY"] = llm_keys.get("deepseek", "")
+                cached["NVIDIA_API_KEY"] = llm_keys.get("nvidia", "")
+                cached["OPENROUTER_API_KEY"] = llm_keys.get("openrouter", "")
+                cached["HF_API_KEY"] = llm_keys.get("huggingface", "")
+
+            db_config = secret_vault.fetch_json_secret("DATABASE_CONFIG", default={})
+            if db_config:
+                cached["SUPABASE_DATABASE_URL_POOLER"] = db_config.get("pooler_url", "")
+                cached["SUPABASE_URL"] = db_config.get("supabase_url", "")
+                cached["SUPABASE_KEY"] = db_config.get("supabase_key", "")
+                
+            auth_keys = secret_vault.fetch_json_secret("AUTH_KEYS", default={})
+            if auth_keys:
+                cached["SUPREMEAI_JWT_SECRET"] = auth_keys.get("jwt_secret", "")
+                cached["ENCRYPTION_KEY"] = auth_keys.get("encryption_key", "")
+                cached["SUPREMEAI_API_KEY"] = auth_keys.get("supremeai_api_key", "")
+                cached["SUPREMEAI_ADMIN_PASSWORD_HASH"] = auth_keys.get("admin_password_hash", "")
+                
+        except Exception as e:
+            logger.debug(f"JSON blob fetch failed, falling back to individual: {e}")
+
+        # 2. FALLBACK FETCH: Load missing individual secrets
         for secret_key in self._BATCH_SECRET_KEYS:
+            if cached.get(secret_key):
+                continue  # Skip if already loaded from JSON blob!
+                
             try:
-                # বাংলা: default="" দেওয়া হচ্ছে — এতে optional secrets missing থাকলে
-                # RuntimeError throw হবে না, বরং empty string return হবে।
-                # Critical secrets (JWT, encryption key) আলাদা validate_all validator-এ চেক হবে।
                 val = secret_vault.fetch_secret(secret_key, default="")
                 if val:
                     cached[secret_key] = val
             except Exception as _secret_err:
-                # বাংলা: RuntimeError সহ সব exception gracefully handle করা হচ্ছে।
-                # যদি কোনো optional secret missing থাকে, server startup block হবে না।
                 logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
+                
         state["_secrets_batch_loaded"] = True
 
     def _get_cached_secret(self, key: str) -> str:
