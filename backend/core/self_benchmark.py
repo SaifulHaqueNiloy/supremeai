@@ -20,7 +20,7 @@ import statistics
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from loguru import logger
@@ -33,7 +33,7 @@ except ImportError:
     HAS_PSUTIL = False
 
 
-class BenchmarkCategory(str, Enum):
+class BenchmarkCategory(StrEnum):
     PERFORMANCE = "performance"
     ACCURACY = "accuracy"
     STRESS = "stress"

@@ -13,7 +13,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from loguru import logger
@@ -24,7 +24,7 @@ def hamming_distance(s1: str, s2: str) -> int:
     return sum(c1 != c2 for c1, c2 in zip(s1, s2, strict=False)) + abs(len(s1) - len(s2))
 
 
-class PatternType(str, Enum):
+class PatternType(StrEnum):
     SEQUENCE = "sequence"
     STRUCTURAL = "structural"
     TEMPORAL = "temporal"

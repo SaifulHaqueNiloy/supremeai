@@ -12,11 +12,11 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class NodeState(str, Enum):
+class NodeState(StrEnum):
     STARTING = "starting"
     ACTIVE = "active"
     BUSY = "busy"

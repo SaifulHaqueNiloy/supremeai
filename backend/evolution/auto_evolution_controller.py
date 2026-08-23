@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from evolution.advanced_evolution_engine import AdvancedEvolutionEngine
@@ -23,7 +23,7 @@ from evolution.performance_monitor import PerformanceMonitor
 from evolution.strategy_optimizer import StrategyOptimizer
 
 
-class EvolutionState(str, Enum):
+class EvolutionState(StrEnum):
     IDLE = "idle"
     MONITORING = "monitoring"
     ANALYZING = "analyzing"

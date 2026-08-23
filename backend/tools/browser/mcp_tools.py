@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from pydantic import BaseModel
 
 
-class MCPToolName(str, Enum):
+class MCPToolName(StrEnum):
     """Standard MCP tool names as per Master Plan specification"""
 
     BROWSER_NAVIGATE = "browser_navigate"

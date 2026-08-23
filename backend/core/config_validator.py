@@ -21,11 +21,11 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class VarType(str, Enum):
+class VarType(StrEnum):
     STRING = "string"
     URL = "url"
     INTEGER = "integer"
@@ -35,7 +35,7 @@ class VarType(str, Enum):
     ENUM = "enum"
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     ERROR = "error"  # Blocks startup
     WARNING = "warning"  # Logs but continues
     INFO = "info"  # Informational only

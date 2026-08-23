@@ -13,18 +13,18 @@ import threading
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class MemoryTier(str, Enum):
+class MemoryTier(StrEnum):
     HOT = "hot"
     WARM = "warm"
     COLD = "cold"
     FROZEN = "frozen"
 
 
-class ConsolidationAction(str, Enum):
+class ConsolidationAction(StrEnum):
     COMPRESS = "compress"
     OFFLOAD = "offload"
     EVICT = "evict"

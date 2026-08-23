@@ -364,7 +364,7 @@ class IntelligentCache:
             self._local_cache.clear()
         else:
             keys_to_delete = [
-                k for k in self._local_cache.keys() if self._match_pattern(k, pattern)
+                k for k in self._local_cache if self._match_pattern(k, pattern)
             ]
             for k in keys_to_delete:
                 del self._local_cache[k]
