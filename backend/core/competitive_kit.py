@@ -1123,7 +1123,7 @@ class SmartContextManager:
 
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
         """Calculate cosine similarity"""
-        dot_product = sum(x * y for x, y in zip(a, b))
+        dot_product = sum(x * y for x, y in zip(a, b, strict=True))
         magnitude_a = math.sqrt(sum(x * x for x in a))
         magnitude_b = math.sqrt(sum(x * x for x in b))
         return dot_product / (magnitude_a * magnitude_b) if magnitude_a and magnitude_b else 0

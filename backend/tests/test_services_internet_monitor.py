@@ -157,8 +157,8 @@ async def test_get_status():
 
     status = await service.get_status()
 
-    assert status["is_running"] == True
-    assert status["is_initialized"] == True  # Because session is not None
+    assert status["is_running"]
+    assert status["is_initialized"]  # Because session is not None
     assert status["check_interval"] == 30
     assert status["name"] == "test_agent"
 

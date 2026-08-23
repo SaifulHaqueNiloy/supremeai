@@ -47,7 +47,9 @@ class FreeTierOptimizedVectorStore:
 
                 records = [
                     {"id": bid, "embedding": emb, "metadata": payload, "created_at": "now()"}
-                    for bid, emb, payload in zip(batch_ids, batch_embeddings, batch_payloads)
+                    for bid, emb, payload in zip(
+                        batch_ids, batch_embeddings, batch_payloads, strict=True
+                    )
                 ]
 
                 # Insert batch
