@@ -163,9 +163,8 @@ async def test_circuit_breaker_state_sharing():
 @pytest.mark.asyncio
 async def test_gateway_health_endpoint_simulation():
     """Test the health endpoint functionality."""
-    from fastapi.testclient import TestClient
-
     from core.api.routes.llm_gateway import router
+    from fastapi.testclient import TestClient
 
     # বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে অ্যাপ ইমপোর্ট করা হলো
     from core.app import app
