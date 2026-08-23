@@ -92,6 +92,7 @@ core_routers: list[tuple[str, str]] = [
     ("api.routes.living_engine", ""),
     ("api.routes.living_brain", ""),
     ("api.routes.scraper", "/api/v1"),
+    ("api.routes.kaggle", ""),
 ]
 
 
