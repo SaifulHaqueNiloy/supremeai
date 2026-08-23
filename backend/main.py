@@ -17,6 +17,15 @@ from core.intelligent_silent_catcher import setup_silent_catcher
 setup_silent_catcher()
 
 # ----------------- SUPERAI ENV VALIDATION -----------------
+# বাংলা মন্তব্য: pytest-এর অধীনে (বা ENV=test/testing/ci) module import করার সময়
+# sys.exit(1) করা উচিত না -- এটা শুধু আসল সার্ভার বুট/deploy-এর জন্য একটা hard
+# gate, টেস্ট কালেকশনের সময় `from main import app` করা যেকোনো টেস্টকে পুরো
+# session-ই ক্র্যাশ করিয়ে দিত।
+_is_test_run = ("pytest" in sys.modules) or os.getenv("ENV", "").lower() in (
+    "test",
+    "testing",
+    "ci",
+)
 try:
     from core.env_validator import EnvironmentValidator
 
@@ -28,9 +37,8 @@ try:
         logging.getLogger(__name__).info(
             "CRITICAL: Environment validation failed! Missing required variables."
         )
-        import sys
-
-        sys.exit(1)
+        if not _is_test_run:
+            sys.exit(1)
     else:
         import logging
 
