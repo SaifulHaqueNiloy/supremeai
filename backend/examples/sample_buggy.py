@@ -1,3 +1,4 @@
+# ruff: noqa
 """Intentionally buggy file used to exercise every pyerrorfix detector.
 
 Run:  python -m pyerrorfix analyze examples/sample_buggy.py --fix --format console

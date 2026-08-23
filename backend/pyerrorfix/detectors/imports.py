@@ -15,7 +15,7 @@ from __future__ import annotations
 import ast
 from typing import Any
 
-from pyerrorfix.core.issue import Category, Severity
+from pyerrorfix.core.issue import Category, Issue, Severity
 from pyerrorfix.detectors.base import BaseDetector
 
 # A pragmatic set of top-level stdlib module names. Not exhaustive, but covers
@@ -91,7 +91,7 @@ class ImportDetector(BaseDetector):
             if top not in _STDLIB and not _looks_local(top, self.filename):
                 # third-party: can't verify install statically — warn only if it
                 # looks suspicious (CamelCase or has unusual chars).
-                pass  # noqa: no-op; ModuleNotFoundError needs runtime check
+                pass  # noqa: E501: no-op; ModuleNotFoundError needs runtime check
             # unused import
             local = alias.asname or top
             if local not in self._all_used and local != "__future__":

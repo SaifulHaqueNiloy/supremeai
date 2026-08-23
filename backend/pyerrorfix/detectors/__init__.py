@@ -1,7 +1,7 @@
 """Detector exports + registry."""
 from __future__ import annotations
 
-from typing import Type
+from typing import Any
 
 from pyerrorfix.detectors.asyncio_err import AsyncioDetector
 from pyerrorfix.detectors.auth_security import AuthSecurityDetector
