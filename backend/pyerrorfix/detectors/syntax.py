@@ -4,6 +4,7 @@ These cannot be caught by AST visitors (the AST never builds), so this detector
 parses with a real compile() and inspects the resulting SyntaxError details.
 It also uses ``tokenize`` to find mixed tab/space usage.
 """
+
 from __future__ import annotations
 
 import io
@@ -64,7 +65,8 @@ class SyntaxDetector(BaseDetector):
                     line=line,
                     col=exc.offset or 0,
                     end_line=line,
-                    end_col=(exc.offset or 0) + (len(exc.text) - (exc.text or "").lstrip().count(" ") if exc.text else 0),
+                    end_col=(exc.offset or 0)
+                    + (len(exc.text) - (exc.text or "").lstrip().count(" ") if exc.text else 0),
                     snippet=snippet,
                     fixable=True,
                     fix_description=fix,
@@ -123,4 +125,3 @@ def _is_python_file(filename: str) -> bool:
         return True
     # anything with a non-python extension or named Dockerfile / *.conf / *.yml
     return False
-

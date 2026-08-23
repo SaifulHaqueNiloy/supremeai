@@ -10,6 +10,7 @@ Catches:
   * SQL injection — already flagged by database detector, but also catches
     f-strings passed to DB-API execute.
 """
+
 from __future__ import annotations
 
 import ast
@@ -20,7 +21,8 @@ from pyerrorfix.detectors.base import BaseDetector, iter_call_name
 
 _SECRET_NAME_RE = re.compile(
     r"(password|passwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token|private[_-]?key|"
-    r"client[_-]?secret|aws[_-]?secret|bearer|jwt)", re.I,
+    r"client[_-]?secret|aws[_-]?secret|bearer|jwt)",
+    re.I,
 )
 _HIGH_ENTROPY_RE = re.compile(r"^[A-Za-z0-9_\-+/=]{16,}$")
 
@@ -45,8 +47,15 @@ class SecurityDetector(BaseDetector):
                 fix_description=f"Avoid {name}(); use ast.literal_eval for literals, or a parser.",
             )
 
-        if name in ("pickle.loads", "pickle.load", "cPickle.loads", "cPickle.load",
-                     "yaml.load", "marshal.loads", "shelve.open"):
+        if name in (
+            "pickle.loads",
+            "pickle.load",
+            "cPickle.loads",
+            "cPickle.load",
+            "yaml.load",
+            "marshal.loads",
+            "shelve.open",
+        ):
             unsafe = name == "yaml.load"
             self.add(
                 rule_id="pickle-deserialize",
@@ -61,8 +70,15 @@ class SecurityDetector(BaseDetector):
                 fix_description="Use yaml.safe_load / json.loads / restrict input trust.",
             )
 
-        if name in ("subprocess.run", "subprocess.call", "subprocess.Popen",
-                     "subprocess.check_output", "subprocess.check_call", "os.system", "os.popen"):
+        if name in (
+            "subprocess.run",
+            "subprocess.call",
+            "subprocess.Popen",
+            "subprocess.check_output",
+            "subprocess.check_call",
+            "os.system",
+            "os.popen",
+        ):
             shell_true = any(
                 kw.arg == "shell" and isinstance(kw.value, ast.Constant) and kw.value.value is True
                 for kw in node.keywords
@@ -104,7 +120,11 @@ class SecurityDetector(BaseDetector):
             if isinstance(target, ast.Name) and _SECRET_NAME_RE.search(target.id):
                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
                     val = node.value.value
-                    if val and not val.startswith(("os.environ", "$")) and _HIGH_ENTROPY_RE.match(val):
+                    if (
+                        val
+                        and not val.startswith(("os.environ", "$"))
+                        and _HIGH_ENTROPY_RE.match(val)
+                    ):
                         self.add(
                             rule_id="hardcoded-secret",
                             code="ValueError",

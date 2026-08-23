@@ -8,6 +8,7 @@ Catches:
   * Missing Path.exists() check before Path operations.
   * broad `except` that swallows FileNotFoundError specifically (anti-pattern).
 """
+
 from __future__ import annotations
 
 import ast
@@ -78,8 +79,10 @@ class FileDetector(BaseDetector):
             if kw.arg == "mode" and isinstance(kw.value, ast.Constant):
                 mode_arg = kw.value.value
         if isinstance(mode_arg, str) and any(m in mode_arg for m in ("w", "x", "a", "+")):
-            if isinstance(path, ast.Constant) and isinstance(path.value, str) and any(
-                path.value.startswith(s) for s in _SYSTEM_PATHS
+            if (
+                isinstance(path, ast.Constant)
+                and isinstance(path.value, str)
+                and any(path.value.startswith(s) for s in _SYSTEM_PATHS)
             ):
                 self.add(
                     rule_id="hardcoded-path",

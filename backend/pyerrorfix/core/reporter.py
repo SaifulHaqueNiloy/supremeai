@@ -1,4 +1,5 @@
 """Reporters: console, JSON, SARIF, Markdown."""
+
 from __future__ import annotations
 
 import json
@@ -64,51 +65,65 @@ def to_sarif(result: ScanResult) -> str:
                 },
             }
         loc_line = i.line if i.line > 0 else 1
-        results.append({
-            "ruleId": i.rule_id,
-            "level": _sarif_level(i.severity),
-            "message": {"text": i.message},
-            "locations": [{
-                "physicalLocation": {
-                    "artifactLocation": {"uri": i.file},
-                    "region": {
-                        "startLine": loc_line,
-                        "startColumn": max(i.col, 1),
-                        "endLine": i.end_line or loc_line,
-                        "endColumn": max(i.end_col, 1),
-                    },
-                },
-            }],
-            "fixes": [{
-                "description": {"text": i.fix_description or "see suggestion"},
-                "artifactChanges": [{
-                    "artifactLocation": {"uri": i.file},
-                    "replacements": [{
-                        "deletedRegion": {
-                            "startLine": loc_line,
-                            "startColumn": max(i.col, 1),
-                            "endLine": i.end_line or loc_line,
-                            "endColumn": max(i.end_col, 1),
+        results.append(
+            {
+                "ruleId": i.rule_id,
+                "level": _sarif_level(i.severity),
+                "message": {"text": i.message},
+                "locations": [
+                    {
+                        "physicalLocation": {
+                            "artifactLocation": {"uri": i.file},
+                            "region": {
+                                "startLine": loc_line,
+                                "startColumn": max(i.col, 1),
+                                "endLine": i.end_line or loc_line,
+                                "endColumn": max(i.end_col, 1),
+                            },
                         },
-                        "insertedContent": {"text": i.suggestion or ""},
-                    }],
-                }],
-            }] if i.fixable and i.suggestion else [],
-        })
+                    }
+                ],
+                "fixes": [
+                    {
+                        "description": {"text": i.fix_description or "see suggestion"},
+                        "artifactChanges": [
+                            {
+                                "artifactLocation": {"uri": i.file},
+                                "replacements": [
+                                    {
+                                        "deletedRegion": {
+                                            "startLine": loc_line,
+                                            "startColumn": max(i.col, 1),
+                                            "endLine": i.end_line or loc_line,
+                                            "endColumn": max(i.end_col, 1),
+                                        },
+                                        "insertedContent": {"text": i.suggestion or ""},
+                                    }
+                                ],
+                            }
+                        ],
+                    }
+                ]
+                if i.fixable and i.suggestion
+                else [],
+            }
+        )
     doc = {
         "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/Schemata/sarif-schema-2.1.0.json",
         "version": "2.1.0",
-        "runs": [{
-            "tool": {
-                "driver": {
-                    "name": "pyerrorfix",
-                    "version": "1.0.0",
-                    "informationUri": "https://github.com/SaifulHaqueNiloy/supremeai",
-                    "rules": list(rules.values()),
+        "runs": [
+            {
+                "tool": {
+                    "driver": {
+                        "name": "pyerrorfix",
+                        "version": "1.0.0",
+                        "informationUri": "https://github.com/SaifulHaqueNiloy/supremeai",
+                        "rules": list(rules.values()),
+                    },
                 },
-            },
-            "results": results,
-        }],
+                "results": results,
+            }
+        ],
     }
     return json.dumps(doc, indent=2, ensure_ascii=False)
 

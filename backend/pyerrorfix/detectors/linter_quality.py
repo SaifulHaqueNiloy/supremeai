@@ -9,6 +9,7 @@ Catches the specific linter codes and style issues the user listed:
   * `F841`  — dead mock (unittest.mock.Mock/patch created but never used in a test).
   * `N816`  — snake_case variable assigned camelCase attribute (naming mismatch).
 """
+
 from __future__ import annotations
 
 import ast
@@ -17,8 +18,8 @@ import re
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
 
-_CAMEL_RE = re.compile(r"^[a-z]+([A-Z][a-z0-9]*)+$")          # camelCase
-_SNAKE_RE = re.compile(r"^[a-z][a-z0-9_]*$")                    # snake_case
+_CAMEL_RE = re.compile(r"^[a-z]+([A-Z][a-z0-9]*)+$")  # camelCase
+_SNAKE_RE = re.compile(r"^[a-z][a-z0-9_]*$")  # snake_case
 
 
 class LinterQualityDetector(BaseDetector):

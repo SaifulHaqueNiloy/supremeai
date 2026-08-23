@@ -10,6 +10,7 @@ Catches:
   * Routes without try/except that call fallible code (heuristic).
   * `RequestValidationError` — accessing `request.body()` without validation.
 """
+
 from __future__ import annotations
 
 import ast
@@ -89,9 +90,18 @@ class WebApiDetector(BaseDetector):
                 )
 
         # FastAPI route decorators: detect missing response_model
-        if name in ("router.get", "router.post", "router.put", "router.patch",
-                     "router.delete", "app.get", "app.post", "app.put", "app.patch",
-                     "app.delete"):
+        if name in (
+            "router.get",
+            "router.post",
+            "router.put",
+            "router.patch",
+            "router.delete",
+            "app.get",
+            "app.post",
+            "app.put",
+            "app.patch",
+            "app.delete",
+        ):
             if not any(kw.arg == "response_model" for kw in node.keywords):
                 self.add(
                     rule_id="missing-response-model",

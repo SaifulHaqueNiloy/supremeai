@@ -15,6 +15,7 @@ Multi-format handling: the detector is given the source text and a filename;
 it picks the parser based on the file extension. For .py files it returns
 immediately (other detectors handle those).
 """
+
 from __future__ import annotations
 
 import re
@@ -32,7 +33,11 @@ class InfraDeployDetector(BaseDetector):
         fn = self.filename.lower()
         if fn.endswith(".py"):
             return self.issues  # python deployment scripts handled elsewhere
-        if fn.endswith(("dockerfile", ".dockerfile")) or "/dockerfile" in fn or fn.endswith("dockerfile"):
+        if (
+            fn.endswith(("dockerfile", ".dockerfile"))
+            or "/dockerfile" in fn
+            or fn.endswith("dockerfile")
+        ):
             self._check_dockerfile()
         elif fn.endswith((".yml", ".yaml")) and ("docker-compose" in fn or "compose" in fn):
             self._check_compose()
@@ -159,8 +164,17 @@ class InfraDeployDetector(BaseDetector):
             )
 
     # ---- helper ----
-    def _add(self, *, rule: str, code: str, sev: Severity, title: str, message: str,
-             line: int, fix_description: str) -> None:
+    def _add(
+        self,
+        *,
+        rule: str,
+        code: str,
+        sev: Severity,
+        title: str,
+        message: str,
+        line: int,
+        fix_description: str,
+    ) -> None:
         if not self.enabled(rule):
             return
         self.issues.append(

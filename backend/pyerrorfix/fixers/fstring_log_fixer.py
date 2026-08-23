@@ -1,4 +1,5 @@
 """Convert `logger.info(f"x {y}")` → `logger.info('x %s', y)` (lazy logging)."""
+
 from __future__ import annotations
 
 import ast
@@ -43,7 +44,10 @@ class FStringLogFixer(BaseFixer):
                     and isinstance(node.args[0], ast.JoinedStr)
                 ):
                     start_line, start_col = node.lineno - 1, node.col_offset
-                    end_line, end_col = (node.end_lineno or node.lineno) - 1, node.end_col_offset or 0
+                    end_line, end_col = (
+                        (node.end_lineno or node.lineno) - 1,
+                        node.end_col_offset or 0,
+                    )
                     break
             else:
                 continue

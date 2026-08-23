@@ -11,6 +11,7 @@ Catches:
     actual auth check preceding it (suggests manual gate that bypasses the
     dependency-injected auth).
 """
+
 from __future__ import annotations
 
 import ast
@@ -50,8 +51,10 @@ class AuthSecurityDetector(BaseDetector):
                     if kw.arg == "options" and isinstance(kw.value, ast.Dict):
                         for k, v in zip(kw.value.keys, kw.value.values, strict=False):
                             if (
-                                isinstance(k, ast.Constant) and k.value == "verify_signature"
-                                and isinstance(v, ast.Constant) and v.value is False
+                                isinstance(k, ast.Constant)
+                                and k.value == "verify_signature"
+                                and isinstance(v, ast.Constant)
+                                and v.value is False
                             ):
                                 disable_sig = True
                 if disable_sig:
@@ -93,9 +96,7 @@ class AuthSecurityDetector(BaseDetector):
                 if kw.arg == "allow_credentials" and isinstance(kw.value, ast.Constant):
                     credentials = bool(kw.value.value)
             if origins is not None:
-                has_wildcard = any(
-                    isinstance(o, ast.Constant) and o.value == "*" for o in origins
-                )
+                has_wildcard = any(isinstance(o, ast.Constant) and o.value == "*" for o in origins)
                 if has_wildcard and credentials:
                     self.add(
                         rule_id="cors-wildcard-credentials",

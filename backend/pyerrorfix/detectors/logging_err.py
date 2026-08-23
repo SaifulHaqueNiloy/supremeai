@@ -10,6 +10,7 @@ Catches:
   * `raise` inside `except` without `from` — loses cause chain (Python 3+).
   * `print()` in production code (info).
 """
+
 from __future__ import annotations
 
 import ast
@@ -62,7 +63,11 @@ class LoggingDetector(BaseDetector):
                 fix_description="Replace `except:` with `except Exception:`.",
                 suggestion="except Exception:",
             )
-        elif isinstance(node.type, ast.Name) and node.type.id == "Exception" and not node.body_re_raises():
+        elif (
+            isinstance(node.type, ast.Name)
+            and node.type.id == "Exception"
+            and not node.body_re_raises()
+        ):
             # broad except Exception that doesn't re-raise
             if not _body_re_raises(node.body):
                 self.add(

@@ -5,6 +5,7 @@ attempt the transformation when the open() is the sole RHS of a simple
 assignment inside a function body (not a module-level statement) and the
 following lines are a contiguous indented block.
 """
+
 from __future__ import annotations
 
 from pyerrorfix.fixers.base import BaseFixer

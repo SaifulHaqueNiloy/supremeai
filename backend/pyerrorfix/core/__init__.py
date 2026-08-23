@@ -1,4 +1,5 @@
 """Core exports."""
+
 from __future__ import annotations
 
 from pyerrorfix.core.issue import Category, Issue, ScanResult, Severity

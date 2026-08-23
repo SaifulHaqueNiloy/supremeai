@@ -5,6 +5,7 @@ fixer, every reporter and every external caller (the Next.js dashboard, the
 GitHub Action, SARIF output, etc.). Keeping it stable and self-describing is
 what makes the tool reusable across projects and pipelines.
 """
+
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
@@ -30,12 +31,12 @@ class Category(StrEnum):
     ASYNCIO = "asyncio"
     DATABASE = "database"
     WEB_API = "web-api"
-    CONCURRENCY = "concurrency"      # NEW
-    TYPING = "typing"                # NEW
-    SECURITY = "security"            # NEW
-    RESOURCES = "resources"         # NEW
-    DEPRECATION = "deprecation"     # NEW
-    LOGGING = "logging"             # NEW
+    CONCURRENCY = "concurrency"  # NEW
+    TYPING = "typing"  # NEW
+    SECURITY = "security"  # NEW
+    RESOURCES = "resources"  # NEW
+    DEPRECATION = "deprecation"  # NEW
+    LOGGING = "logging"  # NEW
 
 
 @dataclass
@@ -46,22 +47,22 @@ class Issue:
     through JSON for the dashboard, SARIF for GitHub, and console for humans.
     """
 
-    rule_id: str                       # e.g. "missing-await"
-    code: str                          # canonical exception/error name e.g. "RuntimeWarning"
+    rule_id: str  # e.g. "missing-await"
+    code: str  # canonical exception/error name e.g. "RuntimeWarning"
     category: Category
     severity: Severity
-    title: str                         # short one-liner
-    message: str                        # human-readable explanation
-    file: str                           # filename or "<stdin>"
-    line: int                           # 1-based
-    col: int = 0                        # 1-based, 0 if unknown
+    title: str  # short one-liner
+    message: str  # human-readable explanation
+    file: str  # filename or "<stdin>"
+    line: int  # 1-based
+    col: int = 0  # 1-based, 0 if unknown
     end_line: int = 0
     end_col: int = 0
-    snippet: str = ""                  # offending source line(s)
+    snippet: str = ""  # offending source line(s)
     fixable: bool = False
-    fix_description: str = ""          # what the fixer will do
-    suggestion: str = ""               # suggested replacement (code)
-    detector: str = ""                 # which detector produced it
+    fix_description: str = ""  # what the fixer will do
+    suggestion: str = ""  # suggested replacement (code)
+    detector: str = ""  # which detector produced it
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -75,7 +76,7 @@ class ScanResult:
     """Aggregated output of a scan: the issues + the (optionally) fixed source."""
 
     issues: list[Issue] = field(default_factory=list)
-    fixed_source: str | None = None    # set when --fix requested
+    fixed_source: str | None = None  # set when --fix requested
     files_scanned: int = 0
     elapsed_ms: int = 0
 

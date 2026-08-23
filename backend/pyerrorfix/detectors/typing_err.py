@@ -6,6 +6,7 @@ Catches:
   * Optional parameter used without None check.
   * Missing type hints on public function signatures (info-level).
 """
+
 from __future__ import annotations
 
 import ast
@@ -14,8 +15,8 @@ from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
 
 _NONE_RETURNING = {
-    "get",            # dict.get / os.environ.get
-    "first",          # query.first()
+    "get",  # dict.get / os.environ.get
+    "first",  # query.first()
     "one_or_none",
     "re.search",
     "re.match",

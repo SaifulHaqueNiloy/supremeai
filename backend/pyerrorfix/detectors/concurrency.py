@@ -7,6 +7,7 @@ Catches:
   * Thread-unsafe singleton — global instance created at import time and reused
     across workers without a guard.
 """
+
 from __future__ import annotations
 
 import ast
@@ -64,6 +65,8 @@ class ConcurrencyDetector(BaseDetector):
         for stmt in node.body:
             if isinstance(stmt, ast.Assign):
                 for t in stmt.targets:
-                    if isinstance(t, ast.Name) and isinstance(stmt.value, ast.List | ast.Dict | ast.Set):
+                    if isinstance(t, ast.Name) and isinstance(
+                        stmt.value, ast.List | ast.Dict | ast.Set
+                    ):
                         self._module_level_mutables.add(t.id)
         self.generic_visit(node)
