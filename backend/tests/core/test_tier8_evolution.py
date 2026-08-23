@@ -14,13 +14,13 @@ from tools.learning.model_trainer import ModelTrainer
 def healer_service():
     healer = AutoHealer()
     healer._mutation_attempts = {}
-    
+
     async def mock_attempt(fp, exc):
         healer._mutation_attempts[fp] = healer._mutation_attempts.get(fp, 0) + 1
         if healer._mutation_attempts[fp] > 3:
             return False
         return True
-        
+
     healer.attempt_code_mutation_heal = mock_attempt
     return healer
 
