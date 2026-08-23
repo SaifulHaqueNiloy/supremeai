@@ -18,9 +18,11 @@ def test_migrations_are_numbered_sequentially():
 def test_migrations_contain_required_tables():
     # বাংলা মন্তব্য: ১০ নম্বর মাইগ্রেশন ফাইল সহ সকল ফাইল পড়ার জন্য f[0].isdigit() ব্যবহার করা হলো
     files = sorted(f for f in os.listdir(MIGRATIONS_DIR) if f.endswith(".sql") and f[0].isdigit())
-    all_sql = "\n".join(
-        open(os.path.join(MIGRATIONS_DIR, f), encoding="utf-8").read() for f in files
-    )
+    contents = []
+    for f in files:
+        with open(os.path.join(MIGRATIONS_DIR, f), encoding="utf-8") as fh:
+            contents.append(fh.read())
+    all_sql = "\n".join(contents)
     required_tables = [
         "referral_codes",
         "credit_wallets",
@@ -37,7 +39,8 @@ def test_migrations_contain_required_tables():
 
 def test_referral_system_constraints():
     path = os.path.join(MIGRATIONS_DIR, "06_referral_system.sql")
-    sql = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        sql = f.read()
     assert "PRIMARY KEY" in sql
     assert "referral_redemptions" in sql
     assert "credit_ledger" in sql
@@ -45,14 +48,16 @@ def test_referral_system_constraints():
 
 def test_tenant_config_constraints():
     path = os.path.join(MIGRATIONS_DIR, "07_tenant_config.sql")
-    sql = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        sql = f.read()
     assert "billing_tier TEXT" in sql
     assert "CHECK (billing_tier" in sql
 
 
 def test_sso_config_constraints():
     path = os.path.join(MIGRATIONS_DIR, "08_sso_configs.sql")
-    sql = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        sql = f.read()
     assert "provider TEXT CHECK" in sql
     assert "group_role_mapping JSONB" in sql
     assert "sso_sessions" in sql
@@ -60,7 +65,8 @@ def test_sso_config_constraints():
 
 def test_offline_sync_logs_constraints():
     path = os.path.join(MIGRATIONS_DIR, "09_offline_sync_logs.sql")
-    sql = open(path, encoding="utf-8").read()
+    with open(path, encoding="utf-8") as f:
+        sql = f.read()
     assert "offline_sync_logs" in sql
     assert "payload JSONB" in sql
     assert "status TEXT DEFAULT 'synced'" in sql
@@ -69,7 +75,8 @@ def test_offline_sync_logs_constraints():
 
 def test_sw_registers_service_worker():
     index_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "index.html")
-    html = open(index_path, encoding="utf-8").read()
+    with open(index_path, encoding="utf-8") as f:
+        html = f.read()
     assert "register('/sw.js')" in html, "Service Worker must be registered in index.html"
 
 
@@ -85,6 +92,7 @@ def test_pwa_manifest_exists():
     assert os.path.isfile(manifest_path), "manifest.json must exist for PWA installability"
     import json
 
-    manifest = json.load(open(manifest_path, encoding="utf-8"))
+    with open(manifest_path, encoding="utf-8") as f:
+        manifest = json.load(f)
     assert manifest["name"]
     assert manifest["start_url"]
