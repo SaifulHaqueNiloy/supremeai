@@ -18,7 +18,6 @@ immediately (other detectors handle those).
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Issue, Severity
 from pyerrorfix.detectors.base import BaseDetector

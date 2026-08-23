@@ -3,22 +3,19 @@
 Run:  python -m pyerrorfix analyze examples/sample_buggy.py --fix --format console
 """
 import asyncio
+import hashlib
 import logging
 import pickle  # noqa: F401  (used by security detector)
-import os
-import os
-import requests
 import subprocess
-import hashlib
 import time
-from typing import Optional
+
+import requests
 
 # --- hardcoded secret (security) ---
 API_KEY = "sk-1234567890abcdef1234567890abcdef"
 
 # --- unused import + wildcard already above (unused-import) ---
 import json  # noqa: F401  (unused, used by detector demo)
-
 
 # --- mutable shared global mutated from async (concurrency) ---
 _cache: dict = {}
@@ -37,7 +34,7 @@ async def handler():
     time.sleep(2)
 
     # requests (blocking) in async
-    r = requests.get("https://x")
+    requests.get("https://x")
 
     # mutable shared state mutated without lock
     _cache["x"] = result
@@ -137,8 +134,6 @@ def add(a, b):
 
 
 # ─── NEW: Network & I/O errors (category 1 expanded) ─────────────────────────
-import requests
-import json
 
 
 def fetch_user(user_id):
@@ -151,13 +146,13 @@ def fetch_user(user_id):
 # ─── NEW: Linter & Code-Quality (category 2) ────────────────────────────────
 def process_pairs(a, b):
     # B905: zip without strict
-    for x, y in zip(a, b):
+    for x, y in zip(a, b, strict=False):
         pass
 
 
 def is_active(flag):
     # E712: comparison to bool literal
-    if flag == True:
+    if flag is True:
         return True
     else:
         return False
@@ -195,7 +190,7 @@ from unittest.mock import Mock
 
 def test_something():
     # dead mock: created but never used
-    unused_mock = Mock()
+    Mock()
     # assert without message (hard to debug)
     assert 1 + 1 == 2
 

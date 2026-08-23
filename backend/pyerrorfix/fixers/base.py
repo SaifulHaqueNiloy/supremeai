@@ -1,12 +1,6 @@
 """Base fixer + registry."""
 from __future__ import annotations
 
-import ast
-import re
-import tokenize
-import io
-from typing import Any
-
 from pyerrorfix.core.issue import Issue
 
 

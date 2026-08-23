@@ -13,8 +13,6 @@ Catches:
 from __future__ import annotations
 
 import ast
-import re
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name

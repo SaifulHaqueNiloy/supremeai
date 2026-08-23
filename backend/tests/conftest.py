@@ -5,9 +5,8 @@ v4.0: Comprehensive fixtures for unit, integration, and E2E tests
 
 from __future__ import annotations
 
-import asyncio
 import os
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 from datetime import UTC
 from unittest.mock import MagicMock
 

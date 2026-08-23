@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import ast
 import re
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
@@ -48,8 +47,8 @@ class LinterQualityDetector(BaseDetector):
 
     def visit_Compare(self, node: ast.Compare) -> None:  # type: ignore[override]
         # E712: x == True / x == False
-        for op, comparator in zip(node.ops, node.comparators):
-            if isinstance(op, (ast.Eq, ast.NotEq)) and isinstance(comparator, ast.Constant):
+        for op, comparator in zip(node.ops, node.comparators, strict=False):
+            if isinstance(op, ast.Eq | ast.NotEq) and isinstance(comparator, ast.Constant):
                 if isinstance(comparator.value, bool):
                     val = comparator.value
                     eq = "==" if isinstance(op, ast.Eq) else "!="

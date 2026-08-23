@@ -115,8 +115,8 @@ class CorePythonDetector(BaseDetector):
         self.scope.define(node.name, node)
         self.scope.push()
         self._in_function += 1
-        is_gen = bool(node.decorator_list) is False and any(
-            isinstance(n, (ast.Yield, ast.YieldFrom)) for n in ast.walk(node)
+        bool(node.decorator_list) is False and any(
+            isinstance(n, ast.Yield | ast.YieldFrom) for n in ast.walk(node)
         )
         # arguments are local
         for arg in node.args.args + node.args.posonlyargs + node.args.kwonlyargs:
@@ -211,7 +211,7 @@ class CorePythonDetector(BaseDetector):
     def _assign_target(self, target: ast.AST, node: ast.AST) -> None:
         if isinstance(target, ast.Name):
             self.scope.define(target.id, node)
-        elif isinstance(target, (ast.Tuple, ast.List)):
+        elif isinstance(target, ast.Tuple | ast.List):
             for el in target.elts:
                 self._assign_target(el, node)
         elif isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name):
@@ -221,7 +221,7 @@ class CorePythonDetector(BaseDetector):
 
     # ---- ZeroDivisionError ----
     def visit_BinOp(self, node: ast.BinOp) -> None:  # type: ignore[override]
-        if isinstance(node.op, (ast.Div, ast.FloorDiv, ast.Mod)):
+        if isinstance(node.op, ast.Div | ast.FloorDiv | ast.Mod):
             zero = self._is_zero_literal(node.right)
             if zero:
                 self.add(
@@ -239,7 +239,7 @@ class CorePythonDetector(BaseDetector):
         self.generic_visit(node)
 
     def _is_zero_literal(self, node: ast.AST) -> bool:
-        if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)) and node.value == 0:
+        if isinstance(node, ast.Constant) and isinstance(node.value, int | float) and node.value == 0:
             return True
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub):
             return self._is_zero_literal(node.operand)

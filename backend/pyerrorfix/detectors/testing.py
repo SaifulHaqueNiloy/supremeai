@@ -15,7 +15,6 @@ Catches:
 from __future__ import annotations
 
 import ast
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
@@ -56,10 +55,8 @@ class TestingDetector(BaseDetector):
     def visit_FunctionDef(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:  # type: ignore[override]
         # session-scoped fixture that mutates state → test pollution
         for dec in node.decorator_list:
-            dec_name = ""
             if isinstance(dec, ast.Attribute) and dec.attr == "fixture":
                 # pytest.fixture or pytest.fixture(scope=...)
-                dec_name = "fixture"
                 # check the call args if it's pytest.fixture(...)
                 if isinstance(dec.value, ast.Call):
                     for kw in dec.value.keywords:

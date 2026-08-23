@@ -10,7 +10,6 @@ Catches:
 from __future__ import annotations
 
 import ast
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
@@ -65,6 +64,6 @@ class ConcurrencyDetector(BaseDetector):
         for stmt in node.body:
             if isinstance(stmt, ast.Assign):
                 for t in stmt.targets:
-                    if isinstance(t, ast.Name) and isinstance(stmt.value, (ast.List, ast.Dict, ast.Set)):
+                    if isinstance(t, ast.Name) and isinstance(stmt.value, ast.List | ast.Dict | ast.Set):
                         self._module_level_mutables.add(t.id)
         self.generic_visit(node)

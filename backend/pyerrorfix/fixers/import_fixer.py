@@ -41,11 +41,10 @@ class ImportSortFixer(BaseFixer):
             return self.source
         lines = self._lines()
         # collect leading import block
-        import_lines: list[tuple[int, str, str]] = []
         first_import: int | None = None
         last_import: int | None = None
         for node in tree.body:
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
+            if isinstance(node, ast.Import | ast.ImportFrom):
                 if first_import is None:
                     first_import = node.lineno
                 last_import = node.end_lineno or node.lineno

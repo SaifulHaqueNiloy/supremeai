@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Iterable
 
 from pyerrorfix.config import load_config
 from pyerrorfix.core.issue import Issue, ScanResult

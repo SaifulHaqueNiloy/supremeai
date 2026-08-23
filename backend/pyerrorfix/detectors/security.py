@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import ast
 import re
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
@@ -127,7 +126,7 @@ def _is_dynamic_string(node: ast.AST | None) -> bool:
         return False
     if isinstance(node, ast.JoinedStr):
         return True
-    if isinstance(node, ast.BinOp) and isinstance(node.op, (ast.Add, ast.Mod)):
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add | ast.Mod):
         return True
     if isinstance(node, ast.Name):
         return True  # variable command → still dynamic

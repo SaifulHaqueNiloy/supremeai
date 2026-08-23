@@ -6,10 +6,8 @@ It also uses ``tokenize`` to find mixed tab/space usage.
 """
 from __future__ import annotations
 
-import ast
 import io
 import tokenize
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Issue, Severity
 from pyerrorfix.detectors.base import BaseDetector
