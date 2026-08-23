@@ -25,10 +25,13 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     delete env.VITE_API_BASE;
     delete env.VITE_API_URL;
     delete env.VITE_WS_BASE_URL;
-    delete env.VITE_USER_BACKEND;
-    delete env.VITE_ADMIN_BACKEND;
     delete env.VITE_PORTAL_TYPE;
     delete env.PROD;
+    
+    // বাংলা মন্তব্য: api.ts থেকে ডিফল্ট URL fallback মুছে ফেলায়, টেস্টের জন্য ডিফল্ট ভ্যালু সেট করতে হবে
+    env.VITE_USER_BACKEND = 'https://supremeai-backend-docker.onrender.com';
+    env.VITE_ADMIN_BACKEND = 'https://supremeai-backend-docker.onrender.com';
+    
     setHostname('localhost');
   });
 
@@ -69,6 +72,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
 
     it('user portal-এ VITE_API_BASE কে VITE_API_URL-এর চেয়ে অগ্রাধিকার দেয়', async () => {
       env.VITE_PORTAL_TYPE = 'user';
+      delete env.VITE_USER_BACKEND;
       env.VITE_API_BASE = 'https://api.example.com';
       env.VITE_API_URL = 'https://fallback.example.com';
       const { BACKEND_URL } = await loadApi();
@@ -85,6 +89,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     it('admin portal কখনোই user backend override রিটার্ন করে না', async () => {
       env.VITE_PORTAL_TYPE = 'admin';
       env.VITE_USER_BACKEND = 'https://user-backend-override.example.com';
+      setHostname('supremeai-admin.web.app');
       const { getApiBaseUrl } = await loadApi();
       expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
     });
