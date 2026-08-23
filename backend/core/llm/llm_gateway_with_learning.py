@@ -83,7 +83,9 @@ class LLMGatewayWithLearning:
         # STEP 2: Fall back to external AI
         logger.info(f"🤔 Confidence too low ({confidence:.2f}). Calling external AI model: {model}")
 
-        gen_resp = await self.router.async_generate(prompt=user_query, model_override=model, **kwargs)
+        gen_resp = await self.router.async_generate(
+            prompt=user_query, model_override=model, **kwargs
+        )
 
         response = gen_resp.get("text", "") if isinstance(gen_resp, dict) else str(gen_resp)
 

@@ -43,7 +43,9 @@ class DiagramToArchitecture:
     # এখন None দিয়ে gateway task_type="vision" ফেলোভার চেইন ব্যবহার করবে।
     def __init__(self, vision_model: str | None = None):
         self.vision_model = vision_model
-        logger.info(f"Initialized DiagramToArchitecture with model {self.vision_model or 'auto (gateway-routed)'}")
+        logger.info(
+            f"Initialized DiagramToArchitecture with model {self.vision_model or 'auto (gateway-routed)'}"
+        )
 
     def _encode_image(self, image_path: str) -> str:
         if not os.path.exists(image_path):
@@ -251,7 +253,9 @@ async def generate_from_diagram(
         tmp_path = tmp.name
 
     try:
-        result = await _converter.generate_infrastructure(tmp_path, provider=provider, iac_tool=iac_tool)
+        result = await _converter.generate_infrastructure(
+            tmp_path, provider=provider, iac_tool=iac_tool
+        )
     finally:
         os.unlink(tmp_path)
 

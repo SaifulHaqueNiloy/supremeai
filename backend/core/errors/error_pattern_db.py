@@ -64,7 +64,9 @@ class ErrorPatternDB:
                     pooled_pg.execute(stmt)
                 logger.info("ErrorPatternDB: using pooled Postgres backend.")
             except Exception as exc:
-                logger.error(f"ErrorPatternDB: Postgres schema init failed, falling back to SQLite: {exc}")
+                logger.error(
+                    f"ErrorPatternDB: Postgres schema init failed, falling back to SQLite: {exc}"
+                )
                 self._use_pg = False
         # ":memory:" is a special SQLite path: every sqlite3.connect() call against
         # it opens an *independent*, empty in-memory database. Since every method
@@ -73,11 +75,17 @@ class ErrorPatternDB:
         # closes. Use a shared-cache URI instead, and keep one connection open for
         # the lifetime of this object so the shared in-memory DB stays alive.
         self._is_memory = self.db_path == ":memory:"
-        self._sqlite_uri = f"file:error_pattern_db_{id(self)}?mode=memory&cache=shared" if self._is_memory else None
+        self._sqlite_uri = (
+            f"file:error_pattern_db_{id(self)}?mode=memory&cache=shared"
+            if self._is_memory
+            else None
+        )
         self._memory_keepalive = None
         if not self._use_pg:
             if self._is_memory:
-                self._memory_keepalive = sqlite3.connect(self._sqlite_uri, uri=True, check_same_thread=False)
+                self._memory_keepalive = sqlite3.connect(
+                    self._sqlite_uri, uri=True, check_same_thread=False
+                )
             self._init_sqlite()
             logger.warning(
                 f"ErrorPatternDB: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."

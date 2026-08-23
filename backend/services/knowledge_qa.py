@@ -14,7 +14,9 @@ from core.llm.llm_gateway import GatewayManager
 from core.observability.audit_logger import AuditLogger
 from memory.chromadb_store import ChromaDBStore
 
-MANIFEST_PATH = Path(__file__).resolve().parent.parent / "skills" / "manifests" / "core_knowledge_qa.json"
+MANIFEST_PATH = (
+    Path(__file__).resolve().parent.parent / "skills" / "manifests" / "core_knowledge_qa.json"
+)
 MIN_RETRIEVAL_SCORE = 0.05
 MAX_CONTEXT_CHARS = 12_000
 
@@ -100,7 +102,9 @@ class KnowledgeQAService:
         if isinstance(allowed_data, dict):
             # flat manifest: get namespaces for this specific role (case-insensitive)
             role_key = next((k for k in allowed_data if k.lower() == role.lower()), None)
-            allowed_namespaces: set[str] = set(allowed_data.get(role_key, [])) if role_key else set()
+            allowed_namespaces: set[str] = (
+                set(allowed_data.get(role_key, [])) if role_key else set()
+            )
         else:
             allowed_namespaces = set(allowed_data)
 

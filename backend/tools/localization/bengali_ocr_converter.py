@@ -110,7 +110,9 @@ def convert_image_to_excel(image_path, excel_path, client):
             metadata_df.to_excel(writer, sheet_name="Metadata", index=False)
             df.to_excel(writer, sheet_name="Data", index=False)
 
-        logger.success(f"Converted {os.path.basename(image_path)} to {os.path.basename(excel_path)}")
+        logger.success(
+            f"Converted {os.path.basename(image_path)} to {os.path.basename(excel_path)}"
+        )
         return True
 
     except (OSError, ValueError, RuntimeError) as e:
@@ -139,7 +141,9 @@ def batch_convert_images(folder_path, credentials_path=None):
         if convert_image_to_excel(image_path, excel_path, client):
             success_count += 1
 
-    logger.info(f"Conversion completed: {success_count}/{len(image_files)} images processed successfully")
+    logger.info(
+        f"Conversion completed: {success_count}/{len(image_files)} images processed successfully"
+    )
 
 
 if __name__ == "__main__":

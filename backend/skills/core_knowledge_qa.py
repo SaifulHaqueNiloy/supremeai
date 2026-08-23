@@ -55,7 +55,9 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
 
     client = getattr(supabase_db, "client", None)
     if client is None:
-        logger.warning("Supabase client not configured — knowledge_qa returning no results instead of fabricated data.")
+        logger.warning(
+            "Supabase client not configured — knowledge_qa returning no results instead of fabricated data."
+        )
         return []
 
     query_embedding = _generate_embedding(query)
@@ -80,7 +82,9 @@ def _vector_search(query: str, namespace: str) -> list[dict[str, Any]]:
                     for row in response.data
                 ]
         except Exception as exc:
-            logger.warning(f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}")
+            logger.warning(
+                f"pgvector RPC 'match_knowledge_base' failed, falling back to ilike: {exc}"
+            )
 
     try:
         result = (

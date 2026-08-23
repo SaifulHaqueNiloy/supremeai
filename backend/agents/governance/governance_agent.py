@@ -183,7 +183,11 @@ class GovernanceAgent:
             )
 
     async def record_decision(
-        self, user_id: str, decision_type: str, decision_data: dict[str, Any], requires_approval: bool = True
+        self,
+        user_id: str,
+        decision_type: str,
+        decision_data: dict[str, Any],
+        requires_approval: bool = True,
     ) -> DecisionRecord:
         """
         Record a decision for governance oversight.
@@ -236,7 +240,9 @@ class GovernanceAgent:
             logger.error(f"Error recording decision: {e}")
             raise
 
-    async def approve_decision(self, decision_id: str, approver_id: str, approval_reason: str = "") -> bool:
+    async def approve_decision(
+        self, decision_id: str, approver_id: str, approval_reason: str = ""
+    ) -> bool:
         """
         Approve a pending decision.
 
@@ -271,7 +277,9 @@ class GovernanceAgent:
                 approval_allowed = True  # Default to allow if not specified
 
             if not approval_allowed:
-                logger.warning(f"User {approver_id} with role {approver_role} cannot approve {decision_risk} decision")
+                logger.warning(
+                    f"User {approver_id} with role {approver_role} cannot approve {decision_risk} decision"
+                )
                 return False
 
             # Update the decision record
@@ -284,7 +292,11 @@ class GovernanceAgent:
             # Log the approval
             await self._log_governance_event(
                 "decision_approved",
-                {"decision_id": decision_id, "approver_id": approver_id, "approval_reason": approval_reason},
+                {
+                    "decision_id": decision_id,
+                    "approver_id": approver_id,
+                    "approval_reason": approval_reason,
+                },
             )
 
             return True
@@ -293,7 +305,9 @@ class GovernanceAgent:
             logger.error(f"Error approving decision: {e}")
             return False
 
-    async def enforce_policy(self, user_id: str, action: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def enforce_policy(
+        self, user_id: str, action: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
         Enforce governance policies for an action.
 
@@ -317,9 +331,9 @@ class GovernanceAgent:
 
             # Check if action requires approval
             risk_level = self.action_risk_levels.get(action, "medium_risk")
-            requires_approval = policies.get("critical_actions_require_approval", True) and action in policies.get(
-                "admin_privileges_required_for", []
-            )
+            requires_approval = policies.get(
+                "critical_actions_require_approval", True
+            ) and action in policies.get("admin_privileges_required_for", [])
 
             # Determine if user has sufficient privileges
             has_privileges = True
@@ -336,7 +350,11 @@ class GovernanceAgent:
                 "policy_compliant": has_privileges and rate_limit_result["within_limit"],
                 "next_action": (
                     "proceed"
-                    if (has_privileges and rate_limit_result["within_limit"] and not requires_approval)
+                    if (
+                        has_privileges
+                        and rate_limit_result["within_limit"]
+                        and not requires_approval
+                    )
                     else "review"
                 ),
             }
@@ -361,7 +379,7 @@ class GovernanceAgent:
             # In a real implementation, this would fetch from the auth system
             # For demonstration, return 'user' as default
             return "user"
-        except Exception as e:
+        except Exception:
             return "user"
 
     @with_error_bus("_get_user_permissions")
@@ -371,9 +389,12 @@ class GovernanceAgent:
             # In a real implementation, this would fetch from the auth system
             # For demonstration, return some default permissions
             return ["read_profile", "read_dashboard"]
-        except Exception as e:
+        except Exception:
             # বাংলা: পারমিশন ফেচ ফেইল করলে fail-closed (কোনো পারমিশন নেই) — এররটি লগ করা হলো যাতে অদৃশ্য না থাকে
-            logger.warning("Failed to fetch user permissions; defaulting to no permissions (fail-closed).", exc_info=True)
+            logger.warning(
+                "Failed to fetch user permissions; defaulting to no permissions (fail-closed).",
+                exc_info=True,
+            )
             return []
 
     async def _check_rate_limit(self, user_id: str, action: str) -> dict[str, Any]:
@@ -392,7 +413,9 @@ class GovernanceAgent:
             within_limit = current_count < threshold
 
             # Increment the counter
-            await redis_manager.set_with_ttl(rate_key, str(current_count + 1), ttl=60)  # 1 minute TTL
+            await redis_manager.set_with_ttl(
+                rate_key, str(current_count + 1), ttl=60
+            )  # 1 minute TTL
 
             return {
                 "within_limit": within_limit,
@@ -419,7 +442,9 @@ class GovernanceAgent:
                 "decision_data": decision.decision_data,
                 "approval_required": decision.approval_required,
                 "approved_by": decision.approved_by,
-                "approval_timestamp": decision.approval_timestamp.isoformat() if decision.approval_timestamp else None,
+                "approval_timestamp": decision.approval_timestamp.isoformat()
+                if decision.approval_timestamp
+                else None,
                 "status": decision.status,
                 "timestamp": decision.timestamp.isoformat(),
             }
@@ -498,7 +523,11 @@ class GovernanceAgent:
     async def _log_governance_event(self, event_type: str, data: dict[str, Any]):
         """Log a governance event."""
         try:
-            log_entry = {"type": event_type, "data": data, "timestamp": datetime.utcnow().isoformat()}
+            log_entry = {
+                "type": event_type,
+                "data": data,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
             await self._add_to_audit_log(log_entry)
         except Exception as e:

@@ -92,7 +92,9 @@ class EducationAgent:
         num_questions: int = 5,
     ) -> list[QuizQuestion]:
         """Generate quiz questions on a topic."""
-        cache_key = self._cache_key(f"quiz:{subject}:{topic}:{difficulty.value}", str(num_questions))
+        cache_key = self._cache_key(
+            f"quiz:{subject}:{topic}:{difficulty.value}", str(num_questions)
+        )
         cached = await self.cache.get(cache_key)
         if cached:
             return [QuizQuestion(**q) for q in cached]
@@ -171,7 +173,7 @@ class EducationAgent:
             content = result.get("content", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             modules = [LearningModule(**m) for m in data.get("modules", [])]
-        except Exception as e:
+        except Exception:
             modules = [
                 LearningModule(
                     title=f"Introduction to {goal}",
@@ -192,7 +194,9 @@ class EducationAgent:
             difficulty_progression=f"{current_level.value} to advanced",
         )
 
-    async def explain_concept(self, concept: str, audience_level: DifficultyLevel = DifficultyLevel.BEGINNER) -> str:
+    async def explain_concept(
+        self, concept: str, audience_level: DifficultyLevel = DifficultyLevel.BEGINNER
+    ) -> str:
         """Explain a concept at the appropriate level."""
         prompt = (
             f"Explain '{concept}' to a {audience_level.value}-level learner.\n"

@@ -63,7 +63,9 @@ class DigitalTwinWorldModel:
         """Initialize all digital twin components."""
         # Discover initial system topology
         topology = await discover_system_topology()
-        logger.info(f"Initialized digital twin with {topology['summary']['total_services']} services")
+        logger.info(
+            f"Initialized digital twin with {topology['summary']['total_services']} services"
+        )
 
         return topology
 
@@ -100,7 +102,11 @@ class DigitalTwinWorldModel:
             "traffic_simulation": traffic_sim,
             "risk_assessment": self._assess_risk(failure_sim, traffic_sim),
             "recommendations": self._combine_recommendations(
-                [failure_sim.recommendations, traffic_sim.recommendations, impact_analysis.get("recommendations", [])]
+                [
+                    failure_sim.recommendations,
+                    traffic_sim.recommendations,
+                    impact_analysis.get("recommendations", []),
+                ]
             ),
         }
 
@@ -121,7 +127,10 @@ class DigitalTwinWorldModel:
             "incoming_dependencies": len(incoming_flows),
             "outgoing_dependencies": len(outgoing_flows),
             "connected_services": len(
-                set([f["source_node_id"] for f in incoming_flows] + [f["target_node_id"] for f in outgoing_flows])
+                set(
+                    [f["source_node_id"] for f in incoming_flows]
+                    + [f["target_node_id"] for f in outgoing_flows]
+                )
             ),
         }
 
@@ -193,9 +202,7 @@ class DigitalTwinWorldModel:
         """Create an adaptive remediation plan based on analysis."""
         from .remediation_engine import RemediationAction, RemediationPlan
 
-        issue_description = (
-            f"Adaptive remediation for {service_id} based on risk assessment: {analysis['risk_assessment']}"
-        )
+        issue_description = f"Adaptive remediation for {service_id} based on risk assessment: {analysis['risk_assessment']}"
 
         # Select actions based on risk level
         if analysis["risk_assessment"] == "critical":

@@ -28,6 +28,7 @@ from web_scraper import WebScraper
 @pytest.fixture
 def client():
     from main import app
+
     return TestClient(app)
 
 
@@ -39,6 +40,7 @@ def browser_agent():
 # ---------------------------------------------------------------------------
 # Health check
 # ---------------------------------------------------------------------------
+
 
 def test_health_check(client):
     """GET /health should return healthy status."""
@@ -104,13 +106,16 @@ def test_recipe_ssrf_blocked_various(client):
     for url in SSRF_URLS:
         if not url.startswith("http"):
             continue  # non-http schemes handled by /scrape and /browse
-        resp = client.post("/recipe", json={"steps": [{"action": "wait", "value": "1"}], "initial_url": url})
+        resp = client.post(
+            "/recipe", json={"steps": [{"action": "wait", "value": "1"}], "initial_url": url}
+        )
         assert resp.status_code in (400,), f"URL should be blocked: {url}"
 
 
 # ---------------------------------------------------------------------------
 # Empty / missing URL validation
 # ---------------------------------------------------------------------------
+
 
 def test_scrape_empty_url_rejected(client):
     """Empty URL should return 400."""
@@ -127,6 +132,7 @@ def test_browse_empty_url_rejected(client):
 # ---------------------------------------------------------------------------
 # Recipe endpoint
 # ---------------------------------------------------------------------------
+
 
 def test_recipe_empty_steps(client):
     """Recipe with empty steps should return success with empty data."""
@@ -196,6 +202,7 @@ def test_recipe_index_guard_on_error(browser_agent):
 # Concurrency semaphore
 # ---------------------------------------------------------------------------
 
+
 def test_concurrency_semaphore_value():
     """BrowserAgent semaphore should reflect SCRAPER_MAX_CONCURRENCY env var."""
     agent = BrowserAgent(headless=True)
@@ -231,6 +238,7 @@ async def test_concurrency_allows_limited_parallel(browser_agent):
 # ---------------------------------------------------------------------------
 # security.is_safe_url unit tests
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "url,expected",
@@ -271,6 +279,7 @@ def test_is_safe_url_none_raises():
 # ---------------------------------------------------------------------------
 # WebScraper unit tests
 # ---------------------------------------------------------------------------
+
 
 def test_web_scraper_ssrf_blocked():
     """WebScraper.fetch_page should block SSRF URLs."""

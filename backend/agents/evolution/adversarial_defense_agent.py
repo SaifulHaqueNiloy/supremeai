@@ -122,7 +122,9 @@ class AdversarialDefenseAgent:
                 match = re.search(pattern, input_text)
                 if match:
                     severity = (
-                        "critical" if attack_type in (AttackType.JAILBREAK, AttackType.PROMPT_INJECTION) else "high"
+                        "critical"
+                        if attack_type in (AttackType.JAILBREAK, AttackType.PROMPT_INJECTION)
+                        else "high"
                     )
                     threats.append(
                         ThreatAssessment(

@@ -22,10 +22,10 @@ class VisionService:
         Analyze image bytes and extract architectural components or UI code layout.
         """
         try:
-            logger.info(f"Vision Service processing image ({len(image_bytes)} bytes) with query: '{user_query}'")
-            analysis_summary = (
-                "Identified 3-tier microservice backend architecture with Redis cache and PostgreSQL database."
+            logger.info(
+                f"Vision Service processing image ({len(image_bytes)} bytes) with query: '{user_query}'"
             )
+            analysis_summary = "Identified 3-tier microservice backend architecture with Redis cache and PostgreSQL database."
             return {
                 "status": "success",
                 "query": user_query,

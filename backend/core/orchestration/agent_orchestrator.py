@@ -86,7 +86,9 @@ def route_request(prompt: str, task_type: str = "general") -> "SmartSemanticRout
             reasoning=f"Explicit task_type={task_type}",
         )
 
-    if "VISION" in upper_task or any(ext in prompt_lower for ext in [".png", ".jpg", ".jpeg", ".pdf"]):
+    if "VISION" in upper_task or any(
+        ext in prompt_lower for ext in [".png", ".jpg", ".jpeg", ".pdf"]
+    ):
         return SmartSemanticRouter(
             intent="vision",
             requires_expensive=True,
@@ -255,7 +257,9 @@ class AsyncTaskManager:
                     )
                 else:
                     # প্রোডাকশনে silently fallback করা যাবে না — জোরে ব্যর্থ হও, চুপচাপ ডেটা হারানোর চেয়ে
-                    logger.critical(f"[AsyncTaskManager] Task queue backend failed to initialize in production: {exc}")
+                    logger.critical(
+                        f"[AsyncTaskManager] Task queue backend failed to initialize in production: {exc}"
+                    )
                     from core.messaging.event_bus import ErrorEvent, error_event_bus
 
                     error_event_bus.emit(
@@ -267,7 +271,9 @@ class AsyncTaskManager:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
-                    raise RuntimeError(f"Task queue unavailable in production (ENV={os.getenv('ENV')}): {exc}") from exc
+                    raise RuntimeError(
+                        f"Task queue unavailable in production (ENV={os.getenv('ENV')}): {exc}"
+                    ) from exc
         return self._queue
 
     def create_task(self, task_type: str, payload: dict) -> str:
@@ -438,7 +444,9 @@ class SupremeAgentOrchestrator:
             if res and isinstance(res, dict) and "output" in res:
                 validated_responses.append(res)
             else:
-                logger.warning(f"⚠️ [MALFORMED_AGENT_RESPONSE]: Agent '{agent_name}' returned invalid signature packet.")
+                logger.warning(
+                    f"⚠️ [MALFORMED_AGENT_RESPONSE]: Agent '{agent_name}' returned invalid signature packet."
+                )
 
         if not validated_responses:
             raise SwarmOrchestrationError(

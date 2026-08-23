@@ -234,7 +234,9 @@ def test_mobile_chat_history_accumulates():
 
 def test_mobile_sliding_window_for_long_chat():
     memory = FakeSlidingWindowMemory(max_tokens=5)
-    summary = memory.build_context(["alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu"])
+    summary = memory.build_context(
+        ["alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu"]
+    )
     assert "\n---\n" in summary or len(summary.split()) <= 30
 
 

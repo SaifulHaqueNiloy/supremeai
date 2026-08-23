@@ -14,18 +14,20 @@ Comprehensive testing framework for self-evaluation and limit detection:
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime
-from enum import Enum
 import os
 import random
 import statistics
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
 from typing import Any
+
 from loguru import logger
 
 try:
     import psutil
+
     HAS_PSUTIL = True
 except ImportError:
     HAS_PSUTIL = False
@@ -144,7 +146,9 @@ class SelfBenchmarkEngine:
             "avg_score_improvement": 0.0,
         }
 
-    async def run_full_benchmark(self, categories: list[BenchmarkCategory] | None = None) -> FullBenchmarkReport:
+    async def run_full_benchmark(
+        self, categories: list[BenchmarkCategory] | None = None
+    ) -> FullBenchmarkReport:
         """Run complete benchmark suite."""
         start_time = time.time()
         report_id = f"bench_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
@@ -179,7 +183,11 @@ class SelfBenchmarkEngine:
         grade = self._score_to_grade(overall_score)
 
         improvements_needed = any(w.severity in ["critical", "major"] for w in weaknesses)
-        optimization_plan = self._generate_optimization_plan(weaknesses, limits_detected) if improvements_needed else {}
+        optimization_plan = (
+            self._generate_optimization_plan(weaknesses, limits_detected)
+            if improvements_needed
+            else {}
+        )
         duration = time.time() - start_time
 
         report = FullBenchmarkReport(
@@ -228,12 +236,16 @@ class SelfBenchmarkEngine:
                 )
                 elapsed = (time.perf_counter() - start) * 1000.0
                 times.append(elapsed)
-            except Exception as e:
+            except Exception:
                 times.append(float(self.test_duration_per_query_ms))
 
         avg_time = statistics.mean(times) if times else 200.0
         thresholds = self.thresholds["response_time_ms"]
-        score = 1.0 if avg_time <= thresholds["excellent"] else max(0.5, 1.0 - (avg_time / thresholds["poor"]))
+        score = (
+            1.0
+            if avg_time <= thresholds["excellent"]
+            else max(0.5, 1.0 - (avg_time / thresholds["poor"]))
+        )
 
         results.append(
             BenchmarkResult(
@@ -404,14 +416,22 @@ class SelfBenchmarkEngine:
             return "D"
         return "F"
 
-    def _generate_optimization_plan(self, weaknesses: list[WeaknessReport], limits: list[LimitDetection]) -> dict[str, Any]:
+    def _generate_optimization_plan(
+        self, weaknesses: list[WeaknessReport], limits: list[LimitDetection]
+    ) -> dict[str, Any]:
         return {
             "priority_actions": [w.area for w in weaknesses],
             "parameter_adjustments": {limit.metric_name: limit.max_sustainable for limit in limits},
             "estimated_improvement": 0.15,
         }
 
-    def _generate_summary(self, results: list[BenchmarkResult], overall_score: float, grade: str, weaknesses: list[WeaknessReport]) -> dict[str, Any]:
+    def _generate_summary(
+        self,
+        results: list[BenchmarkResult],
+        overall_score: float,
+        grade: str,
+        weaknesses: list[WeaknessReport],
+    ) -> dict[str, Any]:
         passed = sum(1 for r in results if r.passed)
         total = len(results)
         return {

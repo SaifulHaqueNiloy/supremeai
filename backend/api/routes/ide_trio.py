@@ -64,9 +64,24 @@ async def trio_status() -> dict[str, Any]:
         return {
             "pipeline": "ide-trio",
             "agents": [
-                {"role": "writer", "agent": "gemini", "available": True, "class": GeminiWriter.__name__},
-                {"role": "reviewer", "agent": "kilo", "available": True, "class": KiloReviewer.__name__},
-                {"role": "checker", "agent": "cline", "available": True, "class": ClineChecker.__name__},
+                {
+                    "role": "writer",
+                    "agent": "gemini",
+                    "available": True,
+                    "class": GeminiWriter.__name__,
+                },
+                {
+                    "role": "reviewer",
+                    "agent": "kilo",
+                    "available": True,
+                    "class": KiloReviewer.__name__,
+                },
+                {
+                    "role": "checker",
+                    "agent": "cline",
+                    "available": True,
+                    "class": ClineChecker.__name__,
+                },
             ],
             "status": "ready",
         }

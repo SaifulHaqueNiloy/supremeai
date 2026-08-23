@@ -12,11 +12,11 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import psutil
+from core.monitoring.metrics_collector import MetricsCollector
 
 from core.cache.redis_manager import redis_manager
 from core.error_bus import with_error_bus
 from core.llm.token_deductor import TokenDeductor
-from core.monitoring.metrics_collector import MetricsCollector
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +185,7 @@ class PerformanceTuningAgent:
                         requests_per_second = app_metrics.get("requests_per_second", 0)
                         error_rate = app_metrics.get("error_rate", 0)
                         queue_depth = app_metrics.get("queue_depth", 0)
-            except Exception as e:
+            except Exception:
                 # Fallback values if metrics collector unavailable
                 active_connections = 10
                 response_time_ms = 150
@@ -433,7 +433,9 @@ class PerformanceTuningAgent:
                 notes=f"Error applying optimization: {e!s}",
             )
 
-    async def _execute_optimization(self, optimization_name: str, parameters: dict[str, Any]) -> bool:
+    async def _execute_optimization(
+        self, optimization_name: str, parameters: dict[str, Any]
+    ) -> bool:
         """Execute a specific optimization technique."""
         try:
             if optimization_name not in self.available_optimizations:
@@ -442,7 +444,9 @@ class PerformanceTuningAgent:
 
             # In a real implementation, this would actually execute the optimization
             # For simulation, we'll just log the intended action
-            logger.info(f"Executing optimization: {optimization_name} with parameters: {parameters}")
+            logger.info(
+                f"Executing optimization: {optimization_name} with parameters: {parameters}"
+            )
 
             # Simulate the optimization action
             # This would typically involve:
@@ -476,7 +480,9 @@ class PerformanceTuningAgent:
             # Calculate overall score (higher is better)
             # Normalize each metric and combine
             cpu_score = (
-                max(0, min(1, (before.cpu_usage - after.cpu_usage) / before.cpu_usage)) if before.cpu_usage > 0 else 0
+                max(0, min(1, (before.cpu_usage - after.cpu_usage) / before.cpu_usage))
+                if before.cpu_usage > 0
+                else 0
             )
             memory_score = (
                 max(0, min(1, (before.memory_usage - after.memory_usage) / before.memory_usage))
@@ -484,7 +490,14 @@ class PerformanceTuningAgent:
                 else 0
             )
             response_score = (
-                max(0, min(1, (before.response_time_ms - after.response_time_ms) / before.response_time_ms))
+                max(
+                    0,
+                    min(
+                        1,
+                        (before.response_time_ms - after.response_time_ms)
+                        / before.response_time_ms,
+                    ),
+                )
                 if before.response_time_ms > 0
                 else 0
             )
@@ -502,7 +515,9 @@ class PerformanceTuningAgent:
             logger.error(f"Error calculating performance improvement: {e}")
             return {"overall_score": 0.0}
 
-    async def get_optimization_recommendations(self, limit: int = 10) -> list[OptimizationRecommendation]:
+    async def get_optimization_recommendations(
+        self, limit: int = 10
+    ) -> list[OptimizationRecommendation]:
         """Get recent optimization recommendations."""
         try:
             recommendations_data = await redis_manager.get(self.tuning_recommendations_key)
@@ -623,10 +638,15 @@ class PerformanceTuningAgent:
 
             # Filter metrics for the specified time period
             cutoff_time = datetime.utcnow() - timedelta(hours=hours)
-            filtered_metrics = [m for m in all_metrics if datetime.fromisoformat(m["timestamp"]) >= cutoff_time]
+            filtered_metrics = [
+                m for m in all_metrics if datetime.fromisoformat(m["timestamp"]) >= cutoff_time
+            ]
 
             if not filtered_metrics:
-                return {"status": "no_data", "message": f"No metrics available for last {hours} hours"}
+                return {
+                    "status": "no_data",
+                    "message": f"No metrics available for last {hours} hours",
+                }
 
             # Calculate averages and statistics
             cpu_values = [m["cpu_usage"] for m in filtered_metrics]
@@ -676,7 +696,9 @@ class PerformanceTuningAgent:
         Args:
             interval_minutes: Interval between tuning checks in minutes
         """
-        logger.info(f"Starting continuous performance tuning (interval: {interval_minutes} minutes)")
+        logger.info(
+            f"Starting continuous performance tuning (interval: {interval_minutes} minutes)"
+        )
 
         while True:
             try:
@@ -694,7 +716,9 @@ class PerformanceTuningAgent:
                             {"recommendation": rec.recommendation, "priority": rec.expected_impact},
                         )
 
-                logger.info(f"Completed performance tuning cycle. Found {len(recommendations)} recommendations.")
+                logger.info(
+                    f"Completed performance tuning cycle. Found {len(recommendations)} recommendations."
+                )
 
                 # Sleep until next cycle
                 await asyncio.sleep(interval_minutes * 60)

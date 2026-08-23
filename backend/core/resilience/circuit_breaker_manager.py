@@ -42,7 +42,9 @@ class CircuitBreakerManager:
     def get_all_states(self) -> dict[str, dict]:
         """Get the state of all circuit breakers."""
         with self._lock:
-            return {name: breaker.get_state_info() for name, breaker in self._circuit_breakers.items()}
+            return {
+                name: breaker.get_state_info() for name, breaker in self._circuit_breakers.items()
+            }
 
     def reset_breaker(self, name: str) -> bool:
         """Reset a specific circuit breaker."""

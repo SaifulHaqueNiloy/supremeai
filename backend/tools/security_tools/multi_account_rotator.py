@@ -20,11 +20,15 @@ from core.config_cache import config_cache
 from core.utils.time_utils import utc_now
 
 # Security: Allowed providers whitelist
-ALLOWED_PROVIDERS = frozenset(["groq", "deepseek", "google_ai_studio", "openai", "anthropic", "cohere"])
+ALLOWED_PROVIDERS = frozenset(
+    ["groq", "deepseek", "google_ai_studio", "openai", "anthropic", "cohere"]
+)
 
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -194,7 +198,9 @@ class MultiAccountRotator:
                     conn = sqlite3.connect(db_path)
                     conn.row_factory = sqlite3.Row
                     cursor = conn.cursor()
-                    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='verification_queue'")
+                    cursor.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name='verification_queue'"
+                    )
                     if cursor.fetchone():
                         cursor.execute(
                             "SELECT * FROM verification_queue WHERE email_target = ? AND processed = 0 ORDER BY timestamp DESC LIMIT 1",
@@ -229,7 +235,9 @@ class MultiAccountRotator:
         """
         # Security: Validate provider_name against whitelist
         if provider_name not in ALLOWED_PROVIDERS:
-            logger.error(f"[SUPREME-AI] Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}")
+            logger.error(
+                f"[SUPREME-AI] Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}"
+            )
             return False
 
         logger.info(f"[SUPREME-AI] Initiating autonomous identity creation for {provider_name}")
@@ -292,7 +300,9 @@ class MultiAccountRotator:
                     await page.click('button[id="signup-button"]')
                     logger.info(f"[SUPREME-AI] Submitted signup form for {new_email}")
                 except Exception as form_err:
-                    logger.warning(f"[SUPREME-AI] Form filling warning/error (continuing): {form_err}")
+                    logger.warning(
+                        f"[SUPREME-AI] Form filling warning/error (continuing): {form_err}"
+                    )
 
                 # Wait for verification (Firestore with SQLite fallback)
                 verification_data = await self._wait_for_verification(new_email, timeout=10)
@@ -312,28 +322,40 @@ class MultiAccountRotator:
                         elif verification_data.get("link"):
                             verification_link = verification_data["link"]
                             # বাংলা মন্তব্য: ভেরিফিকেশন লিংকে token থাকতে পারে — plaintext লগ করা হলে লিক হয়।
-                            logger.info("[SUPREME-AI] Verification link received. Navigating to link.")
+                            logger.info(
+                                "[SUPREME-AI] Verification link received. Navigating to link."
+                            )
                             await page.goto(verification_link)
                             logger.info("[SUPREME-AI] Navigated to verification link.")
                     except Exception as verify_err:
-                        logger.warning(f"[SUPREME-AI] Verification filling warning/error (continuing): {verify_err}")
+                        logger.warning(
+                            f"[SUPREME-AI] Verification filling warning/error (continuing): {verify_err}"
+                        )
 
                     try:
-                        await page.wait_for_selector("text=Account Created Successfully", timeout=2000)
+                        await page.wait_for_selector(
+                            "text=Account Created Successfully", timeout=2000
+                        )
                     except Exception as confirm_err:
-                        logger.warning(f"[SUPREME-AI] Account creation confirmation selector not found: {confirm_err}")
+                        logger.warning(
+                            f"[SUPREME-AI] Account creation confirmation selector not found: {confirm_err}"
+                        )
                     logger.info(f"[SUPREME-AI] Account creation confirmed for {new_email}.")
 
                     # Add to rotator registry - use SHA-256 for secure ID generation
-                    account_id = (
-                        f"{provider_name}-{hashlib.sha256(f'{new_email}{time.time()}'.encode()).hexdigest()[:12]}"
-                    )
+                    account_id = f"{provider_name}-{hashlib.sha256(f'{new_email}{time.time()}'.encode()).hexdigest()[:12]}"
 
                     # বাংলা মন্তব্য: ড্যাশবোর্ড থেকে প্লেরাইট দিয়ে রিয়েল এপিআই কী স্ক্র্যাপ করার চেষ্টা করা হচ্ছে
-                    extracted_api_key = await self._extract_api_key_from_dashboard(page, provider_name)
+                    extracted_api_key = await self._extract_api_key_from_dashboard(
+                        page, provider_name
+                    )
 
                     # বাংলা মন্তব্য: কী এক্সট্রাকশন ব্যর্থ হলে status pending_key_extraction এ রাখা হবে, যাতে অকেজো ডেটা দিয়ে রোটেশন পুল ভেঙে না যায়।
-                    status = ProviderStatus.ACTIVE if extracted_api_key else ProviderStatus.PENDING_KEY_EXTRACTION
+                    status = (
+                        ProviderStatus.ACTIVE
+                        if extracted_api_key
+                        else ProviderStatus.PENDING_KEY_EXTRACTION
+                    )
 
                     new_acc = Account(
                         id=account_id,
@@ -361,7 +383,9 @@ class MultiAccountRotator:
                     self.save_config()
                     return True
                 else:
-                    logger.error(f"[SUPREME-AI] No verification data received for {new_email} within timeout.")
+                    logger.error(
+                        f"[SUPREME-AI] No verification data received for {new_email} within timeout."
+                    )
                     return False
             except asyncio.CancelledError:
                 raise
@@ -510,7 +534,9 @@ class MultiAccountRotator:
         provider = self.providers[provider_name]
 
         # Security: Use SHA-256 for account ID generation
-        account_id = f"{provider_name}-{hashlib.sha256(f'{email}{time.time()}'.encode()).hexdigest()[:12]}"
+        account_id = (
+            f"{provider_name}-{hashlib.sha256(f'{email}{time.time()}'.encode()).hexdigest()[:12]}"
+        )
 
         account = Account(
             id=account_id,
@@ -530,7 +556,9 @@ class MultiAccountRotator:
             raise ValueError(f"Invalid provider: {provider_name}. Must be in {ALLOWED_PROVIDERS}")
 
         # Fetch dynamically from ConfigCache (which falls back to defaults or DB)
-        base_url = config_cache.get(f"provider_base_url_{provider_name}", f"https://api.{provider_name}.com")
+        base_url = config_cache.get(
+            f"provider_base_url_{provider_name}", f"https://api.{provider_name}.com"
+        )
         models = config_cache.get(f"provider_models_{provider_name}", ["default-model"])
 
         # We can also dynamically fetch rate limits if we want, or default them
@@ -685,14 +713,18 @@ class MultiAccountRotator:
                 continue
 
             available_accounts = provider.get_available_accounts()
-            logger.info(f"Provider {provider_name} has {len(available_accounts)} available accounts")
+            logger.info(
+                f"Provider {provider_name} has {len(available_accounts)} available accounts"
+            )
 
             account = provider.get_best_account()
             if account:
                 logger.info(f"Selected account {account.id} for provider {provider_name}")
                 # Check if meets requirements
                 if self._meets_requirements(provider, account, requirements):
-                    logger.info(f"Account meets requirements, returning {provider_name}/{account.id}")
+                    logger.info(
+                        f"Account meets requirements, returning {provider_name}/{account.id}"
+                    )
                     return provider, account
             else:
                 logger.warning(f"No best account found for provider {provider_name}")
@@ -703,15 +735,25 @@ class MultiAccountRotator:
     def _meets_requirements(self, provider: Provider, account: Account, requirements: dict) -> bool:
         """Check if provider/account meets specific requirements"""
         # Check cost requirements
-        if "max_cost_per_token" in requirements and provider.cost_per_token > requirements["max_cost_per_token"]:
+        if (
+            "max_cost_per_token" in requirements
+            and provider.cost_per_token > requirements["max_cost_per_token"]
+        ):
             return False
 
         # Check model requirements
-        if "required_model" in requirements and requirements["required_model"] not in provider.models:
+        if (
+            "required_model" in requirements
+            and requirements["required_model"] not in provider.models
+        ):
             return False
 
         # Check speed requirements (rough estimate)
-        if "speed_priority" in requirements and requirements["speed_priority"] > 0.8 and provider.rate_limit_rpm < 30:
+        if (
+            "speed_priority" in requirements
+            and requirements["speed_priority"] > 0.8
+            and provider.rate_limit_rpm < 30
+        ):
             return False
 
         return True
@@ -851,7 +893,9 @@ class MultiAccountRotator:
             "total_providers": len(self.providers),
             "total_accounts": total_accounts,
             "active_accounts": active_accounts,
-            "system_health": ((active_accounts / total_accounts * 100) if total_accounts > 0 else 0),
+            "system_health": (
+                (active_accounts / total_accounts * 100) if total_accounts > 0 else 0
+            ),
             "providers": provider_status,
         }
 

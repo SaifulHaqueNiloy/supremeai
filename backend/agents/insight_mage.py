@@ -32,8 +32,8 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, TypeVar
 
 from core.cache import get_cache
-from services.llm.llm_router import LLMRouter
 from core.tenant_db import TenantAwareFirestore
+from services.llm.llm_router import LLMRouter
 
 logger = logging.getLogger("supremeai.insight_mage")
 
@@ -133,7 +133,9 @@ class TrendDetector:
             slope = numerator / denominator
 
         # R-squared for confidence
-        ss_res = sum((values[i] - (slope * x[i] + (y_mean - slope * x_mean))) ** 2 for i in range(n))
+        ss_res = sum(
+            (values[i] - (slope * x[i] + (y_mean - slope * x_mean))) ** 2 for i in range(n)
+        )
         ss_tot = sum((v - y_mean) ** 2 for v in values)
         r_squared = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.0
 
@@ -153,7 +155,9 @@ class TrendDetector:
         if values[0] != 0:
             change_percent = ((values[-1] - values[0]) / abs(values[0])) * 100
         else:
-            change_percent = 0.0 if values[-1] == 0 else float("inf") if values[-1] > 0 else float("-inf")
+            change_percent = (
+                0.0 if values[-1] == 0 else float("inf") if values[-1] > 0 else float("-inf")
+            )
 
         return TrendResult(
             direction=direction,
@@ -301,7 +305,8 @@ Keep it concise, business-friendly, and data-driven.
 
         anomalies_text = (
             "\n".join(
-                f"- 🚨 {a.severity.upper()}: z={a.z_score:.2f}, " f"deviation={a.deviation_percent:.1f}% from expected"
+                f"- 🚨 {a.severity.upper()}: z={a.z_score:.2f}, "
+                f"deviation={a.deviation_percent:.1f}% from expected"
                 for a in anomalies
                 if a.is_anomaly
             )

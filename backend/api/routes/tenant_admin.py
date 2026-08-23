@@ -16,10 +16,10 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from loguru import logger
 from pydantic import BaseModel
+
 from api.dependencies import get_current_admin
 
 router = APIRouter(
-
     prefix="/admin/tenant-limits",
     tags=["tenant-admin"],
     dependencies=[Depends(get_current_admin)],
@@ -83,7 +83,7 @@ def _get_db():
         from database.supabase_client import db
 
         return db.client if db and db.client else None
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         return None
 
@@ -243,7 +243,8 @@ async def create_tenant(payload: TenantLimitCreate):
         "billing_tier": tier,
         "requests_per_minute": payload.requests_per_minute or defaults["requests_per_minute"],
         "max_tokens_per_day": payload.max_tokens_per_day or defaults["max_tokens_per_day"],
-        "max_concurrent_sessions": payload.max_concurrent_sessions or defaults["max_concurrent_sessions"],
+        "max_concurrent_sessions": payload.max_concurrent_sessions
+        or defaults["max_concurrent_sessions"],
         "stripe_customer_id": payload.stripe_customer_id,
         "notes": payload.notes,
         "is_active": True,
@@ -366,7 +367,9 @@ async def reset_usage(tenant_id: str):
     if client:
         try:
             today = time.strftime("%Y-%m-%d")
-            client.table("tenant_usage").delete().eq("tenant_id", tenant_id).eq("date", today).execute()
+            client.table("tenant_usage").delete().eq("tenant_id", tenant_id).eq(
+                "date", today
+            ).execute()
             return {"status": "reset", "tenant_id": tenant_id, "source": "supabase"}
         except Exception as exc:
             logger.warning(f"Supabase reset failed: {exc}")

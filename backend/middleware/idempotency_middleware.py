@@ -60,7 +60,9 @@ class IdempotencyMiddleware:
             # P1 Security Fix: Enforce idempotency key for critical mutating endpoints
             # This prevents accidental duplicate task executions or billing events.
             if any(p in path for p in settings.idempotency_critical_paths):
-                logger.warning(f"Rejected request to '{path}' due to missing Idempotency-Key header.")
+                logger.warning(
+                    f"Rejected request to '{path}' due to missing Idempotency-Key header."
+                )
                 response = JSONResponse(
                     status_code=400,
                     content={
@@ -87,7 +89,9 @@ class IdempotencyMiddleware:
                 if data.get("status") == "processing":
                     response = JSONResponse(
                         status_code=409,
-                        content={"detail": "Conflict: Request is already being processed. Please wait."},
+                        content={
+                            "detail": "Conflict: Request is already being processed. Please wait."
+                        },
                     )
                     await response(scope, receive, send)
                     return
@@ -117,7 +121,9 @@ class IdempotencyMiddleware:
         # 2. অ্যাটমিকভাবে idempotency key লক করা (Race Condition প্রতিরোধ)
         # `nx=True` নিশ্চিত করে যে শুধুমাত্র যদি key-টি আগে থেকে না থাকে, তবেই এটি সেট হবে।
         # এটি `get` এবং `set` এর মধ্যে অন্য রিকোয়েস্ট আসার সুযোগ বন্ধ করে দেয়।
-        is_locked = await redis.set(redis_key, json.dumps({"status": "processing"}), ex=600, nx=True)
+        is_locked = await redis.set(
+            redis_key, json.dumps({"status": "processing"}), ex=600, nx=True
+        )
         if not is_locked:
             # যদি অন্য কোনো থ্রেড এইমাত্র কী-টি লক করে ফেলে, তবে কনফ্লিক্ট রেসপন্স পাঠানো হবে
             response = JSONResponse(

@@ -3,7 +3,6 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from fastapi import HTTPException
 
 from api.routes.chat import ChatPayload, get_completion, stream_chat
 
@@ -68,7 +67,9 @@ async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     async def mock_recall_memories(*args, **kwargs):
         return []
 
-    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+    monkeypatch.setattr(
+        "api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion)
+    )
     monkeypatch.setattr("services.memory_service.recall_memories", mock_recall_memories)
 
     request = SimpleNamespace(headers={"X-Session-ID": "session-2"})
@@ -88,18 +89,20 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
 
     async def mock_acompletion(prompt, task_type, stream):
         raise RuntimeError("boom")
-        
+
     async def mock_recall_memories(*args, **kwargs):
         return []
 
-    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+    monkeypatch.setattr(
+        "api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion)
+    )
     monkeypatch.setattr("services.memory_service.recall_memories", mock_recall_memories)
 
     request = SimpleNamespace(headers={"X-Session-ID": "session-3"})
     payload = ChatPayload(prompt="raise-error")
 
     result = await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-3"))
-    
+
     assert result["success"] is True
     assert result["source"] == "no_match"
     assert "দুঃখিত" in result["response"]
@@ -115,7 +118,9 @@ async def test_stream_chat_yields_sse_chunks(monkeypatch):
 
         return Response()
 
-    monkeypatch.setattr("api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion))
+    monkeypatch.setattr(
+        "api.routes.chat.llm_gateway", SimpleNamespace(acompletion=mock_acompletion)
+    )
     request_payload = ChatPayload(prompt="stream-prompt")
     response = await stream_chat(request_payload, db=SimpleNamespace(tenant_id="tenant-4"))
 

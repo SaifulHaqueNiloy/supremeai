@@ -20,7 +20,9 @@ class CodeSmellDetector:
     def __init__(self):
         self.radon_available = self._check_radon()
         self.pylint_available = self._check_pylint()
-        logger.info(f"CodeSmellDetector initialized (radon={self.radon_available}, pylint={self.pylint_available})")
+        logger.info(
+            f"CodeSmellDetector initialized (radon={self.radon_available}, pylint={self.pylint_available})"
+        )
 
     def _check_radon(self) -> bool:
         try:
@@ -42,14 +44,23 @@ class CodeSmellDetector:
         for child in ast.walk(node):
             if isinstance(
                 child,
-                ast.If | ast.IfExp | ast.For | ast.While | ast.ExceptHandler | ast.With | ast.Assert | ast.BoolOp,
+                ast.If
+                | ast.IfExp
+                | ast.For
+                | ast.While
+                | ast.ExceptHandler
+                | ast.With
+                | ast.Assert
+                | ast.BoolOp,
             ):
                 complexity += 1
             if isinstance(child, ast.BoolOp):
                 complexity += len(child.values) - 1
         return complexity
 
-    def analyze_python_file(self, filepath: str, thresholds: dict[str, int] | None = None) -> list[dict[str, Any]]:
+    def analyze_python_file(
+        self, filepath: str, thresholds: dict[str, int] | None = None
+    ) -> list[dict[str, Any]]:
         if not os.path.exists(filepath):
             return []
 
@@ -120,7 +131,9 @@ class CodeSmellDetector:
                             }
                         )
 
-                    return_count = sum(1 for child in ast.walk(node) if isinstance(child, ast.Return))
+                    return_count = sum(
+                        1 for child in ast.walk(node) if isinstance(child, ast.Return)
+                    )
                     if return_count > 7:
                         smells.append(
                             {
@@ -237,9 +250,7 @@ class CodeSmellDetector:
                 # Check for bare `except:`
                 if node.type is None:
                     smell_type = "Bare Except"
-                    details = (
-                        "A bare `except:` clause can catch system-exiting exceptions and hide bugs. Be more specific."
-                    )
+                    details = "A bare `except:` clause can catch system-exiting exceptions and hide bugs. Be more specific."
                 # Check for `except Exception:` or `except BaseException:`
                 elif isinstance(node.type, ast.Name) and node.type.id in {
                     "Exception",
@@ -268,7 +279,9 @@ class CodeSmellDetector:
         dump = re.sub(r"\d+", "0", dump)
         return dump
 
-    def _analyze_radon(self, filepath: str, tree: ast.AST | None, threshold: int) -> list[dict[str, Any]]:
+    def _analyze_radon(
+        self, filepath: str, tree: ast.AST | None, threshold: int
+    ) -> list[dict[str, Any]]:
         try:
             from radon.complexity import cc_visit
             from radon.metrics import mi_visit
@@ -304,7 +317,9 @@ class CodeSmellDetector:
                     )
             except (ValueError, SyntaxError, TypeError) as e:
                 # সুনির্দিষ্ট ত্রুটি (Specific exception) ক্যাচ করা হলো, যাতে অপ্রত্যাশিত ত্রুটি লুকিয়ে না যায়
-                logger.warning(f"Radon maintainability index calculation failed for {filepath}: {e}")
+                logger.warning(
+                    f"Radon maintainability index calculation failed for {filepath}: {e}"
+                )
             return results
         except ImportError:
             return []
@@ -341,7 +356,9 @@ class CodeSmellDetector:
 
         return results
 
-    def analyze_js_ts_file(self, filepath: str, thresholds: dict[str, int] | None = None) -> list[dict[str, Any]]:
+    def analyze_js_ts_file(
+        self, filepath: str, thresholds: dict[str, int] | None = None
+    ) -> list[dict[str, Any]]:
         if not os.path.exists(filepath):
             return []
         smells: list[dict[str, Any]] = []
@@ -440,7 +457,9 @@ class CodeSmellDetector:
                 abs_dir = os.path.abspath(directory_path)
                 base_dir = os.path.abspath(os.getcwd())
                 if not abs_dir.startswith(base_dir) or ".." in directory_path:
-                    logger.error(f"Security Alert: Path traversal attempt blocked for {directory_path}")
+                    logger.error(
+                        f"Security Alert: Path traversal attempt blocked for {directory_path}"
+                    )
                     return output
 
                 import shlex
@@ -467,7 +486,9 @@ class CodeSmellDetector:
                             "line": item.get("line", 0),
                             "message": item.get("message", ""),
                             "severity": (
-                                "warning" if item.get("type") in ("convention", "refactor", "warning") else "critical"
+                                "warning"
+                                if item.get("type") in ("convention", "refactor", "warning")
+                                else "critical"
                             ),
                             "source": "pylint",
                         }

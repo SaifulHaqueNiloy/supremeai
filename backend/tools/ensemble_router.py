@@ -39,7 +39,10 @@ class EnsembleRouter:
 
             router = ModelRouter()
 
-            tasks = [router.async_route_and_generate(prompt, task_type="general", max_cost=0.0) for _ in active_models]
+            tasks = [
+                router.async_route_and_generate(prompt, task_type="general", max_cost=0.0)
+                for _ in active_models
+            ]
             responses = await asyncio.gather(*tasks, return_exceptions=True)
 
             valid = {}
@@ -47,7 +50,9 @@ class EnsembleRouter:
                 if isinstance(resp, Exception):
                     err_msg = str(resp).lower()
                     if "429" in err_msg or "quota" in err_msg or "rate limit" in err_msg:
-                        logger.warning(f"⚠️ PSI Circuit Breaker: Model {model} hit rate-limit/quota. Rotating out.")
+                        logger.warning(
+                            f"⚠️ PSI Circuit Breaker: Model {model} hit rate-limit/quota. Rotating out."
+                        )
                         self.quota_exhausted.add(model)
                     else:
                         logger.warning(f"Ensemble model {model} failed: {resp}")

@@ -41,7 +41,9 @@ def test_setup_tracing_noop():
 
 def test_setup_tracing_with_endpoint():
     with (
-        patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter") as mock_exporter,
+        patch(
+            "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter"
+        ) as mock_exporter,
         patch(f"{_TEL}.BatchSpanProcessor") as mock_processor,
         patch(f"{_TEL}.TracerProvider") as mock_provider_class,
     ):
@@ -57,7 +59,9 @@ def test_setup_tracing_with_endpoint():
 
 def test_setup_tracing_without_endpoint_no_exporter():
     with (
-        patch("opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter") as mock_exporter,
+        patch(
+            "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter"
+        ) as mock_exporter,
         patch(f"{_TEL}.TracerProvider") as mock_provider_class,
     ):
         mock_provider = MagicMock()
@@ -109,9 +113,8 @@ def test_trace_span_records_exception_on_error():
     mock_tracer.start_as_current_span.return_value.__enter__.return_value = mock_span
 
     with patch(f"{_TEL}.get_tracer", return_value=mock_tracer):
-        with pytest.raises(RuntimeError):
-            with trace_span("error-span"):
-                raise RuntimeError("boom")
+        with pytest.raises(RuntimeError), trace_span("error-span"):
+            raise RuntimeError("boom")
 
         mock_span.set_status.assert_called()
         mock_span.record_exception.assert_called()

@@ -5,10 +5,10 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import dataclass, field
-from datetime import datetime, UTC
 import os
 import time
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -107,26 +107,39 @@ class NightlyChaosAuditor:
                     with contextlib.suppress(Exception):
                         if run_sandbox_ast_check(code):
                             failures.append("Sandbox AST bypass detected during fuzzing")
-                            logger.critical("🚨 [SECURITY BREACH] Sandbox bypass detected during autonomous fuzzing!")
+                            logger.critical(
+                                "🚨 [SECURITY BREACH] Sandbox bypass detected during autonomous fuzzing!"
+                            )
             else:
                 # বাংলা মন্তব্য: fuzz_sandbox টুলিং আনঅভেইলেবল (ImportError) মানে এই
                 # security-critical চেক আসলে চলেইনি — silently skip করে gate UNLOCKED
                 # করা fail-open আচরণ। এর বদলে fail-closed: audit-কে failure হিসেবে গণ্য করা।
                 tests_run += 1
-                failures.append("fuzz_sandbox tooling unavailable — sandbox integrity check could not run")
-                logger.error("🚨 [FAIL-CLOSED] fuzz_sandbox unavailable — treating chaos audit as failed, not skipping.")
+                failures.append(
+                    "fuzz_sandbox tooling unavailable — sandbox integrity check could not run"
+                )
+                logger.error(
+                    "🚨 [FAIL-CLOSED] fuzz_sandbox unavailable — treating chaos audit as failed, not skipping."
+                )
 
             # 🧪 টেস্ট ২: রানটাইম স্ট্রেস চেক
             async with httpx.AsyncClient(timeout=5.0) as client:
                 headers = {"Idempotency-Key": f"auto-chaos-{datetime.now(UTC).timestamp()}"}
                 tasks = [
-                    client.post(f"{self.target_url}/api/task/execute", json={"message": "Ping"}, headers=headers)
+                    client.post(
+                        f"{self.target_url}/api/task/execute",
+                        json={"message": "Ping"},
+                        headers=headers,
+                    )
                     for _ in range(5)
                 ]
                 responses = await asyncio.gather(*tasks, return_exceptions=True)
                 for res in responses:
                     tests_run += 1
-                    if isinstance(res, Exception) or getattr(res, "status_code", 0) >= SERVER_ERROR_THRESHOLD:
+                    if (
+                        isinstance(res, Exception)
+                        or getattr(res, "status_code", 0) >= SERVER_ERROR_THRESHOLD
+                    ):
                         failures.append(f"HTTP Server Error: {res}")
                         logger.error(f"💥 Runtime Connection Failure or Server Error: {res}")
 
@@ -140,27 +153,43 @@ class NightlyChaosAuditor:
                 if self.gate_ref:
                     await asyncio.to_thread(
                         self.gate_ref.set,
-                        {"status": "UNLOCKED", "reason": "All self-testing gates green.", "updated_at": datetime.now(UTC)},
+                        {
+                            "status": "UNLOCKED",
+                            "reason": "All self-testing gates green.",
+                            "updated_at": datetime.now(UTC),
+                        },
                     )
                 return True
             else:
                 self.circuit_breaker.record_failure()
                 self.stats["failed"] += 1
-                logger.critical(f"💣 Chaos Audit FAILED with {len(failures)} anomalies. LOCKING deployment gates!")
+                logger.critical(
+                    f"💣 Chaos Audit FAILED with {len(failures)} anomalies. LOCKING deployment gates!"
+                )
                 if self.gate_ref:
                     await asyncio.to_thread(
                         self.gate_ref.set,
-                        {"status": "LOCKED", "reason": f"Audit failed: {len(failures)} anomalies.", "updated_at": datetime.now(UTC)},
+                        {
+                            "status": "LOCKED",
+                            "reason": f"Audit failed: {len(failures)} anomalies.",
+                            "updated_at": datetime.now(UTC),
+                        },
                     )
                 return False
 
         except Exception as global_err:
             self.circuit_breaker.record_failure()
             self.stats["failed"] += 1
-            logger.critical(f"⚠️ Auditor crashed internally: {global_err!s}. Circuit state: {self.circuit_breaker.state}")
+            logger.critical(
+                f"⚠️ Auditor crashed internally: {global_err!s}. Circuit state: {self.circuit_breaker.state}"
+            )
             if self.gate_ref:
                 await asyncio.to_thread(
                     self.gate_ref.set,
-                    {"status": "LOCKED", "reason": f"Auditor crash: {global_err!s}", "updated_at": datetime.now(UTC)},
+                    {
+                        "status": "LOCKED",
+                        "reason": f"Auditor crash: {global_err!s}",
+                        "updated_at": datetime.now(UTC),
+                    },
                 )
             return False

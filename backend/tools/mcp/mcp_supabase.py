@@ -48,7 +48,9 @@ class ExecuteQueryInput(BaseModel):
 
     query: str = Field(..., description="এক্সিকিউট করার SQL কুয়েরি", min_length=1)
     params: list[Any] | None = Field(default_factory=list, description="কুয়েরি প্যারামিটারস (ঐচ্ছিক)")
-    response_format: ResponseFormat = Field(default=ResponseFormat.MARKDOWN, description="আউটপুট ফরম্যাট")
+    response_format: ResponseFormat = Field(
+        default=ResponseFormat.MARKDOWN, description="আউটপুট ফরম্যাট"
+    )
 
 
 class CreateTableInput(BaseModel):
@@ -321,7 +323,9 @@ async def supabase_run_migration(params: MigrationInput) -> str:
         or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
     )
     if not admin_authorized:
-        return json.dumps({"error": "Admin authorization required for migrations"}, ensure_ascii=False)
+        return json.dumps(
+            {"error": "Admin authorization required for migrations"}, ensure_ascii=False
+        )
 
     if not _get_supabase_db_url():
         return json.dumps({"error": "SUPABASE_DATABASE_URL not configured"}, ensure_ascii=False)
@@ -455,7 +459,9 @@ class ExplainQueryInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     query: str = Field(..., description="বিশ্লেষণ করার জন্য SQL EXPLAIN কোয়েরি", min_length=5)
-    analyze: bool = Field(default=False, description="সত্যিই এক্সিকিউট করে নিখুঁত টাইম পরিমাপ করবে কি না (ANALYZE)")
+    analyze: bool = Field(
+        default=False, description="সত্যিই এক্সিকিউট করে নিখুঁত টাইম পরিমাপ করবে কি না (ANALYZE)"
+    )
 
 
 class DescribeTableInput(BaseModel):
@@ -565,12 +571,17 @@ async def supabase_describe_table(params: DescribeTableInput) -> str:
         cur.close()
 
         if not columns:
-            return json.dumps({"error": f"Table '{params.table_name}' not found"}, ensure_ascii=False)
+            return json.dumps(
+                {"error": f"Table '{params.table_name}' not found"}, ensure_ascii=False
+            )
 
         return json.dumps(
             {
                 "table": params.table_name,
-                "columns": [{"name": c[0], "type": c[1], "nullable": c[2] == "YES", "default": c[3]} for c in columns],
+                "columns": [
+                    {"name": c[0], "type": c[1], "nullable": c[2] == "YES", "default": c[3]}
+                    for c in columns
+                ],
                 "indexes": [{"name": i[0], "definition": i[1]} for i in indexes],
             },
             ensure_ascii=False,

@@ -84,12 +84,18 @@ class AgentGenome(Base):
     parent_b_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=True
     )
-    status: Mapped[AgentStatus] = mapped_column(String(50), default=AgentStatus.ACTIVE, nullable=False)
-    lineage: Mapped[list[str]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list)
+    status: Mapped[AgentStatus] = mapped_column(
+        String(50), default=AgentStatus.ACTIVE, nullable=False
+    )
+    lineage: Mapped[list[str]] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False, default=list
+    )
     """Ordered list of ancestor agent names for traceability."""
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -105,17 +111,27 @@ class AgentOffspring(Base):
     __tablename__ = "agent_offspring"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    offspring_name: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
-    parent_a_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False)
-    parent_b_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False)
-    chromosome: Mapped[dict[str, Any]] = mapped_column(JSON().with_variant(JSONB, "postgresql"), nullable=False)
+    offspring_name: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
+    parent_a_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False
+    )
+    parent_b_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("agent_genomes.id"), nullable=False
+    )
+    chromosome: Mapped[dict[str, Any]] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False
+    )
     crossover_method: Mapped[str] = mapped_column(String(50), nullable=False)
     mutation_rate: Mapped[float] = mapped_column(Float, default=0.05, nullable=False)
     evaluation_status: Mapped[str] = mapped_column(String(50), default="pending", nullable=False)
     fitness_score: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -167,7 +183,9 @@ class WeakestLinkReport(Base):
     is_acknowledged: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
     __mapper_args__ = {"version_id_col": version}
 
@@ -187,7 +205,9 @@ class BreedingPool(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),

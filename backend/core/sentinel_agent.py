@@ -174,7 +174,10 @@ class SentinelAgent:
                     # Depending on command output structure (dict or list)
                     is_vuln = False
                     if isinstance(vulnerabilities, list):
-                        is_vuln = any(v.get("name", "").lower() == dep.package_name.lower() for v in vulnerabilities)
+                        is_vuln = any(
+                            v.get("name", "").lower() == dep.package_name.lower()
+                            for v in vulnerabilities
+                        )
                     elif isinstance(vulnerabilities, dict):
                         is_vuln = dep.package_name in vulnerabilities.get("dependencies", {})
 

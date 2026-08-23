@@ -67,7 +67,11 @@ async def github_webhook(request: Request):
     repo = event.get("repository")
 
     # বাংলা মন্তব্য: শুধুমাত্র PR opened/ready_for_review/synchronize ইভেন্টে রিভিউ করা হচ্ছে।
-    if action not in ("opened", "ready_for_review", "synchronize", "reopened") or not pr or not repo:
+    if (
+        action not in ("opened", "ready_for_review", "synchronize", "reopened")
+        or not pr
+        or not repo
+    ):
         return {"status": "ignored", "action": action}
 
     repo_full_name = repo.get("full_name", "")

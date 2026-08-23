@@ -38,13 +38,21 @@ class SelfReflectionLoop:
         """
         reflection: dict[str, Any] = {
             "is_correct": is_success,
-            "success_factor": "Validated execution." if is_success else "Execution error encountered.",
+            "success_factor": "Validated execution."
+            if is_success
+            else "Execution error encountered.",
             "bottleneck_analysis": "None" if is_success else str(error_details),
-            "future_prevention_strategy": "Maintain optimal pattern." if is_success else "Add safeguards.",
+            "future_prevention_strategy": "Maintain optimal pattern."
+            if is_success
+            else "Add safeguards.",
         }
 
         # Query LLM for deep reflection if API keys are available
-        gem_keys = [k.strip() for k in os.getenv("GEMINI_API_KEY", "").split(",") if k.strip().startswith("AIza")]
+        gem_keys = [
+            k.strip()
+            for k in os.getenv("GEMINI_API_KEY", "").split(",")
+            if k.strip().startswith("AIza")
+        ]
         groq_key = os.getenv("GROQ_API_KEY", "").strip()
 
         reflection_prompt = (
@@ -67,13 +75,22 @@ class SelfReflectionLoop:
                         json={"contents": [{"parts": [{"text": reflection_prompt}]}]},
                     )
                     if resp.status_code == 200:
-                        analysis = resp.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        analysis = (
+                            resp.json()
+                            .get("candidates", [{}])[0]
+                            .get("content", {})
+                            .get("parts", [{}])[0]
+                            .get("text", "")
+                        )
                         reflection["deep_analysis"] = analysis
             elif groq_key:
                 async with httpx.AsyncClient(timeout=10) as client:
                     resp = await client.post(
                         "https://api.groq.com/openai/v1/chat/completions",
-                        headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+                        headers={
+                            "Authorization": f"Bearer {groq_key}",
+                            "Content-Type": "application/json",
+                        },
                         json={
                             "model": "qwen/qwen3.6-27b",
                             "messages": [{"role": "user", "content": reflection_prompt}],
@@ -81,7 +98,12 @@ class SelfReflectionLoop:
                         },
                     )
                     if resp.status_code == 200:
-                        analysis = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                        analysis = (
+                            resp.json()
+                            .get("choices", [{}])[0]
+                            .get("message", {})
+                            .get("content", "")
+                        )
                         reflection["deep_analysis"] = analysis
         except Exception as exc:
             logger.debug(f"LLM reflection call skipped: {exc}")

@@ -1,8 +1,9 @@
 # tests/test_live_morphic_run.py
-import os
 import json
 import logging
+import os
 import sys
+
 from backend.skills.core_knowledge_qa import execute_tool
 
 # লগিং কনফিগারেশন (যাতে কনসোলে আউটপুট সুন্দরভাবে দেখা যায় এবং লিন্টার পাস করে)
@@ -30,9 +31,7 @@ def run_rag_rbac_matrix_test():
 
     if res_admin.get("success"):
         logger.info(f"🤖 AI Answer: {res_admin['result']['answer']}")
-        logger.info(
-            f"📄 Citations: {json.dumps(res_admin['result']['citations'], indent=2)}"
-        )
+        logger.info(f"📄 Citations: {json.dumps(res_admin['result']['citations'], indent=2)}")
     else:
         logger.error(f"❌ Error: {res_admin.get('error')}")
 
@@ -49,9 +48,7 @@ def run_rag_rbac_matrix_test():
 
     if res_unauth.get("success"):
         logger.info(f"🤖 AI Answer: {res_unauth['result']['answer']}")
-        logger.info(
-            f"📄 Citations Appended Count: {len(res_unauth['result']['citations'])}"
-        )
+        logger.info(f"📄 Citations Appended Count: {len(res_unauth['result']['citations'])}")
     else:
         logger.error(f"❌ Error: {res_unauth.get('error')}")
 
@@ -68,9 +65,7 @@ def run_rag_rbac_matrix_test():
 
     if res_public.get("success"):
         logger.info(f"🤖 AI Answer: {res_public['result']['answer']}")
-        logger.info(
-            f"📄 Citations: {json.dumps(res_public['result']['citations'], indent=2)}"
-        )
+        logger.info(f"📄 Citations: {json.dumps(res_public['result']['citations'], indent=2)}")
     else:
         logger.error(f"❌ Error: {res_public.get('error')}")
 

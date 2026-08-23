@@ -127,7 +127,10 @@ class LongTermMemory:
         """Store a personalized user preference in long-term memory."""
         pref_fact = f"User Preference [{user_id}] {key}: {value}"
         return self.remember_fact(
-            content=pref_fact, category=f"user_pref_{user_id}", importance=0.9, source="user_setting"
+            content=pref_fact,
+            category=f"user_pref_{user_id}",
+            importance=0.9,
+            source="user_setting",
         )
 
     def get_context_for_user(self, user_id: str) -> str:

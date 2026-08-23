@@ -11,6 +11,8 @@ from unittest.mock import patch
 import pytest
 
 from core.llm.advanced_model_router import (
+    _DETERMINISTIC_PATTERNS,
+    _TIER0_CONFIDENCE_THRESHOLD,
     AdvancedModelRouter,
     ConfidenceDecision,
     DomainExpertAnalyzer,
@@ -19,8 +21,6 @@ from core.llm.advanced_model_router import (
     RouteDecision,
     TaskComplexityAnalyzer,
     Tier0Dispatcher,
-    _DETERMINISTIC_PATTERNS,
-    _TIER0_CONFIDENCE_THRESHOLD,
     get_advanced_router,
 )
 
@@ -249,7 +249,11 @@ def test_get_available_models_provider_split_and_fallback():
 # ── Prompt complexity feature extraction ───────────────────────────────────
 def test_analyze_prompt_complexity_empty():
     router = AdvancedModelRouter()
-    assert router.analyze_prompt_complexity("") == {"length": 0.0, "complexity": 0.0, "overall": 0.0}
+    assert router.analyze_prompt_complexity("") == {
+        "length": 0.0,
+        "complexity": 0.0,
+        "overall": 0.0,
+    }
 
 
 def test_analyze_prompt_complexity_indicators():
@@ -263,7 +267,9 @@ def test_analyze_prompt_complexity_indicators():
 @pytest.mark.asyncio
 async def test_route_request_returns_best_scored():
     router = AdvancedModelRouter()
-    decision = await router.route_request("write a python function to merge two lists", task_type="coding")
+    decision = await router.route_request(
+        "write a python function to merge two lists", task_type="coding"
+    )
     assert isinstance(decision, RouteDecision)
     assert decision.provider and decision.model
     assert decision.priority_score > 0.0
@@ -275,7 +281,9 @@ async def test_route_request_returns_best_scored():
 @pytest.mark.asyncio
 async def test_route_request_budget_filtering():
     router = AdvancedModelRouter()
-    decision = await router.route_request("simple hello", task_type="coding", budget_constraint=0.0001)
+    decision = await router.route_request(
+        "simple hello", task_type="coding", budget_constraint=0.0001
+    )
     assert decision.expected_cost <= 0.0001 or decision.priority_score > 0.0
 
 
@@ -283,7 +291,9 @@ async def test_route_request_budget_filtering():
 async def test_route_request_empty_models_fallback():
     router = AdvancedModelRouter()
     # Force an empty candidate list to exercise the safe default RouteDecision
-    router.model_preferences = {"general": {"preferred_models": [], "tier_preference": ModelTier.BUDGET}}
+    router.model_preferences = {
+        "general": {"preferred_models": [], "tier_preference": ModelTier.BUDGET}
+    }
     decision = await router.route_request("anything")
     assert decision.provider == "groq"
     assert decision.model == "llama-3.3-70b-versatile"
@@ -319,7 +329,9 @@ def test_route_with_confidence_deterministic_pypi():
                 return False
 
             def read(self):
-                return json.dumps({"info": {"name": "numpy", "version": "1.0", "summary": "s", "home_page": ""}}).encode()
+                return json.dumps(
+                    {"info": {"name": "numpy", "version": "1.0", "summary": "s", "home_page": ""}}
+                ).encode()
 
         mock_urlopen.return_value = FakeResp()
         decision = router.route_with_confidence("search pypi for numpy")
@@ -331,7 +343,7 @@ def test_route_with_confidence_deterministic_pypi():
 
 def test_route_with_confidence_deterministic_format():
     router = AdvancedModelRouter()
-    decision = router.route_with_confidence("format as json for {\"k\": 1}")
+    decision = router.route_with_confidence('format as json for {"k": 1}')
     assert decision.is_deterministic is True
     assert decision.matched_pattern == "regex_format"
     assert decision.deterministic_result["result"] == {"k": 1}

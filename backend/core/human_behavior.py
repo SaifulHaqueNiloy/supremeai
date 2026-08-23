@@ -34,8 +34,18 @@ class HumanBehaviorSimulators:
         for i in range(steps):
             t = i / float(steps - 1)
             # Cubic Bezier ফর্মুলা
-            x = (1 - t) ** 3 * x1 + 3 * (1 - t) ** 2 * t * control1_x + 3 * (1 - t) * t**2 * control2_x + t**3 * x2
-            y = (1 - t) ** 3 * y1 + 3 * (1 - t) ** 2 * t * control1_y + 3 * (1 - t) * t**2 * control2_y + t**3 * y2
+            x = (
+                (1 - t) ** 3 * x1
+                + 3 * (1 - t) ** 2 * t * control1_x
+                + 3 * (1 - t) * t**2 * control2_x
+                + t**3 * x2
+            )
+            y = (
+                (1 - t) ** 3 * y1
+                + 3 * (1 - t) ** 2 * t * control1_y
+                + 3 * (1 - t) * t**2 * control2_y
+                + t**3 * y2
+            )
             points.append((x, y))
         return points
 

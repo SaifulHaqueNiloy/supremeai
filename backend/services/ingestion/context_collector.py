@@ -13,6 +13,7 @@ import os
 import subprocess
 import time
 from dataclasses import dataclass, field
+
 from loguru import logger
 
 from backend.engine.compression.token_juice import TokenJuice
@@ -22,6 +23,7 @@ from backend.memory.hierarchical_tree import HierarchicalMemoryTree
 @dataclass
 class WorkspaceSnapshot:
     """Snapshot of current workspace and git status."""
+
     timestamp: float = field(default_factory=time.time)
     active_branch: str = "main"
     modified_files: list[str] = field(default_factory=list)
@@ -41,7 +43,9 @@ class DeveloperContextCollector:
         compressor: TokenJuice | None = None,
     ):
         self.workspace_root = workspace_root or os.getcwd()
-        self.memory_tree = memory_tree or HierarchicalMemoryTree(root_title="SupremeAI Live Context")
+        self.memory_tree = memory_tree or HierarchicalMemoryTree(
+            root_title="SupremeAI Live Context"
+        )
         self.compressor = compressor or TokenJuice()
         self._is_running = False
         self._last_snapshot: WorkspaceSnapshot | None = None

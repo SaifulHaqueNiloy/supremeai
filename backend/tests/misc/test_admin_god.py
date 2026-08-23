@@ -64,7 +64,9 @@ class TestGodModeAuditLog:
         """Update এর ডিফল্ট duration_ms ঠিক আছে।"""
         GodModeAuditLog._entries = []
 
-        session_id = GodModeAuditLog.record(actor="test_user", action="ACTIVATED", resource="system", reason="test")
+        session_id = GodModeAuditLog.record(
+            actor="test_user", action="ACTIVATED", resource="system", reason="test"
+        )
 
         GodModeAuditLog.update(session_id, "TERMINATED")
 
@@ -254,7 +256,9 @@ class TestAdminGodLayer:
 
     @patch.dict(
         os.environ,
-        {"SUPREMEAI_ADMIN_PASSWORD_HASH": "dGhpcyBpcyBhIGJhdnNwYXJzaHdpY2FsbHkgaGFnZSBmb3IgZW5jb2Rpbmc="},
+        {
+            "SUPREMEAI_ADMIN_PASSWORD_HASH": "dGhpcyBpcyBhIGJhdnNwYXJzaHdpY2FsbHkgaGFnZSBmb3IgZW5jb2Rpbmc="
+        },
     )
     def test_verify_admin_bcrypt_exception(self):
         """bcrypt exception during verification is handled gracefully."""

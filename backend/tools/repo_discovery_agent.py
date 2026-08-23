@@ -12,7 +12,9 @@ class RepoDiscoveryAgent:
     def __init__(self, token: str | None = None):
         self.token = token or ""
         if not self.token:
-            logger.warning("RepoDiscoveryAgent initialized without a token; real API operations disabled.")
+            logger.warning(
+                "RepoDiscoveryAgent initialized without a token; real API operations disabled."
+            )
         else:
             logger.info("RepoDiscoveryAgent initialized with token.")
 

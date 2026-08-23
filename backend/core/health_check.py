@@ -155,6 +155,7 @@ class ComprehensiveHealthChecker:
         try:
             start_time = time.time()
             from sqlalchemy import text
+
             import database.session as session_module
 
             session_module.init_engine()
@@ -196,7 +197,10 @@ class ComprehensiveHealthChecker:
                 supa_key = getattr(settings, "supabase_key", "")
                 if supa_url and supa_key:
                     async with httpx.AsyncClient(timeout=4) as client:
-                        r = await client.get(f"{supa_url}/rest/v1/", headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"})
+                        r = await client.get(
+                            f"{supa_url}/rest/v1/",
+                            headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"},
+                        )
                         if r.status_code in (200, 404):
                             return HealthCheckResult(
                                 status=HealthStatus.HEALTHY,
@@ -238,7 +242,9 @@ class ComprehensiveHealthChecker:
                 "llm_provider_configured": llm_provider_configured,
                 "redis_configured": bool(settings.redis_url),
                 "stripe_configured": (
-                    bool(settings.stripe_api_key.get_secret_value()) if settings.stripe_api_key else False
+                    bool(settings.stripe_api_key.get_secret_value())
+                    if settings.stripe_api_key
+                    else False
                 ),
             }
 
@@ -366,6 +372,7 @@ class ComprehensiveHealthChecker:
         """ADVANCED: Predict failures before they occur by correlating with historical ErrorPatternDB."""
         try:
             from core.errors.error_pattern_db import ErrorPatternDB
+
             db = ErrorPatternDB()
             # Analyze if any critical hallucination or error pattern is recurring
             strategy = db.get_prevention_strategy(model=service, task_type=service)
@@ -421,9 +428,15 @@ class ComprehensiveHealthChecker:
                 checks[check_names[i]] = result.to_dict()
 
                 # Update overall status based on individual check
-                if result.status == HealthStatus.UNHEALTHY and overall_status != HealthStatus.UNHEALTHY:
+                if (
+                    result.status == HealthStatus.UNHEALTHY
+                    and overall_status != HealthStatus.UNHEALTHY
+                ):
                     overall_status = HealthStatus.UNHEALTHY
-                elif result.status == HealthStatus.DEGRADED and overall_status == HealthStatus.HEALTHY:
+                elif (
+                    result.status == HealthStatus.DEGRADED
+                    and overall_status == HealthStatus.HEALTHY
+                ):
                     overall_status = HealthStatus.DEGRADED
 
         # ADVANCED: Compute proactive predictive risk assessment across critical services
@@ -454,4 +467,3 @@ class ComprehensiveHealthChecker:
 
 # Global instance
 health_checker = ComprehensiveHealthChecker()
-

@@ -53,7 +53,9 @@ class SelfEvolutionAgent:
         # Conditional instantiation to avoid AttributeError when imports failed
         if fitness_engine is None:
             if FitnessEngine is None:
-                raise RuntimeError("FitnessEngine failed to import - core.evolution.fitness_engine not available")
+                raise RuntimeError(
+                    "FitnessEngine failed to import - core.evolution.fitness_engine not available"
+                )
             fitness_engine = FitnessEngine()
         if auto_skill_creator is None:
             if AutoSkillCreator is None:
@@ -98,7 +100,7 @@ class SelfEvolutionAgent:
             start = time.time()
             try:
                 await self._tick()
-            except Exception as e:
+            except Exception:
                 logger.exception("Self-evolution tick failed")
             elapsed = time.time() - start
             try:
@@ -127,7 +129,9 @@ class SelfEvolutionAgent:
             return
 
         if score < self.refactor_penalty_threshold:
-            self._consecutive_penalties[skill_name] = self._consecutive_penalties.get(skill_name, 0) + 1
+            self._consecutive_penalties[skill_name] = (
+                self._consecutive_penalties.get(skill_name, 0) + 1
+            )
             if self._consecutive_penalties[skill_name] >= self.max_consecutive_penalties:
                 await self._trigger_refactor(skill_name)
                 # বাংলা মন্তব্য: refactor পরে penalty 0-তে reset — pop নয় যাতে test assert করতে পারে
@@ -137,7 +141,9 @@ class SelfEvolutionAgent:
             self._consecutive_penalties[skill_name] = 0
 
         if score < self.fitness_threshold:
-            self.fitness_engine.evaluate_and_prune(skill_name, self.fitness_threshold, self.min_runs_before_action)
+            self.fitness_engine.evaluate_and_prune(
+                skill_name, self.fitness_threshold, self.min_runs_before_action
+            )
 
     async def _trigger_refactor(self, skill_name: str) -> None:
         logger.warning(f"Skill '{skill_name}' hit consecutive penalty threshold. Refactoring...")
@@ -210,7 +216,9 @@ class SelfEvolutionAgent:
             # Step 2: Strict AST Security Scan
             res = self.scanner.scan_code(generated_code)
             if not res["safe"]:
-                logger.critical(f"AST Scanner BLOCKED proposal {proposal_id}: {res.get('error', 'unsafe code')}")
+                logger.critical(
+                    f"AST Scanner BLOCKED proposal {proposal_id}: {res.get('error', 'unsafe code')}"
+                )
                 proposal.status = "rejected_by_ast"
                 proposal.ast_validated = False
                 return False
@@ -223,7 +231,9 @@ class SelfEvolutionAgent:
         ci_passed = await self._run_ci_cd_dry_run(proposal_id, skill_name, generated_code)
 
         async with session.begin():
-            result = await session.execute(select(CodeProposal).where(CodeProposal.proposal_id == proposal_id))
+            result = await session.execute(
+                select(CodeProposal).where(CodeProposal.proposal_id == proposal_id)
+            )
             p = result.scalars().first()
             if p:
                 if not ci_passed:
@@ -235,14 +245,20 @@ class SelfEvolutionAgent:
                 # Step 4: Final Approval for Merge/Apply
                 p.status = "ci_passed"
                 p.ci_passed = True
-                logger.success(f"Evolution successful: {skill_name} ({proposal_id}) passed all zero-gap gates.")
+                logger.success(
+                    f"Evolution successful: {skill_name} ({proposal_id}) passed all zero-gap gates."
+                )
 
         return True
 
-    async def _update_proposal_status(self, session: AsyncSession, proposal_id: str, new_status: str, **kwargs):
+    async def _update_proposal_status(
+        self, session: AsyncSession, proposal_id: str, new_status: str, **kwargs
+    ):
         """Helper method to atomically update proposal state"""
         async with session.begin():
-            result = await session.execute(select(CodeProposal).where(CodeProposal.proposal_id == proposal_id))
+            result = await session.execute(
+                select(CodeProposal).where(CodeProposal.proposal_id == proposal_id)
+            )
             proposal = result.scalars().first()
             if proposal:
                 proposal.status = new_status
@@ -258,16 +274,16 @@ class SelfEvolutionAgent:
         logger.info(f"Triggering Sandbox/CI dry run for {proposal_id} ({skill_name})...")
         try:
             from tools.code.local_code_executor import LocalCodeExecutor
+
             sandbox = LocalCodeExecutor()
             test_harness = (
-                f"{code}\n\n"
-                f"import sys\n"
-                f"if {skill_name!r} not in globals():\n"
-                f"    sys.exit(1)\n"
+                f"{code}\n\nimport sys\nif {skill_name!r} not in globals():\n    sys.exit(1)\n"
             )
             res = await sandbox.execute_local_code(test_harness, timeout=10)
             if not res.get("success"):
-                logger.error(f"Sandbox dry-run failed for {proposal_id}: {res.get('error', res.get('stderr'))}")
+                logger.error(
+                    f"Sandbox dry-run failed for {proposal_id}: {res.get('error', res.get('stderr'))}"
+                )
                 return False
             return True
         except Exception as e:

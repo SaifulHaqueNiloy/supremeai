@@ -114,7 +114,9 @@ class DependencyManagerAgent:
         if "error" in deptry_result:
             return {"success": False, "error": deptry_result["error"]}
 
-        unused_dependencies = [dep["name"] for dep in deptry_result if dep["error"]["code"] == "DEP002"]
+        unused_dependencies = [
+            dep["name"] for dep in deptry_result if dep["error"]["code"] == "DEP002"
+        ]
 
         if not unused_dependencies:
             return {
@@ -124,7 +126,9 @@ class DependencyManagerAgent:
                 "message": "No unused dependencies found.",
             }
 
-        logger.info(f"Found {len(unused_dependencies)} unused dependencies: {', '.join(unused_dependencies)}")
+        logger.info(
+            f"Found {len(unused_dependencies)} unused dependencies: {', '.join(unused_dependencies)}"
+        )
 
         removed_packages = []
         for package in unused_dependencies:
@@ -170,7 +174,9 @@ class DependencyManagerAgent:
                 "message": "No unused npm dependencies found.",
             }
 
-        logger.info(f"Found {len(unused_dependencies)} unused npm dependencies: {', '.join(unused_dependencies)}")
+        logger.info(
+            f"Found {len(unused_dependencies)} unused npm dependencies: {', '.join(unused_dependencies)}"
+        )
 
         removed_packages = []
         for package in unused_dependencies:
@@ -224,13 +230,17 @@ class DependencyManagerAgent:
         # The summary is in the 'metadata' or 'summary' field
         return {"success": True, "audit_results": vuln_data}
 
-    async def auto_update_and_pr(self, repo_path: str, package_name: str, package_manager: str = "pip"):
+    async def auto_update_and_pr(
+        self, repo_path: str, package_name: str, package_manager: str = "pip"
+    ):
         """Automates updating a dependency and creating a PR."""
         if not self.pr_pipeline:
             logger.error("AutoPRPipeline is not available. Cannot create PR.")
             return {"status": "error", "message": "AutoPRPipeline not found."}
 
-        logger.info(f"Attempting to auto-update '{package_name}' using {package_manager} in {repo_path}")
+        logger.info(
+            f"Attempting to auto-update '{package_name}' using {package_manager} in {repo_path}"
+        )
 
         # Define update command
         if package_manager == "pip":

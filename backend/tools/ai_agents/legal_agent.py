@@ -58,15 +58,21 @@ class LegalAgent:
         risks: list[str] = []
         lowered = clause_text.lower()
         if "sole discretion" in lowered or "unilateral" in lowered:
-            risks.append("Clause grants unilateral discretion; may be unconscionable under consumer protection law.")
+            risks.append(
+                "Clause grants unilateral discretion; may be unconscionable under consumer protection law."
+            )
         if "waive" in lowered and "liability" in lowered:
             risks.append(
                 "Liability waiver detected; enforceability varies by jurisdiction and may be void if gross negligence."
             )
         if "indemnify" in lowered:
-            risks.append("Indemnification clause present; ensure mutual scope and caps are defined.")
+            risks.append(
+                "Indemnification clause present; ensure mutual scope and caps are defined."
+            )
         if "governing law" not in lowered and "jurisdiction" not in lowered:
-            risks.append(f"No governing law specified; defaulting to {jurisdiction} courts may be contested.")
+            risks.append(
+                f"No governing law specified; defaulting to {jurisdiction} courts may be contested."
+            )
         return {
             "status": "success",
             "jurisdiction": jurisdiction,
@@ -117,7 +123,9 @@ class LegalAgent:
             "compliant": all(f["severity"] != "high" for f in findings),
         }
 
-    async def generate_tos(self, product_description: str, jurisdiction: str = "BD") -> dict[str, Any]:
+    async def generate_tos(
+        self, product_description: str, jurisdiction: str = "BD"
+    ) -> dict[str, Any]:
         """Terms of Service / Privacy Policy জেনারেট করে।"""
         logger.info(f"Generating ToS/Privacy Policy for {jurisdiction}...")
         try:

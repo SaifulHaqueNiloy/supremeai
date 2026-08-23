@@ -36,8 +36,8 @@ import secrets as _secrets
 from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
-from loguru import logger
 
+from loguru import logger
 
 try:
     import bcrypt
@@ -85,7 +85,7 @@ class GodModeAuditLog:
                 asyncio.get_running_loop().create_task(redis_manager.client.rpush(key, raw))
                 # TTL so infinite growth is bounded without deleting data.
                 asyncio.get_running_loop().create_task(redis_manager.client.expire(key, 86400 * 14))
-        except Exception as e:  # Anti-silent failure: never crash audit path.
+        except Exception:  # Anti-silent failure: never crash audit path.
             return
 
     @classmethod
@@ -152,7 +152,9 @@ class AdminGodLayer:
             GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "empty password")
             return False
         if not self.admin_password_hash:
-            GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "no password hash configured")
+            GodModeAuditLog.record(
+                actor, "VERIFY_FAILED", "admin_auth", "no password hash configured"
+            )
             return False
         if not bcrypt:
             GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "bcrypt not available")
@@ -160,11 +162,13 @@ class AdminGodLayer:
         try:
             result = bcrypt.checkpw(password_raw.encode(), self.admin_password_hash.encode())
             if result:
-                GodModeAuditLog.record(actor, "VERIFY_SUCCESS", "admin_auth", "admin password verified")
+                GodModeAuditLog.record(
+                    actor, "VERIFY_SUCCESS", "admin_auth", "admin password verified"
+                )
             else:
                 GodModeAuditLog.record(actor, "VERIFY_FAILED", "admin_auth", "incorrect password")
             return result
-        except Exception as e:
+        except Exception:
             GodModeAuditLog.record(
                 actor,
                 "VERIFY_ERROR",
@@ -200,8 +204,16 @@ class AdminGodLayer:
     def enforce(self, action: str, user_context: UserContext | str | None = None) -> dict[str, Any]:
         if user_context is None:
             user_context = UserContext(user_id="unknown", role="viewer")
-        role = user_context.role if isinstance(user_context, UserContext) else (user_context or "viewer")
-        ctx = user_context if isinstance(user_context, UserContext) else UserContext(user_id="unknown", role=role)
+        role = (
+            user_context.role
+            if isinstance(user_context, UserContext)
+            else (user_context or "viewer")
+        )
+        ctx = (
+            user_context
+            if isinstance(user_context, UserContext)
+            else UserContext(user_id="unknown", role=role)
+        )
         try:
             self.rbac.require(ctx, action)
         except PermissionDeniedError as e:

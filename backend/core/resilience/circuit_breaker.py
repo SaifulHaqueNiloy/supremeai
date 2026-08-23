@@ -110,7 +110,9 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.OPEN:
                 if self._should_attempt_recovery():
-                    logger.info(f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test")
+                    logger.info(
+                        f"Circuit breaker '{self.name}' transitioning to HALF_OPEN for recovery test"
+                    )
                     self.state = CircuitBreakerState.HALF_OPEN
                     self._recovery_in_progress = True
                     return True
@@ -173,7 +175,9 @@ class CircuitBreaker:
         # Check if request is allowed before executing
         if not self.allow_request():
             err = CircuitBreakerOpenError(self.name, self.state)
-            logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
+            logger.error(
+                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
+            )
             raise err
 
         try:
@@ -210,7 +214,9 @@ class CircuitBreaker:
         # Check if request is allowed before executing
         if not self.allow_request():
             err = CircuitBreakerOpenError(self.name, self.state)
-            logger.error(f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}")
+            logger.error(
+                f"Circuit breaker '{self.name}' rejected request - state: {self.state.value}"
+            )
             raise err
 
         try:
@@ -246,7 +252,9 @@ class CircuitBreaker:
                 self.state = CircuitBreakerState.CLOSED
                 self._recovery_in_progress = False
             elif self.state == CircuitBreakerState.CLOSED:
-                logger.debug(f"Circuit breaker '{self.name}' recorded success (total: {self.success_count})")
+                logger.debug(
+                    f"Circuit breaker '{self.name}' recorded success (total: {self.success_count})"
+                )
 
     def mark_failure(self) -> None:
         """Record a failed call and potentially open the circuit.
@@ -263,11 +271,18 @@ class CircuitBreaker:
 
             if self.state == CircuitBreakerState.HALF_OPEN:
                 # Recovery test failed, reopen the circuit
-                logger.warning(f"Circuit breaker '{self.name}' reopening after failed recovery test")
+                logger.warning(
+                    f"Circuit breaker '{self.name}' reopening after failed recovery test"
+                )
                 self._open_circuit()
-            elif self.state == CircuitBreakerState.CLOSED and self.failure_count >= self.failure_threshold:
+            elif (
+                self.state == CircuitBreakerState.CLOSED
+                and self.failure_count >= self.failure_threshold
+            ):
                 # Threshold exceeded, open the circuit
-                logger.warning(f"Circuit breaker '{self.name}' opening after {self.failure_count} consecutive failures")
+                logger.warning(
+                    f"Circuit breaker '{self.name}' opening after {self.failure_count} consecutive failures"
+                )
                 self._open_circuit()
             elif self.state == CircuitBreakerState.CLOSED:
                 logger.debug(

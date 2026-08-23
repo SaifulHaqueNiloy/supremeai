@@ -20,7 +20,9 @@ class PatchTelemetry(Base):
     error_id: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     patch_id: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
-    status: Mapped[str] = mapped_column(String(32), nullable=False)  # ACCEPTED / REJECTED / MODIFIED
+    status: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # ACCEPTED / REJECTED / MODIFIED
     similarity_score: Mapped[float] = mapped_column(Float, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False

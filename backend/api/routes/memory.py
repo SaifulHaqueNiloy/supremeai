@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any, Optional
 import time
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -17,13 +17,16 @@ router = APIRouter(
     dependencies=[Depends(get_current_user_token)],
 )
 
+
 # Model for message persistence
 class MessageCreate(BaseModel):
-    conversation_id: Optional[str] = None
+    conversation_id: str | None = None
     message: dict
+
 
 class ConversationCreate(BaseModel):
     title: str = "New Conversation"
+
 
 _checkpoint: CheckpointResume | None = None
 _window: SlidingWindowMemory | None = None
@@ -156,7 +159,9 @@ def clear_memory(session_id: str = "default"):
 
 
 class VectorRecallRequest(BaseModel):
-    task_description: str = Field(..., min_length=1, description="Task or prompt to recall context for")
+    task_description: str = Field(
+        ..., min_length=1, description="Task or prompt to recall context for"
+    )
     limit: int = Field(default=5, ge=1, le=20)
     threshold: float = Field(default=0.6, ge=0.0, le=1.0)
 
@@ -179,6 +184,7 @@ class SessionSaveRequest(BaseModel):
 async def vector_recall(req: VectorRecallRequest):
     """Semantic-search the Eternal Brain for relevant past memories."""
     from services.memory_service import recall_memories
+
     memories = await recall_memories(
         task_description=req.task_description,
         limit=req.limit,
@@ -191,6 +197,7 @@ async def vector_recall(req: VectorRecallRequest):
 async def vector_save(req: VectorSaveRequest):
     """Store a vector memory entry into Supabase/pgvector or cascade fallback."""
     from services.memory_service import save_memory
+
     result = await save_memory(
         session_id=req.session_id,
         summary=req.summary,
@@ -205,6 +212,7 @@ async def vector_save(req: VectorSaveRequest):
 async def save_session(req: SessionSaveRequest):
     """Summarize a full chat session via LLM, then save as vector memory."""
     from services.memory_service import summarize_and_save_session
+
     result = await summarize_and_save_session(
         session_id=req.session_id,
         messages=req.messages,
@@ -212,94 +220,105 @@ async def save_session(req: SessionSaveRequest):
     )
     return result
 
+
 @router.post("/conversations/messages")
 async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
     """
     Save a chat message to conversation history.
     Creates conversation if doesn't exist.
     """
-    import time
-    from core.config import settings
     import logging
+
+    from core.config import settings
+
     logger = logging.getLogger(__name__)
-    
+
     conversation_id = req.conversation_id or f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-    
+
     try:
         # Get or create conversation
         conversation = await db.conversations.find_one({"_id": conversation_id})
-        
+
         if not conversation:
-            await db.conversations.insert_one({
-                "_id": conversation_id,
-                "title": req.message.get("metadata", {}).get("source", "chat") + " conversation",
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
-                "messages": [],
-                "tags": [],
-            })
-        
+            await db.conversations.insert_one(
+                {
+                    "_id": conversation_id,
+                    "title": req.message.get("metadata", {}).get("source", "chat")
+                    + " conversation",
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow(),
+                    "messages": [],
+                    "tags": [],
+                }
+            )
+
         # Append message
         message_doc = {
             **req.message,
             "saved_at": datetime.utcnow(),
         }
-        
+
         await db.conversations.update_one(
             {"_id": conversation_id},
-            {
-                "$push": {"messages": message_doc},
-                "$set": {"updated_at": datetime.utcnow()}
-            }
+            {"$push": {"messages": message_doc}, "$set": {"updated_at": datetime.utcnow()}},
         )
-        
+
         # If RAG is enabled, also index for retrieval
-        if hasattr(settings, 'RAG_ENABLED') and settings.RAG_ENABLED and req.message.get("role") == "user":
+        if (
+            hasattr(settings, "RAG_ENABLED")
+            and settings.RAG_ENABLED
+            and req.message.get("role") == "user"
+        ):
             try:
                 from services.memory_service import save_memory
+
                 await save_memory(
                     session_id=conversation_id,
                     summary=req.message["content"],
                     task_type="chat",
-                    metadata={"timestamp": req.message.get("timestamp", time.time())}
+                    metadata={"timestamp": req.message.get("timestamp", time.time())},
                 )
             except Exception as e:
                 logger.warning(f"RAG indexing failed for message: {e}")
-        
+
         return {
             "success": True,
             "conversation_id": conversation_id,
             "message_id": req.message.get("id"),
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to save message: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/conversations")
 async def list_conversations(request: Request, db=Depends(get_tenant_db)):
     """Get all conversations for authenticated user."""
     import logging
+
     logger = logging.getLogger(__name__)
     try:
         # Using tenant isolation inherently from get_tenant_db
         conversations = await db.conversations.find().sort("updated_at", -1).to_list(50)
-        
+
         # Format for frontend
         result = []
         for conv in conversations:
-            result.append({
-                "id": conv["_id"],
-                "title": conv.get("title", "Untitled"),
-                "messages": conv.get("messages", [])[-10:],  # Last 10 messages
-                "createdAt": conv.get("created_at"),
-                "updatedAt": conv.get("updated_at"),
-                "messageCount": len(conv.get("messages", [])),
-                "tags": conv.get("tags", []),
-            })
-        
+            result.append(
+                {
+                    "id": conv["_id"],
+                    "title": conv.get("title", "Untitled"),
+                    "messages": conv.get("messages", [])[-10:],  # Last 10 messages
+                    "createdAt": conv.get("created_at"),
+                    "updatedAt": conv.get("updated_at"),
+                    "messageCount": len(conv.get("messages", [])),
+                    "tags": conv.get("tags", []),
+                }
+            )
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Failed to list conversations: {e}")
         raise HTTPException(status_code=500, detail=str(e))

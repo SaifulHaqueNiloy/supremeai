@@ -14,7 +14,11 @@ router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 def _require_admin(request: Request):
     secret = request.headers.get("X-Admin-Secret")
-    expected = getattr(settings, "supremeai_admin_secret", "") or getattr(settings, "docs_password", "") or ""
+    expected = (
+        getattr(settings, "supremeai_admin_secret", "")
+        or getattr(settings, "docs_password", "")
+        or ""
+    )
     if not expected:
         raise HTTPException(status_code=500, detail="Admin secret not configured on server.")
     if not secrets.compare_digest(secret or "", expected):
@@ -56,9 +60,11 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
         logger.debug(f"Failed to persist evolution log to Supabase: {exc}")
     return report
 
+
 class SystemAlertPayload(BaseModel):
     level: str
     message: str
+
 
 @router.post("/api/v1/admin/alerts")
 async def report_system_alert(request: Request, payload: SystemAlertPayload):
@@ -70,7 +76,7 @@ async def report_system_alert(request: Request, payload: SystemAlertPayload):
     logger.bind(alert_level=payload.level).warning(f"System Alert Received: {payload.message}")
 
     # Optionally store in DB/Redis or emit via ErrorEventBus
-    from core.messaging.event_bus import ErrorEvent, error_event_bus, ErrorContext
+    from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
     error_event_bus.emit(
         ErrorEvent(

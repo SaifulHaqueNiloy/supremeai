@@ -1,6 +1,7 @@
 """Tests for Hierarchical Memory Tree Engine."""
 
 import pytest
+
 from backend.memory.hierarchical_tree import HierarchicalMemoryTree
 
 
@@ -12,8 +13,12 @@ def memory_tree():
 
 def test_memory_tree_lifecycle_and_rollup(memory_tree):
     # 1. Add branches
-    dev_branch = memory_tree.add_branch(title="Frontend Improvements", category="dev", tags=["react", "vite"])
-    db_branch = memory_tree.add_branch(title="Database Indexing", category="database", tags=["postgres", "indexes"])
+    dev_branch = memory_tree.add_branch(
+        title="Frontend Improvements", category="dev", tags=["react", "vite"]
+    )
+    db_branch = memory_tree.add_branch(
+        title="Database Indexing", category="database", tags=["postgres", "indexes"]
+    )
 
     assert dev_branch.id in memory_tree.root.children_ids
     assert db_branch.id in memory_tree.root.children_ids
@@ -38,11 +43,16 @@ def test_memory_tree_lifecycle_and_rollup(memory_tree):
     branch_node = memory_tree.nodes[dev_branch.id]
     assert "CommandCenter Store Refactor" in branch_node.summary
     assert "Playwright E2E Canvas Test" in branch_node.summary
-    assert "Frontend Improvements" in memory_tree.root.summary or "CommandCenter Store Refactor" in memory_tree.root.summary
+    assert (
+        "Frontend Improvements" in memory_tree.root.summary
+        or "CommandCenter Store Refactor" in memory_tree.root.summary
+    )
 
 
 def test_search_and_subtree(memory_tree):
-    branch = memory_tree.add_branch(title="Security & Secrets", category="security", tags=["auth", "tokens"])
+    branch = memory_tree.add_branch(
+        title="Security & Secrets", category="security", tags=["auth", "tokens"]
+    )
     memory_tree.add_leaf(
         title="Gitleaks Pre-commit Hook",
         content="Configured gitleaks scanning on git pre-commit hooks to block API key leaks.",
@@ -68,7 +78,9 @@ def test_search_and_subtree(memory_tree):
 
 
 def test_export_to_markdown_vault(memory_tree):
-    branch = memory_tree.add_branch(title="Deployment Pipeline", category="devops", tags=["ci", "docker"])
+    branch = memory_tree.add_branch(
+        title="Deployment Pipeline", category="devops", tags=["ci", "docker"]
+    )
     memory_tree.add_leaf(
         title="FastAPI Lifespan AutoHealer",
         content="Replaced legacy CLI cron with native FastAPI lifespan worker loop.",

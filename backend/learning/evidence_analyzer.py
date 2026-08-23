@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 import math
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import Any
 
 from learning.pattern_detector import DetectedPattern, EvidenceReference
 
@@ -24,9 +23,9 @@ class PatternEvidenceMetrics:
     confidence_interval_low: float
     confidence_interval_high: float
     is_statistically_significant: bool
-    evidence_references: List[EvidenceReference] = field(default_factory=list)
+    evidence_references: list[EvidenceReference] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern_type": self.pattern_type,
             "support": self.support,
@@ -60,7 +59,9 @@ class EvidenceAnalyzer:
         ci_low = max(0.0, p - (confidence_level_z * se))
         ci_high = min(1.0, p + (confidence_level_z * se))
         effect_size = p / base
-        is_significant = (pattern.support_count >= 2) and (p >= base or effect_size >= 1.2 or ci_low > base)
+        is_significant = (pattern.support_count >= 2) and (
+            p >= base or effect_size >= 1.2 or ci_low > base
+        )
 
         return PatternEvidenceMetrics(
             pattern_type=pattern.pattern_type,
@@ -77,7 +78,7 @@ class EvidenceAnalyzer:
 
 
 # Global Singleton
-_analyzer: Optional[EvidenceAnalyzer] = None
+_analyzer: EvidenceAnalyzer | None = None
 
 
 def get_evidence_analyzer() -> EvidenceAnalyzer:

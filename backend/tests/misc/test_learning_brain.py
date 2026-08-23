@@ -80,14 +80,20 @@ async def test_llm_gateway_with_learning(monkeypatch):
     monkeypatch.setattr(gateway.router, "async_generate", mock_async_generate)
 
     # First attempt: calls external
-    resp1 = await gateway.acompletion(model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}])
+    resp1 = await gateway.acompletion(
+        model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}]
+    )
     assert "[SupremeAI Brain]" not in resp1
     assert "Step one" in resp1
 
     # Reinforce 15 times
     for _ in range(15):
-        await gateway.acompletion(model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}])
+        await gateway.acompletion(
+            model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}]
+        )
 
     # Subsequent attempt: answers independently
-    resp2 = await gateway.acompletion(model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}])
+    resp2 = await gateway.acompletion(
+        model="gpt-4o", messages=[{"role": "user", "content": "Explain async Python"}]
+    )
     assert "[SupremeAI Brain]" in resp2

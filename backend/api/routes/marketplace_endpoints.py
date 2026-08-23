@@ -99,14 +99,14 @@ def get_enabled_catalog_sources() -> list[str]:
 
     try:
         enabled = db.get_config("marketplace.resource_sources")
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         enabled = None
 
     if isinstance(enabled, str):
         try:
             enabled = json.loads(enabled)
-        except Exception as e:
+        except Exception:
             logger.exception("Unhandled exception")
             enabled = [item.strip() for item in enabled.split(",") if item.strip()]
 
@@ -117,7 +117,9 @@ def get_enabled_catalog_sources() -> list[str]:
     return enabled_sources or DEFAULT_CATALOG_SOURCES
 
 
-def filter_requested_catalog_sources(categories: list[str], enabled_sources: list[str]) -> list[str]:
+def filter_requested_catalog_sources(
+    categories: list[str], enabled_sources: list[str]
+) -> list[str]:
     return [c for c in categories if c in enabled_sources]
 
 
@@ -223,7 +225,9 @@ async def install_tool(payload: InstallRequest):
             conn.close()
 
         # Fallback to Agent Remote Installation
-        res = marketplace_agent.install_tool(payload.tool_id, payload.target_environment, payload.sandbox)
+        res = marketplace_agent.install_tool(
+            payload.tool_id, payload.target_environment, payload.sandbox
+        )
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e

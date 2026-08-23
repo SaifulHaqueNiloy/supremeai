@@ -28,7 +28,9 @@ global_orchestrator = LivingEngineOrchestrator()
 class SolveRequest(BaseModel):
     prompt: str = Field(..., min_length=1, description="User or admin instruction in any language")
     context: dict[str, Any] | None = Field(default=None, description="Optional execution context")
-    session_id: str | None = Field(default="", description="Session ID for continuous memory tracking")
+    session_id: str | None = Field(
+        default="", description="Session ID for continuous memory tracking"
+    )
 
 
 @router.post("/solve")

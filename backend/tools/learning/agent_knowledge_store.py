@@ -41,7 +41,9 @@ class AgentKnowledgeStore:
         if self.queue.mode == "firestore" and self.queue.client:
             try:
                 self.queue.client.collection(self.collection_name).add(record)
-                logger.info(f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore.")
+                logger.info(
+                    f"✅ Successfully stored AI agent knowledge for '{agent_name}' in Firestore."
+                )
             except Exception as e:
                 logger.error(f"Failed to store knowledge in Firestore: {e}")
 

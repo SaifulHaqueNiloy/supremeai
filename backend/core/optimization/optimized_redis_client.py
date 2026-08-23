@@ -1,24 +1,25 @@
 import asyncio
 import logging
-from typing import Optional
 
 try:
     import redis.asyncio as aioredis
-    from redis.exceptions import RedisError, ConnectionError, TimeoutError
+    from redis.exceptions import ConnectionError, RedisError, TimeoutError
 except ImportError:
     # Graceful fallback if redis is not installed
     aioredis = None
 
 logger = logging.getLogger(__name__)
 
+
 class CircuitBreaker:
     """Simple circuit breaker for Redis connections."""
+
     def __init__(self, failure_threshold: int = 5, recovery_timeout: int = 30):
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
         self.failures = 0
         self.last_failure_time = 0
-        self.state = "CLOSED" # CLOSED (ok), OPEN (failing), HALF_OPEN (testing recovery)
+        self.state = "CLOSED"  # CLOSED (ok), OPEN (failing), HALF_OPEN (testing recovery)
 
     def record_failure(self):
         self.failures += 1
@@ -50,31 +51,33 @@ class OptimizedRedisClient:
     Optimized Redis client with connection pooling, circuit breaker,
     auto-reconnection with exponential backoff, and health monitoring.
     """
-    
+
     def __init__(self, url: str = "redis://localhost:6379", max_connections: int = 20):
         self.url = url
         self.max_connections = max_connections
-        self.pool: Optional[aioredis.ConnectionPool] = None
-        self.client: Optional[aioredis.Redis] = None
+        self.pool: aioredis.ConnectionPool | None = None
+        self.client: aioredis.Redis | None = None
         self.circuit_breaker = CircuitBreaker()
         self._lock = asyncio.Lock()
 
     async def initialize(self):
         """Initialize the Redis connection pool."""
         if aioredis is None:
-            logger.error("redis[asyncio] is not installed. OptimizedRedisClient will run in fallback mode.")
+            logger.error(
+                "redis[asyncio] is not installed. OptimizedRedisClient will run in fallback mode."
+            )
             return
 
         async with self._lock:
             if self.pool is None:
                 try:
                     self.pool = aioredis.ConnectionPool.from_url(
-                        self.url, 
+                        self.url,
                         max_connections=self.max_connections,
                         decode_responses=True,
                         socket_connect_timeout=5,
                         socket_timeout=5,
-                        health_check_interval=30
+                        health_check_interval=30,
                     )
                     self.client = aioredis.Redis(connection_pool=self.pool)
                     # Ping to verify
@@ -85,36 +88,38 @@ class OptimizedRedisClient:
                     logger.error(f"Failed to initialize Redis pool: {e}")
                     self.circuit_breaker.record_failure()
 
-    async def get_client(self) -> Optional[aioredis.Redis]:
+    async def get_client(self) -> aioredis.Redis | None:
         """Get the active Redis client if circuit is closed/half-open."""
         if self.client is None:
             await self.initialize()
-            
+
         if not self.circuit_breaker.can_execute():
             raise Exception("Circuit breaker is OPEN. Redis requests are temporarily blocked.")
-            
+
         return self.client
 
     async def execute_with_retry(self, operation, *args, **kwargs):
         """Execute a Redis operation with retry and circuit breaking."""
         max_retries = 3
         base_backoff = 0.5
-        
+
         for attempt in range(max_retries):
             try:
                 client = await self.get_client()
                 if client is None:
                     return None
-                    
+
                 result = await getattr(client, operation)(*args, **kwargs)
                 self.circuit_breaker.record_success()
                 return result
             except (ConnectionError, TimeoutError) as e:
                 self.circuit_breaker.record_failure()
-                logger.warning(f"Redis operation {operation} failed (attempt {attempt+1}/{max_retries}): {e}")
+                logger.warning(
+                    f"Redis operation {operation} failed (attempt {attempt + 1}/{max_retries}): {e}"
+                )
                 if attempt == max_retries - 1:
                     raise
-                await asyncio.sleep(base_backoff * (2 ** attempt))
+                await asyncio.sleep(base_backoff * (2**attempt))
             except Exception as e:
                 # Other non-connection errors shouldn't trigger circuit breaker directly
                 logger.error(f"Redis error in {operation}: {e}")
@@ -129,11 +134,15 @@ class OptimizedRedisClient:
                 self.client = None
                 logger.info("OptimizedRedisClient closed.")
 
+
 # Global instance management
-_global_redis_client: Optional[OptimizedRedisClient] = None
+_global_redis_client: OptimizedRedisClient | None = None
 _init_lock = asyncio.Lock()
 
-async def get_redis_client(url: str = "redis://localhost:6379", max_connections: int = 20) -> OptimizedRedisClient:
+
+async def get_redis_client(
+    url: str = "redis://localhost:6379", max_connections: int = 20
+) -> OptimizedRedisClient:
     """Get or initialize the global OptimizedRedisClient."""
     global _global_redis_client
     async with _init_lock:
@@ -141,6 +150,7 @@ async def get_redis_client(url: str = "redis://localhost:6379", max_connections:
             _global_redis_client = OptimizedRedisClient(url=url, max_connections=max_connections)
             await _global_redis_client.initialize()
         return _global_redis_client
+
 
 async def close_redis_client():
     """Close the global OptimizedRedisClient."""

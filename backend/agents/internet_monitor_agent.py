@@ -54,7 +54,8 @@ class InternetMonitorAgent:
     async def initialize(self):
         """Initialize the agent with HTTP session."""
         self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30), headers={"User-Agent": "SupremeAI-InternetMonitor/2.0"}
+            timeout=aiohttp.ClientTimeout(total=30),
+            headers={"User-Agent": "SupremeAI-InternetMonitor/2.0"},
         )
         # Load system capabilities on startup
         await self._discover_system_capabilities()
@@ -90,7 +91,11 @@ class InternetMonitorAgent:
             agents_dir = os.path.join(os.path.dirname(__file__))
             if os.path.exists(agents_dir):
                 for item in os.listdir(agents_dir):
-                    if item.endswith(".py") and item != "__init__.py" and item != "internet_monitor_agent.py":
+                    if (
+                        item.endswith(".py")
+                        and item != "__init__.py"
+                        and item != "internet_monitor_agent.py"
+                    ):
                         capabilities["features"].append(item[:-3])  # Remove .py extension
 
             # Store in Redis
@@ -147,7 +152,9 @@ class InternetMonitorAgent:
                             )
                     else:
                         # Fallback to basic update
-                        logger.warning(f"GitHub API failed with status {response.status}, using fallback")
+                        logger.warning(
+                            f"GitHub API failed with status {response.status}, using fallback"
+                        )
                         # This is a simplified version - in reality, we'd scrape the actual page
                         fallback_updates = [
                             UpdateInfo(
@@ -188,7 +195,9 @@ class InternetMonitorAgent:
                             UpdateInfo(
                                 source="Hugging Face",
                                 title=f"New Trending Model: {model.get('id', 'Unknown')}",
-                                description=model.get("cardData", {}).get("summary", "New AI model released"),
+                                description=model.get("cardData", {}).get(
+                                    "summary", "New AI model released"
+                                ),
                                 url=f"https://huggingface.co/{model.get('id', '')}",
                                 timestamp=datetime.utcnow(),
                                 category="ai_updates",
@@ -275,7 +284,9 @@ class InternetMonitorAgent:
                         or "novel approach" in update.description.lower()
                     )
 
-                    if missing_indicator or any(feature.lower() in title_lower for feature in current_features):
+                    if missing_indicator or any(
+                        feature.lower() in title_lower for feature in current_features
+                    ):
                         updates.append(
                             UpdateInfo(
                                 source=f"{update.source} - Capability Alert",
@@ -300,9 +311,7 @@ class InternetMonitorAgent:
             health_status = await health_checker.check_all()  # Use the correct function
 
             # Identify system gaps and status
-            gap_description = (
-                "System is functioning normally but may have capability gaps compared to latest developments"
-            )
+            gap_description = "System is functioning normally but may have capability gaps compared to latest developments"
 
             # Check for any subsystem issues
             for subsystem, status in health_status.get("checks", {}).items():
@@ -382,7 +391,12 @@ class InternetMonitorAgent:
         summary = {
             "timestamp": datetime.utcnow().isoformat(),
             "total_updates": len(updates),
-            "by_category": {"github_trending": [], "ai_updates": [], "system_capability": [], "security_alert": []},
+            "by_category": {
+                "github_trending": [],
+                "ai_updates": [],
+                "system_capability": [],
+                "security_alert": [],
+            },
             "top_updates": updates[:5],  # Top 5 most recent
         }
 

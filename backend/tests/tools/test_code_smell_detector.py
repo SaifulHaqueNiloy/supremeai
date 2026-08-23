@@ -112,9 +112,7 @@ class TestCalculateComplexity:
         assert detector._calculate_complexity(tree.body[0]) == 4
 
     def test_nested_if_and_for(self, detector):
-        code = (
-            "def foo():\n    for i in range(10):\n        if i > 5:\n            while True:\n                break\n"
-        )
+        code = "def foo():\n    for i in range(10):\n        if i > 5:\n            while True:\n                break\n"
         tree = ast.parse(code)
         assert detector._calculate_complexity(tree.body[0]) >= 4
 
@@ -193,9 +191,7 @@ class TestDetectDuplicateFunctions:
         assert result[0]["type"] == "Duplicate Code"
 
     def test_unique_bodies_no_duplicates(self, detector):
-        code = (
-            "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = [1, 2, 3]\n    for i in y:\n        print(i)\n"
-        )
+        code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    y = [1, 2, 3]\n    for i in y:\n        print(i)\n"
         tree = ast.parse(code)
         result = detector._detect_duplicate_functions(tree, "test.py")
         assert len(result) == 0
@@ -209,12 +205,14 @@ class TestDetectDuplicateFunctions:
     def test_mocked_dump_detects_duplicate(self, detector):
         code = "def foo():\n    x = 1\n    return x\n\ndef bar():\n    x = 1\n    return x\n"
         tree = ast.parse(code)
-        with patch.object(detector, "_normalize", return_value="same_norm"):
-            with patch(
+        with (
+            patch.object(detector, "_normalize", return_value="same_norm"),
+            patch(
                 "backend.tools.code.code_smell_detector.ast.dump",
                 side_effect=lambda node: "same",
-            ):
-                result = detector._detect_duplicate_functions(tree, "test.py")
+            ),
+        ):
+            result = detector._detect_duplicate_functions(tree, "test.py")
         assert len(result) == 1
         assert result[0]["type"] == "Duplicate Code"
         assert result[0]["instances"] == 2
@@ -380,7 +378,9 @@ class TestAnalyzeRadon:
         ):
             tree = ast.parse("def foo():\n    return 1\n")
             result = detector._analyze_radon("test.py", tree, 10)
-        assert any(s["type"] == "High Complexity (radon)" and s.get("complexity") == 20 for s in result)
+        assert any(
+            s["type"] == "High Complexity (radon)" and s.get("complexity") == 20 for s in result
+        )
 
     def test_low_maintainability_detected(self, detector):
         fake_radon, fake_complexity, fake_metrics = _make_fake_radon(
@@ -398,7 +398,9 @@ class TestAnalyzeRadon:
         ):
             tree = ast.parse("def foo():\n    return 1\n")
             result = detector._analyze_radon("test.py", tree, 10)
-        assert any(s["type"] == "Low Maintainability" and "30.0" in s.get("message", "") for s in result)
+        assert any(
+            s["type"] == "Low Maintainability" and "30.0" in s.get("message", "") for s in result
+        )
 
     def test_reparses_when_tree_none(self, detector, tmp_path):
         fake_radon, fake_complexity, fake_metrics = _make_fake_radon(
@@ -409,17 +411,19 @@ class TestAnalyzeRadon:
         f = tmp_path / "x.py"
         f.write_text("def foo():\n    return 1\n", encoding="utf-8")
 
-        with patch.dict(
-            sys.modules,
-            {
-                "radon": fake_radon,
-                "radon.complexity": fake_complexity,
-                "radon.metrics": fake_metrics,
-            },
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "radon": fake_radon,
+                    "radon.complexity": fake_complexity,
+                    "radon.metrics": fake_metrics,
+                },
+            ),
+            patch("backend.tools.code.code_smell_detector.ast.parse") as mock_parse,
         ):
-            with patch("backend.tools.code.code_smell_detector.ast.parse") as mock_parse:
-                mock_parse.return_value = ast.parse("def foo():\n    return 1\n")
-                detector._analyze_radon(str(f), None, 10)
+            mock_parse.return_value = ast.parse("def foo():\n    return 1\n")
+            detector._analyze_radon(str(f), None, 10)
         assert mock_parse.call_count >= 1
 
 

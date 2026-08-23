@@ -101,7 +101,7 @@ class DashboardWebSocketManager:
                             try:
                                 # Forward the message to the client
                                 await self.send_personal_message(websocket, raw_message)
-                            except Exception as e:
+                            except Exception:
                                 # Client disconnected, remove from active connections
                                 self.disconnect(websocket)
 
@@ -127,7 +127,12 @@ class DashboardWebSocketManager:
             return "metrics.update"
 
         # Log events
-        elif event_type.startswith("log.") or event_type in ["log_entry", "error_log", "info_log", "debug_log"]:
+        elif event_type.startswith("log.") or event_type in [
+            "log_entry",
+            "error_log",
+            "info_log",
+            "debug_log",
+        ]:
             return "logs.stream"
 
         # Job events
@@ -140,7 +145,11 @@ class DashboardWebSocketManager:
             return "jobs.status"
 
         # Alert events
-        elif event_type.startswith("alert.") or event_type in ["critical_alert", "security_alert", "emergency_alert"]:
+        elif event_type.startswith("alert.") or event_type in [
+            "critical_alert",
+            "security_alert",
+            "emergency_alert",
+        ]:
             return "alerts.emergency"
 
         # Default to misc for other events
@@ -216,13 +225,15 @@ async def websocket_dashboard_endpoint(websocket: WebSocket):
                     if channel:
                         dashboard_manager.remove_channel_subscription(websocket, channel)
                         await dashboard_manager.send_personal_message(
-                            websocket, json.dumps({"type": "unsubscription_ack", "channel": channel})
+                            websocket,
+                            json.dumps({"type": "unsubscription_ack", "channel": channel}),
                         )
 
                 elif command == "ping":
                     # Respond to ping with pong
                     await dashboard_manager.send_personal_message(
-                        websocket, json.dumps({"type": "pong", "timestamp": asyncio.get_event_loop().time()})
+                        websocket,
+                        json.dumps({"type": "pong", "timestamp": asyncio.get_event_loop().time()}),
                     )
 
             except json.JSONDecodeError:

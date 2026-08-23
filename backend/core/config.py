@@ -56,13 +56,13 @@ from pydantic import (
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 from .config_fields import SettingsFieldsMixin
 from .config_secrets import SettingsSecretsMixin
 from .config_validation import SettingsValidationMixin
 
 try:
     from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
+
     _PLATFORM = auto_set_platform_env()
 except ImportError:
     _PLATFORM = None
@@ -83,7 +83,9 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
 
     model_config = SettingsConfigDict(
         env_file=(
-            None if "pytest" in sys.modules else ["../.env", ".env", "/etc/secrets/.env", "/etc/secrets/render.env"]
+            None
+            if "pytest" in sys.modules
+            else ["../.env", ".env", "/etc/secrets/.env", "/etc/secrets/render.env"]
         ),
         extra="ignore",
     )
@@ -91,7 +93,7 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
     # বাংলা মন্তব্য: env validate হবে — invalid value = startup crash
     env: str = Field(default="local", validation_alias="ENV")
     debug: bool = Field(default=False)
-    
+
     # Free Tier Optimizations
     AUTO_HEALING_ENABLED: bool = Field(default=False)
     MONITORING_DETAILED: bool = Field(default=False)
@@ -103,17 +105,19 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
     @property
     def platform(self) -> str:
         return _PLATFORM if _PLATFORM else "unknown"
-    
+
     @property
     def is_cloud(self) -> bool:
-        if not _PLATFORM: return False
+        if not _PLATFORM:
+            return False
         return _PLATFORM in ("render", "vercel", "firebase", "github_actions")
-    
+
     @property
     def auto_backend_url(self) -> str:
         """Generate backend URL from platform detection."""
         try:
             from utils.platform_detect import DETECTED_PLATFORM
+
             if DETECTED_PLATFORM.has_external_url and DETECTED_PLATFORM.external_url:
                 return DETECTED_PLATFORM.external_url
         except ImportError:
@@ -125,7 +129,9 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
     # Production guard: ENV=production হলে এই field সবসময় False থাকবে।
     # auth_middleware.py এবং origin_validator.py এই field চেক করে।
     allow_test_auth_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_AUTH_BYPASS")
-    allow_test_origin_bypass: bool = Field(default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS")
+    allow_test_origin_bypass: bool = Field(
+        default=False, validation_alias="ALLOW_TEST_ORIGIN_BYPASS"
+    )
 
     @property
     def is_bypass_allowed(self) -> bool:
@@ -144,6 +150,7 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
         if current_env in ("production", "prod"):
             return False
         return self.allow_test_origin_bypass
+
 
 try:
     settings = Settings()
@@ -164,6 +171,8 @@ def get_production_env(var_name: str, default: str | None = None) -> str:
     if not value:
         if default is not None:
             return default
-        logger.critical(f"❌ CRITICAL CONFIG ERROR: Missing required environment variable '{var_name}'!")
+        logger.critical(
+            f"❌ CRITICAL CONFIG ERROR: Missing required environment variable '{var_name}'!"
+        )
         raise ValueError(f"Configuration Error: {var_name} must be explicitly defined.")
     return value

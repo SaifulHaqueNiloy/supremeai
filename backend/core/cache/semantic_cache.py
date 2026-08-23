@@ -114,7 +114,9 @@ class SemanticCache:
         return None
 
     @with_error_bus("set")
-    async def set(self, prompt: str, response: Any, task_type: str = "general", ttl: int | None = None) -> None:
+    async def set(
+        self, prompt: str, response: Any, task_type: str = "general", ttl: int | None = None
+    ) -> None:
         try:
             # বাংলা মন্তব্য: সফল ও ভেরিফাইড কোড/রেসপন্স এক্সপেরিয়েন্স ডেটাবেসে রাইট করা হচ্ছে
             resp_str = str(response) if not isinstance(response, str) else response
@@ -132,4 +134,3 @@ class SemanticCache:
 
 # Singleton instance
 semantic_cache = SemanticCache()
-

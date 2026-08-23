@@ -107,7 +107,9 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
                 )
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
-            logger.warning(f"Bypassing verification using mock token mode. Token: {id_token[:20]}...")
+            logger.warning(
+                f"Bypassing verification using mock token mode. Token: {id_token[:20]}..."
+            )
         elif auth:
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
@@ -140,7 +142,9 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
                 role = "admin"
                 doc_ref.set({"email": email, "role": "admin", "created_at": str(time.time())})
         except Exception as e:
-            logger.critical(f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}")
+            logger.critical(
+                f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}"
+            )
             role = "user"
     elif email.lower() in [e.lower() for e in settings.admin_emails]:
         role = "admin"
@@ -149,7 +153,9 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
 
     if role != "admin":
         logger.warning(f"Unauthorized admin access attempt by UID: {uid}, Email: {email}")
-        raise HTTPException(status_code=403, detail="Forbidden: Not authorized as an admin role user")
+        raise HTTPException(
+            status_code=403, detail="Forbidden: Not authorized as an admin role user"
+        )
 
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
@@ -284,7 +290,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
                 await _redis.expire(attempt_key, _TOTP_LOCKOUT_SECONDS)
                 if int(attempts) >= _TOTP_MAX_ATTEMPTS:
                     await _redis.setex(lockout_key, _TOTP_LOCKOUT_SECONDS, "locked")
-                    logger.critical(f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts")
+                    logger.critical(
+                        f"TOTP lockout triggered for uid={uid} after {attempts} failed attempts"
+                    )
             except Exception as e:
                 logger.warning(f"Redis attempt tracking failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid verification code")
@@ -331,8 +339,12 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
 def cloud_distribution(_admin: dict = Depends(get_current_admin)):
     return {
         "distribution": services.parallel_router.get_distribution_stats(),
-        "total_requests": sum(p["current_requests"] for p in services.parallel_router.PROVIDERS.values()),
-        "active_providers": sum(1 for p in services.parallel_router.PROVIDERS.values() if p["status"] == "active"),
+        "total_requests": sum(
+            p["current_requests"] for p in services.parallel_router.PROVIDERS.values()
+        ),
+        "active_providers": sum(
+            1 for p in services.parallel_router.PROVIDERS.values() if p["status"] == "active"
+        ),
         "strategy": "parallel_active_active",
         "rebalance_interval": "1 hour",
     }
@@ -467,7 +479,7 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
             if hmac.compare_digest(code, user_otp):
                 return True
         return False
-    except Exception as e:
+    except Exception:
         return False
 
 

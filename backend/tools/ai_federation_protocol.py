@@ -18,7 +18,9 @@ class AIFederationProtocol:
         self.task_history: list[dict[str, Any]] = []
         logger.info(f"Initialized AIFederationProtocol node: {self.node_id}")
 
-    def register_skill(self, skill_name: str, provider_node: str, metadata: dict[str, Any]) -> dict[str, Any]:
+    def register_skill(
+        self, skill_name: str, provider_node: str, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
         skill_id = f"skill-{uuid.uuid4().hex[:8]}"
         entry = {
             "skill_id": skill_id,

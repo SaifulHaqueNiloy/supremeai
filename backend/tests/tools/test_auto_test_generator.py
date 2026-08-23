@@ -171,7 +171,9 @@ async def test_generate_and_save_writes_file(tmp_path, generator):
     src.write_text("def add(a, b):\n    return a + b", encoding="utf-8")
     expected_test = "def test_add():\n    assert True"
 
-    with patch.object(AutoTestGenerator, "_llm", new_callable=AsyncMock, return_value=expected_test):
+    with patch.object(
+        AutoTestGenerator, "_llm", new_callable=AsyncMock, return_value=expected_test
+    ):
         result = await generator.generate_and_save(str(src), run_tests=False)
 
     assert result["status"] == "success"
@@ -352,7 +354,7 @@ def client(generator):
         from api import app as _app
 
         app = _app
-    except Exception as e:
+    except Exception:
         from fastapi import FastAPI
 
         from tools.code.auto_test_generator import router as test_router
@@ -464,7 +466,7 @@ async def test_generate_endpoint_success(client):
         from api import app as _app
 
         app = _app
-    except Exception as e:
+    except Exception:
         app = None
 
     if app is None:
@@ -509,7 +511,7 @@ async def test_generate_endpoint_error(client):
         from api import app as _app
 
         app = _app
-    except Exception as e:
+    except Exception:
         app = None
 
     if app is None:
@@ -552,7 +554,7 @@ async def test_generate_file_endpoint(client, generator):
         from api import app as _app
 
         app = _app
-    except Exception as e:
+    except Exception:
         app = None
 
     if app is None:

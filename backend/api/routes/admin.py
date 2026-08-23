@@ -35,7 +35,9 @@ class RuleUpdate(BaseModel):
 
 
 @router.post("/rules")
-async def update_constitutional_rule(payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)):
+async def update_constitutional_rule(
+    payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)
+):
     """Update God.py constitutional rules directly from the Command Center UI"""
     try:
         god_layer.set_rule(payload.key, payload.value)
@@ -99,7 +101,9 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             backup_data = {}
             async for session in get_db_session():
                 result = await session.execute(
-                    text("SELECT table_name FROM information_schema.tables WHERE table_schema='public'")
+                    text(
+                        "SELECT table_name FROM information_schema.tables WHERE table_schema='public'"
+                    )
                 )
                 tables = [row[0] for row in result.fetchall()]
                 for table in tables:
@@ -135,8 +139,9 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     elif action_type == "rollback":
         # বাংলা মন্তব্য: Alembic প্রোগ্রামাটিক রোলব্যাক মেকানিজম
         try:
-            from alembic import command
             from alembic.config import Config
+
+            from alembic import command
 
             alembic_cfg = Config("backend/alembic.ini")
             alembic_cfg.set_main_option("script_location", "backend/alembic")
@@ -285,14 +290,17 @@ async def get_rules(admin_user: dict = Depends(get_current_admin)):
 
 
 # 🚨 System Alerts Endpoints
-from models.system_alert import SystemAlert
-from database.session import get_db_session
-from sqlalchemy import select, update
 from fastapi import Header
+from sqlalchemy import select, update
+
+from database.session import get_db_session
+from models.system_alert import SystemAlert
+
 
 class AlertCreate(BaseModel):
     level: str
     message: str
+
 
 @router.get("/alerts")
 async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
@@ -303,36 +311,35 @@ async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
         alerts = result.scalars().all()
         return {"alerts": alerts}
 
+
 @router.post("/alerts")
-async def create_system_alert(
-    payload: AlertCreate,
-    x_api_key: str = Header(None)
-):
+async def create_system_alert(payload: AlertCreate, x_api_key: str = Header(None)):
     """Create a new system alert (Used by internal AI Log Analyzer)."""
     from core.config import settings
 
-    expected_key = settings.supremeai_api_key.get_secret_value() if settings.supremeai_api_key else None
+    expected_key = (
+        settings.supremeai_api_key.get_secret_value() if settings.supremeai_api_key else None
+    )
     if not expected_key or x_api_key != expected_key:
         raise HTTPException(status_code=401, detail="Invalid internal API key")
 
     async for session in get_db_session():
         import uuid
-        new_alert = SystemAlert(
-            id=str(uuid.uuid4()),
-            level=payload.level,
-            message=payload.message
-        )
+
+        new_alert = SystemAlert(id=str(uuid.uuid4()), level=payload.level, message=payload.message)
         session.add(new_alert)
         await session.commit()
         return {"status": "success", "id": new_alert.id}
+
 
 @router.post("/alerts/{alert_id}/resolve")
 async def resolve_system_alert(alert_id: str, admin_user: dict = Depends(get_current_admin)):
     """Mark an alert as resolved."""
     async for session in get_db_session():
-        stmt = update(SystemAlert).where(SystemAlert.id == alert_id).values(
-            resolved=True,
-            resolved_at=datetime.now(UTC)
+        stmt = (
+            update(SystemAlert)
+            .where(SystemAlert.id == alert_id)
+            .values(resolved=True, resolved_at=datetime.now(UTC))
         )
         await session.execute(stmt)
         await session.commit()

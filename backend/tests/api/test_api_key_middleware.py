@@ -40,11 +40,13 @@ def fake_settings():
 
 @pytest.fixture
 def middleware(fake_settings):
-    with patch("core.security.api_key_middleware.redis_manager") as _rm, patch(
-        "core.security.api_key_middleware.get_db_pool", new=AsyncMock()
-    ), patch("core.security.api_key_middleware.AsyncRateLimiter") as _lim, patch(
-        "core.security.api_key_middleware.is_test_environment", return_value=False
-    ), patch("core.config.settings", fake_settings):
+    with (
+        patch("core.security.api_key_middleware.redis_manager") as _rm,
+        patch("core.security.api_key_middleware.get_db_pool", new=AsyncMock()),
+        patch("core.security.api_key_middleware.AsyncRateLimiter") as _lim,
+        patch("core.security.api_key_middleware.is_test_environment", return_value=False),
+        patch("core.config.settings", fake_settings),
+    ):
         _lim.return_value.acquire = AsyncMock(return_value=True)
         mw = APIKeyAuthMiddleware(app=MagicMock())
         yield mw

@@ -87,7 +87,9 @@ class HoneypotMiddleware:
         query_str = scope.get("query_string", b"").decode("utf-8", errors="ignore")
 
         # Check query string and body for malicious signatures
-        is_malicious = any(sig.search(body_str) or sig.search(query_str) for sig in self.attack_signatures)
+        is_malicious = any(
+            sig.search(body_str) or sig.search(query_str) for sig in self.attack_signatures
+        )
 
         if is_malicious:
             # P0 Fix: হ্যাকার ডিটেক্টেড — Immediate auto-block
@@ -102,7 +104,11 @@ class HoneypotMiddleware:
             # 3. Set distributed block in Redis with 1 hour TTL
             import core.services as app_mod
 
-            if hasattr(app_mod, "redis_queue") and app_mod.redis_queue and app_mod.redis_queue.configured:
+            if (
+                hasattr(app_mod, "redis_queue")
+                and app_mod.redis_queue
+                and app_mod.redis_queue.configured
+            ):
                 try:
                     # Set honeypot block key with 1 hour TTL
                     block_entry = {
@@ -154,7 +160,9 @@ class HoneypotMiddleware:
                     )
                 )
             except Exception as exc:
-                logger.debug(f"Event bus emit failed during honeypot block (suppressed by design): {exc}")
+                logger.debug(
+                    f"Event bus emit failed during honeypot block (suppressed by design): {exc}"
+                )
 
             # 5. Return RFC 2324 (418 I'm a teapot) — اطلاعات-লীন রেসপন্স
             response = JSONResponse(

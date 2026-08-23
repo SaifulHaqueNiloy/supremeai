@@ -30,7 +30,9 @@ class PostHogClient:
                 # সুনির্দিষ্ট ত্রুটি ক্যাচ করা হলো, যাতে কোনো ক্রিটিকাল এরর চাপা না পড়ে
                 logger.error(f"PostHog capture failed: {e}")
         else:
-            logger.info(f"[Mock Analytics] User: {distinct_id} | Event: {event} | Props: {properties}")
+            logger.info(
+                f"[Mock Analytics] User: {distinct_id} | Event: {event} | Props: {properties}"
+            )
 
 
 posthog_client = PostHogClient()

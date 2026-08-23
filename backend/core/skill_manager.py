@@ -99,7 +99,9 @@ class SkillManager:
                         f"Skill '{skill_name}' failed security validation and was not loaded."
                     ) from sec_exc
                 if not ast_ok:
-                    raise ValueError(f"Skill '{skill_name}' has invalid/unparseable code and was not loaded.")
+                    raise ValueError(
+                        f"Skill '{skill_name}' has invalid/unparseable code and was not loaded."
+                    )
 
                 # --- নিরাপত্তা গেট ২: ন্যূনতম, লক-ডাউন করা exec namespace ---
                 # `globals().copy()` এই মডিউলের সব ইম্পোর্ট (llm_gateway, MCPRegistryClient, logger
@@ -163,7 +165,9 @@ class SkillManager:
         বাংলা মন্তব্য: LLM ব্যবহার করে একটি নতুন স্কিলের JSON স্কিমা তৈরি করে।
         এটি আগের get_or_create_skill এর মূল লজিকটি ধারণ করে।
         """
-        logger.warning("🚀 [DB Miss] Unique task scenario. Escalating to Claude-3.5-Sonnet for Skill Generation...")
+        logger.warning(
+            "🚀 [DB Miss] Unique task scenario. Escalating to Claude-3.5-Sonnet for Skill Generation..."
+        )
 
         system_prompt = (
             "You are SupremeAI's Skill Architect. Your sole job is to generate a reusable, structural "
@@ -196,7 +200,9 @@ class SkillManager:
         raw_text = response.get("text", "{}").strip()
         if raw_text.startswith("```"):
             lines = raw_text.splitlines()
-            raw_text = "\n".join(lines[1:-1] if lines.startswith("```") and lines[-1].startswith("```") else lines)
+            raw_text = "\n".join(
+                lines[1:-1] if lines.startswith("```") and lines[-1].startswith("```") else lines
+            )
             raw_text = "\n".join(lines).strip()
 
         try:

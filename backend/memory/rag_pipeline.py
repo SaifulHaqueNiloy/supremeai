@@ -57,7 +57,9 @@ class RAGPipeline:
                 model="gemini/gemini-2.5-flash",
             )
             hypothetical_answer = hypo_response.get("text", query)
-            logger.debug(f"HyDE generated hypothetical answer for search: {hypothetical_answer[:50]}...")
+            logger.debug(
+                f"HyDE generated hypothetical answer for search: {hypothetical_answer[:50]}..."
+            )
 
             # Search using the hypothetical answer
             results = self.vector_store.query(hypothetical_answer, n_results=limit)

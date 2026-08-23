@@ -50,7 +50,9 @@ class GraphService:
                 )
         return True
 
-    async def create_relationship(self, source_id: str, target_id: str, rel_type: str, strength: float = 1.0):
+    async def create_relationship(
+        self, source_id: str, target_id: str, rel_type: str, strength: float = 1.0
+    ):
         """বাংলা মন্তব্য: দুটি স্কিলের মধ্যে রিলেশনシップ (Edge) তৈরি করবে।"""
         if self.dry_run:
             logger.info(f"Dry-run: Would create {rel_type} between {source_id} and {target_id}.")

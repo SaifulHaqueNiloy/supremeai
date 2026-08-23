@@ -1,4 +1,5 @@
 from loguru import logger
+
 """Standalone smoke test for the SupremeAI IDE Trio Pipeline adapters.
 
 Run from the repo root:
@@ -22,7 +23,9 @@ def _load_adapters():
     """Load trio_adapters.py directly via importlib, bypassing the heavy
     `agents/__init__.py` (which pulls in loguru / litellm / pandas chains)."""
     candidates = [
-        Path(r"F:\supremeai backup\.kilo\worktrees\dirt-octopus\backend\agents\ide\trio_adapters.py"),
+        Path(
+            r"F:\supremeai backup\.kilo\worktrees\dirt-octopus\backend\agents\ide\trio_adapters.py"
+        ),
         Path(r"F:\supremeai backup\backend\agents\ide\trio_adapters.py"),
     ]
     path = next((p for p in candidates if p.exists()), None)
@@ -128,7 +131,9 @@ async def main() -> None:
         ck = await checker.run(code, language="python", filepath="app.py", reviewer_result=rv)
         assert rv.agent == "kilo" and ck.agent == "cline"
         assert ck.metadata.get("ready_for_production") is not None
-        print(f"  reviewer issues: {len(rv.issues)}, checker ready: {ck.metadata['ready_for_production']}")
+        print(
+            f"  reviewer issues: {len(rv.issues)}, checker ready: {ck.metadata['ready_for_production']}"
+        )
         print("  ✅ PASSED")
     except Exception as exc:
         print(f"  ❌ FAILED: {exc}")

@@ -109,7 +109,9 @@ class TestWorkerGrpcClient:
                 client.channel = MagicMock()
                 client.stub = mock_stub
 
-                result = client.log_audit_event("user_login", "user-123", "auth", {"ip": "127.0.0.1"})
+                result = client.log_audit_event(
+                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
+                )
                 assert result is True
 
     def test_log_audit_event_failure(self):
@@ -124,5 +126,7 @@ class TestWorkerGrpcClient:
                 client.channel = MagicMock()
                 client.stub = mock_stub
 
-                result = client.log_audit_event("user_login", "user-123", "auth", {"ip": "127.0.0.1"})
+                result = client.log_audit_event(
+                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
+                )
                 assert result is False

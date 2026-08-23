@@ -1,4 +1,5 @@
 from loguru import logger
+
 """
 SupremeAI Configuration Validator — Fail-Fast at Startup
 🔬 Evolution v3.0: Schema-based environment variable validation
@@ -19,10 +20,9 @@ from __future__ import annotations
 
 import os
 import re
-import sys
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Literal
+from typing import Any
 
 
 class VarType(str, Enum):
@@ -36,14 +36,15 @@ class VarType(str, Enum):
 
 
 class Severity(str, Enum):
-    ERROR = "error"      # Blocks startup
+    ERROR = "error"  # Blocks startup
     WARNING = "warning"  # Logs but continues
-    INFO = "info"        # Informational only
+    INFO = "info"  # Informational only
 
 
 @dataclass
 class VarDefinition:
     """Definition of an environment variable to validate."""
+
     name: str
     var_type: VarType = VarType.STRING
     required: bool = False
@@ -60,6 +61,7 @@ class VarDefinition:
 @dataclass
 class ValidationError:
     """Single validation error/warning."""
+
     var_name: str
     severity: Severity
     message: str
@@ -70,15 +72,16 @@ class ValidationError:
 @dataclass
 class ConfigValidationResult:
     """Complete validation result."""
+
     is_valid: bool
     errors: list[ValidationError] = field(default_factory=list)
     warnings: list[ValidationError] = field(default_factory=list)
     validated_vars: dict[str, Any] = field(default_factory=dict)
-    
+
     def format_errors(self) -> str:
         """Format all errors for display."""
         lines = ["=" * 60, "❌ CONFIGURATION VALIDATION FAILED", "=" * 60]
-        
+
         for err in self.errors:
             icon = "🚨" if err.severity == Severity.ERROR else "⚠️"
             lines.append(f"\n{icon} [{err.severity.value.upper()}] {err.var_name}")
@@ -87,8 +90,10 @@ class ConfigValidationResult:
                 lines.append(f"   Actual value: '{err.actual_value}'")
             if err.suggestion:
                 lines.append(f"   💡 Suggestion: {err.suggestion}")
-        
-        lines.extend(["", "-" * 40, f"Total errors: {len(self.errors)}, Warnings: {len(self.warnings)}"])
+
+        lines.extend(
+            ["", "-" * 40, f"Total errors: {len(self.errors)}, Warnings: {len(self.warnings)}"]
+        )
         return "\n".join(lines)
 
 
@@ -98,79 +103,131 @@ class ConfigValidationResult:
 
 CONFIG_SCHEMA: list[VarDefinition] = [
     # --- Core ---
-    VarDefinition(name="ENV", var_type=VarType.ENUM, required=True,
-                  allowed_values=["development", "staging", "production"],
-                  description="Application environment",
-                  examples=["development", "production"]),
-    VarDefinition(name="PORT", var_type=VarType.INTEGER, default=8080,
-                  min_value=1024, max_value=65535,
-                  description="Server port"),
-    VarDefinition(name="HOST", default="0.0.0.0",
-                  description="Server bind address"),
-    
+    VarDefinition(
+        name="ENV",
+        var_type=VarType.ENUM,
+        required=True,
+        allowed_values=["development", "staging", "production"],
+        description="Application environment",
+        examples=["development", "production"],
+    ),
+    VarDefinition(
+        name="PORT",
+        var_type=VarType.INTEGER,
+        default=8080,
+        min_value=1024,
+        max_value=65535,
+        description="Server port",
+    ),
+    VarDefinition(name="HOST", default="0.0.0.0", description="Server bind address"),
     # --- Backend URLs ---
-    VarDefinition(name="BACKEND_URL", var_type=VarType.URL,
-                  required=True, severity=Severity.WARNING,
-                  pattern=r"^https?://.+",
-                  description="Public backend URL",
-                  examples=["https://supremeai-backend.onrender.com"]),
-    
+    VarDefinition(
+        name="BACKEND_URL",
+        var_type=VarType.URL,
+        required=True,
+        severity=Severity.WARNING,
+        pattern=r"^https?://.+",
+        description="Public backend URL",
+        examples=["https://supremeai-backend.onrender.com"],
+    ),
     # --- CORS ---
-    VarDefinition(name="USER_CORS_ORIGINS", var_type=VarType.LIST,
-                  default=[],
-                  description="Allowed CORS origins for user portal",
-                  examples=['["https://supremeai.web.app"]']),
-    VarDefinition(name="ADMIN_CORS_ORIGINS", var_type=VarType.LIST,
-                  default=[],
-                  description="Allowed CORS origins for admin portal"),
-    
+    VarDefinition(
+        name="USER_CORS_ORIGINS",
+        var_type=VarType.LIST,
+        default=[],
+        description="Allowed CORS origins for user portal",
+        examples=['["https://supremeai.web.app"]'],
+    ),
+    VarDefinition(
+        name="ADMIN_CORS_ORIGINS",
+        var_type=VarType.LIST,
+        default=[],
+        description="Allowed CORS origins for admin portal",
+    ),
     # --- Security ---
-    VarDefinition(name="JWT_SECRET", var_type=VarType.STRING,
-                  required=True, severity=Severity.ERROR,
-                  min_value=32,
-                  description="JWT signing secret (min 32 chars)",
-                  examples=["your-super-secret-key-at-least-32-chars"]),
-    VarDefinition(name="ENFORCE_ANTI_HACKING", var_type=VarType.BOOLEAN,
-                  default=False,
-                  description="Enable anti-hacking measures"),
-    
+    VarDefinition(
+        name="JWT_SECRET",
+        var_type=VarType.STRING,
+        required=True,
+        severity=Severity.ERROR,
+        min_value=32,
+        description="JWT signing secret (min 32 chars)",
+        examples=["your-super-secret-key-at-least-32-chars"],
+    ),
+    VarDefinition(
+        name="ENFORCE_ANTI_HACKING",
+        var_type=VarType.BOOLEAN,
+        default=False,
+        description="Enable anti-hacking measures",
+    ),
     # --- Database ---
-    VarDefinition(name="DATABASE_URL", var_type=VarType.URL,
-                  severity=Severity.WARNING,
-                  description="Database connection URL"),
-    
+    VarDefinition(
+        name="DATABASE_URL",
+        var_type=VarType.URL,
+        severity=Severity.WARNING,
+        description="Database connection URL",
+    ),
     # --- LLM Providers ---
-    VarDefinition(name="GEMINI_API_KEY", var_type=VarType.STRING,
-                  severity=Severity.INFO,
-                  description="Google Gemini API key"),
-    VarDefinition(name="GROQ_API_KEY", var_type=VarType.STRING,
-                  severity=Severity.INFO,
-                  description="Groq API key"),
-    VarDefinition(name="OPENROUTER_API_KEY", var_type=VarType.STRING,
-                  severity=Severity.INFO,
-                  description="OpenRouter API key"),
-    
+    VarDefinition(
+        name="GEMINI_API_KEY",
+        var_type=VarType.STRING,
+        severity=Severity.INFO,
+        description="Google Gemini API key",
+    ),
+    VarDefinition(
+        name="GROQ_API_KEY",
+        var_type=VarType.STRING,
+        severity=Severity.INFO,
+        description="Groq API key",
+    ),
+    VarDefinition(
+        name="OPENROUTER_API_KEY",
+        var_type=VarType.STRING,
+        severity=Severity.INFO,
+        description="OpenRouter API key",
+    ),
     # --- Rate Limits ---
-    VarDefinition(name="GEMINI_RPM_LIMIT", var_type=VarType.INTEGER,
-                  default=9, min_value=1, max_value=1000),
-    VarDefinition(name="GROQ_RPM_LIMIT", var_type=VarType.INTEGER,
-                  default=28, min_value=1, max_value=1000),
-    VarDefinition(name="OPENROUTER_RPM_LIMIT", var_type=VarType.INTEGER,
-                  default=19, min_value=1, max_value=1000),
-    
+    VarDefinition(
+        name="GEMINI_RPM_LIMIT", var_type=VarType.INTEGER, default=9, min_value=1, max_value=1000
+    ),
+    VarDefinition(
+        name="GROQ_RPM_LIMIT", var_type=VarType.INTEGER, default=28, min_value=1, max_value=1000
+    ),
+    VarDefinition(
+        name="OPENROUTER_RPM_LIMIT",
+        var_type=VarType.INTEGER,
+        default=19,
+        min_value=1,
+        max_value=1000,
+    ),
     # --- Scraper Service ---
-    VarDefinition(name="SCRAPER_MAX_CONCURRENCY", var_type=VarType.INTEGER,
-                  default=3, min_value=1, max_value=10),
-    VarDefinition(name="SCRAPER_TIMEOUT_SECONDS", var_type=VarType.INTEGER,
-                  default=45, min_value=10, max_value=300),
-    
+    VarDefinition(
+        name="SCRAPER_MAX_CONCURRENCY",
+        var_type=VarType.INTEGER,
+        default=3,
+        min_value=1,
+        max_value=10,
+    ),
+    VarDefinition(
+        name="SCRAPER_TIMEOUT_SECONDS",
+        var_type=VarType.INTEGER,
+        default=45,
+        min_value=10,
+        max_value=300,
+    ),
     # --- Feature Flags ---
-    VarDefinition(name="SELF_HEALING_ENABLED", var_type=VarType.BOOLEAN,
-                  default=True,
-                  description="Enable self-healing mode"),
-    VarDefinition(name="COST_GUARD_ENABLED", var_type=VarType.BOOLEAN,
-                  default=True,
-                  description="Enable cost guard"),
+    VarDefinition(
+        name="SELF_HEALING_ENABLED",
+        var_type=VarType.BOOLEAN,
+        default=True,
+        description="Enable self-healing mode",
+    ),
+    VarDefinition(
+        name="COST_GUARD_ENABLED",
+        var_type=VarType.BOOLEAN,
+        default=True,
+        description="Enable cost guard",
+    ),
 ]
 
 
@@ -216,26 +273,41 @@ def _validate_var(var_def: VarDefinition) -> ValidationError | None:
         try:
             int_val = int(value)
             if var_def.min_value is not None and int_val < var_def.min_value:
-                return ValidationError(var_name=var_def.name, severity=Severity.WARNING,
-                    message=f"Value {int_val} below minimum {var_def.min_value}")
+                return ValidationError(
+                    var_name=var_def.name,
+                    severity=Severity.WARNING,
+                    message=f"Value {int_val} below minimum {var_def.min_value}",
+                )
             if var_def.max_value is not None and int_val > var_def.max_value:
-                return ValidationError(var_name=var_def.name, severity=Severity.WARNING,
-                    message=f"Value {int_val} above maximum {var_def.max_value}")
+                return ValidationError(
+                    var_name=var_def.name,
+                    severity=Severity.WARNING,
+                    message=f"Value {int_val} above maximum {var_def.max_value}",
+                )
         except (ValueError, TypeError):
-            return ValidationError(var_name=var_def.name, severity=var_def.severity,
-                message=f"Invalid integer: '{value}'")
+            return ValidationError(
+                var_name=var_def.name,
+                severity=var_def.severity,
+                message=f"Invalid integer: '{value}'",
+            )
 
     elif var_def.var_type == VarType.BOOLEAN:
         if str(value).lower() not in ("true", "false", "1", "0", "", "none"):
-            return ValidationError(var_name=var_def.name, severity=Severity.WARNING,
-                message=f"Invalid boolean: '{value}'. Use true/false/1/0")
+            return ValidationError(
+                var_name=var_def.name,
+                severity=Severity.WARNING,
+                message=f"Invalid boolean: '{value}'. Use true/false/1/0",
+            )
 
     # Pattern match
     if var_def.pattern and value:
         if not re.match(var_def.pattern, str(value)):
-            return ValidationError(var_name=var_def.name, severity=var_def.severity,
+            return ValidationError(
+                var_name=var_def.name,
+                severity=var_def.severity,
                 message=f"Value doesn't match pattern {var_def.pattern}",
-                actual_value=str(value))
+                actual_value=str(value),
+            )
 
     return None
 
@@ -270,9 +342,9 @@ def print_config_summary() -> None:
     logger.debug("\n" + "=" * 50)
     logger.debug("🔧 Configuration Summary")
     logger.debug("=" * 50)
-    
+
     sensitive_keys = ("SECRET", "KEY", "PASSWORD", "TOKEN")
-    
+
     for var_def in CONFIG_SCHEMA:
         value = os.getenv(var_def.name, var_def.default)
         if value is None:
@@ -281,9 +353,11 @@ def print_config_summary() -> None:
             display = "*****" if len(str(value)) > 0 else "⟨empty⟩"
         else:
             display = str(value)[:50] + ("..." if len(str(value)) > 50 else "")
-        
+
         req_marker = " ✗" if var_def.required and value is None else " ✓"
         logger.debug(f"  {var_def.name:<30} = {display:<55}{req_marker}")
-    
+
     logger.debug("=" * 50 + "\n")
+
+
 # =============================================================================

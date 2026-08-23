@@ -49,7 +49,9 @@ contract MyToken {
 """
         }
 
-        result = await agent.generate_contract(description="Create an ERC-20 token contract", standard="ERC20")
+        result = await agent.generate_contract(
+            description="Create an ERC-20 token contract", standard="ERC20"
+        )
 
     assert result is not None
     assert "MyToken" in result.get("contract")
@@ -205,7 +207,9 @@ contract MyNFT is ERC721 {
 """
         }
 
-        result = await agent.generate_contract(description="Create an ERC-721 NFT contract", standard="ERC721")
+        result = await agent.generate_contract(
+            description="Create an ERC-721 NFT contract", standard="ERC721"
+        )
 
     assert result is not None
     assert "ERC721" in result.get("contract")

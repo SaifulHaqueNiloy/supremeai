@@ -77,11 +77,15 @@ async def run_agent_action(
 
         from models.shared_workspace import SharedWorkspace
 
-        custom_workspace = SharedWorkspace(task_id=str(uuid.uuid4()), original_prompt=payload.content, intent=intent)
+        custom_workspace = SharedWorkspace(
+            task_id=str(uuid.uuid4()), original_prompt=payload.content, intent=intent
+        )
         custom_workspace.kwargs = kwargs
 
         # বাংলা মন্তব্য: ডুপ্লিকেট এবং বাগি লোকাল DAG লুপ পরিহার করে সেন্ট্রাল run_dag_for_workspace রান করা হলো।
-        custom_workspace = await orchestrator.run_dag_for_workspace(custom_workspace, user_id=user_id)
+        custom_workspace = await orchestrator.run_dag_for_workspace(
+            custom_workspace, user_id=user_id
+        )
 
         result = custom_workspace.work_product.get("integration_result", {})
         if result.get("status") == "error":

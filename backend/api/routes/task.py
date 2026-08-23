@@ -222,7 +222,9 @@ def format_response(text: str, task_type: str) -> str:
                 "content": extract_code(text),
                 "metadata": {
                     "language": detect_language(text),
-                    "filename": ("index.html" if "html" in detect_language(text) else "component.tsx"),
+                    "filename": (
+                        "index.html" if "html" in detect_language(text) else "component.tsx"
+                    ),
                     "actions": [
                         {"id": "preview", "label": "👁️ Preview", "type": "preview"},
                         {"id": "save", "label": "💾 Save to Project", "type": "save"},
@@ -290,12 +292,16 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     prompt_action: PromptAction = intent_router.route(req.task)
 
     # Offload heavy CPU-bound Intent classification to background thread pool
-    app_spec = await anyio.to_thread.run_sync(app_mod.intent_parser.parse_intent, req.task, req.messages)
+    app_spec = await anyio.to_thread.run_sync(
+        app_mod.intent_parser.parse_intent, req.task, req.messages
+    )
     intent = await anyio.to_thread.run_sync(intent_clf.classify, req.task)
 
     task_type = req.task_type
     if intent.task_type != "general" and req.task_type == "general":
-        task_type = intent.task_type.value if hasattr(intent.task_type, "value") else str(intent.task_type)
+        task_type = (
+            intent.task_type.value if hasattr(intent.task_type, "value") else str(intent.task_type)
+        )
 
     # Build prompt context if chat messages are provided
     prompt = format_unified_chat_prompt(req.task, req.messages)
@@ -321,7 +327,9 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
         )
         if raw.get("success") and sem_cache:
             try:
-                await sem_cache.set_cache_inference(prompt=prompt, model_name=task_type, response_text=raw.get("text"))
+                await sem_cache.set_cache_inference(
+                    prompt=prompt, model_name=task_type, response_text=raw.get("text")
+                )
             except Exception as exc:
                 logger.exception(f"Semantic cache write failed: {exc}")
 
@@ -378,7 +386,11 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
             "payload": prompt_action.payload,
         },
         intent={
-            "task_type": (intent.task_type.value if hasattr(intent.task_type, "value") else str(intent.task_type)),
+            "task_type": (
+                intent.task_type.value
+                if hasattr(intent.task_type, "value")
+                else str(intent.task_type)
+            ),
             "confidence": intent.confidence,
         },
     )

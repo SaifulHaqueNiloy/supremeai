@@ -165,7 +165,9 @@ class EnhancedASTScanner(ast.NodeVisitor):
 
                     self.issues.append(
                         SecurityIssue(
-                            severity="critical" if category in {"sql_injection", "command_injection"} else "high",
+                            severity="critical"
+                            if category in {"sql_injection", "command_injection"}
+                            else "high",
                             category=category,
                             description=f"Pattern match: {pattern.pattern}",
                             file_path=self.file_path,

@@ -49,11 +49,14 @@ async def execute_agent_task(
 
     try:
         from brain.autonomous_agent import AutonomousAgent
+
         agent = AutonomousAgent(name=f"agent-route-{payload.task_id}")
         exec_res = agent.execute(task_description=payload.prompt)
         response_text = exec_res.get("output") or f"Task {payload.task_id} completed successfully."
 
-        return AgentTaskResponse(status="success" if exec_res.get("success") else "failed", result=response_text)
+        return AgentTaskResponse(
+            status="success" if exec_res.get("success") else "failed", result=response_text
+        )
 
     except Exception as exc:
         # Route expected/unexpected errors to the ErrorBus and return safe HTTP response

@@ -46,7 +46,9 @@ class LocalModelHandler:
         """
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                res = await client.post(f"{self.base_url}/api/pull", json={"name": model_tag, "stream": False})
+                res = await client.post(
+                    f"{self.base_url}/api/pull", json={"name": model_tag, "stream": False}
+                )
                 if res.status_code == 200:
                     logger.info(f"Successfully deployed distilled edge model: {model_tag}")
                     return {"status": "deployed", "model": model_tag}
@@ -84,7 +86,9 @@ class LocalModelHandler:
             logger.warning(f"Failed to list local models: {exc}")
         return []
 
-    async def infer(self, model: str, prompt: str, system_prompt: str | None = None) -> dict[str, Any]:
+    async def infer(
+        self, model: str, prompt: str, system_prompt: str | None = None
+    ) -> dict[str, Any]:
         """Run inference on a local model.
 
         বাংলা মন্তব্য: ইনফারেন্স এক্সিকিউশন — মেমোরি ক্যাশিং ও টাইমআউট হ্যান্ডলিং সহ।

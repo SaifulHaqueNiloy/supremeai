@@ -1,4 +1,5 @@
 from typing import Any
+
 _safe_imports = {}
 
 try:
@@ -508,5 +509,3 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     service_topology_router = None  # type: ignore
 
 __all__ = list(_safe_imports.keys())
-
-

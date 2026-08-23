@@ -11,7 +11,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts" / "billing"))
 
-from fraud_detector import FraudDetector, FraudAlert, FraudReport  # noqa: E402
+from fraud_detector import FraudDetector  # noqa: E402
 
 
 @pytest.fixture
@@ -28,7 +28,9 @@ def mock_http():
 
 class TestFraudDetectorInit:
     def test_defaults(self):
-        with patch.dict(os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "SLACK_WEBHOOK_URL": ""}):
+        with patch.dict(
+            os.environ, {"DATABASE_URL": "", "GOOGLE_CLOUD_PROJECT": "", "SLACK_WEBHOOK_URL": ""}
+        ):
             detector = FraudDetector()
             assert detector.database_url == ""
             assert detector.project_id == ""
@@ -115,6 +117,7 @@ class TestFraudDetectorLedger:
     @pytest.mark.asyncio
     async def test_get_ledger_entries_with_data(self, mock_db_session):
         from models.wallet import TransactionLedgerEntry
+
         entry = TransactionLedgerEntry(
             transaction_id="tx1",
             user_id="t1",
@@ -153,17 +156,20 @@ class TestFraudDetectorAnomalyDetection:
     @pytest.mark.asyncio
     async def test_scan_tenant_with_entries(self, mock_db_session):
         from models.wallet import TransactionLedgerEntry
+
         entries = []
         now = datetime.now(UTC)
         for i in range(6):
-            entries.append(TransactionLedgerEntry(
-                transaction_id=f"tx{i}",
-                user_id="t1",
-                amount_usd=Decimal("10.00"),
-                transaction_type="topup",
-                description="topup failed: insufficient funds",
-                timestamp=now - timedelta(hours=i),
-            ))
+            entries.append(
+                TransactionLedgerEntry(
+                    transaction_id=f"tx{i}",
+                    user_id="t1",
+                    amount_usd=Decimal("10.00"),
+                    transaction_type="topup",
+                    description="topup failed: insufficient funds",
+                    timestamp=now - timedelta(hours=i),
+                )
+            )
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = entries
         mock_db_session.execute.return_value = mock_result

@@ -31,7 +31,9 @@ class SkillLibrarian:
         index = self.index_manager.load_index()
         return [meta for meta in index.values() if meta.get("status") == SkillStatus.QUARANTINE]
 
-    def process_approval(self, skill_id: str, action: str, ai_patch_code: str | None = None) -> dict[str, Any]:
+    def process_approval(
+        self, skill_id: str, action: str, ai_patch_code: str | None = None
+    ) -> dict[str, Any]:
         """Admin এর নির্দেশ অনুযায়ী স্কিল স্থানান্তর ও অনুমোদন গেটওয়ে এনফোর্স করে।"""
         try:
             logger.info(f"⚡ Background execution started for Skill: {skill_id} | Action: {action}")
@@ -81,7 +83,9 @@ class SkillLibrarian:
 
         except Exception as e:
             # ব্যাকগ্রাউন্ড ফেইলর সাইলেন্টলি লগ করা হচ্ছে যাতে থ্রেড বা সার্ভার ক্র্যাশ না করে
-            logger.error(f"❌ Critical failure in librarian background loop for skill {skill_id}: {e!s}")
+            logger.error(
+                f"❌ Critical failure in librarian background loop for skill {skill_id}: {e!s}"
+            )
 
             # ব্যর্থতার অ্যালার্ট ডিসকর্ডে পাঠানো হচ্ছে (যদি কনফিগার করা থাকে)
             self._send_discord_message(

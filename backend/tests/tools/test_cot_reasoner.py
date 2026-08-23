@@ -180,12 +180,14 @@ class TestVerifySymbolicMath:
             def sympify(x):
                 raise RuntimeError("bad")
 
-        with patch.dict("sys.modules", {"sympy": FakeSympyRaise()}):
-            with patch(
+        with (
+            patch.dict("sys.modules", {"sympy": FakeSympyRaise()}),
+            patch(
                 "backend.tools.code.cot_reasoner._safe_eval_math",
                 side_effect=ValueError("bad"),
-            ):
-                result = verify_symbolic_math("???", "???")
+            ),
+        ):
+            result = verify_symbolic_math("???", "???")
         assert result["is_verified"] is False
         assert "error" in result
 
@@ -342,7 +344,10 @@ class TestEvaluateThought:
 
     def test_score_clamped_to_one(self):
         r = ChainOfThoughtReasoner()
-        t = Thought("therefore thus conclusion final answer however although alternatively " + " ".join(["x"] * 20))
+        t = Thought(
+            "therefore thus conclusion final answer however although alternatively "
+            + " ".join(["x"] * 20)
+        )
         score = r.evaluate_thought(t, context="thus")
         assert score <= 1.0
 
@@ -374,7 +379,9 @@ class TestTreeSearch:
 
     def test_empty_parse_returns_early(self, monkeypatch):
         r = ChainOfThoughtReasoner()
-        monkeypatch.setattr(r, "parse", lambda raw: {"thoughts": [], "final_answer": "", "raw": raw})
+        monkeypatch.setattr(
+            r, "parse", lambda raw: {"thoughts": [], "final_answer": "", "raw": raw}
+        )
         out = r.tree_search("problem")
         assert out["best_branch"] == []
         assert out["best_score"] == 0.0

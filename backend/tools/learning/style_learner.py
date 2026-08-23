@@ -57,7 +57,7 @@ class StyleLearner:
 
             try:
                 PY_LANG = Language("build/my-languages.so", "python")
-            except Exception as e:
+            except Exception:
                 # বাংলা মন্তব্য: prebuilt language না থাকলে AST বিশ্লেষণ বাদ দেওয়া হচ্ছে।
                 logger.debug("tree-sitter python grammar not compiled; skipping AST analysis.")
                 return patterns
@@ -121,7 +121,9 @@ class StyleLearner:
                 )
                 patterns["avg_function_lines"] = round(avg_len, 1)
             if func_count > 0:
-                patterns["comment_style"] = "docstring" if docstring_count >= func_count * 0.5 else "inline"
+                patterns["comment_style"] = (
+                    "docstring" if docstring_count >= func_count * 0.5 else "inline"
+                )
                 patterns["docstring_coverage"] = round(docstring_count / func_count, 2)
 
             if skipped_ast_files:
@@ -178,7 +180,9 @@ class StyleLearner:
                     "Do not include any markdown or explanation.\n\n"
                     f"Code:\n{combined[:5000]}"
                 )
-                result = await router_llm.async_route_and_generate(prompt, task_type="coding", max_cost=0.03)
+                result = await router_llm.async_route_and_generate(
+                    prompt, task_type="coding", max_cost=0.03
+                )
                 text = result.get("text", "") if isinstance(result, dict) else ""
                 try:
                     cleaned = text.strip()
@@ -193,7 +197,7 @@ class StyleLearner:
                         self.learned_styles[repo_path] = parsed
                         await self._persist_style(repo_path, parsed)
                         return parsed
-                except Exception as e:
+                except Exception:
                     logger.warning("Failed to parse style guidelines JSON from LLM.")
             except Exception as e:
                 logger.warning(f"LLM style analysis failed: {e}")
@@ -211,7 +215,9 @@ class StyleLearner:
 
             router_llm = ModelRouter()
             full_prompt = f"{style_prompt}\n\nTask: {prompt}\nReturn only the code."
-            result = await router_llm.async_route_and_generate(full_prompt, task_type="coding", max_cost=0.03)
+            result = await router_llm.async_route_and_generate(
+                full_prompt, task_type="coding", max_cost=0.03
+            )
             code = result.get("text", "") if isinstance(result, dict) else ""
             return {"status": "success", "code": code.strip(), "style_injected": True}
         except Exception as e:

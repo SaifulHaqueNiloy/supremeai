@@ -15,7 +15,9 @@ from core.error_bus import with_error_bus
 from models.byoc_payloads import BYOCCredentialsPayload, BYOCDeployRequest
 from models.deployment_logs import DeploymentJob
 
-router = APIRouter(prefix="/api/byoc", tags=["BYOC Management"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/api/byoc", tags=["BYOC Management"], dependencies=[Depends(get_current_user_token)]
+)
 orchestrator = ContainerOrchestrator()
 
 # Memory database for tracking deployment jobs (simulating live backend db)
@@ -86,12 +88,14 @@ async def deploy_container(
         with open(config_path, encoding="utf-8") as f:
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 
     # Count active containers (simulation check)
-    current_active = sum(1 for job in active_jobs.values() if job.user_id == user_id and job.status == "success")
+    current_active = sum(
+        1 for job in active_jobs.values() if job.user_id == user_id and job.status == "success"
+    )
     if current_active >= user_limits["max_containers"]:
         raise HTTPException(
             status_code=403,

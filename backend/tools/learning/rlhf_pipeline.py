@@ -39,11 +39,15 @@ class RLHFPipeline:
                     if data and "prompt" in data:
                         self.preference_logs.append(data)
                         fs_count += 1
-                logger.info(f"Synced {fs_count} preference records from Firestore 'ai_rlhf_preferences'")
+                logger.info(
+                    f"Synced {fs_count} preference records from Firestore 'ai_rlhf_preferences'"
+                )
         except Exception as err:
             logger.debug(f"Firestore sync skipped or not configured: {err}")
 
-    def record_preference(self, prompt: str, chosen_response: str, rejected_response: str) -> dict[str, Any]:
+    def record_preference(
+        self, prompt: str, chosen_response: str, rejected_response: str
+    ) -> dict[str, Any]:
         logger.debug("Recording RLHF preference data point.")
         record = {
             "prompt": prompt,

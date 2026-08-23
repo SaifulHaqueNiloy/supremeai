@@ -48,7 +48,9 @@ class TestCloudDeployMCP:
         from tools.mcp.mcp_cloud_deploy import CloudProvider, DeployServiceInput
 
         # বৈধ ইনপুট
-        valid_input = DeployServiceInput(provider=CloudProvider.RENDER, service_name="test-service", branch="main")
+        valid_input = DeployServiceInput(
+            provider=CloudProvider.RENDER, service_name="test-service", branch="main"
+        )
         assert valid_input.provider == CloudProvider.RENDER
         assert valid_input.service_name == "test-service"
         assert valid_input.branch == "main"
@@ -64,7 +66,9 @@ class TestCloudDeployMCP:
         """GetLogsInput মডেলের ভ্যালিডেশন টেস্ট।"""
         from tools.mcp.mcp_cloud_deploy import CloudProvider, GetLogsInput
 
-        valid_input = GetLogsInput(provider=CloudProvider.RAILWAY, service_name="my-service", lines=500)
+        valid_input = GetLogsInput(
+            provider=CloudProvider.RAILWAY, service_name="my-service", lines=500
+        )
         assert valid_input.lines == 500
 
     def test_cloud_provider_enum(self):
@@ -169,7 +173,9 @@ class TestWorkspaceMCP:
         """WorkspaceContextInput মডেলের ভ্যালিডেশন টেস্ট।"""
         from tools.mcp.mcp_workspace import WorkspaceContextInput, WorkspaceType
 
-        valid_input = WorkspaceContextInput(project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="tenant-001")
+        valid_input = WorkspaceContextInput(
+            project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="tenant-001"
+        )
         assert valid_input.project_type == WorkspaceType.ECOMMERCE_BACKEND
         assert valid_input.tenant_id == "tenant-001"
 
@@ -726,9 +732,13 @@ class TestSupabaseMCPExtended:
             mock_cursor.fetchall.return_value = []
             mock_cursor.description = []
             mock_cursor.rowcount = 1
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
-            params = ExecuteQueryInput(query="DROP TABLE users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="DROP TABLE users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -748,7 +758,9 @@ class TestSupabaseMCPExtended:
             mock_cursor.description = [("id",), ("name",)]
             mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
 
-            params = ExecuteQueryInput(query="SELECT * FROM users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["row_count"] == 2
@@ -759,7 +771,9 @@ class TestSupabaseMCPExtended:
         monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
-        params = CreateTableInput(table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True)
+        params = CreateTableInput(
+            table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True
+        )
         result = await supabase_create_table(params)
         data = json.loads(result)
         assert data["error"] == "Admin authorization required for table creation"
@@ -771,9 +785,13 @@ class TestSupabaseMCPExtended:
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
         with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
-            mock_conn.return_value = MagicMock(cursor=MagicMock(), commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=MagicMock(), commit=MagicMock(), close=MagicMock()
+            )
 
-            params = CreateTableInput(table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True)
+            params = CreateTableInput(
+                table_name="users", columns="id SERIAL PRIMARY KEY", if_not_exists=True
+            )
             result = await supabase_create_table(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -802,7 +820,9 @@ class TestSupabaseMCPExtended:
         with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = [1]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="test",
@@ -897,7 +917,9 @@ class TestWorkspaceMCPExtended:
             workspace_set_context,
         )
 
-        params = WorkspaceContextInput(project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="test-tenant")
+        params = WorkspaceContextInput(
+            project_type=WorkspaceType.ECOMMERCE_BACKEND, tenant_id="test-tenant"
+        )
         result = await workspace_set_context(params)
         data = json.loads(result)
         assert data["success"] is True
@@ -1249,7 +1271,9 @@ class TestInputValidation:
             mock_instance.get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = GetLogsInput(provider=CloudProvider.RENDER, service_name="test-service", lines=50)
+            params = GetLogsInput(
+                provider=CloudProvider.RENDER, service_name="test-service", lines=50
+            )
             result = await cloud_get_deployment_logs(params)
             data = json.loads(result)
             assert data["provider"] == "render"
@@ -1312,7 +1336,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [{"serviceName": "svc1", "status": "active", "url": "https://test.com"}]
+        mock_response.json.return_value = [
+            {"serviceName": "svc1", "status": "active", "url": "https://test.com"}
+        ]
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1333,7 +1359,9 @@ class TestInputValidation:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = [{"name": "svc1", "status": "active", "url": "https://test.com"}]
+        mock_response.json.return_value = [
+            {"name": "svc1", "status": "active", "url": "https://test.com"}
+        ]
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_instance = MagicMock()
@@ -1468,7 +1496,9 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test PR", body="Test body", head="feature", base="develop")
+            params = CreatePRInput(
+                title="Test PR", body="Test body", head="feature", base="develop"
+            )
             result = await github_create_pull_request(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1669,7 +1699,9 @@ class TestInputValidation:
             mock_cursor.description = [("id",), ("name",)]
             mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
 
-            params = ExecuteQueryInput(query="SELECT * FROM users", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM users", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             data = json.loads(result)
             assert data["row_count"] == 2
@@ -1710,7 +1742,9 @@ class TestInputValidation:
             mock_cursor = MagicMock()
             mock_cursor.rowcount = 1
             mock_cursor.description = None
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = ExecuteQueryInput(
                 query="INSERT INTO users (name) VALUES ('Alice')",
@@ -1775,7 +1809,9 @@ class TestInputValidation:
             mock_cursor.execute.side_effect = Exception("syntax error at line 1")
             mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, close=MagicMock())
 
-            params = ExecuteQueryInput(query="SELECT * FROM invalid", response_format=ResponseFormat.JSON)
+            params = ExecuteQueryInput(
+                query="SELECT * FROM invalid", response_format=ResponseFormat.JSON
+            )
             result = await supabase_execute_sql(params)
             assert "SQL syntax error" in result
 
@@ -1849,9 +1885,13 @@ class TestInputValidation:
         from tools.mcp.mcp_supabase import CreateTableInput, supabase_create_table
 
         with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
-            mock_conn.return_value = MagicMock(cursor=MagicMock(), commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=MagicMock(), commit=MagicMock(), close=MagicMock()
+            )
 
-            params = CreateTableInput(table_name="logs", columns="id SERIAL PRIMARY KEY", if_not_exists=False)
+            params = CreateTableInput(
+                table_name="logs", columns="id SERIAL PRIMARY KEY", if_not_exists=False
+            )
             result = await supabase_create_table(params)
             data = json.loads(result)
             assert data["success"] is True
@@ -1863,7 +1903,9 @@ class TestInputValidation:
         with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = [1]
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="existing_migration",
@@ -1880,7 +1922,9 @@ class TestInputValidation:
         with patch("tools.mcp.mcp_supabase._get_connection") as mock_conn:
             mock_cursor = MagicMock()
             mock_cursor.fetchone.return_value = None
-            mock_conn.return_value = MagicMock(cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock())
+            mock_conn.return_value = MagicMock(
+                cursor=lambda: mock_cursor, commit=MagicMock(), close=MagicMock()
+            )
 
             params = MigrationInput(
                 migration_name="test",

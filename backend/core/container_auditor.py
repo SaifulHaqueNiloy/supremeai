@@ -23,8 +23,7 @@ import subprocess
 
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent
-from core.messaging.event_bus import error_event_bus
+from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 
 class ContainerAuditor:
@@ -88,7 +87,9 @@ class ContainerAuditor:
                 mem_perc = self.parse_memory_percent(mem_perc_str)
 
                 if mem_perc >= 95.0:
-                    logger.error(f"🚨 OOM Kill Chain Triggered: Container {name} is at {mem_perc}%. Terminating...")
+                    logger.error(
+                        f"🚨 OOM Kill Chain Triggered: Container {name} is at {mem_perc}%. Terminating..."
+                    )
                     try:
                         subprocess.run(
                             ["docker", "kill", name],
@@ -109,7 +110,9 @@ class ContainerAuditor:
                             )
                         )
                 elif mem_perc >= 80.0:
-                    logger.warning(f"⚠️ Memory Warning: Container {name} is nearing capacity at {mem_perc}%.")
+                    logger.warning(
+                        f"⚠️ Memory Warning: Container {name} is nearing capacity at {mem_perc}%."
+                    )
         except asyncio.CancelledError:
             raise
         except Exception as e:

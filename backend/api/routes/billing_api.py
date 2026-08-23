@@ -143,7 +143,9 @@ async def add_funds(
     # বাংলা মন্তব্য: ডাইনামিক অরিজিন ডিটেকশন (Zero-Config)
     checkout_base = getattr(settings, "checkout_base_url", None)
     if not checkout_base:
-        checkout_base = request.headers.get("origin") or request.headers.get("referer", "http://localhost:3000")
+        checkout_base = request.headers.get("origin") or request.headers.get(
+            "referer", "http://localhost:3000"
+        )
     checkout_base = checkout_base.rstrip("/")
 
     return {
@@ -166,7 +168,9 @@ async def get_subscription_plans():
 # 💳 ROUTE: Create Checkout Session
 # ==========================================
 @router.post("/checkout")
-async def create_checkout_session(payload: CheckoutRequest, token_payload: dict = Depends(get_current_user_token)):
+async def create_checkout_session(
+    payload: CheckoutRequest, token_payload: dict = Depends(get_current_user_token)
+):
     user_id = token_payload.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -175,7 +179,9 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
         stripe_key = settings.stripe_api_key
         if not stripe_key:
             if os.environ.get("SUPREMEAI_ENV") == "production":
-                raise RuntimeError("Stripe API key not configured in production. Payment processing is unavailable.")
+                raise RuntimeError(
+                    "Stripe API key not configured in production. Payment processing is unavailable."
+                )
             logger.warning("Stripe API key not set in settings. Using mock checkout session.")
             return {
                 "status": "mock",
@@ -201,7 +207,9 @@ async def create_checkout_session(payload: CheckoutRequest, token_payload: dict 
     except Exception as e:
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # Generic message to client (never expose internals or stack traces)
-        raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
+        raise HTTPException(
+            status_code=500, detail="Payment processing error. Please contact support."
+        ) from e
 
 
 # ==========================================
@@ -218,7 +226,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
     # Bangla comment: সিক্রেট বা সিগনেচার হেডার মিসিং থাকলে HTTP 400 রিজেক্ট করা হচ্ছে যাতে Stripe ফেইলিয়র সনাক্ত করতে পারে।
     if not STRIPE_WEBHOOK_SECRET or not sig_header:
         if os.environ.get("ENV") == "test" or os.environ.get("PYTEST_CURRENT_TEST"):
-            logger.warning("Stripe webhook missing secret or header in test mode. Returning ignored status.")
+            logger.warning(
+                "Stripe webhook missing secret or header in test mode. Returning ignored status."
+            )
             return {"status": "ignored"}
         logger.warning("Stripe webhook rejected: Missing webhook secret or signature header.")
         raise HTTPException(
@@ -230,10 +240,14 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
         event = stripe.Webhook.construct_event(payload, sig_header, STRIPE_WEBHOOK_SECRET)
     except stripe.error.SignatureVerificationError as e:
         logger.warning("Invalid Stripe signature detected. Dropping request.")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature") from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature"
+        ) from e
     except Exception as e:
         logger.error(f"Webhook payload validation error: {e!s}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payload validation failed") from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Payload validation failed"
+        ) from e
 
     user_id: str | None = None
     try:
@@ -247,7 +261,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                 return {"status": "ignored", "reason": "missing metadata"}
 
             async with session.begin():
-                result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
+                result = await session.execute(
+                    select(UserWallet).where(UserWallet.user_id == user_id)
+                )
                 wallet = result.scalars().first()
 
                 if not wallet:
@@ -305,7 +321,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                     logger.debug(f"PostHog subscription capture failed: {exc}")
 
     except StaleDataError as e:
-        logger.critical(f"Concurrency Failure on Webhook for user {user_id}. Requires manual intervention.")
+        logger.critical(
+            f"Concurrency Failure on Webhook for user {user_id}. Requires manual intervention."
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Transaction conflict. Please contact support.",
@@ -324,7 +342,9 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
 # 🕸️ ROUTE: SSLCommerz Webhook Listener
 # ==========================================
 @router.post("/webhook/sslcommerz")
-async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = Depends(get_db_session)):
+async def sslcommerz_webhook_listener(
+    request: Request, session: AsyncSession = Depends(get_db_session)
+):
     """
     Asynchronously processes local currency MFS payments success logs from SSLCommerz securely.
     """
@@ -355,10 +375,14 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
         async with session.begin():
             # SSLCommerz-এর unique `val_id` দিয়ে ledger এ অলরেডি এন্ট্রি আছে কিনা চেক করি
             existing_tx = await session.execute(
-                select(TransactionLedgerEntry).where(TransactionLedgerEntry.transaction_id == val_id)
+                select(TransactionLedgerEntry).where(
+                    TransactionLedgerEntry.transaction_id == val_id
+                )
             )
             if existing_tx.scalars().first():
-                logger.info(f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success.")
+                logger.info(
+                    f"SSLCommerz transaction val_id {val_id} already processed. Returning idempotent success."
+                )
                 return {
                     "status": "processed",
                     "message": "Transaction already credited via SSLCommerz.",
@@ -392,7 +416,9 @@ async def sslcommerz_webhook_listener(request: Request, session: AsyncSession = 
 
     except StaleDataError as e:
         logger.critical(f"Concurrency Failure on SSLCommerz Webhook for val_id {val_id}.")
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict.") from e
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Transaction conflict."
+        ) from e
     except HTTPException:
         raise
     except Exception as e:

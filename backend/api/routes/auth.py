@@ -3,18 +3,16 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from jwt import PyJWTError as JWTError
 from loguru import logger
 from pydantic import BaseModel
 
-from core.error_bus import with_error_bus
-
-import jwt
-from jwt import PyJWTError as JWTError
-
 from core.cache.redis_manager import redis_manager
 from core.config import settings
+from core.error_bus import with_error_bus
 from core.security.authentication.rbac import UserContext
 from database.supabase_client import db
 
@@ -89,7 +87,7 @@ async def optional_current_user(
             role=role,
             email=payload.get("email") if isinstance(payload.get("email"), str) else None,
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unhandled exception")
         return None
 
@@ -142,7 +140,9 @@ async def login(body: LoginRequest, request: Request):
         if not res.user:
             # বাংলা: auth ফেইলিওরে generic message — internal detail লিক করছি না।
             logger.warning(f"Login failed for email={body.username!r}: no user returned")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
 
         user_id = res.user.id
         # বাংলা: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
@@ -203,11 +203,15 @@ async def register(body: RegisterRequest):
             {"email": body.username, "password": body.password},
         )
         if not res.user:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed"
+            )
 
         # বাংলা মন্তব্য: যদি ইমেইল ভেরিফিকেশন অন থাকে, তাহলে res.session None হবে। সেক্ষেত্রে ফেক টোকেন না দিয়ে ইউজারকে ভেরিফাই করতে বলব।
         if res.session is None:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Email confirmation required")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Email confirmation required"
+            )
 
         user_id = res.user.id
         # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
@@ -247,14 +251,20 @@ async def refresh_token_endpoint(body: RefreshRequest):
     type=refresh চেক করে access token রিফ্রেশে ব্যবহার রোধ করা হয় — token confusion প্রতিরোধ।
     """
     if jwt is None:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWT service unavailable")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWT service unavailable"
+        )
     try:
         payload = jwt.decode(body.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
+        )
 
     if payload.get("type") != "refresh":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is not a refresh token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is not a refresh token"
+        )
 
     token_data = {
         "sub": payload.get("sub", "unknown"),

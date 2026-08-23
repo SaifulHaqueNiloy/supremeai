@@ -43,7 +43,13 @@ async def run_experiment():
     try:
         os.environ["CHAOS_FORCE_FAULT"] = "latency"
         await engine.inject_fault()
-        results.append({"scenario": "Network Latency Spike", "status": "PASS", "detail": "Handled 2s delay gracefully"})
+        results.append(
+            {
+                "scenario": "Network Latency Spike",
+                "status": "PASS",
+                "detail": "Handled 2s delay gracefully",
+            }
+        )
     except Exception as e:
         results.append({"scenario": "Network Latency Spike", "status": "FAIL", "detail": str(e)})
 
@@ -114,7 +120,9 @@ async def run_experiment():
     with open(report_file, "w", encoding="utf-8") as f:
         f.write(report_content)
 
-    logger.info(f"✅ [Chaos Experiment] Completed! Resilience Score: {score:.1f}%. Report saved to {report_file}")
+    logger.info(
+        f"✅ [Chaos Experiment] Completed! Resilience Score: {score:.1f}%. Report saved to {report_file}"
+    )
     return score
 
 

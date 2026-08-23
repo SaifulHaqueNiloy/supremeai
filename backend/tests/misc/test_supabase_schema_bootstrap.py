@@ -100,7 +100,9 @@ def test_insert_task_history_retries_after_schema_cache_error(monkeypatch):
         def execute(self):
             self.calls += 1
             if self.calls == 1:
-                raise RuntimeError("Could not find the table 'public.task_history' in the schema cache")
+                raise RuntimeError(
+                    "Could not find the table 'public.task_history' in the schema cache"
+                )
             return FakeResponse([{"id": 1, **self.entry}])
 
     class FakeClient:
@@ -111,7 +113,9 @@ def test_insert_task_history_retries_after_schema_cache_error(monkeypatch):
             assert name == "task_history"
             return self.table_obj
 
-    monkeypatch.setattr("database.supabase_client.create_client", lambda *args, **kwargs: FakeClient())
+    monkeypatch.setattr(
+        "database.supabase_client.create_client", lambda *args, **kwargs: FakeClient()
+    )
     monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
     monkeypatch.setenv("SUPABASE_KEY", "test-key")
     db = SupabaseDB()

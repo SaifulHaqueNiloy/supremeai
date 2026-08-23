@@ -24,7 +24,9 @@ class FileIsolationGate:
         # নিশ্চিত করা যে স্টেজিং রুট ডিরেক্টরি এক্সিস্ট করে
         SECURE_STAGING_DIR.mkdir(parents=True, exist_ok=True)
 
-    def execute_file_parsing_safely(self, raw_file_bytes: bytes, file_extension: str) -> dict[str, Any]:
+    def execute_file_parsing_safely(
+        self, raw_file_bytes: bytes, file_extension: str
+    ) -> dict[str, Any]:
         """
         আপলোড করা ফাইলকে একটি র্যান্ডম আইসোলেটেড ডিরেক্টরিতে সাময়িক স্টোর করে
         ডকার স্যান্ডবক্সে এক্সিকিউট করায় এবং কাজ শেষে মেমোরি ও ডিস্ক সম্পূর্ণ ক্লিন করে।
@@ -58,7 +60,9 @@ class FileIsolationGate:
             # getattr/hasattr/__import__/eval/exec ইত্যাদি বিপজ্জনক প্যাটার্ন চেক করা হয়
             is_safe, reason = validate_code_for_sandbox(sandbox_payload["script"], strict_mode=True)
             if not is_safe:
-                logger.critical(f"🚫 AST sandbox scan blocked payload for transaction {transaction_id}: {reason}")
+                logger.critical(
+                    f"🚫 AST sandbox scan blocked payload for transaction {transaction_id}: {reason}"
+                )
                 return {
                     "success": False,
                     "error": f"Code safety validation failed: {reason}",
@@ -89,4 +93,6 @@ class FileIsolationGate:
             # কাজ সফল হোক বা ব্যর্থ, ট্রানজেকশন ফোল্ডার ডিস্ক থেকে সম্পূর্ণ মুছে ফেলা হবে
             if session_dir.exists():
                 shutil.rmtree(session_dir)
-                logger.info(f"🧹 Vacuum cleanup complete for transaction workspace: {transaction_id}")
+                logger.info(
+                    f"🧹 Vacuum cleanup complete for transaction workspace: {transaction_id}"
+                )

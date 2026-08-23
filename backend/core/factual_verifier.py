@@ -173,7 +173,11 @@ class FactualVerifier:
             ddg_results = web_search(claim, max_results=3)
             if ddg_results:
                 href = ddg_results[0].get("href") or ddg_results[0].get("url") or ""
-                sources = [r.get("href") or r.get("url") or "" for r in ddg_results if (r.get("href") or r.get("url"))]
+                sources = [
+                    r.get("href") or r.get("url") or ""
+                    for r in ddg_results
+                    if (r.get("href") or r.get("url"))
+                ]
                 return {
                     "claim": claim,
                     "is_verified": True,

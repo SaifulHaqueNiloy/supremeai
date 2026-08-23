@@ -141,7 +141,10 @@ def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
     monkeypatch.setenv("USER_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
     monkeypatch.setenv("ADMIN_CORS_ORIGINS", '["http://127.0.0.1:3000", "https://example.com"]')
-    monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD_12345678901234567890")
+    monkeypatch.setenv(
+        "SUPREMEAI_JWT_SECRET",
+        "TEST_ONLY_SUPREMEAI_JWT_SECRET_DO_NOT_USE_IN_PROD_12345678901234567890",
+    )
     monkeypatch.setenv("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_hash_value_for_test_pass")
     monkeypatch.setenv("ALLOWED_HOSTS", '["api.supremeai.com"]')
     monkeypatch.setenv("STRIPE_API_KEY", "TEST_ONLY_STRIPE_API_KEY")

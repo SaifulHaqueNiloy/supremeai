@@ -23,7 +23,7 @@ _request_history: deque[dict] = deque(maxlen=HISTORY_SIZE)
 class QueryTimingMiddleware:
     """
     ASGI middleware that tracks API response times.
-    
+
     Features:
       - Logs all requests with timing
       - Alerts on slow requests (> SLOW_REQUEST_MS)
@@ -65,13 +65,15 @@ class QueryTimingMiddleware:
         )
 
         # Store in history
-        _request_history.append({
-            "method": method,
-            "path": path,
-            "status": status_code,
-            "duration_ms": round(duration_ms, 2),
-            "timestamp": time.time(),
-        })
+        _request_history.append(
+            {
+                "method": method,
+                "path": path,
+                "status": status_code,
+                "duration_ms": round(duration_ms, 2),
+                "timestamp": time.time(),
+            }
+        )
 
 
 def get_timing_stats() -> dict:

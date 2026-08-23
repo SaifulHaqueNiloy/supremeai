@@ -5,18 +5,18 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import Request, Response
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from core.database.query_optimizer import (
     DatabaseOptimizationMiddleware,
     query_optimizer,
     setup_query_profiling,
 )
-from core.logging_config import logger
 from core.memory.memory_manager import memory_manager, track_memory_usage
 from core.security.secret_scanner import secret_scanner
 from core.security.sql_injection_guard import sql_injection_middleware
+from fastapi import Request, Response
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.logging_config import logger
 
 
 class ComprehensiveDBOptimizationMiddleware:
@@ -84,14 +84,17 @@ class ComprehensiveDBOptimizationMiddleware:
         if queries_during_request > 10:  # Threshold for concern
             n_plus_one_warnings = query_optimizer.analyzer.get_n_plus_one_warnings()
             if n_plus_one_warnings:
-                logger.warning(f"Potential N+1 issue in request {request.url}: {n_plus_one_warnings}")
+                logger.warning(
+                    f"Potential N+1 issue in request {request.url}: {n_plus_one_warnings}"
+                )
 
                 # Add performance header to response
                 response.headers["X-Performance-Warning"] = "Potential N+1 query detected"
 
         # Log performance metrics
         logger.debug(
-            f"Request {request.url} completed in {request_duration:.3f}s " f"with {queries_during_request} queries"
+            f"Request {request.url} completed in {request_duration:.3f}s "
+            f"with {queries_during_request} queries"
         )
 
         # Take memory snapshot if significant activity occurred
@@ -138,7 +141,9 @@ def _register_common_eager_load_strategies():
     from models.patch_telemetry import PatchTelemetry
 
     # Register relationships that are commonly accessed together
-    query_optimizer.register_eager_load_strategy(AgentSession, ["handoff_events"], strategy="selectinload")
+    query_optimizer.register_eager_load_strategy(
+        AgentSession, ["handoff_events"], strategy="selectinload"
+    )
 
     query_optimizer.register_eager_load_strategy(PatchTelemetry, [], strategy="selectinload")
 

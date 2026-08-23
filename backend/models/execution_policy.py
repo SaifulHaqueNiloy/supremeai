@@ -35,5 +35,9 @@ class ExecutionPolicy(Base):
     )
     max_concurrent_sandboxes: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
-    circuit_breaker_failure_threshold: Mapped[int] = mapped_column(Integer, default=5, nullable=False)
-    circuit_breaker_cooldown_seconds: Mapped[int] = mapped_column(Integer, default=300, nullable=False)
+    circuit_breaker_failure_threshold: Mapped[int] = mapped_column(
+        Integer, default=5, nullable=False
+    )
+    circuit_breaker_cooldown_seconds: Mapped[int] = mapped_column(
+        Integer, default=300, nullable=False
+    )

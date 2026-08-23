@@ -2,10 +2,8 @@ from typing import Any, ClassVar
 from urllib.parse import parse_qs, urlparse
 
 import defusedxml.ElementTree as ET  # -- standard idiom (mirrors stdlib xml.etree.ElementTree as ET)
-from loguru import logger
-
 import jwt
-from jwt import PyJWTError as JWTError
+from loguru import logger
 
 
 class SSOIntegrator:
@@ -14,7 +12,9 @@ class SSOIntegrator:
     def __init__(self, saml_settings: dict[str, Any] | None = None):
         self.saml_settings = saml_settings or {}
         self.onelogin = self._load_onelogin()
-        logger.info(f"Initialized SSOIntegrator (python-saml={'loaded' if self.onelogin else 'fallback'})")
+        logger.info(
+            f"Initialized SSOIntegrator (python-saml={'loaded' if self.onelogin else 'fallback'})"
+        )
 
     def _load_onelogin(self):
         try:
@@ -30,7 +30,11 @@ class SSOIntegrator:
     def _prepare_request(self, request_data: dict[str, Any]) -> dict[str, Any]:
         if self.onelogin:
             return {
-                "https": ("on" if self.saml_settings.get("sp_entity_id", "").startswith("https") else "off"),
+                "https": (
+                    "on"
+                    if self.saml_settings.get("sp_entity_id", "").startswith("https")
+                    else "off"
+                ),
                 "http_host": self.saml_settings.get("sp_entity_id", "") or "localhost",
                 "script_name": self.saml_settings.get("acs_url", ""),
                 "get_data": parse_qs(urlparse(self.saml_settings.get("query_string", "")).query),
@@ -65,7 +69,9 @@ class SSOIntegrator:
                 logger.error(f"SSO URL generation failed: {exc}")
         return self.saml_settings.get("idp_sso_url", "")
 
-    async def process_sso_response(self, post_data: dict[str, Any], relay_state: str | None = None) -> dict[str, Any]:
+    async def process_sso_response(
+        self, post_data: dict[str, Any], relay_state: str | None = None
+    ) -> dict[str, Any]:
         if self.onelogin:
             try:
                 settings_obj = self._build_settings()
@@ -157,7 +163,9 @@ class SSOIntegrator:
                 internal_roles.append(role)
         return internal_roles or ["viewer"]
 
-    def get_logout_url(self, request: dict[str, Any] | None = None, relay_state: str | None = None) -> str:
+    def get_logout_url(
+        self, request: dict[str, Any] | None = None, relay_state: str | None = None
+    ) -> str:
         if self.onelogin:
             try:
                 settings_obj = self._build_settings()
@@ -206,7 +214,9 @@ class SSOIntegrator:
             "strict": False,
             "debug": True,
             "sp": {
-                "entityId": self.saml_settings.get("sp_entity_id", "https://supremeai.com/metadata"),
+                "entityId": self.saml_settings.get(
+                    "sp_entity_id", "https://supremeai.com/metadata"
+                ),
                 "assertionConsumerService": {
                     "url": self.saml_settings.get("acs_url", "https://supremeai.com/acs"),
                 },

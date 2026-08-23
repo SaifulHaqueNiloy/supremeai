@@ -7,7 +7,11 @@ from pydantic import BaseModel
 
 from core.security.authentication.rbac import get_current_user_token
 
-router = APIRouter(prefix="/api/agents", tags=["specialized-agents"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/api/agents",
+    tags=["specialized-agents"],
+    dependencies=[Depends(get_current_user_token)],
+)
 
 
 class SymptomRequest(BaseModel):
@@ -42,8 +46,6 @@ class SummarizeRequest(BaseModel):
     style: str = "apa"
 
 
-
-
 # বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.listAgents()
 # GET /api/v1/agents কল করে (আগে এই endpoint ছিল না, 404 পেত)।
 @router.get("/", tags=["specialized-agents"])
@@ -69,6 +71,8 @@ async def get_agent_status(agent_id: str):
         "status": "active",
         "last_activity": "2026-01-01T00:00:00Z",
     }
+
+
 @router.post("/legal/analyze")
 async def legal_analyze(payload: LegalAnalysisRequest):
     try:
@@ -87,7 +91,9 @@ async def medical_symptoms(payload: SymptomRequest):
         from agents.medical_agent import MedicalAgent
 
         agent = MedicalAgent()
-        result = agent.symptom_analysis(payload.symptoms, age=payload.age, medical_history=payload.medical_history)
+        result = agent.symptom_analysis(
+            payload.symptoms, age=payload.age, medical_history=payload.medical_history
+        )
         return result
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -155,7 +161,9 @@ async def research_search(payload: ResearchRequest):
         from agents.research_assistant import ResearchAssistant
 
         assistant = ResearchAssistant()
-        results = assistant.search(payload.query, source=payload.source, max_results=payload.max_results)
+        results = assistant.search(
+            payload.query, source=payload.source, max_results=payload.max_results
+        )
         return {
             "query": payload.query,
             "source": payload.source,

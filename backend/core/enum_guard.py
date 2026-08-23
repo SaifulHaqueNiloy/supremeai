@@ -26,7 +26,10 @@ class EnumGuard:
             # কেস-ইনসেনসিটিভ ম্যাচিং সাপোর্ট
             normalized_value = value.strip().upper()
             for member in enum_cls:
-                if member.name.upper() == normalized_value or str(member.value).upper() == normalized_value:
+                if (
+                    member.name.upper() == normalized_value
+                    or str(member.value).upper() == normalized_value
+                ):
                     return member
 
         # 🚨 সাইলেন্ট ড্রপ প্রতিরোধ: ইনভ্যালিড ভ্যালু পেলে সাথে সাথে এক্সপ্লোসিভ এক্সেপশন থ্রো
@@ -40,5 +43,7 @@ class EnumGuard:
         try:
             return EnumGuard.validate_and_parse(enum_cls, value, context)
         except EnumGuardError:
-            logger.warning(f"⚠️ Fallback applied for '{value}' -> using '{fallback.name}' in {context}")
+            logger.warning(
+                f"⚠️ Fallback applied for '{value}' -> using '{fallback.name}' in {context}"
+            )
             return fallback

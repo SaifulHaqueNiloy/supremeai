@@ -50,7 +50,9 @@ class ImageToCode:
     # এখন None দিয়ে llm_gateway-এর task_type="vision" ফেলোভার চেইন ব্যবহার করা হবে।
     def __init__(self, vision_model: str | None = None):
         self.vision_model = vision_model
-        logger.info(f"Initialized ImageToCode with model {self.vision_model or 'auto (gateway-routed)'}")
+        logger.info(
+            f"Initialized ImageToCode with model {self.vision_model or 'auto (gateway-routed)'}"
+        )
 
     def _encode_image_bytes(self, image_bytes: bytes) -> str:
         return base64.b64encode(image_bytes).decode("utf-8")
@@ -112,7 +114,9 @@ class ImageToCode:
                 match = re.search(r"class\s+(\w+)", code)
                 if match:
                     component_name = match.group(1)
-            return ComponentCode(framework=framework, code=code.strip(), component_name=component_name)
+            return ComponentCode(
+                framework=framework, code=code.strip(), component_name=component_name
+            )
         except Exception as e:
             # ✅ FIXED: previously returned an empty-code ComponentCode disguised as a
             # normal result; now the failure is surfaced so the router returns a real error.
@@ -188,7 +192,9 @@ class ImageToCode:
             raise RuntimeError("Vision model returned an empty response.")
         return text
 
-    async def _call_vision_model(self, base64_image: str, framework: str, styling: str) -> dict[str, Any]:
+    async def _call_vision_model(
+        self, base64_image: str, framework: str, styling: str
+    ) -> dict[str, Any]:
         try:
             from brain.model_router import ModelRouter
 
@@ -240,7 +246,9 @@ async def api_image_to_code(
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file provided")
 
-        result = await image_to_code_tool.generate_code_from_bytes(contents, framework=framework, styling=styling)
+        result = await image_to_code_tool.generate_code_from_bytes(
+            contents, framework=framework, styling=styling
+        )
         if result.get("status") == "error":
             raise HTTPException(status_code=500, detail=result.get("error"))
 
@@ -263,7 +271,9 @@ async def api_figma_to_component(
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        component = await image_to_code_tool.figma_to_react(tmp_path, framework=framework, styling=styling)
+        component = await image_to_code_tool.figma_to_react(
+            tmp_path, framework=framework, styling=styling
+        )
         return {"status": "success", **component.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Component generation failed: {e}") from e

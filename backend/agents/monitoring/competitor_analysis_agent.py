@@ -151,7 +151,13 @@ class CompetitorAnalysisAgent:
                     if feature.impact_score > 0.4
                     else "low"
                 )
-                effort = "high" if priority == "critical" else "medium" if priority in ("high", "medium") else "low"
+                effort = (
+                    "high"
+                    if priority == "critical"
+                    else "medium"
+                    if priority in ("high", "medium")
+                    else "low"
+                )
 
                 gaps.append(
                     FeatureGap(

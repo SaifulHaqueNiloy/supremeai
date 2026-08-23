@@ -53,7 +53,9 @@ async def main():
 
         npm_vuln_results = agent.check_npm_vulnerabilities(project_path=frontend_path)
         if npm_vuln_results.get("success") and npm_vuln_results.get("audit_results"):
-            summary = npm_vuln_results["audit_results"].get("metadata", {}).get("vulnerabilities", {})
+            summary = (
+                npm_vuln_results["audit_results"].get("metadata", {}).get("vulnerabilities", {})
+            )
             logger.warning(f"NPM audit found vulnerabilities: {summary}")
             logger.debug("--- NPM Package Vulnerabilities (npm audit) ---")
             logger.debug(json.dumps(npm_vuln_results["audit_results"], indent=2))

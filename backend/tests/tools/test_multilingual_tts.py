@@ -13,7 +13,9 @@ class TestMultilingualTTS:
     def setup(self, monkeypatch, tmp_path):
         monkeypatch.setenv("ELEVENLABS_API_KEY", "")
         monkeypatch.setenv("TTS_CACHE_TTL", "86400")
-        monkeypatch.setattr("tools.media.multilingual_tts.os.path.join", lambda *parts: str(tmp_path))
+        monkeypatch.setattr(
+            "tools.media.multilingual_tts.os.path.join", lambda *parts: str(tmp_path)
+        )
         monkeypatch.setattr("tools.media.multilingual_tts.os.makedirs", lambda *a, **k: None)
         monkeypatch.setattr("tools.media.multilingual_tts.os.path.exists", lambda p: False)
         monkeypatch.setattr(
@@ -71,7 +73,9 @@ class TestMultilingualTTS:
 
     def test_cache_hit(self, monkeypatch, tmp_path):
         monkeypatch.setattr("tools.media.multilingual_tts.os.path.exists", lambda p: True)
-        monkeypatch.setattr("tools.media.multilingual_tts.os.path.getmtime", lambda p: time.time() - 100)
+        monkeypatch.setattr(
+            "tools.media.multilingual_tts.os.path.getmtime", lambda p: time.time() - 100
+        )
         result = self.tts._cache_hit("hello", "en")
         # cache hit (TTL 86400)
         assert result is not None
@@ -94,7 +98,9 @@ class TestMultilingualTTS:
     @pytest.mark.asyncio
     async def test_synthesize_cache_hit(self, monkeypatch):
         monkeypatch.setattr("tools.media.multilingual_tts.os.path.exists", lambda p: True)
-        monkeypatch.setattr("tools.media.multilingual_tts.os.path.getmtime", lambda p: time.time() - 100)
+        monkeypatch.setattr(
+            "tools.media.multilingual_tts.os.path.getmtime", lambda p: time.time() - 100
+        )
         result = await self.tts.synthesize("Hi there")
         assert result["status"] == "success"
         assert result["cached"] is True

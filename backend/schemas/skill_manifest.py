@@ -16,9 +16,13 @@ class SkillStatus(StrEnum):
 
 class SkillPermissions(BaseModel):
     allow_network: bool = Field(default=False, description="স্কিলটি ইন্টারনেট অ্যাক্সেস করতে পারবে কিনা")
-    allowed_domains: list[str] = Field(default_factory=list, description="নেটওয়ার্ক ট্রাস্টেড ওরিজিন ডোমেইন লিস্ট")
+    allowed_domains: list[str] = Field(
+        default_factory=list, description="নেটওয়ার্ক ট্রাস্টেড ওরিজিন ডোমেইন লিস্ট"
+    )
     allow_filesystem_write: bool = Field(default=False, description="লোকাল ফাইলে রাইট করার অনুমতি")
-    required_env_vars: list[str] = Field(default_factory=list, description="কাজ করার জন্য প্রয়োজনীয় পরিবেশ ভ্যারিয়েবল")
+    required_env_vars: list[str] = Field(
+        default_factory=list, description="কাজ করার জন্য প্রয়োজনীয় পরিবেশ ভ্যারিয়েবল"
+    )
 
 
 class SkillGovernance(BaseModel):

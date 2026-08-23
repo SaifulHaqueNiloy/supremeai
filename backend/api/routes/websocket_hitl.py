@@ -21,13 +21,17 @@ class HITLConnectionManager:
         await websocket.accept()
         async with self._lock:
             self.active_connections.add(websocket)
-        logger.info(f"New HITL WebSocket connection. Total connections: {len(self.active_connections)}")
+        logger.info(
+            f"New HITL WebSocket connection. Total connections: {len(self.active_connections)}"
+        )
 
     async def disconnect(self, websocket: WebSocket):
         async with self._lock:
             if websocket in self.active_connections:
                 self.active_connections.remove(websocket)
-        logger.info(f"HITL WebSocket disconnected. Total connections: {len(self.active_connections)}")
+        logger.info(
+            f"HITL WebSocket disconnected. Total connections: {len(self.active_connections)}"
+        )
 
     async def broadcast(self, message: str):
         # কানেকশন ড্রপ বা এরর হ্যান্ডল করার জন্য ব্রডকাস্ট লজিক ইমপ্রুভ করা হয়েছে।

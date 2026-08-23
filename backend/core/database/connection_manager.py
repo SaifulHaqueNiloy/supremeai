@@ -131,7 +131,9 @@ class ConnectionManager:
         from core.pgbouncer_pool import get_db_pool_with_retry
 
         if self._raw_pool is None:
-            self._raw_pool = await get_db_pool_with_retry(max_retries=max_retries, initial_delay=initial_delay)
+            self._raw_pool = await get_db_pool_with_retry(
+                max_retries=max_retries, initial_delay=initial_delay
+            )
         return self._raw_pool
 
     # ── psycopg2 Sync Pool ───────────────────────────────────────────────────

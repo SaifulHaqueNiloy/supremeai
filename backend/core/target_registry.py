@@ -82,7 +82,9 @@ class TargetPlatformRegistry:
         """নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম রেজিস্টার করে।"""
         with self._lock:
             self._targets[target.id] = target
-            logger.info(f"Registered target '{target.id}' ({target.name}) with scope {target.scope}")
+            logger.info(
+                f"Registered target '{target.id}' ({target.name}) with scope {target.scope}"
+            )
             return target
 
     def unregister_target(self, target_id: str) -> bool:

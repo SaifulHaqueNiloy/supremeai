@@ -21,7 +21,9 @@ from core.cache.redis_manager import redis_manager
 from core.error_bus import with_error_bus
 from core.security.authentication.rbac import get_current_user_token
 
-router = APIRouter(prefix="/api/simulator", tags=["simulator"], dependencies=[Depends(get_current_user_token)])
+router = APIRouter(
+    prefix="/api/simulator", tags=["simulator"], dependencies=[Depends(get_current_user_token)]
+)
 
 _PROFILE_KEY = "simulator:profile:{user_id}"
 _SESSION_KEY = "simulator:session:{user_id}"
@@ -65,7 +67,9 @@ class ProfileUpdateRequest(BaseModel):
 
 class InstallRequest(BaseModel):
     appId: str  # -- camelCase required to match frontend JSON API contract
-    deviceProfile: str | None = "PIXEL_6"  # -- camelCase required to match frontend JSON API contract
+    deviceProfile: str | None = (
+        "PIXEL_6"  # -- camelCase required to match frontend JSON API contract
+    )
 
 
 @with_error_bus("_use_redis")
@@ -81,7 +85,7 @@ def _use_redis() -> bool:
         if not url or "mock" in url.lower():
             return False
         return True
-    except Exception as e:
+    except Exception:
         return False
 
 

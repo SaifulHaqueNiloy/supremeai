@@ -10,11 +10,20 @@ def test_moe_prompt_classification():
     assert SupremeMoERouter.classify_prompt("kemon acho brother?") == ExpertType.BENGALI
 
     # Coder prompts
-    assert SupremeMoERouter.classify_prompt("def async_generate(self, prompt: str):") == ExpertType.CODER
-    assert SupremeMoERouter.classify_prompt("How to fix Docker API connection error?") == ExpertType.CODER
+    assert (
+        SupremeMoERouter.classify_prompt("def async_generate(self, prompt: str):")
+        == ExpertType.CODER
+    )
+    assert (
+        SupremeMoERouter.classify_prompt("How to fix Docker API connection error?")
+        == ExpertType.CODER
+    )
 
     # Reasoner prompts
-    assert SupremeMoERouter.classify_prompt("Calculate the theorem proof for calculus equation") == ExpertType.REASONER
+    assert (
+        SupremeMoERouter.classify_prompt("Calculate the theorem proof for calculus equation")
+        == ExpertType.REASONER
+    )
 
     # General prompts
     assert SupremeMoERouter.classify_prompt("What is the capital of France?") == ExpertType.GENERAL
@@ -23,7 +32,10 @@ def test_moe_prompt_classification():
 def test_moe_model_chain_generation():
     bengali_chain = SupremeMoERouter.get_model_chain("বাংলাদেশে সবচেয়ে বড় নদী কোনটি?")
     assert len(bengali_chain) > 0
-    assert "hf_space/supreme-hybrid-8b" in bengali_chain or "groq/llama-3.3-70b-versatile" in bengali_chain
+    assert (
+        "hf_space/supreme-hybrid-8b" in bengali_chain
+        or "groq/llama-3.3-70b-versatile" in bengali_chain
+    )
 
     coder_chain = SupremeMoERouter.get_model_chain("import numpy as np; print(np.array([1,2]))")
     assert "deepseek/deepseek-coder" in coder_chain

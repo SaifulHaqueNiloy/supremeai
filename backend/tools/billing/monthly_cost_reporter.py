@@ -48,7 +48,9 @@ class MonthlyCostReporter:
         }
 
     def _month_range(self, month: str) -> tuple[datetime, datetime]:
-        start = datetime.strptime(month, "%Y-%m") if "-" in month else datetime.strptime(month, "%Y%m")
+        start = (
+            datetime.strptime(month, "%Y-%m") if "-" in month else datetime.strptime(month, "%Y%m")
+        )
         next_month = (start.replace(day=28) + timedelta(days=4)).replace(day=1)
         end = next_month
         return start, end

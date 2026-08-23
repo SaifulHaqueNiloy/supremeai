@@ -1,6 +1,6 @@
-import os
 import json
 import logging
+import os
 from collections.abc import Callable
 from typing import Any
 
@@ -50,7 +50,9 @@ class NATSClient:
     async def connect(self):
         """Establishes connection to NATS with Token Auth and enables JetStream."""
         if nats is None:
-            logger.warning("[NATS] Optional dependency 'nats' is not installed. Skipping NATS connection.")
+            logger.warning(
+                "[NATS] Optional dependency 'nats' is not installed. Skipping NATS connection."
+            )
             return
 
         try:
@@ -66,7 +68,7 @@ class NATSClient:
             # Initialize or bind to the Key-Value store for Worker Registry
             try:
                 self.kv_store = await self.js.key_value("WORKER_REGISTRY")
-            except Exception as e:
+            except Exception:
                 # Create the bucket if it doesn't exist
                 self.kv_store = await self.js.create_key_value(bucket="WORKER_REGISTRY")
                 logger.info("🛠️ Created JetStream Key-Value bucket: WORKER_REGISTRY")
@@ -139,7 +141,9 @@ class NATSClient:
                     skipped.append(key)
                     logger.warning(f"[NATS] Skipped malformed worker entry '{key}': {entry_err!r}")
             if skipped:
-                logger.warning(f"[NATS] {len(skipped)} worker entries skipped due to errors: {skipped}")
+                logger.warning(
+                    f"[NATS] {len(skipped)} worker entries skipped due to errors: {skipped}"
+                )
         return workers
 
 

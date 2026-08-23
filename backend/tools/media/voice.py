@@ -34,7 +34,9 @@ class VoiceInterface:
                 logger.info(f"Locally transcribed audio: {transcription}")
                 return transcription
         except Exception as e:
-            logger.warning(f"Local Whisper not available or failed: {e}. Falling back to HuggingFace API...")
+            logger.warning(
+                f"Local Whisper not available or failed: {e}. Falling back to HuggingFace API..."
+            )
 
         if not self.hf_token:
             logger.warning("HF_API_KEY not set. Cannot transcribe audio via API.")
@@ -97,7 +99,9 @@ class VoiceInterface:
                 try:
                     tts.to(device)
                 except Exception as device_err:
-                    logger.warning(f"Coqui TTS device set failed ({device_err}); using default device.")
+                    logger.warning(
+                        f"Coqui TTS device set failed ({device_err}); using default device."
+                    )
             tts.tts_to_file(text=text, file_path=output_path, language=lang)
             logger.info(f"Generated offline speech file at: {output_path}")
             return True
@@ -113,7 +117,9 @@ class VoiceInterface:
             logger.info(f"Generated speech file locally at: {output_path}")
             return True
         except Exception as e:
-            logger.warning(f"gTTS library not available or failed: {e}. Falling back to Google TTS API...")
+            logger.warning(
+                f"gTTS library not available or failed: {e}. Falling back to Google TTS API..."
+            )
 
         import urllib.parse
 

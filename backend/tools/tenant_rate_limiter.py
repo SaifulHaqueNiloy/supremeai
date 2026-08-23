@@ -300,7 +300,11 @@ class TenantRateLimiter:
                             ttl=86400,  # 24 ঘণ্টা cache
                         )
             else:
-                customer_id = customer_id.decode("utf-8") if isinstance(customer_id, bytes) else str(customer_id)
+                customer_id = (
+                    customer_id.decode("utf-8")
+                    if isinstance(customer_id, bytes)
+                    else str(customer_id)
+                )
 
             stripe.InvoiceItem.create(
                 customer=customer_id,

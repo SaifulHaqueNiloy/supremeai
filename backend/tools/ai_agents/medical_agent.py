@@ -4,7 +4,9 @@ from loguru import logger
 
 
 class MedicalAgent:
-    async def analyze_symptoms(self, symptoms: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def analyze_symptoms(
+        self, symptoms: str, context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         logger.info(f"Analyzing medical symptoms: {symptoms}")
         try:
             from brain.model_router import ModelRouter

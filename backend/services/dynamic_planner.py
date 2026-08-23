@@ -89,7 +89,9 @@ class TaskDAG:
 
         if len(ordered_ids) != len(self.nodes):
             unresolved = [n for n, deg in in_degree.items() if deg > 0]
-            raise ValueError(f"Cyclic dependency detected in TaskDAG. Unresolved nodes: {unresolved}")
+            raise ValueError(
+                f"Cyclic dependency detected in TaskDAG. Unresolved nodes: {unresolved}"
+            )
 
         return [self.nodes[nid] for nid in ordered_ids]
 
@@ -135,7 +137,10 @@ class DynamicPlanningEngine:
             name="Dual-Loop Invariant Verifier",
             capability="verify_invariants",
             description="Run unit tests, check SLA metrics, and assert zero regression",
-            input_params={"invariants": intent.invariants, "latent_constraints": intent.latent_constraints},
+            input_params={
+                "invariants": intent.invariants,
+                "latent_constraints": intent.latent_constraints,
+            },
             dependencies=[last_action_id],
         )
         dag.add_node(verify_node)
@@ -146,17 +151,24 @@ class DynamicPlanningEngine:
             name="Eternal Brain Memory Consolidation",
             capability="consolidate_ai_memory",
             description="Embed successful execution path and persist to ai_memory (pgvector)",
-            input_params={"goal": intent.ultimate_goal, "methodology": intent.suggested_methodology},
+            input_params={
+                "goal": intent.ultimate_goal,
+                "methodology": intent.suggested_methodology,
+            },
             dependencies=[verify_node.id],
         )
         dag.add_node(consolidate_node)
 
         # Ensure DAG validity
         dag.topological_sort()
-        logger.info(f"DynamicPlanningEngine: Generated DAG '{dag_id}' with {len(dag.nodes)} nodes for goal '{intent.ultimate_goal[:50]}'")
+        logger.info(
+            f"DynamicPlanningEngine: Generated DAG '{dag_id}' with {len(dag.nodes)} nodes for goal '{intent.ultimate_goal[:50]}'"
+        )
         return dag
 
-    def _build_action_nodes(self, dag_id: str, intent: IntentAnalysis, parent_id: str) -> list[TaskNode]:
+    def _build_action_nodes(
+        self, dag_id: str, intent: IntentAnalysis, parent_id: str
+    ) -> list[TaskNode]:
         """Synthesizes intermediate execution nodes based on intent methodology."""
         methodology = intent.suggested_methodology
 

@@ -87,14 +87,16 @@ class TenantAwareFirestore:
             client = get_firestore_client()
             if client is not None:
                 return client
-        except Exception as e:
+        except Exception:
             logger.debug("get_firestore_client() failed, falling back to direct firestore.Client()")
 
         # বাংলা মন্তব্য: firestore module exists কিনা check করে তবেই কল
         if _HAS_FIRESTORE:
             return firestore.Client()  # type: ignore[union-attr]
         # No Firestore available — raise a clear error instead of NameError
-        raise RuntimeError("Firestore client not available. Install google-cloud-firestore or run in test environment.")
+        raise RuntimeError(
+            "Firestore client not available. Install google-cloud-firestore or run in test environment."
+        )
 
     def collection(self, collection_name: str):
         """ট্যানান্টের নিজস্ব সাব-কালেকশন রিটার্ন করবে"""

@@ -291,7 +291,9 @@ class BiasDetectionAgent:
             logger.error(f"Error retrieving bias detection history: {e}")
             return []
 
-    async def assess_mitigation_effectiveness(self, original_content: str, mitigated_content: str) -> dict[str, Any]:
+    async def assess_mitigation_effectiveness(
+        self, original_content: str, mitigated_content: str
+    ) -> dict[str, Any]:
         """
         Assess how effective the mitigation was by comparing before/after.
 
@@ -307,7 +309,13 @@ class BiasDetectionAgent:
 
         improvement = original_result.severity_score - mitigated_result.severity_score
         effectiveness_score = max(
-            0.0, min(1.0, improvement / original_result.severity_score if original_result.severity_score > 0 else 0)
+            0.0,
+            min(
+                1.0,
+                improvement / original_result.severity_score
+                if original_result.severity_score > 0
+                else 0,
+            ),
         )
 
         return {
@@ -316,7 +324,10 @@ class BiasDetectionAgent:
             "improvement": improvement,
             "effectiveness_score": round(effectiveness_score, 2),
             "bias_reduction_percentage": round(
-                (improvement / original_result.severity_score) * 100 if original_result.severity_score > 0 else 0, 2
+                (improvement / original_result.severity_score) * 100
+                if original_result.severity_score > 0
+                else 0,
+                2,
             ),
             "remaining_bias_types": mitigated_result.bias_types_detected,
         }

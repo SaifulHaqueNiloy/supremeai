@@ -9,7 +9,6 @@ Autonomous intent interpretation:
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -110,26 +109,38 @@ class IntentDecipheringService:
         methodology = "dynamic_dag_execution"
 
         # Pattern: Performance / Latency goals
-        if any(w in lowered for w in ["slow", "speed up", "optimize latency", "পারফরম্যান্স", "ধীরগতি"]):
+        if any(
+            w in lowered for w in ["slow", "speed up", "optimize latency", "পারফরম্যান্স", "ধীরগতি"]
+        ):
             ultimate_goal = "Optimize system throughput, cache hits, and minimize execution latency"
             invariants.append("p99_latency_within_sla")
             methodology = "profile_bottlenecks_and_apply_caching"
 
         # Pattern: Bug Fix / Crash / Debugging
-        elif any(w in lowered for w in ["fix", "bug", "crash", "error", "সমস্যা", "ভাঙা", "ইস্যু", "বাগ", "ত্রুটি", "সমাধান"]):
+        elif any(
+            w in lowered
+            for w in ["fix", "bug", "crash", "error", "সমস্যা", "ভাঙা", "ইস্যু", "বাগ", "ত্রুটি", "সমাধান"]
+        ):
             ultimate_goal = f"Identify root cause and eliminate defect: {request}"
             invariants.append("all_test_suites_must_pass")
             methodology = "reproduce_localize_ast_patch_and_verify"
 
         # Pattern: Refactor / Consolidation / Structural Cleanup
-        elif any(w in lowered for w in ["refactor", "cleanup", "consolidate", "একীভূত", "মুছে", "remove duplicate"]):
-            ultimate_goal = f"Unify redundant abstractions and remove duplicate code while maintaining parity"
+        elif any(
+            w in lowered
+            for w in ["refactor", "cleanup", "consolidate", "একীভূত", "মুছে", "remove duplicate"]
+        ):
+            ultimate_goal = (
+                "Unify redundant abstractions and remove duplicate code while maintaining parity"
+            )
             invariants.append("strict_backward_compatibility")
             methodology = "single_source_of_truth_migration_with_facades"
 
         # Pattern: Security / RBAC / Auth hardening
         elif any(w in lowered for w in ["security", "auth", "rbac", "নিরাপত্তা", "guard", "protect"]):
-            ultimate_goal = "Harden endpoints with role-based access control and strict boundary enforcement"
+            ultimate_goal = (
+                "Harden endpoints with role-based access control and strict boundary enforcement"
+            )
             invariants.append("zero_unauthenticated_admin_access")
             methodology = "inject_explicit_rbac_guards"
 

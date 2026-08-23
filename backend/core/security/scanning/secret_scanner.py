@@ -88,7 +88,9 @@ class SecretReport:
                     "line_number": f.line_number,
                     "column_start": f.column_start,
                     "column_end": f.column_end,
-                    "matched_text": (f.matched_text[:50] + "..." if len(f.matched_text) > 50 else f.matched_text),
+                    "matched_text": (
+                        f.matched_text[:50] + "..." if len(f.matched_text) > 50 else f.matched_text
+                    ),
                     "secret_type": f.secret_type,
                     "severity": f.severity,
                     "remediation": f.remediation,
@@ -219,7 +221,9 @@ class GitleaksRunner:
 
         return findings
 
-    def scan_directory(self, directory: Path, extensions: set[str] | None = None) -> list[SecretFinding]:
+    def scan_directory(
+        self, directory: Path, extensions: set[str] | None = None
+    ) -> list[SecretFinding]:
         """Scan a directory recursively for secrets."""
         if extensions is None:
             extensions = {
@@ -386,7 +390,9 @@ class SecretHunter:
                     try:
                         finding = await self.ai_analyzer.analyze_finding(finding, context)
                     except Exception as e:
-                        logger.warning(f"AI secret analysis skipped due to network/API timeout: {e}")
+                        logger.warning(
+                            f"AI secret analysis skipped due to network/API timeout: {e}"
+                        )
                     if finding.severity != "info":  # Not a false positive
                         validated_findings.append(finding)
                 else:

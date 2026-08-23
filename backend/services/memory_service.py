@@ -4,16 +4,18 @@ import json
 import math
 import os
 import sqlite3
+from datetime import UTC
 from typing import Any
 
 from loguru import logger
 
 from core.persistence import pooled_pg
-from datetime import UTC
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec("sentence_transformers") is not None
+HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
+    "sentence_transformers"
+) is not None
 
 
 def hash_vectorize(text: str, size: int = 384) -> list[float]:
@@ -71,7 +73,9 @@ class CascadeMemoryService:
                 self.db_path = None
                 logger.info("CascadeMemoryService: using pooled Postgres backend.")
             except Exception as exc:
-                logger.error(f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}")
+                logger.error(
+                    f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}"
+                )
                 self._use_pg = False
 
         if not self._use_pg:
@@ -182,11 +186,11 @@ class CascadeMemoryService:
         file_path: str,  # Could map to session_id or task_id
         content: str,
         summary: str,
-        structure: str, # Could map to metadata
+        structure: str,  # Could map to metadata
         session_id: str = "",
         agent_type: str = "unknown",
         task_type: str = "general",
-        metadata: dict[str, Any] | None = None
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         """Stores or updates a memory entry in the database.
 
@@ -205,7 +209,14 @@ class CascadeMemoryService:
                     INSERT INTO ai_memory (session_id, agent_type, task_type, summary, embedding, metadata)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     """,
-                    (session_id, agent_type, task_type, summary, embedding_str, json.dumps(metadata)),
+                    (
+                        session_id,
+                        agent_type,
+                        task_type,
+                        summary,
+                        embedding_str,
+                        json.dumps(metadata),
+                    ),
                 )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.store_memory: Postgres write failed: {exc}")
@@ -239,9 +250,14 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 if session_id:
-                     rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s", (session_id,))
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        (session_id,),
+                    )
                 else:
-                     rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory")
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                    )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
                 rows = []
@@ -252,8 +268,8 @@ class CascadeMemoryService:
                         "agent_type": row["agent_type"],
                         "task_type": row["task_type"],
                         "summary": row["summary"],
-                        "embedding": row["embedding"], # This is a JSON string
-                        "metadata": row["metadata"], # This is a dict
+                        "embedding": row["embedding"],  # This is a JSON string
+                        "metadata": row["metadata"],  # This is a dict
                         "created_at": row["created_at"],
                     }
                 )
@@ -318,7 +334,9 @@ class CascadeMemoryService:
             return 0.0
         return dot / (norm_b * norm_a)
 
-    def query_context(self, prompt: str, top_k: int = 5, session_id: str | None = None) -> list[dict[str, Any]]:
+    def query_context(
+        self, prompt: str, top_k: int = 5, session_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """
         Takes the user's prompt, embeds it, and queries PostgreSQL or local SQLite for the top_k
         most relevant structural contexts using cosine similarity.
@@ -332,9 +350,14 @@ class CascadeMemoryService:
         if self._use_pg:
             try:
                 if session_id:
-                    rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s", (session_id,))
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        (session_id,),
+                    )
                 else:
-                    rows = pooled_pg.query_dicts("SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory")
+                    rows = pooled_pg.query_dicts(
+                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                    )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
                 rows = []
@@ -348,14 +371,16 @@ class CascadeMemoryService:
                             "agent_type": row["agent_type"],
                             "task_type": row["task_type"],
                             "summary": row["summary"],
-                            "embedding": row["embedding"], # JSON string
-                            "metadata": row["metadata"], # Dict
+                            "embedding": row["embedding"],  # JSON string
+                            "metadata": row["metadata"],  # Dict
                             "created_at": row["created_at"],
                             "score": score,
                         }
                     )
                 except Exception as e:
-                    logger.warning(f"Error calculating similarity for {row.get('session_id', row.get('file_path', 'unknown'))}: {e}")
+                    logger.warning(
+                        f"Error calculating similarity for {row.get('session_id', row.get('file_path', 'unknown'))}: {e}"
+                    )
             results.sort(key=lambda x: x["score"], reverse=True)
             return results[:top_k]
 
@@ -418,7 +443,12 @@ class CascadeMemoryService:
         """Backward-compatible method to store messages in context window."""
         for msg in messages:
             content = msg.get("content", str(msg))
-            self.store_memory(f"{user_id}/context", content, content, json.dumps({"role": msg.get("role", "user")}))
+            self.store_memory(
+                f"{user_id}/context",
+                content,
+                content,
+                json.dumps({"role": msg.get("role", "user")}),
+            )
 
     def semantic_search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Backward-compatible alias for query_context."""
@@ -454,7 +484,9 @@ def _get_embedding_model():
         logger.info("Embedding model loaded: all-MiniLM-L6-v2")
         return _embedding_model
     except Exception as exc:
-        logger.warning(f"sentence-transformers not available ({exc}). Falling back to hash_vectorize.")
+        logger.warning(
+            f"sentence-transformers not available ({exc}). Falling back to hash_vectorize."
+        )
         return None
 
 
@@ -485,7 +517,11 @@ def _get_supabase():
         from supabase import create_client
 
         url = os.getenv("SUPABASE_URL")
-        key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY") or os.getenv("SUPABASE_ANON_KEY")
+        key = (
+            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+            or os.getenv("SUPABASE_KEY")
+            or os.getenv("SUPABASE_ANON_KEY")
+        )
         if not url or not key:
             return None
         _supabase_client = create_client(url, key)
@@ -514,6 +550,7 @@ async def save_memory(
     """
     try:
         from datetime import datetime
+
         embedding = get_embedding(summary)
         supabase = _get_supabase()
         now = datetime.now(UTC).isoformat()
@@ -532,10 +569,14 @@ async def save_memory(
                 result = supabase.table("ai_memory").insert(record).execute()
                 if result.data:
                     mem_id = result.data[0].get("id", "unknown")
-                    logger.info(f"Memory saved (Supabase) | id={mem_id} | task={task_type} | session={session_id}")
+                    logger.info(
+                        f"Memory saved (Supabase) | id={mem_id} | task={task_type} | session={session_id}"
+                    )
                     return {"success": True, "id": mem_id}
             except Exception as sb_err:
-                logger.warning(f"Supabase insert failed ({sb_err}), falling back to cascade service.")
+                logger.warning(
+                    f"Supabase insert failed ({sb_err}), falling back to cascade service."
+                )
 
         # Local / PostgreSQL Cascade Fallback
         memory_service.store_memory(
@@ -566,19 +607,18 @@ async def recall_memories(
         supabase = _get_supabase()
         if supabase:
             try:
-                result = (
-                    supabase.rpc(
-                        "match_ai_memory",
-                        {
-                            "query_embedding": embedding,
-                            "match_threshold": threshold,
-                            "match_count": limit,
-                        },
-                    )
-                    .execute()
-                )
+                result = supabase.rpc(
+                    "match_ai_memory",
+                    {
+                        "query_embedding": embedding,
+                        "match_threshold": threshold,
+                        "match_count": limit,
+                    },
+                ).execute()
                 memories = result.data or []
-                logger.info(f"Memory recall (Supabase) | query='{task_description[:60]}...' | found={len(memories)}")
+                logger.info(
+                    f"Memory recall (Supabase) | query='{task_description[:60]}...' | found={len(memories)}"
+                )
                 return memories
             except Exception as sb_err:
                 logger.debug(f"Supabase RPC failed ({sb_err}), falling back to cascade service.")
@@ -619,7 +659,7 @@ async def set_semantic_cache(prompt: str, response: str, session_id: str = "cach
             summary=prompt,
             task_type="semantic_cache",
             agent_type="system",
-            metadata={"response": response}
+            metadata={"response": response},
         )
         logger.info("🧠 Semantic Cache SET")
     except Exception as exc:
@@ -669,6 +709,7 @@ async def summarize_and_save_session(
         task_type=task_type,
         metadata={"message_count": len(messages)},
     )
+
 
 # Test Execution (If run directly)
 if __name__ == "__main__":

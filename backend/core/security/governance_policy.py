@@ -3,12 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 import logging
 import os
 import re
-from typing import List, Optional, Tuple
 
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
@@ -57,13 +54,13 @@ class GovernancePolicy:
 
     def __init__(
         self,
-        allowed_namespaces: Tuple[str, ...] = ALLOWED_EVOLUTION_NAMESPACES,
-        protected_paths: Tuple[str, ...] = PROTECTED_CRITICAL_PATHS,
+        allowed_namespaces: tuple[str, ...] = ALLOWED_EVOLUTION_NAMESPACES,
+        protected_paths: tuple[str, ...] = PROTECTED_CRITICAL_PATHS,
     ) -> None:
         self.allowed_namespaces = allowed_namespaces
         self.protected_paths = protected_paths
 
-    def validate_evolution_target(self, target_path: str) -> Tuple[bool, str]:
+    def validate_evolution_target(self, target_path: str) -> tuple[bool, str]:
         """Validate if a target module is eligible for autonomous self-modification.
 
         Returns (is_valid: bool, reason: str).
@@ -94,7 +91,9 @@ class GovernancePolicy:
         )
 
         if not is_allowed:
-            reason = f"Target '{target_path}' is not in an authorized evolution allowlist namespace."
+            reason = (
+                f"Target '{target_path}' is not in an authorized evolution allowlist namespace."
+            )
             logger.warning(f"🛡️ [GOVERNANCE GATE] Rejected: {reason}")
             return False, reason
 
@@ -110,7 +109,11 @@ class GovernancePolicy:
                     message=f"Unauthorized self-modification attempt on '{raw_path}' ({normalized_path}): {reason}",
                     severity="CRITICAL",
                     structured_context=ErrorContext(module="governance_policy"),
-                    context={"raw_path": raw_path, "normalized_path": normalized_path, "reason": reason},
+                    context={
+                        "raw_path": raw_path,
+                        "normalized_path": normalized_path,
+                        "reason": reason,
+                    },
                 )
             )
         except Exception as e:
@@ -118,7 +121,7 @@ class GovernancePolicy:
 
 
 # Global Singleton
-_governance_policy: Optional[GovernancePolicy] = None
+_governance_policy: GovernancePolicy | None = None
 
 
 def get_governance_policy() -> GovernancePolicy:

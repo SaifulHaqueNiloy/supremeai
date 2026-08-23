@@ -132,7 +132,9 @@ class PerformanceOptimizer:
         for m in inactive:
             del self.model_stats[m]
 
-    async def track_performance(self, operation: str, execution_time: float, success: bool = True) -> None:
+    async def track_performance(
+        self, operation: str, execution_time: float, success: bool = True
+    ) -> None:
         """Track performance metrics for an operation.
 
         বাংলা: Race condition এড়াতে asyncio.Lock দিয়ে atomic state update নিশ্চিত করে।
@@ -190,7 +192,9 @@ class PerformanceOptimizer:
             ]
         elif task_type == "coding":
             suitable_models = [
-                model_id for model_id, model_info in all_models.items() if "coding" in model_info.get("strengths", [])
+                model_id
+                for model_id, model_info in all_models.items()
+                if "coding" in model_info.get("strengths", [])
             ]
         else:
             # Default to general purpose models
@@ -266,7 +270,9 @@ class PerformanceOptimizer:
         }
         return provider_keys.get(provider, "")
 
-    async def handle_failure(self, error_type: str, error_message: str, context: dict[str, Any]) -> None:
+    async def handle_failure(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> None:
         """Handle system failures with self-healing capabilities.
 
         Args:
@@ -324,7 +330,9 @@ class PerformanceOptimizer:
             except Exception as e:
                 logger.error(f"Failed to submit auto-fix: {e}")
 
-    def _generate_error_signature(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
+    def _generate_error_signature(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> str:
         """Generate a unique signature for the error pattern.
 
         Args:
@@ -345,7 +353,9 @@ class PerformanceOptimizer:
         error_json = json.dumps(error_data, sort_keys=True, default=str)
         return hashlib.sha256(error_json.encode()).hexdigest()[:16]
 
-    async def _generate_fix_proposal(self, error_type: str, error_message: str, context: dict[str, Any]) -> str:
+    async def _generate_fix_proposal(
+        self, error_type: str, error_message: str, context: dict[str, Any]
+    ) -> str:
         """Generate a potential fix for the error.
 
         Args:
@@ -368,7 +378,9 @@ class PerformanceOptimizer:
             "CONNECTION_ERROR": "Check network connectivity and service availability",
         }
 
-        proposal = fix_proposals.get(error_type, f"Manual investigation required for: {error_message}")
+        proposal = fix_proposals.get(
+            error_type, f"Manual investigation required for: {error_message}"
+        )
 
         return f"""
 # Auto-generated fix proposal for: {error_type}
@@ -409,7 +421,9 @@ class PerformanceOptimizer:
         else:
             return 0.3
 
-    async def adaptive_load_balancing(self, task_type: str, workload: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def adaptive_load_balancing(
+        self, task_type: str, workload: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Distribute workload intelligently based on current system capacity.
 
         Args:
@@ -423,7 +437,11 @@ class PerformanceOptimizer:
         """
         # Track current system load
         active_tasks = len(
-            [m for m in self.metrics.values() if m.last_updated > datetime.now() - timedelta(seconds=30)]
+            [
+                m
+                for m in self.metrics.values()
+                if m.last_updated > datetime.now() - timedelta(seconds=30)
+            ]
         )
 
         # Adjust processing strategy based on load
@@ -447,7 +465,9 @@ class PerformanceOptimizer:
 
         return processed_workload
 
-    async def _process_workload_chunk(self, task_type: str, chunk: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _process_workload_chunk(
+        self, task_type: str, chunk: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Process a chunk of workload with appropriate error handling.
 
         Args:
