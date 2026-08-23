@@ -272,7 +272,7 @@ async def receive_ci_webhook(payload: WebhookPayload):
     _store_summary(summary)
 
     # Broadcast to WebSocket clients
-    await _broadcast_to_webhooks("summary_updated", summary.dict())
+    await _broadcast_to_websockets("summary_updated", summary.dict())
 
     return {
         "status": "received",

@@ -331,7 +331,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                     for name, cb, s in [
                         (n, CIRCUITS[n], CIRCUITS[n].stats)
                         for n in CIRCUITS
-                        if s.current_state.value == "open"
+                        if CIRCUITS[n].stats.current_state.value == "open"
                     ]
                 }
 
