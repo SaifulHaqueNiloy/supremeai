@@ -399,7 +399,7 @@ class UpstashChecker:
                     data = response.json()
                     return data.get("commandsToday", 3200)
         except Exception as e:
-            pass
+            logger.debug(f"Redis stats fetch failed: {e}")
         
         # Fallback to local tracking
         tracker_path = Path("/tmp/supremai_redis_commands.json")
@@ -584,7 +584,7 @@ class GitHubActionsChecker:
                 
                 return 520, is_public
         except Exception as e:
-            pass
+            logger.debug(f"GitHub billing fetch failed: {e}")
         
         # Local tracking fallback
         tracker_path = Path("/tmp/supremai_gha_minutes.json")

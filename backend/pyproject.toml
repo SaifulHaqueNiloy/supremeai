@@ -93,6 +93,7 @@ pydantic-ai = "^2.31.0"
 langfuse = "^4.14.4"
 packaging = "^26.3"
 bcrypt = "^5.0.0"
+infisical-python = "^2.3.6"
 [tool.poetry.group.ml]
 optional = true
 
