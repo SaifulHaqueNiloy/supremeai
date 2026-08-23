@@ -32,14 +32,6 @@ os.environ.setdefault("OPENROUTER_API_KEY", "mock_key")
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create a session-scoped event loop."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
-
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Create an async HTTP client for FastAPI testing."""
