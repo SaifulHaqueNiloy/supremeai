@@ -10,7 +10,8 @@ from typing import Any
 import httpx
 from bs4 import BeautifulSoup
 from loguru import logger
-from security import is_safe_url
+
+from services.scraper.security import is_safe_url
 
 # 🔧 DYNAMIC CONFIG: User-Agent from env, with safe default
 _DEFAULT_USER_AGENT = os.getenv(

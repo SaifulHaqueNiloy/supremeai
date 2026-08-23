@@ -29,6 +29,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import TypeVar
 
+from loguru import logger
+
 T = TypeVar("T")
 
 
@@ -226,6 +228,76 @@ def get_circuit(name: str) -> CircuitBreaker:
     if name not in CIRCUITS:
         CIRCUITS[name] = CircuitBreaker(name)
     return CIRCUITS[name]
+
+
+class RedisCircuitBreaker(CircuitBreaker):
+    """
+    Circuit breaker with a Redis-backed compatibility API.
+
+    Provides the should_attempt_external() / record_success() / record_failure()
+    surface used by call sites written against the original Redis-based circuit
+    breaker (see core/cache/redis_manager.py), while delegating actual
+    open/closed/half-open bookkeeping to the CircuitBreaker v3.0 state machine
+    above. State is tracked centrally in Redis when available (shared across
+    workers), and falls back to local in-memory state if Redis is unreachable.
+    """
+
+    def __init__(
+        self,
+        name: str = "default",
+        failure_threshold: int = 3,
+        recovery_timeout: float = 30.0,
+    ):
+        super().__init__(
+            name=name, failure_threshold=failure_threshold, recovery_timeout=recovery_timeout
+        )
+        self.prefix = f"circuit_breaker:{name}"
+
+    async def _get_redis_client(self):
+        try:
+            from core.cache.redis_manager import redis_manager
+
+            return await redis_manager.get_client_async()
+        except Exception as e:
+            logger.debug(f"RedisCircuitBreaker: Redis unavailable ({e}), using in-memory state")
+            return None
+
+    async def record_success(self) -> None:
+        await self._on_success()
+        client = await self._get_redis_client()
+        if not client:
+            return
+        try:
+            await client.set(f"{self.prefix}:state", self._state.value)
+            await client.set(f"{self.prefix}:failures", self._failure_count)
+        except Exception as e:
+            logger.error(f"RedisCircuitBreaker record_success sync failed: {e}")
+
+    async def record_failure(self) -> None:
+        await self._on_failure()
+        client = await self._get_redis_client()
+        if not client:
+            return
+        try:
+            await client.set(f"{self.prefix}:state", self._state.value)
+            await client.set(f"{self.prefix}:failures", self._failure_count)
+            if self._state == CircuitState.OPEN:
+                await client.set(f"{self.prefix}:opened_at", self._last_failure_time)
+        except Exception as e:
+            logger.error(f"RedisCircuitBreaker record_failure sync failed: {e}")
+
+    async def should_attempt_external(self) -> bool:
+        """Return True if a call should be attempted (mirrors protect()'s gate logic)."""
+        async with self._lock:
+            if self._should_attempt_reset():
+                self._state = CircuitState.HALF_OPEN
+                self._half_open_calls = 0
+
+            if self._state == CircuitState.OPEN:
+                return False
+            if self._state == CircuitState.HALF_OPEN:
+                return self._half_open_calls < self.half_open_max_calls
+            return True
 
 
 # =============================================================================
