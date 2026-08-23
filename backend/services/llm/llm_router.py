@@ -230,9 +230,14 @@ class LLMRouter:
             Provider.DEEPSEEK: DeepSeekProvider(),
             Provider.TOGETHER: TogetherProvider(),
             Provider.GEMINI: GeminiProvider(),
-            Provider.OLLAMA: OllamaProvider(),
             Provider.HUGGINGFACE_SPACE: HuggingFaceSpaceProvider(),
         }
+        
+        try:
+            _candidate_providers[Provider.OLLAMA] = OllamaProvider()
+        except NotImplementedError as e:
+            logger.debug(f"llm_router_ollama_skipped: {e}")
+
         # key-less provider বাদ দেওয়া হচ্ছে — Ollama local provider-এর key নেই, সেটা রাখা হবে
         self.providers: dict[Provider, LLMProvider] = {
             p: prov for p, prov in _candidate_providers.items()
