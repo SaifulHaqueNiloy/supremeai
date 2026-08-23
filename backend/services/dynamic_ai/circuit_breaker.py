@@ -89,7 +89,7 @@ class CircuitBreakerManager:
                 else:
                     # Still in open state - block request
                     circuit.total_blocked_requests += 1
-                    remaining = self._config.timeout_seconds - time_since_open
+                    self._config.timeout_seconds - time_since_open
                     return False
 
             elif circuit.state == CircuitState.HALF_OPEN:
@@ -114,7 +114,6 @@ class CircuitBreakerManager:
 
                 # Check if we should close the circuit
                 if circuit.success_count >= self._config.success_threshold:
-                    old_state = circuit.state
                     circuit.state = CircuitState.CLOSED
                     circuit.failure_count = 0
                     circuit.success_count = 0
@@ -136,7 +135,6 @@ class CircuitBreakerManager:
             if circuit.state == CircuitState.CLOSED:
                 # Check if we should open the circuit
                 if circuit.failure_count >= self._config.failure_threshold:
-                    old_state = circuit.state
                     circuit.state = CircuitState.OPEN
                     circuit.last_state_change = time.time()
                     logger.debug(

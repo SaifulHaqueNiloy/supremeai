@@ -54,7 +54,7 @@ async def test_dispatch_non_admin_request():
     # Mock call_next to return a simple response
     call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-    response = await middleware.dispatch(request, call_next)
+    await middleware.dispatch(request, call_next)
 
     # Verify that security_signal was added to request state
     assert hasattr(request.state, "security_signal")
@@ -93,11 +93,11 @@ async def test_dispatch_admin_request_no_previous_context():
         mock_redis_manager.set_cache = AsyncMock()
 
         # Mock send_otp function
-        with patch("backend.middleware.anti_hacking.send_otp") as mock_send_otp:
+        with patch("backend.middleware.anti_hacking.send_otp"):
             # Mock call_next to return a simple response
             call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-            response = await middleware.dispatch(request, call_next)
+            await middleware.dispatch(request, call_next)
 
             # Verify that security_signal was added to request state
             assert hasattr(request.state, "security_signal")
@@ -146,7 +146,7 @@ async def test_dispatch_admin_request_matching_context():
         # Mock call_next to return a simple response
         call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-        response = await middleware.dispatch(request, call_next)
+        await middleware.dispatch(request, call_next)
 
         # Verify that security_signal was added to request state
         assert hasattr(request.state, "security_signal")
@@ -202,7 +202,7 @@ async def test_dispatch_admin_request_context_mismatch_alert_only():
                 # Mock call_next to return a simple response
                 call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-                response = await middleware.dispatch(request, call_next)
+                await middleware.dispatch(request, call_next)
 
                 # Verify that security_signal was added to request state
                 assert hasattr(request.state, "security_signal")
@@ -314,7 +314,7 @@ async def test_dispatch_admin_request_same_subnet_ua_caution():
         # Mock call_next to return a simple response
         call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-        response = await middleware.dispatch(request, call_next)
+        await middleware.dispatch(request, call_next)
 
         # In caution mode, it should continue normally
         call_next.assert_called_once()
@@ -404,7 +404,7 @@ async def test_dispatch_with_redis_disabled():
         # Mock call_next to return a simple response
         call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-        response = await middleware.dispatch(request, call_next)
+        await middleware.dispatch(request, call_next)
 
         # Should continue normally despite Redis being unavailable
         call_next.assert_called_once()
@@ -443,7 +443,7 @@ async def test_dispatch_with_redis_client_none():
         # Mock call_next to return a simple response
         call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-        response = await middleware.dispatch(request, call_next)
+        await middleware.dispatch(request, call_next)
 
         # Should continue normally despite Redis client being None
         call_next.assert_called_once()
@@ -471,7 +471,7 @@ async def test_dispatch_admin_no_sub_attribute():
     # Mock call_next to return a simple response
     call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-    response = await middleware.dispatch(request, call_next)
+    await middleware.dispatch(request, call_next)
 
     # Should handle gracefully and continue
     call_next.assert_called_once()
@@ -499,7 +499,7 @@ async def test_dispatch_admin_user_none():
     # Mock call_next to return a simple response
     call_next = AsyncMock(return_value=JSONResponse(content={"test": "response"}))
 
-    response = await middleware.dispatch(request, call_next)
+    await middleware.dispatch(request, call_next)
 
     # Should handle gracefully and continue
     call_next.assert_called_once()

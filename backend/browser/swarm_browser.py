@@ -70,7 +70,7 @@ class SwarmBrowser:
         try:
             from core.evolution.digital_twin.simulator import DigitalTwinSimulator
 
-            twin = DigitalTwinSimulator()
+            DigitalTwinSimulator()
             # Simulation verification
             return {
                 "safe": True,

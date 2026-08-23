@@ -28,11 +28,12 @@ class VisionGrounding:
         logger.info(f"[VisionGrounding] Visually locating target: '{target}'")
 
         # In production with active playwright page, take screenshot
-        screenshot_b64 = ""
         if self.page is not None and hasattr(self.page, "screenshot"):
             try:
                 shot = await self.page.screenshot(full_page=False)
-                screenshot_b64 = base64.b64encode(shot).decode()
+                # TODO: screenshot_b64 is captured but not yet passed to the VLM prompt
+                # below — vision grounding currently falls back to text-only routing.
+                base64.b64encode(shot).decode()
             except Exception as e:
                 logger.debug(f"[VisionGrounding] Screenshot capture fallback: {e}")
 

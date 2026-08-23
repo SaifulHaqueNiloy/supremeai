@@ -53,9 +53,7 @@ class FreeTierOptimizedVectorStore:
                 ]
 
                 # Insert batch
-                result = (
-                    self.client.table(self.table_name).upsert(records, on_conflict="id").execute()
-                )
+                (self.client.table(self.table_name).upsert(records, on_conflict="id").execute())
 
                 # Small delay to prevent overwhelming free tier DB
                 await asyncio.sleep(0.05)
@@ -119,7 +117,7 @@ class FreeTierOptimizedVectorStore:
 
             cutoff = (datetime.utcnow() - timedelta(days=days_old)).isoformat()
 
-            result = (
+            (
                 self.client.table(self.table_name)
                 .filter(f"created_at.lt.{cutoff}")
                 .limit(limit)
