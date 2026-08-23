@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-MIGRATIONS_DIR = pathlib.Path(__file__).parent.parent / "database" / "migrations"
+MIGRATIONS_DIR = pathlib.Path(__file__).parent.parent.parent / "database" / "migrations"
 
 
 # ── SQL Schema Validation ─────────────────────────────────────────────────────
@@ -280,7 +280,7 @@ class TestTenantRateLimiter:
     def test_rate_limiter_file_exists(self):
         import pathlib
 
-        p = pathlib.Path(__file__).parent.parent / "tools" / "tenant_rate_limiter.py"
+        p = pathlib.Path(__file__).parent.parent.parent / "tools" / "tenant_rate_limiter.py"
         assert p.exists(), "tenant_rate_limiter.py must exist"
         assert p.stat().st_size > 1000, "tenant_rate_limiter.py appears too small (stub?)"
 
@@ -288,7 +288,7 @@ class TestTenantRateLimiter:
         import ast
         import pathlib
 
-        p = pathlib.Path(__file__).parent.parent / "tools" / "tenant_rate_limiter.py"
+        p = pathlib.Path(__file__).parent.parent.parent / "tools" / "tenant_rate_limiter.py"
         tree = ast.parse(p.read_text(encoding="utf-8"))
         classes = [n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)]
         assert len(classes) > 0, "tenant_rate_limiter.py should have at least one class"
