@@ -2884,31 +2884,72 @@ type = ["pytest-mypy"]
 
 [[package]]
 name = "infisical-python"
-version = "2.3.6"
+version = "2.1.7"
 description = "Official Infisical SDK for Python (New)"
 optional = false
 python-versions = ">=3.7"
 groups = ["main"]
 files = [
-    {file = "infisical_python-2.3.6-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:f255e066b928a9e83cfb84589fa57d04f4b9f055f97915916e3d01adb93b17b4"},
-    {file = "infisical_python-2.3.6-cp310-none-win_amd64.whl", hash = "sha256:feefdcaa46e3c03e170841338aac2f97d55964bf5293764dd154f715a84d0d2c"},
-    {file = "infisical_python-2.3.6-cp311-cp311-macosx_10_7_x86_64.whl", hash = "sha256:81c61f092c18a991120c249eac09c6b957f33f0ed86b93db13ec3def187c9ab8"},
-    {file = "infisical_python-2.3.6-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:5c78bca289052ccf61108f36621c3f7f15fa58b2149a96009e5668b1dd2cfd76"},
-    {file = "infisical_python-2.3.6-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:199f10faf53161265f313e6542c35500ef3e4b9cced9f439715c821519b47897"},
-    {file = "infisical_python-2.3.6-cp311-none-win_amd64.whl", hash = "sha256:8fe1254b86d9d447c0d734cfbf6bec858215b45af599350a5c66fc4cab8b43bd"},
-    {file = "infisical_python-2.3.6-cp312-cp312-macosx_10_7_x86_64.whl", hash = "sha256:1ed5c5da24013b8fbede899569775420cfd7d120dec26b465771a608dc9255ea"},
-    {file = "infisical_python-2.3.6-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:63a80e9827f90e1a1bcf97463b11982fb56a2dc7cd0f4f431355d8946b216ef4"},
-    {file = "infisical_python-2.3.6-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:3015b4bb746e470f2d5de588018475e8933f8ad58d49cd012bf4398679d543f6"},
-    {file = "infisical_python-2.3.6-cp312-none-win_amd64.whl", hash = "sha256:fc66284e44bec19a9caafc57daaefd37844da75ce60406e760a8a27196883809"},
-    {file = "infisical_python-2.3.6-cp313-none-win_amd64.whl", hash = "sha256:c543bf48c4460fb89f2b7e3d78d0678be12bb1b8c193df6bb54edf01374d656a"},
-    {file = "infisical_python-2.3.6-cp37-cp37m-manylinux_2_28_aarch64.whl", hash = "sha256:851dcf242a3d46639d0d0b9a0306c489198a234c4cbd4b3f4d0cba0db6ff6298"},
-    {file = "infisical_python-2.3.6-cp38-cp38-manylinux_2_28_aarch64.whl", hash = "sha256:5bacada396c348703b37d15c35f87acb9f4016930417f1ec681b602ec2acfe9f"},
-    {file = "infisical_python-2.3.6-cp38-none-win_amd64.whl", hash = "sha256:52ad547d5a853a14b8ade4493092bf91d8454f2365337be0eb8225b430f720af"},
-    {file = "infisical_python-2.3.6-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:e507219c145441e7b14e4e66a5467b30a574ae583b67dc4fbac7267f9a2021c2"},
-    {file = "infisical_python-2.3.6-cp39-none-win_amd64.whl", hash = "sha256:c0a70338d1f2bc4ae858c655b4a0094e9e0c33746b1062a658929fbc2eb6f397"},
-    {file = "infisical_python-2.3.6-pp37-pypy37_pp73-manylinux_2_28_aarch64.whl", hash = "sha256:c7275251889a812987e764989a22114b98346a17f450ee3accac4fd0417ba63d"},
-    {file = "infisical_python-2.3.6-pp38-pypy38_pp73-manylinux_2_28_aarch64.whl", hash = "sha256:56ca72be8fb082ec5380263ba385a7b28b13020e3a0cc1218c7810b198fbe44f"},
-    {file = "infisical_python-2.3.6-pp39-pypy39_pp73-manylinux_2_28_aarch64.whl", hash = "sha256:88842dc37a1b226c61614ca3a9c9fd74438b144adee15ce683ae15b98589796e"},
+    {file = "infisical_python-2.1.7-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:657ff24729818779af3988a4faa4ffe485286eb1677eeececc7752cf6c3d0054"},
+    {file = "infisical_python-2.1.7-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e2b8d2aa113ef3ee2a964cfdc8651e50825efcd7c12b932be7d28707f2c0f89f"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:3777e263141c304a8fbd1f3c033ca044b3809af7e275b1331fca9959fd7ac6ab"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f6d3c59233dee4b2060a6c6b13f8b23ab0a377c81e9527a9e06d4825eb612ae1"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:6aec90556c182dfc480ca7853f3523c3a4d987c0327a986f8069dd65da2b758b"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:e0caa14e23f63d3a69836da22dfcb801cd9f3877669773f4290ba6359c95489f"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:698f973c9f76b52ba8ce477e55eb25dbc55301a647593217e280b596b4e8df50"},
+    {file = "infisical_python-2.1.7-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:249a36ac8616ba3f02ef9bcef0f970cde17a518e5b2ba035afeb69c5ccb1e268"},
+    {file = "infisical_python-2.1.7-cp310-none-win32.whl", hash = "sha256:63b9bfa24fd5e153d60aede51b7dda03ecb7a718158fd607ef5aaf80b5636f23"},
+    {file = "infisical_python-2.1.7-cp310-none-win_amd64.whl", hash = "sha256:bf6cf53147b6a00d7d8304ded5629c17912ae2854bf25373f23364fcff02b833"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:6e5745c55b16bff0df38db6c2fe1883ea940d3fffc69a5e2e67092030fea8065"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:34f5f3446ffacd735a5272beb9f197e0be6df95fbcf2a28dad0f662bd04ab8db"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:efce910024a65506eac6e32ce843f2a18f46cd23c5d2d8eecb1c45d1a9084822"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:957a2ca578e502ebe274ed5cff8d408d5faed399d6af7d46f1a7534e7e6cd4c3"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:dfba771e16d2106fc43ea71166f61a212e751e976fc78f6d50964b4c01639844"},
+    {file = "infisical_python-2.1.7-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:02b115bc4e8cd97bc51f788b202f8c527bc93e40dc7a0cf93f8d852aa712abdc"},
+    {file = "infisical_python-2.1.7-cp312-cp312-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:b2468ca84057538c76724cc337172d84cdb62a36a726812c8bbcc3ea18b4884b"},
+    {file = "infisical_python-2.1.7-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:56c19ede66eb9e3e94bad01f2abf8c55f70a21ed92575ed15892caef73da9f08"},
+    {file = "infisical_python-2.1.7-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:b9f8e42376f48cc067bee1e6d2385767425d9b2c76e34bc9177ebee30ff64ee9"},
+    {file = "infisical_python-2.1.7-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9f04e0d93811295a7f959f719872765df2770a834a067c7cb7742f112e7c0d7c"},
+    {file = "infisical_python-2.1.7-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:86aa6c2cfb320233ddf10ee80c2e3c310de1e49cc4d43882b5b01e455666e966"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:809f39e5ba8cf85b69223c86ff77c3357b908c35cdb2344f033aea8c1e3cb145"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:535489f9ca53a0b2c13204bc90dadf5dde0035fa9655383a0e7defa366ecb2a4"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:72f2f0b0282c60a73f4f432d19d9893d64f75990165a1c2efa0deb8beb5816a1"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:d865bd70062e2b33ab460a561e6c71e6d4d906edd283c09bb7a3f163203745a1"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:9c0bcf8c2cec8bc0ff4c7d0eda7be128f3884608831b2c2ea760a82400399cc9"},
+    {file = "infisical_python-2.1.7-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0a695e4a491cde86dcbff241f465a63e2e7ad7f138d2d141999f24e892d8a62e"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:4ef64bd011a107a405fef5af7c804030b73d290f0eb7b548f443c4970fc06d5e"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8fcdad0c0a236a9fb406ab2ad83887275240e03c47939695d007aeacc615c044"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:5ad3f730158914080ac57484acd3f55b5cea1ff1ee675799034a5ff180b43bd7"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:02413fcfffb09cc8504ed73c84266324d6ff1e4132ee781082e33b5917d55142"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:3da0de393a0c56665121774b164c6c257bf4a3442a35c7093e483ae928f35fba"},
+    {file = "infisical_python-2.1.7-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:613d089cdb2ac909b2191b6fd329c6752206d8a3156999eee64e4032b4a49149"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:8f89eae4ae30a4d8bcc1a49c483eedff30b3e0a37e7dab6e9525bd8898db61f3"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cea9ddf62b62878593fbf6d8a8a07739951ce3a4778a2eb6e0a83d8b49966414"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:831aac7aa9d33c55ad46c712db26b43a0f706d5102dcf27dd3e6aaed9dda171e"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:e3d6fcd76a63d7555cee1f366303f73d32bdd9303b21b07e56ea1ce68bec5d86"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:5355eb2e57f30092b5b4cf2109f0faa8f3fc4e09fe6bb45516539a7b1d62a4c6"},
+    {file = "infisical_python-2.1.7-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:abb6b7a3207149908d76ed9c6f5ce6dbb117a2925480601bbd015424a9f938a0"},
+    {file = "infisical_python-2.1.7-pp310-pypy310_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:827147fb6ea1e340c9bfba024581e0e613c4b391fcfffde30bb22d1adf2a1f38"},
+    {file = "infisical_python-2.1.7-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4558fde04416db916503477ff1e54ada8a5e4a4a0a9d8d9cce42fe017d47f8f3"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:c9d9b4432b24c92900243057f67c76f5589c97da86c3731fc1807eedd7d9d64c"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9d942606207b95ac08e94de2d57c0df6e0345b7ef75eb888671e6b85b83900e4"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:0921e9a5c3c18eb1c7ead88da58e61023885e3b34e2b806395d8bbad9a9e396b"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:a70afaadd6e3ce46b9a1e92d8b66ef01573799448bf1759e2318e37d24b474d6"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:b2a3ccecab51f82edc57af723eb4346b22a1f39815ebb1f6c4c83fec0baa1e3e"},
+    {file = "infisical_python-2.1.7-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8c26a001dfbd714502d66a6d2b640325c661da8003fdc05a0df9a5b2c882c8f"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:6c3f3d9dacbaf3d28a9249f9642e5b3e3b693b5267327185d56caa13c773cfdf"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2ed99d097c350fa5634eefaca0c8c6779ecc44e2bb597821677d23f527ea8ba2"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:3706b6b0a1cbe67f4f08567cf4abd661644585057c72272137fdce3d77620a94"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:75058b183fedebcee80285bac5f11ee8e7ee444544dd9bbae13d48e110d7c33d"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:61d84f81a921b14d0d66492a5ad2389b7607422b32d998cf529390006f3e6dc9"},
+    {file = "infisical_python-2.1.7-pp38-pypy38_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9cc112a2e9cfad734ef8b0bb871124c92276e4d9e1ff4439bab8e75ddbc7b5a1"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_12_i686.manylinux2010_i686.whl", hash = "sha256:0314985340cf60decef05d5423be3b182f5824e6e1c69f63481b27c45ef7b1b2"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f5c1705b5342bf9d337e58edd8b102898c28baa1ffcf36b8cf8ab2295a84e26d"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:c9fd3feb3ec89adb204ebcd72953b8d0829346bb127f743671163eaadd5e7afe"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:46fc8cc3734e55d5af221dd0cab9fa85a30d70de2400209b9e8bd73a540fe49b"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:06ee8462b9e9edd4a42e9e67aa9991ba48aa2cef1560ccb18063c0783e3e327f"},
+    {file = "infisical_python-2.1.7-pp39-pypy39_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:52c60c63fc0019afd4cf43b3ac96a694b71ccbf8b2a7766a48202435bb69bd6c"},
+    {file = "infisical_python-2.1.7.tar.gz", hash = "sha256:f30e6d6c53a758fff4100e4661cf92177545c249acee1a95fe676298496c36a2"},
 ]
 
 [[package]]
@@ -8656,4 +8697,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "11ff791529fc6c6e1caf77f8a84dcfd92a2467f60de3b7ad6f7f6efca2dbf91e"
+content-hash = "619767c5123b4b4e8c2ab7f7c0679290980940e722f03e3a56281bd7fe1ae55d"
