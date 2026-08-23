@@ -254,4 +254,6 @@ ignore = [
     "B028",   # Missing stacklevel in warnings.warn (low-impact, tracked separately)
 ]
 
-
+[tool.ruff.lint.per-file-ignores]
+# Ignore isort (I001) for Alembic migrations due to Windows vs Linux sys.path resolution discrepancy causing CI flip-flops
+"alembic_migrations/versions/*.py" = ["I001"]
