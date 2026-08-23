@@ -1,4 +1,5 @@
 """Detector exports + registry."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,4 +49,3 @@ ALL_DETECTORS: list[type[BaseDetector]] = [
 ]
 
 __all__ = ["ALL_DETECTORS", "BaseDetector"]
-

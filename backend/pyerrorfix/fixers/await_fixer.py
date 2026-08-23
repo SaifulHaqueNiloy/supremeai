@@ -1,4 +1,5 @@
 """Add missing `await` before known-coroutine calls."""
+
 from __future__ import annotations
 
 import ast
@@ -31,7 +32,10 @@ class AwaitFixer(BaseFixer):
         edits: list[tuple[int, int]] = []  # (line_index, col_offset)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
-                if (node.lineno, node.col_offset + 1) in targets or (node.lineno, node.col_offset) in targets:
+                if (node.lineno, node.col_offset + 1) in targets or (
+                    node.lineno,
+                    node.col_offset,
+                ) in targets:
                     if not _is_already_awaited(tree, node):
                         edits.append((node.lineno, node.col_offset))
         if not edits:

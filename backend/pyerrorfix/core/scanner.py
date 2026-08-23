@@ -1,4 +1,5 @@
 """Scanner orchestrator: runs every detector and (optionally) every fixer."""
+
 from __future__ import annotations
 
 import time
@@ -34,9 +35,7 @@ class Scanner:
         elapsed = int((time.perf_counter() - t0) * 1000)
         # stable order: by line, then severity weight, then rule_id
         issues.sort(key=lambda i: (i.line, _sev_weight(i.severity), i.rule_id))
-        return ScanResult(
-            issues=issues, fixed_source=fixed, files_scanned=1, elapsed_ms=elapsed
-        )
+        return ScanResult(issues=issues, fixed_source=fixed, files_scanned=1, elapsed_ms=elapsed)
 
     # ---- directory walk ----
     def scan_path(self, path: str | Path) -> ScanResult:
@@ -111,7 +110,22 @@ def _sev_weight(sev) -> int:
 
 def _should_skip(path: Path) -> bool:
     parts = path.parts
-    if any(p in {"__pycache__", ".venv", "venv", "env", ".git", "node_modules",
-                  "dist", "build", ".tox", ".mypy_cache", ".pytest_cache"} for p in parts):
+    if any(
+        p
+        in {
+            "__pycache__",
+            ".venv",
+            "venv",
+            "env",
+            ".git",
+            "node_modules",
+            "dist",
+            "build",
+            ".tox",
+            ".mypy_cache",
+            ".pytest_cache",
+        }
+        for p in parts
+    ):
         return True
     return False

@@ -3,6 +3,7 @@
 
 Run:  python -m pyerrorfix analyze examples/sample_buggy.py --fix --format console
 """
+
 import asyncio
 import hashlib
 import logging
@@ -92,6 +93,7 @@ def hash_password(pw: str) -> str:
 # --- deprecated API (deprecation) ---
 def legacy():
     import imp  # removed in 3.12
+
     return imp.find_module("os")
 
 

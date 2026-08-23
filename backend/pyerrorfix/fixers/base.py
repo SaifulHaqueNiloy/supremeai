@@ -1,4 +1,5 @@
 """Base fixer + registry."""
+
 from __future__ import annotations
 
 from pyerrorfix.core.issue import Issue

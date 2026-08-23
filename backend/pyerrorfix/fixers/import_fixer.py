@@ -1,4 +1,5 @@
 """Remove unused imports + sort imports (isort-lite, zero-dependency)."""
+
 from __future__ import annotations
 
 import ast
@@ -81,7 +82,9 @@ class ImportSortFixer(BaseFixer):
         # ensure trailing newline consistency
         if not new_block or not new_block[-1].endswith("\n"):
             new_block.append("\n" if new_block else "")
-        return "".join(lines[: first_import - 1]) + "".join(new_block) + "".join(lines[last_import:])
+        return (
+            "".join(lines[: first_import - 1]) + "".join(new_block) + "".join(lines[last_import:])
+        )
 
 
 def _is_single_import(line: str) -> bool:
@@ -101,14 +104,69 @@ def _module_of(import_line: str) -> str:
 
 # Subset of stdlib top-level names used for grouping (see detectors/imports.py for full set).
 _STDLIB_TOP = {
-    "abc", "argparse", "ast", "asyncio", "base64", "binascii", "collections",
-    "concurrent", "contextlib", "contextvars", "copy", "csv", "dataclasses",
-    "datetime", "decimal", "difflib", "enum", "functools", "hashlib", "heapq",
-    "html", "http", "importlib", "inspect", "io", "ipaddress", "itertools",
-    "json", "logging", "math", "os", "pathlib", "pickle", "re", "secrets",
-    "shutil", "signal", "socket", "sqlite3", "ssl", "statistics", "string",
-    "struct", "subprocess", "sys", "tempfile", "textwrap", "threading", "time",
-    "timeit", "token", "tokenize", "traceback", "types", "typing", "unicodedata",
-    "unittest", "urllib", "uuid", "warnings", "weakref", "xml", "zipfile", "zlib",
+    "abc",
+    "argparse",
+    "ast",
+    "asyncio",
+    "base64",
+    "binascii",
+    "collections",
+    "concurrent",
+    "contextlib",
+    "contextvars",
+    "copy",
+    "csv",
+    "dataclasses",
+    "datetime",
+    "decimal",
+    "difflib",
+    "enum",
+    "functools",
+    "hashlib",
+    "heapq",
+    "html",
+    "http",
+    "importlib",
+    "inspect",
+    "io",
+    "ipaddress",
+    "itertools",
+    "json",
+    "logging",
+    "math",
+    "os",
+    "pathlib",
+    "pickle",
+    "re",
+    "secrets",
+    "shutil",
+    "signal",
+    "socket",
+    "sqlite3",
+    "ssl",
+    "statistics",
+    "string",
+    "struct",
+    "subprocess",
+    "sys",
+    "tempfile",
+    "textwrap",
+    "threading",
+    "time",
+    "timeit",
+    "token",
+    "tokenize",
+    "traceback",
+    "types",
+    "typing",
+    "unicodedata",
+    "unittest",
+    "urllib",
+    "uuid",
+    "warnings",
+    "weakref",
+    "xml",
+    "zipfile",
+    "zlib",
     "zoneinfo",
 }

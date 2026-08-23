@@ -1,4 +1,5 @@
 """Convert bare `except:` → `except Exception:`."""
+
 from __future__ import annotations
 
 import re
@@ -18,7 +19,7 @@ class BareExceptFixer(BaseFixer):
             m = re.match(r"^(\s*)except\s*:", line)
             if m:
                 indent = m.group(1)
-                rest = line[len(indent) + len("except:"):].lstrip()
+                rest = line[len(indent) + len("except:") :].lstrip()
                 if rest:
                     out.append(f"{indent}except Exception:{rest}")
                 else:
