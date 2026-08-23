@@ -781,9 +781,7 @@ import itertools
 try:
     import requests
 except ImportError:
-    import httpx
-from services.dynamic_ai.orchestrator import get_ai_orchestrator
- as requests
+    import httpx as requests
 
 
 class HFKeyRotator:
