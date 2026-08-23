@@ -39,6 +39,10 @@ USER supremeai
 # Expose port
 EXPOSE 8080
 
+# 🔬 Evolution v3.0: Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health/live')" || exit 1
+
 # Start command
 CMD ["python", "main.py"]
 
