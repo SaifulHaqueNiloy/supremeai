@@ -1,11 +1,3 @@
-logger = logging.getLogger(__name__)
-
-try:
-    import requests
-
-    HAS_REQUESTS = True
-except ImportError:
-    HAS_REQUESTS = False
 #!/usr/bin/env python3
 """
 ╔═══════════════════════════════════════════════════════════════════╗
@@ -27,6 +19,7 @@ Author: SuperAI Team | License: MIT | Version: 1.0
 
 import asyncio
 import hashlib
+import logging
 import math
 import time
 from dataclasses import dataclass
@@ -34,7 +27,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-import requests
+try:
+    import requests
+
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
+logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════════════════════════
 # 1. PERSONALITY ENGINE (🚀 NO COMPETITOR HAS THIS!)
