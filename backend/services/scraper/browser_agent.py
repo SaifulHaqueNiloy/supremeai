@@ -18,7 +18,7 @@ except ImportError:
 from loguru import logger
 from pydantic import BaseModel
 
-from security import is_safe_url
+from core.security import is_safe_url
 from web_scraper import WebScraper
 
 # 🔧 DYNAMIC BROWSER CONFIG: All values from environment variables
