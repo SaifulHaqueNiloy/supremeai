@@ -196,7 +196,7 @@ class SupabaseStore(SQLiteMemoryStore):
                     embedding = list(embedding) + [0.0] * (1536 - len(embedding))
                 return embedding[:1536]
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
                 
             try:
                 # Fallback 2: LiteLLM with OpenAI

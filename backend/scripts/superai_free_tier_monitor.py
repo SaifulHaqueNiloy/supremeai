@@ -274,7 +274,7 @@ class SupabaseChecker:
                     data = json.load(f)
                     return data.get("estimated_size_mb", 150)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         return 180  # Default estimate
     
     @staticmethod
@@ -287,7 +287,7 @@ class SupabaseChecker:
                     data = json.load(f)
                     return data.get("monthly_gb", 0.3)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         return 0.25
     
     @staticmethod
@@ -301,7 +301,7 @@ class SupabaseChecker:
                     data = json.load(f)
                     return data.get("mau", 120)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         return 85  # Conservative default
     
     @staticmethod
@@ -409,7 +409,7 @@ class UpstashChecker:
                     data = json.load(f)
                     return data.get("today_count", 2800)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         
         return 3500
     
@@ -423,7 +423,7 @@ class UpstashChecker:
                     data = json.load(f)
                     return data.get("used_mb", 45)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         return 52  # Default estimate
 
 
@@ -594,7 +594,7 @@ class GitHubActionsChecker:
                     data = json.load(f)
                     return data.get("minutes_used", 380), data.get("is_public", False)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         
         return 480, False
 
@@ -676,7 +676,7 @@ class LLMAPIChecker:
                     data = json.load(f)
                     return data.get("estimated_monthly_usd", 8.50)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         return 12.0  # Default estimate
     
     @classmethod
@@ -1139,7 +1139,7 @@ class UsageTracker:
                 with open(file) as f:
                     data = json.load(f)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         
         if data.get("date") != today:
             data = {"date": today, "count": 0}
@@ -1160,7 +1160,7 @@ class UsageTracker:
                 with open(file) as f:
                     data = json.load(f)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         
         if data.get("month") != month:
             data = {"month": month, "total_cost": 0, "by_provider": {}}
@@ -1182,7 +1182,7 @@ class UsageTracker:
                 with open(file) as f:
                     data = json.load(f)
             except Exception as e:
-            logger.debug(f"Error: {e}")
+                logger.debug(f"Error: {e}")
         
         if data.get("date") != today:
             data = {"date": today, "calls": {}, "bandwidth_kb": 0}

@@ -832,6 +832,7 @@ class CitationVerifier:
             return citation
             
         except Exception as e:
+            logger.debug(f"Error: {e}")
             return VerifiedCitation(
                 id=-1,
                 url=url,
