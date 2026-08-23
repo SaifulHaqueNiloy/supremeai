@@ -15,7 +15,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 # Set test environment BEFORE importing app
-os.environ.setdefault("ENV", "testing")
+os.environ.setdefault("ENV", "test")
 os.environ.setdefault("JWT_SECRET", "test-secret-key-for-testing-purpose-minimum-32")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
 
