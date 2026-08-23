@@ -450,7 +450,9 @@ async def get_trend_analysis(
     weighted_recent = success_rates[-5:] if len(success_rates) >= 5 else success_rates
     weights = [0.1, 0.15, 0.2, 0.25, 0.3][-len(weighted_recent) :]
     prediction_prob = (
-        sum(w * s for w, s in zip(weights, weighted_recent)) if weighted_recent else overall_rate
+        sum(w * s for w, s in zip(weights, weighted_recent, strict=True))
+        if weighted_recent
+        else overall_rate
     )
 
     prediction_confidence = min(len(_ci_history) / 20, 0.95)
