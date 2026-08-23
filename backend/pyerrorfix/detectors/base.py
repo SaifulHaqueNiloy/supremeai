@@ -1,4 +1,5 @@
 """Base detector + shared AST helpers."""
+
 from __future__ import annotations
 
 import ast
@@ -7,7 +8,9 @@ import re
 from pyerrorfix.core.issue import Category, Issue, Severity
 
 # Pre-compiled common patterns ----------------------------------------------
-_FSTRING_LOG_RE = re.compile(r"log(ger)?\.(debug|info|warning|warn|error|critical|exception)\(f[\"']")
+_FSTRING_LOG_RE = re.compile(
+    r"log(ger)?\.(debug|info|warning|warn|error|critical|exception)\(f[\"']"
+)
 
 
 class BaseDetector(ast.NodeVisitor):
@@ -76,7 +79,7 @@ class BaseDetector(ast.NodeVisitor):
             line = getattr(node, "lineno", 0) or 0
             col = (getattr(node, "col_offset", 0) or 0) + 1
             end_line = getattr(node, "end_lineno", line) or line
-            end_col = (getattr(node, "end_col_offset", col) or col)
+            end_col = getattr(node, "end_col_offset", col) or col
         if not snippet and line and line - 1 < len(self._lines):
             snippet = self._lines[line - 1]
         self.issues.append(

@@ -12,6 +12,7 @@ Catches:
     mutates state (session-scoped + mutation = test pollution).
   * bare `pytest.raises` without `match=` — swallows the wrong error silently.
 """
+
 from __future__ import annotations
 
 import ast
@@ -27,8 +28,11 @@ class TestingDetector(BaseDetector):
 
     @property
     def _is_test_file(self) -> bool:
-        return any(self.filename.endswith(s) for s in _IS_TEST_FILE_SUFFIXES) \
-            or "/tests/" in self.filename or "\\tests\\" in self.filename
+        return (
+            any(self.filename.endswith(s) for s in _IS_TEST_FILE_SUFFIXES)
+            or "/tests/" in self.filename
+            or "\\tests\\" in self.filename
+        )
 
     def visit_Assert(self, node: ast.Assert) -> None:  # type: ignore[override]
         if not self._is_test_file:
@@ -60,8 +64,11 @@ class TestingDetector(BaseDetector):
                 # check the call args if it's pytest.fixture(...)
                 if isinstance(dec.value, ast.Call):
                     for kw in dec.value.keywords:
-                        if kw.arg == "scope" and isinstance(kw.value, ast.Constant) \
-                                and kw.value.value == "session":
+                        if (
+                            kw.arg == "scope"
+                            and isinstance(kw.value, ast.Constant)
+                            and kw.value.value == "session"
+                        ):
                             if _mutates_self_or_global(node):
                                 self.add(
                                     rule_id="session-fixture-mutation",
@@ -77,11 +84,17 @@ class TestingDetector(BaseDetector):
                                     fixable=False,
                                     fix_description="Use scope='function' or return immutable data.",
                                 )
-            elif isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute) \
-                    and dec.func.attr == "fixture":
+            elif (
+                isinstance(dec, ast.Call)
+                and isinstance(dec.func, ast.Attribute)
+                and dec.func.attr == "fixture"
+            ):
                 for kw in dec.keywords:
-                    if kw.arg == "scope" and isinstance(kw.value, ast.Constant) \
-                            and kw.value.value == "session":
+                    if (
+                        kw.arg == "scope"
+                        and isinstance(kw.value, ast.Constant)
+                        and kw.value.value == "session"
+                    ):
                         if _mutates_self_or_global(node):
                             self.add(
                                 rule_id="session-fixture-mutation",
@@ -107,7 +120,9 @@ class TestingDetector(BaseDetector):
                 ):
                     callee = iter_call_name(n.items[0].context_expr)
                     if callee in ("pytest.raises", "pytest.warns"):
-                        has_match = any(kw.arg == "match" for kw in n.items[0].context_expr.keywords)
+                        has_match = any(
+                            kw.arg == "match" for kw in n.items[0].context_expr.keywords
+                        )
                         if not has_match:
                             self.add(
                                 rule_id="pytest.raises-without-match",
@@ -138,7 +153,8 @@ def _mutates_self_or_global(node: ast.FunctionDef | ast.AsyncFunctionDef) -> boo
             isinstance(stmt, ast.Expr)
             and isinstance(stmt.value, ast.Call)
             and isinstance(stmt.value.func, ast.Attribute)
-            and stmt.value.func.attr in {"append", "extend", "update", "pop", "remove", "clear", "add", "discard"}
+            and stmt.value.func.attr
+            in {"append", "extend", "update", "pop", "remove", "clear", "add", "discard"}
             and isinstance(stmt.value.func.value, ast.Name)
         ):
             return True

@@ -16,6 +16,7 @@ Catches:
   * Missing commit/rollback — session mutations without commit/rollback in
     finally.
 """
+
 from __future__ import annotations
 
 import ast

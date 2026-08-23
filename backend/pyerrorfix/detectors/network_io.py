@@ -12,6 +12,7 @@ Catches:
   * `ReadTimeout` / `ConnectTimeout` — requests.get(...) without timeout=
     (alias of TimeoutError but framed for the requests library).
 """
+
 from __future__ import annotations
 
 import ast

@@ -9,6 +9,7 @@ TypeError on modern Python:
   * `.dict()` on Pydantic v1 models (also flagged by web-api).
   * `print >>` Python2, `xrange`, `unicode`, `basestring`.
 """
+
 from __future__ import annotations
 
 import ast

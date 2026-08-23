@@ -7,6 +7,7 @@ Catches:
   * DB connection / engine created but never .close()/.dispose().
   * httpx.Client / requests.Session not closed.
 """
+
 from __future__ import annotations
 
 import ast
@@ -33,7 +34,11 @@ class ResourceDetector(BaseDetector):
     def visit_Assign(self, node: ast.Assign) -> None:  # type: ignore[override]
         if isinstance(node.value, ast.Call):
             name = iter_call_name(node.value)
-            if name and (name in _LEAKABLE_CTORS or name.endswith(".Session") or name.endswith("create_engine")):
+            if name and (
+                name in _LEAKABLE_CTORS
+                or name.endswith(".Session")
+                or name.endswith("create_engine")
+            ):
                 if not _in_with_or_try(node):
                     resource = _LEAKABLE_CTORS.get(name, name)
                     self.add(

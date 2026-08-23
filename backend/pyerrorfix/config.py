@@ -5,6 +5,7 @@ Default ruleset is builtin (see :func:`default_config`) so the tool works with
 zero configuration. Users may override with ``.pyerrorfix.json`` (always
 supported) or ``.pyerrorfix.yaml`` (requires PyYAML).
 """
+
 from __future__ import annotations
 
 import json

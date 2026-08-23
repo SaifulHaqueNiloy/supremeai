@@ -12,6 +12,7 @@ Catches:
   * Unhandled exceptions in ``asyncio.create_task(...)`` / ``ensure_future``
     (forgotten ``await`` / ``add_done_callback``).
 """
+
 from __future__ import annotations
 
 import ast

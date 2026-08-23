@@ -21,6 +21,7 @@ Usage
 
 Exit codes: 0 = no errors, 1 = errors found, 2 = invocation error.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,7 +46,9 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--stdin", action="store_true", help="Read source from stdin.")
     a.add_argument("--fix", action="store_true", help="Apply auto-fixers.")
     a.add_argument(
-        "--format", choices=["console", "json", "sarif", "markdown"], default="console",
+        "--format",
+        choices=["console", "json", "sarif", "markdown"],
+        default="console",
         help="Output format. Default: console.",
     )
     a.add_argument("--config", default=None, help="Path to .pyerrorfix.json/.yaml config.")
@@ -64,6 +67,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "version":
         from pyerrorfix import __version__
+
         print(__version__)
         return 0
 
@@ -79,7 +83,11 @@ def main(argv: list[str] | None = None) -> int:
 
 def _cmd_catalog(args: argparse.Namespace) -> int:
     if args.format == "json":
-        print(json.dumps({"catalog": CATALOG, "summary": catalog_summary()}, indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {"catalog": CATALOG, "summary": catalog_summary()}, indent=2, ensure_ascii=False
+            )
+        )
         return 0
     print(f"pyerrorfix error catalog — {catalog_summary()}")
     for cat in CATALOG:
