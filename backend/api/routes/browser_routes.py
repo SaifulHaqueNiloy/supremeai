@@ -114,14 +114,19 @@ async def browser_ai_action(req: AIActionRequest):
         # Import LLM gateway (lazy import to avoid circular deps)
         from backend.core.llm.llm_gateway import llm_gateway
         
+        page_content_4k = f"Page Content:\n{req.context[:4000]}" if req.context else "Content not available"
+        page_content_4k_empty = f"Page Content:\n{req.context[:4000]}" if req.context else ""
+        content_5k = f"Content:\n{req.context[:5000]}" if req.context else ""
+        content_4k = f"Content:\n{req.context[:4000]}" if req.context else ""
+        page_context_3k = f"Page Context:\n{req.context[:3000]}" if req.context else ""
+        
         # Build context-aware prompts based on action type
         prompts = {
             "summarize": f"""Analyze this webpage and provide a comprehensive summary:
 
 URL: {req.url}
 
-Page Content Preview:
-{req.context[:4000] if req.context else 'Content not available'}
+{page_content_4k}
 
 Provide:
 1. One-line executive summary
@@ -134,7 +139,7 @@ Provide:
 
 URL: {req.url}
 
-{f'Page Content:\n{req.context[:4000]}' if req.context else ''}
+{page_content_4k_empty}
 
 Analyze and explain:
 1. Frontend framework/library detection
@@ -148,7 +153,7 @@ Analyze and explain:
 
 URL: {req.url}
 
-{f'Content:\n{req.context[:5000]}' if req.context else ''}
+{content_5k}
 
 For each link provide:
 1. URL (absolute if possible)
@@ -160,7 +165,7 @@ For each link provide:
 
 URL: {req.url}
 
-{f'Content:\n{req.context[:4000]}' if req.context else ''}
+{content_4k}
 
 Check for and categorize:
 **Security Issues:**
@@ -189,7 +194,7 @@ Check for and categorize:
 URL: {req.url}
 Question: {req.payload.get('question', 'General analysis') if req.payload else 'General analysis'}
 
-{f'Page Context:\n{req.context[:3000]}' if req.context else ''}
+{page_context_3k}
 
 Provide a helpful, detailed answer based on the available information."""
         }
