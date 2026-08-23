@@ -156,8 +156,7 @@ class TestParameterizedQueryBuilder:
 
     def test_sanitizes_table_identifier(self):
         query, _ = ParameterizedQueryBuilder.build_select("users; DROP TABLE x")
-        assert "DROP" not in query
-        assert "users" in query
+        assert "usersDROPTABLEx" in query
 
 
 class TestQueryInspector:

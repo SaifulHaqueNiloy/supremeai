@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-08-23 06:08 UTC
+- **Date:** 2026-08-23 06:21 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `tools/vscode-extension/test/supremeai-service.test.ts`
-  - `tools/vscode-extension/test/ScopeGuardService.test.ts`
-  - `.github/scripts/ci_summary_v2.py`
-  - `backend/api/routes/browser_routes.py`
   - `CHECKPOINT.md`
+  - `backend/api/routes/browser_routes.py`
+  - `.github/scripts/ci_summary_v2.py`
+  - `backend/tests/security/test_sql_prevention.py`
+  - `backend/tests/misc/test_universal_rules_extended.py`
+  - `backend/tests/misc/test_migrations_and_onboarding.py`
 
 ## Pending (Carry Forward)
 - **MED:** Supabase `ai_memory` টেবিলে ভেক্টর স্কিমা ভ্যালিডেশন এবং `memory_write.py` লাইভ ভেক্টর ইনসার্ট টেস্ট।
