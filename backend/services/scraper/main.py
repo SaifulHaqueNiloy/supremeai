@@ -2,7 +2,7 @@
 SupremeAI Scraper Microservice — FastAPI Application
 
 Decoupled from the main backend. Exposes browser automation + web scraping
-as a standalone HTTP API. Designed to run on Render free tier (port 8081).
+as a standalone HTTP API. Designed to run on Render free tier (port 8080).
 
 Endpoints:
   GET  /health        — Liveness probe
@@ -24,6 +24,7 @@ from web_scraper import WebScraper
 
 MAX_CONCURRENCY = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))
 TIMEOUT_SECONDS = int(os.getenv("SCRAPER_TIMEOUT_SECONDS", "45"))
+DEFAULT_PORT = int(os.getenv("PORT", "8080"))  # 🔧 FIX: Was 8081, now matches Dockerfile
 
 app = FastAPI(
     title="SupremeAI Scraper Microservice",
@@ -97,5 +98,5 @@ _APP_IMPORT_STRING = "main:app"
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("PORT", "8081"))
+    port = int(os.getenv("PORT", "8080"))  # 🔧 FIX: Must match Dockerfile EXPOSE & render.yaml
     uvicorn.run(_APP_IMPORT_STRING, host="0.0.0.0", port=port)
