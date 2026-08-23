@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 from core.cache import get_cache
+from core.cache.redis_manager import redis_manager
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -40,19 +41,25 @@ async def health_check():
     """
     Comprehensive health check endpoint.
     """
-    cache = get_cache()
+    db_status = await _check_database()
+    redis_status = await _check_redis()
+    cache_status = "connected" if redis_manager.is_connected else "disabled"
+    
+    overall_status = "healthy"
+    if db_status != "healthy" or redis_status != "healthy" or cache_status != "connected":
+        overall_status = "degraded"
 
     return HealthStatus(
-        status="healthy",
+        status=overall_status,
         timestamp=datetime.utcnow().isoformat(),
         version="3.0.0-superai",
         uptime_seconds=round(time.time() - _start_time, 2),
         services={
-            "database": await _check_database(),
-            "redis": await _check_redis(),
-            "cache": "connected" if cache.enabled else "disabled",
+            "database": db_status,
+            "redis": redis_status,
+            "cache": cache_status,
         },
-        cache_stats=cache.get_stats() if cache else None,
+        cache_stats=None,
     )
 
 
@@ -62,7 +69,7 @@ async def readiness_check():
     db_ok = await _check_database()
     if db_ok != "healthy":
         raise HTTPException(status_code=503, detail="Database not ready")
-    return {"status": "ready"}
+    return {"status": "ok", "service": "supremeai-backend"}
 
 
 @router.get("/live")
