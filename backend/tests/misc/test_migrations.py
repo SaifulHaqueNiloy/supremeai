@@ -1,7 +1,7 @@
 import os
 import re
 
-MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "database", "migrations")
+MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "database", "migrations")
 
 
 def test_migrations_are_numbered_sequentially():
@@ -74,7 +74,7 @@ def test_offline_sync_logs_constraints():
 
 
 def test_sw_registers_service_worker():
-    index_path = os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "index.html")
+    index_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "frontend", "index.html")
     with open(index_path, encoding="utf-8") as f:
         html = f.read()
     assert "register('/sw.js')" in html, "Service Worker must be registered in index.html"
@@ -83,6 +83,7 @@ def test_sw_registers_service_worker():
 def test_pwa_manifest_exists():
     manifest_path = os.path.join(
         os.path.dirname(__file__),
+        "..",
         "..",
         "..",
         "frontend",
