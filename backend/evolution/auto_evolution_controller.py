@@ -111,8 +111,8 @@ class AutoEvolutionController:
     async def check_system_health(self) -> SystemHealth:
         """Evaluate composite health across all components."""
         perf_metrics = self.performance_monitor.get_current_metrics()
-        mem_metrics = self.memory_consolidator.get_memory_stats()
-        strategy_metrics = self.strategy_optimizer.get_optimizer_stats()
+        self.memory_consolidator.get_memory_stats()
+        self.strategy_optimizer.get_optimizer_stats()
 
         scores = {
             "performance": 0.94,

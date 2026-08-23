@@ -143,7 +143,7 @@ class NightlyChaosAuditor:
                         failures.append(f"HTTP Server Error: {res}")
                         logger.error(f"💥 Runtime Connection Failure or Server Error: {res}")
 
-            duration = time.perf_counter() - start_time
+            time.perf_counter() - start_time
             passed = len(failures) == 0
 
             if passed:

@@ -152,9 +152,7 @@ class OllamaFallback:
         """Attempt to start Ollama server"""
         try:
             # Try starting ollama serve (works on Linux/Mac)
-            process = subprocess.Popen(
-                ["ollama", "serve"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
+            subprocess.Popen(["ollama", "serve"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             # Wait for it to start
             await asyncio.sleep(3)
