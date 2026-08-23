@@ -225,6 +225,52 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
 
+
+
+    @with_error_bus("fetch_secret_async")
+    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
+        """Fetch a secret from Infisical asynchronously (Bug #5 fix)."""
+        if self._circuit_breaker_open:
+            return self._fallback_to_env(secret_id, default)
+
+        cached = self._cache.get(secret_id)
+        if cached and not cached.is_expired():
+            return cached.value
+
+        if not self.client:
+            return self._fallback_to_env(secret_id, default)
+
+        try:
+            import asyncio
+            from infisical_client import GetSecretOptions
+            options = GetSecretOptions(
+                environment="dev" if self.env == "local" else "prod",
+                project_id=self.project_id,
+                secret_name=secret_id,
+            )
+
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    secret_value = await asyncio.to_thread(lambda: self.client.getSecret(options=options).secret_value)
+                    self._cache[secret_id] = _CacheEntry(secret_value, ttl=600)
+                    return secret_value
+                except (ConnectionError, TimeoutError) as exc:
+                    if attempt < max_retries - 1:
+                        sleep_time = 2**attempt
+                        logger.warning(f"Retrying Infisical async fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        await asyncio.sleep(sleep_time)
+                    else:
+                        raise exc
+            raise RuntimeError("Unexpected end of retry loop without success or exception")
+        except (ConnectionError, TimeoutError) as exc:
+            self._circuit_breaker_open = True
+            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN.")
+            return self._fallback_to_env(secret_id, default)
+        except Exception as exc:
+            self._circuit_breaker_open = True
+            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical.")
+            return self._fallback_to_env(secret_id, default)
     @with_error_bus("_fallback_to_env")
     def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
         """Fallback to environment variable.

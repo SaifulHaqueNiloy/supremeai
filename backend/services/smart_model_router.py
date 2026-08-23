@@ -29,10 +29,6 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from loguru import logger
 
-try:
-    from dataclasses import dataclass
-except ImportError:
-    pass
 
 
 class ModelTier(Enum):
