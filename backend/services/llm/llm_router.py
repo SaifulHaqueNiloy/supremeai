@@ -202,11 +202,6 @@ class RouteResult:
 
 
 
-
-
-
-
-
 # ── Bengali Text Utilities ────────────────────────────────────────────────────
 
 
@@ -234,15 +229,23 @@ class LLMRouter:
         }
         
         try:
+            from services.llm.providers import GroqProvider
+            _candidate_providers[Provider.GROQ] = GroqProvider()
+        except Exception as e:
+            logger.debug(f"llm_router_groq_skipped: {e}")
+        
+        try:
             _candidate_providers[Provider.OLLAMA] = OllamaProvider()
         except NotImplementedError as e:
             logger.debug(f"llm_router_ollama_skipped: {e}")
 
-        # key-less provider বাদ দেওয়া হচ্ছে — Ollama local provider-এর key নেই, সেটা রাখা হবে
-        self.providers: dict[Provider, LLMProvider] = {
-            p: prov for p, prov in _candidate_providers.items()
-            if getattr(prov, "api_key", None) or p == Provider.OLLAMA
-        }
+        self.providers: dict[Provider, LLMProvider] = {}
+        for p, prov in _candidate_providers.items():
+            if p == Provider.OLLAMA:
+                # Ollama is special - include always, let health_check decide availability
+                self.providers[p] = prov
+            elif hasattr(prov, 'api_key') and prov.api_key:
+                self.providers[p] = prov
         if not self.providers:
             logger.warning("llm_router_no_providers", msg="কোনো LLM provider configured নেই — সব request fail করবে!")
         else:
