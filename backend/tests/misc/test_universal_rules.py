@@ -120,8 +120,9 @@ def test_save_rules_atomic_write():
 
 def test_default_rules_path_is_project_data_dir():
     engine = UniversalRulesEngine()
+    # The default path is backend_root / data / admin_rules.json
     expected = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
         "data",
         "admin_rules.json",
     )
