@@ -44,7 +44,7 @@ async def health_check():
     db_status = await _check_database()
     redis_status = await _check_redis()
     cache_status = "connected" if redis_manager.is_connected else "disabled"
-    
+
     overall_status = "healthy"
     if db_status != "healthy" or redis_status != "healthy" or cache_status != "connected":
         overall_status = "degraded"
