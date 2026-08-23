@@ -68,10 +68,10 @@ class LRUCache:
     """Simple LRU Cache implementation for performance optimization."""
 
     def __init__(self, maxsize: int = 128, ttl: int = 300):
-        self.cache = {}
+        self.cache: dict[str, Any] = {}
         self.maxsize = maxsize
         self.ttl = ttl  # Time to live in seconds
-        self.access_order = {}  # Track access times
+        self.access_order: dict[str, float] = {}  # Track access times
 
     def get(self, key: str) -> Any | None:
         """Get value from cache if it exists and hasn't expired."""
@@ -99,7 +99,7 @@ class LRUCache:
         if len(self.cache) >= self.maxsize:
             # Find LRU item (earliest access time)
             if self.access_order:
-                lru_key = min(self.access_order, key=self.access_order.get)
+                lru_key = min(self.access_order, key=lambda k: self.access_order[k])
                 del self.cache[lru_key]
                 del self.access_order[lru_key]
 
@@ -128,10 +128,10 @@ class AsyncLRUCache:
     """Async version of LRU Cache."""
 
     def __init__(self, maxsize: int = 128, ttl: int = 300):
-        self.cache = {}
+        self.cache: dict[str, Any] = {}
         self.maxsize = maxsize
         self.ttl = ttl
-        self.access_order = {}
+        self.access_order: dict[str, float] = {}
         self._lock = asyncio.Lock()
 
     async def get(self, key: str) -> Any | None:
@@ -158,7 +158,7 @@ class AsyncLRUCache:
 
             if len(self.cache) >= self.maxsize:
                 if self.access_order:
-                    lru_key = min(self.access_order, key=self.access_order.get)
+                    lru_key = min(self.access_order, key=lambda k: self.access_order[k])
                     del self.cache[lru_key]
                     if lru_key in self.access_order:
                         del self.access_order[lru_key]
@@ -185,20 +185,21 @@ class QueryOptimizer:
 
     def analyze_query(self, query: str) -> dict[str, Any]:
         """Analyze a query for optimization opportunities."""
-        analysis = {
+        suggested_optimizations: list[str] = []
+        analysis: dict[str, Any] = {
             "table_scan": "FULL SCAN" in query.upper(),
             "missing_indexes": [],
             "joins": query.upper().count("JOIN"),
             "complexity_score": self._calculate_complexity(query),
-            "suggested_optimizations": [],
+            "suggested_optimizations": suggested_optimizations,
         }
 
         # Simple heuristics for optimization suggestions
         if "WHERE" not in query.upper():
-            analysis["suggested_optimizations"].append("Consider adding WHERE clause for filtering")
+            suggested_optimizations.append("Consider adding WHERE clause for filtering")
 
         if "ORDER BY" in query.upper() and "LIMIT" not in query.upper():
-            analysis["suggested_optimizations"].append("Consider adding LIMIT for better performance")
+            suggested_optimizations.append("Consider adding LIMIT for better performance")
 
         return analysis
 
@@ -250,8 +251,8 @@ class AsyncPoolManager:
 
     def __init__(self, max_connections: int = 10):
         self.max_connections = max_connections
-        self.available_connections = asyncio.Queue()
-        self.active_connections = set()
+        self.available_connections: Any = asyncio.Queue()
+        self.active_connections: set[Any] = set()
         self._initialized = False
 
     async def initialize(self):
@@ -556,7 +557,7 @@ class PerformanceOptimizer:
 
     async def batch_process(self, items: list[Any], processor: Callable, batch_size: int = 10) -> list[Any]:
         """Process items in batches for better performance."""
-        results = []
+        results: list[dict[str, Any]] = []
 
         for i in range(0, len(items), batch_size):
             batch = items[i : i + batch_size]
@@ -567,7 +568,7 @@ class PerformanceOptimizer:
             for idx, result in enumerate(batch_results):
                 if isinstance(result, BaseException):
                     logger.warning(f"Batch processor failed for item {idx}: {result}")
-                    results.append(None)
+                    results.append({"error": str(result)})
                 else:
                     results.append(result)
 
