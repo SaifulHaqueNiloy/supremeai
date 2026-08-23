@@ -10,10 +10,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from core.monitoring.metrics_collector import MetricsCollector
-
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
+from core.monitoring.metrics_collector import MetricsCollector
 from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)

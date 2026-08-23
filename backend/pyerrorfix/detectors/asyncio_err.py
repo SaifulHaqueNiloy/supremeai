@@ -180,7 +180,7 @@ class AsyncioDetector(BaseDetector):
         for n in ast.walk(tree_root):
             if isinstance(n, ast.Expr) and _contains(n, node):
                 return "expr"
-            if isinstance(n, (ast.Assign, ast.Await, ast.Return, ast.Call)) and _contains(n, node):
+            if isinstance(n, ast.Assign | ast.Await | ast.Return | ast.Call) and _contains(n, node):
                 return "value"
         return "other"
 

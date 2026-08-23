@@ -26,8 +26,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from pathlib import Path
-from typing import Any
 
 from pyerrorfix.config import load_config
 from pyerrorfix.core.catalog import CATALOG, catalog_summary
@@ -56,7 +54,7 @@ def build_parser() -> argparse.ArgumentParser:
     c = sub.add_parser("catalog", help="Print the full error catalog.")
     c.add_argument("--format", choices=["console", "json"], default="console")
 
-    v = sub.add_parser("version", help="Print version and exit.")
+    sub.add_parser("version", help="Print version and exit.")
     return p
 
 

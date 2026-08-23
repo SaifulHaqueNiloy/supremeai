@@ -12,7 +12,6 @@ TypeError on modern Python:
 from __future__ import annotations
 
 import ast
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
