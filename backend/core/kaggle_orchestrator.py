@@ -280,9 +280,9 @@ def callback(status: str, result: dict = None, error: str = None):
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
-            print(f"✅ Callback sent: {{response.read().decode()}}")
+            logger.debug(f"✅ Callback sent: {{response.read().decode()}}")
     except Exception as e:
-        print(f"⚠️ Callback failed: {{e}}")
+        logger.debug(f"⚠️ Callback failed: {{e}}")
 
 def main():
     try:
@@ -291,7 +291,7 @@ def main():
         callback("success", result={{"output": output}})
     except Exception as e:
         error_msg = f"{{traceback.format_exc()}}"
-        print(f"❌ Error: {{error_msg}}")
+        logger.debug(f"❌ Error: {{error_msg}}")
         callback("failed", error=error_msg)
 
 if __name__ == "__main__":

@@ -166,7 +166,7 @@ class EcommerceAgent:
             data = json.loads(content) if isinstance(content, str) else content
             pros = data.get("pros", [])
             cons = data.get("cons", [])
-        except Exception:
+        except Exception as e:
             pros = []
             cons = []
 

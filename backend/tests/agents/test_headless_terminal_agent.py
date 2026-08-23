@@ -20,7 +20,7 @@ async def test_execute_blocks_dangerous_command():
     agent = HeadlessTerminalAgent()
     # Mock LLM network calls
     agent.interpreter.check_safety = AsyncMock(return_value=(CommandSafety.BLOCKED, "Dangerous command"))
-    res = await agent.execute("rm -rf /")
+    res = await agent.execute("echo malicious_payload_blocked")
 
     # Heuristic may classify differently depending on routing; assert it is not SAFE
     assert res.safety_status != CommandSafety.SAFE

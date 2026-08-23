@@ -251,7 +251,7 @@ class AgentEvolutionEngine(BaseSkill):
             used = response.get("usage", {}).get("total_tokens", genome.max_tokens)
             efficiency = 1.0 - (used / genome.max_tokens)
             return min(1.0, max(0.0, score * 0.7 + efficiency * 0.3))
-        except Exception:
+        except Exception as e:
             return 0.0
 
     @trace_span("evolution.breed")

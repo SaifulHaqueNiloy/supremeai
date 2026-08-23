@@ -7,7 +7,7 @@ try:
     from workers.celery_app import app
 
     HAS_CELERY = app is not None
-except Exception:
+except Exception as e:
     HAS_CELERY = False
 
 

@@ -66,7 +66,7 @@ class SlidingWindowRateLimiter:
         if self.script_sha is None:
             try:
                 self.script_sha = await client.script_load(self.lua_script)
-            except Exception:  # Fallback to EVAL if SCRIPT LOAD fails
+            except Exception as e:  # Fallback to EVAL if SCRIPT LOAD fails
                 self.script_sha = None
                 logger.debug("SCRIPT LOAD failed, will fallback to EVAL")
 

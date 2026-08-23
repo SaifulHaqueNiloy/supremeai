@@ -73,7 +73,7 @@ class AICodeValidator:
                 elif isinstance(node, ast.ImportFrom) and not self._module_exists(node.module):
                     return False
             return True
-        except Exception:
+        except Exception as e:
             return False
 
     def _module_exists(self, module_name: str) -> bool:
@@ -88,7 +88,7 @@ class AICodeValidator:
         try:
             spec = importlib.util.find_spec(base_module)
             return spec is not None
-        except Exception:
+        except Exception as e:
             return False
 
     def _check_variables_defined(self, code: str) -> bool:
@@ -123,7 +123,7 @@ class AICodeValidator:
                     undefined.discard(node.func.id)
 
             return len(undefined) == 0
-        except Exception:
+        except Exception as e:
             return False
 
     def _check_loop_safety(self, code: str) -> bool:
@@ -139,7 +139,7 @@ class AICodeValidator:
                     if not has_break:
                         return False
             return True
-        except Exception:
+        except Exception as e:
             return False
 
     def _auto_fix(self, code: str) -> str:

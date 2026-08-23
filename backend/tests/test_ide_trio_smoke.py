@@ -1,3 +1,4 @@
+from loguru import logger
 """Standalone smoke test for the SupremeAI IDE Trio Pipeline adapters.
 
 Run from the repo root:
@@ -13,8 +14,8 @@ from pathlib import Path
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-except Exception:
-    pass
+except Exception as e:
+    logger.warning(f"Ignored error: {e}")
 
 
 def _load_adapters():

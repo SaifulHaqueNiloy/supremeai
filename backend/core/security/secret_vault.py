@@ -123,7 +123,7 @@ class ProductionSecretVault:
                 logger.info("Production Secret Vault hooked into Infisical via Token")
         except (ConnectionError, TimeoutError, ValueError) as exc:
             logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
-        except Exception:
+        except Exception as e:
             logger.opt(exception=True).warning(
                 "Unexpected error initializing Infisical client. Falling back to raw env."
             )

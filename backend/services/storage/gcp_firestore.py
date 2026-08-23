@@ -29,7 +29,7 @@ try:
     from google.cloud import firestore  # type: ignore[import-untyped]
 
     FIRESTORE_AVAILABLE = True
-except Exception:
+except Exception as e:
     FIRESTORE_AVAILABLE = False
 
 

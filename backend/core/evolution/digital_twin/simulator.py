@@ -540,24 +540,24 @@ async def run_sample_simulations():
     """
     simulator = get_impact_simulator()
 
-    print("Running sample service failure simulation...")
+    logger.debug("Running sample service failure simulation...")
     failure_result = await simulator.simulate_service_failure(
         "llm_router", failure_type="complete", duration_minutes=10
     )
-    print(f"Failure simulation result: {failure_result.predicted_impact} impact")
-    print(f"Affected services: {len(failure_result.affected_services)}")
-    print(f"Recommendations: {len(failure_result.recommendations)}")
+    logger.debug(f"Failure simulation result: {failure_result.predicted_impact} impact")
+    logger.debug(f"Affected services: {len(failure_result.affected_services)}")
+    logger.debug(f"Recommendations: {len(failure_result.recommendations)}")
 
-    print("\nRunning sample traffic spike simulation...")
+    logger.debug("\nRunning sample traffic spike simulation...")
     traffic_result = await simulator.simulate_traffic_spike("api_gateway", multiplier=3.0, duration_minutes=15)
-    print(f"Traffic simulation result: {traffic_result.predicted_impact} impact")
-    print(f"Cascade effects: {len(traffic_result.cascade_effects)}")
+    logger.debug(f"Traffic simulation result: {traffic_result.predicted_impact} impact")
+    logger.debug(f"Cascade effects: {len(traffic_result.cascade_effects)}")
 
     # Generate a report
     report = simulator.get_simulation_report(days_back=7)
-    print("\nSimulation report for last 7 days:")
-    print(f"Total simulations: {report['statistics']['total_simulations']}")
-    print(f"High/critical impacts: {report['statistics']['high_impact_count']}")
+    logger.debug("\nSimulation report for last 7 days:")
+    logger.debug(f"Total simulations: {report['statistics']['total_simulations']}")
+    logger.debug(f"High/critical impacts: {report['statistics']['high_impact_count']}")
 
     return failure_result, traffic_result
 

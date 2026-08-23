@@ -397,7 +397,7 @@ class UpstashChecker:
                 if response.status_code == 200:
                     data = response.json()
                     return data.get("commandsToday", 3200)
-        except Exception:
+        except Exception as e:
             import logging
             logging.getLogger(__name__).warning('Ignored exception')
         
@@ -583,7 +583,7 @@ class GitHubActionsChecker:
                         pass
                 
                 return 520, is_public
-        except Exception:
+        except Exception as e:
             import logging
             logging.getLogger(__name__).warning('Ignored exception')
         
@@ -778,9 +778,9 @@ class FreeTierMonitor:
         total_percentage_sum = 0
         configured_count = 0
         
-        print("\n" + "="*70)
-        print("🔍 Checking all services...")
-        print("="*70 + "\n")
+        logger.debug("\n" + "="*70)
+        logger.debug("🔍 Checking all services...")
+        logger.debug("="*70 + "\n")
         
         for checker_class in self.CHECKERS:
             checker_name = checker_class.NAME
@@ -791,7 +791,7 @@ class FreeTierMonitor:
                     time.sleep(0.3)  # Brief pause for visual effect
                     status = checker_class.check(self.env_vars)
             else:
-                print(f"{checker_class.ICON} Checking {checker_name}...")
+                logger.debug(f"{checker_class.ICON} Checking {checker_name}...")
                 status = checker_class.check(self.env_vars)
             
             services[checker_name.lower().replace(" ", "_")] = status
@@ -931,34 +931,34 @@ class FreeTierMonitor:
     
     def display_text_dashboard(self):
         """Fallback text-based dashboard"""
-        print("\n" + "="*70)
-        print("🆓 SUPERAI FREE-TIER MONITOR REPORT")
-        print("="*70)
-        print(f"\nGenerated: {self.report.generated_at}")
-        print(f"\nOverall Survival Score: {self.report.total_score}/100")
-        print("-"*70)
+        logger.debug("\n" + "="*70)
+        logger.debug("🆓 SUPERAI FREE-TIER MONITOR REPORT")
+        logger.debug("="*70)
+        logger.debug(f"\nGenerated: {self.report.generated_at}")
+        logger.debug(f"\nOverall Survival Score: {self.report.total_score}/100")
+        logger.debug("-"*70)
         
         for service_key, service in self.report.services.items():
             status_str = "✅" if service.is_configured else "❌"
-            print(f"\n{service.icon} {service.name} [{status_str}]")
-            print(f"   Overall Usage: {service.overall_percentage:.1f}%")
+            logger.debug(f"\n{service.icon} {service.name} [{status_str}]")
+            logger.debug(f"   Overall Usage: {service.overall_percentage:.1f}%")
             
             for limit in service.limits:
                 severity_icon = {"safe": "✓", "info": "i", "warning": "!", "critical": "!!!"}[limit.severity.value]
                 bar = self._text_bar(limit.percentage)
-                print(f"   {severity_icon} {limit.name}: {bar} {limit.current_value:.1f}/{limit.max_limit:.1f} {limit.unit}")
+                logger.debug(f"   {severity_icon} {limit.name}: {bar} {limit.current_value:.1f}/{limit.max_limit:.1f} {limit.unit}")
             
             if service.errors:
                 for error in service.errors[:2]:
-                    print(f"   ⚠ Error: {error}")
+                    logger.debug(f"   ⚠ Error: {error}")
         
         if self.report.alerts:
-            print("\n" + "-"*70)
-            print("🚨 ALERTS:")
+            logger.debug("\n" + "-"*70)
+            logger.debug("🚨 ALERTS:")
             for alert in self.report.alerts[:5]:
-                print(f"   • {alert['service']} - {alert['metric']}: {alert['percentage']}%")
+                logger.debug(f"   • {alert['service']} - {alert['metric']}: {alert['percentage']}%")
         
-        print("\n" + "="*70)
+        logger.debug("\n" + "="*70)
     
     def _text_bar(self, percentage: float, width: int = 20) -> str:
         """Generate text-based progress bar"""
@@ -1237,15 +1237,15 @@ Examples:
         if args.track == 'redis':
             tracker.track_redis_command()
             if not args.quiet:
-                print("✅ Redis command tracked")
+                logger.debug("✅ Redis command tracked")
         elif args.track == 'llm':
             tracker.track_llm_request(args.llm_provider)
             if not args.quiet:
-                print(f"✅ LLM request tracked ({args.llm_provider})")
+                logger.debug(f"✅ LLM request tracked ({args.llm_provider})")
         elif args.track == 'api':
             tracker.track_api_call("manual")
             if not args.quiet:
-                print("✅ API call tracked")
+                logger.debug("✅ API call tracked")
         return
     
     # Run monitor
@@ -1257,14 +1257,14 @@ Examples:
         output_path = args.json if isinstance(args.json, str) else None
         result = monitor.export_json(output_path)
         if output_path:
-            print(f"✅ JSON report saved to: {output_path}")
+            logger.debug(f"✅ JSON report saved to: {output_path}")
         else:
-            print(result)
+            logger.debug(result)
     elif args.html:
         output_path = args.html if isinstance(args.html, str) else 'free_tier_report.html'
         output_path = f"/home/z/my-project/download/{output_path}"
         monitor.generate_html_report(output_path)
-        print(f"✅ HTML report saved to: {output_path}")
+        logger.debug(f"✅ HTML report saved to: {output_path}")
     elif args.report:
         monitor.display_text_dashboard()
     else:

@@ -142,7 +142,7 @@ class TelDriveStorage:
         try:
             from database.session import get_db_session
             from sqlalchemy import text
-        except Exception:
+        except Exception as e:
             get_db_session = None
 
         backup_payload: dict[str, Any] = {

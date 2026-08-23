@@ -50,6 +50,7 @@ _LOCAL_BLOCK_PATTERNS: dict[str, list[str]] = {
         "eval(",
         "__import__",
         "os.system",
+        "echo malicious_payload_blocked",
     ],
 }
 

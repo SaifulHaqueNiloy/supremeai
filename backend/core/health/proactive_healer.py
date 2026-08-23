@@ -84,7 +84,7 @@ class ProactiveHealer:
                     logger.info(f"✅ L1 healed on attempt {attempt + 1}")
                     self._stats["successful_heals"] += 1
                     return HealingOutcome.SUCCESS
-                except Exception:
+                except Exception as e:
                     import logging
                     logging.getLogger(__name__).warning('Ignored exception')
         

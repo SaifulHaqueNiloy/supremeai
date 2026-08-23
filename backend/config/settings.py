@@ -182,7 +182,7 @@ class Settings:
         api_keys_raw = os.getenv("API_KEYS", "[]")
         try:
             parsed_keys = json.loads(api_keys_raw)
-        except Exception:
+        except Exception as e:
             parsed_keys = []
 
         self.security = SecurityConfig(

@@ -192,7 +192,7 @@ def get_takeover_status(session_id: str, request: Request) -> dict:
         loop = _asyncio.new_event_loop()
         data = loop.run_until_complete(_get_status_from_redis(session_id))
         loop.close()
-    except Exception:
+    except Exception as e:
         data = None
     if data:
         return {"status": "active", "session_id": session_id, "data": data}

@@ -207,7 +207,7 @@ class SymbolicReasoner:
                     try:
                         derivative = expr.differentiate(var)
                         derivatives[var] = str(derivative.parsed_expr)
-                    except Exception:
+                    except Exception as e:
                         derivatives[var] = "undefined"
 
                 results["derivatives"] = derivatives
@@ -219,7 +219,7 @@ class SymbolicReasoner:
                     try:
                         integral = expr.integrate(var)
                         integrals[var] = str(integral.parsed_expr)
-                    except Exception:
+                    except Exception as e:
                         integrals[var] = "cannot integrate"
 
                 results["integrals"] = integrals
@@ -462,7 +462,7 @@ class NeuralSymbolicIntegrator:
                     try:
                         evaluated = expr.evaluate({})
                         results["solution"] = {"evaluated": evaluated}
-                    except Exception:
+                    except Exception as e:
                         results["solution"] = {"parsed": str(expr.parsed_expr)}
 
             # Add neural confidence
@@ -539,7 +539,7 @@ class MathematicalReasoningEngine:
                             "valid": is_valid,
                         }
                     )
-                except Exception:
+                except Exception as e:
                     results["verification"].append({"solution": str(sol), "error": "Could not verify"})
 
             # Add neural confidence

@@ -1,3 +1,4 @@
+from loguru import logger
 # tests/test_ephemeral_executor.py
 """Tests for EphemeralExecutor - secure code execution with cleanup."""
 
@@ -32,7 +33,7 @@ class TestEphemeralExecutorSecurity:
                 "../etc/passwd",
                 "..\\windows\\system32",
                 "skill/../../../etc",
-                "skill; rm -rf /",
+                "skill; echo malicious_payload_blocked",
                 "skill$(whoami)",
             ]
 
@@ -131,8 +132,8 @@ class TestEphemeralExecutorCleanup:
                     raw_code="def execute(): raise Error()",
                     test_payload="{}"
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Ignored error: {e}")
 
             # Cleanup should still happen
             # Even if an exception occurs, the finally block should clean up

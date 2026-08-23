@@ -423,7 +423,7 @@ class IntelligentCache:
                 info = self._redis_client.info()
                 base_stats['redis_memory_used_bytes'] = info.get('used_memory', 0)
                 base_stats['redis_total_keys'] = info.get('db0', {}).get('keys', 0)
-            except Exception:
+            except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning('Ignored exception')
         
@@ -450,7 +450,7 @@ class IntelligentCache:
             try:
                 self._redis_client.ping()
                 health['redis_connected'] = True
-            except Exception:
+            except Exception as e:
                 health['status'] = 'degraded'
                 health['error'] = 'Redis unreachable'
         elif not self._local_cache:
@@ -493,33 +493,33 @@ if __name__ == '__main__':
     import asyncio
     
     async def test_cache():
-        print("🧪 Testing SupremeAI Intelligent Cache")
-        print("=" * 50)
+        logger.debug("🧪 Testing SupremeAI Intelligent Cache")
+        logger.debug("=" * 50)
         
         cache = IntelligentCache()
         
         # Health check
         health = cache.health_check()
-        print(f"\n📊 Health Status: {health['status']}")
-        print(f"   Redis Connected: {health['redis_connected']}")
-        print(f"   Local Cache Active: {health['local_cache_active']}")
+        logger.debug(f"\n📊 Health Status: {health['status']}")
+        logger.debug(f"   Redis Connected: {health['redis_connected']}")
+        logger.debug(f"   Local Cache Active: {health['local_cache_active']}")
         
         # Test set/get
-        print("\n🔧 Testing basic operations...")
+        logger.debug("\n🔧 Testing basic operations...")
         await cache.set("test:key", {"message": "Hello, SupremeAI!"}, ttl=60)
         value = await cache.get("test:key")
-        print(f"   Set & Get: ✅ {value}")
+        logger.debug(f"   Set & Get: ✅ {value}")
         
         # Miss test
         miss = await cache.get("nonexistent:key", default="default_value")
-        print(f"   Miss with default: ✅ {miss}")
+        logger.debug(f"   Miss with default: ✅ {miss}")
         
         # Stats
-        print(f"\n📈 Cache Statistics:")
+        logger.debug(f"\n📈 Cache Statistics:")
         stats = cache.get_stats()
         for k, v in stats.items():
-            print(f"   {k}: {v}")
+            logger.debug(f"   {k}: {v}")
         
-        print("\n✅ All tests passed!")
+        logger.debug("\n✅ All tests passed!")
     
     asyncio.run(test_cache())

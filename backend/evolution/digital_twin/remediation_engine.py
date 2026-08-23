@@ -579,26 +579,26 @@ async def run_remediation_demo():
     # Start monitoring
     await engine.start_monitoring()
 
-    print("Remediation engine started, monitoring for issues...")
+    logger.debug("Remediation engine started, monitoring for issues...")
 
     # Simulate some remediation actions
-    print("\nSimulating manual remediation triggers...")
+    logger.debug("\nSimulating manual remediation triggers...")
 
     # Restart a service
     restart_result = await engine.manual_trigger_remediation("test_service", RemediationAction.RESTART_SERVICE)
-    print(f"Restart action result: Success={restart_result.success}")
+    logger.debug(f"Restart action result: Success={restart_result.success}")
 
     # Scale up resources
     scale_result = await engine.manual_trigger_remediation("api_gateway", RemediationAction.SCALE_UP)
-    print(f"Scale up action result: Success={scale_result.success}")
+    logger.debug(f"Scale up action result: Success={scale_result.success}")
 
     # Get statistics
     stats = engine.get_statistics()
-    print(f"\nRemediation engine statistics: {stats}")
+    logger.debug(f"\nRemediation engine statistics: {stats}")
 
     # Stop monitoring after demo
     await engine.stop_monitoring()
-    print("Remediation engine stopped.")
+    logger.debug("Remediation engine stopped.")
 
 
 if __name__ == "__main__":

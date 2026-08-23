@@ -252,7 +252,7 @@ class HeuristicScorer:
             score = float(result.get("content", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
-        except Exception:
+        except Exception as e:
             return 0.0
 
     def _get_skill_name(self, skill_id: str) -> str:

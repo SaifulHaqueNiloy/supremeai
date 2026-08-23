@@ -67,7 +67,7 @@ class SupabaseStore(SQLiteMemoryStore):
             parsed = urlparse(url)
             hostname = parsed.hostname or ""
             return hostname.endswith("supabase.co") or "supabase" in hostname.lower()
-        except Exception:
+        except Exception as e:
             return False
 
     def _verify_pgvector_schema(self, client) -> bool:
@@ -195,7 +195,7 @@ class SupabaseStore(SQLiteMemoryStore):
                 if len(embedding) < 1536:
                     embedding = list(embedding) + [0.0] * (1536 - len(embedding))
                 return embedding[:1536]
-            except Exception:
+            except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning('Ignored exception')
                 
@@ -207,7 +207,7 @@ class SupabaseStore(SQLiteMemoryStore):
                     input=text
                 )
                 return response.data[0]["embedding"]
-            except Exception:
+            except Exception as e:
                 import logging
                 logging.getLogger(__name__).warning('Ignored exception')
                 

@@ -16,7 +16,7 @@ try:
     chromadb = lazy_import("chromadb", package_hint="ml")
 
     _CHROMA_AVAILABLE = True
-except Exception:
+except Exception as e:
     _CHROMA_AVAILABLE = False
 
 

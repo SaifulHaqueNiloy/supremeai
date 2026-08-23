@@ -28,7 +28,7 @@ async def simulate_request(tenant_id: str, request_id: int):
 
 
 async def main():
-    print("Starting Phase 3 Load Test (1,000 Transactions)")
+    logger.debug("Starting Phase 3 Load Test (1,000 Transactions)")
     tenant_id = "tenant-load-test"
     db = get_firestore_db()
 
@@ -60,15 +60,15 @@ async def main():
         results.count("402")
         errors = results.count("error")
 
-        print("\n=== Load Test Results ===")
-        print("Total Requests: 1000")
-        print(f"Success: {successes}")
-        print(f"Other Errors (Triggered SelfHealer): {errors}")
-        print(f"Total Time: {elapsed:.2f} seconds")
-        print(f"RPS: {1000 / elapsed:.2f} req/s")
+        logger.debug("\n=== Load Test Results ===")
+        logger.debug("Total Requests: 1000")
+        logger.debug(f"Success: {successes}")
+        logger.debug(f"Other Errors (Triggered SelfHealer): {errors}")
+        logger.debug(f"Total Time: {elapsed:.2f} seconds")
+        logger.debug(f"RPS: {1000 / elapsed:.2f} req/s")
 
         # Test Sandbox TTL
-        print("\n=== Testing Sandbox Auto-Destroy ===")
+        logger.debug("\n=== Testing Sandbox Auto-Destroy ===")
         orchestrator = CloudSandboxOrchestrator(provider="runpod")
         sandbox_id = "load-test-sandbox-1"
         orchestrator._active_sandboxes[sandbox_id] = {
@@ -76,7 +76,7 @@ async def main():
             "status": "running",
         }
 
-        print(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")
+        logger.debug(f"Injected sandbox {sandbox_id} with age 11.6 minutes.")
 
         with patch("asyncio.sleep", AsyncMock(side_effect=Exception("Exit Loop"))):
             try:

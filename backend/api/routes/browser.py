@@ -120,7 +120,7 @@ def get_credentials(userId: str = "default"):
             decrypted = cred_store.decrypt(c.get("ciphertext", ""), c.get("key_ref"))
             try:
                 decrypted_dict = json.loads(decrypted)
-            except Exception:
+            except Exception as e:
                 logger.exception("Unhandled exception")
                 decrypted_dict = {}
 

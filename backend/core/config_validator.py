@@ -1,3 +1,4 @@
+from loguru import logger
 """
 SupremeAI Configuration Validator — Fail-Fast at Startup
 🔬 Evolution v3.0: Schema-based environment variable validation
@@ -10,7 +11,7 @@ Usage:
     
     result = validate_config()
     if not result.is_valid:
-        print(result.format_errors())
+        logger.debug(result.format_errors())
         sys.exit(1)
 """
 
@@ -266,9 +267,9 @@ def validate_config() -> ConfigValidationResult:
 
 def print_config_summary() -> None:
     """Print masked configuration summary for debugging."""
-    print("\n" + "=" * 50)
-    print("🔧 Configuration Summary")
-    print("=" * 50)
+    logger.debug("\n" + "=" * 50)
+    logger.debug("🔧 Configuration Summary")
+    logger.debug("=" * 50)
     
     sensitive_keys = ("SECRET", "KEY", "PASSWORD", "TOKEN")
     
@@ -282,7 +283,7 @@ def print_config_summary() -> None:
             display = str(value)[:50] + ("..." if len(str(value)) > 50 else "")
         
         req_marker = " ✗" if var_def.required and value is None else " ✓"
-        print(f"  {var_def.name:<30} = {display:<55}{req_marker}")
+        logger.debug(f"  {var_def.name:<30} = {display:<55}{req_marker}")
     
-    print("=" * 50 + "\n")
+    logger.debug("=" * 50 + "\n")
 # =============================================================================

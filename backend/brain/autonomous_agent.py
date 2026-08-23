@@ -28,7 +28,7 @@ class AutonomousAgent:
             from core.evolution.auto_skill_creator import AutoSkillCreator
 
             self.skill_creator = AutoSkillCreator()
-        except Exception:
+        except Exception as e:
             self.skill_creator = None  # type: ignore
 
         # Add performance optimizer

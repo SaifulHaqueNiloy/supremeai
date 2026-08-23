@@ -88,4 +88,4 @@ class SeedDataLoader:
 if __name__ == "__main__":
     loader = SeedDataLoader()
     data = loader.load_all()
-    print(f"Loaded {len(data)} categories")
+    logger.debug(f"Loaded {len(data)} categories")
