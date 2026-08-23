@@ -19,13 +19,13 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class ProviderStatus(str, Enum):
+class ProviderStatus(StrEnum):
     AVAILABLE = "available"
     RATE_LIMITED = "rate_limited"
     DOWN = "down"

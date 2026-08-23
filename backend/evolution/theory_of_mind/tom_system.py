@@ -814,7 +814,7 @@ class TheoryOfMindSystem:
         elif focus_area == "relationships":
             # Analyze relationships with other agents
             other_agents = [
-                aid for aid in self.reasoner.mental_state_manager.beliefs.keys() if aid != agent_id
+                aid for aid in self.reasoner.mental_state_manager.beliefs if aid != agent_id
             ]
             if other_agents:
                 other = other_agents[0]  # Pick first other agent

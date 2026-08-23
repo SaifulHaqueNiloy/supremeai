@@ -18,7 +18,7 @@ import asyncio
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from fastapi import APIRouter, Response
@@ -26,7 +26,7 @@ from fastapi import APIRouter, Response
 router = APIRouter(tags=["health"])
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"

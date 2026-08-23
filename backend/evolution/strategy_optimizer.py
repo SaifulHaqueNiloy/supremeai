@@ -10,18 +10,18 @@ from __future__ import annotations
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class StrategyType(str, Enum):
+class StrategyType(StrEnum):
     REACTIVE = "reactive"
     PROACTIVE = "proactive"
     ADAPTIVE = "adaptive"
     HYBRID = "hybrid"
 
 
-class StrategyStatus(str, Enum):
+class StrategyStatus(StrEnum):
     ACTIVE = "active"
     TESTING = "testing"
     DEPRECATED = "deprecated"

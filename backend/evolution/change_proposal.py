@@ -14,14 +14,14 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("supremeai.evolution")
 
 
-class ProposalState(str, Enum):
+class ProposalState(StrEnum):
     DRAFTED = "drafted"
     VALIDATED = "validated"
     SECURITY_CLEARED = "security_cleared"
@@ -32,7 +32,7 @@ class ProposalState(str, Enum):
     ROLLED_BACK = "rolled_back"
 
 
-class ChangeType(str, Enum):
+class ChangeType(StrEnum):
     PROMPT_OPTIMIZATION = "prompt_optimization"
     PARAMETER_TUNING = "parameter_tuning"
     ROUTING_POLICY = "routing_policy"

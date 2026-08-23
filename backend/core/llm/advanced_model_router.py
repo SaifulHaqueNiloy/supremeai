@@ -15,7 +15,7 @@ import json
 import re
 import urllib.request
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 from loguru import logger
@@ -42,7 +42,7 @@ _TIER0_CONFIDENCE_THRESHOLD = 0.85
 
 
 # ── Domain & Expert Classification (MoE) ───────────────────────────────────
-class ExpertType(str, Enum):
+class ExpertType(StrEnum):
     BENGALI = "bengali"  # Bangla language, Banglish, BD context
     CODER = "coder"  # Programming, DevOps, API, Technical
     REASONER = "reasoner"  # Math, Logic, Analysis, Strategy
@@ -312,7 +312,7 @@ class ModelPerformanceMetrics:
     error_count: int = 0
 
 
-class ModelTier(str, Enum):
+class ModelTier(StrEnum):
     EXPENSIVE = "expensive"
     BALANCED = "balanced"
     BUDGET = "budget"

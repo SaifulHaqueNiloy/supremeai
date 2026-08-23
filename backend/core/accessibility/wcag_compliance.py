@@ -413,7 +413,7 @@ class HTMLAccessibilityChecker:
     def _check_aria_attributes(self, soup: BeautifulSoup):
         """Check ARIA attributes for proper usage."""
         elements_with_aria = soup.find_all(
-            attrs=lambda x: x and any(attr.startswith("aria-") for attr in x.keys())
+            attrs=lambda x: x and any(attr.startswith("aria-") for attr in x)
         )  # type: ignore
 
         for elem in elements_with_aria:

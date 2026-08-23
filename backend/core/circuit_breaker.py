@@ -26,13 +26,13 @@ import asyncio
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import TypeVar
 
 T = TypeVar("T")
 
 
-class CircuitState(str, Enum):
+class CircuitState(StrEnum):
     CLOSED = "closed"  # Normal operation
     OPEN = "open"  # Failing, reject immediately
     HALF_OPEN = "half_open"  # Testing recovery

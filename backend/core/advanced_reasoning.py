@@ -13,11 +13,11 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import Any
 
 
-class ReasoningType(str, Enum):
+class ReasoningType(StrEnum):
     DEDUCTIVE = "deductive"
     INDUCTIVE = "inductive"
     ABDUCTIVE = "abductive"
