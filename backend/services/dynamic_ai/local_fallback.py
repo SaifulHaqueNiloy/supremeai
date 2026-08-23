@@ -105,6 +105,14 @@ class OllamaFallback:
     
     async def initialize(self):
         """Initialize Ollama fallback system"""
+        # Block initialization in cloud environments to prevent RAM exhaustion and crashes
+        from core.config import settings
+        if getattr(settings, "env", getattr(settings, "ENV", "local")).lower() != "local":
+            print("☁️ Cloud environment detected. Disabling Ollama local fallback.")
+            self._is_running = False
+            self.available_models = []
+            return
+
         print("🏠 Initializing Local Fallback (Ollama)...")
         
         # Check if Ollama is running
