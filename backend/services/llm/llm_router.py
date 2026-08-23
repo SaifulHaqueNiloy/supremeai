@@ -25,6 +25,8 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
+from services.dynamic_ai.orchestrator import get_ai_orchestrator
+
 
 # Internal core imports
 from core.cache import get_redis_client
@@ -318,6 +320,33 @@ class LLMRouter:
         normalize_bengali: bool = True,
         **kwargs: Any,
     ) -> RouteResult | AsyncGenerator[StreamChunk, None]:
+        # V5 Dynamic AI Architecture Bridge (Non-Streaming only for now)
+        if not stream:
+            orchestrator = await get_ai_orchestrator()
+            v5_result = await orchestrator.generate(
+                prompt=prompt,
+                task_type=task_type,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                prefer_free_tier=cost_sensitive,
+                **kwargs
+            )
+            if v5_result.success:
+                try:
+                    prov_enum = Provider(v5_result.provider_used)
+                except ValueError:
+                    prov_enum = Provider.OLLAMA # Fallback mapping
+                    
+                return RouteResult(
+                    provider=prov_enum,
+                    content=v5_result.text or "",
+                    tokens_used=0,
+                    cost_usd=v5_result.cost_usd,
+                    latency_ms=v5_result.latency_ms,
+                    cached=False,
+                    fallback_used=v5_result.was_fallback
+                )
+
         """
         Route prompt to optimal LLM provider with automatic fallback.
         সকল রুলস যাচাই করে এবং মেনে চালায়।
@@ -586,22 +615,26 @@ class LLMRouter:
         model_override: str | None = None,
         **kwargs: Any,
     ) -> dict[str, Any]:
-        """বাংলা মন্তব্য: LLMRouter-এর convenience wrapper। LLMGatewayWithLearning-এর সাথে সামঞ্জস্যতার জন্য যোগ করা হয়েছে।"""
-        result = await self.route(
+        """Bridged to DynamicAIOrchestrator"""
+        orchestrator = await get_ai_orchestrator()
+        result = await orchestrator.generate(
             prompt=prompt,
             task_type=task_type,
             max_tokens=max_tokens,
             temperature=temperature,
-            preferred_provider=model_override,
-            **kwargs,
+            prefer_free_tier=True,
+            **kwargs
         )
+        
+        provider_name = result.provider_used or "unknown"
+        
         return {
-            "text": result.content,
-            "provider": result.provider.value,
-            "tokens_used": result.tokens_used,
+            "text": result.text or "",
+            "provider": provider_name,
+            "tokens_used": 0,
             "cost_usd": result.cost_usd,
             "latency_ms": result.latency_ms,
-            "cached": result.cached,
+            "cached": False,
         }
 
     async def health_check_all(self) -> dict[str, bool]:
@@ -748,7 +781,9 @@ import itertools
 try:
     import requests
 except ImportError:
-    import httpx as requests
+    import httpx
+from services.dynamic_ai.orchestrator import get_ai_orchestrator
+ as requests
 
 
 class HFKeyRotator:
