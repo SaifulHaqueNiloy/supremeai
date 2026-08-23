@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import Editor from '@monaco-editor/react';
-import { Terminal } from 'xterm';
-import { FitAddon } from '@xterm/addon-fit';
-import { WebContainer } from '@webcontainer/api';
+import type { Terminal } from 'xterm';
+import type { FitAddon } from '@xterm/addon-fit';
 import 'xterm/css/xterm.css';
 
 import { AiAssistantBar } from '../../components/editor/AiAssistantBar';
@@ -35,6 +34,8 @@ export const IdeWorkspace: React.FC = () => {
 
     const initEnv = async () => {
       if (terminalRef.current && !xtermRef.current) {
+        const { Terminal } = await import('xterm');
+        const { FitAddon } = await import('@xterm/addon-fit');
         term = new Terminal({
           theme: { background: '#1e1e1e', foreground: '#d4d4d4' },
           fontFamily: '"Fira Code", monospace',
@@ -55,6 +56,7 @@ export const IdeWorkspace: React.FC = () => {
           // Boot WebContainer if not already booted
           let wc = webContainer;
           if (!wc) {
+            const { WebContainer } = await import('@webcontainer/api');
             wc = await WebContainer.boot();
             setWebContainer(wc);
           }

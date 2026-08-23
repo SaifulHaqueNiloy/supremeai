@@ -1,4 +1,4 @@
-import { WebContainer } from '@webcontainer/api';
+import type { WebContainer } from '@webcontainer/api';
 
 export interface SandboxExecutionResult {
   status: 'SUCCESS' | 'FAILED' | 'TIMEOUT';
@@ -29,6 +29,7 @@ export class SandboxService {
     this.isInitializing = true;
     console.warn('Booting WebContainer...');
     try {
+      const { WebContainer } = await import('@webcontainer/api');
       this.containerInstance = await WebContainer.boot();
       console.warn('WebContainer booted successfully.');
     } catch (e) {
