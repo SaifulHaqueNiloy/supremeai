@@ -11,7 +11,8 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 import jwt
-from jwt import PyJWTError as JWTError, ExpiredSignatureError
+from jwt import ExpiredSignatureError
+from jwt import PyJWTError as JWTError
 from loguru import logger
 
 from core.config import settings
@@ -52,7 +53,7 @@ def _get_token_from_query(scope: ASGIScope) -> str | None:
         return None
     try:
         query = qs.decode("utf-8", errors="replace")
-    except Exception as e:
+    except Exception:
         return None
     for part in query.split("&"):
         if "=" not in part:
@@ -77,7 +78,9 @@ def _decode_jwt(token: str) -> dict[str, Any] | None:
     এ async ভাবে করা হয় (নিচে দেখুন)।
     """
     if not settings.jwt_secret:
-        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        logger.critical(
+            "JWT_SECRET is missing. Rejecting authentication under fail-closed security policy."
+        )
         return None
 
     try:
@@ -298,7 +301,9 @@ async def verify_admin_session_fail_closed(request: Any) -> dict[str, Any]:
 
     # Fail-closed check for JWT secret config
     if not settings.jwt_secret:
-        logger.critical("JWT_SECRET is missing. Rejecting authentication under fail-closed security policy.")
+        logger.critical(
+            "JWT_SECRET is missing. Rejecting authentication under fail-closed security policy."
+        )
         raise HTTPException(status_code=500, detail="Authentication server configuration error")
 
     # Reuse _decode_jwt to avoid duplicate JWT decode logic

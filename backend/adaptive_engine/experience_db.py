@@ -87,7 +87,9 @@ class ExperienceDatabase:
                 import chromadb
 
                 logger.info("Initializing ChromaDB EphemeralClient lazily...")
-                self.chroma_collection = chromadb.EphemeralClient().get_or_create_collection("experience")
+                self.chroma_collection = chromadb.EphemeralClient().get_or_create_collection(
+                    "experience"
+                )
             except Exception as exc:
                 logger.error(f"ChromaDB lazy init failed: {exc}")
 
@@ -151,7 +153,9 @@ class ExperienceDatabase:
                 logger.info("Initializing SentenceTransformer('all-MiniLM-L6-v2') lazily...")
                 self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
             except Exception as exc:
-                logger.error(f"[ExperienceDB] Lazy SentenceTransformer initialization failed: {exc}")
+                logger.error(
+                    f"[ExperienceDB] Lazy SentenceTransformer initialization failed: {exc}"
+                )
 
         if self.encoder:
             try:
@@ -170,7 +174,8 @@ class ExperienceDatabase:
 
     def record_experience(self, exp: Experience) -> int:
         timestamp = (
-            exp.timestamp or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+            exp.timestamp
+            or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
         )
         request_text = exp.request or ""
         embedding = self._embed(request_text)
@@ -266,7 +271,9 @@ class ExperienceDatabase:
             return 0.0
         return dot / (norm_a * norm_b)
 
-    def find_similar(self, query: str, limit: int = 5, threshold: float = 0.7) -> list[dict[str, Any]]:
+    def find_similar(
+        self, query: str, limit: int = 5, threshold: float = 0.7
+    ) -> list[dict[str, Any]]:
         # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
         self._ensure_chroma()
         self._ensure_qdrant()
@@ -363,9 +370,8 @@ class ExperienceDatabase:
                 return
 
             gz_path = self.db_path.with_suffix(".sqlite.gz")
-            with open(self.db_path, "rb") as f_in:
-                with gzip.open(gz_path, "wb") as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+            with open(self.db_path, "rb") as f_in, gzip.open(gz_path, "wb") as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
             client = storage.Client()
             bucket = client.bucket(bucket_name)
@@ -375,7 +381,9 @@ class ExperienceDatabase:
             blob.content_encoding = "gzip"
             blob.upload_from_filename(str(gz_path), content_type="application/x-sqlite3")
 
-            loguru.logger.info(f"Successfully synced experience db to GCS: gs://{bucket_name}/{blob_name}")
+            loguru.logger.info(
+                f"Successfully synced experience db to GCS: gs://{bucket_name}/{blob_name}"
+            )
 
             # Clean up local compressed file
             gz_path.unlink(missing_ok=True)

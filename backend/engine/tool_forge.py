@@ -18,16 +18,21 @@ class ToolForge:
     def __init__(self):
         self._synthesized_tools: dict[str, dict[str, Any]] = {}
 
-    async def synthesize_tool(self, tool_name: str, task_description: str, code_snippet: str) -> bool:
+    async def synthesize_tool(
+        self, tool_name: str, task_description: str, code_snippet: str
+    ) -> bool:
         """
         Synthesize and register a dynamic helper tool.
         """
         try:
             from core.security.scanning.ast_scanner import ASTSandboxScanner
+
             scanner = ASTSandboxScanner()
             scan_res = scanner.scan(code_snippet)
             if not scan_res.is_safe:
-                logger.error(f"Tool Forge rejected unsafe code for tool '{tool_name}': {scan_res.violations}")
+                logger.error(
+                    f"Tool Forge rejected unsafe code for tool '{tool_name}': {scan_res.violations}"
+                )
                 return False
 
             self._synthesized_tools[tool_name] = {
@@ -35,7 +40,9 @@ class ToolForge:
                 "description": task_description,
                 "code": code_snippet,
             }
-            logger.info(f"Tool Forge successfully synthesized and verified dynamic tool: '{tool_name}'")
+            logger.info(
+                f"Tool Forge successfully synthesized and verified dynamic tool: '{tool_name}'"
+            )
             return True
         except Exception as e:
             logger.error(f"Failed to synthesize tool '{tool_name}': {e}")

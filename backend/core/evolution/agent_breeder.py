@@ -108,7 +108,9 @@ class UniformCrossover:
         for key in all_keys:
             if key in parent_a and key in parent_b:
                 # 50% chance from either parent
-                child[key] = copy.deepcopy(parent_a[key] if random.random() < 0.5 else parent_b[key])
+                child[key] = copy.deepcopy(
+                    parent_a[key] if random.random() < 0.5 else parent_b[key]
+                )
             elif key in parent_a:
                 child[key] = copy.deepcopy(parent_a[key])
             else:
@@ -173,7 +175,11 @@ class GaussianMutation:
                 messages=[{"role": "user", "content": prompt}],
                 temperature=self._llm_temperature,
                 max_tokens=1024,
-                api_key=(settings.gemini_api_key.split(",")[0].strip() if settings.gemini_api_key else None),
+                api_key=(
+                    settings.gemini_api_key.split(",")[0].strip()
+                    if settings.gemini_api_key
+                    else None
+                ),
             )
             refined = response.choices[0].message.content.strip()
             return refined if len(refined) > 5 else text
@@ -294,7 +300,9 @@ class AgentBreeder:
             child_chromosome = copy.deepcopy(fittest.chromosome)
             crossover_method = "clone_elite"
         else:
-            child_chromosome = await self._crossover.crossover(parent_a.chromosome, parent_b.chromosome)
+            child_chromosome = await self._crossover.crossover(
+                parent_a.chromosome, parent_b.chromosome
+            )
             crossover_method = "uniform"
 
         # Mutation

@@ -298,7 +298,9 @@ class VisionAnalyzer:
         cache_key = self._cache_key(image_path)
         cached = await self.cache.get(cache_key)
         if cached:
-            return tuple(ComponentNode(**n) if isinstance(n, dict) else n for n in cached[0]), tuple(  # type: ignore
+            return tuple(
+                ComponentNode(**n) if isinstance(n, dict) else n for n in cached[0]
+            ), tuple(  # type: ignore
                 ComponentEdge(**e) if isinstance(e, dict) else e for e in cached[1]
             )
 

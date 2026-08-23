@@ -92,9 +92,13 @@ class AsyncRateLimiter:
             client = await self._get_redis()
             if client is None:
                 if settings.env in ("production", "staging"):
-                    logger.critical(f"Rate limiter Redis unavailable. Blocking request for {key} (fail-closed).")
+                    logger.critical(
+                        f"Rate limiter Redis unavailable. Blocking request for {key} (fail-closed)."
+                    )
                     return False
-                logger.warning(f"Redis rate limiter unavailable. Allowing request for {key} (fail-open in dev).")
+                logger.warning(
+                    f"Redis rate limiter unavailable. Allowing request for {key} (fail-open in dev)."
+                )
                 return True
 
             now = time.time()
@@ -121,9 +125,13 @@ class AsyncRateLimiter:
             return is_allowed
         except Exception as e:
             if settings.env in ("production", "staging"):
-                logger.critical(f"Rate limiter failed critically in production: {e}. Blocking request (fail-closed).")
+                logger.critical(
+                    f"Rate limiter failed critically in production: {e}. Blocking request (fail-closed)."
+                )
                 return False
             else:
-                logger.warning(f"Rate limiter failed in non-production: {e}. Allowing request (fail-open).")
+                logger.warning(
+                    f"Rate limiter failed in non-production: {e}. Allowing request (fail-open)."
+                )
                 # Use in-memory fallback for dev/testing
                 return self._fallback_limiter.is_allowed(key, limit)

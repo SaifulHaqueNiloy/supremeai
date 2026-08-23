@@ -29,8 +29,12 @@ class CIReportPayload(BaseModel):
     runtime_seconds: int = Field(..., description="Total execution time in seconds")
     commit_sha: str = Field(..., description="Commit SHA of the run")
     branch: str = Field(..., description="Branch name of the run")
-    jobs_summary: dict[str, Any] | None = Field(default=None, description="Detailed status of all GHA jobs run")
-    error_logs: str | None = Field(default=None, description="Logs/error information for failed runs")
+    jobs_summary: dict[str, Any] | None = Field(
+        default=None, description="Detailed status of all GHA jobs run"
+    )
+    error_logs: str | None = Field(
+        default=None, description="Logs/error information for failed runs"
+    )
 
 
 async def create_ci_report(payload: CIReportPayload) -> dict[str, Any] | None:

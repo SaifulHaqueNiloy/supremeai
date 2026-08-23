@@ -19,7 +19,9 @@ def test_truncate_to_token_limit_from_end_keeps_tail():
 
 @pytest.mark.anyio
 async def test_prepare_prompt_truncates_when_exceeds_budget(monkeypatch):
-    mgr = TokenBudgetManager(custom_budgets={"default": {"max_input_tokens": 200, "max_output_tokens": 50}})
+    mgr = TokenBudgetManager(
+        custom_budgets={"default": {"max_input_tokens": 200, "max_output_tokens": 50}}
+    )
 
     long_prompt = "hello " * 1000
     _processed, meta = mgr.prepare_prompt(long_prompt, provider="default", system_prompt="sys")
@@ -32,7 +34,9 @@ async def test_prepare_prompt_truncates_when_exceeds_budget(monkeypatch):
 @pytest.mark.anyio
 async def test_prepare_prompt_budget_exhaustion_raises_and_emits(monkeypatch):
     # system_prompt consumes almost entire budget
-    mgr = TokenBudgetManager(custom_budgets={"default": {"max_input_tokens": 100, "max_output_tokens": 50}})
+    mgr = TokenBudgetManager(
+        custom_budgets={"default": {"max_input_tokens": 100, "max_output_tokens": 50}}
+    )
 
     # patch emit so it won't require real bus
     from core.llm import token_budget

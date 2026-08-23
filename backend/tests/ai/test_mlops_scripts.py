@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 np = pytest.importorskip("numpy")
 
 repo_root = Path(__file__).resolve().parents[3]
@@ -60,7 +61,9 @@ class TestModelDriftDetector:
             preds = np.random.randn(100)
 
             detector.save_baseline("test-model", features, preds)
-            results = detector.run_full_drift_check("test-model", features, preds, current_accuracy=0.90)
+            results = detector.run_full_drift_check(
+                "test-model", features, preds, current_accuracy=0.90
+            )
             assert len(results) >= 1
 
 

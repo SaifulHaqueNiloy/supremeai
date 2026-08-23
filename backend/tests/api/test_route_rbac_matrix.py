@@ -123,20 +123,20 @@ def test_public_auth_login_not_admin_guarded():
     from api.routes import auth as auth_routes
 
     router = auth_routes.router
-    login_routes = [
-        r for r in router.routes if "login" in getattr(r, "path", "")
-    ]
+    login_routes = [r for r in router.routes if "login" in getattr(r, "path", "")]
     assert login_routes, "Expected at least one login route"
     for route in login_routes:
         deps = _collect_auth_dependency_names(route)
-        assert "require_admin_token" not in deps, f"Login route {route.path} is admin-gated (should be public)"
+        assert "require_admin_token" not in deps, (
+            f"Login route {route.path} is admin-gated (should be public)"
+        )
 
 
 def test_health_endpoint_not_admin_guarded():
     """Health checks are public and must not require an admin token."""
     try:
         from api.routes import health as health_routes
-    except Exception as e:
+    except Exception:
         pytest.skip("health routes module not importable in this environment")
     router = health_routes.router
     for route in router.routes:

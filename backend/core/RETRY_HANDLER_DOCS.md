@@ -19,10 +19,12 @@
 ```python
 from backend.core.retry_handler import retry_handler
 
+
 @retry_handler(max_retries=3, delay=1.0, backoff=2.0)
 async def my_async_function():
     # আপনার অ্যাসিঙ্ক কোড এখানে
     pass
+
 
 @retry_handler(max_retries=3, delay=1.0, backoff=2.0)
 def my_sync_function():
@@ -36,15 +38,17 @@ def my_sync_function():
 def on_retry_callback(attempt: int, exception: Exception):
     print(f"চেষ্টা #{attempt} ব্যর্থ হয়েছে - {exception}")
 
+
 def on_max_retries_callback(exception: Exception):
     print(f"সর্বাধিক রিট্রাই সম্পন্ন - চূড়ান্ত এক্সেপশন: {exception}")
 
+
 @retry_handler(
-    max_retries=3, 
-    delay=1.0, 
+    max_retries=3,
+    delay=1.0,
     backoff=2.0,
     on_retry_callback=on_retry_callback,
-    on_max_retries_callback=on_max_retries_callback
+    on_max_retries_callback=on_max_retries_callback,
 )
 async def my_function():
     # কোড এখানে
@@ -55,6 +59,7 @@ async def my_function():
 
 ```python
 from backend.core.retry_handler import retry_with_budget
+
 
 @retry_with_budget(max_retries=2, delay=0.3, backoff=1.5)
 async def my_budgeted_function():

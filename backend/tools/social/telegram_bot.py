@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 """
 SupremeAI 2.0 — Telegram Bot Handler (Production-Ready)
 
@@ -91,7 +90,11 @@ class TelegramBotHandler:
     }
 
     def __init__(self, task_processor_interface=None) -> None:
-        self.bot_token: str = str(os.environ.get("TELEGRAM_BOT_TOKEN") or getattr(settings, "telegram_bot_token", "") or "").strip()
+        self.bot_token: str = str(
+            os.environ.get("TELEGRAM_BOT_TOKEN")
+            or getattr(settings, "telegram_bot_token", "")
+            or ""
+        ).strip()
         self.api_base: str = f"https://api.telegram.org/bot{self.bot_token}"
         self.processor = task_processor_interface
 
@@ -274,8 +277,14 @@ class TelegramBotHandler:
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 await client.post(f"{self.api_base}/setMyName", json={"name": name})
-                await client.post(f"{self.api_base}/setMyDescription", json={"description": description or default_desc})
-                await client.post(f"{self.api_base}/setMyShortDescription", json={"short_description": short_description or default_short})
+                await client.post(
+                    f"{self.api_base}/setMyDescription",
+                    json={"description": description or default_desc},
+                )
+                await client.post(
+                    f"{self.api_base}/setMyShortDescription",
+                    json={"short_description": short_description or default_short},
+                )
                 await client.post(f"{self.api_base}/setMyCommands", json={"commands": commands})
                 logger.info("✅ Telegram bot profile and commands synchronized successfully.")
                 return True
@@ -300,7 +309,11 @@ class TelegramBotHandler:
 
     def is_admin(self, chat_id: int | str) -> bool:
         """Check if Telegram chat ID belongs to the system administrator."""
-        admin_id = str(os.environ.get("ADMIN_TELEGRAM_CHAT_ID") or os.environ.get("TELEGRAM_CHAT_ID") or "7804133572").strip()
+        admin_id = str(
+            os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
+            or os.environ.get("TELEGRAM_CHAT_ID")
+            or "7804133572"
+        ).strip()
         return str(chat_id) == admin_id or str(chat_id) == "7804133572"
 
     @staticmethod
@@ -309,7 +322,10 @@ class TelegramBotHandler:
         return {
             "inline_keyboard": [
                 [
-                    {"text": "✨ Open Studio (Telegram Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}},
+                    {
+                        "text": "✨ Open Studio (Telegram Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    },
                 ],
                 [
                     {"text": "⚡ Quick Actions", "callback_data": "quick_actions_menu"},
@@ -336,7 +352,10 @@ class TelegramBotHandler:
         return {
             "inline_keyboard": [
                 [
-                    {"text": "✨ Open Admin Studio (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}},
+                    {
+                        "text": "✨ Open Admin Studio (Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    },
                     {"text": "🌐 Admin Web Console", "url": "https://supremeai-admin.web.app"},
                 ],
                 [
@@ -356,7 +375,10 @@ class TelegramBotHandler:
                     {"text": "📜 AI Directives", "callback_data": "admin_rules"},
                 ],
                 [
-                    {"text": "📚 API Documentation", "url": "https://supremeai-backend-docker.onrender.com/docs"},
+                    {
+                        "text": "📚 API Documentation",
+                        "url": "https://supremeai-backend-docker.onrender.com/docs",
+                    },
                     {"text": "⚡ Quick Actions", "callback_data": "quick_actions_menu"},
                 ],
             ]
@@ -368,7 +390,10 @@ class TelegramBotHandler:
         return {
             "inline_keyboard": [
                 [
-                    {"text": "✨ Open Studio (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}},
+                    {
+                        "text": "✨ Open Studio (Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    },
                 ],
                 [
                     {"text": "⚡ Trigger Self-Healer", "callback_data": "quick_self_healer"},
@@ -421,9 +446,15 @@ class TelegramBotHandler:
                     await self._handle_session_menu(chat_id)
                 elif data.startswith("session_switch_"):
                     sid = data.replace("session_switch_", "")
-                    await self.send_message(chat_id, f"🔄 <b>Session Switched:</b> Context active on <code>{sid}</code>.")
+                    await self.send_message(
+                        chat_id,
+                        f"🔄 <b>Session Switched:</b> Context active on <code>{sid}</code>.",
+                    )
                 elif data == "session_new":
-                    await self.send_message(chat_id, "✨ <b>New Conversation Session Created!</b>\nSend any message to start a fresh thread.")
+                    await self.send_message(
+                        chat_id,
+                        "✨ <b>New Conversation Session Created!</b>\nSend any message to start a fresh thread.",
+                    )
                 elif data == "user_studio_info":
                     await self._handle_user_studio_info(chat_id)
                 elif data == "user_desktop_info":
@@ -438,7 +469,7 @@ class TelegramBotHandler:
                     await self.send_message(
                         chat_id,
                         "🤖 <b>SupremeAI 2.0 | User Studio & Dashboard</b>\n\nনিচের অপশনগুলো থেকে আপনার প্রয়োজনীয় সার্ভিস বেছে নিন:",
-                        reply_markup=self._user_keyboard()
+                        reply_markup=self._user_keyboard(),
                     )
                 elif data == "user_apk_info":
                     apk_text = (
@@ -449,18 +480,30 @@ class TelegramBotHandler:
                     )
                     keyboard = {
                         "inline_keyboard": [
-                            [{"text": "✨ Open Studio (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}}],
+                            [
+                                {
+                                    "text": "✨ Open Studio (Mini App)",
+                                    "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                                }
+                            ],
                             [{"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
                         ]
                     }
                     await self.send_message(chat_id, apk_text, reply_markup=keyboard)
                 elif data == "cmd_help":
-                    await self.send_message(chat_id, self.COMMANDS["/help"], reply_markup=self._quick_actions_keyboard(chat_id))
+                    await self.send_message(
+                        chat_id,
+                        self.COMMANDS["/help"],
+                        reply_markup=self._quick_actions_keyboard(chat_id),
+                    )
 
                 # ── Admin Dashboard Callbacks ─────────────────────────
                 elif data.startswith("admin_") or data in ("cmd_status", "cmd_backup", "cmd_rules"):
                     if not self.is_admin(chat_id):
-                        await self.send_message(chat_id, "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>")
+                        await self.send_message(
+                            chat_id,
+                            "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>",
+                        )
                     else:
                         if data in ("admin_cluster", "cmd_status"):
                             await self._handle_status(chat_id)
@@ -480,7 +523,7 @@ class TelegramBotHandler:
                             await self.send_message(
                                 chat_id,
                                 "🔱 <b>SupremeAI 2.0 | Admin Command Center</b>\n\nপ্রধান অ্যাডমিন মেনু থেকে একটি অপশন বেছে নিন:",
-                                reply_markup=self._admin_keyboard()
+                                reply_markup=self._admin_keyboard(),
                             )
             return
 
@@ -501,12 +544,14 @@ class TelegramBotHandler:
         # ── Step A: Anti-Hacking & Prompt Injection Guardrail ─────────
         injected, _inj_reason = security_guard.detect_prompt_injection(text)
         if injected:
-            logger.warning(f"🚨 Security Alert: Prompt injection attempt from @{username} ({user_id}): '{text}'")
+            logger.warning(
+                f"🚨 Security Alert: Prompt injection attempt from @{username} ({user_id}): '{text}'"
+            )
             await self.send_message(
                 chat_id,
                 "🛡️ <b>Security Alert: AutonoGuard Triggered</b>\n\n"
                 "আপনার বার্তায় প্রম্পট ইঞ্জেকশন বা সিকিউরিটি বাইপাস প্যাটার্ন শনাক্ত হয়েছে।\n"
-                "সুপ্রিমএআই-এর সাংবিধানিক নিরাপত্তা নীতি অনুসারে এই রিকোয়েস্টটি বাতিল করা হলো।"
+                "সুপ্রিমএআই-এর সাংবিধানিক নিরাপত্তা নীতি অনুসারে এই রিকোয়েস্টটি বাতিল করা হলো।",
             )
             return
 
@@ -515,7 +560,11 @@ class TelegramBotHandler:
         is_verify_cmd = command in ("/verify", "/auth", "/totp", "/otp")
         raw_digits = text.strip()
 
-        if is_verify_cmd or (security_guard.has_pending_challenge(chat_id) and raw_digits.isdigit() and len(raw_digits) == 6):
+        if is_verify_cmd or (
+            security_guard.has_pending_challenge(chat_id)
+            and raw_digits.isdigit()
+            and len(raw_digits) == 6
+        ):
             otp_code = text.split()[1] if is_verify_cmd and len(text.split()) > 1 else raw_digits
             ok, msg, challenge = security_guard.verify_challenge(chat_id, otp_code)
             await self.send_message(chat_id, msg)
@@ -529,7 +578,7 @@ class TelegramBotHandler:
             if not self.is_admin(chat_id):
                 await self.send_message(
                     chat_id,
-                    "🔒 <b>Access Denied:</b> This destructive/privileged system instruction is restricted to System Administrators."
+                    "🔒 <b>Access Denied:</b> This destructive/privileged system instruction is restricted to System Administrators.",
                 )
                 return
 
@@ -560,7 +609,9 @@ class TelegramBotHandler:
                         "• 🌐 <b>Dashboard:</b> <a href='https://supremeai-lac.vercel.app'>supremeai-lac.vercel.app</a>\n\n"
                         "<i>যেকোনো প্রশ্ন বা কমান্ড পাঠিয়ে এআই অ্যাসিস্ট্যান্স শুরু করুন।</i>"
                     )
-                    await self.send_message(chat_id, welcome_text, reply_markup=self._admin_keyboard())
+                    await self.send_message(
+                        chat_id, welcome_text, reply_markup=self._admin_keyboard()
+                    )
                 else:
                     user_welcome = (
                         "🤖 <b>Welcome to SupremeAI 2.0</b>\n\n"
@@ -571,14 +622,25 @@ class TelegramBotHandler:
                         "• Desktop Installer (.exe), VS Code Extension (.vsix) ও Mobile (.apk) ডাউনলোড করুন।\n\n"
                         "🚀 <i>শুরু করতে নিচে যেকোনো অপশন সিলেক্ট করুন বা সরাসরি বার্তা পাঠান!</i>"
                     )
-                    await self.send_message(chat_id, user_welcome, reply_markup=self._user_keyboard())
+                    await self.send_message(
+                        chat_id, user_welcome, reply_markup=self._user_keyboard()
+                    )
                 return
 
             if command in ("/app", "/studio"):
                 await self.send_message(
                     chat_id,
                     self.COMMANDS["/app"],
-                    reply_markup={"inline_keyboard": [[{"text": "✨ Open Studio (Telegram Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}}]]}
+                    reply_markup={
+                        "inline_keyboard": [
+                            [
+                                {
+                                    "text": "✨ Open Studio (Telegram Mini App)",
+                                    "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                                }
+                            ]
+                        ]
+                    },
                 )
                 return
 
@@ -591,7 +653,7 @@ class TelegramBotHandler:
                 return
 
             if command in ("/kb", "/docs"):
-                query = text[len(command):].strip()
+                query = text[len(command) :].strip()
                 await self._handle_kb_search(chat_id, query)
                 return
 
@@ -635,7 +697,12 @@ class TelegramBotHandler:
         keyboard = {
             "inline_keyboard": [
                 [{"text": "🔄 Refresh Telemetry", "callback_data": "quick_telemetry"}],
-                [{"text": "✨ Open Studio (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}}],
+                [
+                    {
+                        "text": "✨ Open Studio (Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    }
+                ],
                 [{"text": "🔙 Main Menu", "callback_data": "user_main_menu"}],
             ]
         }
@@ -643,7 +710,9 @@ class TelegramBotHandler:
 
     async def _handle_quick_actions(self, chat_id: int | str) -> None:
         """Display 1-click Quick Actions keyboard."""
-        await self.send_message(chat_id, self.COMMANDS["/quick"], reply_markup=self._dashboard_quick_actions_keyboard())
+        await self.send_message(
+            chat_id, self.COMMANDS["/quick"], reply_markup=self._dashboard_quick_actions_keyboard()
+        )
 
     async def _handle_quick_self_healer(self, chat_id: int | str) -> None:
         """Trigger autonomous Self-Healer diagnosis routine."""
@@ -674,7 +743,12 @@ class TelegramBotHandler:
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "✨ Open Evolution Forge (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app/evolution-forge"}}],
+                [
+                    {
+                        "text": "✨ Open Evolution Forge (Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app/evolution-forge"},
+                    }
+                ],
                 [{"text": "🔙 Quick Actions", "callback_data": "quick_actions_menu"}],
             ]
         }
@@ -716,7 +790,12 @@ class TelegramBotHandler:
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "✨ Open Studio Docs (Mini App)", "web_app": {"url": "https://supremeai-lac.vercel.app"}}],
+                [
+                    {
+                        "text": "✨ Open Studio Docs (Mini App)",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    }
+                ],
                 [{"text": "🔙 Quick Actions", "callback_data": "quick_actions_menu"}],
             ]
         }
@@ -759,7 +838,12 @@ class TelegramBotHandler:
 
         keyboard = {
             "inline_keyboard": [
-                [{"text": "✨ Open Studio Mini App", "web_app": {"url": "https://supremeai-lac.vercel.app"}}],
+                [
+                    {
+                        "text": "✨ Open Studio Mini App",
+                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                    }
+                ],
                 [{"text": "🔙 Knowledge Base", "callback_data": "quick_kb"}],
             ]
         }
@@ -782,41 +866,54 @@ class TelegramBotHandler:
         }
         await self.send_message(chat_id, session_text, reply_markup=keyboard)
 
-    async def _execute_authorized_critical_action(self, chat_id: int | str, challenge: dict[str, Any]) -> None:
+    async def _execute_authorized_critical_action(
+        self, chat_id: int | str, challenge: dict[str, Any]
+    ) -> None:
         """Execute a privileged critical action after successful TOTP 2FA verification."""
         action_type = challenge.get("action_type", "")
         original_command = challenge.get("original_command", "")
 
         logger.info(f"Executing authorized critical action: {action_type} for chat_id={chat_id}")
-        await self.send_message(chat_id, f"⚙️ <i>Executing authorized action:</i> <code>{challenge.get('action_desc')}</code>...")
+        await self.send_message(
+            chat_id,
+            f"⚙️ <i>Executing authorized action:</i> <code>{challenge.get('action_desc')}</code>...",
+        )
 
         if action_type == "DATABASE_DESTRUCTION":
             await self.send_message(
                 chat_id,
                 "🛡️ <b>Safety Guard:</b> Direct destructive table dropping via Telegram is intercepted. "
-                "Creating emergency safety backup snapshot first before executing migration workflow..."
+                "Creating emergency safety backup snapshot first before executing migration workflow...",
             )
             await self._handle_backup_now(chat_id)
         elif action_type == "SECRET_MUTATION":
             await self.send_message(
                 chat_id,
                 "🔐 <b>Secret Mutation Approved:</b> Please use the Admin Web Console (https://supremeai-admin.web.app) "
-                "or Infisical CLI to commit new encrypted secrets to the cluster."
+                "or Infisical CLI to commit new encrypted secrets to the cluster.",
             )
         else:
             # Route to autonomous agent orchestrator for safe supervised execution
             if self.processor:
                 try:
                     loop = asyncio.get_event_loop()
-                    res = await loop.run_in_executor(None, lambda: self.processor.execute_task(original_command, "admin"))
-                    await self.send_message(chat_id, f"✅ <b>Execution Result:</b>\n{res.get('result', 'Executed successfully.')}")
+                    res = await loop.run_in_executor(
+                        None, lambda: self.processor.execute_task(original_command, "admin")
+                    )
+                    await self.send_message(
+                        chat_id,
+                        f"✅ <b>Execution Result:</b>\n{res.get('result', 'Executed successfully.')}",
+                    )
                 except Exception as exc:
                     await self.send_message(chat_id, f"❌ <b>Execution Failed:</b> {exc}")
             else:
-                await self.send_message(chat_id, "✅ <b>Action Authorized:</b> Task logged in System Audit Trail.")
+                await self.send_message(
+                    chat_id, "✅ <b>Action Authorized:</b> Task logged in System Audit Trail."
+                )
 
     async def _handle_status(self, chat_id: int | str) -> None:
         import time as _time
+
         import httpx as _httpx
 
         status_lines = [
@@ -826,33 +923,43 @@ class TelegramBotHandler:
         ]
 
         # Backend Health
-        backend_url = getattr(settings, "supremeai_api_url", "") or "https://supremeai-backend-docker.onrender.com"
+        backend_url = (
+            getattr(settings, "supremeai_api_url", "")
+            or "https://supremeai-backend-docker.onrender.com"
+        )
         try:
             async with _httpx.AsyncClient(timeout=5) as c:
                 r = await c.get(f"{backend_url}/health")
                 icon = "🟢" if r.status_code == 200 else "🟡"
-                status_lines.append(f"{icon} <b>Render Backend:</b> <code>{r.status_code} OK (Port 8000)</code>")
-        except Exception as e:
+                status_lines.append(
+                    f"{icon} <b>Render Backend:</b> <code>{r.status_code} OK (Port 8000)</code>"
+                )
+        except Exception:
             status_lines.append("🔴 <b>Render Backend:</b> <code>Degraded/Unreachable</code>")
 
         # Database Health
         try:
             from core.health_check import ComprehensiveHealthChecker
+
             checker = ComprehensiveHealthChecker()
             db_res = await checker.check_database()
             db_icon = "🟢" if db_res.status.value == "healthy" else "🔴"
-            status_lines.append(f"{db_icon} <b>Supabase Postgres:</b> <code>{db_res.message}</code>")
+            status_lines.append(
+                f"{db_icon} <b>Supabase Postgres:</b> <code>{db_res.message}</code>"
+            )
         except Exception as e:
             status_lines.append(f"⚪ <b>Database:</b> <code>{e}</code>")
 
         # AI Engine & Free Tier status
-        status_lines.extend([
-            "🟢 <b>AI Reasoning:</b> <code>Gemini 2.5 Flash + Groq ($0 Cost)</code>",
-            "🟢 <b>TelDrive Storage:</b> <code>Operational (Unlimited Cloud)</code>",
-            "🟢 <b>Vector Fabric:</b> <code>pgvector / Continuous Learning</code>",
-            "",
-            "💡 <i>সব সার্ভিস স্বাভাবিকভাবে চলমান রয়েছে।</i>",
-        ])
+        status_lines.extend(
+            [
+                "🟢 <b>AI Reasoning:</b> <code>Gemini 2.5 Flash + Groq ($0 Cost)</code>",
+                "🟢 <b>TelDrive Storage:</b> <code>Operational (Unlimited Cloud)</code>",
+                "🟢 <b>Vector Fabric:</b> <code>pgvector / Continuous Learning</code>",
+                "",
+                "💡 <i>সব সার্ভিস স্বাভাবিকভাবে চলমান রয়েছে।</i>",
+            ]
+        )
 
         keyboard = {
             "inline_keyboard": [
@@ -926,7 +1033,10 @@ class TelegramBotHandler:
             "inline_keyboard": [
                 [
                     {"text": "📦 Download Releases", "callback_data": "cmd_build"},
-                    {"text": "📚 Swagger API Docs", "url": "https://supremeai-backend-docker.onrender.com/docs"},
+                    {
+                        "text": "📚 Swagger API Docs",
+                        "url": "https://supremeai-backend-docker.onrender.com/docs",
+                    },
                 ],
                 [
                     {"text": "🔙 Admin Dashboard", "callback_data": "admin_main_menu"},
@@ -976,14 +1086,21 @@ class TelegramBotHandler:
         await self.send_message(chat_id, text, reply_markup=keyboard)
 
     async def _handle_backup_now(self, chat_id: int | str) -> None:
-        await self.send_message(chat_id, "⏳ <i>Initiating on-demand encrypted database & AI memory backup...</i>")
+        await self.send_message(
+            chat_id, "⏳ <i>Initiating on-demand encrypted database & AI memory backup...</i>"
+        )
         try:
             from tools.social.teldrive_storage import teldrive_storage
+
             res = await teldrive_storage.create_and_upload_backup(chat_id=chat_id)
             if res:
-                await self.send_message(chat_id, "✅ <b>Backup Complete!</b> File securely archived in Telegram Cloud.")
+                await self.send_message(
+                    chat_id, "✅ <b>Backup Complete!</b> File securely archived in Telegram Cloud."
+                )
             else:
-                await self.send_message(chat_id, "⚠️ Backup creation encountered an issue. Check server logs.")
+                await self.send_message(
+                    chat_id, "⚠️ Backup creation encountered an issue. Check server logs."
+                )
         except Exception as exc:
             logger.exception("On-demand backup error")
             await self.send_message(chat_id, f"❌ Backup failed: <code>{exc}</code>")
@@ -999,7 +1116,10 @@ class TelegramBotHandler:
         keyboard = {
             "inline_keyboard": [
                 [{"text": "🌐 Launch Web Studio", "url": "https://supremeai-lac.vercel.app"}],
-                [{"text": "💡 Prompt Library", "callback_data": "user_skills_info"}, {"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
+                [
+                    {"text": "💡 Prompt Library", "callback_data": "user_skills_info"},
+                    {"text": "🔙 User Dashboard", "callback_data": "user_main_menu"},
+                ],
             ]
         }
         await self.send_message(chat_id, text, reply_markup=keyboard)
@@ -1014,7 +1134,12 @@ class TelegramBotHandler:
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "⬇️ Download Desktop (.exe)", "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases"}],
+                [
+                    {
+                        "text": "⬇️ Download Desktop (.exe)",
+                        "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases",
+                    }
+                ],
                 [{"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
             ]
         }
@@ -1030,7 +1155,12 @@ class TelegramBotHandler:
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "⬇️ Download Extension (.vsix)", "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases"}],
+                [
+                    {
+                        "text": "⬇️ Download Extension (.vsix)",
+                        "url": "https://github.com/SaifulHaqueNiloy/supremeai/releases",
+                    }
+                ],
                 [{"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
             ]
         }
@@ -1082,7 +1212,11 @@ class TelegramBotHandler:
     async def _ai_response(self, text: str, user_id: str) -> str:
         """Route user query through SupremeAI reasoning engine and persist chat memory."""
         # 1. Primary: Gemini 2.5 Flash (Ultra-fast & Intelligent)
-        gem_keys = [k.strip() for k in os.getenv("GEMINI_API_KEY", "").split(",") if k.strip().startswith("AIza")]
+        gem_keys = [
+            k.strip()
+            for k in os.getenv("GEMINI_API_KEY", "").split(",")
+            if k.strip().startswith("AIza")
+        ]
         system_instruction = (
             "You are SupremeAI 2.0, a living self-evolving autonomous intelligence. "
             "Respond helpfully, clearly, and concisely in Bengali or English according to the user's language."
@@ -1113,7 +1247,10 @@ class TelegramBotHandler:
                     async with httpx.AsyncClient(timeout=20) as client:
                         r = await client.post(
                             "https://api.groq.com/openai/v1/chat/completions",
-                            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+                            headers={
+                                "Authorization": f"Bearer {groq_key}",
+                                "Content-Type": "application/json",
+                            },
                             json={
                                 "model": model_name,
                                 "messages": [
@@ -1130,9 +1267,15 @@ class TelegramBotHandler:
         # 3. Fallback: Orchestrator / ModelRouter
         if self.processor:
             try:
-                task_type = "coding" if any(k in text.lower() for k in ["code", "function", "script", "fix", "bug"]) else "general"
+                task_type = (
+                    "coding"
+                    if any(k in text.lower() for k in ["code", "function", "script", "fix", "bug"])
+                    else "general"
+                )
                 loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(None, lambda: self.processor.execute_task(text, task_type))
+                result = await loop.run_in_executor(
+                    None, lambda: self.processor.execute_task(text, task_type)
+                )
                 if isinstance(result, dict) and result.get("result"):
                     return str(result["result"])
             except Exception as exc:
@@ -1163,7 +1306,11 @@ class TelegramBotHandler:
                 async with httpx.AsyncClient(timeout=35) as client:
                     resp = await client.get(
                         f"{self.api_base}/getUpdates",
-                        params={"offset": offset, "timeout": 25, "allowed_updates": ["message", "callback_query"]},
+                        params={
+                            "offset": offset,
+                            "timeout": 25,
+                            "allowed_updates": ["message", "callback_query"],
+                        },
                     )
                     if resp.status_code == 200:
                         data = resp.json()
@@ -1183,7 +1330,9 @@ class TelegramBotHandler:
         url = f"https://api.telegram.org/bot{self.bot_token}/setWebhook"
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post(url, json={"url": webhook_url, "allowed_updates": ["message", "callback_query"]})
+                resp = await client.post(
+                    url, json={"url": webhook_url, "allowed_updates": ["message", "callback_query"]}
+                )
                 if resp.status_code == 200:
                     logger.info(f"Successfully registered Telegram Webhook to {webhook_url}")
                 else:

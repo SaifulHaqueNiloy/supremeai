@@ -105,7 +105,9 @@ async def complete_onboarding(payload: OnboardingPayload):
     2. Save user preferences (theme, model, language)
     3. Return readiness status
     """
-    logger.info(f"Onboarding completion request for user={payload.user_id} provider={payload.provider}")
+    logger.info(
+        f"Onboarding completion request for user={payload.user_id} provider={payload.provider}"
+    )
 
     # 1. Validate API key
     provider_valid = await _validate_api_key(payload.provider, payload.api_key)
@@ -188,8 +190,6 @@ async def reset_onboarding(user_id: str) -> dict[str, str]:
     return {"status": "reset", "user_id": user_id}
 
 
-
-
 class OnboardingPlanRequest(BaseModel):
     locale: str = "en"
     source: str = "mobile"
@@ -209,6 +209,7 @@ async def build_onboarding_plan(req: OnboardingPlanRequest):
     """ADVANCED: Generates a personalized onboarding DAG based on user intent and persona."""
     try:
         from adaptive_engine.learning_loop import LearningLoop
+
         loop = LearningLoop.get_instance()
         steps = await loop.personalize_flow(
             persona=req.persona,
@@ -231,6 +232,7 @@ async def record_onboarding_signal(sig: OnboardingSignalRequest):
     """ADVANCED: Records real-time user interaction signals to train the AdaptiveEngine."""
     try:
         from adaptive_engine.learning_loop import LearningLoop
+
         loop = LearningLoop.get_instance()
         await loop.record_signal(
             user_id=sig.user_id,
@@ -242,4 +244,3 @@ async def record_onboarding_signal(sig: OnboardingSignalRequest):
     except Exception as e:
         logger.debug(f"[Onboarding] Signal recording skipped: {e}")
         return {"status": "skipped", "error": str(e)}
-

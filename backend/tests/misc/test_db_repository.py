@@ -37,7 +37,9 @@ class FakeFirebase:
         self.exists = exists
 
     def collection(self, collection_name: str):
-        return FakeFirebaseDocRef(collection_name, should_error=self.should_error, exists=self.exists)
+        return FakeFirebaseDocRef(
+            collection_name, should_error=self.should_error, exists=self.exists
+        )
 
 
 class FakeSupabaseTable:

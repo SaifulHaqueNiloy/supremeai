@@ -80,7 +80,9 @@ class ModelHasher:
         """Create a hash of the model state dictionary."""
         # Serialize the state dict to bytes
         serialized = json.dumps(
-            {k: v.cpu().numpy().tolist() for k, v in state_dict.items()}, sort_keys=True, separators=(",", ":")
+            {k: v.cpu().numpy().tolist() for k, v in state_dict.items()},
+            sort_keys=True,
+            separators=(",", ":"),
         )
         return hashlib.sha256(serialized.encode()).hexdigest()
 
@@ -113,9 +115,9 @@ class DifferentialPrivacy:
         """Add noise to gradients for differential privacy."""
         for p in model.parameters():
             if p.grad is not None:
-                noise = torch.normal(mean=0.0, std=self.noise_multiplier * self.max_grad_norm, size=p.grad.size()).to(
-                    p.grad.device
-                )
+                noise = torch.normal(
+                    mean=0.0, std=self.noise_multiplier * self.max_grad_norm, size=p.grad.size()
+                ).to(p.grad.device)
                 p.grad.data.add_(noise)
 
 
@@ -178,7 +180,9 @@ class ByzantineRobustAggregator:
         return result
 
     @staticmethod
-    def trimmed_mean(parameters_list: list[list[torch.Tensor]], trim_ratio: float = 0.1) -> list[torch.Tensor]:
+    def trimmed_mean(
+        parameters_list: list[list[torch.Tensor]], trim_ratio: float = 0.1
+    ) -> list[torch.Tensor]:
         """Compute trimmed mean of parameters."""
         if not parameters_list or trim_ratio <= 0 or trim_ratio >= 0.5:
             return parameters_list[0] if parameters_list else []
@@ -306,7 +310,9 @@ class FederatedServer:
         client_list = list(self.clients.values())
 
         # Random selection
-        selected_indices = np.random.choice(len(client_list), size=num_clients_to_select, replace=False)
+        selected_indices = np.random.choice(
+            len(client_list), size=num_clients_to_select, replace=False
+        )
 
         return [client_list[i] for i in selected_indices]
 
@@ -428,7 +434,9 @@ class FederatedServer:
         self, criterion: nn.Module, test_loader, convergence_check_interval: int = 5
     ) -> dict[str, Any]:
         """Run federated training for specified rounds."""
-        logger.info(f"Starting federated training for {self.config.max_communication_rounds} rounds")
+        logger.info(
+            f"Starting federated training for {self.config.max_communication_rounds} rounds"
+        )
 
         best_accuracy = 0.0
         patience_counter = 0
@@ -436,7 +444,9 @@ class FederatedServer:
         for round_num in range(self.config.max_communication_rounds):
             self.round_number = round_num
 
-            logger.info(f"Starting communication round {round_num + 1}/{self.config.max_communication_rounds}")
+            logger.info(
+                f"Starting communication round {round_num + 1}/{self.config.max_communication_rounds}"
+            )
 
             # Select clients for this round
             selected_clients = self.select_clients()
@@ -520,7 +530,9 @@ class FederatedLearningCoordinator:
         self.server: FederatedServer | None = None
         self.clients: list[LocalClient] = []
 
-    def setup_federated_system(self, global_model: nn.Module, client_data_loaders: list) -> FederatedServer:
+    def setup_federated_system(
+        self, global_model: nn.Module, client_data_loaders: list
+    ) -> FederatedServer:
         """Setup the federated learning system with server and clients."""
         # Initialize server
         self.server = FederatedServer(global_model, self.config)
@@ -528,7 +540,9 @@ class FederatedLearningCoordinator:
         # Register clients
         for i, data_loader in enumerate(client_data_loaders):
             client_id = f"client_{i}"
-            client = LocalClient(client_id=client_id, model=global_model, data_loader=data_loader, config=self.config)
+            client = LocalClient(
+                client_id=client_id, model=global_model, data_loader=data_loader, config=self.config
+            )
             self.server.register_client(client)
             self.clients.append(client)
 

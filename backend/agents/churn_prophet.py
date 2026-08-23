@@ -33,8 +33,8 @@ from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
-from services.llm.llm_router import LLMRouter
 from core.tenant_db import TenantAwareFirestore
+from services.llm.llm_router import LLMRouter
 
 logger = logging.getLogger("supremeai.churn_prophet")
 
@@ -152,8 +152,12 @@ class BehavioralScorer:
         # Normalize each signal to 0-1 range
         signals = {
             "days_since_last_active": min(days_since_active / 30, 1.0),
-            "session_frequency_drop": (max(-session_freq_change / 100, 0) if session_freq_change < 0 else 0),
-            "feature_usage_decline": (max(-feature_usage_change / 100, 0) if feature_usage_change < 0 else 0),
+            "session_frequency_drop": (
+                max(-session_freq_change / 100, 0) if session_freq_change < 0 else 0
+            ),
+            "feature_usage_decline": (
+                max(-feature_usage_change / 100, 0) if feature_usage_change < 0 else 0
+            ),
             "support_ticket_spike": min(support_tickets_recent / 5, 1.0),
             "payment_delay": min(payment_delay_days / 14, 1.0),
         }
@@ -394,7 +398,9 @@ class ChurnProphet:
             recent_count = recent_sessions[0][0].value if recent_sessions else 0
             prev_count = prev_sessions[0][0].value if prev_sessions else 0
 
-            session_freq_change = ((recent_count - prev_count) / prev_count * 100) if prev_count > 0 else 0
+            session_freq_change = (
+                ((recent_count - prev_count) / prev_count * 100) if prev_count > 0 else 0
+            )
 
             last_active = user_data.get("last_active_at")
             if isinstance(last_active, str):

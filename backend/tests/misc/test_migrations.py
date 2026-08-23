@@ -18,7 +18,9 @@ def test_migrations_are_numbered_sequentially():
 def test_migrations_contain_required_tables():
     # বাংলা মন্তব্য: ১০ নম্বর মাইগ্রেশন ফাইল সহ সকল ফাইল পড়ার জন্য f[0].isdigit() ব্যবহার করা হলো
     files = sorted(f for f in os.listdir(MIGRATIONS_DIR) if f.endswith(".sql") and f[0].isdigit())
-    all_sql = "\n".join(open(os.path.join(MIGRATIONS_DIR, f), encoding="utf-8").read() for f in files)
+    all_sql = "\n".join(
+        open(os.path.join(MIGRATIONS_DIR, f), encoding="utf-8").read() for f in files
+    )
     required_tables = [
         "referral_codes",
         "credit_wallets",
@@ -28,7 +30,9 @@ def test_migrations_contain_required_tables():
         "offline_sync_logs",
     ]
     for table in required_tables:
-        assert "CREATE TABLE" in all_sql and table in all_sql, f"Required table '{table}' missing from migrations"
+        assert "CREATE TABLE" in all_sql and table in all_sql, (
+            f"Required table '{table}' missing from migrations"
+        )
 
 
 def test_referral_system_constraints():

@@ -115,6 +115,7 @@ class TestCascadeMemoryService:
 class TestVectorMemoryFunctions:
     def test_get_embedding_returns_384_dimensions(self):
         from services.memory_service import get_embedding
+
         vec = get_embedding("test prompt for vectorization")
         assert isinstance(vec, list)
         assert len(vec) == 384
@@ -122,7 +123,8 @@ class TestVectorMemoryFunctions:
 
     @pytest.mark.asyncio
     async def test_save_and_recall_memory(self):
-        from services.memory_service import save_memory, recall_memories
+        from services.memory_service import recall_memories, save_memory
+
         res = await save_memory(
             session_id="test_sess_101",
             summary="Implemented telemetry and vector recall for eternal brain",
@@ -140,6 +142,7 @@ class TestVectorMemoryFunctions:
     @pytest.mark.asyncio
     async def test_summarize_and_save_session(self):
         from services.memory_service import summarize_and_save_session
+
         messages = [
             {"role": "user", "content": "How do we implement LLM telemetry?"},
             {"role": "assistant", "content": "We use track_llm_call context manager."},
@@ -156,6 +159,7 @@ class TestLLMTelemetry:
     @pytest.mark.asyncio
     async def test_track_llm_call_success(self):
         from core.llm.telemetry import track_llm_call
+
         async with track_llm_call(
             session_id="test_telemetry_sess",
             provider="gemini",
@@ -174,6 +178,7 @@ class TestLLMTelemetry:
     @pytest.mark.asyncio
     async def test_track_llm_call_exception_handling(self):
         from core.llm.telemetry import track_llm_call
+
         rec_captured = None
         with pytest.raises(ValueError, match="simulated failure"):
             async with track_llm_call(
@@ -186,4 +191,3 @@ class TestLLMTelemetry:
         assert rec_captured is not None
         assert rec_captured.success is False
         assert "simulated failure" in (rec_captured.error or "")
-

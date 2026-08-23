@@ -18,7 +18,9 @@ class R2StorageClient:
         self.dry_run = not (self.account_id and self.access_key and self.secret_key)
 
         if self.dry_run:
-            logger.warning("Cloudflare R2 credentials missing. R2StorageClient will run in dry-run/mock mode.")
+            logger.warning(
+                "Cloudflare R2 credentials missing. R2StorageClient will run in dry-run/mock mode."
+            )
             self.s3_client = None
         else:
             # Cloudflare R2 Endpoint
@@ -36,9 +38,7 @@ class R2StorageClient:
         # বাংলা মন্তব্য: মক মোড অ্যাক্টিভ থাকলে লোকাল মক আপলোড URL জেনারেট করা হচ্ছে।
         if self.dry_run:
             logger.info(f"Dry-run: Generating mock presigned upload URL for {object_name}")
-            return (
-                f"https://mock-r2-upload.local/{self.bucket_name}/{object_name}?expires={expiration}&type={file_type}"
-            )
+            return f"https://mock-r2-upload.local/{self.bucket_name}/{object_name}?expires={expiration}&type={file_type}"
 
         try:
             response = self.s3_client.generate_presigned_url(

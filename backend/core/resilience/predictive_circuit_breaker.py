@@ -12,7 +12,9 @@ class PredictiveCircuitBreaker:
     সিস্টেম সম্পূর্ণ ক্র্যাশ করার আগেই অ্যানমেলি ধরা পড়লে স্বয়ংক্রিয়ভাবে ফলব্যাক রাউটে শিফট করে।
     """
 
-    def __init__(self, name: str, fallback_provider: str | None = "openrouter", cooldown_seconds: int = 60):
+    def __init__(
+        self, name: str, fallback_provider: str | None = "openrouter", cooldown_seconds: int = 60
+    ):
         self.name = name
         self.fallback_provider = fallback_provider
         self.cooldown_seconds = cooldown_seconds

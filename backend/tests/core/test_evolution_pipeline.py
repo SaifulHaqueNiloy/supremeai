@@ -5,16 +5,18 @@ import pytest
 
 try:
     from skill_loader import SkillLoader
-
-    from core.evolution.auto_skill_creator import AutoSkillCreator
     from skills.installer import SkillInstaller
     from skills.registry import SkillRegistry
+
+    from core.evolution.auto_skill_creator import AutoSkillCreator
 
     HAS_SKILLS_INSTALLER = True
 except (ImportError, ModuleNotFoundError):
     HAS_SKILLS_INSTALLER = False
 
-pytestmark = pytest.mark.skipif(not HAS_SKILLS_INSTALLER, reason="skills.installer module not available in environment")
+pytestmark = pytest.mark.skipif(
+    not HAS_SKILLS_INSTALLER, reason="skills.installer module not available in environment"
+)
 
 
 @pytest.fixture

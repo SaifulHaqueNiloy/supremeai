@@ -116,7 +116,9 @@ class TaskQueue:
         self._worker_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
-        logger.info(f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}")
+        logger.info(
+            f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}"
+        )
 
     @functools.cached_property
     def _is_celery_available(self) -> bool:
@@ -210,7 +212,7 @@ class TaskQueue:
         # Parse fallback sequence
         try:
             priorities = [p.strip() for p in settings.queue_backend_priority.split(",")]
-        except Exception as e:
+        except Exception:
             priorities = ["asyncio"]
 
         try:
@@ -346,7 +348,9 @@ class TaskQueue:
             async with self._lock:
                 await self._mark_complete(task_id)
 
-    async def _submit_to_asyncio(self, func: Callable, task_id: str, args: tuple, kwargs: dict) -> None:
+    async def _submit_to_asyncio(
+        self, func: Callable, task_id: str, args: tuple, kwargs: dict
+    ) -> None:
         """বাংলা মন্তব্য: Local asyncio queue-এ submit এবং worker ensure।"""
         await self.local_queue.put((func, task_id, args, kwargs))
         if self._worker_task is None or self._worker_task.done():
@@ -364,7 +368,9 @@ class TaskQueue:
         while not self._shutdown_event.is_set():
             try:
                 # বাংলা মন্তব্য: timeout দিয়ে wait — shutdown signal check করা যাবে
-                func, task_id, args, kwargs = await asyncio.wait_for(self.local_queue.get(), timeout=1.0)
+                func, task_id, args, kwargs = await asyncio.wait_for(
+                    self.local_queue.get(), timeout=1.0
+                )
                 try:
                     await self._execute_task(func, task_id, args, kwargs)
                 finally:
@@ -437,7 +443,9 @@ class TaskQueue:
             "timestamp": time.time(),
         }
         payload = json.dumps(message_data).encode("utf-8")
-        future = publisher.publish(topic_path, payload, priority=str(priority.value), task_id=task_id)
+        future = publisher.publish(
+            topic_path, payload, priority=str(priority.value), task_id=task_id
+        )
         # বাংলা মন্তব্য: blocking future.result() → thread pool offload
         message_id = await asyncio.to_thread(future.result, 30)
         logger.debug(f"[TaskQueue] Pub/Sub message {message_id} for task {task_id}")
@@ -456,7 +464,9 @@ class TaskQueue:
         from celery import Celery  # lazy import
 
         if TaskQueue._celery_app_instance is None:
-            TaskQueue._celery_app_instance = Celery("supremeai_tasks", broker=self.redis_url, backend=self.redis_url)
+            TaskQueue._celery_app_instance = Celery(
+                "supremeai_tasks", broker=self.redis_url, backend=self.redis_url
+            )
 
         # বাংলা মন্তব্য: Celery send_task — function reference safe
         await asyncio.to_thread(
@@ -572,7 +582,9 @@ try:
         broker=getattr(settings, "redis_url", "redis://localhost:6379/0"),
     )
 except ImportError as _celery_import_err:
-    logger.warning(f"Celery not installed, running without Celery worker support: {_celery_import_err}")
+    logger.warning(
+        f"Celery not installed, running without Celery worker support: {_celery_import_err}"
+    )
 
     class _CeleryStub:
         """Celery unavailable stub — keeps app importable without Celery installed."""

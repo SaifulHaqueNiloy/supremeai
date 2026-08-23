@@ -2,8 +2,10 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from github import Github  # PyGithub library
-from github import GithubException
+from github import (
+    Github,  # PyGithub library
+    GithubException,
+)
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,7 +59,9 @@ async def run_dock_integration(
 
 
 # --- গিটহাব ইন্টিগ্রেশন লজিক ---
-async def handle_github_push(session_id: str, payload: DockActionPayload, user: dict, sql_db: AsyncSession):
+async def handle_github_push(
+    session_id: str, payload: DockActionPayload, user: dict, sql_db: AsyncSession
+):
     try:
         # ধাপ ১: ইউজারের Vault থেকে গিটহাব টোকেন বের করা
         # গ্যাপ #3 সমাধান: হার্ডকোড করা placeholder টোকেনের বদলে repo-তে যে প্যাটার্ন ইতিমধ্যে
@@ -133,9 +137,13 @@ async def handle_github_push(session_id: str, payload: DockActionPayload, user: 
             session_id,
             {"state": "error", "message": f"GitHub API Error (ref: {error_id})"},
         )
-        raise HTTPException(status_code=502, detail=f"GitHub operation failed (ref: {error_id})") from e
+        raise HTTPException(
+            status_code=502, detail=f"GitHub operation failed (ref: {error_id})"
+        ) from e
     except Exception as e:
         error_id = uuid.uuid4().hex[:8]
         logger.error(f"[{error_id}] dock_actions/github push failed: {e}")
-        await push_to_sse(session_id, {"state": "error", "message": f"GitHub Error (ref: {error_id})"})
+        await push_to_sse(
+            session_id, {"state": "error", "message": f"GitHub Error (ref: {error_id})"}
+        )
         raise HTTPException(status_code=500, detail=f"Internal error (ref: {error_id})") from e

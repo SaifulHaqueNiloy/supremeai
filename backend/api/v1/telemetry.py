@@ -94,8 +94,12 @@ async def get_detailed_status():
         "version": settings.app_name,
         "environment": settings.env,
         "subsystems": {
-            "database": "operational" if health_data["database_performance"]["avg_query_time"] < 1.0 else "degraded",
-            "cache": "operational" if health_data["cache_performance"]["hit_rate_percentage"] > 50 else "degraded",
+            "database": "operational"
+            if health_data["database_performance"]["avg_query_time"] < 1.0
+            else "degraded",
+            "cache": "operational"
+            if health_data["cache_performance"]["hit_rate_percentage"] > 50
+            else "degraded",
             "api": (
                 "operational"
                 if health_data["total_errors"] / max(1, health_data["total_requests"]) < 0.05
@@ -103,7 +107,8 @@ async def get_detailed_status():
             ),
         },
         "metrics": {
-            "request_rate_per_minute": health_data["total_requests"] / max(1, health_data["uptime_minutes"]),
+            "request_rate_per_minute": health_data["total_requests"]
+            / max(1, health_data["uptime_minutes"]),
             "error_rate_percentage": (
                 (health_data["total_errors"] / max(1, health_data["total_requests"])) * 100
                 if health_data["total_requests"] > 0
@@ -133,6 +138,7 @@ class FrontendErrorReport(BaseModel):
 async def report_frontend_error(payload: FrontendErrorReport):
     """Receive and log frontend error reports safely from the Studio Client."""
     import logging
+
     logger = logging.getLogger("supremeai.telemetry.frontend")
     logger.error(f"Frontend error report: message={payload.message[:200]} url={payload.url}")
     return {"status": "logged", "message": "Frontend error report received"}

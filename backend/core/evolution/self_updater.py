@@ -86,7 +86,9 @@ class SelfUpdater:
                 target.write_text(content, encoding="utf-8")
                 applied_files.append(str(target))
 
-            logger.info(f"Multi-file patch {proposal_id or ''} applied to {len(applied_files)} files.")
+            logger.info(
+                f"Multi-file patch {proposal_id or ''} applied to {len(applied_files)} files."
+            )
             return True, applied_files
 
         except Exception as exc:

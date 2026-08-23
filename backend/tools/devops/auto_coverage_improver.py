@@ -54,7 +54,9 @@ class AutoCoverageImprover:
 
         generation_results = []
         for gap in gaps:
-            logger.info(f"Attempting to generate tests for '{gap.file_path}' (Coverage: {gap.coverage}%)")
+            logger.info(
+                f"Attempting to generate tests for '{gap.file_path}' (Coverage: {gap.coverage}%)"
+            )
             if not os.path.exists(gap.file_path):
                 logger.warning(f"Source file not found, skipping: {gap.file_path}")
                 continue
@@ -73,7 +75,9 @@ class AutoCoverageImprover:
 async def main():
     """Command-line interface for the AutoCoverageImprover."""
     parser = argparse.ArgumentParser(description="Automatically find and fix test coverage gaps.")
-    parser.add_argument("coverage_report", help="Path to the coverage.xml or coverage.json report file.")
+    parser.add_argument(
+        "coverage_report", help="Path to the coverage.xml or coverage.json report file."
+    )
     parser.add_argument(
         "--min-target",
         type=float,

@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from byoc.resource_manager import ResourceManager

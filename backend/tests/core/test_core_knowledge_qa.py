@@ -14,7 +14,9 @@ try:
     root_skills = os.path.normpath(os.path.join(backend_path, "..", "skills")).lower()
     root_dir = os.path.normpath(os.path.join(backend_path, "..")).lower()
     sys.path = [
-        p for p in sys.path if os.path.normpath(p).lower() != root_skills and os.path.normpath(p).lower() != root_dir
+        p
+        for p in sys.path
+        if os.path.normpath(p).lower() != root_skills and os.path.normpath(p).lower() != root_dir
     ]
     sys.modules.pop("skills", None)
 
@@ -61,7 +63,9 @@ def test_vector_search_uses_real_rpc_not_hardcoded_dict():
         result = core_knowledge_qa._vector_search("any arbitrary query text", "public_sops")
 
     fake_client.rpc.assert_called_once()
-    assert result == [{"id": "doc_99", "content": "Real retrieved content", "source": "Real Source"}]
+    assert result == [
+        {"id": "doc_99", "content": "Real retrieved content", "source": "Real Source"}
+    ]
 
 
 def test_execute_tool_returns_no_documents_message_when_nothing_found():

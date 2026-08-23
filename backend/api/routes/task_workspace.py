@@ -19,7 +19,9 @@ class ChatMessage(BaseModel):
 class TaskPayload(BaseModel):
     task: str = Field(..., min_length=1, max_length=10000, description="Task prompt description")
     task_type: str = Field("general", description="Category or type of task")
-    messages: list[ChatMessage] = Field(default_factory=list, description="Recent conversation history")
+    messages: list[ChatMessage] = Field(
+        default_factory=list, description="Recent conversation history"
+    )
 
 
 class TaskExecuteResponse(BaseModel):
@@ -40,7 +42,6 @@ async def execute_task(
     background_tasks: BackgroundTasks,
     token_payload: dict = Depends(get_current_user_token),
 ):
-
     """
     Handles user prompts from the Vanilla JS Customer Dashboard.
     Integrates Redis rate limiting, RAM conversation history, and Supabase persistent storage.
@@ -69,7 +70,9 @@ async def execute_task(
 
         # ৩. Generate AI Response
         # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
-        response = await llm_gateway.acompletion(prompt=messages_payload, task_type=payload.task_type, stream=False)
+        response = await llm_gateway.acompletion(
+            prompt=messages_payload, task_type=payload.task_type, stream=False
+        )
         result_text = response.get("text", "") if isinstance(response, dict) else str(response)
 
         # ৫. Save to Supabase (Database - Long Term) - Background Task
@@ -91,7 +94,6 @@ async def execute_task(
 # ==========================================
 @router.get("/quota", response_model=TaskQuotaResponse)
 async def get_quota(token_payload: dict = Depends(get_current_user_token)):
-
     """
     Fetch the current token quota from Redis for the UI.
     """

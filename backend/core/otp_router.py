@@ -63,8 +63,12 @@ async def set_active_channel(admin_id: str, channel: str, ttl_seconds: int = 360
     }:
         raise ValueError(f"Unknown OTP channel: {channel}")
     if redis_manager and redis_manager.client:
-        await redis_manager.set_cache(f"{_REDIS_KEY_PREFIX}{admin_id}", channel, ex_seconds=ttl_seconds)
-    logger.info(f"🔐 OTP channel for admin {_mask(admin_id)} switched to {channel} (ttl={ttl_seconds}s)")
+        await redis_manager.set_cache(
+            f"{_REDIS_KEY_PREFIX}{admin_id}", channel, ex_seconds=ttl_seconds
+        )
+    logger.info(
+        f"🔐 OTP channel for admin {_mask(admin_id)} switched to {channel} (ttl={ttl_seconds}s)"
+    )
 
 
 async def send_otp(admin_id: str, code: str, context: dict) -> bool:
@@ -75,12 +79,16 @@ async def send_otp(admin_id: str, code: str, context: dict) -> bool:
     if channel == CHANNEL_DISCORD:
         sent = await _send_discord(admin_id, code, context)
         if not sent:
-            logger.warning(f"Discord OTP delivery failed for {_mask(admin_id)}, falling back to email.")
+            logger.warning(
+                f"Discord OTP delivery failed for {_mask(admin_id)}, falling back to email."
+            )
             sent = await _send_email(admin_id, code, context)
     elif channel == CHANNEL_EMAIL:
         sent = await _send_email(admin_id, code, context)
     elif channel in (CHANNEL_TELEGRAM, CHANNEL_WHATSAPP):
-        logger.warning(f"{channel} OTP requested for {_mask(admin_id)} but not yet wired up — falling back to Discord.")
+        logger.warning(
+            f"{channel} OTP requested for {_mask(admin_id)} but not yet wired up — falling back to Discord."
+        )
         sent = await _send_discord(admin_id, code, context)
 
     return sent

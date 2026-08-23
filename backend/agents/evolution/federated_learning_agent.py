@@ -81,13 +81,21 @@ class FederatedLearningAgent:
     def start_round(self, participants: list[str]) -> int:
         """Start a new federated learning round."""
         self._current_round += 1
-        logger.info("Starting federated round %d with %d participants", self._current_round, len(participants))
+        logger.info(
+            "Starting federated round %d with %d participants",
+            self._current_round,
+            len(participants),
+        )
         return self._current_round
 
     def submit_update(self, update: ModelUpdate) -> bool:
         """Submit a model update from a client."""
         if update.round_number != self._current_round:
-            logger.warning("Update round mismatch: got %d, expected %d", update.round_number, self._current_round)
+            logger.warning(
+                "Update round mismatch: got %d, expected %d",
+                update.round_number,
+                self._current_round,
+            )
             return False
         self._updates.append(update)
         return True
@@ -141,7 +149,9 @@ class FederatedLearningAgent:
         # Aggregate metrics
         aggregated_metrics = {}
         for key in round_updates[0].metrics:
-            aggregated_metrics[key] = sum(u.metrics[key] * u.num_samples / total_samples for u in round_updates)
+            aggregated_metrics[key] = sum(
+                u.metrics[key] * u.num_samples / total_samples for u in round_updates
+            )
 
         # Update privacy budget
         self._privacy_budget = PrivacyBudget(
@@ -170,7 +180,8 @@ class FederatedLearningAgent:
             "epsilon_used": self._privacy_budget.spent_epsilon,
             "epsilon_remaining": self._privacy_budget.remaining_epsilon,
             "epsilon_total": self._privacy_budget.epsilon,
-            "usage_percent": (self._privacy_budget.spent_epsilon / self._privacy_budget.epsilon) * 100,
+            "usage_percent": (self._privacy_budget.spent_epsilon / self._privacy_budget.epsilon)
+            * 100,
         }
 
     def get_round_history(self) -> list[dict[str, Any]]:

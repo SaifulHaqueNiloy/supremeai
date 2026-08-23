@@ -109,7 +109,9 @@ class ErrorEventBus:
     def __init__(self) -> None:
         self._listeners: dict[str, list[Callable[[ErrorEvent], Any]]] = defaultdict(list)
         self._lock = threading.RLock()  # Use RLock for better thread safety
-        self._registered_handlers: set[str] = set()  # Track registered handlers to prevent duplicates
+        self._registered_handlers: set[str] = (
+            set()
+        )  # Track registered handlers to prevent duplicates
         # বাংলা মন্তব্য: bounded queue — unbounded growth prevent করা হলো
         self._dlq: asyncio.Queue[DeadLetterQueueItem] = asyncio.Queue(maxsize=1000)
         self._dead_letter_handlers: list[Callable[[DeadLetterQueueItem], Any]] = []
@@ -154,7 +156,9 @@ class ErrorEventBus:
 
             self._listeners[event_type].append(actual_listener)
             self._registered_handlers.add(handler_id)
-            logger.debug(f"[ErrorEventBus] Registered listener for event type: {event_type}: {listener_name}")
+            logger.debug(
+                f"[ErrorEventBus] Registered listener for event type: {event_type}: {listener_name}"
+            )
 
     def unregister_listener(self, event_type: str, listener: Callable[[ErrorEvent], Any]) -> None:
         """বাংলা মন্তব্য: Error event listener unregister করুন (thread-safe)."""
@@ -363,14 +367,19 @@ class IntelligentErrorBus(ErrorEventBus):
     def emit(self, event: ErrorEvent) -> None:
         event.structured_context.system_state = self._get_current_metrics()
         self._check_and_escalate_pattern(event)
-        
+
         # Forward severe errors to Sentry via monitoring
         if event.severity in ["CRITICAL", "ERROR", "HIGH"]:
             track_exception(
                 Exception(f"[{event.error_type}] {event.message}"),
-                context={"module": event.module, "service": event.service, **event.context, **event.structured_context.model_dump()}
+                context={
+                    "module": event.module,
+                    "service": event.service,
+                    **event.context,
+                    **event.structured_context.model_dump(),
+                },
             )
-            
+
         super().emit(event)
 
     async def publish(self, event: ErrorEvent) -> ErrorEvent:

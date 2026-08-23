@@ -81,7 +81,9 @@ class PDFToSDKConverter:
                 from brain.model_router import ModelRouter
 
                 router = ModelRouter()
-                endpoint_desc = ", ".join(f"{e['method']} {e['path']}" for e in spec.get("endpoints", [])[:10])
+                endpoint_desc = ", ".join(
+                    f"{e['method']} {e['path']}" for e in spec.get("endpoints", [])[:10]
+                )
                 prompt = (
                     f"You are a senior SDK engineer. Generate a full, production-ready client SDK in the requested language "
                     f"for this API spec. Base URL: {spec['base_url']}. Auth: {spec['auth']}. "

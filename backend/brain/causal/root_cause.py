@@ -26,7 +26,10 @@ class RootCauseAnalyzer:
         self.intervention_tracker = InterventionTracker()
 
     async def analyze_root_cause(
-        self, anomaly_metric: str, telemetry_df: pd.DataFrame, interventions: list[dict] | None = None
+        self,
+        anomaly_metric: str,
+        telemetry_df: pd.DataFrame,
+        interventions: list[dict] | None = None,
     ) -> dict[str, Any]:
         """
         Identify true root cause vs symptoms.
@@ -36,7 +39,9 @@ class RootCauseAnalyzer:
         edges = dag.get("edges", [])
 
         # Find candidate causes directed to or correlated with anomaly_metric
-        causes = [e for e in edges if e["target"] == anomaly_metric or e["source"] == anomaly_metric]
+        causes = [
+            e for e in edges if e["target"] == anomaly_metric or e["source"] == anomaly_metric
+        ]
 
         primary_cause = causes[0]["source"] if causes else "configuration_change"
         confidence = 0.92 if causes else 0.75

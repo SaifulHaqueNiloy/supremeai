@@ -78,5 +78,8 @@ class HybridRetriever:
             return sparse_results[:top_k]
 
         return self.reciprocal_rank_fusion(
-            dense_results=dense_vector_results, sparse_results=sparse_results, top_k=top_k, doc_id_key=doc_id_key
+            dense_results=dense_vector_results,
+            sparse_results=sparse_results,
+            top_k=top_k,
+            doc_id_key=doc_id_key,
         )

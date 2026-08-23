@@ -37,7 +37,9 @@ class StealthHTTPClient:
             headers.update(custom_headers)
         return headers
 
-    async def request(self, method: str, url: str, retries: int = 3, **kwargs: Any) -> httpx.Response:
+    async def request(
+        self, method: str, url: str, retries: int = 3, **kwargs: Any
+    ) -> httpx.Response:
         # বাংলা মন্তব্য: প্রতিটি রিকোয়েস্টের জন্য নতুন প্রক্সি নির্বাচন ও র্যান্ডম ব্রাউজার হেডার এমুলেট করা হচ্ছে।
         headers = self._get_headers(kwargs.pop("headers", None))
 

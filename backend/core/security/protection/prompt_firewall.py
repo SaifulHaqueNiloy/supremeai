@@ -158,7 +158,9 @@ class PromptFirewall:
                     f"Does the following response violate this principle: '{principle}'?\n\n"
                     f"Response:\n{response_text}\n\nAnswer ONLY with 'YES' or 'NO'."
                 )
-                critique_response = await self.gateway.acompletion(prompt=critique_prompt, model=self.cheap_model)
+                critique_response = await self.gateway.acompletion(
+                    prompt=critique_prompt, model=self.cheap_model
+                )
                 critique_text = critique_response.get("text", "").strip().upper()
 
                 if "YES" in critique_text:
@@ -170,13 +172,17 @@ class PromptFirewall:
                         f"Please revise it to be compliant while preserving the original intent.\n\n"
                         f"Response:\n{response_text}"
                     )
-                    revised_response = await self.gateway.acompletion(prompt=revision_prompt, model=self.cheap_model)
+                    revised_response = await self.gateway.acompletion(
+                        prompt=revision_prompt, model=self.cheap_model
+                    )
                     return revised_response.get("text", response_text), True
 
             except Exception as exc:
                 # বাংলা মন্তব্য: httpx/provider-নির্দিষ্ট exception সহ যেকোনো ব্যর্থতায় পরের
                 # principle-এ এগিয়ে যাওয়া হচ্ছে, পুরো pipeline crash করার বদলে।
-                logger.error(f"Constitutional filter error on principle '{principle}': {type(exc).__name__}: {exc}")
+                logger.error(
+                    f"Constitutional filter error on principle '{principle}': {type(exc).__name__}: {exc}"
+                )
                 continue
 
         return response_text, False

@@ -1,8 +1,9 @@
-from loguru import logger
 import asyncio
 import json
 import sys
 from pathlib import Path
+
+from loguru import logger
 
 # Ensure backend directory is in sys.path
 backend_dir = Path(__file__).resolve().parent.parent

@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import secrets
 
+import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
 from loguru import logger
 
 from core.config import settings
@@ -43,7 +43,9 @@ async def require_admin_token(credentials: HTTPAuthorizationCredentials = Depend
             else:
                 if jti in _in_memory_jwt_blacklist:
                     raise HTTPException(status_code=401, detail="Token has been revoked.")
-                logger.warning("Redis not configured; falling back to in-memory JWT blacklist check.")
+                logger.warning(
+                    "Redis not configured; falling back to in-memory JWT blacklist check."
+                )
 
         return decoded
     except HTTPException:

@@ -77,6 +77,7 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
 
 import os
 import time
+
 from sqlalchemy import event
 
 # বাংলা মন্তব্য: স্লো কুয়েরি ডিটেকশনের থ্রেশহোল্ড (ডিফল্ট: 0.2 সেকেন্ড / 200ms)
@@ -123,7 +124,9 @@ def init_engine() -> None:
                 "Refusing to boot with SQLite fallback (data loss risk)."
             )
             raise RuntimeError("Production environment requires SUPABASE_DATABASE_URL_POOLER")
-        logger.warning("SUPABASE_DATABASE_URL_POOLER is missing. Falling back to SQLite in-memory (test/dev only).")
+        logger.warning(
+            "SUPABASE_DATABASE_URL_POOLER is missing. Falling back to SQLite in-memory (test/dev only)."
+        )
 
     _async_url = get_async_url(DATABASE_URL or "")
     engine_kwargs = _build_engine_kwargs(_async_url)
@@ -143,7 +146,9 @@ def init_engine() -> None:
         if current_env in ("production", "prod"):
             logger.critical(f"FATAL: Failed to create DB engine in PRODUCTION: {exc}")
             raise RuntimeError(f"Production DB engine creation failed: {exc}") from exc
-        logger.error(f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory.")
+        logger.error(
+            f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory."
+        )
         fallback_url = "sqlite+aiosqlite:///:memory:"
         _engine_instance = create_async_engine(
             fallback_url,
@@ -249,4 +254,3 @@ async def dispose_engine() -> None:
         await _engine_instance.dispose()
         _engine_instance = None
         _session_maker_instance = None
-

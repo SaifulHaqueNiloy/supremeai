@@ -10,9 +10,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
+from core.monitoring.metrics_collector import MetricsCollector
+
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
-from core.monitoring.metrics_collector import MetricsCollector
 from core.utils.background_tasks import track_task
 
 logger = logging.getLogger(__name__)
@@ -348,7 +349,9 @@ class CostOptimizationAgent:
                 "daily_forecast": forecasted_costs,
                 "confidence": 0.7,  # Basic confidence for simple model
                 "trend": (
-                    "increasing" if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0] else "stable"
+                    "increasing"
+                    if avg_daily_cost > daily_totals[-7 if len(daily_totals) >= 7 else 0]
+                    else "stable"
                 ),
             }
 
@@ -428,7 +431,9 @@ class CostOptimizationAgent:
                 "status": "success",
                 "timestamp": datetime.utcnow().isoformat(),
                 "recommendations": recommendations,
-                "total_potential_savings": round(sum(r["potential_savings"] for r in recommendations), 2),
+                "total_potential_savings": round(
+                    sum(r["potential_savings"] for r in recommendations), 2
+                ),
                 "highest_cost_categories": sorted(
                     [
                         ("compute", avg_compute),
@@ -629,7 +634,9 @@ class CostOptimizationAgent:
             # Keep only recent alerts (last 7 days worth)
             cutoff_time = datetime.utcnow() - timedelta(days=7)
             recent_alerts = [
-                alert for alert in alerts_list if datetime.fromisoformat(alert["timestamp"]) >= cutoff_time
+                alert
+                for alert in alerts_list
+                if datetime.fromisoformat(alert["timestamp"]) >= cutoff_time
             ]
 
             await redis_manager.set_with_ttl(
@@ -712,7 +719,12 @@ class CostOptimizationAgent:
             avg_ai = sum(m.ai_model_cost for m in recent_metrics) / len(recent_metrics)
 
             highest_cost_cat = max(
-                [("Compute", avg_compute), ("Storage", avg_storage), ("Network", avg_network), ("AI Models", avg_ai)],
+                [
+                    ("Compute", avg_compute),
+                    ("Storage", avg_storage),
+                    ("Network", avg_network),
+                    ("AI Models", avg_ai),
+                ],
                 key=lambda x: x[1],
             )
 
@@ -730,7 +742,11 @@ class CostOptimizationAgent:
                     "count": len(opportunities),
                     "top_3_potential_savings": round(
                         (
-                            sum(min(3, len(opportunities)), key=lambda x: x.potential_savings, default=0)  # type: ignore
+                            sum(
+                                min(3, len(opportunities)),
+                                key=lambda x: x.potential_savings,
+                                default=0,
+                            )  # type: ignore
                             if opportunities
                             else 0
                         ),
@@ -756,7 +772,9 @@ class CostOptimizationAgent:
                         "potential_savings": opp.potential_savings,
                         "timeline": opp.timeline,
                     }
-                    for opp in sorted(opportunities, key=lambda x: x.potential_savings, reverse=True)[:5]
+                    for opp in sorted(
+                        opportunities, key=lambda x: x.potential_savings, reverse=True
+                    )[:5]
                 ]
 
             return report
@@ -772,7 +790,9 @@ cost_optimization_agent = CostOptimizationAgent()
 # বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
 # রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
 try:
-    track_task(asyncio.get_running_loop().create_task(cost_optimization_agent.initialize_budget_config()))
+    track_task(
+        asyncio.get_running_loop().create_task(cost_optimization_agent.initialize_budget_config())
+    )
 except RuntimeError:
     logger.debug(
         "No running event loop at import time; skipping eager budget config init "

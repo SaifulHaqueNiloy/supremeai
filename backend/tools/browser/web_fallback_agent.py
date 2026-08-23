@@ -112,7 +112,9 @@ class WebFallbackAgent:
                 }
 
         except ImportError:
-            logger.warning("Playwright is not installed. Falling back to simulated headless runner.")
+            logger.warning(
+                "Playwright is not installed. Falling back to simulated headless runner."
+            )
             mock_steps = [
                 {
                     "step": 1,

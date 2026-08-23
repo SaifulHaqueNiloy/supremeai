@@ -109,9 +109,13 @@ async def trigger_nightly_chaos(background_tasks: BackgroundTasks, x_chaos_key: 
 
     if not x_chaos_key or x_chaos_key != expected_key:
         logger.warning("🚨 Unauthorized attempt to trigger Autonomous Chaos Engine blocked!")
-        raise HTTPException(status_code=401, detail="Unauthorized: Invalid Chaos Orchestration Key.")
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: Invalid Chaos Orchestration Key."
+        )
 
-    logger.info("🔌 Cloud Scheduler authenticated successfully. Spawning Chaos Auditor in background...")
+    logger.info(
+        "🔌 Cloud Scheduler authenticated successfully. Spawning Chaos Auditor in background..."
+    )
 
     # এপিআই রেসপন্স ইমিডিয়েট রিলিজ করে ব্যাকগ্রাউন্ড টাস্কে পুশ করা হলো যাতে শিডিউলার টাইমআউট না খায়
     background_tasks.add_task(run_bg_audit)
@@ -222,14 +226,26 @@ async def get_realtime_metrics():
     """Get real-time system metrics for dashboard widgets."""
     import time
     from datetime import UTC, datetime
+
     report = await metrics_engine.calculate_system_roi()
     return {
         "status": "ok",
         "timestamp": datetime.now(UTC).isoformat(),
         "uptime_seconds": int(time.time() - getattr(metrics_engine, "start_time", time.time())),
         "metrics": [
-            {"name": "requests_per_minute", "value": report.get("financial_metrics", {}).get("estimated_usd_saved", 0)},
-            {"name": "error_rate", "value": report.get("security_metrics", {}).get("duplicate_executions_prevented", 0)},
-            {"name": "cache_hit_rate", "value": report.get("financial_metrics", {}).get("api_cost_reduction_ratio", "0%")},
+            {
+                "name": "requests_per_minute",
+                "value": report.get("financial_metrics", {}).get("estimated_usd_saved", 0),
+            },
+            {
+                "name": "error_rate",
+                "value": report.get("security_metrics", {}).get(
+                    "duplicate_executions_prevented", 0
+                ),
+            },
+            {
+                "name": "cache_hit_rate",
+                "value": report.get("financial_metrics", {}).get("api_cost_reduction_ratio", "0%"),
+            },
         ],
     }

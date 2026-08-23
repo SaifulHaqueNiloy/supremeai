@@ -57,7 +57,6 @@ class FileReadResponse(BaseModel):
     content: str = Field(..., description="Decoded UTF-8 content of the file")
 
 
-
 def _get_tenant_root(tenant_id: str) -> Path:
     """তেনান্টের জন্য isolated workspace root বানায় ও রিটার্ন করে।"""
     if not _TENANT_ID_PATTERN.match(tenant_id):
@@ -101,17 +100,23 @@ def _resolve_safe_path(root: Path, relative_path: str) -> Path:
     # os.path.commonpath এর বদলে pathlib-এর is_relative_to (py3.9+) ব্যবহার করা হলো,
     # কারণ এটা string-prefix bug-প্রবণ (যেমন "/root2" শুরু হয় "/root" দিয়ে) এড়ায়।
     if not resolved.is_relative_to(root):
-        logger.warning(f"🚨 Path traversal attempt blocked: '{relative_path}' resolved outside workspace root")
+        logger.warning(
+            f"🚨 Path traversal attempt blocked: '{relative_path}' resolved outside workspace root"
+        )
         raise HTTPException(status_code=400, detail="Path escapes workspace root")
 
     if resolved.suffix.lower() in _BLOCKED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"File extension '{resolved.suffix}' is not allowed")
+        raise HTTPException(
+            status_code=400, detail=f"File extension '{resolved.suffix}' is not allowed"
+        )
 
     return resolved
 
 
 @router.put("/{file_path:path}", response_model=FileWriteResponse)
-async def write_file(file_path: str, payload: FileWriteRequest, token: dict = Depends(get_current_user_token)):
+async def write_file(
+    file_path: str, payload: FileWriteRequest, token: dict = Depends(get_current_user_token)
+):
     """
     বাংলা মন্তব্য: IDE editor থেকে save — শুধুমাত্র caller-এর নিজের tenant-scoped
     workspace-এ, path-traversal protection সহ।
@@ -122,7 +127,9 @@ async def write_file(file_path: str, payload: FileWriteRequest, token: dict = De
 
     content_bytes = payload.content.encode("utf-8")
     if len(content_bytes) > _MAX_FILE_BYTES:
-        raise HTTPException(status_code=413, detail=f"File exceeds {_MAX_FILE_BYTES // (1024 * 1024)}MB limit")
+        raise HTTPException(
+            status_code=413, detail=f"File exceeds {_MAX_FILE_BYTES // (1024 * 1024)}MB limit"
+        )
 
     root = _get_tenant_root(str(tenant_id))
     target = _resolve_safe_path(root, file_path)
@@ -159,4 +166,3 @@ async def read_file(file_path: str, token: dict = Depends(get_current_user_token
         raise HTTPException(status_code=500, detail="Failed to read file") from e
 
     return FileReadResponse(path=file_path, content=content)
-

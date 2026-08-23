@@ -89,7 +89,9 @@ def _get_workspace_path(project_type: WorkspaceType) -> Path:
 
     path_mapping = {
         WorkspaceType.ECOMMERCE_BACKEND: workspace_config.get("ecommerce_backend", "backend"),
-        WorkspaceType.ECOMMERCE_FRONTEND: workspace_config.get("ecommerce_frontend", "apps/studio-client"),
+        WorkspaceType.ECOMMERCE_FRONTEND: workspace_config.get(
+            "ecommerce_frontend", "apps/studio-client"
+        ),
         WorkspaceType.MOBILE_FLUTTER: workspace_config.get("mobile_flutter", "apps/mobile"),
         WorkspaceType.ANDROID_JAVA: workspace_config.get("android_java", "apps/android"),
         WorkspaceType.ADMIN_PANEL: workspace_config.get("admin_panel", "admin"),
@@ -144,7 +146,9 @@ def _save_workspace_session(project_type: WorkspaceType, tenant_id: str | None =
     session_path = Path(WORKSPACE_SESSION_FILE)
 
     with _session_file_lock(session_path):
-        temp_fd, temp_path = tempfile.mkstemp(dir=str(session_path.parent), prefix=session_path.name + ".tmp")
+        temp_fd, temp_path = tempfile.mkstemp(
+            dir=str(session_path.parent), prefix=session_path.name + ".tmp"
+        )
         try:
             with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
                 f.write(json.dumps(session, indent=2, ensure_ascii=False))
@@ -339,7 +343,10 @@ async def workspace_list_projects() -> str:
     """
     config = _load_workspace_config()
 
-    projects = [{"type": ws_type.value, "path": config.get(ws_type.value, "default")} for ws_type in WorkspaceType]
+    projects = [
+        {"type": ws_type.value, "path": config.get(ws_type.value, "default")}
+        for ws_type in WorkspaceType
+    ]
 
     session_file = Path(WORKSPACE_SESSION_FILE)
     current_session = None
@@ -349,7 +356,9 @@ async def workspace_list_projects() -> str:
         except (json.JSONDecodeError, OSError):
             current_session = None
 
-    return json.dumps({"projects": projects, "current_session": current_session}, ensure_ascii=False)
+    return json.dumps(
+        {"projects": projects, "current_session": current_session}, ensure_ascii=False
+    )
 
 
 class ReadFileInput(BaseModel):
@@ -404,16 +413,22 @@ async def workspace_read_file(params: ReadFileInput) -> str:
 
     if not resolved_path.exists():
         return json.dumps(
-            {"error": f"File '{params.relative_path}' not found in scoped workspace."}, ensure_ascii=False
+            {"error": f"File '{params.relative_path}' not found in scoped workspace."},
+            ensure_ascii=False,
         )
 
     if not resolved_path.is_file():
-        return json.dumps({"error": f"Path '{params.relative_path}' is not a file."}, ensure_ascii=False)
+        return json.dumps(
+            {"error": f"Path '{params.relative_path}' is not a file."}, ensure_ascii=False
+        )
 
     try:
         content = resolved_path.read_text(encoding="utf-8", errors="replace")
         if len(content) > CHARACTER_LIMIT:
-            content = content[:CHARACTER_LIMIT] + f"\n... [Truncated: Content exceeds {CHARACTER_LIMIT} chars]"
+            content = (
+                content[:CHARACTER_LIMIT]
+                + f"\n... [Truncated: Content exceeds {CHARACTER_LIMIT} chars]"
+            )
 
         return json.dumps({"path": str(resolved_path), "content": content}, ensure_ascii=False)
     except Exception as e:
@@ -481,7 +496,9 @@ async def workspace_search_files(params: SearchFilesInput) -> str:
 
     base_dir = _get_workspace_path(ws_type)
     if not base_dir.exists():
-        return json.dumps({"error": f"Workspace directory '{base_dir}' does not exist."}, ensure_ascii=False)
+        return json.dumps(
+            {"error": f"Workspace directory '{base_dir}' does not exist."}, ensure_ascii=False
+        )
 
     try:
         matched_files = [
@@ -491,7 +508,8 @@ async def workspace_search_files(params: SearchFilesInput) -> str:
         ][:50]
 
         return json.dumps(
-            {"workspace": str(base_dir), "count": len(matched_files), "files": matched_files}, ensure_ascii=False
+            {"workspace": str(base_dir), "count": len(matched_files), "files": matched_files},
+            ensure_ascii=False,
         )
     except Exception as e:
         return json.dumps({"error": f"Failed to search files: {e}"}, ensure_ascii=False)

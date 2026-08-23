@@ -69,7 +69,9 @@ async def test_meta_ai_models_and_logic():
 
     # Test promotion
     promoted = await breeder.promote_if_elite(offspring, p1, p2)
-    assert promoted is None  # since offspring fitness is 0.5 by default which is <= parent fitness 0.8
+    assert (
+        promoted is None
+    )  # since offspring fitness is 0.5 by default which is <= parent fitness 0.8
 
     # Verify PerformanceOracle
     oracle = PerformanceOracle(db_mock, config=OracleConfig.from_settings())

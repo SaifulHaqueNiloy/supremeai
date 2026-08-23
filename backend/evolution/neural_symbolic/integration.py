@@ -146,7 +146,9 @@ class SymbolicReasoner:
             logger.error(f"Error in theorem proving: {e}")
             return False, [f"Error during proof: {e!s}"]
 
-    def _check_basic_derivability(self, goal: SymbolicExpression, premises: list[SymbolicExpression]) -> bool:
+    def _check_basic_derivability(
+        self, goal: SymbolicExpression, premises: list[SymbolicExpression]
+    ) -> bool:
         """Basic check for whether goal can be derived from premises."""
         # This is a simplified implementation
         # A full implementation would require sophisticated logical inference
@@ -179,7 +181,9 @@ class SymbolicReasoner:
         """Check if goal can be derived from premise by substitution."""
         return True
 
-    def perform_mathematical_reasoning(self, expression: str, variables: dict[str, float]) -> dict[str, Any]:
+    def perform_mathematical_reasoning(
+        self, expression: str, variables: dict[str, float]
+    ) -> dict[str, Any]:
         """
         Perform mathematical reasoning on an expression.
 
@@ -207,7 +211,7 @@ class SymbolicReasoner:
                     try:
                         derivative = expr.differentiate(var)
                         derivatives[var] = str(derivative.parsed_expr)
-                    except Exception as e:
+                    except Exception:
                         derivatives[var] = "undefined"
 
                 results["derivatives"] = derivatives
@@ -219,7 +223,7 @@ class SymbolicReasoner:
                     try:
                         integral = expr.integrate(var)
                         integrals[var] = str(integral.parsed_expr)
-                    except Exception as e:
+                    except Exception:
                         integrals[var] = "cannot integrate"
 
                 results["integrals"] = integrals
@@ -240,7 +244,9 @@ class NeuralModule(nn.Module):
         self.config = config
 
         # Embedding layers for symbols and operations
-        self.symbol_embedding = nn.Embedding(1000, config.embedding_dim)  # Vocabulary size placeholder
+        self.symbol_embedding = nn.Embedding(
+            1000, config.embedding_dim
+        )  # Vocabulary size placeholder
         self.operation_embedding = nn.Embedding(len(SymbolicOperation), config.embedding_dim)
 
         # Neural reasoning network
@@ -257,7 +263,9 @@ class NeuralModule(nn.Module):
         # Output layer for predictions
         self.output_layer = nn.Linear(config.embedding_dim, 1)  # Binary classification
 
-    def forward(self, symbol_indices: torch.Tensor, operation_indices: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, symbol_indices: torch.Tensor, operation_indices: torch.Tensor
+    ) -> torch.Tensor:
         """
         Forward pass for neural reasoning.
 
@@ -330,11 +338,15 @@ class NeuralSymbolicIntegrator:
 
         # Convert to indices
         symbol_indices = torch.tensor([self.add_to_vocabulary(s) for s in symbols])
-        operation_indices = torch.tensor([[op.value for op in SymbolicOperation].index(op) for op in operations])
+        operation_indices = torch.tensor(
+            [[op.value for op in SymbolicOperation].index(op) for op in operations]
+        )
 
         return symbol_indices, operation_indices
 
-    def neural_symbolic_reasoning(self, expression: str, variables: dict[str, float] | None = None) -> dict[str, Any]:
+    def neural_symbolic_reasoning(
+        self, expression: str, variables: dict[str, float] | None = None
+    ) -> dict[str, Any]:
         """
         Perform reasoning using both neural and symbolic approaches.
 
@@ -350,7 +362,9 @@ class NeuralSymbolicIntegrator:
         # Perform symbolic reasoning
         try:
             if variables:
-                math_results = self.symbolic_reasoner.perform_mathematical_reasoning(expression, variables or {})
+                math_results = self.symbolic_reasoner.perform_mathematical_reasoning(
+                    expression, variables or {}
+                )
                 results["symbolic"] = math_results
             else:
                 # Just parse the expression
@@ -408,7 +422,9 @@ class NeuralSymbolicIntegrator:
             # If feedback indicates error, adjust approach
             logger.debug("Adjusting reasoning strategy based on negative feedback")
 
-    def solve_mathematical_problem(self, problem_statement: str, constraints: list[str] | None = None) -> dict[str, Any]:
+    def solve_mathematical_problem(
+        self, problem_statement: str, constraints: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Solve a mathematical problem using neural-symbolic integration.
 
@@ -454,7 +470,9 @@ class NeuralSymbolicIntegrator:
 
                 # Try to prove or evaluate
                 if constraints:
-                    proved, proof_steps = self.symbolic_reasoner.prove_theorem(problem_statement, constraints)
+                    proved, proof_steps = self.symbolic_reasoner.prove_theorem(
+                        problem_statement, constraints
+                    )
                     results["steps"].extend(proof_steps)
                     results["solution"] = {"proved": proved, "theorem": problem_statement}
                 else:
@@ -462,7 +480,7 @@ class NeuralSymbolicIntegrator:
                     try:
                         evaluated = expr.evaluate({})
                         results["solution"] = {"evaluated": evaluated}
-                    except Exception as e:
+                    except Exception:
                         results["solution"] = {"parsed": str(expr.parsed_expr)}
 
             # Add neural confidence
@@ -514,7 +532,8 @@ class MathematicalReasoningEngine:
                 "standard_form": f"{expr} = 0",
                 "solutions": [str(sol) for sol in solutions],
                 "numeric_solutions": [
-                    float(complex(str(sol))) if complex(str(sol)).imag == 0 else complex(str(sol)) for sol in solutions
+                    float(complex(str(sol))) if complex(str(sol)).imag == 0 else complex(str(sol))
+                    for sol in solutions
                 ],
                 "verification": [],
             }
@@ -539,19 +558,25 @@ class MathematicalReasoningEngine:
                             "valid": is_valid,
                         }
                     )
-                except Exception as e:
-                    results["verification"].append({"solution": str(sol), "error": "Could not verify"})
+                except Exception:
+                    results["verification"].append(
+                        {"solution": str(sol), "error": "Could not verify"}
+                    )
 
             # Add neural confidence
             neural_results = self.integrator.neural_symbolic_reasoning(equation)
-            results["confidence"] = neural_results.get("combined_confidence", 0.7)  # Default to medium confidence
+            results["confidence"] = neural_results.get(
+                "combined_confidence", 0.7
+            )  # Default to medium confidence
 
             return results
 
         except Exception as e:
             return {"equation": equation, "variable": variable, "error": str(e), "confidence": 0.0}
 
-    def perform_calculus_operation(self, expression: str, operation: str, variable: str) -> dict[str, Any]:
+    def perform_calculus_operation(
+        self, expression: str, operation: str, variable: str
+    ) -> dict[str, Any]:
         """
         Perform calculus operations (differentiation/integration).
 
@@ -638,4 +663,3 @@ def demo_neural_symbolic_integration():
 
 if __name__ == "__main__":
     demo_neural_symbolic_integration()
-

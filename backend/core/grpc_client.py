@@ -65,7 +65,9 @@ class WorkerGrpcClient:
             logger.error(f"gRPC call failed: {e}")
             return {"status": "ERROR", "error_message": str(e)}
 
-    def log_audit_event(self, event_type: str, user_id: str, resource: str, details: dict[str, Any]) -> bool:
+    def log_audit_event(
+        self, event_type: str, user_id: str, resource: str, details: dict[str, Any]
+    ) -> bool:
         try:
             req = pb2.AuditLogRequest(
                 event_type=event_type,

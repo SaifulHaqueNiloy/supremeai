@@ -120,9 +120,13 @@ class EcommerceAgent:
 
         recommendations = []
         for score, product in scored:
-            matched_tags = ", ".join(t for t in product.tags if t.lower() in set(p.lower() for p in user_preferences))
+            matched_tags = ", ".join(
+                t for t in product.tags if t.lower() in set(p.lower() for p in user_preferences)
+            )
             reason = (
-                f"Matches your interest in {matched_tags}" if matched_tags else f"Top-rated {product.category} product"
+                f"Matches your interest in {matched_tags}"
+                if matched_tags
+                else f"Top-rated {product.category} product"
             )
 
             recommendations.append(
@@ -166,7 +170,7 @@ class EcommerceAgent:
             data = json.loads(content) if isinstance(content, str) else content
             pros = data.get("pros", [])
             cons = data.get("cons", [])
-        except Exception as e:
+        except Exception:
             pros = []
             cons = []
 

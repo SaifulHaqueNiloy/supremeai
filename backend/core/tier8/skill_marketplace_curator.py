@@ -227,7 +227,11 @@ class SkillMarketplaceCurator(BaseSkill):
     async def _auto_review_pending(self) -> None:
         """Use LLM to auto-review pending listings."""
         llm = await self._get_llm()
-        pending = [lid for lid, listing in self._listings.items() if listing.status == ListingStatus.PENDING_REVIEW]
+        pending = [
+            lid
+            for lid, listing in self._listings.items()
+            if listing.status == ListingStatus.PENDING_REVIEW
+        ]
         for lid in pending:
             listing = self._listings[lid]
             prompt = (
@@ -269,7 +273,9 @@ class SkillMarketplaceCurator(BaseSkill):
         """Generate a trending skills report (logged, not stored)."""
         trending = sorted(
             self._listings.values(),
-            key=lambda listing: (listing.download_count * 0.5 + listing.rating * listing.review_count),
+            key=lambda listing: (
+                listing.download_count * 0.5 + listing.rating * listing.review_count
+            ),
             reverse=True,
         )[:10]
         with self._tracer.start_as_current_span("marketplace.trending") as span:
@@ -286,7 +292,9 @@ class SkillMarketplaceCurator(BaseSkill):
         tags: list[str],
     ) -> str:
         """Publish a new skill listing."""
-        listing_id = hashlib.sha256(f"{skill_name}:{author}:{version}:{time.time()}".encode()).hexdigest()[:16]
+        listing_id = hashlib.sha256(
+            f"{skill_name}:{author}:{version}:{time.time()}".encode()
+        ).hexdigest()[:16]
         listing = SkillListing(
             listing_id=listing_id,
             skill_name=skill_name,
@@ -323,7 +331,10 @@ class SkillMarketplaceCurator(BaseSkill):
         for listing in self._listings.values():
             if listing.status != ListingStatus.PUBLISHED:
                 continue
-            match = query_lower in listing.skill_name.lower() or query_lower in listing.description.lower()
+            match = (
+                query_lower in listing.skill_name.lower()
+                or query_lower in listing.description.lower()
+            )
             if tags and not set(tags).issubset(set(listing.tags)):
                 match = False
             if match:
@@ -339,10 +350,14 @@ class SkillMarketplaceCurator(BaseSkill):
         """Return trending skill listings."""
         trending = sorted(
             self._listings.values(),
-            key=lambda listing: (listing.download_count * 0.5 + listing.rating * listing.review_count),
+            key=lambda listing: (
+                listing.download_count * 0.5 + listing.rating * listing.review_count
+            ),
             reverse=True,
         )[:limit]
-        return [listing.to_dict() for listing in trending if listing.status == ListingStatus.PUBLISHED]
+        return [
+            listing.to_dict() for listing in trending if listing.status == ListingStatus.PUBLISHED
+        ]
 
     async def _log_error(self, context: str, message: str) -> None:
         with self._tracer.start_as_current_span("marketplace.error") as span:
@@ -392,7 +407,11 @@ class SkillMarketplaceCurator(BaseSkill):
             return {
                 "running": self._running,
                 "listings": len(self._listings),
-                "published": sum(1 for listing in self._listings.values() if listing.status == ListingStatus.PUBLISHED),
+                "published": sum(
+                    1
+                    for listing in self._listings.values()
+                    if listing.status == ListingStatus.PUBLISHED
+                ),
                 "subscribers": len(self._subscriptions),
             }
         return {"status": "unknown_action", "action": action}

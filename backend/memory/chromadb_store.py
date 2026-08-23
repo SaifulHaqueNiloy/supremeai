@@ -16,7 +16,7 @@ try:
     chromadb = lazy_import("chromadb", package_hint="ml")
 
     _CHROMA_AVAILABLE = True
-except Exception as e:
+except Exception:
     _CHROMA_AVAILABLE = False
 
 
@@ -137,7 +137,9 @@ class ChromaDBStore:
             }
         self._save_fallback()
 
-    def add_document_incremental(self, doc_id: str, text: str, metadata: dict[str, Any] | None = None) -> bool:
+    def add_document_incremental(
+        self, doc_id: str, text: str, metadata: dict[str, Any] | None = None
+    ) -> bool:
         """Add or update document only if content hash changed (Bangla: ইনক্রিমেন্টাল ইনডেক্সিং).
 
         Returns:

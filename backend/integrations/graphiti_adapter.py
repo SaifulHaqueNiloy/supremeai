@@ -42,7 +42,9 @@ def _asyncio_run(coro: Any) -> Any:
 class GraphitiMemoryAdapter:
     """Temporal knowledge-graph memory bridging optional Graphiti with zero-cost fallback."""
 
-    def __init__(self, uri: str | None = None, user: str | None = None, password: str | None = None) -> None:
+    def __init__(
+        self, uri: str | None = None, user: str | None = None, password: str | None = None
+    ) -> None:
         self.enabled_flag = _ENABLED_FLAG
         self._graphiti = None
         self._triples: list[dict[str, Any]] = []
@@ -55,7 +57,9 @@ class GraphitiMemoryAdapter:
                 self._graphiti = Graphiti(uri=uri, user=user or "", password=password or "")
                 logger.info("GraphitiMemoryAdapter: using upstream temporal graph memory.")
             except Exception as exc:  # pragma: no cover - defensive
-                logger.warning(f"GraphitiMemoryAdapter: upstream init failed, using fallback: {exc}")
+                logger.warning(
+                    f"GraphitiMemoryAdapter: upstream init failed, using fallback: {exc}"
+                )
                 self._graphiti = None
         else:
             logger.info(

@@ -462,7 +462,9 @@ class DailyLearner:
         ]
         sorted_goals = sorted(
             sub_goals,
-            key=lambda sg: (priority_order.index(sg.priority) if sg.priority in priority_order else 99),
+            key=lambda sg: (
+                priority_order.index(sg.priority) if sg.priority in priority_order else 99
+            ),
         )
 
         total_effort = sum(sg.estimated_effort for sg in sub_goals)
@@ -542,7 +544,9 @@ class DailyLearner:
             latest = task_history[-1].get("objective", "")
             if latest:
                 plan = await self.learn_and_plan(latest)
-                logger.info(f"Auto-decomposed '{latest[:50]}' into {len(plan['sub_goals'])} sub-goals")
+                logger.info(
+                    f"Auto-decomposed '{latest[:50]}' into {len(plan['sub_goals'])} sub-goals"
+                )
 
         # Run evolution engine (backward compatible)
         result = await self.engine.run_daily_evolution(task_history)

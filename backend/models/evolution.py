@@ -24,14 +24,18 @@ class SkillFitness(Base):
     # Optimistic Concurrency Control (OCC)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
 
-    __mapper_args__ = {"version_id_col": version}  # SQLAlchemy অটোমেটিকভাবে ভার্সন ট্র্যাকিং এবং রেস-কন্ডিশন ব্লক করবে
+    __mapper_args__ = {
+        "version_id_col": version
+    }  # SQLAlchemy অটোমেটিকভাবে ভার্সন ট্র্যাকিং এবং রেস-কন্ডিশন ব্লক করবে
 
 
 class CodeProposal(Base):
@@ -50,9 +54,13 @@ class CodeProposal(Base):
     )  # proposed, approved, rejected, applied
 
     # Pro Tip: JSONB is highly optimized for PostgreSQL query matching.
-    metadata_json: Mapped[dict] = mapped_column(JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=True)
+    metadata_json: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), default=dict, nullable=True
+    )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
     __mapper_args__ = {"version_id_col": version}
 
@@ -82,7 +90,9 @@ class AgentPerformanceLog(Base):
     endpoint: Mapped[str | None] = mapped_column(String(255), nullable=True)
     model_used: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
 
 class PerformanceAlert(Base):
@@ -95,7 +105,9 @@ class PerformanceAlert(Base):
     alert_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # latency_spike, accuracy_drop, cost_surge, error_rate_high
-    severity: Mapped[str] = mapped_column(String(20), nullable=False)  # warning, critical, emergency
+    severity: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # warning, critical, emergency
     metric_value: Mapped[float] = mapped_column(Float, nullable=False)
     threshold_value: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -105,4 +117,6 @@ class PerformanceAlert(Base):
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )

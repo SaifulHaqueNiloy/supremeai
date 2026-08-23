@@ -81,7 +81,9 @@ class TimeSeriesForecaster:
         return forecasted
 
     @staticmethod
-    def confidence_intervals(values: list[float], forecast: list[float]) -> list[tuple[float, float]]:
+    def confidence_intervals(
+        values: list[float], forecast: list[float]
+    ) -> list[tuple[float, float]]:
         """Calculate confidence intervals based on historical variance."""
         if len(values) < 2:
             return [(v * 0.8, v * 1.2) for v in forecast]

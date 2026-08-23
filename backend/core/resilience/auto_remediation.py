@@ -44,7 +44,9 @@ class AutoRemediation:
         severity: str,
         tenant_id: str = "default_tenant",
     ) -> dict:
-        logger.info(f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}")
+        logger.info(
+            f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}"
+        )
 
         safe_path = self._validate_file_path(file_path)
 
@@ -84,7 +86,9 @@ class AutoRemediation:
         # The actual LLM integration is intentionally dynamic to keep this module testable.
         from core.ld_client import get_ld_ai_components
 
-        ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context = get_ld_ai_components()
+        ld_ai_client, AICompletionConfigDefault, LDMessage, ModelConfig, Context = (
+            get_ld_ai_components()
+        )
 
         default_prompt_template = (
             "You are an elite secure coding assistant. Correct the security vulnerability in this file.\n"
@@ -124,7 +128,9 @@ class AutoRemediation:
                 logger.warning(f"LaunchDarkly config evaluation failed, falling back: {exc}")
 
         if config and getattr(config, "enabled", False):
-            model_name = config.model.name if getattr(config, "model", None) else "gemini/gemini-2.5-pro"
+            model_name = (
+                config.model.name if getattr(config, "model", None) else "gemini/gemini-2.5-pro"
+            )
             prompt = (
                 config.messages[0].content
                 if getattr(config, "messages", None)

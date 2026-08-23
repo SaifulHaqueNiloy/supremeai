@@ -6,9 +6,7 @@ Converts recurring LearningInsights into validated ChangeProposals.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
-from typing import Any, Dict, List, Optional
 
 from evolution.change_proposal import (
     ChangeProposal,
@@ -18,7 +16,6 @@ from evolution.change_proposal import (
 )
 from learning.experience import ExperienceRecord
 from learning.outcome_analyzer import (
-    LearningInsight,
     OutcomeAnalyzer,
     OutcomeClassification,
     get_outcome_analyzer,
@@ -32,8 +29,8 @@ class EvolutionBridge:
 
     def __init__(
         self,
-        analyzer: Optional[OutcomeAnalyzer] = None,
-        proposal_manager: Optional[ChangeProposalManager] = None,
+        analyzer: OutcomeAnalyzer | None = None,
+        proposal_manager: ChangeProposalManager | None = None,
     ) -> None:
         self.analyzer = analyzer or get_outcome_analyzer()
         self.proposal_manager = proposal_manager or get_change_manager()
@@ -42,7 +39,7 @@ class EvolutionBridge:
         self,
         record: ExperienceRecord,
         min_evidence_threshold: int = 1,
-    ) -> Optional[ChangeProposal]:
+    ) -> ChangeProposal | None:
         """Analyze task experience, synthesize insight, and propose system optimization."""
         classification = self.analyzer.classify_outcome(record)
 
@@ -59,7 +56,9 @@ class EvolutionBridge:
                 target_module="backend/brain/code_generation_prompt.py",
                 current_fitness=record.verification_score,
             )
-            logger.info(f"✨ Synthesized ChangeProposal [{proposal.proposal_id}] from AST Syntax Error")
+            logger.info(
+                f"✨ Synthesized ChangeProposal [{proposal.proposal_id}] from AST Syntax Error"
+            )
             return proposal
 
         elif classification == OutcomeClassification.BUDGET_EXHAUSTED:
@@ -72,14 +71,16 @@ class EvolutionBridge:
                 target_module="backend/runtime/budget_guard.py",
                 current_fitness=0.70,
             )
-            logger.info(f"✨ Synthesized ChangeProposal [{proposal.proposal_id}] from Budget Exhaustion")
+            logger.info(
+                f"✨ Synthesized ChangeProposal [{proposal.proposal_id}] from Budget Exhaustion"
+            )
             return proposal
 
         return None
 
 
 # Global Singleton
-_evolution_bridge: Optional[EvolutionBridge] = None
+_evolution_bridge: EvolutionBridge | None = None
 
 
 def get_evolution_bridge() -> EvolutionBridge:

@@ -52,7 +52,9 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
         if not stripe_key:
             is_production = os.environ.get("SUPREMEAI_ENV", "local").lower() == "production"
             if is_production:
-                logger.critical("🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production")
+                logger.critical(
+                    "🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production"
+                )
                 raise HTTPException(
                     status_code=503,
                     detail="Payment processing unavailable: Stripe not configured",
@@ -94,7 +96,9 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
     except Exception as e:
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।
-        raise HTTPException(status_code=500, detail="Payment processing error. Please contact support.") from e
+        raise HTTPException(
+            status_code=500, detail="Payment processing error. Please contact support."
+        ) from e
 
 
 # বাংলা মন্তব্য: সাবস্ক্রিপশন প্ল্যানগুলোর লিস্ট প্রদান করার জন্য এন্ডপয়েন্ট

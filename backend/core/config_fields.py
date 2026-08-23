@@ -20,11 +20,17 @@ class SettingsFieldsMixin:
     LLM_MAX_KEEPALIVE: int = Field(default=20, validation_alias="LLM_MAX_KEEPALIVE")
 
     LATENCY_WINDOW_SIZE: int = Field(default=20, validation_alias="LATENCY_WINDOW_SIZE")
-    LATENCY_NORMALIZATION_MS: float = Field(default=1000.0, validation_alias="LATENCY_NORMALIZATION_MS")
+    LATENCY_NORMALIZATION_MS: float = Field(
+        default=1000.0, validation_alias="LATENCY_NORMALIZATION_MS"
+    )
     MIN_PROVIDER_WEIGHT: float = Field(default=0.01, validation_alias="MIN_PROVIDER_WEIGHT")
     CIRCUIT_FAILURE_THRESHOLD: int = Field(default=5, validation_alias="CIRCUIT_FAILURE_THRESHOLD")
-    CIRCUIT_SUCCESS_RATE_FLOOR: float = Field(default=0.5, validation_alias="CIRCUIT_SUCCESS_RATE_FLOOR")
-    CIRCUIT_COOLDOWN_SECONDS: float = Field(default=30.0, validation_alias="CIRCUIT_COOLDOWN_SECONDS")
+    CIRCUIT_SUCCESS_RATE_FLOOR: float = Field(
+        default=0.5, validation_alias="CIRCUIT_SUCCESS_RATE_FLOOR"
+    )
+    CIRCUIT_COOLDOWN_SECONDS: float = Field(
+        default=30.0, validation_alias="CIRCUIT_COOLDOWN_SECONDS"
+    )
     MAX_ROUTING_ATTEMPTS: int = Field(default=3, validation_alias="MAX_ROUTING_ATTEMPTS")
     docs_auth_enabled: bool = True
     docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
@@ -68,14 +74,8 @@ class SettingsFieldsMixin:
         default=False, validation_alias="SUPREMEAI_BROWSER_USE_ENABLED"
     )
     e2b_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_E2B_ENABLED")
-    openhands_enabled: bool = Field(
-        default=False, validation_alias="SUPREMEAI_OPENHANDS_ENABLED"
-    )
-    openhands_server_url: str = Field(
-        default="", validation_alias="OPENHANDS_SERVER_URL"
-    )
-
-
+    openhands_enabled: bool = Field(default=False, validation_alias="SUPREMEAI_OPENHANDS_ENABLED")
+    openhands_server_url: str = Field(default="", validation_alias="OPENHANDS_SERVER_URL")
 
     # বাংলা মন্তব্য: JIT OTP over-saturation protection — প্রতি admin প্রতি এই সেকেন্ডে সর্বোচ্চ ১টি OTP।
     otp_cooldown_seconds: int = Field(default=60, validation_alias="OTP_COOLDOWN_SECONDS")
@@ -117,7 +117,9 @@ class SettingsFieldsMixin:
 
     # ── Security & Auth Config ──────────────────────────────────────────────
     security_context_ttl: int = Field(default=86400, validation_alias="SECURITY_CONTEXT_TTL")
-    security_caution_log_ttl: int = Field(default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL")
+    security_caution_log_ttl: int = Field(
+        default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL"
+    )
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
 
     supremeai_public_paths: str | list[str] = Field(
@@ -164,8 +166,12 @@ class SettingsFieldsMixin:
     )
 
     # ── Circuit Breaker Config ───────────────────────────────────────────────
-    circuit_breaker_failure_threshold: int = Field(default=3, validation_alias="CIRCUIT_BREAKER_FAILURE_THRESHOLD")
-    circuit_breaker_cooldown_period: int = Field(default=60, validation_alias="CIRCUIT_BREAKER_COOLDOWN_PERIOD")
+    circuit_breaker_failure_threshold: int = Field(
+        default=3, validation_alias="CIRCUIT_BREAKER_FAILURE_THRESHOLD"
+    )
+    circuit_breaker_cooldown_period: int = Field(
+        default=60, validation_alias="CIRCUIT_BREAKER_COOLDOWN_PERIOD"
+    )
 
     # ── Idempotency Config ───────────────────────────────────────────────
     # বাংলা মন্তব্য: idempotency_critical_paths সম্পূর্ণ env-driven।
@@ -209,18 +215,24 @@ class SettingsFieldsMixin:
         description="Base directory for user workspace files (api/routes/files.py)",
     )
     sandbox_root: str = Field(default="/tmp/sandboxes", validation_alias="SANDBOX_ROOT")  # nosec B108
-    firecracker_path: str = Field(default="/usr/bin/firecracker", validation_alias="FIRECRACKER_PATH")
+    firecracker_path: str = Field(
+        default="/usr/bin/firecracker", validation_alias="FIRECRACKER_PATH"
+    )
     gvisor_path: str = Field(default="/usr/bin/runsc", validation_alias="GVISOR_PATH")
     allow_sandbox_fallback: bool = Field(default=False, validation_alias="ALLOW_SANDBOX_FALLBACK")
     # বাংলা মন্তব্য: local_code_executor ও docker_sandbox-এর লোকাল ফলব্যাকের জন্য settings ভেরিয়েবল যোগ করা হলো।
-    allow_local_sandbox_fallback: str = Field(default="false", validation_alias="ALLOW_LOCAL_SANDBOX_FALLBACK")
+    allow_local_sandbox_fallback: str = Field(
+        default="false", validation_alias="ALLOW_LOCAL_SANDBOX_FALLBACK"
+    )
 
     # ── Agent Execution Config — env-driven ─────────────────────────────────
     # বাংলা মন্তব্য: আগে agent_orchestrator.py সরাসরি os.getenv() করত।
     # এখন এই দুটো settings-এর Single Source of Truth থেকে আসে।
     max_agent_tokens: int = Field(default=5000, validation_alias="MAX_AGENT_TOKENS")
     max_agent_iterations: int = Field(default=5, validation_alias="MAX_AGENT_ITERATIONS")
-    agent_admin_permissions_required: bool = Field(default=True, validation_alias="AGENT_ADMIN_PERMISSIONS_REQUIRED")
+    agent_admin_permissions_required: bool = Field(
+        default=True, validation_alias="AGENT_ADMIN_PERMISSIONS_REQUIRED"
+    )
 
     # ── LLM Cost Config — env-driven ────────────────────────────────────────
     # বাংলা মন্তব্য: আগে llm_gateway.py-এ `estimated_cost = tokens * 0.00001` hardcoded ছিল।
@@ -236,14 +248,22 @@ class SettingsFieldsMixin:
 
     # ── Health Check Config — env-driven ────────────────────────────────────
     # বাংলা মন্তব্য: health_monitor.py-এ hardcoded interval এখন config-driven।
-    health_check_interval_seconds: int = Field(default=60, validation_alias="HEALTH_CHECK_INTERVAL_SECONDS")
+    health_check_interval_seconds: int = Field(
+        default=60, validation_alias="HEALTH_CHECK_INTERVAL_SECONDS"
+    )
     skill_timeout_seconds: int = Field(default=30, validation_alias="SKILL_TIMEOUT_SECONDS")
 
     # ── Self-Healing Config — env-driven ────────────────────────────────────
     # বাংলা মন্তব্য: self_healer.py-এ human approval loop-এর জন্য config যোগ করা হলো।
-    self_heal_approval_webhook: str = Field(default="", validation_alias="SELF_HEAL_APPROVAL_WEBHOOK")
-    self_heal_approval_timeout_hours: int = Field(default=24, validation_alias="SELF_HEAL_APPROVAL_TIMEOUT_HOURS")
-    auto_remediation_dry_run: bool = Field(default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN")
+    self_heal_approval_webhook: str = Field(
+        default="", validation_alias="SELF_HEAL_APPROVAL_WEBHOOK"
+    )
+    self_heal_approval_timeout_hours: int = Field(
+        default=24, validation_alias="SELF_HEAL_APPROVAL_TIMEOUT_HOURS"
+    )
+    auto_remediation_dry_run: bool = Field(
+        default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN"
+    )
 
     # ── Microservices Config — env-driven ─────────────────────────────────────
     # বাংলা মন্তব্য: Scraper microservic-এর লিভ সেনেন, Cloudflare Worker থেকে proxy করে।

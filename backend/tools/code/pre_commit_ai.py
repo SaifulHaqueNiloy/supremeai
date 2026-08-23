@@ -9,7 +9,7 @@ try:
     from tools.code.pr_reviewer import PRReviewer
 
     _PR_REVIEWER_AVAILABLE = True
-except Exception as e:
+except Exception:
     _PR_REVIEWER_AVAILABLE = False
     PRReviewer = None  # type: ignore[misc,assignment]
 
@@ -42,13 +42,17 @@ class PreCommitAI:
 
             self.isort_available = True
         except ImportError:
-            logger.warning("isort is not installed. Some auto-fixes will be unavailable. Run 'pip install isort'")
+            logger.warning(
+                "isort is not installed. Some auto-fixes will be unavailable. Run 'pip install isort'"
+            )
         try:
             import black  # noqa: F401 -- শুধু availability probe
 
             self.black_available = True
         except ImportError:
-            logger.warning("black is not installed. Some auto-fixes will be unavailable. Run 'pip install black'")
+            logger.warning(
+                "black is not installed. Some auto-fixes will be unavailable. Run 'pip install black'"
+            )
         logger.debug(f"PreCommit tools: isort={self.isort_available}, black={self.black_available}")
 
     def _get_staged_diff(self) -> str:
@@ -138,10 +142,14 @@ class PreCommitAI:
                     processed_content = re.sub(r"[ \t]+$", "", new_content, flags=re.MULTILINE)
                     if processed_content != new_content:
                         new_content = processed_content
-                        fixes_applied.append({"file": filepath, "action": "trim_trailing_whitespace"})
+                        fixes_applied.append(
+                            {"file": filepath, "action": "trim_trailing_whitespace"}
+                        )
                         content_changed = True
 
-                if self.AUTO_FIX_RULES.get("end_of_file_newline") and not new_content.endswith("\n"):
+                if self.AUTO_FIX_RULES.get("end_of_file_newline") and not new_content.endswith(
+                    "\n"
+                ):
                     new_content += "\n"
                     fixes_applied.append({"file": filepath, "action": "add_final_newline"})
                     content_changed = True
@@ -175,11 +183,14 @@ class PreCommitAI:
         critical_issues = [
             i
             for i in issues
-            if "critical" in str(i.get("severity", "")).lower() or "SECURITY" in str(i.get("body", "")).upper()
+            if "critical" in str(i.get("severity", "")).lower()
+            or "SECURITY" in str(i.get("body", "")).upper()
         ]
 
         if critical_issues:
-            logger.error(f"Pre-commit blocked! Found {len(critical_issues)} critical security issues.")
+            logger.error(
+                f"Pre-commit blocked! Found {len(critical_issues)} critical security issues."
+            )
             for issue in critical_issues:
                 logger.error(
                     f"  - {issue.get('path', '?')}:{issue.get('line', '?')} -> {issue.get('body', issue.get('type', ''))}"
@@ -218,7 +229,9 @@ class PreCommitAI:
                 # The hook should return success now. The calling pre-commit framework will handle the rest.
 
         if issues:
-            logger.warning(f"Found {len(issues)} non-critical issues. Commit allowed but review is suggested.")
+            logger.warning(
+                f"Found {len(issues)} non-critical issues. Commit allowed but review is suggested."
+            )
 
         logger.info("Pre-commit checks passed.")
         return {

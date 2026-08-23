@@ -7,11 +7,10 @@ from __future__ import annotations
 
 from typing import Any, TypedDict
 
+from brain.economic_optimizer import BudgetContext, get_economic_optimizer
 from core.llm.advanced_model_router import (
-    AdvancedModelRouter,
     get_advanced_router,
 )
-from brain.economic_optimizer import get_economic_optimizer, BudgetContext
 
 
 class ProviderHealth(TypedDict):
@@ -76,10 +75,14 @@ class PerformanceAwareRouter:
             + (norm_quality_inv * self.quality_weight)
         )
 
-    async def route(self, prompt: str, task_type: str = "general", budget_context: BudgetContext = None) -> dict[str, Any]:
+    async def route(
+        self, prompt: str, task_type: str = "general", budget_context: BudgetContext = None
+    ) -> dict[str, Any]:
         if budget_context:
             optimizer = await get_economic_optimizer()
-            decision = await optimizer.optimize_route(prompt=prompt, task_type=task_type, budget_context=budget_context)
+            decision = await optimizer.optimize_route(
+                prompt=prompt, task_type=task_type, budget_context=budget_context
+            )
             return {
                 "provider": decision.provider,
                 "model": decision.model,
@@ -87,7 +90,7 @@ class PerformanceAwareRouter:
                 "latency_ms": 0,
                 "estimated_cost": decision.estimated_cost,
                 "route_class": "economic",
-                "reasoning": decision.reasoning
+                "reasoning": decision.reasoning,
             }
 
         scored_providers = []
@@ -106,7 +109,9 @@ class PerformanceAwareRouter:
 
         return {
             "provider": best_provider["name"],
-            "model": "llama-3.3-70b-versatile" if best_provider["name"] == "groq" else "default-model",
+            "model": "llama-3.3-70b-versatile"
+            if best_provider["name"] == "groq"
+            else "default-model",
             "score": best_score,
             "latency_ms": lat,
             "estimated_cost": best_provider["cost_per_1k"],

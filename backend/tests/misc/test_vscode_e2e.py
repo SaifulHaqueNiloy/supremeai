@@ -136,7 +136,9 @@ class FakeSupremeAIService:
         checkpoint["resumed"] = True
         return {"task_id": task_id, **checkpoint}
 
-    async def buildMemoryContext(self, documents: list[str], query: str, sessionId: str, budget: int = 4000) -> str:
+    async def buildMemoryContext(
+        self, documents: list[str], query: str, sessionId: str, budget: int = 4000
+    ) -> str:
         self.memory_windows.setdefault(sessionId, [])
         for doc in documents:
             text = doc if len(doc.split()) <= budget else " ".join(doc.split()[:budget])
@@ -279,5 +281,7 @@ def test_vscode_memory_context_building():
         "first doc remembers the start",
         "second doc expands the idea further beyond the original context",
     ]
-    context = __import__("asyncio").run(service.buildMemoryContext(docs, "", "session-1", budget=20))
+    context = __import__("asyncio").run(
+        service.buildMemoryContext(docs, "", "session-1", budget=20)
+    )
     assert "first doc remembers the start" in context or "second doc" in context

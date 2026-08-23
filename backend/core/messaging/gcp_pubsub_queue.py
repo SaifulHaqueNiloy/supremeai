@@ -14,7 +14,7 @@ try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
 
     PUBSUB_AVAILABLE = True
-except Exception as e:
+except Exception:
     PUBSUB_AVAILABLE = False
 
 
@@ -28,9 +28,13 @@ class GCPPubSubQueue:
         subscription_id: str | None = None,
         db_path: str | None = None,
     ):
-        self.project_id = project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
+        self.project_id = (
+            project_id or os.getenv("GCP_PROJECT_ID") or os.getenv("GOOGLE_CLOUD_PROJECT")
+        )
         self.topic_id = topic_id or os.getenv("GCP_PUBSUB_TOPIC", "supremeai-tasks")
-        self.subscription_id = subscription_id or os.getenv("GCP_PUBSUB_SUBSCRIPTION") or f"{self.topic_id}-sub"
+        self.subscription_id = (
+            subscription_id or os.getenv("GCP_PUBSUB_SUBSCRIPTION") or f"{self.topic_id}-sub"
+        )
         self.db_path = db_path or os.getenv("GCP_PUBSUB_SQLITE_PATH")
         self.publisher = None
         self.subscriber = None
@@ -42,7 +46,9 @@ class GCPPubSubQueue:
                 self.publisher = pubsub_v1.PublisherClient()
                 self.subscriber = pubsub_v1.SubscriberClient()
                 self.topic_path = self.publisher.topic_path(self.project_id, self.topic_id)
-                self.subscription_path = self.subscriber.subscription_path(self.project_id, self.subscription_id)
+                self.subscription_path = self.subscriber.subscription_path(
+                    self.project_id, self.subscription_id
+                )
                 self.mode = "gcp_pubsub"
                 logger.info("Using GCP Pub/Sub task queue")
             except Exception as exc:
@@ -213,7 +219,9 @@ class GCPPubSubQueue:
                 raise
 
         with self._get_connection() as conn:
-            cursor = conn.execute("UPDATE pubsub_queue SET acked = 1 WHERE message_id = ?", (message_id,))
+            cursor = conn.execute(
+                "UPDATE pubsub_queue SET acked = 1 WHERE message_id = ?", (message_id,)
+            )
             conn.commit()
         return {
             "success": True,
@@ -233,7 +241,9 @@ class GCPPubSubQueue:
             }
 
         with self._get_connection() as conn:
-            pending = conn.execute("SELECT COUNT(*) FROM pubsub_queue WHERE acked = 0").fetchone()[0]
+            pending = conn.execute("SELECT COUNT(*) FROM pubsub_queue WHERE acked = 0").fetchone()[
+                0
+            ]
             acked = conn.execute("SELECT COUNT(*) FROM pubsub_queue WHERE acked = 1").fetchone()[0]
         return {
             "provider": "local_sqlite",

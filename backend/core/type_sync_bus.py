@@ -29,7 +29,12 @@ from loguru import logger
 # ── Constants ─────────────────────────────────────────────────────────────────
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 GENERATE_TYPES_SCRIPT = SCRIPTS_DIR / "generate_types.py"
-CHECKSUM_FILE = Path(__file__).resolve().parent.parent.parent / "packages" / "shared-types" / ".type_checksums.json"
+CHECKSUM_FILE = (
+    Path(__file__).resolve().parent.parent.parent
+    / "packages"
+    / "shared-types"
+    / ".type_checksums.json"
+)
 
 # NATS channels
 CHANNEL_TYPE_SYNC = "types.sync"
@@ -78,7 +83,9 @@ class TypeSyncBus:
             logger.info("[TypeSyncBus] Using SwarmPubSub (Redis) as fallback")
             return
 
-        logger.warning("[TypeSyncBus] No messaging infrastructure available. Running in local mode.")
+        logger.warning(
+            "[TypeSyncBus] No messaging infrastructure available. Running in local mode."
+        )
 
     async def disconnect(self) -> None:
         """Disconnect from the messaging infrastructure."""

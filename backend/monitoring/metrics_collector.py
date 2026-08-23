@@ -44,7 +44,9 @@ class MetricsCollector:
         self._security_events = defaultdict(int)
         self._active_connections = 0
 
-    async def increment_counter(self, metric_name: str, value: int = 1, labels: dict[str, str] | None = None):
+    async def increment_counter(
+        self, metric_name: str, value: int = 1, labels: dict[str, str] | None = None
+    ):
         """Increment a counter metric."""
         labels = labels or {}
         key = f"{metric_name}:{sorted(labels.items())!s}"
@@ -62,7 +64,9 @@ class MetricsCollector:
         async with self._lock:
             self._metrics[key] = value
 
-    async def observe_histogram(self, metric_name: str, value: float, labels: dict[str, str] | None = None):
+    async def observe_histogram(
+        self, metric_name: str, value: float, labels: dict[str, str] | None = None
+    ):
         """Record a histogram observation."""
         labels = labels or {}
         key = f"{metric_name}:{sorted(labels.items())!s}"
@@ -76,7 +80,9 @@ class MetricsCollector:
         """Start a timer for measuring duration."""
         self._start_times[timer_id] = time.time()
 
-    async def stop_timer(self, timer_id: str, metric_name: str, labels: dict[str, str] | None = None):
+    async def stop_timer(
+        self, timer_id: str, metric_name: str, labels: dict[str, str] | None = None
+    ):
         """Stop a timer and record the duration."""
         if timer_id in self._start_times:
             duration = time.time() - self._start_times[timer_id]
@@ -237,6 +243,8 @@ async def start_operation_timer(operation_id: str):
     await metrics_collector.start_timer(operation_id)
 
 
-async def end_operation_timer(operation_id: str, metric_name: str, labels: dict[str, str] | None = None):
+async def end_operation_timer(
+    operation_id: str, metric_name: str, labels: dict[str, str] | None = None
+):
     """End timing an operation and record the duration."""
     return await metrics_collector.stop_timer(operation_id, metric_name, labels)

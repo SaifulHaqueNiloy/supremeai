@@ -67,7 +67,9 @@ class ExperienceClusterer:
         self.similarity_threshold = similarity_threshold
         self._embeddings_cache: dict[str, list[float]] = {}
 
-    def cluster_failures(self, experiences: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+    def cluster_failures(
+        self, experiences: list[dict[str, Any]]
+    ) -> dict[str, list[dict[str, Any]]]:
         """Group experiences by failure signature for pattern detection."""
         clusters: dict[str, list[dict[str, Any]]] = {}
 
@@ -166,7 +168,9 @@ class PerformanceDriftDetector:
             "provider": provider,
             "drift_detected": drift_detected,
             "latency_change_pct": (
-                round((recent_lat_mean - old_lat_mean) / old_lat_mean * 100, 2) if old_lat_mean else 0.0
+                round((recent_lat_mean - old_lat_mean) / old_lat_mean * 100, 2)
+                if old_lat_mean
+                else 0.0
             ),
             "error_rate_change": round(recent_err_mean - old_err_mean, 4),
             "recommendation": "consider_fallback" if drift_detected else "stable",
@@ -250,7 +254,9 @@ class LearningLoop:
                 drift_results = await self._check_model_drift()
 
                 # Step 4: Generate insights via LLM if gateway available
-                insights = await self._generate_insights(experiences, failure_clusters, drift_results)
+                insights = await self._generate_insights(
+                    experiences, failure_clusters, drift_results
+                )
 
                 # Step 5: Persist insights and update counters
                 self._insights_log.extend(insights)
@@ -341,7 +347,9 @@ class LearningLoop:
                     category="reliability",
                     severity="critical" if len(cluster) > 5 else "warning",
                     description=f"Failure pattern '{fingerprint}' occurred {len(cluster)} times",
-                    affected_components=list(set(e.get("action_taken", "unknown") for e in cluster)),
+                    affected_components=list(
+                        set(e.get("action_taken", "unknown") for e in cluster)
+                    ),
                     suggested_action="Review error handling and add retry logic",
                     confidence=min(len(cluster) / 10, 1.0),
                 )
@@ -365,11 +373,13 @@ class LearningLoop:
                 )
 
         # Insight 3: User feedback trends
-        feedback_scores = [e.get("user_feedback") for e in experiences if e.get("user_feedback") is not None]
+        feedback_scores = [
+            e.get("user_feedback") for e in experiences if e.get("user_feedback") is not None
+        ]
         if feedback_scores:
-            avg_feedback = sum(1 if f == "positive" else -1 if f == "negative" else 0 for f in feedback_scores) / len(
-                feedback_scores
-            )
+            avg_feedback = sum(
+                1 if f == "positive" else -1 if f == "negative" else 0 for f in feedback_scores
+            ) / len(feedback_scores)
             if avg_feedback < -0.3:
                 insights.append(
                     LearningInsight(
@@ -384,7 +394,9 @@ class LearningLoop:
 
         return insights
 
-    def get_insights(self, category: str | None = None, unresolved_only: bool = True) -> list[LearningInsight]:
+    def get_insights(
+        self, category: str | None = None, unresolved_only: bool = True
+    ) -> list[LearningInsight]:
         """Retrieve insights, optionally filtered."""
         insights = self._insights_log
         if category:
@@ -439,6 +451,7 @@ class LearningLoop:
         if self.experience_db:
             try:
                 from adaptive_engine.experience_db import Experience
+
                 exp = Experience(
                     user_id=user_id,
                     action_taken=signal_type,
@@ -456,17 +469,21 @@ class LearningLoop:
         suggestions: list[dict[str, Any]] = []
         insights = self.get_insights(unresolved_only=True)
         for insight in insights[:3]:
-            suggestions.append({
-                "type": insight.category,
-                "suggestion": insight.suggested_action or insight.description,
-                "confidence": insight.confidence,
-            })
+            suggestions.append(
+                {
+                    "type": insight.category,
+                    "suggestion": insight.suggested_action or insight.description,
+                    "confidence": insight.confidence,
+                }
+            )
         if not suggestions:
-            suggestions.append({
-                "type": "general",
-                "suggestion": "System operating optimally with zero detected drift.",
-                "confidence": 1.0,
-            })
+            suggestions.append(
+                {
+                    "type": "general",
+                    "suggestion": "System operating optimally with zero detected drift.",
+                    "confidence": 1.0,
+                }
+            )
         return suggestions
 
     async def personalize_flow(
@@ -515,11 +532,19 @@ class LearningLoop:
             {"id": "ready", "title": "Start Building", "required": True},
         ]
         if persona == "developer":
-            base_steps.insert(2, {"id": "cli_setup", "title": "Install Antigravity CLI", "required": False})
+            base_steps.insert(
+                2, {"id": "cli_setup", "title": "Install Antigravity CLI", "required": False}
+            )
         elif persona == "business":
-            base_steps.insert(2, {"id": "billing_overview", "title": "Review Cost Guard ($0 Zero-Cost)", "required": False})
+            base_steps.insert(
+                2,
+                {
+                    "id": "billing_overview",
+                    "title": "Review Cost Guard ($0 Zero-Cost)",
+                    "required": False,
+                },
+            )
         return base_steps
-
 
 
 # Convenience factory for lifespan.py integration

@@ -86,7 +86,9 @@ class TestOnboardingFlow:
                 "default_model": "gpt-4o",
             }
         ]
-        _mock_db.table.return_value.select.return_value.eq.return_value.execute.return_value = existing
+        _mock_db.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            existing
+        )
 
         resp = client.get("/api/v1/onboarding/onboarding/status/user_abc")
         assert resp.status_code == 200
@@ -97,7 +99,9 @@ class TestOnboardingFlow:
 
 class TestSmellCheck:
     def test_smell_check_requires_path(self):
-        resp = client.post("/tools/smell-check", json={}, headers={"Authorization": "Bearer mock-token"})
+        resp = client.post(
+            "/tools/smell-check", json={}, headers={"Authorization": "Bearer mock-token"}
+        )
         assert resp.status_code == 422
 
     def test_smell_check_invalid_path(self):
@@ -105,6 +109,8 @@ class TestSmellCheck:
 
         with patch("os.path.exists", return_value=False):
             resp = client.post(
-                "/tools/smell-check", json={"path": "/nonexistent/path"}, headers={"Authorization": "Bearer mock-token"}
+                "/tools/smell-check",
+                json={"path": "/nonexistent/path"},
+                headers={"Authorization": "Bearer mock-token"},
             )
             assert resp.status_code == 404

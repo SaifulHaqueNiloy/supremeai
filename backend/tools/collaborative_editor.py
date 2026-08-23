@@ -146,13 +146,13 @@ class CollaborativeEditor:
             logger.info(f"Asking Freebuff/AI to generate code for: {prompt}")
 
             # AI কে দিয়ে কোড জেনারেট করানো (আপাতত আপনার Freebuff ইন্টিগ্রেশন মেথড কল করছি)
-            response = await orchestrator.delegate_to_freebuff(prompt=f"Write python code for: {prompt}")
+            response = await orchestrator.delegate_to_freebuff(
+                prompt=f"Write python code for: {prompt}"
+            )
 
             # জেনারেট হওয়া কোড এক্সট্র্যাক্ট করা
             if response.get("status") == "success":
-                ai_generated_code = (
-                    f"\n\n# --- AI Generated Code ---\n# Prompt: {prompt}\n{response.get('output', '')}\n"
-                )
+                ai_generated_code = f"\n\n# --- AI Generated Code ---\n# Prompt: {prompt}\n{response.get('output', '')}\n"
             else:
                 # ফলব্যাক (যদি Freebuff কাজ না করে)
                 ai_generated_code = f"\n\n# --- AI Response ---\n# Executed Prompt: {prompt}\ndef auto_generated_feature():\n    logger.info('Hello from SupremeAI!')\n"
@@ -244,7 +244,9 @@ async def websocket_collab(websocket: WebSocket, session_id: str, client_id: str
                 msg_type = message.get("type")
 
                 if msg_type == "delta":
-                    await editor_manager.broadcast_delta(session_id, message.get("delta", {}), client_id)
+                    await editor_manager.broadcast_delta(
+                        session_id, message.get("delta", {}), client_id
+                    )
                 elif msg_type == "ai_request":
                     prompt = message.get("prompt", "")
                     await editor_manager.trigger_ai_edit(session_id, prompt, client_id)

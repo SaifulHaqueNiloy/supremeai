@@ -45,4 +45,9 @@ async def hybrid_search(req: HybridSearchRequest):
     results = global_retriever.hybrid_search(
         query=req.query, dense_vector_results=req.dense_results, top_k=req.top_k or 10
     )
-    return {"status": "success", "query": req.query, "results_count": len(results), "results": results}
+    return {
+        "status": "success",
+        "query": req.query,
+        "results_count": len(results),
+        "results": results,
+    }

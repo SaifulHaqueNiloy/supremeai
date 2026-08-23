@@ -112,7 +112,9 @@ class ReliabilityController:
         count = cls._failures[fingerprint]
         await cls._persist_fingerprint(fingerprint, count)
 
-        logger.warning(f"⚠️ Registered failure {fingerprint} under correlation {corr_id} (count={count})")
+        logger.warning(
+            f"⚠️ Registered failure {fingerprint} under correlation {corr_id} (count={count})"
+        )
 
         class FailureContext:
             def __init__(self, c_id, f_print):

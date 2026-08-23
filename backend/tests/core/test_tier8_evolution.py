@@ -4,9 +4,9 @@
 
 import pytest
 
-from services.auto_healer import AutoHealer
 from core.failure_fingerprint import make_fingerprint
 from core.resilience.rollback_monitor import RollbackMonitor
+from services.auto_healer import AutoHealer
 from tools.learning.model_trainer import ModelTrainer
 
 
@@ -55,7 +55,9 @@ async def test_model_trainer_failure_learning():
     বাংলা মন্তব্য: ModelTrainer-এর লার্নিং ডাইনামিক ফাংশন টেস্ট।
     """
     trainer = ModelTrainer()
-    success = await trainer.learn_from_execution_failure("fp_12345678", "Traceback info", "applied_fix_code")
+    success = await trainer.learn_from_execution_failure(
+        "fp_12345678", "Traceback info", "applied_fix_code"
+    )
     assert success is True
     similar = await trainer.retrieve_similar_fix("Traceback info")
     assert isinstance(similar, list)

@@ -65,7 +65,9 @@ def test_ocr_trigger_queue_to_firestore(mock_firebase_admin):
     MagicMock()
     mock_firebase_admin[
         "rtdb"
-    ].reference.return_value.reference.return_value.child.return_value.push.return_value = MagicMock(key="push-123")
+    ].reference.return_value.reference.return_value.child.return_value.push.return_value = (
+        MagicMock(key="push-123")
+    )
     mock_firebase_admin["rtdb"].reference.return_value.reference.return_value.set = MagicMock()
 
     ref = mock_firebase_admin["rtdb"].reference.return_value
@@ -111,7 +113,9 @@ def test_existing_gcp_roundtrip_coverage():
     # coverage enforcement (this can cause isolated roundtrip runs to fail due to
     # overall project coverage thresholds).
     env.pop("PYTEST_ADDOPTS", None)
-    test_path_prefix = "tests" if os.path.exists("tests/test_gcp_integration.py") else "backend/tests"
+    test_path_prefix = (
+        "tests" if os.path.exists("tests/test_gcp_integration.py") else "backend/tests"
+    )
     r = subprocess.run(
         [
             sys.executable,

@@ -33,6 +33,7 @@ class ScrapeRequest(BaseModel):
 async def health_check():
     try:
         import playwright.async_api as _pw
+
         playwright_ok = callable(getattr(_pw, "async_playwright", None))
     except ImportError:
         playwright_ok = False
@@ -76,6 +77,8 @@ class RecipeRequest(BaseModel):
 @router.post("/recipe")
 async def recipe(request: RecipeRequest):
     if request.initial_url and not is_safe_url(request.initial_url):
-        raise HTTPException(status_code=400, detail="SSRF check failed: Unauthorized internal access")
+        raise HTTPException(
+            status_code=400, detail="SSRF check failed: Unauthorized internal access"
+        )
     result = await _agent.execute_recipe(steps=request.steps, initial_url=request.initial_url)
     return result

@@ -3,14 +3,12 @@ from __future__ import annotations
 import secrets
 import time
 
+import jwt
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
-
-import jwt
-from jwt import PyJWTError as JWTError
 
 _sso_instance = None
 _sso_error = None
@@ -126,7 +124,9 @@ async def oidc_provider_callback(provider: str, payload: OIDCCallbackRequest):
         state=payload.state,
     )
     if result.get("status") != "success":
-        raise HTTPException(status_code=401, detail=result.get("message", "OIDC authentication failed"))
+        raise HTTPException(
+            status_code=401, detail=result.get("message", "OIDC authentication failed")
+        )
     primary_role = (result.get("roles") or ["viewer"])[0]
     token_data = {
         "sub": result.get("user_id", "unknown"),
@@ -173,7 +173,9 @@ async def saml_login(payload: SAMLAssertionRequest):
         raise HTTPException(status_code=503, detail="SSO service is unavailable")
     result = await sso_service.process_sso_response({"SAMLResponse": payload.assertion})
     if result.get("status") != "success":
-        raise HTTPException(status_code=401, detail=result.get("message", "SAML authentication failed"))
+        raise HTTPException(
+            status_code=401, detail=result.get("message", "SAML authentication failed")
+        )
     roles = result.get("roles", ["viewer"])
     primary_role = roles[0] if roles else "viewer"
     token_data = {

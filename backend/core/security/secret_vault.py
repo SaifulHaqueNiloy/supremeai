@@ -33,6 +33,7 @@ try:
     )
 except ImportError as e:
     import logging
+
     logging.getLogger("core.security").warning(f"Failed to import infisical_client: {e}")
     InfisicalClient = None  # type: ignore[assignment]
 
@@ -80,11 +81,11 @@ class ProductionSecretVault:
 
         # TTL overrides for smart caching (Infisical API quota optimization)
         self._ttl_overrides: dict[str, int] = {
-            "FEATURE_FLAGS": 3600,      # 1 hour
-            "PUBLIC_CONFIG": 1800,      # 30 min
-            "API_ENDPOINTS": 900,       # 15 min
-            "LLM_PROVIDER_KEYS": 300,   # 5 min
-            "DATABASE_CONFIG": 300,     # 5 min
+            "FEATURE_FLAGS": 3600,  # 1 hour
+            "PUBLIC_CONFIG": 1800,  # 30 min
+            "API_ENDPOINTS": 900,  # 15 min
+            "LLM_PROVIDER_KEYS": 300,  # 5 min
+            "DATABASE_CONFIG": 300,  # 5 min
         }
 
         # বাংলা মন্তব্য: PRE_COMMIT=1 বা TESTING=1 থাকলে Infisical init skip করো।
@@ -98,7 +99,9 @@ class ProductionSecretVault:
             try:
                 self._init_infisical_client()
             except Exception as e:
-                logger.error(f"Infisical initialization failed (invalid token/credentials): {e}. Bypassing Cloud Vault.")
+                logger.error(
+                    f"Infisical initialization failed (invalid token/credentials): {e}. Bypassing Cloud Vault."
+                )
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
 
@@ -123,7 +126,7 @@ class ProductionSecretVault:
                 logger.info("Production Secret Vault hooked into Infisical via Token")
         except (ConnectionError, TimeoutError, ValueError) as exc:
             logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
-        except Exception as e:
+        except Exception:
             logger.opt(exception=True).warning(
                 "Unexpected error initializing Infisical client. Falling back to raw env."
             )
@@ -190,7 +193,9 @@ class ProductionSecretVault:
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
                         sleep_time = 2**attempt
-                        logger.warning(f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        logger.warning(
+                            f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}"
+                        )
                         time.sleep(sleep_time)
                     else:
                         raise exc
@@ -198,7 +203,9 @@ class ProductionSecretVault:
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             self._circuit_breaker_open = True
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -212,7 +219,9 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:
             self._circuit_breaker_open = True
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback."
+            )
             error_event_bus.emit(
                 ErrorEvent(
                     module="secret_vault",
@@ -224,8 +233,6 @@ class ProductionSecretVault:
                 )
             )
             return self._fallback_to_env(secret_id, default)
-
-
 
     @with_error_bus("fetch_secret_async")
     async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
@@ -242,7 +249,9 @@ class ProductionSecretVault:
 
         try:
             import asyncio
+
             from infisical_client import GetSecretOptions
+
             options = GetSecretOptions(
                 environment="dev" if self.env == "local" else "prod",
                 project_id=self.project_id,
@@ -252,25 +261,34 @@ class ProductionSecretVault:
             max_retries = 3
             for attempt in range(max_retries):
                 try:
-                    secret_value = await asyncio.to_thread(lambda: self.client.getSecret(options=options).secret_value)
+                    secret_value = await asyncio.to_thread(
+                        lambda: self.client.getSecret(options=options).secret_value
+                    )
                     self._cache[secret_id] = _CacheEntry(secret_value, ttl=600)
                     return secret_value
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
                         sleep_time = 2**attempt
-                        logger.warning(f"Retrying Infisical async fetch for {secret_id} in {sleep_time}s due to: {exc}")
+                        logger.warning(
+                            f"Retrying Infisical async fetch for {secret_id} in {sleep_time}s due to: {exc}"
+                        )
                         await asyncio.sleep(sleep_time)
                     else:
                         raise exc
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             self._circuit_breaker_open = True
-            logger.warning(f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN.")
+            logger.warning(
+                f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN."
+            )
             return self._fallback_to_env(secret_id, default)
-        except Exception as exc:
+        except Exception:
             self._circuit_breaker_open = True
-            logger.opt(exception=True).warning(f"Unexpected error fetching {secret_id} from Infisical.")
+            logger.opt(exception=True).warning(
+                f"Unexpected error fetching {secret_id} from Infisical."
+            )
             return self._fallback_to_env(secret_id, default)
+
     @with_error_bus("_fallback_to_env")
     def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
         """Fallback to environment variable.
@@ -314,7 +332,9 @@ class ProductionSecretVault:
                 }
 
                 if default is None and secret_id in HARD_REQUIRED_SECRETS:
-                    logger.critical(f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert...")
+                    logger.critical(
+                        f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert..."
+                    )
                     try:
                         error_event_bus.emit(
                             ErrorEvent(
@@ -328,14 +348,18 @@ class ProductionSecretVault:
                     except Exception as exc:
                         logger.debug(f"Failed to emit error event: {exc}")
                     # বাংলা মন্তব্য: শুধুমাত্র infra-critical secret অনুপস্থিত হলেই Fail-closed।
-                    raise RuntimeError(f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed.")
+                    raise RuntimeError(
+                        f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
+                    )
                 elif default is None:
                     if secret_id not in OPTIONAL_SECRETS:
                         logger.warning(
                             f"⚠️ Secret '{secret_id}' missing in {self.env} — degrading with empty value (unknown)."
                         )
                     else:
-                        logger.info(f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping.")
+                        logger.info(
+                            f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping."
+                        )
 
                 env_fallback = default if default is not None else ""
             else:
@@ -345,6 +369,7 @@ class ProductionSecretVault:
                 elif secret_id == "SUPREMEAI_JWT_SECRET":
                     # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
                     import secrets
+
                     env_fallback = secrets.token_urlsafe(64)
                 elif secret_id == "SUPABASE_URL":
                     env_fallback = "https://mock.supabase.co"
@@ -377,10 +402,11 @@ class ProductionSecretVault:
     @with_error_bus("fetch_json_secret")
     def fetch_json_secret(self, secret_id: str, default: dict | None = None) -> dict:
         """Fetch a secret that contains JSON (useful for grouped secrets).
-        
+
         বাংলা: JSON সিক্রেট ফেচ করার সুবিধা।
         """
         import json
+
         raw_val = self.fetch_secret(secret_id, None)
         if raw_val is None:
             if default is not None:

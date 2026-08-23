@@ -65,12 +65,12 @@ class ArchitectureAgent(SwarmAgentBase):
         model_name: str = "gemini/gemini-2.5-flash",
     ):
         workspace.log("ArchitectureAgent: Starting system architecture layout analysis...")
-        sys_prompt = (
-            "You are a lead system architect. Define file structures, component breakdown, and database schemas."
-        )
+        sys_prompt = "You are a lead system architect. Define file structures, component breakdown, and database schemas."
         user_prompt = f"Design architecture for task: {workspace.original_prompt}"
 
-        design_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        design_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         # বাংলা মন্তব্য: ডোমেইন-অ্যাগনস্টিক work_product ব্যবহার করা হচ্ছে।
         workspace.work_product["architecture_design"] = design_output
         workspace.log("ArchitectureAgent: System design blueprint completed.")
@@ -103,7 +103,9 @@ class CodeGeneratorAgent(SwarmAgentBase):
         sys_prompt = "You are an expert backend engineer. Output only clean python code blocks for specified files."
         user_prompt = f"Design blueprint:\n{workspace.work_product.get('architecture_design', '')}\nGenerate the python code matching this design."
 
-        code_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        code_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["generated_code"] = {"main.py": code_output}
         workspace.log("CodeGeneratorAgent: Core files successfully generated.")
 
@@ -115,9 +117,13 @@ class CodeGeneratorAgent(SwarmAgentBase):
         model_name: str = "gemini/gemini-2.5-flash",
     ):
         workspace.log("CodeGeneratorAgent: Refining code based on Guardian feedback...")
-        sys_prompt = "You are an expert backend engineer. Refine the python code based on the feedback."
+        sys_prompt = (
+            "You are an expert backend engineer. Refine the python code based on the feedback."
+        )
         user_prompt = f"Original Code:\n{workspace.work_product.get('generated_code', {}).get('main.py', '')}\nFeedback:\n{feedback}\nGenerate the fixed python code matching the constraints."
-        code_output = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        code_output = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["generated_code"]["main.py"] = code_output
         workspace.log("CodeGeneratorAgent: Code successfully refined.")
 
@@ -157,7 +163,9 @@ class QAAgent(SwarmAgentBase):
         if not scan_result.get("safe", False):
             workspace.test_results["safe"] = False
             workspace.test_results["error"] = scan_result.get("error", "Unknown error")
-            workspace.log(f"QAAgent: 🚨 Immune System scan failed: {workspace.test_results['error']}")
+            workspace.log(
+                f"QAAgent: 🚨 Immune System scan failed: {workspace.test_results['error']}"
+            )
         else:
             workspace.test_results["safe"] = True
             workspace.test_results["passed"] = True
@@ -165,7 +173,9 @@ class QAAgent(SwarmAgentBase):
 
         sys_prompt = "You are a QA engineer. Review code and validation results and give feedback. State clearly if the code is APPROVED or FAILED."
         user_prompt = f"Code:\n{code_to_test}\nResults: {workspace.test_results}"
-        qa_feedback = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        qa_feedback = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         workspace.test_results["feedback"] = qa_feedback
 
     async def run(
@@ -203,7 +213,9 @@ class GuardianAgent(SwarmAgentBase):
         """Helper to run a specialized sub-agent, optimized for speed and cost."""
         logger.info(f"GuardianManager: Delegating task to {sub_agent_name}...")
         # Using a faster model for specialized, smaller tasks
-        return await self.call_gateway(system_prompt, user_prompt, user_id, model_name="gemini/gemini-2.5-flash")
+        return await self.call_gateway(
+            system_prompt, user_prompt, user_id, model_name="gemini/gemini-2.5-flash"
+        )
 
     async def validate(
         self,
@@ -224,9 +236,7 @@ class GuardianAgent(SwarmAgentBase):
             "DocumentationChecker": "You are a Documentation Checker. Analyze the code for missing or inadequate docstrings and comments for all functions and classes. Report only findings or 'DOCS_OK'.",
         }
 
-        user_prompt_template = (
-            f"Analyze this code and report any violations based on your specialty:\n```python\n{code_to_analyze}\n```"
-        )
+        user_prompt_template = f"Analyze this code and report any violations based on your specialty:\n```python\n{code_to_analyze}\n```"
 
         # Run sub-agents in parallel using asyncio.gather for efficiency
         tasks = [
@@ -239,7 +249,10 @@ class GuardianAgent(SwarmAgentBase):
         violations = []
         for agent_name, report in zip(sub_agents.keys(), results, strict=False):
             # Check if the report indicates a pass or contains actual findings
-            if not any(keyword in report for keyword in ["SECURITY_OK", "QUALITY_OK", "COMPLIANCE_OK", "DOCS_OK"]):
+            if not any(
+                keyword in report
+                for keyword in ["SECURITY_OK", "QUALITY_OK", "COMPLIANCE_OK", "DOCS_OK"]
+            ):
                 violations.append(f"--- VIOLATIONS FROM {agent_name} ---\n{report}")
 
         if not violations:
@@ -276,7 +289,9 @@ class ResearchAgent(SwarmAgentBase):
     ):
         workspace.log("ResearchAgent: Starting analysis and information synthesis...")
         sys_prompt = "You are a world-class research analyst. Analyze the user's prompt, synthesize information, and provide a structured summary."
-        analysis_output = await self.call_gateway(sys_prompt, workspace.original_prompt, user_id, model_name=model_name)
+        analysis_output = await self.call_gateway(
+            sys_prompt, workspace.original_prompt, user_id, model_name=model_name
+        )
         workspace.work_product["research_summary"] = analysis_output
         workspace.log("ResearchAgent: Analysis complete.")
 
@@ -303,7 +318,9 @@ class ReflectionAgent(SwarmAgentBase):
     ):
         workspace.log("ReflectionAgent: Analyzing task outcome to generate experience...")
         sys_prompt = "You are an AI Reflection engine. Analyze the workspace logs and extract what worked, what failed, and suggested improvements. Return JSON with 'what_worked', 'what_failed', 'suggested_improvements'."
-        user_prompt = f"Logs: {workspace.execution_logs}\nOriginal Prompt: {workspace.original_prompt}"
+        user_prompt = (
+            f"Logs: {workspace.execution_logs}\nOriginal Prompt: {workspace.original_prompt}"
+        )
 
         analysis = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
 
@@ -317,7 +334,7 @@ class ReflectionAgent(SwarmAgentBase):
 
             try:
                 parsed = json.loads(analysis)
-            except Exception as e:
+            except Exception:
                 parsed = {
                     "what_worked": [analysis],
                     "what_failed": [],
@@ -372,12 +389,16 @@ class ToolSynthesizerAgent(SwarmAgentBase):
         sys_prompt = "You are a master tool builder. Based on a task intent, create a JSON definition for a new tool. The definition must include a name, description, and a list of parameters."
         user_prompt = f"Create a tool definition for the intent: '{workspace.original_prompt}'. Respond with only the JSON object."
 
-        tool_definition_str = await self.call_gateway(sys_prompt, user_prompt, user_id, model_name=model_name)
+        tool_definition_str = await self.call_gateway(
+            sys_prompt, user_prompt, user_id, model_name=model_name
+        )
         import json
 
         tool_definition = json.loads(tool_definition_str)
         workspace.work_product["synthesized_tool"] = tool_definition
-        workspace.log(f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized.")
+        workspace.log(
+            f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
+        )
 
     async def run(
         self,
@@ -394,7 +415,9 @@ class ToolSynthesizerAgent(SwarmAgentBase):
             model_name=model_name,
         )
         workspace.work_product["synthesized_tool"] = tool_definition
-        workspace.log(f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized.")
+        workspace.log(
+            f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
+        )
 
 
 class ToolExecutorAgent(SwarmAgentBase):

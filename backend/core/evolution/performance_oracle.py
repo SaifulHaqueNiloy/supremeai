@@ -204,7 +204,9 @@ class PerformanceOracle:
         if not agent_names:
             cutoff = datetime.now(UTC) - timedelta(hours=self._config.lookback_hours)
             distinct_query = (
-                select(PerformanceMetric.agent_name).where(PerformanceMetric.recorded_at >= cutoff).distinct()
+                select(PerformanceMetric.agent_name)
+                .where(PerformanceMetric.recorded_at >= cutoff)
+                .distinct()
             )
             result = await self._db.execute(distinct_query)
             agent_names = [r[0] for r in result.all()]
@@ -238,17 +240,26 @@ class PerformanceOracle:
             # Compute percentile ranks across all agents
             rt_pct = self._rank_percentile(
                 rt_mean,
-                [s.get(MetricType.RESPONSE_TIME_MS.value, {}).get("mean", 0) for s in all_stats.values()],
+                [
+                    s.get(MetricType.RESPONSE_TIME_MS.value, {}).get("mean", 0)
+                    for s in all_stats.values()
+                ],
                 lower_is_better=True,
             )
             acc_pct = self._rank_percentile(
                 acc_mean,
-                [s.get(MetricType.ACCURACY_SCORE.value, {}).get("mean", 1) for s in all_stats.values()],
+                [
+                    s.get(MetricType.ACCURACY_SCORE.value, {}).get("mean", 1)
+                    for s in all_stats.values()
+                ],
                 lower_is_better=False,
             )
             cost_pct = self._rank_percentile(
                 cost_mean,
-                [s.get(MetricType.COST_PER_REQUEST.value, {}).get("mean", 0) for s in all_stats.values()],
+                [
+                    s.get(MetricType.COST_PER_REQUEST.value, {}).get("mean", 0)
+                    for s in all_stats.values()
+                ],
                 lower_is_better=True,
             )
             err_pct = self._rank_percentile(
@@ -266,7 +277,9 @@ class PerformanceOracle:
             )
 
             # Determine suggestion
-            suggestion, reasoning = self._suggest_action(composite, rt_pct, acc_pct, cost_pct, err_pct)
+            suggestion, reasoning = self._suggest_action(
+                composite, rt_pct, acc_pct, cost_pct, err_pct
+            )
 
             report = WeakestLinkReport(
                 id=uuid.uuid4(),
@@ -332,7 +345,8 @@ class PerformanceOracle:
         if composite >= self._config.weak_link_threshold:
             return (
                 SuggestionAction.NO_ACTION,
-                f"Composite score {composite:.2f} is acceptable. " f"All dimensions within normal range.",
+                f"Composite score {composite:.2f} is acceptable. "
+                f"All dimensions within normal range.",
             )
 
         if composite <= self._config.deprecate_threshold:

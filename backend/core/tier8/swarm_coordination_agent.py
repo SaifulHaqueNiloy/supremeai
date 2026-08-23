@@ -320,7 +320,9 @@ class SwarmCoordinationAgent(BaseSkill):
 
     async def submit_task(self, payload: dict[str, Any], **kwargs: Any) -> str:
         """Submit a new task to the swarm queue."""
-        task_id = hashlib.sha256(f"{json.dumps(payload, sort_keys=True)}:{time.time()}".encode()).hexdigest()[:16]
+        task_id = hashlib.sha256(
+            f"{json.dumps(payload, sort_keys=True)}:{time.time()}".encode()
+        ).hexdigest()[:16]
         task = SwarmTask(
             task_id=task_id,
             payload=payload,

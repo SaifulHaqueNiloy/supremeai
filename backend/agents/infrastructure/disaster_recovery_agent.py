@@ -101,7 +101,14 @@ class DisasterRecoveryAgent:
         }
 
         # Recovery priorities (order of restoration)
-        self.recovery_priority_order = ["configuration", "database", "user_data", "skills", "models", "logs"]
+        self.recovery_priority_order = [
+            "configuration",
+            "database",
+            "user_data",
+            "skills",
+            "models",
+            "logs",
+        ]
 
         # Initialize default recovery plans
         self.default_recovery_plans = {
@@ -143,7 +150,10 @@ class DisasterRecoveryAgent:
             logger.error(f"Error initializing recovery plans: {e}")
 
     async def create_backup(
-        self, backup_type: str = "full", components: list[str] | None = None, location_override: str | None = None
+        self,
+        backup_type: str = "full",
+        components: list[str] | None = None,
+        location_override: str | None = None,
     ) -> BackupResult:
         """
         Create a system backup.
@@ -205,7 +215,11 @@ class DisasterRecoveryAgent:
 
             # Update system state
             await self._update_system_state(
-                {"last_backup": start_time.isoformat(), "backup_size": size_bytes, "backup_location": backup_path}
+                {
+                    "last_backup": start_time.isoformat(),
+                    "backup_size": size_bytes,
+                    "backup_location": backup_path,
+                }
             )
 
             logger.info(f"Backup completed successfully: {backup_id}, size: {size_bytes} bytes")
@@ -230,7 +244,10 @@ class DisasterRecoveryAgent:
             return backup_result
 
     async def restore_from_backup(
-        self, backup_id: str, recovery_plan: str = "full_restoration", components: list[str] | None = None
+        self,
+        backup_id: str,
+        recovery_plan: str = "full_restoration",
+        components: list[str] | None = None,
     ) -> RecoveryResult:
         """
         Restore system from a backup using a specific recovery plan.
@@ -285,7 +302,9 @@ class DisasterRecoveryAgent:
                 recovery_id=recovery_id,
                 timestamp=start_time,
                 backup_id=backup_id,
-                status="success" if len(restored_components) == len(valid_components) else "partial",
+                status="success"
+                if len(restored_components) == len(valid_components)
+                else "partial",
                 recovered_components=restored_components,
                 duration_seconds=duration,
                 notes=f"Restored {len(restored_components)} of {len(valid_components)} components",
@@ -303,7 +322,9 @@ class DisasterRecoveryAgent:
                 }
             )
 
-            logger.info(f"Recovery completed: {recovery_id}, restored {len(restored_components)} components")
+            logger.info(
+                f"Recovery completed: {recovery_id}, restored {len(restored_components)} components"
+            )
             return recovery_result
 
         except Exception as e:
@@ -605,7 +626,9 @@ class DisasterRecoveryAgent:
 
             verification_result = {
                 "backup_id": backup_id,
-                "status": "verified" if (stored_hash == current_hash and is_valid_structure) else "corrupted",
+                "status": "verified"
+                if (stored_hash == current_hash and is_valid_structure)
+                else "corrupted",
                 "hash_match": stored_hash == current_hash,
                 "structure_valid": is_valid_structure,
                 "file_count": len(file_list) if is_valid_structure else 0,
@@ -632,7 +655,9 @@ disaster_recovery_agent = DisasterRecoveryAgent()
 # বাংলা: import-time-এ event loop না থাকলে RuntimeError এড়ানো হয়, আর টাস্কের রেফারেন্স ট্র্যাক করে
 # রাখা হয় যাতে GC হয়ে মাঝপথে বাতিল না হয়ে যায় (RUF006)।
 try:
-    track_task(asyncio.get_running_loop().create_task(disaster_recovery_agent.initialize_recovery_plans()))
+    track_task(
+        asyncio.get_running_loop().create_task(disaster_recovery_agent.initialize_recovery_plans())
+    )
 except RuntimeError:
     logger.debug(
         "No running event loop at import time; skipping eager recovery plan init "

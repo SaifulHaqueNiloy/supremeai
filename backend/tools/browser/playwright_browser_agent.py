@@ -25,7 +25,9 @@ TRUST_SCORE_THRESHOLD = 0.95
 
 
 class PlaywrightBrowserAgent:
-    COOKIE_STORAGE_BASE: ClassVar[Any] = Path(__file__).resolve().parents[1] / ".cache" / "playwright_cookies"
+    COOKIE_STORAGE_BASE: ClassVar[Any] = (
+        Path(__file__).resolve().parents[1] / ".cache" / "playwright_cookies"
+    )
 
     def __init__(self, headless: bool = True, timeout_ms: int = 30000) -> None:
         self.headless = headless
@@ -106,7 +108,9 @@ class PlaywrightBrowserAgent:
 
             # Target coordinates (center of the element with some randomness)
             target_x = bb["x"] + bb["width"] / 2 + random.uniform(-bb["width"] / 4, bb["width"] / 4)
-            target_y = bb["y"] + bb["height"] / 2 + random.uniform(-bb["height"] / 4, bb["height"] / 4)
+            target_y = (
+                bb["y"] + bb["height"] / 2 + random.uniform(-bb["height"] / 4, bb["height"] / 4)
+            )
 
             # Starting coordinates (random point on the screen)
             start_x, start_y = random.uniform(0, 500), random.uniform(0, 500)
@@ -125,7 +129,9 @@ class PlaywrightBrowserAgent:
             page.mouse.click(target_x, target_y)
 
         except Exception as e:
-            logger.error(f"Human-like click failed for selector '{selector}': {e}. Falling back to simple click.")
+            logger.error(
+                f"Human-like click failed for selector '{selector}': {e}. Falling back to simple click."
+            )
             page.click(selector)  # Fallback to a simple click if anything goes wrong
 
     def _new_context(self, session_name: str | None = None) -> tuple[Any, BrowserStealth]:
@@ -222,7 +228,11 @@ class PlaywrightBrowserAgent:
         self.start()
         context, stealth_manager = self._new_context(session_name)
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
 
         try:
             page.goto(url)
@@ -242,7 +252,11 @@ class PlaywrightBrowserAgent:
         self.start()
         context, stealth_manager = self._new_context(session_name)
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
 
         try:
             page.goto(url)
@@ -257,7 +271,11 @@ class PlaywrightBrowserAgent:
         self.start()
         context, stealth_manager = self._new_context(session_name)
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
 
         try:
             page.goto(url)
@@ -272,7 +290,11 @@ class PlaywrightBrowserAgent:
         self.start()
         context, stealth_manager = self._new_context(session_name)
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
 
         try:
             page.goto(url)
@@ -282,7 +304,7 @@ class PlaywrightBrowserAgent:
             page.close()
             context.close()
             asyncio.run(stealth_manager.close())
-            
+
     async def upload_file(self, selector: str, file_path: str) -> dict:
         """
         browser_file_upload - Per Master Plan Pillar 2
@@ -294,17 +316,21 @@ class PlaywrightBrowserAgent:
         # but following the existing pattern of creating context/page per action for now
         context, stealth_manager = self._new_context("upload-session")
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
-        
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
+
         try:
             # Locate file input element
             file_input = page.locator(selector)
             if not file_input:
                 return {"success": False, "error": f"File input not found: {selector}"}
-            
+
             # Set files
             file_input.set_input_files(file_path)
-            
+
             return {
                 "success": True,
                 "message": f"Uploaded: {file_path}",
@@ -317,7 +343,9 @@ class PlaywrightBrowserAgent:
             context.close()
             asyncio.run(stealth_manager.close())
 
-    def _update_model_behavior_in_background(self, model_name: str, latency_ms: float, success: bool):
+    def _update_model_behavior_in_background(
+        self, model_name: str, latency_ms: float, success: bool
+    ):
         """Runs the DB update in a background thread to avoid blocking."""
         try:
             import threading
@@ -366,21 +394,30 @@ class PlaywrightBrowserAgent:
                 # Trust score could be a mix of success rate, latency, etc.
                 # For now, we use a simple flag.
                 trust_score = primary_behavior.get("trust_score", 0)
-                if primary_behavior.get("requires_verification") is False or trust_score > TRUST_SCORE_THRESHOLD:
+                if (
+                    primary_behavior.get("requires_verification") is False
+                    or trust_score > TRUST_SCORE_THRESHOLD
+                ):
                     requires_verification = False
 
-            logger.info(f"Checking primary AI '{primary_site['name']}'. Verification required: {requires_verification}")
+            logger.info(
+                f"Checking primary AI '{primary_site['name']}'. Verification required: {requires_verification}"
+            )
 
             # Step 1: Get response from the primary AI site
             logger.info(f"Querying Primary AI: {primary_site['name']}")
             start_time = time.time()
             initial_response, primary_success = self._query_ai_site(page, primary_site, prompt)
             latency_ms = (time.time() - start_time) * 1000
-            self._update_model_behavior_in_background(primary_site["name"], latency_ms, primary_success)
+            self._update_model_behavior_in_background(
+                primary_site["name"], latency_ms, primary_success
+            )
 
             if not primary_success:
                 raise RuntimeError(f"Failed to get a response from {primary_site['name']}")
-            logger.info(f"Got initial response from {primary_site['name']}: '{initial_response[:100]}...'")
+            logger.info(
+                f"Got initial response from {primary_site['name']}: '{initial_response[:100]}...'"
+            )
 
             # If verification is not required, return early
             if not requires_verification:
@@ -402,13 +439,19 @@ class PlaywrightBrowserAgent:
             )
 
             start_time_verifier = time.time()
-            verification_result, verifier_success = self._query_ai_site(page, verifier_site, verification_prompt)
+            verification_result, verifier_success = self._query_ai_site(
+                page, verifier_site, verification_prompt
+            )
             latency_ms_verifier = (time.time() - start_time_verifier) * 1000
-            self._update_model_behavior_in_background(verifier_site["name"], latency_ms_verifier, verifier_success)
+            self._update_model_behavior_in_background(
+                verifier_site["name"], latency_ms_verifier, verifier_success
+            )
 
             if not verifier_success:
                 raise RuntimeError(f"Failed to get a response from {verifier_site['name']}")
-            logger.info(f"Got verification result from {verifier_site['name']}: '{verification_result}'")
+            logger.info(
+                f"Got verification result from {verifier_site['name']}: '{verification_result}'"
+            )
 
             # Step 3: Analyze the verification and return the final result
             is_confirmed = "correct" in verification_result.lower()
@@ -430,7 +473,9 @@ class PlaywrightBrowserAgent:
             context.close()
             asyncio.run(stealth_manager.close())
 
-    def _query_ai_site(self, page: Page, site_config: dict[str, str], prompt: str) -> tuple[str, bool]:
+    def _query_ai_site(
+        self, page: Page, site_config: dict[str, str], prompt: str
+    ) -> tuple[str, bool]:
         """Helper function to interact with a single AI chat website."""
         try:
             page.goto(site_config["url"])
@@ -495,7 +540,11 @@ class PlaywrightBrowserAgent:
         self.start()
         context, stealth_manager = self._new_context("goal-execution-session")
         page = context.new_page()
-        (page.set_default_timeout(self.timeout_ms) if hasattr(page, "set_default_timeout") else None)
+        (
+            page.set_default_timeout(self.timeout_ms)
+            if hasattr(page, "set_default_timeout")
+            else None
+        )
 
         try:
             page.goto(url)
@@ -512,7 +561,9 @@ class PlaywrightBrowserAgent:
                     b64_image = base64.b64encode(image_file.read()).decode("utf-8")
 
                 # 1.5. Recall: Consult long-term memory
-                relevant_memories = asyncio.run(self.memory.retrieve_relevant_memories(f"Goal: {goal} on URL: {url}"))
+                relevant_memories = asyncio.run(
+                    self.memory.retrieve_relevant_memories(f"Goal: {goal} on URL: {url}")
+                )
 
                 # 2. Reason: Ask a VLM what to do next
                 vlm_prompt = (
@@ -539,15 +590,21 @@ class PlaywrightBrowserAgent:
                 )
 
                 if not vlm_response.get("success"):
-                    raise RuntimeError(f"VLM failed to provide an action: {vlm_response.get('text')}")
+                    raise RuntimeError(
+                        f"VLM failed to provide an action: {vlm_response.get('text')}"
+                    )
 
                 try:
                     # Clean up potential markdown code blocks from the response
-                    action_text = vlm_response["text"].strip().replace("```json", "").replace("```", "")
+                    action_text = (
+                        vlm_response["text"].strip().replace("```json", "").replace("```", "")
+                    )
                     action = json.loads(action_text)
                     logger.info(f"VLM Reason: {action.get('reason', 'No reason provided.')}")
                 except (json.JSONDecodeError, KeyError) as e:
-                    logger.error(f"Failed to parse VLM action response: {e}\nResponse was: {vlm_response['text']}")
+                    logger.error(
+                        f"Failed to parse VLM action response: {e}\nResponse was: {vlm_response['text']}"
+                    )
                     return {"success": False, "error": "Failed to parse VLM action."}
 
                 if action.get("type", "").upper() == "FINISH":

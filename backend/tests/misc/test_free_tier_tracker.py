@@ -257,7 +257,9 @@ class TestTokenBudgetManager:
         m = self._make_manager()
         long_prompt = "word " * 500  # ~625 estimated tokens
         # reserve_output_tokens=False so max_input_tokens=200 is applied directly
-        result, meta = m.prepare_prompt(long_prompt, provider="large_provider", reserve_output_tokens=False)
+        result, meta = m.prepare_prompt(
+            long_prompt, provider="large_provider", reserve_output_tokens=False
+        )
         assert meta["truncated"] is True
         assert estimate_tokens(result) <= 205  # within 200 + small sentence-boundary buffer
 

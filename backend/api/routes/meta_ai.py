@@ -22,9 +22,9 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
 from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -147,7 +147,9 @@ async def run_breeding_cycle(
             # Explicit parents
             from sqlalchemy import select
 
-            q = select(AgentGenome).where(AgentGenome.agent_name.in_([request.parent_a, request.parent_b]))
+            q = select(AgentGenome).where(
+                AgentGenome.agent_name.in_([request.parent_a, request.parent_b])
+            )
             r = await db.execute(q)
             genomes = {g.agent_name: g for g in r.scalars().all()}
 

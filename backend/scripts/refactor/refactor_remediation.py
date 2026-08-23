@@ -45,7 +45,9 @@ new_method = '''
         )
 '''
 # Insert it after __init__
-content = content.replace("def _validate_file_path", new_method.strip() + "\n\n    def _validate_file_path")
+content = content.replace(
+    "def _validate_file_path", new_method.strip() + "\n\n    def _validate_file_path"
+)
 
 # 3. Use _create_github_pr instead of commit_changes
 content = content.replace(

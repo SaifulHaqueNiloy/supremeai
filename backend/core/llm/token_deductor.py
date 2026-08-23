@@ -116,7 +116,9 @@ class TokenDeductor:
             # In production, never allow fallback behavior that could lead to double-spending
             # Check if Redis is configured first
             if not self.redis_client.configured:
-                logger.critical("Redis not configured in production - blocking token deduction for security")
+                logger.critical(
+                    "Redis not configured in production - blocking token deduction for security"
+                )
                 return TokenDeductionResult.SYSTEM_ERROR
             return await self._secure_deduct_tokens(
                 actual_user_id, total_tokens, transaction_id, deduce_cost, cost_multiplier
@@ -192,7 +194,8 @@ class TokenDeductor:
             await self.redis_client.set_cache(transaction_key, "1", ex=3600)  # 1 hour TTL
 
             logger.info(
-                f"Successfully deducted {total_deduction} tokens for user {user_id}. " f"New balance: {new_balance}"
+                f"Successfully deducted {total_deduction} tokens for user {user_id}. "
+                f"New balance: {new_balance}"
             )
             return TokenDeductionResult.SUCCESS
 
@@ -203,10 +206,16 @@ class TokenDeductor:
             # Release the lock
             await self._release_lock(lock_key, lock_value)
 
-    def _acquire_distributed_lock(self, lock_key: str, lock_value: str, timeout: int = 10, **kwargs) -> bool:
+    def _acquire_distributed_lock(
+        self, lock_key: str, lock_value: str, timeout: int = 10, **kwargs
+    ) -> bool:
         """Helper method for distributed lock check with production fail-closed enforcement."""
-        if settings.env in ["production", "staging"] and not getattr(self.redis_client, "configured", True):
-            raise RuntimeError("Redis lock unavailable in production - fail-closed protection triggered")
+        if settings.env in ["production", "staging"] and not getattr(
+            self.redis_client, "configured", True
+        ):
+            raise RuntimeError(
+                "Redis lock unavailable in production - fail-closed protection triggered"
+            )
         return True
 
     def _release_distributed_lock(self, lock_key: str, lock_value: str) -> bool:

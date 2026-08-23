@@ -77,20 +77,24 @@ def parse_coverage_gaps(min_coverage: float = 0.5, limit: int = 20) -> list[Modu
             if not source_path.exists():
                 continue
 
-        if any(part in source_path.parts for part in ("tests", "alembic", "migrations", "__pycache__")):
+        if any(
+            part in source_path.parts for part in ("tests", "alembic", "migrations", "__pycache__")
+        ):
             continue
         if source_path.name.startswith("test_") or source_path.name == "__init__.py":
             continue
 
         missing = [int(l.get("number")) for l in cls.findall(".//line") if l.get("hits") == "0"]
-        gaps.append(ModuleInfo(
-            source_path=source_path,
-            line_rate=line_rate,
-            missing_lines=missing[:50],
-        ))
+        gaps.append(
+            ModuleInfo(
+                source_path=source_path,
+                line_rate=line_rate,
+                missing_lines=missing[:50],
+            )
+        )
 
     gaps.sort(key=lambda m: m.line_rate)
-    logger.info(f"Found {len(gaps)} modules below {min_coverage*100:.0f}% coverage threshold.")
+    logger.info(f"Found {len(gaps)} modules below {min_coverage * 100:.0f}% coverage threshold.")
     return gaps[:limit]
 
 
@@ -100,7 +104,9 @@ def extract_module_signature(module: ModuleInfo) -> ModuleInfo:
         lines = source.splitlines()
         module.source_snippet = "\n".join(lines[:MAX_SOURCE_LINES])
         if len(lines) > MAX_SOURCE_LINES:
-            module.source_snippet += f"\n# ... (truncated, {len(lines) - MAX_SOURCE_LINES} more lines)"
+            module.source_snippet += (
+                f"\n# ... (truncated, {len(lines) - MAX_SOURCE_LINES} more lines)"
+            )
 
         tree = ast.parse(source)
         for node in ast.walk(tree):
@@ -189,7 +195,9 @@ def build_prompt(module: ModuleInfo) -> str:
 
     missing_info = ""
     if module.missing_lines:
-        missing_info = f"\nLines with ZERO coverage (most important to test): {module.missing_lines}"
+        missing_info = (
+            f"\nLines with ZERO coverage (most important to test): {module.missing_lines}"
+        )
 
     prompt = textwrap.dedent(f"""
     Generate a complete pytest test file for the following SupremeAI module.
@@ -265,7 +273,7 @@ def run(
     for i, module in enumerate(modules, 1):
         logger.info(
             f"[{i}/{len(modules)}] {module.source_path.relative_to(BACKEND_ROOT)} "
-            f"(coverage: {module.line_rate*100:.1f}%)"
+            f"(coverage: {module.line_rate * 100:.1f}%)"
         )
         module = extract_module_signature(module)
 
@@ -311,11 +319,20 @@ def run(
         for attempt in range(1, max_retries + 2):
             result = subprocess.run(
                 [
-                    sys.executable, "-m", "pytest", str(test_path),
-                    "-x", "--tb=short", "-q", "--no-header",
-                    "--import-mode=importlib", "--no-cov",
+                    sys.executable,
+                    "-m",
+                    "pytest",
+                    str(test_path),
+                    "-x",
+                    "--tb=short",
+                    "-q",
+                    "--no-header",
+                    "--import-mode=importlib",
+                    "--no-cov",
                 ],
-                capture_output=True, text=True, cwd=BACKEND_ROOT,
+                capture_output=True,
+                text=True,
+                cwd=BACKEND_ROOT,
             )
             if result.returncode == 0:
                 logger.success(f"  PASS (attempt {attempt})")
@@ -377,8 +394,9 @@ def main():
 
     args = parser.parse_args()
     logger.remove()
-    logger.add(sys.stderr, level="INFO",
-               format="<green>{time:HH:mm:ss}</green> | <level>{message}</level>")
+    logger.add(
+        sys.stderr, level="INFO", format="<green>{time:HH:mm:ss}</green> | <level>{message}</level>"
+    )
 
     run(
         limit=args.limit,

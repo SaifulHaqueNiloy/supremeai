@@ -119,13 +119,13 @@ class FeatureFlags:
 
     # Advanced-upgrade rollout flags (Phase 1-7)
     ADV_FLAGS: dict[str, dict[str, Any]] = {
-        "adv.i18n_ai_translate": {"enabled": True, "pct": 100},   # Phase 1a
-        "adv.preferences_adaptive": {"enabled": True, "pct": 100}, # Phase 1b
-        "adv.health_predictive": {"enabled": True, "pct": 100},    # Phase 2a
-        "adv.email_smart": {"enabled": True, "pct": 100},          # Phase 2b
+        "adv.i18n_ai_translate": {"enabled": True, "pct": 100},  # Phase 1a
+        "adv.preferences_adaptive": {"enabled": True, "pct": 100},  # Phase 1b
+        "adv.health_predictive": {"enabled": True, "pct": 100},  # Phase 2a
+        "adv.email_smart": {"enabled": True, "pct": 100},  # Phase 2b
         "adv.theme_server_tokens": {"enabled": True, "pct": 100},  # Phase 3a
-        "adv.docs_living": {"enabled": True, "pct": 100},          # Phase 3b (CI living docs)
-        "adv.search_semantic": {"enabled": True, "pct": 100},      # Phase 5a
+        "adv.docs_living": {"enabled": True, "pct": 100},  # Phase 3b (CI living docs)
+        "adv.search_semantic": {"enabled": True, "pct": 100},  # Phase 5a
         "adv.onboarding_adaptive": {"enabled": True, "pct": 100},  # Phase 5b
     }
 
@@ -170,4 +170,3 @@ __all__ = [
     "FeatureFlags",
     "feature_flags",
 ]
-

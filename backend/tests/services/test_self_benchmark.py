@@ -2,16 +2,19 @@
 """Tests for SelfBenchmarkEngine and AdaptiveOptimizer."""
 
 import pytest
+
+from core.adaptive_optimizer import get_optimizer
 from core.integration_layer import get_integrator
-from core.self_benchmark import SelfBenchmarkEngine, BenchmarkCategory
-from core.adaptive_optimizer import AdaptiveOptimizer, get_optimizer
+from core.self_benchmark import BenchmarkCategory, SelfBenchmarkEngine
 
 
 @pytest.mark.asyncio
 async def test_self_benchmark_engine_run():
     integrator = await get_integrator()
     benchmarker = SelfBenchmarkEngine(ai_system=integrator)
-    report = await benchmarker.run_full_benchmark(categories=[BenchmarkCategory.PERFORMANCE, BenchmarkCategory.ACCURACY])
+    report = await benchmarker.run_full_benchmark(
+        categories=[BenchmarkCategory.PERFORMANCE, BenchmarkCategory.ACCURACY]
+    )
 
     assert report.overall_score >= 0.0
     assert report.grade in ["A+", "A", "B+", "B", "C+", "C", "D", "F"]

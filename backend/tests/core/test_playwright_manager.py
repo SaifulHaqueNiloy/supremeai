@@ -60,7 +60,9 @@ class TestGetGlobalBrowser:
                 browser = await pm.get_global_browser()
 
                 assert browser is mock_browser
-                mock_logger.info.assert_called_once_with("🚀 Starting a new headless Global Chromium instance...")
+                mock_logger.info.assert_called_once_with(
+                    "🚀 Starting a new headless Global Chromium instance..."
+                )
                 mock_playwright_runner.chromium.launch.assert_called_once_with(
                     headless=True,
                     args=[

@@ -27,10 +27,9 @@ except ImportError:
 from fastapi import HTTPException, status
 from loguru import logger
 
-from .intelligence.behavioral_analyzer import AnomalyAlert, BehavioralAnalyzer, get_analyzer
-
 # Fixed import path - using relative import instead of absolute
 from .enhanced_ast_scanner import SecurityIssue, SecurityScanner
+from .intelligence.behavioral_analyzer import AnomalyAlert, BehavioralAnalyzer, get_analyzer
 
 # Version info
 __version__ = "2.0.0"
@@ -238,7 +237,9 @@ async def revoke_token(jti: str, exp: int | None = None) -> bool:
     if redis_manager and getattr(redis_manager, "client", None):
         ttl = max(1, (exp - int(time.time())) if exp else BLACKLIST_TTL)
         try:
-            await redis_manager.client.setex(f"{BLACKLIST_PREFIX}{jti}", min(ttl, BLACKLIST_TTL), "revoked")
+            await redis_manager.client.setex(
+                f"{BLACKLIST_PREFIX}{jti}", min(ttl, BLACKLIST_TTL), "revoked"
+            )
             logger.info(f"✅ JWT Token revoked: {jti}")
             return True
         except Exception as e:
@@ -300,8 +301,12 @@ def verify_token(token: str) -> dict:
         return payload
     except Exception as e:
         if type(e).__name__ == "ExpiredSignatureError":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired") from None
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials") from None
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+            ) from None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        ) from None
 
 
 def _get_api_key_signing_secret() -> str:
@@ -332,7 +337,9 @@ def verify_api_key(plain_key: str, stored_hash: str) -> bool:
     return hmac.compare_digest(expected, stored_hash)
 
 
-def verify_api_key_with_expiry(plain_key: str, stored_hash: str, expires_at: int | None = None) -> bool:
+def verify_api_key_with_expiry(
+    plain_key: str, stored_hash: str, expires_at: int | None = None
+) -> bool:
     """বাংলা মন্তব্য: API Key হ্যাশ ভেরিফাই করে এবং একই সাথে Expiration টাইম চেক করে।"""
     import time
 

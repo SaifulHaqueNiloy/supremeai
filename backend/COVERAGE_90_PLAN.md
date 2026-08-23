@@ -148,20 +148,23 @@ For every conditional block, cover both branches:
 
 ```python
 # if/else উভয় branch
-async def test_condition_true():    ...  # truthy path
-async def test_condition_false():   ...  # falsy path
+async def test_condition_true(): ...  # truthy path
+async def test_condition_false(): ...  # falsy path
+
 
 # try/except উভয় branch
-async def test_success_path():      ...  # no exception
-async def test_exception_path():    ...  # exception raised
+async def test_success_path(): ...  # no exception
+async def test_exception_path(): ...  # exception raised
+
 
 # None guard
-async def test_none_input():        ...  # None value
-async def test_valid_input():       ...  # valid value
+async def test_none_input(): ...  # None value
+async def test_valid_input(): ...  # valid value
+
 
 # Empty collection guard
-async def test_empty_list():        ...  # []
-async def test_populated_list():    ...  # [item]
+async def test_empty_list(): ...  # []
+async def test_populated_list(): ...  # [item]
 ```
 
 **Tool to find uncovered branches:**
@@ -179,30 +182,36 @@ poetry run coverage report --branch --show-missing --include="path/to/file.py"
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
+
 # ১. Happy path (primary functionality)
 async def test_success_path():
     result = await module.function(valid_input)
     assert result.status == "success"
+
 
 # ২. Error path (exceptions, invalid inputs)
 async def test_invalid_input_raises():
     with pytest.raises(ValueError, match="invalid"):
         await module.function(bad_input)
 
+
 # ৩. Edge case (empty, boundary, None)
 async def test_empty_state():
     result = await module.function([])
     assert result == []
 
+
 async def test_none_input():
     result = await module.function(None)
     assert result is None  # or raises
+
 
 # ৪. Async paths
 async def test_async_timeout():
     with patch("asyncio.sleep"):
         result = await module.long_running()
     assert result is not None
+
 
 # ৫. External dependency mocking
 @patch("module.redis_client")

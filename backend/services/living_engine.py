@@ -29,7 +29,7 @@ from learning.pattern_recognizer import PatternMatch, PatternRecognizer
 from services.dynamic_planner import DynamicPlanningEngine, TaskDAG, TaskNode
 from services.intent_deciphering import IntentAnalysis, IntentDecipheringService
 from services.memory_service import CascadeMemoryService
-from services.self_correction import SelfCorrectionService, VerificationResult
+from services.self_correction import SelfCorrectionService
 from services.tool_forge import ToolForgeService, ToolSpec
 
 
@@ -67,6 +67,7 @@ class SolutionResult:
 
 # ── Domain Adapters Bridge ─────────────────────────────────────────────────────
 
+
 class BaseDomainAdapter:
     """Base domain execution adapter."""
 
@@ -85,12 +86,30 @@ class DevDomainAdapter(BaseDomainAdapter):
         res = await self.adapter.adapt(node.description or node.name, context)
 
         if capability == "probe_system_state":
-            return {"probed_files": ["backend/core", "backend/api"], "contract_status": "valid", "adaptation": res.domain_specific_metadata}
+            return {
+                "probed_files": ["backend/core", "backend/api"],
+                "contract_status": "valid",
+                "adaptation": res.domain_specific_metadata,
+            }
         elif capability == "ast_localize_defect":
-            return {"defect_location": "backend/api/routes", "ast_nodes_affected": 3, "analysis": res.domain_specific_metadata.get("analysis", {})}
+            return {
+                "defect_location": "backend/api/routes",
+                "ast_nodes_affected": 3,
+                "analysis": res.domain_specific_metadata.get("analysis", {}),
+            }
         elif capability == "apply_safe_code_patch":
-            return {"patch_applied": True, "syntax_valid": True, "regression_risk": "zero", "solution": res.adapted_solution}
-        return {"status": "executed", "node_id": node.id, "capability": capability, "result": res.adapted_solution}
+            return {
+                "patch_applied": True,
+                "syntax_valid": True,
+                "regression_risk": "zero",
+                "solution": res.adapted_solution,
+            }
+        return {
+            "status": "executed",
+            "node_id": node.id,
+            "capability": capability,
+            "result": res.adapted_solution,
+        }
 
 
 class BusinessDomainAdapter(BaseDomainAdapter):
@@ -104,12 +123,25 @@ class BusinessDomainAdapter(BaseDomainAdapter):
         res = await self.adapter.adapt(node.description or node.name, context)
 
         if capability == "probe_system_state":
-            return {"active_infrastructure_costs": 0.0, "free_tier_status": "optimal", "metrics": res.domain_specific_metadata}
+            return {
+                "active_infrastructure_costs": 0.0,
+                "free_tier_status": "optimal",
+                "metrics": res.domain_specific_metadata,
+            }
         elif capability == "profile_latency_and_throughput":
             return {"p99_latency_ms": 42.0, "cache_hit_rate": 0.94, "report": res.adapted_solution}
         elif capability == "optimize_cache_layers":
-            return {"lru_cache_configured": True, "redis_sync": "active", "solution": res.adapted_solution}
-        return {"status": "executed", "node_id": node.id, "capability": capability, "result": res.adapted_solution}
+            return {
+                "lru_cache_configured": True,
+                "redis_sync": "active",
+                "solution": res.adapted_solution,
+            }
+        return {
+            "status": "executed",
+            "node_id": node.id,
+            "capability": capability,
+            "result": res.adapted_solution,
+        }
 
 
 class UXDomainAdapter(BaseDomainAdapter):
@@ -125,13 +157,27 @@ class UXDomainAdapter(BaseDomainAdapter):
         if capability == "probe_system_state":
             return {"dom_elements_checked": 14, "a11y_contrast_ratio": 4.5, "wcag_status": "valid"}
         elif capability == "audit_route_dependencies":
-            return {"secured_endpoints_count": 84, "auth_matrix": "complete", "spec": res.domain_specific_metadata}
+            return {
+                "secured_endpoints_count": 84,
+                "auth_matrix": "complete",
+                "spec": res.domain_specific_metadata,
+            }
         elif capability == "inject_rbac_guards":
-            return {"rbac_applied": True, "role_required": "admin", "solution": res.adapted_solution}
-        return {"status": "executed", "node_id": node.id, "capability": capability, "result": res.adapted_solution}
+            return {
+                "rbac_applied": True,
+                "role_required": "admin",
+                "solution": res.adapted_solution,
+            }
+        return {
+            "status": "executed",
+            "node_id": node.id,
+            "capability": capability,
+            "result": res.adapted_solution,
+        }
 
 
 # ── Living Engine Orchestrator ─────────────────────────────────────────────────
+
 
 class LivingEngineOrchestrator:
     """Master orchestrator for unpredictable user demands with full Phase 2 intelligence."""
@@ -149,10 +195,14 @@ class LivingEngineOrchestrator:
         evolution_controller: AutoEvolutionController | None = None,
     ) -> None:
         self.memory_service = memory_service or CascadeMemoryService()
-        self.intent_service = intent_service or IntentDecipheringService(memory_service=self.memory_service)
+        self.intent_service = intent_service or IntentDecipheringService(
+            memory_service=self.memory_service
+        )
         self.planning_engine = planning_engine or DynamicPlanningEngine()
         self.tool_forge = tool_forge or ToolForgeService()
-        self.self_correction = self_correction or SelfCorrectionService(memory_service=self.memory_service)
+        self.self_correction = self_correction or SelfCorrectionService(
+            memory_service=self.memory_service
+        )
         self.reasoning_engine = reasoning_engine or AdvancedReasoningEngine()
         self.pattern_recognizer = pattern_recognizer or PatternRecognizer()
         self.evolution_module = evolution_module or EvolutionModule()
@@ -184,7 +234,9 @@ class LivingEngineOrchestrator:
             reasoning_chain: ReasoningChain = await self.reasoning_engine.reason(prompt, ctx)
 
             # ── 2. Online Pattern Recognition ──
-            pattern_matches: list[PatternMatch] = await self.pattern_recognizer.recognize(prompt, ctx)
+            pattern_matches: list[PatternMatch] = await self.pattern_recognizer.recognize(
+                prompt, ctx
+            )
             matched_patterns_summary = [
                 {"id": p.pattern.id, "type": p.pattern.pattern_type.value, "score": p.match_score}
                 for p in pattern_matches
@@ -262,7 +314,9 @@ class LivingEngineOrchestrator:
                 },
             )
 
-            logger.info(f"LivingEngine: Task completed in {duration_ms:.1f}ms with fitness {fitness}")
+            logger.info(
+                f"LivingEngine: Task completed in {duration_ms:.1f}ms with fitness {fitness}"
+            )
             return solution
 
         except Exception as exc:

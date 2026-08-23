@@ -281,7 +281,9 @@ class SelfImprovementAgent(BaseSkill):
             if proposal.dry_run_passed:
                 continue
             passed = await self._run_dry_run(proposal)
-            self._proposals[idx] = ImprovementProposal(**{**proposal.to_dict(), "dry_run_passed": passed})
+            self._proposals[idx] = ImprovementProposal(
+                **{**proposal.to_dict(), "dry_run_passed": passed}
+            )
 
     async def _run_dry_run(self, proposal: ImprovementProposal) -> bool:
         """Execute a safe dry-run of the proposed patch."""
@@ -314,7 +316,9 @@ class SelfImprovementAgent(BaseSkill):
 
     async def _apply_approved(self) -> None:
         """Apply proposals that passed dry-run and have high confidence."""
-        approved = [p for p in self._proposals if p.dry_run_passed and p.confidence >= self._min_confidence]
+        approved = [
+            p for p in self._proposals if p.dry_run_passed and p.confidence >= self._min_confidence
+        ]
         for proposal in approved:
             # Log only — never auto-apply without human review
             await self._feedback.record_suggestion_feedback(  # type: ignore
@@ -324,7 +328,9 @@ class SelfImprovementAgent(BaseSkill):
             )
         # Clear processed proposals
         self._proposals = [
-            p for p in self._proposals if not (p.dry_run_passed and p.confidence >= self._min_confidence)
+            p
+            for p in self._proposals
+            if not (p.dry_run_passed and p.confidence >= self._min_confidence)
         ]
 
     async def execute(self, **kwargs: Any) -> dict[str, Any]:

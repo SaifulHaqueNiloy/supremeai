@@ -6,9 +6,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import jwt
 from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,7 +60,9 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         expected = getattr(settings, "supremeai_api_token", None) or ""
         if expected and secrets.compare_digest(token, expected):
             return {"uid": "admin", "role": "admin"}
-        raise HTTPException(status_code=401, detail=f"Invalid Admin Authorization Token: {e!s}") from e
+        raise HTTPException(
+            status_code=401, detail=f"Invalid Admin Authorization Token: {e!s}"
+        ) from e
 
 
 @router.get("/logs")
@@ -96,12 +98,16 @@ class EvolutionRequest(BaseModel):
 
 
 @router.post("/forge")
-async def forge_dynamic_skill(payload: EvolutionRequest, db: TenantAwareFirestore = Depends(get_tenant_db)):
+async def forge_dynamic_skill(
+    payload: EvolutionRequest, db: TenantAwareFirestore = Depends(get_tenant_db)
+):
     """
     On-the-fly AI Skill Generation and Sandbox Deployed Gate.
     """
     creator = AutoSkillCreator(db=db)
-    result = await creator.generate_and_deploy_skill(user_demand=payload.user_demand, skill_name=payload.skill_name)
+    result = await creator.generate_and_deploy_skill(
+        user_demand=payload.user_demand, skill_name=payload.skill_name
+    )
 
     if not result["success"]:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=result["error"])
@@ -155,7 +161,9 @@ async def quarantine_skill(
             shutil.move(str(src), str(dst))
             logger.info(f"Skill '{skill_name}' quarantined: {src} -> {dst}")
         else:
-            logger.info(f"Skill '{skill_name}' marked QUARANTINED in registry (no dynamic directory found)")
+            logger.info(
+                f"Skill '{skill_name}' marked QUARANTINED in registry (no dynamic directory found)"
+            )
         base_dir_for_logs = Path(__file__).resolve().parent.parent.parent
         log_path = base_dir_for_logs / "backend" / "data" / "evolution_logs.jsonl"
         try:
@@ -241,7 +249,9 @@ async def approve_proposal(
     Manually approve a proposal after security review.
     """
     async with session.begin():
-        result = await session.execute(select(CodeProposal).where(CodeProposal.proposal_id == proposal_id))
+        result = await session.execute(
+            select(CodeProposal).where(CodeProposal.proposal_id == proposal_id)
+        )
         proposal = result.scalars().first()
         if not proposal:
             raise HTTPException(status_code=404, detail="Proposal not found")
@@ -376,7 +386,8 @@ async def evaluate_performance(
                 {
                     "severity": (
                         "critical"
-                        if r.suggestion == SuggestionAction.DEPRECATE or r.suggestion == SuggestionAction.REPLACE
+                        if r.suggestion == SuggestionAction.DEPRECATE
+                        or r.suggestion == SuggestionAction.REPLACE
                         else "warning"
                     ),
                     "recommended_action": r.suggestion.value,

@@ -67,7 +67,9 @@ class JudgeAgent:
     def __init__(self, model_name: str = "gpt-4o"):
         self.model_name = model_name
 
-    async def evaluate_proposals(self, task_prompt: str, proposals: list[Proposal]) -> dict[str, Any]:
+    async def evaluate_proposals(
+        self, task_prompt: str, proposals: list[Proposal]
+    ) -> dict[str, Any]:
         """
         Evaluates the given proposals against the original task prompt.
         Returns the evaluation result including decision state and the winning proposal (if any).
@@ -83,7 +85,9 @@ class JudgeAgent:
 
         from core.llm.llm_gateway import get_llm_gateway
 
-        proposals_block = "\n\n".join(f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals)
+        proposals_block = "\n\n".join(
+            f"### Proposal from {p.agent_id}\n{p.content}" for p in proposals
+        )
         system_prompt = (
             "You are the Judge Agent in a multi-agent debate/consensus system. "
             "Evaluate the given proposals against the original task and pick the strongest one. "
@@ -115,7 +119,9 @@ class JudgeAgent:
                 "feedback": f"Judge evaluation unavailable (LLM error: {exc}). Retrying next cycle.",
             }
 
-        parsed = _extract_json_object(response.get("text", "")) if isinstance(response, dict) else None
+        parsed = (
+            _extract_json_object(response.get("text", "")) if isinstance(response, dict) else None
+        )
         if not parsed:
             logger.warning(f"Judge Agent returned non-JSON response: {response}")
             return {
@@ -132,7 +138,9 @@ class JudgeAgent:
             winner.score = 0.0
         winner.feedback = parsed.get("feedback", "")
 
-        consensus_reached = bool(parsed.get("consensus_reached")) and winner.score >= _CONSENSUS_SCORE_THRESHOLD
+        consensus_reached = (
+            bool(parsed.get("consensus_reached")) and winner.score >= _CONSENSUS_SCORE_THRESHOLD
+        )
         decision = DebateState.CONSENSUS if consensus_reached else DebateState.RETHINKING
 
         return {
@@ -170,7 +178,9 @@ class ConsensusOrchestrator:
 
         while self.iteration < self.max_iterations:
             self.iteration += 1
-            logger.info(f"Debate Cycle {self.iteration}/{self.max_iterations} for session {self.session_id}")
+            logger.info(
+                f"Debate Cycle {self.iteration}/{self.max_iterations} for session {self.session_id}"
+            )
 
             # 1. Proposing Phase
             self.current_state = DebateState.PROPOSING
@@ -267,11 +277,14 @@ class ConsensusOrchestrator:
 
                 # Append feedback to the prompt for the next cycle
                 task_prompt = (
-                    task_prompt + f"\n\nFeedback from Judge: {judge_result.get('feedback', 'Improve the proposal.')}"
+                    task_prompt
+                    + f"\n\nFeedback from Judge: {judge_result.get('feedback', 'Improve the proposal.')}"
                 )
 
         # 3. Fallback Solution if no consensus
-        logger.warning(f"Max iterations reached for session {self.session_id}. Returning FALLBACK_SOLUTION.")
+        logger.warning(
+            f"Max iterations reached for session {self.session_id}. Returning FALLBACK_SOLUTION."
+        )
         return Proposal(
             agent_id="Fallback_Agent",
             content="System fallback executed due to lack of consensus.",

@@ -99,7 +99,7 @@ The user has spoken in Bengali. A rough transcription hint is provided:
 
 Your tasks:
 1. Correct the transcription to proper Bengali (বাংলা)
-2. Identify the user's intent from: {', '.join(self.supported_intents)}
+2. Identify the user's intent from: {", ".join(self.supported_intents)}
 3. Extract any key entities (product names, locations, quantities, prices)
 
 Respond in this EXACT JSON format:
@@ -121,7 +121,7 @@ Respond ONLY with the JSON. No other text.
         """Build intent classification prompt for Bengali text."""
         # বাংলা মন্তব্য: বাংলা কম্যান্ডের টাইপ ক্লাসিফিকেশনের প্রম্পট
         return f"""Classify the following Bengali text into one of these intents:
-{', '.join(self.supported_intents)}
+{", ".join(self.supported_intents)}
 
 Text: \"{text_bn}\"
 
@@ -278,7 +278,9 @@ Respond ONLY with the intent name (single word from the list above).
         }
 
         action_def = action_map.get(intent, {"action": "unknown", "needs": []})
-        missing = [need for need in action_def["needs"] if not any(e.get("type") == need for e in entities)]
+        missing = [
+            need for need in action_def["needs"] if not any(e.get("type") == need for e in entities)
+        ]
 
         return {
             "action": action_def["action"],

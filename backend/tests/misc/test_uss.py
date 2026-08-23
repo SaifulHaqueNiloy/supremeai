@@ -2,7 +2,6 @@ import pytest
 
 try:
     from skill_loader import SkillLoader
-
     from skills.installer import SkillInstaller
     from skills.registry import SkillRegistry
     from skills.schema import UniversalSkillSchema
@@ -11,7 +10,9 @@ try:
 except (ImportError, ModuleNotFoundError):
     HAS_USS_SKILLS = False
 
-pytestmark = pytest.mark.skipif(not HAS_USS_SKILLS, reason="skills module not available in environment")
+pytestmark = pytest.mark.skipif(
+    not HAS_USS_SKILLS, reason="skills module not available in environment"
+)
 
 
 @pytest.fixture

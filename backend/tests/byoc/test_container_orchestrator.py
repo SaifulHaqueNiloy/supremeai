@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from byoc.container_orchestrator import ContainerOrchestrator

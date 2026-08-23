@@ -35,7 +35,9 @@ class EvolutionEngine:
 
     def __init__(self, db_path: str | None = None, model_router: ModelRouter | None = None):
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.db_path = db_path or os.getenv("EVOLUTION_DB_PATH", os.path.join(base, "data", "evolution.db"))
+        self.db_path = db_path or os.getenv(
+            "EVOLUTION_DB_PATH", os.path.join(base, "data", "evolution.db")
+        )
         self.model_router = model_router or ModelRouter()
 
         # বাংলা মন্তব্য: P2 Fix — Production Cloud Run-এ local SQLite নিষিদ্ধ।
@@ -114,7 +116,9 @@ class EvolutionEngine:
             # db.client None হলে supabase_success False থাকবে — এটিই সঠিক behavior।
             # আগে: else: supabase_success = True — এটি false positive তৈরি করতো।
             else:
-                logger.warning("Supabase client is None. Task history will only be stored in local SQLite.")
+                logger.warning(
+                    "Supabase client is None. Task history will only be stored in local SQLite."
+                )
         except Exception as e:
             logger.warning(f"Failed to insert success to Supabase: {e}")
             if evolution_write_failures:
@@ -159,7 +163,9 @@ class EvolutionEngine:
                 db.insert_task_history(task, approach, result, False, created_at)
                 supabase_success = True
             else:
-                logger.warning("Supabase client is not initialized, fallback to SQLite only for failure data.")
+                logger.warning(
+                    "Supabase client is not initialized, fallback to SQLite only for failure data."
+                )
         except Exception as e:
             logger.warning(f"Failed to insert failure to Supabase: {e}")
             if evolution_write_failures:
@@ -271,7 +277,9 @@ class EvolutionEngine:
         finally:
             conn.close()
 
-    async def propose_prompt_optimization(self, original_prompt: str, failure_data: dict[str, Any]) -> dict[str, Any]:
+    async def propose_prompt_optimization(
+        self, original_prompt: str, failure_data: dict[str, Any]
+    ) -> dict[str, Any]:
         task_hash = hashlib.sha256(original_prompt.encode()).hexdigest()
 
         # বাংলা মন্তব্য: LLM ব্যবহার করে উন্নত প্রম্পট তৈরির জন্য একটি প্রম্পট তৈরি করা হচ্ছে।
@@ -338,7 +346,9 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             from core.evolution.auto_skill_creator import AutoSkillCreator
 
             creator = AutoSkillCreator()
-            result = await creator.generate_and_deploy_skill(user_demand=pattern, skill_name=skill_name)
+            result = await creator.generate_and_deploy_skill(
+                user_demand=pattern, skill_name=skill_name
+            )
         except Exception as e:
             # বাংলা মন্তব্য: AutoSkillCreator instantiation/call ব্যর্থ হলেও পুরো daily evolution
             # run crash করবে না — failed status সহ রেকর্ড হয়ে পরের সাইকেলে retry হবে।
@@ -377,7 +387,9 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         finally:
             conn.close()
 
-    def record_feedback(self, session_id: str, query: str, retrieved_chunks: str, user_rating: float) -> dict[str, Any]:
+    def record_feedback(
+        self, session_id: str, query: str, retrieved_chunks: str, user_rating: float
+    ) -> dict[str, Any]:
         created_at = datetime.now(UTC).isoformat()
         try:
             from database.supabase_client import db
@@ -427,7 +439,9 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             if proposal.get("status") == "proposed":
                 prompt_optimizations_proposed.append(proposal)
 
-        optimizations = ["Increase RAG context depth to reduce hallucination."] if success_rate < 95 else []
+        optimizations = (
+            ["Increase RAG context depth to reduce hallucination."] if success_rate < 95 else []
+        )
 
         report = {
             "timestamp": datetime.now(UTC).isoformat(),

@@ -141,16 +141,21 @@ def _free_browse(task: str, max_steps: int) -> dict[str, Any]:
             steps[-1]["engine"] = "jina_reader"
             extracted = _try_extract_with_llm(jr["content"], task)
             return {
-                "status": "ok", "engine": "fallback",
+                "status": "ok",
+                "engine": "fallback",
                 "result": {
-                    "plan": f"browser-task: {task}", "steps_planned": max_steps,
-                    "url": url, "scraped_content": jr["content"][:5000],
+                    "plan": f"browser-task: {task}",
+                    "steps_planned": max_steps,
+                    "url": url,
+                    "scraped_content": jr["content"][:5000],
                     "extracted_data": extracted or "Extraction unavailable — raw content returned.",
                     "steps_executed": steps,
                 },
                 "note": "Scraped via Jina Reader (free) + LLM extraction.",
             }
-        steps.append({"step": 2, "action": "Jina unavailable — trying Firecrawl", "status": "running"})
+        steps.append(
+            {"step": 2, "action": "Jina unavailable — trying Firecrawl", "status": "running"}
+        )
         fc_key = os.getenv("FIRECRAWL_API_KEY", "")
         if fc_key:
             fc = _firecrawl_scrape(url, fc_key)
@@ -159,26 +164,35 @@ def _free_browse(task: str, max_steps: int) -> dict[str, Any]:
                 steps[-1]["engine"] = "firecrawl"
                 extracted = _try_extract_with_llm(fc["content"], task)
                 return {
-                    "status": "ok", "engine": "fallback",
+                    "status": "ok",
+                    "engine": "fallback",
                     "result": {
-                        "plan": f"browser-task: {task}", "steps_planned": max_steps,
-                        "url": url, "scraped_content": fc["content"][:5000],
-                        "extracted_data": extracted or "Extraction unavailable — raw content returned.",
+                        "plan": f"browser-task: {task}",
+                        "steps_planned": max_steps,
+                        "url": url,
+                        "scraped_content": fc["content"][:5000],
+                        "extracted_data": extracted
+                        or "Extraction unavailable — raw content returned.",
                         "steps_executed": steps,
                     },
                     "note": "Scraped via Firecrawl (free tier) + LLM extraction.",
                 }
-        steps.append({"step": 3, "action": "Firecrawl unavailable — trying WebScraper", "status": "running"})
+        steps.append(
+            {"step": 3, "action": "Firecrawl unavailable — trying WebScraper", "status": "running"}
+        )
         ws = _webscraper_fallback(url)
         if ws["ok"]:
             steps[-1]["status"] = "completed"
             steps[-1]["engine"] = "webscraper"
             extracted = _try_extract_with_llm(ws["content"], task)
             return {
-                "status": "ok", "engine": "fallback",
+                "status": "ok",
+                "engine": "fallback",
                 "result": {
-                    "plan": f"browser-task: {task}", "steps_planned": max_steps,
-                    "url": url, "scraped_content": ws["content"][:5000],
+                    "plan": f"browser-task: {task}",
+                    "steps_planned": max_steps,
+                    "url": url,
+                    "scraped_content": ws["content"][:5000],
                     "extracted_data": extracted or "Extraction unavailable — raw content returned.",
                     "steps_executed": steps,
                 },
@@ -186,7 +200,8 @@ def _free_browse(task: str, max_steps: int) -> dict[str, Any]:
             }
         steps[-1]["status"] = "failed"
         return {
-            "status": "error", "engine": "fallback",
+            "status": "error",
+            "engine": "fallback",
             "result": {"plan": f"browser-task: {task}", "steps_planned": max_steps},
             "error": f"All web scrapers failed for {url}. Last error: {ws.get('error', 'unknown')}",
         }
@@ -196,9 +211,11 @@ def _free_browse(task: str, max_steps: int) -> dict[str, Any]:
         for i in range(1, max_steps + 1)
     ]
     return {
-        "status": "ok", "engine": "fallback",
+        "status": "ok",
+        "engine": "fallback",
         "result": {
-            "plan": f"browser-task: {task}", "steps_planned": max_steps,
+            "plan": f"browser-task: {task}",
+            "steps_planned": max_steps,
             "steps_executed": plan_steps,
         },
         "note": "browser-use upstream disabled — no URL detected, plan returned without live browser.",

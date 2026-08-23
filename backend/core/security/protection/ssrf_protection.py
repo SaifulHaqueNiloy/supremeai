@@ -177,7 +177,9 @@ class SSRFProtection:
         if custom_blocklist:
             self._blocklist_hostnames.update(custom_blocklist)
         if env_blocklist:
-            self._blocklist_hostnames.update(h.strip().lower() for h in env_blocklist.split(",") if h.strip())
+            self._blocklist_hostnames.update(
+                h.strip().lower() for h in env_blocklist.split(",") if h.strip()
+            )
 
         logger.info(
             f"[SSRFProtection] Initialized. DNS rebinding={enable_dns_rebinding_protection}, "
@@ -278,7 +280,8 @@ class SSRFProtection:
                     )
                     result.validation_time_ms = (time.monotonic() - start_time) * 1000
                     logger.critical(
-                        f"[SSRF] DNS rebinding detected for {hostname}: " f"{resolved_ip} -> {second_resolved}"
+                        f"[SSRF] DNS rebinding detected for {hostname}: "
+                        f"{resolved_ip} -> {second_resolved}"
                     )
                     return result
             except (socket.gaierror, OSError) as e:

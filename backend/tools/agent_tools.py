@@ -133,7 +133,9 @@ def check_system_health() -> str:
                 headers={"apikey": supabase_key, "Authorization": f"Bearer {supabase_key}"},
                 timeout=5.0,
             )
-            health["database"] = "ONLINE" if resp.status_code < 500 else f"ERROR ({resp.status_code})"
+            health["database"] = (
+                "ONLINE" if resp.status_code < 500 else f"ERROR ({resp.status_code})"
+            )
         except Exception as exc:
             health["database"] = f"OFFLINE ({exc})"
     else:

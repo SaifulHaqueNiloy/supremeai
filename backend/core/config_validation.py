@@ -17,7 +17,7 @@ class SettingsValidationMixin:
         "redis_url": r"^redis://[^:]+:\d+$|^rediss://.*$",
         "database_url": r"^postgresql(ql)?://[^:]+:[^@]+@[^:/]+:\d+/[^/]+$",
     }
-    
+
     # ── Fix suggestions for common issues ──
     FIX_SUGGESTIONS = {
         "supabase_database_url": "Set SUPABASE_DATABASE_URL in Render dashboard. Format: postgresql://postgres.[project-ref]:[password]@aws-0-[region].pool.supabase.com:6543/postgres",
@@ -31,6 +31,7 @@ class SettingsValidationMixin:
     @classmethod
     def validate_env_vars(cls, value: Any, info: ValidationInfo) -> Any:
         import re
+
         if value is None:
             return value
         var_name = info.field_name
@@ -83,17 +84,23 @@ class SettingsValidationMixin:
             if str(v).lower() == "true" and (
                 os.getenv("debug", "").lower() == "true" or os.getenv("DEBUG", "").lower() == "true"
             ):
-                raise ValueError("Explicitly setting debug=True is PROHIBITED in production/staging.")
+                raise ValueError(
+                    "Explicitly setting debug=True is PROHIBITED in production/staging."
+                )
             return False
         return bool(v)
 
     @field_validator("docs_password", mode="before")
     @classmethod
-    def validate_docs_password(cls, v: str | SecretStr | None, info: ValidationInfo) -> str | SecretStr:
+    def validate_docs_password(
+        cls, v: str | SecretStr | None, info: ValidationInfo
+    ) -> str | SecretStr:
         if "pytest" in sys.modules:
             return v or ""
         if not v and info.data.get("env", "local") in {"production", "staging"}:
-            logger.warning("⚠️ SUPREMEAI_DOCS_PASSWORD not configured — using auto-generated secure password")
+            logger.warning(
+                "⚠️ SUPREMEAI_DOCS_PASSWORD not configured — using auto-generated secure password"
+            )
             return SecretStr(secrets.token_urlsafe(32))
         return v or ""
 
@@ -145,13 +152,17 @@ class SettingsValidationMixin:
         # Stripe warning (non-blocking)
         if self.env in {"production", "staging"}:
             stripe_key = self.stripe_api_key.get_secret_value() if self.stripe_api_key else ""
-            stripe_webhook = self.stripe_webhook_secret.get_secret_value() if self.stripe_webhook_secret else ""
+            stripe_webhook = (
+                self.stripe_webhook_secret.get_secret_value() if self.stripe_webhook_secret else ""
+            )
             if not stripe_key:
                 logger.warning(
                     "⚠️ Stripe API key missing in production/staging. Billing features will run in mock mode."
                 )
             if not stripe_webhook:
-                logger.warning("⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled.")
+                logger.warning(
+                    "⚠️ Stripe webhook secret missing in production/staging. Webhook validation disabled."
+                )
 
         # Production completeness / degraded mode allowed
         if self.env == "production":
@@ -181,7 +192,9 @@ class SettingsValidationMixin:
                     f"❌ CRITICAL INFRASTRUCTURE MISSING: {critical_infrastructure}. "
                     "Server startup aborted (Fail-Fast enforced)."
                 )
-                raise ValueError(f"Production/Staging requires {critical_infrastructure} to be set.")
+                raise ValueError(
+                    f"Production/Staging requires {critical_infrastructure} to be set."
+                )
         elif self.env not in {"test"}:
             missing: list[str] = []
             if not self.encryption_key.get_secret_value():
@@ -317,7 +330,11 @@ class SettingsValidationMixin:
     def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:
         env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
         if env == "production":
-            return [origin for origin in value if "localhost" not in origin and "127.0.0.1" not in origin]
+            return [
+                origin
+                for origin in value
+                if "localhost" not in origin and "127.0.0.1" not in origin
+            ]
         return value
 
     @classmethod
@@ -328,6 +345,7 @@ class SettingsValidationMixin:
         if not value or value is None:
             # Generate a secure random JWT secret instead of using hardcoded string
             import secrets
+
             return secrets.token_urlsafe(64)
         # বাংলা মন্তব্য: প্রোডাকশনে JWT secret কমপক্ষে 64 bytes হতে হবে — brute-force attack ঠেকাতে
         if env == "production" and len(str(value)) < 64:
@@ -345,7 +363,9 @@ class SettingsValidationMixin:
 
             # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
             if not self.user_cors_origins and not self.admin_cors_origins:
-                logger.warning("⚠️ Production CORS origins not explicitly configured. Using defaults for security.")
+                logger.warning(
+                    "⚠️ Production CORS origins not explicitly configured. Using defaults for security."
+                )
 
         # বাংলা মন্তব্য: কনফিগারেশন লোড হওয়ার পর লগ মেসেজ দেখানো
         logger.info(f"✅ Configuration loaded successfully for environment: {self.env}")
