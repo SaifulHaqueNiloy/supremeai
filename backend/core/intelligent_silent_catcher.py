@@ -47,6 +47,18 @@ def handle_unhandled_exception(exc_type, exc_value, exc_tb):
         )
     )
 
+    # 🚀 Send to Sentry Error Bus
+    try:
+        import sentry_sdk
+        import os
+        dsn = os.getenv("SENTRY_DSN")
+        if dsn:
+            if not sentry_sdk.Hub.current.client:
+                sentry_sdk.init(dsn=dsn, traces_sample_rate=1.0)
+            sentry_sdk.capture_exception(exc_value)
+    except Exception as e:
+        logger.debug(f"⚠️ Sentry SDK integration failed: {e}")
+
     # Call the original excepthook to preserve default behavior (like printing to stderr)
     sys.__excepthook__(exc_type, exc_value, exc_tb)
 

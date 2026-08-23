@@ -320,6 +320,9 @@ class OllamaProvider:
     name = Provider.OLLAMA
 
     def __init__(self) -> None:
+        if (getattr(settings, "env", getattr(settings, "ENV", "local")) or "local").lower() != "local":
+            raise NotImplementedError("Ollama is for local development only and should not be used in cloud environments due to resource constraints.")
+            
         raw_url = getattr(settings, "ollama_url", "http://localhost:11434")
         self.base_url = str(raw_url) if isinstance(raw_url, str | bytes) else "http://localhost:11434"
         self.client = httpx.AsyncClient(
