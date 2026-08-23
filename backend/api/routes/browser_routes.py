@@ -397,7 +397,7 @@ async def check_ssl_security(url: str) -> tuple[int, list]:
             context = ssl.create_default_context()
             with socket.create_connection((hostname, port), timeout=5) as sock:
                 with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                    cert = ssock.getpeercert()
+                    ssock.getpeercert()
                     # Certificate is valid if we get here
 
     except ssl.SSLCertVerificationError as e:

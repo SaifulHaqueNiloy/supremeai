@@ -27,7 +27,7 @@ def test_gitleaks_runner_compiles_all_patterns():
 
 def test_gitleaks_detects_openai_key():
     runner = GitleaksRunner()
-    finding = runner.scan_file(Path("fake_openai.py"))
+    runner.scan_file(Path("fake_openai.py"))
     # scan_file পড়তে পারবে না, তাই সরাসরি লাইন ম্যাচ টেস্ট করি
     line = 'api_key = "sk-A' + "B" * 46 + '"'
     findings = []

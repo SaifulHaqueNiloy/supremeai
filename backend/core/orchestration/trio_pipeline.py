@@ -108,7 +108,7 @@ class TrioPipeline:
 
         ready = bool(checker_result.metadata.get("ready_for_production", False))
         review_issue_count = len(reviewer_result.issues)
-        check_issue_count = len(checker_result.issues)
+        len(checker_result.issues)
         status = (
             "ready"
             if ready and review_issue_count == 0

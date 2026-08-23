@@ -106,10 +106,6 @@ def test_telegram_security_webapp_validation():
     user_json = '{"id":12345,"first_name":"Niloy"}'
 
     # Construct check string
-    data_dict = {
-        "auth_date": auth_date,
-        "user": user_json,
-    }
     check_string = f"auth_date={auth_date}\nuser={user_json}"
     secret_key = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()
     valid_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()

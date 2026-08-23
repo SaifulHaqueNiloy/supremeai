@@ -262,7 +262,7 @@ def test_settings_supremeai_docs_password_required():
 def test_settings_reload_env_vars():
     """Test reloading environment variables."""
     settings = Settings()
-    original_env = os.environ.get("TEST_RELOAD_VAR", "original")
+    os.environ.get("TEST_RELOAD_VAR", "original")
 
     # Temporarily set a test variable
     os.environ["TEST_RELOAD_VAR"] = "new_value"

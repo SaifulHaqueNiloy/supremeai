@@ -105,7 +105,7 @@ class OptimizedBehaviorTracker:
         user_deque = self.user_events[user_id]
 
         while user_deque and user_deque[0].timestamp <= cutoff:
-            evicted_event = user_deque.popleft()
+            user_deque.popleft()
             # We optionally could decrement counters here if absolute precision
             # within the exact window is needed, but typically keeping historical
             # profile stats is fine for overall profiling.

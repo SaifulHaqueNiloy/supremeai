@@ -55,7 +55,6 @@ async def ai_translate(
     bot: BhashaBot = Depends(get_bhasha_bot),
 ):
     """ADVANCED: Dynamic runtime AI translation with semantic caching for mobile and web clients."""
-    cache_key = f"i18n::{payload.key}::{payload.target_lang}"
     # Try bot / semantic cache translation
     try:
         res = await bot.translate(

@@ -121,7 +121,7 @@ async def get_brain_status():
     This is the main "pulse check" endpoint.
     Returns quickly to indicate if AI systems are operational.
     """
-    start_time = time.time()
+    time.time()
 
     # Initialize component statuses
     components = {

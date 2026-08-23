@@ -134,7 +134,7 @@ def test_21_state_governed_self_evolution_closed_loop():
 
 def test_governance_policy_negative_security_rejections():
     """Verifies that malicious or illegal self-modifications are strictly rejected fail-closed."""
-    policy = get_governance_policy()
+    get_governance_policy()
     proposal_mgr = ChangeProposalManager()
 
     # 1. Attempt to modify Auth Guards

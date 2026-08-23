@@ -24,14 +24,14 @@ def test_memory_tree_lifecycle_and_rollup(memory_tree):
     assert db_branch.id in memory_tree.root.children_ids
 
     # 2. Add leaves
-    leaf1 = memory_tree.add_leaf(
+    memory_tree.add_leaf(
         title="CommandCenter Store Refactor",
         content="Migrated CommandCenter state to Zustand with full immutability guarantees.",
         branch_id=dev_branch.id,
         category="dev",
         tags=["frontend", "state"],
     )
-    leaf2 = memory_tree.add_leaf(
+    memory_tree.add_leaf(
         title="Playwright E2E Canvas Test",
         content="Added multi-workspace canvas drag-and-drop smoke tests.",
         branch_id=dev_branch.id,

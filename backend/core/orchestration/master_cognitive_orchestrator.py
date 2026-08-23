@@ -96,7 +96,6 @@ class MasterCognitiveOrchestrator:
 
         # 3. Knowledge OS Quarantine & Truth Gate
         stages.append("03_knowledge_quarantine_gate")
-        is_safe_to_synthesize = True
         artifacts["quarantine_status"] = "PASSED"
 
         # 4. Solution Synthesis & Sandbox Pre-Verification
@@ -215,7 +214,6 @@ class MasterCognitiveOrchestrator:
     ) -> PipelineExecutionResult:
         """Governed Evolution Chain: ChangeProposal -> Static AST -> BenchmarkRunner -> Canary -> Ingestion."""
         stages = []
-        artifacts: dict[str, Any] = {}
 
         stages.append("01_change_proposal_creation")
         target = proposal_payload.get("target_module", "skills/custom_tool.py")

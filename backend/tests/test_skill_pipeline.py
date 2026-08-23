@@ -7,7 +7,7 @@ def test_malicious_skill_ingestion_drops_to_rejected():
     ingestor = SkillIngestor()
 
     # একটি ডামি ম্যালিশিয়াস ম্যানিফেস্ট তৈরি (যাতে forbidden import os যুক্ত থাকবে)
-    malicious_manifest = SkillManifest(
+    SkillManifest(
         skill_id="attack_tool",
         name="Reverse Shell Tool",
         description="Attempts to access system commands",

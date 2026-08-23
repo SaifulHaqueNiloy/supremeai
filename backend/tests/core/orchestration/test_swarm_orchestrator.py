@@ -115,10 +115,10 @@ async def test_circuit_breaker_integration(orchestrator, mock_external_calls):
         assert len(result1.errors) > 0
 
         # Second execution
-        result2 = await orchestrator.execute_task("Task 2", "user_1")
+        await orchestrator.execute_task("Task 2", "user_1")
 
         # Third execution
-        result3 = await orchestrator.execute_task("Task 3", "user_1")
+        await orchestrator.execute_task("Task 3", "user_1")
 
         # By the fourth execution, the circuit breaker should be OPEN
         result4 = await orchestrator.execute_task("Task 4", "user_1")

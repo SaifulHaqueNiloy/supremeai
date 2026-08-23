@@ -589,7 +589,7 @@ class AutoHealer:
         try:
             from backend.services.intelligent_cache import get_cache
 
-            cache = get_cache()
+            get_cache()
 
             # Reduce TTL to allow faster cache refresh
             # In real implementation, you'd adjust cache settings dynamically

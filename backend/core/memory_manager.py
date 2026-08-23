@@ -46,11 +46,11 @@ class FreeTierMemoryManager:
     def get_status(self) -> MemoryStatus:
         """Get current memory status."""
         try:
-            mem_info = self._process.memory_info()
+            self._process.memory_info()
             total_virtual = self._process.memory_info().rss / (1024 * 1024)
 
             # Get system memory for context
-            system_mem = psutil.virtual_memory()
+            psutil.virtual_memory()
 
             status = MemoryStatus(
                 total_mb=self.MAX_MEMORY_MB,

@@ -77,7 +77,7 @@ class SupabaseStore(SQLiteMemoryStore):
         try:
             # Test the match_learned_facts RPC function
             test_embedding = [0.0] * 1536
-            result = client.rpc(
+            client.rpc(
                 "match_learned_facts",
                 {
                     "query_embedding": test_embedding,

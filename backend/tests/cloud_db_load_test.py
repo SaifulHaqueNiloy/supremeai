@@ -153,7 +153,7 @@ async def main() -> None:
     parser = argparse.ArgumentParser(description="Supabase Cloud DB Load Tester")
     parser.add_argument("--quick", action="store_true", help="Quick smoke test")
     parser.add_argument("--full", action="store_true", help="Full benchmark suite")
-    args = parser.parse_args()
+    parser.parse_args()
 
     print("☁️ SUPABASE pgvector CLOUD LOAD TESTER")
     tester = CloudDBTester()

@@ -78,7 +78,7 @@ class TestEphemeralExecutorCleanup:
         with patch("core.microvm_sandbox.MicroVMSandbox"):
             from backend.agents.ephemeral_executor import EphemeralExecutor
 
-            executor = EphemeralExecutor(base_skills_dir=temp_skills_dir)
+            EphemeralExecutor(base_skills_dir=temp_skills_dir)
 
             ephemeral_path = Path(temp_skills_dir) / "ephemeral"
             assert ephemeral_path.exists()
@@ -122,7 +122,7 @@ class TestEphemeralExecutorCleanup:
 
             # Execute should handle the exception gracefully
             try:
-                result = executor.execute_use_and_throw(
+                executor.execute_use_and_throw(
                     skill_id="failed_skill",
                     raw_code="def execute(): raise Error()",
                     test_payload="{}",
