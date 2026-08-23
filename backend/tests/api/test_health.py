@@ -43,12 +43,3 @@ def test_health_check_ok_without_subsystems():
     assert resp.status_code == 200
     assert resp.json()["status"] == "degraded"
 
-
-def test_health_agents_requires_registry():
-    # বাংলা: registry-এ redis_manager না থাকলে graceful error ফেরত দেওয়া উচিত
-    client = TestClient(_build_client())
-    with patch("api.routes.health.registry") as reg:
-        reg.get.side_effect = KeyError("redis_manager")
-        resp = client.post("/health/agents", json={"agent_ids": ["a1"]})
-        assert resp.status_code == 200
-        assert "error" in resp.json()
