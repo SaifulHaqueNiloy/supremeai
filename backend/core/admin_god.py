@@ -1,5 +1,3 @@
-from core.error_bus import with_error_bus
-
 """Admin God Layer — admin-only constitutional enforcement + immutable audit.
 
 This module provides privileged control utilities (god mode) and an append-only
@@ -38,6 +36,8 @@ from datetime import datetime
 from typing import Any
 
 from loguru import logger
+
+from core.error_bus import with_error_bus
 
 try:
     import bcrypt

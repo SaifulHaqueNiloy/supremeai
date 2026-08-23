@@ -1,5 +1,3 @@
-from core.messaging.event_bus import ErrorContext
-
 """This module implements the `MaintenancePipeline`, acting as the "Immune System" for the SupremeAI ecosystem. It is responsible for continuously monitoring the health and performance of critical backend components such as databases, Redis, and external AI APIs. The pipeline proactively listens for system-wide error events, performs routine health checks, detects potential performance regressions, and attempts automated self-healing remediation actions like switching LLM providers or re-initializing services to ensure the overall stability and resilience of the AI platform.
 
 Key Components:
@@ -21,7 +19,7 @@ import random
 import time
 
 from core.health.health_probes import probe_database, probe_external_api, probe_redis
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 logger = logging.getLogger("supremeai.immune_system")
 

@@ -1,5 +1,3 @@
-from loguru import logger
-
 """Standalone smoke test for the SupremeAI IDE Trio Pipeline adapters.
 
 Run from the repo root:
@@ -10,6 +8,8 @@ import asyncio
 import importlib.util
 import sys
 from pathlib import Path
+
+from loguru import logger
 
 # Ensure Unicode output works even on cp1252 Windows consoles.
 try:

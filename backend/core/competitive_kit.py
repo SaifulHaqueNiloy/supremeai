@@ -1,8 +1,3 @@
-import logging
-import math
-
-import requests
-
 logger = logging.getLogger(__name__)
 
 try:
@@ -32,11 +27,14 @@ Author: SuperAI Team | License: MIT | Version: 1.0
 
 import asyncio
 import hashlib
+import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
+
+import requests
 
 # ═══════════════════════════════════════════════════════════════════
 # 1. PERSONALITY ENGINE (🚀 NO COMPETITOR HAS THIS!)

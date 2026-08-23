@@ -1,5 +1,3 @@
-from loguru import logger
-
 """
 Sprint G Tests:
 - G.1: MultilingualTTS
@@ -11,6 +9,7 @@ Sprint G Tests:
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from loguru import logger
 
 # ── G.1 MultilingualTTS ───────────────────────────────────────────────────────
 

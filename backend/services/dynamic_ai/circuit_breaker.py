@@ -1,5 +1,3 @@
-from loguru import logger
-
 # backend/services/dynamic_ai/circuit_breaker.py
 """
 Circuit Breaker Pattern Implementation
@@ -10,6 +8,8 @@ import asyncio
 import time
 from dataclasses import dataclass, field
 from enum import Enum
+
+from loguru import logger
 
 
 class CircuitState(Enum):

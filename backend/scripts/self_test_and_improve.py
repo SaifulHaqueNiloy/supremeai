@@ -1,5 +1,3 @@
-from loguru import logger
-
 # backend/scripts/self_test_and_improve.py
 """SupremeAI Self-Test & Auto-Improve Runner.
 
@@ -20,6 +18,8 @@ import os
 import sys
 from datetime import datetime
 from typing import Any
+
+from loguru import logger
 
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

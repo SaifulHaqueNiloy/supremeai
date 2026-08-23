@@ -1,6 +1,3 @@
-from core.error_bus import with_error_bus
-from core.messaging.event_bus import ErrorContext
-
 """This module provides a robust and asynchronous email service for the SupremeAI project, centralizing the functionality for sending various transactional emails such as welcome messages, password reset links, and billing notifications. It integrates with an external email API (e.g., Resend) for delivery, leverages application settings for configuration, and reports errors via the internal event bus, ensuring reliable communication with users within the highly scalable AI ecosystem.
 
 Key Components:
@@ -28,7 +25,8 @@ import httpx
 from loguru import logger
 
 from core.config import settings
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.error_bus import with_error_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
 class EmailService:

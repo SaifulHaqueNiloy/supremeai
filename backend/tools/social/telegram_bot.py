@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """
 SupremeAI 2.0 — Telegram Bot Handler (Production-Ready)
 
@@ -17,6 +15,7 @@ Setup:
      curl "https://api.telegram.org/bot<TOKEN>/setWebhook?url=<WEBHOOK_URL>"
 """
 
+from __future__ import annotations
 
 import asyncio
 import contextlib

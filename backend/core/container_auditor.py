@@ -1,5 +1,3 @@
-from core.messaging.event_bus import ErrorContext
-
 """This module provides real-time memory auditing for Docker containers within the SupremeAI ecosystem. It proactively monitors container resource usage, issuing warnings when memory utilization approaches 80% and automatically triggering a termination "kill chain" for containers exceeding 95% memory usage to prevent Out-Of-Memory (OOM) abuse and ensure system stability in a highly scalable environment.
 
 Key Components:
@@ -23,7 +21,7 @@ import subprocess
 
 from loguru import logger
 
-from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
 class ContainerAuditor:

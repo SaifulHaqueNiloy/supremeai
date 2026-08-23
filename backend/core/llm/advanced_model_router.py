@@ -15,7 +15,7 @@ import json
 import re
 import urllib.request
 from dataclasses import dataclass
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger

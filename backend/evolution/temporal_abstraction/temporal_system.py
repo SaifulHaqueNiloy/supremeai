@@ -1,5 +1,3 @@
-from loguru import logger
-
 """
 SupremeAI Temporal Abstraction System
 =====================================
@@ -29,6 +27,7 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
+from loguru import logger
 
 
 class TemporalGranularity(Enum):

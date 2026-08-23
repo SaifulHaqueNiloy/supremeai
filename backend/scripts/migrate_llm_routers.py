@@ -1,5 +1,3 @@
-from loguru import logger
-
 #!/usr/bin/env python3
 """
 Migration script for consolidating LLM routers to unified approach.
@@ -11,6 +9,8 @@ enhanced LLM gateway with shared circuit breakers and consistent provider taxono
 import asyncio
 import sys
 from pathlib import Path
+
+from loguru import logger
 
 # Add backend to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
