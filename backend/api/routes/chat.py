@@ -204,10 +204,15 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     # বাংলা: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
                     response_stream = await llm_gateway.acompletion(prompt=enriched_prompt, task_type="chat", stream=True)
 
+                    import json
+                    meta_payload = json.dumps({"meta": {"provider": "llm_gateway", "status": "streaming"}})
+                    yield f"data: {meta_payload}\n\n"
+
                     async for chunk in response_stream:
                         if chunk:
-                            # SSE (Server-Sent Events) স্ট্যান্ডার্ড ফরম্যাট
-                            yield f"data: {chunk}\n\n"
+                            # SSE (Server-Sent Events) স্ট্যান্ডার্ড ফরম্যাট with JSON chunking
+                            chunk_payload = json.dumps({"token": chunk})
+                            yield f"data: {chunk_payload}\n\n"
 
                     yield "data: [DONE]\n\n"
                     await main_llm_circuit.record_success()
@@ -239,7 +244,11 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     disclaimer = " (এই উত্তরটি সম্পূর্ণ নিশ্চিত নাও হতে পারে।)" if similarity < 0.8 else ""
                     
                     response_text = answer + disclaimer
-                    yield f"data: {response_text}\n\n"
+                    import json
+                    chunk_payload = json.dumps({"token": response_text})
+                    meta_payload = json.dumps({"meta": {"provider": "cache_fallback", "status": "completed"}})
+                    yield f"data: {meta_payload}\n\n"
+                    yield f"data: {chunk_payload}\n\n"
                     yield "data: [DONE]\n\n"
                     return
             except Exception as e:
