@@ -7,8 +7,6 @@ following lines are a contiguous indented block.
 """
 from __future__ import annotations
 
-import ast
-
 from pyerrorfix.fixers.base import BaseFixer
 
 

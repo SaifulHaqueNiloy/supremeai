@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import ast
 import re
-from typing import Any, Iterable
 
 from pyerrorfix.core.issue import Category, Issue, Severity
 
@@ -35,7 +34,7 @@ class BaseDetector(ast.NodeVisitor):
     def run(self) -> list[Issue]:
         try:
             tree = ast.parse(self.source, filename=self.filename)
-        except SyntaxError as exc:
+        except SyntaxError:
             # SyntaxError is reported by the syntax detector, not here.
             return self.issues
         self.visit(tree)

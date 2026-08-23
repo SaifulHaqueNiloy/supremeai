@@ -14,8 +14,6 @@ Catches:
 from __future__ import annotations
 
 import ast
-import re
-from typing import Any
 
 from pyerrorfix.core.issue import Category, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
@@ -50,7 +48,7 @@ class AuthSecurityDetector(BaseDetector):
                 disable_sig = False
                 for kw in node.keywords:
                     if kw.arg == "options" and isinstance(kw.value, ast.Dict):
-                        for k, v in zip(kw.value.keys, kw.value.values):
+                        for k, v in zip(kw.value.keys, kw.value.values, strict=False):
                             if (
                                 isinstance(k, ast.Constant) and k.value == "verify_signature"
                                 and isinstance(v, ast.Constant) and v.value is False
@@ -90,7 +88,7 @@ class AuthSecurityDetector(BaseDetector):
             origins = None
             credentials = False
             for kw in node.keywords:
-                if kw.arg == "allow_origins" and isinstance(kw.value, (ast.List, ast.Tuple)):
+                if kw.arg == "allow_origins" and isinstance(kw.value, ast.List | ast.Tuple):
                     origins = kw.value.elts
                 if kw.arg == "allow_credentials" and isinstance(kw.value, ast.Constant):
                     credentials = bool(kw.value.value)

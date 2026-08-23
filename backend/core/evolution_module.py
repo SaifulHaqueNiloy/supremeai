@@ -262,7 +262,7 @@ class EvolutionModule:
         return sorted_pop[: self.elitism_count]
 
     def _mutate_gene(self, gene: Gene) -> Gene | None:
-        if isinstance(gene.value, (int, float)):
+        if isinstance(gene.value, int | float):
             new_val = gene.value * random.uniform(0.95, 1.05)
         elif isinstance(gene.value, dict):
             new_val = {**gene.value, "optimized": True}
