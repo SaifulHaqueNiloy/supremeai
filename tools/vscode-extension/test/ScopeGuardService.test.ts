@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { ScopeGuardService, PermissionScope } from '../src/services/ScopeGuardService';
+import { ScopeGuardService, PermissionScope } from '@supremeai/shared-services';
 
 describe('ScopeGuardService', () => {
   let service: ScopeGuardService;

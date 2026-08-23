@@ -180,13 +180,13 @@ describe('SupremeAIService', () => {
     });
   });
 
-  describe('sendFeedback', () => {
+  describe('sendSuggestionFeedback', () => {
     test('posts feedback to backend', async () => {
       axios.post.mockResolvedValueOnce({
         data: { success: true, message: 'feedback recorded' },
       });
 
-      const response = await service.sendFeedback({
+      const response = await service.sendSuggestionFeedback({
         suggestionId: 's1',
         accepted: true,
         context: 'ctx',
@@ -204,7 +204,7 @@ describe('SupremeAIService', () => {
     });
   });
 
-  describe('analyzeRepository', () => {
+  describe('startCodeFlowAnalysis', () => {
     test('returns CodeFlow analysis response on success', async () => {
       axios.post.mockResolvedValueOnce({
         data: {
@@ -229,7 +229,7 @@ describe('SupremeAIService', () => {
         },
       });
 
-      const response = await service.analyzeRepository({
+      const response = await service.startCodeFlowAnalysis({
         files: [{ path: 'a.ts', content: 'code' }],
         options: { includePatterns: true, includeSecurity: true, includeDependencies: true, depth: 2 },
       });
@@ -242,14 +242,12 @@ describe('SupremeAIService', () => {
     test('returns failed response on error', async () => {
       axios.post.mockRejectedValueOnce(new Error('Server error'));
 
-      const response = await service.analyzeRepository({
+      const response = await service.startCodeFlowAnalysis({
         files: [{ path: 'a.ts', content: 'code' }],
         options: { includePatterns: true, includeSecurity: true, includeDependencies: true, depth: 2 },
       });
 
-      expect(response.success).toBe(false);
-      expect(response.analysisId).toBe('');
-      expect(response.data.status).toBe('failed');
+      expect(response).toBeNull();
     });
   });
 
