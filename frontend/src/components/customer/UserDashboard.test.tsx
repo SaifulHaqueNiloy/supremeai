@@ -28,8 +28,8 @@ const renderWithI18n = (ui: React.ReactElement) => {
 
 const defaultProps = {
   customerMessages: [
-    { id: 1, sender: 'User' as const, text: 'Hello', timestamp: '10:00 AM' },
-    { id: 2, sender: 'SupremeAI' as const, text: 'Hi there', timestamp: '10:01 AM' },
+    { id: '1', role: 'user' as const, content: 'Hello', timestamp: '10:00 AM' },
+    { id: '2', role: 'assistant' as const, content: 'Hi there', timestamp: '10:01 AM' },
   ],
   customerInput: '',
   setCustomerInput: vi.fn(),
