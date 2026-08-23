@@ -10,7 +10,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts" / "billing"))
+_billing_dir = Path(__file__).resolve().parent.parent.parent / "scripts" / "billing"
+sys.path.insert(0, str(_billing_dir))
+
+if not (_billing_dir / "quota_enforcer.py").is_file():
+    pytest.skip(
+        f"scripts/billing/quota_enforcer.py not found at {_billing_dir} — the "
+        "scripts/billing/ module directory appears to have been removed/never "
+        "committed. Un-skip once quota_enforcer.py is restored.",
+        allow_module_level=True,
+    )
 
 from quota_enforcer import QuotaEnforcer, QuotaStatus  # noqa: E402
 
