@@ -15,6 +15,7 @@ import importlib.util
 import logging
 import math
 import os
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,13 @@ _REMOTE_MODEL = "text-embedding-3-small"
 _REMOTE_DIM = 1536
 
 _encoder = None
+_embedding_cache: dict[str, list[float]] = {}
+_cache_hits = 0
+_cache_misses = 0
+
+def get_cache_stats() -> dict[str, int]:
+    """Return embedding cache hit/miss statistics."""
+    return {"hits": _cache_hits, "misses": _cache_misses, "size": len(_embedding_cache)}
 
 
 def get_local_encoder():
@@ -88,14 +96,32 @@ def embed_for_pgvector(text: str, pg_dim: int = _REMOTE_DIM) -> list[float] | No
     - Falls back to LiteLLM OpenAI (native ``pg_dim``) when local encoder unavailable.
     - Returns ``None`` only if both fail (callers degrade gracefully to substring search).
     """
+    global _cache_hits, _cache_misses
+    cache_key = f"{text}:{pg_dim}"
+    if cache_key in _embedding_cache:
+        _cache_hits += 1
+        return _embedding_cache[cache_key].copy()
+    
+    _cache_misses += 1
+    
     local = local_embed(text)
     if local is not None:
-        return _pad_to_dim(local, pg_dim)
+        padded = _pad_to_dim(local, pg_dim)
+        _embedding_cache[cache_key] = padded
+        
+        # Prevent unbounded memory growth
+        if len(_embedding_cache) > 5000:
+            _embedding_cache.clear()
+            
+        return padded.copy()
+        
     try:
         import litellm
 
         resp = litellm.embedding(model=_REMOTE_MODEL, input=text)
-        return resp.data[0]["embedding"]
+        vec = resp.data[0]["embedding"]
+        _embedding_cache[cache_key] = vec
+        return vec.copy()
     except Exception as exc:
         logger.warning(f"[embeddings] LiteLLM fallback embedding failed: {exc}")
         return None

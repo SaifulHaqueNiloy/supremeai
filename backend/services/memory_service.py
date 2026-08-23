@@ -557,8 +557,8 @@ async def save_memory(
 async def recall_memories(
     *,
     task_description: str,
-    limit: int = 5,
-    threshold: float = 0.7,
+    limit: int = 10,
+    threshold: float = 0.65,
 ) -> list[dict[str, Any]]:
     """Semantic-search ai_memory and return the top *limit* matches."""
     try:
