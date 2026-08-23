@@ -8,6 +8,7 @@ Author: SupremeAI Audit Patch
 Version: 2.0.0
 """
 
+import os
 import asyncio
 import time
 import json
@@ -110,7 +111,10 @@ COMPLETE_SERVICE_REGISTRY: List[ServiceConfig] = [
         health_endpoint="/rest/v1/",
         critical=True,
         timeout=8.0,
-        headers={"apikey": "${SUPABASE_ANON_KEY}", "Authorization": "Bearer ${SUPABASE_ANON_KEY}"},
+        headers={
+            "apikey": os.environ.get("SUPABASE_ANON_KEY", ""), 
+            "Authorization": f"Bearer {os.environ.get('SUPABASE_ANON_KEY', '')}"
+        },
         check_type="api",
     ),
     ServiceConfig(
