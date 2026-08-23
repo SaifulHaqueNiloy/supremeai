@@ -241,7 +241,6 @@ ignore = [
     "SIM117", # Nested with statements (style, not a bug)
     "SIM112", # Uppercase env var suggestion (style, not a bug)
     "SIM116", # If-elif chain to dict suggestion (style, not a bug)
-    "E722",   # Bare except (legacy error-handling, tracked separately)
     "E741",   # Ambiguous variable name (style, not a bug)
     "B017",   # assertRaises(Exception) in tests (acceptable in this suite)
     "B007",   # Unused loop variable (style, not a bug)
