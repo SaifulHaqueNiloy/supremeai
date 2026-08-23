@@ -324,7 +324,7 @@ def performance_monitor(func: Callable) -> Callable:
 
         try:
             result = await func(*args, **kwargs)
-        except Exception:
+        except Exception as e:
             raise
         finally:
             end_time = time.time()
@@ -356,7 +356,7 @@ def performance_monitor(func: Callable) -> Callable:
 
         try:
             result = func(*args, **kwargs)
-        except Exception:
+        except Exception as e:
             raise
         finally:
             end_time = time.time()
@@ -590,7 +590,7 @@ def get_performance_optimizer(level: OptimizationLevel = OptimizationLevel.MODER
 
 async def demo_performance_optimization():
     """Demonstrate performance optimization features."""
-    print("Initializing Performance Optimizer...")
+    logger.debug("Initializing Performance Optimizer...")
 
     optimizer = get_performance_optimizer(OptimizationLevel.MODERATE)
     await optimizer.start_monitoring()
@@ -602,7 +602,7 @@ async def demo_performance_optimization():
         await asyncio.sleep(0.1)  # Simulate work
         return n * n
 
-    print("Testing cached function...")
+    logger.debug("Testing cached function...")
     start = time.time()
     result1 = await expensive_calculation(5)
     first_call_time = time.time() - start
@@ -611,22 +611,22 @@ async def demo_performance_optimization():
     result2 = await expensive_calculation(5)  # Should be cached
     second_call_time = time.time() - start
 
-    print(f"First call: {first_call_time:.4f}s, Result: {result1}")
-    print(f"Second call (cached): {second_call_time:.4f}s, Result: {result2}")
-    print(f"Speed improvement: {first_call_time/second_call_time:.2f}x")
+    logger.debug(f"First call: {first_call_time:.4f}s, Result: {result1}")
+    logger.debug(f"Second call (cached): {second_call_time:.4f}s, Result: {result2}")
+    logger.debug(f"Speed improvement: {first_call_time/second_call_time:.2f}x")
 
     # Demonstrate query optimization
-    print("\nTesting query optimization...")
+    logger.debug("\nTesting query optimization...")
     optimized = await optimizer.optimize_database_access("SELECT * FROM users WHERE id = 1")
-    print(f"Optimized query: {optimized}")
+    logger.debug(f"Optimized query: {optimized}")
 
     # Get performance report
     report = optimizer.get_performance_report()
-    print(f"\nPerformance Report: {report['current_metrics']}")
+    logger.debug(f"\nPerformance Report: {report['current_metrics']}")
 
     # Stop monitoring
     await optimizer.stop_monitoring()
-    print("\nPerformance optimization demo completed!")
+    logger.debug("\nPerformance optimization demo completed!")
 
 
 if __name__ == "__main__":

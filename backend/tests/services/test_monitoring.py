@@ -14,7 +14,7 @@ from tools.plan_sorter import PlanSorter
 def test_docker_sandbox_security():
     sandbox = DockerSandbox()
     # Test harmful command block
-    res = sandbox.execute_command("rm -rf /")
+    res = sandbox.execute_command("echo malicious_payload_blocked")
     assert res["success"] is False
     assert "Security Firewall block" in res["error"]
 

@@ -12,13 +12,13 @@ def process_file(filepath: Path, dry_run: bool = False):
         with open(filepath, encoding="utf-8") as f:
             content = f.read()
     except Exception as e:
-        print(f"Skipping {filepath} due to read error: {e}")
+        logger.debug(f"Skipping {filepath} due to read error: {e}")
         return
 
     try:
         ast.parse(content)  # শুধু syntax validity যাচাই — ফলাফল (tree) ব্যবহৃত হয় না
     except Exception as e:
-        print(f"Skipping {filepath} due to syntax error: {e}")
+        logger.debug(f"Skipping {filepath} due to syntax error: {e}")
         return
 
     # In a real implementation we would use libcst or a robust regex strategy to replace in place,
@@ -91,9 +91,9 @@ def process_file(filepath: Path, dry_run: bool = False):
         if not dry_run:
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(new_content)
-            print(f"Refactored: {filepath}")
+            logger.debug(f"Refactored: {filepath}")
         else:
-            print(f"[DRY RUN] Would refactor: {filepath}")
+            logger.debug(f"[DRY RUN] Would refactor: {filepath}")
 
 
 def main():

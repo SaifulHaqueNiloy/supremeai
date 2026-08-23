@@ -424,7 +424,7 @@ class SecurityAuditor:
                 min_ver = v.parse(range_spec[2:].strip())
                 return current >= min_ver
                 
-        except Exception:
+        except Exception as e:
             import logging; logging.getLogger(__name__).warning("Ignored error")
         
         return False
@@ -463,7 +463,7 @@ class SecurityAuditor:
                                         # Get base module name
                                         base_module = imp.split('.')[0].lower()
                                         imported_modules.add(base_module)
-                        except Exception:
+                        except Exception as e:
                             import logging; logging.getLogger(__name__).warning("Ignored error")
             
             # Compare with installed packages
@@ -703,8 +703,8 @@ def print_security_report(report: Dict[str, Any]) -> None:
 if __name__ == '__main__':
     import sys
     
-    print("🔍 Running SupremeAI Security Audit...")
-    print("=" * 60)
+    logger.debug("🔍 Running SupremeAI Security Audit...")
+    logger.debug("=" * 60)
     
     project = sys.argv[1] if len(sys.argv) > 1 else None
     

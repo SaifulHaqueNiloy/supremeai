@@ -217,7 +217,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         # We simulate it with empty string for now in streaming
                         # In production we'd collect chunks
                         pass
-                    except Exception:
+                    except Exception as e:
                         import logging
                         logging.getLogger(__name__).warning('Ignored exception')
                         

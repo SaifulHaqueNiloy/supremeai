@@ -124,5 +124,5 @@ class GCPCloudRunRouter:
     def _safe_json(response: httpx.Response) -> Any:
         try:
             return response.json()
-        except Exception:
+        except Exception as e:
             return {"text": response.text}

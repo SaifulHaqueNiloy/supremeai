@@ -367,7 +367,7 @@ def _get_last_learning_time() -> Optional[str]:
             db_conn.close()
             
             return result
-        except Exception:
+        except Exception as e:
             import logging
             logging.getLogger(__name__).warning('Ignored exception')
     return None
@@ -383,7 +383,7 @@ def _get_patterns_by_domain(engine) -> Dict[str, int]:
         result = dict(cursor.fetchall())
         conn.close()
         return result
-    except Exception:
+    except Exception as e:
         return {}
 
 
@@ -397,7 +397,7 @@ def _get_avg_confidence(engine) -> float:
         result = cursor.fetchone()[0] or 0.0
         conn.close()
         return round(result, 3)
-    except Exception:
+    except Exception as e:
         return 0.0
 
 

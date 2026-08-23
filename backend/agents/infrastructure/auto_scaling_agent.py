@@ -131,7 +131,7 @@ class AutoScalingAgent:
                         requests_per_second = app_metrics.get("requests_per_second", 0)
                         average_response_time = app_metrics.get("avg_response_time", 0)
                         error_rate = app_metrics.get("error_rate", 0)
-            except Exception:
+            except Exception as e:
                 # If metrics collector is not available, use simulated values
                 active_connections = 10
                 requests_per_second = 50
@@ -413,7 +413,7 @@ class AutoScalingAgent:
             recommended_cost = sum(recommended.values())  # Simplified calculation
 
             return recommended_cost - current_cost
-        except Exception:
+        except Exception as e:
             return 0.0
 
     @with_error_bus("_calculate_scaling_confidence")
@@ -440,7 +440,7 @@ class AutoScalingAgent:
             # Average the factors and ensure it's between 0.5 and 1.0
             avg_confidence = sum(confidence_factors) / len(confidence_factors) if confidence_factors else 0.5
             return max(0.5, min(1.0, avg_confidence))
-        except Exception:
+        except Exception as e:
             return 0.7  # Default confidence
 
     @with_error_bus("_get_last_scaling_time")
@@ -451,7 +451,7 @@ class AutoScalingAgent:
             if last_time_str:
                 return datetime.fromisoformat(last_time_str)
             return None
-        except Exception:
+        except Exception as e:
             return None
 
     async def _record_scaling_action(self, recommendation: ScalingRecommendation):

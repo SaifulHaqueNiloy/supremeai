@@ -821,13 +821,13 @@ if __name__ == '__main__':
     import asyncio
     
     async def test_healer():
-        print("🧪 Testing SupremeAI Auto-Healer")
-        print("=" * 60)
+        logger.debug("🧪 Testing SupremeAI Auto-Healer")
+        logger.debug("=" * 60)
         
         healer = AutoHealer()
         
         # Test error diagnosis
-        print("\n🔍 Testing Error Diagnosis:\n")
+        logger.debug("\n🔍 Testing Error Diagnosis:\n")
         
         test_errors = [
             (ValueError("Missing environment variable: API_KEY"), "test_func"),
@@ -839,29 +839,29 @@ if __name__ == '__main__':
         
         for error, source in test_errors:
             issue = healer.diagnose(error, source=source)
-            print(f"Source: {source}")
-            print(f"  Issue: {issue.title}")
-            print(f"  Severity: {issue.severity.value}")
-            print(f"  Auto-fix: {'✅ Yes' if issue.automatic else '❌ Manual'}")
-            print(f"  Confidence: {issue.fix_confidence:.0%}")
-            print()
+            logger.debug(f"Source: {source}")
+            logger.debug(f"  Issue: {issue.title}")
+            logger.debug(f"  Severity: {issue.severity.value}")
+            logger.debug(f"  Auto-fix: {'✅ Yes' if issue.automatic else '❌ Manual'}")
+            logger.debug(f"  Confidence: {issue.fix_confidence:.0%}")
+            logger.debug()
         
         # Test auto-fix
-        print("\n🔧 Testing Auto-Fix:\n")
+        logger.debug("\n🔧 Testing Auto-Fix:\n")
         dep_error = ImportError("No module named 'fake-package-xyz'")
         dep_issue = healer.diagnose(dep_error, source="test_import")
         
         # Note: Won't actually install, but shows the flow
-        print(f"Attempting fix for: {dep_issue.title}")
+        logger.debug(f"Attempting fix for: {dep_issue.title}")
         # result = await healer.auto_fix(dep_issue)  # Would actually try to install
         
         # Generate report
-        print("\n📊 Healing Report:\n")
+        logger.debug("\n📊 Healing Report:\n")
         report = healer.generate_report()
-        print(f"Total Issues Detected: {report['summary']['total_issues']}")
-        print(f"Auto-Fixable: {report['summary']['auto_fixable']}")
-        print(f"Manual Required: {report['summary']['manual_required']}")
+        logger.debug(f"Total Issues Detected: {report['summary']['total_issues']}")
+        logger.debug(f"Auto-Fixable: {report['summary']['auto_fixable']}")
+        logger.debug(f"Manual Required: {report['summary']['manual_required']}")
         
-        print("\n✅ Auto-healer test complete!")
+        logger.debug("\n✅ Auto-healer test complete!")
     
     asyncio.run(test_healer())

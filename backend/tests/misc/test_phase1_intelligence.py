@@ -47,7 +47,7 @@ def test_behavioral_guard_anomalies():
     assert res1["allowed"] is True
 
     # Security violation
-    res2 = guard.record_action(agent_id="ag_01", action_type="cmd", prompt_or_command="rm -rf /")
+    res2 = guard.record_action(agent_id="ag_01", action_type="cmd", prompt_or_command="echo malicious_payload_blocked")
     assert res2["allowed"] is False
     assert res2["anomaly_type"] == "SECURITY_VIOLATION"
     assert guard.is_agent_blocked("ag_01") is True

@@ -1,3 +1,4 @@
+from loguru import logger
 # tests/test_agents_churn_prophet.py
 """Tests for ChurnProphet - user behavior analysis and retention prediction."""
 
@@ -150,9 +151,9 @@ class TestChurnProphet:
                 user_id="test-user"
             )
             assert isinstance(result, object)
-        except Exception:
+        except Exception as e:
             # May fail due to DB setup, but tests the code path
-            pass
+            logger.warning(f"Ignored error: {e}")
 
     @pytest.mark.asyncio
     async def test_batch_analyze(self, mock_llm_router):
@@ -173,9 +174,9 @@ class TestChurnProphet:
                 user_ids=["user1", "user2", "user3"]
             )
             assert isinstance(results, list)
-        except Exception:
+        except Exception as e:
             # May fail due to DB setup, but tests the code path
-            pass
+            logger.warning(f"Ignored error: {e}")
 
 
 class TestChurnProphetIntegration:

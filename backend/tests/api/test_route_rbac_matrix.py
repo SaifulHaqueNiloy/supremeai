@@ -136,7 +136,7 @@ def test_health_endpoint_not_admin_guarded():
     """Health checks are public and must not require an admin token."""
     try:
         from api.routes import health as health_routes
-    except Exception:
+    except Exception as e:
         pytest.skip("health routes module not importable in this environment")
     router = health_routes.router
     for route in router.routes:

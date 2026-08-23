@@ -123,31 +123,31 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         from utils.platform_detect import auto_set_platform_env, DETECTED_PLATFORM
         import asyncio
         
-        print("\n" + "=" * 60)
-        print(f"🚀 SupremeAI Starting on {DETECTED_PLATFORM.platform.value.upper()}...")
-        print("=" * 60)
+        logger.debug("\n" + "=" * 60)
+        logger.debug(f"🚀 SupremeAI Starting on {DETECTED_PLATFORM.platform.value.upper()}...")
+        logger.debug("=" * 60)
         
         # Auto-detect platform
         platform = auto_set_platform_env()
-        print(f"📍 Platform: {platform}")
+        logger.debug(f"📍 Platform: {platform}")
         
         # Validate configuration (Fail-Fast)
-        print("\n🔧 Validating configuration...")
+        logger.debug("\n🔧 Validating configuration...")
         result = validate_config()
         if not result.is_valid:
-            print(result.format_errors())
+            logger.debug(result.format_errors())
             if any(e.severity.value == "error" for e in result.errors):
-                print("❌ Fatal configuration errors. Exiting.")
+                logger.debug("❌ Fatal configuration errors. Exiting.")
                 import sys
                 sys.exit(1)
         else:
-            print("✅ Configuration valid.")
+            logger.debug("✅ Configuration valid.")
         
         # Print summary (masked secrets)
         print_config_summary()
         
         # Register health checks
-        print("\n🏥 Registering health checks...")
+        logger.debug("\n🏥 Registering health checks...")
         
         async def _check_database() -> bool:
             try:
@@ -156,7 +156,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 with engine.connect() as conn:
                     conn.execute(text("SELECT 1"))
                 return True
-            except Exception:
+            except Exception as e:
                 return False
                 
         def _check_memory() -> bool:
@@ -178,7 +178,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         async with app_lifespan(app):
             yield
             
-        print("\n🛑 SupremeAI shutting down...")
+        logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
         
         if settings.AUTO_HEALING_ENABLED and monitoring_task:

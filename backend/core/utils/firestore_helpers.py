@@ -161,7 +161,7 @@ def firestore_transaction(db: Any | None = None) -> Generator[Any, None, None]:
             db.execute("BEGIN")
             yield db
             db.commit()
-        except Exception:
+        except Exception as e:
             db.rollback()
             raise
     else:
@@ -170,7 +170,7 @@ def firestore_transaction(db: Any | None = None) -> Generator[Any, None, None]:
         try:
             yield transaction
             transaction.commit()
-        except Exception:
+        except Exception as e:
             transaction.rollback()
             raise
 

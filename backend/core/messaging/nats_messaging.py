@@ -66,7 +66,7 @@ class NATSClient:
             # Initialize or bind to the Key-Value store for Worker Registry
             try:
                 self.kv_store = await self.js.key_value("WORKER_REGISTRY")
-            except Exception:
+            except Exception as e:
                 # Create the bucket if it doesn't exist
                 self.kv_store = await self.js.create_key_value(bucket="WORKER_REGISTRY")
                 logger.info("🛠️ Created JetStream Key-Value bucket: WORKER_REGISTRY")

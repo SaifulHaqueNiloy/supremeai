@@ -352,7 +352,7 @@ def client(generator):
         from api import app as _app
 
         app = _app
-    except Exception:
+    except Exception as e:
         from fastapi import FastAPI
 
         from tools.code.auto_test_generator import router as test_router
@@ -464,7 +464,7 @@ async def test_generate_endpoint_success(client):
         from api import app as _app
 
         app = _app
-    except Exception:
+    except Exception as e:
         app = None
 
     if app is None:
@@ -509,7 +509,7 @@ async def test_generate_endpoint_error(client):
         from api import app as _app
 
         app = _app
-    except Exception:
+    except Exception as e:
         app = None
 
     if app is None:
@@ -552,7 +552,7 @@ async def test_generate_file_endpoint(client, generator):
         from api import app as _app
 
         app = _app
-    except Exception:
+    except Exception as e:
         app = None
 
     if app is None:

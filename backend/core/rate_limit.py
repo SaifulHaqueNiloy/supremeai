@@ -74,7 +74,7 @@ class RateLimiter:
                     socket_timeout=1
                 )
                 await self._redis.ping()
-            except Exception:
+            except Exception as e:
                 self._redis = None
         return self._redis
     

@@ -52,7 +52,7 @@ def _get_token_from_query(scope: ASGIScope) -> str | None:
         return None
     try:
         query = qs.decode("utf-8", errors="replace")
-    except Exception:
+    except Exception as e:
         return None
     for part in query.split("&"):
         if "=" not in part:

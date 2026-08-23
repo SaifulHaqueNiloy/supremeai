@@ -86,7 +86,7 @@ async def deploy_container(
         with open(config_path, encoding="utf-8") as f:
             limits = json.load(f)["limits"]
             user_limits = limits.get(user_tier, limits["free"])
-    except Exception:
+    except Exception as e:
         logger.exception("Unhandled exception")
         user_limits = {"max_containers": 1, "max_memory": "256Mi", "max_cpu": "500m"}
 

@@ -421,8 +421,8 @@ def validate_environment(strict: bool = False) -> bool:
 if __name__ == '__main__':
     import json
     
-    print("🔍 SupremeAI Environment Validator")
-    print("=" * 50)
+    logger.debug("🔍 SupremeAI Environment Validator")
+    logger.debug("=" * 50)
     
     validator = EnvironmentValidator()
     result = validator.validate()
@@ -441,7 +441,7 @@ if __name__ == '__main__':
         }
     }
     
-    print('\n📋 JSON Output (for CI/CD):')
-    print(json.dumps(output, indent=2))
+    logger.debug('\n📋 JSON Output (for CI/CD):')
+    logger.debug(json.dumps(output, indent=2))
     
     sys.exit(0 if result.is_valid else 1)

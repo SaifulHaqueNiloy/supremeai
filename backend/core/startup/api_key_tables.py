@@ -70,7 +70,7 @@ async def ensure_api_key_tables() -> None:
             await conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_api_key_usage_key ON api_key_usage(api_key_id, created_at DESC)"
             )
-    except Exception:
+    except Exception as e:
         success = False
         raise
     finally:

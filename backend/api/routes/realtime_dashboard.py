@@ -101,7 +101,7 @@ class DashboardWebSocketManager:
                             try:
                                 # Forward the message to the client
                                 await self.send_personal_message(websocket, raw_message)
-                            except Exception:
+                            except Exception as e:
                                 # Client disconnected, remove from active connections
                                 self.disconnect(websocket)
 

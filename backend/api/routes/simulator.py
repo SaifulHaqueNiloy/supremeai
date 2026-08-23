@@ -81,7 +81,7 @@ def _use_redis() -> bool:
         if not url or "mock" in url.lower():
             return False
         return True
-    except Exception:
+    except Exception as e:
         return False
 
 
