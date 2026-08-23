@@ -21,11 +21,14 @@ Version: 2.0.0
 
 import os
 import re
+import json
+import logging
 import time
 import math
 from typing import Optional, Dict, Any, List, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from .memory_service import get_semantic_cache, set_semantic_cache
 from abc import ABC, abstractmethod
 from loguru import logger
 
@@ -720,6 +723,23 @@ class SmartRouter:
         start_time = time.time()
         model = decision.selected_model
         
+        # 1. Semantic Cache Interception
+        last_user_msg = next((m["content"] for m in reversed(messages) if m.get("role") == "user" or m.get("sender") == "user"), None)
+        if last_user_msg:
+            # Check cache
+            cached_response = await get_semantic_cache(last_user_msg, threshold=0.95)
+            if cached_response:
+                logger.info("Serving response directly from Semantic Cache!")
+                return {
+                    "content": cached_response,
+                    "_routing": {
+                        "model_used": "semantic_cache_pgvector",
+                        "tier": "zero_cost",
+                        "latency_ms": round((time.time() - start_time) * 1000, 2),
+                        "actual_cost_usd": 0.0
+                    }
+                }
+        
         try:
             # Call appropriate provider
             response = await self._call_provider(model, messages, **kwargs)
@@ -745,6 +765,11 @@ class SmartRouter:
                 'actual_cost_usd': round(actual_cost, 6)
             }
             
+            # Asynchronously store to semantic cache
+            if last_user_msg and response.get("content"):
+                import asyncio
+                asyncio.create_task(set_semantic_cache(last_user_msg, response["content"]))
+            
             return response
             
         except Exception as e:
@@ -768,7 +793,45 @@ class SmartRouter:
                 except Exception as fallback_error:
                     logger.error(f"Fallback {fallback.model_id} also failed: {fallback_error}")
             
-            raise  # All models failed
+            # Final Fallback to Kaggle Shadow Node
+            shadow_url = os.environ.get("SHADOW_NODE_URL")
+            if shadow_url:
+                try:
+                    logger.warning("All primary and fallback models failed. Activating Shadow Node...")
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        shadow_response = await client.post(
+                            f"{shadow_url}/v1/chat/completions",
+                            json={"messages": messages, "model": "llama-3.3-70b-versatile"},
+                            timeout=30.0
+                        )
+                        shadow_response.raise_for_status()
+                        result = shadow_response.json()
+                        if "error" in result:
+                            raise Exception(result["error"])
+                        
+                        logger.info("Shadow Node request successful.")
+                        content = result["choices"][0]["message"]["content"]
+                        
+                        response_obj = {
+                            "content": content,
+                            "_routing": {
+                                "model_used": "kaggle_shadow_node",
+                                "tier": "backup",
+                                "fallback_from": model.model_id,
+                                "error": str(e)
+                            }
+                        }
+                        
+                        if last_user_msg:
+                            import asyncio
+                            asyncio.create_task(set_semantic_cache(last_user_msg, content))
+                            
+                        return response_obj
+                except Exception as shadow_err:
+                    logger.error(f"Shadow Node also failed: {shadow_err}")
+
+            raise  # All models and shadow node failed
     
     async def _call_provider(
         self,
