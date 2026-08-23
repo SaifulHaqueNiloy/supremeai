@@ -42,4 +42,3 @@ def test_health_check_ok_without_subsystems():
     resp = client.get("/health")
     assert resp.status_code == 200
     assert resp.json()["status"] == "degraded"
-
