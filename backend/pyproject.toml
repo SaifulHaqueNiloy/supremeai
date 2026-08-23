@@ -96,6 +96,7 @@ bcrypt = "^5.0.0"
 lxml = "^6.1.2"
 playwright = "^1.62.0"
 infisical-python = "^2.3.6"
+aiofiles = "^25.1.0"
 [tool.poetry.group.ml]
 optional = true
 
