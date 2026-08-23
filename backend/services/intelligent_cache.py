@@ -406,7 +406,7 @@ class IntelligentCache:
                 call_kwargs.update({k: str(v) for k, v in kwargs.items()})
                 call_kwargs.update(key_kwargs)
 
-                cache_key = self._generate_key(func_prefix or func_key, **call_kwargs)
+                cache_key = self._generate_key(key_prefix or func_key, **call_kwargs)
 
                 return await self.get_or_compute(
                     key=cache_key, compute_fn=lambda: func(*args, **kwargs), ttl=ttl, tier=tier
