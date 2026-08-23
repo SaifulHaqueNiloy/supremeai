@@ -39,15 +39,32 @@ class FreeTierMemoryManager:
     MAX_MEMORY_MB = 512  # Render free tier limit
 
     def __init__(self):
-        self._process = psutil.Process()
+        try:
+            self._process = psutil.Process()
+        except (psutil.Error, OSError) as e:
+            # বাংলা মন্তব্য: PID সাময়িকভাবে অনুপলব্ধ/স্টেল হলে (কনটেইনার/স্যান্ডবক্স
+            # পরিবেশে বিরল ক্ষেত্রে ঘটে) constructor-এ ক্র্যাশ না করে None রেখে
+            # get_status()-এ পরে পুনরায় চেষ্টা করা হয় — এতে singleton স্থায়ীভাবে
+            # ভাঙে না ও পুরো অ্যাপ/মিডলওয়্যার ক্র্যাশ করে না।
+            logger.warning(f"psutil.Process() unavailable at startup, will retry lazily: {e}")
+            self._process = None
         self._last_gc_time = 0
         self._gc_interval_seconds = 60  # Run GC every 60 seconds
 
     def get_status(self) -> MemoryStatus:
         """Get current memory status."""
         try:
-            self._process.memory_info()
-            total_virtual = self._process.memory_info().rss / (1024 * 1024)
+            if self._process is None:
+                self._process = psutil.Process()
+
+            try:
+                total_virtual = self._process.memory_info().rss / (1024 * 1024)
+            except (psutil.NoSuchProcess, psutil.ZombieProcess):
+                # বাংলা মন্তব্য: cached Process handle স্টেল হয়ে গেলে একবার পুনরায়
+                # তৈরি করে চেষ্টা করা হচ্ছে (self-heal), বারবার একই এরর যেন সব
+                # পরবর্তী রিকোয়েস্টকেও ব্যর্থ না করে।
+                self._process = psutil.Process()
+                total_virtual = self._process.memory_info().rss / (1024 * 1024)
 
             # Get system memory for context
             psutil.virtual_memory()

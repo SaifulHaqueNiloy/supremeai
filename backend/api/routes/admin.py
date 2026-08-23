@@ -139,12 +139,11 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     elif action_type == "rollback":
         # বাংলা মন্তব্য: Alembic প্রোগ্রামাটিক রোলব্যাক মেকানিজম
         try:
+            from alembic import command
             from alembic.config import Config
 
-            from alembic import command
-
             alembic_cfg = Config("backend/alembic.ini")
-            alembic_cfg.set_main_option("script_location", "backend/alembic")
+            alembic_cfg.set_main_option("script_location", "backend/alembic_migrations")
             command.downgrade(alembic_cfg, "-1")
 
             logger.info("Alembic rollback to previous revision completed successfully.")
