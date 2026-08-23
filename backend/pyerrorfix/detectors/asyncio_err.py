@@ -17,7 +17,7 @@ from __future__ import annotations
 import ast
 from typing import Any
 
-from pyerrorfix.core.issue import Category, Severity
+from pyerrorfix.core.issue import Category, Issue, Severity
 from pyerrorfix.detectors.base import BaseDetector, iter_call_name
 
 _BLOCKING_CALLS = {

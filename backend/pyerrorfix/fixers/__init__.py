@@ -1,7 +1,7 @@
 """Fixer registry."""
 from __future__ import annotations
 
-from typing import Type
+from typing import Any
 
 from pyerrorfix.fixers.await_fixer import AwaitFixer
 from pyerrorfix.fixers.base import BaseFixer
