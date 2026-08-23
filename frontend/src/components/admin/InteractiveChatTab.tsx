@@ -50,7 +50,6 @@ export function InteractiveChatTab({
     chatTabTerminalOpen,
     chatTabBrowserOpen,
     toggleTerminal,
-    toggleTerminal,
     toggleBrowser,
   } = useDashboardStore();
 
