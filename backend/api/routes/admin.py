@@ -139,9 +139,9 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     elif action_type == "rollback":
         # বাংলা মন্তব্য: Alembic প্রোগ্রামাটিক রোলব্যাক মেকানিজম
         try:
-            from alembic.config import Config
-
+            # ruff: noqa: I001
             from alembic import command
+            from alembic.config import Config
 
             alembic_cfg = Config("backend/alembic.ini")
             alembic_cfg.set_main_option("script_location", "backend/alembic_migrations")
