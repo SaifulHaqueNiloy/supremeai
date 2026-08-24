@@ -57,7 +57,16 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     mocks["redis_manager"].close = AsyncMock()
     mocks["orchestrator"] = stack.enter_context(patch("core.lifespan.Orchestrator"))
     stack.enter_context(patch("core.startup.services.maintenance_pipeline.start_monitoring"))
-    mocks["create_task"] = stack.enter_context(patch("asyncio.create_task"))
+    def _closing_create_task(coro, **kwargs):
+        # বাংলা মন্তব্য: coroutine বন্ধ না করলে asyncio "coroutine was never
+        # awaited" RuntimeWarning দেয়, কারণ create_task() mocked থাকায়
+        # কখনো schedule/await হয় না।
+        coro.close()
+        return MagicMock()
+
+    mocks["create_task"] = stack.enter_context(
+        patch("asyncio.create_task", side_effect=_closing_create_task)
+    )
     stack.enter_context(patch("asyncio.to_thread", side_effect=lambda f, *a, **kw: f()))
 
     mocks["services_lifespan"] = stack.enter_context(patch("core.lifespan.services", create=True))
