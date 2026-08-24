@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 # backend/core/llm/telemetry.py
 """LLM Call Telemetry — structured logging for every gateway call.
 
@@ -7,7 +11,6 @@ model, task_type, latency_ms, tokens (if available), cost, success.
 This is the data source for future self-evolving routing policies.
 """
 
-from __future__ import annotations
 
 import contextlib
 import json

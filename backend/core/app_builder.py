@@ -1,3 +1,5 @@
+import logging
+
 # backend/core/app_builder.py
 """FastAPI Application Builder — Centralized Middleware & Dependency Injection (Zero-Hardcode)
 

@@ -1,3 +1,5 @@
+import logging
+
 """
 MCP Server for Cloud Deployment Integration in SupremeAI 2.0.
 

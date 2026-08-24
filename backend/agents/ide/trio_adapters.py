@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 """
 SupremeAI IDE Trio - Adapters for Gemini, Kilo Code, and Cline
 ===============================================================
@@ -8,7 +12,6 @@ Each adapter wraps its respective IDE AI tool and exposes a standardized
     Gemini (Writer) -> Kilo (Reviewer) -> Cline (Checker)
 """
 
-from __future__ import annotations
 
 import json
 import shutil
@@ -24,7 +27,7 @@ try:
 except ImportError:  # pragma: no cover
     from loguru import logger
 
-        if not logger.handlers:
+    if not logger.handlers:
         logger.addHandler(logging.NullHandler())
 
 

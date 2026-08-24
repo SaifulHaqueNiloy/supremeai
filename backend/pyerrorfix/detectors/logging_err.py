@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 """Logging & exception-handling detector (NEW category).
 
 Catches:
@@ -11,7 +15,6 @@ Catches:
   * `print()` in production code (info).
 """
 
-from __future__ import annotations
 
 import ast
 

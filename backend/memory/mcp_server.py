@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 #!/usr/bin/env python3
 """
 SupremeAI 2.0 — Memory MCP Server
@@ -44,7 +48,6 @@ Tools (MCP protocol):
     - search_learned_facts
 """
 
-from __future__ import annotations
 
 import asyncio
 import json
