@@ -35,7 +35,7 @@ class VectorDatabaseClient:
         Saves an experience into the shared memory pool using CascadeMemoryService.
         """
         try:
-            from services.memory_service import save_memory
+            from services.memory_service import memory_service
 
             request_text = metadata.get("request", metadata.get("patch_id", ""))
 
@@ -50,9 +50,13 @@ class VectorDatabaseClient:
                 "original": metadata,
             }
 
-            await save_memory(
-                session_id=metadata.get("session_id", "vector_db_legacy"),
+            memory_service.store_memory(
+                file_path=metadata.get("patch_id", "vector_db_legacy"),
+                content="",
                 summary=request_text,
+                structure="",
+                session_id=metadata.get("session_id", "vector_db_legacy"),
+                agent_type="legacy_experience",
                 task_type="legacy_experience",
                 metadata=stored_metadata,
             )
@@ -76,9 +80,9 @@ class VectorDatabaseClient:
             return []
 
         try:
-            from services.memory_service import recall_memories
+            from services.memory_service import memory_service
 
-            hits = await recall_memories(task_description=query_text, limit=top_k, threshold=0.65)
+            hits = memory_service.query_context(query=query_text, limit=top_k, threshold=0.65)
 
             # Transform Cascade format back to Pinecone-shaped format
             return [
