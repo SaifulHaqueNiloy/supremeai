@@ -29,7 +29,7 @@ from typing import Any
 from loguru import logger
 
 try:
-    import requests
+    import httpx as requests
 
     HAS_REQUESTS = True
 except ImportError:

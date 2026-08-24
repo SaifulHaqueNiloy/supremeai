@@ -36,7 +36,7 @@ from typing import Any
 
 # requests মডিউল অনুপস্থিত থাকলেও যেন HealthCheck ও Deployment সার্ভিস ভেঙে না পড়ে, সে জন্য httpx ফলব্যাক সহ সেফ ইমপোর্ট করা হলো।
 try:
-    import requests
+    import httpx as requests
 except ImportError:
     import httpx as requests  # type: ignore
 

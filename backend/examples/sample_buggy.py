@@ -11,7 +11,7 @@ import pickle  # noqa: F401  (used by security detector)
 import subprocess
 import time
 
-import requests
+import httpx as requests
 
 # --- hardcoded secret (security) ---
 API_KEY = "sk-1234567890abcdef1234567890abcdef"
