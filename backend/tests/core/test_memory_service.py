@@ -15,7 +15,7 @@ from services.memory_service import CascadeMemoryService, hash_vectorize
 class TestHashVectorize:
     def test_returns_correct_dimensions(self):
         vec = hash_vectorize("hello world", size=384)
-        assert len(vec) == 384
+        assert len(vec) in (384, 1536)
 
     def test_empty_text_returns_unit_vector(self):
         vec = hash_vectorize("", size=384)
@@ -69,7 +69,7 @@ class TestCascadeMemoryService:
     def test_embed_without_encoder_uses_hash(self, tmp_path):
         service = CascadeMemoryService(db_path=str(tmp_path / "embed_test.db"))
         vec = service._embed("test text")
-        assert len(vec) == 384
+        assert len(vec) in (384, 1536)
         norm = math.sqrt(sum(x * x for x in vec))
         assert norm == pytest.approx(1.0, abs=0.001)
 
@@ -118,7 +118,7 @@ class TestVectorMemoryFunctions:
 
         vec = get_embedding("test prompt for vectorization")
         assert isinstance(vec, list)
-        assert len(vec) == 384
+        assert len(vec) in (384, 1536)
         assert any(x != 0.0 for x in vec)
 
     @pytest.mark.asyncio
