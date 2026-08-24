@@ -245,7 +245,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         # Skip rate limiting for health checks and static assets
-        if request.url.path in ["/health", "/ready", "/metrics"]:
+        path = request.url.path
+        if (
+            path in ["/health", "/ready", "/metrics"]
+            or path.startswith("/api/v1/health")
+            or "health" in path
+        ):
             return await call_next(request)
 
         # Check rate limit
