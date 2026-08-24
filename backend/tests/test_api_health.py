@@ -16,44 +16,58 @@ class TestHealthEndpoint:
     @pytest.mark.unit
     async def test_health_returns_200_when_healthy(self, client):
         """Health endpoint returns 200 when all checks pass."""
-        with patch("core.health._run_check") as mock_check:
-            from core.health import HealthResult, HealthStatus
+        from core.health_routes import HealthCheck, HealthResult, HealthStatus, _checks
 
-            mock_result = HealthResult(
-                name="database",
-                status=HealthStatus.HEALTHY,
-                latency_ms=5.0,
-            )
-            mock_check.return_value = AsyncMock(return_value=mock_result)
+        dummy_check = HealthCheck(name="database", check_fn=lambda: True, critical=True)
+        _checks.append(dummy_check)
+        try:
+            with patch("core.health_routes._run_check") as mock_check:
+                mock_result = HealthResult(
+                    name="database",
+                    status=HealthStatus.HEALTHY,
+                    latency_ms=5.0,
+                )
+                mock_check.return_value = mock_result
 
-            response = await client.get("/health")
+                response = await client.get("/health")
 
-            assert response.status_code == 200
-            data = response.json()
-            assert data["status"] == "healthy"
-            assert "uptime_seconds" in data
-            assert "checks" in data
+                assert response.status_code == 200
+                data = response.json()
+                assert data["status"] == "healthy"
+                assert "uptime_seconds" in data
+                assert "checks" in data
+        finally:
+            _checks.remove(dummy_check)
 
     @pytest.mark.unit
     async def test_health_returns_503_when_unhealthy(self, client):
         """Health endpoint returns 503 when critical check fails."""
-        with patch("core.health._run_check") as mock_check:
-            from core.health import HealthResult, HealthStatus
+        from core.health_routes import HealthCheck, HealthResult, HealthStatus, _checks
 
-            mock_result = HealthResult(
-                name="database",
-                status=HealthStatus.UNHEALTHY,
-                latency_ms=5000.0,
-                error="Connection refused",
-                critical=True,
-            )
-            mock_check.return_value = AsyncMock(return_value=mock_result)
+        # বাংলা মন্তব্য: httpx ASGITransport টেস্ট ক্লায়েন্ট lifespan startup
+        # ট্রিগার করে না, তাই _checks registry খালি থাকে এবং mock করা
+        # _run_check কখনো কল হয় না (খালি লিস্টের ওপর কম্প্রিহেনশন)। এখানে
+        # ম্যানুয়ালি একটা dummy check রেজিস্টার করে সেটা নিশ্চিত করা হচ্ছে।
+        dummy_check = HealthCheck(name="database", check_fn=lambda: True, critical=True)
+        _checks.append(dummy_check)
+        try:
+            with patch("core.health_routes._run_check") as mock_check:
+                mock_result = HealthResult(
+                    name="database",
+                    status=HealthStatus.UNHEALTHY,
+                    latency_ms=5000.0,
+                    error="Connection refused",
+                    critical=True,
+                )
+                mock_check.return_value = mock_result
 
-            response = await client.get("/health")
+                response = await client.get("/health")
 
-            assert response.status_code == 503
-            data = response.json()
-            assert data["status"] == "unhealthy"
+                assert response.status_code == 503
+                data = response.json()
+                assert data["status"] == "unhealthy"
+        finally:
+            _checks.remove(dummy_check)
 
     @pytest.mark.unit
     async def test_readiness_probe(self, client):

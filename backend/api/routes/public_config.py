@@ -13,6 +13,7 @@ class PublicConfigResponse(BaseModel):
     adminEmail: str  # -- camelCase required to match frontend JSON API contract
     maxConcurrency: int  # -- camelCase required to match frontend JSON API contract
     features: dict[str, bool]
+    version: str
 
 
 @router.get("", response_model=PublicConfigResponse)
@@ -23,6 +24,7 @@ async def get_public_config():
         adminEmail="admin@supremeai.dev",
         maxConcurrency=3,
         features={"selfHealing": True, "costGuard": True},
+        version="2.0.0",
     )
 
 
