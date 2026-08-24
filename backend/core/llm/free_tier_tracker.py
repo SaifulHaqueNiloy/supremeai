@@ -433,6 +433,7 @@ class FreeTierTracker:
 # Module-level dictionary for per-user trackers
 # ---------------------------------------------------------------------------
 import cachetools
+
 _trackers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
 
 
