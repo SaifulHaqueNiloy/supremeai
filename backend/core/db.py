@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Generator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from functools import lru_cache
 
 from loguru import logger
