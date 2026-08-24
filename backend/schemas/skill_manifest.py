@@ -15,9 +15,7 @@ class SkillStatus(StrEnum):
 
 
 class SkillPermissions(BaseModel):
-    allow_network: bool = Field(
-        default=False, description="স্কিলটি ইন্টারনেট অ্যাক্সেস করতে পারবে কিনা"
-    )
+    allow_network: bool = Field(default=False, description="স্কিলটি ইন্টারনেট অ্যাক্সেস করতে পারবে কিনা")
     allowed_domains: list[str] = Field(
         default_factory=list, description="নেটওয়ার্ক ট্রাস্টেড ওরিজিন ডোমেইন লিস্ট"
     )
