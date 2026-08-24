@@ -29,6 +29,23 @@ async def start_background_services(app):
         restart_delay=5.0,
     )
 
+    # Agent 3: Task Queue Worker
+    try:
+        # Import to register handlers
+        import api.routes.websocket_agent
+        from core.queue.task_queue import task_queue
+
+        await agent_supervisor.start_agent(
+            "task-queue-worker",
+            task_queue.worker_loop,
+            health_check_interval=60,
+            max_restarts=10,
+            restart_delay=2.0,
+        )
+        logger.info("✅ Task Queue Worker background loop started.")
+    except Exception as exc:
+        logger.warning(f"⚠️ Task Queue Worker failed to start: {exc}")
+
     try:
         from core.telemetry.system_telemetry import run_system_telemetry_loop
 

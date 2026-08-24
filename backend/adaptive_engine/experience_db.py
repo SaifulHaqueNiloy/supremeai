@@ -214,7 +214,9 @@ class ExperienceDatabase:
             conn.commit()
             exp_id = int(cursor.lastrowid or 0)
         if embedding:
-            self._upsert_vector_db(exp_id, request_text, embedding, exp.result, response_text)
+            self._upsert_vector_db(
+                exp_id, request_text, embedding, exp.result, response_text, exp.user_id
+            )
         return exp_id
 
     def _upsert_vector_db(
@@ -224,6 +226,7 @@ class ExperienceDatabase:
         embedding: list[float],
         result: str,
         response_text: str = "",
+        user_id: str = "",
     ) -> None:
         # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
         self._ensure_chroma()
@@ -233,7 +236,7 @@ class ExperienceDatabase:
                 self.chroma_collection.upsert(
                     ids=[str(exp_id)],
                     embeddings=[embedding],
-                    metadatas=[{"result": result, "response": response_text}],
+                    metadatas=[{"result": result, "response": response_text, "user_id": user_id}],
                     documents=[text],
                 )
         except Exception as e:
@@ -253,6 +256,7 @@ class ExperienceDatabase:
                                 "result": result,
                                 "text": text,
                                 "response": response_text,
+                                "user_id": user_id,
                             },
                         )
                     ],
