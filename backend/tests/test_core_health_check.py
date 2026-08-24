@@ -216,8 +216,7 @@ async def test_check_external_services_all_configured():
 
         assert result.status == HealthStatus.HEALTHY
         assert "All external services configured" in result.message
-        assert result.details["gemini_api"] is True
-        assert result.details["openrouter_api"] is True
+        assert result.details["llm_provider_configured"] is True
         assert result.details["redis_configured"] is True
         assert result.details["stripe_configured"] is True
 
@@ -237,8 +236,7 @@ async def test_check_external_services_some_missing():
 
         assert result.status == HealthStatus.DEGRADED
         assert "Some external services not configured" in result.message
-        assert result.details["gemini_api"] is False
-        assert result.details["openrouter_api"] is True
+        assert result.details["llm_provider_configured"] is True
         assert result.details["redis_configured"] is False
         assert result.details["stripe_configured"] is False
 
