@@ -124,6 +124,7 @@ class SettingsFieldsMixin:
 
     supremeai_public_paths: str | list[str] = Field(
         default=[
+            "/",
             "/health",
             "/metrics",
             "/docs",
