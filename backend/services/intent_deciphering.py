@@ -148,9 +148,7 @@ class IntentDecipheringService:
             methodology = "single_source_of_truth_migration_with_facades"
 
         # Pattern: Security / RBAC / Auth hardening
-        elif any(
-            w in lowered for w in ["security", "auth", "rbac", "নিরাপত্তা", "guard", "protect"]
-        ):
+        elif any(w in lowered for w in ["security", "auth", "rbac", "নিরাপত্তা", "guard", "protect"]):
             ultimate_goal = (
                 "Harden endpoints with role-based access control and strict boundary enforcement"
             )
