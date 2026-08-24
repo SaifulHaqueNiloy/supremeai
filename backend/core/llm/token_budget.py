@@ -364,14 +364,17 @@ class TokenBudgetManager:
 
 
 # ---------------------------------------------------------------------------
-# Module-level singleton
+# Module-level dictionary for per-user managers (TTLCache if cachetools available)
 # ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Module-level dictionary for per-user managers
-# ---------------------------------------------------------------------------
-import cachetools
+try:
+    import cachetools
 
-_managers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
+    _managers: dict = cachetools.TTLCache(maxsize=10000, ttl=86400)
+except ImportError:
+    logger.warning(
+        "[TokenBudget] cachetools not available, using plain dict for per-user manager cache."
+    )
+    _managers = {}
 
 
 def get_budget_manager(
