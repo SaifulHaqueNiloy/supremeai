@@ -20,9 +20,7 @@ import os
 logger = logging.getLogger(__name__)
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-_HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
-    "sentence_transformers"
-) is not None
+_HAS_SENTENCE_TRANSFORMERS = False  # Disabled local 384-dim model to avoid zero-padding issues
 
 _LOCAL_MODEL_NAME = "all-MiniLM-L6-v2"
 _LOCAL_DIM = 384
@@ -93,11 +91,8 @@ def _pad_to_dim(vec: list[float], dim: int) -> list[float]:
 
 def embed_for_pgvector(text: str, pg_dim: int = _REMOTE_DIM) -> list[float] | None:
     """
-    Local-first embedding padded to ``pg_dim``.
-
-    - Local path (384) zero-padded to ``pg_dim`` — cosine similarity preserved.
-    - Falls back to LiteLLM OpenAI (native ``pg_dim``) when local encoder unavailable.
-    - Returns ``None`` only if both fail (callers degrade gracefully to substring search).
+    Native 1536-dimensional embedding using text-embedding-3-small via LiteLLM.
+    Avoids zero-padding 384-dim models which was identified as causing cosine similarity issues.
     """
     global _cache_hits, _cache_misses
     cache_key = f"{text}:{pg_dim}"
@@ -107,26 +102,20 @@ def embed_for_pgvector(text: str, pg_dim: int = _REMOTE_DIM) -> list[float] | No
 
     _cache_misses += 1
 
-    local = local_embed(text)
-    if local is not None:
-        padded = _pad_to_dim(local, pg_dim)
-        _embedding_cache[cache_key] = padded
-
-        # Prevent unbounded memory growth
-        if len(_embedding_cache) > 5000:
-            _embedding_cache.clear()
-
-        return padded.copy()
-
     try:
         import litellm
 
         resp = litellm.embedding(model=_REMOTE_MODEL, input=text)
         vec = resp.data[0]["embedding"]
         _embedding_cache[cache_key] = vec
+
+        # Prevent unbounded memory growth
+        if len(_embedding_cache) > 5000:
+            _embedding_cache.clear()
+
         return vec.copy()
     except Exception as exc:
-        logger.warning(f"[embeddings] LiteLLM fallback embedding failed: {exc}")
+        logger.warning(f"[embeddings] LiteLLM embedding failed: {exc}")
         return None
 
 
