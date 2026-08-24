@@ -13,8 +13,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
 

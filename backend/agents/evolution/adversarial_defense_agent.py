@@ -14,8 +14,6 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
 
 DEFENSE_CACHE_TTL = 600

@@ -32,7 +32,6 @@ async def start_background_services(app):
     # Agent 3: Task Queue Worker
     try:
         # Import to register handlers
-        import api.routes.websocket_agent
         from core.queue.task_queue import task_queue
 
         await agent_supervisor.start_agent(

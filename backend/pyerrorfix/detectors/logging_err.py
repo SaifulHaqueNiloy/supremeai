@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 """Logging & exception-handling detector (NEW category).
 
 Catches:

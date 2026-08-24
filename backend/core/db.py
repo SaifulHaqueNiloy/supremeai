@@ -8,7 +8,7 @@ from __future__ import annotations
 import os
 import time
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 from functools import lru_cache
 
 from loguru import logger
@@ -64,14 +64,19 @@ def get_engine():
       - pool_recycle: Recycle connections after N seconds (default: 3600)
       - pool_pre_ping: Verify connections before use
     """
-    engine = create_async_engine(
-        _get_database_url(),
-        pool_size=POOL_SIZE,
-        max_overflow=MAX_OVERFLOW,
-        pool_recycle=POOL_RECYCLE,
-        pool_pre_ping=True,  # Detect stale connections
-        echo=os.getenv("DB_ECHO", "false").lower() == "true",
-    )
+    db_url = _get_database_url()
+    is_sqlite = db_url.startswith("sqlite")
+    engine_kwargs: dict = {
+        "echo": os.getenv("DB_ECHO", "false").lower() == "true",
+        "pool_pre_ping": True,  # Detect stale connections
+    }
+    if not is_sqlite:
+        # pool_size / max_overflow are NOT supported for SQLite
+        engine_kwargs["pool_size"] = POOL_SIZE
+        engine_kwargs["max_overflow"] = MAX_OVERFLOW
+        engine_kwargs["pool_recycle"] = POOL_RECYCLE
+
+    engine = create_async_engine(db_url, **engine_kwargs)
 
     # Register slow query listener
     @event.listens_for(engine.sync_engine, "before_cursor_execute")
@@ -95,19 +100,35 @@ def get_engine():
     return engine
 
 
-engine = get_engine()
+# ---------------------------------------------------------------------------
+# Lazy engine initialization — avoids crashing on import if DB is unavailable
+# ---------------------------------------------------------------------------
+_engine = None
+_async_session_factory = None
 
-# Session factory
-async_session_factory = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+
+def get_session_factory():
+    """Return the module-level session factory, initializing lazily."""
+    global _engine, _async_session_factory
+    if _async_session_factory is None:
+        _engine = get_engine()
+        _async_session_factory = async_sessionmaker(
+            _engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+    return _async_session_factory
+
+
+# Keep backward-compat references (filled lazily)
+engine = None  # type: ignore[assignment]  # resolved on first use via get_session_factory()
+async_session_factory = None  # type: ignore[assignment]
 
 
 async def get_db() -> Generator[AsyncSession, None, None]:
     """Dependency injection for FastAPI routes."""
-    async with async_session_factory() as session:
+    factory = get_session_factory()
+    async with factory() as session:
         try:
             yield session
             await session.commit()
@@ -118,10 +139,11 @@ async def get_db() -> Generator[AsyncSession, None, None]:
             await session.close()
 
 
-@contextmanager
-async def db_session() -> AsyncSession:
+@asynccontextmanager
+async def db_session() -> AsyncSession:  # type: ignore[override]
     """Context manager for non-FastAPI usage."""
-    async with async_session_factory() as session:
+    factory = get_session_factory()
+    async with factory() as session:
         yield session
 
 

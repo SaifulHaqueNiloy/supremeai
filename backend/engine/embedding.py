@@ -1,7 +1,5 @@
 import asyncio
 
-from loguru import logger
-
 from core.embeddings import embed_for_pgvector
 
 

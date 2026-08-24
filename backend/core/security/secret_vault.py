@@ -392,12 +392,8 @@ class ProductionSecretVault:
             raise SecretNotFoundError(error_msg)
         return value or default or ""
 
-    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
-        """Async wrapper — runs fetch_secret in a thread to avoid blocking the event loop.
-
-        বাংলা: অ্যাসিঙ্ক র‍্যাপার — ইভেন্ট লুপ ব্লক না করে থ্রেডে fetch_secret চালায়।
-        """
-        return await asyncio.to_thread(self.fetch_secret, secret_id, default)
+    # NOTE: The async implementation of fetch_secret_async is defined above at the
+    # @with_error_bus("fetch_secret_async") decorator — do NOT redefine it here.
 
     @with_error_bus("fetch_json_secret")
     def fetch_json_secret(self, secret_id: str, default: dict | None = None) -> dict:
