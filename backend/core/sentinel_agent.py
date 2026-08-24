@@ -126,8 +126,8 @@ class SentinelAgent:
                             session.add(incident)
 
                 await session.commit()
-        except Exception as e:
-            logger.error(f"[SentinelAgent] Error during monitor_endpoints: {e}")
+        except Exception:
+            logger.exception("[SentinelAgent] Error during monitor_endpoints:")
 
     async def audit_dependencies(self):
         """
@@ -194,8 +194,8 @@ class SentinelAgent:
                     else:
                         dep.status = "secure"
                 await session.commit()
-        except Exception as e:
-            logger.error(f"[SentinelAgent] Error during audit_dependencies: {e}")
+        except Exception:
+            logger.exception("[SentinelAgent] Error during audit_dependencies:")
 
     async def trigger_event(self, event_type: str, details: str):
         """
@@ -211,8 +211,8 @@ class SentinelAgent:
                 session.add(incident)
                 await session.commit()
                 logger.info(f"[SentinelAgent] Event-driven incident recorded: {event_type}")
-        except Exception as e:
-            logger.error(f"[SentinelAgent] Error triggering event: {e}")
+        except Exception:
+            logger.exception("[SentinelAgent] Error triggering event:")
 
     async def run_periodic_loop(self):
         """
