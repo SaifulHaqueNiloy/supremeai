@@ -93,7 +93,7 @@ class HealthMonitor:
         }
         if probe_results:
             result["probes"] = probe_results
-        if _PROMETHEUS_AVAILABLE:
+        if hasattr(self, "uptime_seconds"):
             try:
                 self.uptime_seconds.set(result["uptime_seconds"])
                 self.cpu_usage_percent.set(result["cpu_usage_percent"])
@@ -116,21 +116,21 @@ class HealthMonitor:
         return True
 
     def record_request_duration(self, duration_seconds: float) -> None:
-        if _PROMETHEUS_AVAILABLE:
+        if hasattr(self, "request_duration_seconds"):
             try:
                 self.request_duration_seconds.observe(duration_seconds)
             except Exception as exc:
                 logger.debug(f"Failed to record request duration: {exc}")
 
     def record_error(self, error_type: str = "general") -> None:
-        if _PROMETHEUS_AVAILABLE and hasattr(self, "error_count"):
+        if hasattr(self, "error_count"):
             try:
                 self.error_count.labels(error_type=error_type).inc()
             except Exception as exc:
                 logger.debug(f"Failed to record error metric: {exc}")
 
     def record_token_usage(self, provider: str, token_type: str, count: int) -> None:
-        if _PROMETHEUS_AVAILABLE and hasattr(self, "token_usage"):
+        if hasattr(self, "token_usage"):
             try:
                 self.token_usage.labels(provider=provider, type=token_type).inc(count)
             except Exception as exc:
