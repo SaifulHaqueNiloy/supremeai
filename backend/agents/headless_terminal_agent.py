@@ -23,6 +23,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
 
@@ -86,8 +87,8 @@ class CommandInterpreter:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="generation",
-                max_tokens=200,
-                temperature=0.1,
+                max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
+                temperature=config_cache.get("headless_terminal_agent_temperature", 0.1),
             )
             command = result.get("content", "").strip()
 
@@ -340,7 +341,7 @@ class HeadlessTerminalAgent:
             result = await self.interpreter.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=200,
+                max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
             )
             return result.get("content", "").strip()
         except Exception as exc:
@@ -356,7 +357,7 @@ class HeadlessTerminalAgent:
             result = await self.interpreter.llm.route(
                 prompt=prompt,
                 task_type="summarization",
-                max_tokens=200,
+                max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
             )
             return result.get("content", "").strip()
         except Exception as exc:

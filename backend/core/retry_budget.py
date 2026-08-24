@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 
 
@@ -18,6 +19,19 @@ class RetryBudget:
 
     async def consume(self) -> bool:
         async with self.lock:
+            from services.config_service import ConfigService
+
+            # Fetch dynamic configs from cache/DB where possible
+            max_tokens = await ConfigService.get_config(
+                None, "retry_budget_max_tokens", self.max_tokens
+            )
+            refill_rate = await ConfigService.get_config(
+                None, "retry_budget_refill_rate", self.refill_rate
+            )
+
+            self.max_tokens = max_tokens
+            self.refill_rate = refill_rate
+
             now = time.monotonic()
             elapsed = now - self.last_refill
             # টোকেন রিফিল করা
@@ -30,4 +44,7 @@ class RetryBudget:
 
 
 # গ্লোবাল রিট্রাই বাজেট ইনস্ট্যান্স
-global_retry_budget = RetryBudget(max_tokens=20, refill_rate_per_sec=1.0)
+global_retry_budget = RetryBudget(
+    max_tokens=int(os.getenv("RETRY_BUDGET_MAX_TOKENS", "20")),
+    refill_rate_per_sec=float(os.getenv("RETRY_BUDGET_REFILL_RATE", "1.0")),
+)

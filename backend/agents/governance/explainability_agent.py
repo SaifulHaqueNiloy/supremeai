@@ -11,6 +11,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager
+from core.config_cache import config_cache
 from core.llm.token_deductor import TokenDeductor
 
 
@@ -130,7 +131,11 @@ class ExplainabilityAgent:
             from core.llm.language_model import LanguageModel
 
             lm = LanguageModel()
-            result = await lm.generate(prompt, max_tokens=500, temperature=0.3)
+            result = await lm.generate(
+                prompt,
+                max_tokens=config_cache.get("explainability_agent_max_tokens", 500),
+                temperature=config_cache.get("explainability_agent_temperature", 0.3),
+            )
             return result.get("text", "")
         except Exception as e:
             logger.error(f"Error calling LLM for explanation: {e}")

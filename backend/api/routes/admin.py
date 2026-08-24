@@ -360,3 +360,40 @@ async def model_branding(admin_user: dict = Depends(get_current_admin)):
         "models": {k: v["label"] for k, v in MODEL_DISPLAY.items()},
         "providers": PROVIDER_DISPLAY,
     }
+
+
+@router.post("/configs/refresh")
+async def refresh_system_configs(admin_user: dict = Depends(get_current_admin)):
+    """Hot-Reload model registries and system thresholds from the database without a restart."""
+    import asyncio
+    from database.session import get_db_session_context
+    from services.smart_model_router import sync_from_db as sync_router
+    from brain.model_registry import ModelRegistry
+    from brain.economic_optimizer import get_economic_optimizer
+    from utils.branding import sync_from_db as sync_branding
+
+    from core.circuit_breaker import sync_from_db as sync_circuit_breaker
+    from core.health.health_monitor import get_health_monitor
+    from core.middleware.health_aware_middleware import sync_from_db as sync_health_middleware
+
+    try:
+        async with get_db_session_context() as db:
+            economic_opt = await get_economic_optimizer()
+            health_monitor = get_health_monitor()
+            await asyncio.gather(
+                sync_router(db),
+                ModelRegistry.sync_from_db(db),
+                economic_opt.sync_from_db(db),
+                sync_branding(db),
+                sync_circuit_breaker(db),
+                health_monitor.sync_from_db(db),
+                sync_health_middleware(db),
+            )
+        logger.info(f"✅ Hot-Reload executed successfully by {admin_user.get('sub')}")
+        return {
+            "status": "success",
+            "message": "System configs and model registries reloaded successfully",
+        }
+    except Exception as e:
+        logger.error(f"❌ Hot-Reload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

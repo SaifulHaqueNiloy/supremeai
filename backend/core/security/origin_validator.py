@@ -1,5 +1,6 @@
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ট্রাস্টেড অরিজিন ভ্যালিডেশন মিডলওয়্যার।
 # এটি ওয়াইল্ডকার্ড CORS বাইপাস রোধ করে এবং শুধুমাত্র অনুমোদিত ডোমেইন থেকে এপিআই অ্যাক্সেস নিশ্চিত করে।
+import json
 import os
 
 from fastapi import Request, status
@@ -15,22 +16,35 @@ from core.cors_policy import (
 )
 from core.logging_config import logger
 
-# বাংলা মন্তব্য: portal-ভিত্তিক ডিফল্ট ট্রাস্টেড অরিজিন — User instance ও Admin instance
-# কখনোই একে অপরের ব্রাউজার অরিজিন ট্রাস্ট করবে না (আর্কিটেকচারাল আইসোলেশন)।
-USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
-    {
-        "https://supremeai-a.web.app",
-        "https://supremeai-backend.onrender.com",
-        "https://supremeai-studio-client.onrender.com",
-        "https://supremeai-studio.vercel.app",
-        "https://supremeai-lac.vercel.app",
-    }
+
+def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
+    val = os.getenv(env_var)
+    if val:
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return frozenset(parsed)
+        except json.JSONDecodeError:
+            return frozenset([x.strip() for x in val.split(",") if x.strip()])
+    return default
+
+
+USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = _load_origins(
+    "CORS_ORIGINS",
+    frozenset(
+        {
+            "https://supremeai-studio.vercel.app",
+            "https://supremeai-lac.vercel.app",
+        }
+    ),
 )
-ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = frozenset(
-    {
-        "https://supremeai-admin.web.app",
-        "https://supremeai-backend-docker.onrender.com",
-    }
+ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = _load_origins(
+    "ADMIN_CORS_ORIGINS",
+    frozenset(
+        {
+            "https://supremeai-admin.web.app",
+        }
+    ),
 )
 
 

@@ -8,6 +8,13 @@ via GET /api/admin/model-branding.
 
 from __future__ import annotations
 
+import logging
+from typing import Any
+
+from services.config_service import ConfigService
+
+logger = logging.getLogger(__name__)
+
 # provider id (raw) -> SupremeAI branded display name
 PROVIDER_DISPLAY: dict[str, str] = {
     "openai": "SupremeAI Core",
@@ -53,6 +60,24 @@ MODEL_DISPLAY: dict[str, dict[str, str]] = {
     # Mistral
     "mistral": {"label": "SupremeAI Mistral", "family": "mistral"},
 }
+
+
+async def sync_from_db(db: Any) -> None:
+    """Sync PROVIDER_DISPLAY and MODEL_DISPLAY from the database configuration."""
+    global PROVIDER_DISPLAY, MODEL_DISPLAY
+    try:
+        default_config = {"provider_display": PROVIDER_DISPLAY, "model_display": MODEL_DISPLAY}
+        configs = await ConfigService.get_config(db, "model_branding_map", default_config)
+        if configs:
+            if "provider_display" in configs:
+                PROVIDER_DISPLAY.clear()
+                PROVIDER_DISPLAY.update(configs["provider_display"])
+            if "model_display" in configs:
+                MODEL_DISPLAY.clear()
+                MODEL_DISPLAY.update(configs["model_display"])
+            logger.info("✅ Synced model_branding_map from DB.")
+    except Exception as e:
+        logger.error(f"❌ Failed to sync model_branding_map from DB: {e}")
 
 
 def _normalize(raw: str | None) -> str:

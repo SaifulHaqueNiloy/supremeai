@@ -68,11 +68,12 @@ class Orchestrator:
                     )
                     return
 
+                timeout_val = float(os.getenv("ORCHESTRATOR_TIMEOUT", "120"))
                 result = subprocess.run(
                     [sys.executable, script_path],
                     capture_output=True,
                     text=True,
-                    timeout=120,
+                    timeout=timeout_val,
                 )
                 if result.returncode != 0:
                     logger.error(
@@ -85,7 +86,7 @@ class Orchestrator:
                 logger.info(f"[Orchestrator] Budget guardian completed: {result.stdout[:200]}")
             except subprocess.TimeoutExpired:
                 logger.critical(
-                    "[Orchestrator] Budget guardian timed out after 120s. Enforcing Fail-Closed."
+                    f"[Orchestrator] Budget guardian timed out after {timeout_val}s. Enforcing Fail-Closed."
                 )
                 raise RuntimeError(
                     "Budget guardian timed out. Halting orchestrator to prevent financial bleed."

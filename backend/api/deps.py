@@ -32,7 +32,10 @@ async def get_current_user_token(request: Request) -> dict[str, Any]:
         return user
 
     if is_test_environment():
-        return {"sub": "admin@supremeai.com", "role": "admin"}
+        import os
+
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+        return {"sub": admin_email, "role": "admin"}
 
     raise_unauthorized("Missing or invalid authentication token.")
     return None  # type: ignore

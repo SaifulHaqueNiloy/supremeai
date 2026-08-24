@@ -17,6 +17,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from services.llm.llm_router import LLMRouter
 
 COLLAB_CACHE_TTL = 300
@@ -108,7 +109,11 @@ class MultiAgentCollaborationAgent:
         )
 
         try:
-            result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=1000)
+            result = await self.llm.route(
+                prompt=prompt,
+                task_type="reasoning",
+                max_tokens=config_cache.get("multi_agent_collaboration_agent_max_tokens", 1000),
+            )
             import json
 
             content = result.get("content", "{}")

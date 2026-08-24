@@ -3,6 +3,8 @@ import os
 
 from loguru import logger
 
+from core.config_cache import config_cache
+
 # বাংলা মন্তব্য: google-genai প্যাকেজ CI-তে ঠিকমতো install না থাকলে graceful fallback
 try:
     from google import genai
@@ -80,7 +82,7 @@ def execute_tool(payload: dict) -> dict:
                 contents=user_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=system_instruction,
-                    temperature=0.3,
+                    temperature=config_cache.get("core_doc_summarizer_temperature", 0.3),
                 ),
             )
         except CircuitBreakerOpenError as cb_exc:

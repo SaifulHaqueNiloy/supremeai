@@ -28,6 +28,8 @@ from typing import Any
 
 from loguru import logger
 
+from services.config_service import ConfigService
+
 from .memory_service import get_semantic_cache, set_semantic_cache
 
 
@@ -220,6 +222,49 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         tpm_limit=30000,
     ),
 }
+
+
+async def sync_from_db(db: Any) -> None:
+    """Sync MODEL_REGISTRY from the database configuration."""
+    global MODEL_REGISTRY
+    try:
+        # We serialize the default dict to a list of dicts for fallback
+        default_configs = [
+            {
+                "key": k,
+                **{
+                    f: getattr(v, f)
+                    if not isinstance(getattr(v, f), ModelTier)
+                    else getattr(v, f).value
+                    for f in v.__dataclass_fields__
+                },
+            }
+            for k, v in MODEL_REGISTRY.items()
+        ]
+
+        configs = await ConfigService.get_config(db, "smart_model_configs", default_configs)
+
+        new_registry = {}
+        for c in configs:
+            if "key" not in c:
+                continue
+            key = c.pop("key")
+
+            # Convert string tier back to ModelTier enum if necessary
+            if "tier" in c and isinstance(c["tier"], str):
+                try:
+                    c["tier"] = ModelTier(c["tier"])
+                except ValueError:
+                    c["tier"] = ModelTier.STANDARD
+
+            new_registry[key] = ModelConfig(**c)
+
+        if new_registry:
+            MODEL_REGISTRY.clear()
+            MODEL_REGISTRY.update(new_registry)
+            logger.info(f"✅ Synced {len(MODEL_REGISTRY)} smart_model_configs from DB.")
+    except Exception as e:
+        logger.error(f"❌ Failed to sync smart_model_configs from DB: {e}")
 
 
 @dataclass

@@ -197,5 +197,38 @@ async def initialize_independent_services(app):
     for idx, result in enumerate(init_results):
         if isinstance(result, BaseException):
             logger.error(f"Startup initialization failed for component {idx}: {result}")
+
+    # Sync DB-backed Model Registries after DB is initialized
+    if app.state.subsystem_status.get("db") != "down":
+        try:
+            from brain.economic_optimizer import get_economic_optimizer
+            from brain.model_registry import ModelRegistry
+            from core.circuit_breaker import sync_from_db as sync_circuit_breaker
+            from core.health.health_monitor import get_health_monitor
+            from core.middleware.health_aware_middleware import (
+                sync_from_db as sync_health_middleware,
+            )
+            from database.session import get_db_session_context
+            from services.smart_model_router import sync_from_db as sync_router
+            from utils.branding import sync_from_db as sync_branding
+
+            async with get_db_session_context() as db:
+                economic_opt = await get_economic_optimizer()
+                health_monitor = get_health_monitor()
+                await asyncio.gather(
+                    sync_router(db),
+                    ModelRegistry.sync_from_db(db),
+                    economic_opt.sync_from_db(db),
+                    sync_branding(db),
+                    sync_circuit_breaker(db),
+                    health_monitor.sync_from_db(db),
+                    sync_health_middleware(db),
+                )
+                logger.info(
+                    "✅ Core model registries and system thresholds synchronized from DB successfully."
+                )
+        except Exception as e:
+            logger.error(f"❌ Failed to sync model registries from DB: {e}")
+
     # Start SupremeAI Immune System zero-cost background probing
     maintenance_pipeline.start_monitoring()

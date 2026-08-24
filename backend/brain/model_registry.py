@@ -1,4 +1,9 @@
+import logging
 from typing import Any
+
+from services.config_service import ConfigService
+
+logger = logging.getLogger(__name__)
 
 
 class ModelRegistry:
@@ -238,6 +243,18 @@ class ModelRegistry:
             "strengths": ["offline reasoning", "distilled reasoning"],
         },
     }
+
+    @classmethod
+    async def sync_from_db(cls, db: Any) -> None:
+        """Sync MODELS from the database configuration."""
+        try:
+            configs = await ConfigService.get_config(db, "model_registry", cls.MODELS)
+            if configs:
+                cls.MODELS.clear()
+                cls.MODELS.update(configs)
+                logger.info(f"✅ Synced {len(cls.MODELS)} model_registry entries from DB.")
+        except Exception as e:
+            logger.error(f"❌ Failed to sync model_registry from DB: {e}")
 
     @classmethod
     def get_model(cls, model_id: str) -> dict[str, Any]:

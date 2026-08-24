@@ -5,6 +5,7 @@ Distributes ML/AI tasks across 6 Kaggle accounts (180 hrs/week total).
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -120,7 +121,8 @@ class KaggleOrchestrator:
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
 
         self.accounts = {acc.account_id: acc for acc in accounts}
-        self.http_client = httpx.AsyncClient(timeout=300.0)  # 5 min timeout
+        timeout_val = float(os.getenv("KAGGLE_TASK_TIMEOUT", "300.0"))
+        self.http_client = httpx.AsyncClient(timeout=timeout_val)
 
     async def submit_job(
         self,

@@ -3,6 +3,8 @@ import os
 import re
 from typing import Any
 
+from core.config_cache import config_cache
+
 # 🚀 Google modern SDK is optional during test/CI
 try:
     from google import genai  # type: ignore
@@ -74,7 +76,9 @@ class MorphicAdapter:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=self._get_morphic_system_prompt(),
-                    temperature=0.1,  # কাঠামোগত কোড আউটপুটের জন্য একদম লো-টেম্পারেচার
+                    temperature=config_cache.get(
+                        "morphic_adapter_temperature", 0.1
+                    ),  # কাঠামোগত কোড আউটপুটের জন্য একদম লো-টেম্পারেচার
                 ),
             )
 

@@ -11,6 +11,24 @@ from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.cache.redis_manager import redis_manager
+from services.config_service import ConfigService
+
+GLOBAL_HEALTH_CONFIG = {"health_threshold": 0.8}
+
+
+async def sync_from_db(db: Any) -> None:
+    """Sync global health middleware thresholds from the database configuration."""
+    try:
+        configs = await ConfigService.get_config(
+            db, "middleware_health_threshold", GLOBAL_HEALTH_CONFIG
+        )
+        if configs:
+            GLOBAL_HEALTH_CONFIG.update(configs)
+            logger.info(
+                f"✅ Synced middleware_health_threshold from DB. threshold={GLOBAL_HEALTH_CONFIG['health_threshold']}"
+            )
+    except Exception as e:
+        logger.error(f"❌ Failed to sync middleware_health_threshold from DB: {e}")
 
 
 class HealthAwareMiddleware(BaseHTTPMiddleware):
@@ -18,7 +36,6 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
-        self.health_threshold = 0.8  # 80% health threshold
         self.health_cache_ttl = 5  # 5 seconds cache
         self.degraded_endpoints: list[str] = []
 
@@ -140,7 +157,11 @@ class HealthAwareMiddleware(BaseHTTPMiddleware):
                 db_connected,
             )
 
-            status = "healthy" if health_score >= self.health_threshold else "degraded"
+            status = (
+                "healthy"
+                if health_score >= GLOBAL_HEALTH_CONFIG["health_threshold"]
+                else "degraded"
+            )
 
             return {
                 "status": status,

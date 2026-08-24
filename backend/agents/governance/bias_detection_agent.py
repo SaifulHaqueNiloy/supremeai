@@ -12,6 +12,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager
+from core.config_cache import config_cache
 from core.llm.token_deductor import TokenDeductor
 
 
@@ -207,7 +208,11 @@ class BiasDetectionAgent:
             from core.llm.language_model import LanguageModel
 
             lm = LanguageModel()
-            result = await lm.generate(prompt, max_tokens=300, temperature=0.2)
+            result = await lm.generate(
+                prompt,
+                max_tokens=config_cache.get("bias_detection_agent_max_tokens", 300),
+                temperature=config_cache.get("bias_detection_agent_temperature", 0.2),
+            )
 
             response_text = result.get("text", "")
 

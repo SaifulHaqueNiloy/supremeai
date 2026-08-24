@@ -31,15 +31,15 @@ export const CONFIG: EnvConfig = {
   // Backend API URL - use env var or detect automatically
   BACKEND_URL: getEnvVar(
     'BACKEND_URL',
-    typeof window !== 'undefined' 
+    getEnvVar('USER_BACKEND', typeof window !== 'undefined' 
       ? `${window.location.protocol}//${window.location.hostname}:8000`
-      : 'https://api.supremeai.com'
+      : 'http://localhost:8000')
   ),
   
   // WebSocket URL - derive from backend URL
   WS_URL: getEnvVar(
     'WS_URL',
-    CONFIG?.BACKEND_URL?.replace(/^http/, 'ws') || 'wss://api.supremeai.com/ws'
+    getEnvVar('USER_BACKEND', 'http://localhost:8000').replace(/^http/, 'ws') + '/ws'
   ),
   
   // Application identity

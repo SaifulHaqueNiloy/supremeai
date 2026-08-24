@@ -56,7 +56,7 @@ class QueryCache:
 
     def __init__(
         self,
-        redis_url: str = "redis://localhost:6379",
+        redis_url: str | None = None,
         enabled: bool = True,
         default_ttl: int = DEFAULT_TTL,
         max_cache_size: int = 10000,
@@ -70,7 +70,9 @@ class QueryCache:
             default_ttl: Default time-to-live in seconds
             max_cache_size: Maximum number of cached items
         """
-        self.redis_url = redis_url
+        from core.config import settings
+
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
         self.enabled = enabled
         self.default_ttl = default_ttl
         self.max_cache_size = max_cache_size
@@ -310,7 +312,9 @@ def get_cache() -> QueryCache:
     if _global_cache is None:
         import os
 
-        redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+        from core.config import settings
+
+        redis_url = os.getenv("REDIS_URL", getattr(settings, "redis_url", "redis://localhost:6379"))
         enabled = os.getenv("LLM_CACHE_ENABLED", "true").lower() == "true"
         _global_cache = QueryCache(redis_url=redis_url, enabled=enabled)
     return _global_cache

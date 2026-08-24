@@ -24,6 +24,7 @@ from typing import Any, cast
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from database.supabase_client import db
 from services.llm.llm_router import LLMRouter
@@ -252,8 +253,8 @@ class HeuristicScorer:
             result = await self.llm_router.route(
                 prompt=prompt,
                 task_type="embedding",
-                max_tokens=50,
-                temperature=0.0,
+                max_tokens=config_cache.get("skill_recommender_max_tokens", 50),
+                temperature=config_cache.get("skill_recommender_temperature", 0.0),
             )
             score = float(result.get("content", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)

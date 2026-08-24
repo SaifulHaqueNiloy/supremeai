@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
 
@@ -153,7 +154,7 @@ class BanglaNLPAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=200,
+                max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 200),
             )
             content = result.get("content", "{}")
             import json
@@ -205,7 +206,7 @@ class BanglaNLPAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=200,
+                max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 200),
             )
             bangla_text = result.get("content", romanized_text)
             confidence = self.processor.get_bangla_ratio(bangla_text)
@@ -248,7 +249,7 @@ class BanglaNLPAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="text_generation",
-                max_tokens=500,
+                max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 500),
             )
             return result.get("content", "")
         except Exception as e:

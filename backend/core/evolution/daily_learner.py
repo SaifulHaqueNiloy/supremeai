@@ -25,6 +25,7 @@ from loguru import logger
 
 from core.cache import get_cache
 from core.evolution.evolution_engine import EvolutionEngine
+from services.config_service import ConfigService
 from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -123,11 +124,14 @@ class GoalDecomposer:
         )
 
         try:
+            llm_config = await ConfigService.get_config(
+                None, "daily_learner_max_tokens", {"max_tokens": 2000, "temperature": 0.3}
+            )
             response = await self.llm_router.route(
                 prompt=prompt,
                 task_type="planning",
-                max_tokens=2000,
-                temperature=0.3,
+                max_tokens=llm_config.get("max_tokens", 2000),
+                temperature=llm_config.get("temperature", 0.3),
             )
             text = response.get("content", "")
         except Exception as e:

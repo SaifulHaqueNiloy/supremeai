@@ -4,6 +4,7 @@ Aggregates health status from all microservices and external dependencies.
 """
 
 import asyncio
+import os
 from datetime import datetime
 
 import httpx
@@ -53,21 +54,23 @@ SERVICE_REGISTRY = [
     {
         "name": "main_backend",
         "display_name": "Main Backend",
-        "url": "http://localhost:8080/api/v1/health",
+        "url": os.environ.get("BACKEND_URL", "http://localhost:8080") + "/api/v1/health",
         "critical": True,
         "timeout": 5.0,
     },
     {
         "name": "admin_backend",
         "display_name": "Admin Backend",
-        "url": "https://supremeai-admin.onrender.com/api/v1/health",
+        "url": os.environ.get("ADMIN_URL", "https://supremeai-admin.onrender.com")
+        + "/api/v1/health",
         "critical": True,
         "timeout": 8.0,
     },
     {
         "name": "scraper_service",
         "display_name": "Scraper Microservice",
-        "url": "https://supremeai-scraper-6nwi.onrender.com/health",
+        "url": os.environ.get("SCRAPER_URL", "https://supremeai-scraper-6nwi.onrender.com")
+        + "/health",
         "critical": False,
         "timeout": 8.0,
     },

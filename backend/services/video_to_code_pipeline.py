@@ -29,6 +29,7 @@ from loguru import logger
 
 from core.cache import get_cache
 from core.upload_validator import validate_upload
+from services.config_service import ConfigService
 from services.llm.llm_router import LLMRouter
 
 router = APIRouter(prefix="/video-to-code", tags=["video-to-code"])
@@ -197,10 +198,11 @@ class FrameAnalyzer:
         )
 
         try:
+            max_tokens = await ConfigService.get_config(None, "llm_max_tokens_video", 1500)
             result = await self.llm_router.route(
                 prompt=prompt,
                 task_type="vision",
-                max_tokens=1500,
+                max_tokens=max_tokens,
                 images=[{"base64": base64_image, "mime": "image/png"}],
             )
 
@@ -276,10 +278,11 @@ class CodeGenerator:
         )
 
         try:
+            max_tokens = await ConfigService.get_config(None, "llm_max_tokens_video", 2000)
             result = await self.llm_router.route(
                 prompt=prompt,
                 task_type="generation",
-                max_tokens=2000,
+                max_tokens=max_tokens,
             )
 
             code = result.get("content", "") if isinstance(result, dict) else ""

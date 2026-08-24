@@ -15,6 +15,7 @@ Dependencies:
 
 import asyncio
 import json
+import os
 from collections.abc import AsyncGenerator
 
 # বাংলা মন্তব্য: aioredis মডিউল লেভেলে ইমপোর্ট করা হয়েছে যাতে টেস্টের সময় সঠিক মক ট্র্যাকিং বজায় থাকে।
@@ -78,8 +79,11 @@ class SwarmPubSub:
         logger.info("New client subscribed to Redis Swarm Stream.")
 
         try:
+            timeout_val = float(os.getenv("PUBSUB_TIMEOUT", "1.0"))
             while True:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                message = await pubsub.get_message(
+                    ignore_subscribe_messages=True, timeout=timeout_val
+                )
                 if message is not None:
                     yield message["data"].decode("utf-8")
                 await asyncio.sleep(0.01)

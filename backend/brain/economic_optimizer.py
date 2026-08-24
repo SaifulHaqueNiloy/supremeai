@@ -1,4 +1,10 @@
+import logging
 from dataclasses import dataclass
+from typing import Any
+
+from services.config_service import ConfigService
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -32,6 +38,19 @@ class EconomicOptimizer:
             "nvidia": {"model": "nemotron-4", "cost_per_1k": 0.0005, "tier": "mid"},
             "huggingface": {"model": "zephyr-7b", "cost_per_1k": 0.00005, "tier": "free/cheap"},
         }
+
+    async def sync_from_db(self, db: Any) -> None:
+        """Sync provider_tiers from the database configuration."""
+        try:
+            configs = await ConfigService.get_config(db, "model_cost_per_1k", self.provider_tiers)
+            if configs:
+                self.provider_tiers.clear()
+                self.provider_tiers.update(configs)
+                logger.info(
+                    f"✅ Synced {len(self.provider_tiers)} model_cost_per_1k entries from DB."
+                )
+        except Exception as e:
+            logger.error(f"❌ Failed to sync model_cost_per_1k from DB: {e}")
 
     async def optimize_route(
         self, prompt: str, task_type: str, budget_context: BudgetContext

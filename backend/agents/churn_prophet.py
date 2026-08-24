@@ -34,6 +34,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
 
@@ -245,8 +246,8 @@ class RetentionStrategist:
                 response = await self.llm_router.route(
                     prompt=prompt,
                     task_type="retention_strategy",
-                    max_tokens=500,
-                    temperature=0.4,
+                    max_tokens=config_cache.get("churn_prophet_max_tokens", 500),
+                    temperature=config_cache.get("churn_prophet_temperature", 0.4),
                 )
                 personalized = response.get("content", "")
             except Exception as e:

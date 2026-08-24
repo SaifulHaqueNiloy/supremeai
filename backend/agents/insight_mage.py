@@ -33,6 +33,7 @@ from typing import Any, TypeVar
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
 
@@ -323,8 +324,8 @@ Keep it concise, business-friendly, and data-driven.
         response = await self.llm_router.route(
             prompt=prompt,
             task_type="analytics_report",
-            max_tokens=2000,
-            temperature=0.3,
+            max_tokens=config_cache.get("insight_mage_max_tokens", 2000),
+            temperature=config_cache.get("insight_mage_temperature", 0.3),
         )
 
         return response.get("content", "Report generation failed. Please retry.")
