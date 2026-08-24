@@ -267,6 +267,14 @@ export function LoginView({
             {isSubmitting ? 'Verifying...' : otpRequired ? 'Verify OTP' : 'Authorize Access'}
           </button>
         </form>
+        
+        {/* 
+          বাংলা মন্তব্য: প্রোডাকশনে লেটেস্ট বিল্ড ডিপ্লয় হয়েছে কিনা তা সহজে চেক করার জন্য 
+          এই Build Timestamp টি অ্যাডমিন গেটেও দেখানো হচ্ছে। 
+        */}
+        <div className="absolute bottom-2 right-4 text-[9px] text-slate-600 font-mono">
+          Build: {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}
+        </div>
       </div>
     </div>
   );
