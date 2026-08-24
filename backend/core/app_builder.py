@@ -121,8 +121,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         # 🔬 Evolution v3.0: Enhanced lifespan with validation & health checks
         import asyncio
 
-        from core.auto_healer import get_auto_healer
-
         from core.config_validator import print_config_summary, validate_config
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
@@ -179,9 +177,16 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         register_check("memory", _check_memory, critical=False)
 
         monitoring_task = None
+        healer = None
         if settings.AUTO_HEALING_ENABLED:
-            healer = get_auto_healer()
-            monitoring_task = asyncio.create_task(healer.start_monitoring())
+            try:
+                from services.auto_healer import get_healer
+
+                healer = get_healer()
+                monitoring_task = asyncio.create_task(healer.start_monitoring())
+            except Exception as e:
+                logger.warning(f"⚠️ Auto-healer unavailable, continuing without it: {e}")
+                healer = None
 
         async with app_lifespan(app):
             yield
@@ -189,7 +194,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
 
-        if settings.AUTO_HEALING_ENABLED and monitoring_task:
+        if settings.AUTO_HEALING_ENABLED and monitoring_task and healer:
             healer.stop_monitoring()
             await monitoring_task
 

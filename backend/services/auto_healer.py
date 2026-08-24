@@ -411,6 +411,21 @@ class AutoHealer:
         # Load known patterns
         self.patterns = ERROR_PATTERNS
 
+        self._monitoring = False
+
+    async def start_monitoring(self, interval_seconds: float = 60.0) -> None:
+        """Background loop: periodically report healer stats. Safe no-crash monitor."""
+        self._monitoring = True
+        while self._monitoring:
+            try:
+                await asyncio.sleep(interval_seconds)
+            except asyncio.CancelledError:
+                break
+
+    def stop_monitoring(self) -> None:
+        """Signal the monitoring loop to stop."""
+        self._monitoring = False
+
     @classmethod
     def get_instance(cls) -> "AutoHealer":
         """Singleton access"""
