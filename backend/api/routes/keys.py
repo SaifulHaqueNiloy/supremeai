@@ -1,6 +1,5 @@
 import os
 
-
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
