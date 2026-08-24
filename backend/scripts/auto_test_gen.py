@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import requests
+import httpx as requests
 from loguru import logger
 
 BACKEND_ROOT = Path(__file__).parent.parent.resolve()

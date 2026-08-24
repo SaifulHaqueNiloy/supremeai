@@ -46,7 +46,7 @@ except ImportError:
     logger.warning("⚠️ litellm not available. Token cost tracking will be limited.")
 
 try:
-    import requests
+    import httpx as requests
 except ImportError:
     requests = None
 

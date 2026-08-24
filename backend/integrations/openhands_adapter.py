@@ -37,13 +37,13 @@ class OpenHandsAdapter:
         self._active = False
         if flag(_ENABLED_FLAG) and self.server_url:
             try:
-                import requests as _req
+                import httpx as _req
 
                 self._http = _req
                 self._active = True
                 logger.info(f"OpenHandsAdapter: connected to agent-server at {self.server_url}")
             except Exception as exc:  # pragma: no cover - defensive
-                logger.warning(f"OpenHandsAdapter: requests unavailable: {exc}")
+                logger.warning(f"OpenHandsAdapter: httpx unavailable: {exc}")
         else:
             logger.info(
                 "OpenHandsAdapter: inactive (flag=%s, server_url=%s) — autonomous coding "
