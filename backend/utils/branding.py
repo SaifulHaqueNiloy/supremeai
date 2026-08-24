@@ -66,13 +66,16 @@ async def sync_from_db(db: Any) -> None:
     """Sync PROVIDER_DISPLAY and MODEL_DISPLAY from the database configuration."""
     global PROVIDER_DISPLAY, MODEL_DISPLAY
     try:
-        default_config = {"provider_display": PROVIDER_DISPLAY, "model_display": MODEL_DISPLAY}
+        default_config = {
+            "provider_display": dict(PROVIDER_DISPLAY),
+            "model_display": dict(MODEL_DISPLAY),
+        }
         configs = await ConfigService.get_config(db, "model_branding_map", default_config)
         if configs:
-            if "provider_display" in configs:
+            if "provider_display" in configs and configs["provider_display"]:
                 PROVIDER_DISPLAY.clear()
                 PROVIDER_DISPLAY.update(configs["provider_display"])
-            if "model_display" in configs:
+            if "model_display" in configs and configs["model_display"]:
                 MODEL_DISPLAY.clear()
                 MODEL_DISPLAY.update(configs["model_display"])
             logger.info("✅ Synced model_branding_map from DB.")
