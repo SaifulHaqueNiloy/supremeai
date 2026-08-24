@@ -123,7 +123,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         from core.auto_healer import get_auto_healer
 
         from core.config_validator import print_config_summary, validate_config
-        from core.health import register_check, set_liveness
+        from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
 
         logger.debug("\n" + "=" * 60)
@@ -304,6 +304,15 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     from core.health_routes import router as health_router
 
     app.include_router(health_router, prefix="/health")
+
+    @app.get("/")
+    async def root():
+        """পাবলিক রুট এন্ডপয়েন্ট — বেসিক সার্ভিস তথ্য এবং হেলথ চেক লিংক দেয়।"""
+        return {
+            "service": settings.app_name,
+            "status": "online",
+            "health_check": "/health",
+        }
 
     from fastapi.responses import JSONResponse
 
