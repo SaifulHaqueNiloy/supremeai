@@ -51,7 +51,7 @@ async def get_policies(session: AsyncSession = Depends(get_db_session)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )
+        ) from e
 
 
 @router.put("/{policy_id}")
@@ -103,4 +103,4 @@ async def update_policy(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error",
-        )
+        ) from e

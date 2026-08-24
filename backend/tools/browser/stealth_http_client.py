@@ -67,7 +67,7 @@ class StealthHTTPClient:
                     self.proxy_manager.report_failed_proxy(proxy)
 
                 if attempt == retries - 1:
-                    raise e
+                    raise e from e
 
         raise httpx.RequestError("Stealth requests failed all retries.")
 

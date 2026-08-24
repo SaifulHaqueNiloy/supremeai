@@ -289,7 +289,7 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
 
     except Exception as e:
         logger.error(f"Failed to save message: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/conversations")
@@ -321,4 +321,4 @@ async def list_conversations(request: Request, db=Depends(get_tenant_db)):
 
     except Exception as e:
         logger.error(f"Failed to list conversations: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

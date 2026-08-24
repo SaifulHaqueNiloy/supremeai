@@ -239,7 +239,7 @@ class Orchestrator:
             if halt_signals:
                 logger.critical(f"🛑 BUDGET GUARDIAN HALT: {halt_signals[0]}")
                 self._running = False
-                raise halt_signals[0]
+                raise halt_signals[0] from eg
 
     def status(self) -> dict:
         return {"running": self._running, "next_interval_secs": self.interval}
