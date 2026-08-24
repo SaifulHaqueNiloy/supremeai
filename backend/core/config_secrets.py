@@ -9,7 +9,7 @@ from typing import Any
 from loguru import logger
 from pydantic import PrivateAttr, SecretStr, model_serializer
 
-from .security.secret_vault import secret_vault
+from .security.secret_vault import get_secret_vault
 
 
 class SettingsSecretsMixin:
@@ -94,7 +94,7 @@ class SettingsSecretsMixin:
 
         # 1. OPTIMIZED FETCH: Try loading grouped JSON blobs first
         try:
-            llm_keys = secret_vault.fetch_json_secret("LLM_PROVIDER_KEYS", default={})
+            llm_keys = get_secret_vault().fetch_json_secret("LLM_PROVIDER_KEYS", default={})
             if llm_keys:
                 cached["OPENAI_API_KEY"] = llm_keys.get("openai", "")
                 cached["GEMINI_API_KEY"] = llm_keys.get("gemini", "")
@@ -104,13 +104,13 @@ class SettingsSecretsMixin:
                 cached["OPENROUTER_API_KEY"] = llm_keys.get("openrouter", "")
                 cached["HF_API_KEY"] = llm_keys.get("huggingface", "")
 
-            db_config = secret_vault.fetch_json_secret("DATABASE_CONFIG", default={})
+            db_config = get_secret_vault().fetch_json_secret("DATABASE_CONFIG", default={})
             if db_config:
                 cached["SUPABASE_DATABASE_URL_POOLER"] = db_config.get("pooler_url", "")
                 cached["SUPABASE_URL"] = db_config.get("supabase_url", "")
                 cached["SUPABASE_KEY"] = db_config.get("supabase_key", "")
 
-            auth_keys = secret_vault.fetch_json_secret("AUTH_KEYS", default={})
+            auth_keys = get_secret_vault().fetch_json_secret("AUTH_KEYS", default={})
             if auth_keys:
                 cached["SUPREMEAI_JWT_SECRET"] = auth_keys.get("jwt_secret", "")
                 cached["ENCRYPTION_KEY"] = auth_keys.get("encryption_key", "")
@@ -126,7 +126,7 @@ class SettingsSecretsMixin:
                 continue  # Skip if already loaded from JSON blob!
 
             try:
-                val = secret_vault.fetch_secret(secret_key, default="")
+                val = get_secret_vault().fetch_secret(secret_key, default="")
                 if val:
                     cached[secret_key] = val
             except Exception as _secret_err:
@@ -174,7 +174,7 @@ class SettingsSecretsMixin:
     @property
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
-            url = secret_vault.fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
+            url = get_secret_vault().fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
         except Exception:
             url = ""
         return SecretStr(url) if url else None
@@ -307,7 +307,7 @@ class SettingsSecretsMixin:
     @property
     def discord_bot_token(self) -> str:
         try:
-            return secret_vault.fetch_secret("DISCORD_BOT_TOKEN", default="")
+            return get_secret_vault().fetch_secret("DISCORD_BOT_TOKEN", default="")
         except Exception:
             return ""
 

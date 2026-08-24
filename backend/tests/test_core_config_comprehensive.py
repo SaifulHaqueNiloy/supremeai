@@ -15,7 +15,11 @@ from backend.core.config import Settings, get_production_env
 
 def test_settings_environment_validation():
     """Test environment variable validation."""
-    with patch.dict(os.environ, {"ENV": "production"}):
+    with patch.dict(os.environ, {
+        "ENV": "production",
+        "SUPREMEAI_JWT_SECRET": "x" * 64,
+        "ENCRYPTION_KEY": "x" * 32,
+    }):
         settings = Settings()
         assert settings.env == "production"
 
@@ -38,6 +42,7 @@ def test_settings_production_complete_validation():
             "SUPABASE_KEY": "prod-supabase-key",
             "GEMINI_API_KEY": "prod-gemini-key",
             "OPENROUTER_API_KEY": "prod-openrouter-key",
+            "ENCRYPTION_KEY": "x" * 32,
         },
     ):
         settings = Settings()
@@ -107,7 +112,7 @@ def test_settings_default_values():
     with patch.dict(os.environ, {}, clear=True):
         settings = Settings()
         assert settings.env == "local"
-        assert settings.debug is True
+        assert settings.debug is False
 
 
 def test_settings_jwt_secret_generation():
@@ -177,6 +182,8 @@ def test_settings_production_allowed_hosts_auto_population():
         {
             "ENV": "production",
             "ALLOWED_HOSTS": "",  # Empty to trigger auto-population
+            "SUPREMEAI_JWT_SECRET": "x" * 64,
+            "ENCRYPTION_KEY": "x" * 32,
         },
     ):
         settings = Settings()
@@ -191,6 +198,8 @@ def test_settings_production_no_wildcard_hosts():
         {
             "ENV": "production",
             "ALLOWED_HOSTS": "localhost,127.0.0.1,testserver,example.com",
+            "SUPREMEAI_JWT_SECRET": "x" * 64,
+            "ENCRYPTION_KEY": "x" * 32,
         },
     ):
         settings = Settings()

@@ -261,7 +261,7 @@ class SettingsValidationMixin:
     @classmethod
     def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
         # Fail fast if no hosts are defined in production/staging
-        env = info.data.get("env", "local")
+        env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
         forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
@@ -295,7 +295,7 @@ class SettingsValidationMixin:
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
         # Test-isolation guard:
         # ENV=test হলে CORS fail-fast validator ট্রিগার করা হবে না।
-        env = str(info.data.get("env", "local") or "local").lower()
+        env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
         if env == "test":
             return v
         if env in {"production", "staging"}:
@@ -328,7 +328,7 @@ class SettingsValidationMixin:
 
     @classmethod
     def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:
-        env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
+        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv("ENV", "local")
         if env == "production":
             return [
                 origin
@@ -339,7 +339,7 @@ class SettingsValidationMixin:
 
     @classmethod
     def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
-        env = info.data.get("env", "local") if info and hasattr(info, "data") else "local"
+        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv("ENV", "local")
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
         if not value or value is None:
