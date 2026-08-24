@@ -48,6 +48,7 @@ pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)
 cryptography = "^48.0.1"  # CVE fix floor (AUDIT-014)
 pybreaker = "^1.4.1"
 pytz = "^2024.2"
+cachetools = ">=5.0.0"  # Required for per-user TTLCache in rate_limit.py, free_tier_tracker.py, token_budget.py
 python-dateutil = "^2.9.0.post0"
 email-validator = "^2.2.0"
 asyncpg = "^0.30.0"

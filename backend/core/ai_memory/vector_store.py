@@ -119,7 +119,7 @@ class FreeTierOptimizedVectorStore:
     async def delete_old_memories(self, days_old: int = 30, limit: int = 100):
         """Delete old memories to save space (free tier storage limit)."""
         try:
-            from datetime import datetime, timedelta, timezone
+            from datetime import datetime, timedelta
 
             cutoff = (datetime.now(UTC) - timedelta(days=days_old)).isoformat()
 

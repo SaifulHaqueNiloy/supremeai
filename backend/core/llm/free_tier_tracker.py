@@ -427,14 +427,18 @@ class FreeTierTracker:
 
 
 # ---------------------------------------------------------------------------
-# Module-level singleton — import and use directly
+# Module-level dictionary for per-user trackers (TTLCache if cachetools available)
 # ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
-# Module-level dictionary for per-user trackers
-# ---------------------------------------------------------------------------
-import cachetools
+try:
+    import cachetools
 
-_trackers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
+    _trackers: dict = cachetools.TTLCache(maxsize=10000, ttl=86400)
+except ImportError:
+    # Fallback: plain dict (no TTL — acceptable for free-tier environments)
+    logger.warning(
+        "[FreeTier] cachetools not available, using plain dict for per-user tracker cache."
+    )
+    _trackers = {}
 
 
 def get_tracker(
