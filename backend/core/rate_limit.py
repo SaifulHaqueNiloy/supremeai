@@ -23,7 +23,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 security = HTTPBearer(auto_error=False)
 
 import cachetools
+
 fallback_cache = cachetools.TTLCache(maxsize=10000, ttl=3600)
+
 
 class RateLimiter:
     """
@@ -105,10 +107,20 @@ class RateLimiter:
             timestamps = fallback_cache.get(key, [])
             timestamps = [t for t in timestamps if now - t < window]
             if len(timestamps) >= limit:
-                return False, {"remaining": 0, "reset": now + window, "current": len(timestamps), "limit": limit}
+                return False, {
+                    "remaining": 0,
+                    "reset": now + window,
+                    "current": len(timestamps),
+                    "limit": limit,
+                }
             timestamps.append(now)
             fallback_cache[key] = timestamps
-            return True, {"remaining": limit - len(timestamps), "reset": now + window, "current": len(timestamps), "limit": limit}
+            return True, {
+                "remaining": limit - len(timestamps),
+                "reset": now + window,
+                "current": len(timestamps),
+                "limit": limit,
+            }
         except Exception as e:
             logger.error(f"Fallback rate limit failed: {e}")
             return True, {"remaining": limit, "reset": now + window, "current": 0, "limit": limit}

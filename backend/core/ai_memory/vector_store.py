@@ -4,6 +4,7 @@ Reduces memory usage while maintaining search quality.
 """
 
 import asyncio
+from datetime import UTC
 from typing import Any
 
 from loguru import logger
@@ -46,7 +47,8 @@ class FreeTierOptimizedVectorStore:
                 batch_ids = ids[i : i + self.BATCH_SIZE]
 
                 from datetime import datetime, timezone
-                now_str = datetime.now(timezone.utc).isoformat()
+
+                now_str = datetime.now(UTC).isoformat()
                 records = [
                     {"id": bid, "embedding": emb, "metadata": payload, "created_at": now_str}
                     for bid, emb, payload in zip(
@@ -117,9 +119,9 @@ class FreeTierOptimizedVectorStore:
     async def delete_old_memories(self, days_old: int = 30, limit: int = 100):
         """Delete old memories to save space (free tier storage limit)."""
         try:
-            from datetime import datetime, timezone, timedelta
+            from datetime import datetime, timedelta, timezone
 
-            cutoff = (datetime.now(timezone.utc) - timedelta(days=days_old)).isoformat()
+            cutoff = (datetime.now(UTC) - timedelta(days=days_old)).isoformat()
 
             (
                 self.client.table(self.table_name)

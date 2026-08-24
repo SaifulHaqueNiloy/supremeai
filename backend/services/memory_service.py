@@ -462,7 +462,7 @@ class CascadeMemoryService:
             except Exception as exc:
                 logger.error(f"clear_user_memories PG failed: {exc}")
             return
-        
+
         with sqlite3.connect(self.db_path) as conn:
             # Note: local sqlite still uses file_path as session_id representation
             conn.execute("DELETE FROM file_memories WHERE file_path LIKE ?", (f"{user_id}/%",))

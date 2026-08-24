@@ -370,6 +370,7 @@ class TokenBudgetManager:
 # Module-level dictionary for per-user managers
 # ---------------------------------------------------------------------------
 import cachetools
+
 _managers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
 
 
