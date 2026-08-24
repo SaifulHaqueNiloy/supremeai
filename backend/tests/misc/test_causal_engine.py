@@ -56,7 +56,11 @@ async def test_causal_discovery():
 
     mock_corr = MagicMock()
     mock_corr.loc = MockLoc()
-    data.corr.return_value = mock_corr
+    # বাংলা মন্তব্য: pandas এখানে mock করা হয়নি (আসল DataFrame ব্যবহৃত হচ্ছে),
+    # তাই data.corr একটা bound method -- তার ওপর সরাসরি return_value সেট করা
+    # যায় না (AttributeError)। এর বদলে instance attribute হিসেবে corr-কে
+    # MagicMock দিয়ে override করা হলো।
+    data.corr = MagicMock(return_value=mock_corr)
 
     dag = await engine.discover_graph(data)
     assert "nodes" in dag
