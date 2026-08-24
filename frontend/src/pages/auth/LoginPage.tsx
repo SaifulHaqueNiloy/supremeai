@@ -88,8 +88,10 @@ export const LoginPage: React.FC = () => {
             Sign Up
           </Link>
         </p>
-
-        {/* Build Timestamp for Debugging */}
+        {/* 
+          বাংলা মন্তব্য: প্রোডাকশনে লেটেস্ট বিল্ড ডিপ্লয় হয়েছে কিনা তা সহজে চেক করার জন্য 
+          এই Build Timestamp টি নিচে দেখানো হচ্ছে। 
+        */}
         <div className="absolute bottom-4 right-4 text-[10px] text-text-secondary/50 font-mono">
           Build: {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}
         </div>
