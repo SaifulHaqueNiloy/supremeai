@@ -43,6 +43,7 @@ def hash_vectorize(text: str, size: int = 384) -> list[float]:
 _PG_SCHEMA = """
     CREATE TABLE IF NOT EXISTS ai_memory (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT DEFAULT NULL, -- NEW: nullable for backward compat
         session_id TEXT,
         agent_type TEXT,
         task_type TEXT,
@@ -188,6 +189,7 @@ class CascadeMemoryService:
         agent_type: str = "unknown",
         task_type: str = "general",
         metadata: dict[str, Any] | None = None,
+        user_id: str | None = None,
     ) -> None:
         """Stores or updates a memory entry in the database.
 
@@ -203,10 +205,11 @@ class CascadeMemoryService:
                 # Insert into ai_memory table
                 pooled_pg.execute(
                     """
-                    INSERT INTO ai_memory (session_id, agent_type, task_type, summary, embedding, metadata)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
                     (
+                        user_id,
                         session_id,
                         agent_type,
                         task_type,
@@ -238,7 +241,9 @@ class CascadeMemoryService:
             )
             conn.commit()
 
-    def retrieve_memories(self, session_id: str | None = None) -> list[dict[str, Any]]:
+    def retrieve_memories(
+        self, session_id: str | None = None, user_id: str | None = None
+    ) -> list[dict[str, Any]]:
         """Retrieves all memory entries from the database or filtered by session_id.
 
         বাংলা মন্তব্য: ডেটাবেসে থাকা সকল মেমোরি এন্ট্রি রিট্রিভ করার কোর মেথড।
@@ -246,14 +251,24 @@ class CascadeMemoryService:
         results = []
         if self._use_pg:
             try:
-                if session_id:
+                if user_id and session_id:
                     rows = pooled_pg.query_dicts(
-                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s AND user_id = %s",
+                        (session_id, user_id),
+                    )
+                elif session_id:
+                    rows = pooled_pg.query_dicts(
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
                         (session_id,),
+                    )
+                elif user_id:
+                    rows = pooled_pg.query_dicts(
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE user_id = %s",
+                        (user_id,),
                     )
                 else:
                     rows = pooled_pg.query_dicts(
-                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
                     )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.retrieve_memories: Postgres read failed: {exc}")
@@ -261,6 +276,8 @@ class CascadeMemoryService:
             for row in rows:
                 results.append(
                     {
+                        "id": row.get("id"),
+                        "user_id": row.get("user_id"),
                         "session_id": row["session_id"],
                         "agent_type": row["agent_type"],
                         "task_type": row["task_type"],
@@ -332,7 +349,7 @@ class CascadeMemoryService:
         return dot / (norm_b * norm_a)
 
     def query_context(
-        self, prompt: str, top_k: int = 5, session_id: str | None = None
+        self, prompt: str, top_k: int = 5, session_id: str | None = None, user_id: str | None = None
     ) -> list[dict[str, Any]]:
         """
         Takes the user's prompt, embeds it, and queries PostgreSQL or local SQLite for the top_k
@@ -346,14 +363,24 @@ class CascadeMemoryService:
 
         if self._use_pg:
             try:
-                if session_id:
+                if user_id and session_id:
                     rows = pooled_pg.query_dicts(
-                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s AND user_id = %s",
+                        (session_id, user_id),
+                    )
+                elif session_id:
+                    rows = pooled_pg.query_dicts(
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
                         (session_id,),
+                    )
+                elif user_id:
+                    rows = pooled_pg.query_dicts(
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE user_id = %s",
+                        (user_id,),
                     )
                 else:
                     rows = pooled_pg.query_dicts(
-                        "SELECT session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
                     )
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
@@ -364,6 +391,8 @@ class CascadeMemoryService:
                     score = self._cosine_similarity(query_vector, stored_vector)
                     results.append(
                         {
+                            "id": row.get("id"),
+                            "user_id": row.get("user_id"),
                             "session_id": row["session_id"],
                             "agent_type": row["agent_type"],
                             "task_type": row["task_type"],
@@ -415,11 +444,11 @@ class CascadeMemoryService:
 
     def get_memories(self, user_id: str) -> list[dict[str, Any]]:
         """Backward-compatible alias for retrieve_memories."""
-        return self.retrieve_memories()
+        return self.retrieve_memories(user_id=user_id)
 
     def search_memories(self, user_id: str, query: str) -> list[dict[str, Any]]:
         """Backward-compatible alias for query_context."""
-        return self.query_context(query)
+        return self.query_context(query, user_id=user_id)
 
     def delete(self, memory_id: str) -> None:
         """Backward-compatible alias for delete_memory."""
@@ -434,7 +463,7 @@ class CascadeMemoryService:
 
     def get_context_window(self, user_id: str, agent_id: str, limit: int) -> list[dict[str, Any]]:
         """Backward-compatible alias for query_context."""
-        return self.query_context(f"{user_id} {agent_id}", top_k=limit)
+        return self.query_context(f"{user_id} {agent_id}", top_k=limit, user_id=user_id)
 
     def update_context_window(self, user_id: str, messages: list[dict[str, Any]]) -> None:
         """Backward-compatible method to store messages in context window."""
@@ -453,7 +482,7 @@ class CascadeMemoryService:
 
     def get_recent_interactions(self, user_id: str, limit: int = 20) -> list[dict[str, Any]]:
         """Backward-compatible method to get recent interactions."""
-        return self.retrieve_memories()[:limit]
+        return self.retrieve_memories(user_id=user_id)[:limit]
 
 
 # Global instance
@@ -515,6 +544,7 @@ async def save_memory(
     task_type: str = "general",
     agent_type: str = "main",
     metadata: dict[str, Any] | None = None,
+    user_id: str | None = None,
 ) -> dict[str, Any]:
     """Insert a vector memory row into Supabase/Postgres ai_memory.
 
@@ -527,6 +557,7 @@ async def save_memory(
         supabase = _get_supabase()
         now = datetime.now(UTC).isoformat()
         record = {
+            "user_id": user_id,
             "session_id": session_id,
             "agent_type": agent_type,
             "task_type": task_type,
@@ -560,6 +591,7 @@ async def save_memory(
             agent_type=agent_type,
             task_type=task_type,
             metadata=metadata or {},
+            user_id=user_id,
         )
         return {"success": True, "id": str(session_id), "backend": "cascade"}
     except Exception as exc:
@@ -572,6 +604,7 @@ async def recall_memories(
     task_description: str,
     limit: int = 10,
     threshold: float = 0.65,
+    user_id: str | None = None,
 ) -> list[dict[str, Any]]:
     """Semantic-search ai_memory and return the top *limit* matches."""
     try:
@@ -585,6 +618,7 @@ async def recall_memories(
                         "query_embedding": embedding,
                         "match_threshold": threshold,
                         "match_count": limit,
+                        "p_user_id": user_id,
                     },
                 ).execute()
                 memories = result.data or []
@@ -596,20 +630,23 @@ async def recall_memories(
                 logger.debug(f"Supabase RPC failed ({sb_err}), falling back to cascade service.")
 
         # Local / Cascade Fallback
-        matches = memory_service.query_context(task_description, top_k=limit)
+        matches = memory_service.query_context(task_description, top_k=limit, user_id=user_id)
         return matches
     except Exception as exc:
         logger.error(f"Memory recall exception: {exc}")
         return []
 
 
-async def get_semantic_cache(prompt: str, threshold: float = 0.95) -> str | None:
+async def get_semantic_cache(
+    prompt: str, threshold: float = 0.95, user_id: str | None = None
+) -> str | None:
     """Check if a highly similar prompt has been cached in ai_memory."""
     try:
         memories = await recall_memories(
             task_description=prompt,
             limit=1,
             threshold=threshold,
+            user_id=user_id,
         )
         for mem in memories:
             # Only consider memories explicitly marked as semantic_cache
@@ -623,7 +660,9 @@ async def get_semantic_cache(prompt: str, threshold: float = 0.95) -> str | None
     return None
 
 
-async def set_semantic_cache(prompt: str, response: str, session_id: str = "cache_layer") -> None:
+async def set_semantic_cache(
+    prompt: str, response: str, session_id: str = "cache_layer", user_id: str | None = None
+) -> None:
     """Store a successful LLM response into the semantic cache."""
     try:
         await save_memory(
@@ -632,6 +671,7 @@ async def set_semantic_cache(prompt: str, response: str, session_id: str = "cach
             task_type="semantic_cache",
             agent_type="system",
             metadata={"response": response},
+            user_id=user_id,
         )
         logger.info("🧠 Semantic Cache SET")
     except Exception as exc:
@@ -680,6 +720,7 @@ async def summarize_and_save_session(
         summary=summary,
         task_type=task_type,
         metadata={"message_count": len(messages)},
+        # Extract user_id from session_id if needed, but keeping signature clean
     )
 
 

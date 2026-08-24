@@ -13,6 +13,7 @@ from functools import wraps
 
 import redis.asyncio as aioredis
 from fastapi import HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -212,12 +213,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Check rate limit
         allowed, headers = await self.limiter.check_rate_limit(request)
 
-        response = await call_next(request)
-
-        # Add rate limit headers to response
-        for key, value in headers.items():
-            response.headers[key] = value
-
         if not allowed:
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -229,10 +224,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 headers=headers,
             )
 
+        response = await call_next(request)
+
+        # Add rate limit headers to response
+        for key, value in headers.items():
+            response.headers[key] = value
+
         return response
-
-
-from fastapi.responses import JSONResponse
 
 
 def rate_limit(limit: int = 60, window: int = 60):

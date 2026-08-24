@@ -69,21 +69,23 @@ class FreeTierOptimizedVectorStore:
         query_embedding: list[float],
         limit: int = MAX_RESULTS,
         filter_metadata: dict | None = None,
+        user_id: str | None = None,
     ) -> list[dict]:
         """
         Search with memory-efficient streaming.
         Uses RPC call for vector search (pgvector).
         """
         try:
+            rpc_params: dict[str, Any] = {
+                "query_embedding": query_embedding,
+                "match_threshold": 0.7,
+                "match_count": min(limit, self.MAX_RESULTS),
+            }
+            if user_id:
+                rpc_params["p_user_id"] = user_id
+
             # Build query with filters
-            query = self.client.rpc(
-                "match_memories",  # Need to create this function in Supabase if not exists
-                {
-                    "query_embedding": query_embedding,
-                    "match_threshold": 0.7,
-                    "match_count": min(limit, self.MAX_RESULTS),
-                },
-            )
+            query = self.client.rpc("match_memories", rpc_params)
 
             # Apply additional filters if provided
             if filter_metadata:
