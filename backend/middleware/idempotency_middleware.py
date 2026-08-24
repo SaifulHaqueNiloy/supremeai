@@ -178,7 +178,9 @@ class IdempotencyMiddleware:
                 ),
                 ex=86400,
             )
-        except Exception:  # বাংলা মন্তব্য: কোনো কারণে রিকোয়েস্ট ফেইল হলে কী-টি মুছে ফেলা হবে, যাতে ক্লায়েন্ট আবার চেষ্টা করতে পারে
+        except (
+            Exception
+        ):  # বাংলা মন্তব্য: কোনো কারণে রিকোয়েস্ট ফেইল হলে কী-টি মুছে ফেলা হবে, যাতে ক্লায়েন্ট আবার চেষ্টা করতে পারে
             try:
                 await redis.delete(redis_key)
             except Exception as exc:
