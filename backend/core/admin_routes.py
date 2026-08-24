@@ -1,3 +1,5 @@
+import logging
+
 """This module defines FastAPI routes for the SupremeAI project's administrative interface, providing secure authentication mechanisms, system monitoring, and configuration management. It supports both traditional password-based and Firebase-authenticated admin logins with Time-based One-Time Password (TOTP) verification, alongside endpoints for observing cloud resource distribution, free-tier usage, token budgets, GCP service health, rules engine management, and available AI skills. This centralizes control and visibility for the AI ecosystem's backend operations.
 
 Key Components:

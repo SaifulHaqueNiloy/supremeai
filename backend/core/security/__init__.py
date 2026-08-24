@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 """Security module initialization.
 
 This module provides centralized access to security components:
@@ -7,7 +11,6 @@ This module provides centralized access to security components:
 - Token and API Key Management (Restored)
 """
 
-from __future__ import annotations
 
 import hashlib
 import hmac

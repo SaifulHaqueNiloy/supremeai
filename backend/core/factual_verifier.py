@@ -82,7 +82,7 @@ class FactualVerifier:
 
             self.local_rag = LocalSearchRAG()
         except (ImportError, RuntimeError) as e:
-            _logger.warning(
+            logger.warning(
                 f"LocalSearchRAG not available or failed to initialize, RAG-based verification disabled: {e}"
             )
             self.local_rag = None
@@ -116,7 +116,7 @@ class FactualVerifier:
                 "method": "no_matches",
             }
         except Exception as e:
-            _logger.warning(f"RAG verification failed for claim: {claim[:50]}... error: {e}")
+            logger.warning(f"RAG verification failed for claim: {claim[:50]}... error: {e}")
             return {
                 "claim": claim,
                 "is_verified": False,
@@ -161,7 +161,7 @@ class FactualVerifier:
                     "method": "duckduckgo_no_results",
                 }
             except Exception as e:
-                _logger.warning(f"_ddgs search failed: {e}")
+                logger.warning(f"_ddgs search failed: {e}")
 
         # বাংলা মন্তব্য: ফ্রি DuckDuckGo (DDGS) সার্চ — কোনো API key লাগে না।
         # core.search.web_search() প্যাকেজ ইনস্টল না থাকলে খালি লিস্ট রিটার্ন করে।
@@ -185,7 +185,7 @@ class FactualVerifier:
                     "method": "duckduckgo_ddgs",
                 }
         except Exception as e:
-            _logger.warning(f"DDGS web search failed: {e}")
+            logger.warning(f"DDGS web search failed: {e}")
 
         # Prioritize local ChromaDB RAG search before external web search
         if self.local_rag is not None:
@@ -203,7 +203,7 @@ class FactualVerifier:
                         "method": "local_rag",
                     }
             except Exception as e:
-                _logger.warning(f"RAG search failed in verify_with_web_search: {e}")
+                logger.warning(f"RAG search failed in verify_with_web_search: {e}")
 
         try:
             query = __import__("urllib.parse").parse.quote(claim)
@@ -223,7 +223,7 @@ class FactualVerifier:
                             "method": "duckduckgo_api",
                         }
         except Exception as e:
-            _logger.warning(f"Web search failed for claim: {claim[:50]}... error: {e}")
+            logger.warning(f"Web search failed for claim: {claim[:50]}... error: {e}")
 
         return {
             "claim": claim,
@@ -247,7 +247,7 @@ class FactualVerifier:
                 try:
                     is_correct = abs(expr.evalf() - claimed.evalf()) < 1e-9
                 except Exception as exc:
-                    _logger.exception(f"Numeric verification failed for expression: {exc}")
+                    logger.exception(f"Numeric verification failed for expression: {exc}")
             result_bool = bool(is_correct)
             return {
                 "is_correct": result_bool,

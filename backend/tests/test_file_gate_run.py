@@ -1,3 +1,5 @@
+import logging
+
 # tests/test_file_gate_run.py
 import sys
 
