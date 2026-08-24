@@ -23,11 +23,17 @@ class RedisTaskQueue:
             import redis.asyncio as aioredis
 
             try:
+                import os
+
                 from core.config import settings
 
-                redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+                redis_url = getattr(settings, "redis_url", None) or os.environ.get(
+                    "REDIS_URL", "redis://localhost:6379"
+                )
             except ImportError:
-                redis_url = "redis://localhost:6379"
+                import os
+
+                redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
             self.redis = aioredis.from_url(redis_url, decode_responses=True)
         return self.redis
 
