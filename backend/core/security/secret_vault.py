@@ -107,10 +107,12 @@ class ProductionSecretVault:
 
     @with_error_bus("_init_infisical_client")
     def _init_infisical_client(self) -> None:
-        """Initialize Infisical client with timeout protection."""
-        try:
+        """Initialize Infisical client with strict timeout protection."""
+        import concurrent.futures
+
+        def _do_init():
             if self.client_id and self.client_secret:
-                self.client = InfisicalClient(
+                return InfisicalClient(
                     ClientSettings(
                         auth=AuthenticationOptions(
                             universal_auth=UniversalAuthMethod(
@@ -120,10 +122,24 @@ class ProductionSecretVault:
                         )
                     )
                 )
-                logger.info("Production Secret Vault hooked into Infisical via Machine Identity")
             elif self.token:
-                self.client = InfisicalClient(ClientSettings(access_token=self.token))
-                logger.info("Production Secret Vault hooked into Infisical via Token")
+                return InfisicalClient(ClientSettings(access_token=self.token))
+            return None
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_do_init)
+                # Enforce strict timeout (default 10s) to prevent container boot hangs
+                self.client = future.result(timeout=INFISICAL_TIMEOUT)
+
+            if self.client:
+                logger.info(
+                    f"Production Secret Vault hooked into Infisical (Timeout: {INFISICAL_TIMEOUT}s)"
+                )
+        except concurrent.futures.TimeoutError:
+            logger.error(
+                f"Infisical init TIMEOUT after {INFISICAL_TIMEOUT}s. Bypassing Cloud Vault."
+            )
         except (ConnectionError, TimeoutError, ValueError) as exc:
             logger.warning(f"Failed to bind Infisical Client: {exc}. Falling back to raw env.")
         except Exception:
