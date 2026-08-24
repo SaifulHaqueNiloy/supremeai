@@ -35,6 +35,7 @@ os.environ.setdefault("OPENROUTER_API_KEY", "mock_key")
 def reset_vault():
     """Reset the secret vault before each test to ensure test isolation."""
     from core.security.secret_vault import reset_secret_vault
+
     reset_secret_vault()
 
 
