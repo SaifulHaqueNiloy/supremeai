@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, Badge } from '../ui';
-import { GitBranch, Play, RotateCcw, FlaskConical, Clock, User, Terminal, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, RotateCcw, FlaskConical } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { useCIReports } from '../../hooks/useAdminApi';
@@ -21,9 +21,8 @@ interface FeatureFlag {
 
 export function CICDVisualizer() {
   const [flags, setFlags] = useState<FeatureFlag[]>([]);
-  const [selectedRun, setSelectedRun] = useState<CIReport | null>(null);
   const { fetchGateStatus } = useStore();
-  const { data: ciReports, isLoading: isCILoading, refetch: refetchCI } = useCIReports(15);
+  const { refetch: refetchCI } = useCIReports(15);
 
   const fetchFlags = async () => {
     try {
