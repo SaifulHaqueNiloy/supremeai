@@ -25,61 +25,39 @@ class VectorDatabaseClient:
     """
 
     def __init__(self) -> None:
-        # বাংলা মন্তব্য: lazy import করা হচ্ছে circular-import এড়াতে।
-        # services.py এই module কে import করলে সরাসরি top-level import ঝুঁকিপূর্ণ।
-        self._exp_db = None
         self.degraded: bool = False
-        _logger.debug("VectorDatabaseClient initialised (free-tier adapter, shared experience_db)")
-
-    def _get_exp_db(self):
-        """Lazily fetch the shared experience_db singleton from core.services."""
-        if self._exp_db is None:
-            try:
-                import core.services as _services
-
-                self._exp_db = _services.experience_db
-                # বাংলা মন্তব্য: singleton থেকে degraded state propagate করা হচ্ছে
-                if getattr(self._exp_db, "vector_backend_degraded", False):
-                    self.degraded = True
-            except Exception as exc:
-                _logger.error(
-                    f"VectorDatabaseClient: failed to fetch shared experience_db — "
-                    f"memory will be DEGRADED. error={exc!r}"
-                )
-                self.degraded = True
-        return self._exp_db
+        _logger.debug(
+            "VectorDatabaseClient initialised (free-tier adapter, delegating to CascadeMemoryService)"
+        )
 
     async def save_experience(self, vector: list[float], metadata: dict[str, Any]) -> None:
         """
-        Saves an experience into the shared memory pool.
-        বাংলা মন্তব্য: vector argument এখন ignore করা হচ্ছে — experience_db নিজেই
-        sentence-transformers দিয়ে free embedding তৈরি করে। caller-এর interface অক্ষত রাখতে
-        এই parameter signature বজায় রাখা হলো।
+        Saves an experience into the shared memory pool using CascadeMemoryService.
         """
-        exp_db = self._get_exp_db()
-        if exp_db is None:
-            self.degraded = True
-            _logger.error(
-                "save_experience() skipped: shared experience_db unavailable (DEGRADED). "
-                "Experience NOT persisted."
-            )
-            return
-
         try:
-            from adaptive_engine.experience_db import Experience
+            from services.memory_service import save_memory
 
-            exp = Experience(
-                request=metadata.get("request", metadata.get("patch_id", "")),
-                action_taken=metadata.get("solution", metadata.get("action", "")),
-                result=metadata.get("result", "success"),
-                generated_code=metadata.get("generated_code"),
-                what_worked=metadata.get("what_worked", []),
-                what_failed=metadata.get("what_failed", []),
+            request_text = metadata.get("request", metadata.get("patch_id", ""))
+
+            # Pack detailed experience into metadata
+            stored_metadata = {
+                "action_taken": metadata.get("solution", metadata.get("action", "")),
+                "result": metadata.get("result", "success"),
+                "generated_code": metadata.get("generated_code"),
+                "what_worked": metadata.get("what_worked", []),
+                "what_failed": metadata.get("what_failed", []),
+                # Include the original metadata
+                "original": metadata,
+            }
+
+            await save_memory(
+                session_id=metadata.get("session_id", "vector_db_legacy"),
+                summary=request_text,
+                task_type="legacy_experience",
+                metadata=stored_metadata,
             )
-            # বাংলা মন্তব্য: blocking SQLite write — thread-এ offload করা হচ্ছে
-            await asyncio.to_thread(exp_db.record_experience, exp)
             _logger.debug(
-                f"🧠 Saved neural memory experience via shared pool: {metadata.get('patch_id', 'n/a')}"
+                f"🧠 Saved neural memory experience via CascadeMemoryService: {metadata.get('patch_id', 'n/a')}"
             )
         except Exception as exc:
             self.degraded = True
@@ -89,22 +67,8 @@ class VectorDatabaseClient:
         self, vector: list[float], top_k: int = 3
     ) -> list[dict[str, Any]]:
         """
-        Retrieves past experiences from the shared free-tier vector backend.
-        বাংলা মন্তব্য: vector argument ignore করা হয় — experience_db.find_similar()
-        নিজেই query embedding করে। Pinecone-shaped return format বজায় রাখা হলো।
+        Retrieves past experiences from the CascadeMemoryService.
         """
-        exp_db = self._get_exp_db()
-        if exp_db is None:
-            self.degraded = True
-            _logger.error(
-                "find_similar_experiences() skipped: shared experience_db unavailable "
-                "(DEGRADED, not 'no matches found')."
-            )
-            return []
-
-        # বাংলা মন্তব্য: vector argument থেকে raw query text বের করার কোনো উপায় নেই,
-        # তাই caller যদি raw text পাঠায় (str), সেটা সরাসরি ব্যবহার করা হবে।
-        # memory_middleware এখন raw text পাঠায়, তাই এটা কাজ করে।
         query_text = vector if isinstance(vector, str) else ""  # type: ignore[assignment]
 
         if not query_text:
@@ -112,17 +76,17 @@ class VectorDatabaseClient:
             return []
 
         try:
-            hits = await asyncio.to_thread(exp_db.find_similar, query_text, top_k)
-            # বাংলা মন্তব্য: experience_db থেকে পাওয়া degraded state propagate করা হচ্ছে
-            if getattr(exp_db, "vector_backend_degraded", False):
-                self.degraded = True
-            # Pinecone-shaped format-এ রূপান্তর করা হচ্ছে callers-এর সাথে compatibility রাখতে
+            from services.memory_service import recall_memories
+
+            hits = await recall_memories(task_description=query_text, limit=top_k, threshold=0.65)
+
+            # Transform Cascade format back to Pinecone-shaped format
             return [
                 {
-                    "id": h.get("id"),
+                    "id": h.get("session_id") or h.get("id"),
                     "score": h.get("score", 0.0),
-                    "metadata": h.get("meta", {}),
-                    "solution": h.get("response", ""),
+                    "metadata": h.get("metadata", {}).get("original", h.get("metadata", {})),
+                    "solution": h.get("metadata", {}).get("action_taken", ""),
                 }
                 for h in hits
             ]

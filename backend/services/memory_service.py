@@ -11,11 +11,8 @@ from loguru import logger
 
 from core.persistence import pooled_pg
 
-# বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
-LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
-HAS_SENTENCE_TRANSFORMERS = (not LOW_MEMORY_MODE) and importlib.util.find_spec(
-    "sentence_transformers"
-) is not None
+# Using core.embeddings for 1536-dim embeddings to prevent zero-padding mismatch
+HAS_SENTENCE_TRANSFORMERS = False
 
 
 def hash_vectorize(text: str, size: int = 384) -> list[float]:
@@ -86,15 +83,7 @@ class CascadeMemoryService:
                 f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."
             )
         self.encoder = None
-
-        if HAS_SENTENCE_TRANSFORMERS:
-            try:
-                from sentence_transformers import SentenceTransformer
-
-                self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
-                logger.info("Initialized SentenceTransformer encoder for memory service")
-            except Exception as e:
-                logger.warning(f"Failed to load SentenceTransformer: {e}. Using hash fallback.")
+        # Relying on core.embeddings to fetch 1536-dim embeddings natively
 
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
@@ -114,12 +103,20 @@ class CascadeMemoryService:
             conn.commit()
 
     def _embed(self, text: str) -> list[float]:
-        if self.encoder:
-            try:
-                return self.encoder.encode(text).tolist()
-            except Exception as e:
-                logger.warning(f"Embedding failed: {e}. Falling back to hash vectorizer.")
-        return hash_vectorize(text)
+        import asyncio
+
+        from core.embeddings import embed_for_pgvector
+
+        try:
+            # try to get embedding, since we're in synchronous context we need to handle it carefully.
+            # wait, embed_for_pgvector is synchronous!
+            embedding = embed_for_pgvector(text, pg_dim=1536)
+            if embedding:
+                return embedding
+        except Exception as e:
+            logger.warning(f"Embedding failed: {e}. Falling back to hash vectorizer (1536 dim).")
+
+        return hash_vectorize(text, size=1536)
 
     def _parse_code_structure(self, file_path: str, content: str) -> dict[str, Any]:
         """
@@ -463,42 +460,17 @@ class CascadeMemoryService:
 memory_service = CascadeMemoryService()
 
 
-# ---------------------------------------------------------------------------
-# Embedding helper (shared with scripts/ai/memory_write.py)
-# ---------------------------------------------------------------------------
-
-_embedding_model = None
-
-
-def _get_embedding_model():
-    """Lazy-load the sentence-transformer model once per process."""
-    global _embedding_model
-    if _embedding_model is not None:
-        return _embedding_model
-    if not HAS_SENTENCE_TRANSFORMERS:
-        return None
-    try:
-        from sentence_transformers import SentenceTransformer
-
-        _embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-        logger.info("Embedding model loaded: all-MiniLM-L6-v2")
-        return _embedding_model
-    except Exception as exc:
-        logger.warning(
-            f"sentence-transformers not available ({exc}). Falling back to hash_vectorize."
-        )
-        return None
-
-
 def get_embedding(text: str) -> list[float]:
-    """Return a 384-d embedding for *text*. Falls back to hash_vectorize."""
-    model = _get_embedding_model()
-    if model is not None:
-        try:
-            return model.encode(text).tolist()
-        except Exception as e:
-            logger.debug(f"SentenceTransformer encoding error: {e}")
-    return hash_vectorize(text, size=384)
+    """Return a 1536-d embedding for *text*."""
+    from core.embeddings import embed_for_pgvector
+
+    try:
+        embedding = embed_for_pgvector(text, pg_dim=1536)
+        if embedding:
+            return embedding
+    except Exception as e:
+        logger.debug(f"LiteLLM encoding error: {e}")
+    return hash_vectorize(text, size=1536)
 
 
 # ---------------------------------------------------------------------------
