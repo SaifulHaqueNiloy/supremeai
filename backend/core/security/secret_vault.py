@@ -218,6 +218,17 @@ class ProductionSecretVault:
             )
             return self._fallback_to_env(secret_id, default)
         except Exception as exc:
+            err_str = str(exc).lower()
+            # Do not open circuit breaker for missing secrets or generic API errors
+            if (
+                "not found" in err_str
+                or "404" in err_str
+                or "400" in err_str
+                or "not_found" in err_str
+            ):
+                logger.warning(f"Secret '{secret_id}' not found in Infisical. Using fallback.")
+                return self._fallback_to_env(secret_id, default)
+
             self._circuit_breaker_open = True
             logger.opt(exception=True).warning(
                 f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback."
@@ -282,7 +293,17 @@ class ProductionSecretVault:
                 f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN."
             )
             return self._fallback_to_env(secret_id, default)
-        except Exception:
+        except Exception as exc:
+            err_str = str(exc).lower()
+            if (
+                "not found" in err_str
+                or "404" in err_str
+                or "400" in err_str
+                or "not_found" in err_str
+            ):
+                logger.warning(f"Secret '{secret_id}' not found in Infisical. Using fallback.")
+                return self._fallback_to_env(secret_id, default)
+
             self._circuit_breaker_open = True
             logger.opt(exception=True).warning(
                 f"Unexpected error fetching {secret_id} from Infisical."
