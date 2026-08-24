@@ -19,13 +19,14 @@ Author: SuperAI Team | License: MIT | Version: 1.0
 
 import asyncio
 import hashlib
-import logging
 import math
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
+
+from loguru import logger
 
 try:
     import requests
@@ -34,7 +35,6 @@ try:
 except ImportError:
     HAS_REQUESTS = False
 
-logger = logging.getLogger(__name__)
 
 # ═══════════════════════════════════════════════════════════════════
 # 1. PERSONALITY ENGINE (🚀 NO COMPETITOR HAS THIS!)
@@ -889,9 +889,9 @@ class CitationVerifier:
             return citation
 
         except Exception as e:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).warning(f"Error: {e}")
+            logger.warning(f"Error: {e}")
             return VerifiedCitation(
                 id=-1,
                 url=url,

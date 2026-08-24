@@ -3,13 +3,12 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-logger = logging.getLogger("supremeai.orchestration.master")
+from loguru import logger
 
 
 class CognitiveIntent(StrEnum):

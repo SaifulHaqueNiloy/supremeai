@@ -5,18 +5,17 @@ Manages access controls, decision-making oversight, and policy enforcement.
 
 import asyncio
 import json
-import logging
 import secrets
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from loguru import logger
+
 from core.cache.redis_manager import redis_manager
 from core.error_bus import with_error_bus
 from core.llm.token_deductor import TokenDeductor
 from core.utils.background_tasks import track_task
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

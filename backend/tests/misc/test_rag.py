@@ -1,11 +1,11 @@
 import asyncio
-import logging
+
+from loguru import logger
 
 from engine.embedding import embedding_service
 from engine.vector_db import vector_db
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def main():

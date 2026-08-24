@@ -1,8 +1,8 @@
 import asyncio
-import logging
 import os
 import random
 
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -10,7 +10,6 @@ from starlette.responses import JSONResponse, Response
 # বাংলা মন্তব্য: ChaosInjectorMiddleware — LOCAL_CHAOS_MODE env var দিয়ে নিয়ন্ত্রিত।
 # Production-এ সম্পূর্ণ নিষ্ক্রিয়। শুধুমাত্র local dev/test-এ random delay ও packet drop inject করে।
 
-logger = logging.getLogger(__name__)
 
 # DROP_THRESHOLD এর নিচে random() হলে packet drop হবে
 _DROP_THRESHOLD = 0.15

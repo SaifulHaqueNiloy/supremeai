@@ -4,15 +4,14 @@ Provides clear explanations for AI decisions to enhance transparency and trust.
 """
 
 import json
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from loguru import logger
+
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

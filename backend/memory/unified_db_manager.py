@@ -4,16 +4,15 @@
 
 from __future__ import annotations
 
-import logging
 import re
 from typing import Any
+
+from loguru import logger
 
 from memory.chromadb_store import ChromaDBStore
 from memory.cloud_postgres_store import CloudPostgresStore
 from memory.sqlite_store import SQLiteStore
 from memory.supabase_store import SupabaseStore
-
-logger = logging.getLogger("supremeai.unified_db")
 
 # বাংলা মন্তব্য: collection নামে SQL injection প্রতিরোধ করতে whitelist pattern ব্যবহার করা হচ্ছে —
 # একই প্যাটার্ন admin.py ও db_repository.py-তেও ব্যবহার হয়।

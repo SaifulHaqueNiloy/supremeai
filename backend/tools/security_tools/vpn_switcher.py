@@ -1,8 +1,9 @@
 import json
-import logging
 import secrets
 import time
 from typing import Any
+
+from loguru import logger
 
 from core.config import settings
 
@@ -12,8 +13,6 @@ try:
     HAS_HTTPX = True
 except ImportError:
     HAS_HTTPX = False
-
-logger = logging.getLogger(__name__)
 
 
 class VPNRotator:

@@ -316,7 +316,7 @@ const Dashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Cost Efficiency Card */}
+            {/* Cost Efficiency Card (LLM Metrics) */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -328,22 +328,23 @@ const Dashboard: React.FC = () => {
                   <DollarSign size={24} className="text-emerald-600" />
                 </div>
                 <span className="text-sm font-mono font-bold text-emerald-600">
-                  ${metrics ? metrics.cost_per_hour.toFixed(2) : '0.00'}/h
+                  ${metrics ? (metrics as any)?.financial_metrics?.estimated_usd_saved?.toFixed(2) || '0.00' : '0.00'} Saved
                 </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800">Cost Efficiency</h3>
+              <h3 className="text-lg font-bold text-slate-800">LLM Cost & Latency</h3>
               <p className="text-2xl font-extrabold text-emerald-600 mt-2">
-                {metrics && metrics.cost_per_hour < 0.5 ? 'Efficient' : metrics && metrics.cost_per_hour < 1.0 ? 'Moderate' : 'High Cost'}
+                {metrics && (metrics as any)?.financial_metrics?.total_semantic_cache_hits > 0 ? 'Cache Active' : 'No Cache Hits'}
               </p>
-              <p className="text-xs text-slate-500 mt-2">
-                Under budget allocation
+              <p className="text-xs text-slate-500 mt-2 flex justify-between">
+                <span>Hits: {(metrics as any)?.financial_metrics?.total_semantic_cache_hits || 0}</span>
+                <span>Saved: {(metrics as any)?.financial_metrics?.api_cost_reduction_ratio || '0%'}</span>
               </p>
               <div className="mt-4 h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full"
                   style={{
-                    width: `${metrics ? Math.min(metrics.cost_per_hour * 50, 100) : 25}%`,
-                    backgroundColor: metrics && metrics.cost_per_hour < 0.5 ? '#10b981' : metrics && metrics.cost_per_hour < 1.0 ? '#f59e0b' : '#ef4444'
+                    width: `${metrics ? Math.min(parseFloat((metrics as any)?.financial_metrics?.api_cost_reduction_ratio || '0') * 100, 100) : 25}%`,
+                    backgroundColor: '#10b981'
                   }}
                 ></div>
               </div>

@@ -3,16 +3,15 @@
 
 from __future__ import annotations
 
-import logging
 import time
 from typing import Any
+
+from loguru import logger
 
 from core.integration_layer import SupremeAIIntegrator
 from core.provider_rate_limiter import IntelligentRateLimiter, get_provider_rate_limiter
 from core.task_contract import TaskContract
 from runtime.task_context import TaskContext
-
-logger = logging.getLogger("supremeai.runtime.executor")
 
 
 class TaskExecutor:

@@ -1,10 +1,9 @@
 # Standard imports
-import logging
 import math
 import time
 from collections import deque
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class PredictiveMetricsTracker:

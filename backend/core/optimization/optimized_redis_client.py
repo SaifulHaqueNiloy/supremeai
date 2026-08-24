@@ -1,5 +1,6 @@
 import asyncio
-import logging
+
+from loguru import logger
 
 try:
     import redis.asyncio as aioredis
@@ -7,8 +8,6 @@ try:
 except ImportError:
     # Graceful fallback if redis is not installed
     aioredis = None
-
-logger = logging.getLogger(__name__)
 
 
 class CircuitBreaker:

@@ -1,12 +1,10 @@
 import hashlib
 import json
-import logging
 import time
 from typing import Any
 
 from fastapi import BackgroundTasks
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class CryptographicLedger:

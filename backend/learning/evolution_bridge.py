@@ -6,7 +6,7 @@ Converts recurring LearningInsights into validated ChangeProposals.
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
 from evolution.change_proposal import (
     ChangeProposal,
@@ -20,8 +20,6 @@ from learning.outcome_analyzer import (
     OutcomeClassification,
     get_outcome_analyzer,
 )
-
-logger = logging.getLogger("supremeai.learning.evolution_bridge")
 
 
 class EvolutionBridge:

@@ -19,7 +19,6 @@ Dependencies:
 
 from __future__ import annotations
 
-import logging
 import re
 import sys
 from dataclasses import dataclass, field
@@ -27,6 +26,8 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
 if sys.platform == "win32":
@@ -43,8 +44,6 @@ try:
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     from core.gcp_firestore import get_firestore_client
-
-logger = logging.getLogger(__name__)
 
 
 class RegulationType(Enum):

@@ -387,9 +387,9 @@ def _get_last_learning_time() -> str | None:
 
             return result
         except Exception:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).warning("Ignored exception")
+            logger.warning("Ignored exception")
     return None
 
 

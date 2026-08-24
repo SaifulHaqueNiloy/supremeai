@@ -6,14 +6,13 @@ to identify potential security threats based on user behavior patterns.
 
 from __future__ import annotations
 
-import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 @dataclass

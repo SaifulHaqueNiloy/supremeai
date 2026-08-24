@@ -1,9 +1,8 @@
 import json
-import logging
 import os
 import sys
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def export_openapi_schema(output_path: str = "packages/shared-types/openapi.json") -> str:

@@ -10,13 +10,14 @@ from __future__ import annotations
 
 import datetime
 import json
-import logging
 import os
 import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
 if sys.platform == "win32":
@@ -42,7 +43,7 @@ try:
     LITELLM_AVAILABLE = True
 except ImportError:
     LITELLM_AVAILABLE = False
-    logging.warning("⚠️ litellm not available. Token cost tracking will be limited.")
+    logger.warning("⚠️ litellm not available. Token cost tracking will be limited.")
 
 try:
     import requests
@@ -51,7 +52,6 @@ except ImportError:
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("costsage")
 
 COST_DB_FILE = Path(__file__).parent / ".costsage_db.json"
 BUDGET_CONFIG_FILE = Path(__file__).parent / ".costsage_budget.json"

@@ -7,14 +7,13 @@ memory-bounded operations, and pre-computed hourly distributions.
 
 from __future__ import annotations
 
-import logging
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 @dataclass

@@ -3,13 +3,12 @@
 
 from __future__ import annotations
 
-import logging
 import os
 import re
 
-from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from loguru import logger
 
-logger = logging.getLogger("supremeai.security.governance_policy")
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 # ── Explicit Allowlist for Evolution Target Namespaces ──────────────────────
 ALLOWED_EVOLUTION_NAMESPACES = (

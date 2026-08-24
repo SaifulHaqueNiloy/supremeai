@@ -42,14 +42,13 @@ except ImportError:
 
     requests.exceptions = type("exceptions", (), {"RequestException": Exception})
 
-import logging
+from loguru import logger
 
 try:
     import yaml  # type: ignore
 except ImportError:
     yaml: Any = None  # type: ignore[no-redef, assignment]
 
-logger = logging.getLogger(__name__)
 
 try:
     import docker

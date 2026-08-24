@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import datetime
 import json
-import logging
 import os
 import statistics
 import sys
@@ -20,6 +19,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import requests
+from loguru import logger
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
 if sys.platform == "win32":
@@ -41,7 +41,6 @@ except ImportError:
 
 # --- Configuration ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("cloudwatchman")
 
 REQUEST_TIMEOUT = int(os.getenv("HTTP_TIMEOUT_SECONDS") or "15")
 MAX_WORKERS = int(os.getenv("CLOUDWATCH_CONCURRENCY") or "5")

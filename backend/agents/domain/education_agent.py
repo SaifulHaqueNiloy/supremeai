@@ -8,16 +8,15 @@ Provides curriculum planning, quiz generation, and learning path recommendations
 from __future__ import annotations
 
 import hashlib
-import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 
+from loguru import logger
+
 from core.cache import get_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
-
-logger = logging.getLogger("supremeai.education")
 
 EDUCATION_CACHE_TTL = 3600  # 1 hour
 

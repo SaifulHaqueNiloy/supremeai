@@ -11,14 +11,13 @@ Key Capabilities:
 
 from __future__ import annotations
 
-import logging
 import subprocess
 from pathlib import Path
 
+from loguru import logger
+
 from core.config import settings
 from core.target_registry import TargetEntity, target_registry
-
-logger = logging.getLogger(__name__)
 
 
 class PermissionDeniedError(PermissionError):

@@ -1,12 +1,10 @@
 import json
-import logging
 import re
 from enum import StrEnum
 from typing import Any
 
+from loguru import logger
 from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
 
 # বাংলা মন্তব্য: Judge-এর জন্য consensus থ্রেশহোল্ড — hardcode value নয়, একটি নামযুক্ত
 # কনস্ট্যান্ট যাতে ভবিষ্যতে routing_policy.json/settings থেকে override করা সহজ হয়।

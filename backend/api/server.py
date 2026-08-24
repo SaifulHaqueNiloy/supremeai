@@ -23,6 +23,7 @@ from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from api.middleware import GlobalRateLimiterMiddleware
 from core.factory import SupremeAIFactory, get_factory
 from core.integration_layer import SupremeAIIntegrator
 
@@ -76,6 +77,8 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
+
+app.add_middleware(GlobalRateLimiterMiddleware, limit=100, window=60)
 
 
 # Request/Response Models

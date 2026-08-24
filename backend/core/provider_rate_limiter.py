@@ -12,7 +12,6 @@ Handles free-tier API rate limits gracefully:
 from __future__ import annotations
 
 import asyncio
-import logging
 import os
 import random
 import time
@@ -22,7 +21,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class ProviderStatus(StrEnum):

@@ -8,10 +8,9 @@
 from __future__ import annotations
 
 import importlib.util
-import logging
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def _ddgs_client():
