@@ -127,9 +127,9 @@ def test_public_auth_login_not_admin_guarded():
     assert login_routes, "Expected at least one login route"
     for route in login_routes:
         deps = _collect_auth_dependency_names(route)
-        assert "require_admin_token" not in deps, (
-            f"Login route {route.path} is admin-gated (should be public)"
-        )
+        assert (
+            "require_admin_token" not in deps
+        ), f"Login route {route.path} is admin-gated (should be public)"
 
 
 def test_health_endpoint_not_admin_guarded():
