@@ -468,7 +468,9 @@ class DescribeTableInput(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    table_name: str = Field(..., description="যে টেবিলের কলাম ও ইনডেক্স স্ট্রাকচার দেখা হবে", min_length=1)
+    table_name: str = Field(
+        ..., description="যে টেবিলের কলাম ও ইনডেক্স স্ট্রাকচার দেখা হবে", min_length=1
+    )
 
 
 @mcp.tool(
