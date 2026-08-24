@@ -13,11 +13,10 @@ Supabase-এর মতো ১৫৩৬-ডাইম pgvector কলামের 
 from __future__ import annotations
 
 import importlib.util
-import logging
 import math
 import os
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
 _HAS_SENTENCE_TRANSFORMERS = False  # Disabled local 384-dim model to avoid zero-padding issues

@@ -15,15 +15,13 @@ This module provides:
 """
 
 import hashlib
-import logging
 import time
 from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
+from loguru import logger
 from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/browser", tags=["browser-integration"])
 

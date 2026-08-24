@@ -14,13 +14,12 @@ Connects and orchestrates ALL phases and modules:
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from typing import Any
 
-# Structured logging setup
-logger = logging.getLogger("supremeai")
+from loguru import logger
 
+# Structured logging setup
 from config.settings import Settings, get_settings
 from core.adaptive_optimizer import AdaptiveOptimizer, get_optimizer
 from core.integration_layer import SupremeAIIntegrator

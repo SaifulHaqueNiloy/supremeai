@@ -1,5 +1,6 @@
 import asyncio
-import logging
+
+from loguru import logger
 
 from core.messaging.nats_messaging import nats_client
 from core.utils.background_tasks import track_task
@@ -7,7 +8,6 @@ from engine.worker_node import SwarmWorkerNode
 from engine.worker_registry import worker_registry
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def main():

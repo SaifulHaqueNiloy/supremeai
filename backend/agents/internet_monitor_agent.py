@@ -4,10 +4,11 @@ Monitors GitHub trending repos, AI world updates, and system capabilities to kee
 
 import asyncio
 import json
-import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
+
+from loguru import logger
 
 # aiohttp প্যাকেজ উপলব্ধ না থাকলে সেফ ইমপোর্ট ফলব্যাক।
 try:
@@ -23,8 +24,6 @@ from core.config import settings
 from core.health_check import health_checker
 from core.llm.token_deductor import TokenDeductor
 from core.messaging.event_bus import EventBus
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

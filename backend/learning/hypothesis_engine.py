@@ -3,11 +3,12 @@
 
 from __future__ import annotations
 
-import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
+
+from loguru import logger
 
 from evolution.change_proposal import (
     ChangeProposal,
@@ -21,8 +22,6 @@ from learning.evidence_analyzer import (
     get_evidence_analyzer,
 )
 from learning.pattern_detector import PatternDetector, get_pattern_detector
-
-logger = logging.getLogger("supremeai.learning.hypothesis_engine")
 
 
 @dataclass

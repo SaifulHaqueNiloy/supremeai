@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import uuid
 from dataclasses import dataclass, field
@@ -12,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("supremeai.learning.experience")
+from loguru import logger
 
 
 @dataclass

@@ -8,16 +8,15 @@ Provides transaction analysis, risk scoring, and financial insights.
 from __future__ import annotations
 
 import hashlib
-import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+from loguru import logger
+
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
-
-logger = logging.getLogger("supremeai.financial_services")
 
 FINANCIAL_CACHE_TTL = 300  # 5 minutes
 

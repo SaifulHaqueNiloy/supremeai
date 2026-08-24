@@ -6,12 +6,11 @@ event-loop blocking মুক্ত, fail-closed প্যাটার্ন অ
 
 import asyncio
 import json
-import logging
 import os
 import time
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 try:
     import aioredis

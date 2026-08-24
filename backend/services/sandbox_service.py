@@ -1,12 +1,10 @@
 import asyncio
-import logging
 from typing import Any
 
 from docker.errors import ContainerError
+from loguru import logger
 
 import docker
-
-logger = logging.getLogger(__name__)
 
 
 class SandboxService:

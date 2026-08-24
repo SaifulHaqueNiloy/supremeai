@@ -3,11 +3,9 @@
 
 from __future__ import annotations
 
-import logging
+from loguru import logger
 
 from core.task_contract import TaskContract
-
-logger = logging.getLogger("supremeai.runtime.budget")
 
 
 class BudgetExceededError(Exception):

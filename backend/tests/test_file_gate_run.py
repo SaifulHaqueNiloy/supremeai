@@ -1,6 +1,7 @@
 # tests/test_file_gate_run.py
-import logging
 import sys
+
+from loguru import logger
 
 from backend.sandbox.file_isolation_gate import FileIsolationGate
 
@@ -9,7 +10,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
-logger = logging.getLogger("supremeai.test_gate")
 
 
 def run_gate_test():

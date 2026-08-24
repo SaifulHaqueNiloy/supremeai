@@ -7,11 +7,11 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
-import logging
 import time
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -19,7 +19,6 @@ from core.cache import get_cache
 from core.cache.redis_manager import redis_manager
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 class HealthStatus(BaseModel):

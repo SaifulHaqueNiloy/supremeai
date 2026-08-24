@@ -1,10 +1,11 @@
 # FILE_PATH: backend/core/pgbouncer_pool.py
 
 import asyncio
-import logging
 import os
 import ssl
 from contextlib import asynccontextmanager
+
+from loguru import logger
 
 try:
     import asyncpg
@@ -13,7 +14,6 @@ except ImportError:
     asyncpg = None  # type: ignore[assignment]
     Connection = None  # type: ignore[assignment]
 
-logger = logging.getLogger(__name__)
 
 # বাংলা মন্তব্য: User ও Admin — দুই আলাদা Render instance একই Supabase PgBouncer পুলে
 # কানেক্ট করে। database/session.py-এর SQLAlchemy engine ইতিমধ্যে SERVICE_ROLE অনুযায়ী

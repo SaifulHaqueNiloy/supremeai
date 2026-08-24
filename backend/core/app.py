@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import logging
 import os
 import sys
+
+from loguru import logger
 
 # Ensure backend root is in sys.path to resolve top-level packages (api, core, utils)
 _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,8 +17,6 @@ from core.admin_routes import router as admin_router
 from core.app_builder import create_app
 from core.health_check import health_checker
 from monitoring import init_observability
-
-logger = logging.getLogger(__name__)
 
 # Initialize observability (Sentry APM & Error Tracking) before creating app
 init_observability()

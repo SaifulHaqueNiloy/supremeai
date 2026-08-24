@@ -1,5 +1,4 @@
 # backend/agents/skill_gc.py
-import logging
 import shutil
 import tarfile
 
@@ -7,11 +6,11 @@ import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from loguru import logger
+
 from core.utils.time_utils import utc_now
 from schemas.skill_index import SkillIndexManager
 from schemas.skill_manifest import SkillManifest, SkillStatus
-
-logger = logging.getLogger("supremeai.skill_gc")
 
 
 class SkillGarbageCollector:

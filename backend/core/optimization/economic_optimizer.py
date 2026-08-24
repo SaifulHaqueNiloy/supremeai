@@ -1,9 +1,8 @@
-import logging
 from dataclasses import dataclass
 
-from services.smart_model_router import MODEL_REGISTRY, ModelConfig
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from services.smart_model_router import MODEL_REGISTRY, ModelConfig
 
 
 @dataclass

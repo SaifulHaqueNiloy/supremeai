@@ -5,13 +5,11 @@ Monitors and manages memory usage within 512MB constraint.
 
 import asyncio
 import gc
-import logging
 from dataclasses import dataclass
 from functools import wraps
 
 import psutil
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 @dataclass

@@ -1,9 +1,9 @@
 import asyncio
-import logging
 import os
 from typing import Any
 
 from dotenv import load_dotenv
+from loguru import logger
 
 # Ensure we are in the backend directory
 if os.path.exists(".env"):
@@ -12,7 +12,6 @@ elif os.path.exists("../.env"):
     load_dotenv("../.env")
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 async def migrate_embeddings():

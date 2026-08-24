@@ -12,8 +12,6 @@ from core.config import settings
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
-    import logging
-
     import ldclient
     from langchain_anthropic import ChatAnthropic
     from langchain_community.callbacks import get_openai_callback
@@ -24,6 +22,7 @@ try:
     from ldclient.config import Config
     from ldclient.context import Context
     from ldobserve import ObservabilityConfig, ObservabilityPlugin, observe
+    from loguru import logger
 
     INTEGRATION_OK = True
 except ImportError as e:

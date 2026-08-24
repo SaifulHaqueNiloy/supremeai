@@ -2,212 +2,221 @@
 
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from loguru import logger
 
 from api import register_router
+from api.deps import get_current_user_token
 from core.config import settings
 
-core_routers: list[tuple[str, str]] = [
-    ("api.routes.memory", ""),
-    ("api.routes.unified_memory_api", ""),
-    ("api.routes.task", ""),
-    ("api.routes.markdown", "/api/v1"),
-    ("api.routes.simulator", ""),
-    ("api.routes.site_actions", ""),
-    # বাংলা মন্তব্য: llm_gateway ইচ্ছাকৃতভাবে optional_routers-এ সরানো হয়েছে।
-    # এটি দুইবার bad import-এর কারণে পুরো test suite crash করেছে (cv2 এবং core.auth)।
-    # optional রাখলে ভবিষ্যতে একটি broken route file পুরো app object poison করতে পারবে না।
-    ("api.routes.browser_routes", ""),
-    ("api.routes.stream", ""),
-    ("api.routes.media", ""),
-    ("api.routes.graph", ""),
-    ("api.routes.marketplace_endpoints", ""),
-    ("api.routes.auth", "/api/v1"),
-    ("api.routes.onboarding", "/api/v1"),
-    ("api.routes.evolution", "/api/v1"),
-    ("api.routes.meta_ai", "/api/v1"),
-    ("api.routes.localization", "/api/v1"),
-    ("api.routes.analytics", "/api/v1"),
-    ("api.routes.admin_dashboard", ""),
-    ("api.routes.email", ""),
-    ("api.routes.github", ""),
-    ("api.routes.internal", ""),
-    ("api.routes.config", ""),
-    ("api.routes.economics", "/api/v1"),
-    ("api.routes.cognitive", "/api/v1"),
-    ("api.routes.cache_predictions", "/api/v1"),
-    ("api.routes.digital_twin", "/api/v1"),
-    ("api.routes.healing", "/api/v1"),
-    ("api.routes.repos", ""),
-    ("api.routes.tools_ops", ""),
-    ("api.routes.agents", ""),
-    ("api.routes.agent", ""),
-    ("api.routes.admin", ""),
-    ("api.routes.tools_registry", ""),
-    # বাংলা মন্তব্য: AUDIT-018 ফিক্স — এই router-টা আগে কোথাও register-ই করা হয়নি,
-    # ফলে frontend-এর skillsService.fetchSkillCatalog() /api/skills/catalog-এ
-    # সবসময় 404 পেত। router-এর নিজস্ব prefix ("/skills") + এখানে "/api" যোগ করলে
-    # final path মিলে যায়।
-    ("api.routes.skills", "/api"),
-    # বাংলা মন্তব্য: AUDIT-018 (৩য় আইটেম) ফিক্স — /api/files/{path} PUT আগে flag
-    # করা হয়েছিল কারণ path-traversal protection ছাড়া বানানো ঝুঁকিপূর্ণ ছিল।
-    # এখন backend/api/routes/files.py-তে tenant-scoped, resolved-path-containment
-    # সহ safely implement করে register করা হলো।
-    ("api.routes.files", "/api"),
-    ("api.routes.preferences", "/api"),
-    ("api.routes.usage_metrics", ""),
-    ("api.routes.sso", ""),
-    ("api.routes.health", "/api/v1"),
-    ("api.routes.api_keys", ""),
-    ("api.routes.ci_webhooks", ""),
-    ("api.routes.task_workspace", "/api/v1"),
-    ("api.routes.websocket_agent", ""),
-    ("api.routes.agent_workspace", "/api/v1"),
-    ("api.routes.integrations", "/api/v1"),
-    ("api.routes.public_config", "/api"),
-    ("api.routes.traffic_monitor", ""),
-    ("api.routes.admin_v1", ""),
-    ("api.routes.agent_action", "/api/v1"),
-    ("api.routes.websocket_hitl", ""),
-    ("api.routes.syncguard", "/api/v1"),
-    ("api.routes.admin_librarian", "/api"),
-    # বাংলা মন্তব্ট: AUDIT-018 ফিক্স — session_stream router-টি কোথাও register করা হয়নি,
-    # ফলে Studio Client-এর /api/session/${sessionId}/stream SSE কলে 404 পেত।
-    # রাউটারটির নিজস্ব prefix নেই, তাই এখানে /api যোগ করলে full path মিলে যায়।
-    ("api.routes.session_stream", "/api"),
-    # বাংলা মন্তব্ট: AUDIT-018 ফিক্স — execution_policies router-টি কোথাও register করা হয়নি,
-    # ফলে /api/admin/execution-policies/* এন্ডপয়েন্টগুলো 404 দিচ্ছিল।
-    # রাউটারটির নিজস্ব prefix="/api/admin/execution-policies" আছে, তাই "" prefix।
-    ("api.routes.execution_policies", ""),
-    # বাংলা মন্তব্ব্য: এই রাউটারটি আগে এখানে যোগই করা হয়নি — ফলে /api/v1/swarm/*
-    # (real-time SSE stream, patch-telemetry persistence, VSCode self-healing
-    # endpoint, এবং নতুন emergency-stop /halt+/resume) সব HTTP 404 দিত।
-    # Kill-switch ও Swarm Health স্ক্রিন কাজ না করার আসল root cause এটিই ছিল।
-    ("api.routes.swarm", "/api/v1/swarm"),
-    # Added real-time dashboard WebSocket endpoint for Phase 2.1 of roadmap
-    ("api.routes.realtime_dashboard", ""),
-    ("api.routes.ci_dashboard_api", ""),
-    # Living, Self-Evolving Autonomous Engine Orchestrator
-    ("api.routes.living_engine", ""),
-    ("api.routes.living_brain", ""),
-    ("api.routes.scraper", "/api/v1"),
-    ("api.routes.kaggle", ""),
-]
-
-
-# 🔴 CRITICAL ROUTERS: These are functionally required for core features.
-# They live in optional_routers for historical reasons (test compatibility),
-# but MUST fail-fast in production if they can't load.
-# Migration path: Move these to core_routers when test dependencies are fixed.
-_CRITICAL_ROUTERS = {
-    "api.routes.llm_gateway",  # Required: AI chat/LLM functionality
-    "api.routes.knowledge",  # Required: RAG/Knowledge base features
-    "api.routes.billing_api",  # Required: Payment processing
-}
-
-optional_routers: list[tuple[str, str]] = [
-    # বাংলা মন্তব্য: llm_gateway এখানে optional — ব্যর্থ হলে warn করে, পুরো app crash করে না।
-    # Systemic fix: core_routers থেকে এখানে সরানো হয়েছে (দেখুন উপরের কমেন্ট)।
-    ("api.routes.llm_gateway", ""),
-    # বাংলা মন্তব্ব্য: chromadb নির্ভর হওয়ায় নলেজ বেস রাউটারটিকে অপশনাল হিসেবে রেজিস্টার করা হলো
-    ("api.routes.knowledge", "/api"),
-    ("api.routes.dock_actions", "/api"),
-    ("api.routes.websocket_voice", ""),
-    ("tools.collaborative_editor", "/api/v1"),
-    ("tools.code.image_to_code", ""),
-    ("tools.learning.style_learner", "/api"),
-    ("api.routes.codeflow", ""),
-    ("api.routes.feedback", ""),
-    ("tools.media.multilingual_tts", "/api"),
-    ("api.routes.voice", "/api/voice"),
-    ("tools.comment_thread_ai", "/api"),
-    ("api.routes.tenant_admin", "/api"),
-    ("api.routes.mobile_bff", ""),
-    ("api.routes.billing_api", ""),
-    ("api.routes.metrics", ""),
-    ("api.routes.cloud_mesh", ""),
-    ("api.routes.events", "/api"),
-    ("api.routes.payments", ""),
-    ("api.routes.maintenance", "/api/v1"),
-    ("api.routes.sandbox_api", ""),
-    ("api.routes.pr_review_api", ""),
-    # Added telemetry router for performance monitoring and system health
-    ("api.v1.telemetry", "/api"),
-    ("tools.social.telegram_bot", "/api/v1"),
-]
-
-
-# Identify admin router paths
-# বাংলা মন্তব্ব্য: tools_ops যোগ করা হলো — এটি DevOps/deploy টুলিং (docker-compose/helm
-# ফাইল-রাইট সহ) যা আগে ভুলবশত User API-তে এক্সপোজড ছিল (route-leakage)।
-_admin_paths = {
-    "api.routes.simulator_admin",
-    "api.routes.site_actions",
-    "api.routes.llm_gateway",
-    "api.routes.browser_routes",
-    "api.routes.evolution",
-    "api.routes.meta_ai",
-    "api.routes.admin_dashboard",
-    "api.routes.internal",
-    "api.routes.admin",
-    "api.routes.traffic_monitor",
-    "api.routes.admin_librarian",
-    "api.routes.tenant_admin",
-    "api.routes.metrics",
-    "api.routes.cloud_mesh",
-    "api.routes.tools_ops",
-    "api.routes.execution_policies",
-    "api.routes.living_brain",
-}
-
-# ADMIN_ROUTERS includes health and specific admin routes
-# বাংলা মন্তব্ব্য: অ্যাডমিন এপিআই রাউটারসমূহ
-ADMIN_ROUTERS: list[tuple[str, str]] = [
-    ("api.routes.health_aggregation", "/api"),
-    ("api.routes.health", "/api/v1"),
-    # বাংলা মন্তব্ব্য: অ্যাডমিন পোর্টালে গ্লোবাল কনফিগারেশন লোড করার জন্য public_config রাউটার যুক্ত করা হলো
-    ("api.routes.public_config", "/api"),
-    # বাংলা মন্তব্য: অ্যাডমিন প্যানেলের safe-default preferences স্ট্রিম (/api/preferences/default/stream)
-    # রাউটারটি আগে শুধু core_routers-এ ছিল, তাই অ্যাডমিন অ্যাপে 404 দিচ্ছিল। এখানে যোগ করা হলো।
-    ("api.routes.preferences", "/api"),
-    ("api.routes.simulator_admin", ""),
-    ("api.routes.site_actions", ""),
-    ("api.routes.llm_gateway", ""),
-    ("api.routes.browser_routes", ""),
-    ("api.routes.evolution", "/api/v1"),
-    ("api.routes.meta_ai", "/api/v1"),
-    ("api.routes.admin_dashboard", ""),
-    ("api.routes.internal", ""),
-    ("api.routes.admin", ""),
-    ("api.routes.traffic_monitor", ""),
-    ("api.routes.admin_librarian", "/api"),
-    ("api.routes.tenant_admin", "/api"),
-    ("api.routes.metrics", ""),
-    ("api.routes.cloud_mesh", ""),
-    ("api.routes.tools_ops", ""),
-    ("api.routes.living_brain", ""),
-]
-
-# USER_ROUTERS is all other routers
-# বাংলা মন্তব্ব্য: ইউজার এপিআই রাউটারসমূহ
-USER_ROUTERS: list[tuple[str, str]] = [
-    r for r in (core_routers + optional_routers) if r[0] not in _admin_paths
+# Unified declarative registry of all routers.
+# Format: {"path": str, "prefix": str, "is_admin": bool, "is_critical": bool}
+# Deduplicated and cleaned up according to Phase 2 API Cleanup.
+ALL_ROUTERS = [
+    # ---- Core & User Routes ----
+    {"path": "api.routes.memory", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.unified_memory_api",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.task", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.markdown", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.simulator", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.stream", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.media", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.graph", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.marketplace_endpoints",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.auth", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.onboarding", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.localization",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.analytics", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.email", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.github", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.config", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.economics", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.cognitive", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.cache_predictions",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {
+        "path": "api.routes.digital_twin",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.healing", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.repos", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.agents", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.agent", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.tools_registry", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.skills", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.files", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.usage_metrics", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.sso", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.api_keys", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.ci_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.task_workspace",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.websocket_agent", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.agent_workspace",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {
+        "path": "api.routes.integrations",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.admin_v1", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.agent_action",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.websocket_hitl", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.syncguard", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.session_stream",
+        "prefix": "/api",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {
+        "path": "api.routes.swarm",
+        "prefix": "/api/v1/swarm",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {
+        "path": "api.routes.realtime_dashboard",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.ci_dashboard_api", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.living_engine", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.scraper", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.kaggle", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.dock_actions", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "tools.collaborative_editor",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "tools.code.image_to_code", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "tools.learning.style_learner",
+        "prefix": "/api",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.codeflow", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.feedback", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "tools.media.multilingual_tts",
+        "prefix": "/api",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.voice", "prefix": "/api/voice", "is_admin": False, "is_critical": False},
+    {"path": "tools.comment_thread_ai", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.mobile_bff", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.payments", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.maintenance",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.sandbox_api", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.pr_review_api", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.v1.telemetry", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {
+        "path": "tools.social.telegram_bot",
+        "prefix": "/api/v1",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    # ---- Critical Routes ----
+    {"path": "api.routes.llm_gateway", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.knowledge", "prefix": "/api", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.billing_api", "prefix": "", "is_admin": False, "is_critical": True},
+    # ---- Admin & Health Routes ----
+    {
+        "path": "api.routes.health_aggregation",
+        "prefix": "/api",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.health", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.public_config", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.preferences", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.simulator_admin", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.site_actions", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.browser_routes", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.evolution", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.meta_ai", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.admin_dashboard", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.internal", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.admin", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.traffic_monitor", "prefix": "", "is_admin": True, "is_critical": False},
+    {
+        "path": "api.routes.admin_librarian",
+        "prefix": "/api",
+        "is_admin": True,
+        "is_critical": False,
+    },
+    {"path": "api.routes.tenant_admin", "prefix": "/api", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.metrics", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.cloud_mesh", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.tools_ops", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.execution_policies", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.living_brain", "prefix": "", "is_admin": True, "is_critical": False},
 ]
 
 
 def register_all_routers(app: FastAPI) -> None:
-    """Register all core and optional routers on the FastAPI app."""
-    for router_path, prefix in core_routers:
-        register_router(app, router_path, prefix=prefix)
-    for router_path, prefix in optional_routers:
-        # 🔴 FAIL-FAST: Critical routers must load successfully in production
-        is_critical = router_path in _CRITICAL_ROUTERS
+    """Register all unified routers on the FastAPI app."""
+    for router_def in ALL_ROUTERS:
+        path = router_def["path"]
+        prefix = router_def["prefix"]
+        is_admin = router_def["is_admin"]
+        is_critical = router_def["is_critical"]
+
+        deps = [Depends(get_current_user_token)] if is_admin else None
+
         if is_critical:
-            logger.info(f"Loading critical router: {router_path}")
-            register_router(app, router_path, prefix=prefix, optional=False)  # Fail-fast!
+            logger.info(f"Loading critical router: {path}")
+            register_router(app, path, prefix=prefix, optional=False, dependencies=deps)
         else:
-            register_router(app, router_path, prefix=prefix, optional=True)
+            register_router(app, path, prefix=prefix, optional=True, dependencies=deps)
+
+    # BYOC Router logic remains unchanged
     if settings.encryption_key and settings.encryption_key.get_secret_value():
         register_router(app, "api.routes.byoc_api", "", optional=True)
     else:
@@ -215,25 +224,29 @@ def register_all_routers(app: FastAPI) -> None:
 
 
 def include_user_routers(app: FastAPI) -> None:
-    """Register all user/client-facing routers on the FastAPI app."""
-    for router_path, prefix in USER_ROUTERS:
-        register_router(app, router_path, prefix=prefix, optional=True)
-    if settings.encryption_key and settings.encryption_key.get_secret_value():
-        register_router(app, "api.routes.byoc_api", "", optional=True)
+    """For compatibility/tests - registers non-admin routers."""
+    for router_def in ALL_ROUTERS:
+        if not router_def["is_admin"]:
+            register_router(app, router_def["path"], prefix=router_def["prefix"], optional=True)
 
 
 def include_admin_routers(app: FastAPI) -> None:
-    """Register all admin-facing routers on the FastAPI app."""
-    for router_path, prefix in ADMIN_ROUTERS:
-        register_router(app, router_path, prefix=prefix, optional=True)
+    """For compatibility/tests - registers admin routers."""
+    for router_def in ALL_ROUTERS:
+        if router_def["is_admin"]:
+            deps = [Depends(get_current_user_token)]
+            register_router(
+                app,
+                router_def["path"],
+                prefix=router_def["prefix"],
+                optional=True,
+                dependencies=deps,
+            )
 
 
 __all__ = [
-    "ADMIN_ROUTERS",
-    "USER_ROUTERS",
-    "core_routers",
+    "ALL_ROUTERS",
     "include_admin_routers",
     "include_user_routers",
-    "optional_routers",
     "register_all_routers",
 ]

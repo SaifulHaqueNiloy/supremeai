@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
-from memory.episodic_memory import EpisodicMemory
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from memory.episodic_memory import EpisodicMemory
 
 
 class SyntheticDataPipeline:

@@ -10,17 +10,16 @@ Version: 1.0.0
 
 import hashlib
 import json
-import logging
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
 from typing import Any
 
 import redis.asyncio as aioredis
+from loguru import logger
 from redis.exceptions import RedisError
 
 # Configure logging
-logger = logging.getLogger(__name__)
 
 
 class QueryCache:

@@ -5,7 +5,6 @@
 
 import datetime
 import json
-import logging
 import re
 
 # বাংলা মন্তব্য: টাইপিং এরর এড়ানোর জন্য Any ইমপোর্ট করা হলো
@@ -196,7 +195,7 @@ def format_chat_history(messages: list[dict]) -> str:
                 if isinstance(data, dict) and "content" in data:
                     content = data["content"]
             except Exception as e:
-                logging.getLogger(__name__).warning(f"Exception suppressed: {e}")
+                logger.warning(f"Exception suppressed: {e}")
         role_label = "User" if role == "user" else "Assistant"
         lines.append(f"{role_label}: {content}")
     return "\n".join(lines)

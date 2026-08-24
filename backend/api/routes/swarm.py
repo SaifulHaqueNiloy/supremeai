@@ -1,9 +1,9 @@
 import asyncio
-import logging
 import uuid
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from loguru import logger
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
@@ -14,9 +14,6 @@ from core.swarm_pubsub import swarm_streamer
 from database.session import get_db_session
 from engine.forge_compiler import ForgeCompiler
 from models.patch_telemetry import PatchTelemetry
-
-logger = logging.getLogger(__name__)
-
 
 router = APIRouter(tags=["Swarm"])
 

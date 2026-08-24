@@ -8,14 +8,13 @@ security vulnerabilities and malicious code patterns.
 from __future__ import annotations
 
 import ast
-import logging
 import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 @dataclass

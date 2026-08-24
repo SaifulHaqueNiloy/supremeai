@@ -6,7 +6,6 @@ Complete implementation for intelligent provider switching and account managemen
 import asyncio
 import hashlib
 import json
-import logging
 import os
 import secrets
 import time
@@ -14,6 +13,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
+
+from loguru import logger
 
 from core.config import settings
 from core.config_cache import config_cache
@@ -29,7 +30,6 @@ ALLOWED_PROVIDERS = frozenset(
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger(__name__)
 
 
 class ProviderStatus(Enum):

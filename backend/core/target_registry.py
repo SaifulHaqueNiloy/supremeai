@@ -11,13 +11,12 @@ Key Features:
 
 from __future__ import annotations
 
-import logging
 import threading
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class PermissionScope(StrEnum):

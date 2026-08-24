@@ -5,12 +5,11 @@ v4.0: Log slow requests, track percentiles, alert on degradation
 
 from __future__ import annotations
 
-import logging
 import time
 from collections import deque
 from typing import ASGI
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 # Configuration
 SLOW_REQUEST_MS = float(__import__("os").getenv("SLOW_REQUEST_MS", "2000"))

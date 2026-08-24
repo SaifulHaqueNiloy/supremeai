@@ -8,7 +8,6 @@ Proposal -> Static/Security Scan -> Sandbox Benchmark -> Canary Gate -> Auto-Rol
 from __future__ import annotations
 
 import json
-import logging
 import os
 import uuid
 from collections.abc import Callable
@@ -18,7 +17,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("supremeai.evolution")
+from loguru import logger
 
 
 class ProposalState(StrEnum):

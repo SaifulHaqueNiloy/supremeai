@@ -3,15 +3,13 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from typing import Any
 
 import httpx
+from loguru import logger
 
 from memory.episodic_memory import EpisodicMemory
-
-logger = logging.getLogger(__name__)
 
 
 class SelfReflectionLoop:

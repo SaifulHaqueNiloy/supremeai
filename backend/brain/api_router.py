@@ -1,9 +1,8 @@
 import inspect
-import logging
 from collections.abc import Callable
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class ApiRouter:

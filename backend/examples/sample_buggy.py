@@ -6,7 +6,7 @@ Run:  python -m pyerrorfix analyze examples/sample_buggy.py --fix --format conso
 
 import asyncio
 import hashlib
-import logging
+from loguru import logger
 import pickle  # noqa: F401  (used by security detector)
 import subprocess
 import time
@@ -42,7 +42,7 @@ async def handler():
     _cache["x"] = result
 
     # f-string in logging
-    logging.info(f"got {result} for {url}")
+    logger.info(f"got {result} for {url}")
 
     return result
 

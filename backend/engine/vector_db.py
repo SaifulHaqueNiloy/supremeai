@@ -11,10 +11,9 @@ Pinecone-shaped interface (save_experience, find_similar_experiences) অক্�
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
-_logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class VectorDatabaseClient:

@@ -371,73 +371,71 @@ class EnvironmentValidator:
 
     def print_report(self, result: ValidationResult) -> None:
         """Print validation report to console"""
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info("\n" + "=" * 70)
-        import logging
+        logger.info("\n" + "=" * 70)
+        from loguru import logger
 
-        logging.getLogger(__name__).info("🔍 SUPREMEAI ENVIRONMENT VALIDATION REPORT")
-        import logging
+        logger.info("🔍 SUPREMEAI ENVIRONMENT VALIDATION REPORT")
+        from loguru import logger
 
-        logging.getLogger(__name__).info("=" * 70)
-        import logging
+        logger.info("=" * 70)
+        from loguru import logger
 
-        logging.getLogger(__name__).info(f"\n📊 Health Score: {result.score}/100")
-        import logging
+        logger.info(f"\n📊 Health Score: {result.score}/100")
+        from loguru import logger
 
-        logging.getLogger(__name__).info(
-            f"   Status: {'✅ PASS' if result.is_valid else '❌ FAIL'}\n"
-        )
+        logger.info(f"   Status: {'✅ PASS' if result.is_valid else '❌ FAIL'}\n")
 
         if result.errors:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).info("🚨 CRITICAL ERRORS (Must Fix):")
-            import logging
+            logger.info("🚨 CRITICAL ERRORS (Must Fix):")
+            from loguru import logger
 
-            logging.getLogger(__name__).info("-" * 70)
+            logger.info("-" * 70)
             for i, error in enumerate(result.errors, 1):
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).info(f"\n{i}. {error['variable']}")
-                import logging
+                logger.info(f"\n{i}. {error['variable']}")
+                from loguru import logger
 
-                logging.getLogger(__name__).info(f"   {error['message']}")
+                logger.info(f"   {error['message']}")
                 if "description" in error:
-                    import logging
+                    from loguru import logger
 
-                    logging.getLogger(__name__).info(f"   📖 {error['description']}")
+                    logger.info(f"   📖 {error['description']}")
 
         if result.warnings:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).info("\n⚠️  WARNINGS (Recommended):")
-            import logging
+            logger.info("\n⚠️  WARNINGS (Recommended):")
+            from loguru import logger
 
-            logging.getLogger(__name__).info("-" * 70)
+            logger.info("-" * 70)
             for i, warning in enumerate(result.warnings, 1):
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).info(f"\n{i}. {warning['variable']}")
-                import logging
+                logger.info(f"\n{i}. {warning['variable']}")
+                from loguru import logger
 
-                logging.getLogger(__name__).info(f"   {warning['message']}")
+                logger.info(f"   {warning['message']}")
 
         if result.info:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).info("\nℹ️  INFORMATION:")
-            import logging
+            logger.info("\nℹ️  INFORMATION:")
+            from loguru import logger
 
-            logging.getLogger(__name__).info("-" * 70)
+            logger.info("-" * 70)
             for info in result.info[:5]:  # Show first 5
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).info(f"  • {info['variable']}: {info['message']}")
+                logger.info(f"  • {info['variable']}: {info['message']}")
 
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info("\n" + "=" * 70 + "\n")
+        logger.info("\n" + "=" * 70 + "\n")
 
 
 def validate_environment(strict: bool = False) -> bool:

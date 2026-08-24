@@ -3,13 +3,12 @@
 
 from __future__ import annotations
 
-import logging
 import time
 from typing import Any
 
-from memory.chromadb_store import ChromaDBStore
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from memory.chromadb_store import ChromaDBStore
 
 
 class EpisodicMemory:

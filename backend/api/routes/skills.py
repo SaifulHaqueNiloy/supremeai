@@ -1,14 +1,13 @@
 # backend/api/routes/skills.py
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 
 from api.dependencies import get_current_user_token
 
-logger = logging.getLogger("supremeai.api.skills")
 router = APIRouter(
     prefix="/skills",
     tags=["Skill Catalog Infrastructure"],

@@ -3,14 +3,13 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from learning.experience import ExperienceStore, get_experience_store
+from loguru import logger
 
-logger = logging.getLogger("supremeai.learning.pattern_detector")
+from learning.experience import ExperienceStore, get_experience_store
 
 
 @dataclass

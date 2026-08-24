@@ -32,9 +32,9 @@ try:
         UniversalAuthMethod,
     )
 except ImportError as e:
-    import logging
+    from loguru import logger
 
-    logging.getLogger("core.security").warning(f"Failed to import infisical_client: {e}")
+    logger.warning(f"Failed to import infisical_client: {e}")
     InfisicalClient = None  # type: ignore[assignment]
 
 # ── Constants ──────────────────────────────────────────────────────────────────

@@ -5,16 +5,15 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 from typing import Any
+
+from loguru import logger
 
 from evolution.change_proposal import (
     ChangeProposalManager,
     ProposalState,
     get_change_manager,
 )
-
-logger = logging.getLogger("supremeai.evolution.integrity")
 
 
 def canonical_artifact_hash(code: str, schema: dict[str, Any] | None = None) -> str:

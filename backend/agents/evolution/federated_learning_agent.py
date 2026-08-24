@@ -8,15 +8,14 @@ Coordinates model training across decentralized clients with differential privac
 from __future__ import annotations
 
 import hashlib
-import logging
 import random
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from core.cache import get_cache
+from loguru import logger
 
-logger = logging.getLogger("supremeai.federated_learning")
+from core.cache import get_cache
 
 FEDERATED_CACHE_TTL = 3600
 

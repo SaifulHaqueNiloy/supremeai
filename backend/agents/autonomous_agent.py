@@ -3,10 +3,11 @@
 
 import asyncio
 import gc
-import logging
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from typing import Any
+
+from loguru import logger
 
 from core.error_bus import with_error_bus
 
@@ -16,8 +17,6 @@ except ImportError:
     psutil = None
 
 from core.messaging.event_bus import ErrorEvent, ErrorSeverity, error_bus
-
-logger = logging.getLogger("supremeai.autonomous_agent")
 
 
 class AutonomousAgent(ABC):

@@ -64,6 +64,6 @@ def test_local_ocr_extractor():
             if os.path.exists(excel_path):
                 os.remove(excel_path)
     except ImportError:
-        import logging
+        from loguru import logger
 
-        logging.warning("Optional dependencies not installed, skipping excel export test")
+        logger.warning("Optional dependencies not installed, skipping excel export test")

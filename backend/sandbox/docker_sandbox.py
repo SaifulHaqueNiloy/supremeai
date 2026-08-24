@@ -1,11 +1,10 @@
 # backend/sandbox/docker_sandbox.py
-import logging
 import re
 import subprocess
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("supremeai.sandbox.docker")
+from loguru import logger
 
 
 class DockerSandbox:

@@ -1,6 +1,7 @@
 # backend/skills/core_doc_summarizer.py
-import logging
 import os
+
+from loguru import logger
 
 # বাংলা মন্তব্য: google-genai প্যাকেজ CI-তে ঠিকমতো install না থাকলে graceful fallback
 try:
@@ -14,8 +15,6 @@ except ImportError:
     types = None  # type: ignore[assignment]
 
 from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
-
-logger = logging.getLogger("supremeai.skills.doc_summarizer")
 
 # বাংলা মন্তব্য: Doc Summarizer এর জন্য প্রথক Circuit Breaker রেজিস্ট্রি
 # knowledge_qa এর ব্রেকার থেকে আলাদা রাখা হয়েছে যাতে একটা failure অন্যটার সার্কিট block না করে

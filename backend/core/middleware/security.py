@@ -7,15 +7,14 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
-import logging
 import re
 import time
 
 from fastapi import Request, Response
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 # Configure logging
-logger = logging.getLogger(__name__)
 
 
 # Security header configuration

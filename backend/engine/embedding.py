@@ -1,9 +1,8 @@
 import asyncio
-import logging
+
+from loguru import logger
 
 from core.embeddings import embed_for_pgvector
-
-logger = logging.getLogger(__name__)
 
 
 class EmbeddingService:

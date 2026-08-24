@@ -48,10 +48,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import os
 import sys
 from typing import Any
+
+from loguru import logger
 
 # বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে যাতে backend/ modules import করা যায়
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,7 +71,6 @@ try:
 except ImportError:
     _MCP_AVAILABLE = False
 
-logger = logging.getLogger("supremeai.memory.mcp")
 
 # বাংলা মন্তব্য: মেমোরি লেয়ার সমূহ import করা হচ্ছে — ব্যর্থ হলে graceful degradation ও স্পষ্ট লগিং
 try:

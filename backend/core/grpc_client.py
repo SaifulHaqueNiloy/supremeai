@@ -15,7 +15,6 @@ Dependencies:
 - `protos.supreme_engine_pb2_grpc`: Generated gRPC service stubs for the Worker Service."""
 
 import json
-import logging
 from typing import Any
 
 import grpc
@@ -23,8 +22,7 @@ import grpc
 # We assume the protobuf compiler (protoc) will generate these files inside backend/protos
 import protos.supreme_engine_pb2 as pb2
 import protos.supreme_engine_pb2_grpc as pb2_grpc
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class WorkerGrpcClient:

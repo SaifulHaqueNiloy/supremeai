@@ -6,13 +6,13 @@
 # Listener failure → DLQ — silent drop সম্পূর্ণ নিষিদ্ধ।
 
 import asyncio
-import logging
 import threading
 from collections import defaultdict
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from monitoring import track_exception
@@ -21,8 +21,6 @@ try:
     import psutil
 except ImportError:
     psutil = None
-
-logger = logging.getLogger("supremeai.event_bus")
 
 
 from enum import StrEnum

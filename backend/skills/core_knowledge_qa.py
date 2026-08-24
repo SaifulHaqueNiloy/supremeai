@@ -1,7 +1,8 @@
 # backend/skills/core_knowledge_qa.py
-import logging
 import os
 from typing import Any
+
+from loguru import logger
 
 # বাংলা মন্তব্য: google-genai প্যাকেজ CI-তে ঠিকমতো install না থাকলে graceful fallback
 try:
@@ -15,8 +16,6 @@ except ImportError:
     types = None  # type: ignore[assignment]
 
 from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
-
-logger = logging.getLogger("supremeai.skills.knowledge_qa")
 
 # বাংলা মন্তব্য: গ্লোবাল Gemini Circuit Breaker — ৫ বার ফেইল হলে OPEN, 60স পর HALF_OPEN
 _gemini_qa_breaker: CircuitBreaker = CircuitBreaker(

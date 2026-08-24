@@ -7,14 +7,13 @@ Defines roles, permissions, and authorization logic for the entire platform.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from core.config import settings
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from core.config import settings
 
 
 # বাংলা মন্তব্য: UP042 ফিক্স — Role এর জন্য StrEnum ব্যবহার করা হয়েছে

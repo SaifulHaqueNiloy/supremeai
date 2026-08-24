@@ -6,17 +6,16 @@ NEVER crashes due to external API issues!
 """
 
 import asyncio
-import logging
 import time
 from dataclasses import dataclass
 from typing import Any
+
+from loguru import logger
 
 from .circuit_breaker import CircuitBreakerManager
 from .learning_engine import LearningEngine, TaskType
 from .local_fallback import OllamaFallback
 from .provider_registry import ProviderConfig, ProviderRegistry
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

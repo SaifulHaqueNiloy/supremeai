@@ -1,8 +1,9 @@
 import json
-import logging
 import os
 from collections.abc import Callable
 from typing import Any
+
+from loguru import logger
 
 from core.error_bus import with_error_bus
 
@@ -21,8 +22,6 @@ except ModuleNotFoundError:  # pragma: no cover
 
 
 from pydantic import BaseModel
-
-logger = logging.getLogger(__name__)
 
 
 class NATSClient:

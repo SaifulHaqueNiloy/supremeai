@@ -8,10 +8,11 @@ TaskContract -> TaskStateMachine -> Planner -> BudgetGuard -> TaskExecutor -> Ve
 from __future__ import annotations
 
 import asyncio
-import logging
 import time
 from datetime import datetime
 from typing import Any
+
+from loguru import logger
 
 from core.integration_layer import SupremeAIIntegrator
 from core.task_contract import TaskContract, TaskStatus, VerificationPolicy
@@ -21,8 +22,6 @@ from runtime.task_context import TaskContext
 from runtime.task_executor import TaskExecutor
 from runtime.task_result import TaskResult, VerificationSummary
 from verification.verifier import VerifierEngine, get_verifier
-
-logger = logging.getLogger("supremeai.runtime")
 
 
 class TaskRuntime:

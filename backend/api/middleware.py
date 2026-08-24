@@ -177,6 +177,44 @@ class ChaosInjectorMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+class GlobalRateLimiterMiddleware(BaseHTTPMiddleware):
+    """Redis-based distributed sliding window rate limiter."""
+
+    def __init__(self, app, limit: int = 100, window: int = 60):
+        super().__init__(app)
+        self.limit = limit
+        self.window = window
+
+    async def dispatch(self, request: Request, call_next):
+        # Exclude certain paths from rate limiting
+        if request.url.path.startswith(("/docs", "/redoc", "/api/v1/health", "/api/health")):
+            return await call_next(request)
+
+        client_ip = request.client.host if request.client else "unknown"
+
+        # Use existing async rate limiter from middleware.rate_limiter
+        from middleware.rate_limiter import AsyncRateLimiter
+
+        limiter = AsyncRateLimiter()
+        is_allowed = await limiter.acquire(
+            f"global_ip:{client_ip}", limit=self.limit, window=self.window
+        )
+
+        if not is_allowed:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": {
+                        "title": "Too Many Requests",
+                        "detail": "Rate limit exceeded. Please try again later.",
+                    }
+                },
+                headers={"Retry-After": str(self.window)},
+            )
+
+        return await call_next(request)
+
+
 IDEMPOTENCY_TTL_SECONDS = 120
 IDEMPOTENCY_PATHS = (
     "/api/task",

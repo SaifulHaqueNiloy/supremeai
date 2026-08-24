@@ -13,15 +13,14 @@ Dependencies:
 - `core.cache.redis_manager`: Utilized within remediation logic to interact with Redis, such as updating configuration or re-initializing connections."""
 
 import asyncio
-import logging
 import os
 import random
 import time
 
+from loguru import logger
+
 from core.health.health_probes import probe_database, probe_external_api, probe_redis
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
-
-logger = logging.getLogger("supremeai.immune_system")
 
 
 class MaintenancePipeline:

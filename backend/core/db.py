@@ -5,13 +5,13 @@ v4.0: Connection pooling, slow query logging, health checks
 
 from __future__ import annotations
 
-import logging
 import os
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from functools import lru_cache
 
+from loguru import logger
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -19,8 +19,6 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import DeclarativeBase
-
-logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Configuration

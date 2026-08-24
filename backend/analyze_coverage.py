@@ -1,9 +1,8 @@
 """Analyze coverage.json and identify high-priority files needing tests."""
 
 import json
-import logging
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 with open("coverage.json") as f:
     data = json.load(f)

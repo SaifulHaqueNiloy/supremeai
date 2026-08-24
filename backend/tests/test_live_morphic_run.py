@@ -1,8 +1,9 @@
 # tests/test_live_morphic_run.py
 import json
-import logging
 import os
 import sys
+
+from loguru import logger
 
 from backend.skills.core_knowledge_qa import execute_tool
 
@@ -12,7 +13,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
-logger = logging.getLogger("supremeai.test_runner")
 
 
 def run_rag_rbac_matrix_test():

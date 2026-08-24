@@ -26,17 +26,16 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
-import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+from loguru import logger
+
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
-
-logger = logging.getLogger("supremeai.churn_prophet")
 
 
 # ── Enums & Constants ───────────────────────────────────────────────────────

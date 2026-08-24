@@ -1,13 +1,12 @@
 import asyncio
-import logging
 import os
 import platform
 import uuid
 from datetime import UTC, datetime
 
-from core.messaging.nats_messaging import NATSClient
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from core.messaging.nats_messaging import NATSClient
 
 
 class SwarmWorkerNode:

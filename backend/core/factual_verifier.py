@@ -20,13 +20,11 @@ Dependencies:
 - `tools.knowledge.local_search_rag`: (Optional) For local RAG-based factual verification."""
 
 import ast
-import logging
 import operator
 import re
 
 import httpx
-
-_logger = logging.getLogger(__name__)
+from loguru import logger
 
 _ALLOWED_OPERATORS = {
     ast.Add: operator.add,

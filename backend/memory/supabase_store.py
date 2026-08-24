@@ -216,9 +216,9 @@ class SupabaseStore(SQLiteMemoryStore):
                     embedding = list(embedding) + [0.0] * (1536 - len(embedding))
                 return embedding[:1536]
             except Exception:
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).warning("Ignored exception")
+                logger.warning("Ignored exception")
 
             try:
                 # Fallback 2: LiteLLM with OpenAI
@@ -227,9 +227,9 @@ class SupabaseStore(SQLiteMemoryStore):
                 response = litellm.embedding(model="text-embedding-3-small", input=text)
                 return response.data[0]["embedding"]
             except Exception:
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).warning("Ignored exception")
+                logger.warning("Ignored exception")
 
             # All methods failed
             try:

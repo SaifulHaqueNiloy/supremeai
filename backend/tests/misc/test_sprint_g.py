@@ -398,9 +398,9 @@ class TestTenantAdminAPI:
                 await create_tenant(payload)
             except Exception as e:
                 # May fail on tier cache — check local store directly
-                import logging
+                from loguru import logger
 
-                logging.warning(
+                logger.warning(
                     f"Tenant creation failed in test, checking local store fallback. Error: {e}"
                 )
 

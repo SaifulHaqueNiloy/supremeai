@@ -425,9 +425,9 @@ class IntelligentCache:
                 base_stats["redis_memory_used_bytes"] = info.get("used_memory", 0)
                 base_stats["redis_total_keys"] = info.get("db0", {}).get("keys", 0)
             except Exception:
-                import logging
+                from loguru import logger
 
-                logging.getLogger(__name__).warning("Ignored exception")
+                logger.warning("Ignored exception")
 
         base_stats["local_cache_size"] = len(self._local_cache)
         base_stats["circuit_breaker_open"] = self._circuit_breaker_open

@@ -45,15 +45,14 @@ CPU Impact: <2% when active, idle ~0%
 """
 
 import json
-import logging
 from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, WebSocket
+from loguru import logger
 from pydantic import BaseModel, Field
 
 # Set up logging
-logger = logging.getLogger(__name__)
 
 # Create router
 router = APIRouter(

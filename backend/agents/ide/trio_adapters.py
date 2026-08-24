@@ -22,10 +22,9 @@ from typing import Any
 try:
     from loguru import logger
 except ImportError:  # pragma: no cover
-    import logging
+    from loguru import logger
 
-    logger = logging.getLogger("supremeai.ide_trio")
-    if not logger.handlers:
+        if not logger.handlers:
         logger.addHandler(logging.NullHandler())
 
 

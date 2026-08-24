@@ -3,14 +3,13 @@
 বাংলা: P2P কম্পিউট রিসোর্স শেয়ারিং, নোড ম্যাচমেকিং, জিরো-ট্রাস্ট স্যান্ডবক্সিং এবং ক্রিপ্টোগ্রাফিক প্রুফ ভ্যালিডেশন।
 """
 
-import logging
 import time
 from typing import Any
 
+from loguru import logger
+
 from core.microvm_sandbox import execute_code_securely
 from p2p.credit_system import InsufficientCreditsError, credit_system
-
-logger = logging.getLogger("supremeai.p2p.resource_broker")
 
 
 class P2PResourceBroker:

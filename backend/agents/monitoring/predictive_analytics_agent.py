@@ -8,16 +8,15 @@ Uses statistical methods (ARIMA-like, exponential smoothing) without external ML
 from __future__ import annotations
 
 import hashlib
-import logging
 import math
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from loguru import logger
+
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
-
-logger = logging.getLogger("supremeai.predictive_analytics")
 
 MIN_DATA_POINTS = 10
 FORECAST_CACHE_TTL = 600  # 10 minutes
