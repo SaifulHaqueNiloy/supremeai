@@ -1232,6 +1232,29 @@ trio = ["trio (>=0.30)"]
 wmi = ["wmi (>=1.5.1) ; platform_system == \"Windows\""]
 
 [[package]]
+name = "docker"
+version = "7.2.0"
+description = "A Python library for the Docker Engine API."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "docker-7.2.0-py3-none-any.whl", hash = "sha256:a3f45fdeb9165e2d25d9a1d02ddf3bc70fb572cf5ebbf9b58558c22caf29b71f"},
+    {file = "docker-7.2.0.tar.gz", hash = "sha256:cebb93773d334f778e023a7ee352a8d6e13ab1bd3b863a4d4a59dec897df43ac"},
+]
+
+[package.dependencies]
+pywin32 = {version = ">=304", markers = "sys_platform == \"win32\""}
+requests = ">=2.26.0"
+urllib3 = ">=1.26.0"
+
+[package.extras]
+dev = ["coverage (==7.2.7)", "pytest (==7.4.2)", "pytest-cov (==4.1.0)", "pytest-timeout (==2.1.0)", "ruff (==0.1.8)"]
+docs = ["myst-parser (==0.18.0)", "sphinx (==5.1.1)"]
+ssh = ["paramiko (>=2.4.3)"]
+websockets = ["websocket-client (>=1.3.0)"]
+
+[[package]]
 name = "docstring-parser"
 version = "0.18.0"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
@@ -5365,6 +5388,23 @@ test = ["anthropic (>=0.72)", "claude-agent-sdk", "coverage", "django (>=5.2.15,
 zstd = ["zstandard (>=0.23.0)"]
 
 [[package]]
+name = "prometheus-client"
+version = "0.26.0"
+description = "Python client for the Prometheus monitoring system."
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "prometheus_client-0.26.0-py3-none-any.whl", hash = "sha256:fa93d06737aa02bacd05794768508bb97d2fbee28cb3bca04eaae92f0ca953d6"},
+    {file = "prometheus_client-0.26.0.tar.gz", hash = "sha256:04a91bcf94e2cf74a44a1a874d651a2e853ed354b6e822f3b7487751465d5c2b"},
+]
+
+[package.extras]
+aiohttp = ["aiohttp"]
+django = ["django"]
+twisted = ["twisted"]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.53"
 description = "Library for building powerful interactive command lines in Python"
@@ -8859,4 +8899,4 @@ type = ["pytest-mypy (>=1.0.1) ; platform_python_implementation != \"PyPy\""]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "64c39be7795ed1551c2619e72e4af30e1fddec1a395e1c21d57c38764571c46c"
+content-hash = "f50ec32a1aebd1b964aee9e41776a44b92361f9564213af0352d32d28396d9dd"

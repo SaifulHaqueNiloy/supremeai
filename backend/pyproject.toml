@@ -21,6 +21,7 @@ pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
 loguru = "^0.7.3"
 psutil = "^6.1.0"
+prometheus-client = "^0.26.0"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
 python-multipart = "^0.0.20"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}

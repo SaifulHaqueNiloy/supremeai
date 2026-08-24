@@ -48,6 +48,10 @@ class DockerSandbox:
             "shutdown",
             "reboot",
             ":(){ :|:& };:",
+            "malicious",
+            "payload",
+            "exploit",
+            "backdoor",
         ]
 
         forbidden_patterns = [

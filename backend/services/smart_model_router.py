@@ -677,10 +677,6 @@ class SmartRouter:
             elif model.avg_latency_ms < 2000:
                 score += 5
 
-            # Free Tier Priority Bonus
-            if model.provider == "groq" and model.tier == ModelTier.ECONOMY:
-                score += 10  # Explicit priority as per architecture plan
-
             # Quality bonus for complex tasks
             if complexity.score > 70:
                 score += model.quality_score * 2

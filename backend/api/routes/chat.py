@@ -266,7 +266,9 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     answer = metadata.get("content", best.get("summary", ""))
 
                     similarity = best.get("similarity", 0.8)
-                    disclaimer = " (এই উত্তরটি সম্পূর্ণ নিশ্চিত নাও হতে পারে।)" if similarity < 0.8 else ""
+                    disclaimer = (
+                        " (এই উত্তরটি সম্পূর্ণ নিশ্চিত নাও হতে পারে।)" if similarity < 0.8 else ""
+                    )
 
                     response_text = answer + disclaimer
                     import json
