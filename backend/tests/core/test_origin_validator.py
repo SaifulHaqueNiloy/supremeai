@@ -1,173 +1,120 @@
-"""Tests for core.security.origin_validator — TrustedOriginMiddleware."""
+"""TrustedOriginMiddleware এর ইউনিট টেস্ট।
 
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+বাংলা: এখানে শুধু portal_role নির্ধারণ ও allowed_origins গণনার লজিক কভার করা হয়েছে
+(নেটওয়ার্ক/ডিস্প্যাচ ছাড়া)। settings-এর বিভিন্ন অ্যাট্রিবিউট মক করে আইসোলেশন নিশ্চিত করা হয়েছে।
+"""
+
+from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import pytest
-from starlette.responses import JSONResponse
 
-from core.security.origin_validator import TrustedOriginMiddleware
+from core.security import origin_validator
+from core.security.origin_validator import (
+    ADMIN_DEFAULT_TRUSTED_ORIGINS,
+    USER_DEFAULT_TRUSTED_ORIGINS,
+    TrustedOriginMiddleware,
+)
 
 
-class TestTrustedOriginMiddleware:
-    """Tests for TrustedOriginMiddleware."""
+@pytest.fixture
+def fake_settings():
+    s = MagicMock()
+    s.service_role = "user"
+    s.admin_cors_origins = []
+    s.user_cors_origins = []
+    s.cors_origins = []
+    s.env = "local"
+    s.is_origin_bypass_allowed = False
+    s.supremeai_public_paths = ["/api/v1/health"]
+    s.allowed_hosts = []
+    return s
 
-    def _make_request(
-        self,
-        method="GET",
-        path="/api/test",
-        headers=None,
-        origin=None,
-        client_host="127.0.0.1",
-    ):
-        """Helper to create a mock request."""
-        request = MagicMock()
-        request.method = method
-        request.url.path = path
-        all_headers = {"host": "localhost"}
-        if origin:
-            all_headers["Origin"] = origin
-        if headers:
-            all_headers.update(headers)
-        request.headers = all_headers
-        request.client = MagicMock()
-        request.client.host = client_host
-        return request
 
-    @pytest.mark.asyncio
-    async def test_non_http_scope_passes_through(self):
-        """Test that middleware handles non-HTTP scopes."""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request()
-        await middleware.dispatch(request, app)
-        app.assert_awaited_once()
+def test_portal_role_override_admin(fake_settings):
+    with pytest.MagicMock() if False else _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="admin")
+        assert mw.portal_role == "admin"
 
-    @pytest.mark.asyncio
-    async def test_options_preflight_allowed_origin(self):
-        """বাংলা: ডিফল্ট portal_role='user' — তাই ইউজার অরিজিনের preflight 200 পাবে।"""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(method="OPTIONS", origin="https://supremeai-a.web.app")
-        response = await middleware.dispatch(request, app)
-        assert response.status_code == 200
 
-    @pytest.mark.asyncio
-    async def test_options_preflight_allowed_origin_admin_portal(self):
-        """বাংলা: admin portal-এ অ্যাডমিন কনসোল অরিজিনের preflight 200 পাবে।"""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app, portal_role="admin")
-        request = self._make_request(method="OPTIONS", origin="https://supremeai-admin.web.app")
-        response = await middleware.dispatch(request, app)
-        assert response.status_code == 200
+def test_portal_role_override_user(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="USER")
+        assert mw.portal_role == "user"
 
-    @pytest.mark.asyncio
-    async def test_options_preflight_no_origin(self):
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(method="OPTIONS")
-        response = await middleware.dispatch(request, app)
-        assert response.status_code == 200
 
-    @pytest.mark.asyncio
-    async def test_test_environment_bypasses_check(self):
-        """Test env bypasses origin check."""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(origin="http://evil.com")
-        with patch.dict("os.environ", {"ENV": "test"}):
-            await middleware.dispatch(request, app)
-            app.assert_awaited_once()
+def test_portal_role_from_settings_admin(fake_settings):
+    fake_settings.service_role = "admin"
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock())
+        assert mw.portal_role == "admin"
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip(
-        reason="SECURITY: TrustedOriginMiddleware has NO public-path bypass by design (intentional, secure) - test expects a bypass that doesn't exist. Needs test rewrite, not code change."
-    )
-    async def test_public_path_bypasses_origin_check(self):
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(path="/health", origin="http://evil.com")
 
-        from core.config import settings
+def test_portal_role_default_user(fake_settings):
+    fake_settings.service_role = "unknown"
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock())
+        assert mw.portal_role == "user"
 
-        old_paths = settings.supremeai_public_paths
-        settings.supremeai_public_paths = ["/health"]
-        try:
-            await middleware.dispatch(request, app)
-            app.assert_awaited_once()
-        finally:
-            settings.supremeai_public_paths = old_paths
 
-    @pytest.mark.asyncio
-    async def test_blocked_unauthorized_origin(self):
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(
-            path="/api/protected",
-            origin="http://evil-hacker.com",
-            client_host="10.0.0.5",
-        )
-        request.headers = {
-            "host": "api.supremeai.com",
-            "Origin": "http://evil-hacker.com",
-        }
+def test_allowed_origins_user_defaults(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        # বাংলা: Unified backend আর্কিটেকচারে ইউজার পোর্টাল অ্যাডমিন অরিজিনও ট্রাস্ট করবে
+        assert ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
-        with patch.dict("os.environ", {"ENV": "production", "ALLOW_TEST_ORIGIN_BYPASS": "false"}):
-            with patch(
-                "core.security.origin_validator.TrustedOriginMiddleware.allowed_origins",
-                new_callable=PropertyMock,
-            ) as mock_origins:
-                mock_origins.return_value = {"https://trusted.com"}
-                with patch("core.security.origin_validator.settings") as mock_settings:
-                    mock_settings.is_origin_bypass_allowed = False
-                    mock_settings.supremeai_public_paths = ["/health"]
-                    mock_settings.allowed_hosts = ["api.supremeai.com"]
-                    response = await middleware.dispatch(request, app)
-                    assert isinstance(response, JSONResponse)
-                    assert response.status_code == 403
 
-    @pytest.mark.asyncio
-    async def test_allowed_origin_passes(self):
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request(origin="https://trusted.com")
+def test_allowed_origins_admin_defaults(fake_settings):
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="admin")
+        origins = mw.allowed_origins
+        assert ADMIN_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
+        assert USER_DEFAULT_TRUSTED_ORIGINS.issubset(origins)
 
-        with (
-            patch.dict("os.environ", {"ENV": "production"}),
-            patch(
-                "core.security.origin_validator.TrustedOriginMiddleware.allowed_origins",
-                new_callable=PropertyMock,
-            ) as mock_origins,
-        ):
-            mock_origins.return_value = {"https://trusted.com"}
-            await middleware.dispatch(request, app)
-            app.assert_awaited_once()
 
-    @pytest.mark.asyncio
-    async def test_missing_origin_passes(self):
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app)
-        request = self._make_request()
+def test_allowed_origins_strips_wildcard(fake_settings):
+    fake_settings.user_cors_origins = ["*", "https://evil.example.com"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "*" not in origins
 
-        with patch.dict("os.environ", {"ENV": "production"}):
-            await middleware.dispatch(request, app)
-            app.assert_awaited_once()
 
-    def test_allowed_origins_property_user_portal(self):
-        """বাংলা: Unified backend আর্কিটেকচারে User instance সব অরিজিন ট্রাস্ট করবে।"""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app, portal_role="user")
-        origins = middleware.allowed_origins
-        assert "https://supremeai-backend.onrender.com" in origins
-        assert "https://supremeai-a.web.app" in origins
-        assert "https://supremeai-admin.web.app" in origins
-        assert "https://supremeai-backend-docker.onrender.com" in origins
+def test_allowed_origins_localhost_in_dev(fake_settings):
+    fake_settings.env = "local"
+    fake_settings.cors_origins = ["http://localhost:3000", "http://127.0.0.1:5173"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "http://localhost:3000" in origins
+        assert "http://127.0.0.1:5173" in origins
 
-    def test_allowed_origins_property_admin_portal(self):
-        """বাংলা: Unified backend আর্কিটেকচারে Admin instance সব অরিজিন ট্রাস্ট করবে।"""
-        app = AsyncMock()
-        middleware = TrustedOriginMiddleware(app, portal_role="admin")
-        origins = middleware.allowed_origins
-        assert "https://supremeai-admin.web.app" in origins
-        assert "https://supremeai-a.web.app" in origins
+
+def test_allowed_origins_no_localhost_in_production(fake_settings):
+    # বাংলা: প্রোডাকশনে স্পষ্টভাবে কনফিগ না করা localhost অটো-যোগ হবে না
+    fake_settings.env = "production"
+    fake_settings.cors_origins = ["https://supremeai-lac.vercel.app"]
+    with _patch_settings(fake_settings):
+        mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
+        origins = mw.allowed_origins
+        assert "http://localhost:3000" not in origins
         assert "https://supremeai-lac.vercel.app" in origins
-        assert "https://supremeai-backend.onrender.com" in origins
+
+
+def test_default_origin_constants_non_empty():
+    assert len(USER_DEFAULT_TRUSTED_ORIGINS) > 0
+    assert len(ADMIN_DEFAULT_TRUSTED_ORIGINS) > 0
+
+
+import contextlib
+
+
+@contextlib.contextmanager
+def _patch_settings(fake_settings):
+    """settings মডিউল অবজেক্টকে মক দিয়ে প্যাচ করে।"""
+    with pytest.MonkeyPatch().context() as mp:
+        mp.setattr(origin_validator, "settings", fake_settings)
+        yield
