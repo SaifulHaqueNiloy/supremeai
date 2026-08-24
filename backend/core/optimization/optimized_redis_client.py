@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from loguru import logger
 
@@ -51,8 +52,10 @@ class OptimizedRedisClient:
     auto-reconnection with exponential backoff, and health monitoring.
     """
 
-    def __init__(self, url: str = "redis://localhost:6379", max_connections: int = 20):
-        self.url = url
+    def __init__(self, url: str | None = None, max_connections: int = 20):
+        from core.config import settings
+
+        self.url = url or getattr(settings, "redis_url", "redis://localhost:6379")
         self.max_connections = max_connections
         self.pool: aioredis.ConnectionPool | None = None
         self.client: aioredis.Redis | None = None
@@ -74,8 +77,8 @@ class OptimizedRedisClient:
                         self.url,
                         max_connections=self.max_connections,
                         decode_responses=True,
-                        socket_connect_timeout=5,
-                        socket_timeout=5,
+                        socket_connect_timeout=float(os.getenv("REDIS_SOCKET_TIMEOUT", "5")),
+                        socket_timeout=float(os.getenv("REDIS_SOCKET_TIMEOUT", "5")),
                         health_check_interval=30,
                     )
                     self.client = aioredis.Redis(connection_pool=self.pool)
@@ -140,7 +143,7 @@ _init_lock = asyncio.Lock()
 
 
 async def get_redis_client(
-    url: str = "redis://localhost:6379", max_connections: int = 20
+    url: str | None = None, max_connections: int = 20
 ) -> OptimizedRedisClient:
     """Get or initialize the global OptimizedRedisClient."""
     global _global_redis_client

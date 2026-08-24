@@ -22,6 +22,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -243,7 +244,7 @@ class PerformanceGuardian:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=500,
+                max_tokens=config_cache.get("performance_guardian_max_tokens", 500),
             )
 
             analysis = {

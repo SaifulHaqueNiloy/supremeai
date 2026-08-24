@@ -321,11 +321,12 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
 
     now = int(time.time())
     # বাংলা মন্তব্য: jti (JWT ID) + sub + iat যোগ করা হলো — JWT replay attack প্রতিরোধ (Patch 6 fix)
+    expiry_hours = int(os.environ.get("ADMIN_JWT_EXPIRY_HOURS", 24))
     jwt_payload = {
         "sub": uid,
         "uid": uid,
         "role": "admin",
-        "exp": now + 3600 * 24,
+        "exp": now + 3600 * expiry_hours,
         "iat": now,
         "jti": uuid.uuid4().hex,
     }

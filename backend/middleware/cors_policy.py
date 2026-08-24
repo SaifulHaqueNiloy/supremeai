@@ -13,20 +13,34 @@
 
 from __future__ import annotations
 
+import json
+import os
 from collections.abc import Iterable
 
-# বাংলা মন্তব্য: ইউজার ফ্রন্টএন্ড অরিজিন — Vercel (primary), Netlify (legacy), Firebase user target।
-USER_ALLOWED_ORIGINS: tuple[str, ...] = (
-    "https://supremeai-lac.vercel.app",
-    "https://supremeai-studio.vercel.app",
-    "https://tiny-stroopwafel-2d981c.netlify.app",
-    "https://supremeai-a.web.app",
-    "https://supremeai-studio-client.onrender.com",
-    "https://supremeai-backend.onrender.com",
+
+def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    val = os.getenv(env_var)
+    if val:
+        try:
+            parsed = json.loads(val)
+            if isinstance(parsed, list):
+                return tuple(parsed)
+        except json.JSONDecodeError:
+            return tuple([x.strip() for x in val.split(",") if x.strip()])
+    return default
+
+
+USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
+    "CORS_ORIGINS",
+    (
+        "https://supremeai-lac.vercel.app",
+        "https://supremeai-studio.vercel.app",
+    ),
 )
 
-# বাংলা মন্তব্য: অ্যাডমিন কনসোল অরিজিন — শুধুমাত্র Firebase admin target।
-ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = ("https://supremeai-admin.web.app",)
+ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
+    "ADMIN_CORS_ORIGINS", ("https://supremeai-admin.web.app",)
+)
 
 # বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
 USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()

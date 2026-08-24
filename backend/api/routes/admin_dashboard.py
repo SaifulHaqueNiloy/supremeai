@@ -218,6 +218,57 @@ def get_costs_breakdown():
                 }
             )
 
+        # Real-time Render usage data integration
+        render_spent = 0.0
+        render_quota = 50.0  # Estimated budget for Render
+        try:
+            import requests
+
+            render_api_key = os.getenv("RENDER_API_KEY", "")
+            if render_api_key:
+                resp = requests.get(
+                    "https://api.render.com/v1/services",
+                    headers={
+                        "Authorization": f"Bearer {render_api_key}",
+                        "Accept": "application/json",
+                    },
+                    timeout=5,
+                )
+                if resp.status_code == 200:
+                    services = resp.json()
+                    # Calculate estimated cost based on plan
+                    for srv in services:
+                        plan = (
+                            srv.get("service", {})
+                            .get("serviceDetails", {})
+                            .get("plan", "free")
+                            .lower()
+                        )
+                        if plan == "starter":
+                            render_spent += 7.0
+                        elif plan == "standard":
+                            render_spent += 25.0
+                        elif plan == "pro":
+                            render_spent += 85.0
+                        elif plan == "pro_plus":
+                            render_spent += 175.0
+                        elif plan == "custom":
+                            render_spent += 50.0
+
+            providers["Render Cloud"] = {
+                "spent": render_spent,
+                "quota": render_quota,
+                "color": "from-[#8a2be2] to-[#da70d6]",
+            }
+            spent += render_spent
+        except Exception as render_err:
+            logger.warning(f"Failed to fetch Render API usage: {render_err}")
+            providers["Render Cloud"] = {
+                "spent": 0.0,
+                "quota": render_quota,
+                "color": "from-[#8a2be2] to-[#da70d6]",
+            }
+
         provider_costs_list = [
             {"name": name, "spent": p["spent"], "quota": p["quota"], "color": p["color"]}
             for name, p in providers.items()

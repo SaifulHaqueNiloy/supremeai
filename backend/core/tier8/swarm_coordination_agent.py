@@ -25,6 +25,7 @@ from core.base import BaseSkill
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.observability.telemetry import get_tracer, trace_span
 from core.swarm_pubsub import SwarmPubSub, get_swarm_streamer
+from services.config_service import ConfigService
 
 
 class TaskStatus(Enum):
@@ -274,11 +275,14 @@ class SwarmCoordinationAgent(BaseSkill):
             # In real impl, this would be an RPC or message queue
             # Here we simulate with LLM call for zero-cost demo
             llm = await self._get_llm()
+            llm_config = await ConfigService.get_config(
+                None, "swarm_max_tokens", {"max_tokens": 1024, "temperature": 0.3}
+            )
             response = await llm.acompletion(
                 model=os.getenv("SWARM_MODEL", "gpt-4o-mini"),
                 messages=[{"role": "user", "content": str(task.payload)}],
-                temperature=0.3,
-                max_tokens=1024,
+                temperature=llm_config.get("temperature", 0.3),
+                max_tokens=llm_config.get("max_tokens", 1024),
             )
             return {
                 "agent_id": agent.agent_id,

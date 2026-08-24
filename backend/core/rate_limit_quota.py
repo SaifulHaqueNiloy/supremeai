@@ -10,8 +10,10 @@ class DailyQuotaLimiter:
     and control LLM costs over a 24-hour period.
     """
 
-    def __init__(self, redis_url: str = "redis://localhost:6379"):
-        self.redis_url = redis_url
+    def __init__(self, redis_url: str | None = None):
+        from core.config import settings
+
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
         self._redis = None
         self.DAILY_LIMITS = {
             "anonymous": 50,
