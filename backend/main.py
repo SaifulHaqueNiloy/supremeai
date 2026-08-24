@@ -11,6 +11,8 @@ from typing import Any
 if not os.getenv("ENV"):
     os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
 
+print(f">>> SUPREMEAI BOOTSTRAP STARTING (ENV={os.getenv('ENV')}) <<<", flush=True)
+
 # Initialize global silent catcher before any other imports that might spawn threads
 from core.intelligent_silent_catcher import setup_silent_catcher
 
@@ -59,7 +61,11 @@ def __getattr__(name: str) -> Any:
 from core.config import settings
 from core.logging_config import setup_logging
 
+print(">>> CONFIG AND LOGGING LOADED <<<", flush=True)
+
 setup_logging()
+
+print(">>> LOGGING SETUP COMPLETE <<<", flush=True)
 
 
 def _handle_sigterm(signum: int, frame: object) -> None:
