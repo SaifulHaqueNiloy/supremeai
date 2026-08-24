@@ -4,9 +4,8 @@ Internet Monitor API Routes
 API endpoints for the Internet Monitor Agent that tracks updates and system capabilities.
 """
 
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 
 from agents.internet_monitor_agent import (
     get_internet_updates,
@@ -18,7 +17,6 @@ from agents.internet_monitor_agent import (
 from api.dependencies import get_current_admin
 
 router = APIRouter(prefix="/internet-monitor", tags=["Internet Monitor"])
-logger = logging.getLogger(__name__)
 
 
 # Bangla comment: APIRouter-এ @router.on_event অবচিত (deprecated)। সরাসরি অন-ডিমান্ড বা Lifespan মাধ্যমে লোড করার জন্য ইনিশিয়ালাইজেশন মেথড দেওয়া হলো।

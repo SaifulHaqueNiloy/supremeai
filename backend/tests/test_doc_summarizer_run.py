@@ -1,8 +1,9 @@
 # tests/test_doc_summarizer_run.py
-import logging
 import os
 import sys
 import time
+
+from loguru import logger
 
 from backend.skills.core_doc_summarizer import execute_tool
 
@@ -12,7 +13,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
-logger = logging.getLogger("supremeai.test_summarizer")
 
 
 def run_summarizer_benchmark_suite():

@@ -20,13 +20,14 @@ Dependencies:
 from __future__ import annotations
 
 import json
-import logging
 import re
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
 if sys.platform == "win32":
@@ -44,8 +45,6 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     from core.config import settings
     from core.llm.llm_gateway import llm_gateway
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

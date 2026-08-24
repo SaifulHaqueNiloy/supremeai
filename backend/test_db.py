@@ -1,13 +1,12 @@
 import asyncio
-import logging
 import os
 
 from dotenv import load_dotenv
+from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("test_db")
 
 
 async def check_db():

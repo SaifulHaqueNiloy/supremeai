@@ -8,14 +8,13 @@ Separates model self-confidence from external factual verification.
 from __future__ import annotations
 
 import ast
-import logging
 import time
 from typing import Any
 
+from loguru import logger
+
 from core.task_contract import TaskContract, VerificationPolicy
 from runtime.task_result import CriterionResult, VerificationSummary
-
-logger = logging.getLogger("supremeai.verification")
 
 
 class VerifierEngine:

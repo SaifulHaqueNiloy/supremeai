@@ -249,3 +249,14 @@ async def get_realtime_metrics():
             },
         ],
     }
+
+
+if _PROMETHEUS_AVAILABLE:
+    from fastapi.responses import PlainTextResponse
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+    @router.get("", response_class=PlainTextResponse, tags=["infrastructure-metrics"])
+    async def get_prometheus_metrics():
+        """Expose Prometheus metrics for scraping (at /api/admin/metrics)."""
+        data = generate_latest(REGISTRY)
+        return PlainTextResponse(data, media_type=CONTENT_TYPE_LATEST)

@@ -4,14 +4,13 @@
 """
 
 import asyncio
-import logging
 import shutil
 import sys
 from typing import Any
 
-from .skill_registry import skill_registry
+from loguru import logger
 
-logger = logging.getLogger("supremeai.skills.provisioner")
+from .skill_registry import skill_registry
 
 
 class SkillProvisioner:

@@ -137,8 +137,7 @@ class FrontendErrorReport(BaseModel):
 @router.post("/frontend-error", tags=["telemetry"])
 async def report_frontend_error(payload: FrontendErrorReport):
     """Receive and log frontend error reports safely from the Studio Client."""
-    import logging
+    from loguru import logger
 
-    logger = logging.getLogger("supremeai.telemetry.frontend")
-    logger.error(f"Frontend error report: message={payload.message[:200]} url={payload.url}")
+        logger.error(f"Frontend error report: message={payload.message[:200]} url={payload.url}")
     return {"status": "logged", "message": "Frontend error report received"}

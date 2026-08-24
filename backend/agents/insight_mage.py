@@ -25,17 +25,16 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 import math
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, TypeVar
 
+from loguru import logger
+
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
-
-logger = logging.getLogger("supremeai.insight_mage")
 
 T = TypeVar("T", bound="InsightMage")
 

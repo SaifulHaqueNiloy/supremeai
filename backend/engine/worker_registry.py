@@ -1,10 +1,9 @@
 import asyncio
-import logging
 from datetime import UTC, datetime
 
-from core.messaging.nats_messaging import nats_client
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from core.messaging.nats_messaging import nats_client
 
 
 class WorkerRegistry:

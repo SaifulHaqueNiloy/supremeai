@@ -5,18 +5,16 @@ Manages advanced cost optimization and budget adherence across the system.
 
 import asyncio
 import json
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
 from core.monitoring.metrics_collector import MetricsCollector
+from loguru import logger
 
 from core.cache.redis_manager import redis_manager
 from core.llm.token_deductor import TokenDeductor
 from core.utils.background_tasks import track_task
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

@@ -1,16 +1,15 @@
 # backend/agents/skill_librarian.py
 import json
-import logging
 import os
 import shutil
 import urllib.request
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
+
 from schemas.skill_index import SkillIndexManager
 from schemas.skill_manifest import SkillManifest, SkillStatus
-
-logger = logging.getLogger("supremeai.librarian")
 
 
 class SkillLibrarian:

@@ -431,9 +431,9 @@ class SecurityAuditor:
                 return current >= min_ver
 
         except Exception:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).warning("Ignored error")
+            logger.warning("Ignored error")
 
         return False
 
@@ -470,9 +470,9 @@ class SecurityAuditor:
                                         base_module = imp.split(".")[0].lower()
                                         imported_modules.add(base_module)
                         except Exception:
-                            import logging
+                            from loguru import logger
 
-                            logging.getLogger(__name__).warning("Ignored error")
+                            logger.warning("Ignored error")
 
             # Compare with installed packages
             for dep_name, dep_info in self.dependencies.items():
@@ -670,60 +670,56 @@ def run_security_audit(project_root: str | None = None) -> dict[str, Any]:
 
 def print_security_report(report: dict[str, Any]) -> None:
     """Pretty-print security report to console"""
-    import logging
+    from loguru import logger
 
-    logging.getLogger(__name__).info("\n" + "=" * 70)
-    import logging
+    logger.info("\n" + "=" * 70)
+    from loguru import logger
 
-    logging.getLogger(__name__).info("🔒 SUPREMEAI SECURITY AUDIT REPORT")
-    import logging
+    logger.info("🔒 SUPREMEAI SECURITY AUDIT REPORT")
+    from loguru import logger
 
-    logging.getLogger(__name__).info("=" * 70)
+    logger.info("=" * 70)
 
-    import logging
+    from loguru import logger
 
-    logging.getLogger(__name__).info(
-        f"\n📊 Overall Score: {report['score']}/100 (Grade: {report['grade']})"
-    )
-    import logging
+    logger.info(f"\n📊 Overall Score: {report['score']}/100 (Grade: {report['grade']})")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   Timestamp: {report['timestamp']}")
+    logger.info(f"   Timestamp: {report['timestamp']}")
 
     summary = report["summary"]
-    import logging
+    from loguru import logger
 
-    logging.getLogger(__name__).info("\n📋 Summary:")
-    import logging
+    logger.info("\n📋 Summary:")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(
-        f"   Total Vulnerabilities: {summary['total_vulnerabilities']}"
-    )
-    import logging
+    logger.info(f"   Total Vulnerabilities: {summary['total_vulnerabilities']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   🚨 Critical: {summary['critical']}")
-    import logging
+    logger.info(f"   🚨 Critical: {summary['critical']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   ⚠️  High: {summary['high']}")
-    import logging
+    logger.info(f"   ⚠️  High: {summary['high']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   📋 Medium: {summary['medium']}")
-    import logging
+    logger.info(f"   📋 Medium: {summary['medium']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   ℹ️  Low: {summary['low']}")
-    import logging
+    logger.info(f"   ℹ️  Low: {summary['low']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   Dependencies Scanned: {summary['dependencies_scanned']}")
-    import logging
+    logger.info(f"   Dependencies Scanned: {summary['dependencies_scanned']}")
+    from loguru import logger
 
-    logging.getLogger(__name__).info(f"   Unused Dependencies: {summary['unused_dependencies']}")
+    logger.info(f"   Unused Dependencies: {summary['unused_dependencies']}")
 
     if report["vulnerabilities"]:
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info("\n🐛 Vulnerabilities Found:")
-        import logging
+        logger.info("\n🐛 Vulnerabilities Found:")
+        from loguru import logger
 
-        logging.getLogger(__name__).info("-" * 70)
+        logger.info("-" * 70)
 
         for vuln in report["vulnerabilities"][:20]:  # Show top 20
             severity_icon = {
@@ -734,33 +730,31 @@ def print_security_report(report: dict[str, Any]) -> None:
                 "INFO": "💡",
             }.get(vuln["severity"], "❓")
 
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).info(
-                f"\n{severity_icon} [{vuln['severity']}] {vuln['title']}"
-            )
-            import logging
+            logger.info(f"\n{severity_icon} [{vuln['severity']}] {vuln['title']}")
+            from loguru import logger
 
-            logging.getLogger(__name__).info(f"   Location: {vuln['location']}")
-            import logging
+            logger.info(f"   Location: {vuln['location']}")
+            from loguru import logger
 
-            logging.getLogger(__name__).info(f"   Issue: {vuln['description']}")
-            import logging
+            logger.info(f"   Issue: {vuln['description']}")
+            from loguru import logger
 
-            logging.getLogger(__name__).info(f"   Fix: {vuln['remediation']}")
+            logger.info(f"   Fix: {vuln['remediation']}")
 
     if report["recommendations"]:
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info("\n💡 Recommendations:")
+        logger.info("\n💡 Recommendations:")
         for rec in report["recommendations"]:
-            import logging
+            from loguru import logger
 
-            logging.getLogger(__name__).info(f"   • {rec}")
+            logger.info(f"   • {rec}")
 
-    import logging
+    from loguru import logger
 
-    logging.getLogger(__name__).info("\n" + "=" * 70 + "\n")
+    logger.info("\n" + "=" * 70 + "\n")
 
 
 # CLI entry point

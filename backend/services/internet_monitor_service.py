@@ -5,12 +5,11 @@ Service to manage the lifecycle of the internet monitoring agent.
 """
 
 import asyncio
-import logging
+
+from loguru import logger
 
 # Fixed import path - using absolute import from backend
 from agents.internet_monitor_agent import internet_monitor_agent
-
-logger = logging.getLogger(__name__)
 
 
 class InternetMonitorService:

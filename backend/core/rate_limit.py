@@ -8,17 +8,16 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
-import logging
 import time
 from functools import wraps
 
 import redis.asyncio as aioredis
 from fastapi import HTTPException, Request, status
 from fastapi.security import HTTPBearer
+from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 # Configure logging
-logger = logging.getLogger(__name__)
 
 security = HTTPBearer(auto_error=False)
 

@@ -8,16 +8,15 @@ Detects prompt injection, jailbreak attempts, and input manipulation.
 from __future__ import annotations
 
 import hashlib
-import logging
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from core.cache import get_cache
+from loguru import logger
 
-logger = logging.getLogger("supremeai.adversarial_defense")
+from core.cache import get_cache
 
 DEFENSE_CACHE_TTL = 600
 

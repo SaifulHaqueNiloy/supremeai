@@ -32,19 +32,15 @@ try:
     validator = EnvironmentValidator()
     result = validator.validate()
     if not result.is_valid:
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info(
-            "CRITICAL: Environment validation failed! Missing required variables."
-        )
+        logger.info("CRITICAL: Environment validation failed! Missing required variables.")
         if not _is_test_run:
             sys.exit(1)
     else:
-        import logging
+        from loguru import logger
 
-        logging.getLogger(__name__).info(
-            f"SUCCESS: Environment validated successfully (Score: {result.score}/100)"
-        )
+        logger.info(f"SUCCESS: Environment validated successfully (Score: {result.score}/100)")
 except ImportError:
     pass
 # ----------------------------------------------------------

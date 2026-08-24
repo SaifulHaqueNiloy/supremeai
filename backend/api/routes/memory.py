@@ -227,12 +227,11 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
     Save a chat message to conversation history.
     Creates conversation if doesn't exist.
     """
-    import logging
+    from loguru import logger
 
     from core.config import settings
 
-    logger = logging.getLogger(__name__)
-
+    
     conversation_id = req.conversation_id or f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
     try:
@@ -295,10 +294,9 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
 @router.get("/conversations")
 async def list_conversations(request: Request, db=Depends(get_tenant_db)):
     """Get all conversations for authenticated user."""
-    import logging
+    from loguru import logger
 
-    logger = logging.getLogger(__name__)
-    try:
+        try:
         # Using tenant isolation inherently from get_tenant_db
         conversations = await db.conversations.find().sort("updated_at", -1).to_list(50)
 

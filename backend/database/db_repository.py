@@ -1,9 +1,10 @@
 import asyncio
 import inspect
-import logging
 import re
 from typing import Any
 from unittest.mock import MagicMock, Mock
+
+from loguru import logger
 
 _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
 
@@ -57,7 +58,7 @@ class SmartDataRepository:
         except PrimaryDatabaseDownException:
             raise
         except Exception as e:
-            logging.warning(f"⚠️ Firebase unreachable ({e!s}). Retrying...")
+            logger.warning(f"⚠️ Firebase unreachable ({e!s}). Retrying...")
             raise PrimaryDatabaseDownException(str(e)) from e
 
     async def _fetch_from_primary(self, collection: str, doc_id: str) -> dict[str, Any] | None:
@@ -74,7 +75,7 @@ class SmartDataRepository:
             # Try to fetch from Firebase
             return await self._fetch_from_primary(table_name, doc_id)
         except PrimaryDatabaseDownException:
-            logging.critical(
+            logger.critical(
                 "🚨 FIREBASE IS DOWN! Circuit Breaker Tripped. Falling back to Supabase."
             )
             try:
@@ -92,10 +93,10 @@ class SmartDataRepository:
                     row = self.supabase._execute(query, (doc_id,), fetchone=True)
                     return dict(row) if row else None
                 else:
-                    logging.critical("Supabase client is not compatible or not initialized.")
+                    logger.critical("Supabase client is not compatible or not initialized.")
                     return None
             except Exception as backup_error:
-                logging.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
+                logger.critical(f"💀 FATAL: Both databases are down! {backup_error!s}")
                 raise ServiceDegradedException(
                     "Both primary and fallback databases unavailable"
                 ) from backup_error

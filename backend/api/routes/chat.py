@@ -244,9 +244,9 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         # In production we'd collect chunks
                         pass
                     except Exception:
-                        import logging
+                        from loguru import logger
 
-                        logging.getLogger(__name__).warning("Ignored exception")
+                        logger.warning("Ignored exception")
 
                     return
                 except Exception as e:

@@ -5,11 +5,9 @@
 যেটা নিজেই free sentence-transformers দিয়ে embed করে।
 """
 
-import logging
+from loguru import logger
 
 from engine.vector_db import vector_db
-
-logger = logging.getLogger(__name__)
 
 
 class MemoryMiddleware:

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
-import logging
 import math
 import os
 import uuid
 from typing import Any
+
+from loguru import logger
 
 from core.utils.lazy_loader import lazy_import
 
@@ -18,9 +19,6 @@ try:
     _CHROMA_AVAILABLE = True
 except Exception:
     _CHROMA_AVAILABLE = False
-
-
-_logger = logging.getLogger(__name__)
 
 
 class ChromaDBStore:

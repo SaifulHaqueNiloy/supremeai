@@ -37,9 +37,7 @@ try:
 except ImportError:
     import httpx as requests  # type: ignore
 
-import logging
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class WCAGPrinciple(Enum):

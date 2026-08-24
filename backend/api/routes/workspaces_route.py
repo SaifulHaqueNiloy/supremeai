@@ -10,10 +10,10 @@ Endpoints:
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, status
+from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin
@@ -24,8 +24,6 @@ from core.target_registry import (
     TargetPlatformType,
     target_registry,
 )
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/admin-api/workspaces",

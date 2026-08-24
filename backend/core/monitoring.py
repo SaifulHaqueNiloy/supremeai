@@ -14,7 +14,6 @@ Version: 1.0.0
 Compliance: OpenTelemetry, Prometheus, GDPR logging
 """
 
-import logging
 import threading
 import time
 import uuid
@@ -26,14 +25,14 @@ from enum import Enum
 from functools import wraps
 from typing import Any
 
+from loguru import logger
+
 # Configure structured logging
 logging.basicConfig(
     level=logging.INFO,
     format='{"timestamp":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","message":"%(message)s","correlation_id":"%(correlation_id)s"}',
     datefmt="%Y-%m-%dT%H:%M:%S.%fZ",
 )
-
-logger = logging.getLogger("superai.monitoring")
 
 
 class AlertSeverity(Enum):

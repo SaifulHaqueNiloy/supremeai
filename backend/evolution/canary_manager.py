@@ -3,18 +3,17 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+
+from loguru import logger
 
 from evolution.change_proposal import (
     ChangeProposalManager,
     ProposalState,
     get_change_manager,
 )
-
-logger = logging.getLogger("supremeai.evolution.canary")
 
 
 @dataclass

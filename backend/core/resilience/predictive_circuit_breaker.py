@@ -1,9 +1,8 @@
-import logging
 import time
 
-from core.resilience.predictive_metrics import PredictiveMetricsTracker
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from core.resilience.predictive_metrics import PredictiveMetricsTracker
 
 
 class PredictiveCircuitBreaker:

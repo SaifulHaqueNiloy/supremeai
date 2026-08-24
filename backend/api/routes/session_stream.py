@@ -1,13 +1,12 @@
 import asyncio
 import json
-import logging
 
 from fastapi import APIRouter, Path, Request
+from loguru import logger
 from sse_starlette.sse import EventSourceResponse
 
 from core.observability.log_batcher import batcher
 
-logger = logging.getLogger(__name__)
 router = APIRouter()
 
 

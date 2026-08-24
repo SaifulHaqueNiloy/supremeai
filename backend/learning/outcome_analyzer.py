@@ -3,16 +3,15 @@
 
 from __future__ import annotations
 
-import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from learning.experience import ExperienceRecord
+from loguru import logger
 
-logger = logging.getLogger("supremeai.learning.analyzer")
+from learning.experience import ExperienceRecord
 
 
 class OutcomeClassification(StrEnum):

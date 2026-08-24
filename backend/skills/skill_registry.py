@@ -4,11 +4,10 @@
 """
 
 import json
-import logging
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("supremeai.skills.registry")
+from loguru import logger
 
 SKILLS_DIR = Path(__file__).parent
 MANIFESTS_DIR = SKILLS_DIR / "manifests"

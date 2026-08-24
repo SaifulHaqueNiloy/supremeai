@@ -272,9 +272,9 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                                 if k in ["status", "version", "uptime", "latency"]
                             }
                 except Exception:
-                    import logging
+                    from loguru import logger
 
-                    logging.warning("Ignored exception")
+                    logger.warning("Ignored exception")
 
             elif response.status_code >= 500:
                 status = ServiceStatus.UNHEALTHY
