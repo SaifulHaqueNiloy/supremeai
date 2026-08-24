@@ -47,6 +47,7 @@ class FreeTierMemoryManager:
             logger.warning(f"psutil.Process() unavailable at startup, will retry lazily: {e}")
             self._process = None
         self._last_gc_time = 0
+        self._last_aggressive_cleanup_time = 0
         self._gc_interval_seconds = 60  # Run GC every 60 seconds
 
     def get_status(self) -> MemoryStatus:
@@ -117,6 +118,14 @@ class FreeTierMemoryManager:
 
     async def _aggressive_cleanup(self):
         """Aggressive cleanup for critical memory situations."""
+        import time
+
+        current_time = time.time()
+        # Cooldown: Only run aggressive cleanup once every 60 seconds
+        if current_time - self._last_aggressive_cleanup_time < 60:
+            return
+
+        self._last_aggressive_cleanup_time = current_time
 
         logger.critical("🚨 Running AGGRESSIVE memory cleanup!")
 
@@ -135,22 +144,8 @@ class FreeTierMemoryManager:
         except ImportError:
             pass
 
-        # 3. Log top memory consumers
-        try:
-            import tracemalloc
-
-            tracemalloc.start()
-
-            snapshot = tracemalloc.take_snapshot()
-            top_stats = snapshot.statistics("lineno")[:10]
-
-            logger.warning("Top memory consumers:")
-            for stat in top_stats:
-                logger.warning(f"  {stat}")
-
-            tracemalloc.stop()
-        except Exception as e:
-            logger.warning(f"Ignored error: {e}")
+        # Note: Tracemalloc snapshotting was removed here because allocating memory for the
+        # snapshot during a critical OOM event actually exacerbates the crash and wastes CPU.
 
 
 # Singleton instance
