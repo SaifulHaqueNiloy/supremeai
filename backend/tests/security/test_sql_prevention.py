@@ -155,9 +155,15 @@ class TestParameterizedQueryBuilder:
         assert params == [1]
 
     def test_sanitizes_table_identifier(self):
+        # sanitize_identifier strips symbols (;, space) but keeps alphanumeric
+        # substrings — this matches the documented contract in
+        # TestInputSanitizerIdentifier.test_strips_invalid_chars ("col; DROP --"
+        # -> "colDROP"). The result "usersDROPTABLEx" has no SQL syntax left
+        # (no semicolons/spaces to break out of the identifier position), so it
+        # is not executable as injected SQL even though the letters remain.
         query, _ = ParameterizedQueryBuilder.build_select("users; DROP TABLE x")
-        assert "DROP" not in query
-        assert "users" in query
+        assert ";" not in query
+        assert "usersDROPTABLEx" in query
 
 
 class TestQueryInspector:

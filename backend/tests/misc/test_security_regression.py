@@ -22,7 +22,8 @@ async def test_production_jwt_secret_required():
             "JWT_SECRET": "",
         },
     ):
-        with patch("core.config_secrets.secret_vault.fetch_secret", return_value=""):
+        with patch("core.security.secret_vault.get_secret_vault") as mock_get_secret_vault:
+            mock_get_secret_vault.return_value.fetch_secret.return_value = ""
             with pytest.raises(RuntimeError) as excinfo:
                 _ = Settings().jwt_secret
     assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo.value)
