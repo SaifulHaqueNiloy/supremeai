@@ -87,9 +87,9 @@ def test_get_fixes_authorized(mock_decode_jwt, mock_token, mock_healer, mock_fir
     response = client.get(
         "/api/admin/fixes?tenant_id=test", headers={"Authorization": "Bearer dummy"}
     )
-    assert (
-        response.status_code == 200
-    ), f"Unexpected status: {response.status_code}, details: {response.text}"
+    assert response.status_code == 200, (
+        f"Unexpected status: {response.status_code}, details: {response.text}"
+    )
     assert "fixes" in response.json()
     assert len(response.json()["fixes"]) == 1
 
