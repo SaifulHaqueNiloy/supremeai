@@ -7,6 +7,7 @@ backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from core.logger import get_logger
+
 from services.memory_service import CascadeMemoryService
 
 logger = get_logger("knowledge_sync")

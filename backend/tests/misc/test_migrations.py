@@ -32,9 +32,9 @@ def test_migrations_contain_required_tables():
         "offline_sync_logs",
     ]
     for table in required_tables:
-        assert (
-            "CREATE TABLE" in all_sql and table in all_sql
-        ), f"Required table '{table}' missing from migrations"
+        assert "CREATE TABLE" in all_sql and table in all_sql, (
+            f"Required table '{table}' missing from migrations"
+        )
 
 
 def test_referral_system_constraints():
