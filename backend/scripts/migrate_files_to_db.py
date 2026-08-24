@@ -51,7 +51,9 @@ try:
     from core.config import settings
     from tools.headless_agent_registry import get_headless_agent_configs
 except ImportError as e:
-    logger.error(f"প্রয়োজনীয় মডিউল ইম্পোর্ট করা যায়নি: {e}. backend ডিরেক্টরি থেকে বা repo root থেকে চালান।")
+    logger.error(
+        f"প্রয়োজনীয় মডিউল ইম্পোর্ট করা যায়নি: {e}. backend ডিরেক্টরি থেকে বা repo root থেকে চালান।"
+    )
     sys.exit(1)
 
 
@@ -59,7 +61,9 @@ def get_db_connection() -> psycopg2.extensions.connection | None:
     """settings.supabase_database_url থেকে ডাটাবেস কানেকশন তৈরি করে।"""
     db_url = getattr(settings, "supabase_database_url", None)
     if not db_url:
-        logger.error("SUPABASE_DATABASE_URL_POOLER কনফিগার করা নেই (settings.supabase_database_url)।")
+        logger.error(
+            "SUPABASE_DATABASE_URL_POOLER কনফিগার করা নেই (settings.supabase_database_url)।"
+        )
         return None
     try:
         conn = psycopg2.connect(db_url)

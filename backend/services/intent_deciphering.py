@@ -119,7 +119,18 @@ class IntentDecipheringService:
         # Pattern: Bug Fix / Crash / Debugging
         elif any(
             w in lowered
-            for w in ["fix", "bug", "crash", "error", "সমস্যা", "ভাঙা", "ইস্যু", "বাগ", "ত্রুটি", "সমাধান"]
+            for w in [
+                "fix",
+                "bug",
+                "crash",
+                "error",
+                "সমস্যা",
+                "ভাঙা",
+                "ইস্যু",
+                "বাগ",
+                "ত্রুটি",
+                "সমাধান",
+            ]
         ):
             ultimate_goal = f"Identify root cause and eliminate defect: {request}"
             invariants.append("all_test_suites_must_pass")
@@ -137,7 +148,9 @@ class IntentDecipheringService:
             methodology = "single_source_of_truth_migration_with_facades"
 
         # Pattern: Security / RBAC / Auth hardening
-        elif any(w in lowered for w in ["security", "auth", "rbac", "নিরাপত্তা", "guard", "protect"]):
+        elif any(
+            w in lowered for w in ["security", "auth", "rbac", "নিরাপত্তা", "guard", "protect"]
+        ):
             ultimate_goal = (
                 "Harden endpoints with role-based access control and strict boundary enforcement"
             )
