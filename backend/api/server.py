@@ -123,25 +123,7 @@ class MemoryStatsResponse(BaseModel):
     estimated_size_mb: float
 
 
-rate_limit_store: dict[str, list[float]] = {}
 
-
-async def check_rate_limit(
-    client_id: str = "anonymous", max_requests: int = 60, window_seconds: int = 60
-) -> None:
-    """Simple rate limiting check."""
-    now = time.time()
-    if client_id not in rate_limit_store:
-        rate_limit_store[client_id] = []
-
-    rate_limit_store[client_id] = [
-        t for t in rate_limit_store[client_id] if now - t < window_seconds
-    ]
-
-    if len(rate_limit_store[client_id]) >= max_requests:
-        raise HTTPException(status_code=429, detail="Rate limit exceeded")
-
-    rate_limit_store[client_id].append(now)
 
 
 # ==================== ENDPOINTS ====================
@@ -179,7 +161,6 @@ async def process_query(
         factory = get_factory()
         ai_integrator = await factory.create_production_instance()
 
-    await check_rate_limit(x_client_id)
     request_id = str(uuid.uuid4())
     start_time = time.perf_counter()
 

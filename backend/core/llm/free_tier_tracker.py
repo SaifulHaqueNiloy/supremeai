@@ -429,15 +429,20 @@ class FreeTierTracker:
 # ---------------------------------------------------------------------------
 # Module-level singleton — import and use directly
 # ---------------------------------------------------------------------------
-_tracker: FreeTierTracker | None = None
+# ---------------------------------------------------------------------------
+# Module-level dictionary for per-user trackers
+# ---------------------------------------------------------------------------
+import cachetools
+_trackers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
 
 
 def get_tracker(
     custom_limits: dict[str, dict[str, int]] | None = None,
+    user_id: str = "default",
 ) -> FreeTierTracker:
-    """Return the module-level singleton FreeTierTracker."""
-    global _tracker
-    if _tracker is None:
-        _tracker = FreeTierTracker(custom_limits=custom_limits)
-        logger.info("[FreeTier] FreeTierTracker initialized")
-    return _tracker
+    """Return the per-user FreeTierTracker."""
+    global _trackers
+    if user_id not in _trackers:
+        _trackers[user_id] = FreeTierTracker(custom_limits=custom_limits)
+        logger.info(f"[FreeTier] FreeTierTracker initialized for user: {user_id}")
+    return _trackers[user_id]

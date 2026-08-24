@@ -77,10 +77,7 @@ class SemanticCache:
             # বাংলা মন্তব্য: কাজের ধরণের ওপর ভিত্তি করে ডাইনামিক থ্রেশহোল্ড সেট করা হচ্ছে
             threshold = get_cache_threshold(task_type)
 
-            hits = self.db.find_similar(prompt, limit=10, threshold=threshold)
-            if user_id:
-                # Filter by user_id if provided
-                hits = [h for h in hits if h.get("meta", {}).get("user_id") == user_id]
+            hits = self.db.find_similar(prompt, limit=10, threshold=threshold, user_id=user_id)
 
             if hits:
                 best_hit = hits[0]
