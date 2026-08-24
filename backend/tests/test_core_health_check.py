@@ -178,10 +178,17 @@ async def test_check_redis_exception():
 
 @pytest.mark.asyncio
 async def test_check_database_healthy():
-    """Test database health check (placeholder implementation)."""
+    """Test database health check (mocked implementation)."""
     checker = ComprehensiveHealthChecker()
 
-    result = await checker.check_database()
+    mock_engine = MagicMock()
+    mock_conn = AsyncMock()
+    mock_conn.execute.return_value = None
+    mock_engine.connect.return_value = mock_conn
+
+    with patch("database.session.init_engine"), \
+         patch("database.session._engine_instance", mock_engine):
+        result = await checker.check_database()
 
     assert result.status == HealthStatus.HEALTHY
     assert "connectivity OK" in result.message
