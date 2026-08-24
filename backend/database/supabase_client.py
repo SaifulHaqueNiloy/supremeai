@@ -1,5 +1,4 @@
 import functools
-import logging
 import os
 import time
 from collections.abc import Callable

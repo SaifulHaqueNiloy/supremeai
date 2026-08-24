@@ -1,5 +1,4 @@
 import ast
-import importlib.util
 import json
 import math
 import os
@@ -104,7 +103,6 @@ class CascadeMemoryService:
             conn.commit()
 
     def _embed(self, text: str) -> list[float]:
-        import asyncio
 
         from core.embeddings import embed_for_pgvector
 
