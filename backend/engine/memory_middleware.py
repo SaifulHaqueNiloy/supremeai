@@ -64,5 +64,34 @@ class MemoryMiddleware:
             )
             return task_prompt  # Fallback to original prompt — never crash the agent
 
+    async def intercept_result(
+        self, task_prompt: str, intent_domain: str, execution_result: dict, success: bool = True
+    ) -> None:
+        """
+        Intercepts execution results and stores them with intent tags to enable the self-healing feedback loop.
+        """
+        try:
+            import json
+
+            from services.memory_service import memory_service
+
+            summary = f"Task: {task_prompt} | Result: {'Success' if success else 'Failed'}"
+
+            memory_service.store_memory(
+                file_path=f"intercept_{hash(task_prompt)}",
+                content=json.dumps(execution_result),
+                summary=summary,
+                structure="execution_result",
+                session_id="memory_middleware",
+                agent_type="system",
+                task_type=intent_domain,
+                metadata={"success": success, "intent": intent_domain, "result": execution_result},
+            )
+            logger.info(
+                f"🧠 MemoryMiddleware: Intercepted and stored memory with intent tag '{intent_domain}'"
+            )
+        except Exception as e:
+            logger.error(f"❌ MemoryMiddleware.intercept_result() FAILED: {e!r}")
+
 
 memory_mw = MemoryMiddleware()
