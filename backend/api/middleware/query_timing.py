@@ -1,9 +1,12 @@
+from __future__ import annotations
+
+import logging
+
 """
 Query Timing Middleware — Track API Response Times
 v4.0: Log slow requests, track percentiles, alert on degradation
 """
 
-from __future__ import annotations
 
 import time
 from collections import deque

@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import logging
+
 """
 SupremeAI - CloudWatchman Agent 🧙‍♂️
 ===================================
@@ -6,7 +10,6 @@ Author: SupremeAI Architecture Team
 Date: July 18, 2026
 """
 
-from __future__ import annotations
 
 import datetime
 import json

@@ -1,3 +1,5 @@
+import logging
+
 """Analyze coverage.json and identify high-priority files needing tests."""
 
 import json

@@ -25,7 +25,7 @@ class VectorDatabaseClient:
 
     def __init__(self) -> None:
         self.degraded: bool = False
-        _logger.debug(
+        logger.debug(
             "VectorDatabaseClient initialised (free-tier adapter, delegating to CascadeMemoryService)"
         )
 
@@ -59,12 +59,12 @@ class VectorDatabaseClient:
                 task_type="legacy_experience",
                 metadata=stored_metadata,
             )
-            _logger.debug(
+            logger.debug(
                 f"🧠 Saved neural memory experience via CascadeMemoryService: {metadata.get('patch_id', 'n/a')}"
             )
         except Exception as exc:
             self.degraded = True
-            _logger.error(f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}")
+            logger.error(f"save_experience() failed (experience NOT persisted, DEGRADED): {exc!r}")
 
     async def find_similar_experiences(
         self, vector: list[float], top_k: int = 3
@@ -75,7 +75,7 @@ class VectorDatabaseClient:
         query_text = vector if isinstance(vector, str) else ""  # type: ignore[assignment]
 
         if not query_text:
-            _logger.debug("find_similar_experiences(): no query text available, returning empty.")
+            logger.debug("find_similar_experiences(): no query text available, returning empty.")
             return []
 
         try:
@@ -95,7 +95,7 @@ class VectorDatabaseClient:
             ]
         except Exception as exc:
             self.degraded = True
-            _logger.error(
+            logger.error(
                 f"find_similar_experiences() failed (returning empty, DEGRADED state): {exc!r}"
             )
             return []

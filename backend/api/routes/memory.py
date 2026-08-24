@@ -231,7 +231,6 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
 
     from core.config import settings
 
-    
     conversation_id = req.conversation_id or f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
     try:
@@ -296,7 +295,7 @@ async def list_conversations(request: Request, db=Depends(get_tenant_db)):
     """Get all conversations for authenticated user."""
     from loguru import logger
 
-        try:
+    try:
         # Using tenant isolation inherently from get_tenant_db
         conversations = await db.conversations.find().sort("updated_at", -1).to_list(50)
 

@@ -1,3 +1,5 @@
+import logging
+
 """Tests for ErrorPatternDB - Error pattern tracking and prevention.
 
 This module tests:
