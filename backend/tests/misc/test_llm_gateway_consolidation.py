@@ -49,16 +49,16 @@ async def test_shared_circuit_breaker_manager():
 async def test_gateway_has_rate_limit_handling(llm_gateway):
     """Test that the enhanced gateway has rate limit handling."""
     # Check that the rate limit handler method exists
-    assert hasattr(llm_gateway, "_handle_rate_limit_error"), (
-        "LLMGateway should have rate limit handling method"
-    )
+    assert hasattr(
+        llm_gateway, "_handle_rate_limit_error"
+    ), "LLMGateway should have rate limit handling method"
 
     # Check that the method is async
     import inspect
 
-    assert inspect.iscoroutinefunction(llm_gateway._handle_rate_limit_error), (
-        "Rate limit handler should be async"
-    )
+    assert inspect.iscoroutinefunction(
+        llm_gateway._handle_rate_limit_error
+    ), "Rate limit handler should be async"
 
 
 @pytest.mark.asyncio
@@ -163,8 +163,9 @@ async def test_circuit_breaker_state_sharing():
 @pytest.mark.asyncio
 async def test_gateway_health_endpoint_simulation():
     """Test the health endpoint functionality."""
-    from core.api.routes.llm_gateway import router
     from fastapi.testclient import TestClient
+
+    from core.api.routes.llm_gateway import router
 
     # বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে অ্যাপ ইমপোর্ট করা হলো
     from core.app import app
@@ -194,13 +195,13 @@ async def test_enhanced_gateway_features():
     gateway = get_llm_gateway()
 
     # Verify enhanced features exist
-    assert hasattr(gateway, "_handle_rate_limit_error"), (
-        "Enhanced gateway should have rate limit handler"
-    )
+    assert hasattr(
+        gateway, "_handle_rate_limit_error"
+    ), "Enhanced gateway should have rate limit handler"
 
-    assert hasattr(gateway, "_get_or_create_circuit_breaker"), (
-        "Enhanced gateway should have circuit breaker management"
-    )
+    assert hasattr(
+        gateway, "_get_or_create_circuit_breaker"
+    ), "Enhanced gateway should have circuit breaker management"
 
     # Verify it's using the centralized circuit breaker manager
     original_method = gateway._get_or_create_circuit_breaker

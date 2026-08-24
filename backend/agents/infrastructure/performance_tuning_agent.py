@@ -12,11 +12,11 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import psutil
-from core.monitoring.metrics_collector import MetricsCollector
 
 from core.cache.redis_manager import redis_manager
 from core.error_bus import with_error_bus
 from core.llm.token_deductor import TokenDeductor
+from core.monitoring.metrics_collector import MetricsCollector
 
 logger = logging.getLogger(__name__)
 
