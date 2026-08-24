@@ -31,6 +31,7 @@ def vault_production():
                 # AttributeError দেয়। এখানে বাস্তব __init__-এর ডিফল্টের মতোই
                 # explicit False সেট করা হলো।
                 v._circuit_breaker_open = False
+                v._ttl_overrides = {}
                 yield v
 
 
@@ -94,6 +95,7 @@ def test_production_mode_missing_client_and_project(monkeypatch, vault_productio
     # instance-টাও real __init__ পায় না -- _circuit_breaker_open ম্যানুয়ালি
     # সেট করতে হবে, নাহলে fetch_secret() AttributeError দেবে।
     v._circuit_breaker_open = False
+    v._ttl_overrides = {}
     import pytest
 
     with pytest.raises(RuntimeError):
