@@ -333,9 +333,11 @@ class LLMRouter:
 
         return chain
 
-    def _cache_key(self, prompt: str, task_type: str, **kwargs: Any) -> str:
+    def _cache_key(
+        self, prompt: str, task_type: str, user_id: str | None = None, **kwargs: Any
+    ) -> str:
         """Generate deterministic cache key."""
-        data = f"{prompt}:{task_type}:{json.dumps(kwargs, sort_keys=True)}"
+        data = f"{user_id or 'anon'}:{prompt}:{task_type}:{json.dumps(kwargs, sort_keys=True)}"
         return f"llm:cache:{hashlib.sha256(data.encode()).hexdigest()[:16]}"
 
     @timed("llm.route.total")
@@ -352,6 +354,7 @@ class LLMRouter:
         cost_sensitive: bool = True,  # AI-96: Prefer low-cost providers
         use_cache: bool = True,  # AI-094: Semantic caching
         normalize_bengali: bool = True,
+        user_id: str | None = None,
         **kwargs: Any,
     ) -> RouteResult | AsyncGenerator[StreamChunk, None]:
         # V5 Dynamic AI Architecture Bridge (Non-Streaming only for now)
@@ -406,7 +409,7 @@ class LLMRouter:
 
         # Check cache - AI-094: Semantic Caching
         cache_key = self._cache_key(
-            prompt, task.value, max_tokens=max_tokens, temperature=temperature
+            prompt, task.value, user_id=user_id, max_tokens=max_tokens, temperature=temperature
         )
         if use_cache and not stream and self.cache is not None:
             cached_result = await self.cache.get(cache_key)

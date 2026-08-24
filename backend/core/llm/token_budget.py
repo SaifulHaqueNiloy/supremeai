@@ -193,6 +193,54 @@ class TokenBudgetManager:
     ) -> None:
         self._budgets = {**PROVIDER_TOKEN_BUDGETS, **(custom_budgets or {})}
         self._stats: dict[str, TokenBudgetStats] = {}
+        self._redis = None
+
+    async def _get_redis(self):
+        if not self._redis:
+            import redis.asyncio as aioredis
+
+            try:
+                from core.config import settings
+
+                redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+            except ImportError:
+                redis_url = "redis://localhost:6379"
+            self._redis = aioredis.from_url(redis_url, decode_responses=True)
+        return self._redis
+
+    async def check_user_budget(self, user_id: str, daily_limit: int = 100000) -> bool:
+        """
+        Check if the user has exceeded their daily token limit.
+        Uses Redis to support multi-worker environments.
+        """
+        try:
+            redis = await self._get_redis()
+            today = time.strftime("%Y-%m-%d")
+            key = f"user_budget:{user_id}:{today}"
+            current = await redis.get(key)
+            if current and int(current) >= daily_limit:
+                logger.warning(f"User {user_id} exceeded daily token budget of {daily_limit}")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"Redis user budget check failed: {e}")
+            return True  # fail open
+
+    async def record_user_usage(self, user_id: str, tokens: int) -> None:
+        """
+        Record tokens used by a user in Redis.
+        """
+        if tokens <= 0:
+            return
+        try:
+            redis = await self._get_redis()
+            today = time.strftime("%Y-%m-%d")
+            key = f"user_budget:{user_id}:{today}"
+            current = await redis.incrby(key, tokens)
+            if current == tokens:
+                await redis.expire(key, 86400)  # 24 hours
+        except Exception as e:
+            logger.error(f"Redis user budget record failed: {e}")
 
     # ------------------------------------------------------------------
     # Public API

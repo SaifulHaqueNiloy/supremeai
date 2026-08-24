@@ -70,16 +70,22 @@ class SemanticCache:
         logger.info("SemanticCache initialized using ExperienceDatabase vector backend")
 
     @with_error_bus("query_similar")
-    async def query_similar(self, prompt: str, task_type: str = "general") -> CacheEntry | None:
+    async def query_similar(
+        self, prompt: str, task_type: str = "general", user_id: str | None = None
+    ) -> CacheEntry | None:
         try:
             # বাংলা মন্তব্য: কাজের ধরণের ওপর ভিত্তি করে ডাইনামিক থ্রেশহোল্ড সেট করা হচ্ছে
             threshold = get_cache_threshold(task_type)
 
-            hits = self.db.find_similar(prompt, limit=1, threshold=threshold)
+            hits = self.db.find_similar(prompt, limit=10, threshold=threshold)
+            if user_id:
+                # Filter by user_id if provided
+                hits = [h for h in hits if h.get("meta", {}).get("user_id") == user_id]
+
             if hits:
                 best_hit = hits[0]
                 logger.info(
-                    f"⚡ [SEMANTIC CACHE HIT] Task: {task_type} | Score: {best_hit['score']:.4f} | Source: {best_hit['source']}"
+                    f"⚡ [SEMANTIC CACHE HIT] Task: {task_type} | User: {user_id} | Score: {best_hit['score']:.4f} | Source: {best_hit['source']}"
                 )
                 return CacheEntry(
                     provider=best_hit.get("source", "chroma"),
@@ -104,21 +110,29 @@ class SemanticCache:
             )
             return None
 
-    async def get(self, prompt: str, task_type: str = "general") -> Any | None:
+    async def get(
+        self, prompt: str, task_type: str = "general", user_id: str | None = None
+    ) -> Any | None:
         """Convenience getter returning response string or object if hit."""
-        entry = await self.query_similar(prompt, task_type=task_type)
+        entry = await self.query_similar(prompt, task_type=task_type, user_id=user_id)
         if entry:
             return entry.response
         return None
 
     @with_error_bus("set")
     async def set(
-        self, prompt: str, response: Any, task_type: str = "general", ttl: int | None = None
+        self,
+        prompt: str,
+        response: Any,
+        task_type: str = "general",
+        ttl: int | None = None,
+        user_id: str | None = None,
     ) -> None:
         try:
             # বাংলা মন্তব্য: সফল ও ভেরিফাইড কোড/রেসপন্স এক্সপেরিয়েন্স ডেটাবেসে রাইট করা হচ্ছে
             resp_str = str(response) if not isinstance(response, str) else response
             exp = Experience(
+                user_id=user_id or "",
                 request=prompt,
                 generated_code=resp_str if "code" in task_type.lower() else None,
                 action_taken=(resp_str if "code" not in task_type.lower() else "Code Generated"),

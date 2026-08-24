@@ -5,6 +5,7 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 from loguru import logger
 
 from core.llm.llm_gateway import llm_gateway
+from core.queue.task_queue import task_queue
 from core.security import verify_token
 from database.supabase_client import SupabaseDB
 
@@ -65,23 +66,80 @@ JSON:"""
             logger.warning(f"⚠️ [WS] Failed to analyze user preferences: {type(e).__name__}: {e}")
 
 
+async def handle_analyze_preferences(task_data: dict):
+    user_id = task_data.get("user_id")
+    content = task_data.get("payload", {}).get("content", "")
+    if user_id and content:
+        await analyze_and_save_preferences(user_id, content)
+    return True
+
+
+task_queue.register_handler("analyze_preferences", handle_analyze_preferences)
+
+
 # ==========================================
 # 🔌 WEBSOCKET CONNECTION MANAGER
 # ==========================================
-class ConnectionManager:
+class DistributedConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: dict[str, list[WebSocket]] = {}
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
+        self.redis = None
+        self.pubsub = None
 
-    async def connect(self, websocket: WebSocket):
+    async def _get_redis(self):
+        if not self.redis:
+            import redis.asyncio as aioredis
+
+            try:
+                from core.config import settings
+
+                redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+            except ImportError:
+                redis_url = "redis://localhost:6379"
+            self.redis = aioredis.from_url(redis_url, decode_responses=True)
+            self.pubsub = self.redis.pubsub()
+            await self.pubsub.subscribe("ws_broadcast")
+            asyncio.create_task(self._listen_to_redis())
+        return self.redis
+
+    async def _listen_to_redis(self):
+        while True:
+            try:
+                message = await self.pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if message and message["type"] == "message":
+                    data = json.loads(message["data"])
+                    user_id = data.get("user_id")
+                    content = data.get("content")
+                    if user_id in self.active_connections:
+                        for ws in self.active_connections[user_id]:
+                            try:
+                                await ws.send_text(content)
+                            except Exception:
+                                pass
+            except Exception as e:
+                logger.error(f"Redis pubsub error: {e}")
+                await asyncio.sleep(1)
+
+    async def connect(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
-        self.active_connections.append(websocket)
-        logger.info("🟢 [WS] New Client Connected to Neural Engine.")
+        if user_id not in self.active_connections:
+            self.active_connections[user_id] = []
+        self.active_connections[user_id].append(websocket)
+        await self._get_redis()
+        logger.info(f"🟢 [WS] New Client Connected to Neural Engine: {user_id}")
 
-    def disconnect(self, websocket: WebSocket):
-        if websocket in self.active_connections:
-            self.active_connections.remove(websocket)
-        logger.info("🔴 [WS] Client Disconnected.")
+    def disconnect(self, websocket: WebSocket, user_id: str):
+        if user_id in self.active_connections:
+            if websocket in self.active_connections[user_id]:
+                self.active_connections[user_id].remove(websocket)
+            if not self.active_connections[user_id]:
+                del self.active_connections[user_id]
+        logger.info(f"🔴 [WS] Client Disconnected: {user_id}")
+
+    async def broadcast_to_user(self, user_id: str, content: str):
+        redis = await self._get_redis()
+        await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
 
     async def _authenticate(self, websocket: WebSocket) -> dict | None:
         # বাংলা মন্তব্য: P0 Fix — Anonymous WebSocket access সম্পূর্ণ নিষিদ্ধ।
@@ -112,7 +170,7 @@ class ConnectionManager:
         self._pref_tasks.pop(user_id, None)
 
 
-manager = ConnectionManager()
+manager = DistributedConnectionManager()
 
 
 @router.websocket("/chat")
@@ -129,13 +187,13 @@ async def websocket_chat_endpoint(
     if not auth_payload:
         return
 
-    await manager.connect(websocket)
+    user_id = auth_payload.get("sub", "unknown")
+    await manager.connect(websocket, user_id)
 
     # সেশন হিস্ট্রি মেইনটেইন করার জন্য চ্যাট অবজেক্ট তৈরি করা
     chat_history = []
 
     # বাংলা মন্তব্য: কানেক্টেড ইউজারের পূর্ববর্তী প্রেফারেন্স ডাটাবেজ থেকে রিড করা হচ্ছে
-    user_id = auth_payload.get("sub", "unknown")
     db = SupabaseDB()
     user_pref_record = await asyncio.to_thread(db.get_user_preferences, user_id)
     user_pref_record = user_pref_record or {}
@@ -195,10 +253,11 @@ async def websocket_chat_endpoint(
                 await websocket.send_text("[DONE]")
                 logger.info("✅ [AI]: Stream completed.")
 
-                pref_task = asyncio.create_task(
-                    analyze_and_save_preferences(user_id, content_to_send)
+                await task_queue.enqueue(
+                    task_type="analyze_preferences",
+                    payload={"content": content_to_send},
+                    user_id=user_id,
                 )
-                manager.track_pref_task(user_id, pref_task)
 
             except Exception as e:
                 # বাংলা মন্তব্য: P1 Fix — সকল exception সম্পূর্ণ log করা হচ্ছে।
@@ -214,6 +273,6 @@ async def websocket_chat_endpoint(
     finally:
         # বাংলা মন্তব্য: P1 Fix — finally block নিশ্চিত করে যে যেকোনো কারণে exit হলেও
         # (WebSocketDisconnect, Exception, বা CancelledError) zombie task cancel হবে এবং disconnect হবে।
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, user_id)
         if user_id:
             manager.cancel_pref_tasks(user_id)

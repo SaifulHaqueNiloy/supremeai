@@ -99,7 +99,8 @@ class SelfEvolutionAgent:
         while self._running:
             start = time.time()
             try:
-                await self._tick()
+                if await self._acquire_lock():
+                    await self._tick()
             except Exception:
                 logger.exception("Self-evolution tick failed")
             elapsed = time.time() - start
@@ -107,6 +108,31 @@ class SelfEvolutionAgent:
                 await asyncio.sleep(max(0.0, self.interval_seconds - elapsed))
             except asyncio.CancelledError:
                 break
+
+    async def _acquire_lock(self) -> bool:
+        """Acquire a Redis distributed lock to prevent concurrent executions."""
+        try:
+            import redis.asyncio as aioredis
+
+            try:
+                from core.config import settings
+
+                redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+            except ImportError:
+                redis_url = "redis://localhost:6379"
+            redis = aioredis.from_url(redis_url, decode_responses=True)
+            lock_key = "lock:self_evolution_agent"
+            # Lock expires slightly after the interval to prevent deadlock if instance dies
+            acquired = await redis.set(lock_key, "locked", nx=True, ex=self.interval_seconds + 30)
+            if acquired:
+                logger.debug("SelfEvolutionAgent acquired distributed lock.")
+                return True
+            else:
+                logger.debug("SelfEvolutionAgent skipping tick (locked by another instance).")
+                return False
+        except Exception as e:
+            logger.warning(f"Failed to acquire Redis lock for SelfEvolutionAgent: {e}")
+            return True  # Fail open if Redis is unreachable
 
     async def _tick(self) -> None:
         metrics = self.fitness_engine.metrics
