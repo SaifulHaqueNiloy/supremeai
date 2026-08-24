@@ -31,6 +31,13 @@ os.environ.setdefault("OPENROUTER_API_KEY", "mock_key")
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def reset_vault():
+    """Reset the secret vault before each test to ensure test isolation."""
+    from core.security.secret_vault import reset_secret_vault
+    reset_secret_vault()
+
+
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[AsyncClient, None]:
     """Create an async HTTP client for FastAPI testing."""
