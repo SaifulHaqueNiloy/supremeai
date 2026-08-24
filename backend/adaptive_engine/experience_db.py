@@ -312,13 +312,16 @@ class ExperienceDatabase:
             elif self.qdrant_client:
                 query_filter = None
                 if user_id:
-                    from qdrant_client.models import Filter, FieldCondition, MatchValue
-                    query_filter = Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))])
+                    from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+                    query_filter = Filter(
+                        must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))]
+                    )
                 res = self.qdrant_client.search(
                     collection_name=self.qdrant_collection,
                     query_vector=embedding,
                     limit=limit,
-                    query_filter=query_filter
+                    query_filter=query_filter,
                 )
                 for hit in res:
                     if hit.score >= threshold:

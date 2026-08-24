@@ -284,7 +284,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             yield "data: [DONE]\n\n"
         except Exception as e:
             logger.error(f"Stream broken: {e!s}")
-            yield "data: {\"error\": \"Internal Stream Error\"}\n\n"
+            yield 'data: {"error": "Internal Stream Error"}\n\n'
 
     # বাংলা: SSE হেডার — proxy/CDN বাফারিং রোধে ক্রিটিক্যাল।
     return StreamingResponse(
