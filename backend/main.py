@@ -17,32 +17,10 @@ from core.intelligent_silent_catcher import setup_silent_catcher
 setup_silent_catcher()
 
 # ----------------- SUPERAI ENV VALIDATION -----------------
-# বাংলা মন্তব্য: pytest-এর অধীনে (বা ENV=test/testing/ci) module import করার সময়
-# sys.exit(1) করা উচিত না -- এটা শুধু আসল সার্ভার বুট/deploy-এর জন্য একটা hard
-# gate, টেস্ট কালেকশনের সময় `from main import app` করা যেকোনো টেস্টকে পুরো
-# session-ই ক্র্যাশ করিয়ে দিত।
-_is_test_run = ("pytest" in sys.modules) or os.getenv("ENV", "").lower() in (
-    "test",
-    "testing",
-    "ci",
-)
-try:
-    from core.env_validator import EnvironmentValidator
-
-    validator = EnvironmentValidator()
-    result = validator.validate()
-    if not result.is_valid:
-        from loguru import logger
-
-        logger.info("CRITICAL: Environment validation failed! Missing required variables.")
-        if not _is_test_run:
-            sys.exit(1)
-    else:
-        from loguru import logger
-
-        logger.info(f"SUCCESS: Environment validated successfully (Score: {result.score}/100)")
-except ImportError:
-    pass
+# বাংলা মন্তব্য: Pydantic Settings এখন Single Source of Truth এবং এটি
+# Infisical থেকে ডায়নামিকালি ডেটা ফেচ করে validate করে (Fail-Fast)।
+# আগের `EnvironmentValidator` শুধু `os.environ` চেক করতো, যা Infisical-এর সাথে
+# কাজ করে না এবং প্রোডাকশনে সার্ভার ক্র্যাশ করায়। তাই এটি রিমুভ করা হলো।
 # ----------------------------------------------------------
 
 
