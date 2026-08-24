@@ -13,8 +13,6 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.tenant_db import TenantAwareFirestore
 

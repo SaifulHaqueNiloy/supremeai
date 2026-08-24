@@ -6,8 +6,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
 from evolution.change_proposal import ChangeProposal
 from evolution.fitness_evaluator import FitnessBreakdown, get_fitness_evaluator
 

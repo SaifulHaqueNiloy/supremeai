@@ -9,7 +9,7 @@ what makes the tool reusable across projects and pipelines.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from enum import Enum, StrEnum
+from enum import StrEnum
 from typing import Any
 
 

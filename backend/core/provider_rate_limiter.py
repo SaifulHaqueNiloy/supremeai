@@ -21,8 +21,6 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
-
 
 class ProviderStatus(StrEnum):
     AVAILABLE = "available"
