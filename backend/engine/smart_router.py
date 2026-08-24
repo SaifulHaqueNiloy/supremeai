@@ -15,12 +15,17 @@ class SmartModelRouter:
     Analyzes prompt intent, domain, and historical model success rates to dynamically select the best specialized model.
     """
 
+    # Use the real model mappings from LLMGateway instead of fictional ones
+    from core.llm.llm_gateway import TASK_MODEL_MAP
+
     MODEL_MAP = {
-        "code": "Supreme-Coder-3B",
-        "reasoning": "Supreme-Reasoner-3B",
-        "bengali": "Supreme-Bhasha-1.5B",
-        "math": "Supreme-Math-1.5B",
-        "general": "Supreme-General-3B",
+        "code": TASK_MODEL_MAP.get("coding", "groq/llama-3.3-70b-versatile"),
+        "reasoning": TASK_MODEL_MAP.get(
+            "reasoning", "openrouter/meta-llama/llama-3.3-70b-instruct"
+        ),
+        "bengali": TASK_MODEL_MAP.get("chat", "gemini/gemini-2.0-flash"),
+        "math": TASK_MODEL_MAP.get("reasoning", "openrouter/meta-llama/llama-3.3-70b-instruct"),
+        "general": TASK_MODEL_MAP.get("general", "gemini/gemini-2.0-flash"),
     }
 
     def classify_intent(self, prompt: str) -> str:
