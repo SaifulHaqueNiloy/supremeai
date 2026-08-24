@@ -15,6 +15,7 @@ from enum import StrEnum
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
 
@@ -108,7 +109,7 @@ class EducationAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=1000,
+                max_tokens=config_cache.get("education_agent_max_tokens", 1000),
             )
             import json
 
@@ -165,7 +166,7 @@ class EducationAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=1500,
+                max_tokens=config_cache.get("education_agent_max_tokens", 1500),
             )
             import json
 
@@ -207,7 +208,7 @@ class EducationAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=300,
+                max_tokens=config_cache.get("education_agent_max_tokens", 300),
             )
             return result.get("content", f"Explanation of {concept} is not available.")
         except Exception as e:

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import time  # - Added for metrics collection
 
 from loguru import logger
@@ -46,7 +47,8 @@ async def shutdown_services(app):
     # Shutdown all background agents via centralized supervisor
     # বাংলা মন্তব্ব্য: AgentSupervisor graceful shutdown — পূর্বের ম্যানুয়াল task management প্রতিস্থাপন করে।
     try:
-        await agent_supervisor.shutdown_all(timeout=30)
+        timeout_val = float(os.getenv("SHUTDOWN_TIMEOUT", "30"))
+        await agent_supervisor.shutdown_all(timeout=timeout_val)
         logger.info("✅ All background agents shut down via centralized supervisor.")
     except Exception as e:
         logger.error(f"Error during agent supervisor shutdown: {e}")

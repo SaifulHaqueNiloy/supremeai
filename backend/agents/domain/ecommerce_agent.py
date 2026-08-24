@@ -13,6 +13,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
 
@@ -160,7 +161,11 @@ class EcommerceAgent:
         )
 
         try:
-            result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=500)
+            result = await self.llm.route(
+                prompt=prompt,
+                task_type="reasoning",
+                max_tokens=config_cache.get("ecommerce_agent_max_tokens", 500),
+            )
             import json
 
             content = result.get("content", "{}")

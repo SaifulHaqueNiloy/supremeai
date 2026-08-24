@@ -18,6 +18,8 @@ from fastapi.security import HTTPBearer
 from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from services.config_service import ConfigService
+
 # Configure logging
 
 security = HTTPBearer(auto_error=False)
@@ -57,8 +59,10 @@ class RateLimiter:
         "/api/browser/scrape": (5, 60),  # Scraping is resource-intensive
     }
 
-    def __init__(self, redis_url: str = "redis://localhost:6379", enabled: bool = True):
-        self.redis_url = redis_url
+    def __init__(self, redis_url: str | None = None, enabled: bool = True):
+        from core.config import settings
+
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
         self.enabled = enabled
         self._redis: aioredis.Redis | None = None
 
@@ -96,13 +100,39 @@ class RateLimiter:
 
         return "anonymous"
 
-    def _get_limits(self, endpoint: str, tier: str) -> tuple:
+    async def _get_limits(self, request: Request, endpoint: str, tier: str) -> tuple:
         """Get rate limits for endpoint/tier combination."""
+        db = getattr(request.state, "db", None)
+
         # Check endpoint-specific override first
-        if endpoint in self.ENDPOINT_OVERRIDES:
-            return self.ENDPOINT_OVERRIDES[endpoint]
-        # Fall back to tier defaults
-        return self.TIERS.get(tier, self.TIERS["anonymous"])
+        endpoint_overrides = await ConfigService.get_config(
+            db, "endpoint_overrides", self.ENDPOINT_OVERRIDES
+        )
+        if endpoint in endpoint_overrides:
+            val = endpoint_overrides[endpoint]
+            # Handle tuple/list or dict formats
+            if isinstance(val, (list, tuple)) and len(val) >= 2:
+                return tuple(val[:2])
+            elif isinstance(val, dict):
+                return (val.get("limit", 10), val.get("window", 60))
+
+        # Fall back to tier defaults from DB
+        tiers = await ConfigService.get_config(db, "rate_limit_tiers", self.TIERS)
+        if tier in tiers:
+            val = tiers[tier]
+            if isinstance(val, (list, tuple)) and len(val) >= 2:
+                return tuple(val[:2])
+            elif isinstance(val, dict):
+                return (val.get("limit", 10), val.get("window", 60))
+
+        # Default to anonymous
+        anon_val = tiers.get("anonymous", self.TIERS["anonymous"])
+        if isinstance(anon_val, (list, tuple)) and len(anon_val) >= 2:
+            return tuple(anon_val[:2])
+        elif isinstance(anon_val, dict):
+            return (anon_val.get("limit", 10), anon_val.get("window", 60))
+
+        return self.TIERS["anonymous"]
 
     def _fallback_is_allowed(self, key: str, limit: int, window: int) -> tuple[bool, dict]:
         now = time.time()
@@ -200,7 +230,7 @@ class RateLimiter:
         client_id = self._get_client_id(request)
         endpoint = request.url.path
         tier = self._get_tier(request)
-        limit, window = self._get_limits(endpoint, tier)
+        limit, window = await self._get_limits(request, endpoint, tier)
 
         # Build Redis key
         key = f"ratelimit:{client_id}:{endpoint}"

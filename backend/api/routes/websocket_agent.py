@@ -94,7 +94,9 @@ class DistributedConnectionManager:
             try:
                 from core.config import settings
 
-                redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+                redis_url = getattr(
+                    settings, "redis_url", getattr(settings, "REDIS_URL", "redis://localhost:6379")
+                )
             except ImportError:
                 redis_url = "redis://localhost:6379"
             self.redis = aioredis.from_url(redis_url, decode_responses=True)

@@ -14,6 +14,7 @@ from enum import StrEnum
 from typing import Any
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from services.llm.llm_router import LLMRouter
 
 RADAR_CACHE_TTL = 43200  # 12 hours
@@ -132,7 +133,7 @@ class TechnologyRadarAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=300,
+                max_tokens=config_cache.get("technology_radar_agent_max_tokens", 300),
             )
             return {
                 "technology": tech_name,

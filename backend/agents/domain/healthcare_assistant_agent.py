@@ -17,6 +17,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from services.llm.llm_router import LLMRouter
 
 HEALTHCARE_CACHE_TTL = 600  # 10 minutes
@@ -178,7 +179,7 @@ class HealthcareAssistantAgent:
             result = await self.llm.route(
                 prompt=prompt,
                 task_type="reasoning",
-                max_tokens=200,
+                max_tokens=config_cache.get("healthcare_assistant_agent_max_tokens", 200),
             )
             return result.get(
                 "content",

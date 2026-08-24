@@ -125,15 +125,20 @@ async def app_lifespan(app):
         app.state.orchestrator = None
 
     # Supabase schema bootstrap (depends on DB pool)
+    import os
+
+    timeout_val = float(os.getenv("DB_BOOTSTRAP_TIMEOUT", "30.0"))
     try:
         from database import db as supabase_db
 
         if settings.supabase_database_url:
-            await asyncio.wait_for(asyncio.to_thread(supabase_db.bootstrap_schema), timeout=30.0)
+            await asyncio.wait_for(
+                asyncio.to_thread(supabase_db.bootstrap_schema), timeout=timeout_val
+            )
             logger.info("Supabase schema bootstrap complete")
     except TimeoutError:
         logger.warning(
-            "Supabase schema bootstrap timed out after 30s — continuing without full schema init."
+            f"Supabase schema bootstrap timed out after {timeout_val}s — continuing without full schema init."
         )
     except Exception as exc:
         logger.warning(

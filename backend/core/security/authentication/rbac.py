@@ -7,6 +7,7 @@ Defines roles, permissions, and authorization logic for the entire platform.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -268,10 +269,12 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
         from utils.environment import is_test_environment
 
         if is_test_environment():
-            return {"sub": "admin@supremeai.com", "role": "admin"}
+            admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+            return {"sub": admin_email, "role": "admin"}
     except Exception as e:
         logger.debug(f"RBAC environment check error: {e}")
-    return {"sub": "admin@supremeai.com", "role": "admin"}
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+    return {"sub": admin_email, "role": "admin"}
 
 
 def get_current_admin(request: Any = None) -> dict[str, Any]:

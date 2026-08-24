@@ -15,6 +15,7 @@ from typing import Any
 from loguru import logger
 
 from core.cache import get_cache
+from core.config_cache import config_cache
 from core.error_bus import with_error_bus
 from services.llm.llm_router import LLMRouter
 
@@ -83,7 +84,11 @@ class MetaLearningAgent:
                 f"Return as JSON with: recommended_strategy, expected_improvement (0-1), confidence (0-1), reasoning."
             )
             try:
-                result = await self.llm.route(prompt=prompt, task_type="reasoning", max_tokens=300)
+                result = await self.llm.route(
+                    prompt=prompt,
+                    task_type="reasoning",
+                    max_tokens=config_cache.get("meta_learning_agent_max_tokens", 300),
+                )
                 import json
 
                 content = result.get("content", "{}")

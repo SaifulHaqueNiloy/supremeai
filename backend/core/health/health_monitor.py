@@ -4,6 +4,8 @@ from typing import Any
 
 from loguru import logger
 
+from services.config_service import ConfigService
+
 try:
     from prometheus_client import Gauge, Histogram, start_http_server
 
@@ -36,6 +38,25 @@ class HealthMonitor:
         """Register a custom health check probe."""
         # বাংলা মন্তব্য: কাস্টম হেলথ চেক প্রোব রেজিস্টার করার জন্য
         self.probes[name] = probe_fn
+
+    async def sync_from_db(self, db: Any) -> None:
+        """Sync health thresholds from the database configuration."""
+        try:
+            default_config = {
+                "cpu_threshold": self.cpu_threshold,
+                "mem_threshold": self.mem_threshold,
+            }
+            configs = await ConfigService.get_config(
+                db, "health_monitor_thresholds", default_config
+            )
+            if configs:
+                self.cpu_threshold = float(configs.get("cpu_threshold", self.cpu_threshold))
+                self.mem_threshold = float(configs.get("mem_threshold", self.mem_threshold))
+                logger.info(
+                    f"✅ Synced health_monitor_thresholds from DB. CPU={self.cpu_threshold}, Mem={self.mem_threshold}"
+                )
+        except Exception as e:
+            logger.error(f"❌ Failed to sync health_monitor_thresholds from DB: {e}")
 
     def _setup_metrics(self):
         self.uptime_seconds = Gauge("supremeai_uptime_seconds", "Server uptime in seconds")
