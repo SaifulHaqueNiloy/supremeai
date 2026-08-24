@@ -88,6 +88,11 @@ export const LoginPage: React.FC = () => {
             Sign Up
           </Link>
         </p>
+
+        {/* Build Timestamp for Debugging */}
+        <div className="absolute bottom-4 right-4 text-[10px] text-text-secondary/50 font-mono">
+          Build: {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}
+        </div>
       </div>
     </div>
   );

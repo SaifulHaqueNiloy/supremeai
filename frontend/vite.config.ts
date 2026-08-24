@@ -65,6 +65,9 @@ const devProxy = {
 // https://vite.dev/config/
 export default defineConfig({
   base: process.env.ELECTRON === 'true' ? './' : '/', // Use './' for Electron, '/' for Web to fix client-side routing and MIME issues
+  define: {
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })),
+  },
   plugins: [
     react({ jsxRuntime: 'automatic' }),
     tailwindcss({
