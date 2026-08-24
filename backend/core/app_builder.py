@@ -137,9 +137,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         logger.debug("\n🔧 Validating configuration...")
         result = validate_config()
         if not result.is_valid:
-            logger.debug(result.format_errors())
+            logger.critical(result.format_errors())
             if any(e.severity.value == "error" for e in result.errors):
-                logger.debug("❌ Fatal configuration errors. Exiting.")
+                logger.critical("❌ Fatal configuration errors. Exiting.")
                 import sys
 
                 sys.exit(1)
