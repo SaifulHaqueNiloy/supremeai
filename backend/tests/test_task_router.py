@@ -16,7 +16,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-pytest.skip("Hallucinated config surface: budget_service and rate_limiter are not implemented in task router.", allow_module_level=True)
+pytest.skip(
+    "Hallucinated config surface: budget_service and rate_limiter are not implemented in task router.",
+    allow_module_level=True,
+)
 
 
 class TestCostGuardBudgetLimits:
