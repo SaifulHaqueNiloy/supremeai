@@ -19,12 +19,23 @@ class AutonomousProviderRouter:
             "openrouter": 0.0,
         }
         self.quota_limit = 0.80  # ৮০% ডেইলি ফ্রি কোটা লিমিট ট্র্যাকিং
+        import time
+        self.last_reset_date = time.strftime("%Y-%m-%d")
+
+    def _check_reset(self) -> None:
+        import time
+        today = time.strftime("%Y-%m-%d")
+        if self.last_reset_date != today:
+            for k in self.provider_token_usage:
+                self.provider_token_usage[k] = 0.0
+            self.last_reset_date = today
 
     def get_optimal_provider(self, task_type: str, fallback_active: bool = False) -> str:
         """
         টাস্ক টাইপ অনুযায়ী শুধুমাত্র ফ্রি ক্লাউড প্রোভাইডারদের মধ্যে রাউটিং করে।
         (কোনো লোকাল রিসোর্স বা পেইড এপিআই কল করা হবে না)
         """
+        self._check_reset()
         # বাংলা ভাষা বা ক্রিয়েটিভ রাইটিং-এর কাজের জন্য Moonshot Kimi (PSI-001)
         if (task_type == "BANGLA_SPECIFIC" or task_type == "CREATIVE") and not fallback_active:
             if self.provider_token_usage["moonshot"] < self.quota_limit:
@@ -65,6 +76,7 @@ class AutonomousProviderRouter:
         """
         ফ্রি প্রোভাইডারগুলোর টোকেন ব্যবহার ট্র্যাকিং (ZCO-002)
         """
+        self._check_reset()
         if provider in self.provider_token_usage:
             # টোকেন ব্যবহার আপডেট করা হচ্ছে
             self.provider_token_usage[provider] += tokens_used / 100000.0

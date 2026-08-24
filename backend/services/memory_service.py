@@ -456,10 +456,17 @@ class CascadeMemoryService:
 
     def clear_user_memories(self, user_id: str) -> None:
         """Backward-compatible alias to clear all memories."""
-        if not self._use_pg:
-            with sqlite3.connect(self.db_path) as conn:
-                conn.execute("DELETE FROM file_memories")
-                conn.commit()
+        if self._use_pg:
+            try:
+                pooled_pg.execute("DELETE FROM ai_memory WHERE user_id = %s", (user_id,))
+            except Exception as exc:
+                logger.error(f"clear_user_memories PG failed: {exc}")
+            return
+        
+        with sqlite3.connect(self.db_path) as conn:
+            # Note: local sqlite still uses file_path as session_id representation
+            conn.execute("DELETE FROM file_memories WHERE file_path LIKE ?", (f"{user_id}/%",))
+            conn.commit()
 
     def get_context_window(self, user_id: str, agent_id: str, limit: int) -> list[dict[str, Any]]:
         """Backward-compatible alias for query_context."""
@@ -618,7 +625,7 @@ async def recall_memories(
                         "query_embedding": embedding,
                         "match_threshold": threshold,
                         "match_count": limit,
-                        "p_user_id": user_id,
+                        "p_user_id": user_id,  # Assume RPC handles it, or fails safely to fallback
                     },
                 ).execute()
                 memories = result.data or []

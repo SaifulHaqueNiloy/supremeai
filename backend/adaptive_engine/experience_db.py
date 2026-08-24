@@ -276,7 +276,7 @@ class ExperienceDatabase:
         return dot / (norm_a * norm_b)
 
     def find_similar(
-        self, query: str, limit: int = 5, threshold: float = 0.7
+        self, query: str, limit: int = 5, threshold: float = 0.7, user_id: str | None = None
     ) -> list[dict[str, Any]]:
         # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
         self._ensure_chroma()
@@ -287,7 +287,10 @@ class ExperienceDatabase:
         hits: list[dict[str, Any]] = []
         try:
             if self.chroma_collection:
-                res = self.chroma_collection.query(query_embeddings=[embedding], n_results=limit)
+                where_clause = {"user_id": user_id} if user_id else None
+                res = self.chroma_collection.query(
+                    query_embeddings=[embedding], n_results=limit, where=where_clause
+                )
                 ids = res.get("ids", [[]])[0]
                 metadatas = res.get("metadatas", [[]])[0]
                 distances = res.get("distances", [[]])[0]
@@ -307,10 +310,15 @@ class ExperienceDatabase:
                             }
                         )
             elif self.qdrant_client:
+                query_filter = None
+                if user_id:
+                    from qdrant_client.models import Filter, FieldCondition, MatchValue
+                    query_filter = Filter(must=[FieldCondition(key="user_id", match=MatchValue(value=user_id))])
                 res = self.qdrant_client.search(
                     collection_name=self.qdrant_collection,
                     query_vector=embedding,
                     limit=limit,
+                    query_filter=query_filter
                 )
                 for hit in res:
                     if hit.score >= threshold:

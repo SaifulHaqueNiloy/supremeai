@@ -366,15 +366,20 @@ class TokenBudgetManager:
 # ---------------------------------------------------------------------------
 # Module-level singleton
 # ---------------------------------------------------------------------------
-_manager: TokenBudgetManager | None = None
+# ---------------------------------------------------------------------------
+# Module-level dictionary for per-user managers
+# ---------------------------------------------------------------------------
+import cachetools
+_managers: cachetools.TTLCache = cachetools.TTLCache(maxsize=10000, ttl=86400)
 
 
 def get_budget_manager(
     custom_budgets: dict[str, dict[str, int]] | None = None,
+    user_id: str = "default",
 ) -> TokenBudgetManager:
-    """Return the module-level singleton TokenBudgetManager."""
-    global _manager
-    if _manager is None:
-        _manager = TokenBudgetManager(custom_budgets=custom_budgets)
-        logger.info("[TokenBudget] TokenBudgetManager initialized")
-    return _manager
+    """Return the per-user TokenBudgetManager."""
+    global _managers
+    if user_id not in _managers:
+        _managers[user_id] = TokenBudgetManager(custom_budgets=custom_budgets)
+        logger.info(f"[TokenBudget] TokenBudgetManager initialized for user: {user_id}")
+    return _managers[user_id]

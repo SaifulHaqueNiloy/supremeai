@@ -57,7 +57,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         try:
             from memory.long_term_memory import LongTermMemory
 
-            ltm = LongTermMemory(session_id=session_id or "default")
+            ltm = LongTermMemory(session_id=session_id or f"default_{db.tenant_id}")
             mem_facts = ltm.build_context()
             if mem_facts and mem_facts != "No memory available.":
                 memory_ctx = f"[Relevant Memory Context:\n{mem_facts}]\n\n"
@@ -284,7 +284,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             yield "data: [DONE]\n\n"
         except Exception as e:
             logger.error(f"Stream broken: {e!s}")
-            yield f"data: [ERROR] {e!s}\n\n"
+            yield "data: {\"error\": \"Internal Stream Error\"}\n\n"
 
     # বাংলা: SSE হেডার — proxy/CDN বাফারিং রোধে ক্রিটিক্যাল।
     return StreamingResponse(
@@ -300,7 +300,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
 
 
 @router.get("/learning/stats")
-async def get_learning_stats():
+async def get_learning_stats(db=Depends(get_tenant_db)):
     """Get statistics about the learning engine."""
     engine = get_learning_engine()
     return engine.get_stats()
