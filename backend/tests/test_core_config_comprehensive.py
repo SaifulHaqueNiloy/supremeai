@@ -15,11 +15,14 @@ from backend.core.config import Settings, get_production_env
 
 def test_settings_environment_validation():
     """Test environment variable validation."""
-    with patch.dict(os.environ, {
-        "ENV": "production",
-        "SUPREMEAI_JWT_SECRET": "x" * 64,
-        "ENCRYPTION_KEY": "x" * 32,
-    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENV": "production",
+            "SUPREMEAI_JWT_SECRET": "x" * 64,
+            "ENCRYPTION_KEY": "x" * 32,
+        },
+    ):
         settings = Settings()
         assert settings.env == "production"
 

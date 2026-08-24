@@ -328,7 +328,9 @@ class SettingsValidationMixin:
 
     @classmethod
     def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:
-        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv("ENV", "local")
+        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv(
+            "ENV", "local"
+        )
         if env == "production":
             return [
                 origin
@@ -339,7 +341,9 @@ class SettingsValidationMixin:
 
     @classmethod
     def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
-        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv("ENV", "local")
+        env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv(
+            "ENV", "local"
+        )
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
         if not value or value is None:
