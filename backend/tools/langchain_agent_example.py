@@ -87,7 +87,7 @@ def handle_agent_call_langchain(
     except Exception as exc:
         tracker.track_error()
         logger.error(f"LangChain invocation failed: {exc}")
-        raise exc
+        raise exc from exc
 
 
 if __name__ == "__main__":

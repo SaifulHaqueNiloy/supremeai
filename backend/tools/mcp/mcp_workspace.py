@@ -158,7 +158,7 @@ def _save_workspace_session(project_type: WorkspaceType, tenant_id: str | None =
                 os.unlink(temp_path)
             except OSError as exc:
                 logger.debug(f"Could not remove temp file {temp_path}: {exc}")
-            raise e
+            raise e from e
 
 
 @mcp.tool(

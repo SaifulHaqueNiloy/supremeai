@@ -198,7 +198,7 @@ class ProductionSecretVault:
                         )
                         time.sleep(sleep_time)
                     else:
-                        raise exc
+                        raise exc from exc
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
@@ -274,7 +274,7 @@ class ProductionSecretVault:
                         )
                         await asyncio.sleep(sleep_time)
                     else:
-                        raise exc
+                        raise exc from exc
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
             self._circuit_breaker_open = True

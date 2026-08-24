@@ -55,7 +55,7 @@ async def initialize_independent_services(app):
                             finally:
                                 await pool.release(conn)
                         except Exception as health_exc:
-                            raise health_exc
+                            raise health_exc from health_exc
                     return pool
 
                 # 1. Attempt Primary DB (Supabase)
@@ -73,7 +73,7 @@ async def initialize_independent_services(app):
                     if not _neon_url:
                         raise Exception(
                             f"Primary DB failed and no neon_database_url found. Error: {primary_exc}"
-                        )
+                        ) from primary_exc
 
                     try:
                         pool = await _try_connect_and_check(_neon_url)
@@ -86,7 +86,7 @@ async def initialize_independent_services(app):
                     except Exception as secondary_exc:
                         raise Exception(
                             f"Both Primary and Secondary DBs failed. Primary: {primary_exc}, Secondary: {secondary_exc}"
-                        )
+                        ) from secondary_exc
 
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()

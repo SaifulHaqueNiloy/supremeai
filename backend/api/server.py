@@ -212,7 +212,7 @@ async def process_query(
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Processing error: {exc!s}")
+        raise HTTPException(status_code=500, detail=f"Processing error: {exc!s}") from exc
 
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["Monitoring"])
