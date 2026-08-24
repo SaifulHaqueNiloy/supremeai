@@ -22,9 +22,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 security = HTTPBearer(auto_error=False)
 
-import cachetools
+try:
+    import cachetools
 
-fallback_cache = cachetools.TTLCache(maxsize=10000, ttl=3600)
+    fallback_cache: dict = cachetools.TTLCache(maxsize=10000, ttl=3600)
+except ImportError:
+    # Fallback: plain dict without TTL expiry
+    fallback_cache = {}
 
 
 class RateLimiter:

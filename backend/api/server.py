@@ -14,7 +14,7 @@ import asyncio
 import time
 import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
@@ -303,6 +303,6 @@ async def dashboard_data(_token: dict = Depends(get_current_user_token)) -> dict
         raise HTTPException(status_code=503, detail="System not initialized")
 
     return {
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "system": ai_integrator.get_system_status(),
     }
