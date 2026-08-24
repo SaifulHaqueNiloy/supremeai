@@ -110,7 +110,10 @@ def get_current_user_token(request: Request) -> dict:
 
     # 2. Test Environment fallback
     if is_test_environment():
-        return {"sub": "admin@supremeai.com", "role": "admin"}
+        import os
+
+        admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+        return {"sub": admin_email, "role": "admin"}
 
     # 3. Fallback check
     raise HTTPException(status_code=401, detail="Unauthorized")

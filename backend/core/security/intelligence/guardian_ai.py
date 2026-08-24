@@ -44,6 +44,7 @@ except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
     from core.config import settings
     from core.llm.llm_gateway import llm_gateway
+    from services.config_service import ConfigService
 
 
 class ThreatLevel(Enum):
@@ -293,10 +294,13 @@ Respond ONLY with JSON:
 }}"""
 
         try:
+            llm_config = await ConfigService.get_config(
+                None, "guardian_ai_temperature", {"temperature": 0.0}
+            )
             response = await llm_gateway.acomplete(
                 model=settings.gemini_model_name,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.0,
+                temperature=llm_config.get("temperature", 0.0),
             )
             content = response.choices[0].message.content or "{}"
             json_match = re.search(r"```json\s*(.*?)\s*```", content, re.DOTALL)

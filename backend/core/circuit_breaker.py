@@ -27,9 +27,11 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from loguru import logger
+
+from services.config_service import ConfigService
 
 T = TypeVar("T")
 
@@ -221,6 +223,41 @@ CIRCUITS: dict[str, CircuitBreaker] = {
     "database": CircuitBreaker("database", failure_threshold=3, recovery_timeout=15),
     "external_http": CircuitBreaker("external_http", failure_threshold=5, recovery_timeout=20),
 }
+
+
+async def sync_from_db(db: Any) -> None:
+    """Sync circuit breaker thresholds from the database configuration."""
+    global CIRCUITS
+    try:
+        # We serialize the default dict to a dict of config kwargs for fallback
+        default_configs = {
+            name: {
+                "failure_threshold": cb.failure_threshold,
+                "recovery_timeout": cb.recovery_timeout,
+            }
+            for name, cb in CIRCUITS.items()
+        }
+
+        configs = await ConfigService.get_config(db, "circuit_breaker_configs", default_configs)
+
+        if configs:
+            for name, cfg in configs.items():
+                if name in CIRCUITS:
+                    CIRCUITS[name].failure_threshold = cfg.get(
+                        "failure_threshold", CIRCUITS[name].failure_threshold
+                    )
+                    CIRCUITS[name].recovery_timeout = float(
+                        cfg.get("recovery_timeout", CIRCUITS[name].recovery_timeout)
+                    )
+                else:
+                    CIRCUITS[name] = CircuitBreaker(
+                        name=name,
+                        failure_threshold=cfg.get("failure_threshold", 5),
+                        recovery_timeout=float(cfg.get("recovery_timeout", 30.0)),
+                    )
+            logger.info(f"✅ Synced {len(configs)} circuit_breaker_configs from DB.")
+    except Exception as e:
+        logger.error(f"❌ Failed to sync circuit_breaker_configs from DB: {e}")
 
 
 def get_circuit(name: str) -> CircuitBreaker:

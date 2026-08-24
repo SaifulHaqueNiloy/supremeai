@@ -39,7 +39,7 @@ class FreeTierCacheManager:
 
         # Daily command counter (to stay within 10K limit)
         self.command_count = 0
-        self.daily_limit = 9000  # Leave some buffer
+        self.daily_limit = int(os.environ.get("REDIS_DAILY_LIMIT", 9000))  # Leave some buffer
 
     async def connect(self):
         """Initialize Redis connection."""

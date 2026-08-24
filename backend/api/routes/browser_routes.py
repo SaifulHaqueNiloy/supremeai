@@ -23,6 +23,8 @@ from fastapi import APIRouter, HTTPException
 from loguru import logger
 from pydantic import BaseModel
 
+from core.config_cache import config_cache
+
 router = APIRouter(prefix="/api/browser", tags=["browser-integration"])
 
 # ════════════════════════════════════════════════════════════════════
@@ -216,8 +218,10 @@ Provide a helpful, detailed answer based on the available information.""",
         # Call LLM Gateway
         result = await llm_gateway.complete(
             prompt=prompt,
-            max_tokens=800,
-            temperature=0.3,  # Lower temp for more factual responses
+            max_tokens=config_cache.get("browser_routes_max_tokens", 800),
+            temperature=config_cache.get(
+                "browser_routes_temperature", 0.3
+            ),  # Lower temp for more factual responses
         )
 
         processing_time = int((time.time() - start_time) * 1000)

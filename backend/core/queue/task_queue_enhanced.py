@@ -90,8 +90,8 @@ class TaskQueue:
         max_tracked_tasks: int = 10_000,
     ):
         self.default_backend = default_backend
-        self.redis_url = redis_url or settings.redis_url or "redis://localhost:6379"
-        self.project_id = project_id or settings.gcp_project_id
+        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.project_id = project_id or getattr(settings, "gcp_project_id", "supremeai")
 
         # বাংলা মন্তব্য: OrderedDict — FIFO eviction policy (oldest evicted first)
         self._MAX_TRACKED_TASKS = max_tracked_tasks

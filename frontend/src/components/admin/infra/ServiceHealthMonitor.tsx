@@ -54,7 +54,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'render_backend',
     displayName: 'Render Backend',
-    url: 'https://supremeai-backend-docker.onrender.com',
+    url: import.meta.env.VITE_USER_BACKEND || 'https://supremeai-backend-docker.onrender.com',
     description: 'Python/FastAPI Core API',
     critical: true,
     icon: <Server size={16} />,
@@ -64,7 +64,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'scraper_service',
     displayName: 'Scraper Service',
-    url: 'https://supremeai-scraper-6nwi.onrender.com',
+    url: import.meta.env.VITE_SCRAPER_BACKEND || 'https://supremeai-scraper-6nwi.onrender.com',
     description: 'Playwright Browser Automation',
     critical: false,
     icon: <Activity size={16} />,

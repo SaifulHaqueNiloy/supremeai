@@ -323,7 +323,9 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Studio (Telegram Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     },
                 ],
                 [
@@ -353,9 +355,14 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Admin Studio (Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     },
-                    {"text": "🌐 Admin Web Console", "url": "https://supremeai-admin.web.app"},
+                    {
+                        "text": "🌐 Admin Web Console",
+                        "url": os.getenv("ADMIN_URL", "https://supremeai-admin.web.app"),
+                    },
                 ],
                 [
                     {"text": "⚡ Cluster & Cost", "callback_data": "admin_cluster"},
@@ -376,7 +383,8 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "📚 API Documentation",
-                        "url": "https://supremeai-backend-docker.onrender.com/docs",
+                        "url": os.getenv("BACKEND_URL", "https://supremeai-backend-v2.onrender.com")
+                        + "/docs",
                     },
                     {"text": "⚡ Quick Actions", "callback_data": "quick_actions_menu"},
                 ],
@@ -391,7 +399,9 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Studio (Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     },
                 ],
                 [
@@ -482,7 +492,11 @@ class TelegramBotHandler:
                             [
                                 {
                                     "text": "✨ Open Studio (Mini App)",
-                                    "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                                    "web_app": {
+                                        "url": os.getenv(
+                                            "FRONTEND_URL", "https://supremeai-lac.vercel.app"
+                                        )
+                                    },
                                 }
                             ],
                             [{"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
@@ -605,7 +619,7 @@ class TelegramBotHandler:
                         "• ⚡ <b>Cluster Telemetry:</b> /sys_status\n"
                         "• 💾 <b>Instant Vault Backup:</b> /backup_now\n"
                         "• 🚀 <b>Build Releases:</b> /latest_build\n"
-                        "• 🌐 <b>Dashboard:</b> <a href='https://supremeai-lac.vercel.app'>supremeai-lac.vercel.app</a>\n\n"
+                        f"• 🌐 <b>Dashboard:</b> <a href='{os.getenv('FRONTEND_URL', 'https://supremeai-lac.vercel.app')}'>supremeai-lac.vercel.app</a>\n\n"
                         "<i>যেকোনো প্রশ্ন বা কমান্ড পাঠিয়ে এআই অ্যাসিস্ট্যান্স শুরু করুন।</i>"
                     )
                     await self.send_message(
@@ -635,7 +649,11 @@ class TelegramBotHandler:
                             [
                                 {
                                     "text": "✨ Open Studio (Telegram Mini App)",
-                                    "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                                    "web_app": {
+                                        "url": os.getenv(
+                                            "FRONTEND_URL", "https://supremeai-lac.vercel.app"
+                                        )
+                                    },
                                 }
                             ]
                         ]
@@ -699,7 +717,9 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Studio (Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     }
                 ],
                 [{"text": "🔙 Main Menu", "callback_data": "user_main_menu"}],
@@ -745,7 +765,10 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Evolution Forge (Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app/evolution-forge"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                            + "/evolution-forge"
+                        },
                     }
                 ],
                 [{"text": "🔙 Quick Actions", "callback_data": "quick_actions_menu"}],
@@ -792,7 +815,9 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Studio Docs (Mini App)",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     }
                 ],
                 [{"text": "🔙 Quick Actions", "callback_data": "quick_actions_menu"}],
@@ -840,7 +865,9 @@ class TelegramBotHandler:
                 [
                     {
                         "text": "✨ Open Studio Mini App",
-                        "web_app": {"url": "https://supremeai-lac.vercel.app"},
+                        "web_app": {
+                            "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app")
+                        },
                     }
                 ],
                 [{"text": "🔙 Knowledge Base", "callback_data": "quick_kb"}],
@@ -888,7 +915,8 @@ class TelegramBotHandler:
         elif action_type == "SECRET_MUTATION":
             await self.send_message(
                 chat_id,
-                "🔐 <b>Secret Mutation Approved:</b> Please use the Admin Web Console (https://supremeai-admin.web.app) "
+                "🔐 <b>Secret Mutation Approved:</b> Please use the Admin Web Console "
+                f"({os.getenv('ADMIN_URL', 'https://supremeai-admin.web.app')}) "
                 "or Infisical CLI to commit new encrypted secrets to the cluster.",
             )
         else:
@@ -922,9 +950,8 @@ class TelegramBotHandler:
         ]
 
         # Backend Health
-        backend_url = (
-            getattr(settings, "supremeai_api_url", "")
-            or "https://supremeai-backend-docker.onrender.com"
+        backend_url = getattr(settings, "supremeai_api_url", "") or os.getenv(
+            "BACKEND_URL", "https://supremeai-backend-v2.onrender.com"
         )
         try:
             async with _httpx.AsyncClient(timeout=5) as c:
@@ -1034,7 +1061,8 @@ class TelegramBotHandler:
                     {"text": "📦 Download Releases", "callback_data": "cmd_build"},
                     {
                         "text": "📚 Swagger API Docs",
-                        "url": "https://supremeai-backend-docker.onrender.com/docs",
+                        "url": os.getenv("BACKEND_URL", "https://supremeai-backend-v2.onrender.com")
+                        + "/docs",
                     },
                 ],
                 [
@@ -1056,7 +1084,10 @@ class TelegramBotHandler:
         keyboard = {
             "inline_keyboard": [
                 [
-                    {"text": "🔐 Admin Web Console", "url": "https://supremeai-admin.web.app"},
+                    {
+                        "text": "🔐 Admin Web Console",
+                        "url": os.getenv("ADMIN_URL", "https://supremeai-admin.web.app"),
+                    },
                     {"text": "📜 Constitutional Rules", "callback_data": "admin_rules"},
                 ],
                 [
@@ -1108,13 +1139,18 @@ class TelegramBotHandler:
         text = (
             "💬 <b>SupremeAI AI Chat & Coding Studio</b>\n\n"
             "• 🧠 <b>Smart AI Models:</b> Gemini 2.5 Flash + Groq Qwen/Llama\n"
-            "• 🌐 <b>Web Studio:</b> <a href='https://supremeai-lac.vercel.app'>supremeai-lac.vercel.app</a>\n"
+            f"• 🌐 <b>Web Studio:</b> <a href='{os.getenv('FRONTEND_URL', 'https://supremeai-lac.vercel.app')}'>supremeai-lac.vercel.app</a>\n"
             "• ⚡ <b>Capabilities:</b> কোডিং, বাগ ফিক্স, ট্রান্সলেশন, ডাটাবেস ডিজাইন, ডকুমেন্ট সামারি\n\n"
             "💡 <i>যেকোনো প্রশ্ন সরাসরি এই চ্যাটে লিখুন — এআই তাৎক্ষণিক উত্তর দেবে!</i>"
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "🌐 Launch Web Studio", "url": "https://supremeai-lac.vercel.app"}],
+                [
+                    {
+                        "text": "🌐 Launch Web Studio",
+                        "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app"),
+                    }
+                ],
                 [
                     {"text": "💡 Prompt Library", "callback_data": "user_skills_info"},
                     {"text": "🔙 User Dashboard", "callback_data": "user_main_menu"},
@@ -1192,7 +1228,12 @@ class TelegramBotHandler:
         )
         keyboard = {
             "inline_keyboard": [
-                [{"text": "🌐 Launch Web Studio", "url": "https://supremeai-lac.vercel.app"}],
+                [
+                    {
+                        "text": "🌐 Launch Web Studio",
+                        "url": os.getenv("FRONTEND_URL", "https://supremeai-lac.vercel.app"),
+                    }
+                ],
                 [{"text": "🔙 User Dashboard", "callback_data": "user_main_menu"}],
             ]
         }

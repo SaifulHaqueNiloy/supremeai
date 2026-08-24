@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -174,7 +175,8 @@ class TypeSyncBus:
                 stderr=asyncio.subprocess.PIPE,
                 cwd=SCRIPTS_DIR.parent,  # Run from repo root
             )
-            stdout, stderr = await proc.communicate(timeout=120)  # type: ignore
+            timeout_val = float(os.getenv("TYPE_SYNC_TIMEOUT", "120"))
+            stdout, stderr = await proc.communicate(timeout=timeout_val)  # type: ignore
 
             success = proc.returncode == 0
             return {
@@ -187,7 +189,7 @@ class TypeSyncBus:
         except TimeoutError:
             return {
                 "success": False,
-                "error": "Generation timed out after 120 seconds",
+                "error": f"Generation timed out after {timeout_val} seconds",
                 "timestamp": datetime.now(UTC).isoformat(),
             }
         except Exception as e:
@@ -208,7 +210,8 @@ class TypeSyncBus:
                 stderr=asyncio.subprocess.PIPE,
                 cwd=SCRIPTS_DIR.parent,
             )
-            stdout, _stderr = await proc.communicate(timeout=60)  # type: ignore
+            timeout_val_validate = float(os.getenv("TYPE_SYNC_TIMEOUT", "60"))
+            stdout, _stderr = await proc.communicate(timeout=timeout_val_validate)  # type: ignore
 
             drift_detected = proc.returncode != 0
             return {
