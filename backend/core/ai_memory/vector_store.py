@@ -45,8 +45,10 @@ class FreeTierOptimizedVectorStore:
                 batch_payloads = payloads[i : i + self.BATCH_SIZE]
                 batch_ids = ids[i : i + self.BATCH_SIZE]
 
+                from datetime import datetime, timezone
+                now_str = datetime.now(timezone.utc).isoformat()
                 records = [
-                    {"id": bid, "embedding": emb, "metadata": payload, "created_at": "now()"}
+                    {"id": bid, "embedding": emb, "metadata": payload, "created_at": now_str}
                     for bid, emb, payload in zip(
                         batch_ids, batch_embeddings, batch_payloads, strict=True
                     )
@@ -115,9 +117,9 @@ class FreeTierOptimizedVectorStore:
     async def delete_old_memories(self, days_old: int = 30, limit: int = 100):
         """Delete old memories to save space (free tier storage limit)."""
         try:
-            from datetime import datetime, timedelta
+            from datetime import datetime, timezone, timedelta
 
-            cutoff = (datetime.utcnow() - timedelta(days=days_old)).isoformat()
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=days_old)).isoformat()
 
             (
                 self.client.table(self.table_name)

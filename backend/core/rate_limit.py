@@ -22,6 +22,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 security = HTTPBearer(auto_error=False)
 
+import cachetools
+fallback_cache = cachetools.TTLCache(maxsize=10000, ttl=3600)
 
 class RateLimiter:
     """
@@ -96,6 +98,21 @@ class RateLimiter:
         # Fall back to tier defaults
         return self.TIERS.get(tier, self.TIERS["anonymous"])
 
+    def _fallback_is_allowed(self, key: str, limit: int, window: int) -> tuple[bool, dict]:
+        now = time.time()
+        global fallback_cache
+        try:
+            timestamps = fallback_cache.get(key, [])
+            timestamps = [t for t in timestamps if now - t < window]
+            if len(timestamps) >= limit:
+                return False, {"remaining": 0, "reset": now + window, "current": len(timestamps), "limit": limit}
+            timestamps.append(now)
+            fallback_cache[key] = timestamps
+            return True, {"remaining": limit - len(timestamps), "reset": now + window, "current": len(timestamps), "limit": limit}
+        except Exception as e:
+            logger.error(f"Fallback rate limit failed: {e}")
+            return True, {"remaining": limit, "reset": now + window, "current": 0, "limit": limit}
+
     async def is_allowed(self, key: str, limit: int, window: int) -> tuple[bool, dict]:
         """
         Check if request is allowed under rate limit.
@@ -110,9 +127,9 @@ class RateLimiter:
 
         redis = await self._get_redis()
         if not redis:
-            # Fail open if Redis unavailable
-            logger.warning("Rate limiter Redis unavailable, allowing request")
-            return True, {"remaining": limit, "reset": time.time() + window}
+            # Fallback to in-memory rate limiting
+            logger.warning("Rate limiter Redis unavailable, falling back to in-memory")
+            return self._fallback_is_allowed(key, limit, window)
 
         try:
             now = time.time()
@@ -153,8 +170,8 @@ class RateLimiter:
 
         except Exception as e:
             logger.error(f"Rate limit check error: {e}")
-            # Fail open on errors
-            return True, {"remaining": limit, "reset": time.time() + window}
+            # Fallback on errors
+            return self._fallback_is_allowed(key, limit, window)
 
     async def check_rate_limit(self, request: Request) -> tuple[bool, dict]:
         """
@@ -195,7 +212,12 @@ class RateLimiter:
         if forwarded:
             return f"ip:{forwarded.split(',')[0].strip()}"
 
-        return f"ip:{request.client.host if request.client else 'unknown'}"
+        client_ip = request.client.host if request.client else None
+        if not client_ip:
+            # Generate a consistent anonymous ID for the session to prevent global block
+            session_id = request.headers.get("User-Agent", "unknown_agent")
+            return f"ip:unknown:{hash(session_id)}"
+        return f"ip:{client_ip}"
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
