@@ -128,7 +128,7 @@ class StartupValidator:
                     "success": False,
                     "error": str(exc),
                 }
-            raise exc
+            raise exc from exc
 
     @classmethod
     def last_status(cls) -> dict:

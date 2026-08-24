@@ -316,7 +316,7 @@ class ModelRouter:
                         "dependency_tree": ["model_router", "llm_gateway"],
                     },
                 )
-                raise exc
+                raise exc from exc
         except Exception as e:
             logger.error(f"[ModelRouter] Gateway completion failed: {e}")
             # Track the error with performance optimizer

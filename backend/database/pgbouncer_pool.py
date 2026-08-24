@@ -169,7 +169,7 @@ async def get_db_pool_with_retry(
         except Exception as e:
             if attempt == max_retries:
                 logger.error(f"❌ [DB Pool] Max connection retries reached: {e}")
-                raise e
+                raise e from e
             delay = initial_delay * (2 ** (attempt - 1))
             logger.warning(
                 f"⚠️ [DB Pool] Connection attempt {attempt} failed. Retrying in {delay}s..."
