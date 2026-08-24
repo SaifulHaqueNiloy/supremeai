@@ -37,7 +37,7 @@ from loguru import logger
 
 # Try imports with graceful fallbacks
 try:
-    import requests
+    import httpx as requests
 
     HAS_REQUESTS = True
 except ImportError:
