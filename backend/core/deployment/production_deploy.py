@@ -218,46 +218,52 @@ class HealthChecker:
         self.max_retries = max_retries
 
     async def check_health(self, health_path: str = "/health") -> bool:
-        """Check service health."""
+        """Check service health (async-safe — uses httpx.AsyncClient).
+
+        R2 FIX: was using blocking ``requests.get`` inside an async function,
+        which would block the FastAPI event loop under load.
+        """
+        import httpx
+
         url = f"{self.base_url}{health_path}"
 
-        for attempt in range(self.max_retries):
-            try:
-                response = requests.get(url, timeout=self.timeout)
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            for attempt in range(self.max_retries):
+                try:
+                    response = await client.get(url)
 
-                if response.status_code == 200:
-                    try:
-                        health_data = response.json()
-                        # Check if the service reports itself as healthy
-                        if isinstance(health_data, dict):
-                            status = health_data.get("status")
-                            if status == "healthy":
+                    if response.status_code == 200:
+                        try:
+                            health_data = response.json()
+                            if isinstance(health_data, dict):
+                                status = health_data.get("status")
+                                if status == "healthy":
+                                    return True
+                                logger.warning(
+                                    f"Health check reported non-healthy status: {status} in response: {health_data}"
+                                )
+                                return False
+                            elif isinstance(health_data, str) and "healthy" in health_data.lower():
                                 return True
+                            else:
+                                logger.warning(
+                                    f"Health check response format unverified: {health_data}"
+                                )
+                                return False
+                        except ValueError:
                             logger.warning(
-                                f"Health check reported non-healthy status: {status} in response: {health_data}"
+                                f"Health check response is not valid JSON: {response.text[:100]}"
                             )
                             return False
-                        elif isinstance(health_data, str) and "healthy" in health_data.lower():
-                            return True
-                        else:
-                            logger.warning(
-                                f"Health check response format unverified: {health_data}"
-                            )
-                            return False
-                    except ValueError:
-                        logger.warning(
-                            f"Health check response is not valid JSON: {response.text[:100]}"
-                        )
-                        return False
-                else:
-                    logger.warning(f"Health check returned status {response.status_code}")
+                    else:
+                        logger.warning(f"Health check returned status {response.status_code}")
 
-            except requests.exceptions.RequestException as e:
-                logger.warning(f"Health check attempt {attempt + 1} failed: {e}")
+                except httpx.RequestError as e:
+                    logger.warning(f"Health check attempt {attempt + 1} failed: {e}")
 
-            await asyncio.sleep(5)  # Wait 5 seconds between attempts
+                await asyncio.sleep(5)  # Wait 5 seconds between attempts
 
-        return False
+            return False
 
     async def check_readiness(self, readiness_path: str = "/ready") -> bool:
         """Check service readiness."""

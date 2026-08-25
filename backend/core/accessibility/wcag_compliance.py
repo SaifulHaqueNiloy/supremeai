@@ -564,7 +564,11 @@ class AccessibilityComplianceEngine:
 def check_url_accessibility(url: str) -> dict:
     """Check accessibility of a web page at the given URL."""
     try:
-        response = requests.get(url, timeout=30)
+        # R2 FIX: use httpx instead of blocking `requests` lib
+        import httpx
+
+        with httpx.Client(timeout=30.0) as client:
+            response = client.get(url)
         response.raise_for_status()
 
         engine = AccessibilityComplianceEngine()
