@@ -360,9 +360,9 @@ def test_settings_infisical_configuration():
 @pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_settings_redis_url():
     """Test Redis URL configuration."""
-    with patch.dict(os.environ, {"REDIS_URL": "redis://localhost:6379"}):
+    with patch.dict(os.environ, {"REDIS_URL": "redis://<your-redis-url>"}):
         settings = Settings()
-        assert settings.redis_url == "redis://localhost:6379"
+        assert settings.redis_url == "redis://<your-redis-url>"
 
 
 @pytest.mark.skip(

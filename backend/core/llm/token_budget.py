@@ -205,12 +205,12 @@ class TokenBudgetManager:
                 from core.config import settings
 
                 redis_url = getattr(settings, "redis_url", None) or os.environ.get(
-                    "REDIS_URL", "redis://localhost:6379"
+                    "REDIS_URL", "redis://<your-redis-url>"
                 )
             except ImportError:
                 import os
 
-                redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+                redis_url = os.environ.get("REDIS_URL", None)
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
 

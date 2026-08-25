@@ -3,7 +3,7 @@ import { apiClient, setApiConcurrency } from './apiClient';
 
 // Mock getApiBaseUrl
 vi.mock('../utils/api', () => ({
-  getApiBaseUrl: () => 'https://supremeai-backend-docker.onrender.com'
+  getApiBaseUrl: () => '<backend-url>'
 }));
 
 // Mock useAdminStore

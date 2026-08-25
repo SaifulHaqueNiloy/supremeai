@@ -269,11 +269,11 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
         from utils.environment import is_test_environment
 
         if is_test_environment():
-            admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+            admin_email = os.getenv("ADMIN_EMAIL", None)
             return {"sub": admin_email, "role": "admin"}
     except Exception as e:
         logger.debug(f"RBAC environment check error: {e}")
-    admin_email = os.getenv("ADMIN_EMAIL", "admin@supremeai.com")
+    admin_email = os.getenv("ADMIN_EMAIL", None)
     return {"sub": admin_email, "role": "admin"}
 
 

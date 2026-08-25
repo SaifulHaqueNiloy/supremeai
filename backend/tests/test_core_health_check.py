@@ -217,7 +217,7 @@ async def test_check_external_services_all_configured():
     with patch("backend.core.health_check.settings") as mock_settings:
         mock_settings.gemini_api_key = "test_key"
         mock_settings.openrouter_api_key = "test_key"
-        mock_settings.redis_url = "redis://localhost:6379"
+        mock_settings.redis_url = "redis://<your-redis-url>"
         mock_settings.stripe_api_key = MagicMock()
         mock_settings.stripe_api_key.get_secret_value.return_value = "stripe_key"
 

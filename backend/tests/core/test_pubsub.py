@@ -97,7 +97,7 @@ async def test_pubsub_lazy_initialization():
     mock_redis = AsyncMock()
     with patch("core.swarm_pubsub.aioredis.from_url", return_value=mock_redis):
         with patch("core.config.settings") as mock_settings:
-            mock_settings.redis_url = "redis://localhost:6379"
+            mock_settings.redis_url = "redis://<your-redis-url>"
             pubsub._redis = None
             _ = pubsub._get_redis()
             assert pubsub._redis is mock_redis

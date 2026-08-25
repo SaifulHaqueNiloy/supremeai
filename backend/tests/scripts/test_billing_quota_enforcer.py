@@ -104,7 +104,7 @@ class TestQuotaEnforcerContextManager:
 
     @pytest.mark.asyncio
     async def test_aenter_with_redis(self):
-        with patch.dict(os.environ, {"REDIS_URL": "redis://localhost:6379/0"}):
+        with patch.dict(os.environ, {"REDIS_URL": "redis://<your-redis-url>/0"}):
             with patch("redis.asyncio.from_url") as mock_from_url:
                 mock_instance = AsyncMock()
                 mock_from_url.return_value = mock_instance
