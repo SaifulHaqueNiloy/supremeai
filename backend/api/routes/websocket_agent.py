@@ -131,8 +131,10 @@ class DistributedConnectionManager:
                         for ws in self.active_connections[user_id]:
                             try:
                                 await ws.send_text(content)
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                import logging
+
+                                logging.getLogger(__name__).exception(f"Silenced error: {e}")
             except Exception as e:
                 logger.error(f"Redis pubsub error: {e}")
                 await asyncio.sleep(1)
@@ -305,8 +307,10 @@ async def websocket_chat_endpoint(
                 )
                 await websocket.send_text(f"\n[Error: {type(e).__name__}]\n[DONE]")
 
-    except WebSocketDisconnect:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
     finally:
         # বাংলা মন্তব্য: P1 Fix — finally block নিশ্চিত করে যে যেকোনো কারণে exit হলেও
         # (WebSocketDisconnect, Exception, বা CancelledError) zombie task cancel হবে এবং disconnect হবে।

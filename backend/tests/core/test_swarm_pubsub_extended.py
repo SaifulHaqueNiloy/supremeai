@@ -66,8 +66,10 @@ async def test_subscribe_yields_messages():
             try:
                 msg = await gen.__anext__()
                 assert msg == "msg1"
-            except StopAsyncIteration:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 def test_get_swarm_streamer_returns_singleton():

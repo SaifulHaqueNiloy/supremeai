@@ -190,8 +190,10 @@ class SkillMarketplaceCurator(BaseSkill):
             self._task.cancel()
             try:
                 await self._task
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     async def _discover_local_skills(self) -> None:
         """Auto-register skills found in the skills directory."""

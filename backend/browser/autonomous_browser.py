@@ -123,16 +123,20 @@ class AutonomousBrowserAgent:
                 sdom = SemanticDOM(page)
                 el = await sdom.query(target)
                 return {"status": "success", "method": "semantic_dom", "element": el}
-            except ElementNotFoundSemantically:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             # Cascade Level 2: Vision Grounding Fallback
             try:
                 vg = VisionGrounding(page)
                 click_res = await vg.click(target)
                 return {"status": "success", "method": "vision_grounding", "coordinates": click_res}
-            except LowConfidenceGrounding:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             # Cascade Level 3: HITL Escalation
             return {"status": "escalated_to_hitl", "method": "hitl", "target": target}

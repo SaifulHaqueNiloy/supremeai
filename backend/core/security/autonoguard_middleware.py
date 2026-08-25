@@ -96,8 +96,10 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                     try:
                         payload = json.loads(raw_body)
                         code_to_scan = payload.get("code") or payload.get("generated_code")
-                    except json.JSONDecodeError:
-                        pass
+                    except Exception as e:
+                        import logging
+
+                        logging.getLogger(__name__).exception(f"Silenced error: {e}")
             except Exception as exc:
                 logger.debug(f"Failed to extract body for scanning: {exc}")
 

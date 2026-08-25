@@ -296,9 +296,10 @@ def _bootstrap_schema() -> None:
                 )
             },
         ).execute()
-    except Exception:
-        # Table may already exist or RPC not available — attempt direct path
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 def _seed_builtins() -> None:

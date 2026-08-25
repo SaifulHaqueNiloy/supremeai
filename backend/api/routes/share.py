@@ -193,8 +193,10 @@ async def get_shared_conversation(share_id: str):
                 "share_id", share_id
             ).execute()
             cached["view_count"] = current_count + 1
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         return PublicShareDetailResponse(
             conversation_id=cached["conversation_id"],

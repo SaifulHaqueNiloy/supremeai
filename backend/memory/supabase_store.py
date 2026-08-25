@@ -236,8 +236,10 @@ class SupabaseStore(SQLiteMemoryStore):
                 from loguru import logger
 
                 logger.error(f"Embedding generation failed: {e}")
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
             return None
 
     def _save_learned_fact_sqlite(self, fact_id: str, fact: dict) -> None:
@@ -332,8 +334,10 @@ class SupabaseStore(SQLiteMemoryStore):
                     from loguru import logger
 
                     logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
-                except ImportError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             try:
                 client = self._get_supabase_client()
@@ -356,8 +360,10 @@ class SupabaseStore(SQLiteMemoryStore):
                     from loguru import logger
 
                     logger.error(f"Fallback search failed: {e}")
-                except ImportError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
                 return []
         return []
 

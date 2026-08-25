@@ -76,9 +76,10 @@ class MetricCollector:
             metrics["disk_percent"] = psutil.disk_usage("/").percent
             net = psutil.net_io_counters()
             metrics["network_io"] = (net.bytes_sent + net.bytes_recv) / 1024 / 1024
-        except ImportError:
-            # Fallback: basic estimation
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         return metrics
 

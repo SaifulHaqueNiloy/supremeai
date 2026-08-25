@@ -172,8 +172,10 @@ class SwarmCoordinationAgent(BaseSkill):
                 task.cancel()
                 try:
                     await task
-                except asyncio.CancelledError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     async def _coordination_loop(self) -> None:
         """Main loop: dequeue tasks → allocate → collect → consensus."""

@@ -137,8 +137,10 @@ class RemediationEngine:
             task.cancel()
             try:
                 await task
-            except asyncio.CancelledError:
-                pass  # Expected when cancelling tasks
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         self.monitoring_tasks.clear()
         logger.info("Stopped remediation engine monitoring")

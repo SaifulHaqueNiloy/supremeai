@@ -605,8 +605,10 @@ async def _cached_scrape(payload: dict) -> dict:
     if cached is not None:
         try:
             return json.loads(cached)
-        except (json.JSONDecodeError, TypeError):
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
     result = await _proxy_to_scraper("scrape", payload)
     if isinstance(result, dict) and result.get("success"):
         await _scrape_cache.set(key, json.dumps(result), ttl=_SCRAPE_CACHE_TTL)
@@ -785,16 +787,20 @@ async def smart_click(req: SemanticClickRequest):
         await sdom.build_index()
         el = await sdom.query(req.target)
         return {"status": "clicked", "method": "semantic_dom", "element": el}
-    except ElementNotFoundSemantically:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     # 2. Vision Grounding
     try:
         vg = VisionGrounding(page=None)
         click_res = await vg.click(req.target)
         return {"status": "clicked", "method": "vision_grounding", "coordinates": click_res}
-    except LowConfidenceGrounding:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     # 3. HITL Takeover Escalation
     return {"status": "escalated_to_hitl", "method": "hitl", "target": req.target}

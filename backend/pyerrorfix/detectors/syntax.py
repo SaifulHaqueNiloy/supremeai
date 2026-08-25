@@ -74,9 +74,10 @@ class SyntaxDetector(BaseDetector):
                     detector=self.name,
                 )
             )
-        except Exception:
-            # Non-syntax compile errors are out of scope here.
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     def _check_token_consistency(self) -> None:
         """tokenize catches inconsistent leading whitespace that compile misses."""
@@ -108,9 +109,10 @@ class SyntaxDetector(BaseDetector):
                             detector=self.name,
                         )
                     )
-        except (tokenize.TokenError, IndentationError):
-            # Already reported by compile() path.
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 def _is_python_file(filename: str) -> bool:

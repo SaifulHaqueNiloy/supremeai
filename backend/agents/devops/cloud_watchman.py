@@ -29,8 +29,10 @@ if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
-    except AttributeError:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 # --- Path Setup (consistent with existing codebase) ---
 # বাংলা মন্তব্য: পাথ সেটআপ ও কনফিগ লোড নিশ্চিত করা হচ্ছে।

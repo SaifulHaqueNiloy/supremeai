@@ -209,8 +209,10 @@ class HeuristicScorer:
                 if days_old < 30:
                     score += 0.15
                     reasons.append("Recently updated")
-            except (ValueError, TypeError):
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Use LLM for semantic matching if available
         try:

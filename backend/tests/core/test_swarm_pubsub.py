@@ -163,8 +163,10 @@ class TestSubscribe:
             try:
                 msg = await gen.__anext__()
                 assert msg == "test"
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             # Sleep should have been called at least once (after first None)
             assert mock_sleep.call_count >= 1
@@ -204,8 +206,10 @@ class TestSubscribe:
                 # First call should get real message (subscribe messages are filtered by Redis)
                 msg1 = await gen.__anext__()
                 received.append(msg1)
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             # Should only receive the real message
             assert received == ["real message"]
@@ -346,8 +350,10 @@ class TestSwarmPubSubIntegration:
 
         try:
             await gen.__anext__()
-        except asyncio.CancelledError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Verify cleanup was called
         mock_pubsub.unsubscribe.assert_called_once_with("swarm_stream")

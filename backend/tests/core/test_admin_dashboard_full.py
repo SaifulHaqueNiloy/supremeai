@@ -347,7 +347,7 @@ class TestCodebaseExport:
     async def test_export_success(self):
         """Export succeeds → returns markdown."""
         with patch(
-            "tools.knowledge.codebase_exporter.export_codebase_to_markdown",
+            "api.routes.admin_dashboard.export_codebase_to_markdown",
             new_callable=AsyncMock,
         ) as mock_export:
             mock_export.return_value = "# Codebase\nSome markdown"

@@ -83,8 +83,10 @@ def _ensure_schema_columns() -> None:
                 )
             },
         ).execute()
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
     try:
         supabase_db.client.rpc(
             "exec_sql",
@@ -95,8 +97,10 @@ def _ensure_schema_columns() -> None:
                 )
             },
         ).execute()
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 def _normalise_conversation(row: dict[str, Any]) -> dict[str, Any]:

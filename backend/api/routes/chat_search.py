@@ -201,8 +201,10 @@ async def search_chats(
                                     .execute()
                                 )
                                 title = conv_resp.data[0]["title"] if conv_resp.data else None
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                import logging
+
+                                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
                         results_map[conv_id] = SearchResultItem(
                             conversation_id=conv_id,

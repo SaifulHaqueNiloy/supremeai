@@ -83,8 +83,10 @@ def _get_public_base_url() -> str:
         auto_url = settings.auto_backend_url
         if auto_url:
             return auto_url.rstrip("/")
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     # 3. Backend URL environment variables
     backend_url = os.environ.get("SUPREMEAI_BACKEND_URL") or os.environ.get("BACKEND_URL")

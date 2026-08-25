@@ -118,8 +118,10 @@ def _ensure_schema() -> None:
         raise HTTPException(status_code=503, detail="Database is not available.")
     try:
         supabase_db.client.rpc("exec_sql", {"query_string": _RESEARCH_SQL}).execute()
-    except Exception:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
     _research_bootstrapped = True
 
 

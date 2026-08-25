@@ -221,8 +221,10 @@ class MaintenancePipeline:
                     from core.app import app
 
                     _evo = getattr(app.state, "evo_agent", None)
-                except Exception:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
                 if _evo is None:
                     # No app.state.evo_agent — instantiate properly (with FitnessEngine)

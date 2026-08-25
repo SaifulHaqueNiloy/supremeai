@@ -35,8 +35,10 @@ def mock_env_vars(monkeypatch):
             # Handle extra fields properly if Pydantic model allows it
             elif getattr(settings.model_config, "extra", "ignore") == "allow":
                 setattr(settings, k.lower(), v)
-        except AttributeError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 # বাংলা মন্তব্য: cloud_deploy_mcp টেস্টস
