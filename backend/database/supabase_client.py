@@ -56,7 +56,7 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
                     # the OS scheduler. The CORRECT fix is to make callers wrap with
                     # asyncio.to_thread() — see ADMIN_TASKS.md for migration plan.
                     try:
-                        loop = asyncio.get_running_loop()
+                        asyncio.get_running_loop()
                         # We're inside an event loop — can't use time.sleep without blocking.
                         # Use loop.run_in_executor to push the sleep to a thread pool.
                         import concurrent.futures
