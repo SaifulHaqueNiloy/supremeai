@@ -4,7 +4,7 @@ Catches:
   * `ExpiredSignatureError` / `InvalidTokenError` — `jwt.decode()` without
     verifying signature / expiry (the #1 JWT bug: `options={"verify_signature":
     False}` or omitting the secret).
-  * CORS misconfiguration — `CORSMiddleware(allow_origins=["*"])` combined with
+  * CORS misconfiguration — `CORSMiddleware(allow_origins=["<all>"])` combined with
     `allow_credentials=True` (browsers reject this, but more dangerously it
     allows any site to read authenticated responses).
   * Hardcoded `401`/`403` — `raise HTTPException(401)` / `(403)` without an
