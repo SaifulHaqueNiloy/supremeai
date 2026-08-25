@@ -36,10 +36,6 @@ class ConfigService:
                     except json.JSONDecodeError:
                         return cached_val
         except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).exception(f"Silenced error: {e}")
-        except Exception as e:
             logger.warning(f"Redis cache error when getting config {key}: {e}")
 
         # Fallback to DB
