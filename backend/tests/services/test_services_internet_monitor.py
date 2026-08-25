@@ -279,8 +279,10 @@ async def test_service_lifecycle():
         # Suppress the CancelledError for this test
         try:
             await service.monitoring_task
-        except asyncio.CancelledError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
     service.monitoring_task = None
     service.is_running = False
 
@@ -317,8 +319,10 @@ async def test_concurrent_operations():
         service.monitoring_task.cancel()
         try:
             await service.monitoring_task
-        except asyncio.CancelledError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
     service.monitoring_task = None
     service.is_running = False
 

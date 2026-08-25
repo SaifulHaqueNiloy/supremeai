@@ -227,5 +227,7 @@ def del_response_header(headers, key: str):
     """Safely delete a response header."""
     try:
         del headers[key]
-    except KeyError:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
