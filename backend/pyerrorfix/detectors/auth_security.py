@@ -103,7 +103,7 @@ class AuthSecurityDetector(BaseDetector):
                         code="RuntimeError",
                         category=Category.SECURITY,
                         severity=Severity.CRITICAL,
-                        title="CORS allow_origins=['*'] + allow_credentials=True",
+                        title="CORS allow_origins=['<all>'] + allow_credentials=True",
                         message="This combination is rejected by browsers AND, when "
                         "allowed by a permissive server, lets any website read "
                         "authenticated responses (cookie/Authorization header leak).",
@@ -117,7 +117,7 @@ class AuthSecurityDetector(BaseDetector):
                         code="RuntimeError",
                         category=Category.SECURITY,
                         severity=Severity.WARNING,
-                        title="CORS allow_origins=['*']",
+                        title="CORS allow_origins=['<all>']",
                         message="allow_origins=['*'] permits any website to call your "
                         "API. Acceptable for public read-only APIs; dangerous for "
                         "anything that returns user-specific data.",
