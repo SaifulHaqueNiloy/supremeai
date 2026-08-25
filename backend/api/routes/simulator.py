@@ -11,13 +11,17 @@ Falls back to in-memory dicts if Redis is unavailable (e.g. in test environments
 from __future__ import annotations
 
 import json
+import os
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urljoin
 
 from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 from pydantic import BaseModel
 
 from core.cache.redis_manager import redis_manager
+from core.config import settings
 from core.error_bus import with_error_bus
 from core.security.authentication.rbac import get_current_user_token
 
@@ -51,6 +55,73 @@ DEVICE_PROFILES = [
 _IN_MEMORY_PROFILES: dict[str, Any] = {}
 _IN_MEMORY_SESSIONS: dict[str, Any] = {}
 _IN_MEMORY_KNOWN_USERS: set[str] = set()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ✅ NEW: Dynamic URL Resolution using existing config system
+# ══════════════════════════════════════════════════════════════════════════════
+def _get_public_base_url() -> str:
+    """
+    Derive public-facing base URL using existing SupremeAI config infrastructure.
+
+    Priority order:
+    1. SUPREMEAI_PUBLIC_URL env var (explicit override for Docker/K8s)
+    2. settings.auto_backend_url (your existing platform detection)
+    3. SUPREMEAI_BACKEND_URL or BACKEND_URL env var
+    4. Localhost ONLY when ENV=local/dev/test
+
+    Raises:
+        RuntimeError: If no valid URL in production (fail-fast)
+    """
+    # 1. Explicit public URL override (for reverse proxy scenarios)
+    public_url = os.environ.get("SUPREMEAI_PUBLIC_URL")
+    if public_url:
+        return public_url.rstrip("/")
+
+    # 2. Use existing platform detection system
+    try:
+        auto_url = settings.auto_backend_url
+        if auto_url:
+            return auto_url.rstrip("/")
+    except Exception:
+        pass
+
+    # 3. Backend URL environment variables
+    backend_url = os.environ.get("SUPREMEAI_BACKEND_URL") or os.environ.get("BACKEND_URL")
+    if backend_url:
+        # Remove /api/v1 suffix if present (we add our own paths)
+        base = backend_url.rstrip("/")
+        for suffix in ["/api/v1", "/api", "/v1"]:
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+        return base
+
+    # 4. Environment check — ONLY allow localhost in local/dev mode
+    current_env = getattr(settings, "env", "local") or os.environ.get("ENV", "local")
+    is_local = current_env.lower() in ("local", "development", "dev", "test")
+
+    if is_local:
+        logger.warning(
+            "[simulator] No PUBLIC_URL/BACKEND_URL set; "
+            f"using http://127.0.0.1:8000 (acceptable only in {current_env} mode)"
+        )
+        return "http://127.0.0.1:8000"
+
+    # 5. Production fail-fast
+    raise RuntimeError(
+        f"[simulator] Cannot determine public URL for preview/websocket endpoints. "
+        f"Set SUPREMEAI_PUBLIC_URL or BACKEND_URL environment variable. "
+        f"Current ENV={current_env}"
+    )
+
+
+def _get_websocket_base_url() -> str:
+    """Convert HTTP base URL to WebSocket URL."""
+    http_base = _get_public_base_url()
+    # Convert protocol: http -> ws, https -> wss
+    ws_base = http_base.replace("https://", "wss://").replace("http://", "ws://")
+    return ws_base
 
 
 class DeviceUpdateRequest(BaseModel):
@@ -202,11 +273,14 @@ async def install_app(req: InstallRequest, userId: str = "default"):
             },
         }
 
+    # ✅ FIXED: Use dynamic URL instead of hardcoded 127.0.0.1
+    base_url = _get_public_base_url()
+
     app = {
         "appId": req.appId,
         "appName": f"App {req.appId}",
         "version": "1.0.0",
-        "previewUrl": f"http://127.0.0.1:8000/preview/{req.appId}",
+        "previewUrl": f"{base_url}/preview/{req.appId}",  # ✅ DYNAMIC
         "installedAt": datetime.now(UTC).isoformat(),
         "launchCount": 0,
         "lastLaunchedAt": None,
@@ -255,9 +329,13 @@ async def start_session(appId: str, userId: str = "default"):
     await _save_profile(userId, profile)
 
     session_id = f"sess_{userId}_{appId}"
+
+    # ✅ FIXED: Use dynamic websocket URL instead of hardcoded 127.0.0.1
+    ws_base = _get_websocket_base_url()
+
     session = {
         "sessionId": session_id,
-        "websocketUrl": f"ws://127.0.0.1:8000/ws/simulator/{session_id}",
+        "websocketUrl": f"{ws_base}/ws/simulator/{session_id}",  # ✅ DYNAMIC
         "previewUrl": app["previewUrl"],
         "state": "RUNNING",
         "startedAt": datetime.now(UTC).isoformat(),

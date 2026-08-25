@@ -14,15 +14,41 @@ Bengali:
 পূর্ববর্তী টাস্কগুলোর জন্য গুরুত্বপূর্ণ ওজনগুলো নির্বাচিতভাবে সীমিত করে নতুন শেখা বাধা দেয়া থেকে রক্ষা করে
 """
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ✅ PRODUCTION FIX: Guarded ML imports — graceful degradation if torch unavailable
+# ══════════════════════════════════════════════════════════════════════════════
+import logging
 import os
 import pickle
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
-import torch
-import torch.nn as nn
-import torch.optim as optim
+logger = logging.getLogger(__name__)
+
+# Optional PyTorch dependency — evolution features degrade gracefully
+try:
+    import torch
+    import torch.nn as nn
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None  # type: ignore
+    nn = None  # type: ignore
+    logger.debug("torch not installed; evolution ML features disabled")
+
+# Additional torch submodules (file-specific)
+try:
+    import torch.optim as optim
+    from torch.utils.data import DataLoader
+
+    TORCH_UTILS_AVAILABLE = True
+except ImportError:
+    optim = None  # type: ignore
+    DataLoader = None  # type: ignore
+    TORCH_UTILS_AVAILABLE = False
+
 from loguru import logger
 from torch.utils.data import DataLoader
 

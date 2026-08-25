@@ -54,7 +54,12 @@ SERVICE_REGISTRY = [
     {
         "name": "main_backend",
         "display_name": "Main Backend",
-        "url": os.environ.get("BACKEND_URL", "http://localhost:8080") + "/api/v1/health",
+        "url": (
+            os.environ.get("BACKEND_URL")
+            or os.environ.get("SUPREMEAI_BACKEND_URL")
+            or "http://localhost:8080"
+        )
+        + "/api/v1/health",
         "critical": True,
         "timeout": 5.0,
     },
