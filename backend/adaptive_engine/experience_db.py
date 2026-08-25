@@ -85,11 +85,19 @@ class ExperienceDatabase:
         if HAS_CHROMADB:
             try:
                 import chromadb
+                import os
 
-                logger.info("Initializing ChromaDB EphemeralClient lazily...")
-                self.chroma_collection = chromadb.EphemeralClient().get_or_create_collection(
-                    "experience"
-                )
+                # FIX (ANALYSIS-D): original used EphemeralClient() which means ALL
+                # learned experiences are LOST on every container restart
+                # (Render free-tier cold-starts every 15 min). Switch to
+                # PersistentClient with a configurable path. Admin must mount
+                # /data/ volume (see ADMIN_TASKS.md) for persistence across
+                # restarts; falls back to local /tmp/chroma if not set.
+                chroma_path = os.getenv("EXPERIENCE_DB_PATH", "/tmp/chroma")
+                logger.info(f"Initializing ChromaDB PersistentClient at {chroma_path}...")
+                self.chroma_collection = chromadb.PersistentClient(
+                    path=chroma_path
+                ).get_or_create_collection("experience")
             except Exception as exc:
                 logger.error(f"ChromaDB lazy init failed: {exc}")
 
@@ -102,11 +110,17 @@ class ExperienceDatabase:
         self._qdrant_initialized = True
         if HAS_QDRANT:
             try:
+                import os
+
                 from qdrant_client import QdrantClient
                 from qdrant_client.models import Distance, VectorParams
 
-                logger.info("Initializing QdrantClient(':memory:') lazily...")
-                self.qdrant_client = QdrantClient(":memory:")
+                # FIX (ANALYSIS-D): same persistence bug as Chroma — ':memory:'
+                # means all learned experiences vanish on restart. Switch to
+                # local file path. Qdrant local mode uses path-based storage.
+                qdrant_path = os.getenv("QDRANT_PATH", "/tmp/qdrant")
+                logger.info(f"Initializing QdrantClient at {qdrant_path}...")
+                self.qdrant_client = QdrantClient(path=qdrant_path)
                 if not self.qdrant_client.collection_exists(collection_name=self.qdrant_collection):
                     self.qdrant_client.create_collection(
                         collection_name=self.qdrant_collection,
