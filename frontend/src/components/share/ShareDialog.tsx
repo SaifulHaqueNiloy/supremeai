@@ -253,7 +253,7 @@ export function ShareDialog({ conversationId, isOpen, onClose }: ShareDialogProp
                           expiry === option.value
                             ? 'text-emerald-700 dark:text-emerald-400'
                             : 'text-slate-700 dark:text-slate-300'
-                        }`
+                        }`}
                       >
                         {option.label}
                       </span>

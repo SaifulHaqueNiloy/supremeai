@@ -8,10 +8,28 @@ import { UnifiedChatBubble } from './UnifiedChatBubble';
 import { apiClient } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, Share2 } from 'lucide-react';
+
+import { ShareDialog } from '../share/ShareDialog';
+import { ThinkingPanel } from '../reasoning/ThinkingPanel';
+import { ArtifactsPanel } from '../artifacts/ArtifactsPanel';
+import { ImageUploadButton } from './ImageUploadButton';
+import ExportMenu from '../export/ExportMenu';
+import BranchButton from '../branch/BranchButton';
+import { SlashCommandMenu } from '../commands/SlashCommandMenu';
+import { ChatSearchDialog } from '../search/ChatSearchDialog';
+import { useTierSStore } from '../../store/tierSStore';
 
 export const ChatInterface: React.FC = () => {
   const { chatHistory, addMessage, isOrchestrating, triggerOrchestration } = useStore();
+  const {
+    shareDialogOpen, shareConversationId, closeShareDialog, openShareDialog,
+    showReasoning, reasoningSteps, isThinking,
+    artifactsPanelOpen, activeArtifactId, artifacts, selectArtifact, setArtifactsPanelOpen,
+    slashMenuOpen, closeSlashMenu, slashFilter, slashPosition, openSlashMenu,
+    searchDialogOpen, closeSearchDialog, openSearchDialog,
+  } = useTierSStore();
+
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -45,6 +63,35 @@ export const ChatInterface: React.FC = () => {
       setInput(data.content);  // Pre-fill with browser URL/context
     }
   });
+
+  // S6: Keyboard Shortcut - Cmd+K for Chat Search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchDialogOpen ? closeSearchDialog() : openSearchDialog();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchDialogOpen, openSearchDialog, closeSearchDialog]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+
+    // S5: Slash command detection
+    const slashMatch = value.match(/(^|\s)\/(\S*)$/);
+    if (slashMatch) {
+      const rect = e.target.getBoundingClientRect();
+      openSlashMenu(slashMatch[2], {
+        top: rect.top - 10,
+        left: rect.left + 20,
+      });
+    } else {
+      closeSlashMenu();
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -107,7 +154,19 @@ export const ChatInterface: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar area */}
-      <div className="flex justify-end p-2 border-b border-slate-800">
+      <div className="flex justify-end p-2 border-b border-slate-800 gap-2 items-center">
+        {/* S1: Share Button */}
+        <button 
+          onClick={() => openShareDialog("current_conv")}
+          className="p-2 rounded-lg transition-colors text-slate-400 hover:bg-slate-800"
+          title="Share Conversation"
+        >
+          <Share2 size={18} />
+        </button>
+
+        {/* S7: Export Menu */}
+        <ExportMenu conversationId="current_conv" />
+
         <button
           onClick={() => {
             setVoiceEnabled(!voiceEnabled);
@@ -126,12 +185,22 @@ export const ChatInterface: React.FC = () => {
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {chatHistory.map((msg) => (
-          <div key={msg.id}>
+          <div key={msg.id} className="relative group">
             <UnifiedChatBubble
               text={msg.content}
               sender={msg.role === 'user' ? 'user' : 'system'}
               timestamp={new Date(msg.timestamp).toLocaleTimeString()}
             />
+            
+            {/* S11: Branch Button */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <BranchButton
+                conversationId="current_conv"
+                messageId={msg.id.toString()}
+                onBranchCreated={(newId) => { console.log('Branch created:', newId) }}
+              />
+            </div>
+
             {voiceEnabled && msg.role === 'assistant' && (msg as any).audioUrl && (
               <audio 
                 controls 
@@ -148,9 +217,15 @@ export const ChatInterface: React.FC = () => {
       {/* Input Area */}
       <div className="p-4 border-t border-slate-800">
         <div className="flex gap-2">
+          {/* S4: Image Upload */}
+          <ImageUploadButton
+            conversationId="current_conv"
+            onUploadComplete={(attachment) => { console.log('Upload complete', attachment) }}
+          />
+
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type your message to the AI agent..."
             className="flex-1 bg-slate-800 text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -166,6 +241,16 @@ export const ChatInterface: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Dialogs & Menus */}
+      <ShareDialog />
+      <ChatSearchDialog />
+      <SlashCommandMenu
+        onSelect={(cmd) => {
+          setInput(prev => prev.replace(/(^|\s)\/\S*$/, `$1${cmd.trigger} `));
+          closeSlashMenu();
+        }}
+      />
     </div>
   );
 };

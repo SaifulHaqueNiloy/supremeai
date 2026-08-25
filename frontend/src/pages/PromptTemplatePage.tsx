@@ -7,10 +7,10 @@ import PromptTemplateLibrary from '../components/templates/PromptTemplateLibrary
 export default function PromptTemplatePage() {
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-slate-950">
-      {/* Page Header */
+      {/* Page Header */}
       <header className="flex-shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="px-6 py-4">
-          {/* Breadcrumb */
+          {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-slate-400 mb-3">
             <Link
               to="/"
@@ -40,7 +40,7 @@ export default function PromptTemplatePage() {
         </div>
       </header>
 
-      {/* Library Content - Full Height */
+      {/* Library Content - Full Height */}
       <main className="flex-1 min-h-0">
         <PromptTemplateLibrary />
       </main>

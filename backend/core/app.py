@@ -43,3 +43,7 @@ async def aggregated_health_check():
 
 app.include_router(admin_router)
 register_all_routers(app)
+
+from api.routes.tier_s_routes import register_tier_s_routes
+
+register_tier_s_routes(app)

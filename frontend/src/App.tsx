@@ -29,6 +29,8 @@ const BillingPage = React.lazy(() => import("./pages/BillingPage"));
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 
+import { tierSUserRoutes } from './routes/tierSRoutes';
+
 // Services & Hooks
 import { getAethelResponse } from "./services/chatService";
 import type { ChatMessage as ApiChatMessage } from "./services/chatService";
@@ -250,6 +252,11 @@ const AppContent: React.FC = () => {
                       <AdminShell />
                     </ProtectedRoute>
                   } />
+
+                    {/* ═══ Tier-S Feature Routes ═══ */}
+                    {tierSUserRoutes.map((r, i) => (
+                      <Route key={`tier-s-${i}`} path={r.path!} element={r.element} />
+                    ))}
 
                   {/* Catch-all 404 Route */}
                   <Route path="*" element={<ErrorPage code={404} />} />
