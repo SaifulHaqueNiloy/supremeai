@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 from loguru import logger
@@ -11,7 +12,15 @@ from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/ws", tags=["Neural Engine Stream"])
 
-_pref_locks: dict[str, asyncio.Lock] = {}
+# FIX (perf): _pref_locks was an unbounded dict that leaked memory per user.
+# Switched to LRU cache with maxsize to bound memory usage on free-tier.
+try:
+    from cachetools import LRUCache
+
+    _pref_locks: LRUCache = LRUCache(maxsize=1000)
+except ImportError:
+    # Fallback: plain dict if cachetools is not installed (still leaks but works)
+    _pref_locks = {}  # type: ignore[assignment]
 _pref_locks_lock = asyncio.Lock()
 
 
@@ -81,11 +90,18 @@ task_queue.register_handler("analyze_preferences", handle_analyze_preferences)
 # 🔌 WEBSOCKET CONNECTION MANAGER
 # ==========================================
 class DistributedConnectionManager:
+    # FIX (perf): add max-connection cap to prevent OOM on free-tier (512MB RAM)
+    MAX_TOTAL_CONNECTIONS = int(os.getenv("WS_MAX_CONNECTIONS", "50"))
+    MAX_PER_USER = int(os.getenv("WS_MAX_PER_USER", "3"))
+
     def __init__(self):
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
         self.redis = None
         self.pubsub = None
+
+    def _total_connections(self) -> int:
+        return sum(len(conns) for conns in self.active_connections.values())
 
     async def _get_redis(self):
         if not self.redis:
@@ -122,12 +138,34 @@ class DistributedConnectionManager:
                 await asyncio.sleep(1)
 
     async def connect(self, websocket: WebSocket, user_id: str):
+        # FIX (perf): enforce connection caps to prevent OOM on free-tier
+        if self._total_connections() >= self.MAX_TOTAL_CONNECTIONS:
+            logger.warning(
+                f"⚠️ [WS] Rejecting connection for {user_id}: total {self._total_connections()} "
+                f">= MAX_TOTAL_CONNECTIONS ({self.MAX_TOTAL_CONNECTIONS})"
+            )
+            await websocket.close(code=1013)  # Try Again Later
+            return False
+
+        per_user = len(self.active_connections.get(user_id, []))
+        if per_user >= self.MAX_PER_USER:
+            logger.warning(
+                f"⚠️ [WS] Rejecting connection for {user_id}: per-user {per_user} "
+                f">= MAX_PER_USER ({self.MAX_PER_USER})"
+            )
+            await websocket.close(code=1013)  # Try Again Later
+            return False
+
         await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
         await self._get_redis()
-        logger.info(f"🟢 [WS] New Client Connected to Neural Engine: {user_id}")
+        logger.info(
+            f"🟢 [WS] New Client Connected to Neural Engine: {user_id} "
+            f"(total: {self._total_connections()})"
+        )
+        return True
 
     def disconnect(self, websocket: WebSocket, user_id: str):
         if user_id in self.active_connections:

@@ -34,48 +34,46 @@ HEARTBEAT_SECONDS = 15
 async def _event_stream(prompt: str, user_id: str, task_type: str = "chat") -> AsyncIterator[str]:
     """Generator yielding SSE-formatted events.
 
-    Strategy: call llm_gateway.acompletion with stream=True — it returns a
-    StreamingResponse, so we just stream its body through as SSE events.
+    Strategy:
+      1. Call llm_gateway.acompletion(stream=True) — returns an async generator
+         (NOT a StreamingResponse — that was the previous bug).
+      2. Iterate it directly with `async for chunk in response_stream:`.
+      3. If streaming fails, fall back to non-stream acompletion and emit the
+         whole response as a single 'token' event.
 
-    If streaming fails, fall back to non-stream acompletion and emit the
-    whole response as a single 'token' event.
+    Verified against backend/api/routes/chat.py:221-238 (the working pattern).
     """
     yield f"event: connected\ndata: {json.dumps({'user_id': user_id})}\n\n"
 
     last_heartbeat = asyncio.get_event_loop().time()
 
     try:
-        # Try streaming first (preferred path)
+        # Try streaming first (preferred path).
+        # When stream=True, llm_gateway.acompletion returns an async generator
+        # that yields string chunks — same as chat.py:221-238 uses.
         try:
-            response = await llm_gateway.acompletion(
+            response_stream = await llm_gateway.acompletion(
                 prompt=prompt,
                 task_type=task_type,
                 stream=True,
             )
 
-            # If acompletion returns a StreamingResponse (when stream=True),
-            # we delegate its body_iterator through as SSE 'token' events.
-            body_iterator = getattr(response, "body_iterator", None)
-            if body_iterator is not None:
-                async for chunk in body_iterator:
-                    if not chunk:
-                        continue
-                    if isinstance(chunk, bytes):
-                        chunk = chunk.decode("utf-8", errors="replace")
-                    payload = json.dumps({"delta": chunk, "user_id": user_id})
-                    yield f"event: token\ndata: {payload}\n\n"
-
-                    now = asyncio.get_event_loop().time()
-                    if now - last_heartbeat > HEARTBEAT_SECONDS:
-                        yield ": ping\n\n"
-                        last_heartbeat = now
-            else:
-                # Non-streaming response (fallback) — emit as single event
-                text = response.get("text", "") if isinstance(response, dict) else str(response)
-                payload = json.dumps({"delta": text, "user_id": user_id})
+            async for chunk in response_stream:
+                if not chunk:
+                    continue
+                if isinstance(chunk, bytes):
+                    chunk = chunk.decode("utf-8", errors="replace")
+                payload = json.dumps({"delta": chunk, "user_id": user_id})
                 yield f"event: token\ndata: {payload}\n\n"
 
+                now = asyncio.get_event_loop().time()
+                if now - last_heartbeat > HEARTBEAT_SECONDS:
+                    yield ": ping\n\n"
+                    last_heartbeat = now
+
         except Exception as inner:
+            # Streaming failed — fall back to non-streaming acompletion which
+            # returns a dict like {"success": True, "text": "...", ...}
             logger.warning(f"[SSE] streaming path failed ({inner}); falling back to non-stream")
             response = await llm_gateway.acompletion(
                 prompt=prompt,

@@ -598,6 +598,28 @@ class LLMGateway:
                         rec.tokens_prompt = getattr(response.usage, "prompt_tokens", None)
                         rec.tokens_completion = getattr(response.usage, "completion_tokens", None)
                     cb.mark_success()
+
+                    # FIX (ANALYSIS-D): Wire EvolutionEngine.learn_from_success into
+                    # the success path. Original code never called this method, so
+                    # the auto-learning was write-only (ExperienceDatabase.record_experience
+                    # in task.py) and never fed back into the evolution engine.
+                    # Gated behind env ENABLE_EVOLUTION_LEARNING (default false) so
+                    # admins can opt-in after verifying the EvolutionEngine works.
+                    if os.getenv("ENABLE_EVOLUTION_LEARNING", "false").lower() == "true":
+                        try:
+                            # FIX: EvolutionEngine is a class, not a singleton.
+                            # Instantiate lazily (cheap — uses default SQLite path).
+                            from core.evolution.evolution_engine import EvolutionEngine
+
+                            _evolution_engine = EvolutionEngine()
+                            _evolution_engine.learn_from_success(
+                                task=prompt_text,
+                                approach=current_model,
+                                result=response.choices[0].message.content,
+                            )
+                        except Exception as evo_err:
+                            logger.debug(f"EvolutionEngine.learn_from_success skipped: {evo_err}")
+
                     return {
                         "success": True,
                         "text": response.choices[0].message.content,
