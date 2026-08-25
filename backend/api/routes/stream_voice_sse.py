@@ -22,7 +22,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -53,9 +53,7 @@ async def _voice_event_stream(user_id: str, text: str, lang: str) -> AsyncIterat
         result = await _get_voice_service().text_to_speech(text, lang=lang)
 
         if result.get("status") != "success":
-            err = json.dumps(
-                {"error": result.get("error", "TTS failed"), "user_id": user_id}
-            )
+            err = json.dumps({"error": result.get("error", "TTS failed"), "user_id": user_id})
             yield f"event: error\ndata: {err}\n\n"
             return
 
