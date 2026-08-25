@@ -103,7 +103,9 @@ async def test_get_global_browser_initialization(mock_async_playwright):
 
 
 @patch("core.agents.live.browser_agent.is_safe_url", return_value=True)
-@patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
+@patch(
+    "core.agents.live.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None
+)
 @patch(
     "httpx.get",
     return_value=MagicMock(
@@ -132,7 +134,9 @@ async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
 
 @pytest.mark.skip(reason="Live HTTP network error mock patch mismatch")
 @patch("core.agents.live.browser_agent.is_safe_url", return_value=True)
-@patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
+@patch(
+    "core.agents.live.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None
+)
 @patch("httpx.get", side_effect=httpx.RequestError("Network error"))
 @pytest.mark.asyncio
 async def test_navigate_and_interact_network_error(mock_get, mock_browser, mock_is_safe, agent):

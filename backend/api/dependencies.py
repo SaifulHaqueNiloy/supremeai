@@ -112,7 +112,7 @@ def get_current_user_token(request: Request) -> dict:
     if is_test_environment():
         import os
 
-        admin_email = os.getenv("ADMIN_EMAIL", None)
+        admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
         return {"sub": admin_email, "role": "admin"}
 
     # 3. Fallback check

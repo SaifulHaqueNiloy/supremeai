@@ -23,7 +23,7 @@ class TestBrowserAgent:
         agent = BrowserAgent()
         with patch("core.agents.live.browser_agent.is_safe_url", return_value=True):
             with patch(
-                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
+                "core.agents.live.browser_agent.get_global_browser", new_callable=AsyncMock
             ) as mock_browser:
                 mock_browser.return_value = None
                 with patch("httpx.get") as mock_get:
@@ -46,7 +46,7 @@ class TestBrowserAgent:
         agent = BrowserAgent()
         with patch("core.agents.live.browser_agent.is_safe_url", return_value=True):
             with patch(
-                "tools.browser_agent.get_global_browser", new_callable=AsyncMock
+                "core.agents.live.browser_agent.get_global_browser", new_callable=AsyncMock
             ) as mock_browser:
                 mock_browser.return_value = None
                 with patch("httpx.get", side_effect=httpx.RequestError("Connection refused")):
