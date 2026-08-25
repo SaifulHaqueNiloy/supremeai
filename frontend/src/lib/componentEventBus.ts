@@ -365,7 +365,6 @@ export function useComponentEventEmitter() {
     emitDeploymentStatusUpdate: useCallback(componentEventBus.emitDeploymentStatusUpdate.bind(componentEventBus), []),
     emit: useCallback(componentEventBus.emit.bind(componentEventBus), []),
   };
-  };
 }
 
 // ════════════════════════════════════════════════════════════════════
