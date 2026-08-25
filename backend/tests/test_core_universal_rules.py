@@ -2,7 +2,6 @@
 """Tests for the core Universal Rules Engine (constitutional rules)."""
 
 import pytest
-
 from backend.core.universal_rules import UniversalRulesEngine
 
 

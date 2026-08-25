@@ -4,7 +4,6 @@
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-
 from backend.core.health_check import ComprehensiveHealthChecker, HealthCheckResult, HealthStatus
 
 
