@@ -5,7 +5,6 @@ import os
 from unittest.mock import patch
 
 import pytest
-
 from backend.core import feature_flags as ff
 
 
