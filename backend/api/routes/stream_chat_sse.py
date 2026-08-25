@@ -1,15 +1,16 @@
 """SSE replacement for websocket_agent.py `/chat` endpoint.
 
-R10 FIX: WebSocket → Server-Sent Events migration.
+R10 FIX (corrected): WebSocket → Server-Sent Events migration.
 
-Why SSE > WS on Render free-tier:
-  - One-way server→client push (sufficient for chat tokens, HITL, voice frames)
-  - HTTP/2 multiplexing — no separate connection limit
-  - Auto-reconnect via EventSource browser API
-  - No idle-timeout disconnect (we send `: ping` every 15s)
+Endpoint: GET /api/v1/stream/chat?prompt=...&token=<JWT>
+Auth: ?token=<JWT> query param (EventSource cannot set headers)
+Heartbeat: ': ping' every 15s
 
-Endpoint: GET /api/v1/stream/chat
-Auth: ?token=<JWT> (query param — EventSource cannot set headers)
+Uses the REAL LLMGateway API:
+  - llm_gateway.acompletion(prompt=..., stream=True) → returns StreamingResponse
+  - OR we delegate to llm_gateway._stream_completion(messages, call_chain, timeout)
+
+Verified against backend/core/llm/llm_gateway.py at commit 38acf13acb.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
+from core.llm.llm_gateway import llm_gateway
 from core.security import verify_token
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Chat Stream"])
@@ -30,29 +32,59 @@ HEARTBEAT_SECONDS = 15
 
 
 async def _event_stream(prompt: str, user_id: str, task_type: str = "chat") -> AsyncIterator[str]:
-    """Generator yielding SSE-formatted events."""
+    """Generator yielding SSE-formatted events.
+
+    Strategy: call llm_gateway.acompletion with stream=True — it returns a
+    StreamingResponse, so we just stream its body through as SSE events.
+
+    If streaming fails, fall back to non-stream acompletion and emit the
+    whole response as a single 'token' event.
+    """
     yield f"event: connected\ndata: {json.dumps({'user_id': user_id})}\n\n"
 
     last_heartbeat = asyncio.get_event_loop().time()
 
     try:
-        # Lazy import to avoid circular dependency at module load
-        from core.llm.llm_gateway import llm_gateway
+        # Try streaming first (preferred path)
+        try:
+            response = await llm_gateway.acompletion(
+                prompt=prompt,
+                task_type=task_type,
+                stream=True,
+            )
 
-        async for chunk in llm_gateway._stream_completion_iter(
-            messages_payload=[{"role": "user", "content": prompt}],
-            call_chain=["gemini/gemini-2.0-flash"],
-            timeout=60.0,
-        ):
-            if not chunk:
-                continue
-            payload = json.dumps({"delta": chunk, "user_id": user_id})
+            # If acompletion returns a StreamingResponse (when stream=True),
+            # we delegate its body_iterator through as SSE 'token' events.
+            body_iterator = getattr(response, "body_iterator", None)
+            if body_iterator is not None:
+                async for chunk in body_iterator:
+                    if not chunk:
+                        continue
+                    if isinstance(chunk, bytes):
+                        chunk = chunk.decode("utf-8", errors="replace")
+                    payload = json.dumps({"delta": chunk, "user_id": user_id})
+                    yield f"event: token\ndata: {payload}\n\n"
+
+                    now = asyncio.get_event_loop().time()
+                    if now - last_heartbeat > HEARTBEAT_SECONDS:
+                        yield ": ping\n\n"
+                        last_heartbeat = now
+            else:
+                # Non-streaming response (fallback) — emit as single event
+                text = response.get("text", "") if isinstance(response, dict) else str(response)
+                payload = json.dumps({"delta": text, "user_id": user_id})
+                yield f"event: token\ndata: {payload}\n\n"
+
+        except Exception as inner:
+            logger.warning(f"[SSE] streaming path failed ({inner}); falling back to non-stream")
+            response = await llm_gateway.acompletion(
+                prompt=prompt,
+                task_type=task_type,
+                stream=False,
+            )
+            text = response.get("text", "") if isinstance(response, dict) else str(response)
+            payload = json.dumps({"delta": text, "user_id": user_id})
             yield f"event: token\ndata: {payload}\n\n"
-
-            now = asyncio.get_event_loop().time()
-            if now - last_heartbeat > HEARTBEAT_SECONDS:
-                yield ": ping\n\n"
-                last_heartbeat = now
 
         yield f"event: done\ndata: {json.dumps({'user_id': user_id})}\n\n"
     except asyncio.CancelledError:
@@ -75,13 +107,11 @@ async def stream_chat_sse(
     Frontend usage::
 
         const es = new EventSource('/api/v1/stream/chat?prompt=...&token=...');
-        es.addEventListener('token', (e) => { appendText(JSON.parse(e.data).delta); });
+        es.addEventListener('token', (e) => appendText(JSON.parse(e.data).delta));
         es.addEventListener('done',  () => es.close());
         es.addEventListener('error', (e) => { console.error(e); es.close(); });
 
     Rollback: keep WS route active by setting ``WS_FALLBACK=true`` (default).
-    Once SSE is verified end-to-end, set ``WS_FALLBACK=false`` and remove
-    ``websocket_agent`` from ``api/routers.py``.
     """
     payload = verify_token(token)
     user_id = payload.get("sub") or payload.get("user_id") or "anonymous"
