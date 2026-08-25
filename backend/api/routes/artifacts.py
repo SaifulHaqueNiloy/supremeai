@@ -34,7 +34,7 @@ _ARTIFACT_CONTENT_TYPES: dict[str, str] = {
 # ---------- Pydantic Schemas ----------
 
 
-class ArtifactType(str, str):
+class ArtifactType(str):
     """Allowed artifact types."""
 
     HTML = "html"

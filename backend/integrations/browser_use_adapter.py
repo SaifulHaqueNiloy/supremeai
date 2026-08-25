@@ -102,8 +102,15 @@ def _webscraper_fallback(url: str) -> dict[str, Any]:
 
 
 def _try_extract_with_llm(content: str, task: str) -> str | None:
-    """Use the free-tier LLM router to extract structured data from scraped content."""
+    """Use the free-tier LLM router to extract structured data from scraped content.
+
+    NOTE: This is a SYNC function that calls an ASYNC method via asyncio.run().
+    The original code was missing `await` AND missing asyncio.run(), so the
+    call returned a coroutine that was never awaited → silently no-op.
+    """
     try:
+        import asyncio
+
         from brain.model_router import ModelRouter
 
         router = ModelRouter()
@@ -113,7 +120,12 @@ def _try_extract_with_llm(content: str, task: str) -> str | None:
             "Extract the specific information requested by the task. "
             "Return ONLY the extracted data, no formatting or preamble."
         )
-        result = router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.02)
+        # FIX: wrap async call in asyncio.run() (sync caller can't use `await`)
+        result = asyncio.run(
+            router.async_route_and_generate(
+                prompt, task_type="reasoning", max_cost=0.02
+            )
+        )
         if isinstance(result, dict):
             return result.get("text", "")
         if isinstance(result, str):

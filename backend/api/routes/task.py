@@ -33,9 +33,9 @@ def get_semantic_cache():
     global _semantic_cache
     if _semantic_cache is None:
         try:
-            from core.cache.semantic_cache import VectorSemanticCache
+            from core.cache.semantic_cache import SemanticCache
 
-            _semantic_cache = VectorSemanticCache()
+            _semantic_cache = SemanticCache()
         except ImportError:
             _semantic_cache = False
     return _semantic_cache if _semantic_cache is not False else None
@@ -312,11 +312,13 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     raw = None
     sem_cache = get_semantic_cache()
     if sem_cache:
-        cached_text = await sem_cache.get_cached_inference(prompt=prompt, model_name=task_type)
-        if cached_text:
+        # FIX: original called get_cached_inference (doesn't exist) — actual method is query_similar
+        # which returns CacheEntry(provider, model, response) or None
+        cached_entry = await sem_cache.query_similar(prompt=prompt, task_type=task_type)
+        if cached_entry and getattr(cached_entry, "response", None):
             raw = {
                 "success": True,
-                "text": cached_text,
+                "text": cached_entry.response,
                 "provider": "semantic-vector-hit",
                 "cost": 0.0,
             }
@@ -329,8 +331,9 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
         )
         if raw.get("success") and sem_cache:
             try:
-                await sem_cache.set_cache_inference(
-                    prompt=prompt, model_name=task_type, response_text=raw.get("text")
+                # FIX: original called set_cache_inference (doesn't exist) — actual method is set
+                await sem_cache.set(
+                    prompt=prompt, response=raw.get("text"), task_type=task_type
                 )
             except Exception as exc:
                 logger.exception(f"Semantic cache write failed: {exc}")

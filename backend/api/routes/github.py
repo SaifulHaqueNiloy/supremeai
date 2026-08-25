@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_current_user_token, get_tenant_db
 from database.session import get_db_session
+from services import global_http_client  # FIX: reuse shared connection pool
 from tools.devops.github_agent import GitHubAgent, get_user_github_token
 from tools.repo_discovery_agent import RepoDiscoveryAgent
 
@@ -195,14 +196,22 @@ async def list_connected_repos(
     GITHUB_API_BASE = "https://api.github.com"
     agent = await _get_agent(user, sql_db)
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(
-            f"{GITHUB_API_BASE}/repos/{repo}",
-            headers={
-                "Authorization": f"Bearer {agent.token}",
-                "Accept": "application/vnd.github.v3+json",
-            },
-        )
+    # FIX (perf): reuse shared httpx.AsyncClient from lifespan (50 keep-alive conns)
+    # instead of creating a new client per request (which pays full TCP+TLS handshake).
+    client = global_http_client
+    if client is None:
+        # Fallback if lifespan hasn't initialized it yet (e.g., in tests)
+        import httpx
+
+        client = httpx.AsyncClient(timeout=10.0)
+    resp = await client.get(
+        f"{GITHUB_API_BASE}/repos/{repo}",
+        headers={
+            "Authorization": f"Bearer {agent.token}",
+            "Accept": "application/vnd.github.v3+json",
+        },
+        timeout=10.0,
+    )
     resp.raise_for_status()
     data = resp.json()
     return [
@@ -234,14 +243,20 @@ async def list_repo_commits(
     GITHUB_API_BASE = "https://api.github.com"
     agent = await _get_agent(user, sql_db)
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(
-            f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
-            headers={
-                "Authorization": f"Bearer {agent.token}",
-                "Accept": "application/vnd.github.v3+json",
-            },
-        )
+    # FIX (perf): reuse shared httpx.AsyncClient from lifespan (same as /repos endpoint above)
+    client = global_http_client
+    if client is None:
+        import httpx
+
+        client = httpx.AsyncClient(timeout=10.0)
+    resp = await client.get(
+        f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
+        headers={
+            "Authorization": f"Bearer {agent.token}",
+            "Accept": "application/vnd.github.v3+json",
+        },
+        timeout=10.0,
+    )
     resp.raise_for_status()
     return [
         {
