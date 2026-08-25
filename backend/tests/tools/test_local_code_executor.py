@@ -50,9 +50,12 @@ async def test_execute_local_code_docker_fails_fallback_to_subprocess(
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=True)
-    result = await executor.execute_local_code("print('fallback')")
+    # production guard bypass করার জন্য settings.env কে mock করা হচ্ছে
+    with patch("tools.code.local_code_executor.settings") as mock_settings:
+        mock_settings.env = "test"
+        result = await executor.execute_local_code("print('fallback')")
 
-    # যাচাই করা হচ্ছে যে সাবপ্রসেস কল হয়েছে
+    # যাচাই করা হচ্ছে যে সাবপ্রসেস কল হয়েছে
     mock_subprocess.assert_awaited_once()
     assert result["success"] is True
     assert result["output"] == "Subprocess success"
@@ -70,7 +73,9 @@ async def test_execute_host_subprocess_success(mock_subprocess):
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=False)
-    result = await executor.execute_local_code("print('hello from host')")
+    with patch("tools.code.local_code_executor.settings") as mock_settings:
+        mock_settings.env = "test"
+        result = await executor.execute_local_code("print('hello from host')")
 
     mock_subprocess.assert_awaited_once()
     assert result["success"] is True
@@ -89,7 +94,9 @@ async def test_execute_host_subprocess_error(mock_subprocess):
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=False)
-    result = await executor.execute_local_code("print('good syntax')")
+    with patch("tools.code.local_code_executor.settings") as mock_settings:
+        mock_settings.env = "test"
+        result = await executor.execute_local_code("print('good syntax')")
 
     assert result["success"] is False
     assert result["error"] == "Syntax Error"
@@ -107,7 +114,9 @@ async def test_execute_host_subprocess_timeout(mock_subprocess):
     mock_subprocess.return_value = mock_proc
 
     executor = LocalCodeExecutor(use_docker=False)
-    result = await executor.execute_local_code("import time; time.sleep(5)", timeout_seconds=2)
+    with patch("tools.code.local_code_executor.settings") as mock_settings:
+        mock_settings.env = "test"
+        result = await executor.execute_local_code("import time; time.sleep(5)", timeout_seconds=2)
 
     assert result["success"] is False
     assert result["error"] == "Execution TimeoutExpired"

@@ -102,7 +102,7 @@ async def test_get_global_browser_initialization(mock_async_playwright):
 # --- BrowserAgent ক্লাস টেস্ট ---
 
 
-@patch("tools.browser_agent.is_safe_url", return_value=True)
+@patch("core.agents.live.browser_agent.is_safe_url", return_value=True)
 @patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
 @patch(
     "httpx.get",
@@ -121,7 +121,7 @@ async def test_navigate_and_interact_fallback_scraper(mock_get, mock_browser, mo
     assert "Hello" in result["content"]
 
 
-@patch("tools.browser_agent.is_safe_url", return_value=False)
+@patch("core.agents.live.browser_agent.is_safe_url", return_value=False)
 @pytest.mark.asyncio
 async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
     """নিরাপদ নয় এমন URL ব্লক করে কিনা তা পরীক্ষা করে।"""
@@ -131,7 +131,7 @@ async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
 
 
 @pytest.mark.skip(reason="Live HTTP network error mock patch mismatch")
-@patch("tools.browser_agent.is_safe_url", return_value=True)
+@patch("core.agents.live.browser_agent.is_safe_url", return_value=True)
 @patch("tools.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None)
 @patch("httpx.get", side_effect=httpx.RequestError("Network error"))
 @pytest.mark.asyncio
