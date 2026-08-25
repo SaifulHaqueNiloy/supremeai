@@ -4,7 +4,7 @@ import json
 import time
 
 GH_TOKEN = "ghp_REDACTED"
-RENDER_KEY = "rnd_S0H7uYcNWmqX3jcepMTBL9WXghGP"
+RENDER_KEY = os.environ.get("RENDER_API_KEY", "")
 
 # Fetch latest workflow run on main
 gh_req = urllib.request.Request(

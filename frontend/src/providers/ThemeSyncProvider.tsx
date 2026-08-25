@@ -4,6 +4,8 @@ import { getApiBaseUrl } from '../utils/api';
 import { getRawToken } from '../services/apiClient';
 
 
+import { createSecureEventSource } from '../lib/secureSse';
+
 // বাংলা মন্তব্য: ThemeSyncContext একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
 // useThemeSync hook একে অপর ফাইলে সরানো হয়েছে (useThemeSync.ts)
 export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: string }> = ({
@@ -15,29 +17,26 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
   useEffect(() => {
     // Listen for Server-Sent Events from FastAPI
     const token = getRawToken();
-    const eventSource = new EventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
-
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.event === 'theme_changed' && data.theme) {
-          console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
-          setThemeState(data.theme);
+    const eventSource = createSecureEventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream`, token, {
+      onMessage: (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          // fetchEventSource passes event.type via event.type property now if we matched it, or we check data.event
+          if ((event.type === 'theme_changed' || data.event === 'theme_changed') && data.theme) {
+            console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
+            setThemeState(data.theme);
+          }
+        } catch (err) {
+          console.error('[ThemeSync] Error parsing SSE message:', err);
         }
-      } catch (err) {
-        console.error('[ThemeSync] Error parsing SSE message:', err);
-      }
-    };
-
-    if (typeof eventSource.addEventListener === 'function') {
-      eventSource.addEventListener('connected', () => {
+      },
+      onOpen: () => {
         console.warn('[ThemeSync] Connected to SSE Stream for user:', userId);
-      });
-    }
-
-    eventSource.onerror = (err) => {
-      console.error('[ThemeSync] SSE Connection Error:', err);
-    };
+      },
+      onError: (err) => {
+        console.error('[ThemeSync] SSE Connection Error:', err);
+      }
+    });
 
     return () => {
       eventSource.close();

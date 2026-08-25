@@ -146,7 +146,7 @@ export function BrowserPreview({ url = 'https://supremeai.web.app', html }: Brow
             srcDoc={html || undefined}
             title="Preview"
             className="w-full h-full border-none"
-            sandbox="allow-scripts allow-forms allow-same-origin allow-popups"
+            sandbox="allow-scripts allow-forms allow-popups"
             onLoad={() => setIsLoading(false)}
           />
         </div>

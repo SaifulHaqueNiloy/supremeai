@@ -5,7 +5,7 @@ import { THEME_ORDER } from './ThemeConstants';
 import { ThemeContext } from './ThemeContext';
 import type { Theme } from './ThemeConstants';
 import { apiClient } from '../services/apiClient';
-import { eventBus, Events } from '../lib/eventBus';
+import { eventBus, Events } from '../lib/componentEventBus';
 
 // বাংলা মন্তব্য: ThemeContext একে অপর ফাইল থেকে ইম্পোর্ট করা হয়েছে, যাতে react-refresh সতর্কতা দূর হয়
 // useTheme hook একে অপর ফাইলে সরানো হয়েছে (useTheme.ts)

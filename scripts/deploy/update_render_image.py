@@ -1,7 +1,8 @@
+import os
 import urllib.request, json
 
 service_id = 'srv-da5i4frm8hqs73cpp5hg'
-api_key = 'rnd_S0H7uYcNWmqX3jcepMTBL9WXghGP'
+api_key = os.environ.get("RENDER_API_KEY", "")
 
 # Try to set env to image and provide imagePath
 payload = {

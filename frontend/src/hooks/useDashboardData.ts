@@ -198,7 +198,7 @@ export function useDashboardReports(reportName?: string) {
 
 // SSE Listener Hook
 import { getApiBaseUrl } from '../utils/api';
-
+import { createSecureEventSource } from '../lib/secureSse';
 
 export function useDashboardSSE() {
   const qc = useQueryClient();
@@ -207,25 +207,27 @@ export function useDashboardSSE() {
     if (!hasToken()) return;
     const backendUrl = getApiBaseUrl();
     const rawToken = adminTokenStore.getRawToken();
-    // EventSource can't set Authorization headers, so pass the token via query param
-    // (backend AuthMiddleware now accepts ?token=<jwt> for SSE endpoints).
-    const sse = new EventSource(`${backendUrl}/api/dashboard/stream?token=${encodeURIComponent(rawToken || '')}`);
-
-    sse.addEventListener('dashboard_events', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        qc.setQueryData(['dashboard', 'events', 50], data); // update cache directly
-      } catch (err) {
-        console.error('Failed to parse dashboard_events:', err);
-      }
-    });
-
-    sse.addEventListener('metrics_events', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        qc.setQueryData(['dashboard', 'metrics'], data);
-      } catch (err) {
-        console.error('Failed to parse metrics_events:', err);
+    
+    const sse = createSecureEventSource(`${backendUrl}/api/dashboard/stream`, rawToken, {
+      onMessage: (e) => {
+        if (e.type === 'dashboard_events') {
+          try {
+            const data = JSON.parse(e.data);
+            qc.setQueryData(['dashboard', 'events', 50], data); // update cache directly
+          } catch (err) {
+            console.error('Failed to parse dashboard_events:', err);
+          }
+        } else if (e.type === 'metrics_events') {
+          try {
+            const data = JSON.parse(e.data);
+            qc.setQueryData(['dashboard', 'metrics'], data);
+          } catch (err) {
+            console.error('Failed to parse metrics_events:', err);
+          }
+        }
+      },
+      onError: (err) => {
+        console.error('Dashboard SSE error:', err);
       }
     });
 
