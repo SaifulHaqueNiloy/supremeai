@@ -14,7 +14,7 @@ import time
 import httpx as requests
 
 # --- hardcoded secret (security) ---
-API_KEY = "sk-1234567890abcdef1234567890abcdef"
+API_KEY = "sk-1234567890abcdef1234567890abcdef"  # placeholder
 
 # --- unused import + wildcard already above (unused-import) ---
 import json  # noqa: F401  (unused, used by detector demo)

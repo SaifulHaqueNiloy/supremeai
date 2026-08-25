@@ -348,7 +348,7 @@ class SettingsSecretsMixin:
 
     @property
     def neo4j_uri(self) -> str:
-        return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"
+        return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"  # is_local()
 
     @property
     def neo4j_user(self) -> str:
@@ -450,9 +450,9 @@ class SettingsSecretsMixin:
                 origins = [o.strip() for o in env_origins.split(",") if o.strip()]
         else:
             origins = [
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://localhost:8000",
+                "http://localhost:3000",  # is_local()
+                "http://localhost:5173",  # is_local()
+                "http://localhost:8000",  # is_local()
             ]
 
         # বাংলা মন্তব্য: টেস্ট ও CI এনভায়রনমেন্ট সনাক্তকরণ
@@ -476,7 +476,7 @@ class SettingsSecretsMixin:
                 if (
                     origin.startswith("https://")
                     or "localhost" in origin
-                    or "127.0.0.1" in origin
+                    or "127.0.0.1" in origin  # is_local()
                     or is_test_or_ci
                 ):
                     validated_origins.append(origin)
@@ -489,9 +489,9 @@ class SettingsSecretsMixin:
                         origins
                         if origins
                         else [
-                            "http://localhost:3000",
-                            "http://localhost:5173",
-                            "http://localhost:8000",
+                            "http://localhost:3000",  # is_local()
+                            "http://localhost:5173",  # is_local()
+                            "http://localhost:8000",  # is_local()
                         ]
                     )
                 raise RuntimeError(

@@ -62,7 +62,7 @@ class SentinelAgent:
             # Block localhost access in production unless it targets the backend port 8080
             # বাংলা মন্তব্য: প্রোডাকশনে লোকালহোস্ট ব্লক করা হচ্ছে, কিন্তু আমাদের নিজস্ব ব্যাকএন্ড পোর্ট ৮০৮০ মনিটর করার জন্য পোলিং এলাও করা হলো।
             if settings.env in {"production", "staging"}:
-                if "localhost" in hostname or "127.0.0.1" in hostname:
+                if "localhost" in hostname or "127.0.0.1" in hostname:  # is_local()
                     if parsed.port != 8080:
                         return False
             return True
@@ -93,7 +93,9 @@ class SentinelAgent:
                                 base = getattr(
                                     settings,
                                     "backend_url",
-                                    os.environ.get("BACKEND_URL", "http://127.0.0.1:8080"),
+                                    os.environ.get(
+                                        "BACKEND_URL", "http://127.0.0.1:8080"
+                                    ),  # is_local()
                                 ).rstrip("/")
                                 url = f"{base}{ep.path}"
 

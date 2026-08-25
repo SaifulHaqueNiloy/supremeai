@@ -34,7 +34,7 @@ class MCPRegistryClient:
         mcp_servers = getattr(settings, "mcp_server_urls", [])
         if not mcp_servers:
             # Fallback to local settings configurations or defaults if list empty
-            mcp_servers = ["http://localhost:8000/mcp"]
+            mcp_servers = ["http://localhost:8000/mcp"]  # is_local()
 
         all_tools = []
         async with httpx.AsyncClient(timeout=5.0) as client:

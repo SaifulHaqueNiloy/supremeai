@@ -218,7 +218,7 @@ class ErrorRemediation:
                         else "local"
                     )
                     if current_env in ("local", "development", "dev", "test"):
-                        qdrant_url = "http://localhost:6333"
+                        qdrant_url = "http://localhost:6333"  # is_local()
                     else:
                         raise ValueError("QDRANT_URL is required in production environment")
 

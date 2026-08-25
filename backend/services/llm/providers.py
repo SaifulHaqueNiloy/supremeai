@@ -401,9 +401,11 @@ class OllamaProvider:
                 "Ollama is for local development only and should not be used in cloud environments due to resource constraints."
             )
 
-        raw_url = getattr(settings, "ollama_url", "http://localhost:11434")
+        raw_url = getattr(settings, "ollama_url", "http://localhost:11434")  # is_local()
         self.base_url = (
-            str(raw_url) if isinstance(raw_url, str | bytes) else "http://localhost:11434"
+            str(raw_url)
+            if isinstance(raw_url, str | bytes)
+            else "http://localhost:11434"  # is_local()
         )
         self.client = httpx.AsyncClient(
             base_url=self.base_url,
