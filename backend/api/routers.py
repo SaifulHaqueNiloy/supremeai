@@ -45,16 +45,9 @@ ALL_ROUTERS = [
     {"path": "api.routes.email", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.github", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.config", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.economics", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.cognitive", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.cache_predictions",
-        "prefix": "/api/v1",
-        "is_admin": False,
-        "is_critical": False,
-    },
-    {
-        "path": "api.routes.digital_twin",
         "prefix": "/api/v1",
         "is_admin": False,
         "is_critical": False,
@@ -101,12 +94,6 @@ ALL_ROUTERS = [
     {
         "path": "api.routes.session_stream",
         "prefix": "/api",
-        "is_admin": False,
-        "is_critical": False,
-    },
-    {
-        "path": "api.routes.swarm",
-        "prefix": "/api/v1/swarm",
         "is_admin": False,
         "is_critical": False,
     },
