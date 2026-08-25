@@ -52,9 +52,16 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 @pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator:
     """Create a fresh database session for each test."""
+    import importlib
+    import pkgutil
+
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+    import models
     from core.db import Base
+
+    for _, module_name, _ in pkgutil.iter_modules(models.__path__):
+        importlib.import_module(f"models.{module_name}")
 
     # Use in-memory SQLite for tests
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
