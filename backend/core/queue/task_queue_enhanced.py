@@ -90,7 +90,7 @@ class TaskQueue:
         max_tracked_tasks: int = 10_000,
     ):
         self.default_backend = default_backend
-        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.redis_url = redis_url or getattr(settings, "redis_url", None)
         self.project_id = project_id or getattr(settings, "gcp_project_id", "supremeai")
 
         # বাংলা মন্তব্য: OrderedDict — FIFO eviction policy (oldest evicted first)
@@ -579,7 +579,7 @@ try:
 
     celery_app = _Celery(
         "supremeai",
-        broker=getattr(settings, "redis_url", "redis://localhost:6379/0"),
+        broker=getattr(settings, "redis_url", "redis://<your-redis-url>/0"),
     )
 except ImportError as _celery_import_err:
     logger.warning(

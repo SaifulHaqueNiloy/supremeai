@@ -13,7 +13,7 @@ class DailyQuotaLimiter:
     def __init__(self, redis_url: str | None = None):
         from core.config import settings
 
-        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.redis_url = redis_url or getattr(settings, "redis_url", None)
         self._redis = None
         self.DAILY_LIMITS = {
             "anonymous": 50,
