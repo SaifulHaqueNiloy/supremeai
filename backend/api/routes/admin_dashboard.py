@@ -222,18 +222,19 @@ def get_costs_breakdown():
         render_spent = 0.0
         render_quota = 50.0  # Estimated budget for Render
         try:
-            import requests
+            # R2 FIX: use httpx instead of blocking `requests` lib
+            import httpx
 
             render_api_key = os.getenv("RENDER_API_KEY", "")
             if render_api_key:
-                resp = requests.get(
-                    "https://api.render.com/v1/services",
-                    headers={
-                        "Authorization": f"Bearer {render_api_key}",
-                        "Accept": "application/json",
-                    },
-                    timeout=5,
-                )
+                with httpx.Client(timeout=5.0) as client:
+                    resp = client.get(
+                        "https://api.render.com/v1/services",
+                        headers={
+                            "Authorization": f"Bearer {render_api_key}",
+                            "Accept": "application/json",
+                        },
+                    )
                 if resp.status_code == 200:
                     services = resp.json()
                     # Calculate estimated cost based on plan
