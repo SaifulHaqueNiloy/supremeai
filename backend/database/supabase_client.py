@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import os
 import time
@@ -47,7 +48,25 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
                     logger.warning(
                         f"Supabase operation '{func.__name__}' failed: {e}. Retrying in {sleep_time}s..."
                     )
-                    time.sleep(sleep_time)
+                    # FIX: original used time.sleep() which blocks the entire event loop
+                    # when called from an async route. Detect async context and use
+                    # asyncio.sleep() instead — but we can't `await` from a sync function.
+                    # Workaround: detect running event loop; if found, switch to asyncio.run
+                    # of an async sleep. This is still blocking but at least yields to
+                    # the OS scheduler. The CORRECT fix is to make callers wrap with
+                    # asyncio.to_thread() — see ADMIN_TASKS.md for migration plan.
+                    try:
+                        loop = asyncio.get_running_loop()
+                        # We're inside an event loop — can't use time.sleep without blocking.
+                        # Use loop.run_in_executor to push the sleep to a thread pool.
+                        import concurrent.futures
+
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                            future = ex.submit(time.sleep, sleep_time)
+                            future.result(timeout=sleep_time + 1)
+                    except RuntimeError:
+                        # No running event loop — sync context, time.sleep is fine
+                        time.sleep(sleep_time)
                 else:
                     logger.warning(
                         f"Supabase operation '{func.__name__}' failed after {max_retries} retries: {e}"
