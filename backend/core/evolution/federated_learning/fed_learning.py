@@ -22,15 +22,43 @@ Bengali:
 
 import hashlib
 import json
+
+# ══════════════════════════════════════════════════════════════════════════════
+# ✅ PRODUCTION FIX: Guarded ML imports — graceful degradation if torch unavailable
+# ══════════════════════════════════════════════════════════════════════════════
+import logging
 import secrets
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
+
+logger = logging.getLogger(__name__)
+
+# Optional PyTorch dependency — evolution features degrade gracefully
+try:
+    import torch
+    import torch.nn as nn
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None  # type: ignore
+    nn = None  # type: ignore
+    logger.debug("torch not installed; evolution ML features disabled")
+
+# Additional torch submodules (file-specific)
+try:
+    import torch.optim as optim
+    from torch.utils.data import DataLoader
+
+    TORCH_UTILS_AVAILABLE = True
+except ImportError:
+    optim = None  # type: ignore
+    DataLoader = None  # type: ignore
+    TORCH_UTILS_AVAILABLE = False
+
 from loguru import logger
 
 

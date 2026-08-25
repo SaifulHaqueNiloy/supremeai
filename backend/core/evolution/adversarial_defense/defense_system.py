@@ -15,6 +15,10 @@ Bengali:
 অ্যাডভারসেরিয়াল এটাক থেকে রক্ষার জন্য একাধিক স্তরের প্রতিরোধ ব্যবস্থা
 """
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ✅ PRODUCTION FIX: Guarded ML imports — graceful degradation if torch unavailable
+# ══════════════════════════════════════════════════════════════════════════════
+import logging
 import time
 
 # বাংলা মন্তব্য: cv2 টপ-লেভেলে import করলে CI-তে `No module named 'cv2'` এরর
@@ -26,8 +30,32 @@ from enum import Enum
 from typing import Any
 
 import numpy as np
-import torch
-import torch.nn as nn
+
+logger = logging.getLogger(__name__)
+
+# Optional PyTorch dependency — evolution features degrade gracefully
+try:
+    import torch
+    import torch.nn as nn
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None  # type: ignore
+    nn = None  # type: ignore
+    logger.debug("torch not installed; evolution ML features disabled")
+
+# Additional torch submodules (file-specific)
+try:
+    import torch.optim as optim
+    from torch.utils.data import DataLoader
+
+    TORCH_UTILS_AVAILABLE = True
+except ImportError:
+    optim = None  # type: ignore
+    DataLoader = None  # type: ignore
+    TORCH_UTILS_AVAILABLE = False
+
 from loguru import logger
 
 warnings.filterwarnings("ignore")
