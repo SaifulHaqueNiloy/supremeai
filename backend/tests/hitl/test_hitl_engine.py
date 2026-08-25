@@ -83,7 +83,7 @@ class TestRiskAssessment:
 
         assert risk_result["risk_level"] == "LOW"
         assert risk_result["risk_score"] < 0.3
-        assert "auto_approve" in risk_result or risk_result["can_auto_approve"] == True
+        assert "auto_approve" in risk_result or risk_result["can_auto_approve"]
 
     @pytest.mark.unit
     async def test_medium_risk_detection(self):
@@ -148,7 +148,7 @@ class TestRiskAssessment:
 
         assert risk_result["risk_level"] == "CRITICAL"
         assert risk_result["risk_score"] >= 0.9
-        assert risk_result.get("requires_multi_approval") == True
+        assert risk_result.get("requires_multi_approval")
 
     @pytest.mark.unit
     async def test_custom_risk_rules_application(self):
@@ -252,7 +252,7 @@ class TestApprovalQueue:
             notes="Approved - looks good",
         )
 
-        assert result["success"] == True
+        assert result["success"]
         assert result["status"] == "approved"
         assert result["reviewed_by"] == reviewer_id
 
@@ -276,7 +276,7 @@ class TestApprovalQueue:
             reason="Rejected - security concern",
         )
 
-        assert result["success"] == True
+        assert result["success"]
         assert result["status"] == "rejected"
         assert "security concern" in result.get("reason", "")
 
@@ -299,7 +299,7 @@ class TestApprovalQueue:
             reason="Requires senior review",
         )
 
-        assert result["success"] == True
+        assert result["success"]
         assert result["status"] == "escalated"
         assert result["escalated_to"] == escalate_to
 
@@ -347,7 +347,7 @@ class TestAutoApprovalLogic:
 
         result = await engine.process_request(request)
 
-        assert result["auto_approved"] == True
+        assert result["auto_approved"]
         assert result["status"] == "approved"
         assert result["reason"] == "low_risk_auto_approved"
 
@@ -366,7 +366,7 @@ class TestAutoApprovalLogic:
 
         result = await engine.process_request(request)
 
-        assert result["auto_approved"] == False
+        assert not result["auto_approved"]
         assert result["status"] == "pending_review"
         assert "approval_id" in result
 
@@ -385,7 +385,7 @@ class TestAutoApprovalLogic:
 
         result = await engine.process_request(request)
 
-        assert result["multi_approval_required"] == True
+        assert result["multi_approval_required"]
         assert result["min_approvers"] >= 2
         assert result["status"] == "pending_multi_approval"
 
@@ -413,7 +413,7 @@ class TestAutoApprovalLogic:
 
         result = await engine.process_request(read_request)
 
-        assert result["auto_approved"] == True
+        assert result["auto_approved"]
         assert result["reason"] == "pattern_match"
 
 
@@ -430,13 +430,13 @@ class TestEscalationRules:
         queue = ApprovalQueue()
 
         # Create old pending request
-        created_at = datetime.now(UTC) - timedelta(hours=2)
+        datetime.now(UTC) - timedelta(hours=2)
         request = (
             sample_hitl_request(None) if callable(sample_hitl_request) else sample_hitl_request
         )
         request["sla_minutes"] = 60  # 1 hour SLA
 
-        approval_id = await queue.create(request)
+        await queue.create(request)
 
         # Simulate time passing by modifying internal state
         # (In real implementation, this would be handled by timestamps)
@@ -476,7 +476,7 @@ class TestEscalationRules:
 
             # Check if escalation was triggered
             if rejection_result.get("escalated"):
-                assert rejection_result["escalated"] == True
+                assert rejection_result["escalated"]
 
 
 class TestHITLAPIEndpoints:
@@ -692,9 +692,9 @@ class TestHITLConcurrency:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Only one should succeed, others should fail
-        successes = sum(1 for r in results if getattr(r, "success", False) == True)
+        successes = sum(1 for r in results if getattr(r, "success", False))
         failures = sum(
-            1 for r in results if isinstance(r, Exception) or getattr(r, "success", None) == False
+            1 for r in results if isinstance(r, Exception) or not getattr(r, "success", None)
         )
 
         assert successes == 1  # Only one approval should succeed
@@ -801,7 +801,7 @@ class TestHITLErrorHandling:
         assert result is None
 
         result = await queue.approve(fake_id, str(uuid.uuid4()), "test")
-        assert result["success"] == False
+        assert not result["success"]
         assert "not found" in result.get("error", "").lower()
 
 

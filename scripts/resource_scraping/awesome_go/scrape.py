@@ -1,7 +1,8 @@
 import json
 import re
-import urllib.request
 import urllib.error
+import urllib.request
+
 
 def fetch_readme():
     # Try the awesome-go GitHub repo
