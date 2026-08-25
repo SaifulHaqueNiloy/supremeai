@@ -11,6 +11,8 @@ from core.app import app as base_app
 
 @pytest.fixture()
 def stream_app() -> FastAPI:
+    # 64-char test JWT secret to satisfy production JWT length check
+    os.environ["SUPREMEAI_JWT_SECRET"] = "test_jwt_secret_" + "x" * 48
     os.environ["SUPREMEAI_API_KEY"] = "test-token"
     return base_app
 
