@@ -69,7 +69,7 @@ export const ChatInterface: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        searchDialogOpen ? closeSearchDialog() : openSearchDialog();
+        if (searchDialogOpen) closeSearchDialog(); else openSearchDialog();
       }
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -68,7 +68,7 @@ function highlightSyntax(code: string): string {
   const lines = code.split('\n');
   return lines
     .map((line) => {
-      let highlighted = line
+      const highlighted = line
         // String literals (double and single quotes)
         .replace(
           /("[^"]*"|'[^']*'|`[^`]*`)/g,
