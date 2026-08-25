@@ -210,7 +210,17 @@ class ErrorRemediation:
             except ImportError:
                 pass
             if not qdrant_url:
-                qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+                qdrant_url = os.getenv("QDRANT_URL", "")
+                if not qdrant_url:
+                    current_env = (
+                        getattr(app_settings, "env", os.getenv("ENV", "local")).lower()
+                        if "app_settings" in locals()
+                        else "local"
+                    )
+                    if current_env in ("local", "development", "dev", "test"):
+                        qdrant_url = "http://localhost:6333"
+                    else:
+                        raise ValueError("QDRANT_URL is required in production environment")
 
             self._qdrant = QdrantClient(url=qdrant_url, prefer_grpc=False)
             self._ensure_qdrant_collection()
