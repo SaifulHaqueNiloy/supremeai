@@ -751,7 +751,7 @@ class QASuite:
         )
         api_result = await self.integration_runner.test_api_integration(target_url)
         cache_result = await self.integration_runner.test_cache_integration(
-            "redis://localhost:6379"
+            "redis://<your-redis-url>"
         )
 
         return {

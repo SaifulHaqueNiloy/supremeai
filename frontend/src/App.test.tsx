@@ -137,7 +137,7 @@ vi.mock('./services/adminTokenStore', () => ({
 
 // Mock getApiBaseUrl used by InteractiveChatTab and other components
 vi.mock('./utils/api', () => ({
-  getApiBaseUrl: vi.fn().mockReturnValue('https://supremeai-backend-docker.onrender.com'),
+  getApiBaseUrl: vi.fn().mockReturnValue('<backend-url>'),
 }));
 
 // Mock useDashboardStore used by InteractiveChatTab

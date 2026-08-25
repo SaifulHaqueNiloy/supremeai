@@ -24,7 +24,7 @@ from loguru import logger
 
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
-# বাংলা মন্তব্য: module-level redis.from_url("redis://localhost") সম্পূর্ণ নিষিদ্ধ।
+# বাংলা মন্তব্য: module-level redis.from_url("redis://<your-redis-url>") সম্পূর্ণ নিষিদ্ধ।
 # RedisURL এখন settings থেকে আসে, hardcode নয়।
 
 

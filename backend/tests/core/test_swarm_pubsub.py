@@ -52,11 +52,11 @@ class TestSwarmPubSubInit:
         mock_redis = AsyncMock()
         with patch("core.swarm_pubsub.aioredis.from_url", return_value=mock_redis) as mock_from_url:
             with patch("core.config.settings") as mock_settings:
-                mock_settings.redis_url = "redis://localhost"
+                mock_settings.redis_url = "redis://<your-redis-url>"
                 pubsub = SwarmPubSub()
                 r = pubsub.redis
                 assert r is not None
-                mock_from_url.assert_called_once_with("redis://localhost")
+                mock_from_url.assert_called_once_with("redis://<your-redis-url>")
 
 
 # -------------------- Tests: subscribe --------------------
@@ -290,7 +290,7 @@ class TestGlobalInstance:
         from core.swarm_pubsub import swarm_streamer
 
         with patch("core.config.settings") as mock_settings:
-            mock_settings.redis_url = "redis://localhost"
+            mock_settings.redis_url = "redis://<your-redis-url>"
             with patch("redis.asyncio.from_url") as mock_from_url:
                 mock_redis = AsyncMock()
                 mock_from_url.return_value = mock_redis
