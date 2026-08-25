@@ -118,7 +118,7 @@ class AuthSecurityDetector(BaseDetector):
                         category=Category.SECURITY,
                         severity=Severity.WARNING,
                         title="CORS allow_origins=['<all>']",
-                        message="allow_origins=['*'] permits any website to call your "
+                        message="allow_origins=['<all>'] permits any website to call your "
                         "API. Acceptable for public read-only APIs; dangerous for "
                         "anything that returns user-specific data.",
                         node=node,
