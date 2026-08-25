@@ -936,7 +936,11 @@ class HFSwarmRouter:
         logger.info(f"🔀 [Router] Task: '{task_type}' | Target Model: '{target_model}'")
 
         try:
-            response = requests.post(endpoint, headers=headers, json=payload, timeout=30)
+            # R2 FIX: use httpx instead of blocking `requests` lib
+            import httpx
+
+            with httpx.Client(timeout=30.0) as client:
+                response = client.post(endpoint, headers=headers, json=payload)
             response.raise_for_status()
             return {
                 "status": "success",
