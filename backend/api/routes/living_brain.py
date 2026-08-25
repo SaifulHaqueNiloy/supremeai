@@ -128,7 +128,6 @@ async def get_brain_status():
         "learning_engine": {"status": "unknown", "details": {}},
         "memory": {"status": "unknown", "details": {}},
         "economic_optimizer": {"status": "unknown", "details": {}},
-        "digital_twin": {"status": "not_configured"},
     }
 
     # Check Learning Engine
