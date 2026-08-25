@@ -23,10 +23,10 @@ class CollaborativeEditor:
         # Production-এ REDIS_URL সেট না থাকলে বা ফর্ম্যাট ভুল থাকলে সাইলেন্টলি localhost-এ ফলব্যাক না করে এরর লগ করা হয়।
         redis_url = getattr(settings, "redis_url", getattr(settings, "REDIS_URL", None))
         if not redis_url or not str(redis_url).startswith(("redis://", "rediss://", "unix://")):
-            redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379")
+            redis_url = os.environ.get("REDIS_URL", None)
             if (
                 getattr(settings, "env", "local") != "local"
-                and redis_url == "redis://localhost:6379"
+                and redis_url == "redis://<your-redis-url>"
             ):
                 logger.error("REDIS_URL not configured — CollaborativeEditor Pub/Sub will fail!")
         self.redis = redis.from_url(redis_url, decode_responses=True)

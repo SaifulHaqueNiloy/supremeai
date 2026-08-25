@@ -34,7 +34,7 @@ class QueryCache:
     - Graceful degradation when Redis unavailable
 
     Usage:
-        cache = QueryCache(redis_url="redis://localhost:6379")
+        cache = QueryCache(redis_url="redis://<your-redis-url>")
 
         # Cache a computation
         result = await cache.get_or_compute(
@@ -72,7 +72,7 @@ class QueryCache:
         """
         from core.config import settings
 
-        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.redis_url = redis_url or getattr(settings, "redis_url", None)
         self.enabled = enabled
         self.default_ttl = default_ttl
         self.max_cache_size = max_cache_size
@@ -314,7 +314,7 @@ def get_cache() -> QueryCache:
 
         from core.config import settings
 
-        redis_url = os.getenv("REDIS_URL", getattr(settings, "redis_url", "redis://localhost:6379"))
+        redis_url = os.getenv("REDIS_URL", getattr(settings, "redis_url", None))
         enabled = os.getenv("LLM_CACHE_ENABLED", "true").lower() == "true"
         _global_cache = QueryCache(redis_url=redis_url, enabled=enabled)
     return _global_cache

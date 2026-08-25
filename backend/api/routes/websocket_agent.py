@@ -94,11 +94,9 @@ class DistributedConnectionManager:
             try:
                 from core.config import settings
 
-                redis_url = getattr(
-                    settings, "redis_url", getattr(settings, "REDIS_URL", "redis://localhost:6379")
-                )
+                redis_url = getattr(settings, "redis_url", getattr(settings, "REDIS_URL", None))
             except ImportError:
-                redis_url = "redis://localhost:6379"
+                redis_url = "redis://<your-redis-url>"
             self.redis = aioredis.from_url(redis_url, decode_responses=True)
             self.pubsub = self.redis.pubsub()
             await self.pubsub.subscribe("ws_broadcast")
