@@ -4,7 +4,9 @@ import asyncpg
 
 async def run_migration():
     # Setup database url
-    db_url = 'postgresql://postgres.xtvkltzmberxekoamala:NjelComBd_2026_Prod!@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres'
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        raise ValueError("DATABASE_URL environment variable is not set")
     
     # Read sql file
     with open('../migrations/phase3_multi_tenant_schema.sql', 'r') as f:
