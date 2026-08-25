@@ -1,6 +1,4 @@
 import json
-import sys
-import re
 
 with open('lint-results.json', 'r', encoding='utf-8') as f:
     text = f.read()

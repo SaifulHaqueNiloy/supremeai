@@ -499,7 +499,7 @@ class TestMemoryDeletion:
         # Delete it
         result = await service.delete(memory_id=memory_id)
 
-        assert result["success"] == True
+        assert result["success"]
 
         # Verify it's gone
         search_result = await service.get_by_id(memory_id)
@@ -599,14 +599,14 @@ class TestMemoryCaching:
         service = MemoryService(db=mock_db, redis=mock_redis)
 
         # First call - should query DB and cache
-        results1 = await service.search(
+        await service.search(
             query_embedding=sample_embedding,
             agent_id=created_agent["id"],
             use_cache=True,
         )
 
         # Second call - should use cache
-        results2 = await service.search(
+        await service.search(
             query_embedding=sample_embedding,
             agent_id=created_agent["id"],
             use_cache=True,
@@ -721,7 +721,7 @@ class TestMemoryAPIEndpoints:
 
         assert delete_response.status_code == 200
         data = delete_response.json().get("data", delete_response.json())
-        assert data["success"] == True
+        assert data["success"]
 
     @pytest.mark.integration
     async def test_memory_stats_endpoint(

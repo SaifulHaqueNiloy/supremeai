@@ -1,5 +1,5 @@
-import re
 import os
+
 
 def fix_file(filepath, fixes):
     if not os.path.exists(filepath): return
