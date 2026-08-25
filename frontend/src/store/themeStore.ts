@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiClient } from '../services/apiClient';
-import { eventBus, Events } from '../lib/eventBus';
+import { eventBus, Events } from '../lib/componentEventBus';
 
 interface ThemeState {
   theme: 'dark' | 'light' | 'system';

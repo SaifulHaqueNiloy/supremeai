@@ -23,7 +23,7 @@ import { useForgeAutosave } from './hooks/useForgeAutosave';
 import { DebateOverlay } from './DebateOverlay';
 import { getApiBaseUrl } from '../../../utils/api';
 import { apiClient } from '../../../services/apiClient';
-import { eventBus, Events } from '../../../lib/eventBus';
+import { eventBus, Events } from '../../../lib/componentEventBus';
 import { Sparkles, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 
 // Register custom node types

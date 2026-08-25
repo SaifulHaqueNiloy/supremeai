@@ -280,7 +280,11 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
         except HTTPException:
             raise
         except Exception as e:
-            logger.warning(f"Redis lockout check failed — proceeding (fail-open): {e}")
+            logger.critical(f"Redis lockout check failed — blocking login (fail-closed): {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Authentication service temporarily unavailable. Please try again later.",
+            )
 
     if not check_totp(otp.strip(), secret_to_use):
         # বাংলা মন্তব্য: ব্যর্থ OTP attempt counter বাড়ানো হচ্ছে, সীমা ছাড়ালে lockout

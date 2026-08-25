@@ -17,9 +17,6 @@ class LocalCodeExecutor:
 
     async def execute_local_code(self, code: str, timeout_seconds: int = 30) -> dict:
         env = getattr(settings, "env", "development").lower()
-        allow_fallback = (
-            getattr(settings, "allow_local_sandbox_fallback", "false").lower() == "true"
-        )
 
         if self.use_docker and self.docker_sandbox:
             try:
@@ -37,11 +34,11 @@ class LocalCodeExecutor:
             except Exception as exc:
                 logger.warning(f"🐳 Docker execution failure: {exc}")
 
-        if env == "production" and not allow_fallback:
+        if env == "production":
             return {
                 "success": False,
-                "error": "local execution is disabled for safety",
-                "stderr": "local execution is disabled for safety",
+                "error": "CRITICAL SECURITY: Host subprocess execution is strictly disabled in production.",
+                "stderr": "CRITICAL SECURITY: Host subprocess execution is strictly disabled in production.",
                 "stdout": "",
                 "output": "",
             }
