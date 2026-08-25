@@ -7,7 +7,7 @@ import asyncio
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional, dict, list
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

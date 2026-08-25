@@ -19,7 +19,7 @@ export const isUnifiedStoreEnabled = (): boolean => {
     return window.localStorage.getItem('UNIFIED_STORE') === 'true';
   }
   // Vite env fallback
-  // @ts-ignore — Vite injects import.meta.env at build time
+  // @ts-expect-error — Vite injects import.meta.env at build time
   return import.meta?.env?.VITE_UNIFIED_STORE === 'true';
 };
 
