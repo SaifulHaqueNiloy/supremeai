@@ -508,6 +508,52 @@ class LLMGateway:
         # Apply OmniRoute Caveman-lite compression to save tokens
         messages_payload = compress_prompt_messages(messages_payload)
 
+        # ──────────────────────────────────────────────────────────────────
+        # R5 FIX: TokenJuice — content-aware pruning for HTML/JSON/logs/git_diff
+        # Saves 60-80% tokens on bulky tool outputs (Playwright DOM, API JSON,
+        # terminal logs, git diffs) before sending to LLM.
+        # Rollback: set env TOKEN_JUICE_ENABLED=false to disable.
+        # ──────────────────────────────────────────────────────────────────
+        if os.getenv("TOKEN_JUICE_ENABLED", "true").lower() == "true":
+            try:
+                from engine.compression.token_juice import TokenJuice
+
+                _juicer = TokenJuice()
+                _TOKEN_JUICE_MIN_CHARS = 800  # skip small payloads (overhead > savings)
+                _tokens_saved_by_juice = 0
+
+                for _idx, _msg in enumerate(messages_payload):
+                    _content = _msg.get("content") if isinstance(_msg, dict) else None
+                    if not isinstance(_content, str) or len(_content) < _TOKEN_JUICE_MIN_CHARS:
+                        continue
+                    _detected = _juicer.detect_content_type(_content)
+                    if _detected in {"html", "dom", "json", "log", "terminal", "git_diff"}:
+                        _result = _juicer.compress(_content, content_type=_detected)
+                        if _result.compression_ratio > 0.20:  # only apply if >=20% saved
+                            messages_payload[_idx] = {
+                                **_msg,
+                                "content": _result.compressed_text,
+                                "_juice_meta": {
+                                    "orig_chars": _result.original_chars,
+                                    "comp_chars": _result.compressed_chars,
+                                    "ratio": round(_result.compression_ratio, 3),
+                                    "type": _detected,
+                                },
+                            }
+                            _tokens_saved_by_juice += (
+                                _result.estimated_original_tokens
+                                - _result.estimated_compressed_tokens
+                            )
+
+                if _tokens_saved_by_juice > 0:
+                    logger.info(
+                        f"[LLMGateway] TokenJuice saved ~{_tokens_saved_by_juice} tokens "
+                        f"on this call (env TOKEN_JUICE_ENABLED=true)"
+                    )
+            except Exception as _juice_err:
+                # TokenJuice should never break the LLM call path
+                logger.debug(f"[LLMGateway] TokenJuice skipped: {_juice_err}")
+
         if stream:
             return self._stream_completion(messages_payload, call_chain, timeout)
 
