@@ -1,5 +1,5 @@
-import os
 import re
+
 
 def fix_file(path, replacements):
     with open(path, 'r', encoding='utf-8') as f:

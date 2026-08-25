@@ -40,7 +40,7 @@ class TestUserJourneyComplete:
 
         register_response = await client.post("/api/v1/auth/register", json=user_data)
         assert register_response.status_code in [200, 201]
-        user = register_response.json().get("data", register_response.json())
+        register_response.json().get("data", register_response.json())
 
         # Step 2: Login
         login_response = await client.post(
@@ -224,7 +224,7 @@ class TestAgentExecutionIntegration:
         if data.get("content"):
             content_lower = data["content"].lower()
             # Should mention Alice or Acme or developer based on context
-            has_context = any(word in content_lower for word in ["alice", "acme", "developer"])
+            any(word in content_lower for word in ["alice", "acme", "developer"])
             # Note: This depends on actual LLM integration working
 
     @pytest.mark.slow
@@ -545,12 +545,10 @@ class TestSecurityIntegration:
         headers = {"Authorization": f"Bearer {token}"}
 
         # Make many rapid requests
-        rate_limited = False
         for i in range(100):
             response = await client.get("/api/v1/admin/health", headers=headers)
 
             if response.status_code == 429:  # Too Many Requests
-                rate_limited = True
                 break
 
         # Rate limiting may or may not be enabled in test env
