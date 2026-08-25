@@ -18,7 +18,7 @@ Run with: pytest tests/test_utils.py -v --cov=utils
 
 import asyncio
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union, dict, list
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

@@ -297,7 +297,7 @@ export default function MemoryPanel() {
           >
             <div className="px-6 py-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
               <textarea
-                placeholder="Enter a memory (e.g., "User prefers TypeScript over JavaScript", "Always format code with Prettier")..."
+                placeholder="Enter a memory (e.g., 'User prefers TypeScript over JavaScript', 'Always format code with Prettier')..."
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
                 rows={3}

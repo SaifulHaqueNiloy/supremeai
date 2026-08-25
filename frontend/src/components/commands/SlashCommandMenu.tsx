@@ -186,8 +186,7 @@ export function SlashCommandMenu({
   }, [activeIndex]);
 
   // Keyboard navigation
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
       if (!isOpen) return;
 
       switch (e.key) {
@@ -216,9 +215,7 @@ export function SlashCommandMenu({
           onClose();
           break;
       }
-    },
-    [isOpen, flatCommands, activeIndex, onSelect, onClose]
-  );
+    };
 
   // Attach keyboard listener to parent
   useEffect(() => {
