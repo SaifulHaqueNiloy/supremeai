@@ -46,5 +46,7 @@ class UserProfiler:
                 duration_ms=task.get("duration_ms", 100),
                 success=task.get("success", True),
             )
-        except ImportError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")

@@ -523,8 +523,10 @@ class SettingsSecretsMixin:
                     secret = f.read().strip()
                     if len(secret) >= 43:  # Fernet keys are 44 characters (base64 of 32 bytes)
                         return SecretStr(secret)
-            except OSError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Generate a new Fernet key (URL-safe base64-encoded 32-byte key)
         new_key = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")

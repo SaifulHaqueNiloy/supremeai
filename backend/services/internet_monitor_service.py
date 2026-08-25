@@ -54,8 +54,10 @@ class InternetMonitorService:
                 self.monitoring_task.cancel()
                 try:
                     await self.monitoring_task
-                except asyncio.CancelledError:
-                    pass  # Expected when cancelling
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
             self.is_running = False
             logger.info("Internet monitoring stopped successfully")

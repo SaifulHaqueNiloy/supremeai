@@ -309,5 +309,7 @@ class DockerSandbox:
             if script_path:
                 try:
                     os.unlink(script_path)
-                except OSError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")

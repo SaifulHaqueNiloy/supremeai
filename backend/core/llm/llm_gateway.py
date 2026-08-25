@@ -163,8 +163,10 @@ class LLMGateway:
 
             if getattr(settings, "redis_url", None):
                 litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
-        except ImportError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     @with_error_bus("_load_routing_policy")
     def _load_routing_policy(self) -> dict[str, Any]:

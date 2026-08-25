@@ -120,8 +120,10 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
 
             if DETECTED_PLATFORM.has_external_url and DETECTED_PLATFORM.external_url:
                 return DETECTED_PLATFORM.external_url
-        except ImportError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
         return os.getenv("BACKEND_URL", "")
 
     # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware-এর JWT ভেরিফিকেশন বাইপাস করার জন্য

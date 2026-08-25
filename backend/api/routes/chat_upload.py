@@ -225,8 +225,10 @@ async def serve_upload(
             if resp.data:
                 metadata = resp.data[0]
                 _uploads[attachment_id] = metadata
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     if metadata is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
@@ -268,8 +270,10 @@ async def delete_upload(
             resp = db.client.table("chat_attachments").select("*").eq("id", attachment_id).execute()
             if resp.data:
                 metadata = resp.data[0]
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     if metadata is None:
         raise HTTPException(status_code=404, detail="Attachment not found")

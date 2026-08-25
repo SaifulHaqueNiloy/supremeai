@@ -126,8 +126,10 @@ def _get_service_attr(name: str) -> Any:
                 if loop.is_running():
                     # In async context, return the service
                     return reg._instances.get(name)
-            except RuntimeError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
         if hasattr(reg, "_services") and name in reg._services:
             return reg._services[name]
 

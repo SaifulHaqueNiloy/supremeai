@@ -113,8 +113,10 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
     if not backend_url:
         try:
             backend_url = settings.auto_backend_url
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     if not backend_url:
         current_env = getattr(settings, "env", "local") or "local"

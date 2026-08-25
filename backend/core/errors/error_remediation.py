@@ -207,8 +207,10 @@ class ErrorRemediation:
                 from core.config import settings as app_settings
 
                 qdrant_url = getattr(app_settings, "qdrant_url", "")
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
             if not qdrant_url:
                 qdrant_url = os.getenv("QDRANT_URL", "")
                 if not qdrant_url:

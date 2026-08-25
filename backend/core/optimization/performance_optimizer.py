@@ -417,8 +417,10 @@ class PerformanceOptimizer:
             self.monitoring_task.cancel()
             try:
                 await self.monitoring_task
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     async def _monitor_system(self):
         """Monitor system resources continuously."""

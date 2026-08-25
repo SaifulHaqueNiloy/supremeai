@@ -86,8 +86,10 @@ class AutoSkillCreator:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
-                except ImportError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
             if self.skills_ref is None:
 
                 class MockDoc:

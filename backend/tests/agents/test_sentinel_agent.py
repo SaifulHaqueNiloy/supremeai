@@ -138,8 +138,10 @@ class TestSentinelLoopCancellation:
 
             try:
                 await task
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         asyncio.get_event_loop().run_until_complete(run_with_cancel())
 
