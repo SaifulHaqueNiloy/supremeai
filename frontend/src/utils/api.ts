@@ -262,6 +262,9 @@ export const getWebSocketBaseUrl = (): string => {
   }
 
   const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = typeof window !== 'undefined' ? window.location.host : 'localhost:8000';
+  const host = typeof window !== 'undefined' ? window.location.host : (BACKEND_URL ? BACKEND_URL.replace(/^https?:\/\//, '') : 'localhost:8000');
+  if (typeof window === 'undefined' && import.meta.env.PROD && !BACKEND_URL) {
+    throw new Error('❌ Backend URL is required in production SSR.');
+  }
   return `${protocol}//${host}`;
 };

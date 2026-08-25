@@ -19,6 +19,7 @@ Dependencies:
 """
 
 import asyncio
+import os
 import shutil
 from datetime import UTC, datetime
 
@@ -26,6 +27,7 @@ import httpx
 from loguru import logger
 from sqlalchemy import select
 
+from core.config import settings
 from database.session import AsyncSessionLocal
 from models.sentinel import ApiEndpoint, SystemDependency, SystemIncident
 
@@ -88,7 +90,12 @@ class SentinelAgent:
                             if ep.path.startswith("http"):
                                 url = ep.path
                             else:
-                                url = f"http://127.0.0.1:8080{ep.path}"
+                                base = getattr(
+                                    settings,
+                                    "backend_url",
+                                    os.environ.get("BACKEND_URL", "http://127.0.0.1:8080"),
+                                ).rstrip("/")
+                                url = f"{base}{ep.path}"
 
                             # SSRF protection
                             if not self._validate_endpoint_url(url):
