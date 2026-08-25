@@ -55,7 +55,7 @@ class OptimizedRedisClient:
     def __init__(self, url: str | None = None, max_connections: int = 20):
         from core.config import settings
 
-        self.url = url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.url = url or getattr(settings, "redis_url", None)
         self.max_connections = max_connections
         self.pool: aioredis.ConnectionPool | None = None
         self.client: aioredis.Redis | None = None

@@ -54,7 +54,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'render_backend',
     displayName: 'Render Backend',
-    url: import.meta.env.VITE_USER_BACKEND || 'https://supremeai-backend-docker.onrender.com',
+    url: import.meta.env.VITE_USER_BACKEND,
     description: 'Python/FastAPI Core API',
     critical: true,
     icon: <Server size={16} />,
