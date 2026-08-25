@@ -332,9 +332,7 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
         if raw.get("success") and sem_cache:
             try:
                 # FIX: original called set_cache_inference (doesn't exist) — actual method is set
-                await sem_cache.set(
-                    prompt=prompt, response=raw.get("text"), task_type=task_type
-                )
+                await sem_cache.set(prompt=prompt, response=raw.get("text"), task_type=task_type)
             except Exception as exc:
                 logger.exception(f"Semantic cache write failed: {exc}")
 

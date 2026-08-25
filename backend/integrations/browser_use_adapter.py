@@ -122,9 +122,7 @@ def _try_extract_with_llm(content: str, task: str) -> str | None:
         )
         # FIX: wrap async call in asyncio.run() (sync caller can't use `await`)
         result = asyncio.run(
-            router.async_route_and_generate(
-                prompt, task_type="reasoning", max_cost=0.02
-            )
+            router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.02)
         )
         if isinstance(result, dict):
             return result.get("text", "")

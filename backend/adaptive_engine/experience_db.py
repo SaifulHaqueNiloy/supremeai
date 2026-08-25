@@ -84,8 +84,9 @@ class ExperienceDatabase:
         self._chroma_initialized = True
         if HAS_CHROMADB:
             try:
-                import chromadb
                 import os
+
+                import chromadb
 
                 # FIX (ANALYSIS-D): original used EphemeralClient() which means ALL
                 # learned experiences are LOST on every container restart

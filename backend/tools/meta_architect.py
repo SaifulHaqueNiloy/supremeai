@@ -108,7 +108,9 @@ class MetaArchitect:
                 f"Analysis: {analysis}"
             )
             # FIX: add missing `await` — async_route_and_generate is async (was no-op coroutine)
-            result = await router.async_route_and_generate(prompt, task_type="reasoning", max_cost=0.03)
+            result = await router.async_route_and_generate(
+                prompt, task_type="reasoning", max_cost=0.03
+            )
             text = result.get("text", "{}") if isinstance(result, dict) else "{}"
             import json
 
@@ -156,7 +158,9 @@ class MetaArchitect:
                 f"Instruction: {instruction}\n\nCode:\n{original[:8000]}"
             )
             # FIX: add missing `await` — async_route_and_generate is async (was no-op coroutine)
-            result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.05)
+            result = await router.async_route_and_generate(
+                prompt, task_type="coding", max_cost=0.05
+            )
             new_code = result.get("text", "") if isinstance(result, dict) else ""
             if not new_code:
                 return {"status": "error", "error": "Model returned empty response."}
