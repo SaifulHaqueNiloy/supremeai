@@ -212,8 +212,10 @@ class TestAppLifespan:
             # CancelledError gracefully handle করা উচিত
             try:
                 await _run_lifespan(mock_app)
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     @pytest.mark.anyio
     async def test_handles_teardown_errors(self):

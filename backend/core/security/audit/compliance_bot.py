@@ -34,8 +34,10 @@ if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
         sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
-    except AttributeError:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 # --- Path Setup ---
 try:

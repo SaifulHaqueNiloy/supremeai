@@ -197,8 +197,10 @@ class IntelligentCache:
             if engine.cache_client is None:
                 await engine.initialize(self)
             await engine.record_access(user_id=user_id, cache_key=key)
-        except ImportError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     async def get(self, key: str, default: Any | None = None) -> Any | None:
         """

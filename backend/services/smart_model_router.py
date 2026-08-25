@@ -1103,8 +1103,10 @@ def get_router(config: dict | None = None) -> SmartRouter:
             loop = asyncio.get_running_loop()
             if loop.is_running():
                 asyncio.create_task(_router_instance.start_health_monitor())
-        except RuntimeError:
-            pass  # No running loop yet
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
     return _router_instance
 
 

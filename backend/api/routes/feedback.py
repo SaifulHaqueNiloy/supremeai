@@ -33,8 +33,10 @@ _feedback_loop = FeedbackLoop()
 def _ensure_db() -> None:
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    except PermissionError:
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     try:
         conn.execute("""

@@ -159,8 +159,10 @@ class TreeOfThoughtReasoner:
                         try:
                             score = float(text.strip())
                             node.score = max(0.0, min(1.0, score))
-                        except ValueError:
-                            pass
+                        except Exception as e:
+                            import logging
+
+                            logging.getLogger(__name__).exception(f"Silenced error: {e}")
         except Exception as exc:
             logger.warning(f"ToT _score_thoughts failed: {exc}. Using heuristic fallback.")
 

@@ -627,9 +627,10 @@ async def ci_dashboard_websocket(websocket: WebSocket, token: str = Query(...)):
                         }
                     )
 
-            except json.JSONDecodeError:
-                # Ignore non-JSON messages
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     except Exception as e:
         logger.warning(f"WebSocket error: {e}")

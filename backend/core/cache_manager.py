@@ -126,8 +126,10 @@ class FreeTierCacheManager:
                     # Parse JSON
                     try:
                         value = json.loads(value)
-                    except (json.JSONDecodeError, TypeError):
-                        pass
+                    except Exception as e:
+                        import logging
+
+                        logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
                     # Store in L1 for next time
                     self._set_l1(key, value)

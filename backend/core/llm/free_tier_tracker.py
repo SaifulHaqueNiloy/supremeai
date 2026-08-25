@@ -322,8 +322,10 @@ class FreeTierTracker:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
-                except ImportError:
-                    pass
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
             return None, None
 
         db_limits, db_priority = await asyncio.to_thread(_fetch)

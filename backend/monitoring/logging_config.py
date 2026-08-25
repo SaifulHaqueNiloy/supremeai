@@ -119,8 +119,10 @@ def inject_correlation_id():
     correlation_id = str(uuid.uuid4())
     try:
         context.set(HeaderKeys.correlation_id, correlation_id)
-    except (AttributeError, LookupError, NameError):  # Context may not be initialized in some cases
-        pass
+    except Exception as e:
+        import logging
+
+        logging.getLogger(__name__).exception(f"Silenced error: {e}")
     return correlation_id
 
 

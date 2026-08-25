@@ -105,8 +105,10 @@ class RedisTaskQueue:
                             {"type": "task_completed", "task_id": task_id, "result": result}
                         ),
                     )
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         except Exception as e:
             logger.error(f"Task {task_id} failed: {e}")

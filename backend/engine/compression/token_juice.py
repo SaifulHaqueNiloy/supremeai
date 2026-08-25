@@ -105,8 +105,10 @@ class TokenJuice:
             try:
                 json.loads(stripped)
                 return "json"
-            except (json.JSONDecodeError, ValueError):
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
         if stripped.startswith("diff --git") or "--- a/" in stripped or "+++ b/" in stripped:
             return "git_diff"
         if (

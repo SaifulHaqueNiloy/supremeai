@@ -141,8 +141,10 @@ class FreeTierMemoryManager:
             if hasattr(VectorStore, "_connection_pool"):
                 # Don't close, just shrink
                 pass
-        except ImportError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Note: Tracemalloc snapshotting was removed here because allocating memory for the
         # snapshot during a critical OOM event actually exacerbates the crash and wastes CPU.

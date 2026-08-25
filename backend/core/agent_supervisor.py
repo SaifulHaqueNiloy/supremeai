@@ -118,8 +118,10 @@ class AgentSupervisor:
             logger.info(f"✅ Agent '{name}' stopped gracefully.")
         except TimeoutError:
             logger.warning(f"⚠️ Agent '{name}' did not stop within {timeout}s timeout.")
-        except asyncio.CancelledError:
-            pass
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     async def shutdown_all(self, timeout: int = 30) -> None:
         """Gracefully shut down all agents with a global timeout.
@@ -138,8 +140,10 @@ class AgentSupervisor:
             self._monitor_task.cancel()
             try:
                 await asyncio.wait_for(self._monitor_task, timeout=5.0)
-            except (TimeoutError, asyncio.CancelledError):
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Signal all agents to stop
         for name in self._health:
@@ -163,8 +167,10 @@ class AgentSupervisor:
                     f"⚠️ Agent shutdown timed out after {timeout}s. "
                     f"Remaining: {sum(1 for t in self._agents.values() if not t.done())} agents."
                 )
-            except asyncio.CancelledError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         self._agents.clear()
         self._health.clear()

@@ -101,8 +101,10 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
 
     async def validate_budget(self, tenant_id: str, tier: str) -> bool:
@@ -139,8 +141,10 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
             return tier == "free"  # fail-safe: শুধু ফ্রি টিয়ারে যেতে দাও
 
         cap = self._daily_cap(tier)
@@ -184,8 +188,10 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
-            except ImportError:
-                pass
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
 
 # CRITICAL FIX (Import Error & Backward Compatibility):
