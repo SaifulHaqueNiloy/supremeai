@@ -6,29 +6,55 @@
 -- Rollback: DROP INDEX IF EXISTS <name>;
 
 -- Conversations table
-CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations (user_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations (updated_at DESC);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'conversations') THEN
+        CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations (user_id);
+        CREATE INDEX IF NOT EXISTS idx_conversations_updated_at ON conversations (updated_at DESC);
+    END IF;
+END $$;
 
 -- Messages table
-CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversation_id);
-CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages (created_at);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'messages') THEN
+        CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages (conversation_id);
+        CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages (created_at);
+    END IF;
+END $$;
 
 -- Shared conversations
-CREATE INDEX IF NOT EXISTS idx_shared_conversations_user_id ON shared_conversations (user_id);
-CREATE INDEX IF NOT EXISTS idx_shared_conversations_conversation_id ON shared_conversations (conversation_id);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'shared_conversations') THEN
+        CREATE INDEX IF NOT EXISTS idx_shared_conversations_user_id ON shared_conversations (user_id);
+        CREATE INDEX IF NOT EXISTS idx_shared_conversations_conversation_id ON shared_conversations (conversation_id);
+    END IF;
+END $$;
 
 -- User API keys
-CREATE INDEX IF NOT EXISTS idx_user_keys_user_id ON user_keys (user_id);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user_keys') THEN
+        CREATE INDEX IF NOT EXISTS idx_user_keys_user_id ON user_keys (user_id);
+    END IF;
+END $$;
 
 -- Voice interactions
-CREATE INDEX IF NOT EXISTS idx_voice_interactions_user_id ON voice_interactions (user_id);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'voice_interactions') THEN
+        CREATE INDEX IF NOT EXISTS idx_voice_interactions_user_id ON voice_interactions (user_id);
+    END IF;
+END $$;
 
 -- Artifacts
-CREATE INDEX IF NOT EXISTS idx_artifacts_conversation_id ON artifacts (conversation_id);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'artifacts') THEN
+        CREATE INDEX IF NOT EXISTS idx_artifacts_conversation_id ON artifacts (conversation_id);
+    END IF;
+END $$;
 
 -- Scheduled tasks
-CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_user_id ON scheduled_tasks (user_id);
-CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next_run ON scheduled_tasks (next_run_at);
+DO $$ BEGIN
+    IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'scheduled_tasks') THEN
+        CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_user_id ON scheduled_tasks (user_id);
+        CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next_run ON scheduled_tasks (next_run_at);
+    END IF;
+END $$;
 
--- Comment for migration log
-COMMENT ON MIGRATION '15_add_user_indexes' IS 'Adds 10 indexes on user_id/conversation_id columns to prevent full table scans on Supabase free-tier. Idempotent via IF NOT EXISTS.';
