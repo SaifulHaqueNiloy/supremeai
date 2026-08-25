@@ -22,7 +22,7 @@ loguru = "^0.7.3"
 psutil = "^6.1.0"
 prometheus-client = "^0.26.0"
 redis = {extras = ["hiredis"], version = "^5.2.0"}
-python-multipart = "^0.0.20"
+python-multipart = "^0.0.32"
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 python-dotenv = "^1.2.2"  # CVE fix floor (AUDIT-014)
