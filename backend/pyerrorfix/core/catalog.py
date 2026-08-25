@@ -1051,7 +1051,7 @@ CATALOG: list[dict[str, Any]] = [
                 "severity": "info",
                 "fixable": True,
                 "rule_id": "docker-missing-healthcheck",
-                "fix_strategy": "Add HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1",
+                "fix_strategy": "Add HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1",  # is_local()
             },
             {
                 "code": "502",
@@ -1086,7 +1086,7 @@ CATALOG: list[dict[str, Any]] = [
             {
                 "code": "502",
                 "title": "nginx proxy_pass to wrong port",
-                "description": "proxy_pass to 127.0.0.1:80 forwards to nginx itself → 502.",
+                "description": "proxy_pass to 127.0.0.1:80 forwards to nginx itself → 502.",  # is_local()
                 "description_bn": "nginx নিজের পোর্টে ফরওয়ার্ড → 502।",
                 "severity": "warning",
                 "fixable": True,

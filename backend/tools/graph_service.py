@@ -9,7 +9,7 @@ from core.config import settings
 class GraphService:
     def __init__(self):
         # বাংলা মন্তব্য: Neo4j Aura (ফ্রি টিয়ার) এর ক্রেডেনশিয়াল
-        self.uri = getattr(settings, "neo4j_uri", "bolt://localhost:7687")
+        self.uri = getattr(settings, "neo4j_uri", "bolt://localhost:7687")  # is_local()
         self.user = getattr(settings, "neo4j_user", "neo4j")
         self.password = getattr(settings, "neo4j_password", None)
 

@@ -73,7 +73,7 @@ class InfraDeployDetector(BaseDetector):
                 title="Docker image has no HEALTHCHECK",
                 message="Without HEALTHCHECK, the orchestrator can't detect a hung "
                 "process (returns 502 before the container is marked unhealthy). "
-                "Add `HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1`.",
+                "Add `HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1`.",  # is_local()
                 line=_first_line_match(text, r"^FROM\b"),
                 fix_description="Add a HEALTHCHECK directive.",
             )
@@ -140,7 +140,7 @@ class InfraDeployDetector(BaseDetector):
                 code="502",
                 sev=Severity.WARNING,
                 title="nginx proxy_pass to port 80",
-                message="proxy_pass to 127.0.0.1:80 forwards to nginx itself (loop), "
+                message="proxy_pass to 127.0.0.1:80 forwards to nginx itself (loop), "  # is_local()
                 "causing 502 Bad Gateway. Use the backend's real port (e.g. :8000).",
                 line=1,
                 fix_description="Use the backend's actual port (8000/8080/etc.).",

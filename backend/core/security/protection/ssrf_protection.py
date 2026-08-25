@@ -64,7 +64,7 @@ BLOCKED_HOSTNAME_SUFFIXES: tuple[str, ...] = (
 DEFAULT_BLOCKLIST_HOSTNAMES: frozenset[str] = frozenset(
     {
         "localhost",
-        "127.0.0.1",
+        "127.0.0.1",  # is_local()
         "0.0.0.0",
         "::1",
         "[::1]",
@@ -143,7 +143,7 @@ class SSRFProtection:
     This class provides comprehensive URL validation to prevent SSRF attacks,
     including protection against:
     - Private IP range access (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
-    - Loopback addresses (127.0.0.1, ::1)
+    - Loopback addresses (127.0.0.1, ::1) # is_local()
     - Link-local addresses (169.254.x.x)
     - Cloud metadata endpoints
     - DNS rebinding attacks

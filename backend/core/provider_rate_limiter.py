@@ -155,7 +155,9 @@ class IntelligentRateLimiter:
             "ollama_local": ProviderConfig(
                 name="Ollama Local",
                 api_key_env="",
-                base_url=getattr(settings, "provider_base_url_ollama", "http://localhost:11434/v1"),
+                base_url=getattr(
+                    settings, "provider_base_url_ollama", "http://localhost:11434/v1"
+                ),  # is_local()
                 rpm_limit=0,
                 priority=4,
                 is_free=True,

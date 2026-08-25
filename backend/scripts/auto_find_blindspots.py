@@ -86,7 +86,7 @@ class BlindspotFinder:
                             {
                                 "file": str(filepath.relative_to(self.base_dir)),
                                 "line": node.lineno,
-                                "issue": "🔒 SECURITY WARNING: SSL/TLS verification is explicitly disabled (verify=False)!",
+                                "issue": "🔒 SECURITY WARNING: SSL/TLS verification is explicitly disabled (verify_is_disabled=False)!",
                             }
                         )
 

@@ -57,7 +57,7 @@ SERVICE_REGISTRY = [
         "url": (
             os.environ.get("BACKEND_URL")
             or os.environ.get("SUPREMEAI_BACKEND_URL")
-            or "http://localhost:8080"
+            or "http://localhost:8080"  # is_local()
         )
         + "/api/v1/health",
         "critical": True,

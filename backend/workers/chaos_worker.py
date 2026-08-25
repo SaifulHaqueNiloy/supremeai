@@ -82,7 +82,7 @@ class NightlyChaosAuditor:
     def __init__(self) -> None:
         self.db = get_firestore_db()
         self.gate_ref = self.db.collection("deploy_gate").document("status") if self.db else None
-        self.target_url = os.getenv("STAGING_REPLICA_URL", "http://localhost:8000")
+        self.target_url = os.getenv("STAGING_REPLICA_URL", "http://localhost:8000")  # is_local()
         self.circuit_breaker = CircuitBreaker(failure_threshold=3, cooldown_seconds=300)
         self.stats = {"total_audits": 0, "passed": 0, "failed": 0}
 

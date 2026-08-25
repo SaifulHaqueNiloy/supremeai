@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 RENDER_API_KEY = os.getenv("RENDER_API_KEY")
 RENDER_SERVICE_ID = os.getenv("RENDER_SERVICE_ID")  # e.g. srv-cxxx
 SUPREMEAI_API_KEY = os.getenv("SUPREMEAI_API_KEY")  # Optional: Used for the AI analysis
-INTERNAL_API_URL = os.getenv("INTERNAL_API_URL", "http://localhost:8000")
+INTERNAL_API_URL = os.getenv("INTERNAL_API_URL", "http://localhost:8000")  # is_local()
 
 
 def fetch_render_logs():
