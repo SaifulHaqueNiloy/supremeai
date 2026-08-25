@@ -96,7 +96,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # বাংলা মন্তব্য: লঞ্চডার্কলি ক্লায়েন্ট কনফিগারেশন এবং অবজারভেবিলিটি প্লাগইন ইনিশিয়ালাইজেশন
-    sdk_key = getattr(settings, "launchdarkly_sdk_key", "***REMOVED***")
+    sdk_key = getattr(settings, "launchdarkly_sdk_key", os.getenv("LAUNCHDARKLY_SDK_KEY"))
+    if not sdk_key:
+        logger.error("LAUNCHDARKLY_SDK_KEY is not set. Exiting.")
+        sys.exit(1)
+
     ldclient.set_config(
         Config(
             sdk_key,
