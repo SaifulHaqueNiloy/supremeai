@@ -5,7 +5,6 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from backend.core.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerError,
