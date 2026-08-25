@@ -62,7 +62,7 @@ class RateLimiter:
     def __init__(self, redis_url: str | None = None, enabled: bool = True):
         from core.config import settings
 
-        self.redis_url = redis_url or getattr(settings, "redis_url", "redis://localhost:6379")
+        self.redis_url = redis_url or getattr(settings, "redis_url", None)
         self.enabled = enabled
         self._redis: aioredis.Redis | None = None
 
