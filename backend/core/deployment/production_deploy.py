@@ -439,7 +439,7 @@ class DeploymentManager:
             # Create health checker
             # For demo, we'll use a mock URL - in real implementation this would come from config
             health_checker = HealthChecker(
-                base_url="http://localhost:8000",  # This would be determined by deployment
+                base_url="http://localhost:8000",  # This would be determined by deployment # is_local()
                 timeout=config.readiness_timeout,
             )
 

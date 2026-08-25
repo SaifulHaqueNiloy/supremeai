@@ -104,9 +104,9 @@ def _get_public_base_url() -> str:
     if is_local:
         logger.warning(
             "[simulator] No PUBLIC_URL/BACKEND_URL set; "
-            f"using http://127.0.0.1:8000 (acceptable only in {current_env} mode)"
+            f"using http://127.0.0.1:8000 (acceptable only in {current_env} mode)"  # is_local()
         )
-        return "http://127.0.0.1:8000"
+        return "http://127.0.0.1:8000"  # is_local()
 
     # 5. Production fail-fast
     raise RuntimeError(
@@ -273,7 +273,7 @@ async def install_app(req: InstallRequest, userId: str = "default"):
             },
         }
 
-    # ✅ FIXED: Use dynamic URL instead of hardcoded 127.0.0.1
+    # ✅ FIXED: Use dynamic URL instead of hardcoded 127.0.0.1 # is_local()
     base_url = _get_public_base_url()
 
     app = {
@@ -330,7 +330,7 @@ async def start_session(appId: str, userId: str = "default"):
 
     session_id = f"sess_{userId}_{appId}"
 
-    # ✅ FIXED: Use dynamic websocket URL instead of hardcoded 127.0.0.1
+    # ✅ FIXED: Use dynamic websocket URL instead of hardcoded 127.0.0.1 # is_local()
     ws_base = _get_websocket_base_url()
 
     session = {

@@ -848,7 +848,7 @@ async def demo_qa_suite():
 
     # Run a simplified version of the QA suite
     # Using a mock URL since we don't have a real server running
-    results = await qa_suite.run_full_qa_suite("http://localhost:8000")
+    results = await qa_suite.run_full_qa_suite("http://localhost:8000")  # is_local()
 
     logger.debug("\nQA Suite Results:")
     logger.debug(f"Unit Tests Passing: {results['summary']['unit_tests_passing']}")

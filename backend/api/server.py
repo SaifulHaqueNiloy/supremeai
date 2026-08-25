@@ -61,10 +61,10 @@ app = FastAPI(
 
 # Hardened CORS middleware (Audit P1-5)
 _allowed_origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:5173",
+    "http://localhost:3000",  # is_local()
+    "http://localhost:5173",  # is_local()
+    "http://127.0.0.1:3000",  # is_local()
+    "http://127.0.0.1:5173",  # is_local()
     "tauri://localhost",
     "https://supremeai.app",
 ]

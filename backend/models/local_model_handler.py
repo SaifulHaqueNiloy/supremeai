@@ -33,7 +33,7 @@ class LocalModelHandler:
             ollama_base_url
             or os.getenv("OLLAMA_URL")
             or getattr(settings, "ollama_url", "")
-            or "http://localhost:11434"
+            or "http://localhost:11434"  # is_local()
         ).rstrip("/")
         self.timeout = float(os.getenv("LOCAL_MODEL_TIMEOUT", "30.0"))
         self._cache: dict[str, tuple[float, dict[str, Any]]] = {}

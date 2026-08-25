@@ -45,7 +45,7 @@ class InternalGateway:
 
         if is_local:
             logger.warning("[gateway] N8N_URL not set; using localhost (dev mode)")
-            return "http://127.0.0.1:5678"
+            return "http://127.0.0.1:5678"  # is_local()
 
         logger.error(f"[gateway] N8N_URL not set in {current_env}; n8n triggers will fail")
         return ""
@@ -103,7 +103,7 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
         logger.warning(f"Blocked path for source={source}: {request.path}")
         raise HTTPException(status_code=403, detail="path not allowed for source")
 
-    client_ip = http_request.client.host if http_request.client else "127.0.0.1"
+    client_ip = http_request.client.host if http_request.client else "127.0.0.1"  # is_local()
     if not rate_limiter.check(client_ip):
         raise HTTPException(status_code=429, detail="rate limit exceeded")
 
@@ -120,7 +120,7 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
         current_env = getattr(settings, "env", "local") or "local"
         is_local = current_env.lower() in ("local", "development", "dev", "test")
         if is_local:
-            backend_url = "http://127.0.0.1:8000/api/v1"
+            backend_url = "http://127.0.0.1:8000/api/v1"  # is_local()
             logger.warning("[gateway] Using localhost backend (dev mode)")
         else:
             raise HTTPException(status_code=500, detail="Backend URL not configured for production")

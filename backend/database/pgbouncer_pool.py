@@ -43,7 +43,7 @@ def _supabase_ssl_context() -> ssl.SSLContext:
     """
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    ctx.verify_mode = ssl.CERT_REQUIRED
     return ctx
 
 

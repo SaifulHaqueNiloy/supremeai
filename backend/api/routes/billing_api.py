@@ -144,7 +144,8 @@ async def add_funds(
     checkout_base = getattr(settings, "checkout_base_url", None)
     if not checkout_base:
         checkout_base = request.headers.get("origin") or request.headers.get(
-            "referer", "http://localhost:3000"
+            "referer",
+            "http://localhost:3000",  # is_local()
         )
     checkout_base = checkout_base.rstrip("/")
 
