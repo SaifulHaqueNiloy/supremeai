@@ -2,7 +2,6 @@
 """Tests for the core P0 Universal Task Contract and state machine."""
 
 import pytest
-
 from backend.core.task_contract import (
     CapabilityState,
     InvalidTaskStateTransition,

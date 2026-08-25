@@ -5,10 +5,9 @@ import json
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from backend.middleware.anti_hacking import AntiHackingContextMiddleware, _octet3
 from fastapi import Request
 from fastapi.responses import JSONResponse
-
-from backend.middleware.anti_hacking import AntiHackingContextMiddleware, _octet3
 
 
 def test_octet3_ipv4():
