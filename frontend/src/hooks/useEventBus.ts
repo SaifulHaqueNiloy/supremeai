@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react';
-import { eventBus, Events, type EventCallback } from '../lib/eventBus';
+import { eventBus, Events, type EventCallback } from '../lib/componentEventBus';
 
 interface UseEventBusReturn {
   emit: typeof eventBus.emit;

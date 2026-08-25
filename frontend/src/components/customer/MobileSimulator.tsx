@@ -74,9 +74,9 @@ export function MobileSimulator({ html, url = 'https://supremeai.web.app' }: Mob
             <div className="w-full h-full rounded-[2rem] overflow-hidden bg-white relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-slate-900 rounded-b-xl z-10" />
               {html ? (
-                <iframe srcDoc={html} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms allow-same-origin" />
+                <iframe srcDoc={html} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms" />
               ) : (
-                <iframe src={proxied(url)} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms allow-same-origin" />
+                <iframe src={proxied(url)} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms" />
               )}
             </div>
           </div>

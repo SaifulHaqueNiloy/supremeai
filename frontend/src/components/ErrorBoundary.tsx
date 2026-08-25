@@ -83,25 +83,27 @@ export class ErrorBoundary extends Component<Props, State> {
           <p style={{ color: '#666', marginBottom: '1rem' }}>
             We apologize for the inconvenience. Our team has been notified.
           </p>
-          <details style={{
-            textAlign: 'left',
-            backgroundColor: '#f5f5f5',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1rem',
-          }}>
-            <summary style={{ cursor: 'pointer' }}>Error Details</summary>
-            <pre style={{
-              fontSize: '0.85rem',
-              overflow: 'auto',
-              marginTop: '0.5rem',
+          {import.meta.env.DEV && (
+            <details style={{
+              textAlign: 'left',
+              backgroundColor: '#f5f5f5',
+              padding: '1rem',
+              borderRadius: '8px',
+              marginBottom: '1rem',
             }}>
-              {this.state.error?.stack || this.state.error?.message}
-            </pre>
-            <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>
-              Error ID: {this.state.errorId}
-            </p>
-          </details>
+              <summary style={{ cursor: 'pointer' }}>Error Details (Dev Only)</summary>
+              <pre style={{
+                fontSize: '0.85rem',
+                overflow: 'auto',
+                marginTop: '0.5rem',
+              }}>
+                {this.state.error?.stack || this.state.error?.message}
+              </pre>
+            </details>
+          )}
+          <p style={{ fontSize: '0.8rem', color: '#999', marginTop: '0.5rem' }}>
+            Error ID: {this.state.errorId}
+          </p>
           <button
             onClick={this.handleReset}
             style={{

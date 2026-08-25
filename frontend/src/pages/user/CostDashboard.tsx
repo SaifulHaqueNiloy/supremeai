@@ -3,7 +3,7 @@ import { getSupremeProviderLabel } from '../../lib/modelBranding';
 import { getApiBaseUrl, getWebSocketBaseUrl } from '../../utils/api';
 import { apiClient } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
-import { eventBus, Events } from '../../lib/eventBus';
+import { eventBus, Events } from '../../lib/componentEventBus';
 import { AlertTriangle, X, Wifi, WifiOff } from 'lucide-react';
 
 interface CostMetrics {

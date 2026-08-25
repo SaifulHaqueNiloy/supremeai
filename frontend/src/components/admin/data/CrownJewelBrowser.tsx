@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { componentEventBus } from '../../../lib/componentEventBus';
-import { eventBus, Events } from '../../../lib/eventBus';
+import { eventBus, Events } from '../../../lib/componentEventBus';
 import { useUnifiedStore } from '../../../store/unifiedStore';
 import {
   Globe, ArrowLeft, ArrowRight, RotateCw, Plus, X, Star, Camera,

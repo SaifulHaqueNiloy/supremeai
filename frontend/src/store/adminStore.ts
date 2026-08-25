@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getApiBaseUrl } from '../utils/api';
 import { getFirebaseAuth } from '../firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { eventBus, Events } from '../lib/eventBus';
+import { eventBus, Events } from '../lib/componentEventBus';
 import { authService } from '../services/authService';
 
 const decodeJwt = (token: string): Record<string, unknown> | null => {

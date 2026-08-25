@@ -3,6 +3,8 @@ import { useStore } from '../store/useStore';
 import { getApiBaseUrl } from '../utils/api';
 import { getRawToken } from '../services/apiClient';
 
+import { createSecureEventSource } from '../lib/secureSse';
+
 export type ServerStreamStatus = 'connecting' | 'connected' | 'disconnected';
 
 export const useServerStream = () => {
@@ -12,8 +14,8 @@ export const useServerStream = () => {
   useEffect(() => {
     const API_BASE_URL = getApiBaseUrl();
     const token = getRawToken();
-    const sseEndpoint = `${API_BASE_URL}/api/task/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`;
-    let eventSource: EventSource | null = null;
+    const sseEndpoint = `${API_BASE_URL}/api/task/stream`;
+    let eventSource: { close: () => void } | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     let reconnectAttempts = 0;
     const MAX_RECONNECT_ATTEMPTS = 10;
@@ -57,44 +59,42 @@ export const useServerStream = () => {
 
       console.warn("🔌 Initializing SupremeAI Unified Lifespan SSE Stream...");
       setStreamStatus(reconnectAttempts > 0 ? 'connecting' : 'connecting');
-      eventSource = new EventSource(sseEndpoint);
+      eventSource = createSecureEventSource(sseEndpoint, token, {
+        onOpen: () => {
+          if (!isMounted) return;
+          console.warn("🟢 SSE Stream connected.");
+          setServerStatus(true);
+          setStreamStatus('connected');
+          fetchGateStatus();
+          reconnectAttempts = 0;
+        },
+        onMessage: (e) => {
+          if (e.data && (e.data.includes('auth_error') || e.data.includes('401'))) {
+             console.error("🔴 SSE Auth Error: Closing stream to prevent storm.");
+             eventSource?.close();
+             if (isMounted) {
+               setServerStatus(false);
+               setStreamStatus('disconnected');
+             }
+          }
+        },
+        onError: (err) => {
+          eventSource?.close();
+          if (!isMounted) return;
+          console.error("🔴 [SYSTEM CRITICAL] SSE Stream severed. SupremeAI Server is OFFLINE.", err);
+          setServerStatus(false);
+          setStreamStatus('disconnected');
+          reconnectAttempts++;
+          const backoff = Math.min(1000 * 2 ** reconnectAttempts, 30000);
+          const jitter = Math.random() * 500;
+          console.warn(`🔄 SSE Reconnecting in ${(backoff + jitter) / 1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
 
-      eventSource.onopen = () => {
-        if (!isMounted) return;
-        console.warn("🟢 SSE Stream connected.");
-        setServerStatus(true);
-        setStreamStatus('connected');
-        fetchGateStatus();
-        reconnectAttempts = 0;
-      };
-
-      eventSource.onerror = () => {
-        eventSource?.close();
-        if (!isMounted) return;
-        console.error("🔴 [SYSTEM CRITICAL] SSE Stream severed. SupremeAI Server is OFFLINE.");
-        setServerStatus(false);
-        setStreamStatus('disconnected');
-        reconnectAttempts++;
-        const backoff = Math.min(1000 * 2 ** reconnectAttempts, 30000);
-        const jitter = Math.random() * 500;
-        console.warn(`🔄 SSE Reconnecting in ${(backoff + jitter) / 1000}s (attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
-
-        if (isMounted) {
-          setStreamStatus('connecting'); // Transition back to connecting during wait
-          reconnectTimeout = setTimeout(connect, backoff + jitter);
+          if (isMounted) {
+            setStreamStatus('connecting'); // Transition back to connecting during wait
+            reconnectTimeout = setTimeout(connect, backoff + jitter);
+          }
         }
-      };
-
-      eventSource.onmessage = (e) => {
-        if (e.data && (e.data.includes('auth_error') || e.data.includes('401'))) {
-           console.error("🔴 SSE Auth Error: Closing stream to prevent storm.");
-           eventSource?.close();
-           if (isMounted) {
-             setServerStatus(false);
-             setStreamStatus('disconnected');
-           }
-        }
-      };
+      });
     };
 
     // বাংলা মন্তব্য: প্রথমেই একবার হেলথ প্রোব (৫০x সনাক্তকরণের জন্য) এবং পরে ১৫ সেকেন্ড পরপর পোল করবে।

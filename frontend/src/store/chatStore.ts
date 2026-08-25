@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { UnifiedChatMessage, ChatConversation } from '../types/chat';
-import { eventBus, Events } from '../lib/eventBus';
+import { eventBus, Events } from '../lib/componentEventBus';
 import { apiClient } from '../services/apiClient';
 
 const MAX_MESSAGES = 1000;

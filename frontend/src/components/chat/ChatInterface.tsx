@@ -7,7 +7,7 @@ import { useStore } from '../../store/useStore';
 import { UnifiedChatBubble } from './UnifiedChatBubble';
 import { apiClient } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
-import { eventBus, Events } from '../../lib/eventBus';
+import { eventBus, Events } from '../../lib/componentEventBus';
 import { Volume2, VolumeX } from 'lucide-react';
 
 export const ChatInterface: React.FC = () => {

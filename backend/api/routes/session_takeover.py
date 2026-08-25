@@ -288,15 +288,25 @@ def _is_production() -> bool:
 
 
 @router.websocket("/ws/session/{session_id}/takeover")
-async def takeover_session_websocket(
-    websocket: WebSocket, session_id: str, token: str = Query(...)
-):
+async def takeover_session_websocket(websocket: WebSocket, session_id: str):
     """
     Ephemeral WebSocket gateway for Sandbox Viewport takeover.
     Validates token, streams CDP frames to client, and receives mouse/keyboard events.
     Mounts ONLY when control_mode == 'human'.
     """
     await websocket.accept()
+
+    # First-message authentication
+    try:
+        auth_msg = await websocket.receive_json()
+        token = auth_msg.get("token")
+        if auth_msg.get("type") != "auth" or not token:
+            await websocket.send_json({"error": "Authentication required as first message"})
+            await websocket.close(code=1008)
+            return
+    except Exception:
+        await websocket.close(code=1008)
+        return
 
     if not await verify_takeover_token(token):
         await websocket.send_json({"error": "Invalid, expired, or already-used takeover token"})

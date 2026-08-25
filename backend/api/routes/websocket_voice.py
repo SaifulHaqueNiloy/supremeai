@@ -29,10 +29,11 @@ class VoiceConnectionManager:
         logger.info("🔴 [WS] Voice Client Disconnected.")
 
     async def _authenticate(self, websocket: WebSocket) -> dict | None:
-        token = websocket.query_params.get("token")
-        if not token:
-            return None
         try:
+            auth_msg = await websocket.receive_json()
+            token = auth_msg.get("token")
+            if auth_msg.get("type") != "auth" or not token:
+                return None
             return verify_token(token)
         except Exception as e:
             import jwt
@@ -111,7 +112,6 @@ async def handle_intent(transcript: str, websocket: WebSocket, start_time: float
 @router.websocket("/voice")
 async def websocket_voice_endpoint(
     websocket: WebSocket,
-    token: str | None = Query(default=None),
 ):
     """
     Real-time WebSocket for Voice-to-Voice Streaming.

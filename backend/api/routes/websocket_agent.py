@@ -144,15 +144,15 @@ class DistributedConnectionManager:
     async def _authenticate(self, websocket: WebSocket) -> dict | None:
         # বাংলা মন্তব্য: P0 Fix — Anonymous WebSocket access সম্পূর্ণ নিষিদ্ধ।
         # Token না থাকলে বা invalid হলে WS_1008 (Policy Violation) দিয়ে তাৎক্ষণিক reject।
-        # আগে anonymous user-কে {"sub": "anonymous"} দিয়ে LLM access দেওয়া হতো — এটি বন্ধ করা হয়েছে।
-        token = websocket.query_params.get("token")
-        if not token:
-            logger.warning(
-                "[WS] Rejected unauthenticated WebSocket connection — no token provided."
-            )
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return None
         try:
+            auth_msg = await websocket.receive_json()
+            token = auth_msg.get("token")
+            if auth_msg.get("type") != "auth" or not token:
+                logger.warning(
+                    "[WS] Rejected unauthenticated WebSocket connection — auth message missing or invalid."
+                )
+                await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+                return None
             return verify_token(token)
         except Exception as e:
             logger.warning(f"[WS] Invalid token — closing WebSocket connection: {e}")
@@ -176,7 +176,6 @@ manager = DistributedConnectionManager()
 @router.websocket("/chat")
 async def websocket_chat_endpoint(
     websocket: WebSocket,
-    token: str | None = Query(default=None),
 ):
     """
     Real-time bidirectional WebSocket for Token-by-Token streaming and Agentic Tool execution.
