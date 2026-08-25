@@ -89,7 +89,9 @@ class PDFToSDKConverter:
                     f"for this API spec. Base URL: {spec['base_url']}. Auth: {spec['auth']}. "
                     f"Endpoints: {endpoint_desc}. Return ONLY code, no markdown formatting."
                 )
-                result = await router.async_route_and_generate(prompt, task_type="coding", max_cost=0.05)
+                result = await router.async_route_and_generate(
+                    prompt, task_type="coding", max_cost=0.05
+                )
                 text = result.get("text", "") if isinstance(result, dict) else ""
                 if text:
                     return {
