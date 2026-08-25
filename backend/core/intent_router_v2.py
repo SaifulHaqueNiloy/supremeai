@@ -39,7 +39,6 @@ from loguru import logger
 # don't need to import from the legacy module.
 from core.intent_router import ACTION_PATTERNS, PromptAction  # noqa: F401
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # LLM Gatekeeper prompt — strict JSON output, Bengali-aware
 # ──────────────────────────────────────────────────────────────────────────
@@ -60,8 +59,8 @@ Respond ONLY with a JSON object: {"action": "<action>", "confidence": <0.0-1.0>,
 Do not include any other text. If unsure, return {"action": "chat", "confidence": 0.5}.
 """
 
-GATEKEEPER_TIMEOUT_SECONDS = 2.0   # strict SLA — fall back to regex if exceeded
-GATEKEEPER_MIN_CONFIDENCE = 0.6     # below this, regex fallback is consulted
+GATEKEEPER_TIMEOUT_SECONDS = 2.0  # strict SLA — fall back to regex if exceeded
+GATEKEEPER_MIN_CONFIDENCE = 0.6  # below this, regex fallback is consulted
 GATEKEEPER_MODEL = "gemini/gemini-2.0-flash"  # free-tier fast model
 
 
@@ -70,7 +69,7 @@ def _is_llm_mode_enabled() -> bool:
     return os.getenv("INTENT_ROUTER_MODE", "llm").lower() != "regex"
 
 
-async def _llm_classify(prompt: str) -> Optional[PromptAction]:
+async def _llm_classify(prompt: str) -> PromptAction | None:
     """Call LLM gateway with a fast/cheap model to classify intent.
 
     Returns ``None`` on any failure (timeout, JSON decode error, unknown action,
@@ -92,7 +91,7 @@ async def _llm_classify(prompt: str) -> Optional[PromptAction]:
             ),
             timeout=GATEKEEPER_TIMEOUT_SECONDS,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning("[IntentRouterV2] LLM gatekeeper timed out — falling back to regex")
         return None
     except Exception as e:
