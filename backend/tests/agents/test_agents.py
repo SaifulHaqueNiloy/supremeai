@@ -19,7 +19,7 @@ Run with: pytest tests/test_agents.py -v --cov=agents
 
 import asyncio
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional, dict, list
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -184,7 +184,7 @@ class MockAgentService:
     async def list_agents(
         self, status: str | None = None, limit: int = 50, offset: int = 0
     ) -> dict[str, Any]:
-        """List all agents with pagination."""
+        """list all agents with pagination."""
         agents = list(self.agents.values())
 
         if status:
@@ -611,7 +611,7 @@ class TestAgentRetrieval:
         # Create multiple agents
         for i in range(5):
             await agent_service.create_agent(
-                name=f"List Agent {i}", owner_id=sample_user_data["id"], system_prompt=f"Prompt {i}"
+                name=f"list Agent {i}", owner_id=sample_user_data["id"], system_prompt=f"Prompt {i}"
             )
 
         result = await agent_service.list_agents()
