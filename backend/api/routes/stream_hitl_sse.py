@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -63,7 +63,7 @@ async def _hitl_event_stream(user_id: str) -> AsyncIterator[str]:
                     "module": getattr(event, "module", None),
                 }
                 yield f"event: hitl\ndata: {json.dumps(payload, default=str)}\n\n"
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 yield ": ping\n\n"
     except asyncio.CancelledError:
         logger.info(f"[SSE] HITL stream cancelled for {user_id}")

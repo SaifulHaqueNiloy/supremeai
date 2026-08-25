@@ -290,6 +290,7 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     # বাংলা মন্তব্য: ইনপুটকে ক্যাটাগরি রূপে চিহ্নিত করে ফ্রন্টএন্ডকে ডাইনামিক অ্যাকশন টিপ দিচ্ছে
     # R1 FIX: Use LLM-based IntentRouterV2 with regex fallback (env INTENT_ROUTER_MODE=regex to disable)
     from core.intent_router_v2 import intent_router_v2
+
     prompt_action: PromptAction = await intent_router_v2.route(req.task)
 
     # Offload heavy CPU-bound Intent classification to background thread pool
