@@ -92,7 +92,7 @@ class OllamaFallback:
 
     def __init__(
         self,
-        ollama_base_url: str = "http://localhost:11434",
+        ollama_base_url: str = "http://localhost:11434",  # is_local()
         auto_install_models: bool = True,
         preferred_model: str = "llama3.1:8b",
     ):

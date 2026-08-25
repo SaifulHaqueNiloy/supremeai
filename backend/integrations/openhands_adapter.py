@@ -11,7 +11,7 @@ server URL না থাকলে graceful fallback ("skipped + planner") → �
 
 কনফিগারেশন (env):
 - SUPREMEAI_OPENHANDS_ENABLED=true
-- OPENHANDS_SERVER_URL=http://localhost:8000   # agent-server base (REST)
+- OPENHANDS_SERVER_URL=http://localhost:8000   # agent-server base (REST) # is_local()
 """
 
 from __future__ import annotations

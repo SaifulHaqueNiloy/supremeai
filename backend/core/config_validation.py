@@ -262,7 +262,7 @@ class SettingsValidationMixin:
     def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
         # Fail fast if no hosts are defined in production/staging
         env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
-        forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}
+        forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}  # is_local()
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
             if not v:
@@ -303,7 +303,7 @@ class SettingsValidationMixin:
             # field_name check করা হচ্ছে — 'cors_origins' shorthand ও accept করা হচ্ছে
             field = getattr(info, "field_name", None) or ""
             if field in {"user_cors_origins", "admin_cors_origins", "cors_origins"} or not field:
-                v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
+                v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]  # is_local()
         return v
 
     @property
@@ -335,7 +335,7 @@ class SettingsValidationMixin:
             return [
                 origin
                 for origin in value
-                if "localhost" not in origin and "127.0.0.1" not in origin
+                if "localhost" not in origin and "127.0.0.1" not in origin  # is_local()
             ]
         return value
 

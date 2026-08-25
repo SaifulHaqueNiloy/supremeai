@@ -274,7 +274,9 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
     except Exception as e:
         logger.debug(f"RBAC environment check error: {e}")
     admin_email = os.getenv("ADMIN_EMAIL", None)
-    return {"sub": admin_email, "role": "admin"}
+    from fastapi import HTTPException
+
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def get_current_admin(request: Any = None) -> dict[str, Any]:

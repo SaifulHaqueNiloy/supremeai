@@ -102,7 +102,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
                     {
                         o
                         for o in (settings.cors_origins or [])
-                        if "localhost" in o or "127.0.0.1" in o
+                        if "localhost" in o or "127.0.0.1" in o  # is_local()
                     }
                 )
         except Exception as exc:
@@ -181,7 +181,7 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             allowed_hosts = set(settings.allowed_hosts)
             allowed_hosts.add("testserver")
             allowed_hosts.add("localhost")
-            allowed_hosts.add("127.0.0.1")
+            allowed_hosts.add("127.0.0.1")  # is_local()
             is_allowed = host_header_no_port in allowed_hosts or any(
                 host_header_no_port.endswith("." + h) for h in allowed_hosts
             )
