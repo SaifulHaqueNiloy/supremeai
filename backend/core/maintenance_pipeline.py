@@ -209,9 +209,33 @@ class MaintenancePipeline:
                     SelfEvolutionAgent,
                 )
 
+                # FIX: original used SelfEvolutionAgent.__new__(SelfEvolutionAgent)
+                # which skips __init__ → self.fitness_engine, self.auto_skill_creator
+                # are never set → _tick() crashes immediately with AttributeError,
+                # caught by outer try/except → silently skipped.
+                # Now: try app.state.evo_agent first (properly initialized in startup);
+                # fall back to a real __init__() call if app.state not available.
+                _evo = None
+                try:
+                    # Access the already-initialized singleton from app state
+                    from core.app import app
+
+                    _evo = getattr(app.state, "evo_agent", None)
+                except Exception:
+                    pass
+
+                if _evo is None:
+                    # No app.state.evo_agent — instantiate properly (with FitnessEngine)
+                    try:
+                        _evo = SelfEvolutionAgent(interval_seconds=300)
+                    except Exception as init_exc:
+                        logger.debug(
+                            f"SelfEvolutionAgent init failed (FitnessEngine missing?): {init_exc!r}"
+                        )
+                        _evo = None
+
                 # শুধু tick() চালাই, পুরো loop নয় — non-blocking
-                _evo = SelfEvolutionAgent.__new__(SelfEvolutionAgent)
-                if hasattr(_evo, "_tick"):
+                if _evo is not None and hasattr(_evo, "_tick"):
                     self._evolution_tick_task = _asyncio.create_task(_evo._tick())
                     logger.warning(
                         f"🛡️→🧬 Health critical (score={self.health_score}), "
