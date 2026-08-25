@@ -29,8 +29,8 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     delete env.PROD;
     
     // বাংলা মন্তব্য: api.ts থেকে ডিফল্ট URL fallback মুছে ফেলায়, টেস্টের জন্য ডিফল্ট ভ্যালু সেট করতে হবে
-    env.VITE_USER_BACKEND = 'https://supremeai-backend-docker.onrender.com';
-    env.VITE_ADMIN_BACKEND = 'https://supremeai-backend-docker.onrender.com';
+    env.VITE_USER_BACKEND = 'https://api.test-domain.com';
+    env.VITE_ADMIN_BACKEND = 'https://api.test-domain.com';
     
     setHostname('localhost');
   });
@@ -47,13 +47,13 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
     it('user portal-এ ডিফল্ট user backend রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'user';
       const { BACKEND_URL } = await loadApi();
-      expect(BACKEND_URL).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(BACKEND_URL).toBe('https://api.test-domain.com');
     });
 
     it('admin portal-এ admin backend রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'admin';
       const { BACKEND_URL } = await loadApi();
-      expect(BACKEND_URL).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(BACKEND_URL).toBe('https://api.test-domain.com');
     });
 
     it('VITE_USER_BACKEND override সম্মান করে', async () => {
@@ -91,7 +91,7 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_USER_BACKEND = 'https://user-backend-override.example.com';
       setHostname('supremeai-admin.web.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
   });
 
@@ -100,20 +100,20 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_PORTAL_TYPE = 'user';
       setHostname('supremeai-a.web.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
 
     it('admin Firebase hosting-এও সরাসরি admin backend URL রিটার্ন করে', async () => {
       env.VITE_PORTAL_TYPE = 'admin';
       setHostname('supremeai-admin.web.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
 
     it('firebaseapp.com ডোমেইনেও সরাসরি backend URL রিটার্ন করে', async () => {
       setHostname('supremeai-a.firebaseapp.com');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('https://supremeai-backend-docker.onrender.com');
+      expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
 
     it('Vercel ডোমেইনে relative path ("") রিটার্ন করে', async () => {
@@ -135,14 +135,14 @@ describe('api.ts — portal-ভিত্তিক backend resolution', () => {
       env.VITE_PORTAL_TYPE = 'admin';
       setHostname('supremeai-admin.web.app');
       const { getWebSocketBaseUrl } = await loadApi();
-      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-backend-docker.onrender.com');
+      expect(getWebSocketBaseUrl()).toBe('wss://api.test-domain.com');
     });
 
     it('Vercel ডোমেইনে relative path থেকে wss backend URL এ রূপান্তর করে', async () => {
       env.VITE_PORTAL_TYPE = 'user';
       setHostname('supremeai-lac.vercel.app');
       const { getWebSocketBaseUrl } = await loadApi();
-      expect(getWebSocketBaseUrl()).toBe('wss://supremeai-backend-docker.onrender.com');
+      expect(getWebSocketBaseUrl()).toBe('wss://api.test-domain.com');
     });
   });
 });
