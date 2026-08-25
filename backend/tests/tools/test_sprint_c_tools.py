@@ -21,7 +21,7 @@ class TestBrowserAgent:
         from tools.ai_agents.browser_agent import BrowserAgent
 
         agent = BrowserAgent()
-        with patch("tools.browser_agent.is_safe_url", return_value=True):
+        with patch("core.agents.live.browser_agent.is_safe_url", return_value=True):
             with patch(
                 "tools.browser_agent.get_global_browser", new_callable=AsyncMock
             ) as mock_browser:
@@ -44,7 +44,7 @@ class TestBrowserAgent:
         from tools.ai_agents.browser_agent import BrowserAgent
 
         agent = BrowserAgent()
-        with patch("tools.browser_agent.is_safe_url", return_value=True):
+        with patch("core.agents.live.browser_agent.is_safe_url", return_value=True):
             with patch(
                 "tools.browser_agent.get_global_browser", new_callable=AsyncMock
             ) as mock_browser:
