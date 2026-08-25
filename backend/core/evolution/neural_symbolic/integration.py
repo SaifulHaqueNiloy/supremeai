@@ -22,14 +22,42 @@ Bengali:
 - প্রতীক গ্রাউন্ডিং
 """
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ✅ PRODUCTION FIX: Guarded ML imports — graceful degradation if torch unavailable
+# ══════════════════════════════════════════════════════════════════════════════
+import logging
 import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
 import sympy
-import torch
-import torch.nn as nn
+
+logger = logging.getLogger(__name__)
+
+# Optional PyTorch dependency — evolution features degrade gracefully
+try:
+    import torch
+    import torch.nn as nn
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    torch = None  # type: ignore
+    nn = None  # type: ignore
+    logger.debug("torch not installed; evolution ML features disabled")
+
+# Additional torch submodules (file-specific)
+try:
+    import torch.optim as optim
+    from torch.utils.data import DataLoader
+
+    TORCH_UTILS_AVAILABLE = True
+except ImportError:
+    optim = None  # type: ignore
+    DataLoader = None  # type: ignore
+    TORCH_UTILS_AVAILABLE = False
+
 from loguru import logger
 from sympy.parsing.sympy_parser import parse_expr
 

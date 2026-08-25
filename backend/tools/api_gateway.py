@@ -31,7 +31,24 @@ class GatewayRequest(BaseModel):
 
 class InternalGateway:
     def __init__(self):
-        self.n8n_url = os.environ.get("N8N_URL", "http://127.0.0.1:5678")
+        self.n8n_url = self._resolve_n8n_url()
+
+    @staticmethod
+    def _resolve_n8n_url() -> str:
+        """Resolve n8n URL with environment-aware fallback using existing config."""
+        n8n_url = os.environ.get("N8N_URL")
+        if n8n_url:
+            return n8n_url.rstrip("/")
+
+        current_env = getattr(settings, "env", "local") or "local"
+        is_local = current_env.lower() in ("local", "development", "dev", "test")
+
+        if is_local:
+            logger.warning("[gateway] N8N_URL not set; using localhost (dev mode)")
+            return "http://127.0.0.1:5678"
+
+        logger.error(f"[gateway] N8N_URL not set in {current_env}; n8n triggers will fail")
+        return ""
 
     def trigger_n8n_workflow(self, webhook_path: str, payload: dict[str, Any]) -> dict[str, Any]:
         url = f"{self.n8n_url}/{webhook_path.lstrip('/')}"
@@ -90,7 +107,24 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
     if not rate_limiter.check(client_ip):
         raise HTTPException(status_code=429, detail="rate limit exceeded")
 
-    backend_url = os.environ.get("SUPREMEAI_BACKEND_URL", "http://127.0.0.1:8000/api/v1")
+    # ✅ SAFE: Environment-aware backend URL resolution
+    backend_url = os.environ.get("SUPREMEAI_BACKEND_URL") or os.environ.get("BACKEND_URL")
+
+    if not backend_url:
+        try:
+            backend_url = settings.auto_backend_url
+        except Exception:
+            pass
+
+    if not backend_url:
+        current_env = getattr(settings, "env", "local") or "local"
+        is_local = current_env.lower() in ("local", "development", "dev", "test")
+        if is_local:
+            backend_url = "http://127.0.0.1:8000/api/v1"
+            logger.warning("[gateway] Using localhost backend (dev mode)")
+        else:
+            raise HTTPException(status_code=500, detail="Backend URL not configured for production")
+
     target = backend_url.rstrip("/") + "/" + request.path.lstrip("/")
 
     headers = dict(request.headers or {})
