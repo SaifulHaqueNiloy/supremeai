@@ -277,13 +277,17 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     origins = list(
         set(_ensure_list(settings.user_cors_origins) + _ensure_list(settings.admin_cors_origins))
     )
-    if not origins:
-        origins = ["*"]  # Fallback if empty, though origin_validator will still guard
+
+    # C-03 Fix: If origin is wildcard, credentials must not be allowed
+    cors_allow_credentials = True
+    if not origins or origins == [""]:
+        origins = ["*"]
+        cors_allow_credentials = False
 
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
-        allow_credentials=True,
+        allow_credentials=cors_allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["*"],
@@ -334,10 +338,21 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         from core.circuit_breaker import CIRCUITS
 
         status_code = getattr(exc, "status_code", 500)
-        error_response = {
-            "error": exc.__class__.__name__,
-            "detail": str(exc),
-        }
+
+        # Log the full error internally
+        logger.error(f"Global Exception: {exc.__class__.__name__}: {str(exc)}")
+
+        # H-03 Fix: Only expose safe details to the client
+        if status_code < 500:
+            error_response = {
+                "error": exc.__class__.__name__,
+                "detail": str(exc),
+            }
+        else:
+            error_response = {
+                "error": "Internal Server Error",
+                "detail": "An unexpected error occurred on the server.",
+            }
 
         if hasattr(exc, "to_dict"):
             error_response.update(exc.to_dict())

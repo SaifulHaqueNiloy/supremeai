@@ -4,7 +4,7 @@
 
 import { getApiBaseUrl } from '../utils/api';
 import { apiClient, ApiError } from './apiClient';
-import { eventBus, Events } from '../lib/eventBus';
+import { eventBus, Events } from '../lib/componentEventBus';
 
 export type SkillStatus = 'active' | 'deprecated' | 'experimental' | 'coming_soon';
 

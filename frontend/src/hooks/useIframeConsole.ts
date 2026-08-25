@@ -19,10 +19,15 @@ export function useIframeConsole(iframeRef: React.RefObject<HTMLIFrameElement>) 
     
     try {
       // Inject error interceptor into iframe
+      // H-05 Fix: Determine precise target origin instead of wildcard
+      const targetOrigin = iframe.src && iframe.src !== 'about:blank' 
+        ? new URL(iframe.src, window.location.href).origin 
+        : window.location.origin;
+
       iframe.contentWindow.postMessage({
         type: 'CONSOLE_TRAP_INIT',
-      }, '*');
-      
+      }, targetOrigin);
+
       // Listen for errors from iframe via postMessage
       const handler = (event: MessageEvent) => {
         if (event.data?.source !== 'iframe-console') return;

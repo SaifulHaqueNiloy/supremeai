@@ -509,23 +509,33 @@ class SettingsSecretsMixin:
         if val:
             return SecretStr(val)
 
-        # Fallback: Generate a valid Fernet key from any available LLM API key
-        import base64
-        import hashlib
+        # Fallback for development/local environment
+        if self.env == "production":
+            raise ValueError("ENCRYPTION_KEY must be explicitly set in production!")
 
-        fallback_material = (
-            self._get_cached_secret("GEMINI_API_KEY")
-            or self._get_cached_secret("OPENROUTER_API_KEY")
-            or self._get_cached_secret("GROQ_API_KEY")
-            or self._get_cached_secret("DEEPSEEK_API_KEY")
-            or self._get_cached_secret("OPENAI_API_KEY")
-            or "supremeai-default-fallback-encryption-key-2026-v2"
-        )
-        if fallback_material:
-            digest = hashlib.sha256(fallback_material.encode("utf-8")).digest()
-            fernet_key = base64.urlsafe_b64encode(digest).decode("utf-8")
-            return SecretStr(fernet_key)
-        return SecretStr("")
+        import base64
+        import os
+
+        local_file = ".secrets/encryption.key"
+        if os.path.exists(local_file):
+            try:
+                with open(local_file) as f:
+                    secret = f.read().strip()
+                    if len(secret) >= 43:  # Fernet keys are 44 characters (base64 of 32 bytes)
+                        return SecretStr(secret)
+            except OSError:
+                pass
+
+        # Generate a new Fernet key (URL-safe base64-encoded 32-byte key)
+        new_key = base64.urlsafe_b64encode(os.urandom(32)).decode("utf-8")
+        try:
+            os.makedirs(".secrets", exist_ok=True)
+            with open(local_file, "w") as f:
+                f.write(new_key)
+        except OSError:
+            logger.warning("Could not persist ENCRYPTION_KEY - using in-memory only")
+
+        return SecretStr(new_key)
 
     # ── Stripe Credentials — Infisical-backed ────────────────────────────────
     # বাংলা মন্তব্য: Stripe এপিআই এবং ওয়েবহুক সিক্রেটসমূহের জন্য Infisical lazy fetching নিশ্চিত করা হলো,

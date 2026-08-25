@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { getWebSocketBaseUrl, getApiBaseUrl } from '../utils/api';
 import { getRawToken } from '../services/apiClient';
+import { createSecureEventSource } from '../lib/secureSse';
 
 export type SujonState =
   | 'idle'
@@ -94,26 +95,27 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
   connectSSE: (sessionId: string) => {
     get().disconnectSSE(); // Ensure previous is closed
     const token = getRawToken();
-    const sse = new EventSource(`${getApiBaseUrl()}/api/session/${sessionId}/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
-    sse.onmessage = (event) => {
-      try {
-        const parsed = JSON.parse(event.data);
-        if (parsed.channel === 'logs') {
-          get().addLog(parsed.data);
-        } else if (parsed.channel === 'state') {
-          set({ agentState: parsed.data.current_state });
+    const sse = createSecureEventSource(`${getApiBaseUrl()}/api/session/${sessionId}/stream`, token, {
+      onMessage: (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          if (parsed.channel === 'logs') {
+            get().addLog(parsed.data);
+          } else if (parsed.channel === 'state') {
+            set({ agentState: parsed.data.current_state });
+          }
+        } catch (err) {
+          console.error("SSE parse error", err);
         }
-      } catch (err) {
-        console.error("SSE parse error", err);
       }
-    };
-    set({ sseRef: sse, sessionId });
+    });
+    set({ sseRef: sse as any, sessionId });
   },
 
   disconnectSSE: () => {
     const { sseRef } = get();
     if (sseRef) {
-      sseRef.close();
+      (sseRef as any).close();
       set({ sseRef: null });
     }
   },
@@ -122,9 +124,11 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
     get().disconnectTakeoverWS();
     // বাংলা মন্তব্য: প্রোডাকশন ক্লাউড সার্ভারের সাথে WSS সংযোগ স্থাপনের জন্য getWebSocketBaseUrl ব্যবহার
     const baseUrl = getWebSocketBaseUrl();
-    const ws = new WebSocket(`${baseUrl}/ws/session/${sessionId}/takeover?token=${token}`);
+    const ws = new WebSocket(`${baseUrl}/ws/session/${sessionId}/takeover`);
 
     ws.onopen = () => {
+      // First-message authentication for WebSocket
+      ws.send(JSON.stringify({ type: 'auth', token }));
       set({ controlMode: 'human' });
     };
     ws.onclose = () => {
