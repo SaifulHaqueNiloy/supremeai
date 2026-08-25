@@ -16,8 +16,10 @@ from dataclasses import dataclass, field
 
 from loguru import logger
 
-from backend.engine.compression.token_juice import TokenJuice
-from backend.memory.hierarchical_tree import HierarchicalMemoryTree
+# FIX: original used 'from backend.X.Y import ...' which only works when CWD
+# is the project root. Use absolute imports from backend/ as the root.
+from engine.compression.token_juice import TokenJuice
+from memory.hierarchical_tree import HierarchicalMemoryTree
 
 
 @dataclass
