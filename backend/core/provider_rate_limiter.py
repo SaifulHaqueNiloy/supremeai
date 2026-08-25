@@ -21,6 +21,8 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+from core.config import settings
+
 
 class ProviderStatus(StrEnum):
     AVAILABLE = "available"
@@ -115,7 +117,11 @@ class IntelligentRateLimiter:
             "gemini": ProviderConfig(
                 name="Gemini",
                 api_key_env="GEMINI_API_KEY",
-                base_url="https://generativelanguage.googleapis.com/v1beta",
+                base_url=getattr(
+                    settings,
+                    "provider_base_url_gemini",
+                    "https://generativelanguage.googleapis.com/v1beta",
+                ),
                 rpm_limit=60,
                 priority=1,
                 is_free=True,
@@ -125,7 +131,9 @@ class IntelligentRateLimiter:
             "groq": ProviderConfig(
                 name="Groq",
                 api_key_env="GROQ_API_KEY",
-                base_url="https://api.groq.com/openai/v1",
+                base_url=getattr(
+                    settings, "provider_base_url_groq", "https://api.groq.com/openai/v1"
+                ),
                 rpm_limit=30,
                 priority=2,
                 is_free=True,
@@ -135,7 +143,9 @@ class IntelligentRateLimiter:
             "openrouter": ProviderConfig(
                 name="OpenRouter",
                 api_key_env="OPENROUTER_API_KEY",
-                base_url="https://openrouter.ai/api/v1",
+                base_url=getattr(
+                    settings, "provider_base_url_openrouter", "https://openrouter.ai/api/v1"
+                ),
                 rpm_limit=200,
                 priority=3,
                 is_free=False,
@@ -145,7 +155,7 @@ class IntelligentRateLimiter:
             "ollama_local": ProviderConfig(
                 name="Ollama Local",
                 api_key_env="",
-                base_url="http://localhost:11434/v1",
+                base_url=getattr(settings, "provider_base_url_ollama", "http://localhost:11434/v1"),
                 rpm_limit=0,
                 priority=4,
                 is_free=True,

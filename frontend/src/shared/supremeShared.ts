@@ -27,20 +27,20 @@ function getEnvVar(key: string, fallback?: string): string {
   return value || fallback || '';
 }
 
+const getProdBackendUrl = () => {
+  const url = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND;
+  if (import.meta.env.PROD && !url) {
+    throw new Error('❌ VITE_BACKEND_URL or VITE_USER_BACKEND must be set in production.');
+  }
+  return url || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000');
+};
+
 export const CONFIG: EnvConfig = {
   // Backend API URL - use env var or detect automatically
-  BACKEND_URL: getEnvVar(
-    'BACKEND_URL',
-    getEnvVar('USER_BACKEND', typeof window !== 'undefined' 
-      ? `${window.location.protocol}//${window.location.hostname}:8000`
-      : 'http://localhost:8000')
-  ),
+  BACKEND_URL: getEnvVar('BACKEND_URL', getProdBackendUrl()),
   
   // WebSocket URL - derive from backend URL
-  WS_URL: getEnvVar(
-    'WS_URL',
-    getEnvVar('USER_BACKEND', 'http://localhost:8000').replace(/^http/, 'ws') + '/ws'
-  ),
+  WS_URL: getEnvVar('WS_URL', getProdBackendUrl().replace(/^http/, 'ws') + '/ws'),
   
   // Application identity
   APP_NAME: getEnvVar('APP_NAME', 'SuperAI'),
