@@ -1,5 +1,5 @@
 import os
-import re
+
 
 def refactor_zustand_stores(root_dir):
     for root, dirs, files in os.walk(root_dir):
@@ -14,7 +14,6 @@ def refactor_zustand_stores(root_dir):
             with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
                 
-            original_content = content
             
             # Map old stores to new store slice properties
             # Wait, if we use a unified store, we might just do:

@@ -1,7 +1,8 @@
 import json
 import re
-import urllib.request
 import urllib.error
+import urllib.request
+
 
 def fetch_readme():
     url = "https://raw.githubusercontent.com/awesome-selfhosted/awesome-selfhosted/master/README.md"

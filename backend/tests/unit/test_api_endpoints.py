@@ -37,7 +37,7 @@ class TestHealthEndpoints:
         response = await client.get("/api/v1/admin/health/live")
 
         assert response.status_code == 200
-        assert response.text == "OK" or response.json().get("alive") == True
+        assert response.text == "OK" or response.json().get("alive")
 
     @pytest.mark.unit
     async def test_readiness_probe(self, client: AsyncClient):
@@ -781,7 +781,6 @@ class TestErrorHandling:
         response = await client.get("/api/v1/admin/health")
 
         # Check for rate limit headers (if enabled)
-        headers = response.headers
         # These may or may not be present depending on config
         assert response.status_code == 200
 

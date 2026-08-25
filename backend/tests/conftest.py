@@ -22,7 +22,46 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-# Add project root to path for imports
+
+class CustomAssertions:
+    pass
+
+
+TEST_ACCESS_TOKEN_EXPIRE_MINUTES = 30
+TEST_ALGORITHM = "HS256"
+TEST_SECRET_KEY = "test_secret_key_1234567890_test_secret_key_1234567890"
+
+
+@pytest.fixture
+def valid_password():
+    return "ValidPassword123!"
+
+
+@pytest.fixture
+def sample_agent_create_request():
+    return {"name": "test_agent", "model": "gpt-4"}
+
+
+@pytest.fixture
+def sample_admin_data():
+    return {"id": "admin-123", "role": "admin"}
+
+
+@pytest.fixture
+def sample_agent_data():
+    return {"id": "agent-123", "name": "test_agent"}
+
+
+@pytest.fixture
+def sample_user_data():
+    return {"id": "user-123", "role": "user"}
+
+
+@pytest.fixture
+def sample_operator_data():
+    return {"id": "operator-123", "role": "operator"}
+
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
@@ -94,9 +133,9 @@ def db_engine(test_settings):
     async def teardown_db():
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
+        await engine.dispose()
 
     asyncio.run(teardown_db())
-    await engine.dispose()
 
 
 @pytest_asyncio.fixture
