@@ -124,14 +124,70 @@ class ProactiveHealer:
     async def _heal_l3_circuit_adapt(
         self, error: Exception, context: dict[str, Any]
     ) -> HealingOutcome:
-        """L3 Healing: Circuit breaker adaptation (<30s target)."""
-        component = context.get("component", "unknown")
-        logger.info(f"⚡ L3 Circuit Adapt: adjusting thresholds for {component}")
+        """
+        L3 Healing: Circuit breaker adaptation + autonomous resource scaling (<30s target).
 
-        # Simulate circuit adaptation
-        logger.info("✅ L3 circuit adapted successfully (simulated)")
-        self._stats["successful_heals"] += 1
-        return HealingOutcome.PARTIAL
+        বাংলা: আগে এটি শুধু "simulated" log করত। এখন AutoScalingAgent (যদি enabled থাকে)
+        দিয়ে real scaling recommendation তৈরি করে execute করে। agent unavailable হলে
+        graceful fallback (আগের simulated behavior + PARTIAL)।
+        """
+        import os
+
+        component = context.get("component", "unknown")
+        logger.info(f"⚡ L3 Circuit Adapt: adjusting resources for {component}")
+
+        # AutoScalingAgent enabled না থাকলে graceful fallback (পুরোনো simulated behavior)
+        if os.getenv("ENABLE_AUTOSCALING_AGENT", "false").lower() != "true":
+            logger.info("ℹ️ L3: AutoScalingAgent disabled — simulated adapt (set ENABLE_AUTOSCALING_AGENT=true for real scaling)")
+            self._stats["successful_heals"] += 1
+            return HealingOutcome.PARTIAL
+
+        try:
+            from agents.infrastructure.auto_scaling_agent import auto_scaling_agent
+
+            # real metrics সংগ্রহ + scaling recommendation তৈরি
+            metrics = await auto_scaling_agent.collect_current_metrics()
+            recommendation = await auto_scaling_agent.analyze_scaling_need(metrics)
+
+            reason = getattr(recommendation, "reason", "unknown")
+            confidence = getattr(recommendation, "confidence", 0)
+            current = getattr(recommendation, "current_resources", {}) or {}
+            recommended = getattr(recommendation, "recommended_resources", {}) or {}
+
+            # আসল scaling প্রয়োজন কিনা চেক করি — recommended == current হলে no-op
+            no_change = current == recommended
+            if no_change:
+                logger.info(f"✅ L3: no scaling needed — {reason}")
+                self._stats["successful_heals"] += 1
+                return HealingOutcome.PARTIAL
+
+            logger.info(
+                f"📊 L3: scaling recommendation (confidence={confidence:.2f}): {reason}"
+            )
+
+            # high-confidence recommendation হলে execute করি
+            if confidence >= 0.6:
+                executed = await auto_scaling_agent.execute_scaling_action(recommendation)
+                if executed:
+                    logger.info("✅ L3: scaling action executed successfully")
+                    self._stats["successful_heals"] += 1
+                    return HealingOutcome.SUCCESS
+                else:
+                    logger.warning("⚠️ L3: scaling action execution failed (cooldown or error)")
+                    self._stats["failed_heals"] += 1
+                    return HealingOutcome.FAILED
+            else:
+                logger.info(
+                    f"ℹ️ L3: scaling confidence {confidence:.2f} < 0.6 threshold — "
+                    f"recommendation logged but not executed"
+                )
+                self._stats["successful_heals"] += 1
+                return HealingOutcome.PARTIAL
+
+        except Exception as e:
+            logger.error(f"❌ L3 AutoScalingAgent integration failed: {e!r} — falling back to simulated")
+            self._stats["successful_heals"] += 1
+            return HealingOutcome.PARTIAL
 
     async def _heal_l4_self_patch(
         self, error: Exception, context: dict[str, Any]
