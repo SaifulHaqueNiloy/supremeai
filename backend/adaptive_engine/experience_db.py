@@ -75,6 +75,36 @@ class ExperienceDatabase:
         # ধরতে পারবে, memory silently গায়েব হয়ে যাবে না।
         self.vector_backend_degraded = False
 
+        # FREE-TIER FIX: prefer Supabase pgvector (no Render disk needed).
+        # Render free-tier does NOT support persistent disks — ChromaDB/Qdrant
+        # store vectors in local files which are LOST on every container restart.
+        # Supabase pgvector is remote + persistent + already provisioned (ai_memory table).
+        # Set USE_SUPABASE_VECTOR=false to force ChromaDB/Qdrant (requires disk).
+        self.supabase_backend: Any = None
+        use_supabase = os.getenv("USE_SUPABASE_VECTOR", "true").lower() == "true"
+        if use_supabase:
+            try:
+                from adaptive_engine.supabase_vector_backend import SupabaseVectorBackend
+
+                self.supabase_backend = SupabaseVectorBackend()
+                if self.supabase_backend.is_available:
+                    logger.info(
+                        "✅ ExperienceDatabase using Supabase pgvector "
+                        "(persistent, no Render disk needed)"
+                    )
+                else:
+                    logger.warning(
+                        "⚠️ Supabase pgvector not available — falling back to "
+                        "ChromaDB/Qdrant (data NOT persistent on Render free-tier)"
+                    )
+                    self.supabase_backend = None
+            except Exception as exc:
+                logger.warning(
+                    f"SupabaseVectorBackend init failed: {exc} — using local "
+                    "ChromaDB/Qdrant (data NOT persistent on Render free-tier)"
+                )
+                self.supabase_backend = None
+
     def _ensure_chroma(self) -> None:
         """
         বাংলা মন্তব্য: মেমরি ও রিসোর্স সাশ্রয় করতে ChromaDB ক্লায়েন্ট অলসভাবে (lazily) তৈরি করা হচ্ছে।
@@ -243,6 +273,20 @@ class ExperienceDatabase:
         response_text: str = "",
         user_id: str = "",
     ) -> None:
+        # FREE-TIER FIX: prefer Supabase pgvector (persistent, no Render disk)
+        if self.supabase_backend is not None:
+            ok = self.supabase_backend.upsert(
+                exp_id=exp_id,
+                text=text,
+                embedding=embedding,
+                result=result,
+                response_text=response_text,
+                user_id=user_id,
+            )
+            if ok:
+                return  # Supabase took it — skip ChromaDB/Qdrant entirely
+            # else fall through to ChromaDB/Qdrant (data NOT persistent on Render free-tier)
+
         # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
         self._ensure_chroma()
         self._ensure_qdrant()
@@ -293,13 +337,46 @@ class ExperienceDatabase:
     def find_similar(
         self, query: str, limit: int = 5, threshold: float = 0.7, user_id: str | None = None
     ) -> list[dict[str, Any]]:
-        # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
-        self._ensure_chroma()
-        self._ensure_qdrant()
         embedding = self._embed(query)
         if not embedding:
             return []
-        hits: list[dict[str, Any]] = []
+
+        # FREE-TIER FIX: prefer Supabase pgvector (persistent, no Render disk)
+        if self.supabase_backend is not None:
+            try:
+                results = self.supabase_backend.query(
+                    query_embedding=embedding,
+                    limit=limit,
+                    threshold=threshold,
+                )
+                if results:
+                    # Normalize to existing schema (source/id/score/meta/response/text)
+                    hits: list[dict[str, Any]] = []
+                    for row in results:
+                        meta = row.get("metadata", {}) or {}
+                        hits.append(
+                            {
+                                "source": "supabase_pgvector",
+                                "id": row.get("id"),
+                                "score": float(row.get("similarity", 0.0)),
+                                "meta": meta,
+                                "response": meta.get("response", ""),
+                                "text": row.get("content", ""),
+                            }
+                        )
+                    return hits
+                # Supabase returned empty — fall through to ChromaDB/Qdrant
+                # (could be because no experiences stored yet, or Supabase unreachable)
+            except Exception as e:
+                logger.debug(
+                    f"Supabase pgvector find_similar failed: {e} — "
+                    "falling back to ChromaDB/Qdrant"
+                )
+
+        # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।
+        self._ensure_chroma()
+        self._ensure_qdrant()
+        hits = []
         try:
             if self.chroma_collection:
                 where_clause = {"user_id": user_id} if user_id else None
