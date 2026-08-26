@@ -49,13 +49,13 @@ async def require_admin_token(credentials: HTTPAuthorizationCredentials = Depend
 
         return decoded
     except HTTPException:
-        # বাংলা: HTTPException যেগুলো নিজে রেইজ করেছি সেগুলো পুনরায় রেইজ করি।
         raise
     except Exception as err:
         logger.warning("Admin token validation failed", exc_info=True)
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token, expected):
-            return {"uid": "admin", "role": "admin"}
+        # DEEP-007 FIX: Removed API key fallback that granted admin access.
+        # Previously: if JWT failed, it checked supremeai_api_token and if it
+        # matched, returned {"uid": "admin", "role": "admin"} — full admin
+        # bypass with just an API key! Now: always reject.
         raise HTTPException(status_code=401, detail="Authentication failed.") from err
 
 

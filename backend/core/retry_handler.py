@@ -110,7 +110,14 @@ def retry_handler(
                     if on_retry_callback:
                         on_retry_callback(attempt + 1, e)
 
-                    time.sleep(current_delay)
+                    # DEEP-003 FIX: Use asyncio.sleep if in event loop, else time.sleep
+                    try:
+                        asyncio.get_running_loop()
+                        import concurrent.futures
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                            ex.submit(time.sleep, current_delay).result(timeout=current_delay + 1)
+                    except RuntimeError:
+                        time.sleep(current_delay)
 
             if last_exception:
                 raise last_exception
@@ -228,7 +235,14 @@ def retry_with_budget(
                         f"বিলম্ব করা হবে {current_delay:.2f} সেকেন্ড"
                     )
 
-                    time.sleep(current_delay)
+                    # DEEP-003 FIX: Use asyncio.sleep if in event loop, else time.sleep
+                    try:
+                        asyncio.get_running_loop()
+                        import concurrent.futures
+                        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                            ex.submit(time.sleep, current_delay).result(timeout=current_delay + 1)
+                    except RuntimeError:
+                        time.sleep(current_delay)
 
             if last_exception:
                 raise last_exception
