@@ -199,6 +199,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.living_brain", "prefix": "", "is_admin": True, "is_critical": False},
     # ── Tier-S (all 12 routers via centralized registry) ──
     {"path": "api.routes.tier_s_routes", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.zero_cost", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
 ]
 
 

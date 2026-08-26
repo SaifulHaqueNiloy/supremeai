@@ -9,7 +9,7 @@ import sys
 import uuid
 from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Any, dict, list
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

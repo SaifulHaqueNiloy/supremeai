@@ -508,4 +508,17 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for service_topology_router: {traceback.format_exc()}")
     service_topology_router = None  # type: ignore
 
+
+try:
+    from .zero_cost import router as zero_cost_router
+
+    _safe_imports["zero_cost_router"] = zero_cost_router
+except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
+    import traceback
+
+    from loguru import logger
+
+    logger.warning(f"Router import failed for zero_cost_router: {traceback.format_exc()}")
+    zero_cost_router = None  # type: ignore
+
 __all__ = list(_safe_imports.keys())
