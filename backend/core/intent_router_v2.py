@@ -35,7 +35,6 @@ from typing import Any, Optional
 
 from loguru import logger
 
-
 # ──────────────────────────────────────────────────────────────────────────
 # PromptAction dataclass + ACTION_PATTERNS dict (canonical location)
 #
@@ -51,12 +50,12 @@ class PromptAction:
     """Result of intent classification."""
 
     action_type: str
-    target_module: Optional[str] = None
+    target_module: str | None = None
     payload: dict[str, Any] = field(default_factory=dict)
     confidence: float = 0.0
     requires_confirmation: bool = False
-    label: Optional[str] = None
-    icon: Optional[str] = None
+    label: str | None = None
+    icon: str | None = None
 
 
 ACTION_PATTERNS: dict[str, dict[str, Any]] = {
