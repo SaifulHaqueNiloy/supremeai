@@ -1,3 +1,32 @@
+"""⚠️ ARCHIVED / SUPERSEDED — DO NOT WIRE (preserve for sentiment-scoring pattern).
+
+বাংলা সারসংক্ষেপ: এই ফাইলটি একটি উন্নত wired alternative দ্বারা superseded।
+কেবল `FeedbackAnalyzer`-এর keyword-sentiment-scoring pattern হিসেবে সংরক্ষিত।
+
+কেন superseded (deep value-analysis findings):
+  1. উন্নত wired alternative বিদ্যমান: `core/tier8/self_improvement_agent.py::
+     SelfImprovementAgent(BaseSkill)` — LLM-driven refactor proposals, dry-run CI/CD
+     validation, BaseSkill-based singleton। এটি `core/tier8/tier8_integration.py::
+     init_tier8()` দ্বারা wired (startup/agents.py:84, যখন ENABLE_TIER8=true)।
+  2. এই adaptive_engine version-এর "improvements" (model_selection_adjustments,
+     prompt_optimizations, caching_adjustments, context_improvements) Redis-এ লেখা
+     হয় কিন্তু কেউ পড়ে না (write-only, কোনো downstream consumer নেই)।
+     model_router/prompt_handler/cache_manager/context_manager কোনোটিই এই keys পড়ে না।
+  3. একটি import broken: `from core.adaptive_engine.learning_loop import ExperienceDatabase`
+     — `core/adaptive_engine/` directory নেই (top-level `adaptive_engine/` আছে), এবং
+     `learning_loop.py`-তে `ExperienceDatabase` নেই (সেটি `adaptive_engine/experience_db.py`
+     এ আছে)। সঠিক fix হবে: `from adaptive_engine.experience_db import ExperienceDatabase`।
+  4. `FeedbackAnalyzer` keyword-based sentiment scoring (primitive কিন্তু functional) —
+     এটিই একমাত্র সংরক্ষণযোগ্য অংশ।
+
+যদি ভবিষ্যতে revive করতে হয়:
+  - broken import ঠিক করুন: `from adaptive_engine.experience_db import ExperienceDatabase`
+  - Redis "improvement" keys-এর জন্য downstream consumers যোগ করুন (model_router এই
+    keys পড়ে behavior adjust করবে)।
+  - অথবা tier8 version-এর সাথে একত্রিত করুন।
+
+Wired alternative (ব্যবহার করুন): core/tier8/self_improvement_agent.py::SelfImprovementAgent
+"""
 """
 SupremeAI 2.0 Self-Improving Agent
 ===================================
