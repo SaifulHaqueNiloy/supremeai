@@ -59,40 +59,42 @@ class DisasterRecoveryAgent:
         self.recovery_plan_key = "disaster_recovery:recovery_plans"
         self.system_state_key = "disaster_recovery:system_state"
 
-        # Define critical system components that need backup
+        # Define critical system components that need backup.
+        # বাংলা: প্রতিটা component-এর paths env var দিয়ে override করা যায় (comma-separated)।
+        # env var না থাকলে sensible defaults ব্যবহার হয়। এটি "zero-hardcoded" principle follow করে।
         self.critical_components = {
             "database": {
-                "paths": [getattr(settings, "DATABASE_URL", ""), "/data/db.sqlite3"],
+                "paths": self._env_paths("DR_DB_PATHS", [getattr(settings, "DATABASE_URL", ""), "/data/db.sqlite3"]),
                 "backup_method": "sql_dump",
                 "restore_method": "sql_restore",
                 "priority": "high",
             },
             "configuration": {
-                "paths": ["/config/", "./config/", "/etc/app/"],
+                "paths": self._env_paths("DR_CONFIG_PATHS", ["/config/", "./config/", "/etc/app/"]),
                 "backup_method": "file_copy",
                 "restore_method": "file_copy",
                 "priority": "high",
             },
             "user_data": {
-                "paths": ["/data/users/", "/storage/uploads/"],
+                "paths": self._env_paths("DR_USER_DATA_PATHS", ["/data/users/", "/storage/uploads/"]),
                 "backup_method": "archive",
                 "restore_method": "extract",
                 "priority": "high",
             },
             "skills": {
-                "paths": ["/skills/", "/backend/skills/"],
+                "paths": self._env_paths("DR_SKILLS_PATHS", ["/skills/", "/backend/skills/"]),
                 "backup_method": "archive",
                 "restore_method": "extract",
                 "priority": "medium",
             },
             "models": {
-                "paths": ["/models/", "/backend/models/"],
+                "paths": self._env_paths("DR_MODELS_PATHS", ["/models/", "/backend/models/"]),
                 "backup_method": "archive",
                 "restore_method": "extract",
                 "priority": "medium",
             },
             "logs": {
-                "paths": ["/logs/", "/var/log/app/"],
+                "paths": self._env_paths("DR_LOGS_PATHS", ["/logs/", "/var/log/app/"]),
                 "backup_method": "archive",
                 "restore_method": "skip",
                 "priority": "low",
@@ -133,6 +135,18 @@ class DisasterRecoveryAgent:
                 "target_point_objective": 1800,  # 30 minutes
             },
         }
+
+    @staticmethod
+    def _env_paths(env_var: str, defaults: list[str]) -> list[str]:
+        """
+        env var থেকে comma-separated paths পড়ে। env var না থাকলে বা empty হলে
+        defaults ফেরত দেয়। এটি "zero-hardcoded" principle মেনে চলে — deployment-এর
+        সময় প্রতিটা component-এর paths env var দিয়ে override করা যায়।
+        """
+        val = os.environ.get(env_var, "").strip()
+        if not val:
+            return defaults
+        return [p.strip() for p in val.split(",") if p.strip()]
 
     async def initialize_recovery_plans(self):
         """Initialize disaster recovery plans in Redis."""
