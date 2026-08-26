@@ -130,7 +130,7 @@ async def search_chats(
         # --- Search conversation titles ---
         try:
             title_results = (
-                db.client.table("conversations")
+                await db.client.table("conversations")
                 .select("id, title")
                 .eq("user_id", user_id)
                 .ilike("title", like_pattern)
@@ -158,7 +158,7 @@ async def search_chats(
         try:
             # First get all conversation IDs for this user
             conv_ids_resp = (
-                db.client.table("conversations").select("id").eq("user_id", user_id).execute()
+                await db.client.table("conversations").select("id").eq("user_id", user_id).execute()
             )
 
             user_conv_ids = [r["id"] for r in conv_ids_resp.data]
@@ -168,7 +168,7 @@ async def search_chats(
                 # Supabase RPC or filter by conversation_id list
                 # Use ilike on content
                 message_results = (
-                    db.client.table("messages")
+                    await db.client.table("messages")
                     .select("id, conversation_id, role, content, created_at")
                     .ilike("content", like_pattern)
                     .order("created_at", desc=True)
@@ -195,7 +195,7 @@ async def search_chats(
                         else:
                             try:
                                 conv_resp = (
-                                    db.client.table("conversations")
+                                    await db.client.table("conversations")
                                     .select("title")
                                     .eq("id", conv_id)
                                     .execute()

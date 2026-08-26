@@ -38,7 +38,7 @@ async def migrate_embeddings():
 
         # Fetch all records
         logger.info("Fetching existing records from ai_memory...")
-        response = supabase.table("ai_memory").select("id, summary, embedding").execute()
+        response = await supabase.table("ai_memory").select("id, summary, embedding").execute()
         records = response.data
 
         if not records:
@@ -61,7 +61,7 @@ async def migrate_embeddings():
 
                 if new_embedding:
                     # Update record in Supabase
-                    supabase.table("ai_memory").update({"embedding": new_embedding}).eq(
+                    await supabase.table("ai_memory").update({"embedding": new_embedding}).eq(
                         "id", record_id
                     ).execute()
                     logger.info(

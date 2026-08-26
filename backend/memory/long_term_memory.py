@@ -39,7 +39,7 @@ class MemoryManager:
 
         # 2. Store in Supabase 'agent_memories' table
         await (
-            self.db_client.table("agent_memories")
+            await self.db_client.table("agent_memories")
             .insert(
                 {
                     "content": learning,
