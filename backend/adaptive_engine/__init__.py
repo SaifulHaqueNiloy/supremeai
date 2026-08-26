@@ -13,26 +13,25 @@ from typing import Any
 
 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
-from adaptive_engine.learning_loop import (
-    LearningCycleResult,
-    LearningInsight,
-    LearningLoop,
-    create_learning_loop,
-)
+from adaptive_engine.learning_loop import LearningLoop
 from adaptive_engine.platform_learner import PlatformLearner, PlatformProfile
 from adaptive_engine.registry import PlatformRegistry
+
+# VERIFY FIX: removed broken imports of LearningCycleResult, LearningInsight,
+# create_learning_loop — these were defined in the OLD learning_loop.py before
+# Phase 2 Learning Consolidation refactored it to delegate to core.unified_learning.
+# Keeping them in __all__ would cause ImportError at package import time, which
+# blocks ExperienceDatabase and all auto-learning from working.
+# Callers needing these should import from core.unified_learning directly.
 
 __all__ = [
     "Experience",
     "ExperienceDatabase",
     "IntentParser",
-    "LearningCycleResult",
-    "LearningInsight",
     "LearningLoop",
     "PlatformLearner",
     "PlatformProfile",
     "PlatformRegistry",
-    "create_learning_loop",
 ]
 
 # Version tracking for adaptive engine components
