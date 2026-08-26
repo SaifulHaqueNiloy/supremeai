@@ -154,7 +154,6 @@ export class LLMSmartRouter {
       // ✅ Fallback to next available provider
       const fallbackProvider = this._getFallbackProvider(provider);
       if (fallbackProvider && fallbackProvider !== provider) {
-        console.log(`🔄 Falling back to: ${fallbackProvider}`);
         const fallbackRes = await this.route({ ...request, preferFree: true }); // Retry with fallback
         return fallbackRes;
       }

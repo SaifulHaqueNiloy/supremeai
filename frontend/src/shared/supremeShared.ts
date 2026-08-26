@@ -60,7 +60,7 @@ export const APP_NAME = CONFIG.APP_NAME;
  * Validate configuration on import
  */
 if (import.meta.env.DEV) {
-  console.log('🔧 SuperAI Config:', {
+  console.warn('🔧 SuperAI Config:', {
     backend: CONFIG.BACKEND_URL,
     ws: CONFIG.WS_URL,
     features: {
