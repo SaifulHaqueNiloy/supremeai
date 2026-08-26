@@ -29,8 +29,11 @@ class ChromaDBStore:
 
     def __init__(self, db_path: str | None = None, collection_name: str = "supremeai_knowledge"):
         if db_path is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            db_path = os.path.join(base_dir, "data", "chromadb_store")
+            # FIX: Allow configuring persistent storage via environment variable (vital for Docker/Cloud persistence)
+            db_path = os.getenv("CHROMA_PERSIST_DIR")
+            if not db_path:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                db_path = os.path.join(base_dir, "data", "chromadb_store")
         self.db_path = db_path
         self.collection_name = collection_name
         self._fallback_docs: dict[str, dict[str, Any]] = {}
