@@ -331,7 +331,7 @@ class ViralReferralEngine:
     def generate_deep_link(self, referral_code: str, platform: str = "generic") -> str:
         """Generate social sharing deep links for a referral code."""
         base_url = getattr(
-            settings, "app_base_url", os.getenv("APP_BASE_URL", "https://supremeai.com")
+            settings, "app_base_url", os.getenv("APP_BASE_URL", "")
         )
         invite_path = f"/invite/{referral_code}"
         deep_link = f"{base_url}{invite_path}"

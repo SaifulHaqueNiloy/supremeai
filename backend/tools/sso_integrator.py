@@ -216,16 +216,16 @@ class SSOIntegrator:
             "debug": True,
             "sp": {
                 "entityId": self.saml_settings.get(
-                    "sp_entity_id", os.getenv("APP_BASE_URL", "https://supremeai.com") + "/metadata"
+                    "sp_entity_id", os.getenv("APP_BASE_URL", "") + "/metadata"
                 ),
                 "assertionConsumerService": {
                     "url": self.saml_settings.get(
-                        "acs_url", os.getenv("APP_BASE_URL", "https://supremeai.com") + "/acs"
+                        "acs_url", os.getenv("APP_BASE_URL", "") + "/acs"
                     ),
                 },
                 "singleLogoutService": {
                     "url": self.saml_settings.get(
-                        "sls_url", os.getenv("APP_BASE_URL", "https://supremeai.com") + "/sls"
+                        "sls_url", os.getenv("APP_BASE_URL", "") + "/sls"
                     ),
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
@@ -253,7 +253,7 @@ class SSOIntegrator:
 
     def _fallback_metadata(self) -> str:
         sp_entity_id = self.saml_settings.get(
-            "sp_entity_id", os.getenv("APP_BASE_URL", "https://supremeai.com")
+            "sp_entity_id", os.getenv("APP_BASE_URL", "")
         )
         acs_url = self.saml_settings.get("acs_url", f"{sp_entity_id}/acs")
         return f"""<?xml version="1.0"?>

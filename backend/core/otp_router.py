@@ -12,6 +12,7 @@ supports both if triggered explicitly by an admin.
 
 from __future__ import annotations
 
+import os
 import re
 
 import httpx
@@ -124,8 +125,15 @@ async def _send_email(admin_id: str, code: str, context: dict) -> bool:
         logger.error("RESEND_API_KEY or ADMIN_NOTIFICATION_EMAIL not configured.")
         return False
     masked_admin = _mask(admin_id, visible=3)
+    # SECURE FIX: email sender is now env-driven (EMAIL_FROM_ADDRESS).
+    # Previously hardcoded "SupremeAI Security <security@supremeai.app>" —
+    # violates "zero hardcoded value" principle.
+    email_from = os.getenv(
+        "EMAIL_FROM_ADDRESS",
+        "SupremeAI Security <noreply@supremeai.app>",  # dev fallback only
+    )
     payload = {
-        "from": "SupremeAI Security <security@supremeai.app>",
+        "from": email_from,
         "to": [to_addr],
         "subject": f"Admin Login Verification — {masked_admin}",
         "html": (

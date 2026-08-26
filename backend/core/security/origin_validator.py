@@ -29,22 +29,18 @@ def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
     return default
 
 
+# SECURE FIX: defaults are now EMPTY frozensets — admin MUST set env vars
+# CORS_ORIGINS and ADMIN_CORS_ORIGINS in production.
+# Localhost origins are added conditionally for dev/test envs (see below).
+# This enforces the "zero hardcoded value" principle from the customer's
+# goal: every production value must come from env or Infisical vault.
 USER_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = _load_origins(
     "CORS_ORIGINS",
-    frozenset(
-        {
-            "https://supremeai-studio.vercel.app",
-            "https://supremeai-lac.vercel.app",
-        }
-    ),
+    frozenset(),  # empty — admin must configure
 )
 ADMIN_DEFAULT_TRUSTED_ORIGINS: frozenset[str] = _load_origins(
     "ADMIN_CORS_ORIGINS",
-    frozenset(
-        {
-            "https://supremeai-admin.web.app",
-        }
-    ),
+    frozenset(),  # empty — admin must configure
 )
 
 
