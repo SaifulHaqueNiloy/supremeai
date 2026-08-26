@@ -168,10 +168,10 @@ class CostOptimizationAgent:
         try:
             existing_config = await redis_manager.get(self.budget_config_key)
             if not existing_config:
-                await redis_manager.set_with_ttl(
+                await redis_manager.set(
                     self.budget_config_key,
                     json.dumps(self.default_budget_config),
-                    ttl=2592000,  # 30 days
+                    ex=2592000,  # 30 days
                 )
                 logger.info("Default budget configuration initialized")
         except Exception as e:
@@ -354,10 +354,10 @@ class CostOptimizationAgent:
             }
 
             # Store forecast in Redis
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.cost_forecast_key,
                 json.dumps(forecast_result),
-                ttl=86400,  # 24 hours
+                ex=86400,  # 24 hours
             )
 
             return forecast_result
@@ -503,10 +503,10 @@ class CostOptimizationAgent:
             if len(metrics_list) > max_metrics:
                 metrics_list = metrics_list[-max_metrics:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.cost_metrics_key,
                 json.dumps(metrics_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
         except Exception as e:
             logger.error(f"Error storing cost metric: {e}")
@@ -544,10 +544,10 @@ class CostOptimizationAgent:
             if len(opp_list) > max_opportunities:
                 opp_list = opp_list[-max_opportunities:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.optimization_opportunities_key,
                 json.dumps(opp_list),
-                ttl=86400,  # 24 hours
+                ex=86400,  # 24 hours
             )
         except Exception as e:
             logger.error(f"Error storing optimization opportunities: {e}")
@@ -637,10 +637,10 @@ class CostOptimizationAgent:
                 if datetime.fromisoformat(alert["timestamp"]) >= cutoff_time
             ]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.budget_alerts_key,
                 json.dumps(recent_alerts),
-                ttl=86400,  # 24 hours
+                ex=86400,  # 24 hours
             )
         except Exception as e:
             logger.error(f"Error storing budget alerts: {e}")

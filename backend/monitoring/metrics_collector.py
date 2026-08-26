@@ -146,6 +146,44 @@ class MetricsCollector:
         total_requests = sum(self._request_counts.values())
         return {"total_requests": total_requests, "timeframe_minutes": timeframe_minutes}
 
+    async def get_recent_metrics(self, minutes: int = 1) -> dict[str, float]:
+        """
+        বাংলা: গত N মিনিটের aggregated app-metrics। auto_scaling_agent ও
+        performance_tuning_agent এই method-টি call করে (তারা graceful fallback সহ)।
+        আগে এই method ছিল না বলে agent-গুলো simulated values fallback নিত।
+
+        Returns:
+            active_connections: বর্তমান active connection count
+            requests_per_second: সাম্প্রতিক request rate (RPS)
+            avg_response_time: গড় DB query time (ms — proxy for response time)
+            error_rate: error / total request percentage
+        """
+        try:
+            total_requests = sum(self._request_counts.values())
+            total_errors = sum(self._error_counts.values())
+            error_rate = (total_errors / total_requests * 100) if total_requests > 0 else 0.0
+
+            # avg DB query time কে response time proxy হিসেবে ব্যবহার করি
+            avg_response_time = 0.0
+            if self._db_query_times:
+                avg_response_time = sum(self._db_query_times) / len(self._db_query_times) * 1000  # → ms
+
+            # requests_per_second: total requests / (minutes * 60)
+            seconds = max(minutes * 60, 1)
+            rps = total_requests / seconds if total_requests > 0 else 0.0
+
+            return {
+                "active_connections": float(self._active_connections),
+                "requests_per_second": rps,
+                "avg_response_time": avg_response_time,
+                "error_rate": error_rate,
+                "total_requests": float(total_requests),
+                "total_errors": float(total_errors),
+            }
+        except Exception:
+            # graceful: কিছু ভুল হলে empty dict (agents তখন fallback নেবে)
+            return {}
+
     async def get_cache_performance(self) -> dict[str, float]:
         """Get cache performance metrics."""
         total = self._cache_stats["hits"] + self._cache_stats["misses"]
