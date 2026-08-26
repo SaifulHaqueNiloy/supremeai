@@ -117,32 +117,47 @@ except ImportError:
 # try/except দিয়ে গার্ড করে দেওয়া হলো যেন torch অনুপস্থিত থাকলে শুধু এই optional
 # নামগুলো None হয়ে যায়, বাকি পুরো অ্যাপ স্বাভাবিকভাবে import/চলতে পারে।
 try:
-    from evolution import (  # Digital Twin; Continual Learning; Adversarial Defense; Neural-Symbolic Integration; Federated Learning; Theory of Mind; Temporal Abstraction
-        EWC,
+    # BUG FIX #4: original was 'from evolution import (...)' but evolution/
+    # subfolders (theory_of_mind, temporal_abstraction, etc.) were deleted
+    # during UNIFY cleanup. The correct location is core/evolution/ subfolders.
+    # TheoryOfMind and TemporalAbstraction don't exist anymore — set to None.
+    from core.evolution.adversarial_defense.defense_system import (
         AdversarialDefenseSystem,
         AdversarialTrainer,
-        AggregationMethod,
         DefenseConfig,
-        DigitalTwinWorldModel,
+    )
+    from core.evolution.continual_learning.ewc import (
+        EWC,
         EWCConfig,
         EWCTrainer,
+        OnlineEWC,
+    )
+    from core.evolution.digital_twin.remediation_engine import RemediationEngine
+    from core.evolution.digital_twin.simulator import ImpactSimulator
+    from core.evolution.digital_twin.topology import SystemTopologyMapper
+    from core.evolution.federated_learning.fed_learning import (
         FederatedLearningCoordinator,
-        FLConfig,
-        ImpactSimulator,
-        MathematicalReasoningEngine,
+    )
+    from core.evolution.neural_symbolic.integration import (
         NeuralSymbolicConfig,
         NeuralSymbolicIntegrator,
-        OnlineEWC,
-        RemediationEngine,
-        SystemTopologyMapper,
-        TemporalAbstractionConfig,
-        TemporalAbstractionSystem,
-        TemporalGranularity,
-        TheoryOfMindSystem,
-        ToMConfig,
-        ToMLevel,
-        get_digital_twin_model,
     )
+
+    # These symbols don't exist anywhere (deleted with evolution/ subfolders):
+    # DigitalTwinWorldModel, get_digital_twin_model, FLConfig, AggregationMethod,
+    # MathematicalReasoningEngine, TheoryOfMindSystem, ToMConfig, ToMLevel,
+    # TemporalAbstractionSystem, TemporalAbstractionConfig, TemporalGranularity
+    DigitalTwinWorldModel = None
+    get_digital_twin_model = None
+    FLConfig = None
+    AggregationMethod = None
+    MathematicalReasoningEngine = None
+    TheoryOfMindSystem = None
+    ToMConfig = None
+    ToMLevel = None
+    TemporalAbstractionSystem = None
+    TemporalAbstractionConfig = None
+    TemporalGranularity = None
 
     EVOLUTION_COMPONENTS_AVAILABLE = True
 except (ImportError, OSError):
