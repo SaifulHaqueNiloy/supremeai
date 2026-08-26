@@ -1,3 +1,28 @@
+"""⚠️ ARCHIVED / SUPERSEDED — DO NOT WIRE (preserve as design template).
+
+বাংলা সারসংক্ষেপ: এই ফাইলটি বর্তমানে ব্যবহারযোগ্য নয় এবং wired হওয়া উচিত নয়।
+এটি কেবল N+1 query detection-এর ভবিষ্যৎ ডিজাইন টেমপ্লেট হিসেবে সংরক্ষিত।
+
+কেন superseded (deep value-analysis findings):
+  1. ৪টি import broken — `core.database.query_optimizer`, `core.memory.memory_manager`,
+     `core.security.secret_scanner`, `core.security.sql_injection_guard` — কোনোটিই এই
+     path-এ বিদ্যমান নেই (canonical path ভিন্ন)।
+  2. module-load এ `comprehensive_db_middleware = ComprehensiveDBOptimizationMiddleware()`
+     চালায় যা `DatabaseOptimizationMiddleware(query_optimizer)` call করে → তাৎক্ষণিক
+     ModuleNotFoundError। ইম্পোর্ট করলেই crash।
+  3. SQL-injection validation কার্যক্ষমতা ইতিমধ্যে wired `core/middleware/security.py::
+     RequestValidationMiddleware` (app_builder.py:236 এ যুক্ত) দ্বারা আচ্ছাদিত।
+  4. N+1 detection অংশটি এমন একটি `query_optimizer` subsystem এর উপর নির্ভর করে
+     যা এই repo-তে কখনো তৈরিই হয়নি।
+
+যদি ভবিষ্যতে revive করতে হয়:
+  - প্রথমে `backend/core/database/query_optimizer.py` সম্পূর্ণ module তৈরি করতে হবে।
+  - ৪টি broken import ঠিক করতে হবে (canonical path-এ)।
+  - middleware base-class protocol ঠিক করতে হবে (BaseHTTPMiddleware inherit করাতে হবে)।
+  - module-level singleton instantiation lazy করতে হবে।
+
+Wired alternative (ব্যবহার করুন): core/middleware/security.py::RequestValidationMiddleware
+"""
 """Database Optimization Middleware integrating all Phase 3 improvements."""
 
 import asyncio
