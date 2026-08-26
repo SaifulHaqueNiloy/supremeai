@@ -36,8 +36,11 @@ from loguru import logger
 from pydantic import BaseModel
 
 # Import brain components
+# UNIFY FIX: removed 'backend.' prefix from imports — they were silently
+# failing (wrapped in try/except) because CWD is backend/, not project root.
+# Correct paths use top-level packages (brain/, memory/) directly.
 try:
-    from backend.brain.supreme_learning_engine import get_learning_engine
+    from brain.supreme_learning_engine import get_learning_engine
 
     LEARNING_ENGINE_AVAILABLE = True
 except ImportError:
@@ -45,7 +48,7 @@ except ImportError:
     logger.warning("⚠️ SupremeLearningEngine not available")
 
 try:
-    from backend.memory.supabase_store import SupabaseStore
+    from memory.supabase_store import SupabaseStore
 
     MEMORY_STORE_AVAILABLE = True
 except ImportError:
@@ -53,7 +56,7 @@ except ImportError:
     logger.warning("⚠️ Memory store not available")
 
 try:
-    from backend.brain.economic_optimizer import EconomicOptimizer
+    from brain.economic_optimizer import EconomicOptimizer
 
     ECON_OPTIMIZER_AVAILABLE = True
 except ImportError:
