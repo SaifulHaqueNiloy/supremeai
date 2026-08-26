@@ -369,8 +369,7 @@ class ExperienceDatabase:
                 # (could be because no experiences stored yet, or Supabase unreachable)
             except Exception as e:
                 logger.debug(
-                    f"Supabase pgvector find_similar failed: {e} — "
-                    "falling back to ChromaDB/Qdrant"
+                    f"Supabase pgvector find_similar failed: {e} — falling back to ChromaDB/Qdrant"
                 )
 
         # বাংলা মন্তব্য: মেমরি সাশ্রয়ের জন্য ভেক্টর ডেটাবেস ব্যবহারের ঠিক পূর্বে ইনিশিয়ালাইজেশন নিশ্চিত করা হচ্ছে।

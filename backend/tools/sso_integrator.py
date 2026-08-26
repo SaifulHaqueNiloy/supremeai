@@ -252,9 +252,7 @@ class SSOIntegrator:
         return settings_dict
 
     def _fallback_metadata(self) -> str:
-        sp_entity_id = self.saml_settings.get(
-            "sp_entity_id", os.getenv("APP_BASE_URL", "")
-        )
+        sp_entity_id = self.saml_settings.get("sp_entity_id", os.getenv("APP_BASE_URL", ""))
         acs_url = self.saml_settings.get("acs_url", f"{sp_entity_id}/acs")
         return f"""<?xml version="1.0"?>
 <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="{sp_entity_id}">
