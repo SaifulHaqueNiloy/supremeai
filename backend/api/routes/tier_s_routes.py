@@ -11,18 +11,18 @@ from typing import TYPE_CHECKING
 
 from fastapi import FastAPI
 
-from backend.api.routes.artifacts import router as artifacts_router
-from backend.api.routes.branch_conversations import router as branch_conversations_router
-from backend.api.routes.chat_export import router as chat_export_router
-from backend.api.routes.chat_search import router as chat_search_router
-from backend.api.routes.chat_upload import router as chat_upload_router
-from backend.api.routes.deep_research import router as deep_research_router
-from backend.api.routes.global_memory import router as global_memory_router
-from backend.api.routes.prompt_templates import router as prompt_templates_router
-from backend.api.routes.reasoning import router as reasoning_router
-from backend.api.routes.scheduled_tasks import router as scheduled_tasks_router
-from backend.api.routes.share import router as share_router
-from backend.api.routes.slash_commands import router as slash_commands_router
+from api.routes.artifacts import router as artifacts_router
+from api.routes.branch_conversations import router as branch_conversations_router
+from api.routes.chat_export import router as chat_export_router
+from api.routes.chat_search import router as chat_search_router
+from api.routes.chat_upload import router as chat_upload_router
+from api.routes.deep_research import router as deep_research_router
+from api.routes.global_memory import router as global_memory_router
+from api.routes.prompt_templates import router as prompt_templates_router
+from api.routes.reasoning import router as reasoning_router
+from api.routes.scheduled_tasks import router as scheduled_tasks_router
+from api.routes.share import router as share_router
+from api.routes.slash_commands import router as slash_commands_router
 
 if TYPE_CHECKING:
     from fastapi import APIRouter
@@ -61,7 +61,7 @@ def register_tier_s_routes(app: FastAPI) -> None:
 
     Usage::
 
-        from backend.api.routes.tier_s_routes import register_tier_s_routes
+        from api.routes.tier_s_routes import register_tier_s_routes
 
         app = FastAPI()
         register_tier_s_routes(app)
