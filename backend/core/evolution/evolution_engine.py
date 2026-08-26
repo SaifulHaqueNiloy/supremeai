@@ -33,12 +33,26 @@ except ImportError:
 class EvolutionEngine:
     """Persists task outcomes, detects repeated failures, proposes and auto-generates skills."""
 
-    def __init__(self, db_path: str | None = None, model_router: ModelRouter | None = None):
+    def __init__(
+        self,
+        db_path: str | None = None,
+        model_router: ModelRouter | None = None,
+        fitness_engine: Any | None = None,
+    ):
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.db_path = db_path or os.getenv(
             "EVOLUTION_DB_PATH", os.path.join(base, "data", "evolution.db")
         )
         self.model_router = model_router or ModelRouter()
+        # SELF-EVOLVE FIX: connect EvolutionEngine to FitnessEngine so that
+        # every learn_from_success/failure call updates the fitness metrics.
+        # This closes the self-evolution loop:
+        #   LLM call → learn_from_success → fitness_engine.track_execution →
+        #   SelfEvolutionAgent._tick reads metrics → _trigger_refactor →
+        #   AutoSkillCreator generates improved skill
+        # Previously: EvolutionEngine wrote to DB but FitnessEngine.metrics
+        # stayed empty (only populated by AutoSkillCreator after skill execution).
+        self.fitness_engine = fitness_engine
 
         # বাংলা মন্তব্য: P2 Fix — Production Cloud Run-এ local SQLite নিষিদ্ধ।
         # /data/ directory ephemeral — container restart-এ সব data হারায়।
@@ -151,6 +165,15 @@ class EvolutionEngine:
             }
         finally:
             conn.close()
+            # SELF-EVOLVE FIX: update FitnessEngine so _tick() can evaluate
+            # the "approach" (model name) and trigger refactors if needed.
+            if self.fitness_engine is not None:
+                try:
+                    self.fitness_engine.track_execution(
+                        skill_name=approach, success=True, latency=0.0
+                    )
+                except Exception as fit_err:
+                    logger.debug(f"fitness_engine.track_execution skipped: {fit_err}")
 
     def learn_from_failure(self, task: str, approach: str, result: str) -> dict[str, Any]:
         created_at = datetime.now(UTC).isoformat()
@@ -206,6 +229,14 @@ class EvolutionEngine:
             }
         finally:
             conn.close()
+            # SELF-EVOLVE FIX: update FitnessEngine with failure to close the loop.
+            if self.fitness_engine is not None:
+                try:
+                    self.fitness_engine.track_execution(
+                        skill_name=approach, success=False, latency=0.0
+                    )
+                except Exception as fit_err:
+                    logger.debug(f"fitness_engine.track_execution skipped: {fit_err}")
 
     def detect_repeated_failures(self, min_occurrences: int = 3) -> list[dict[str, Any]]:
         try:
