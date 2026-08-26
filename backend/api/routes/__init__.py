@@ -472,17 +472,10 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     logger.warning(f"Router import failed for integrations_router: {traceback.format_exc()}")
     integrations_router = None  # type: ignore
 
-try:
-    from .swarm import router as swarm_router
-
-    _safe_imports["swarm_router"] = swarm_router
-except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
-    import traceback
-
-    from loguru import logger
-
-    logger.warning(f"Router import failed for swarm_router: {traceback.format_exc()}")
-    swarm_router = None  # type: ignore
+# STABILIZE FIX: swarm.py was deleted during Phase 1 Router Consolidation
+# (refactor commit 97c718b772 "remove bloated fantasy routes").
+# Leaving this as a clean comment — no more noisy import-failed warnings.
+swarm_router = None
 
 try:
     from .internet_monitor import router as internet_monitor_router
