@@ -5,6 +5,7 @@ were moved to core/intent_router_v2.py (canonical location) during the
 Router Consolidation refactor. They are re-exported here for backwards
 compatibility with any code that still imports from core.intent_router.
 """
+
 import warnings
 
 # Re-export PromptAction and ACTION_PATTERNS from the canonical v2 location

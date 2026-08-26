@@ -8,6 +8,7 @@ Provides aggregated metrics for the admin Command Center UI:
 OBSERVE phase: implements the previously-stub /metrics endpoint with real
 aggregated data, so admin can observe the entire system from one place.
 """
+
 from __future__ import annotations
 
 import os
@@ -70,7 +71,8 @@ async def command_metrics():
         "evolution_enabled": os.getenv("ENABLE_EVOLUTION", "false").lower() == "true",
         "daily_learner_enabled": os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true",
         "tier8_enabled": os.getenv("ENABLE_TIER8", "false").lower() == "true",
-        "evolution_learning_enabled": os.getenv("ENABLE_EVOLUTION_LEARNING", "false").lower() == "true",
+        "evolution_learning_enabled": os.getenv("ENABLE_EVOLUTION_LEARNING", "false").lower()
+        == "true",
         "token_juice_enabled": os.getenv("TOKEN_JUICE_ENABLED", "true").lower() == "true",
     }
 
@@ -78,9 +80,7 @@ async def command_metrics():
     try:
         from api.routes.websocket_agent import manager as _ws_manager
 
-        ws_count = sum(
-            len(conns) for conns in _ws_manager.active_connections.values()
-        )
+        ws_count = sum(len(conns) for conns in _ws_manager.active_connections.values())
         metrics["websocket"] = {
             "total_connections": ws_count,
             "unique_users": len(_ws_manager.active_connections),

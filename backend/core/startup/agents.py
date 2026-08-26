@@ -91,9 +91,20 @@ async def start_background_services(app):
     # বাংলা মন্তব্ব্য: SelfEvolutionAgent শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_EVOLUTION", "false").lower() == "true":
+            # SELF-EVOLVE FIX (real): pass the SHARED FitnessEngine singleton so
+            # SelfEvolutionAgent._tick() reads the SAME metrics that
+            # EvolutionEngine.learn_from_success() writes to via track_execution.
+            # Previously SelfEvolutionAgent(interval_seconds=300) was called with
+            # no fitness_engine arg → it created its OWN private FitnessEngine()
+            # with empty metrics → _tick() never triggered refactors.
+            # Now both use the same instance from api.deps.get_fitness_engine().
+            from api.deps import get_fitness_engine
             from core.evolution.self_evolution_agent import SelfEvolutionAgent
 
-            _evo_agent = SelfEvolutionAgent(interval_seconds=300)
+            _evo_agent = SelfEvolutionAgent(
+                fitness_engine=get_fitness_engine(),
+                interval_seconds=300,
+            )
             await _evo_agent.start()
             app.state.evo_agent = _evo_agent
             logger.info("✅ SelfEvolutionAgent background loop started (5-min evolution cycle).")

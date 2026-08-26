@@ -609,11 +609,19 @@ class LLMGateway:
                     # admins can opt-in after verifying the EvolutionEngine works.
                     if os.getenv("ENABLE_EVOLUTION_LEARNING", "false").lower() == "true":
                         try:
-                            # FIX: EvolutionEngine is a class, not a singleton.
-                            # Instantiate lazily (cheap — uses default SQLite path).
+                            # SELF-EVOLVE FIX (real): wire EvolutionEngine to the SHARED
+                            # FitnessEngine singleton (from api.deps.get_fitness_engine).
+                            # Previously EvolutionEngine() was called with no args, so
+                            # self.fitness_engine was always None → learn_from_success
+                            # wrote to DB but never called track_execution →
+                            # SelfEvolutionAgent._tick() always saw empty metrics →
+                            # no auto-refactor ever triggered (the "loop" was NOT closed).
+                            # Now both EvolutionEngine AND SelfEvolutionAgent use the
+                            # SAME FitnessEngine singleton, so metrics are shared.
+                            from api.deps import get_fitness_engine
                             from core.evolution.evolution_engine import EvolutionEngine
 
-                            _evolution_engine = EvolutionEngine()
+                            _evolution_engine = EvolutionEngine(fitness_engine=get_fitness_engine())
                             _evolution_engine.learn_from_success(
                                 task=prompt_text,
                                 approach=current_model,

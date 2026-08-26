@@ -227,9 +227,16 @@ class MaintenancePipeline:
                     logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
                 if _evo is None:
-                    # No app.state.evo_agent — instantiate properly (with FitnessEngine)
+                    # No app.state.evo_agent — instantiate properly (with shared FitnessEngine)
+                    # SELF-EVOLVE FIX (real): pass shared FitnessEngine singleton so
+                    # the emergency tick() reads the SAME metrics as the regular loop.
                     try:
-                        _evo = SelfEvolutionAgent(interval_seconds=300)
+                        from api.deps import get_fitness_engine
+
+                        _evo = SelfEvolutionAgent(
+                            fitness_engine=get_fitness_engine(),
+                            interval_seconds=300,
+                        )
                     except Exception as init_exc:
                         logger.debug(
                             f"SelfEvolutionAgent init failed (FitnessEngine missing?): {init_exc!r}"
