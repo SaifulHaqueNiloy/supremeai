@@ -180,5 +180,114 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ SelfHealer listener registration failed: {exc}")
 
+    # ── SupremeAI 2.0 Infrastructure Agents ──────────────────────────────────
+    # বাংলা: ৪টা futuristic infrastructure agent — autonomous/self-healing/free-tier
+    # vision-এর কোর। সব default "false" যাতে user opt-in করে enable করে (prior pattern:
+    # Tier8/Evolution/DailyLearner সব default false)। প্রতিটা try/except-এ wrapped যাতে
+    # একটা fail করলে অন্যগুলো চালু থাকে।
+
+    # Agent: AutoScalingAgent — autonomous resource scaling (CPU/mem/response-time thresholds)
+    try:
+        if os.getenv("ENABLE_AUTOSCALING_AGENT", "false").lower() == "true":
+            from agents.infrastructure.auto_scaling_agent import auto_scaling_agent
+
+            async def _autoscaling_loop() -> None:
+                await auto_scaling_agent.initialize_policies()
+                while True:
+                    try:
+                        metrics = await auto_scaling_agent.collect_current_metrics()
+                        rec = await auto_scaling_agent.analyze_scaling_need(metrics)
+                        if rec and getattr(rec, "confidence", 0) > 0.6:
+                            await auto_scaling_agent.execute_scaling_action(rec)
+                    except Exception as _e:
+                        logger.warning(f"⚠️ auto-scaling cycle failed: {_e}")
+                    await asyncio.sleep(300)  # 5-min cycle
+
+            await agent_supervisor.start_agent(
+                "auto-scaling",
+                lambda: _autoscaling_loop(),
+                health_check_interval=60,
+                max_restarts=5,
+                restart_delay=10.0,
+            )
+            logger.info("✅ AutoScalingAgent started (5-min autonomous scaling cycle).")
+        else:
+            logger.info("ℹ️ AutoScalingAgent disabled (set ENABLE_AUTOSCALING_AGENT=true).")
+    except Exception as exc:
+        logger.warning(f"⚠️ AutoScalingAgent failed to start: {exc}")
+
+    # Agent: PerformanceTuningAgent — continuous optimization with auto-apply
+    try:
+        if os.getenv("ENABLE_PERFORMANCE_TUNING_AGENT", "false").lower() == "true":
+            from agents.infrastructure.performance_tuning_agent import performance_tuning_agent
+
+            await agent_supervisor.start_agent(
+                "performance-tuning",
+                lambda: performance_tuning_agent.run_continuous_tuning(interval_minutes=15),
+                health_check_interval=300,  # 5-min (loop runs 15-min cycles)
+                max_restarts=5,
+                restart_delay=30.0,
+            )
+            logger.info("✅ PerformanceTuningAgent started (15-min continuous tuning cycle).")
+        else:
+            logger.info("ℹ️ PerformanceTuningAgent disabled (set ENABLE_PERFORMANCE_TUNING_AGENT=true).")
+    except Exception as exc:
+        logger.warning(f"⚠️ PerformanceTuningAgent failed to start: {exc}")
+
+    # Agent: CostOptimizationAgent — strategic cost tracking + opportunity identification
+    try:
+        if os.getenv("ENABLE_COST_OPTIMIZATION_AGENT", "false").lower() == "true":
+            from agents.infrastructure.cost_optimization_agent import cost_optimization_agent
+
+            async def _cost_opt_loop() -> None:
+                await cost_optimization_agent.initialize_budget_config()
+                while True:
+                    try:
+                        await cost_optimization_agent.track_cost_metrics()
+                        await cost_optimization_agent.identify_optimization_opportunities()
+                    except Exception as _e:
+                        logger.warning(f"⚠️ cost-optimization cycle failed: {_e}")
+                    await asyncio.sleep(3600)  # 1-hour cycle
+
+            await agent_supervisor.start_agent(
+                "cost-optimization",
+                lambda: _cost_opt_loop(),
+                health_check_interval=600,  # 10-min
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info("✅ CostOptimizationAgent started (1-hour cost-tracking cycle).")
+        else:
+            logger.info("ℹ️ CostOptimizationAgent disabled (set ENABLE_COST_OPTIMIZATION_AGENT=true).")
+    except Exception as exc:
+        logger.warning(f"⚠️ CostOptimizationAgent failed to start: {exc}")
+
+    # Agent: DisasterRecoveryAgent — periodic incremental backups + integrity verification
+    try:
+        if os.getenv("ENABLE_DISASTER_RECOVERY_AGENT", "false").lower() == "true":
+            from agents.infrastructure.disaster_recovery_agent import disaster_recovery_agent
+
+            async def _disaster_recovery_loop() -> None:
+                await disaster_recovery_agent.initialize_recovery_plans()
+                while True:
+                    try:
+                        await disaster_recovery_agent.create_backup(backup_type="incremental")
+                    except Exception as _e:
+                        logger.warning(f"⚠️ disaster-recovery backup cycle failed: {_e}")
+                    await asyncio.sleep(21600)  # 6-hour cycle
+
+            await agent_supervisor.start_agent(
+                "disaster-recovery",
+                lambda: _disaster_recovery_loop(),
+                health_check_interval=1800,  # 30-min
+                max_restarts=3,
+                restart_delay=120.0,
+            )
+            logger.info("✅ DisasterRecoveryAgent started (6-hour incremental backup cycle).")
+        else:
+            logger.info("ℹ️ DisasterRecoveryAgent disabled (set ENABLE_DISASTER_RECOVERY_AGENT=true).")
+    except Exception as exc:
+        logger.warning(f"⚠️ DisasterRecoveryAgent failed to start: {exc}")
+
     # Start the agent health monitor
     await agent_supervisor.start_monitor(check_interval=30)
