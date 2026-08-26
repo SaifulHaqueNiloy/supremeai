@@ -56,7 +56,7 @@ interface BrowserPreviewProps {
 
 
 
-export function BrowserPreview({ url = 'https://supremeai.web.app', html }: BrowserPreviewProps) {
+export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
   const [currentUrl, setCurrentUrl] = useState(url);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
