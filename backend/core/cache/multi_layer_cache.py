@@ -51,14 +51,21 @@ def _get_redis_client():
 class _InMemoryRedisStub:
     """বাংলা মন্তব্ব্য: Test/dev fallback — production-এ কখনো এটি ব্যবহার হবে না।"""
 
+    # MEMLEAK-003 FIX: Bound the store to prevent OOM when Redis is down.
+    _MAX_STORE_SIZE = 5000
+
     def __init__(self):
-        self._store: dict[str, str] = {}
+        from collections import OrderedDict
+        self._store: OrderedDict = OrderedDict()
 
     async def get(self, key: str) -> str | None:
         return self._store.get(key)
 
     async def setex(self, key: str, ttl: int, value: str):
         self._store[key] = value
+        # MEMLEAK-003 FIX: Evict oldest when store exceeds max size
+        if len(self._store) > self._MAX_STORE_SIZE:
+            self._store.popitem(last=False)
 
     async def mget(self, keys: list[str]) -> list[str | None]:
         # বাংলা মন্তব্ব্য: ব্যাচ রিড সাপোর্ট করার জন্য স্টাব ক্লাসে mget মেথড যোগ করা হলো।

@@ -279,10 +279,25 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
 
     # C-03 Fix: If origin is wildcard, credentials must not be allowed
+    # RUNTIME-001 FIX: Previously fell back to ["*"] (wildcard CORS) when no
+    # origins configured — allows any website to make authenticated requests.
+    # Now: fail-closed — use localhost-only origins for dev, reject in production.
     cors_allow_credentials = True
     if not origins or origins == [""]:
-        origins = ["*"]
-        cors_allow_credentials = False
+        env = str(getattr(settings, "env", "local")).lower()
+        if env in ("production", "staging"):
+            logger.error(
+                "🚨 CORS: no origins configured in production! "
+                "Set USER_CORS_ORIGINS and ADMIN_CORS_ORIGINS env vars. "
+                "Using localhost-only fallback (production will break)."
+            )
+        origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+        ]
+        cors_allow_credentials = True
 
     app.add_middleware(
         CORSMiddleware,

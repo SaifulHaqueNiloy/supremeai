@@ -207,23 +207,28 @@ async def list_connected_repos(
     agent = await _get_agent(user, sql_db)
 
     # FIX (perf): reuse shared httpx.AsyncClient from lifespan (50 keep-alive conns)
-    # instead of creating a new client per request (which pays full TCP+TLS handshake).
+    # CONNLEAK-001 FIX: Fallback client was never closed → FD exhaustion.
+    # Now: use async with for fallback client so it's always closed.
     client = global_http_client
+    _fallback_client = None
     if client is None:
-        # Fallback if lifespan hasn't initialized it yet (e.g., in tests)
         import httpx
-
-        client = httpx.AsyncClient(timeout=10.0)
-    resp = await client.get(
-        f"{GITHUB_API_BASE}/repos/{repo}",
-        headers={
-            "Authorization": f"Bearer {agent.token}",
-            "Accept": "application/vnd.github.v3+json",
-        },
-        timeout=10.0,
-    )
-    resp.raise_for_status()
-    data = resp.json()
+        _fallback_client = httpx.AsyncClient(timeout=10.0)
+        client = _fallback_client
+    try:
+        resp = await client.get(
+            f"{GITHUB_API_BASE}/repos/{repo}",
+            headers={
+                "Authorization": f"Bearer {agent.token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+    finally:
+        if _fallback_client:
+            await _fallback_client.aclose()
     return [
         {
             "id": str(data["id"]),
@@ -254,20 +259,26 @@ async def list_repo_commits(
     agent = await _get_agent(user, sql_db)
 
     # FIX (perf): reuse shared httpx.AsyncClient from lifespan (same as /repos endpoint above)
+    # CONNLEAK-001 FIX: Fallback client was never closed → FD exhaustion.
     client = global_http_client
+    _fallback_client = None
     if client is None:
         import httpx
-
-        client = httpx.AsyncClient(timeout=10.0)
-    resp = await client.get(
-        f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
-        headers={
-            "Authorization": f"Bearer {agent.token}",
-            "Accept": "application/vnd.github.v3+json",
-        },
-        timeout=10.0,
-    )
-    resp.raise_for_status()
+        _fallback_client = httpx.AsyncClient(timeout=10.0)
+        client = _fallback_client
+    try:
+        resp = await client.get(
+            f"{GITHUB_API_BASE}/repos/{repo}/commits?per_page={limit}",
+            headers={
+                "Authorization": f"Bearer {agent.token}",
+                "Accept": "application/vnd.github.v3+json",
+            },
+            timeout=10.0,
+        )
+        resp.raise_for_status()
+    finally:
+        if _fallback_client:
+            await _fallback_client.aclose()
     return [
         {
             "hash": c["sha"][:7],
