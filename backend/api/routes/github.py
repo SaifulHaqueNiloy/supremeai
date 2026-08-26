@@ -213,6 +213,7 @@ async def list_connected_repos(
     _fallback_client = None
     if client is None:
         import httpx
+
         _fallback_client = httpx.AsyncClient(timeout=10.0)
         client = _fallback_client
     try:
@@ -264,6 +265,7 @@ async def list_repo_commits(
     _fallback_client = None
     if client is None:
         import httpx
+
         _fallback_client = httpx.AsyncClient(timeout=10.0)
         client = _fallback_client
     try:

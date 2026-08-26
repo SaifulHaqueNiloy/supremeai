@@ -32,11 +32,13 @@ except ImportError:
     # RUNTIME-002 FIX: Use bounded OrderedDict instead of unbounded dict.
     # Previously: plain dict grew without limit → OOM if cachetools missing.
     from collections import OrderedDict
+
     _BoundedCache = OrderedDict()
     _BOUNDED_CACHE_MAX = 10000
 
     class _BoundedDict(OrderedDict):
         """Bounded dict that evicts oldest entries when max size is reached."""
+
         def __setitem__(self, key, value):
             super().__setitem__(key, value)
             if len(self) > _BOUNDED_CACHE_MAX:

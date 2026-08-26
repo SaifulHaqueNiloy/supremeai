@@ -18,7 +18,9 @@ from datetime import datetime, timedelta
 
 _DB_PATH = os.environ.get(
     "UPTIME_DB_PATH",
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "uptime_history.db"),
+    os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "uptime_history.db"
+    ),
 )
 _LOCK = threading.Lock()
 
@@ -99,9 +101,6 @@ def get_history(service_name: str, hours: int = 24) -> list[dict]:
                 "WHERE service_name = ? AND checked_at >= ? ORDER BY checked_at ASC",
                 (service_name, cutoff),
             ).fetchall()
-        return [
-            {"status": r[0], "response_time_ms": r[1], "checked_at": r[2]}
-            for r in rows
-        ]
+        return [{"status": r[0], "response_time_ms": r[1], "checked_at": r[2]} for r in rows]
     except Exception:
         return []

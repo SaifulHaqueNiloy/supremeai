@@ -114,6 +114,7 @@ def retry_handler(
                     try:
                         asyncio.get_running_loop()
                         import concurrent.futures
+
                         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
                             ex.submit(time.sleep, current_delay).result(timeout=current_delay + 1)
                     except RuntimeError:
@@ -239,6 +240,7 @@ def retry_with_budget(
                     try:
                         asyncio.get_running_loop()
                         import concurrent.futures
+
                         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
                             ex.submit(time.sleep, current_delay).result(timeout=current_delay + 1)
                     except RuntimeError:
