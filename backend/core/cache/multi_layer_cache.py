@@ -56,6 +56,7 @@ class _InMemoryRedisStub:
 
     def __init__(self):
         from collections import OrderedDict
+
         self._store: OrderedDict = OrderedDict()
 
     async def get(self, key: str) -> str | None:

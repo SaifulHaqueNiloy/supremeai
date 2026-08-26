@@ -24,7 +24,7 @@ class LearningLoop:
         for key in cur_weights:
             if key in old_weights and key in fisher:
                 diff = cur_weights[key] - old_weights[key]
-                penalty += 0.5 * ewc_lambda * fisher[key] * (diff ** 2)
+                penalty += 0.5 * ewc_lambda * fisher[key] * (diff**2)
         return penalty
 
     async def observe_and_learn(self, input_data, output_data, **kwargs):
