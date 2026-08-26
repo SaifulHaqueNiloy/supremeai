@@ -1,8 +1,8 @@
 import uuid
 from contextlib import asynccontextmanager
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Depends, HTTPException
-from firebase_admin import firestore
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,11 +13,21 @@ from services import global_http_client  # FIX: reuse shared connection pool
 from tools.devops.github_agent import GitHubAgent, get_user_github_token
 from tools.repo_discovery_agent import RepoDiscoveryAgent
 
+# Lazy/optional firebase_admin import — only needed for type hints.
+# The actual firestore.Client is only used at runtime if db is a Firestore client.
+if TYPE_CHECKING:
+    from firebase_admin import firestore
+else:
+    try:
+        from firebase_admin import firestore
+    except ImportError:
+        firestore = None  # type: ignore[assignment]
+
 router = APIRouter(prefix="/github", tags=["github"])
 repo_discovery_agent = RepoDiscoveryAgent()
 
 
-def _resolve_repo(payload_repo: str | None, db: firestore.Client) -> str:
+def _resolve_repo(payload_repo: str | None, db) -> str:
     repo = payload_repo
     if not repo or not repo.strip():
         profile = db.get_tenant_profile() or {}
