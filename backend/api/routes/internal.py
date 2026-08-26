@@ -33,7 +33,10 @@ class RunEvolutionRequest(BaseModel):
 @router.post("/internal/run-daily-evolution")
 async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
     _require_admin(request)
-    engine = EvolutionEngine()
+    # BUG FIX #2: Use shared FitnessEngine singleton via EvolutionEngine.
+    from api.deps import get_fitness_engine
+
+    engine = EvolutionEngine(fitness_engine=get_fitness_engine())
     task_history = payload.task_history or []
     try:
         # বাংলা মন্তব্য: run_daily_evolution অ্যাসিঙ্ক হওয়ায় এখানে await ব্যবহার করা হলো।
