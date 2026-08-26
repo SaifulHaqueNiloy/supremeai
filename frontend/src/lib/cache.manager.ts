@@ -156,14 +156,12 @@ export async function cachedFetch<T>(
     // Try cache first (saves API calls AND Redis commands!)
     const cached = await redis.get<string>(fullKey);
     if (cached) {
-      console.log(`🎯 Cache HIT: ${cacheKey}`);
       cacheStats.hits++;
       cacheStats.bytes_saved += cached.length;  // Avoided re-fetching this size
       
       return JSON.parse(await decompress(cached));  // ✅ Use proper decompression
     }
 
-    console.log(`💾 Cache MISS: ${cacheKey}, fetching...`);
     
     // Fetch fresh data
     const data = await fetcher();
@@ -206,14 +204,12 @@ export async function prefetchCommonKeys(): Promise<void> {
     'pricing:plans'
   ];
   
-  console.log('🚀 Prefetching common cache keys...');
   
   for (const key of commonKeys) {
     try {
       const exists = await redis.exists(`superai:${key}`);
       if (!exists) {
         // Trigger fetch (will be cached)
-        console.log(`  Prefetching: ${key}`);
       }
     } catch (e) {
       // Silently continue
@@ -232,7 +228,6 @@ export async function warmCacheFromPatterns(): Promise<void> {
   
   for (const { pattern, ttl } of patternsToWarm) {
     // Implementation would analyze access logs and pre-warm
-    console.log(`🔥 Warming cache pattern: ${pattern} (TTL: ${ttl}s)`);
   }
 }
 
@@ -255,9 +250,6 @@ const MAX_DAILY_COMMANDS = 9000; // Leave buffer
 
 export function trackRedisCommand(): boolean {
   dailyCommandCount++;
-  if (dailyCommandCount % 100 === 0) {
-    console.log(`📊 Redis commands today: ${dailyCommandCount}/${MAX_DAILY_COMMANDS}`);
-  }
   return dailyCommandCount < MAX_DAILY_COMMANDS;
 }
 

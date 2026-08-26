@@ -61,7 +61,6 @@ export const useThemeStore = create<ThemeState>()(
               theme: prefs.theme,
               lastSyncedAt: Date.now()
             });
-            console.log(`[ThemeStore] Loaded theme from backend: ${prefs.theme}`);
           }
         } catch (e) {
           console.warn('[ThemeStore] Failed to load from backend, using local:', e);

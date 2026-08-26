@@ -20,6 +20,7 @@ from pydantic import BaseModel
 # Moved imports to the top of the file to improve performance by avoiding repeated imports inside functions.
 from adaptive_engine.experience_db import Experience
 from api.dependencies import get_current_user_token
+
 # STABILIZE FIX: PromptAction now lives in core.intent_router_v2 (canonical).
 # core.intent_router re-exports it for backwards compat.
 from core.intent_router import PromptAction

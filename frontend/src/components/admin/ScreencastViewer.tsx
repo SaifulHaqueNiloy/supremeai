@@ -32,7 +32,6 @@ export function ScreencastViewer({
     
     wsRef.current.onopen = () => {
       setIsConnected(true);
-      console.log('Screencast connected');
     };
     
     wsRef.current.onmessage = async (event) => {
@@ -70,7 +69,6 @@ export function ScreencastViewer({
     
     wsRef.current.onclose = () => {
       setIsConnected(false);
-      console.log('Screencast disconnected');
     };
     
     return () => {

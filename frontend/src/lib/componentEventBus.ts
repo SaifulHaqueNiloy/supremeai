@@ -149,7 +149,7 @@ class ComponentEventBus {
     
     // Debug logging in development
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[ComponentEventBus] 📤 ${event}`, {
+      console.warn(`[ComponentEventBus] 📤 ${event}`, {
         listenersCount: callbacks?.size || 0,
         data
       });

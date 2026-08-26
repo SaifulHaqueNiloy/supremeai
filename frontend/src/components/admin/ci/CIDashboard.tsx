@@ -589,7 +589,6 @@ export function CIDashboard({
         
         ws.onopen = () => {
           setConnectionStatus('connected');
-          console.log('CI Dashboard WebSocket connected');
         };
         
         ws.onmessage = (event) => {

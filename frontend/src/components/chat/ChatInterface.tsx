@@ -197,7 +197,7 @@ export const ChatInterface: React.FC = () => {
               <BranchButton
                 conversationId="current_conv"
                 messageId={msg.id.toString()}
-                onBranchCreated={(newId) => { console.log('Branch created:', newId) }}
+                onBranchCreated={(newId) => { void newId; }}
               />
             </div>
 
@@ -220,7 +220,7 @@ export const ChatInterface: React.FC = () => {
           {/* S4: Image Upload */}
           <ImageUploadButton
             conversationId="current_conv"
-            onUploadComplete={(attachment) => { console.log('Upload complete', attachment) }}
+            onUploadComplete={(attachment) => { void attachment; }}
           />
 
           <textarea

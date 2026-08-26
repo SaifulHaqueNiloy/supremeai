@@ -142,7 +142,6 @@ export async function fetchWithRetry(
     // Wait before retry (except after last attempt)
     if (attempt < config.maxRetries) {
       const delay = calculateBackoff(attempt, config);
-      console.log(`🔄 Retrying in ${Math.round(delay)}ms...`);
       await sleep(delay);
     }
   }

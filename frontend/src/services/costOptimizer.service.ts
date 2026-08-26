@@ -147,7 +147,6 @@ class RequestDeduplicator {
     const cached = this.recentRequests.get(requestHash);
     
     if (cached && Date.now() - cached.timestamp < this.windowMs) {
-      console.log('✨ Request deduplicated (cached response reused)');
       return cached.response;
     }
     
@@ -291,7 +290,6 @@ export class CostOptimizerService {
   resetAll(): void {
     this.rateLimiter.reset();
     resetCacheStats();
-    console.log('🔄 Cost optimizer state reset');
   }
 }
 

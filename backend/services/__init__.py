@@ -17,6 +17,6 @@ except ImportError:
     _httpx_type = "object"
 
 # Initialized by core.lifespan at app startup.
-global_http_client: Optional[object] = None  # type: ignore[assignment]
+global_http_client: object | None = None  # type: ignore[assignment]
 
 __all__ = ["global_http_client"]
