@@ -127,6 +127,7 @@ class IntelligentCache:
         # When Redis is unavailable, this dict grew without limit → OOM.
         try:
             from collections import OrderedDict
+
             self._local_cache: OrderedDict = OrderedDict()
             self._local_cache_max = 1000  # max entries
         except ImportError:
