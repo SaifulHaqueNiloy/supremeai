@@ -161,7 +161,9 @@ class SelfCorrectionService:
                             f"TaskNode '{node.id}' failed after {self.max_retries} auto-healing attempts: {exc}"
                         ) from exc
                     # Apply localized self-healing backoff/adaptation
-                    time.sleep(0.05 * retries)
+                    import asyncio
+
+                    await asyncio.sleep(0.05 * retries)
 
         duration_ms = (time.perf_counter() - start_time) * 1000.0
 
