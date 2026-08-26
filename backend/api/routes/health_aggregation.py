@@ -11,6 +11,12 @@ import httpx
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
+from core.health.uptime_tracker import (
+    get_history,
+    get_uptime_summary,
+    record_check,
+)
+
 router = APIRouter(prefix="/admin-api", tags=["health"])
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -28,6 +34,9 @@ class ServiceHealth(BaseModel):
     last_check: datetime
     url: str
     critical: bool = False
+    uptime_24h: float | None = None
+    uptime_7d: float | None = None
+    uptime_30d: float | None = None
 
 
 class HealthAggregationResponse(BaseModel):
@@ -186,6 +195,14 @@ async def check_all_services() -> list[ServiceHealth]:
         else:
             services.append(result)
 
+    # Persist each check + attach rolling uptime percentages (best-effort).
+    for svc in services:
+        record_check(svc.name, svc.status, svc.response_time_ms)
+        summary = get_uptime_summary(svc.name)
+        svc.uptime_24h = summary["uptime_24h"]
+        svc.uptime_7d = summary["uptime_7d"]
+        svc.uptime_30d = summary["uptime_30d"]
+
     return services
 
 
@@ -246,6 +263,20 @@ async def get_health_aggregation():
         else 0,
         alerts=alerts,
     )
+
+
+@router.get("/service-uptime")
+async def get_service_uptime(service: str = Query(...), hours: int = Query(24, ge=1, le=720)):
+    """
+    Historical up/down timeline + rolling uptime % for one service.
+    Powers the uptime bar / sparkline in the admin dashboard.
+    """
+    return {
+        "service": service,
+        "hours": hours,
+        "summary": get_uptime_summary(service),
+        "history": get_history(service, hours=hours),
+    }
 
 
 @router.get("/health-map")
