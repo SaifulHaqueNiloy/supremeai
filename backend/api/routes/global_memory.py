@@ -213,7 +213,7 @@ async def delete_memory(
         if not resp.data:
             raise HTTPException(status_code=404, detail="Memory not found.")
 
-        supabase_db.await client.table("ai_memory").delete().eq("id", memory_id).execute()
+        await supabase_db.client.table("ai_memory").delete().eq("id", memory_id).execute()
         return {"status": "deleted", "id": memory_id}
     except HTTPException:
         raise
@@ -270,7 +270,12 @@ async def update_memory(
             metadata["content_type"] = payload.content_type
             update_fields["metadata"] = metadata
 
-        supabase_db.await client.table("ai_memory").update(update_fields).eq("id", memory_id).execute()
+        await (
+            supabase_db.client.table("ai_memory")
+            .update(update_fields)
+            .eq("id", memory_id)
+            .execute()
+        )
         return {"status": "updated", "id": memory_id}
     except HTTPException:
         raise

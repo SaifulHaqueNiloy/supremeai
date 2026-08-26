@@ -524,24 +524,26 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
 
 try:
     from .artifacts import router as artifacts_router
-    _safe_imports['artifacts_router'] = artifacts_router
+
+    _safe_imports["artifacts_router"] = artifacts_router
 except Exception as e:
-    logger.warning(f'Router import failed for artifacts_router: {e}')
+    logger.warning(f"Router import failed for artifacts_router: {e}")
     artifacts_router = None
 
 try:
     from .chat import router as chat_router
-    _safe_imports['chat_router'] = chat_router
+
+    _safe_imports["chat_router"] = chat_router
 except Exception as e:
-    logger.warning(f'Router import failed for chat_router: {e}')
+    logger.warning(f"Router import failed for chat_router: {e}")
     chat_router = None
 
 try:
     from .stream_chat_sse import router as sse_router
-    _safe_imports['sse_router'] = sse_router
+
+    _safe_imports["sse_router"] = sse_router
 except Exception as e:
-    logger.warning(f'Router import failed for sse_router: {e}')
+    logger.warning(f"Router import failed for sse_router: {e}")
     sse_router = None
 
 __all__ = list(_safe_imports.keys())
-

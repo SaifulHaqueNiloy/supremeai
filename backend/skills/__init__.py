@@ -23,21 +23,26 @@ from core.skills import (
 try:
     from .provisioner import SkillProvisioner
 except ImportError:
+
     class SkillProvisioner:
         """Fallback stub when provisioner unavailable."""
+
         async def provision_skill(self, skill_id: str) -> dict:
             raise NotImplementedError(f"Skill provisioning not available for {skill_id}")
 
+
 try:
-    from .skill_registry import skill_registry, SkillRegistry
+    from .skill_registry import SkillRegistry, skill_registry
 except ImportError:
     skill_registry = None
+
     class SkillRegistry:
         def __init__(self):
             self._skills = {}
-        
+
         def get(self, skill_id):
             return self._skills.get(skill_id)
+
 
 __all__ = [
     "BaseSkill",

@@ -61,9 +61,12 @@ async def migrate_embeddings():
 
                 if new_embedding:
                     # Update record in Supabase
-                    await supabase.table("ai_memory").update({"embedding": new_embedding}).eq(
-                        "id", record_id
-                    ).execute()
+                    await (
+                        supabase.table("ai_memory")
+                        .update({"embedding": new_embedding})
+                        .eq("id", record_id)
+                        .execute()
+                    )
                     logger.info(
                         f"[{i + 1}/{len(records)}] Successfully re-encoded record {record_id}."
                     )

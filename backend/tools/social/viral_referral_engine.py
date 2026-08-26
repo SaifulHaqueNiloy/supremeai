@@ -147,9 +147,12 @@ class ViralReferralEngine:
         if db.client:
             try:
                 await db.client.table("referral_redemptions").insert(redemption).execute()
-                await db.client.table("referral_codes").update(
-                    {"redeemed_count": record.get("redeemed_count", 0) + 1}
-                ).eq("code", referral_code).execute()
+                await (
+                    db.client.table("referral_codes")
+                    .update({"redeemed_count": record.get("redeemed_count", 0) + 1})
+                    .eq("code", referral_code)
+                    .execute()
+                )
             except Exception as exc:
                 logger.debug(f"Referral redemption persistence failed: {exc}")
         else:

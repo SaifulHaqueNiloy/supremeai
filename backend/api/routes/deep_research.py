@@ -492,13 +492,17 @@ async def deep_research_sync(
         if payload.conversation_id and supabase_db.client:
             try:
                 summary = report.get("summary", "")[:2000]
-                await supabase_db.client.table("messages").insert(
-                    {
-                        "conversation_id": payload.conversation_id,
-                        "role": "assistant",
-                        "content": f"[Deep Research: {report.get('title', '')}]\n\n{summary}",
-                    }
-                ).execute()
+                await (
+                    supabase_db.client.table("messages")
+                    .insert(
+                        {
+                            "conversation_id": payload.conversation_id,
+                            "role": "assistant",
+                            "content": f"[Deep Research: {report.get('title', '')}]\n\n{summary}",
+                        }
+                    )
+                    .execute()
+                )
             except Exception as exc:
                 logger.warning(f"Failed to attach research to conversation: {exc}")
 

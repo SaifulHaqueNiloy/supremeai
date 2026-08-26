@@ -237,12 +237,16 @@ class StyleLearner:
             from database.supabase_client import db
 
             if db.client:
-                await db.client.table("user_preferences").upsert(
-                    {
-                        "user_id": f"repo:{repo_path}",
-                        "custom_shortcuts": style,
-                    }
-                ).execute()
+                await (
+                    db.client.table("user_preferences")
+                    .upsert(
+                        {
+                            "user_id": f"repo:{repo_path}",
+                            "custom_shortcuts": style,
+                        }
+                    )
+                    .execute()
+                )
                 return
         except Exception as persist_err:
             # বাংলা মন্তব্য: Supabase persist ব্যর্থ হলে warning দেওয়া হচ্ছে যাতে DB সমস্যাটি অগোচরে না থাকে।

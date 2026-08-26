@@ -15,7 +15,13 @@ try:
 except ImportError:
     ChurnProphet = None
 try:
-    from .ephemeral_executor import EphemeralExecutor, ExecutionResult, ExecutionStatus, ResourceQuota, SecurityScanner
+    from .ephemeral_executor import (
+        EphemeralExecutor,
+        ExecutionResult,
+        ExecutionStatus,
+        ResourceQuota,
+        SecurityScanner,
+    )
 except ImportError:
     EphemeralExecutor = ExecutionResult = ExecutionStatus = ResourceQuota = SecurityScanner = None
 try:
@@ -57,7 +63,7 @@ except ImportError:
 try:
     from .vulnerability_prophet import VulnerabilityProphet
 except ImportError:
-    VulnerabilityProphet = None.ephemeral_executor import EphemeralExecutor
+    VulnerabilityProphet = None
 from .headless_terminal_agent import HeadlessTerminalAgent
 from .insight_mage import InsightMage
 from .internet_monitor_agent import InternetMonitorAgent
@@ -87,6 +93,3 @@ __all__ = [
     "SkillLibrarian",
     "VulnerabilityProphet",
 ]
-
-
-

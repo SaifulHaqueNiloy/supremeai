@@ -150,16 +150,20 @@ async def generate_share_link(
         share_id = _generate_share_id()
         expires_at = (datetime.now(UTC) + timedelta(days=30)).isoformat()
 
-        await db.client.table("shared_conversations").insert(
-            {
-                "share_id": share_id,
-                "conversation_id": payload.conversation_id,
-                "user_id": user_id,
-                "is_public": True,
-                "view_count": 0,
-                "expires_at": expires_at,
-            }
-        ).execute()
+        await (
+            db.client.table("shared_conversations")
+            .insert(
+                {
+                    "share_id": share_id,
+                    "conversation_id": payload.conversation_id,
+                    "user_id": user_id,
+                    "is_public": True,
+                    "view_count": 0,
+                    "expires_at": expires_at,
+                }
+            )
+            .execute()
+        )
 
         logger.info(f"Share link generated: {share_id} for conversation {payload.conversation_id}")
 
@@ -189,9 +193,12 @@ async def get_shared_conversation(share_id: str):
         try:
             db = SupabaseDB()
             current_count = cached.get("view_count", 0)
-            await db.client.table("shared_conversations").update({"view_count": current_count + 1}).eq(
-                "share_id", share_id
-            ).execute()
+            await (
+                db.client.table("shared_conversations")
+                .update({"view_count": current_count + 1})
+                .eq("share_id", share_id)
+                .execute()
+            )
             cached["view_count"] = current_count + 1
         except Exception as e:
             import logging
