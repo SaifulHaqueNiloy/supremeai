@@ -738,13 +738,19 @@ class CostOptimizationAgent:
                 },
                 "optimization_opportunities": {
                     "count": len(opportunities),
+                    # FIX: আগে `sum(min(3, len(opportunities)), key=...)` ছিল — সেটা int-কে
+                    # iterable হিসেবে দেওয়ায় TypeError হত। সঠিক logic: top-3 opportunities
+                    # (potential_savings অনুযায়ী descending sort) এর savings যোগ করা।
                     "top_3_potential_savings": round(
                         (
                             sum(
-                                min(3, len(opportunities)),
-                                key=lambda x: x.potential_savings,
-                                default=0,
-                            )  # type: ignore
+                                opp.potential_savings
+                                for opp in sorted(
+                                    opportunities,
+                                    key=lambda x: x.potential_savings,
+                                    reverse=True,
+                                )[:3]
+                            )
                             if opportunities
                             else 0
                         ),

@@ -316,8 +316,9 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     # --- Neural Memory Augmentation (RAG over past experiences, zero-cost) ---
     # বাংলা: free sentence-transformers দিয়ে past experiences retrieve করে prompt কে augment করে।
     # memory_mw নিজেই graceful fallback করে (vector_db down হলে original prompt ফেরত দেয়)।
-    # env ENABLE_MEMORY_AUGMENT=false দিলে disable থাকে (default: enabled)।
-    if os.environ.get("ENABLE_MEMORY_AUGMENT", "true").lower() in ("true", "1", "yes"):
+    # default-OFF যাতে deploy হওয়ার সাথে সাথে সব live task-এ vector_db query না যায় (free-tier latency/cost সচেতনতা)।
+    # enable করতে: ENABLE_MEMORY_AUGMENT=true
+    if os.environ.get("ENABLE_MEMORY_AUGMENT", "false").lower() in ("true", "1", "yes"):
         prompt = await memory_mw.augment_task(prompt)
 
     # --- True Vector Semantic Caching ---
@@ -375,7 +376,8 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     # --- Neural Memory Feedback Loop: store result for future RAG retrieval ---
     # বাংলা: এই execution-এর result store করা হচ্ছে যাতে ভবিষ্যতে similar task-এ এটি retrieve হয়।
     # background-এ চলে যাতে response latency না বাড়ে। success/failure দুটোই store হয় (self-healing-এর জন্য)।
-    if os.environ.get("ENABLE_MEMORY_AUGMENT", "true").lower() in ("true", "1", "yes"):
+    # default-OFF (augment-এর সাথে symmetric)।
+    if os.environ.get("ENABLE_MEMORY_AUGMENT", "false").lower() in ("true", "1", "yes"):
         background_tasks.add_task(
             memory_mw.intercept_result,
             task_prompt=req.task,
