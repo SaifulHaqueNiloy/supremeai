@@ -154,11 +154,17 @@ async def start_background_services(app):
             from services.auto_healer import get_healer
 
             auto_healer_service = get_healer()
-            # FIX: AutoHealer has start_monitoring(), not start()
-            await auto_healer_service.start_monitoring(interval_seconds=30.0)
+            # BUG FIX #1 (CRITICAL): start_monitoring() is 'while True: await asyncio.sleep(30)'
+            # — calling it with `await` BLOCKS the lifespan forever (ASGI never serves HTTP).
+            # Fix: wrap with asyncio.create_task so it runs in background.
+            import asyncio as _asyncio
+
             app.state.auto_healer = auto_healer_service
+            app.state.auto_healer_task = _asyncio.create_task(
+                auto_healer_service.start_monitoring(interval_seconds=30.0)
+            )
             logger.info(
-                "✅ AutoHealerService started (DB/Redis healing active, 30s check interval)."
+                "✅ AutoHealerService started in background (DB/Redis healing active, 30s check interval)."
             )
         else:
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")

@@ -421,7 +421,13 @@ class DailyLearner:
         self.decomposer = goal_decomposer or GoalDecomposer()
         self.scanner = research_scanner or ResearchScanner()
         self.scorer = priority_scorer or PriorityScorer()
-        self.engine = EvolutionEngine()
+        # BUG FIX #2: Use shared FitnessEngine singleton via EvolutionEngine.
+        # Private EvolutionEngine() here had its own private FitnessEngine (or None)
+        # → metrics from daily learning didn't reach the shared singleton that
+        # SelfEvolutionAgent._tick() reads.
+        from api.deps import get_fitness_engine
+
+        self.engine = EvolutionEngine(fitness_engine=get_fitness_engine())
         self.active_goals: dict[str, list[SubGoal]] = {}
         logger.info("DailyLearner initialized with full autonomy pipeline")
 
