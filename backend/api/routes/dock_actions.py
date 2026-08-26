@@ -14,8 +14,10 @@ try:
     from github import Github, GithubException  # PyGithub library
 except ImportError:
     Github = None  # type: ignore[assignment]
+
     class GithubException(Exception):
         """Stub for when PyGithub is not installed."""
+
 
 from api.dependencies import get_current_user_token
 from core.error_bus import with_error_bus
