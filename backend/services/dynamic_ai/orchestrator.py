@@ -12,10 +12,47 @@ from typing import Any
 
 from loguru import logger
 
-from .circuit_breaker import CircuitBreakerManager
-from .learning_engine import LearningEngine, TaskType
-from .local_fallback import OllamaFallback
-from .provider_registry import ProviderConfig, ProviderRegistry
+try:
+    from .circuit_breaker import CircuitBreakerManager
+except ImportError:
+    # Fallback to core circuit breaker
+    from core.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
+    
+try:
+    from .learning_engine import LearningEngine, TaskType
+except ImportError:
+    # Define stubs if module missing
+    class TaskType(str):
+        CHAT = "chat"
+        CODE = "code"
+        ANALYSIS = "analysis"
+    
+    class LearningEngine:
+        async def process(self, *args, **kwargs):
+            raise NotImplementedError("Dynamic AI learning engine not available")
+
+try:
+    from .local_fallback import OllamaFallback
+except ImportError:
+    OllamaFallback = None  # Will be checked before use
+    
+try:
+    from .provider_registry import ProviderConfig, ProviderRegistry
+except ImportError:
+    class ProviderConfig:
+        def __init__(self, **kwargs):
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+    
+    class ProviderRegistry:
+        def __init__(self):
+            self._providers = {}
+        
+        def register(self, name, config):
+            self._providers[name] = config
+            
+        def get(self, name):
+            return self._providers.get(name)
 
 
 @dataclass
