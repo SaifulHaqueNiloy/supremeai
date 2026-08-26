@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from core.monitoring.metrics_collector import MetricsCollector
+from monitoring.metrics_collector import MetricsCollector
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager

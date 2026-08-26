@@ -5,6 +5,7 @@
 
 import datetime
 import json
+import os
 import re
 
 # বাংলা মন্তব্য: টাইপিং এরর এড়ানোর জন্য Any ইমপোর্ট করা হলো
@@ -25,6 +26,7 @@ from api.dependencies import get_current_user_token
 # core.intent_router re-exports it for backwards compat.
 from core.intent_router import PromptAction
 from core.prompt_handler import format_unified_chat_prompt
+from engine.memory_middleware import memory_mw
 
 router = APIRouter(dependencies=[Depends(get_current_user_token)])
 
@@ -311,6 +313,13 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
     # Build prompt context if chat messages are provided
     prompt = format_unified_chat_prompt(req.task, req.messages)
 
+    # --- Neural Memory Augmentation (RAG over past experiences, zero-cost) ---
+    # বাংলা: free sentence-transformers দিয়ে past experiences retrieve করে prompt কে augment করে।
+    # memory_mw নিজেই graceful fallback করে (vector_db down হলে original prompt ফেরত দেয়)।
+    # env ENABLE_MEMORY_AUGMENT=false দিলে disable থাকে (default: enabled)।
+    if os.environ.get("ENABLE_MEMORY_AUGMENT", "true").lower() in ("true", "1", "yes"):
+        prompt = await memory_mw.augment_task(prompt)
+
     # --- True Vector Semantic Caching ---
     raw = None
     sem_cache = get_semantic_cache()
@@ -362,6 +371,18 @@ async def execute_task(req: TaskRequest, background_tasks: BackgroundTasks):
         what_failed=([] if raw.get("success") else [str(raw.get("error", "Unknown error"))]),
     )
     background_tasks.add_task(app_mod.experience_db.record_experience, exp)
+
+    # --- Neural Memory Feedback Loop: store result for future RAG retrieval ---
+    # বাংলা: এই execution-এর result store করা হচ্ছে যাতে ভবিষ্যতে similar task-এ এটি retrieve হয়।
+    # background-এ চলে যাতে response latency না বাড়ে। success/failure দুটোই store হয় (self-healing-এর জন্য)।
+    if os.environ.get("ENABLE_MEMORY_AUGMENT", "true").lower() in ("true", "1", "yes"):
+        background_tasks.add_task(
+            memory_mw.intercept_result,
+            task_prompt=req.task,
+            intent_domain=task_type,
+            execution_result=raw,
+            success=bool(raw.get("success")),
+        )
 
     if not raw.get("success"):
         return ProblemDetailsResponse(
