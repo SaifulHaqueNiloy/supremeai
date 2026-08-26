@@ -104,7 +104,7 @@ class SymbolicExpression:
         self.parsed_expr = parse_expr(expression_str)
         self.variables = list(self.parsed_expr.free_symbols)
 
-    def substitute(self, substitutions: dict[str, Any]) -> "SymbolicExpression":
+    def substitute(self, substitutions: dict[str, Any]) -> SymbolicExpression:
         """Substitute variables in the expression."""
         substituted_expr = self.parsed_expr.subs(substitutions)
         return SymbolicExpression(str(substituted_expr))
@@ -114,18 +114,18 @@ class SymbolicExpression:
         substituted = self.parsed_expr.subs(assignments)
         return float(substituted.evalf())
 
-    def simplify(self) -> "SymbolicExpression":
+    def simplify(self) -> SymbolicExpression:
         """Simplify the expression."""
         simplified_expr = sympy.simplify(self.parsed_expr)
         return SymbolicExpression(str(simplified_expr))
 
-    def differentiate(self, variable: str) -> "SymbolicExpression":
+    def differentiate(self, variable: str) -> SymbolicExpression:
         """Differentiate the expression with respect to a variable."""
         var = sympy.Symbol(variable)
         diff_expr = sympy.diff(self.parsed_expr, var)
         return SymbolicExpression(str(diff_expr))
 
-    def integrate(self, variable: str) -> "SymbolicExpression":
+    def integrate(self, variable: str) -> SymbolicExpression:
         """Integrate the expression with respect to a variable."""
         var = sympy.Symbol(variable)
         integral_expr = sympy.integrate(self.parsed_expr, var)
