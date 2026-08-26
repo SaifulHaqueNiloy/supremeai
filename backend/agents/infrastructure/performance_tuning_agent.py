@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import psutil
-from core.monitoring.metrics_collector import MetricsCollector
+from monitoring.metrics_collector import MetricsCollector
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager
