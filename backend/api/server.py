@@ -60,14 +60,22 @@ app = FastAPI(
 )
 
 # Hardened CORS middleware (Audit P1-5)
-_allowed_origins = [
+# SECURE FIX: production origins must come from env vars (zero hardcoded value).
+# Dev localhost entries are kept as convenience defaults.
+# Set ALLOWED_ORIGINS env var in production, e.g.:
+#   ALLOWED_ORIGINS=https://supremeai.app,https://admin.supremeai.app
+import os as _os
+
+_dev_origins = [
     "http://localhost:3000",  # is_local()
     "http://localhost:5173",  # is_local()
     "http://127.0.0.1:3000",  # is_local()
     "http://127.0.0.1:5173",  # is_local()
     "tauri://localhost",
-    "https://supremeai.app",
 ]
+_prod_origins_env = _os.getenv("ALLOWED_ORIGINS", "")
+_prod_origins = [o.strip() for o in _prod_origins_env.split(",") if o.strip()]
+_allowed_origins = _dev_origins + _prod_origins
 
 app.add_middleware(
     CORSMiddleware,

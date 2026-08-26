@@ -16,7 +16,7 @@ const DEVICES = [
 
 type Orientation = 'portrait' | 'landscape';
 
-export function MobileSimulator({ html, url = 'https://supremeai.web.app' }: MobileSimulatorProps) {
+export function MobileSimulator({ html, url = '' }: MobileSimulatorProps) {
   const [selectedDevice, setSelectedDevice] = useState(DEVICES[0]);
   const [orientation, setOrientation] = useState<Orientation>('portrait');
 
