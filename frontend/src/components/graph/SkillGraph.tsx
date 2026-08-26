@@ -32,6 +32,7 @@ export default function SkillGraph() {
       const token = localStorage.getItem('supreme_admin_jwt');
 
       const response = await fetch(`${getApiBaseUrl()}/api/v1/graph/skills`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token || decodedToken}`
         }
