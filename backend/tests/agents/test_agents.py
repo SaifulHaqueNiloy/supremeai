@@ -19,7 +19,7 @@ Run with: pytest tests/test_agents.py -v --cov=agents
 
 import asyncio
 from datetime import UTC, datetime, timedelta, timezone
-from typing import Any, Optional, dict, list
+from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
