@@ -132,12 +132,25 @@ def anyio_backend():
 # ============================================================
 @pytest.fixture(scope="session")
 def db_engine(test_settings):
-    """Create async database engine for testing."""
+    """Create async database engine for testing.
+
+    CI FIX (Option C — NullPool): pytest-asyncio 0.23 creates a separate
+    event loop per test, but session-scoped db_engine creates its connections
+    via asyncio.run() (a different loop). When db_session (function-scoped
+    async fixture) tries to use the engine, asyncpg complains:
+    "attached to a different loop" or "Event loop is closed".
+
+    Fix: use poolclass=NullPool — no connections are pooled, so every
+    checkout creates a fresh connection bound to the CURRENT event loop.
+    No dependency bump needed (unlike Option B), no per-test engine
+    creation overhead (unlike Option A).
+    """
+    from sqlalchemy.pool import NullPool
+
     engine = create_async_engine(
         test_settings["DATABASE_URL"],
         echo=False,  # Set to True for SQL debugging
-        pool_size=5,
-        max_overflow=10,
+        poolclass=NullPool,  # CI FIX: no cross-loop connection reuse
         future=True,
     )
 

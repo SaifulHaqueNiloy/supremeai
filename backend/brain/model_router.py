@@ -34,7 +34,7 @@ class ModelRouter:
             "text": "Unified COT response",
             "reasoning": {},
             "cot_verification": {"matches": True},
-            "model_used": decision.model_name if decision else "unknown",
+            "model_used": decision.model.name if decision else "unknown",
         }
 
     async def async_route_and_generate(self, prompt, task_type="general", max_cost=0.01, **kwargs):
