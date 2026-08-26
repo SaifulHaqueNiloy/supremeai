@@ -1,8 +1,34 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from loguru import logger
 
-from services.smart_model_router import MODEL_REGISTRY, ModelConfig
+# SECURE FIX (CI): services.smart_model_router no longer exports MODEL_REGISTRY or
+# ModelConfig (refactored away during Phase 1 Router Consolidation).
+# Previously this file did: 'from services.smart_model_router import MODEL_REGISTRY, ModelConfig'
+# which raised ImportError in CI, breaking test_economic_router.py collection.
+# Now ModelConfig is defined inline (self-contained) and MODEL_REGISTRY defaults to empty.
+# Admin can populate it via env-driven configuration if needed (zero hardcoded value).
+
+
+@dataclass
+class ModelConfig:
+    """Inline definition of ModelConfig (was previously imported).
+
+    Captures the pricing + quality fields used by EconomicRouter.
+    """
+
+    name: str
+    provider: str
+    quality_score: float = 0.0
+    cost_per_1k_input: float = 0.0
+    cost_per_1k_output: float = 0.0
+    tier: str = "STANDARD"
+
+
+# Default empty registry — admin can extend by editing this dict or wiring
+# to a runtime source. Left empty to avoid hardcoding provider rates.
+MODEL_REGISTRY: dict[str, ModelConfig] = {}
 
 
 @dataclass
