@@ -20,6 +20,7 @@ export const useSwarmGraph = () => {
     queryKey: ['swarm-graph'],
     queryFn: async () => {
       const res = await fetch(`${getApiBaseUrl()}/api/v1/evolution/swarm-graph`, {
+        method: 'GET',
         headers: await getAuthHeaders(),
       });
       return res.json(); // ব্যাকএন্ড থেকে {added: {nodes:[], edges:[]}, removed: {nodes:[], edges:[]}}
@@ -53,9 +54,8 @@ export const useSwarmGraph = () => {
     queryFn: async () => {
       if (agentIds.length === 0) return {};
       const res = await fetch(`${getApiBaseUrl()}/api/v1/health/agents`, {
-        method: 'POST',
+        method: 'GET',
         headers: await getAuthHeaders(),
-        body: JSON.stringify({ agent_ids: agentIds })
       });
       return res.json();
     },

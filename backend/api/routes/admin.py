@@ -187,6 +187,42 @@ async def get_fixes(
     return {"fixes": fixes}
 
 
+# CI FIX: frontend OneClickPatch.tsx:29 calls POST /api/admin/fixes/apply
+# and ArchitectTower.tsx:18 calls POST /api/admin/fixes to trigger one-click
+# fix application. Added POST aliases.
+@router.post("/fixes")
+@router.post("/fixes/apply")
+async def apply_fixes(
+    tenant_id: str = "default",
+    admin_user: dict = Depends(get_current_admin),
+    healer: SelfHealerService = Depends(get_healer_service),
+):
+    """Apply all pending fixes for a tenant (one-click patch)."""
+    admin_id = admin_user.get("sub", "unknown_admin")
+    logger.info(f"Admin {admin_id} applying all pending fixes for tenant {tenant_id}")
+
+    # Get all pending fixes
+    db = get_firestore_db()
+    if not db:
+        return {"status": "success", "applied": 0, "message": "No Firestore available"}
+
+    fixes_ref = db.collection("tenants").document(tenant_id).collection("fixes")
+    query = fixes_ref.where("status", "==", "pending_review")
+    docs = query.stream()
+
+    applied = 0
+    for doc in docs:
+        success = await healer.apply_fix(tenant_id, doc.id, admin_id)
+        if success:
+            applied += 1
+
+    return {
+        "status": "success",
+        "applied": applied,
+        "message": f"Applied {applied} fix(es) for tenant {tenant_id}",
+    }
+
+
 @router.post("/fixes/{fix_id}/approve")
 async def approve_fix(
     fix_id: str,

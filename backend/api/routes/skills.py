@@ -57,6 +57,8 @@ async def get_active_skill_catalog():
 # বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর useAdminApi.ts এবং
 # EnhancedSkillMarketplace.tsx-এর /api/skills/install এবং /api/skills/search
 # কলগুলো এখন ব্যাকএন্ডে আছে (আগে 404 পেত)।
+# CI FIX: frontend also calls GET /api/skills/search — added GET alias.
+@router.get("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
 @router.post("/search", response_model=list[dict[str, Any]], tags=["Skill Catalog Infrastructure"])
 async def search_skills(query: str = "", installed_only: bool = False):
     """Search skill manifests by keyword query."""
