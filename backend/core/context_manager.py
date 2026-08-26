@@ -54,10 +54,17 @@ class ContextManager:
         # Create collection for conversation contexts if Qdrant is available
         if self.vector_client:
             try:
-                self.vector_client.recreate_collection(
-                    collection_name="conversation_contexts",
-                    vectors_config=models.VectorParams(size=384, distance=models.Distance.COSINE),
-                )
+                # FIX: Check if collection exists first, to prevent wiping out data on restart
+                if not self.vector_client.collection_exists(
+                    collection_name="conversation_contexts"
+                ):
+                    self.vector_client.create_collection(
+                        collection_name="conversation_contexts",
+                        vectors_config=models.VectorParams(
+                            size=384, distance=models.Distance.COSINE
+                        ),
+                    )
+                    self.logger.info("✅ Created Qdrant collection 'conversation_contexts'")
             except Exception as e:
                 self.logger.error(f"Failed to create Qdrant collection: {e}")
 
