@@ -36,7 +36,13 @@ class Orchestrator:
         self.interval = interval_seconds
         self._task: asyncio.Task | None = None
         self._running: bool = False
-        self.fitness_engine = FitnessEngine()
+        # BUG FIX #2: Use shared FitnessEngine singleton instead of private instance.
+        # Private FitnessEngine() here had empty metrics → SelfEvolutionAgent._tick()
+        # read from this private instance, not from the shared singleton that
+        # EvolutionEngine.learn_from_success() writes to via track_execution().
+        from api.deps import get_fitness_engine
+
+        self.fitness_engine = get_fitness_engine()
         self.self_evolution = SelfEvolutionAgent(
             fitness_engine=self.fitness_engine, interval_seconds=interval_seconds
         )
