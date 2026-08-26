@@ -396,7 +396,7 @@ async def list_templates(
 
     try:
         query = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .select("*")
             .or_(f"is_builtin.eq.true,user_id.eq.{user_id}")
         )
@@ -439,7 +439,7 @@ async def create_template(
             "is_builtin": False,
             "usage_count": 0,
         }
-        resp = supabase_db.client.table("prompt_templates").insert(row).execute()
+        resp = supabase_db.await client.table("prompt_templates").insert(row).execute()
         if not resp.data:
             raise HTTPException(status_code=500, detail="Template creation returned no data.")
         return _row_to_template(resp.data[0])
@@ -470,7 +470,7 @@ async def get_template(
 
     try:
         resp = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .select("*")
             .eq("id", template_id)
             .or_(f"is_builtin.eq.true,user_id.eq.{user_id}")
@@ -506,7 +506,7 @@ async def update_template(
     try:
         # Verify ownership and that it is not builtin
         existing = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .select("id, is_builtin, user_id")
             .eq("id", template_id)
             .execute()
@@ -532,7 +532,7 @@ async def update_template(
             update_fields["variables"] = [v.model_dump() for v in payload.variables]
 
         resp = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .update(update_fields)
             .eq("id", template_id)
             .execute()
@@ -564,7 +564,7 @@ async def delete_template(
 
     try:
         existing = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .select("id, is_builtin, user_id")
             .eq("id", template_id)
             .execute()
@@ -577,7 +577,7 @@ async def delete_template(
         if row.get("user_id") != user_id:
             raise HTTPException(status_code=403, detail="Not authorized to delete this template.")
 
-        supabase_db.client.table("prompt_templates").delete().eq("id", template_id).execute()
+        supabase_db.await client.table("prompt_templates").delete().eq("id", template_id).execute()
         return {"status": "deleted", "id": template_id}
     except HTTPException:
         raise
@@ -607,7 +607,7 @@ async def use_template(
 
     try:
         resp = (
-            supabase_db.client.table("prompt_templates")
+            await supabase_db.client.table("prompt_templates")
             .select("*")
             .eq("id", template_id)
             .or_(f"is_builtin.eq.true,user_id.eq.{user_id}")
@@ -628,7 +628,7 @@ async def use_template(
 
         # Atomically increment usage_count
         new_count = (row.get("usage_count") or 0) + 1
-        supabase_db.client.table("prompt_templates").update(
+        await supabase_db.client.table("prompt_templates").update(
             {"usage_count": new_count, "updated_at": datetime.now(UTC).isoformat()}
         ).eq("id", template_id).execute()
 

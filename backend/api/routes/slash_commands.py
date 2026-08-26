@@ -287,7 +287,7 @@ async def _handle_summarize(args: dict[str, Any], user_id: str) -> dict[str, Any
     # If no conversation_id provided, get the most recent
     if not conversation_id:
         convs = (
-            db.client.table("conversations")
+            await db.client.table("conversations")
             .select("id")
             .eq("user_id", user_id)
             .order("updated_at", desc=True)
@@ -300,7 +300,7 @@ async def _handle_summarize(args: dict[str, Any], user_id: str) -> dict[str, Any
 
     # Fetch messages
     messages_resp = (
-        db.client.table("messages")
+        await db.client.table("messages")
         .select("role, content")
         .eq("conversation_id", conversation_id)
         .order("created_at", desc=False)
@@ -428,7 +428,7 @@ async def _handle_export(args: dict[str, Any], user_id: str) -> dict[str, Any]:
 
     if not conversation_id:
         convs = (
-            db.client.table("conversations")
+            await db.client.table("conversations")
             .select("id, title")
             .eq("user_id", user_id)
             .order("updated_at", desc=True)
@@ -440,7 +440,12 @@ async def _handle_export(args: dict[str, Any], user_id: str) -> dict[str, Any]:
         conversation_id = convs.data[0]["id"]
         title = convs.data[0].get("title", "Export")
     else:
-        conv = db.client.table("conversations").select("title").eq("id", conversation_id).execute()
+        conv = (
+            await db.client.table("conversations")
+            .select("title")
+            .eq("id", conversation_id)
+            .execute()
+        )
         title = conv.data[0]["title"] if conv.data else "Export"
 
     # Fetch messages
@@ -538,7 +543,7 @@ async def _handle_clear(args: dict[str, Any], user_id: str) -> dict[str, Any]:
         conversation_id = convs.data[0]["id"]
 
     try:
-        db.client.table("messages").delete().eq("conversation_id", conversation_id).execute()
+        await db.client.table("messages").delete().eq("conversation_id", conversation_id).execute()
         return {
             "status": "cleared",
             "conversation_id": conversation_id,

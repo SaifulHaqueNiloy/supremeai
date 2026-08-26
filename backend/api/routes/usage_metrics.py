@@ -31,7 +31,7 @@ async def get_usage_metrics(
     if not db.client:
         return {"items": [], "total": 0}
     try:
-        query = db.client.table("usage_metrics").select("*")
+        query = await db.client.table("usage_metrics").select("*")
         if start:
             query = query.gte("date", start)
         if end:
@@ -51,7 +51,7 @@ async def upsert_usage_metric(
         raise HTTPException(status_code=503, detail="Database not configured")
     try:
         data = payload.dict()
-        res = db.client.table("usage_metrics").upsert(data).execute()
+        res = await db.client.table("usage_metrics").upsert(data).execute()
         return {"status": "success", "metric": res.data[0] if res.data else data}
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

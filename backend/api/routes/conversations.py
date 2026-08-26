@@ -37,7 +37,7 @@ async def list_conversations(user: dict = Depends(verify_token_dependency)):
     db = SupabaseDB()
     try:
         response = (
-            db.client.table("conversations")
+            await db.client.table("conversations")
             .select("*")
             .eq("user_id", user_id)
             .order("updated_at", desc=True)
@@ -59,7 +59,7 @@ async def create_conversation(
     db = SupabaseDB()
     try:
         response = (
-            db.client.table("conversations")
+            await db.client.table("conversations")
             .insert({"user_id": user_id, "title": title or "New Conversation"})
             .execute()
         )
@@ -80,7 +80,7 @@ async def add_message(
     try:
         # The database policy should ensure the user owns the conversation
         response = (
-            db.client.table("messages")
+            await db.client.table("messages")
             .insert(
                 {
                     "conversation_id": conversation_id,
@@ -92,7 +92,7 @@ async def add_message(
         )
 
         # Update conversation timestamp
-        db.client.table("conversations").update({"updated_at": "now()"}).eq(
+        await db.client.table("conversations").update({"updated_at": "now()"}).eq(
             "id", conversation_id
         ).execute()
 

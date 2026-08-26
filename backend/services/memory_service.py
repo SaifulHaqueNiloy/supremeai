@@ -574,7 +574,7 @@ async def save_memory(
 
         if supabase:
             try:
-                result = supabase.table("ai_memory").insert(record).execute()
+                result = await supabase.table("ai_memory").insert(record).execute()
                 if result.data:
                     mem_id = result.data[0].get("id", "unknown")
                     logger.info(

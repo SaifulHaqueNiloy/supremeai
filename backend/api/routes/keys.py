@@ -49,7 +49,7 @@ async def create_or_update_key(key_data: KeyCreate, user: dict = Depends(verify_
     # We will use direct table access here
     try:
         response = (
-            db.client.table("user_keys")
+            await db.client.table("user_keys")
             .upsert(
                 {"user_id": user_id, "provider": key_data.provider, "encrypted_key": encrypted_key},
                 on_conflict="user_id,provider",
@@ -72,7 +72,7 @@ async def list_keys(user: dict = Depends(verify_token_dependency)):
     db = SupabaseDB()
     try:
         response = (
-            db.client.table("user_keys")
+            await db.client.table("user_keys")
             .select("provider, created_at")
             .eq("user_id", user_id)
             .execute()

@@ -57,7 +57,7 @@ async def _fetch_conversation(user_id: str, conversation_id: str) -> dict[str, A
 
     try:
         resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("*")
             .eq("id", conversation_id)
             .eq("user_id", user_id)
@@ -84,7 +84,7 @@ async def _fetch_messages(conversation_id: str) -> list[dict[str, Any]]:
 
     try:
         resp = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("*")
             .eq("conversation_id", conversation_id)
             .order("created_at", desc=False)

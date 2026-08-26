@@ -167,7 +167,7 @@ async def upload_chat_image(
     # Persist reference in DB
     try:
         db = SupabaseDB()
-        db.client.table("chat_attachments").insert(
+        await db.client.table("chat_attachments").insert(
             {
                 "id": attachment_id,
                 "user_id": user_id,
@@ -221,7 +221,12 @@ async def serve_upload(
         # Try loading from database
         try:
             db = SupabaseDB()
-            resp = db.client.table("chat_attachments").select("*").eq("id", attachment_id).execute()
+            resp = (
+                await db.client.table("chat_attachments")
+                .select("*")
+                .eq("id", attachment_id)
+                .execute()
+            )
             if resp.data:
                 metadata = resp.data[0]
                 _uploads[attachment_id] = metadata
@@ -267,7 +272,12 @@ async def delete_upload(
     if metadata is None:
         try:
             db = SupabaseDB()
-            resp = db.client.table("chat_attachments").select("*").eq("id", attachment_id).execute()
+            resp = (
+                await db.client.table("chat_attachments")
+                .select("*")
+                .eq("id", attachment_id)
+                .execute()
+            )
             if resp.data:
                 metadata = resp.data[0]
         except Exception as e:
@@ -292,7 +302,7 @@ async def delete_upload(
     # Delete from DB
     try:
         db = SupabaseDB()
-        db.client.table("chat_attachments").delete().eq("id", attachment_id).execute()
+        await db.client.table("chat_attachments").delete().eq("id", attachment_id).execute()
     except Exception as db_err:
         logger.warning(f"Failed to delete attachment from DB: {db_err}")
 

@@ -157,7 +157,12 @@ async def get_onboarding_status(user_id: str) -> dict[str, Any]:
         from database.supabase_client import db
 
         if db.client:
-            res = db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+            res = (
+                await db.client.table("user_preferences")
+                .select("*")
+                .eq("user_id", user_id)
+                .execute()
+            )
             if res.data:
                 prefs = res.data[0]
                 completed_at = prefs.get("custom_shortcuts", {}).get("onboarding_completed_at")
@@ -184,7 +189,7 @@ async def reset_onboarding(user_id: str) -> dict[str, str]:
         from database.supabase_client import db
 
         if db.client:
-            db.client.table("user_preferences").delete().eq("user_id", user_id).execute()
+            await db.client.table("user_preferences").delete().eq("user_id", user_id).execute()
     except Exception as exc:
         logger.warning(f"Failed to reset onboarding state for {user_id}: {exc}")
     return {"status": "reset", "user_id": user_id}

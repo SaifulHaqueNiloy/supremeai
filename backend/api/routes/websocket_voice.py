@@ -94,7 +94,7 @@ async def handle_intent(transcript: str, websocket: WebSocket, start_time: float
             latency_ms=latency_ms,
         )
         try:
-            db.client.table("voice_interactions").insert(
+            await db.client.table("voice_interactions").insert(
                 log_entry.dict(exclude_none=True)
             ).execute()
         except Exception as db_err:

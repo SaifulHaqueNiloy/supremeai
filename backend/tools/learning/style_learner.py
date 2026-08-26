@@ -237,7 +237,7 @@ class StyleLearner:
             from database.supabase_client import db
 
             if db.client:
-                db.client.table("user_preferences").upsert(
+                await db.client.table("user_preferences").upsert(
                     {
                         "user_id": f"repo:{repo_path}",
                         "custom_shortcuts": style,

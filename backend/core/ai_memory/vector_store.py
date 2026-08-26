@@ -57,7 +57,11 @@ class FreeTierOptimizedVectorStore:
                 ]
 
                 # Insert batch
-                (self.client.table(self.table_name).upsert(records, on_conflict="id").execute())
+                (
+                    await self.client.table(self.table_name)
+                    .upsert(records, on_conflict="id")
+                    .execute()
+                )
 
                 # Small delay to prevent overwhelming free tier DB
                 await asyncio.sleep(0.05)

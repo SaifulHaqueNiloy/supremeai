@@ -83,7 +83,7 @@ class BenchmarkAgent:
 
         if self.db_client:
             logger.info("Persisting benchmark results to database.")
-            self.db_client.table("provider_benchmarks").insert(all_results).execute()
+            await self.db_client.table("provider_benchmarks").insert(all_results).execute()
 
         logger.info("Benchmark run completed.")
         return full_report

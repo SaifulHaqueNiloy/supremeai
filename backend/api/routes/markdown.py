@@ -55,7 +55,7 @@ async def run_export_task(job_id: str, payload: MarkdownExportRequest):
         # Try to save to Supabase history
         try:
             if supabase_db.client:
-                supabase_db.client.table("markdown_exports").insert(
+                await supabase_db.client.table("markdown_exports").insert(
                     {
                         "job_id": job_id,
                         "repo_url": payload.clone_url or "local",
@@ -171,7 +171,7 @@ async def get_history():
     try:
         if supabase_db.client:
             res = (
-                supabase_db.client.table("markdown_exports")
+                await supabase_db.client.table("markdown_exports")
                 .select("*")
                 .order("timestamp", desc=True)
                 .limit(50)
