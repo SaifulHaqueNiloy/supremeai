@@ -57,7 +57,11 @@ google-cloud-firestore = "^2.19.0"
 google-cloud-storage = "^2.18.2"
 google-auth = "^2.36.0"
 google-auth-oauthlib = "^1.2.1"
-google-auth-httplib2 = "^0.2.1"
+# CI FIX (P1-1): Removed google-auth-httplib2 — it was declared but NEVER
+# imported anywhere in the codebase. It pulls in httplib2 which has known
+# CVEs. The codebase uses google.oauth2.service_account (from google-auth)
+# directly, not httplib2's transport.
+# google-auth-httplib2 = "^0.2.1"  # REMOVED — dead dependency
 pyasn1 = "^0.6.4"  # transitive via google-auth; explicit floor for CVE fix (AUDIT-014)
 openai = ">=1.54.0"
 anthropic = "^0.120.0"
