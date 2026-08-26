@@ -167,16 +167,20 @@ async def upload_chat_image(
     # Persist reference in DB
     try:
         db = SupabaseDB()
-        await db.client.table("chat_attachments").insert(
-            {
-                "id": attachment_id,
-                "user_id": user_id,
-                "file_name": original_name,
-                "file_path": file_path,
-                "mime_type": mime_type,
-                "file_size": len(content),
-            }
-        ).execute()
+        await (
+            db.client.table("chat_attachments")
+            .insert(
+                {
+                    "id": attachment_id,
+                    "user_id": user_id,
+                    "file_name": original_name,
+                    "file_path": file_path,
+                    "mime_type": mime_type,
+                    "file_size": len(content),
+                }
+            )
+            .execute()
+        )
     except Exception as db_err:
         logger.warning(f"DB insert for attachment failed (non-critical): {db_err}")
 

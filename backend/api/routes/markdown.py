@@ -55,15 +55,19 @@ async def run_export_task(job_id: str, payload: MarkdownExportRequest):
         # Try to save to Supabase history
         try:
             if supabase_db.client:
-                await supabase_db.client.table("markdown_exports").insert(
-                    {
-                        "job_id": job_id,
-                        "repo_url": payload.clone_url or "local",
-                        "time_range": f"{payload.time_since or ''} to {payload.time_until or ''}",
-                        "status": "completed",
-                        "timestamp": time.time(),
-                    }
-                ).execute()
+                await (
+                    supabase_db.client.table("markdown_exports")
+                    .insert(
+                        {
+                            "job_id": job_id,
+                            "repo_url": payload.clone_url or "local",
+                            "time_range": f"{payload.time_since or ''} to {payload.time_until or ''}",
+                            "status": "completed",
+                            "timestamp": time.time(),
+                        }
+                    )
+                    .execute()
+                )
         except Exception as exc:
             # বল মনতবয: history টবল এখনও তর হয়ন থাকল একসপর্ট বযর্থ কর যাব ন;
             # তব নরব সযলপ ন কর ডবগ লগ কর হল

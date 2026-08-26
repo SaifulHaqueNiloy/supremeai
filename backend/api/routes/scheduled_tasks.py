@@ -243,7 +243,7 @@ async def create_scheduled_task(
             "created_at": now,
             "updated_at": now,
         }
-        resp = supabase_db.await client.table("scheduled_tasks").insert(row).execute()
+        resp = await supabase_db.client.table("scheduled_tasks").insert(row).execute()
         if not resp.data:
             raise HTTPException(status_code=500, detail="Task creation returned no data.")
         return _row_to_task(resp.data[0])
@@ -453,7 +453,7 @@ async def delete_scheduled_task(
         if not existing.data:
             raise HTTPException(status_code=404, detail="Scheduled task not found.")
 
-        supabase_db.await client.table("scheduled_tasks").delete().eq("id", task_id).execute()
+        await supabase_db.client.table("scheduled_tasks").delete().eq("id", task_id).execute()
         return {"status": "deleted", "id": task_id}
     except HTTPException:
         raise
@@ -499,7 +499,9 @@ async def run_scheduled_task(
             "status": "running",
             "started_at": now,
         }
-        exec_resp = supabase_db.await client.table("scheduled_task_executions").insert(exec_row).execute()
+        exec_resp = (
+            await supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
+        )
         exec_id = exec_resp.data[0]["id"] if exec_resp.data else str(uuid.uuid4())
 
         # Execute prompt
@@ -516,34 +518,48 @@ async def run_scheduled_task(
         completed_at = datetime.now(UTC).isoformat()
 
         # Update execution record
-        await supabase_db.client.table("scheduled_task_executions").update(
-            {
-                "status": status,
-                "result": result_text[:5000] if result_text else None,
-                "error": error_text[:2000] if error_text else None,
-                "completed_at": completed_at,
-            }
-        ).eq("id", exec_id).execute()
+        await (
+            supabase_db.client.table("scheduled_task_executions")
+            .update(
+                {
+                    "status": status,
+                    "result": result_text[:5000] if result_text else None,
+                    "error": error_text[:2000] if error_text else None,
+                    "completed_at": completed_at,
+                }
+            )
+            .eq("id", exec_id)
+            .execute()
+        )
 
         # Update task's last_run fields
-        await supabase_db.client.table("scheduled_tasks").update(
-            {
-                "last_run_at": completed_at,
-                "last_run_status": status,
-                "updated_at": completed_at,
-            }
-        ).eq("id", task_id).execute()
+        await (
+            supabase_db.client.table("scheduled_tasks")
+            .update(
+                {
+                    "last_run_at": completed_at,
+                    "last_run_status": status,
+                    "updated_at": completed_at,
+                }
+            )
+            .eq("id", task_id)
+            .execute()
+        )
 
         # Optionally append result as a message to the linked conversation
         if task.get("conversation_id") and result_text:
             try:
-                await supabase_db.client.table("messages").insert(
-                    {
-                        "conversation_id": task["conversation_id"],
-                        "role": "assistant",
-                        "content": f"[Scheduled Task: {task['title']}]\n\n{result_text}",
-                    }
-                ).execute()
+                await (
+                    supabase_db.client.table("messages")
+                    .insert(
+                        {
+                            "conversation_id": task["conversation_id"],
+                            "role": "assistant",
+                            "content": f"[Scheduled Task: {task['title']}]\n\n{result_text}",
+                        }
+                    )
+                    .execute()
+                )
             except Exception as msg_exc:
                 logger.warning(f"Failed to append task result to conversation: {msg_exc}")
 
