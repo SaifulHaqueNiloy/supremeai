@@ -6,12 +6,13 @@ Supports HTML, React, SVG, Mermaid, and generic code artifacts.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from enum import StrEnum
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from loguru import logger
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from api.deps import get_current_user_token
 from database.supabase_client import SupabaseDB
@@ -34,8 +35,8 @@ _ARTIFACT_CONTENT_TYPES: dict[str, str] = {
 # ---------- Pydantic Schemas ----------
 
 
-class ArtifactType(str):
-    """Allowed artifact types."""
+class ArtifactType(StrEnum):
+    """Allowed artifact types using proper Enum to avoid MRO conflicts."""
 
     HTML = "html"
     REACT = "react"
@@ -43,21 +44,43 @@ class ArtifactType(str):
     MERMAID = "mermaid"
     CODE = "code"
 
+    @classmethod
+    def values(cls) -> list[str]:
+        """Return list of valid artifact type values."""
+        return [item.value for item in cls]
+
 
 class ArtifactCreate(BaseModel):
     title: str = Field(default="Untitled", max_length=256)
-    artifact_type: Literal["html", "react", "svg", "mermaid", "code"] = Field(
-        default="code", description="Type of artifact for preview rendering"
-    )
+    artifact_type: str = Field(default="code", description="Type of artifact for preview rendering")
     content: str = Field(..., min_length=1, description="The artifact content")
     conversation_id: str | None = Field(default=None, description="Optional linked conversation")
+
+    @field_validator("artifact_type")
+    @classmethod
+    def validate_artifact_type(cls, v: str) -> str:
+        """Validate artifact_type against allowed Enum values."""
+        allowed = ArtifactType.values()
+        if v not in allowed:
+            raise ValueError(f"Invalid artifact_type '{v}'. Must be one of: {allowed}")
+        return v
 
 
 class ArtifactUpdate(BaseModel):
     title: str | None = Field(default=None, max_length=256)
     content: str | None = Field(default=None, min_length=1)
-    artifact_type: Literal["html", "react", "svg", "mermaid", "code"] | None = None
+    artifact_type: str | None = None
     is_pinned: bool | None = None
+
+    @field_validator("artifact_type")
+    @classmethod
+    def validate_artifact_type_optional(cls, v: str | None) -> str | None:
+        """Validate optional artifact_type against allowed Enum values."""
+        if v is not None:
+            allowed = ArtifactType.values()
+            if v not in allowed:
+                raise ValueError(f"Invalid artifact_type '{v}'. Must be one of: {allowed}")
+        return v
 
 
 class ArtifactResponse(BaseModel):
