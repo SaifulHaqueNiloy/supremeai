@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, status
 from loguru import logger
 
 from core.llm.llm_gateway import llm_gateway
@@ -90,18 +90,98 @@ task_queue.register_handler("analyze_preferences", handle_analyze_preferences)
 # 🔌 WEBSOCKET CONNECTION MANAGER
 # ==========================================
 class DistributedConnectionManager:
-    # FIX (perf): add max-connection cap to prevent OOM on free-tier (512MB RAM)
+    # DoS Protection Config
     MAX_TOTAL_CONNECTIONS = int(os.getenv("WS_MAX_CONNECTIONS", "50"))
     MAX_PER_USER = int(os.getenv("WS_MAX_PER_USER", "3"))
+    MAX_PER_IP = int(os.getenv("WS_MAX_PER_IP", "10"))
+    AUTH_ATTEMPT_WINDOW = int(os.getenv("WS_AUTH_WINDOW_SECONDS", "60"))
+    MAX_AUTH_ATTEMPTS_PER_IP = int(os.getenv("WS_MAX_AUTH_ATTEMPTS", "5"))
+    STALE_CONNECTION_TIMEOUT = int(os.getenv("WS_STALE_TIMEOUT_SECONDS", "300"))
+    CLEANUP_INTERVAL = int(os.getenv("WS_CLEANUP_INTERVAL_SECONDS", "60"))
+    MAX_MEMORY_MB = int(os.getenv("WS_MAX_MEMORY_MB", "100"))
 
     def __init__(self):
+        from collections import defaultdict
+
+        # Legacy tracking for pubsub and pref tasks
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
         self.redis = None
         self.pubsub = None
 
+        # New DoS tracking
+        self._ip_connections: dict[str, int] = defaultdict(int)
+        self._auth_attempts: dict[str, list[float]] = defaultdict(list)
+        self._last_activity: dict[int, float] = {}  # id(ws) -> float
+
+        # Cleanup
+        self._cleanup_task = None
+
+    async def start_background_tasks(self):
+        if self._cleanup_task is None or self._cleanup_task.done():
+            self._cleanup_task = asyncio.create_task(self._cleanup_stale_connections())
+            logger.info("🛡️ [WS] DoS protection enabled - background cleanup started")
+
+    def _get_memory_usage_mb(self) -> float:
+        try:
+            import resource
+
+            return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        except ImportError:
+            # Fallback
+            return self._total_connections() * 0.01
+
+    def _is_memory_pressure(self) -> bool:
+        return self._get_memory_usage_mb() > self.MAX_MEMORY_MB
+
+    def _check_ip_rate_limit(self, ip_address: str) -> bool:
+        import time
+
+        now = time.time()
+        self._auth_attempts[ip_address] = [
+            t for t in self._auth_attempts[ip_address] if now - t < self.AUTH_ATTEMPT_WINDOW
+        ]
+        if len(self._auth_attempts[ip_address]) >= self.MAX_AUTH_ATTEMPTS_PER_IP:
+            logger.warning(f"⚠️ [WS] IP {ip_address} rate limited.")
+            return False
+        return True
+
+    def _record_auth_attempt(self, ip_address: str):
+        import time
+
+        self._auth_attempts[ip_address].append(time.time())
+
     def _total_connections(self) -> int:
         return sum(len(conns) for conns in self.active_connections.values())
+
+    async def _cleanup_stale_connections(self):
+        import time
+
+        while True:
+            try:
+                await asyncio.sleep(self.CLEANUP_INTERVAL)
+                now = time.time()
+                for user_id, conns in list(self.active_connections.items()):
+                    active = []
+                    for ws in conns:
+                        last_act = self._last_activity.get(id(ws), now)
+                        if now - last_act > self.STALE_CONNECTION_TIMEOUT:
+                            try:
+                                await ws.close(code=1001)
+                            except Exception:
+                                pass
+                            if id(ws) in self._last_activity:
+                                del self._last_activity[id(ws)]
+                        else:
+                            active.append(ws)
+                    if active:
+                        self.active_connections[user_id] = active
+                    else:
+                        self.active_connections.pop(user_id, None)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"[WS] Cleanup error: {e}")
 
     async def _get_redis(self):
         if not self.redis:
@@ -139,63 +219,86 @@ class DistributedConnectionManager:
                 logger.error(f"Redis pubsub error: {e}")
                 await asyncio.sleep(1)
 
-    async def connect(self, websocket: WebSocket, user_id: str):
-        # FIX (perf): enforce connection caps to prevent OOM on free-tier
+    async def connect(self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"):
+        import time
+
+        if self._is_memory_pressure():
+            logger.warning(f"⚠️ [WS] Rejecting {user_id}: memory pressure")
+            await websocket.close(code=1013, reason="Server overloaded")
+            return False
+
         if self._total_connections() >= self.MAX_TOTAL_CONNECTIONS:
-            logger.warning(
-                f"⚠️ [WS] Rejecting connection for {user_id}: total {self._total_connections()} "
-                f">= MAX_TOTAL_CONNECTIONS ({self.MAX_TOTAL_CONNECTIONS})"
-            )
-            await websocket.close(code=1013)  # Try Again Later
+            logger.warning(f"⚠️ [WS] Rejecting {user_id}: total limit reached")
+            await websocket.close(code=1013, reason="Too many connections")
             return False
 
         per_user = len(self.active_connections.get(user_id, []))
         if per_user >= self.MAX_PER_USER:
-            logger.warning(
-                f"⚠️ [WS] Rejecting connection for {user_id}: per-user {per_user} "
-                f">= MAX_PER_USER ({self.MAX_PER_USER})"
-            )
-            await websocket.close(code=1013)  # Try Again Later
+            logger.warning(f"⚠️ [WS] Rejecting {user_id}: per-user limit")
+            await websocket.close(code=1013, reason="Too many connections for user")
+            return False
+
+        ip_count = self._ip_connections.get(ip_address, 0)
+        if ip_count >= self.MAX_PER_IP:
+            logger.warning(f"⚠️ [WS] Rejecting {user_id}: IP limit")
+            await websocket.close(code=1013, reason="IP limit exceeded")
             return False
 
         await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
+
+        self._ip_connections[ip_address] += 1
+        self._last_activity[id(websocket)] = time.time()
+
         await self._get_redis()
-        logger.info(
-            f"🟢 [WS] New Client Connected to Neural Engine: {user_id} "
-            f"(total: {self._total_connections()})"
-        )
+        await self.start_background_tasks()
+
+        logger.info(f"🟢 [WS] Connected: {user_id} from {ip_address}")
         return True
 
-    def disconnect(self, websocket: WebSocket, user_id: str):
+    def disconnect(self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"):
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
+
+        self._ip_connections[ip_address] -= 1
+        if id(websocket) in self._last_activity:
+            del self._last_activity[id(websocket)]
+
         logger.info(f"🔴 [WS] Client Disconnected: {user_id}")
+
+    async def record_activity(self, websocket: WebSocket):
+        import time
+
+        self._last_activity[id(websocket)] = time.time()
 
     async def broadcast_to_user(self, user_id: str, content: str):
         redis = await self._get_redis()
         await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
 
-    async def _authenticate(self, websocket: WebSocket) -> dict | None:
-        # বাংলা মন্তব্য: P0 Fix — Anonymous WebSocket access সম্পূর্ণ নিষিদ্ধ।
-        # Token না থাকলে বা invalid হলে WS_1008 (Policy Violation) দিয়ে তাৎক্ষণিক reject।
+    async def _authenticate(
+        self, websocket: WebSocket, client_ip: str = "127.0.0.1"
+    ) -> dict | None:
+        if not self._check_ip_rate_limit(client_ip):
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Rate limited")
+            return None
+
         try:
             auth_msg = await websocket.receive_json()
             token = auth_msg.get("token")
             if auth_msg.get("type") != "auth" or not token:
-                logger.warning(
-                    "[WS] Rejected unauthenticated WebSocket connection — auth message missing or invalid."
-                )
+                self._record_auth_attempt(client_ip)
+                logger.warning("[WS] Rejected unauthenticated WS connection")
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
                 return None
             return verify_token(token)
         except Exception as e:
-            logger.warning(f"[WS] Invalid token — closing WebSocket connection: {e}")
+            self._record_auth_attempt(client_ip)
+            logger.warning(f"[WS] Invalid token: {e}")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return None
 
@@ -203,7 +306,6 @@ class DistributedConnectionManager:
         self._pref_tasks.setdefault(user_id, set()).add(task)
 
     def cancel_pref_tasks(self, user_id: str) -> None:
-        # বাংলা মন্তব্য: disconnect হলে সব background pref task cancel করা হচ্ছে — zombie task প্রতিরোধ
         tasks = self._pref_tasks.get(user_id, set())
         for task in tasks:
             task.cancel()
@@ -216,18 +318,22 @@ manager = DistributedConnectionManager()
 @router.websocket("/chat")
 async def websocket_chat_endpoint(
     websocket: WebSocket,
+    request: Request,
 ):
     """
     Real-time bidirectional WebSocket for Token-by-Token streaming and Agentic Tool execution.
     Supports both plain text (Flutter) and JSON payloads with base64 images (Web Chat).
     """
-    # বাংলা মন্তব্য: _authenticate ব্যর্থ হলে সরাসরি return — double-close এড়াতে
-    auth_payload = await manager._authenticate(websocket)
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    auth_payload = await manager._authenticate(websocket, client_ip)
     if not auth_payload:
         return
 
     user_id = auth_payload.get("sub", "unknown")
-    await manager.connect(websocket, user_id)
+    connected = await manager.connect(websocket, user_id, client_ip)
+    if not connected:
+        return
 
     # সেশন হিস্ট্রি মেইনটেইন করার জন্য চ্যাট অবজেক্ট তৈরি করা
     chat_history = []
@@ -242,6 +348,7 @@ async def websocket_chat_endpoint(
         while True:
             # ১. ফ্রন্টএন্ড থেকে ইউজার প্রম্পট রিসিভ করা
             user_message = await websocket.receive_text()
+            await manager.record_activity(websocket)
 
             # ==========================================
             # 👁️ MULTI-MODAL PAYLOAD PARSING
