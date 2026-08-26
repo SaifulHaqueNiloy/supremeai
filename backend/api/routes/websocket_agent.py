@@ -336,7 +336,10 @@ async def websocket_chat_endpoint(
         return
 
     # সেশন হিস্ট্রি মেইনটেইন করার জন্য চ্যাট অবজেক্ট তৈরি করা
-    chat_history = []
+    # MEMLEAK-004 FIX: Use bounded deque instead of unbounded list.
+    # Previously: chat_history grew without limit → 5-20 MB per session → OOM.
+    from collections import deque
+    chat_history = deque(maxlen=50)  # Keep last 50 messages max
 
     # বাংলা মন্তব্য: কানেক্টেড ইউজারের পূর্ববর্তী প্রেফারেন্স ডাটাবেজ থেকে রিড করা হচ্ছে
     db = SupabaseDB()

@@ -123,7 +123,15 @@ class IntelligentCache:
         self.config = config or CacheConfig()
         self.stats = CacheStats()
         self._redis_client = None
-        self._local_cache: dict[str, Any] = {}  # Fallback when Redis unavailable
+        # MEMLEAK-002 FIX: Use bounded LRU cache instead of unbounded dict.
+        # When Redis is unavailable, this dict grew without limit → OOM.
+        try:
+            from collections import OrderedDict
+            self._local_cache: OrderedDict = OrderedDict()
+            self._local_cache_max = 1000  # max entries
+        except ImportError:
+            self._local_cache = {}
+            self._local_cache_max = 0
         self._circuit_breaker_open = False
         self._circuit_breaker_until = 0
 
@@ -268,6 +276,9 @@ class IntelligentCache:
 
         # Store in local cache as backup
         self._local_cache[key] = data
+        # MEMLEAK-002 FIX: Evict oldest entries when cache exceeds max size
+        if self._local_cache_max and len(self._local_cache) > self._local_cache_max:
+            self._local_cache.popitem(last=False)  # FIFO eviction
 
         if not self._check_circuit_breaker():
             return True  # Stored locally
