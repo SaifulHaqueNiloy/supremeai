@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { ServiceHealthBar } from '../../components/auth/ServiceHealthBar';
 
 // বাংলা মন্তব্য: ইউজার লগইন পেজ (নিয়ন থিম) — ব্লার-মুক্ত ও শার্প টেক্সটের জন্য রিফ্যাক্টর করা হয়েছে
 export const LoginPage: React.FC = () => {
@@ -26,17 +27,42 @@ export const LoginPage: React.FC = () => {
       navigate('/workspace');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || err.message || 'লগইন ব্যর্থ হয়েছে।';
-      setError(`Error: ${errorMsg}`);
+      // বাংলা মন্তব্য: Enhanced Error Handling — Backend/Network সমস্যা চিহ্নিত করে User-friendly message দেখায়
+      let userMessage = 'লগইন ব্যর্থ হয়েছে।';
+      
+      // Network/Timeout errors (backend down, cold start, etc.)
+      if (err?.message?.includes('timed out') || err?.message?.includes('timeout')) {
+        userMessage = '⏰ Server response timeout — Backend may be starting up (cold start). Please retry in 30s.';
+      } else if (err?.message?.includes('Failed to fetch') || err?.message?.includes('NetworkError')) {
+        userMessage = '🌐 Network Error — Unable to reach server. Check your connection or try again later.';
+      } else if (err?.status === 503 || err?.status === 502 || err?.status === 504) {
+        userMessage = '🔧 Server temporarily unavailable (maintenance/cold start). Please wait 1-2 minutes.';
+      } else if (err?.status === 401 || err?.status === 403) {
+        userMessage = '🔑 Invalid credentials. Check your email/password and try again.';
+      } else if (err?.response?.data?.detail) {
+        const detail = typeof err.response.data.detail === 'string' 
+          ? err.response.data.detail 
+          : JSON.stringify(err.response.data.detail);
+        userMessage = detail.includes('database') || detail.includes('Database')
+          ? '🗄️ Database service unavailable — Our team has been notified.'
+          : `Error: ${detail}`;
+      }
+      
+      setError(userMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] flex flex-col items-center justify-center relative overflow-hidden p-4">
       {/* বাংলা মন্তব্য: নিয়ন পালস ইফেক্ট (কার্ডের বাইরে, কার্ড ব্লার-মুক্ত থাকবে) */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent-primary/10 via-transparent to-transparent pointer-events-none"></div>
+
+      {/* 🆕 Public Service Health Status Bar — No Auth Required */}
+      <div className="z-10 w-full max-w-md mb-4">
+        <ServiceHealthBar />
+      </div>
 
       <div className="z-10 w-full max-w-md p-8 bg-[var(--supremeai-color-bg-elevated-light)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] shadow-2xl rounded-3xl">
         <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent">
@@ -44,7 +70,14 @@ export const LoginPage: React.FC = () => {
         </h1>
         <p className="text-center text-neon-blue font-semibold tracking-wide mb-8">Enter the Core</p>
 
-        {error && <div className="mb-4 text-danger text-sm text-center font-medium">{error}</div>}
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-950/40 border border-red-800/50 text-red-300 text-sm font-medium backdrop-blur-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-base mt-0.5">⚠️</span>
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
