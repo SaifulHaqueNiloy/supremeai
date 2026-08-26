@@ -433,3 +433,231 @@ async def refresh_system_configs(admin_user: dict = Depends(get_current_admin)):
     except Exception as e:
         logger.error(f"❌ Hot-Reload failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SupremeAI 2.0 Infrastructure Agents — Admin Observability Endpoints
+# বাংলা: ৪টা background agent-এর output দেখার জন্য endpoints। প্রতিটা try/except-এ
+# wrapped — agent disabled বা unavailable হলে clear 503 message। এটি OBSERVE ধাপ।
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+def _agent_enabled(env_var: str) -> bool:
+    """env var check (default-OFF for all infra agents)."""
+    import os
+
+    return os.getenv(env_var, "false").lower() == "true"
+
+
+@router.get("/infrastructure/status")
+async def infrastructure_agents_status(admin_user: dict = Depends(get_current_admin)):
+    """
+    সব ৪টা infrastructure agent-এর overview: enabled কিনা, সংক্ষিপ্ত বিবরণ।
+    """
+    return {
+        "agents": {
+            "memory_augment": {
+                "enabled": _agent_enabled("ENABLE_MEMORY_AUGMENT"),
+                "description": "Neural Memory RAG (zero-cost sentence-transformers)",
+                "wire_point": "api/routes/task.py (augment + intercept)",
+            },
+            "auto_scaling": {
+                "enabled": _agent_enabled("ENABLE_AUTOSCALING_AGENT"),
+                "description": "Autonomous resource scaling (5-min cycle)",
+                "wire_point": "core/startup/agents.py (agent_supervisor)",
+            },
+            "performance_tuning": {
+                "enabled": _agent_enabled("ENABLE_PERFORMANCE_TUNING_AGENT"),
+                "description": "Continuous optimization with auto-apply (15-min cycle)",
+                "wire_point": "core/startup/agents.py (agent_supervisor)",
+            },
+            "cost_optimization": {
+                "enabled": _agent_enabled("ENABLE_COST_OPTIMIZATION_AGENT"),
+                "description": "Strategic cost tracking + opportunities (1-hour cycle)",
+                "wire_point": "core/startup/agents.py (agent_supervisor)",
+            },
+            "disaster_recovery": {
+                "enabled": _agent_enabled("ENABLE_DISASTER_RECOVERY_AGENT"),
+                "description": "Periodic incremental backups (6-hour cycle)",
+                "wire_point": "core/startup/agents.py (agent_supervisor)",
+            },
+        },
+        "note": "Enable via ENABLE_*_AGENT=true env var. See .env.example for details.",
+    }
+
+
+@router.get("/infrastructure/cost/report")
+async def cost_optimization_report(admin_user: dict = Depends(get_current_admin)):
+    """Cost optimization রিপোর্ট — spending, opportunities, forecast।"""
+    if not _agent_enabled("ENABLE_COST_OPTIMIZATION_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="CostOptimizationAgent disabled. Set ENABLE_COST_OPTIMIZATION_AGENT=true to enable.",
+        )
+    try:
+        from agents.infrastructure.cost_optimization_agent import cost_optimization_agent
+
+        return await cost_optimization_agent.get_cost_optimization_report()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ cost report failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/cost/forecast")
+async def cost_forecast(
+    days: int = 30,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Cost forecast — পরের N দিনের projected cost (linear projection)।"""
+    if not _agent_enabled("ENABLE_COST_OPTIMIZATION_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="CostOptimizationAgent disabled. Set ENABLE_COST_OPTIMIZATION_AGENT=true to enable.",
+        )
+    try:
+        from agents.infrastructure.cost_optimization_agent import cost_optimization_agent
+
+        return await cost_optimization_agent.generate_cost_forecast(days_ahead=days)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ cost forecast failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/performance/summary")
+async def performance_summary(
+    hours: int = 24,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Performance tuning summary — গত N ঘন্টার metrics + recommendations।"""
+    if not _agent_enabled("ENABLE_PERFORMANCE_TUNING_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="PerformanceTuningAgent disabled. Set ENABLE_PERFORMANCE_TUNING_AGENT=true to enable.",
+        )
+    try:
+        from agents.infrastructure.performance_tuning_agent import performance_tuning_agent
+
+        return await performance_tuning_agent.get_performance_summary(hours=hours)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ performance summary failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/disaster-recovery/backups")
+async def backup_history(
+    limit: int = 20,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Backup history — সাম্প্রতিক backups-এর তালিকা (Redis থেকে)।"""
+    if not _agent_enabled("ENABLE_DISASTER_RECOVERY_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="DisasterRecoveryAgent disabled. Set ENABLE_DISASTER_RECOVERY_AGENT=true to enable.",
+        )
+    try:
+        from agents.infrastructure.disaster_recovery_agent import disaster_recovery_agent
+
+        raw = await redis_manager.get(disaster_recovery_agent.backup_history_key)
+        backups = json.loads(raw) if raw else []
+        return {
+            "status": "success",
+            "total_backups": len(backups),
+            "recent": backups[-limit:] if backups else [],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ backup history failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/infrastructure/disaster-recovery/backup")
+async def trigger_manual_backup(
+    backup_type: str = "full",
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Manual backup trigger — admin চাইলে এখনই backup তৈরি করতে পারে।"""
+    if not _agent_enabled("ENABLE_DISASTER_RECOVERY_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="DisasterRecoveryAgent disabled. Set ENABLE_DISASTER_RECOVERY_AGENT=true to enable.",
+        )
+    if backup_type not in ("full", "incremental", "config_only"):
+        raise HTTPException(
+            status_code=400,
+            detail="backup_type must be one of: full, incremental, config_only",
+        )
+    try:
+        from agents.infrastructure.disaster_recovery_agent import disaster_recovery_agent
+
+        result = await disaster_recovery_agent.create_backup(backup_type=backup_type)
+        return {
+            "status": "success",
+            "backup_id": result.backup_id,
+            "timestamp": result.timestamp.isoformat() if result.timestamp else None,
+            "size_bytes": result.size_bytes,
+            "location": result.location,
+            "backup_status": result.status,
+            "verification_hash": result.verification_hash,
+            "components_backed_up": result.components_backed_up,
+            "duration_seconds": result.duration_seconds,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ manual backup failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/disaster-recovery/schedule")
+async def backup_schedule_recommendations(
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Backup schedule recommendations — full/incremental frequency + retention পরামর্শ।"""
+    if not _agent_enabled("ENABLE_DISASTER_RECOVERY_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="DisasterRecoveryAgent disabled. Set ENABLE_DISASTER_RECOVERY_AGENT=true to enable.",
+        )
+    try:
+        from agents.infrastructure.disaster_recovery_agent import disaster_recovery_agent
+
+        return await disaster_recovery_agent.get_backup_schedule_recommendations()
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ schedule recommendations failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/infrastructure/auto-scaling/status")
+async def auto_scaling_status(
+    limit: int = 20,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Auto-scaling status — সাম্প্রতিক scaling actions (Redis থেকে)।"""
+    if not _agent_enabled("ENABLE_AUTOSCALING_AGENT"):
+        raise HTTPException(
+            status_code=503,
+            detail="AutoScalingAgent disabled. Set ENABLE_AUTOSCALING_AGENT=true to enable.",
+        )
+    try:
+        # auto_scaling_agent সরাসরি history read করার method নেই, তাই Redis থেকে পড়ি
+        raw = await redis_manager.get("auto_scaling:scaling_history")
+        actions = json.loads(raw) if raw else []
+        return {
+            "status": "success",
+            "total_actions": len(actions),
+            "recent": actions[-limit:] if actions else [],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ auto-scaling status failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
