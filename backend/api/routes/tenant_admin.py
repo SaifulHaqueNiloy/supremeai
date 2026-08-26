@@ -92,7 +92,12 @@ async def _db_list_tenants() -> list[dict[str, Any]]:
     client = _get_db()
     if client:
         try:
-            res = client.table("tenant_limits").select("*").order("created_at", desc=True).execute()
+            res = (
+                await client.table("tenant_limits")
+                .select("*")
+                .order("created_at", desc=True)
+                .execute()
+            )
             return res.data or []
         except Exception as exc:
             logger.warning(f"Supabase tenant list failed: {exc}")
@@ -103,7 +108,9 @@ async def _db_get_tenant(tenant_id: str) -> dict[str, Any] | None:
     client = _get_db()
     if client:
         try:
-            res = client.table("tenant_limits").select("*").eq("tenant_id", tenant_id).execute()
+            res = (
+                await client.table("tenant_limits").select("*").eq("tenant_id", tenant_id).execute()
+            )
             return res.data[0] if res.data else None
         except Exception as exc:
             logger.warning(f"Supabase tenant get failed: {exc}")
@@ -117,7 +124,7 @@ async def _db_upsert_tenant(data: dict[str, Any]) -> bool:
     client = _get_db()
     if client:
         try:
-            client.table("tenant_limits").upsert(data, on_conflict="tenant_id").execute()
+            await client.table("tenant_limits").upsert(data, on_conflict="tenant_id").execute()
             return True
         except Exception as exc:
             logger.warning(f"Supabase tenant upsert failed: {exc}")
@@ -135,7 +142,7 @@ async def _db_delete_tenant(tenant_id: str) -> bool:
     client = _get_db()
     if client:
         try:
-            client.table("tenant_limits").delete().eq("tenant_id", tenant_id).execute()
+            await client.table("tenant_limits").delete().eq("tenant_id", tenant_id).execute()
             return True
         except Exception as exc:
             logger.warning(f"Supabase delete failed: {exc}")

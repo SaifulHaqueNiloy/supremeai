@@ -114,7 +114,7 @@ async def generate_share_link(
     try:
         # Verify the conversation belongs to the user
         conv_response = (
-            db.client.table("conversations")
+            await db.client.table("conversations")
             .select("id, user_id, title")
             .eq("id", payload.conversation_id)
             .eq("user_id", user_id)
@@ -128,7 +128,7 @@ async def generate_share_link(
 
         # Check for existing share for this conversation
         existing = (
-            db.client.table("shared_conversations")
+            await db.client.table("shared_conversations")
             .select("share_id, expires_at")
             .eq("conversation_id", payload.conversation_id)
             .eq("user_id", user_id)
@@ -150,7 +150,7 @@ async def generate_share_link(
         share_id = _generate_share_id()
         expires_at = (datetime.now(UTC) + timedelta(days=30)).isoformat()
 
-        db.client.table("shared_conversations").insert(
+        await db.client.table("shared_conversations").insert(
             {
                 "share_id": share_id,
                 "conversation_id": payload.conversation_id,
@@ -189,7 +189,7 @@ async def get_shared_conversation(share_id: str):
         try:
             db = SupabaseDB()
             current_count = cached.get("view_count", 0)
-            db.client.table("shared_conversations").update({"view_count": current_count + 1}).eq(
+            await db.client.table("shared_conversations").update({"view_count": current_count + 1}).eq(
                 "share_id", share_id
             ).execute()
             cached["view_count"] = current_count + 1
@@ -212,7 +212,7 @@ async def get_shared_conversation(share_id: str):
     try:
         # Fetch the share record
         share_response = (
-            db.client.table("shared_conversations")
+            await db.client.table("shared_conversations")
             .select("*")
             .eq("share_id", share_id)
             .eq("is_public", True)
@@ -233,7 +233,10 @@ async def get_shared_conversation(share_id: str):
 
         # Fetch conversation
         conv_response = (
-            db.client.table("conversations").select("id, title").eq("id", conversation_id).execute()
+            await db.client.table("conversations")
+            .select("id, title")
+            .eq("id", conversation_id)
+            .execute()
         )
 
         if not conv_response.data:
@@ -371,7 +374,7 @@ async def revoke_share(
             )
 
         # Delete the share
-        db.client.table("shared_conversations").delete().eq("share_id", share_id).execute()
+        await db.client.table("shared_conversations").delete().eq("share_id", share_id).execute()
 
         # Clear cache
         _share_cache.pop(share_id, None)

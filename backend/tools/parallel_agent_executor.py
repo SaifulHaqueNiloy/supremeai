@@ -199,7 +199,7 @@ class ParallelAgentExecutor:
             if inspect.iscoroutinefunction(redis.publish):
                 await redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
             else:
-                redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
+                await redis.publish(f"supremeai:agents:{self.execution_group}", json.dumps(payload))
         except Exception as e:
             logger.warning(
                 f"Failed to publish agent state: {e}. Running with local logger fallback."

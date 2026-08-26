@@ -39,7 +39,7 @@ async def get_preferences(user_id: str = Query(default="default")):
             "custom_shortcuts": {},
         }
     try:
-        res = db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+        res = await db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
         rows = res.data or []
         if rows:
             return rows[0]
@@ -91,7 +91,7 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
 
     data["user_id"] = user_id
     try:
-        res = db.client.table("user_preferences").upsert(data).execute()
+        res = await db.client.table("user_preferences").upsert(data).execute()
         if payload.theme:
             await theme_pubsub.publish(user_id, {"theme": payload.theme})
         pref_res = res.data[0] if res.data else data

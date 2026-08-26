@@ -154,7 +154,7 @@ async def branch_conversation(
     try:
         # 1. Verify the parent conversation belongs to the user
         parent_resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("id, title")
             .eq("id", conversation_id)
             .eq("user_id", user_id)
@@ -167,7 +167,7 @@ async def branch_conversation(
         # 2. Fetch messages up to and including message_id
         #    We need the message's created_at to know where to slice.
         target_msg_resp = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("id, created_at")
             .eq("id", payload.message_id)
             .eq("conversation_id", conversation_id)
@@ -179,7 +179,7 @@ async def branch_conversation(
 
         # 3. Get all messages up to that timestamp (inclusive)
         all_msgs_resp = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("*")
             .eq("conversation_id", conversation_id)
             .lte("created_at", target_created_at)
@@ -202,7 +202,7 @@ async def branch_conversation(
             "created_at": now,
             "updated_at": now,
         }
-        new_conv_resp = supabase_db.client.table("conversations").insert(new_conv).execute()
+        new_conv_resp = supabase_db.await client.table("conversations").insert(new_conv).execute()
         if not new_conv_resp.data:
             raise HTTPException(status_code=500, detail="Failed to create branched conversation.")
         new_conv_id = new_conv_resp.data[0]["id"]
@@ -219,7 +219,7 @@ async def branch_conversation(
                 "created_at": msg["created_at"],
                 "parent_message_id": id_map.get(old_parent) if old_parent else None,
             }
-            inserted = supabase_db.client.table("messages").insert(new_msg).execute()
+            inserted = supabase_db.await client.table("messages").insert(new_msg).execute()
             if inserted.data:
                 id_map[msg["id"]] = inserted.data[0]["id"]
 
@@ -257,7 +257,7 @@ async def list_branches(
 
     try:
         resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("*")
             .eq("parent_conversation_id", conversation_id)
             .eq("user_id", user_id)
@@ -290,7 +290,7 @@ async def get_conversation_tree(
 
     try:
         resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("id, title, parent_conversation_id, created_at, updated_at")
             .eq("user_id", user_id)
             .order("created_at", desc=False)
@@ -325,7 +325,7 @@ async def merge_conversation(
     try:
         # 1. Verify both conversations belong to the user
         target_resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("id")
             .eq("id", conversation_id)
             .eq("user_id", user_id)
@@ -335,7 +335,7 @@ async def merge_conversation(
             raise HTTPException(status_code=404, detail="Target conversation not found.")
 
         source_resp = (
-            supabase_db.client.table("conversations")
+            await supabase_db.client.table("conversations")
             .select("id")
             .eq("id", payload.source_conversation_id)
             .eq("user_id", user_id)
@@ -346,7 +346,7 @@ async def merge_conversation(
 
         # 2. Fetch existing target message IDs for deduplication
         target_msgs = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("id, content, role, created_at")
             .eq("conversation_id", conversation_id)
             .execute()
@@ -357,7 +357,7 @@ async def merge_conversation(
 
         # 3. Fetch source messages and filter out duplicates
         source_msgs = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("*")
             .eq("conversation_id", payload.source_conversation_id)
             .order("created_at", desc=False)
@@ -380,12 +380,12 @@ async def merge_conversation(
         # 4. Insert new messages in a batch
         inserted_count = 0
         for msg_row in to_insert:
-            supabase_db.client.table("messages").insert(msg_row).execute()
+            supabase_db.await client.table("messages").insert(msg_row).execute()
             inserted_count += 1
 
         # 5. Update target's updated_at
         now = datetime.now(UTC).isoformat()
-        supabase_db.client.table("conversations").update({"updated_at": now}).eq(
+        await supabase_db.client.table("conversations").update({"updated_at": now}).eq(
             "id", conversation_id
         ).execute()
 

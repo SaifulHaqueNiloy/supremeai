@@ -243,7 +243,7 @@ async def create_scheduled_task(
             "created_at": now,
             "updated_at": now,
         }
-        resp = supabase_db.client.table("scheduled_tasks").insert(row).execute()
+        resp = supabase_db.await client.table("scheduled_tasks").insert(row).execute()
         if not resp.data:
             raise HTTPException(status_code=500, detail="Task creation returned no data.")
         return _row_to_task(resp.data[0])
@@ -271,7 +271,7 @@ async def list_scheduled_tasks(
 
     try:
         resp = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("*")
             .eq("user_id", user_id)
             .order("created_at", desc=True)
@@ -306,7 +306,7 @@ async def list_execution_history(
             task_ids = [task_id]
         else:
             tasks_resp = (
-                supabase_db.client.table("scheduled_tasks")
+                await supabase_db.client.table("scheduled_tasks")
                 .select("id")
                 .eq("user_id", user_id)
                 .execute()
@@ -319,7 +319,7 @@ async def list_execution_history(
         # Build filter: task_id.in.(id1,id2,...)
         # Supabase .in_ expects a column name and a list
         query = (
-            supabase_db.client.table("scheduled_task_executions")
+            await supabase_db.client.table("scheduled_task_executions")
             .select("*")
             .in_("task_id", task_ids)
             .order("started_at", desc=True)
@@ -350,7 +350,7 @@ async def get_scheduled_task(
 
     try:
         resp = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("*")
             .eq("id", task_id)
             .eq("user_id", user_id)
@@ -386,7 +386,7 @@ async def update_scheduled_task(
     try:
         # Verify ownership
         existing = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("id")
             .eq("id", task_id)
             .eq("user_id", user_id)
@@ -412,7 +412,7 @@ async def update_scheduled_task(
             update_fields["is_active"] = payload.is_active
 
         resp = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .update(update_fields)
             .eq("id", task_id)
             .execute()
@@ -444,7 +444,7 @@ async def delete_scheduled_task(
 
     try:
         existing = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("id")
             .eq("id", task_id)
             .eq("user_id", user_id)
@@ -453,7 +453,7 @@ async def delete_scheduled_task(
         if not existing.data:
             raise HTTPException(status_code=404, detail="Scheduled task not found.")
 
-        supabase_db.client.table("scheduled_tasks").delete().eq("id", task_id).execute()
+        supabase_db.await client.table("scheduled_tasks").delete().eq("id", task_id).execute()
         return {"status": "deleted", "id": task_id}
     except HTTPException:
         raise
@@ -482,7 +482,7 @@ async def run_scheduled_task(
     try:
         # Fetch task
         task_resp = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("*")
             .eq("id", task_id)
             .eq("user_id", user_id)
@@ -499,7 +499,7 @@ async def run_scheduled_task(
             "status": "running",
             "started_at": now,
         }
-        exec_resp = supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
+        exec_resp = supabase_db.await client.table("scheduled_task_executions").insert(exec_row).execute()
         exec_id = exec_resp.data[0]["id"] if exec_resp.data else str(uuid.uuid4())
 
         # Execute prompt
@@ -516,7 +516,7 @@ async def run_scheduled_task(
         completed_at = datetime.now(UTC).isoformat()
 
         # Update execution record
-        supabase_db.client.table("scheduled_task_executions").update(
+        await supabase_db.client.table("scheduled_task_executions").update(
             {
                 "status": status,
                 "result": result_text[:5000] if result_text else None,
@@ -526,7 +526,7 @@ async def run_scheduled_task(
         ).eq("id", exec_id).execute()
 
         # Update task's last_run fields
-        supabase_db.client.table("scheduled_tasks").update(
+        await supabase_db.client.table("scheduled_tasks").update(
             {
                 "last_run_at": completed_at,
                 "last_run_status": status,
@@ -537,7 +537,7 @@ async def run_scheduled_task(
         # Optionally append result as a message to the linked conversation
         if task.get("conversation_id") and result_text:
             try:
-                supabase_db.client.table("messages").insert(
+                await supabase_db.client.table("messages").insert(
                     {
                         "conversation_id": task["conversation_id"],
                         "role": "assistant",
@@ -581,7 +581,7 @@ async def toggle_scheduled_task(
 
     try:
         existing = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .select("id, is_active")
             .eq("id", task_id)
             .eq("user_id", user_id)
@@ -594,7 +594,7 @@ async def toggle_scheduled_task(
         now = datetime.now(UTC).isoformat()
 
         resp = (
-            supabase_db.client.table("scheduled_tasks")
+            await supabase_db.client.table("scheduled_tasks")
             .update({"is_active": new_state, "updated_at": now})
             .eq("id", task_id)
             .execute()
