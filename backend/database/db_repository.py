@@ -83,7 +83,7 @@ class SmartDataRepository:
                 if hasattr(self.supabase, "table"):
                     self._validate_table_name(table_name)
                     response = (
-                        self.await supabase.table(table_name).select("*").eq("id", doc_id).execute()
+                        await self.supabase.table(table_name).select("*").eq("id", doc_id).execute()
                     )
                     return response.data[0] if response.data else None
                 # If it's CloudPostgresStore helper

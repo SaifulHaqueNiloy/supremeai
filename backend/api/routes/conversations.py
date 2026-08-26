@@ -92,9 +92,12 @@ async def add_message(
         )
 
         # Update conversation timestamp
-        await db.client.table("conversations").update({"updated_at": "now()"}).eq(
-            "id", conversation_id
-        ).execute()
+        await (
+            db.client.table("conversations")
+            .update({"updated_at": "now()"})
+            .eq("id", conversation_id)
+            .execute()
+        )
 
         return MessageResponse(**response.data[0])
     except Exception as e:

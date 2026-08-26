@@ -202,7 +202,7 @@ async def branch_conversation(
             "created_at": now,
             "updated_at": now,
         }
-        new_conv_resp = supabase_db.await client.table("conversations").insert(new_conv).execute()
+        new_conv_resp = await supabase_db.client.table("conversations").insert(new_conv).execute()
         if not new_conv_resp.data:
             raise HTTPException(status_code=500, detail="Failed to create branched conversation.")
         new_conv_id = new_conv_resp.data[0]["id"]
@@ -219,7 +219,7 @@ async def branch_conversation(
                 "created_at": msg["created_at"],
                 "parent_message_id": id_map.get(old_parent) if old_parent else None,
             }
-            inserted = supabase_db.await client.table("messages").insert(new_msg).execute()
+            inserted = await supabase_db.client.table("messages").insert(new_msg).execute()
             if inserted.data:
                 id_map[msg["id"]] = inserted.data[0]["id"]
 
@@ -380,14 +380,17 @@ async def merge_conversation(
         # 4. Insert new messages in a batch
         inserted_count = 0
         for msg_row in to_insert:
-            supabase_db.await client.table("messages").insert(msg_row).execute()
+            await supabase_db.client.table("messages").insert(msg_row).execute()
             inserted_count += 1
 
         # 5. Update target's updated_at
         now = datetime.now(UTC).isoformat()
-        await supabase_db.client.table("conversations").update({"updated_at": now}).eq(
-            "id", conversation_id
-        ).execute()
+        await (
+            supabase_db.client.table("conversations")
+            .update({"updated_at": now})
+            .eq("id", conversation_id)
+            .execute()
+        )
 
         return {
             "status": "merged",
