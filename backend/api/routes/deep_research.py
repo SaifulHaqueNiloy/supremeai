@@ -492,7 +492,7 @@ async def deep_research_sync(
         if payload.conversation_id and supabase_db.client:
             try:
                 summary = report.get("summary", "")[:2000]
-                supabase_db.client.table("messages").insert(
+                await supabase_db.client.table("messages").insert(
                     {
                         "conversation_id": payload.conversation_id,
                         "role": "assistant",
@@ -638,7 +638,7 @@ async def list_research_history(
 
     try:
         resp = (
-            supabase_db.client.table("deep_research_sessions")
+            await supabase_db.client.table("deep_research_sessions")
             .select("id, query, status, steps_completed, total_sources, created_at")
             .eq("user_id", user_id)
             .order("created_at", desc=True)
@@ -669,7 +669,7 @@ async def get_research_report(
 
     try:
         resp = (
-            supabase_db.client.table("deep_research_sessions")
+            await supabase_db.client.table("deep_research_sessions")
             .select("*")
             .eq("id", research_id)
             .eq("user_id", user_id)

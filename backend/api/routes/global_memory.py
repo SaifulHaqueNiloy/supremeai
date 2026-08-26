@@ -204,7 +204,7 @@ async def delete_memory(
     try:
         # Verify ownership before deleting
         resp = (
-            supabase_db.client.table("ai_memory")
+            await supabase_db.client.table("ai_memory")
             .select("id")
             .eq("id", memory_id)
             .eq("user_id", user_id)
@@ -213,7 +213,7 @@ async def delete_memory(
         if not resp.data:
             raise HTTPException(status_code=404, detail="Memory not found.")
 
-        supabase_db.client.table("ai_memory").delete().eq("id", memory_id).execute()
+        supabase_db.await client.table("ai_memory").delete().eq("id", memory_id).execute()
         return {"status": "deleted", "id": memory_id}
     except HTTPException:
         raise
@@ -242,7 +242,7 @@ async def update_memory(
     try:
         # Verify ownership
         resp = (
-            supabase_db.client.table("ai_memory")
+            await supabase_db.client.table("ai_memory")
             .select("id")
             .eq("id", memory_id)
             .eq("user_id", user_id)
@@ -255,7 +255,7 @@ async def update_memory(
         if payload.content_type is not None:
             # Merge content_type into existing metadata
             existing_resp = (
-                supabase_db.client.table("ai_memory")
+                await supabase_db.client.table("ai_memory")
                 .select("metadata")
                 .eq("id", memory_id)
                 .execute()
@@ -270,7 +270,7 @@ async def update_memory(
             metadata["content_type"] = payload.content_type
             update_fields["metadata"] = metadata
 
-        supabase_db.client.table("ai_memory").update(update_fields).eq("id", memory_id).execute()
+        supabase_db.await client.table("ai_memory").update(update_fields).eq("id", memory_id).execute()
         return {"status": "updated", "id": memory_id}
     except HTTPException:
         raise
@@ -332,7 +332,7 @@ async def sync_memory(
     try:
         # Fetch recent messages
         resp = (
-            supabase_db.client.table("messages")
+            await supabase_db.client.table("messages")
             .select("role, content")
             .eq("conversation_id", payload.conversation_id)
             .order("created_at", desc=False)
@@ -373,7 +373,7 @@ async def memory_stats(
 
     try:
         resp = (
-            supabase_db.client.table("ai_memory")
+            await supabase_db.client.table("ai_memory")
             .select("id, metadata, created_at")
             .eq("user_id", user_id)
             .execute()

@@ -48,7 +48,7 @@ async def list_repos(
 ):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
-    query = db.client.table("github_repos").select("*").eq("status", status)
+    query = await db.client.table("github_repos").select("*").eq("status", status)
     if category:
         query = query.eq("category", category)
     if priority:
@@ -62,7 +62,7 @@ async def create_repo(payload: RepoCreate):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
     data = payload.dict(exclude_none=True)
-    res = db.client.table("github_repos").insert(data).execute()
+    res = await db.client.table("github_repos").insert(data).execute()
     return {"status": "success", "repo": res.data[0] if res.data else data}
 
 
@@ -73,7 +73,7 @@ async def update_repo(repo_id: str, payload: RepoUpdate):
     data = payload.dict(exclude_none=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    res = db.client.table("github_repos").update(data).eq("id", repo_id).execute()
+    res = await db.client.table("github_repos").update(data).eq("id", repo_id).execute()
     return {"status": "success", "repo": res.data[0] if res.data else None}
 
 
@@ -81,5 +81,5 @@ async def update_repo(repo_id: str, payload: RepoUpdate):
 async def delete_repo(repo_id: str):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
-    db.client.table("github_repos").update({"status": "archived"}).eq("id", repo_id).execute()
+    await db.client.table("github_repos").update({"status": "archived"}).eq("id", repo_id).execute()
     return {"status": "success", "message": "Repo archived"}

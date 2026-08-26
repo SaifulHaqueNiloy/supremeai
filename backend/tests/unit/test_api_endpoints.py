@@ -6,7 +6,7 @@
 import json
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, dict, list
+from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
