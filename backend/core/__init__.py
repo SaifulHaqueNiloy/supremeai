@@ -121,73 +121,97 @@ try:
     # subfolders (theory_of_mind, temporal_abstraction, etc.) were deleted
     # during UNIFY cleanup. The correct location is core/evolution/ subfolders.
     # TheoryOfMind and TemporalAbstraction don't exist anymore — set to None.
+    #
+    # BUG FIX (this commit): আগে একটাই বড় try/except ছিল — যেকোনো একটি subsystem
+    # import fail করলে (যেমন torch না থাকলে ewc.py + neural_symbolic দুটোই fail)
+    # সব subsystem None হয়ে যেত। এখন প্রতিটি subsystem আলাদা try/except-এ — torch
+    # unavailable হলেও adversarial_defense/digital_twin/federated_learning available
+    # থাকবে। এটা "no room for mistake" — কোনো production code এগুলো use করে না,
+    # তাই behavior change নেই, শুধু partial availability বাড়ে।
     from core.evolution.adversarial_defense.defense_system import (
         AdversarialDefenseSystem,
         AdversarialTrainer,
         DefenseConfig,
     )
+    ADVERSARIAL_DEFENSE_AVAILABLE = True
+except (ImportError, OSError, AttributeError):
+    ADVERSARIAL_DEFENSE_AVAILABLE = False
+    AdversarialDefenseSystem = None  # type: ignore[assignment]
+    AdversarialTrainer = None  # type: ignore[assignment]
+    DefenseConfig = None  # type: ignore[assignment]
+
+try:
+    # EWC (Elastic Weight Consolidation) — torch-dependent, free-tier-এ unavailable
     from core.evolution.continual_learning.ewc import (
         EWC,
         EWCConfig,
         EWCTrainer,
         OnlineEWC,
     )
+    EWC_AVAILABLE = True
+except (ImportError, OSError, AttributeError):
+    EWC_AVAILABLE = False
+    EWC = None  # type: ignore[assignment]
+    EWCConfig = None  # type: ignore[assignment]
+    EWCTrainer = None  # type: ignore[assignment]
+    OnlineEWC = None  # type: ignore[assignment]
+
+try:
     from core.evolution.digital_twin.remediation_engine import RemediationEngine
     from core.evolution.digital_twin.simulator import ImpactSimulator
     from core.evolution.digital_twin.topology import SystemTopologyMapper
+    DIGITAL_TWIN_AVAILABLE = True
+except (ImportError, OSError, AttributeError):
+    DIGITAL_TWIN_AVAILABLE = False
+    RemediationEngine = None  # type: ignore[assignment]
+    ImpactSimulator = None  # type: ignore[assignment]
+    SystemTopologyMapper = None  # type: ignore[assignment]
+
+try:
     from core.evolution.federated_learning.fed_learning import (
         FederatedLearningCoordinator,
     )
+    FEDERATED_LEARNING_AVAILABLE = True
+except (ImportError, OSError, AttributeError):
+    FEDERATED_LEARNING_AVAILABLE = False
+    FederatedLearningCoordinator = None  # type: ignore[assignment]
+
+try:
+    # neural_symbolic — torch-dependent (NeuralModule(nn.Module)), free-tier-এ unavailable
     from core.evolution.neural_symbolic.integration import (
         NeuralSymbolicConfig,
         NeuralSymbolicIntegrator,
     )
+    NEURAL_SYMBOLIC_AVAILABLE = True
+except (ImportError, OSError, AttributeError):
+    NEURAL_SYMBOLIC_AVAILABLE = False
+    NeuralSymbolicConfig = None  # type: ignore[assignment]
+    NeuralSymbolicIntegrator = None  # type: ignore[assignment]
 
-    # These symbols don't exist anywhere (deleted with evolution/ subfolders):
-    # DigitalTwinWorldModel, get_digital_twin_model, FLConfig, AggregationMethod,
-    # MathematicalReasoningEngine, TheoryOfMindSystem, ToMConfig, ToMLevel,
-    # TemporalAbstractionSystem, TemporalAbstractionConfig, TemporalGranularity
-    DigitalTwinWorldModel = None
-    get_digital_twin_model = None
-    FLConfig = None
-    AggregationMethod = None
-    MathematicalReasoningEngine = None
-    TheoryOfMindSystem = None
-    ToMConfig = None
-    ToMLevel = None
-    TemporalAbstractionSystem = None
-    TemporalAbstractionConfig = None
-    TemporalGranularity = None
+# These symbols don't exist anywhere (deleted with evolution/ subfolders):
+# DigitalTwinWorldModel, get_digital_twin_model, FLConfig, AggregationMethod,
+# MathematicalReasoningEngine, TheoryOfMindSystem, ToMConfig, ToMLevel,
+# TemporalAbstractionSystem, TemporalAbstractionConfig, TemporalGranularity
+DigitalTwinWorldModel = None
+get_digital_twin_model = None
+FLConfig = None
+AggregationMethod = None
+MathematicalReasoningEngine = None
+TheoryOfMindSystem = None
+ToMConfig = None
+ToMLevel = None
+TemporalAbstractionSystem = None
+TemporalAbstractionConfig = None
+TemporalGranularity = None
 
-    EVOLUTION_COMPONENTS_AVAILABLE = True
-except (ImportError, OSError):
-    EVOLUTION_COMPONENTS_AVAILABLE = False
-    (
-        DigitalTwinWorldModel,
-        get_digital_twin_model,
-        SystemTopologyMapper,
-        ImpactSimulator,
-        RemediationEngine,
-        EWC,
-        OnlineEWC,
-        EWCTrainer,
-        EWCConfig,
-        AdversarialDefenseSystem,
-        AdversarialTrainer,
-        DefenseConfig,
-        NeuralSymbolicIntegrator,
-        MathematicalReasoningEngine,
-        NeuralSymbolicConfig,
-        FederatedLearningCoordinator,
-        FLConfig,
-        AggregationMethod,
-        TheoryOfMindSystem,
-        ToMConfig,
-        ToMLevel,
-        TemporalAbstractionSystem,
-        TemporalAbstractionConfig,
-        TemporalGranularity,
-    ) = (None,) * 24
+# Aggregate availability flag — True যদি অন্তত একটি subsystem available হয়
+EVOLUTION_COMPONENTS_AVAILABLE = (
+    ADVERSARIAL_DEFENSE_AVAILABLE
+    or EWC_AVAILABLE
+    or DIGITAL_TWIN_AVAILABLE
+    or FEDERATED_LEARNING_AVAILABLE
+    or NEURAL_SYMBOLIC_AVAILABLE
+)
 
 # Version information
 __version__ = "2.0.0"
