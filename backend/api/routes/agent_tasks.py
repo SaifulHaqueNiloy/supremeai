@@ -11,8 +11,8 @@ from brain.autonomous_agent import AutonomousAgent
 from brain.langgraph_agent import SupremeOrchestrator
 from brain.model_router import ModelRouter
 from core.generation_monitor import GenerationMonitor
-from core.orchestration.swarm_orchestrator import SwarmOrchestrator
 from core.security.authentication.rbac import RoleBasedAccessControl
+from core.zero_cost_architecture.swarm_orchestrator_integration import ZeroCostSwarmOrchestrator
 
 agent_router = APIRouter(
     prefix="/api/v1/agents",
@@ -115,7 +115,7 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
     and returns the final workspace state.
     """
     session_id = body.session_id or str(uuid.uuid4())
-    orchestrator = SwarmOrchestrator(
+    orchestrator = ZeroCostSwarmOrchestrator(
         user_id=body.user_id, session_id=session_id, task_prompt=body.task
     )  # type: ignore
 
