@@ -33,7 +33,7 @@ async def handler():
     result = fetch("https://x")  # should be `await fetch(...)`
 
     # blocking call in async function
-    time.sleep(2)
+    await asyncio.sleep(2)
 
     # requests (blocking) in async
     requests.get("https://x")
