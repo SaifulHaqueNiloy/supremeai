@@ -88,14 +88,14 @@ class TestAuthenticationEndpoints:
     async def test_user_registration_duplicate_email(
         self,
         client: AsyncClient,
-        sample_user_data,
+        sample_user_registration_data,
     ):
         """Test registration with duplicate email fails."""
         # First registration should succeed
-        await client.post("/api/v1/auth/register", json=sample_user_data)
+        await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
         # Second should fail
-        response = await client.post("/api/v1/auth/register", json=sample_user_data)
+        response = await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
         assert response.status_code == 409  # Conflict
         error = response.json().get("error", {})
@@ -143,16 +143,16 @@ class TestAuthenticationEndpoints:
     async def test_user_login_success(
         self,
         client: AsyncClient,
-        sample_user_data,
+        sample_user_registration_data,
     ):
         """Test successful user login."""
         # Register first
-        await client.post("/api/v1/auth/register", json=sample_user_data)
+        await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
         # Login
         login_data = {
-            "email": sample_user_data["email"],
-            "password": sample_user_data["password"],
+            "email": sample_user_registration_data["email"],
+            "password": sample_user_registration_data["password"],
         }
         response = await client.post("/api/v1/auth/login", json=login_data)
 
@@ -167,15 +167,15 @@ class TestAuthenticationEndpoints:
     async def test_user_login_wrong_password(
         self,
         client: AsyncClient,
-        sample_user_data,
+        sample_user_registration_data,
     ):
         """Test login with wrong password fails."""
         # Register first
-        await client.post("/api/v1/auth/register", json=sample_user_data)
+        await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
         # Login with wrong password
         login_data = {
-            "email": sample_user_data["email"],
+            "email": sample_user_registration_data["email"],
             "password": "WrongPassword!",
         }
         response = await client.post("/api/v1/auth/login", json=login_data)
@@ -186,17 +186,17 @@ class TestAuthenticationEndpoints:
     async def test_token_refresh(
         self,
         client: AsyncClient,
-        sample_user_data,
+        sample_user_registration_data,
     ):
         """Test refreshing access token."""
         # Register and login
-        await client.post("/api/v1/auth/register", json=sample_user_data)
+        await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
         login_response = await client.post(
             "/api/v1/auth/login",
             json={
-                "email": sample_user_data["email"],
-                "password": sample_user_data["password"],
+                "email": sample_user_registration_data["email"],
+                "password": sample_user_registration_data["password"],
             },
         )
 
@@ -219,7 +219,7 @@ class TestAuthenticationEndpoints:
         self,
         client: AsyncClient,
         auth_headers: dict,
-        sample_user_data,
+        sample_user_registration_data,
     ):
         """Test getting current authenticated user info."""
         response = await client.get(
@@ -229,8 +229,8 @@ class TestAuthenticationEndpoints:
 
         assert response.status_code == 200
         data = response.json().get("data", response.json())
-        assert data["email"] == sample_user_data["email"]
-        assert data["full_name"] == sample_user_data["full_name"]
+        assert data["email"] == sample_user_registration_data["email"]
+        assert data["full_name"] == sample_user_registration_data["full_name"]
 
     @pytest.mark.auth
     async def test_access_without_token(
