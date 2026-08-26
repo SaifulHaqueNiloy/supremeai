@@ -38,7 +38,12 @@ TIER_S_ROUTERS: list[tuple[APIRouter, str, list[str]]] = [
     (slash_commands_router, "/api/slash-commands", ["slash-commands"]),
     (chat_search_router, "/api/chat/search", ["chat-search"]),
     (chat_export_router, "/api/chat/export", ["chat-export"]),
-    (global_memory_router, "/api/global-memory", ["global-memory"]),
+    # CI FIX: global_memory_router has its own prefix="/api/preferences/memory"
+    # (defined in global_memory.py:21). If we mount it with prefix="/api/global-memory",
+    # FastAPI concatenates both → /api/global-memory/api/preferences/memory/{id}
+    # which doesn't match what the frontend calls (/api/preferences/memory/{id}).
+    # Fix: mount with empty prefix so only the router's own prefix is used.
+    (global_memory_router, "", ["global-memory"]),
     (prompt_templates_router, "/api/prompt-templates", ["prompt-templates"]),
     (branch_conversations_router, "/api/branch-conversations", ["branch-conversations"]),
     (scheduled_tasks_router, "/api/scheduled-tasks", ["scheduled-tasks"]),

@@ -31,6 +31,7 @@ export function useSujonMetrics() {
     const fetchMetrics = async () => {
       try {
         const response = await fetch(`${getApiBaseUrl()}/api/admin/metrics/realtime`, {
+          method: 'GET',
           headers: await getAuthHeaders(),
         });
         const data = await response.json();
