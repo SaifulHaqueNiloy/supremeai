@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any
 
 import psutil  # This may need to be installed separately
-from core.monitoring.metrics_collector import MetricsCollector
+from monitoring.metrics_collector import MetricsCollector
 from loguru import logger
 
 from core.cache.redis_manager import redis_manager
