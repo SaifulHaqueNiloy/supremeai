@@ -192,15 +192,17 @@ filterwarnings = [
     "ignore::PendingDeprecationWarning",
 ]
 asyncio_mode = "auto"
+# CI SPEED FIX: 312 test files were taking 30+ minutes. Key optimizations:
+# 1. Per-test timeout (30s) — kills hanging tests instead of blocking forever
+# 2. Timeout method=thread — works with both sync and async tests
+timeout = 30
+timeout_method = "thread"
 # বাংলা মন্তব্য: conftest.py-র deprecated custom `event_loop` fixture সরানোর
 # পর pytest-asyncio (0.23.8 pinned) নিজেই প্রতি-টেস্ট loop স্কোপ নিয়ন্ত্রণ করে;
 # `asyncio_default_fixture_loop_scope` অপশনটা এই ভার্সনে সাপোর্টেড না (0.24+ এ
 # আসে), তাই যোগ করা হয়নি — ফাংশন-স্কোপ ডিফল্টই এখানে ঠিক আছে, কারণ db_engine
 # session fixture সরাসরি asyncio.run() ব্যবহার করে, কোনো test loop-এর উপর
 # নির্ভর করে না।
-# বাংলা মন্তব্য: লোকাল রানেও CI-এর মতো ১২০ সেকেন্ড গ্লোবাল টাইমআউট নিশ্চিত করে।
-# এর অভাবেই একটি টেস্ট ডেডলক করলে পুরো সুইট হ্যাং করত (রিপোর্টের "৩০% পরে হ্যাং")।
-# thread মেথড pytest-asyncio auto মোডে async ও sync উভয় টেস্টের জন্য কাজ করে।
 
 
 [tool.mypy]
