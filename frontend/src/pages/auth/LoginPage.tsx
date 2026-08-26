@@ -20,9 +20,17 @@ export const LoginPage: React.FC = () => {
     }
 
     setIsLoading(true);
+    // LIVE-002/003 FIX: Add 30s timeout so login doesn't hang forever.
+    // Previously: if backend was slow/down, 'INITIALIZING...' stuck indefinitely.
+    const LOGIN_TIMEOUT = 30000;
     try {
-      // বাংলা মন্তব্য: আসল অথেনটিকেশন — authStore এর মাধ্যমে ব্যাকএন্ডে লগইন করছে
-      await login(email, password);
+      const loginPromise = login(email, password);
+      await Promise.race([
+        loginPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Connection timeout. Server may be starting up — please retry in 30s.')), LOGIN_TIMEOUT)
+        ),
+      ]);
       navigate('/workspace');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

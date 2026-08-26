@@ -39,14 +39,20 @@ _start_time = time.time()
 async def health_check():
     """
     Comprehensive health check endpoint.
+    LIVE-001 FIX: Return 200 with degraded status instead of crashing.
+    The health endpoint should ALWAYS return 200 with diagnostic info,
+    so monitoring tools can read the status. Only /ready should 503.
     """
     db_status = await _check_database()
     redis_status = await _check_redis()
     cache_status = "connected" if redis_manager.is_connected else "disabled"
 
     overall_status = "healthy"
-    if db_status != "healthy" or redis_status != "healthy" or cache_status != "connected":
+    if db_status != "healthy":
         overall_status = "degraded"
+    if redis_status != "healthy" or cache_status != "connected":
+        if overall_status == "healthy":
+            overall_status = "degraded"
 
     return HealthStatus(
         status=overall_status,
