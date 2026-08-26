@@ -27,7 +27,7 @@ CREATE OR REPLACE FUNCTION match_experiences (
 )
 RETURNS TABLE (
     id UUID,
-    content TEXT,
+    summary TEXT,
     metadata JSONB,
     similarity FLOAT
 )
@@ -36,7 +36,7 @@ STABLE
 AS $$
     SELECT
         ai_memory.id,
-        ai_memory.content,
+        ai_memory.summary,
         ai_memory.metadata,
         1 - (ai_memory.embedding <=> query_embedding) AS similarity
     FROM ai_memory
