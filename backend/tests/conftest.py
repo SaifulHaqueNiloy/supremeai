@@ -119,7 +119,9 @@ def db_engine(test_settings):
     )
 
     # Create all tables before tests
-    from app.db.base import Base
+    # CI FIX: 'from app.db.base import Base' was wrong — app/ module doesn't exist.
+    # The project uses models.base.Base as its declarative base.
+    from models.base import Base
 
     async def setup_db():
         async with engine.begin() as conn:
