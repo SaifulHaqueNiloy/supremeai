@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiClient } from '../../../services/apiClient';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -20,6 +21,9 @@ interface ServiceHealth {
   statusCode: number | null;
   error: string | null;
   details?: Record<string, any>;
+  uptime24h?: number | null;
+  uptime7d?: number | null;
+  uptime30d?: number | null;
 }
 
 interface GlobalHealthSummary {
@@ -226,6 +230,48 @@ async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
 }
 
 /**
+ * Fetch per-service uptime percentages (24h/7d/30d) from the backend's
+ * persistent uptime tracker. Keyed loosely by service name so it can be
+ * matched against SERVICE_REGISTRY entries by substring.
+ */
+interface BackendServiceHealth {
+  name: string;
+  status: string;
+  uptime_24h: number | null;
+  uptime_7d: number | null;
+  uptime_30d: number | null;
+}
+
+async function fetchUptimeMap(): Promise<Record<string, BackendServiceHealth>> {
+  try {
+    const data = await apiClient.get<{ services: BackendServiceHealth[] }>(
+      '/admin-api/health-aggregation'
+    );
+    const map: Record<string, BackendServiceHealth> = {};
+    for (const svc of data.services || []) {
+      map[svc.name] = svc;
+    }
+    return map;
+  } catch (e) {
+    console.warn('[HealthMonitor] Failed to fetch uptime map:', e);
+    return {};
+  }
+}
+
+/** Best-effort match between the frontend registry name and the backend's name. */
+function matchUptime(
+  registryName: string,
+  uptimeMap: Record<string, BackendServiceHealth>
+): BackendServiceHealth | undefined {
+  if (uptimeMap[registryName]) return uptimeMap[registryName];
+  const needle = registryName.replace(/_/g, '').toLowerCase();
+  return Object.values(uptimeMap).find((s) =>
+    needle.includes(s.name.replace(/_/g, '').toLowerCase()) ||
+    s.name.replace(/_/g, '').toLowerCase().includes(needle)
+  );
+}
+
+/**
  * Fetch detailed health for a specific service
  */
 async function fetchServiceHealth(serviceName: string): Promise<ServiceHealth | null> {
@@ -271,6 +317,14 @@ export const ServiceHealthMonitor: React.FC<ServiceHealthMonitorProps> = ({
     queryFn: fetchGlobalHealth,
     refetchInterval: autoRefresh * 1000,
     staleTime: 15000, // Consider stale after 15 seconds
+  });
+
+  // Per-service uptime percentages (24h/7d/30d) from the backend tracker
+  const { data: uptimeMap } = useQuery({
+    queryKey: ['service-uptime-map'],
+    queryFn: fetchUptimeMap,
+    refetchInterval: autoRefresh * 1000,
+    staleTime: 15000,
   });
 
   // Individual service details (lazy loaded)
@@ -429,7 +483,24 @@ export const ServiceHealthMonitor: React.FC<ServiceHealthMonitorProps> = ({
                 )}
               </div>
 
-              {/* Status Badge */}
+              {/* Uptime % (24h) */}
+              {(() => {
+                const uptime = matchUptime(service.name, uptimeMap || {});
+                if (!uptime || uptime.uptime_24h == null) return null;
+                const pct = uptime.uptime_24h;
+                const color =
+                  pct >= 99 ? 'text-emerald-400' : pct >= 95 ? 'text-yellow-400' : 'text-red-400';
+                return (
+                  <span
+                    className={`font-mono text-[9px] ${color} tabular-nums`}
+                    title={`Uptime — 24h: ${uptime.uptime_24h ?? '—'}% · 7d: ${uptime.uptime_7d ?? '—'}% · 30d: ${uptime.uptime_30d ?? '—'}%`}
+                  >
+                    {pct.toFixed(1)}%
+                  </span>
+                );
+              })()}
+
+              {/* Status Badge (Online / Offline / Degraded) */}
               <StatusBadge status={serviceStatus} compact={compact} />
 
               {/* External Link */}
@@ -454,6 +525,7 @@ export const ServiceHealthMonitor: React.FC<ServiceHealthMonitorProps> = ({
             <ServiceDetailPanel 
               service={SERVICE_REGISTRY.find(s => s.name === selectedService)!}
               health={serviceDetail}
+              uptime={matchUptime(selectedService, uptimeMap || {})}
             />
           </motion.div>
         )}
@@ -499,7 +571,15 @@ function StatusBadge({ status, compact }: { status: string; compact?: boolean })
   );
 }
 
-function ServiceDetailPanel({ service, health }: { service: ServiceConfig; health: ServiceHealth }) {
+function ServiceDetailPanel({
+  service,
+  health,
+  uptime,
+}: {
+  service: ServiceConfig;
+  health: ServiceHealth;
+  uptime?: BackendServiceHealth;
+}) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
@@ -522,6 +602,13 @@ function ServiceDetailPanel({ service, health }: { service: ServiceConfig; healt
         <DetailItem label="Response Time" value={health.responseTime ? `${health.responseTime}ms` : 'N/A'} />
         <DetailItem label="Status Code" value={health.statusCode?.toString() || 'N/A'} />
         <DetailItem label="Last Check" value={new Date(health.timestamp).toLocaleTimeString()} />
+        {uptime && (
+          <>
+            <DetailItem label="Uptime 24h" value={uptime.uptime_24h != null ? `${uptime.uptime_24h}%` : 'N/A'} />
+            <DetailItem label="Uptime 7d" value={uptime.uptime_7d != null ? `${uptime.uptime_7d}%` : 'N/A'} />
+            <DetailItem label="Uptime 30d" value={uptime.uptime_30d != null ? `${uptime.uptime_30d}%` : 'N/A'} />
+          </>
+        )}
       </div>
 
       {health.error && (
