@@ -76,14 +76,34 @@ def event_loop() -> Generator:
     loop.close()
 
 
+def _resolve_test_database_url() -> str:
+    """CI-তে env var নাম মিসম্যাচ ফিক্স।
+
+    ci.yml পাঠায় `DATABASE_URL` (raw postgresql:// driver সহ), কিন্তু আগে এই
+    fixture শুধু `TEST_DATABASE_URL` পড়ত (যেটা CI কখনো সেট করে না) — ফলে সবসময়
+    hardcoded fallback (user=postgres) ব্যবহার হতো, যেটা CI-র postgres service
+    container-এ (user=test_user) exist-ই করে না -> auth/connection error ->
+    autouse cleanup_database fixture এর কারণে *প্রতিটা* টেস্ট ERROR।
+
+    এখন: TEST_DATABASE_URL > DATABASE_URL > hardcoded local default,
+    এবং async engine এর জন্য asyncpg driver জোর করে বসানো হচ্ছে।
+    """
+    url = os.getenv("TEST_DATABASE_URL") or os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/supremeai_test",
+    )
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    return url
+
+
 @pytest.fixture(scope="session")
 def test_settings():
     """Test-specific settings that override production config."""
     return {
-        "DATABASE_URL": os.getenv(
-            "TEST_DATABASE_URL",
-            "postgresql+asyncpg://postgres:postgres@localhost:5432/supremeai_test",
-        ),
+        "DATABASE_URL": _resolve_test_database_url(),
         "REDIS_URL": "redis://localhost:6379/1",  # Use DB 1 for tests
         "SECRET_KEY": "test-secret-key-for-testing-only-do-not-use-in-production",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
