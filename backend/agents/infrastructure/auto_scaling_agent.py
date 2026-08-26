@@ -96,10 +96,10 @@ class AutoScalingAgent:
                     "scaling_enabled": True,
                 }
 
-                await redis_manager.set_with_ttl(
+                await redis_manager.set(
                     self.scaling_policies_key,
                     json.dumps(default_policies),
-                    ttl=2592000,  # 30 days
+                    ex=2592000,  # 30 days
                 )
                 logger.info("Default auto-scaling policies initialized")
         except Exception as e:
@@ -166,10 +166,10 @@ class AutoScalingAgent:
                 "timestamp": metrics.timestamp.isoformat(),
             }
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.current_metrics_key,
                 json.dumps(metrics_data),
-                ttl=300,  # 5 minutes
+                ex=300,  # 5 minutes
             )
 
             return metrics
@@ -416,10 +416,10 @@ class AutoScalingAgent:
             await asyncio.sleep(0.1)  # Simulate API call delay
 
             # Update last scaling time
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 "autoscaling:last_scale_time",
                 datetime.utcnow().isoformat(),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
 
             return True
@@ -512,10 +512,10 @@ class AutoScalingAgent:
             if len(history_list) > max_history:
                 history_list = history_list[-max_history:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.scaling_history_key,
                 json.dumps(history_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
         except Exception as e:
             logger.error(f"Error recording scaling action: {e}")

@@ -242,10 +242,10 @@ class PerformanceTuningAgent:
             if len(metrics_list) > max_metrics:
                 metrics_list = metrics_list[-max_metrics:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.performance_metrics_key,
                 json.dumps(metrics_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
 
             return metric
@@ -573,10 +573,10 @@ class PerformanceTuningAgent:
             if len(rec_list) > max_recommendations:
                 rec_list = rec_list[-max_recommendations:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.tuning_recommendations_key,
                 json.dumps(rec_list),
-                ttl=86400,  # 24 hours
+                ex=86400,  # 24 hours
             )
         except Exception as e:
             logger.error(f"Error storing recommendations: {e}")
@@ -608,10 +608,10 @@ class PerformanceTuningAgent:
             if len(results_list) > max_results:
                 results_list = results_list[-max_results:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.optimization_history_key,
                 json.dumps(results_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
         except Exception as e:
             logger.error(f"Error storing optimization result: {e}")

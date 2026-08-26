@@ -153,10 +153,10 @@ class DisasterRecoveryAgent:
         try:
             existing_plans = await redis_manager.get(self.recovery_plan_key)
             if not existing_plans:
-                await redis_manager.set_with_ttl(
+                await redis_manager.set(
                     self.recovery_plan_key,
                     json.dumps(self.default_recovery_plans),
-                    ttl=2592000,  # 30 days
+                    ex=2592000,  # 30 days
                 )
                 logger.info("Default disaster recovery plans initialized")
         except Exception as e:
@@ -466,10 +466,10 @@ class DisasterRecoveryAgent:
             if len(backups_list) > max_backups:
                 backups_list = backups_list[-max_backups:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.backup_history_key,
                 json.dumps(backups_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
         except Exception as e:
             logger.error(f"Error storing backup result: {e}")
@@ -502,10 +502,10 @@ class DisasterRecoveryAgent:
             if len(recoveries_list) > max_recoveries:
                 recoveries_list = recoveries_list[-max_recoveries:]
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.recovery_history_key,
                 json.dumps(recoveries_list),
-                ttl=2592000,  # 30 days
+                ex=2592000,  # 30 days
             )
         except Exception as e:
             logger.error(f"Error storing recovery result: {e}")
@@ -553,10 +553,10 @@ class DisasterRecoveryAgent:
             state.update(state_updates)
             state["last_updated"] = datetime.utcnow().isoformat()
 
-            await redis_manager.set_with_ttl(
+            await redis_manager.set(
                 self.system_state_key,
                 json.dumps(state),
-                ttl=86400,  # 24 hours
+                ex=86400,  # 24 hours
             )
         except Exception as e:
             logger.error(f"Error updating system state: {e}")
