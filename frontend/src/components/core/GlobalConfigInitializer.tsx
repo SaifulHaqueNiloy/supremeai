@@ -126,12 +126,24 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
       {error && (
         <div className="fixed top-0 z-50 flex w-full items-center justify-between bg-yellow-600/90 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md">
           <span>{error}</span>
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded bg-yellow-700 px-3 py-1 hover:bg-yellow-800 focus:outline-none"
-          >
-            Retry Connection
-          </button>
+          <div className="flex items-center gap-2">
+            {/* UX-002 FIX: Better error recovery options */}
+            <button
+              onClick={() => window.location.reload()}
+              className="rounded bg-yellow-700 px-3 py-1 hover:bg-yellow-800 focus:outline-none"
+            >
+              Retry Connection
+            </button>
+            <button
+              onClick={() => {
+                setError('');
+                window.location.href = '/login';
+              }}
+              className="rounded bg-yellow-700/50 px-3 py-1 hover:bg-yellow-800/50 focus:outline-none"
+            >
+              Back to Login
+            </button>
+          </div>
         </div>
       )}
       {children}
