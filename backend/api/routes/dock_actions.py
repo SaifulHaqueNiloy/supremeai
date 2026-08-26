@@ -2,13 +2,20 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from github import (
-    Github,  # PyGithub library
-    GithubException,
-)
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+
+# STABILIZE FIX: PyGithub (`github` package) is an optional dependency.
+# Make it a lazy import so the app boots even when PyGithub is not installed.
+# The endpoints that use Github will fail at runtime with a clear error,
+# rather than blocking app startup with a ModuleNotFoundError.
+try:
+    from github import Github, GithubException  # PyGithub library
+except ImportError:
+    Github = None  # type: ignore[assignment]
+    class GithubException(Exception):
+        """Stub for when PyGithub is not installed."""
 
 from api.dependencies import get_current_user_token
 from core.error_bus import with_error_bus

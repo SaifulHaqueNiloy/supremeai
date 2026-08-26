@@ -35,9 +35,151 @@ from typing import Any, Optional
 
 from loguru import logger
 
-# Re-export the PromptAction dataclass and ACTION_PATTERNS dict so callers
-# don't need to import from the legacy module.
-from core.intent_router import ACTION_PATTERNS, PromptAction  # noqa: F401
+
+# ──────────────────────────────────────────────────────────────────────────
+# PromptAction dataclass + ACTION_PATTERNS dict (canonical location)
+#
+# These were originally defined in core/intent_router.py but were removed
+# during Phase 1 Router Consolidation. To preserve backwards compatibility:
+#   - Define them here (in the canonical v2 module)
+#   - core/intent_router.py re-exports them for legacy callers
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class PromptAction:
+    """Result of intent classification."""
+
+    action_type: str
+    target_module: Optional[str] = None
+    payload: dict[str, Any] = field(default_factory=dict)
+    confidence: float = 0.0
+    requires_confirmation: bool = False
+    label: Optional[str] = None
+    icon: Optional[str] = None
+
+
+ACTION_PATTERNS: dict[str, dict[str, Any]] = {
+    "code_generate": {
+        "keywords": [
+            "write",
+            "create",
+            "generate",
+            "build",
+            "make",
+            "implement",
+            "function",
+            "component",
+            "script",
+            "program",
+            "code",
+            "api",
+            "class",
+            "method",
+            "algorithm",
+            "cli",
+            "tool",
+            "bot",
+            "python",
+            "javascript",
+            "typescript",
+            "react",
+            "node",
+        ],
+        "target": "ide",
+        "icon": "💻",
+        "label": "Generate Code",
+        "requires_confirmation": False,
+    },
+    "ide_open": {
+        "keywords": [
+            "open ide",
+            "switch to code",
+            "show editor",
+            "full editor",
+            "open editor",
+            "edit code",
+            "start coding",
+            "write code",
+            "new file",
+            "open project",
+        ],
+        "target": "ide",
+        "icon": "🖥️",
+        "label": "Open IDE",
+        "requires_confirmation": False,
+    },
+    "video_edit": {
+        "keywords": [
+            "video",
+            "edit",
+            "trim",
+            "cut",
+            "merge",
+            "timeline",
+            "clip",
+            "frame",
+            "audio",
+            "background music",
+            "transition",
+        ],
+        "target": "video_editor",
+        "icon": "🎬",
+        "label": "Edit Video",
+        "requires_confirmation": True,
+    },
+    "research": {
+        "keywords": [
+            "search",
+            "research",
+            "find",
+            "look up",
+            "google",
+            "investigate",
+            "explain",
+            "what is",
+            "who is",
+            "summarize",
+            "analyze data",
+            "report",
+        ],
+        "target": "research",
+        "icon": "🔍",
+        "label": "Research",
+        "requires_confirmation": False,
+    },
+    "deploy": {
+        "keywords": [
+            "deploy",
+            "publish",
+            "push to production",
+            "go live",
+            "release",
+            "host",
+            "ship it",
+        ],
+        "target": "deploy",
+        "icon": "🚀",
+        "label": "Deploy",
+        "requires_confirmation": True,
+    },
+    "settings_change": {
+        "keywords": [
+            "settings",
+            "preferences",
+            "config",
+            "theme",
+            "model",
+            "provider",
+            "temperature",
+            "max tokens",
+        ],
+        "target": "settings",
+        "icon": "⚙️",
+        "label": "Settings",
+        "requires_confirmation": False,
+    },
+}
 
 # ──────────────────────────────────────────────────────────────────────────
 # LLM Gatekeeper prompt — strict JSON output, Bengali-aware

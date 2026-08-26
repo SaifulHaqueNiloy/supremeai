@@ -175,7 +175,11 @@ class SafeSSEGenerator:
             # Validate we got an async iterable
             if not hasattr(response_stream, "__aiter__"):
                 logger.warning("[SSE] acompletion(stream=True) did not return async iterable")
-                return False
+                # STABILIZE FIX: 'return False' is illegal in async generator
+                # (function uses yield). Just return None to end iteration.
+                # Caller can check self.state == StreamState.ERROR for failure.
+                self.state = StreamState.ERROR
+                return
 
             async for raw_chunk in response_stream:
                 # Check heartbeat timing
@@ -189,13 +193,18 @@ class SafeSSEGenerator:
                 if sanitized:
                     yield self._make_event("token", {"delta": sanitized, "user_id": self.user_id})
 
-            return True
+            # STABILIZE FIX: 'return True' is illegal in async generator.
+            # Just return None — success is implicit if we reach the end.
+            return
 
         except Exception as e:
             logger.warning(
                 f"[SSE] Streaming path failed ({type(e).__name__}: {e}); falling back to non-stream"
             )
-            return False
+            # STABILIZE FIX: 'return False' illegal in async generator.
+            # Caller will detect fallback via self.state == StreamState.ERROR
+            self.state = StreamState.ERROR
+            return
 
     async def _fallback_path(self) -> None:
         """

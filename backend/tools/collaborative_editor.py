@@ -29,13 +29,28 @@ class CollaborativeEditor:
                 and redis_url == "redis://<your-redis-url>"
             ):
                 logger.error("REDIS_URL not configured — CollaborativeEditor Pub/Sub will fail!")
-        self.redis = redis.from_url(redis_url, decode_responses=True)
-        logger.info("Initialized CollaborativeEditor with Redis Pub/Sub and State Persistence")
+        # STABILIZE FIX: Don't crash app boot if REDIS_URL is invalid/missing.
+        # Store the URL (or None) and connect lazily on first use.
+        if redis_url and str(redis_url).startswith(("redis://", "rediss://", "unix://")):
+            self._redis_url = str(redis_url)
+        else:
+            self._redis_url = None
+        self.redis = None  # lazy: connected on first use via _get_redis()
+        logger.info("Initialized CollaborativeEditor (Redis connection deferred to first use)")
+
+    async def _get_redis(self):
+        """Lazy-connect to Redis on first use. Raises RuntimeError if no valid URL."""
+        if self.redis is not None:
+            return self.redis
+        if not self._redis_url:
+            raise RuntimeError("REDIS_URL not configured — cannot use CollaborativeEditor")
+        self.redis = redis.from_url(self._redis_url, decode_responses=True)
+        return self.redis
 
     async def get_session_state(self, session_id: str) -> dict:
         """বাংলা মন্তব্য: Redis থেকে সেশনের বর্তমান ডকুমেন্ট স্টেট এবং AI কার্সরের অবস্থান নিয়ে আসবে।"""
         state_key = f"supremeai:state:{session_id}"
-        state = await self.redis.hgetall(state_key)
+        state = await (await self._get_redis()).hgetall(state_key)
 
         if not state:
             return {
@@ -51,7 +66,7 @@ class CollaborativeEditor:
     async def update_session_state(self, session_id: str, updates: dict):
         """বাংলা মন্তব্য: Redis হ্যাশে সেশন স্টেট আপডেট করবে (State Persistence)।"""
         state_key = f"supremeai:state:{session_id}"
-        await self.redis.hset(state_key, mapping=updates)
+        await (await self._get_redis()).hset(state_key, mapping=updates)
 
     async def connect_client(self, session_id: str, client_id: str, websocket: WebSocket):
         await websocket.accept()
@@ -89,7 +104,7 @@ class CollaborativeEditor:
             message["sender_id"] = sender_id
 
         channel = f"supremeai:collab:{session_id}"
-        await self.redis.publish(channel, json.dumps(message))
+        await (await self._get_redis()).publish(channel, json.dumps(message))
 
     async def broadcast_delta(self, session_id: str, delta: dict, sender_id: str | None = None):
         """বাংলা মন্তব্য: CRDT মার্জিং লজিক এবং স্টেট পারসিস্টেন্স"""
@@ -183,7 +198,7 @@ class CollaborativeEditor:
     async def _redis_listener(self, session_id: str):
         """বাংলা মন্তব্য: Redis চ্যানেল থেকে মেসেজ রিসিভ করে লোকাল ক্লায়েন্টদের কাছে পাঠাবে।"""
         channel = f"supremeai:collab:{session_id}"
-        pubsub = self.redis.pubsub()
+        pubsub = (await self._get_redis()).pubsub()
         await pubsub.subscribe(channel)
         logger.info(f"Subscribed to Redis channel: {channel}")
 
