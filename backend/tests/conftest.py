@@ -68,12 +68,15 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 # ============================================================
 # TEST CONFIGURATION
 # ============================================================
-@pytest.fixture(scope="session")
-def event_loop() -> Generator:
-    """Create an instance of the default event loop for each test case."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# বাংলা মন্তব্য: এখানে আগে একটা custom session-scoped `event_loop` fixture
+# ছিল, যেটা pyproject.toml-এর `asyncio_mode = "auto"` (pytest-asyncio 0.23+)
+# এর সাথে conflict করছিল। pytest-asyncio auto mode নিজেই প্রতিটা টেস্টের জন্য
+# event loop ম্যানেজ করে; custom `event_loop` fixture override করায়
+# `asyncio.get_event_loop()` কল "There is no current event loop in thread
+# 'MainThread'" এরর দিচ্ছিল — যেটা প্রায় প্রতিটা async টেস্টে (~৮৮২ বার) ছড়িয়ে
+# পড়ছিল। fixture সরিয়ে দিয়ে pyproject.toml-এ
+# `asyncio_default_fixture_loop_scope = "session"` সেট করা হয়েছে যাতে সব
+# টেস্টে একই session-scope loop ব্যবহার হয় (আগের ইচ্ছাকৃত আচরণ বজায় থাকে)।
 
 
 def _resolve_test_database_url() -> str:
