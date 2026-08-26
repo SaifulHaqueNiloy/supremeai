@@ -205,7 +205,12 @@ async def app(test_settings):
     os.environ["SECRET_KEY"] = test_settings["SECRET_KEY"]
     os.environ["JWT_SECRET_KEY"] = test_settings["JWT_SECRET_KEY"]
 
-    from app.main import app as application
+    # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `from app.main import app` করা হতো,
+    # কিন্তু backend/-এ কোনো `app/` প্যাকেজ নেই — real FastAPI instance আছে
+    # `core.app:app`-এ (main.py নিজেই `core.app:app` কে backward-compat হিসেবে
+    # lazily re-export করে)। এই ভুল import পাথের কারণে `app` fixture নির্ভরশীল
+    # প্রতিটা টেস্ট (health endpoint, client ইত্যাদি) ModuleNotFoundError দিত।
+    from core.app import app as application
 
     # Apply test-specific middleware overrides
     application.state.settings = type("Settings", (), test_settings)()
@@ -225,8 +230,16 @@ async def client(app) -> AsyncGenerator[AsyncClient, None]:
 # AUTHENTICATION FIXTURES
 # ============================================================
 @pytest.fixture
-def sample_user_data():
-    """Sample user data for testing."""
+def sample_user_registration_data():
+    """Sample user registration/auth data for testing (email+password shape).
+
+    বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এই fixture-এর নাম ছিল `sample_user_data`,
+    যেটা conftest.py-র লাইন ৫৬-এ ডিফাইন করা আরেকটা `sample_user_data`
+    fixture-কে (id/role শেপ, agent টেস্টে ব্যবহৃত) silently override করে
+    ফেলছিল Python-এর top-to-bottom name shadowing-এর কারণে — ফলে
+    tests/agents/test_agents.py-এর সব টেস্ট `KeyError: 'id'` দিত। এখন আলাদা
+    নাম দেওয়া হলো যাতে দুটো fixture-ই স্বাধীনভাবে কাজ করে।
+    """
     return {
         "email": "test@example.com",
         "password": "SecurePassword123!",
@@ -236,8 +249,12 @@ def sample_user_data():
 
 
 @pytest.fixture
-def sample_admin_data():
-    """Sample admin user data for testing."""
+def sample_admin_registration_data():
+    """Sample admin registration/auth data for testing (email+password shape).
+
+    বাংলা মন্তব্য: `sample_admin_data`-র সাথে একই কারণে রিনেম করা হলো (দেখুন
+    sample_user_registration_data-এর comment)।
+    """
     return {
         "email": "admin@example.com",
         "password": "AdminPassword456!",
