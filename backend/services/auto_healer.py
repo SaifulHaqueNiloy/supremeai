@@ -602,7 +602,11 @@ class AutoHealer:
         """Apply rate limit fix (enable/increase caching)"""
         # This would integrate with your cache system
         try:
-            from backend.services.intelligent_cache import get_cache
+            # ROOT-CAUSE FIX: services.intelligent_cache ছিল একটা পুরনো/স্টেল
+            # কপি — core.intelligent_cache-এ MEMLEAK-002 বাউন্ডেড-LRU ফিক্স
+            # ও predictive cache engine যোগ হয়েছিল কিন্তু এই একমাত্র importer
+            # সেটা কখনো পায়নি। canonical মডিউল থেকে import করা হলো।
+            from backend.core.intelligent_cache import get_cache
 
             get_cache()
 
