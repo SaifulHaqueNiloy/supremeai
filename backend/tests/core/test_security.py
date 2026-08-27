@@ -62,12 +62,12 @@ async def test_cors_origin_validation():
 @pytest.mark.asyncio
 async def test_rate_limiting_failure_mode():
     """Test rate limiter behavior when Redis is unavailable."""
-    from core.rate_limiter import AsyncRateLimiter
+    from middleware.rate_limiter import AsyncRateLimiter
 
     limiter = AsyncRateLimiter()
 
     # Mock redis_manager to return None (simulating down/unavailable)
-    with patch("core.rate_limiter.redis_manager.get_client_async", return_value=None):
+    with patch("middleware.rate_limiter.redis_manager.get_client_async", return_value=None):
         original_env = settings.env
         try:
             # In production/staging, it should fail-closed (return False)

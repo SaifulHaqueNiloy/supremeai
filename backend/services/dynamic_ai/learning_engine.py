@@ -4,7 +4,14 @@ from core.unified_learning import LearningEvent, LearningType, get_learning_engi
 
 
 class LearningEngine:
-    def __init__(self):
+    def __init__(self, *_args, **_kwargs):
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): এই ক্লাস এখন internally
+        # UnifiedLearningEngine-এ delegate করে, তাই কোনো constructor arg
+        # লাগে না। কিন্তু কলার (orchestrator.py) এখনো পুরনো
+        # `LearningEngine(storage_path=...)` সিগনেচার দিয়ে কল করছিল, ফলে
+        # `TypeError: LearningEngine() takes no arguments` হতো। backward
+        # compatibility রাখতে *args/**kwargs নিয়ে ignore করা হলো (deprecated
+        # ওয়ার্নিং তো এমনিতেই দেওয়া হয়)।
         self._real = get_learning_engine()
         warnings.warn("LearningEngine is deprecated, use UnifiedLearningEngine", DeprecationWarning)
 

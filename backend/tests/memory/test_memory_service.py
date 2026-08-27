@@ -16,6 +16,36 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 # ============================================================
+# বাংলা মন্তব্য (ROOT-CAUSE, ফিক্স করা হয়নি -- ইচ্ছাকৃতভাবে skip):
+# এই পুরো টেস্ট ফাইলটা `app.services.memory.service.MemoryService`,
+# `app.services.memory.embeddings.EmbeddingGenerator`,
+# `app.services.memory.vector_store.VectorStore` -- একটা সম্পূর্ণ কাল্পনিক
+# মডিউল স্ট্রাকচার import করে, যা রিপোতে কোথাও নেই (`No module named 'app'`)।
+#
+# শুধু import path ভুল না -- API-ও সম্পূর্ণ ভিন্ন ডিজাইনের:
+#   - এই টেস্ট আশা করে: OpenAI-স্টাইল embeddings, 1536-dim ভেক্টর,
+#     `EmbeddingGenerator(model="text-embedding-3-small")`,
+#     `MemoryService(db=..., redis=...)` (.store/.search/.delete মেথড সহ)।
+#   - বাস্তবে যা আছে (`backend/services/memory_service.py`):
+#     `CascadeMemoryService` ক্লাস, `hash_vectorize()`/`get_embedding()`
+#     ফাংশন দিয়ে 384-dim hash-based ভেক্টর (কোনো OpenAI কল ছাড়াই), আলাদা
+#     কোনো `VectorStore`/`EmbeddingGenerator` ক্লাস নেই।
+#
+# এটা এক-লাইনের import-path প্যাচ না -- পুরো টেস্ট সুইট আসল
+# `CascadeMemoryService` API অনুযায়ী নতুন করে লিখতে হবে (product decision:
+# কোন মেথড/কনট্র্যাক্ট আসলে টেস্ট করা উচিত)। ভুল আচরণ যাচাই করে "পাস" দেখানো
+# আসল বাগ থেকে বেশি বিপজ্জনক, তাই পুরো ফাইল স্কিপ করে স্পষ্টভাবে ফ্ল্যাগ করে
+# রাখা হলো পরের সেশনে সঠিক রিরাইটের জন্য।
+# ============================================================
+pytest.skip(
+    "স্টেল টেস্ট ফাইল: app.services.memory.* (fictitious) API টেস্ট করে, যেখানে "
+    "বাস্তব ইমপ্লিমেন্টেশন হলো services/memory_service.py-র CascadeMemoryService "
+    "(384-dim hash_vectorize, ভিন্ন API)। পুরো ফাইল রিরাইট দরকার -- দেখুন উপরের "
+    "বাংলা মন্তব্য।",
+    allow_module_level=True,
+)
+
+# ============================================================
 # MARKER: All tests in this module are memory tests
 # ============================================================
 pytestmark = pytest.mark.memory
