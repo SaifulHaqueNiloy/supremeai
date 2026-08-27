@@ -64,7 +64,9 @@ class DisasterRecoveryAgent:
         # env var না থাকলে sensible defaults ব্যবহার হয়। এটি "zero-hardcoded" principle follow করে।
         self.critical_components = {
             "database": {
-                "paths": self._env_paths("DR_DB_PATHS", [getattr(settings, "DATABASE_URL", ""), "/data/db.sqlite3"]),
+                "paths": self._env_paths(
+                    "DR_DB_PATHS", [getattr(settings, "DATABASE_URL", ""), "/data/db.sqlite3"]
+                ),
                 "backup_method": "sql_dump",
                 "restore_method": "sql_restore",
                 "priority": "high",
@@ -76,7 +78,9 @@ class DisasterRecoveryAgent:
                 "priority": "high",
             },
             "user_data": {
-                "paths": self._env_paths("DR_USER_DATA_PATHS", ["/data/users/", "/storage/uploads/"]),
+                "paths": self._env_paths(
+                    "DR_USER_DATA_PATHS", ["/data/users/", "/storage/uploads/"]
+                ),
                 "backup_method": "archive",
                 "restore_method": "extract",
                 "priority": "high",

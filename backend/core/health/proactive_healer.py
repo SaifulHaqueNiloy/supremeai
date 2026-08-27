@@ -138,7 +138,9 @@ class ProactiveHealer:
 
         # AutoScalingAgent enabled না থাকলে graceful fallback (পুরোনো simulated behavior)
         if os.getenv("ENABLE_AUTOSCALING_AGENT", "false").lower() != "true":
-            logger.info("ℹ️ L3: AutoScalingAgent disabled — simulated adapt (set ENABLE_AUTOSCALING_AGENT=true for real scaling)")
+            logger.info(
+                "ℹ️ L3: AutoScalingAgent disabled — simulated adapt (set ENABLE_AUTOSCALING_AGENT=true for real scaling)"
+            )
             self._stats["successful_heals"] += 1
             return HealingOutcome.PARTIAL
 
@@ -161,9 +163,7 @@ class ProactiveHealer:
                 self._stats["successful_heals"] += 1
                 return HealingOutcome.PARTIAL
 
-            logger.info(
-                f"📊 L3: scaling recommendation (confidence={confidence:.2f}): {reason}"
-            )
+            logger.info(f"📊 L3: scaling recommendation (confidence={confidence:.2f}): {reason}")
 
             # high-confidence recommendation হলে execute করি
             if confidence >= 0.6:
@@ -185,7 +185,9 @@ class ProactiveHealer:
                 return HealingOutcome.PARTIAL
 
         except Exception as e:
-            logger.error(f"❌ L3 AutoScalingAgent integration failed: {e!r} — falling back to simulated")
+            logger.error(
+                f"❌ L3 AutoScalingAgent integration failed: {e!r} — falling back to simulated"
+            )
             self._stats["successful_heals"] += 1
             return HealingOutcome.PARTIAL
 

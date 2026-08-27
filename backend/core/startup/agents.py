@@ -230,7 +230,9 @@ async def start_background_services(app):
             )
             logger.info("✅ PerformanceTuningAgent started (15-min continuous tuning cycle).")
         else:
-            logger.info("ℹ️ PerformanceTuningAgent disabled (set ENABLE_PERFORMANCE_TUNING_AGENT=true).")
+            logger.info(
+                "ℹ️ PerformanceTuningAgent disabled (set ENABLE_PERFORMANCE_TUNING_AGENT=true)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ PerformanceTuningAgent failed to start: {exc}")
 
@@ -258,7 +260,9 @@ async def start_background_services(app):
             )
             logger.info("✅ CostOptimizationAgent started (1-hour cost-tracking cycle).")
         else:
-            logger.info("ℹ️ CostOptimizationAgent disabled (set ENABLE_COST_OPTIMIZATION_AGENT=true).")
+            logger.info(
+                "ℹ️ CostOptimizationAgent disabled (set ENABLE_COST_OPTIMIZATION_AGENT=true)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ CostOptimizationAgent failed to start: {exc}")
 
@@ -285,7 +289,9 @@ async def start_background_services(app):
             )
             logger.info("✅ DisasterRecoveryAgent started (6-hour incremental backup cycle).")
         else:
-            logger.info("ℹ️ DisasterRecoveryAgent disabled (set ENABLE_DISASTER_RECOVERY_AGENT=true).")
+            logger.info(
+                "ℹ️ DisasterRecoveryAgent disabled (set ENABLE_DISASTER_RECOVERY_AGENT=true)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ DisasterRecoveryAgent failed to start: {exc}")
 
