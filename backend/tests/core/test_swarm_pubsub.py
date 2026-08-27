@@ -352,14 +352,8 @@ class TestSwarmPubSubIntegration:
         # Cancel the generator by raising CancelledError
         mock_pubsub.get_message = AsyncMock(side_effect=asyncio.CancelledError())
 
-        try:
+        with pytest.raises(asyncio.CancelledError):
             await gen.__anext__()
-        except asyncio.CancelledError:
-            raise
-        except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
         # Verify cleanup was called
         mock_pubsub.unsubscribe.assert_called_once_with("swarm_stream")

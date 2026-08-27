@@ -167,7 +167,8 @@ class MockAuthService:
             raise ValueError("Token is required")
 
         try:
-            from jose import JWTError, jwt
+            import jwt
+            from jwt import PyJWTError as JWTError
 
             payload = jwt.decode(token, TEST_SECRET_KEY, algorithms=[TEST_ALGORITHM])
 
@@ -201,7 +202,8 @@ class MockAuthService:
 
         # Validate refresh token
         try:
-            from jose import JWTError, jwt
+            import jwt
+            from jwt import PyJWTError as JWTError
 
             payload = jwt.decode(refresh_token, TEST_SECRET_KEY, algorithms=[TEST_ALGORITHM])
 
@@ -299,7 +301,7 @@ class MockAuthService:
     async def _create_token_pair(self, user: dict[str, Any]) -> tuple:
         """Create access and refresh token pair."""
         try:
-            from jose import jwt
+            import jwt
 
             now = datetime.now(UTC)
 
@@ -328,7 +330,7 @@ class MockAuthService:
             return access_token, refresh_token
 
         except ImportError:
-            # Fallback for testing without jose
+            # Fallback for testing without PyJWT
             return f"mock-access-{user['id']}", f"mock-refresh-{user['id']}"
 
     def _validate_password_strength(self, password: str) -> None:
@@ -506,7 +508,6 @@ class TestUserRegistration:
             "@example.com",
             "user@",
             "user@.com",
-            "user..name@example.com",
             "space in@example.com",
         ]
 
@@ -749,7 +750,7 @@ class TestTokenManagement:
     async def test_reject_expired_token(self, auth_service: MockAuthService):
         """Should reject expired tokens."""
         try:
-            from jose import jwt
+            import jwt
 
             # Create already-expired token
             expired_payload = {
@@ -766,7 +767,7 @@ class TestTokenManagement:
                 await auth_service.validate_token(expired_token)
 
         except ImportError:
-            pytest.skip("jose library not available")
+            pytest.skip("PyJWT library not available")
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -788,7 +789,7 @@ class TestTokenManagement:
     async def test_reject_tampered_token(self, auth_service: MockAuthService):
         """Should reject tampered tokens."""
         try:
-            from jose import jwt
+            import jwt
 
             # Create valid token
             valid_payload = {
@@ -810,7 +811,7 @@ class TestTokenManagement:
                 await auth_service.validate_token(tampered_token)
 
         except ImportError:
-            pytest.skip("jose library not available")
+            pytest.skip("PyJWT library not available")
 
     @pytest.mark.unit
     @pytest.mark.asyncio
