@@ -160,15 +160,6 @@ class ProductionSecretVault:
         if self._circuit_breaker_open:
             return self._fallback_to_env(secret_id, default)
 
-        # Check cache first
-        cached = self._cache.get(secret_id)
-        if cached and not cached.is_expired:
-            return cached.value
-
-        # If cache expired, remove it
-        if cached and cached.is_expired:
-            del self._cache[secret_id]
-
         ttl = self._ttl_overrides.get(secret_id, CACHE_TTL_SECONDS)
 
         # বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবল ভল্টের উপরে প্রাধান্য পায় (12-factor)।
@@ -178,6 +169,15 @@ class ProductionSecretVault:
         if env_override:
             self._cache[secret_id] = _CacheEntry(env_override, ttl=ttl)
             return env_override
+
+        # Check cache first
+        cached = self._cache.get(secret_id)
+        if cached and not cached.is_expired:
+            return cached.value
+
+        # If cache expired, remove it
+        if cached and cached.is_expired:
+            del self._cache[secret_id]
 
         if not self.client or not self.project_id:
             return self._fallback_to_env(secret_id, default)

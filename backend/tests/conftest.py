@@ -22,6 +22,22 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+# ROOT-CAUSE FIX (আগের fix অসম্পূর্ণ ছিল): `app` fixture-এ
+# os.environ["RATE_LIMIT_ENABLED"] = "false" সেট করা যথেষ্ট ছিল না, কারণ
+# pytest collection phase-এ tests/api/*.py, tests/core/*.py-র মতো অনেক
+# টেস্ট ফাইল module-level-এই `from api.routes... import ...` বা
+# `from core.app import app` করে -- যেটা api/routes/api_keys.py-র মতো
+# ফাইলে module-level `limiter = AsyncRateLimiter()` singleton তৈরি করে
+# দেয়, এবং AsyncRateLimiter.__init__() os.getenv("RATE_LIMIT_ENABLED")
+# পড়ে নেয় সেই মুহূর্তেই -- যা প্রথম টেস্টের `app` fixture রান হওয়ারও
+# অনেক আগে (pytest সব টেস্ট ফাইল collect করে তারপর fixture রান করে)।
+# ফলে register endpoint বারবার কল হলে real rate limiter 429 দিতে থাকত,
+# cascade হয়ে ৪০+ টেস্ট FAILED/ERROR হতো। conftest.py সবসময় সবচেয়ে
+# আগে import হয় (pytest guarantee), তাই এখানে module-level-এই env var
+# সেট করা হলো, যেকোনো test file import হওয়ার আগে।
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+os.environ.setdefault("TESTING", "true")
+
 
 class CustomAssertions:
     """
