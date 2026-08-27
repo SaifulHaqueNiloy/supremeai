@@ -207,6 +207,8 @@ class ErrorRemediation:
                 from core.config import settings as app_settings
 
                 qdrant_url = getattr(app_settings, "qdrant_url", "")
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

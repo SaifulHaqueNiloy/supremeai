@@ -211,6 +211,8 @@ class DistributedConnectionManager:
                         for ws in self.active_connections[user_id]:
                             try:
                                 await ws.send_text(content)
+                            except asyncio.CancelledError:
+                                raise
                             except Exception as e:
                                 import logging
 
@@ -418,6 +420,8 @@ async def websocket_chat_endpoint(
                 )
                 await websocket.send_text(f"\n[Error: {type(e).__name__}]\n[DONE]")
 
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

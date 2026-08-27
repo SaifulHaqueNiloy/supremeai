@@ -19,6 +19,7 @@ Dependencies:
 
 from __future__ import annotations
 
+import asyncio
 import re
 import sys
 from dataclasses import dataclass, field
@@ -34,6 +35,8 @@ if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
         sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

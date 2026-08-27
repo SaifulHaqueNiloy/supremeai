@@ -6,6 +6,7 @@ view shared conversations without authentication, list and revoke shares.
 
 from __future__ import annotations
 
+import asyncio
 import secrets
 import time
 from datetime import UTC, datetime, timedelta, timezone
@@ -200,6 +201,8 @@ async def get_shared_conversation(share_id: str):
                 .execute()
             )
             cached["view_count"] = current_count + 1
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

@@ -8,6 +8,7 @@ dramatically saving tokens and inference latency.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 from dataclasses import dataclass
@@ -105,6 +106,8 @@ class TokenJuice:
             try:
                 json.loads(stripped)
                 return "json"
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

@@ -137,6 +137,8 @@ class RemediationEngine:
             task.cancel()
             try:
                 await task
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

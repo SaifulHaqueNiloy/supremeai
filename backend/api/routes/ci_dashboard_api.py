@@ -44,6 +44,7 @@ CPU Impact: <2% when active, idle ~0%
 ================================================================================
 """
 
+import asyncio
 import json
 from datetime import datetime, timedelta
 from typing import Any
@@ -627,6 +628,8 @@ async def ci_dashboard_websocket(websocket: WebSocket, token: str = Query(...)):
                         }
                     )
 
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

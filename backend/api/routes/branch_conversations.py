@@ -12,6 +12,7 @@ Required schema additions:
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from typing import Any
 
@@ -83,6 +84,8 @@ def _ensure_schema_columns() -> None:
                 )
             },
         ).execute()
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 
@@ -97,6 +100,8 @@ def _ensure_schema_columns() -> None:
                 )
             },
         ).execute()
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

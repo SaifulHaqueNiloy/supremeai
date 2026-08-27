@@ -1019,6 +1019,8 @@ class TestSecurityEdgeCases:
                 assert "@" in user.get("email", ""), (
                     f"SQL injection attempt may have succeeded: {malicious_email}"
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -1040,6 +1042,8 @@ class TestSecurityEdgeCases:
             try:
                 user = await auth_service.create_user(email=email, password=valid_password)
                 assert user is not None
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -1058,6 +1062,8 @@ class TestSecurityEdgeCases:
                 email=long_email, password=valid_password, full_name=long_name
             )
             assert user is not None
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

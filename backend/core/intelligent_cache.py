@@ -206,6 +206,8 @@ class IntelligentCache:
             if engine.cache_client is None:
                 await engine.initialize(self)
             await engine.record_access(user_id=user_id, cache_key=key)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

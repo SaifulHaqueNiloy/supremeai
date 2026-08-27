@@ -13,6 +13,7 @@ ML/heuristic-based smart recommendation engine that:
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import re
 from collections import defaultdict
@@ -209,6 +210,8 @@ class HeuristicScorer:
                 if days_old < 30:
                     score += 0.15
                     reasons.append("Recently updated")
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

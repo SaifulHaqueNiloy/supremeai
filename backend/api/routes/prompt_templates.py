@@ -7,6 +7,7 @@ Custom templates are user-scoped.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from datetime import UTC, datetime
@@ -296,6 +297,8 @@ def _bootstrap_schema() -> None:
                 )
             },
         ).execute()
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

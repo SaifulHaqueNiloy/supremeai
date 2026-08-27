@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Any
 
@@ -113,6 +114,8 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
     if not backend_url:
         try:
             backend_url = settings.auto_backend_url
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

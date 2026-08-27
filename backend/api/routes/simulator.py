@@ -10,6 +10,7 @@ Falls back to in-memory dicts if Redis is unavailable (e.g. in test environments
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 from datetime import UTC, datetime
@@ -83,6 +84,8 @@ def _get_public_base_url() -> str:
         auto_url = settings.auto_backend_url
         if auto_url:
             return auto_url.rstrip("/")
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

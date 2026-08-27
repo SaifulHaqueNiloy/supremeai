@@ -11,6 +11,7 @@ This middleware ensures:
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Any
 
@@ -96,6 +97,8 @@ class AutonoGuardMiddleware(BaseHTTPMiddleware):
                     try:
                         payload = json.loads(raw_body)
                         code_to_scan = payload.get("code") or payload.get("generated_code")
+                    except asyncio.CancelledError:
+                        raise
                     except Exception as e:
                         import logging
 

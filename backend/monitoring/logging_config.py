@@ -12,6 +12,7 @@ Critical Security Note: সমস্ত লগ এখন JSON ফরম্যা
 করিলেশন আইডি সহ স্ট্রাকচার্ড হবে অডিট এবং মনিটরিং এর জন্য।
 """
 
+import asyncio
 import json
 import sys
 import uuid
@@ -119,6 +120,8 @@ def inject_correlation_id():
     correlation_id = str(uuid.uuid4())
     try:
         context.set(HeaderKeys.correlation_id, correlation_id)
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

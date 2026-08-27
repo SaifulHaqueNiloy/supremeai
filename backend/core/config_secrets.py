@@ -1,5 +1,6 @@
 """Secret loading and lazy-secret behavior for SupremeAI settings."""
 
+import asyncio
 import json
 import os
 import secrets
@@ -523,6 +524,8 @@ class SettingsSecretsMixin:
                     secret = f.read().strip()
                     if len(secret) >= 43:  # Fernet keys are 44 characters (base64 of 32 bytes)
                         return SecretStr(secret)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

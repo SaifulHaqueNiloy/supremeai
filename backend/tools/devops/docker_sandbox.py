@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import shlex
@@ -309,6 +310,8 @@ class DockerSandbox:
             if script_path:
                 try:
                     os.unlink(script_path)
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 

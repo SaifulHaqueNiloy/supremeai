@@ -163,6 +163,8 @@ class LLMGateway:
 
             if getattr(settings, "redis_url", None):
                 litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

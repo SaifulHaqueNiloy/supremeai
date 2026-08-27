@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
@@ -46,6 +47,8 @@ class UserProfiler:
                 duration_ms=task.get("duration_ms", 100),
                 success=task.get("success", True),
             )
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

@@ -118,6 +118,8 @@ class AgentSupervisor:
             logger.info(f"✅ Agent '{name}' stopped gracefully.")
         except TimeoutError:
             logger.warning(f"⚠️ Agent '{name}' did not stop within {timeout}s timeout.")
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -140,6 +142,8 @@ class AgentSupervisor:
             self._monitor_task.cancel()
             try:
                 await asyncio.wait_for(self._monitor_task, timeout=5.0)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -167,6 +171,8 @@ class AgentSupervisor:
                     f"⚠️ Agent shutdown timed out after {timeout}s. "
                     f"Remaining: {sum(1 for t in self._agents.values() if not t.done())} agents."
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

@@ -7,6 +7,7 @@ reasons with ReasoningOrchestrator, executes actions via L4 cascade, and replans
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from loguru import logger
@@ -123,6 +124,8 @@ class AutonomousBrowserAgent:
                 sdom = SemanticDOM(page)
                 el = await sdom.query(target)
                 return {"status": "success", "method": "semantic_dom", "element": el}
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -133,6 +136,8 @@ class AutonomousBrowserAgent:
                 vg = VisionGrounding(page)
                 click_res = await vg.click(target)
                 return {"status": "success", "method": "vision_grounding", "coordinates": click_res}
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

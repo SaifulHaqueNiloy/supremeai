@@ -7,6 +7,8 @@ Returns ranked results with match type indicators.
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 from pydantic import BaseModel, Field
@@ -201,6 +203,8 @@ async def search_chats(
                                     .execute()
                                 )
                                 title = conv_resp.data[0]["title"] if conv_resp.data else None
+                            except asyncio.CancelledError:
+                                raise
                             except Exception as e:
                                 import logging
 

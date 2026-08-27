@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from typing import Any
 
@@ -159,6 +160,8 @@ class TreeOfThoughtReasoner:
                         try:
                             score = float(text.strip())
                             node.score = max(0.0, min(1.0, score))
+                        except asyncio.CancelledError:
+                            raise
                         except Exception as e:
                             import logging
 

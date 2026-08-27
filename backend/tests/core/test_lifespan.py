@@ -212,6 +212,8 @@ class TestAppLifespan:
             # CancelledError gracefully handle করা উচিত
             try:
                 await _run_lifespan(mock_app)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

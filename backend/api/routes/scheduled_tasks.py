@@ -10,6 +10,7 @@ Required table:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from datetime import UTC, datetime
@@ -73,6 +74,8 @@ def _ensure_schema() -> None:
         raise HTTPException(status_code=503, detail="Database is not available.")
     try:
         supabase_db.client.rpc("exec_sql", {"query_string": _BOOTSTRAP_SQL}).execute()
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

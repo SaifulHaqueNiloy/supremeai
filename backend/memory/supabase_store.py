@@ -236,6 +236,8 @@ class SupabaseStore(SQLiteMemoryStore):
                 from loguru import logger
 
                 logger.error(f"Embedding generation failed: {e}")
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -334,6 +336,8 @@ class SupabaseStore(SQLiteMemoryStore):
                     from loguru import logger
 
                     logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 
@@ -360,6 +364,8 @@ class SupabaseStore(SQLiteMemoryStore):
                     from loguru import logger
 
                     logger.error(f"Fallback search failed: {e}")
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 

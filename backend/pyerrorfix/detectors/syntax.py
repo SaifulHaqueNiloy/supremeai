@@ -7,6 +7,7 @@ It also uses ``tokenize`` to find mixed tab/space usage.
 
 from __future__ import annotations
 
+import asyncio
 import io
 import tokenize
 
@@ -74,6 +75,8 @@ class SyntaxDetector(BaseDetector):
                     detector=self.name,
                 )
             )
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -109,6 +112,8 @@ class SyntaxDetector(BaseDetector):
                             detector=self.name,
                         )
                     )
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

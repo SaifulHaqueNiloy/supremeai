@@ -1,3 +1,4 @@
+import asyncio
 import uuid
 
 from utils.uuid_gen import UUIDv7, generate_uuid7
@@ -35,6 +36,8 @@ class TestUUIDv7Type:
         t = UUIDv7()
         try:
             t.process_bind_param("not-a-uuid", None)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

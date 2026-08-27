@@ -1,3 +1,5 @@
+import asyncio
+
 # mypy: ignore-errors
 """This module, `backend.core.config`, serves as the single, authoritative source
 for all application settings within the SupremeAI project. It implements a robust,
@@ -120,6 +122,8 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
 
             if DETECTED_PLATFORM.has_external_url and DETECTED_PLATFORM.external_url:
                 return DETECTED_PLATFORM.external_url
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

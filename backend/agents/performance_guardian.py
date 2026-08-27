@@ -12,6 +12,7 @@ Monitors and optimizes system performance.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections import defaultdict
 from dataclasses import dataclass
@@ -76,6 +77,8 @@ class MetricCollector:
             metrics["disk_percent"] = psutil.disk_usage("/").percent
             net = psutil.net_io_counters()
             metrics["network_io"] = (net.bytes_sent + net.bytes_recv) / 1024 / 1024
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

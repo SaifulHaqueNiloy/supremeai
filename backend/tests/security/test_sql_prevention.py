@@ -1,3 +1,5 @@
+import asyncio
+
 from core.security.injections.sql_prevention import (
     InputSanitizer,
     ParameterizedQueryBuilder,
@@ -38,6 +40,8 @@ class TestInputSanitizerIdentifier:
     def test_empty_raises(self):
         try:
             InputSanitizer.sanitize_identifier("!!!")
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -48,6 +52,8 @@ class TestInputSanitizerIdentifier:
     def test_none_raises(self):
         try:
             InputSanitizer.sanitize_identifier("")
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

@@ -54,6 +54,8 @@ class InternetMonitorService:
                 self.monitoring_task.cancel()
                 try:
                     await self.monitoring_task
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 

@@ -126,6 +126,8 @@ def _get_service_attr(name: str) -> Any:
                 if loop.is_running():
                     # In async context, return the service
                     return reg._instances.get(name)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
