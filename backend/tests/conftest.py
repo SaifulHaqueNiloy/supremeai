@@ -24,7 +24,28 @@ from sqlalchemy.ext.asyncio import (
 
 
 class CustomAssertions:
-    pass
+    """
+    বাংলা মন্তব্য (ROOT-CAUSE FIX): এই ক্লাসটি আগে খালি (`pass`) ছিল এবং কোনো
+    `assertions` fixture-ও conftest.py-তে ছিল না, অথচ tests/agents/test_agents.py
+    এবং tests/security/test_auth.py উভয়ই `assertions: CustomAssertions` প্যারামিটার
+    এক্সপেক্ট করত -- ফলে "fixture 'assertions' not found" error আসত। এখন real
+    assertion methods যোগ করা হলো এবং নিচে একটি `assertions` fixture instantiate
+    করে fixture হিসেবে এক্সপোজ করা হলো।
+    """
+
+    @staticmethod
+    def assert_valid_uuid(value: str, version: int = 4) -> None:
+        parsed = uuid.UUID(str(value), version=version)
+        assert str(parsed) == str(value).lower() or parsed.version == version, (
+            f"{value!r} is not a valid UUIDv{version}"
+        )
+
+    @staticmethod
+    def assert_email_format(value: str) -> None:
+        import re
+
+        pattern = r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+        assert re.match(pattern, str(value)), f"{value!r} is not a valid email format"
 
 
 TEST_ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -35,6 +56,12 @@ TEST_SECRET_KEY = "test_secret_key_1234567890_test_secret_key_1234567890"
 @pytest.fixture
 def valid_password():
     return "ValidPassword123!"
+
+
+@pytest.fixture
+def assertions() -> CustomAssertions:
+    """বাংলা: CustomAssertions ইনস্ট্যান্স এক্সপোজ করা হলো -- আগে এই fixture-ই ডিফাইন করা ছিল না।"""
+    return CustomAssertions()
 
 
 @pytest.fixture
@@ -288,16 +315,26 @@ def sample_agent_operator_data():
 
 
 @pytest_asyncio.fixture
-async def auth_headers(client: AsyncClient, sample_user_data, db_session: AsyncSession):
-    """Create authenticated user and return auth headers."""
+async def auth_headers(client: AsyncClient, sample_user_registration_data, db_session: AsyncSession):
+    """Create authenticated user and return auth headers.
+
+    বাংলা মন্তব্য (ROOT-CAUSE FIX): এই fixture আগে ভুলবশত `sample_user_data`
+    (id/role শেপ, agent টেস্টের জন্য) নিতো, যেখানে `/api/v1/auth/register`-এর
+    জন্য দরকার email/password শেপ (`sample_user_registration_data`)। ফলে
+    register call সবসময় 422 রিটার্ন করত, এবং এর ওপর নির্ভরশীল প্রতিটি fixture
+    (created_agent, created_conversation, sample_hitl_request, memory/HITL
+    টেস্টের সব) cascade হয়ে fail/error হতো -- একই bug-class যা আগে
+    sample_user_registration_data রিনেমের সময় ধরা পড়েছিল কিন্তু এই দুটো
+    fixture-এ apply করা হয়নি। এখন সঠিক fixture ব্যবহার করা হলো।
+    """
     # Register user
-    response = await client.post("/api/v1/auth/register", json=sample_user_data)
+    response = await client.post("/api/v1/auth/register", json=sample_user_registration_data)
     assert response.status_code in [200, 201, 409]  # OK or already exists
 
     # Login to get tokens
     login_data = {
-        "email": sample_user_data["email"],
-        "password": sample_user_data["password"],
+        "email": sample_user_registration_data["email"],
+        "password": sample_user_registration_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
     assert response.status_code == 200
@@ -309,14 +346,19 @@ async def auth_headers(client: AsyncClient, sample_user_data, db_session: AsyncS
 
 
 @pytest_asyncio.fixture
-async def admin_auth_headers(client: AsyncClient, sample_admin_data, db_session: AsyncSession):
-    """Create admin user and return admin auth headers."""
-    response = await client.post("/api/v1/auth/register", json=sample_admin_data)
+async def admin_auth_headers(client: AsyncClient, sample_admin_registration_data, db_session: AsyncSession):
+    """Create admin user and return admin auth headers.
+
+    বাংলা মন্তব্য (ROOT-CAUSE FIX): auth_headers-এর মতো একই bug -- আগে
+    `sample_admin_data` (id/role শেপ) নিতো, এখন সঠিক
+    `sample_admin_registration_data` (email/password শেপ) নেওয়া হচ্ছে।
+    """
+    response = await client.post("/api/v1/auth/register", json=sample_admin_registration_data)
     assert response.status_code in [200, 201, 409]
 
     login_data = {
-        "email": sample_admin_data["email"],
-        "password": sample_admin_data["password"],
+        "email": sample_admin_registration_data["email"],
+        "password": sample_admin_registration_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
     assert response.status_code == 200

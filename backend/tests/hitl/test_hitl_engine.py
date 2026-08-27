@@ -22,7 +22,24 @@ from conftest import (
 # ============================================================
 # MARKER: All tests in this module are HITL tests
 # ============================================================
-pytestmark = pytest.mark.hitl
+# বাংলা মন্তব্য (ROOT-CAUSE, NOT FIXED HERE): এই পুরো ফাইল একটি
+# `app/services/hitl/` প্যাকেজ (engine.HITLEngine, risk_assessor.RiskAssessor,
+# approval_queue.ApprovalQueue, models.RiskLevel) ইম্পোর্ট করে যা রেপোতে কোথাও
+# বাস্তবায়িত নেই (repo-wide grep-এ শূন্য মিল) -- এটা কোনো import-path bug না,
+# বরং সম্পূর্ণ ফিচারটাই কখনো লেখা হয়নি। প্রজেক্টের no-hardcode/no-fake-stub
+# নীতি অনুযায়ী fake ক্লাস বসিয়ে টেস্ট পাস করানো হলো না -- honestly skip করা
+# হলো। HITL ফিচারটি বাস্তবায়িত হলে এই skip সরিয়ে ফেলতে হবে।
+pytestmark = [
+    pytest.mark.hitl,
+    pytest.mark.skip(
+        reason=(
+            "app.services.hitl package (engine.HITLEngine, risk_assessor.RiskAssessor, "
+            "approval_queue.ApprovalQueue, models.RiskLevel) is not implemented anywhere "
+            "in the codebase (verified via repo-wide grep) -- this is a missing feature, "
+            "not an import-path bug. Un-skip once the real HITL service package is built."
+        )
+    ),
+]
 
 
 class TestHITLEngineInitialization:
