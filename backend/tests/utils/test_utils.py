@@ -39,7 +39,18 @@ class MockStringUtils:
 
         import re
 
-        pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        # ROOT-CAUSE FIX: আগের প্যাটার্নে (a) TLD-তে অন্তত ২টা letter লাগত, তাই
+        # সংখ্যাসূচক/১-অক্ষরের TLD ("123@456.789", "a@b.c") reject হতো যদিও
+        # test এগুলোকে valid ধরে; (b) consecutive dots ("user..name@...")
+        # block করার কোনো লজিক ছিল না, তাই সেটা ভুলভাবে accept হতো। নতুন
+        # প্যাটার্নে negative lookahead দিয়ে ডাবল-ডট আটকানো হলো এবং TLD-তে
+        # alphanumeric (সংখ্যাসহ) অনুমোদন করা হলো।
+        pattern = (
+            r"^(?!.*\.\.)[a-zA-Z0-9][a-zA-Z0-9._%+-]*"
+            r"@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?"
+            r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?)*"
+            r"\.[a-zA-Z0-9]+$"
+        )
         return bool(re.match(pattern, email))
 
     @staticmethod
@@ -638,10 +649,15 @@ class TestDateUtils:
             "year": lambda: (now - timedelta(days=365), now),
         }
 
+        # ROOT-CAUSE FIX: আগে `now` লুপের বাইরে একবার ধরা হতো, কিন্তু
+        # get_time_range() নিজে আবার `datetime.now(UTC)` কল করে -- ফলে সেই
+        # কল টেস্টের `now`-এর কয়েক মাইক্রোসেকেন্ড পরে হওয়ায় `end <= now`
+        # মাঝেমধ্যে ফেইল করত (flaky)। এখন প্রতিটা assertion-এর ঠিক আগে
+        # fresh `datetime.now(UTC)` নিয়ে তুলনা করা হচ্ছে।
         for period, check in ranges.items():
             start, end = MockDateUtils.get_time_range(period)
             assert start < end
-            assert end <= now
+            assert end <= datetime.now(UTC)
 
     @pytest.mark.unit
     @pytest.mark.asyncio

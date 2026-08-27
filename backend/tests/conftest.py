@@ -244,6 +244,12 @@ async def app(test_settings):
     os.environ["REDIS_URL"] = test_settings["REDIS_URL"]
     os.environ["SECRET_KEY"] = test_settings["SECRET_KEY"]
     os.environ["JWT_SECRET_KEY"] = test_settings["JWT_SECRET_KEY"]
+    # ROOT-CAUSE FIX: AsyncRateLimiter পড়ে os.environ["RATE_LIMIT_ENABLED"]
+    # সরাসরি (middleware/rate_limiter.py), কিন্তু test_settings dict শুধু
+    # app.state.settings-এ বসত যেটা rate limiter কখনো পড়ে না। ফলে আসল
+    # rate limiter সবসময় enabled থাকত -> register endpoint বারবার কল হলে
+    # 429 -> auth_headers fixture cascade fail -> ৪০+ dependent test error।
+    os.environ["RATE_LIMIT_ENABLED"] = "false"
 
     # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `from app.main import app` করা হতো,
     # কিন্তু backend/-এ কোনো `app/` প্যাকেজ নেই — real FastAPI instance আছে
