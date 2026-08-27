@@ -505,6 +505,46 @@ class UnifiedLearningEngine:
 
         return await self.learn(event)
 
+    @classmethod
+    def get_instance(cls) -> UnifiedLearningEngine:
+        """Singleton accessor — replaces LearningLoop.get_instance()."""
+        return cls()
+
+    async def record_signal(
+        self,
+        user_id: str,
+        signal_type: str,
+        payload: dict,
+        context: dict | None = None,
+    ) -> None:
+        """Record a preference/behavior signal. Wires into learn_user_preference()."""
+        for key, value in payload.items():
+            await self.learn_user_preference(
+                user_id,
+                key,
+                value,
+                metadata={"signal_type": signal_type, "context": context or {}},
+            )
+
+    async def suggest(self, user_id: str, limit: int = 5) -> list[dict]:
+        """Return adaptive suggestions based on recorded signals for this user."""
+        nodes = await self.recall(
+            LearningQuery(
+                query_text=f"preference:{user_id}",
+                learning_types=[LearningType.USER_PREFERENCE],
+                max_results=limit,
+            )
+        )
+        return [
+            {
+                "key": n.pattern.split(":")[-1] if ":" in n.pattern else n.pattern,
+                "suggestion": n.response,
+                "confidence": n.confidence,
+            }
+            for n in nodes
+            if n.response
+        ]
+
     async def get_user_context(self, user_id: str, limit: int = 20) -> list[KnowledgeNode]:
         """
         Get all learned context for a user.
