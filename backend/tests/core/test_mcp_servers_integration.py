@@ -1,6 +1,7 @@
+import asyncio
+
 # backend/tests/test_mcp_servers_integration.py
 # বাংলা মন্তব্য: সমস্ত নতুন MCP সার্ভারগুলোর ইন্টিগ্রেশন টেস্ট
-
 import importlib
 import json
 import os
@@ -35,6 +36,8 @@ def mock_env_vars(monkeypatch):
             # Handle extra fields properly if Pydantic model allows it
             elif getattr(settings.model_config, "extra", "ignore") == "allow":
                 setattr(settings, k.lower(), v)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

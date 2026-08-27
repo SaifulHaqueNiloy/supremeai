@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import ipaddress
 import json
@@ -605,6 +606,8 @@ async def _cached_scrape(payload: dict) -> dict:
     if cached is not None:
         try:
             return json.loads(cached)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -787,6 +790,8 @@ async def smart_click(req: SemanticClickRequest):
         await sdom.build_index()
         el = await sdom.query(req.target)
         return {"status": "clicked", "method": "semantic_dom", "element": el}
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 
@@ -797,6 +802,8 @@ async def smart_click(req: SemanticClickRequest):
         vg = VisionGrounding(page=None)
         click_res = await vg.click(req.target)
         return {"status": "clicked", "method": "vision_grounding", "coordinates": click_res}
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

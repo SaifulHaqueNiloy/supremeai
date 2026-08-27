@@ -5,6 +5,7 @@ Covers SwarmPubSub edge cases, halt controls, and broadcast failures.
 
 from __future__ import annotations
 
+import asyncio
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -66,6 +67,8 @@ async def test_subscribe_yields_messages():
             try:
                 msg = await gen.__anext__()
                 assert msg == "msg1"
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

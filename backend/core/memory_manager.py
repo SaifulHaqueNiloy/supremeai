@@ -141,6 +141,8 @@ class FreeTierMemoryManager:
             if hasattr(VectorStore, "_connection_pool"):
                 # Don't close, just shrink
                 pass
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

@@ -1,3 +1,5 @@
+import asyncio
+
 """This module, `cost_guard.py`, provides a robust mechanism for managing and enforcing budget constraints within the SupremeAI ecosystem. It features the `CostGuard` class, which offers methods for pre-flight budget checks against a database for individual tenants and a tier-based validation system designed to support multi-tier fallback strategies for AI task routing. A global singleton instance ensures easy access and backward compatibility for other modules like `task_router.py`.
 
 Key Components:
@@ -101,6 +103,8 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -141,6 +145,8 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -188,6 +194,8 @@ class CostGuard:
                         structured_context=ErrorContext(module="auto_fixed"),
                     )
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

@@ -322,6 +322,8 @@ class FreeTierTracker:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 

@@ -1,3 +1,5 @@
+import asyncio
+
 # tests/test_core_sandbox.py
 """Tests for sandbox security components."""
 
@@ -41,6 +43,8 @@ class TestSandboxValidation:
             result = _validate_vm_id("../../../etc/passwd")
             # If it didn't raise, it sanitized the input
             assert isinstance(result, str)
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -80,6 +84,8 @@ class TestSafeVMPath:
                 vm_path = _safe_vm_path(sandbox_root, "../escape")
                 # If within sandbox, check that it's contained
                 assert vm_path.is_relative_to(sandbox_root)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import sqlite3
 import tempfile
@@ -33,6 +34,8 @@ _feedback_loop = FeedbackLoop()
 def _ensure_db() -> None:
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

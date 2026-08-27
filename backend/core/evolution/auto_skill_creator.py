@@ -1,3 +1,5 @@
+import asyncio
+
 """
 Provides the `AutoSkillCreator` class, the core of the SupremeAI self-evolution engine.
 
@@ -86,6 +88,8 @@ class AutoSkillCreator:
                             structured_context=ErrorContext(module="auto_fixed"),
                         )
                     )
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 
