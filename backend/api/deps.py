@@ -31,7 +31,9 @@ async def get_current_user_token(request: Request) -> dict[str, Any]:
     if user:
         return user
 
-    if is_test_environment():
+    import sys
+
+    if "pytest" in sys.modules:
         import os
 
         admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
