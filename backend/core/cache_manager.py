@@ -3,6 +3,7 @@ Redis Cache Manager - Optimized for Upstash Free Tier (10K commands/day).
 Implements intelligent caching to minimize Redis usage.
 """
 
+import asyncio
 import json
 import os
 import zlib
@@ -126,6 +127,8 @@ class FreeTierCacheManager:
                     # Parse JSON
                     try:
                         value = json.loads(value)
+                    except asyncio.CancelledError:
+                        raise
                     except Exception as e:
                         import logging
 

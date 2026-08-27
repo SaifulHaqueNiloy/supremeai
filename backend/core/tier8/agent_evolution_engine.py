@@ -167,6 +167,8 @@ class AgentEvolutionEngine(BaseSkill):
             self._task.cancel()
             try:
                 await self._task
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

@@ -1,3 +1,5 @@
+import asyncio
+
 # backend/tests/core/test_pubsub.py
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -63,6 +65,8 @@ async def test_pubsub_subscriber_error_isolation():
             messages.append(msg)
             if len(messages) >= 2:
                 break
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

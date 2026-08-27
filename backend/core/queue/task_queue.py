@@ -105,6 +105,8 @@ class RedisTaskQueue:
                             {"type": "task_completed", "task_id": task_id, "result": result}
                         ),
                     )
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 

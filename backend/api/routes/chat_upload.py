@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import uuid
@@ -234,6 +235,8 @@ async def serve_upload(
             if resp.data:
                 metadata = resp.data[0]
                 _uploads[attachment_id] = metadata
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 
@@ -284,6 +287,8 @@ async def delete_upload(
             )
             if resp.data:
                 metadata = resp.data[0]
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

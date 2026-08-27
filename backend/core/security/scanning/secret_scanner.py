@@ -19,6 +19,7 @@ Dependencies:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import sys
@@ -34,6 +35,8 @@ if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 

@@ -221,6 +221,8 @@ class MaintenancePipeline:
                     from core.app import app
 
                     _evo = getattr(app.state, "evo_agent", None)
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     import logging
 

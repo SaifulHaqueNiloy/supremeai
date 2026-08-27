@@ -163,6 +163,8 @@ class TestSubscribe:
             try:
                 msg = await gen.__anext__()
                 assert msg == "test"
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -206,6 +208,8 @@ class TestSubscribe:
                 # First call should get real message (subscribe messages are filtered by Redis)
                 msg1 = await gen.__anext__()
                 received.append(msg1)
+            except asyncio.CancelledError:
+                raise
             except Exception as e:
                 import logging
 
@@ -350,6 +354,8 @@ class TestSwarmPubSubIntegration:
 
         try:
             await gen.__anext__()
+        except asyncio.CancelledError:
+            raise
         except Exception as e:
             import logging
 

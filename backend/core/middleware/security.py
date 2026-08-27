@@ -7,6 +7,7 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
+import asyncio
 import re
 import time
 
@@ -227,6 +228,8 @@ def del_response_header(headers, key: str):
     """Safely delete a response header."""
     try:
         del headers[key]
+    except asyncio.CancelledError:
+        raise
     except Exception as e:
         import logging
 
