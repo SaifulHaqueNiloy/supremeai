@@ -10,7 +10,7 @@ import uuid
 from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -303,9 +303,9 @@ def sample_user_registration_data():
     নাম দেওয়া হলো যাতে দুটো fixture-ই স্বাধীনভাবে কাজ করে।
     """
     return {
-        "email": "test@example.com",
-        "password": "SecurePassword123!",
-        "full_name": "Test User",
+        "username": "user@example.com",
+        "password": "UserPassword123!",
+        "name": "Regular User",
         "role": "user",
     }
 
@@ -318,9 +318,9 @@ def sample_admin_registration_data():
     sample_user_registration_data-এর comment)।
     """
     return {
-        "email": "admin@example.com",
+        "username": "admin@example.com",
         "password": "AdminPassword456!",
-        "full_name": "Admin User",
+        "name": "Admin User",
         "role": "admin",
     }
 
@@ -329,9 +329,9 @@ def sample_admin_registration_data():
 def sample_agent_operator_data():
     """Sample agent operator data for testing."""
     return {
-        "email": "operator@example.com",
-        "password": "OperatorPassword789!",
-        "full_name": "Agent Operator",
+        "username": "operator@example.com",
+        "password": "OperatorPassword123!",
+        "name": "Agent Operator",
         "role": "agent_operator",
     }
 
@@ -357,7 +357,7 @@ async def auth_headers(
 
     # Login to get tokens
     login_data = {
-        "username": sample_user_registration_data["email"],
+        "username": sample_user_registration_data["username"],
         "password": sample_user_registration_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
@@ -404,7 +404,7 @@ async def operator_auth_headers(
     assert response.status_code in [200, 201, 409]
 
     login_data = {
-        "email": sample_agent_operator_data["email"],
+        "username": sample_agent_operator_data["username"],
         "password": sample_agent_operator_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
@@ -616,6 +616,28 @@ def mock_openai_client():
     mock.embeddings.create.return_value = MagicMock(data=[MagicMock(embedding=[0.1] * 1536)])
 
     return mock
+
+
+@pytest.fixture(autouse=True)
+def mock_supabase_db_client():
+    """Mock the global Supabase db client to prevent 500 errors in endpoints that require auth."""
+    from database.supabase_client import db
+
+    mock_user = MagicMock()
+    mock_user.id = "mock-user-id"
+    mock_user.email = "mock@example.com"
+
+    mock_res = MagicMock()
+    mock_res.user = mock_user
+
+    with patch.object(db, "client") as mock_client:
+        mock_client.auth = MagicMock()
+        mock_client.auth.sign_up.return_value = mock_res
+        mock_client.auth.sign_in_with_password.return_value = mock_res
+        mock_client.auth.admin = MagicMock()
+        mock_client.auth.admin.create_user.return_value = mock_user
+        mock_client.auth.admin.delete_user.return_value = True
+        yield mock_client
 
 
 # ============================================================
