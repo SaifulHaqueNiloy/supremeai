@@ -6,6 +6,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# ROOT-CAUSE FIX: pytest collection phase-এ tests/api/*.py, tests/core/*.py-র
+# অনেক ফাইল module-level-এই route/app মডিউল import করে, যেগুলো
+# api/routes/api_keys.py-র মতো জায়গায় module-level singleton
+# `limiter = AsyncRateLimiter()` তৈরি করে দেয় -- আর AsyncRateLimiter.__init__()
+# তখনই os.getenv("RATE_LIMIT_ENABLED") পড়ে নেয়, tests/conftest.py-র `app`
+# fixture রান হওয়ারও অনেক আগে। backend/conftest.py হলো pytest rootdir
+# (backend/)-এর সবচেয়ে উপরের conftest, তাই এখানে module-level-এই env var
+# সেট করা হচ্ছে -- এটাই collection শুরুর আগে guaranteed সবচেয়ে আগে চলে।
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+
 
 @pytest.fixture(autouse=True)
 def setup_test_environment():
