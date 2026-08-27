@@ -188,7 +188,9 @@ class ObservabilityMiddleware:
                 logger.debug(f"Evolution log persistence failed in observability middleware: {exc}")
 
             # --- START SENTINEL AGENT EVENT TRIGGER ---
-            if status_code >= 500 or duration > 3.0:
+            from utils.environment import is_test_environment
+
+            if not is_test_environment() and (status_code >= 500 or duration > 3.0):
                 try:
                     import asyncio
 
