@@ -211,15 +211,18 @@ class SentinelAgent:
         Event-driven hook for middleware to immediately trigger an incident review.
         """
         try:
-            async with AsyncSessionLocal() as session:
-                incident = SystemIncident(
-                    incident_type=event_type,
-                    severity="warning",
-                    remediation_log=details,
-                )
-                session.add(incident)
-                await session.commit()
-                logger.info(f"[SentinelAgent] Event-driven incident recorded: {event_type}")
+            async with asyncio.timeout(5):
+                async with AsyncSessionLocal() as session:
+                    incident = SystemIncident(
+                        incident_type=event_type,
+                        severity="warning",
+                        remediation_log=details,
+                    )
+                    session.add(incident)
+                    await session.commit()
+                    logger.info(f"[SentinelAgent] Event-driven incident recorded: {event_type}")
+        except TimeoutError:
+            logger.warning(f"[SentinelAgent] Event trigger timed out for: {event_type}")
         except Exception as e:
             logger.exception(f"[SentinelAgent] Error triggering event: {e}")
 
