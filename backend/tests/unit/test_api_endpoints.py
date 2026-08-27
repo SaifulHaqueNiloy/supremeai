@@ -81,9 +81,9 @@ class TestAuthenticationEndpoints:
 
         assert response.status_code in [200, 201]
         data = response.json().get("data", response.json())
-        assert data["email"] == user_data["username"]
-        assert "id" in data
-        assert "password_hash" not in data  # Never return password hash
+        assert "user_id" in data
+        assert "access_token" in data
+        assert "password" not in data  # Never return password/hash
 
     @pytest.mark.auth
     @pytest.mark.skip(reason="Duplicate email handling is delegated to Supabase")

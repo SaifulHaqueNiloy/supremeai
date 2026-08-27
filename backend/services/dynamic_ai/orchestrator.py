@@ -19,7 +19,7 @@ except ImportError:
     from core.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
 
 try:
-    from .learning_engine import LearningEngine, TaskType
+    from .learning_engine import LearningEngine
 except ImportError:
     # Define stubs if module missing
     class TaskType(str):
@@ -28,6 +28,9 @@ except ImportError:
         ANALYSIS = "analysis"
 
     class LearningEngine:
+        def __init__(self, *args, **kwargs):
+            pass
+
         async def process(self, *args, **kwargs):
             raise NotImplementedError("Dynamic AI learning engine not available")
 

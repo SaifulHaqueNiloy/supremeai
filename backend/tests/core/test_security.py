@@ -69,13 +69,24 @@ async def test_rate_limiting_failure_mode():
     # Mock redis_manager to return None (simulating down/unavailable)
     with patch("middleware.rate_limiter.redis_manager.get_client_async", return_value=None):
         original_env = settings.env
-        try:
-            # In production/staging, it should fail-closed (return False)
-            settings.env = "production"
-            assert not await limiter.acquire("test_key")
+        original_test_mode = getattr(settings, "test_mode", False)
 
-            # In development, it should fail-open (return True)
-            settings.env = "development"
-            assert await limiter.acquire("test_key")
+        # Override os.getenv directly for the CI check inside acquire
+        def mock_getenv(key, default=None):
+            if key == "CI":
+                return "false"
+            return os.environ.get(key, default)
+
+        try:
+            settings.test_mode = False
+            with patch("os.getenv", side_effect=mock_getenv):
+                # In production/staging, it should fail-closed (return False)
+                settings.env = "production"
+                assert not await limiter.acquire("test_key")
+
+                # In development, it should fail-open (return True)
+                settings.env = "development"
+                assert await limiter.acquire("test_key")
         finally:
             settings.env = original_env
+            settings.test_mode = original_test_mode

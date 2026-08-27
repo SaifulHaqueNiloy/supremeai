@@ -53,7 +53,7 @@ class FakeSupabaseTable:
         self._filter = (key, value)
         return self
 
-    def execute(self):
+    async def execute(self):
         return SimpleNamespace(data=self._data)
 
 

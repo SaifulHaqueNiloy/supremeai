@@ -227,25 +227,7 @@ class TestAppLifespan:
         mock_app.state.subsystem_status = {}
 
         with contextlib.ExitStack() as stack:
-            stack.enter_context(
-                patch("core.lifespan.StartupValidator.validate", new_callable=AsyncMock)
-            )
-            stack.enter_context(
-                patch(
-                    "core.lifespan.ReliabilityController.initialize",
-                    new_callable=AsyncMock,
-                )
-            )
-            stack.enter_context(
-                patch("core.observability.telemetry.setup_tracing", return_value=None)
-            )
-            stack.enter_context(patch("core.startup.services.init_db_pool", new_callable=AsyncMock))
-            stack.enter_context(
-                patch("core.startup.services.config_cache.refresh_async", new_callable=AsyncMock)
-            )
-            mock_redis = stack.enter_context(patch("core.startup.services.redis_manager"))
-            # Make the ping mock work
-            mock_redis.client.ping = AsyncMock()
+            _apply_common_patches(stack)
 
             # shutdown.py uses `from core.cache.redis_manager import redis_manager`
             mock_redis_shutdown = stack.enter_context(patch("core.shutdown.redis_manager"))
