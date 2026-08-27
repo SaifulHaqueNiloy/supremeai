@@ -8,11 +8,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.security import is_token_revoked, revoke_token
 from core.security.authentication.rbac import UserContext
 from database.supabase_client import db
 
@@ -79,6 +80,12 @@ async def optional_current_user(
         # বাংলা: type=access ছাড়া অন্য টোকেন (যেমন refresh) ব্যবহার রোধ।
         if payload.get("type") not in (None, "access"):
             return None
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX, /logout ফিচারের অংশ): logout করা
+        # (blacklist-এ থাকা) টোকেন যেন আর valid না ধরা হয়, নাহলে logout-এর
+        # পরেও পুরনো access_token দিয়ে /me কাজ করতে থাকবে।
+        jti = payload.get("jti")
+        if jti and await is_token_revoked(jti):
+            return None
         # বাংলা মন্তব্য: JWT ডিকোড সফল হলে UserContext তৈরি করে return করা হচ্ছে।
         user_id = payload.get("sub", "unknown")
         role = payload.get("role", "viewer")
@@ -93,12 +100,12 @@ async def optional_current_user(
 
 
 class LoginRequest(BaseModel):
-    username: str
+    username: EmailStr
     password: str
 
 
 class RegisterRequest(BaseModel):
-    username: str
+    username: EmailStr
     password: str
     name: str | None = None
 
@@ -293,6 +300,31 @@ async def me(current_user: UserContext | None = Depends(optional_current_user)):
         scopes=scopes_val,
         email=current_user.email,
     )
+
+
+@router.post("/logout")
+async def logout(token: str | None = Depends(oauth2_scheme)):
+    """বাংলা মন্তব্য (নতুন এন্ডপয়েন্ট): আগে /logout রুটটাই ছিল না (তাই 404
+    আসত)। JWT stateless বলে সত্যিকারের "invalidate" সম্ভব না, কিন্তু ইতিমধ্যেই
+    কোডবেসে থাকা Redis-ব্যাকড blacklist (core/security/revoke_token,
+    is_token_revoked -- admin_auth.py-তে যেভাবে ব্যবহৃত হয়) পুনঃব্যবহার করে
+    টোকেনের jti ব্ল্যাকলিস্ট করে দেওয়া হচ্ছে। এরপর optional_current_user
+    (উপরে) revoke-চেক করে, তাই এই টোকেন দিয়ে /me আর কাজ করবে না।
+    """
+    if not token or jwt is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        ) from None
+
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+    if jti:
+        await revoke_token(jti, exp=int(exp) if exp else None)
+    return {"status": "logged_out"}
 
 
 @router.get("/verify")

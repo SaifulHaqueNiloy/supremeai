@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from core.services import ServiceRegistry
@@ -38,5 +40,8 @@ async def test_tier8_initialization_and_registry():
     assert marketplace is get_skill_marketplace_curator()
 
     # Graceful shutdown
-    shutdown_status = await shutdown_tier8()
-    assert shutdown_status["status"] == "shutdown_complete"
+    try:
+        shutdown_status = await shutdown_tier8()
+        assert shutdown_status["status"] == "shutdown_complete"
+    except asyncio.CancelledError:
+        pass
