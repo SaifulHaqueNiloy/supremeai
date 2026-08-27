@@ -315,7 +315,9 @@ def sample_agent_operator_data():
 
 
 @pytest_asyncio.fixture
-async def auth_headers(client: AsyncClient, sample_user_registration_data, db_session: AsyncSession):
+async def auth_headers(
+    client: AsyncClient, sample_user_registration_data, db_session: AsyncSession
+):
     """Create authenticated user and return auth headers.
 
     বাংলা মন্তব্য (ROOT-CAUSE FIX): এই fixture আগে ভুলবশত `sample_user_data`
@@ -346,7 +348,9 @@ async def auth_headers(client: AsyncClient, sample_user_registration_data, db_se
 
 
 @pytest_asyncio.fixture
-async def admin_auth_headers(client: AsyncClient, sample_admin_registration_data, db_session: AsyncSession):
+async def admin_auth_headers(
+    client: AsyncClient, sample_admin_registration_data, db_session: AsyncSession
+):
     """Create admin user and return admin auth headers.
 
     বাংলা মন্তব্য (ROOT-CAUSE FIX): auth_headers-এর মতো একই bug -- আগে
