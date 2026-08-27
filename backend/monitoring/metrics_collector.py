@@ -166,7 +166,9 @@ class MetricsCollector:
             # avg DB query time কে response time proxy হিসেবে ব্যবহার করি
             avg_response_time = 0.0
             if self._db_query_times:
-                avg_response_time = sum(self._db_query_times) / len(self._db_query_times) * 1000  # → ms
+                avg_response_time = (
+                    sum(self._db_query_times) / len(self._db_query_times) * 1000
+                )  # → ms
 
             # requests_per_second: total requests / (minutes * 60)
             seconds = max(minutes * 60, 1)

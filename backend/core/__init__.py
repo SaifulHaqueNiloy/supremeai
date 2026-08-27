@@ -133,6 +133,7 @@ try:
         AdversarialTrainer,
         DefenseConfig,
     )
+
     ADVERSARIAL_DEFENSE_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
     ADVERSARIAL_DEFENSE_AVAILABLE = False
@@ -148,6 +149,7 @@ try:
         EWCTrainer,
         OnlineEWC,
     )
+
     EWC_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
     EWC_AVAILABLE = False
@@ -160,6 +162,7 @@ try:
     from core.evolution.digital_twin.remediation_engine import RemediationEngine
     from core.evolution.digital_twin.simulator import ImpactSimulator
     from core.evolution.digital_twin.topology import SystemTopologyMapper
+
     DIGITAL_TWIN_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
     DIGITAL_TWIN_AVAILABLE = False
@@ -171,6 +174,7 @@ try:
     from core.evolution.federated_learning.fed_learning import (
         FederatedLearningCoordinator,
     )
+
     FEDERATED_LEARNING_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
     FEDERATED_LEARNING_AVAILABLE = False
@@ -182,6 +186,7 @@ try:
         NeuralSymbolicConfig,
         NeuralSymbolicIntegrator,
     )
+
     NEURAL_SYMBOLIC_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
     NEURAL_SYMBOLIC_AVAILABLE = False
