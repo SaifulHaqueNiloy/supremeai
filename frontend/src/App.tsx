@@ -6,7 +6,6 @@ import { useStore } from "./store/useStore";
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
 import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
-import { ToastProvider } from './components/ui/Toast';
 
 // Pages (Core Layouts & Auth)
 import { LoginPage } from './pages/auth/LoginPage';
@@ -70,11 +69,15 @@ import { TranslationProvider } from './i18n/I18nProvider';
 export const App: React.FC = () => {
   return (
     <ThemeSyncProvider>
-      <ToastProvider>
-        <TranslationProvider locale="en">
-          <AppContent />
-        </TranslationProvider>
-      </ToastProvider>
+      {/* ROOT-CAUSE FIX: main.tsx ইতিমধ্যেই contexts/ToastProvider দিয়ে
+          <App /> কে wrap করে রেখেছে (root-level toast system)। এখানে
+          components/ui/Toast.tsx-এর আলাদা, incompatible-API (message, type
+          বনাম contexts-এর type, message) দ্বিতীয় ToastProvider নেস্ট করা
+          ছিল — duplicate_detector.py-তে 97% file-level duplicate হিসেবে
+          ধরা পড়েছিল। এটা redundant, তাই সরিয়ে দেওয়া হলো। */}
+      <TranslationProvider locale="en">
+        <AppContent />
+      </TranslationProvider>
     </ThemeSyncProvider>
   );
 };

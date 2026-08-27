@@ -41,7 +41,7 @@ const initialNodes = [
   },
 ];
 
-import { useToast } from '../../../components/ui/Toast';
+import { useToast } from '../../../contexts/useToast';
 
 const loadAutosavedFlow = () => {
   try {
@@ -109,7 +109,7 @@ const EvolutionForgeCanvas = () => {
   // Listen for newly installed skills
   useEffect(() => {
     const handleSkillCreated = (payload: any) => {
-      showToast(`New skill integrated: ${payload.skillId}`, 'success');
+      showToast('success', `New skill integrated: ${payload.skillId}`);
     };
     eventBus.on(Events.SKILL_AUTO_CREATED, handleSkillCreated);
     return () => {
@@ -186,7 +186,7 @@ const EvolutionForgeCanvas = () => {
   const handleSaveSwarm = async () => {
     const token = localStorage.getItem('supremeai_auth_token');
     if (!token) {
-      showToast('Authentication required to save swarm.', 'error');
+      showToast('error', 'Authentication required to save swarm.');
       return;
     }
 
@@ -196,7 +196,7 @@ const EvolutionForgeCanvas = () => {
 
       await apiClient.post('/api/v1/swarm/forge', payload);
 
-      showToast('Swarm blueprint saved successfully! 🚀', 'success');
+      showToast('success', 'Swarm blueprint saved successfully! 🚀');
 
       if (payload.nodes && payload.nodes.length > 0) {
         eventBus.emit(Events.SKILL_AUTO_CREATED, {
@@ -212,7 +212,7 @@ const EvolutionForgeCanvas = () => {
       }
     } catch (error) {
       console.error('Save failed:', error);
-      showToast('Error saving swarm blueprint.', 'error');
+      showToast('error', 'Error saving swarm blueprint.');
     } finally {
       setIsSaving(false);
     }
@@ -221,7 +221,7 @@ const EvolutionForgeCanvas = () => {
   const handleExecuteSwarm = async () => {
     const token = localStorage.getItem('supremeai_auth_token');
     if (!token) {
-      showToast('Authentication required to execute swarm.', 'error');
+      showToast('error', 'Authentication required to execute swarm.');
       return;
     }
 
@@ -234,10 +234,10 @@ const EvolutionForgeCanvas = () => {
 
       await apiClient.post(`/api/v1/swarm/forge/${flowId}/execute`, payload);
 
-      showToast('Swarm execution started successfully! 🚀 Check Swarm Health Dashboard for live telemetry.', 'success');
+      showToast('success', 'Swarm execution started successfully! 🚀 Check Swarm Health Dashboard for live telemetry.');
     } catch (error: any) {
       console.error('Execution failed', error);
-      showToast(`Failed to execute swarm: ${error?.response?.data?.detail || error.message || 'Unknown error'}`, 'error');
+      showToast('error', `Failed to execute swarm: ${error?.response?.data?.detail || error.message || 'Unknown error'}`);
     } finally {
       setIsExecuting(false);
     }
