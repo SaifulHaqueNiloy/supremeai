@@ -302,9 +302,18 @@ class MockAgentService:
             stats["total_tokens"] += stats_update["tokens"]
 
         if "response_time_ms" in stats_update:
-            current_total = stats["avg_response_time_ms"] * (stats["total_conversations"] - 1)
+            # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে averaging formula
+            # `total_conversations` কে "কতবার response_time আপডেট হয়েছে" হিসেবে
+            # ধরে নিত। কিন্তু একটা call-এ conversations=10 পাঠালেও সেটা একটাই
+            # response_time স্যাম্পল -- ফলে avg 1200/10=120 হয়ে যেত, প্রত্যাশিত
+            # 1200 না। এখন response_time samples-এর নিজস্ব কাউন্টার দিয়ে ঠিকঠাক
+            # running average রাখা হচ্ছে।
+            sample_count = stats.get("_response_time_samples", 0)
+            current_total = stats["avg_response_time_ms"] * sample_count
             new_total = current_total + stats_update["response_time_ms"]
-            stats["avg_response_time_ms"] = new_total / max(stats["total_conversations"], 1)
+            sample_count += 1
+            stats["avg_response_time_ms"] = new_total / sample_count
+            stats["_response_time_samples"] = sample_count
 
     @staticmethod
     def _sanitize_agent(agent: dict[str, Any]) -> dict[str, Any]:
@@ -382,7 +391,7 @@ class TestAgentCreation:
 
         assert agent is not None
         assert "id" in agent
-        assertions.assert_valid_uuid(agent["id"].split("-")[-1], version=4)
+        assertions.assert_valid_uuid(agent["id"], version=4)
         assert agent["name"] == "Test Agent"
         assert agent["owner_id"] == sample_user_data["id"]
         assert agent["system_prompt"] == "You are a test assistant."

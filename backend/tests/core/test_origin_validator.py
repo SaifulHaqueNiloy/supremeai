@@ -6,6 +6,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 from unittest.mock import MagicMock
 
 import pytest
@@ -105,8 +107,32 @@ def test_allowed_origins_no_localhost_in_production(fake_settings):
 
 
 def test_default_origin_constants_non_empty():
-    assert len(USER_DEFAULT_TRUSTED_ORIGINS) > 0
-    assert len(ADMIN_DEFAULT_TRUSTED_ORIGINS) > 0
+    """বাংলা মন্তব্য (ROOT-CAUSE FIX): origin_validator.py-তে ইচ্ছাকৃতভাবে
+    ("SECURE FIX") ডিফল্ট trusted origins খালি frozenset করা হয়েছিল, যাতে
+    admin অবশ্যই CORS_ORIGINS/ADMIN_CORS_ORIGINS env var সেট করে -- এটা
+    hardcoded wildcard CORS bypass ঠেকানোর জন্য ইচ্ছাকৃত ডিজাইন। কিন্তু এই
+    টেস্টটা পুরনো (insecure) আচরণ যাচাই করছিল যে ডিফল্ট non-empty থাকবে,
+    যা নতুন সিকিউর ডিজাইনের বিপরীত। টেস্ট এখন প্রকৃত (secure) আচরণ যাচাই করে:
+    env var না থাকলে ডিফল্ট খালি থাকবে, আর env var সেট থাকলে সেটাই ব্যবহার হবে।
+    """
+    import importlib
+
+    from core.security import origin_validator as ov_module
+
+    # env var ছাড়া ডিফল্ট অবশ্যই খালি থাকতে হবে (secure-by-default)
+    for var in ("CORS_ORIGINS", "ADMIN_CORS_ORIGINS"):
+        assert var not in os.environ, f"{var} শুধু এই টেস্টের জন্যই আনসেট থাকা উচিত"
+    assert frozenset() == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
+    assert frozenset() == ov_module.ADMIN_DEFAULT_TRUSTED_ORIGINS
+
+    # env var সেট থাকলে সেটা থেকেই origins লোড হওয়া উচিত
+    os.environ["CORS_ORIGINS"] = json.dumps(["https://example.com"])
+    try:
+        importlib.reload(ov_module)
+        assert frozenset({"https://example.com"}) == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
+    finally:
+        del os.environ["CORS_ORIGINS"]
+        importlib.reload(ov_module)
 
 
 import contextlib
