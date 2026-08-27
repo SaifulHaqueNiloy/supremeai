@@ -41,3 +41,23 @@ class LearningLoop:
         from core.unified_learning import LearningQuery
 
         return await self._real.recall(LearningQuery(query_text=str(context)))
+
+    async def record_signal(
+        self,
+        user_id: str,
+        signal_type: str,
+        payload: dict,
+        context: dict | None = None,
+    ) -> None:
+        """Deprecated: delegates to UnifiedLearningEngine."""
+        from core.unified_learning import UnifiedLearningEngine
+
+        engine = UnifiedLearningEngine.get_instance()
+        await engine.record_signal(user_id, signal_type, payload, context)
+
+    async def suggest(self, user_id: str, limit: int = 5) -> list[dict]:
+        """Deprecated: delegates to UnifiedLearningEngine."""
+        from core.unified_learning import UnifiedLearningEngine
+
+        engine = UnifiedLearningEngine.get_instance()
+        return await engine.suggest(user_id, limit)
