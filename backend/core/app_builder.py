@@ -285,19 +285,29 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     cors_allow_credentials = True
     if not origins or origins == [""]:
         env = str(getattr(settings, "env", "local")).lower()
-        if env in ("production", "staging"):
+        # ROOT-CAUSE FIX (regression_scanner: unguarded-localhost, HIGH):
+        # আগে production/staging-এ শুধু error log করা হতো কিন্তু তারপরও
+        # নিচের local-host fallback unconditionally প্রয়োগ হতো —
+        # production-এ কোনো origin কনফিগার না থাকলে CORS silently
+        # dev host-এ খুলে যেত। এখন repo-র established idiom অনুসরণ করে
+        # explicit `env == "local"` guard দিয়ে fallback করা হচ্ছে; অন্য
+        # যেকোনো env-এ (production/staging সহ) fail-closed — origins খালি
+        # থাকবে, কোনো cross-origin request allow হবে না যতক্ষণ না ঠিকভাবে
+        # কনফিগার করা হয়।
+        if env == "local":
+            origins = [
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:5173",
+            ]
+        else:
             logger.error(
                 "🚨 CORS: no origins configured in production! "
                 "Set USER_CORS_ORIGINS and ADMIN_CORS_ORIGINS env vars. "
-                "Using localhost-only fallback (production will break)."
+                "Refusing to fall back to localhost — all cross-origin requests will be rejected."
             )
-        origins = [
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:5173",
-        ]
-        cors_allow_credentials = True
+            origins = []
 
     app.add_middleware(
         CORSMiddleware,
