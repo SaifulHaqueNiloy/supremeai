@@ -25,7 +25,7 @@ class TestHealthEndpoints:
     @pytest.mark.unit
     async def test_health_check_endpoint(self, client: AsyncClient):
         """Test basic health check endpoint."""
-        response = await client.get("/api/v1/admin/health")
+        response = await client.get("/api/v1/health")
 
         assert response.status_code == 200
         data = response.json()
@@ -34,7 +34,7 @@ class TestHealthEndpoints:
     @pytest.mark.unit
     async def test_liveness_probe(self, client: AsyncClient):
         """Test Kubernetes liveness probe endpoint."""
-        response = await client.get("/api/v1/admin/health/live")
+        response = await client.get("/api/v1/health/live")
 
         assert response.status_code == 200
         assert response.text == "OK" or response.json().get("alive")
@@ -42,7 +42,7 @@ class TestHealthEndpoints:
     @pytest.mark.unit
     async def test_readiness_probe(self, client: AsyncClient):
         """Test Kubernetes readiness probe endpoint."""
-        response = await client.get("/api/v1/admin/health/ready")
+        response = await client.get("/api/v1/health/ready")
 
         assert response.status_code == 200
         data = response.json()
@@ -70,7 +70,7 @@ class TestAuthenticationEndpoints:
     ):
         """Test new user registration."""
         user_data = {
-            "email": generate_test_emails(),
+            "username": generate_test_emails(),
             "password": "SecurePassword123!",
             "full_name": "New Test User",
             "role": "user",
@@ -111,7 +111,7 @@ class TestAuthenticationEndpoints:
     ):
         """Test registration with invalid email format."""
         user_data = {
-            "email": "not-an-email",
+            "username": "not-an-email",
             "password": "SecurePassword123!",
             "full_name": "Test User",
         }
@@ -128,7 +128,7 @@ class TestAuthenticationEndpoints:
     ):
         """Test registration with weak password fails."""
         user_data = {
-            "email": generate_test_emails(),
+            "username": generate_test_emails(),
             "password": "weak",  # Too short, no complexity
             "full_name": "Test User",
         }
@@ -151,7 +151,7 @@ class TestAuthenticationEndpoints:
 
         # Login
         login_data = {
-            "email": sample_user_registration_data["email"],
+            "username": sample_user_registration_data["email"],
             "password": sample_user_registration_data["password"],
         }
         response = await client.post("/api/v1/auth/login", json=login_data)
@@ -175,7 +175,7 @@ class TestAuthenticationEndpoints:
 
         # Login with wrong password
         login_data = {
-            "email": sample_user_registration_data["email"],
+            "username": sample_user_registration_data["email"],
             "password": "WrongPassword!",
         }
         response = await client.post("/api/v1/auth/login", json=login_data)
@@ -195,7 +195,7 @@ class TestAuthenticationEndpoints:
         login_response = await client.post(
             "/api/v1/auth/login",
             json={
-                "email": sample_user_registration_data["email"],
+                "username": sample_user_registration_data["email"],
                 "password": sample_user_registration_data["password"],
             },
         )
@@ -778,7 +778,7 @@ class TestErrorHandling:
         client: AsyncClient,
     ):
         """Test that rate limiting headers are present in responses."""
-        response = await client.get("/api/v1/admin/health")
+        response = await client.get("/api/v1/health")
 
         # Check for rate limit headers (if enabled)
         # These may or may not be present depending on config
@@ -796,7 +796,7 @@ class TestCORSHeaders:
         """Test CORS headers are set correctly."""
         # Make request with Origin header
         response = await client.get(
-            "/api/v1/admin/health",
+            "/api/v1/health",
             headers={"Origin": "http://localhost:3000"},
         )
 

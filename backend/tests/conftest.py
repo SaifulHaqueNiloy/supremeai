@@ -357,7 +357,7 @@ async def auth_headers(
 
     # Login to get tokens
     login_data = {
-        "email": sample_user_registration_data["email"],
+        "username": sample_user_registration_data["email"],
         "password": sample_user_registration_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
