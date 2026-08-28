@@ -8,6 +8,7 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
+import os
 import time
 from functools import wraps
 
@@ -295,6 +296,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             or path.startswith("/api/v1/health")
             or "health" in path
         ):
+            return await call_next(request)
+
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): এই middleware TESTING/CI env চেক করত না,
+        # অথচ middleware/rate_limiter.py-তে এই বাইপাস আছে। ফলে টেস্ট স্যুট চলাকালীন
+        # (Redis ডাউন থাকায় in-memory fallback ব্যবহৃত হয়) একই client_id-তে বহু
+        # টেস্ট ফিক্সচার register/login কল করায় anonymous tier (10 req/min) দ্রুত
+        # ফুরিয়ে যেত এবং পরবর্তী টেস্টগুলো 429 পেয়ে cascade-ভাবে ব্যর্থ হতো।
+        if os.getenv("TESTING") == "true" or os.getenv("PYTEST_CURRENT_TEST"):
             return await call_next(request)
 
         # Check rate limit

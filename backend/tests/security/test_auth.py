@@ -304,6 +304,11 @@ class MockAuthService:
             import jwt
 
             now = datetime.now(UTC)
+            # বাংলা মন্তব্য (ROOT-CAUSE FIX): iat/exp সেকেন্ড-precision-এ ট্রাংকেট হয়,
+            # তাই একই সেকেন্ডে login + refresh হলে payload হুবহু এক হয়ে যেত এবং
+            # jwt.encode একই টোকেন ফেরত দিত (test_refresh_token_generates_new_pair
+            # ব্যর্থ হতো)। প্রতিটি টোকেনে ইউনিক `jti` যোগ করে uniqueness নিশ্চিত করা হলো।
+            import uuid
 
             # Access token (short-lived)
             access_payload = {
@@ -313,6 +318,7 @@ class MockAuthService:
                 "iat": now,
                 "exp": now + timedelta(minutes=TEST_ACCESS_TOKEN_EXPIRE_MINUTES),
                 "type": "access",
+                "jti": uuid.uuid4().hex,
             }
 
             access_token = jwt.encode(access_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
@@ -323,6 +329,7 @@ class MockAuthService:
                 "iat": now,
                 "exp": now + timedelta(days=7),  # 7 days
                 "type": "refresh",
+                "jti": uuid.uuid4().hex,
             }
 
             refresh_token = jwt.encode(refresh_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
