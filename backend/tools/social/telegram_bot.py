@@ -479,7 +479,7 @@ class TelegramBotHandler:
                         "📱 <b>SupremeAI Mobile Client (.apk)</b>\n\n"
                         "Android APK ফাইলটি আমাদের স্বয়ংক্রিয় ক্লাউড বিল্ড পাইপলাইনে রয়েছে।\n"
                         "রিলিজ প্রস্তুত হওয়া মাত্রই গিটহাব এবং এই বটে ডাউনলোড লিংক উপলব্ধ হবে!\n\n"
-                        "🌐 <i>বর্তমানে মোবাইল ব্রাউজারে ব্যবহার করুন:</i> <a href='https://supremeai-lac.vercel.app'>SupremeAI Web Studio</a>"
+                        "🌐 <i>বর্তমানে মোবাইল ব্রাউজারে ব্যবহার করুন:</i> <a href='{settings.frontend_url}'>SupremeAI Web Studio</a>"
                     )
                     keyboard = {
                         "inline_keyboard": [
@@ -609,7 +609,7 @@ class TelegramBotHandler:
                         "• ⚡ <b>Cluster Telemetry:</b> /sys_status\n"
                         "• 💾 <b>Instant Vault Backup:</b> /backup_now\n"
                         "• 🚀 <b>Build Releases:</b> /latest_build\n"
-                        f"• 🌐 <b>Dashboard:</b> <a href='{settings.frontend_url}'>supremeai-lac.vercel.app</a>\n\n"
+                        f"• 🌐 <b>Dashboard:</b> <a href='{settings.frontend_url}'>SupremeAI Dashboard</a>\n\n"
                         "<i>যেকোনো প্রশ্ন বা কমান্ড পাঠিয়ে এআই অ্যাসিস্ট্যান্স শুরু করুন।</i>"
                     )
                     await self.send_message(
@@ -1113,7 +1113,7 @@ class TelegramBotHandler:
         text = (
             "💬 <b>SupremeAI AI Chat & Coding Studio</b>\n\n"
             "• 🧠 <b>Smart AI Models:</b> Gemini 2.5 Flash + Groq Qwen/Llama\n"
-            f"• 🌐 <b>Web Studio:</b> <a href='{settings.frontend_url}'>supremeai-lac.vercel.app</a>\n"
+            f"• 🌐 <b>Web Studio:</b> <a href='{settings.frontend_url}'>SupremeAI Dashboard</a>\n"
             "• ⚡ <b>Capabilities:</b> কোডিং, বাগ ফিক্স, ট্রান্সলেশন, ডাটাবেস ডিজাইন, ডকুমেন্ট সামারি\n\n"
             "💡 <i>যেকোনো প্রশ্ন সরাসরি এই চ্যাটে লিখুন — এআই তাৎক্ষণিক উত্তর দেবে!</i>"
         )

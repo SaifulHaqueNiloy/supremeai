@@ -5,6 +5,8 @@ import os
 from dotenv import load_dotenv
 from loguru import logger
 
+from core.config import settings
+
 # Ensure we are in the backend directory
 if os.path.exists(".env"):
     load_dotenv(".env")
@@ -25,7 +27,7 @@ async def migrate_embeddings():
 
         from core.embeddings import embed_for_pgvector
 
-        url = os.getenv("SUPABASE_URL")
+        url = settings.supabase_url
         key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
 
         if not url or not key:

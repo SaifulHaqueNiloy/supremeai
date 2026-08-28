@@ -10,6 +10,8 @@ from typing import Any
 import httpx
 from loguru import logger
 
+from core.config import settings
+
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # ১. Database Search Tool — Supabase REST API
@@ -23,7 +25,7 @@ async def search_database(query: str) -> str:
     """
     logger.info(f"🔍 [TOOL] Searching Supabase for: {query!r}")
 
-    supabase_url = os.getenv("SUPABASE_URL", "")
+    supabase_url = settings.supabase_url
     supabase_key = os.getenv("SUPABASE_KEY", "")
 
     if not supabase_url or not supabase_key:
@@ -124,7 +126,7 @@ def check_system_health() -> str:
         health["redis"] = "NOT_CONFIGURED"
 
     # ── Supabase DB Ping ────────────────────────────
-    supabase_url = os.getenv("SUPABASE_URL", "")
+    supabase_url = settings.supabase_url
     supabase_key = os.getenv("SUPABASE_KEY", "")
     if supabase_url and supabase_key:
         try:
