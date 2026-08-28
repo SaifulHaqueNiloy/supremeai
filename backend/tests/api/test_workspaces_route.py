@@ -88,23 +88,23 @@ async def test_bind_target_repository_degrades_when_workspace_preparation_fails(
 async def test_list_target_repositories_maps_registry_entities():
     first = MagicMock(
         id="one",
-        name="One",
         target_type=TargetPlatformType.GIT_REPOSITORY,
         url="origin/one",
         branch="main",
         scope=PermissionScope.READ_ONLY,
     )
+    first.name = "One"
     first.is_read_only.return_value = True
     first.can_write.return_value = False
 
     second = MagicMock(
         id="two",
-        name="Two",
         target_type=TargetPlatformType.CLOUD_SERVICE,
         url="https://cloud.example/two",
         branch="main",
         scope=PermissionScope.FULL_CONTROL,
     )
+    second.name = "Two"
     second.is_read_only.return_value = False
     second.can_write.return_value = True
 
