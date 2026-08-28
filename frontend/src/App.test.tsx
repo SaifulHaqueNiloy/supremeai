@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 // বাংলা মন্তব্য (ROOT-CAUSE FIX): main.tsx App-কে ToastProvider দিয়ে wrap করে,
 // কিন্তু এই টেস্ট ফাইল সরাসরি <App /> render করত ToastProvider ছাড়া। App-এর
@@ -26,7 +26,6 @@ vi.mock('./services/apiClient', () => ({
 }));
 
 import { App } from './App';
-import { getAethelResponse } from './services/chatService';
 
 vi.mock('./components/core/AuthGuards', () => ({
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -157,6 +156,12 @@ vi.mock('./store/dashboardStore', () => ({
   }),
 }));
 
+// Mock useAuthStore (used by the new props-free UserDashboard) so the
+// greeting stays deterministic in tests.
+vi.mock('./store/authStore', () => ({
+  useAuthStore: () => ({ user: null }),
+}));
+
 describe('App component', () => {
   afterEach(() => {
     vi.restoreAllMocks();
@@ -167,12 +172,12 @@ describe('App component', () => {
     storeState.isServerOnline = true;
     storeState.deployGate.status = 'UNLOCKED';
     storeState.deployGate.reason = 'Initial deploy clean';
-    // বাংলা মন্তব্য: লিগ্যাসি ওয়ার্কস্পেস এখন Devin-স্টাইল শেলের #/workspace রুটে রেন্ডার হয়, তাই টেস্টের আগে hash সেট করা হলো
     window.location.hash = '#/workspace';
   });
 
-  // বাংলা মন্তব্য: UI টেক্সট পরিবর্তন হওয়া সত্ত্বেও টেস্ট যাতে স্ট্যাবল থাকে সে জন্য data-testid ব্যবহার করা হলো
-  it('renders header, title, and health status', () => {
+  // The /workspace route renders the WorkspaceLayout shell wrapping the new
+  // props-free customer UserDashboard. We assert on the real rendered content.
+  it('renders the workspace shell with the customer dashboard at /workspace', () => {
     render(
       <ToastProvider>
         <MemoryRouter initialEntries={['/workspace']}>
@@ -181,12 +186,17 @@ describe('App component', () => {
       </ToastProvider>
     );
 
-    expect(screen.getAllByTestId('header-title')[0]).toBeInTheDocument();
-    expect(screen.getAllByTestId('core-status')[0]).toBeInTheDocument();
+    // Customer dashboard greeting
+    expect(screen.getByText('What would you like to build today?')).toBeInTheDocument();
+    // Sidebar navigation
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('AI Studio')).toBeInTheDocument();
+    expect(screen.getByText('Projects')).toBeInTheDocument();
+    // Dashboard sections
+    expect(screen.getByText('Recent Conversations')).toBeInTheDocument();
   });
 
-  // বাংলা মন্তব্য: চ্যাট ট্যাব সক্রিয় করে চ্যাট কনসোল রেন্ডারিং চেক করা হচ্ছে
-  it('renders chat console when chat tab is active', () => {
+  it('renders the customer dashboard prompt input', () => {
     render(
       <ToastProvider>
         <MemoryRouter initialEntries={['/workspace']}>
@@ -195,14 +205,12 @@ describe('App component', () => {
       </ToastProvider>
     );
 
-    // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
-
-    expect(screen.getByTestId('chat-header')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...')
+    ).toBeInTheDocument();
   });
 
-  // বাংলা মন্তব্য: চ্যাট প্যানেলে মেসেজ টাইপ ও সাবমিট করে প্রসেসিং সফলভাবে হচ্ছে কিনা টেস্ট করা হচ্ছে
-  it('allows user to send messages in the chat console', async () => {
+  it('renders the active agents and usage summary in the dashboard', () => {
     render(
       <ToastProvider>
         <MemoryRouter initialEntries={['/workspace']}>
@@ -211,17 +219,7 @@ describe('App component', () => {
       </ToastProvider>
     );
 
-    // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
-    fireEvent.click(screen.getAllByTestId('tab-chat')[0]);
-
-    const input = screen.getByTestId('chat-input');
-    fireEvent.change(input, { target: { value: 'Test message' } });
-
-    const sendButton = screen.getByTestId('chat-submit');
-    fireEvent.click(sendButton);
-
-    expect(screen.getAllByText('Test message')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Analyzing request "Test message"... Processing on central core.')[0]).toBeInTheDocument();
-    expect(getAethelResponse).toHaveBeenCalledWith('Test message', expect.any(Array));
+    expect(screen.getByText('Active Agents')).toBeInTheDocument();
+    expect(screen.getByText('Usage (Pro Plan)')).toBeInTheDocument();
   });
 });
