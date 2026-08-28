@@ -95,7 +95,6 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     set({ adminError: '' });
 
     try {
-      const API_BASE = getApiBaseUrl();
 
       // বাংলা মন্তব্য: getFirebaseAuth() ব্যবহার করা হচ্ছে যাতে Firebase app ইনিশিয়ালাইজেশন (initializeApp) সঠিকভাবে সম্পন্ন হয়
       const auth = await getFirebaseAuth();
@@ -213,7 +212,6 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       }
       const idToken = await user.getIdToken(true);
       const email = (user.email || '').trim() || get().adminEmail.trim();
-      const API_BASE = getApiBaseUrl();
       const data = await authService.firebaseTotpSetup(idToken);
       set({
         totpSetupRequired: true,
