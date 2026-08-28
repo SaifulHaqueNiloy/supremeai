@@ -231,9 +231,22 @@ CONFIG_SCHEMA: list[VarDefinition] = [
 ]
 
 
-def _validate_var(var_def: VarDefinition) -> ValidationError | None:
+def _validate_var(var_def: VarDefinition, settings_obj: Any = None) -> ValidationError | None:
     """Validate a single environment variable."""
     raw_value = os.getenv(var_def.name)
+
+    if raw_value is None and settings_obj is not None:
+        prop_name = var_def.name.lower()
+        if hasattr(settings_obj, prop_name):
+            val = getattr(settings_obj, prop_name)
+            if val:
+                from pydantic import SecretStr
+
+                if isinstance(val, SecretStr):
+                    raw_value = val.get_secret_value()
+                else:
+                    raw_value = str(val)
+
     value = raw_value if raw_value is not None else var_def.default
 
     # Check required
@@ -299,6 +312,20 @@ def _validate_var(var_def: VarDefinition) -> ValidationError | None:
                 message=f"Invalid boolean: '{value}'. Use true/false/1/0",
             )
 
+    elif var_def.var_type == VarType.STRING:
+        if var_def.min_value is not None and len(str(value)) < var_def.min_value:
+            return ValidationError(
+                var_name=var_def.name,
+                severity=var_def.severity,
+                message=f"Value length {len(str(value))} below minimum {var_def.min_value} characters",
+            )
+        if var_def.max_value is not None and len(str(value)) > var_def.max_value:
+            return ValidationError(
+                var_name=var_def.name,
+                severity=var_def.severity,
+                message=f"Value length {len(str(value))} above maximum {var_def.max_value} characters",
+            )
+
     # Pattern match
     if var_def.pattern and value:
         if not re.match(var_def.pattern, str(value)):
@@ -314,13 +341,29 @@ def _validate_var(var_def: VarDefinition) -> ValidationError | None:
 
 def validate_config() -> ConfigValidationResult:
     """Validate all configuration variables. Returns validation result."""
+    from core.config import settings
+
     errors = []
     warnings = []
     validated = {}
 
     for var_def in CONFIG_SCHEMA:
-        error = _validate_var(var_def)
+        error = _validate_var(var_def, settings)
+
+        # Retrieve final value
         raw = os.getenv(var_def.name)
+        if raw is None:
+            prop_name = var_def.name.lower()
+            if hasattr(settings, prop_name):
+                val = getattr(settings, prop_name)
+                if val:
+                    from pydantic import SecretStr
+
+                    if isinstance(val, SecretStr):
+                        raw = val.get_secret_value()
+                    else:
+                        raw = str(val)
+
         validated[var_def.name] = raw if raw is not None else var_def.default
 
         if error:
