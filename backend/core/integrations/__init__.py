@@ -14,9 +14,9 @@ from .registry import (
     IntegrationInfo,
     IntegrationScope,
     IntegrationStatus,
-    list_integrations,
     get_integration,
     is_enabled,
+    list_integrations,
 )
 
 __all__ = [

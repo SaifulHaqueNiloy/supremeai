@@ -9,7 +9,6 @@ from .execution_recorder import execution_recorder
 from .interfaces import AutomationProvider
 from .models import AutomationEvent, AutomationResult, AutomationStatus
 
-
 # ── Plan Section 8: Idempotency cache (in-memory LRU) ──────────────────────
 # বাংলা: একই event_id দিয়ে দ্বিতীয়বার dispatch করলে prior result ফেরত দেয়।
 # এটা in-memory cache — DB persistence পরের phase-এ যাবে (Plan Section 7)।
@@ -26,7 +25,7 @@ class _IdempotencyCache:
         self._max_size = max_size
         self._ttl = ttl
 
-    def get(self, event_id: str) -> Optional[AutomationResult]:
+    def get(self, event_id: str) -> AutomationResult | None:
         """event_id থাকলে ও TTL-এর মধ্যে হলে result ফেরত দেয়, নাহলে None।"""
         entry = self._cache.get(event_id)
         if entry is None:
@@ -136,7 +135,9 @@ class AutomationDispatcher:
                 self._idempotency.set(event.event_id, result)
             # Plan Section 7: record dispatch completion
             await execution_recorder.record_completion(
-                execution_id, event, result,
+                execution_id,
+                event,
+                result,
                 provider_name=self._provider.__class__.__name__,
                 started_at=started_at,
             )
@@ -153,7 +154,9 @@ class AutomationDispatcher:
             self._idempotency.set(event.event_id, failed_result)
             # Plan Section 7: record dispatch failure
             await execution_recorder.record_completion(
-                execution_id, event, failed_result,
+                execution_id,
+                event,
+                failed_result,
                 provider_name=self._provider.__class__.__name__ if self._provider else "none",
                 started_at=started_at,
             )
