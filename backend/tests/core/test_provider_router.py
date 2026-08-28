@@ -24,7 +24,7 @@ def test_provider_stats_record_and_rates():
 def test_provider_stats_circuit_trip_and_expiry():
     stats = ProviderStats(name="test", base_weight=1.0)
 
-    with patch("core.llm.provider_router.time.monotonic", side_effect=[100.0, 100.0, 101.0, 111.0]):
+    with patch("core.llm.provider_router.time.monotonic", side_effect=[100.0, 100.0, 111.0]):
         stats.trip_circuit(10.0)
         assert stats.is_circuit_open() is True
         assert stats.is_circuit_open() is False
