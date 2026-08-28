@@ -27,31 +27,46 @@ def upgrade() -> None:
     """Add missing indexes; real creation failures must fail the migration."""
     op.create_index("idx_artifacts_user_id", "artifacts", ["user_id"], if_not_exists=True)
     print("Created index: idx_artifacts_user_id")
-    op.create_index("idx_artifacts_conversation_id", "artifacts", ["conversation_id"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_conversation_id", "artifacts", ["conversation_id"], if_not_exists=True
+    )
     print("Created index: idx_artifacts_conversation_id")
     op.create_index("idx_artifacts_updated_at", "artifacts", ["updated_at"], if_not_exists=True)
     print("Created index: idx_artifacts_updated_at")
-    op.create_index("idx_artifacts_user_updated", "artifacts", ["user_id", "updated_at"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_user_updated", "artifacts", ["user_id", "updated_at"], if_not_exists=True
+    )
     print("Created index: idx_artifacts_user_updated")
     op.create_index("idx_artifacts_type", "artifacts", ["artifact_type"], if_not_exists=True)
     print("Created index: idx_artifacts_type")
-    op.create_index("idx_artifacts_pinned", "artifacts", ["user_id", "is_pinned"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_pinned", "artifacts", ["user_id", "is_pinned"], if_not_exists=True
+    )
     print("Created index: idx_artifacts_pinned")
     op.create_index("idx_conversations_user_id", "conversations", ["user_id"], if_not_exists=True)
     print("Created index: idx_conversations_user_id")
-    op.create_index("idx_conversations_created", "conversations", ["user_id", "created_at"], if_not_exists=True)
+    op.create_index(
+        "idx_conversations_created", "conversations", ["user_id", "created_at"], if_not_exists=True
+    )
     print("Created index: idx_conversations_created")
-    op.create_index("idx_messages_conversation_id", "messages", ["conversation_id"], if_not_exists=True)
+    op.create_index(
+        "idx_messages_conversation_id", "messages", ["conversation_id"], if_not_exists=True
+    )
     print("Created index: idx_messages_conversation_id")
     op.create_index(
-        "idx_messages_conv_created", "messages", ["conversation_id", "created_at"], if_not_exists=True
+        "idx_messages_conv_created",
+        "messages",
+        ["conversation_id", "created_at"],
+        if_not_exists=True,
     )
     print("Created index: idx_messages_conv_created")
     op.create_index("idx_users_email", "users", ["email"], unique=True, if_not_exists=True)
     print("Created index: idx_users_email (unique)")
     op.create_index("idx_users_sub", "users", ["sub"], if_not_exists=True)
     print("Created index: idx_users_sub")
-    op.create_index("idx_user_prefs_user_id", "user_preferences", ["user_id"], unique=True, if_not_exists=True)
+    op.create_index(
+        "idx_user_prefs_user_id", "user_preferences", ["user_id"], unique=True, if_not_exists=True
+    )
     print("Created index: idx_user_prefs_user_id (unique)")
 
     if _table_exists("knowledge_base"):
@@ -63,19 +78,28 @@ def upgrade() -> None:
             """
         )
         print("Created index: idx_knowledge_base_user_embedding (HNSW)")
-        op.create_index("idx_knowledge_base_user_id", "knowledge_base", ["user_id"], if_not_exists=True)
+        op.create_index(
+            "idx_knowledge_base_user_id", "knowledge_base", ["user_id"], if_not_exists=True
+        )
         print("Created index: idx_knowledge_base_user_id")
     else:
         print("Skipped knowledge_base indexes: table does not exist")
 
     if _table_exists("activity_logs"):
-        op.create_index("idx_activity_logs_user_time", "activity_logs", ["user_id", "created_at"], if_not_exists=True)
+        op.create_index(
+            "idx_activity_logs_user_time",
+            "activity_logs",
+            ["user_id", "created_at"],
+            if_not_exists=True,
+        )
         print("Created index: idx_activity_logs_user_time")
     else:
         print("Skipped activity_logs index: table does not exist")
 
     if _table_exists("telemetry"):
-        op.create_index("idx_telemetry_session", "telemetry", ["session_id", "timestamp"], if_not_exists=True)
+        op.create_index(
+            "idx_telemetry_session", "telemetry", ["session_id", "timestamp"], if_not_exists=True
+        )
         print("Created index: idx_telemetry_session")
     else:
         print("Skipped telemetry index: table does not exist")
@@ -87,8 +111,12 @@ def downgrade() -> None:
     """Remove indexes created by this migration when their tables exist."""
     index_tables = {
         "artifacts": [
-            "idx_artifacts_user_id", "idx_artifacts_conversation_id", "idx_artifacts_updated_at",
-            "idx_artifacts_user_updated", "idx_artifacts_type", "idx_artifacts_pinned",
+            "idx_artifacts_user_id",
+            "idx_artifacts_conversation_id",
+            "idx_artifacts_updated_at",
+            "idx_artifacts_user_updated",
+            "idx_artifacts_type",
+            "idx_artifacts_pinned",
         ],
         "conversations": ["idx_conversations_user_id", "idx_conversations_created"],
         "messages": ["idx_messages_conversation_id", "idx_messages_conv_created"],
