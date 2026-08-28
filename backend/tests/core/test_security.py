@@ -72,7 +72,12 @@ async def test_rate_limiting_failure_mode():
 
         # Override os.getenv directly for the CI check inside acquire
         def mock_getenv(key, default=None):
-            if key == "CI":
+            # বাংলা মন্তব্য (ROOT-CAUSE FIX): AsyncRateLimiter.acquire() শুরুতেই
+            # `os.getenv("TESTING") == "true"` চেক করে True রিটার্ন করে দিত (CI-তে
+            # TESTING=true সেট থাকে), ফলে নিচের production fail-closed লজিক আদৌ
+            # এক্সিকিউট হতো না এবং `assert not True` ব্যর্থ হতো। TESTING-ও এখানে
+            # মক করে "false" করা হলো যাতে আসল Redis-down আচরণ যাচাই করা যায়।
+            if key in ("CI", "TESTING"):
                 return "false"
             return os.environ.get(key, default)
 
