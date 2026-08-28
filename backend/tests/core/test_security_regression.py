@@ -18,6 +18,7 @@ async def test_production_jwt_secret_required():
         {
             "ENV": "production",
             "ALLOW_TEST_AUTH_BYPASS": "false",
+            "ALLOWED_HOSTS": "api.supremeai.com",
             "SUPREMEAI_JWT_SECRET": "",
             "JWT_SECRET": "",
         },

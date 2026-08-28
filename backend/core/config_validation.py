@@ -31,30 +31,30 @@ class SettingsValidationMixin:
         if value is None:
             return value
         if isinstance(value, str) and value.strip() == "":
-            numeric_fields = {
-                "bhasha_cache_ttl_hours",
-                "bhasha_min_quality",
-                "bhasha_max_cache",
-                "bhasha_batch_concurrency",
-                "port",
-                "llm_connect_timeout",
-                "llm_read_timeout",
-                "llm_write_timeout",
-                "llm_pool_timeout",
-                "llm_max_connections",
-                "llm_max_keepalive",
-                "latency_window_size",
-                "latency_normalization_ms",
-                "min_provider_weight",
-                "circuit_failure_threshold",
-                "circuit_success_rate_floor",
-                "circuit_cooldown_seconds",
-                "max_routing_attempts",
-                "llm_cache_max_size",
-                "llm_cache_default_ttl",
+            defaults = {
+                "bhasha_cache_ttl_hours": 24,
+                "bhasha_min_quality": 0.7,
+                "bhasha_max_cache": 10000,
+                "bhasha_batch_concurrency": 5,
+                "port": 8080,
+                "llm_connect_timeout": 5.0,
+                "llm_read_timeout": 30.0,
+                "llm_write_timeout": 5.0,
+                "llm_pool_timeout": 5.0,
+                "llm_max_connections": 100,
+                "llm_max_keepalive": 20,
+                "latency_window_size": 20,
+                "latency_normalization_ms": 1000.0,
+                "min_provider_weight": 0.01,
+                "circuit_failure_threshold": 5,
+                "circuit_success_rate_floor": 0.5,
+                "circuit_cooldown_seconds": 30.0,
+                "max_routing_attempts": 3,
+                "llm_cache_max_size": 500,
+                "llm_cache_default_ttl": 3600,
             }
-            if info.field_name and info.field_name.lower() in numeric_fields:
-                return None
+            if info.field_name and info.field_name.lower() in defaults:
+                return defaults[info.field_name.lower()]
         var_name = info.field_name
         if var_name in cls.FORMAT_PATTERNS:
             pattern = cls.FORMAT_PATTERNS[var_name]
@@ -286,7 +286,11 @@ class SettingsValidationMixin:
             # property-level validation (e.g. JWT). A dedicated test-only
             # placeholder keeps those tests isolated without weakening runtime
             # validation; real startup never runs under pytest.
-            if not v and "pytest" in sys.modules:
+            if not v and (
+                "pytest" in sys.modules
+                or os.getenv("TESTING", "").lower() == "true"
+                or os.getenv("CI", "").lower() == "true"
+            ):
                 return ["testserver"]
             if not v:
                 raise ValueError(

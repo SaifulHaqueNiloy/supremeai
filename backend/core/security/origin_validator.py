@@ -35,6 +35,7 @@ def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
 if os.getenv("TESTING", "false").lower() == "true":
     os.environ.pop("CORS_ORIGINS", None)
     os.environ.pop("ADMIN_CORS_ORIGINS", None)
+    os.environ.pop("USER_CORS_ORIGINS", None)
 
 
 # SECURE FIX: defaults are now EMPTY frozensets — admin MUST set env vars
