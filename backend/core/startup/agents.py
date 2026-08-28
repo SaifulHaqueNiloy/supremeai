@@ -60,19 +60,20 @@ async def start_background_services(app):
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
 
     # Agent 4: Bug Prophet Anomaly Detector
-    try:
-        from scripts.devops.bug_prophet import run_anomaly_detector_loop
-
-        await agent_supervisor.start_agent(
-            "bug-prophet-anomaly-detector",
-            run_anomaly_detector_loop,
-            health_check_interval=60,
-            max_restarts=5,
-            restart_delay=5.0,
-        )
-        logger.info("✅ BugProphet Anomaly Detector started.")
-    except Exception as exc:
-        logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
+    # Temporarily disabled: Dead import warning (No module named 'scripts.devops.bug_prophet')
+    # try:
+    #     from scripts.devops.bug_prophet import run_anomaly_detector_loop
+    #
+    #     await agent_supervisor.start_agent(
+    #         "bug-prophet-anomaly-detector",
+    #         run_anomaly_detector_loop,
+    #         health_check_interval=60,
+    #         max_restarts=5,
+    #         restart_delay=5.0,
+    #     )
+    #     logger.info("✅ BugProphet Anomaly Detector started.")
+    # except Exception as exc:
+    #     logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
 
     import os
 

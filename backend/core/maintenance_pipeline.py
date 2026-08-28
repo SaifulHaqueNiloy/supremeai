@@ -163,16 +163,17 @@ class MaintenancePipeline:
         try:
             from sqlalchemy import text
 
-            from core.db import engine
+            from core.db import get_session_factory
 
-            with engine.connect() as conn:
+            factory = get_session_factory()
+            async with factory() as session:
                 # Delete executions older than 30 days (attempts will cascade delete)
-                result = conn.execute(
+                result = await session.execute(
                     text(
                         "DELETE FROM automation_executions WHERE created_at < NOW() - INTERVAL '30 days'"
                     )
                 )
-                conn.commit()
+                await session.commit()
                 deleted_count = result.rowcount
             if deleted_count > 0:
                 logger.info(

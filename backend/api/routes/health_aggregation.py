@@ -8,16 +8,17 @@ import os
 from datetime import datetime
 
 import httpx
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from api.dependencies import get_current_admin
 from core.health.uptime_tracker import (
     get_history,
     get_uptime_summary,
     record_check,
 )
 
-router = APIRouter(prefix="/admin-api", tags=["health"])
+router = APIRouter(prefix="/admin-api", tags=["health"], dependencies=[Depends(get_current_admin)])
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MODELS

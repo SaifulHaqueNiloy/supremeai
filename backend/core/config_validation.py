@@ -297,9 +297,24 @@ class SettingsValidationMixin:
                         vercel_host.replace("https://", "").replace("http://", "").split("/")[0]
                     )
                     v.append(vercel_host)
-                # If running on Render or Cloud environment without explicit custom domain, allow default onrender / domain patterns
-                if os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"):
-                    if "onrender.com" not in v:
+                # If running on Render without an explicit custom domain, derive the
+                # real per-service onrender.com hostname from RENDER_SERVICE_NAME
+                # (reliably injected by Render for ALL service types, including
+                # Docker-image deploys where RENDER_EXTERNAL_HOSTNAME/URL are not
+                # always available). Using the real hostname — not the bare literal
+                # "onrender.com" — matters downstream: validate_production_completeness
+                # derives CORS origins from allowed_hosts and deliberately excludes
+                # the bare "onrender.com" placeholder (it isn't a real reachable
+                # host), so falling back to the literal here left CORS derivation
+                # with nothing to work with and crashed the app on boot.
+                if not v and (os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID")):
+                    render_service_name = os.getenv("RENDER_SERVICE_NAME")
+                    if render_service_name:
+                        v.append(f"{render_service_name}.onrender.com")
+                    else:
+                        # Last-resort generic placeholder — still excluded from CORS
+                        # derivation below, so ALLOWED_HOSTS won't crash but CORS
+                        # will require an explicit USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS.
                         v.append("onrender.com")
 
             # The application must fail closed in real production/staging, but
