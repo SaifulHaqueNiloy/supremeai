@@ -57,13 +57,18 @@ class AutomationDispatcher:
             )
 
         try:
-            return await self._provider.dispatch(event)
+            result = await self._provider.dispatch(event)
+            # Plan Section 7: link event → execution
+            if result.event_id is None:
+                result.event_id = event.event_id
+            return result
         except Exception as e:
             logger.exception("Dispatcher caught unhandled exception from provider")
             return AutomationResult(
                 status=AutomationStatus.FAILED,
-                provider=self._provider.__class__.__name__,
+                provider=self._provider.__class__.__name__ if self._provider else "none",
                 message=f"Dispatcher Error: {str(e)}",
+                event_id=event.event_id,
             )
 
 

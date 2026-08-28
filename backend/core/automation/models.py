@@ -1,5 +1,7 @@
 from enum import StrEnum
 from typing import Any, Optional
+from datetime import datetime, timezone
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -14,14 +16,67 @@ class AutomationStatus(StrEnum):
 class AutomationEvent(BaseModel):
     """
     Vendor-neutral envelope for background events.
+
+    বাংলা: Plan Section 6 অনুযায়ী durable distributed automation-এর জন্য
+    প্রয়োজনীয় সব field যোগ করা হয়েছে — event_id, idempotency_key, trace_id,
+    schema_version, timestamp, source, tenant_id, actor_type, actor_id।
+
+    Backward-compat: সব নতুন field optional (default সহ), যাতে existing
+    `AutomationEvent(workflow_key=..., payload=...)` call গুলো কাজ করে।
+    event_id ও idempotency_key auto-generate হয় যদি না দেওয়া হয়।
     """
 
     model_config = ConfigDict(extra="forbid")
 
+    # ── Identity & idempotency (Section 8) ─────────────────────────────────
+    event_id: str = Field(
+        default_factory=lambda: str(uuid4()),
+        description="Unique event identifier (UUID). Auto-generated if not provided.",
+    )
+    idempotency_key: str = Field(
+        default_factory=lambda: str(uuid4()),
+        description="Idempotency key — একই key দিয়ে dispatch করলে duplicate execution এড়ানো যায়।",
+    )
+    schema_version: str = Field(
+        default="1",
+        description="Event schema version — future migration-এর জন্য।",
+    )
+
+    # ── Routing & tracing (Section 6) ──────────────────────────────────────
     workflow_key: str = Field(
         ...,
         description="The unique registry key identifying the target workflow (e.g., 'USER_REGISTERED').",
     )
+    trace_id: Optional[str] = Field(
+        default=None,
+        description="OpenTelemetry/observability trace ID for distributed tracing.",
+    )
+
+    # ── Timing & provenance ─────────────────────────────────────────────────
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        description="ISO-8601 timestamp of event creation (UTC).",
+    )
+    source: str = Field(
+        default="supremeai",
+        description="Event source identifier (e.g., 'supremeai', 'agent-xyz').",
+    )
+
+    # ── Multi-tenancy & actor (Section 6) ───────────────────────────────────
+    tenant_id: Optional[str] = Field(
+        default=None,
+        description="Tenant identifier for multi-tenant isolation.",
+    )
+    actor_type: Optional[str] = Field(
+        default=None,
+        description="Actor type (e.g., 'agent', 'user', 'system').",
+    )
+    actor_id: Optional[str] = Field(
+        default=None,
+        description="Actor identifier (e.g., agent ID or user ID).",
+    )
+
+    # ── Payload (backward-compat preserved) ─────────────────────────────────
     payload: dict[str, Any] = Field(
         default_factory=dict, description="The data to be processed by the workflow."
     )
@@ -39,3 +94,13 @@ class AutomationResult(BaseModel):
     provider: str
     message: str
     execution_id: str | None = None
+    # Plan Section 7: link event → execution
+    event_id: str | None = Field(
+        default=None,
+        description="The event_id that triggered this result (for event→execution linkage).",
+    )
+    attempt: int = Field(
+        default=1,
+        description="Which attempt this result represents (1-based, for retry tracking).",
+    )
+
