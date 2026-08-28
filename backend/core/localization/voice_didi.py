@@ -31,13 +31,10 @@ except ImportError:
     BhashaBot = None  # type: ignore[misc,assignment]
 
 
-# --- Zero hardcoded config ---
-VOICE_CONFIDENCE_THRESHOLD = float(os.getenv("VOICE_DIDI_CONFIDENCE", "0.6"))
-MAX_AUDIO_DURATION_SEC = int(os.getenv("VOICE_DIDI_MAX_DURATION") or "30")
-SUPPORTED_INTENTS = os.getenv(
-    "VOICE_DIDI_INTENTS",
-    "search,order,help,price,location,cancel,repeat",
-).split(",")
+# --- Config and Constants ---
+VOICE_CONFIDENCE_THRESHOLD = settings.voice_didi_confidence
+MAX_AUDIO_DURATION_SEC = settings.voice_didi_max_duration
+SUPPORTED_INTENTS = settings.voice_didi_intents.split(",")
 
 
 class VoiceDidi:

@@ -267,7 +267,6 @@ class SettingsFieldsMixin:
     skill_timeout_seconds: int = Field(default=30, validation_alias="SKILL_TIMEOUT_SECONDS")
 
     # ── Self-Healing Config — env-driven ────────────────────────────────────
-    # বাংলা মন্তব্য: self_healer.py-এ human approval loop-এর জন্য config যোগ করা হলো।
     self_heal_approval_webhook: str = Field(
         default="", validation_alias="SELF_HEAL_APPROVAL_WEBHOOK"
     )
@@ -278,11 +277,36 @@ class SettingsFieldsMixin:
         default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN"
     )
 
+    # ── Migrated Runtime Environment Fields ──────────────────────────────────
+    db_slow_query_threshold: float = Field(default=0.2, validation_alias="DB_SLOW_QUERY_THRESHOLD")
+    token_juice_enabled: bool = Field(default=True, validation_alias="TOKEN_JUICE_ENABLED")
+    enable_evolution_learning: bool = Field(
+        default=False, validation_alias="ENABLE_EVOLUTION_LEARNING"
+    )
+    voice_didi_confidence: float = Field(default=0.6, validation_alias="VOICE_DIDI_CONFIDENCE")
+    voice_didi_max_duration: int = Field(default=30, validation_alias="VOICE_DIDI_MAX_DURATION")
+    voice_didi_intents: str = Field(
+        default="search,order,help,price,location,cancel,repeat",
+        validation_alias="VOICE_DIDI_INTENTS",
+    )
+    bhasha_cache_ttl_hours: int = Field(default=24, validation_alias="BHASHA_CACHE_TTL_HOURS")
+    bhasha_min_quality: float = Field(default=0.7, validation_alias="BHASHA_MIN_QUALITY")
+    bhasha_max_cache: int = Field(default=10000, validation_alias="BHASHA_MAX_CACHE")
+    bhasha_batch_concurrency: int = Field(default=5, validation_alias="BHASHA_BATCH_CONCURRENCY")
+    auto_remediation_dry_run: bool = Field(
+        default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN"
+    )
+
     # ── Microservices Config — env-driven ─────────────────────────────────────
     # বাংলা মন্তব্য: Scraper microservic-এর লিভ সেনেন, Cloudflare Worker থেকে proxy করে।
     scraper_service_url: str = Field(default="", validation_alias="SCRAPER_SERVICE_URL")
     # Media microservic-এর URL (Cloud Run)
     media_service_url: str = Field(default="", validation_alias="MEDIA_SERVICE_URL")
+
+    # ── Core App Endpoints (Frontend/Backend Canonical Routing) ───────────────
+    user_backend_url: str = Field(default="", validation_alias="USER_BACKEND_URL")
+    admin_backend_url: str = Field(default="", validation_alias="ADMIN_BACKEND_URL")
+    websocket_url: str = Field(default="", validation_alias="WEBSOCKET_URL")
 
     # ── Telegram Bot & Alerts Config ──────────────────────────────────────────
     telegram_bot_token: str = Field(default="", validation_alias="TELEGRAM_BOT_TOKEN")
