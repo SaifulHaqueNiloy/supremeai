@@ -42,19 +42,25 @@ def upgrade() -> None:
     op.create_index("idx_artifacts_user_id", "artifacts", ["user_id"], if_not_exists=True)
     print("✅ Created index: idx_artifacts_user_id")
 
-    op.create_index("idx_artifacts_conversation_id", "artifacts", ["conversation_id"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_conversation_id", "artifacts", ["conversation_id"], if_not_exists=True
+    )
     print("✅ Created index: idx_artifacts_conversation_id")
 
     op.create_index("idx_artifacts_updated_at", "artifacts", ["updated_at"], if_not_exists=True)
     print("✅ Created index: idx_artifacts_updated_at")
 
-    op.create_index("idx_artifacts_user_updated", "artifacts", ["user_id", "updated_at"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_user_updated", "artifacts", ["user_id", "updated_at"], if_not_exists=True
+    )
     print("✅ Created index: idx_artifacts_user_updated")
 
     op.create_index("idx_artifacts_type", "artifacts", ["artifact_type"], if_not_exists=True)
     print("✅ Created index: idx_artifacts_type")
 
-    op.create_index("idx_artifacts_pinned", "artifacts", ["user_id", "is_pinned"], if_not_exists=True)
+    op.create_index(
+        "idx_artifacts_pinned", "artifacts", ["user_id", "is_pinned"], if_not_exists=True
+    )
     print("✅ Created index: idx_artifacts_pinned")
 
     # ============================================================
@@ -64,7 +70,9 @@ def upgrade() -> None:
     op.create_index("idx_conversations_user_id", "conversations", ["user_id"], if_not_exists=True)
     print("✅ Created index: idx_conversations_user_id")
 
-    op.create_index("idx_conversations_created", "conversations", ["user_id", "created_at"], if_not_exists=True)
+    op.create_index(
+        "idx_conversations_created", "conversations", ["user_id", "created_at"], if_not_exists=True
+    )
     print("✅ Created index: idx_conversations_created")
 
     # ============================================================
@@ -74,7 +82,12 @@ def upgrade() -> None:
     op.create_index("idx_messages_conversation_id", "messages", ["conversation_id"], if_not_exists=True)
     print("✅ Created index: idx_messages_conversation_id")
 
-    op.create_index("idx_messages_conv_created", "messages", ["conversation_id", "created_at"], if_not_exists=True)
+    op.create_index(
+        "idx_messages_conv_created",
+        "messages",
+        ["conversation_id", "created_at"],
+        if_not_exists=True,
+    )
     print("✅ Created index: idx_messages_conv_created")
 
     # ============================================================
@@ -91,7 +104,9 @@ def upgrade() -> None:
     # 5. USER_PREFERENCES TABLE INDEXES
     # ============================================================
 
-    op.create_index("idx_user_prefs_user_id", "user_preferences", ["user_id"], unique=True, if_not_exists=True)
+    op.create_index(
+        "idx_user_prefs_user_id", "user_preferences", ["user_id"], unique=True, if_not_exists=True
+    )
     print("✅ Created index: idx_user_prefs_user_id (unique)")
 
     # ============================================================
