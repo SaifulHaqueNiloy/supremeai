@@ -442,14 +442,19 @@ class ProductionSecretVault:
         import json
 
         raw_val = self.fetch_secret(secret_id, None)
-        if raw_val is None:
-            if default is not None:
-                return default
-            return {}
+        if (
+            not raw_val
+            or not isinstance(raw_val, str)
+            or not raw_val.strip().startswith(("{", "["))
+        ):
+            return default if default is not None else {}
         try:
             return json.loads(raw_val)
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to decode JSON secret '{secret_id}': {e}")
+            if self.env in ("production", "staging"):
+                logger.error(f"Failed to decode JSON secret '{secret_id}': {e}")
+            else:
+                logger.debug(f"Non-JSON or mock value for secret '{secret_id}': {e}")
             return default or {}
 
     async def fetch_json_secret_async(self, secret_id: str, default: dict | None = None) -> dict:
