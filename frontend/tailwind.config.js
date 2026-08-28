@@ -5,27 +5,28 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // ✅ NEW: SupremeAI Design Tokens
+      // ✅ SupremeAI Design Tokens
       colors: {
-        super: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
-          950: '#172554',
+        ink: '#06070B',
+        surface: '#0B0F17',
+        raised: '#111722',
+        text: '#F8FAFC',
+        secondary: '#94A3B8',
+        muted: '#64748B',
+        border: 'rgba(255, 255, 255, 0.08)',
+        user: {
+          primary: '#A855F7',
+          secondary: '#7C3AED',
         },
-        accent: {
-          primary: '#6366f1',
-          secondary: '#8b5cf6',
-          success: '#10b981',
-          warning: '#f59e0b',
-          danger: '#ef4444',
+        admin: {
+          primary: '#00F3FF',
+          secondary: '#22D3EE',
+        },
+        semantic: {
+          success: '#22C55E',
+          warning: '#F59E0B',
+          danger: '#F43F5E',
+          info: '#38BDF8',
         },
       },
       fontFamily: {

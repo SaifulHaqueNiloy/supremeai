@@ -40,125 +40,78 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   THEME 1: SKY BLUE (Light) — ডিফল্ট :root থিম
+   THEME 1: SUPREMEAI 2.0 (Inherently Dark)
    ═══════════════════════════════════════════════════════ */
-:root {
-  --background: var(--supremeai-color-bg-void-light);
-  --foreground: var(--supremeai-color-text-primary-light);
-  --neon-blue: var(--supremeai-color-brand-primary-light);
-  --neon-purple: var(--supremeai-color-brand-secondary-light);
-  --cyber-gray: rgba(0, 0, 0, 0.05);
-  --success: var(--supremeai-color-brand-success-light);
-  --danger: var(--supremeai-color-brand-danger-light);
-  --warning: var(--supremeai-color-brand-warning-light);
-  --card-bg: var(--supremeai-color-bg-elevated-light);
-  --card-border: var(--supremeai-color-border-accent-light);
-  --sidebar-bg: rgba(248, 250, 252, 0.95);
-  --tabbar-bg: #e2e8f0;
-  --border-color: var(--supremeai-color-border-default-light);
-  --card-text: var(--supremeai-color-text-secondary-light);
-  --card-title-text: var(--supremeai-color-text-primary-light);
-  --alert-bg: rgba(0, 0, 0, 0.02);
-  --input-bg: #ffffff;
-  --input-border: #cbd5e1;
-  --panel-bg: #ffffff;
+:root, .dark {
+  --background: #06070B; /* Ink */
+  --foreground: #F8FAFC; /* Text */
+  --neon-blue: #00F3FF; /* Admin Primary */
+  --neon-purple: #A855F7; /* User Primary */
+  --cyber-gray: #64748B; /* Muted */
+  --success: #22C55E;
+  --danger: #F43F5E;
+  --warning: #F59E0B;
+  --info: #38BDF8;
+  --card-bg: #0B0F17; /* Surface */
+  --card-border: rgba(255, 255, 255, 0.08); /* Border */
+  --sidebar-bg: #0B0F17;
+  --tabbar-bg: #111722; /* Raised */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --card-text: #94A3B8; /* Secondary */
+  --card-title-text: #F8FAFC; /* Text */
+  --alert-bg: rgba(255, 255, 255, 0.02);
+  --input-bg: #06070B; /* Ink */
+  --input-border: rgba(255, 255, 255, 0.08);
+  --panel-bg: #0B0F17; /* Surface */
 
   /* CommandCenter Semantic Variables */
-  --bg-main: var(--supremeai-color-bg-void-light);
-  --text-main: var(--supremeai-color-text-primary-light);
-  --text-secondary: var(--supremeai-color-text-secondary-light);
-  --bg-panel: var(--supremeai-color-bg-elevated-light);
-  --bg-cell: rgba(0, 0, 0, 0.04);
-  --border-accent: var(--supremeai-color-border-accent-light);
-  --accent-primary: var(--supremeai-color-brand-primary-light);
-  --accent-secondary: var(--supremeai-color-brand-success-light);
-  --node-bg: rgba(255, 255, 255, 0.92);
-  --node-text: var(--supremeai-color-text-primary-light);
-  --node-border: var(--supremeai-color-border-accent-light);
-  --chat-bg: rgba(255, 255, 255, 0.9);
-  --chat-input-bg: #f1f5f9;
-  --waveform-bg: rgba(255, 255, 255, 0.9);
+  --bg-main: #06070B;
+  --text-main: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --bg-panel: #0B0F17;
+  --bg-cell: #111722;
+  --border-accent: rgba(255, 255, 255, 0.08);
+  --accent-primary: #00F3FF;
+  --accent-secondary: #22D3EE;
+  --node-bg: #0B0F17;
+  --node-text: #F8FAFC;
+  --node-border: rgba(255, 255, 255, 0.08);
+  --chat-bg: #0B0F17;
+  --chat-input-bg: #06070B;
+  --waveform-bg: #111722;
 }
 
 /* ═══════════════════════════════════════════════════════
-   THEME 2: DEEP SPACE (Dark) — সায়েন্স-ফিকশন নিয়ন থিম
+   SURFACES (70% Minimal, 20% Glass)
    ═══════════════════════════════════════════════════════ */
-.dark {
-  --background: var(--supremeai-color-bg-void-dark);
-  --foreground: var(--supremeai-color-text-primary-dark);
-  --neon-blue: var(--supremeai-color-brand-primary-dark);
-  --neon-purple: var(--supremeai-color-brand-secondary-dark);
-  --cyber-gray: rgba(255, 255, 255, 0.02);
-  --success: var(--supremeai-color-brand-success-dark);
-  --danger: var(--supremeai-color-brand-danger-dark);
-  --warning: var(--supremeai-color-brand-warning-dark);
-  --card-bg: var(--supremeai-color-bg-elevated-dark);
-  --card-border: var(--supremeai-color-border-accent-dark);
-  --sidebar-bg: rgba(10, 15, 26, 0.95);
-  --tabbar-bg: #111827;
-  --border-color: var(--supremeai-color-border-default-dark);
-  --card-text: var(--supremeai-color-text-secondary-dark);
-  --card-title-text: var(--supremeai-color-text-primary-dark);
-  --alert-bg: rgba(255, 255, 255, 0.01);
-  --input-bg: #0b0f19;
-  --input-border: #1f2937;
-  --panel-bg: #090d16;
-
-  --bg-main: var(--supremeai-color-bg-void-dark);
-  --text-main: var(--supremeai-color-text-primary-dark);
-  --text-secondary: var(--supremeai-color-text-secondary-dark);
-  --bg-panel: rgba(5, 9, 23, 0.5);
-  --bg-cell: rgba(12, 18, 34, 0.8);
-  --border-accent: var(--supremeai-color-border-accent-dark);
-  --accent-primary: var(--supremeai-color-brand-primary-dark);
-  --accent-secondary: var(--supremeai-color-brand-success-dark);
-  --node-bg: rgba(6, 10, 24, 0.9);
-  --node-text: var(--supremeai-color-text-primary-dark);
-  --node-border: var(--supremeai-color-border-accent-dark);
-  --chat-bg: rgba(5, 9, 23, 0.8);
-  --chat-input-bg: #030611;
-  --waveform-bg: rgba(6, 11, 27, 0.9);
+.surface-0 {
+  background-color: #06070B;
 }
 
-/* ═══════════════════════════════════════════════════════
-   THEME 3: SUNSET EMBER — উষ্ণ সূর্যাস্তের থিম
-   ═══════════════════════════════════════════════════════ */
-.sunset {
-  --background: #1a0a0a;
-  --foreground: #fef2f2;
-  --neon-blue: #f97316;
-  --neon-purple: #e11d48;
-  --cyber-gray: rgba(255, 255, 255, 0.02);
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #fbbf24;
-  --card-bg: rgba(30, 15, 10, 0.65);
-  --card-border: rgba(249, 115, 22, 0.15);
-  --sidebar-bg: rgba(20, 8, 5, 0.95);
-  --tabbar-bg: #1c0a04;
-  --border-color: rgba(255, 255, 255, 0.06);
-  --card-text: #fed7aa;
-  --card-title-text: #fff7ed;
-  --alert-bg: rgba(255, 255, 255, 0.01);
-  --input-bg: #140804;
-  --input-border: #7c2d12;
-  --panel-bg: #120703;
-
-  --bg-main: #0f0503;
-  --text-main: #fff7ed;
-  --text-secondary: #fdba74;
-  --bg-panel: rgba(20, 8, 4, 0.6);
-  --bg-cell: rgba(30, 12, 6, 0.8);
-  --border-accent: rgba(249, 115, 22, 0.2);
-  --accent-primary: #f97316;
-  --accent-secondary: #fbbf24;
-  --node-bg: rgba(20, 8, 4, 0.9);
-  --node-text: #fed7aa;
-  --node-border: rgba(249, 115, 22, 0.4);
-  --chat-bg: rgba(20, 8, 4, 0.85);
-  --chat-input-bg: #0f0503;
-  --waveform-bg: rgba(15, 6, 3, 0.9);
+.surface-1 {
+  background-color: #0B0F17;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+.surface-2 {
+  background-color: rgba(11, 15, 23, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.surface-3 {
+  background-color: rgba(17, 23, 34, 0.8);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.surface-4 {
+  background-color: #111722;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
 
 /* ═══════════════════════════════════════════════════════
    THEME 4: EMERALD MATRIX — সবুজ হ্যাকার ম্যাট্রিক্স থিম
