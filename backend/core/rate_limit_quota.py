@@ -33,13 +33,14 @@ class DailyQuotaLimiter:
         Increments the counter and returns True if allowed, False if exceeded.
         """
         limit = self.DAILY_LIMITS.get(tier, self.DAILY_LIMITS["anonymous"])
-        redis = await self.get_redis()
-
-        # Use current date as part of the key
-        today = time.strftime("%Y-%m-%d")
-        key = f"daily_quota:{user_id}:{today}"
 
         try:
+            redis = await self.get_redis()
+
+            # Use current date as part of the key
+            today = time.strftime("%Y-%m-%d")
+            key = f"daily_quota:{user_id}:{today}"
+
             current = await redis.incr(key)
             if current == 1:
                 # First request of the day, set expiration to 24 hours (86400 seconds)
