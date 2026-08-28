@@ -5,6 +5,8 @@ import boto3
 from loguru import logger
 from supabase import Client, create_client
 
+from core.config import settings
+
 
 class StorageClient:
     """
@@ -19,7 +21,7 @@ class StorageClient:
         self.s3_client = None
 
         if self.provider == "supabase":
-            url = os.getenv("SUPABASE_URL")
+            url = settings.supabase_url
             key = os.getenv("SUPABASE_KEY")
             if url and key:
                 self.supabase_client = create_client(url, key)

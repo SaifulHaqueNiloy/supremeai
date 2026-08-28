@@ -32,15 +32,10 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
 
 USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
     "CORS_ORIGINS",
-    (
-        "https://supremeai-lac.vercel.app",
-        "https://supremeai-studio.vercel.app",
-    ),
+    (),
 )
 
-ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
-    "ADMIN_CORS_ORIGINS", ("https://supremeai-admin.web.app",)
-)
+ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins("ADMIN_CORS_ORIGINS", ())
 
 # বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
 USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()

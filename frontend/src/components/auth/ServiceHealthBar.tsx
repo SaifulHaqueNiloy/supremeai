@@ -96,7 +96,7 @@ const ServiceStatusItem: React.FC<ServiceStatusProps> = ({ name, status, respons
 
 // বাংলা মন্তব্য: Public Health Check Function — কোনো Auth Header ছাড়াই কল হবে
 const fetchPublicHealth = async (): Promise<HealthData> => {
-  const apiBaseUrl = import.meta.env.VITE_API_URL || 'https://supremeai-backend-v2.onrender.com';
+  const apiBaseUrl = import.meta.env.VITE_API_URL || '';
   
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for health check

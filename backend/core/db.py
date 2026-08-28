@@ -20,6 +20,8 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
+from core.config import settings
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -39,7 +41,7 @@ def _get_database_url() -> str:
     """Get database URL from environment with validation."""
     import os
 
-    url = os.getenv("DATABASE_URL", "")
+    url = settings.database_url
     if not url:
         logger.warning("DATABASE_URL not set, using SQLite fallback")
         return "sqlite+aiosqlite:///./local.db"

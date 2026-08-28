@@ -20,6 +20,8 @@ import httpx
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from core.config import settings
+
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
 
 
@@ -77,7 +79,7 @@ COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
         name="render_backend",
         display_name="Render Backend",
         category="infrastructure",
-        url=os.environ.get("BACKEND_URL", "https://supremeai-backend-v2.onrender.com"),
+        url=settings.backend_url,
         health_endpoint="/api/v1/health",
         critical=True,
         timeout=15.0,  # Render cold start can be slow

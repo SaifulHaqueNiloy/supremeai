@@ -8,6 +8,7 @@ from typing import Any
 
 from loguru import logger
 
+from core.config import settings
 from core.persistence import pooled_pg
 
 # Using core.embeddings for 1536-dim embeddings to prevent zero-padding mismatch
@@ -522,7 +523,7 @@ def _get_supabase():
     try:
         from supabase import create_client
 
-        url = os.getenv("SUPABASE_URL")
+        url = settings.supabase_url
         key = (
             os.getenv("SUPABASE_SERVICE_ROLE_KEY")
             or os.getenv("SUPABASE_KEY")

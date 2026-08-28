@@ -1,5 +1,7 @@
 import asyncio
 
+from core.config import settings
+
 # mypy: ignore-errors
 """This module, `backend.core.config`, serves as the single, authoritative source
 for all application settings within the SupremeAI project. It implements a robust,
@@ -128,7 +130,7 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
             import logging
 
             logging.getLogger(__name__).exception(f"Silenced error: {e}")
-        return os.getenv("BACKEND_URL", "")
+        return settings.backend_url
 
     # বাংলা মন্তব্য: টেস্ট এনভায়রনমেন্টে AuthMiddleware-এর JWT ভেরিফিকেশন বাইপাস করার জন্য
     # বাংলা: CI pytest-এ ALLOW_TEST_AUTH_BYPASS=true সেট করা হয় — শুধু তখনই।
