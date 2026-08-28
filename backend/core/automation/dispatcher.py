@@ -5,6 +5,7 @@ from typing import Optional
 from loguru import logger
 
 from ..config import settings
+from .execution_recorder import execution_recorder
 from .interfaces import AutomationProvider
 from .models import AutomationEvent, AutomationResult, AutomationStatus
 
@@ -118,6 +119,10 @@ class AutomationDispatcher:
                 event_id=event.event_id,
             )
 
+        # Plan Section 7: record dispatch start (best-effort DB persistence)
+        started_at = time.time()
+        execution_id = await execution_recorder.record_start(event)
+
         try:
             result = await self._provider.dispatch(event)
             # Plan Section 7: link event → execution
@@ -129,6 +134,12 @@ class AutomationDispatcher:
             # — সেই state পরিবর্তন হলে আবার dispatch attempt করা উচিত
             if result.status in (AutomationStatus.DELIVERED, AutomationStatus.FAILED):
                 self._idempotency.set(event.event_id, result)
+            # Plan Section 7: record dispatch completion
+            await execution_recorder.record_completion(
+                execution_id, event, result,
+                provider_name=self._provider.__class__.__name__,
+                started_at=started_at,
+            )
             return result
         except Exception as e:
             logger.exception("Dispatcher caught unhandled exception from provider")
@@ -140,6 +151,12 @@ class AutomationDispatcher:
             )
             # exception-ও cache করি যাতে একই event বারবার fail না করে
             self._idempotency.set(event.event_id, failed_result)
+            # Plan Section 7: record dispatch failure
+            await execution_recorder.record_completion(
+                execution_id, event, failed_result,
+                provider_name=self._provider.__class__.__name__ if self._provider else "none",
+                started_at=started_at,
+            )
             return failed_result
 
     def clear_idempotency_cache(self) -> None:
