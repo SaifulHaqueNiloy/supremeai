@@ -1,7 +1,5 @@
 import asyncio
 
-from core.config import settings
-
 # mypy: ignore-errors
 """This module, `backend.core.config`, serves as the single, authoritative source
 for all application settings within the SupremeAI project. It implements a robust,

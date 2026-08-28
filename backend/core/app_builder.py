@@ -308,12 +308,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 "http://127.0.0.1:5173",
             ]
         else:
-            logger.error(
-                "🚨 CORS: no origins configured in production! "
-                "Set USER_CORS_ORIGINS and ADMIN_CORS_ORIGINS env vars. "
-                "Refusing to fall back to localhost — all cross-origin requests will be rejected."
+            raise ValueError(
+                "❌ CORS: no origins configured in production! "
+                "Set USER_CORS_ORIGINS and/or ADMIN_CORS_ORIGINS env vars. "
+                "Fail-fast triggered."
             )
-            origins = []
 
     app.add_middleware(
         CORSMiddleware,
