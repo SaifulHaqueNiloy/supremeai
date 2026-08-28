@@ -18,6 +18,7 @@ Run with: pytest tests/test_agents.py -v --cov=agents
 """
 
 import asyncio
+import uuid
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -131,7 +132,7 @@ class MockAgentService:
         now = datetime.now(UTC)
 
         agent = {
-            "id": f"agent-{self._agent_counter:04d}",
+            "id": str(uuid.uuid4()),
             "name": name.strip(),
             "description": description or "",
             "owner_id": owner_id,
