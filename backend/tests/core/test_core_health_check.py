@@ -540,7 +540,7 @@ async def test_check_all_with_unhealthy_component():
         # Overall status should be unhealthy when one component is unhealthy
         assert result["status"] == "unhealthy"
         assert result["summary"]["total_checks"] == 7
-        assert result["summary"]["healthy"] == 5
+        assert result["summary"]["healthy"] == 6
         assert result["summary"]["degraded"] == 0
         assert result["summary"]["unhealthy"] == 1
 
