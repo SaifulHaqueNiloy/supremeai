@@ -120,18 +120,22 @@ def test_default_origin_constants_non_empty():
     from core.security import origin_validator as ov_module
 
     # env var ছাড়া ডিফল্ট অবশ্যই খালি থাকতে হবে (secure-by-default)
-    for var in ("CORS_ORIGINS", "ADMIN_CORS_ORIGINS"):
-        assert var not in os.environ, f"{var} শুধু এই টেস্টের জন্যই আনসেট থাকা উচিত"
-    assert frozenset() == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
-    assert frozenset() == ov_module.ADMIN_DEFAULT_TRUSTED_ORIGINS
-
-    # env var সেট থাকলে সেটা থেকেই origins লোড হওয়া উচিত
-    os.environ["CORS_ORIGINS"] = json.dumps(["https://example.com"])
+    saved_env = {}
+    for var in ("CORS_ORIGINS", "ADMIN_CORS_ORIGINS", "USER_CORS_ORIGINS"):
+        if var in os.environ:
+            saved_env[var] = os.environ.pop(var)
     try:
+        importlib.reload(ov_module)
+        assert frozenset() == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
+        assert frozenset() == ov_module.ADMIN_DEFAULT_TRUSTED_ORIGINS
+
+        # env var সেট থাকলে সেটা থেকেই origins লোড হওয়া উচিত
+        os.environ["CORS_ORIGINS"] = json.dumps(["https://example.com"])
         importlib.reload(ov_module)
         assert frozenset({"https://example.com"}) == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
     finally:
-        del os.environ["CORS_ORIGINS"]
+        os.environ.pop("CORS_ORIGINS", None)
+        os.environ.update(saved_env)
         importlib.reload(ov_module)
 
 

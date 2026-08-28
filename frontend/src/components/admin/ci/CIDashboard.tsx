@@ -71,8 +71,6 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
-  Zap,
-  Trophy,
   TrendingUp,
   TrendingDown,
   Minus,
@@ -94,12 +92,7 @@ import {
   Wifi,
   WifiOff,
   Loader2,
-  AlertCircle,
-  Info,
-  Award,
-  Star,
-  Medal,
-  Crown,
+  AlertCircle
 } from 'lucide-react';
 import {
   LineChart,

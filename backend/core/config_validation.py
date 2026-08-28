@@ -30,6 +30,31 @@ class SettingsValidationMixin:
 
         if value is None:
             return value
+        if isinstance(value, str) and value.strip() == "":
+            numeric_fields = {
+                "bhasha_cache_ttl_hours",
+                "bhasha_min_quality",
+                "bhasha_max_cache",
+                "bhasha_batch_concurrency",
+                "port",
+                "llm_connect_timeout",
+                "llm_read_timeout",
+                "llm_write_timeout",
+                "llm_pool_timeout",
+                "llm_max_connections",
+                "llm_max_keepalive",
+                "latency_window_size",
+                "latency_normalization_ms",
+                "min_provider_weight",
+                "circuit_failure_threshold",
+                "circuit_success_rate_floor",
+                "circuit_cooldown_seconds",
+                "max_routing_attempts",
+                "llm_cache_max_size",
+                "llm_cache_default_ttl",
+            }
+            if info.field_name and info.field_name.lower() in numeric_fields:
+                return None
         var_name = info.field_name
         if var_name in cls.FORMAT_PATTERNS:
             pattern = cls.FORMAT_PATTERNS[var_name]
@@ -80,7 +105,9 @@ class SettingsValidationMixin:
             if str(v).lower() == "true" and (
                 os.getenv("debug", "").lower() == "true" or os.getenv("DEBUG", "").lower() == "true"
             ):
-                raise ValueError("Explicitly setting debug=True is PROHIBITED in production/staging.")
+                raise ValueError(
+                    "Explicitly setting debug=True is PROHIBITED in production/staging."
+                )
             return False
         return bool(v)
 
