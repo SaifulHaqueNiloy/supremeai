@@ -14,7 +14,6 @@ def mock_diagram_converter():
         return_value="fake_base64",
     ):
         yield
-        return
 
 
 @pytest.mark.anyio

@@ -30,11 +30,6 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
     return default
 
 
-if os.getenv("TESTING", "false").lower() == "true":
-    os.environ.pop("CORS_ORIGINS", None)
-    os.environ.pop("ADMIN_CORS_ORIGINS", None)
-    os.environ.pop("USER_CORS_ORIGINS", None)
-
 USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
     "CORS_ORIGINS",
     (),
