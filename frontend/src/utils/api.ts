@@ -201,7 +201,7 @@ export const getApiBaseUrl = (): string => {
 
   // 🔥 ফিক্স: Firebase Hosting rewrite দিয়ে external URL-এ proxy করা যায় না,
   // তাই Firebase (.web.app/.firebaseapp.com)-এ সরাসরি portal-নির্দিষ্ট backend URL ব্যবহার করি।
-  // Backend CORS ইতিমধ্যে supremeai-admin.web.app allow করে রেখেছে।
+  // Backend CORS ইতিমধ্যে admin domain allow করে রেখেছে।
   // 🔧 DYNAMIC: Configure via VITE_RELATIVE_PATH_HOSTS env var
   const relativePathHosts = (import.meta.env.VITE_RELATIVE_PATH_HOSTS || '').split(',').filter(Boolean);
   if (relativePathHosts.length > 0 && relativePathHosts.some(h => hostname.includes(h))) {
