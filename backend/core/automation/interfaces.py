@@ -1,6 +1,6 @@
 from typing import Protocol, runtime_checkable
 
-from .models import AutomationEvent, AutomationResult
+from .models import AutomationEvent, AutomationResult, IntegrationHealth
 
 
 @runtime_checkable
@@ -18,5 +18,11 @@ class AutomationProvider(Protocol):
 
         Returns:
             AutomationResult containing the status and provider info.
+        """
+        ...
+
+    async def health(self) -> IntegrationHealth:
+        """
+        Check the health of the integration.
         """
         ...

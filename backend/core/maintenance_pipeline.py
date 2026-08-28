@@ -31,6 +31,7 @@ class MaintenancePipeline:
         # create_task() করা হয়, সেটার strong reference ধরে রাখার জন্য।
         self._evolution_tick_task = None
         self.last_recovery_time = 0  # Cooldown tracker
+        self.last_cleanup_time = 0
         # Register to listen to error events
         error_event_bus.register_listener("*", self._handle_error_event)
 
@@ -52,7 +53,14 @@ class MaintenancePipeline:
             jitter = random.uniform(0.9, 1.1)
             actual_interval = int(self._monitor_interval * jitter)
             await asyncio.sleep(actual_interval)
+
             await self.run_health_check()
+
+            # Run cleanup once every 24 hours
+            current_time = time.time()
+            if current_time - self.last_cleanup_time > 86400:
+                await self.cleanup_automation_executions()
+                self.last_cleanup_time = current_time
 
     async def _handle_error_event(self, event):
         logger.warning(
@@ -145,6 +153,33 @@ class MaintenancePipeline:
 
         except Exception as e:
             logger.error(f"Failed to run performance regression check: {e}")
+
+    async def cleanup_automation_executions(self):
+        """
+        Cleans up old automation executions and attempts to prevent unbounded DB growth.
+        Retains data for the last 30 days.
+        """
+        logger.info("🛡️ Immune System: Running automation execution retention cleanup...")
+        try:
+            from sqlalchemy import text
+
+            from core.db import engine
+
+            with engine.connect() as conn:
+                # Delete executions older than 30 days (attempts will cascade delete)
+                result = conn.execute(
+                    text(
+                        "DELETE FROM automation_executions WHERE created_at < NOW() - INTERVAL '30 days'"
+                    )
+                )
+                conn.commit()
+                deleted_count = result.rowcount
+            if deleted_count > 0:
+                logger.info(
+                    f"🛡️ Immune System: Cleaned up {deleted_count} old automation executions."
+                )
+        except Exception as e:
+            logger.error(f"Failed to cleanup automation executions: {e}")
 
     async def auto_remediate(self, event=None):
         logger.warning("🚑 Immune System: Triggering self-healing remediation...")
