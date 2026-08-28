@@ -1,10 +1,9 @@
 import React from 'react';
-import { Activity, ShieldAlert, GitMerge, ServerCog, DollarSign, BrainCircuit, AlertTriangle, CheckCircle, ArrowUpRight, Zap } from 'lucide-react';
-import { useMetrics, useHealthMap, useThreatScan, useCIReports, useDashboardEvents } from '../../hooks/useDashboardData';
+import { Activity, ShieldAlert, GitMerge, ServerCog, DollarSign, BrainCircuit, CheckCircle, ArrowUpRight, Zap } from 'lucide-react';
+import { useMetrics, useThreatScan, useCIReports, useDashboardEvents } from '../../hooks/useDashboardData';
 
 export default function Dashboard() {
   const { data: metrics } = useMetrics();
-  const { data: health } = useHealthMap();
   const { data: threats } = useThreatScan();
   const { data: ciReports } = useCIReports();
   const { data: events } = useDashboardEvents(5);

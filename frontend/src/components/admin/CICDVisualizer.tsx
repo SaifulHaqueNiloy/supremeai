@@ -7,7 +7,6 @@ import { useCIReports } from '../../hooks/useAdminApi';
 import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
-import type { CIReport } from '../../types';
 import { CIDashboard } from './ci/CIDashboard';
 
 interface FeatureFlag {
@@ -59,14 +58,6 @@ export function CICDVisualizer() {
     }
   };
 
-  const getStatusBadgeVariant = (status: string): 'success' | 'warning' | 'info' | 'danger' => {
-    const s = status.toLowerCase();
-    if (s === 'success') return 'success';
-    if (s === 'failure' || s === 'failed') return 'danger';
-    if (s === 'running' || s === 'in_progress') return 'warning';
-    return 'info';
-  };
-
   const handleDeploy = async () => {
     try {
       const API_BASE = getApiBaseUrl();
@@ -86,13 +77,6 @@ export function CICDVisualizer() {
     } catch (e: any) {
       alert(`❌ Deployment failed: ${e.message}`);
     }
-  };
-
-  const formatRuntime = (secs: number) => {
-    if (secs < 60) return `${secs}s`;
-    const mins = Math.floor(secs / 60);
-    const rem = secs % 60;
-    return `${mins}m ${rem}s`;
   };
 
   return (
