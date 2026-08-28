@@ -49,6 +49,7 @@ class ExecutionRecorder:
                     id=execution_id,
                     event_id=event.event_id,
                     workflow_key=event.workflow_key,
+                    idempotency_key=event.idempotency_key,
                     provider="pending",  # provider পরে record_completion-এ update হবে
                     status="PENDING",
                     attempt=1,
@@ -89,7 +90,7 @@ class ExecutionRecorder:
             from sqlalchemy import select
 
             from database.session import get_db_session_context
-            from models.automation_execution import AutomationExecution
+            from models.automation_execution import AutomationExecution, AutomationExecutionAttempt
 
             duration_ms = None
             if started_at is not None:
@@ -120,6 +121,21 @@ class ExecutionRecorder:
                     record.error_message = result.message[:1024] if result.message else None
                 else:
                     record.error_message = None
+
+                # Create the attempt record (Plan Section 8: retry attempt history)
+                attempt_record = AutomationExecutionAttempt(
+                    execution_id=execution_id,
+                    attempt=result.attempt,
+                    status=result.status.value.upper(),
+                    started_at=datetime.fromtimestamp(started_at, tz=UTC)
+                    if started_at
+                    else record.started_at,
+                    completed_at=record.completed_at,
+                    duration_ms=duration_ms,
+                    http_status=None,  # This could be parsed from result if needed
+                    error_message=record.error_message,
+                )
+                session.add(attempt_record)
 
                 await session.commit()
                 logger.debug(
