@@ -5,7 +5,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Install poetry
+# Install poetry (Pip root warning suppressed as builder is isolated)
+ENV PIP_ROOT_USER_ACTION=ignore
 RUN pip install --no-cache-dir poetry==1.8.4
 
 # Copy dependencies
