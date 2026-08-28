@@ -16,11 +16,14 @@ class OllamaLocalAdapter(ModelProvider):
     """
 
     def __init__(self, default_api_base: str = "http://localhost:11434"):
-        if settings.env != "local" and "localhost" in default_api_base:
-            raise ValueError(
-                f"Ollama initialized with localhost fallback ({default_api_base}) in non-local "
-                f"environment '{settings.env}'. Please provide a valid external API base."
-            )
+        if "localhost" in default_api_base:
+            if settings.env == "local":
+                pass
+            else:
+                raise ValueError(
+                    f"Ollama initialized with localhost fallback ({default_api_base}) in non-local "
+                    f"environment '{settings.env}'. Please provide a valid external API base."
+                )
         self.default_api_base = default_api_base
         # Privacy enforcement: Never send telemetry or logging for local execution to cloud
         self._enforce_privacy_boundary = True
