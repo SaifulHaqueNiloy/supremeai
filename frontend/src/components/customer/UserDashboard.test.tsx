@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { UserDashboard } from './UserDashboard';
 import { I18nContext } from '../../i18n/I18nContext';
 import { translations } from '../../i18n/translations';
+import { ToastProvider } from '../../contexts/ToastProvider';
 
 // বাংলা মন্তব্য: i18n মক — I18nContext সরাসরি ইংরেজি ট্রান্সলেশন রিটার্ন করে
 const mockT = (key: string, params?: Record<string, string | number>) => {
@@ -19,10 +20,18 @@ const mockT = (key: string, params?: Record<string, string | number>) => {
 
 const renderWithI18n = (ui: React.ReactElement) => {
   return render(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    <I18nContext.Provider value={{ t: mockT as any, locale: 'en', setLocale: vi.fn() }}>
-      {ui}
-    </I18nContext.Provider>
+    // বাংলা মন্তব্য (ROOT-CAUSE FIX): UserDashboard একাধিক জায়গায় useToast()
+    // ব্যবহার করে, যেটা main.tsx-এ ToastProvider দিয়ে wrap করা থাকে (production-এ
+    // ঠিকমতো কাজ করে)। কিন্তু এই টেস্ট ফাইল সরাসরি UserDashboard render করত,
+    // ToastProvider ছাড়া — ফলে "useToast must be used within a ToastProvider"
+    // থ্রো হয়ে ErrorBoundary "Dashboard Module Failure" দেখাত এবং সব
+    // assertion ব্যর্থ হতো। এখন ToastProvider দিয়ে wrap করা হলো।
+    <ToastProvider>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <I18nContext.Provider value={{ t: mockT as any, locale: 'en', setLocale: vi.fn() }}>
+        {ui}
+      </I18nContext.Provider>
+    </ToastProvider>
   );
 };
 
