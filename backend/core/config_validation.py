@@ -281,6 +281,27 @@ class SettingsValidationMixin:
         forbidden = {f"{'local'}{'host'}", f"{'127'}.0.0.1", "testserver", "0.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
+            # If not explicitly provided, auto-discover host from cloud platform environment (e.g. Render, Vercel)
+            if not v:
+                render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME") or os.getenv(
+                    "RENDER_EXTERNAL_URL"
+                )
+                if render_host:
+                    render_host = (
+                        render_host.replace("https://", "").replace("http://", "").split("/")[0]
+                    )
+                    v.append(render_host)
+                vercel_host = os.getenv("VERCEL_URL") or os.getenv("VERCEL_BRANCH_URL")
+                if vercel_host:
+                    vercel_host = (
+                        vercel_host.replace("https://", "").replace("http://", "").split("/")[0]
+                    )
+                    v.append(vercel_host)
+                # If running on Render or Cloud environment without explicit custom domain, allow default onrender / domain patterns
+                if os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"):
+                    if "onrender.com" not in v:
+                        v.append("onrender.com")
+
             # The application must fail closed in real production/staging, but
             # Settings() is also used by focused pytest cases to exercise later
             # property-level validation (e.g. JWT). A dedicated test-only
