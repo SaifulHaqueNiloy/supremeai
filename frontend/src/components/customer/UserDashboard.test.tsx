@@ -1,90 +1,31 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { UserDashboard } from './UserDashboard';
-import { I18nContext } from '../../i18n/I18nContext';
-import { translations } from '../../i18n/translations';
-import { ToastProvider } from '../../contexts/ToastProvider';
 
-// বাংলা মন্তব্য: i18n মক — I18nContext সরাসরি ইংরেজি ট্রান্সলেশন রিটার্ন করে
-const mockT = (key: string, params?: Record<string, string | number>) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const en = (translations as any).en;
-  let value = en[key] ?? key;
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => {
-      value = value.replace(`{${k}}`, String(v));
-    });
-  }
-  return value;
-};
+const mockedUseNavigate = vi.fn();
+const mockUseAuthStore = vi.fn();
 
-const renderWithI18n = (ui: React.ReactElement) => {
+vi.mock('react-router-dom', () => ({
+  MemoryRouter: ({ children }: { children: React.ReactNode }) => children,
+  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
+    <a href={to} data-testid="link">{children}</a>
+  ),
+  useNavigate: () => mockedUseNavigate,
+}));
+
+vi.mock('../../store/authStore', () => ({
+  useAuthStore: () => mockUseAuthStore(),
+}));
+
+const renderDashboard = (user: { username: string } | null = { username: 'TestUser' }) => {
+  mockUseAuthStore.mockReturnValue({ user });
+  mockedUseNavigate.mockClear();
   return render(
-    // বাংলা মন্তব্য (ROOT-CAUSE FIX): UserDashboard একাধিক জায়গায় useToast()
-    // ব্যবহার করে, যেটা main.tsx-এ ToastProvider দিয়ে wrap করা থাকে (production-এ
-    // ঠিকমতো কাজ করে)। কিন্তু এই টেস্ট ফাইল সরাসরি UserDashboard render করত,
-    // ToastProvider ছাড়া — ফলে "useToast must be used within a ToastProvider"
-    // থ্রো হয়ে ErrorBoundary "Dashboard Module Failure" দেখাত এবং সব
-    // assertion ব্যর্থ হতো। এখন ToastProvider দিয়ে wrap করা হলো।
-    <ToastProvider>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <I18nContext.Provider value={{ t: mockT as any, locale: 'en', setLocale: vi.fn() }}>
-        {ui}
-      </I18nContext.Provider>
-    </ToastProvider>
+    <MemoryRouter initialEntries={['/']}>
+      <UserDashboard />
+    </MemoryRouter>
   );
-};
-
-const defaultProps = {
-  customerMessages: [
-    { id: '1', role: 'user' as const, content: 'Hello', timestamp: '10:00 AM' },
-    { id: '2', role: 'assistant' as const, content: 'Hi there', timestamp: '10:01 AM' },
-  ],
-  customerInput: '',
-  setCustomerInput: vi.fn(),
-  loading: false,
-  handleSendCustomer: vi.fn(),
-  theme: 'dark' as const,
-  toggleTheme: vi.fn(),
-  code: '// code',
-  setCode: vi.fn(),
-  isServerOnline: true,
-  deployGate: { status: 'UNLOCKED' },
-  user: {
-    id: 'user-1',
-    username: 'TestUser',
-    created_at: '2026-06-01',
-    last_login: '2026-06-29',
-    email: 'test@example.com',
-    role: 'operator' as const,
-    preferences: {
-      theme: 'dark' as const,
-      sidebar_collapsed: false,
-      notification_enabled: true,
-      sound_enabled: true,
-      compact_mode: false,
-      font_size: 'medium' as const,
-    },
-  },
-  projects: [
-    {
-      id: '1',
-      name: 'Project A',
-      description: 'Desc',
-      created_at: '2026-06-01',
-      updated_at: '2026-06-29',
-      owner_id: 'u1',
-      settings: {
-        default_model: 'gpt-4',
-        system_prompt: '',
-        temperature: 0.7,
-        max_tokens: 1024,
-        rag_enabled: true,
-      },
-    },
-  ],
-  chatHistory: [],
-  widgets: [],
 };
 
 describe('UserDashboard', () => {
@@ -92,126 +33,158 @@ describe('UserDashboard', () => {
     vi.clearAllMocks();
   });
 
-  const getTabButton = (name: RegExp) =>
-    screen.getAllByRole('button', { name })[0];
-
-  it('renders welcome header with username', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    expect(screen.getByText('Welcome back, TestUser')).toBeInTheDocument();
+  it('renders greeting with username', () => {
+    renderDashboard({ username: 'TestUser' });
+    expect(screen.getByText('Good morning, TestUser.')).toBeInTheDocument();
   });
 
-  it('renders server and gate status', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    expect(screen.getByText(/CORE:/)).toBeInTheDocument();
-    expect(screen.getByText(/ONLINE/)).toBeInTheDocument();
-    expect(screen.getByText(/UNLOCKED/)).toBeInTheDocument();
+  it('renders greeting without username when user has no username', () => {
+    renderDashboard({});
+    expect(screen.getByText('Good morning.')).toBeInTheDocument();
   });
 
-  it('shows offline status when server is down', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} isServerOnline={false} />);
-    expect(screen.getByText(/OFFLINE/)).toBeInTheDocument();
+  it('renders greeting without username when user is null', () => {
+    renderDashboard(null);
+    expect(screen.getByText('Good morning.')).toBeInTheDocument();
   });
 
-  it('renders default theme as dark', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} theme="dark" />);
-    expect(screen.getByText(/☀️ Light/)).toBeInTheDocument();
+  it('renders subtitle text', () => {
+    renderDashboard();
+    expect(screen.getByText('What would you like to build today?')).toBeInTheDocument();
   });
 
-  it('renders light theme when toggled', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} theme="light" />);
-    expect(screen.getByText(/🌙 Dark/)).toBeInTheDocument();
+  it('renders primary input with correct placeholder', () => {
+    renderDashboard();
+    expect(
+      screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...')
+    ).toBeInTheDocument();
   });
 
-  it('calls toggleTheme when theme button clicked', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    const btn = screen.getByText(/☀️ Light/);
-    fireEvent.click(btn);
-    expect(defaultProps.toggleTheme).toHaveBeenCalled();
+  it('navigates to workspace/live on Enter key in input', () => {
+    renderDashboard();
+    const input = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...');
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(mockedUseNavigate).toHaveBeenCalledWith('/workspace/live');
   });
 
-  it('renders all six tab buttons', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    expect(screen.getByRole('button', { name: /Overview/i })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /Home Feed/i }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByRole('button', { name: /Quick Presets/i }).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByRole('button', { name: /Chat/i }).length).toBeGreaterThanOrEqual(1);
+  it('does not navigate on non-Enter keys', () => {
+    renderDashboard();
+    const input = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...');
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(mockedUseNavigate).not.toHaveBeenCalled();
   });
 
-  it('switches to presets tab when clicked', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(getTabButton(/Quick Presets/i));
-    expect(getTabButton(/Quick Presets/i).classList.contains('bg-accent-primary/20')).toBe(true);
+  it('renders the arrow right button', () => {
+    renderDashboard();
+    const inputContainer = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...').closest('div');
+    const arrowButton = inputContainer?.querySelector('button');
+    expect(arrowButton).toBeInTheDocument();
   });
 
-  it('switches to chat tab when clicked', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(getTabButton(/Chat/i));
-    // বাংলা মন্তব্য: টেস্টে ব্যবহৃত হেডার টেক্সট আপডেট করা হলো
-    expect(screen.getByText('Unified Command Portal')).toBeInTheDocument();
+  it('renders all three quick action buttons', () => {
+    renderDashboard();
+    expect(screen.getByRole('button', { name: /New Project/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Generate App/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Deploy Service/i })).toBeInTheDocument();
   });
 
-  it('switches to feed tab when clicked', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(getTabButton(/Home Feed/i));
-    expect(screen.getByText('Personalized Home Feed')).toBeInTheDocument();
+  it('renders the Continue Working section header', () => {
+    renderDashboard();
+    expect(screen.getByText('Continue Working')).toBeInTheDocument();
   });
 
-  it('shows project list on overview', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} projects={defaultProps.projects} />);
-    expect(screen.getByText('Your Projects')).toBeInTheDocument();
-    expect(screen.getByText('Project A')).toBeInTheDocument();
+  it('renders the View All link in Continue Working', () => {
+    renderDashboard();
+    const links = screen.getAllByTestId('link');
+    const viewAllLink = links.find((l) => l.getAttribute('href') === '/projects');
+    expect(viewAllLink).toBeInTheDocument();
+    expect(viewAllLink).toHaveTextContent('View All');
   });
 
-  it('shows empty projects state when no projects', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} projects={[]} />);
-    expect(screen.getByText('No projects yet. Create your first project to get started.')).toBeInTheDocument();
+  it('renders both project cards in Continue Working', () => {
+    renderDashboard();
+    expect(screen.getByText('Ecommerce NextJS Agent')).toBeInTheDocument();
+    expect(screen.getByText('Internal Analytics Dashboard')).toBeInTheDocument();
   });
 
-  it('shows stat cards with counts', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} projects={defaultProps.projects} />);
-    expect(screen.getByText('1')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('0')).toBeInTheDocument();
+  it('renders project card descriptions', () => {
+    renderDashboard();
+    expect(
+      screen.getByText('Working on generating product catalog schema and API routes.')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Data visualization components setup.')).toBeInTheDocument();
   });
 
-  it('shows quick actions and navigates to chat', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(screen.getByText('New Chat Session'));
-    // বাংলা মন্তব্য: টেস্টে ব্যবহৃত হেডার টেক্সট আপডেট করা হলো
-    expect(screen.getByText('Unified Command Portal')).toBeInTheDocument();
+  it('renders project card timestamps', () => {
+    renderDashboard();
+    expect(screen.getByText('2 hrs ago')).toBeInTheDocument();
+    expect(screen.getByText('Yesterday')).toBeInTheDocument();
   });
 
-  it('shows recent activity from customerMessages', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} chatHistory={[]} />);
-    expect(screen.getByText('Hello')).toBeInTheDocument();
-    expect(screen.getByText('Hi there')).toBeInTheDocument();
+  it('renders the Recent Conversations section header', () => {
+    renderDashboard();
+    expect(screen.getByText('Recent Conversations')).toBeInTheDocument();
   });
 
-  it('shows no recent activity when no messages', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} customerMessages={[]} chatHistory={[]} />);
-    expect(screen.getByText('No recent activity')).toBeInTheDocument();
+  it('renders the Go to Studio link in Recent Conversations', () => {
+    renderDashboard();
+    const links = screen.getAllByTestId('link');
+    const studioLink = links.find((l) => l.getAttribute('href') === '/workspace/live');
+    expect(studioLink).toBeInTheDocument();
+    expect(studioLink).toHaveTextContent('Go to Studio');
   });
 
-  it('calls setCustomerInput when chat input changes', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(getTabButton(/Chat/i));
-    // বাংলা মন্তব্য: স্ট্যাবল টেস্টিং নিশ্চিত করতে প্লেসহোল্ডার স্ট্রিংয়ের পরিবর্তে data-testid ব্যবহার করা হলো
-    const input = screen.getByTestId('chat-input');
-    fireEvent.change(input, { target: { value: 'test input' } });
-    expect(defaultProps.setCustomerInput).toHaveBeenCalledWith('test input');
+  it('renders all three recent conversation items', () => {
+    renderDashboard();
+    const conversationText = 'How to configure CI/CD pipeline for SupremeAI agent?';
+    const items = screen.getAllByText(conversationText);
+    expect(items).toHaveLength(3);
   });
 
-  it('calls handleSendCustomer when send button clicked', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} customerInput="hello" />);
-    fireEvent.click(getTabButton(/Chat/i));
-    const sendBtn = screen.getByText('Send').closest('button');
-    if (sendBtn) fireEvent.click(sendBtn);
-    expect(defaultProps.handleSendCustomer).toHaveBeenCalled();
+  it('renders conversation timestamps', () => {
+    renderDashboard();
+    const oct24Elements = screen.getAllByText('Oct 24');
+    expect(oct24Elements).toHaveLength(3);
   });
 
-  it('switches to overview from quick action and back to presets', () => {
-    renderWithI18n(<UserDashboard {...defaultProps} />);
-    fireEvent.click(getTabButton(/Quick Presets/i));
-    expect(getTabButton(/Quick Presets/i).classList.contains('bg-accent-primary/20')).toBe(true);
+  it('renders the Active Agents section header', () => {
+    renderDashboard();
+    expect(screen.getByText('Active Agents')).toBeInTheDocument();
+  });
+
+  it('renders Code Generator agent as Running', () => {
+    renderDashboard();
+    expect(screen.getByText('Code Generator')).toBeInTheDocument();
+    expect(screen.getByText('Running')).toBeInTheDocument();
+  });
+
+  it('renders QA Tester agent as Idle', () => {
+    renderDashboard();
+    expect(screen.getByText('QA Tester')).toBeInTheDocument();
+    expect(screen.getByText('Idle')).toBeInTheDocument();
+  });
+
+  it('renders the Usage (Pro Plan) section header', () => {
+    renderDashboard();
+    expect(screen.getByText('Usage (Pro Plan)')).toBeInTheDocument();
+  });
+
+  it('renders GPT-4 Tokens usage', () => {
+    renderDashboard();
+    expect(screen.getByText('GPT-4 Tokens')).toBeInTheDocument();
+    expect(screen.getByText('42k / 100k')).toBeInTheDocument();
+  });
+
+  it('renders Agent Compute usage', () => {
+    renderDashboard();
+    expect(screen.getByText('Agent Compute')).toBeInTheDocument();
+    expect(screen.getByText('12h / 50h')).toBeInTheDocument();
+  });
+
+  it('renders both View All and Go to Studio links', () => {
+    renderDashboard();
+    const links = screen.getAllByTestId('link');
+    expect(links.find((l) => l.getAttribute('href') === '/projects')).toBeInTheDocument();
+    expect(links.find((l) => l.getAttribute('href') === '/workspace/live')).toBeInTheDocument();
   });
 });
