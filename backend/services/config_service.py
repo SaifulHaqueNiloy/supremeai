@@ -29,7 +29,7 @@ class ConfigService:
 
             redis = await get_redis_client()
             if redis:
-                cached_val = await redis.get(cache_key)
+                cached_val = await redis.execute_with_retry("get", cache_key)
                 if cached_val is not None:
                     try:
                         return json.loads(cached_val)
@@ -54,7 +54,8 @@ class ConfigService:
                 # Cache in Redis
                 if redis:
                     try:
-                        await redis.setex(
+                        await redis.execute_with_retry(
+                            "setex",
                             cache_key,
                             cls.DEFAULT_TTL,
                             json.dumps(val) if not isinstance(val, str) else val,
