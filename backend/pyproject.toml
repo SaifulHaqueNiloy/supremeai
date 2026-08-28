@@ -43,6 +43,7 @@ pydantic-extra-types = "^2.11.1"
 supabase = "^2.11.0"
 firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
+psycopg2-binary = "^2.9.9"
 
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)
 cryptography = "^50.0.0"  # CVE fix floor (AUDIT-014, CVE-2026-69247, CVE-2026-69249)
