@@ -10,7 +10,6 @@ from loguru import logger
 
 from ...automation.interfaces import AutomationProvider
 from ...automation.models import AutomationEvent, AutomationResult, AutomationStatus
-from ...automation.registry import get_workflow_route
 from ...config import settings
 
 
@@ -65,6 +64,8 @@ class N8nAutomationAdapter(AutomationProvider):
     async def dispatch(self, event: AutomationEvent) -> AutomationResult:
         """
         Send the event to n8n if enabled, with retry/backoff for transient errors.
+        Plan Section 5: respects WorkflowDefinition policy (timeout, max_retries,
+        enabled, sensitive).
         """
         if not settings.n8n_enabled or not settings.n8n_event_delivery_enabled:
             return AutomationResult(
@@ -82,18 +83,40 @@ class N8nAutomationAdapter(AutomationProvider):
                 event_id=event.event_id,
             )
 
-        try:
-            route = get_workflow_route(event.workflow_key)
-        except ValueError as e:
+        # Plan Section 5: workflow-specific policy lookup
+        from ...automation.registry import get_workflow_definition
+
+        wf_def = get_workflow_definition(event.workflow_key)
+        if wf_def is None:
             # Permanent error — invalid workflow key, কোনো retry নয়
             return AutomationResult(
                 status=AutomationStatus.FAILED,
                 provider="n8n",
-                message=str(e),
+                message=f"Unknown workflow key: {event.workflow_key}",
+                event_id=event.event_id,
+            )
+        if not wf_def.enabled:
+            return AutomationResult(
+                status=AutomationStatus.SKIPPED,
+                provider="n8n",
+                message=f"Workflow {event.workflow_key} is disabled in registry.",
                 event_id=event.event_id,
             )
 
+        route = wf_def.route
+        # Plan Section 5: workflow-specific timeout ও retry policy
+        # (fall back to module defaults যদি workflow definition-এ না থাকে)
+        wf_timeout = min(wf_def.timeout_seconds, self.timeout) if wf_def.timeout_seconds else self.timeout
+        wf_max_retries = wf_def.max_retries if wf_def.max_retries > 0 else _DEFAULT_MAX_RETRIES
+
         target_url = f"{self.base_url}{route}"
+
+        # Plan Section 5: sensitive workflow — log warning (future: privacy mode)
+        if wf_def.sensitive:
+            logger.info(
+                f"n8n dispatch: workflow {event.workflow_key} marked SENSITIVE — "
+                f"privacy mode should apply to payload logging"
+            )
 
         # Prepare signed payload — Plan Section 6: event_id ও idempotency_key যোগ
         payload_dict = {
@@ -101,6 +124,7 @@ class N8nAutomationAdapter(AutomationProvider):
             "idempotency_key": event.idempotency_key,
             "schema_version": event.schema_version,
             "workflow_key": event.workflow_key,
+            "workflow_version": wf_def.version,  # Plan Section 5: versioning
             "timestamp": event.timestamp.isoformat(),
             "source": event.source,
             "trace_id": event.trace_id,
@@ -109,6 +133,7 @@ class N8nAutomationAdapter(AutomationProvider):
             "actor_id": event.actor_id,
             "payload": event.payload,
             "metadata": event.metadata,
+            "sensitive": wf_def.sensitive,  # receiver-কে জানায় যে payload sensitive
         }
         payload_str = json.dumps(payload_dict, separators=(",", ":"), default=str)
         timestamp = str(int(time.time()))
@@ -125,12 +150,13 @@ class N8nAutomationAdapter(AutomationProvider):
             headers["X-SupremeAI-Signature"] = signature
 
         # ── Plan Section 9: retry loop with transient/permanent classification ──
+        # Plan Section 5: workflow-specific max_retries ও timeout use করি
         last_exc: Exception | None = None
-        for attempt in range(1, _DEFAULT_MAX_RETRIES + 1):
+        for attempt in range(1, wf_max_retries + 1):
             try:
                 async with httpx.AsyncClient(verify=self.verify_tls) as client:
                     response = await client.post(
-                        target_url, content=payload_str, headers=headers, timeout=self.timeout
+                        target_url, content=payload_str, headers=headers, timeout=wf_timeout
                     )
                     response.raise_for_status()
 
@@ -148,7 +174,7 @@ class N8nAutomationAdapter(AutomationProvider):
                 if _is_transient_http_error(e):
                     logger.warning(
                         f"n8n transient HTTP {e.response.status_code} on attempt {attempt}/"
-                        f"{_DEFAULT_MAX_RETRIES} for event {event.event_id}"
+                        f"{wf_max_retries} for event {event.event_id}"
                     )
                 else:
                     # Permanent HTTP error (4xx except 429) — কোনো retry নয়
@@ -166,7 +192,7 @@ class N8nAutomationAdapter(AutomationProvider):
             except httpx.RequestError as e:
                 last_exc = e
                 logger.warning(
-                    f"n8n network error on attempt {attempt}/{_DEFAULT_MAX_RETRIES} "
+                    f"n8n network error on attempt {attempt}/{wf_max_retries} "
                     f"for event {event.event_id}: {e!r}"
                 )
             except Exception as e:
@@ -174,7 +200,7 @@ class N8nAutomationAdapter(AutomationProvider):
                 logger.error(f"Unexpected error dispatching to n8n (attempt {attempt}): {e}")
                 # Unexpected error — transient ধরে retry করি (safe default)
             # আরও attempt আছে কিনা দেখে backoff করি
-            if attempt < _DEFAULT_MAX_RETRIES and last_exc is not None and _is_transient_http_error(last_exc):
+            if attempt < wf_max_retries and last_exc is not None and _is_transient_http_error(last_exc):
                 backoff = _RETRY_BACKOFF_SECONDS[min(attempt - 1, len(_RETRY_BACKOFF_SECONDS) - 1)]
                 logger.info(f"Retrying n8n dispatch in {backoff}s (attempt {attempt + 1})")
                 await asyncio.sleep(backoff)
@@ -189,7 +215,7 @@ class N8nAutomationAdapter(AutomationProvider):
         return AutomationResult(
             status=AutomationStatus.FAILED,
             provider="n8n",
-            message=f"Failed after {_DEFAULT_MAX_RETRIES} attempts: {err_msg}",
+            message=f"Failed after {wf_max_retries} attempts: {err_msg}",
             event_id=event.event_id,
-            attempt=_DEFAULT_MAX_RETRIES,
+            attempt=wf_max_retries,
         )
