@@ -424,9 +424,7 @@ class SettingsValidationMixin:
                 # VERCEL_URL / etc). This avoids hardcoding a domain while still
                 # failing closed if truly nothing could be discovered.
                 derived = [
-                    f"https://{h}"
-                    for h in (self.allowed_hosts or [])
-                    if h and h != "onrender.com"
+                    f"https://{h}" for h in (self.allowed_hosts or []) if h and h != "onrender.com"
                 ]
                 if derived:
                     logger.warning(
