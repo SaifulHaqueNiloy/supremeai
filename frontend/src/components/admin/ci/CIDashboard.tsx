@@ -488,7 +488,6 @@ interface CIDashboardProps {
 }
 
 export function CIDashboard({
-  repoName = '',
   refreshInterval = 30000,
   showTrends = true,
   maxHistoryItems = 20,
@@ -505,11 +504,9 @@ export function CIDashboard({
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'errors' | 'trends'>('overview');
-  const [selectedJob, setSelectedJob] = useState<JobResult | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
   
   // Derived state
-  const isHealthy = data?.metrics && data.metrics.success_rate >= 80;
   const hasErrors = data?.errors && data.errors.total > 0;
   const hasInsights = data?.insights && data.insights.length > 0;
   
@@ -630,7 +627,7 @@ export function CIDashboard({
     
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchData]);
+  }, [autoRefresh, refreshInterval, fetchData, apiUrl]);
   
   // Initial fetch
   useEffect(() => {
@@ -644,7 +641,6 @@ export function CIDashboard({
   };
   
   const handleJobClick = (job: JobResult) => {
-    setSelectedJob(job);
     if (onJobClick) onJobClick(job);
   };
   

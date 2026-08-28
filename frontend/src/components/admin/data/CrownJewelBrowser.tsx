@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { componentEventBus } from '../../../lib/componentEventBus';
 import { eventBus, Events } from '../../../lib/componentEventBus';
 import { useUnifiedStore } from '../../../store/unifiedStore';
 import {
   Globe, ArrowLeft, ArrowRight, RotateCw, Plus, X, Star, Camera,
-  Monitor, Smartphone, Tablet, ZoomIn, ZoomOut, Maximize2, Minimize2,
-  Shield, Wifi, WifiOff, Loader2, Code, Terminal, Sparkles,
-  Clock, Download, ExternalLink, Lock, Unlock, AlertTriangle,
-  Bot, MessageSquare, Eye, EyeOff, Copy, Check, ChevronDown
+  Monitor, Smartphone, Tablet, ZoomIn, ZoomOut,
+  Shield, Loader2, Code,
+  Clock, ExternalLink, Lock, AlertTriangle,
+  Bot, Copy, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -126,14 +125,12 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [urlInputValue, setUrlInputValue] = useState(initialUrl);
   const [showHistory, setShowHistory] = useState(false);
-  const [screenshotMode, setScreenshotMode] = useState(false);
   const [securityScanResult, setSecurityScanResult] = useState<{
   score: number;
   issues: string[];
   } | null>(null);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Computed Values ──
   const activeTab = useMemo(() => tabs.find(t => t.id === activeTabId) || tabs[0], [tabs, activeTabId]);
@@ -163,11 +160,11 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
     return `https://${url}`;
   };
 
-  const updateTabUrl = (url: string) => {
+  const updateTabUrl = useCallback((url: string) => {
     setTabs(prev => prev.map(tab =>
       tab.id === activeTabId ? { ...tab, url } : tab
     ));
-  };
+  }, [activeTabId]);
 
   const addConsoleMessage = useCallback((
     type: ConsoleMessage['type'],
@@ -206,30 +203,22 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
     setIsLoading(true);
     setUrlInputValue(normalizedUrl);
     
-    // Update tab
-    setTabs(prev => prev.map(tab => 
-      tab.id === targetTabId 
-        ? { ...tab, url: normalizedUrl, isLoading: true, lastVisited: Date.now() }
-        : tab
-    ));
-
-    // Add to history
-    const newEntry: HistoryEntry = {
-      url: normalizedUrl,
-      title: '',
-      timestamp: Date.now(),
-      tabId: targetTabId,
-    };
+    updateTabUrl(normalizedUrl);
     
+    // Update local history
     setHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1);
-      newHistory.push(newEntry);
+      newHistory.push({
+        url: normalizedUrl,
+        title: '',
+        timestamp: Date.now(),
+        tabId: targetTabId,
+      });
       return newHistory;
     });
     setHistoryIndex(prev => prev + 1);
 
     onUrlChange?.(normalizedUrl);
-    
     componentEventBus.emitBrowserUrlChange(normalizedUrl);
     
     if (enableMemorySave && userId) {
@@ -246,7 +235,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         body: JSON.stringify({ url: normalizedUrl, userId, timestamp: Date.now(), tabId: targetTabId })
       }).catch(() => {});
     }
-  }, [activeTabId, historyIndex, onUrlChange, serviceHealthStatus, enableMemorySave, userId, addAlert, addBrowseSession]);
+  }, [activeTabId, historyIndex, onUrlChange, serviceHealthStatus, addAlert, updateTabUrl, enableMemorySave, userId, addBrowseSession]);
 
   const goBack = useCallback(() => {
     if (canGoBack && history[historyIndex - 1]) {
@@ -255,7 +244,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
       setHistoryIndex(prev => prev - 1);
       updateTabUrl(entry.url);
     }
-  }, [canGoBack, history, historyIndex]);
+  }, [canGoBack, history, historyIndex, updateTabUrl]);
 
   const goForward = useCallback(() => {
     if (canGoForward && history[historyIndex + 1]) {
@@ -264,7 +253,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
       setHistoryIndex(prev => prev + 1);
       updateTabUrl(entry.url);
     }
-  }, [canGoForward, history, historyIndex]);
+  }, [canGoForward, history, historyIndex, updateTabUrl]);
 
   const refresh = useCallback(() => {
     setIsLoading(true);
@@ -553,7 +542,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         ));
         onPageDetect?.({ title, url: activeTab?.url || '', type: 'page' });
       }
-    } catch (e) {
+    } catch {
       // Cross-origin restriction - expected
     }
   };
@@ -1174,6 +1163,3 @@ function formatIssuesFromData(issues: any[]): string {
     warnings.map((i: any) => `- ⚡ ${i.message}`).join('\n') || 'None'
   }\n\n**Suggestions:** Run security scan for detailed remediation steps.`;
 }
-
-// Icon imports that were used above
-import { Server, Database, Activity, Cloud, GitBranch, FileText, GitBranch as GitBranchIcon, Send } from 'lucide-react';
