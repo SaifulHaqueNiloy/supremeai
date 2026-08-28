@@ -65,6 +65,15 @@ async def test_rate_limiting_failure_mode():
     from middleware.rate_limiter import AsyncRateLimiter
 
     limiter = AsyncRateLimiter()
+    # বাংলা মন্তব্য (ROOT-CAUSE FIX): tests/conftest.py গোটা টেস্ট স্যুটের জন্য
+    # os.environ.setdefault("RATE_LIMIT_ENABLED", "false") সেট করে, যা
+    # AsyncRateLimiter.__init__()-এ পড়ে self._rate_limit_enabled = False
+    # ফিক্সড হয়ে যায় (constructor সময়ে, os.getenv প্যাচের আগেই)। ফলে
+    # acquire()-এর "if not self._rate_limit_enabled: return True" শর্তে
+    # সবসময় early-return হতো, নিচের আসল fail-closed/fail-open লজিক কখনো
+    # এক্সিকিউটই হতো না। এই টেস্ট যেহেতু নির্দিষ্টভাবে সেই লজিক যাচাই করতে চায়,
+    # তাই instance-level flag সরাসরি enable করা হলো।
+    limiter._rate_limit_enabled = True
 
     # Mock redis_manager to return None (simulating down/unavailable)
     with patch("middleware.rate_limiter.redis_manager.get_client_async", return_value=None):
