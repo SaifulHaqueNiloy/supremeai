@@ -108,10 +108,14 @@ def run_server() -> None:
         uvicorn_kwargs["reload"] = True
     else:
         uvicorn_kwargs["reload"] = False
-        # বাংলা: UVICORN_WORKERS env var ব্যবহার করা হয়, GUNICORN_WORKERS deprecated
+        # REVISION 2: Enforce 1 worker in production for 512MB RAM constraint
         workers = int(os.getenv("UVICORN_WORKERS") or "1")
         if workers > 1:
-            uvicorn_kwargs["workers"] = workers
+            logger.critical(
+                f"Startup failed: UVICORN_WORKERS is set to {workers}, but exactly 1 worker is allowed in production to prevent OOM!"
+            )
+            sys.exit(1)
+        uvicorn_kwargs["workers"] = 1
 
     try:
         # বাংলা: আগে app object সরাসরি পাস হতো — reload=True বা workers>1 হলে uvicorn
