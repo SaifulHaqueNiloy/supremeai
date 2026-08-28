@@ -194,6 +194,7 @@ async def liveness_probe(response: Response) -> dict[str, Any]:
     """Liveness probe — is the process alive? Kubernetes uses this for restarts."""
     response.status_code = 200 if _liveness_status else 503
     return {
+        "status": "alive" if _liveness_status else "dead",
         "alive": _liveness_status,
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }

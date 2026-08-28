@@ -383,7 +383,7 @@ async def admin_auth_headers(
     assert response.status_code in [200, 201, 409]
 
     login_data = {
-        "email": sample_admin_registration_data["email"],
+        "username": sample_admin_registration_data["username"],
         "password": sample_admin_registration_data["password"],
     }
     response = await client.post("/api/v1/auth/login", json=login_data)
