@@ -83,8 +83,14 @@ class MaintenancePipeline:
 
         # Calculate Degradation
         penalty = 0
+        from core.config import settings
+
         if results["redis"]["status"] == "down":
-            penalty += 50
+            if (
+                getattr(settings, "redis_required_for_production", False)
+                or settings.env != "production"
+            ):
+                penalty += 50
         if results["database"]["status"] == "down":
             penalty += 50
         if results["api_gemini"]["status"] == "down":
@@ -163,7 +169,12 @@ class MaintenancePipeline:
         try:
             from sqlalchemy import text
 
+            from core.app import app
             from core.db import get_session_factory
+
+            if app.state.subsystem_status.get("db") == "down":
+                logger.warning("🛡️ Immune System: Skipping automation cleanup, DB is down.")
+                return
 
             factory = get_session_factory()
             async with factory() as session:
@@ -238,12 +249,23 @@ class MaintenancePipeline:
         # জরুরি evolution cycle চালাতে signal দেওয়া হচ্ছে।
         # এটাই সেই bridge যেটা self-healing → self-evolution loop বন্ধ করে।
         if self.health_score < 50:
-            try:
-                import asyncio as _asyncio
+            from core.config import settings
 
-                from core.self_evolution.self_evolution_agent import (
-                    SelfEvolutionAgent,
+            if settings.env == "production":
+                logger.warning(
+                    f"🛡️ Health critical (score={self.health_score}). "
+                    "Skipping SelfEvolutionAgent trigger in production to prevent aggressive mutations."
                 )
+            else:
+                try:
+                    import asyncio as _asyncio
+
+                    from core.self_evolution.self_evolution_agent import (
+                        SelfEvolutionAgent,
+                    )
+                except ImportError as e:
+                    logger.error(f"Cannot import SelfEvolutionAgent: {e}")
+                    return
 
                 # FIX: original used SelfEvolutionAgent.__new__(SelfEvolutionAgent)
                 # which skips __init__ → self.fitness_engine, self.auto_skill_creator
@@ -283,13 +305,14 @@ class MaintenancePipeline:
 
                 # শুধু tick() চালাই, পুরো loop নয় — non-blocking
                 if _evo is not None and hasattr(_evo, "_tick"):
-                    self._evolution_tick_task = _asyncio.create_task(_evo._tick())
-                    logger.warning(
-                        f"🛡️→🧬 Health critical (score={self.health_score}), "
-                        "triggered emergency evolution tick."
-                    )
-            except Exception as evo_exc:
-                logger.debug(f"Evolution trigger skipped: {evo_exc!r}")
+                    try:
+                        self._evolution_tick_task = _asyncio.create_task(_evo._tick())
+                        logger.warning(
+                            f"🛡️→🧬 Health critical (score={self.health_score}), "
+                            "triggered emergency evolution tick."
+                        )
+                    except Exception as evo_exc:
+                        logger.debug(f"Evolution trigger skipped: {evo_exc!r}")
 
         logger.info("🚑 Remediation cycle completed.")
 
