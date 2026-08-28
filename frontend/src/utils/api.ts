@@ -202,9 +202,9 @@ export const getApiBaseUrl = (): string => {
   // 🔥 ফিক্স: Firebase Hosting rewrite দিয়ে external URL-এ proxy করা যায় না,
   // তাই Firebase (.web.app/.firebaseapp.com)-এ সরাসরি portal-নির্দিষ্ট backend URL ব্যবহার করি।
   // Backend CORS ইতিমধ্যে supremeai-admin.web.app allow করে রেখেছে।
-  // 🔧 DYNAMIC: Configure via RELATIVE_PATH_HOSTS env var
-  const relativePathHosts = (import.meta.env.RELATIVE_PATH_HOSTS || 'vercel.app,localhost').split(',');
-  if (relativePathHosts.some(h => hostname.includes(h))) {
+  // 🔧 DYNAMIC: Configure via VITE_RELATIVE_PATH_HOSTS env var
+  const relativePathHosts = (import.meta.env.VITE_RELATIVE_PATH_HOSTS || '').split(',').filter(Boolean);
+  if (relativePathHosts.length > 0 && relativePathHosts.some(h => hostname.includes(h))) {
     return '';
   }
 
@@ -222,7 +222,7 @@ export async function checkBackendHealth(): Promise<{
 }> {
   const start = performance.now();
   try {
-    const response = await fetchWithRetry(`${getApiBaseUrl()}/health/live`, {
+    const response = await fetchWithRetry(`${getApiBaseUrl()}/api/v1/health/live`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     });

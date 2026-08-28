@@ -365,10 +365,10 @@ class SettingsValidationMixin:
                 delattr(self, "_jwt_secret_cache")
             _ = self.jwt_secret
 
-            # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই
+            # বাংলা মন্তব্য: প্রোডাকশনে কনফিগারেশন পূর্ণতা যাচাই - FAIL FAST
             if not self.user_cors_origins and not self.admin_cors_origins:
-                logger.warning(
-                    "⚠️ Production CORS origins not explicitly configured. Using defaults for security."
+                raise ValueError(
+                    "❌ Production CORS origins not explicitly configured. Must set USER_CORS_ORIGINS and/or ADMIN_CORS_ORIGINS."
                 )
 
         # বাংলা মন্তব্য: কনফিগারেশন লোড হওয়ার পর লগ মেসেজ দেখানো
