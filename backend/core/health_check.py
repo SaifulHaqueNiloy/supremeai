@@ -274,37 +274,28 @@ class ComprehensiveHealthChecker:
             )
 
     async def check_integrations(self) -> HealthCheckResult:
-        """Check all automation integrations health."""
+        """Check all integrations health."""
         try:
-            from core.automation.dispatcher import get_provider
-            from core.integrations.registry import list_integrations
+            from core.integrations.registry import IntegrationStatus, list_integrations
 
             start_time = time.time()
             integrations_health = {}
             has_unhealthy = False
 
             for intg in list_integrations():
-                if intg.status == "active" and intg.automation_provider_id:
-                    try:
-                        provider = get_provider(intg.automation_provider_id)
-                        if hasattr(provider, "health"):
-                            health_res = await provider.health()
-                            integrations_health[intg.id] = health_res.model_dump()
-                            if health_res.status == "unhealthy":
-                                has_unhealthy = True
-                        else:
-                            integrations_health[intg.id] = {
-                                "status": "unknown",
-                                "message": "Provider does not support health check",
-                            }
-                    except Exception as provider_err:
-                        logger.error(
-                            f"Failed to check health for integration {intg.id}: {provider_err}"
-                        )
-                        integrations_health[intg.id] = {
-                            "status": "unhealthy",
-                            "message": str(provider_err),
-                        }
+                if intg.status == IntegrationStatus.ENABLED:
+                    # Currently we just report it as healthy if it is enabled.
+                    # Individual integrations like n8n could be checked further if needed.
+                    integrations_health[intg.key] = {
+                        "status": "healthy",
+                        "message": "Integration is enabled",
+                    }
+                elif intg.status == IntegrationStatus.MISCONFIGURED:
+                    integrations_health[intg.key] = {
+                        "status": "unhealthy",
+                        "message": "Integration is misconfigured",
+                    }
+                    if intg.required_for_core:
                         has_unhealthy = True
 
             response_time = (time.time() - start_time) * 1000
