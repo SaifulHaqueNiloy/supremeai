@@ -16,10 +16,10 @@ from sqlalchemy.future import select
 
 from api.dependencies import get_fitness_engine, get_tenant_db
 from core.config import settings
-from core.evolution.agent_breeder import AgentBreeder, BreederConfig
-from core.evolution.auto_skill_creator import AutoSkillCreator
-from core.evolution.fitness_engine import FitnessEngine
-from core.evolution.performance_oracle import PerformanceOracle
+from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
+from core.self_evolution.auto_skill_creator import AutoSkillCreator
+from core.self_evolution.fitness_engine import FitnessEngine
+from core.self_evolution.performance_oracle import PerformanceOracle
 from core.tenant_db import TenantAwareFirestore
 from database.session import get_db_session
 from models.evolution import CodeProposal

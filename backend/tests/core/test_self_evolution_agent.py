@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.evolution.self_evolution_agent import SelfEvolutionAgent
+from core.self_evolution.self_evolution_agent import SelfEvolutionAgent
 
 
 @pytest.fixture
@@ -111,7 +111,7 @@ async def test_refactor_prompt_contains_source_code(agent, mock_auto_skill_creat
     skill_dir.mkdir(parents=True)
     (skill_dir / "main.py").write_text("class Skill_A:\n    pass\n")
     base = tmp_path
-    with patch("core.evolution.self_evolution_agent.Path") as mock_path_cls:
+    with patch("core.self_evolution.self_evolution_agent.Path") as mock_path_cls:
         instance = MagicMock()
         instance.resolve.return_value = MagicMock()
         instance.resolve.return_value.parent.parent.parent = base

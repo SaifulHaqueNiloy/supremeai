@@ -241,7 +241,7 @@ class MaintenancePipeline:
             try:
                 import asyncio as _asyncio
 
-                from core.evolution.self_evolution_agent import (
+                from core.self_evolution.self_evolution_agent import (
                     SelfEvolutionAgent,
                 )
 

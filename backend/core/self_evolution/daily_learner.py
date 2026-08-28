@@ -24,7 +24,7 @@ from urllib.parse import quote_plus
 from loguru import logger
 
 from core.cache import get_cache
-from core.evolution.evolution_engine import EvolutionEngine
+from core.self_evolution.evolution_engine import EvolutionEngine
 from services.config_service import ConfigService
 from services.llm.llm_router import LLMRouter
 

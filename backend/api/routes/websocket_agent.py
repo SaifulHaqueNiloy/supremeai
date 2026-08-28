@@ -168,8 +168,8 @@ class DistributedConnectionManager:
                         if now - last_act > self.STALE_CONNECTION_TIMEOUT:
                             try:
                                 await ws.close(code=1001)
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                logger.warning(f"Ignored error: {e}")
                             if id(ws) in self._last_activity:
                                 del self._last_activity[id(ws)]
                         else:

@@ -44,7 +44,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.analytics", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.email", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.github", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.config", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.config_routes", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.cognitive", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.cache_predictions",
@@ -164,7 +164,7 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     # ---- Critical Routes ----
-    {"path": "api.routes.llm_gateway", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.llm_gateway_routes", "prefix": "", "is_admin": False, "is_critical": True},
     {"path": "api.routes.knowledge", "prefix": "/api", "is_admin": False, "is_critical": True},
     {"path": "api.routes.billing_api", "prefix": "", "is_admin": False, "is_critical": True},
     # ---- Admin & Health Routes ----

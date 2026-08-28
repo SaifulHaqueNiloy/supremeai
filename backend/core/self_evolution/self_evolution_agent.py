@@ -23,12 +23,12 @@ from sqlalchemy.future import select
 from core.error_bus import with_error_bus
 
 try:
-    from core.evolution.auto_skill_creator import AutoSkillCreator
+    from core.self_evolution.auto_skill_creator import AutoSkillCreator
 except ImportError:
     AutoSkillCreator = None  # type: ignore[misc,assignment]
 
 try:
-    from core.evolution.fitness_engine import FitnessEngine
+    from core.self_evolution.fitness_engine import FitnessEngine
 except ImportError:
     FitnessEngine = None  # type: ignore[misc,assignment]
 
@@ -54,13 +54,13 @@ class SelfEvolutionAgent:
         if fitness_engine is None:
             if FitnessEngine is None:
                 raise RuntimeError(
-                    "FitnessEngine failed to import - core.evolution.fitness_engine not available"
+                    "FitnessEngine failed to import - core.self_evolution.fitness_engine not available"
                 )
             fitness_engine = FitnessEngine()
         if auto_skill_creator is None:
             if AutoSkillCreator is None:
                 raise RuntimeError(
-                    "AutoSkillCreator failed to import - core.evolution.auto_skill_creator not available"
+                    "AutoSkillCreator failed to import - core.self_evolution.auto_skill_creator not available"
                 )
             auto_skill_creator = AutoSkillCreator()
 

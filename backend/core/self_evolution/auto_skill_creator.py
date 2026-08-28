@@ -23,7 +23,7 @@ if repo_root not in sys.path:
 
 from loguru import logger
 
-from core.evolution.fitness_engine import FitnessEngine
+from core.self_evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 
 try:
