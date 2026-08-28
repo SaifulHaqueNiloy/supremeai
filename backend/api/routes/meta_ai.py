@@ -30,8 +30,8 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
-from core.evolution.agent_breeder import AgentBreeder, BreederConfig
-from core.evolution.performance_oracle import OracleConfig, PerformanceOracle
+from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
+from core.self_evolution.performance_oracle import OracleConfig, PerformanceOracle
 from database.session import get_db_session
 from models.meta_ai import AgentGenome, BreedingPool, MetricType
 

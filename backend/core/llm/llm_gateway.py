@@ -660,7 +660,7 @@ class LLMGateway:
                             # Now both EvolutionEngine AND SelfEvolutionAgent use the
                             # SAME FitnessEngine singleton, so metrics are shared.
                             from api.deps import get_fitness_engine
-                            from core.evolution.evolution_engine import EvolutionEngine
+                            from core.self_evolution.evolution_engine import EvolutionEngine
 
                             _evolution_engine = EvolutionEngine(fitness_engine=get_fitness_engine())
                             _evolution_engine.learn_from_success(

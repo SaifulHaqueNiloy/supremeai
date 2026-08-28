@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from core.evolution.evolution_engine import EvolutionEngine
+from core.self_evolution.evolution_engine import EvolutionEngine
 
 
 def _make_engine(monkeypatch=None):

@@ -2,7 +2,6 @@
 # SupremeAI - Test Configuration & Shared Fixtures
 # Production-Ready pytest Configuration
 # ============================================================
-
 import asyncio
 import os
 import sys
@@ -15,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -213,8 +213,8 @@ def db_engine(test_settings):
 
     try:
         asyncio.run(setup_db())
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Ignored error: {e}")
 
     yield engine
 
@@ -223,17 +223,17 @@ def db_engine(test_settings):
         try:
             async with engine.begin() as conn:
                 await conn.run_sync(Base.metadata.drop_all)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Ignored error: {e}")
         try:
             await engine.dispose()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Ignored error: {e}")
 
     try:
         asyncio.run(teardown_db())
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Ignored error: {e}")
 
 
 @pytest_asyncio.fixture

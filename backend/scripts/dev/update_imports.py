@@ -59,7 +59,7 @@ IMPORT_MAP = {
     "from core.task_queue_enhanced": "from core.queue.task_queue_enhanced",
     "from core.task_router": "from core.queue.task_router",
     # Evolution moves
-    "from core.evolution_engine": "from core.evolution.evolution_engine",
+    "from core.evolution_engine": "from core.self_evolution.evolution_engine",
 }
 
 

@@ -128,7 +128,7 @@ try:
     # unavailable হলেও adversarial_defense/digital_twin/federated_learning available
     # থাকবে। এটা "no room for mistake" — কোনো production code এগুলো use করে না,
     # তাই behavior change নেই, শুধু partial availability বাড়ে।
-    from core.evolution.adversarial_defense.defense_system import (
+    from core.self_evolution.adversarial_defense.defense_system import (
         AdversarialDefenseSystem,
         AdversarialTrainer,
         DefenseConfig,
@@ -143,7 +143,7 @@ except (ImportError, OSError, AttributeError):
 
 try:
     # EWC (Elastic Weight Consolidation) — torch-dependent, free-tier-এ unavailable
-    from core.evolution.continual_learning.ewc import (
+    from core.self_evolution.continual_learning.ewc import (
         EWC,
         EWCConfig,
         EWCTrainer,
@@ -159,9 +159,9 @@ except (ImportError, OSError, AttributeError):
     OnlineEWC = None  # type: ignore[assignment]
 
 try:
-    from core.evolution.digital_twin.remediation_engine import RemediationEngine
-    from core.evolution.digital_twin.simulator import ImpactSimulator
-    from core.evolution.digital_twin.topology import SystemTopologyMapper
+    from core.self_evolution.digital_twin.remediation_engine import RemediationEngine
+    from core.self_evolution.digital_twin.simulator import ImpactSimulator
+    from core.self_evolution.digital_twin.topology import SystemTopologyMapper
 
     DIGITAL_TWIN_AVAILABLE = True
 except (ImportError, OSError, AttributeError):
@@ -171,7 +171,7 @@ except (ImportError, OSError, AttributeError):
     SystemTopologyMapper = None  # type: ignore[assignment]
 
 try:
-    from core.evolution.federated_learning.fed_learning import (
+    from core.self_evolution.federated_learning.fed_learning import (
         FederatedLearningCoordinator,
     )
 
@@ -182,7 +182,7 @@ except (ImportError, OSError, AttributeError):
 
 try:
     # neural_symbolic — torch-dependent (NeuralModule(nn.Module)), free-tier-এ unavailable
-    from core.evolution.neural_symbolic.integration import (
+    from core.self_evolution.neural_symbolic.integration import (
         NeuralSymbolicConfig,
         NeuralSymbolicIntegrator,
     )

@@ -10,11 +10,11 @@ from unittest.mock import MagicMock
 sys.modules.setdefault("google", MagicMock())
 sys.modules.setdefault("google.genai", MagicMock())
 
-from core.evolution.agent_breeder import AgentBreeder  # noqa: E402
-from core.evolution.daily_learner import DailyLearner, PriorityScorer  # noqa: E402
-from core.evolution.evolution_react_agent import EvolutionReActAgent  # noqa: E402
-from core.evolution.fitness_engine import AutomatedFitnessEngine, FitnessEngine  # noqa: E402
-from core.evolution.skill_graph import EvolutionSkillGraph  # noqa: E402
+from core.self_evolution.agent_breeder import AgentBreeder  # noqa: E402
+from core.self_evolution.daily_learner import DailyLearner, PriorityScorer  # noqa: E402
+from core.self_evolution.evolution_react_agent import EvolutionReActAgent  # noqa: E402
+from core.self_evolution.fitness_engine import AutomatedFitnessEngine, FitnessEngine  # noqa: E402
+from core.self_evolution.skill_graph import EvolutionSkillGraph  # noqa: E402
 
 
 def test_evolution_core_modules_importable():
@@ -36,7 +36,7 @@ def test_evolution_classes_construct_with_safe_defaults():
 
 
 def test_self_evolution_agent_constructs():
-    from core.evolution.self_evolution_agent import SelfEvolutionAgent
+    from core.self_evolution.self_evolution_agent import SelfEvolutionAgent
 
     agent = SelfEvolutionAgent()
     assert hasattr(agent, "fitness_threshold")
@@ -85,7 +85,7 @@ def test_agent_breeder_constructs_with_mock_session():
 
 
 def test_self_evolution_agent_thresholds_configurable():
-    from core.evolution.self_evolution_agent import SelfEvolutionAgent
+    from core.self_evolution.self_evolution_agent import SelfEvolutionAgent
 
     agent = SelfEvolutionAgent(fitness_threshold=0.7, max_consecutive_penalties=2)
     assert agent.fitness_threshold == 0.7

@@ -374,7 +374,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
         created_at = datetime.now(UTC).isoformat()
 
         try:
-            from core.evolution.auto_skill_creator import AutoSkillCreator
+            from core.self_evolution.auto_skill_creator import AutoSkillCreator
 
             creator = AutoSkillCreator()
             result = await creator.generate_and_deploy_skill(

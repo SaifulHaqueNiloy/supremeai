@@ -68,7 +68,7 @@ class SwarmBrowser:
         """ADVANCED: Simulate action flow in the Digital Twin simulator before spending real browser compute."""
         logger.info(f"[SwarmBrowser] Dry-running flow of {len(flow)} steps for site: {site}")
         try:
-            from core.evolution.digital_twin.simulator import DigitalTwinSimulator
+            from core.self_evolution.digital_twin.simulator import DigitalTwinSimulator
 
             DigitalTwinSimulator()
             # Simulation verification

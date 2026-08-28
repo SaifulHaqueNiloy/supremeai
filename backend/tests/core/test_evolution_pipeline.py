@@ -8,7 +8,7 @@ try:
     from skills.installer import SkillInstaller
     from skills.registry import SkillRegistry
 
-    from core.evolution.auto_skill_creator import AutoSkillCreator
+    from core.self_evolution.auto_skill_creator import AutoSkillCreator
 
     HAS_SKILLS_INSTALLER = True
 except (ImportError, ModuleNotFoundError):
@@ -32,7 +32,7 @@ def clean_dynamic_skills(tmp_path):
     loader.skills_dir.mkdir(parents=True, exist_ok=True)
 
     # Mock SkillInstaller constructor to return our temp configured installer
-    with patch("core.evolution.auto_skill_creator.SkillInstaller", return_value=installer):
+    with patch("core.self_evolution.auto_skill_creator.SkillInstaller", return_value=installer):
         yield loader, registry, installer
 
 

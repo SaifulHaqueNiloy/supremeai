@@ -25,7 +25,7 @@ class AutonomousAgent:
         self.name = name
         self.history: list[dict[str, Any]] = []
         try:
-            from core.evolution.auto_skill_creator import AutoSkillCreator
+            from core.self_evolution.auto_skill_creator import AutoSkillCreator
 
             self.skill_creator = AutoSkillCreator()
         except Exception:

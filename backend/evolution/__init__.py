@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 # Re-export from core.evolution
-from core.evolution import (
+from core.self_evolution import (
     AgentBreeder,
     AutoSkillCreator,
     DailyLearner,

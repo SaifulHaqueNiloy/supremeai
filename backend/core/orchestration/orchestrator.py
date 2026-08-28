@@ -16,11 +16,12 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
-# Assuming OpenTelemetry tracer is set up in core.telemetry
-from core.evolution.fitness_engine import FitnessEngine
-from core.evolution.self_evolution_agent import SelfEvolutionAgent
-from core.evolution.skill_graph import EvolutionSkillGraph
 from core.observability.telemetry import trace_span
+
+# Assuming OpenTelemetry tracer is set up in core.telemetry
+from core.self_evolution.fitness_engine import FitnessEngine
+from core.self_evolution.self_evolution_agent import SelfEvolutionAgent
+from core.self_evolution.skill_graph import EvolutionSkillGraph
 
 router = APIRouter(prefix="/orchestrator", tags=["orchestrator"])
 

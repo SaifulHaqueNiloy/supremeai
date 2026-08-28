@@ -100,7 +100,7 @@ async def start_background_services(app):
             # with empty metrics → _tick() never triggered refactors.
             # Now both use the same instance from api.deps.get_fitness_engine().
             from api.deps import get_fitness_engine
-            from core.evolution.self_evolution_agent import SelfEvolutionAgent
+            from core.self_evolution.self_evolution_agent import SelfEvolutionAgent
 
             _evo_agent = SelfEvolutionAgent(
                 fitness_engine=get_fitness_engine(),
@@ -119,7 +119,7 @@ async def start_background_services(app):
     # বাংলা মন্তব্ব্য: DailyLearner শুরু করা — এখন AgentSupervisor-এর অধীনে চলবে।
     try:
         if os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true":
-            from core.evolution.daily_learner import DailyLearner
+            from core.self_evolution.daily_learner import DailyLearner
 
             _daily_learner = DailyLearner()
 

@@ -17,8 +17,8 @@ from loguru import logger
 
 from core.config import settings
 from core.error_bus import with_error_bus
-from core.evolution.fitness_engine import FitnessEngine
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+from core.self_evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 
 # শেয়ার্ড ইউটিলিটি — টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
