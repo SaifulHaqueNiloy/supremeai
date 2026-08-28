@@ -141,9 +141,15 @@ class TestCognitiveRouter:
         assert stats["total_requests"] == 2
 
     def test_composition_strategy_selection(self, router):
-        """Should select appropriate composition strategy based on task types."""
-        # This would need a TaskGraph fixture
-        pass  # Implementation depends on _determine_composition_strategy access
+        """Composition strategy selection requires a TaskGraph fixture.
+
+        The full decomposition engine (TaskDecomposer/TaskGraph) is not yet
+        implemented, so this test is skipped rather than faked. Re-enable once
+        _determine_composition_strategy lands in brain/cognitive_router.py.
+        """
+        pytest.skip(
+            "composition strategy API (_determine_composition_strategy) not implemented yet"
+        )
 
 
 class TestTaskExecutionEngine:

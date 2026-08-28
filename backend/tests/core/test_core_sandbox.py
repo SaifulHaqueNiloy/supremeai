@@ -103,18 +103,13 @@ class TestFileIsolationGateExtended:
         return staging
 
     def test_file_gate_initialization(self):
-        """Test FileIsolationGate initializes."""
-        # Mock DockerSandbox to avoid actual container
-        with patch("backend.sandbox.file_isolation_gate.DockerSandbox"):
-            # The gate uses SECURE_STAGING_DIR by default
-            # We can verify it initializes
-            assert True
+        """Test FileIsolationGate initializes without a real container."""
+        from backend.sandbox.file_isolation_gate import FileIsolationGate
 
-    def test_path_traversal_protection(self):
-        """Test that path traversal is blocked in transaction ID."""
-        # This is implicitly tested in the main test file
-        # Additional edge cases here
-        pass
+        with patch("backend.sandbox.file_isolation_gate.DockerSandbox"):
+            gate = FileIsolationGate()
+            assert isinstance(gate, FileIsolationGate)
+            assert hasattr(gate, "sandbox")
 
 
 class TestContainerAuditor:
