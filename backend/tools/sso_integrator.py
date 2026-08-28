@@ -6,6 +6,8 @@ import defusedxml.ElementTree as ET  # -- standard idiom (mirrors stdlib xml.etr
 import jwt
 from loguru import logger
 
+from core.config import settings
+
 
 class SSOIntegrator:
     saml_settings: dict[str, Any] = {}
@@ -216,17 +218,13 @@ class SSOIntegrator:
             "debug": True,
             "sp": {
                 "entityId": self.saml_settings.get(
-                    "sp_entity_id", os.getenv("APP_BASE_URL", "") + "/metadata"
+                    "sp_entity_id", settings.app_base_url + "/metadata"
                 ),
                 "assertionConsumerService": {
-                    "url": self.saml_settings.get(
-                        "acs_url", os.getenv("APP_BASE_URL", "") + "/acs"
-                    ),
+                    "url": self.saml_settings.get("acs_url", settings.app_base_url + "/acs"),
                 },
                 "singleLogoutService": {
-                    "url": self.saml_settings.get(
-                        "sls_url", os.getenv("APP_BASE_URL", "") + "/sls"
-                    ),
+                    "url": self.saml_settings.get("sls_url", settings.app_base_url + "/sls"),
                 },
                 "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
                 "x509cert": self.saml_settings.get("sp_x509_cert", ""),
@@ -252,7 +250,7 @@ class SSOIntegrator:
         return settings_dict
 
     def _fallback_metadata(self) -> str:
-        sp_entity_id = self.saml_settings.get("sp_entity_id", os.getenv("APP_BASE_URL", ""))
+        sp_entity_id = self.saml_settings.get("sp_entity_id", settings.app_base_url)
         acs_url = self.saml_settings.get("acs_url", f"{sp_entity_id}/acs")
         return f"""<?xml version="1.0"?>
 <EntityDescriptor xmlns="urn:oasis:names:tc:SAML:2.0:metadata" entityID="{sp_entity_id}">

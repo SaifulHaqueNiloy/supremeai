@@ -45,6 +45,12 @@ class SettingsFieldsMixin:
     )  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
     host: str = Field(default="0.0.0.0", validation_alias="HOST")
 
+    # ── Canonical Portal Endpoints ──────────────────────────────────────────
+    frontend_url: str = Field(default="", validation_alias="FRONTEND_URL")
+    admin_url: str = Field(default="", validation_alias="ADMIN_URL")
+    backend_url: str = Field(default="", validation_alias="BACKEND_URL")
+    app_base_url: str = Field(default="", validation_alias="APP_BASE_URL")
+
     # CORS origins property is implemented dynamically below to support validation.
 
     # 🔧 DYNAMIC: Empty default — must be explicitly configured in production
@@ -182,7 +188,13 @@ class SettingsFieldsMixin:
         validation_alias="IDEMPOTENCY_CRITICAL_PATHS",
     )
 
-    # বাংলা মন্তব্য: Model names env-driven
+    # ── Provider API Base URLs (Optional Proxies) ─────────────────────────
+    openai_base_url: str = Field(default="", validation_alias="OPENAI_BASE_URL")
+    deepseek_base_url: str = Field(default="", validation_alias="DEEPSEEK_BASE_URL")
+    groq_base_url: str = Field(default="", validation_alias="GROQ_BASE_URL")
+    anthropic_base_url: str = Field(default="", validation_alias="ANTHROPIC_BASE_URL")
+
+    # ── Legacy / specific models ──────────────────────────────────────────────
     claude_openrouter_model: str = Field(
         default="anthropic/claude-3.5-haiku:free",
         validation_alias="CLAUDE_OPENROUTER_MODEL",
