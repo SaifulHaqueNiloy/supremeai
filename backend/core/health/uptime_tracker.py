@@ -11,6 +11,7 @@ because each call opens/closes its own short-lived connection.
 
 from __future__ import annotations
 
+import logging
 import os
 import sqlite3
 import threading
@@ -23,6 +24,7 @@ _DB_PATH = os.environ.get(
     ),
 )
 _LOCK = threading.Lock()
+_LOGGER = logging.getLogger(__name__)
 
 
 def _connect() -> sqlite3.Connection:
@@ -46,7 +48,12 @@ def _connect() -> sqlite3.Connection:
 
 
 def record_check(service_name: str, status: str, response_time_ms: float | None = None) -> None:
-    """Persist a single health-check result. Best-effort: never raises."""
+    """Persist a single health-check result without breaking the health check.
+
+    Persistence is deliberately best-effort because telemetry storage must not
+    turn a healthy service into an unhealthy health endpoint. Failures are,
+    however, logged with a traceback so storage incidents remain observable.
+    """
     try:
         with _LOCK, _connect() as conn:
             conn.execute(
@@ -54,12 +61,14 @@ def record_check(service_name: str, status: str, response_time_ms: float | None 
                 "VALUES (?, ?, ?, ?)",
                 (service_name, status, response_time_ms, datetime.utcnow().isoformat()),
             )
-            # Prune anything older than 30 days to keep the file small.
             cutoff = (datetime.utcnow() - timedelta(days=30)).isoformat()
             conn.execute("DELETE FROM uptime_checks WHERE checked_at < ?", (cutoff,))
     except Exception:
-        # Uptime tracking must never break the health check itself.
-        pass
+        _LOGGER.exception(
+            "Failed to persist uptime check for service=%r status=%r",
+            service_name,
+            status,
+        )
 
 
 def get_uptime_percentage(service_name: str, hours: int) -> float | None:
@@ -79,6 +88,11 @@ def get_uptime_percentage(service_name: str, hours: int) -> float | None:
         ok, total = row
         return round((ok / total) * 100, 2)
     except Exception:
+        _LOGGER.exception(
+            "Failed to calculate uptime percentage for service=%r hours=%d",
+            service_name,
+            hours,
+        )
         return None
 
 
@@ -103,4 +117,9 @@ def get_history(service_name: str, hours: int = 24) -> list[dict]:
             ).fetchall()
         return [{"status": r[0], "response_time_ms": r[1], "checked_at": r[2]} for r in rows]
     except Exception:
+        _LOGGER.exception(
+            "Failed to read uptime history for service=%r hours=%d",
+            service_name,
+            hours,
+        )
         return []
