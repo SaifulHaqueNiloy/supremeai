@@ -95,10 +95,16 @@ def test_allowed_origins_localhost_in_dev(fake_settings):
         assert "http://127.0.0.1:5173" in origins
 
 
-def test_allowed_origins_no_localhost_in_production(fake_settings):
+def test_allowed_origins_no_localhost_in_production(fake_settings, monkeypatch):
     # বাংলা: প্রোডাকশনে স্পষ্টভাবে কনফিগ না করা localhost অটো-যোগ হবে না
     fake_settings.env = "production"
     fake_settings.cors_origins = ["https://supremeai-lac.vercel.app"]
+    monkeypatch.setattr(origin_validator, "USER_DEFAULT_TRUSTED_ORIGINS", frozenset())
+    monkeypatch.setattr(origin_validator, "ADMIN_DEFAULT_TRUSTED_ORIGINS", frozenset())
+    import middleware.cors_policy
+
+    monkeypatch.setattr(middleware.cors_policy, "ADMIN_ALLOWED_ORIGINS", ())
+    monkeypatch.setattr(middleware.cors_policy, "USER_ALLOWED_ORIGINS", ())
     with _patch_settings(fake_settings):
         mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
         origins = mw.allowed_origins
