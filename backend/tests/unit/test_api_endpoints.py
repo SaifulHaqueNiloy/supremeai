@@ -286,6 +286,7 @@ class TestAgentEndpoints:
     """Test agent CRUD operation endpoints."""
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_create_agent(
         self,
         client: AsyncClient,
@@ -322,6 +323,7 @@ class TestAgentEndpoints:
         assert response.status_code == 401
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_list_agents(
         self,
         client: AsyncClient,
@@ -341,6 +343,7 @@ class TestAgentEndpoints:
         assert any(a["id"] == created_agent["id"] for a in data)
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_get_agent_by_id(
         self,
         client: AsyncClient,
@@ -359,6 +362,7 @@ class TestAgentEndpoints:
         assert data["name"] == created_agent["name"]
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_update_agent(
         self,
         client: AsyncClient,
@@ -383,6 +387,7 @@ class TestAgentEndpoints:
         assert data["description"] == "Updated description"
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_delete_agent(
         self,
         client: AsyncClient,
@@ -405,6 +410,7 @@ class TestAgentEndpoints:
         assert get_response.status_code == 404
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_activate_agent(
         self,
         client: AsyncClient,
@@ -422,6 +428,7 @@ class TestAgentEndpoints:
         assert data["status"] == "active"
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_pause_agent(
         self,
         client: AsyncClient,
@@ -446,6 +453,7 @@ class TestAgentEndpoints:
         assert data["status"] == "paused"
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup (no POST/GET/PUT/DELETE /api/v1/agents route exists anywhere in the app -- confirmed via repo-wide grep of api/routes/*.py; matches the already-documented skip on test_create_agent_unauthorized just above)")
     async def test_cannot_access_other_users_agent(
         self,
         client: AsyncClient,
@@ -467,6 +475,7 @@ class TestConversationEndpoints:
     """Test conversation management endpoints."""
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on created_agent/created_conversation fixture which needs POST /api/v1/agents (does not exist anywhere in the app)")
     async def test_create_conversation(
         self,
         client: AsyncClient,
@@ -492,6 +501,7 @@ class TestConversationEndpoints:
         assert "id" in data
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on created_agent/created_conversation fixture which needs POST /api/v1/agents (does not exist anywhere in the app)")
     async def test_list_conversations(
         self,
         client: AsyncClient,
@@ -510,6 +520,7 @@ class TestConversationEndpoints:
         assert len(data) >= 1
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on created_agent/created_conversation fixture which needs POST /api/v1/agents (does not exist anywhere in the app)")
     async def test_send_message_to_conversation(
         self,
         client: AsyncClient,
@@ -534,6 +545,7 @@ class TestConversationEndpoints:
         assert data["role"] == "user"
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on created_agent/created_conversation fixture which needs POST /api/v1/agents (does not exist anywhere in the app)")
     async def test_get_conversation_messages(
         self,
         client: AsyncClient,
@@ -561,6 +573,7 @@ class TestConversationEndpoints:
         assert any(m["content"] == "Test message for retrieval" for m in data)
 
     @pytest.mark.agents
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on created_agent/created_conversation fixture which needs POST /api/v1/agents (does not exist anywhere in the app)")
     async def test_delete_conversation(
         self,
         client: AsyncClient,
@@ -659,6 +672,7 @@ class TestPaginationAndFiltering:
     """Test pagination and filtering on list endpoints."""
 
     @pytest.mark.unit
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on POST/GET /api/v1/agents which does not exist anywhere in the app")
     async def test_pagination_on_agents_list(
         self,
         client: AsyncClient,
@@ -687,6 +701,7 @@ class TestPaginationAndFiltering:
             assert "page" in meta or "pagination" in meta
 
     @pytest.mark.unit
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on POST/GET /api/v1/agents which does not exist anywhere in the app")
     async def test_filtering_agents_by_status(
         self,
         client: AsyncClient,
@@ -704,6 +719,7 @@ class TestPaginationAndFiltering:
         assert all(agent["status"] == "created" for agent in data)
 
     @pytest.mark.unit
+    @pytest.mark.skip(reason="Agents API moved or removed in Phase 2 Cleanup -- depends on POST/GET /api/v1/agents which does not exist anywhere in the app")
     async def test_sorting_agents_by_created_date(
         self,
         client: AsyncClient,
