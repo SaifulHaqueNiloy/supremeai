@@ -674,3 +674,81 @@ async def get_automation_workflows(admin_user: dict = Depends(get_current_admin)
     from core.automation.registry import AUTOMATION_REGISTRY
 
     return {"workflows": AUTOMATION_REGISTRY}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Integration Governance — Plan Section 28 + 29
+# বাংলা: সব optional integration-এর observability endpoints। কোনো secret expose
+# করে না (Plan Section 29)। শুধু status, scope, fallback, capabilities দেখায়।
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/integrations")
+async def list_all_integrations(admin_user: dict = Depends(get_current_admin)):
+    """
+    Plan Section 29: সব optional integration-এর overview।
+    Admin dashboard-এ দেখানোর জন্য status, scope, fallback সহ।
+    কোনো secret expose করে না।
+    """
+    from core.integrations import list_integrations
+
+    integs = list_integrations()
+    return {
+        "total": len(integs),
+        "integrations": [
+            {
+                "key": i.key,
+                "name": i.name,
+                "category": i.category,
+                "scope": i.scope.value,
+                "enabled": i.enabled,
+                "status": i.status.value,
+                "required_for_core": i.required_for_core,
+                "fallback": i.fallback,
+                "privacy_mode": i.privacy_mode,
+                "capabilities": list(i.capabilities),
+                "config_note": i.config_note,
+            }
+            for i in integs
+        ],
+        "summary": {
+            "enabled": sum(1 for i in integs if i.enabled),
+            "disabled": sum(1 for i in integs if not i.enabled and i.status.value != "not-adopted"),
+            "not_adopted": sum(1 for i in integs if i.status.value == "not-adopted"),
+        },
+    }
+
+
+@router.get("/integrations/{key}/health")
+async def get_integration_health(
+    key: str,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 29: একটি specific integration-এর detailed health/status।
+    ভুল key দিলে 404। Secret কখনো expose হয় না।
+    """
+    from core.integrations import get_integration
+
+    info = get_integration(key)
+    if info is None:
+        raise HTTPException(status_code=404, detail=f"Unknown integration: {key}")
+
+    return {
+        "key": info.key,
+        "name": info.name,
+        "category": info.category,
+        "scope": info.scope.value,
+        "enabled": info.enabled,
+        "status": info.status.value,
+        "required_for_core": info.required_for_core,
+        "fallback": info.fallback,
+        "privacy_mode": info.privacy_mode,
+        "capabilities": list(info.capabilities),
+        "config_note": info.config_note,
+        "core_independence": (
+            "✅ Core works without this integration"
+            if not info.required_for_core
+            else "⚠️ Core depends on this integration"
+        ),
+    }
