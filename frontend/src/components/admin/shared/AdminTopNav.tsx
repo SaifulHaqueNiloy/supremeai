@@ -17,7 +17,7 @@ export const AdminTopNav: React.FC<AdminTopNavProps> = ({
   onLogout
 }) => {
   return (
-    <header className="h-16 border-b border-[#00f3ff]/15 bg-[#040814]/90 backdrop-blur-md px-6 flex items-center justify-between font-mono text-white select-none z-50 shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
+    <header className="surface-2 h-16 border-b px-6 flex items-center justify-between font-mono text-text select-none z-50">
       {/* বাম পাশ: লোগো ও অর্কেস্ট্রেশন প্ল্যাটফর্ম টেক্সট */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">

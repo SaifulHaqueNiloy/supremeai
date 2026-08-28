@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import type { AdminSubTab, GcpHealth, CloudStats, Skill, Checkpoint, ChatMessage, AdminUser, HealthMap } from '../../../types';
 import { SubTabContent } from '../shared/AdminSubTabContent';
 import { AdminTopNav } from '../shared/AdminTopNav';
+import { DashboardLayout } from '../../layout/DashboardLayout';
 import { ADMIN_SUBTAB_EVENT } from '../../../config/commandRegistry';
 import {
   LayoutDashboard,
@@ -103,16 +104,11 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
   // বাংলা মন্তব্য: কমান্ড প্যালেট অপশন এখন src/config/commandRegistry.ts-এ (unified registry)।
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      {/* ১. টপ নেভিগেশন বার */}
-      <AdminTopNav onLogout={handleAdminLogout} />
-
-      {/* নিচের অংশ: সাইডবার + মূল কন্টেন্ট */}
-      <div className="flex-1 flex overflow-hidden relative">
-
-        {/* ২. বাম পাশের নেভিগেশন সাইডবার */}
-        <aside className="w-56 bg-[#040814]/55 backdrop-blur-xl border-r border-white/5 flex flex-col justify-between py-6 font-sans text-slate-400 select-none z-20">
-          <div className="space-y-1 px-3">
+    <DashboardLayout
+      header={<AdminTopNav onLogout={handleAdminLogout} />}
+      sidebar={
+        <>
+          <div className="space-y-1 px-3 mt-6">
             {sidebarItems.map(item => {
               const isActive = adminSubTab === item.id;
               return (
@@ -120,11 +116,11 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
                   key={item.id}
                   onClick={() => setAdminSubTab(item.id as AdminSubTab)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-semibold tracking-wider transition-all duration-300 ${isActive
-                      ? 'bg-[#00f3ff]/10 text-[#00f3ff] border-l-2 border-[#00f3ff] shadow-[inset_0_0_12px_rgba(0,243,255,0.05)]'
-                      : 'hover:bg-slate-900/50 hover:text-slate-200'
+                      ? 'surface-3 text-accent-primary border-l-2 border-accent-primary'
+                      : 'hover:surface-2 hover:text-text'
                     }`}
                 >
-                  <span className={isActive ? 'text-[#00f3ff]' : 'text-slate-400'}>
+                  <span className={isActive ? 'text-accent-primary' : 'text-secondary'}>
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -133,27 +129,23 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
             })}
           </div>
 
-          {/* অতিরিক্ত অ্যাডমিন টুলস (অরবিট ক্যানভাস লিঙ্ক) */}
-          <div className="px-6 border-t border-slate-900 pt-4">
+          <div className="px-6 border-t border-border pt-4 mb-6">
             <button
               onClick={() => setAdminSubTab('command-center')}
-              className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded border border-[#00f3ff]/30 text-[#00f3ff] hover:bg-[#00f3ff]/10 text-xs font-mono font-bold tracking-widest uppercase transition-all duration-300 ${adminSubTab === 'command-center' ? 'bg-[#00f3ff]/20' : ''
+              className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded border border-accent-primary/30 text-accent-primary hover:surface-2 text-xs font-mono font-bold tracking-widest uppercase transition-all duration-300 ${adminSubTab === 'command-center' ? 'surface-3' : ''
                 }`}
             >
               <Terminal size={14} />
               <span>Core Canvas</span>
             </button>
-            <div className="text-[9px] text-slate-600 text-center mt-3 font-mono">
+            <div className="text-[9px] text-muted text-center mt-3 font-mono">
               CTRL+K for command menu
             </div>
           </div>
-        </aside>
-
-        {/* ৩. মূল কন্টেন্ট প্যানেল */}
-        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <SubTabContent {...props} />
-        </main>
-      </div>
-    </div>
+        </>
+      }
+    >
+      <SubTabContent {...props} />
+    </DashboardLayout>
   );
 }
