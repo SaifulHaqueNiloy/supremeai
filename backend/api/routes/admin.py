@@ -774,3 +774,128 @@ async def get_integration_health(
             else "⚠️ Core depends on this integration"
         ),
     }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Automation Execution History — Plan Section 7
+# বাংলা: dispatch lifecycle-এর audit trail। admin দেখতে পারে কোন event কখন
+# dispatch হয়েছিল, কী status পেয়েছিল, কত সময় লেগেছিল। secrets expose হয় না।
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/automation/executions")
+async def list_automation_executions(
+    limit: int = 50,
+    workflow_key: str = "",
+    status: str = "",
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 7: automation execution history (audit trail)।
+    optional filters: workflow_key, status। সর্বশেষ `limit` টা execution দেখায়।
+    """
+    try:
+        from database.session import get_db_session_context
+        from models.automation_execution import AutomationExecution
+        from sqlalchemy import select, desc
+
+        async with get_db_session_context() as session:
+            stmt = select(AutomationExecution).order_by(
+                desc(AutomationExecution.created_at)
+            ).limit(min(limit, 200))  # cap at 200
+            if workflow_key:
+                stmt = stmt.where(AutomationExecution.workflow_key == workflow_key)
+            if status:
+                stmt = stmt.where(AutomationExecution.status == status.upper())
+
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+
+            return {
+                "status": "success",
+                "total": len(records),
+                "executions": [
+                    {
+                        "id": r.id,
+                        "event_id": r.event_id,
+                        "workflow_key": r.workflow_key,
+                        "provider": r.provider,
+                        "status": r.status,
+                        "attempt": r.attempt,
+                        "started_at": r.started_at.isoformat() if r.started_at else None,
+                        "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                        "duration_ms": r.duration_ms,
+                        "http_status": r.http_status,
+                        "external_execution_id": r.external_execution_id,
+                        "trace_id": r.trace_id,
+                        "error_code": r.error_code,
+                        # error_message truncate করি — সম্ভাব্য sensitive data না ফাঁসাতে
+                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                    }
+                    for r in records
+                ],
+            }
+    except Exception as e:
+        logger.error(f"❌ automation executions list failed: {e}")
+        return {
+            "status": "error",
+            "message": f"Could not retrieve execution history: {e}",
+            "total": 0,
+            "executions": [],
+        }
+
+
+@router.get("/automation/executions/{event_id}")
+async def get_execution_by_event(
+    event_id: str,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 7: একটি specific event_id-এর সব execution attempts দেখায়
+    (retry history সহ)।
+    """
+    try:
+        from database.session import get_db_session_context
+        from models.automation_execution import AutomationExecution
+        from sqlalchemy import select, desc
+
+        async with get_db_session_context() as session:
+            stmt = select(AutomationExecution).where(
+                AutomationExecution.event_id == event_id
+            ).order_by(desc(AutomationExecution.created_at))
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+
+            if not records:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No executions found for event_id: {event_id}",
+                )
+
+            return {
+                "status": "success",
+                "event_id": event_id,
+                "total_attempts": len(records),
+                "executions": [
+                    {
+                        "id": r.id,
+                        "workflow_key": r.workflow_key,
+                        "provider": r.provider,
+                        "status": r.status,
+                        "attempt": r.attempt,
+                        "started_at": r.started_at.isoformat() if r.started_at else None,
+                        "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                        "duration_ms": r.duration_ms,
+                        "http_status": r.http_status,
+                        "external_execution_id": r.external_execution_id,
+                        "error_code": r.error_code,
+                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                    }
+                    for r in records
+                ],
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ execution lookup failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
