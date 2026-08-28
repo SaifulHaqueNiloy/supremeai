@@ -8,6 +8,7 @@ NEVER crashes due to external API issues!
 import asyncio
 import time
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from loguru import logger
@@ -18,14 +19,32 @@ except ImportError:
     # Fallback to core circuit breaker
     from core.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
 
+
+class TaskType(StrEnum):
+    """Task classification used to pick the best provider/model.
+
+    Defined at module scope (not just as an ImportError fallback) because
+    it is referenced throughout this module (e.g. DynamicAIOrchestrator's
+    method signatures and routing tables) regardless of whether
+    `.learning_engine` imports successfully. Previously this was only
+    defined inside the `except ImportError` branch, so the normal/success
+    import path raised `NameError: name 'TaskType' is not defined` as soon
+    as the class body referencing it was evaluated.
+    """
+
+    CHAT = "chat"
+    GENERAL = "general"
+    CODE_GENERATION = "code_generation"
+    CODE_REVIEW = "code_review"
+    REASONING = "reasoning"
+    CREATIVE_WRITING = "creative_writing"
+    SUMMARIZATION = "summarization"
+
+
 try:
     from .learning_engine import LearningEngine
 except ImportError:
-    # Define stubs if module missing
-    class TaskType(str):
-        CHAT = "chat"
-        CODE = "code"
-        ANALYSIS = "analysis"
+    # Define a stub if the module is missing
 
     class LearningEngine:
         def __init__(self, *args, **kwargs):
