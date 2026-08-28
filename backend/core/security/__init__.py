@@ -230,12 +230,16 @@ def create_access_token(data: dict) -> str:
 BLACKLIST_PREFIX = "jwt:blacklist:"
 BLACKLIST_TTL = 86400  # 24 hours
 
+_IN_MEMORY_BLACKLIST: set[str] = set()
+
 
 async def revoke_token(jti: str, exp: int | None = None) -> bool:
     """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
     import time
 
     from core.cache.redis_manager import redis_manager
+
+    _IN_MEMORY_BLACKLIST.add(jti)
 
     if redis_manager and getattr(redis_manager, "client", None):
         ttl = max(1, (exp - int(time.time())) if exp else BLACKLIST_TTL)
@@ -249,12 +253,15 @@ async def revoke_token(jti: str, exp: int | None = None) -> bool:
             # বাংলা মন্তব্য: সিকিউরিটি গার্ড — টোকেন রিভোকেশন ফেইল করলে নীরব না থেকে এরর রেইজ করা হচ্ছে
             logger.error(f"⚠️ Failed to revoke token in Redis: {e}")
             raise RuntimeError(f"Failed to revoke JWT token: {e}") from e
-    logger.warning(f"Redis manager unavailable, token revocation skipped: {jti}")
-    return False
+    logger.warning(f"Redis manager unavailable, token revocation skipped for Redis: {jti}")
+    return True
 
 
 async def is_token_revoked(jti: str) -> bool:
     """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।"""
+    if jti in _IN_MEMORY_BLACKLIST:
+        return True
+
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):

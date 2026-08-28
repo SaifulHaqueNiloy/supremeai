@@ -280,9 +280,11 @@ async def refresh_token_endpoint(body: RefreshRequest):
         "method": payload.get("method", "supabase_auth"),
     }
     new_access = create_access_token(token_data)
+    new_refresh = create_refresh_token(token_data)
+
     return TokenResponse(
         access_token=new_access,
-        refresh_token=None,
+        refresh_token=new_refresh,
         user_id=str(token_data["sub"]),
         role=str(token_data["role"]),
     )
