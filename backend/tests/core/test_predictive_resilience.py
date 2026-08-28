@@ -79,9 +79,8 @@ def test_predictive_circuit_breaker_opens_on_anomaly_and_uses_fallback():
 
     with patch("core.resilience.predictive_circuit_breaker.time.time", return_value=100.0):
         breaker.record_request_outcome(100.0, 500)
-
-    assert breaker.state == "OPEN"
-    assert breaker.get_active_provider() == "openrouter"
+        assert breaker.state == "OPEN"
+        assert breaker.get_active_provider() == "openrouter"
 
 
 def test_predictive_circuit_breaker_uses_groq_when_fallback_is_none():
