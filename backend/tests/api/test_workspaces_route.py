@@ -32,9 +32,12 @@ async def test_bind_target_repository_returns_registered_target():
     registered.is_read_only.return_value = False
     registered.can_write.return_value = True
 
-    with patch("api.routes.workspaces_route.target_registry.register_target", return_value=registered) as register, patch(
-        "api.routes.workspaces_route.repo_manager.prepare_workspace"
-    ) as prepare:
+    with (
+        patch(
+            "api.routes.workspaces_route.target_registry.register_target", return_value=registered
+        ) as register,
+        patch("api.routes.workspaces_route.repo_manager.prepare_workspace") as prepare,
+    ):
         response = await bind_target_repository(req)
 
     register.assert_called_once()
@@ -65,8 +68,14 @@ async def test_bind_target_repository_degrades_when_workspace_preparation_fails(
     registered.is_read_only.return_value = True
     registered.can_write.return_value = False
 
-    with patch("api.routes.workspaces_route.target_registry.register_target", return_value=registered), patch(
-        "api.routes.workspaces_route.repo_manager.prepare_workspace", side_effect=RuntimeError("disk unavailable")
+    with (
+        patch(
+            "api.routes.workspaces_route.target_registry.register_target", return_value=registered
+        ),
+        patch(
+            "api.routes.workspaces_route.repo_manager.prepare_workspace",
+            side_effect=RuntimeError("disk unavailable"),
+        ),
     ):
         response = await bind_target_repository(req)
 
@@ -99,7 +108,9 @@ async def test_list_target_repositories_maps_registry_entities():
     second.is_read_only.return_value = False
     second.can_write.return_value = True
 
-    with patch("api.routes.workspaces_route.target_registry.list_targets", return_value=[first, second]):
+    with patch(
+        "api.routes.workspaces_route.target_registry.list_targets", return_value=[first, second]
+    ):
         responses = await list_target_repositories()
 
     assert [item.id for item in responses] == ["one", "two"]

@@ -34,9 +34,11 @@ def test_effective_weight_penalizes_latency_and_preserves_minimum():
     router = LatencyAwareWeightedRouter({"fast": 5.0})
     stats = router.stats["fast"]
 
-    with patch.object(stats, "is_circuit_open", return_value=False), patch(
-        "core.llm.provider_router.settings.LATENCY_NORMALIZATION_MS", 100.0
-    ), patch("core.llm.provider_router.settings.MIN_PROVIDER_WEIGHT", 0.1):
+    with (
+        patch.object(stats, "is_circuit_open", return_value=False),
+        patch("core.llm.provider_router.settings.LATENCY_NORMALIZATION_MS", 100.0),
+        patch("core.llm.provider_router.settings.MIN_PROVIDER_WEIGHT", 0.1),
+    ):
         stats.record(100.0, True)
         assert router._effective_weight(stats) == 2.5
 
@@ -83,11 +85,12 @@ async def test_record_result_trips_circuit_after_failure_threshold():
     router = LatencyAwareWeightedRouter({"provider": 1.0})
     stats = router.stats["provider"]
 
-    with patch("core.llm.provider_router.settings.CIRCUIT_FAILURE_THRESHOLD", 3), patch(
-        "core.llm.provider_router.settings.CIRCUIT_SUCCESS_RATE_FLOOR", 0.5
-    ), patch("core.llm.provider_router.settings.CIRCUIT_COOLDOWN_SECONDS", 30.0), patch.object(
-        stats, "trip_circuit"
-    ) as trip:
+    with (
+        patch("core.llm.provider_router.settings.CIRCUIT_FAILURE_THRESHOLD", 3),
+        patch("core.llm.provider_router.settings.CIRCUIT_SUCCESS_RATE_FLOOR", 0.5),
+        patch("core.llm.provider_router.settings.CIRCUIT_COOLDOWN_SECONDS", 30.0),
+        patch.object(stats, "trip_circuit") as trip,
+    ):
         await router.record_result("provider", 10.0, False)
         await router.record_result("provider", 10.0, False)
         await router.record_result("provider", 10.0, False)
