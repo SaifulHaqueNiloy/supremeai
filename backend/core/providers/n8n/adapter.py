@@ -106,7 +106,9 @@ class N8nAutomationAdapter(AutomationProvider):
         route = wf_def.route
         # Plan Section 5: workflow-specific timeout ও retry policy
         # (fall back to module defaults যদি workflow definition-এ না থাকে)
-        wf_timeout = min(wf_def.timeout_seconds, self.timeout) if wf_def.timeout_seconds else self.timeout
+        wf_timeout = (
+            min(wf_def.timeout_seconds, self.timeout) if wf_def.timeout_seconds else self.timeout
+        )
         wf_max_retries = wf_def.max_retries if wf_def.max_retries > 0 else _DEFAULT_MAX_RETRIES
 
         target_url = f"{self.base_url}{route}"
@@ -160,11 +162,25 @@ class N8nAutomationAdapter(AutomationProvider):
                     )
                     response.raise_for_status()
 
+                    execution_id = response.headers.get("X-N8N-Execution-Id")
+
+                    try:
+                        from opentelemetry import trace as otel_trace
+
+                        current_span = otel_trace.get_current_span()
+                        if current_span and current_span.is_recording():
+                            current_span.set_attribute("n8n.workflow_key", event.workflow_key)
+                            current_span.set_attribute("n8n.event_id", event.event_id)
+                            if execution_id:
+                                current_span.set_attribute("n8n.execution_id", execution_id)
+                    except ImportError:
+                        pass
+
                     return AutomationResult(
                         status=AutomationStatus.DELIVERED,
                         provider="n8n",
                         message=f"Event delivered to {route} on attempt {attempt}",
-                        execution_id=response.headers.get("X-N8N-Execution-Id"),
+                        execution_id=execution_id,
                         event_id=event.event_id,
                         attempt=attempt,
                     )
@@ -200,7 +216,11 @@ class N8nAutomationAdapter(AutomationProvider):
                 logger.error(f"Unexpected error dispatching to n8n (attempt {attempt}): {e}")
                 # Unexpected error — transient ধরে retry করি (safe default)
             # আরও attempt আছে কিনা দেখে backoff করি
-            if attempt < wf_max_retries and last_exc is not None and _is_transient_http_error(last_exc):
+            if (
+                attempt < wf_max_retries
+                and last_exc is not None
+                and _is_transient_http_error(last_exc)
+            ):
                 backoff = _RETRY_BACKOFF_SECONDS[min(attempt - 1, len(_RETRY_BACKOFF_SECONDS) - 1)]
                 logger.info(f"Retrying n8n dispatch in {backoff}s (attempt {attempt + 1})")
                 await asyncio.sleep(backoff)
@@ -209,8 +229,10 @@ class N8nAutomationAdapter(AutomationProvider):
                 break
 
         # সব retries শেষ — terminal failure
-        err_msg = f"Network Error: {str(last_exc)}" if isinstance(last_exc, httpx.RequestError) else (
-            f"HTTP Error: {str(last_exc)}" if last_exc else "Unknown error"
+        err_msg = (
+            f"Network Error: {str(last_exc)}"
+            if isinstance(last_exc, httpx.RequestError)
+            else (f"HTTP Error: {str(last_exc)}" if last_exc else "Unknown error")
         )
         return AutomationResult(
             status=AutomationStatus.FAILED,

@@ -53,6 +53,16 @@ class ObservabilityMiddleware:
         if authenticated_user:
             user_id = authenticated_user.get("sub") or authenticated_user.get("user_id") or user_id
 
+        # Use OpenTelemetry trace_id if available, otherwise generate or use header
+        try:
+            from opentelemetry import trace as otel_trace
+
+            current_span = otel_trace.get_current_span()
+            if current_span and current_span.get_span_context().is_valid:
+                trace_id = f"{current_span.get_span_context().trace_id:032x}"
+        except ImportError:
+            pass
+
         if not trace_id:
             trace_id = f"00-{uuid.uuid4().hex}-0000000000000001-01"
 

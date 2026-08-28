@@ -125,6 +125,12 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
 
+        if os.getenv("OPENAPI_GENERATION", "false").lower() == "true":
+            logger.info("🛠️ OPENAPI_GENERATION mode active. Bypassing lifespan checks.")
+            async with app_lifespan(app):
+                yield
+            return
+
         logger.debug("\n" + "=" * 60)
         logger.debug(f"🚀 SupremeAI Starting on {DETECTED_PLATFORM.platform.value.upper()}...")
         logger.debug("=" * 60)
@@ -399,6 +405,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             status_code=status_code,
             content=error_response,
         )
+
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+        FastAPIInstrumentor.instrument_app(app)
+        logger.debug("✅ FastAPI OpenTelemetry instrumentor enabled.")
+    except ImportError:
+        logger.warning("⚠️ opentelemetry-instrumentation-fastapi not installed.")
 
     return app
 

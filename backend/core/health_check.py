@@ -70,6 +70,7 @@ class ComprehensiveHealthChecker:
             "redis",
             "database",
             "external_services",
+            "integrations",
             "memory",
             "disk",
         ]
@@ -272,6 +273,56 @@ class ComprehensiveHealthChecker:
                 details={"error": str(e)},
             )
 
+    async def check_integrations(self) -> HealthCheckResult:
+        """Check all automation integrations health."""
+        try:
+            from core.automation.dispatcher import get_provider
+            from core.integrations.registry import list_integrations
+
+            start_time = time.time()
+            integrations_health = {}
+            has_unhealthy = False
+
+            for intg in list_integrations():
+                if intg.status == "active" and intg.automation_provider_id:
+                    try:
+                        provider = get_provider(intg.automation_provider_id)
+                        if hasattr(provider, "health"):
+                            health_res = await provider.health()
+                            integrations_health[intg.id] = health_res.model_dump()
+                            if health_res.status == "unhealthy":
+                                has_unhealthy = True
+                        else:
+                            integrations_health[intg.id] = {
+                                "status": "unknown",
+                                "message": "Provider does not support health check",
+                            }
+                    except Exception as provider_err:
+                        logger.error(
+                            f"Failed to check health for integration {intg.id}: {provider_err}"
+                        )
+                        integrations_health[intg.id] = {
+                            "status": "unhealthy",
+                            "message": str(provider_err),
+                        }
+                        has_unhealthy = True
+
+            response_time = (time.time() - start_time) * 1000
+
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY if has_unhealthy else HealthStatus.HEALTHY,
+                message="Integrations health check completed",
+                response_time_ms=response_time,
+                details=integrations_health,
+            )
+        except Exception as e:
+            logger.error(f"Integrations health check failed: {e}")
+            return HealthCheckResult(
+                status=HealthStatus.UNHEALTHY,
+                message=f"Integrations health check failed: {e!s}",
+                details={"error": str(e)},
+            )
+
     async def check_memory(self) -> HealthCheckResult:
         """Check memory usage."""
         try:
@@ -397,6 +448,7 @@ class ComprehensiveHealthChecker:
             self.check_redis(),
             self.check_database(),
             self.check_external_services(),
+            self.check_integrations(),
             self.check_memory(),
             self.check_disk(),
             return_exceptions=True,
@@ -411,6 +463,7 @@ class ComprehensiveHealthChecker:
             "redis",
             "database",
             "external_services",
+            "integrations",
             "memory",
             "disk",
         ]

@@ -63,6 +63,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.sso", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.api_keys", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.ci_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.n8n_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.task_workspace",
         "prefix": "/api/v1",
@@ -198,7 +199,6 @@ ALL_ROUTERS = [
     {"path": "api.routes.execution_policies", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.living_brain", "prefix": "", "is_admin": True, "is_critical": False},
     # ── Tier-S (all 12 routers via centralized registry) ──
-    {"path": "api.routes.tier_s_routes", "prefix": "", "is_admin": False, "is_critical": False},
     # CI FIX: Also register individual Tier-S modules directly so the API
     # contract diff analyzer can discover their @router decorators.
     # (tier_s_routes.py uses a tuple list, not @router decorators in-file.)

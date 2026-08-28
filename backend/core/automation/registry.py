@@ -26,15 +26,16 @@ class WorkflowDefinition:
     তার policy (timeout, retries, sync/async, sensitive, enabled) সহ declare
     করে। এটি dispatcher ও adapter-কে এই policies enforce করতে দেয়।
     """
-    key: str                              # unique workflow key (e.g., 'USER_REGISTERED')
-    route: str                            # webhook path (e.g., '/webhook/user-registered')
-    enabled: bool = True                  # disabled হলে dispatch skip হবে
-    timeout_seconds: int = 15             # per-attempt timeout
-    max_retries: int = 3                  # transient failure-এ retry count
-    synchronous: bool = False             # True হলে caller result wait করে; False হলে fire-and-forget
-    sensitive: bool = False               # True হলে payload-এ sensitive data (privacy mode apply)
-    version: str = "1"                    # workflow version (future migration)
-    description: str = ""                 # human-readable purpose
+
+    key: str  # unique workflow key (e.g., 'USER_REGISTERED')
+    route: str  # webhook path (e.g., '/webhook/user-registered')
+    enabled: bool = True  # disabled হলে dispatch skip হবে
+    timeout_seconds: int = 15  # per-attempt timeout
+    max_retries: int = 3  # transient failure-এ retry count
+    synchronous: bool = False  # True হলে caller result wait করে; False হলে fire-and-forget
+    sensitive: bool = False  # True হলে payload-এ sensitive data (privacy mode apply)
+    version: str = "1"  # workflow version (future migration)
+    description: str = ""  # human-readable purpose
 
 
 # ── Workflow definitions (Plan Section 5: metadata-driven) ──────────────────
@@ -55,9 +56,9 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         route="/webhook/security-alert",
         enabled=True,
         timeout_seconds=10,  # security alerts — fast timeout
-        max_retries=5,       # security — more retries (don't lose alerts)
+        max_retries=5,  # security — more retries (don't lose alerts)
         synchronous=False,
-        sensitive=True,      # may contain attack details — privacy mode apply
+        sensitive=True,  # may contain attack details — privacy mode apply
         description="Triggered on security incidents. High-retry to avoid losing alerts.",
     ),
     "HITL_REQUIRED": WorkflowDefinition(
@@ -67,7 +68,7 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         timeout_seconds=20,  # HITL — human-in-loop, may take longer
         max_retries=3,
         synchronous=False,
-        sensitive=True,      # HITL payloads often contain user data
+        sensitive=True,  # HITL payloads often contain user data
         description="Human-in-the-loop approval required. Sensitive payload.",
     ),
     "PAYMENT_SUCCESS": WorkflowDefinition(
@@ -75,9 +76,9 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         route="/webhook/payment-success",
         enabled=True,
         timeout_seconds=15,
-        max_retries=5,       # payments — don't lose (revenue-critical)
+        max_retries=5,  # payments — don't lose (revenue-critical)
         synchronous=False,
-        sensitive=True,      # payment data — privacy mode apply
+        sensitive=True,  # payment data — privacy mode apply
         description="Payment succeeded. Revenue-critical, high-retry.",
     ),
     "PAYMENT_FAILED": WorkflowDefinition(
@@ -85,7 +86,7 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         route="/webhook/payment-failed",
         enabled=True,
         timeout_seconds=15,
-        max_retries=5,       # payments — don't lose (revenue-critical)
+        max_retries=5,  # payments — don't lose (revenue-critical)
         synchronous=False,
         sensitive=True,
         description="Payment failed. Revenue-critical, high-retry.",
@@ -97,7 +98,7 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
         timeout_seconds=10,
         max_retries=3,
         synchronous=False,
-        sensitive=False,     # health status — not sensitive
+        sensitive=False,  # health status — not sensitive
         description="System health degraded below threshold. Triggers ops alerting.",
     ),
 }
@@ -106,12 +107,11 @@ _WORKFLOW_DEFINITIONS: dict[str, WorkflowDefinition] = {
 # ── Backward-compat: AUTOMATION_REGISTRY as dict[str, str] ───────────────────
 # বাংলা: আগে এটা {key: route} dict ছিল। এখন WorkflowDefinition থেকে derive
 # হয়, কিন্তু existing callers (admin route) এখনও dict হিসেবে access করতে পারে।
-AUTOMATION_REGISTRY: dict[str, str] = {
-    key: wf.route for key, wf in _WORKFLOW_DEFINITIONS.items()
-}
+AUTOMATION_REGISTRY: dict[str, str] = {key: wf.route for key, wf in _WORKFLOW_DEFINITIONS.items()}
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
+
 
 def is_valid_workflow(workflow_key: str) -> bool:
     """Check if the provided key is registered AND enabled."""
@@ -130,7 +130,7 @@ def get_workflow_route(workflow_key: str) -> str:
     return wf.route
 
 
-def get_workflow_definition(workflow_key: str) -> Optional[WorkflowDefinition]:
+def get_workflow_definition(workflow_key: str) -> WorkflowDefinition | None:
     """
     Plan Section 5: একটি workflow-এর full metadata পাওয়া।
     None হলে workflow নেই। enabled=False হলেও definition ফেরত দেয়

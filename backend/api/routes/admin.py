@@ -800,9 +800,11 @@ async def list_automation_executions(
         from sqlalchemy import select, desc
 
         async with get_db_session_context() as session:
-            stmt = select(AutomationExecution).order_by(
-                desc(AutomationExecution.created_at)
-            ).limit(min(limit, 200))  # cap at 200
+            stmt = (
+                select(AutomationExecution)
+                .order_by(desc(AutomationExecution.created_at))
+                .limit(min(limit, 200))
+            )  # cap at 200
             if workflow_key:
                 stmt = stmt.where(AutomationExecution.workflow_key == workflow_key)
             if status:
@@ -830,7 +832,9 @@ async def list_automation_executions(
                         "trace_id": r.trace_id,
                         "error_code": r.error_code,
                         # error_message truncate করি — সম্ভাব্য sensitive data না ফাঁসাতে
-                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                        "error_message": (r.error_message[:200] + "...")
+                        if r.error_message and len(r.error_message) > 200
+                        else r.error_message,
                     }
                     for r in records
                 ],
@@ -860,9 +864,11 @@ async def get_execution_by_event(
         from sqlalchemy import select, desc
 
         async with get_db_session_context() as session:
-            stmt = select(AutomationExecution).where(
-                AutomationExecution.event_id == event_id
-            ).order_by(desc(AutomationExecution.created_at))
+            stmt = (
+                select(AutomationExecution)
+                .where(AutomationExecution.event_id == event_id)
+                .order_by(desc(AutomationExecution.created_at))
+            )
             result = await session.execute(stmt)
             records = result.scalars().all()
 
@@ -889,7 +895,9 @@ async def get_execution_by_event(
                         "http_status": r.http_status,
                         "external_execution_id": r.external_execution_id,
                         "error_code": r.error_code,
-                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                        "error_message": (r.error_message[:200] + "...")
+                        if r.error_message and len(r.error_message) > 200
+                        else r.error_message,
                     }
                     for r in records
                 ],
