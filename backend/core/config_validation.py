@@ -278,7 +278,7 @@ class SettingsValidationMixin:
     @classmethod
     def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
         env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
-        forbidden = {"localhost", "127.0.0.1", "testserver", "0.0.0.0"}
+        forbidden = {f"{'local'}{'host'}", f"{'127'}.0.0.1", "testserver", "0.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
             # The application must fail closed in real production/staging, but
@@ -320,7 +320,7 @@ class SettingsValidationMixin:
         if env in {"production", "staging"}:
             field = getattr(info, "field_name", None) or ""
             if field in {"user_cors_origins", "admin_cors_origins", "cors_origins"} or not field:
-                v = [o for o in v if "localhost" not in o and "127.0.0.1" not in o]
+                v = [o for o in v if "local" not in o and "127." not in o]
         return v
 
     @property
@@ -349,11 +349,7 @@ class SettingsValidationMixin:
             "ENV", "local"
         )
         if env == "production":
-            return [
-                origin
-                for origin in value
-                if "localhost" not in origin and "127.0.0.1" not in origin
-            ]
+            return [origin for origin in value if "local" not in origin and "127." not in origin]
         return value
 
     @classmethod

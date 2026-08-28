@@ -31,7 +31,6 @@ _skip_if_missing = pytest.mark.skipif(
 def mock_env_runpod():
     with patch.dict(os.environ, {"RUNPOD_API_KEY": "test-runpod-key"}, clear=True):
         yield
-        return
 
 
 @pytest.fixture
@@ -42,7 +41,6 @@ def mock_env_modal():
         clear=True,
     ):
         yield
-        return
 
 
 def _mock_response(json_data, status_code=200):

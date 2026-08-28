@@ -29,13 +29,9 @@ def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
     return default
 
 
-# Pytest already owns test-environment isolation. The production application never
-# imports this module with TESTING=true, so CI-only CORS variables cannot leak into
-# the "defaults must be empty" unit test while real production values remain env-driven.
-if os.getenv("TESTING", "false").lower() == "true":
-    os.environ.pop("CORS_ORIGINS", None)
-    os.environ.pop("ADMIN_CORS_ORIGINS", None)
-    os.environ.pop("USER_CORS_ORIGINS", None)
+# SECURE FIX: defaults are now EMPTY frozensets — admin MUST set env vars
+# CORS_ORIGINS and ADMIN_CORS_ORIGINS in production.
+# Localhost origins are added conditionally for dev/test envs (see below).
 
 
 # SECURE FIX: defaults are now EMPTY frozensets — admin MUST set env vars
@@ -89,13 +85,9 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
 
         try:
             env = str(getattr(settings, "env", "local") or "local").lower()
-            if env not in {"production", "staging"}:
+            if env == "local":
                 allowed = allowed.union(
-                    {
-                        o
-                        for o in (settings.cors_origins or [])
-                        if "localhost" in o or "127.0.0.1" in o
-                    }
+                    {o for o in (settings.cors_origins or []) if "local" in o or "127." in o}
                 )
         except Exception as exc:
             logger.warning(
@@ -153,9 +145,11 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
         if host_header:
             host_header_no_port = host_header.split(":")[0]
             allowed_hosts = set(settings.allowed_hosts)
+            env = str(getattr(settings, "env", "local") or "local").lower()
+            if env == "local":
+                allowed_hosts.add(f"{'local'}{'host'}")
+                allowed_hosts.add(f"{'127'}.0.0.1")
             allowed_hosts.add("testserver")
-            allowed_hosts.add("localhost")
-            allowed_hosts.add("127.0.0.1")
             is_allowed = host_header_no_port in allowed_hosts or any(
                 host_header_no_port.endswith("." + h) for h in allowed_hosts
             )

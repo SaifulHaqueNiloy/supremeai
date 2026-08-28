@@ -125,17 +125,25 @@ def test_default_origin_constants_non_empty():
         if var in os.environ:
             saved_env[var] = os.environ.pop(var)
     try:
+        import sys
+
+        if "middleware.cors_policy" in sys.modules:
+            importlib.reload(sys.modules["middleware.cors_policy"])
         importlib.reload(ov_module)
         assert frozenset() == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
         assert frozenset() == ov_module.ADMIN_DEFAULT_TRUSTED_ORIGINS
 
         # env var সেট থাকলে সেটা থেকেই origins লোড হওয়া উচিত
         os.environ["CORS_ORIGINS"] = json.dumps(["https://example.com"])
+        if "middleware.cors_policy" in sys.modules:
+            importlib.reload(sys.modules["middleware.cors_policy"])
         importlib.reload(ov_module)
         assert frozenset({"https://example.com"}) == ov_module.USER_DEFAULT_TRUSTED_ORIGINS
     finally:
         os.environ.pop("CORS_ORIGINS", None)
         os.environ.update(saved_env)
+        if "middleware.cors_policy" in sys.modules:
+            importlib.reload(sys.modules["middleware.cors_policy"])
         importlib.reload(ov_module)
 
 

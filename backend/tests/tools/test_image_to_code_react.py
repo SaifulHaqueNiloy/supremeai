@@ -14,7 +14,6 @@ def mock_image_to_code():
         return_value="dummy_base64",
     ):
         yield
-        return
 
 
 @pytest.mark.anyio

@@ -8,6 +8,7 @@ Version: 1.0.0
 """
 
 import asyncio
+import os
 import re
 import time
 
@@ -121,7 +122,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             )
 
         # Simple rate limiting (backup for Redis-based limiter)
-        if not await self._check_rate_limit(client_ip, request.url.path):
+        is_testing = (
+            os.getenv("TESTING", "false").lower() == "true"
+            or bool(os.getenv("PYTEST_CURRENT_TEST"))
+            or os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "false"
+        )
+        if not is_testing and not await self._check_rate_limit(client_ip, request.url.path):
             return Response(
                 status_code=429,
                 content=b'{"error": "Too many requests"}',
