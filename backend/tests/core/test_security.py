@@ -69,7 +69,6 @@ async def test_rate_limiting_failure_mode():
     # Mock redis_manager to return None (simulating down/unavailable)
     with patch("middleware.rate_limiter.redis_manager.get_client_async", return_value=None):
         original_env = settings.env
-        original_test_mode = getattr(settings, "test_mode", False)
 
         # Override os.getenv directly for the CI check inside acquire
         def mock_getenv(key, default=None):
@@ -77,8 +76,14 @@ async def test_rate_limiting_failure_mode():
                 return "false"
             return os.environ.get(key, default)
 
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): আগে এখানে `settings.test_mode = False`
+        # সেট করার চেষ্টা হতো, কিন্তু `Settings` মডেলে `test_mode` নামে কোনো ফিল্ড
+        # কখনোই ছিল না (repo-wide grep-এ কনফার্ম করা), আর pydantic v2 BaseSettings
+        # ডিফল্টভাবে অজানা attribute সেট করতে দেয় না -- তাই `ValueError: "Settings"
+        # object has no field "test_mode"` রেইজ হতো। middleware/rate_limiter.py
+        # কোথাও `settings.test_mode` পড়েও না, তাই এই লাইনগুলো টেস্টের কোনো আসল
+        # আচরণ নিয়ন্ত্রণ করছিল না -- অপ্রয়োজনীয় dead assignment হিসেবে সরানো হলো।
         try:
-            settings.test_mode = False
             with patch("os.getenv", side_effect=mock_getenv):
                 # In production/staging, it should fail-closed (return False)
                 settings.env = "production"
@@ -89,4 +94,3 @@ async def test_rate_limiting_failure_mode():
                 assert await limiter.acquire("test_key")
         finally:
             settings.env = original_env
-            settings.test_mode = original_test_mode

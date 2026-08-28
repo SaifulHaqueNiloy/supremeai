@@ -188,8 +188,13 @@ class TestMeEndpoint:
 
 class TestRequestModels:
     def test_login_request_valid(self):
-        body = LoginRequest(username="user", password="pass")
-        assert body.username == "user"
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): api/routes/auth.py-এর LoginRequest.username
+        # ফিল্ডটা EmailStr (login হয় email দিয়ে, প্লেইন username দিয়ে না)।
+        # আগে এই টেস্ট non-email স্ট্রিং ("user") পাস করছিল, যেটা বাস্তব মডেলের
+        # বিরুদ্ধে সবসময় ValidationError দিত -- এটা অ্যাপের বাগ ছিল না, টেস্ট
+        # পুরনো/স্টেল কন্ট্রাক্ট ধরে লেখা ছিল। সঠিক email ফরম্যাট দিয়ে ফিক্স করা হলো।
+        body = LoginRequest(username="user@example.com", password="pass")
+        assert body.username == "user@example.com"
         assert body.password == "pass"
 
     def test_login_request_missing_username(self):
