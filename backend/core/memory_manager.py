@@ -160,7 +160,7 @@ class FreeTierMemoryManager:
 
         # 2. Clear any object pools
         try:
-            from core.ai_memory.vector_store import VectorStore
+            from core.ai_memory.vector_store import FreeTierOptimizedVectorStore as VectorStore
 
             if hasattr(VectorStore, "_connection_pool"):
                 pass
