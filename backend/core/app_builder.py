@@ -351,7 +351,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও একই রাউটার এক্সপোজ করা থাকল।
     app.include_router(health_router, prefix="/health")
 
-    @app.get("/")
+    @app.api_route("/", methods=["GET", "HEAD"])
     async def root():
         """পাবলিক রুট এন্ডপয়েন্ট — বেসিক সার্ভিস তথ্য এবং হেলথ চেক লিংক দেয়।"""
         return {

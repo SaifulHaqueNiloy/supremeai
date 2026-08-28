@@ -61,8 +61,15 @@ class StartupValidator:
             ]
             configured_keys = [name for name, value in api_keys if value]
             cls._validation_results["api_keys_configured"] = len(configured_keys)
+
             if not configured_keys:
-                warnings.append("No LLM API keys configured — LLM gateway will fail")
+                errors.append("No LLM API keys configured — LLM gateway will fail")
+            else:
+                logger.info(f"LLM providers configured: {len(configured_keys)}")
+                if len(api_keys) > len(configured_keys):
+                    logger.info(
+                        f"LLM providers unavailable by configuration: {len(api_keys) - len(configured_keys)}"
+                    )
 
             # 4. Database URL validation
             cls._validation_results["database_url"] = bool(settings.supabase_database_url)

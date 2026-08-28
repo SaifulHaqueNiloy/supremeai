@@ -28,14 +28,16 @@ security = HTTPBearer(auto_error=False)
 try:
     import cachetools
 
-    fallback_cache: dict = cachetools.TTLCache(maxsize=10000, ttl=3600)
+    fallback_cache: dict = cachetools.TTLCache(
+        maxsize=int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 10000)), ttl=3600
+    )
 except ImportError:
     # RUNTIME-002 FIX: Use bounded OrderedDict instead of unbounded dict.
     # Previously: plain dict grew without limit → OOM if cachetools missing.
     from collections import OrderedDict
 
     _BoundedCache = OrderedDict()
-    _BOUNDED_CACHE_MAX = 10000
+    _BOUNDED_CACHE_MAX = int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 10000))
 
     class _BoundedDict(OrderedDict):
         """Bounded dict that evicts oldest entries when max size is reached."""
@@ -189,7 +191,7 @@ class RateLimiter:
         redis = await self._get_redis()
         if not redis:
             # Fallback to in-memory rate limiting
-            logger.warning("Rate limiter Redis unavailable, falling back to in-memory")
+            logger.info("Rate limiter Redis unavailable, falling back to in-memory")
             return self._fallback_is_allowed(key, limit, window)
 
         try:
