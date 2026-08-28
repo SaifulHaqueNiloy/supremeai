@@ -97,7 +97,13 @@ class LLMGateway:
     def __init__(self, mode: ExecutionMode = ExecutionMode.AUTO) -> None:
         self.mode = mode
         self.cloud_adapter = CloudProviderAdapter()
-        self.local_adapter = OllamaLocalAdapter()
+        # বাংলা মন্তব্য: OllamaLocalAdapter শুধু local/test env-এ eager init করা হয়।
+        # Production/staging-এ Ollama থাকে না — সেখানে None রেখে lazy init করা হবে।
+        # এটি Render free-tier crash ঠেকায় (ValueError: localhost fallback in production)।
+        if settings.env in ("local", "test"):
+            self.local_adapter: OllamaLocalAdapter | None = OllamaLocalAdapter()
+        else:
+            self.local_adapter = None
         self.observability = LangfuseAdapter()
 
         self.routing_policy = self._load_routing_policy()
@@ -568,7 +574,7 @@ class LLMGateway:
         mode = kwargs.pop("mode", getattr(self, "mode", ExecutionMode.AUTO))
 
         if mode in (ExecutionMode.LOCAL, ExecutionMode.AUTO):
-            if await self.local_adapter.health_check():
+            if self.local_adapter is not None and await self.local_adapter.health_check():
                 local_model = kwargs.pop("local_model", "llama3.2")
                 try:
                     logger.info(f"[LLMGateway] Attempting LOCAL execution with {local_model}")
