@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+// বাংলা মন্তব্য (ROOT-CAUSE FIX): main.tsx App-কে ToastProvider দিয়ে wrap করে,
+// কিন্তু এই টেস্ট ফাইল সরাসরি <App /> render করত ToastProvider ছাড়া। App-এর
+// ভেতরের কম্পোনেন্টগুলো useToast() কল করায় "useToast must be used within a
+// ToastProvider" থ্রো হয়ে ErrorBoundary পুরো অ্যাপ ক্র্যাশ হিসেবে দেখাত এবং
+// এই ফাইলের সব টেস্ট ব্যর্থ হতো।
+import { ToastProvider } from './contexts/ToastProvider';
 
 vi.mock('./services/chatService', () => ({
   getAethelResponse: vi.fn().mockImplementation(() => new Promise(() => {})),
@@ -168,9 +174,11 @@ describe('App component', () => {
   // বাংলা মন্তব্য: UI টেক্সট পরিবর্তন হওয়া সত্ত্বেও টেস্ট যাতে স্ট্যাবল থাকে সে জন্য data-testid ব্যবহার করা হলো
   it('renders header, title, and health status', () => {
     render(
-      <MemoryRouter initialEntries={['/workspace']}>
-        <App />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/workspace']}>
+          <App />
+        </MemoryRouter>
+      </ToastProvider>
     );
 
     expect(screen.getAllByTestId('header-title')[0]).toBeInTheDocument();
@@ -180,9 +188,11 @@ describe('App component', () => {
   // বাংলা মন্তব্য: চ্যাট ট্যাব সক্রিয় করে চ্যাট কনসোল রেন্ডারিং চেক করা হচ্ছে
   it('renders chat console when chat tab is active', () => {
     render(
-      <MemoryRouter initialEntries={['/workspace']}>
-        <App />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/workspace']}>
+          <App />
+        </MemoryRouter>
+      </ToastProvider>
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
@@ -194,9 +204,11 @@ describe('App component', () => {
   // বাংলা মন্তব্য: চ্যাট প্যানেলে মেসেজ টাইপ ও সাবমিট করে প্রসেসিং সফলভাবে হচ্ছে কিনা টেস্ট করা হচ্ছে
   it('allows user to send messages in the chat console', async () => {
     render(
-      <MemoryRouter initialEntries={['/workspace']}>
-        <App />
-      </MemoryRouter>
+      <ToastProvider>
+        <MemoryRouter initialEntries={['/workspace']}>
+          <App />
+        </MemoryRouter>
+      </ToastProvider>
     );
 
     // চ্যাট ট্যাবে ক্লিক করা হচ্ছে
