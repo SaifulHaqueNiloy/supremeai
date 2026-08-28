@@ -39,6 +39,8 @@ from ..resilience.circuit_breaker import (
 from ..resilience.circuit_breaker_manager import (
     get_shared_circuit_breaker,  # Fixed import path - using relative import
 )
+from .interfaces import ExecutionMode
+from .providers import CloudProviderAdapter, OllamaLocalAdapter
 
 # বাংলা মন্তব্ব: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
 _POLICY_PATH = os.path.join(
@@ -90,7 +92,11 @@ class LLMGateway:
     - CancelledError সবসময় re-raise।
     """
 
-    def __init__(self) -> None:
+    def __init__(self, mode: ExecutionMode = ExecutionMode.AUTO) -> None:
+        self.mode = mode
+        self.cloud_adapter = CloudProviderAdapter()
+        self.local_adapter = OllamaLocalAdapter()
+
         self.routing_policy = self._load_routing_policy()
         self._setup_litellm_globals()
         self._setup_callbacks()
@@ -562,6 +568,33 @@ class LLMGateway:
             return self._stream_completion(messages_payload, call_chain, timeout)
 
         last_exception: Exception | None = None
+        mode = kwargs.pop("mode", getattr(self, "mode", ExecutionMode.AUTO))
+
+        if mode in (ExecutionMode.LOCAL, ExecutionMode.AUTO):
+            if await self.local_adapter.health_check():
+                local_model = kwargs.pop("local_model", "llama3.2")
+                try:
+                    logger.info(f"[LLMGateway] Attempting LOCAL execution with {local_model}")
+                    response = await self.local_adapter.generate(
+                        model=local_model,
+                        messages=messages_payload,
+                        temperature=kwargs.get("temperature", 0.7),
+                        max_tokens=kwargs.get("max_tokens"),
+                        timeout=timeout,
+                    )
+                    return {
+                        "success": True,
+                        "text": response["choices"][0]["message"]["content"],
+                        "model": local_model,
+                        "cost": 0.0,
+                    }
+                except Exception as e:
+                    logger.warning(f"[LLMGateway] Local execution failed: {e}")
+                    if mode == ExecutionMode.LOCAL:
+                        raise e
+            elif mode == ExecutionMode.LOCAL:
+                raise RuntimeError("Local execution requested but Ollama is not healthy.")
+
         for current_model in call_chain:
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
@@ -584,23 +617,18 @@ class LLMGateway:
                     model=current_model,
                     task_type=task_type,
                 ) as rec:
-                    response = await litellm.acompletion(
+                    response = await self.cloud_adapter.generate(
                         model=current_model,
                         messages=messages_payload,
                         timeout=timeout,
-                        stream=False,
                         api_key=api_key,
                         **kwargs,
                     )
-                    cost = (
-                        response._response_metadata.get("api_cost", 0.0)
-                        if hasattr(response, "_response_metadata")
-                        else 0.0
-                    )
+                    cost = response.get("cost", 0.0)
                     rec.cost_usd = cost
-                    if hasattr(response, "usage") and response.usage:
-                        rec.tokens_prompt = getattr(response.usage, "prompt_tokens", None)
-                        rec.tokens_completion = getattr(response.usage, "completion_tokens", None)
+                    if "usage" in response:
+                        rec.tokens_prompt = response["usage"].get("prompt_tokens")
+                        rec.tokens_completion = response["usage"].get("completion_tokens")
                     cb.mark_success()
 
                     # FIX (ANALYSIS-D): Wire EvolutionEngine.learn_from_success into
@@ -627,14 +655,14 @@ class LLMGateway:
                             _evolution_engine.learn_from_success(
                                 task=prompt_text,
                                 approach=current_model,
-                                result=response.choices[0].message.content,
+                                result=response["choices"][0]["message"]["content"],
                             )
                         except Exception as evo_err:
                             logger.debug(f"EvolutionEngine.learn_from_success skipped: {evo_err}")
 
                     return {
                         "success": True,
-                        "text": response.choices[0].message.content,
+                        "text": response["choices"][0]["message"]["content"],
                         "model": current_model,
                         "cost": cost,
                     }
@@ -653,24 +681,19 @@ class LLMGateway:
                             f"[LLMGateway] Retrying {current_model} after rate limit backoff..."
                         )
                         try:
-                            response = await litellm.acompletion(
+                            response = await self.cloud_adapter.generate(
                                 model=current_model,
                                 messages=messages_payload,
                                 timeout=timeout,
-                                stream=False,
                                 api_key=api_key or self._get_api_key_for_model(current_model),
                                 **kwargs,
                             )
                             cb.mark_success()
                             return {
                                 "success": True,
-                                "text": response.choices[0].message.content,
+                                "text": response["choices"][0]["message"]["content"],
                                 "model": current_model,
-                                "cost": (
-                                    response._response_metadata.get("api_cost", 0.0)
-                                    if hasattr(response, "_response_metadata")
-                                    else 0.0
-                                ),
+                                "cost": response.get("cost", 0.0),
                             }
                         except Exception as retry_exc:
                             logger.warning(
