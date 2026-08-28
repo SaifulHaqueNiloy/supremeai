@@ -15,7 +15,18 @@ import {
   Shield,
   BrainCircuit,
   HardDrive,
-  Bell
+  Bell,
+  Network,
+  Activity,
+  ServerCog,
+  FileCheck2,
+  AlertTriangle,
+  Zap,
+  Repeat,
+  RefreshCcw,
+  DollarSign,
+  Search,
+  Wrench
 } from 'lucide-react';
 
 interface AuthenticatedViewProps {
@@ -88,17 +99,20 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
 
   // As per SUPREMEAI_GOD_CONTROL_CENTER_PLAN.md, the sidebar is module-driven.
   const sidebarItems = [
-    { id: 'dashboard', label: 'DASHBOARD', icon: <LayoutDashboard size={16} /> },
-    { id: 'alerts', label: 'SYSTEM ALERTS', icon: <Bell size={16} /> },
-    { id: 'model-router', label: 'AI CORE', icon: <BrainCircuit size={16} /> },
-    { id: 'skills', label: 'SKILLS & AGENTS', icon: <Users size={16} /> },
-    { id: 'memory', label: 'MEMORY', icon: <HardDrive size={16} /> },
-    { id: 'cloud', label: 'INFRASTRUCTURE', icon: <Server size={16} /> },
-    { id: 'cicd', label: 'DEPLOYMENTS', icon: <GitMerge size={16} /> },
-    { id: 'observability', label: 'OBSERVABILITY', icon: <BarChart3 size={16} /> },
-    { id: 'threats', label: 'SECURITY', icon: <Shield size={16} /> },
-    { id: 'config', label: 'SETTINGS', icon: <Settings size={16} /> },
-    { id: 'interactive-chat', label: 'TERMINAL', icon: <Terminal size={16} /> },
+    { id: 'overview', label: 'OVERVIEW', icon: <Activity size={16} /> },
+    { id: 'topology', label: 'TOPOLOGY', icon: <Network size={16} /> },
+    { id: 'service-explorer', label: 'SERVICE EXPLORER', icon: <ServerCog size={16} /> },
+    { id: 'agents-swarm', label: 'AGENTS / SWARM', icon: <BrainCircuit size={16} /> },
+    { id: 'security', label: 'SECURITY', icon: <Shield size={16} /> },
+    { id: 'audit', label: 'AUDIT', icon: <FileCheck2 size={16} /> },
+    { id: 'incidents', label: 'INCIDENTS', icon: <AlertTriangle size={16} /> },
+    { id: 'deployments', label: 'DEPLOYMENTS', icon: <GitMerge size={16} /> },
+    { id: 'reliability', label: 'RELIABILITY', icon: <Zap size={16} /> },
+    { id: 'recovery', label: 'RECOVERY', icon: <RefreshCcw size={16} /> },
+    { id: 'tenants-rbac', label: 'TENANTS / RBAC', icon: <Users size={16} /> },
+    { id: 'finops', label: 'FINOPS', icon: <DollarSign size={16} /> },
+    { id: 'rca-intelligence', label: 'RCA / INTELLIGENCE', icon: <Search size={16} /> },
+    { id: 'configuration', label: 'CONFIGURATION', icon: <Wrench size={16} /> },
   ];
 
   // বাংলা মন্তব্য: কমান্ড প্যালেট অপশন এখন src/config/commandRegistry.ts-এ (unified registry)।

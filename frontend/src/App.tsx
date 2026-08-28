@@ -11,6 +11,7 @@ import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { DashboardShell } from "@supremeai/ui-components";
+import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
 import type { ChatMessage } from "./components/customer/UserDashboard";
@@ -18,6 +19,7 @@ import type { ChatMessage } from "./components/customer/UserDashboard";
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
 const AdminShell = React.lazy(() => import("./pages/admin/AdminShell").then(m => ({ default: m.AdminShell })));
 const AgentWorkspace = React.lazy(() => import("./pages/user/AgentWorkspace").then(m => ({ default: m.AgentWorkspace })));
+const AIStudio = React.lazy(() => import("./pages/user/AIStudio").then(m => ({ default: m.AIStudio })));
 const IdeWorkspace = React.lazy(() => import("./pages/user/IdeWorkspace").then(m => ({ default: m.IdeWorkspace })));
 const IntegrationsManager = React.lazy(() => import("./pages/user/IntegrationsManager").then(m => ({ default: m.IntegrationsManager })));
 const ArchitectTower = React.lazy(() => import("./pages/user/ArchitectTower").then(m => ({ default: m.ArchitectTower })));
@@ -237,15 +239,17 @@ const AppContent: React.FC = () => {
                   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
                   <Route path="/workspace" element={
                     <ProtectedRoute>
-                      <DashboardShell>
+                      <WorkspaceLayout>
                         {legacyWorkspace}
-                      </DashboardShell>
+                      </WorkspaceLayout>
                     </ProtectedRoute>
                   } />
                   {/* Removed duplicate route to avoid duplicate rendering */}
                   <Route path="/workspace/live" element={
                     <ProtectedRoute>
-                      <LivingDashboardShell chatPanel={legacyWorkspace} resolveDraggedContent={(id) => ({ content: id })} />
+                      <WorkspaceLayout>
+                        <LivingDashboardShell chatPanel={<AIStudio />} />
+                      </WorkspaceLayout>
                     </ProtectedRoute>
                   } />
 

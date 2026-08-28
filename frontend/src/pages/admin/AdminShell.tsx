@@ -26,7 +26,7 @@ export function AdminShell() {
     resetTotpSetup,
   } = useAdminStore();
 
-  const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>("dashboard");
+  const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>("overview");
   const [skillQuery, setSkillQuery] = useState("");
   
   const { data: skillsList = [] } = useSkills(skillQuery);
