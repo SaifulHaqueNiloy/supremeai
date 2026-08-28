@@ -36,6 +36,15 @@ def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = N
     otel_trace.set_tracer_provider(provider)
     _tracer = otel_trace.get_tracer(service_name)
 
+    # Enable automatic tracing for outgoing HTTPX calls (end-to-end W3C propagation)
+    try:
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+
+        HTTPXClientInstrumentor().instrument()
+        logger.info("✅ HTTPX OpenTelemetry instrumentor enabled.")
+    except ImportError:
+        logger.warning("⚠️ opentelemetry-instrumentation-httpx not installed.")
+
 
 def get_tracer() -> Tracer | None:
     """Return the current tracer. Always call this after setup_tracing(), never import at module level."""

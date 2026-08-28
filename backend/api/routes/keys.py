@@ -15,7 +15,11 @@ ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
 if not ENCRYPTION_KEY:
     # Generate a temporary key if none provided (keys will be lost on restart)
     ENCRYPTION_KEY = Fernet.generate_key().decode()
-cipher_suite = Fernet(ENCRYPTION_KEY.encode())
+try:
+    cipher_suite = Fernet(ENCRYPTION_KEY.encode())
+except Exception:
+    # Fallback to random if invalid key was provided in env
+    cipher_suite = Fernet(Fernet.generate_key())
 
 
 class KeyCreate(BaseModel):

@@ -34,7 +34,7 @@ class ExecutionRecorder:
     করে। DB unavailable হলে graceful degradation — dispatch কখনো block হয় না।
     """
 
-    async def record_start(self, event: AutomationEvent) -> Optional[str]:
+    async def record_start(self, event: AutomationEvent) -> str | None:
         """
         dispatch শুরু হলে PENDING record তৈরি করে।
         রিটার্ন: execution_id (DB row id) অথবা None (DB unavailable)।
@@ -72,11 +72,11 @@ class ExecutionRecorder:
 
     async def record_completion(
         self,
-        execution_id: Optional[str],
+        execution_id: str | None,
         event: AutomationEvent,
         result: AutomationResult,
         provider_name: str,
-        started_at: Optional[float] = None,
+        started_at: float | None = None,
     ) -> None:
         """
         dispatch সম্পন্ন হলে record update করে।
@@ -86,9 +86,10 @@ class ExecutionRecorder:
             return  # record_start fail করেছিল — কিছু করার নেই
 
         try:
+            from sqlalchemy import select
+
             from database.session import get_db_session_context
             from models.automation_execution import AutomationExecution
-            from sqlalchemy import select
 
             duration_ms = None
             if started_at is not None:
@@ -96,9 +97,7 @@ class ExecutionRecorder:
 
             async with get_db_session_context() as session:
                 # fetch existing record
-                stmt = select(AutomationExecution).where(
-                    AutomationExecution.id == execution_id
-                )
+                stmt = select(AutomationExecution).where(AutomationExecution.id == execution_id)
                 db_result = await session.execute(stmt)
                 record = db_result.scalar_one_or_none()
                 if record is None:
@@ -130,8 +129,7 @@ class ExecutionRecorder:
         except Exception as e:
             # Plan Section 10: DB failure কখনো dispatch-কে block করে না
             logger.warning(
-                f"⚠️ ExecutionRecorder.record_completion failed: {e!r} — "
-                f"dispatch result unaffected"
+                f"⚠️ ExecutionRecorder.record_completion failed: {e!r} — dispatch result unaffected"
             )
 
 
