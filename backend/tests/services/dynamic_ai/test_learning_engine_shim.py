@@ -140,9 +140,7 @@ class TestRecordInteraction:
     def test_does_not_raise_without_running_loop(self, engine):
         # e.g. called from a sync test/context with no event loop -- must
         # degrade gracefully rather than crash the caller.
-        engine.record_interaction(
-            provider_id="gemini", task_type=TaskType.CHAT, success=False
-        )
+        engine.record_interaction(provider_id="gemini", task_type=TaskType.CHAT, success=False)
 
 
 class TestOrchestratorWiring:

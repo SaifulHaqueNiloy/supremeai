@@ -154,7 +154,9 @@ class DynamicAIOrchestrator:
             f"   External providers: {len(self.registry.get_available_providers())} available"
         )
         local_fallback_status = (
-            "Ready" if self.local_fallback and await self.local_fallback.is_available() else "Unavailable"
+            "Ready"
+            if self.local_fallback and await self.local_fallback.is_available()
+            else "Unavailable"
         )
         logger.debug(f"   Local fallback: {local_fallback_status}")
 
