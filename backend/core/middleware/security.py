@@ -166,12 +166,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
     async def _check_rate_limit(self, client_ip: str, path: str) -> bool:
         """Simple in-memory rate limiting with path specificity."""
-        # Bypass rate limit in tests to prevent 429 Too Many Requests in CI
-        if (
-            getattr(settings, "env", "").lower() == "test"
-            or getattr(settings, "ENVIRONMENT", "").lower() == "test"
-        ):
-            return True
+
         now = time.time()
 
         # Determine applicable limits
