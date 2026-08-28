@@ -670,10 +670,32 @@ async def auto_scaling_status(
 
 @router.get("/automation/workflows")
 async def get_automation_workflows(admin_user: dict = Depends(get_current_admin)):
-    """Fetch all available automation workflows from the centralized registry."""
-    from core.automation.registry import AUTOMATION_REGISTRY
+    """
+    Fetch all automation workflows with full metadata (Plan Section 5).
+    বাংলা: আগে শুধু {key: route} dict ফেরত দিত। এখন প্রতিটি workflow-এর
+    full policy (timeout, retries, sync/async, sensitive, enabled, version)
+    দেখায় — admin UI-তে workflow management সহজ করে।
+    """
+    from core.automation.registry import list_workflow_definitions
 
-    return {"workflows": AUTOMATION_REGISTRY}
+    defs = list_workflow_definitions()
+    return {
+        "total": len(defs),
+        "workflows": [
+            {
+                "key": wf.key,
+                "route": wf.route,
+                "enabled": wf.enabled,
+                "timeout_seconds": wf.timeout_seconds,
+                "max_retries": wf.max_retries,
+                "synchronous": wf.synchronous,
+                "sensitive": wf.sensitive,
+                "version": wf.version,
+                "description": wf.description,
+            }
+            for wf in defs
+        ],
+    }
 
 
 # ══════════════════════════════════════════════════════════════════════════════
