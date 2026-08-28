@@ -1,4 +1,5 @@
 from .agent_session import AgentSession
+from .automation_execution import AutomationExecution
 from .dynamic_agent import DynamicAgent
 from .execution_log import ExecutionLog
 from .morphic import AgentReflection, DynamicCapability, ExecutionChain
@@ -9,6 +10,7 @@ __all__ = [
     "AgentReflection",
     "AgentSession",
     "ApiEndpoint",
+    "AutomationExecution",
     "DynamicAgent",
     "DynamicCapability",
     "ExecutionChain",

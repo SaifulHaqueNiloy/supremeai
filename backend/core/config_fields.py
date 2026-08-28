@@ -275,3 +275,24 @@ class SettingsFieldsMixin:
     # ── Telegram Bot & Alerts Config ──────────────────────────────────────────
     telegram_bot_token: str = Field(default="", validation_alias="TELEGRAM_BOT_TOKEN")
     admin_telegram_chat_id: str = Field(default="", validation_alias="ADMIN_TELEGRAM_CHAT_ID")
+
+    # ── Automation & Vendor Independence Config ───────────────────────────────
+    automation_enabled: bool = Field(default=True, validation_alias="AUTOMATION_ENABLED")
+    storage_provider: str = Field(default="postgres", validation_alias="STORAGE_PROVIDER")
+    messaging_provider: str = Field(default="existing", validation_alias="MESSAGING_PROVIDER")
+
+    # n8n
+    n8n_enabled: bool = Field(default=False, validation_alias="N8N_ENABLED")
+    n8n_base_url: str = Field(default="", validation_alias="N8N_BASE_URL")
+    n8n_timeout_seconds: int = Field(default=15, validation_alias="N8N_TIMEOUT_SECONDS")
+    n8n_max_retries: int = Field(default=3, validation_alias="N8N_MAX_RETRIES")
+    n8n_verify_tls: bool = Field(default=True, validation_alias="N8N_VERIFY_TLS")
+    n8n_event_delivery_enabled: bool = Field(
+        default=False, validation_alias="N8N_EVENT_DELIVERY_ENABLED"
+    )
+
+    # Appwrite
+    appwrite_enabled: bool = Field(default=False, validation_alias="APPWRITE_ENABLED")
+    appwrite_endpoint: str = Field(default="", validation_alias="APPWRITE_ENDPOINT")
+    appwrite_project_id: str = Field(default="", validation_alias="APPWRITE_PROJECT_ID")
+    appwrite_timeout_seconds: int = Field(default=10, validation_alias="APPWRITE_TIMEOUT_SECONDS")

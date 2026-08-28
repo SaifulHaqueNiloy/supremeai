@@ -80,6 +80,8 @@ class SettingsSecretsMixin:
         "KAGGLE_API_TOKEN_4",
         "KAGGLE_API_TOKEN_5",
         "KAGGLE_API_TOKEN_6",
+        "N8N_WEBHOOK_SECRET",
+        "APPWRITE_API_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -565,6 +567,17 @@ class SettingsSecretsMixin:
             "ADMIN_TELEGRAM_CHAT_ID", ""
         )
 
+    # ── Automation Credentials — Infisical-backed ────────────────────────────
+    @property
+    def n8n_webhook_secret(self) -> SecretStr:
+        val = self._get_cached_secret("N8N_WEBHOOK_SECRET")
+        return SecretStr(val) if val else SecretStr("")
+
+    @property
+    def appwrite_api_key(self) -> SecretStr:
+        val = self._get_cached_secret("APPWRITE_API_KEY")
+        return SecretStr(val) if val else SecretStr("")
+
     # ── Serializer ──────────────────────────────────────────────────────────
     # বাংলা মন্তব্য: @property-ভিত্তিক সিক্রেট Pydantic model_dump()-এ অন্তর্ভুক্ত হয় না।
     # এই serializer নিশ্চিত করে যে settings.model_dump() কল করলে সব ফিল্ড এবং প্রপার্টি দেখা যায়,
@@ -611,6 +624,8 @@ class SettingsSecretsMixin:
             "KAGGLE_API_TOKEN_4",
             "KAGGLE_API_TOKEN_5",
             "KAGGLE_API_TOKEN_6",
+            "N8N_WEBHOOK_SECRET",
+            "APPWRITE_API_KEY",
         ]:
             result[key_field] = redacted
         # Include non-secret properties

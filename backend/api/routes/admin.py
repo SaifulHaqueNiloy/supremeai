@@ -661,3 +661,16 @@ async def auto_scaling_status(
     except Exception as e:
         logger.error(f"❌ auto-scaling status failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Automation endpoints
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/automation/workflows")
+async def get_automation_workflows(admin_user: dict = Depends(get_current_admin)):
+    """Fetch all available automation workflows from the centralized registry."""
+    from core.automation.registry import AUTOMATION_REGISTRY
+
+    return {"workflows": AUTOMATION_REGISTRY}

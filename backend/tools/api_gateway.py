@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
 
+from core.automation.dispatcher import automation_dispatcher
+from core.automation.models import AutomationEvent
 from core.config import settings
 from core.rate_limiter import AsyncRateLimiter
 from core.security.authentication.auth_middleware import AuthMiddleware
@@ -32,38 +34,7 @@ class GatewayRequest(BaseModel):
 
 class InternalGateway:
     def __init__(self):
-        self.n8n_url = self._resolve_n8n_url()
-
-    @staticmethod
-    def _resolve_n8n_url() -> str:
-        """Resolve n8n URL with environment-aware fallback using existing config."""
-        n8n_url = os.environ.get("N8N_URL")
-        if n8n_url:
-            return n8n_url.rstrip("/")
-
-        current_env = getattr(settings, "env", "local") or "local"
-        is_local = current_env.lower() in ("local", "development", "dev", "test")
-
-        if is_local:
-            logger.warning("[gateway] N8N_URL not set; using localhost (dev mode)")
-            return "http://127.0.0.1:5678"  # is_local()
-
-        logger.error(f"[gateway] N8N_URL not set in {current_env}; n8n triggers will fail")
-        return ""
-
-    def trigger_n8n_workflow(self, webhook_path: str, payload: dict[str, Any]) -> dict[str, Any]:
-        url = f"{self.n8n_url}/{webhook_path.lstrip('/')}"
-        logger.info(f"Triggering n8n workflow at {url}")
-        try:
-            response = httpx.post(url, json=payload, timeout=10.0)
-            return {
-                "success": response.is_success,
-                "status_code": response.status_code,
-                "data": response.json() if response.is_success else response.text,
-            }
-        except Exception as exc:
-            logger.error(f"n8n trigger failed: {exc}")
-            return {"success": False, "error": str(exc)}
+        pass
 
     def trigger_make_webhook(self, webhook_url: str, payload: dict[str, Any]) -> dict[str, Any]:
         logger.info("Triggering Make.com webhook")
@@ -202,16 +173,28 @@ async def api_dispatch(capability: str, payload: dict[str, Any]) -> JSONResponse
     return JSONResponse(content=result, status_code=status)
 
 
-@router.post("/n8n")
-async def trigger_n8n(
-    webhook_path: str = "", payload: dict[str, Any] | None = None
+@router.post("/automation")
+async def trigger_automation(
+    workflow_key: str, payload: dict[str, Any] | None = None
 ) -> JSONResponse:
     if payload is None:
         payload = {}
-    internal = InternalGateway()
-    result = internal.trigger_n8n_workflow(webhook_path, payload)
-    status = 200 if result.get("success") else 502
-    return JSONResponse(content=result, status_code=status)
+
+    event = AutomationEvent(workflow_key=workflow_key, payload=payload)
+
+    result = await automation_dispatcher.dispatch(event)
+
+    status_code = 200 if result.status != "failed" else 502
+    return JSONResponse(
+        content={
+            "success": result.status != "failed",
+            "status": result.status,
+            "provider": result.provider,
+            "message": result.message,
+            "execution_id": result.execution_id,
+        },
+        status_code=status_code,
+    )
 
 
 @router.post("/make")
