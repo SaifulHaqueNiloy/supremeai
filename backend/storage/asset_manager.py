@@ -3,6 +3,8 @@ import os
 from firebase_admin import storage as firebase_storage
 from loguru import logger
 
+from core.config import settings
+
 
 class AssetManager:
     """
@@ -29,7 +31,7 @@ class AssetManager:
             try:
                 from supabase import create_client
 
-                url = os.getenv("SUPABASE_URL")
+                url = settings.supabase_url
                 key = os.getenv("SUPABASE_KEY")
                 if url and key:
                     self._supabase_client = create_client(url, key)

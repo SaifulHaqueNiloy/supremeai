@@ -7,6 +7,7 @@ import time
 from datetime import UTC, datetime
 from urllib.parse import urlparse
 
+from core.config import settings
 from memory.sqlite_store import SQLiteMemoryStore
 
 
@@ -17,7 +18,7 @@ class SupabaseStore(SQLiteMemoryStore):
             or os.getenv("SUPABASE_DATABASE_URL_POOLER")
             or os.getenv("SUPABASE_DATABASE_URL")
             or os.getenv("SUPABASE_DB_URL")
-            or os.getenv("DATABASE_URL")
+            or settings.database_url
         )
         self.local_path = local_path or os.getenv("SQLITE_PATH", "data/supremeai.db")
         self._provider: str | None = None  # Will be determined after health check
@@ -108,7 +109,7 @@ class SupabaseStore(SQLiteMemoryStore):
             try:
                 from supabase import create_client
 
-                url = os.getenv("SUPABASE_URL")
+                url = settings.supabase_url
                 if not url and self.database_url:
                     parsed = urlparse(self.database_url)
                     hostname = parsed.hostname or ""
