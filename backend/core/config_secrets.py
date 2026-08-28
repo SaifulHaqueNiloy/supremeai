@@ -87,53 +87,141 @@ class SettingsSecretsMixin:
     def _ensure_secrets_loaded(self) -> None:
         """Batch-load all secrets at once into memory cache.
 
-        বাংলা: startup-এ একবারে সব সিক্রেট লোড করে singleton dict-এ cache করে।
-        V4.1: Optimized to fetch JSON grouped blobs first to save Infisical API calls.
+        বাংলা: startup-এ **একটাই** `listSecrets()` HTTP call দিয়ে সব secrets
+        লোড করে। আগের sequential per-secret loop (~30s) থেকে ~1s-এ নামিয়ে আনে।
+
+        V4.2: Bulk-first via `fetch_all_secrets()` → per-key individual fallback।
         """
         state = self._get_private_state()
         if state["_secrets_batch_loaded"]:
             return
         cached = state["_cached_secrets"]
 
-        # 1. OPTIMIZED FETCH: Try loading grouped JSON blobs first
-        try:
-            llm_keys = get_secret_vault().fetch_json_secret("LLM_PROVIDER_KEYS", default={})
-            if llm_keys:
-                cached["OPENAI_API_KEY"] = llm_keys.get("openai", "")
-                cached["GEMINI_API_KEY"] = llm_keys.get("gemini", "")
-                cached["GROQ_API_KEY"] = llm_keys.get("groq", "")
-                cached["DEEPSEEK_API_KEY"] = llm_keys.get("deepseek", "")
-                cached["NVIDIA_API_KEY"] = llm_keys.get("nvidia", "")
-                cached["OPENROUTER_API_KEY"] = llm_keys.get("openrouter", "")
-                cached["HF_API_KEY"] = llm_keys.get("huggingface", "")
+        import time
 
-            db_config = get_secret_vault().fetch_json_secret("DATABASE_CONFIG", default={})
-            if db_config:
-                cached["SUPABASE_DATABASE_URL_POOLER"] = db_config.get("pooler_url", "")
-                cached["SUPABASE_URL"] = db_config.get("supabase_url", "")
-                cached["SUPABASE_KEY"] = db_config.get("supabase_key", "")
+        _t0 = time.perf_counter()
 
-            auth_keys = get_secret_vault().fetch_json_secret("AUTH_KEYS", default={})
-            if auth_keys:
-                cached["SUPREMEAI_JWT_SECRET"] = auth_keys.get("jwt_secret", "")
-                cached["ENCRYPTION_KEY"] = auth_keys.get("encryption_key", "")
-                cached["SUPREMEAI_API_KEY"] = auth_keys.get("supremeai_api_key", "")
-                cached["SUPREMEAI_ADMIN_PASSWORD_HASH"] = auth_keys.get("admin_password_hash", "")
+        # ── STEP 1: Bulk fetch — এক HTTP call-এ সব secrets ─────────────────
+        bulk = get_secret_vault().fetch_all_secrets()
 
-        except Exception as e:
-            logger.debug(f"JSON blob fetch failed, falling back to individual: {e}")
+        if bulk:
+            # সরাসরি bulk dict থেকে map করো — কোনো HTTP call নেই
+            for secret_key in self._BATCH_SECRET_KEYS:
+                if secret_key in bulk and bulk[secret_key]:
+                    cached[secret_key] = bulk[secret_key]
 
-        # 2. FALLBACK FETCH: Load missing individual secrets
-        for secret_key in self._BATCH_SECRET_KEYS:
-            if cached.get(secret_key):
-                continue  # Skip if already loaded from JSON blob!
+            # JSON blob secrets — bulk result-এ থাকলে parse করো
+            _json_blobs = {
+                "LLM_PROVIDER_KEYS": {
+                    "openai": "OPENAI_API_KEY",
+                    "gemini": "GEMINI_API_KEY",
+                    "groq": "GROQ_API_KEY",
+                    "deepseek": "DEEPSEEK_API_KEY",
+                    "nvidia": "NVIDIA_API_KEY",
+                    "openrouter": "OPENROUTER_API_KEY",
+                    "huggingface": "HF_API_KEY",
+                },
+                "DATABASE_CONFIG": {
+                    "pooler_url": "SUPABASE_DATABASE_URL_POOLER",
+                    "supabase_url": "SUPABASE_URL",
+                    "supabase_key": "SUPABASE_KEY",
+                },
+                "AUTH_KEYS": {
+                    "jwt_secret": "SUPREMEAI_JWT_SECRET",
+                    "encryption_key": "ENCRYPTION_KEY",
+                    "supremeai_api_key": "SUPREMEAI_API_KEY",
+                    "admin_password_hash": "SUPREMEAI_ADMIN_PASSWORD_HASH",
+                },
+            }
+            import json as _json
 
+            for blob_key, field_map in _json_blobs.items():
+                raw = bulk.get(blob_key, "")
+                if not raw:
+                    continue
+                try:
+                    blob = _json.loads(raw)
+                    for json_field, cache_key in field_map.items():
+                        val = blob.get(json_field, "")
+                        if val and not cached.get(cache_key):
+                            cached[cache_key] = val
+                except Exception as _je:
+                    logger.debug(f"JSON blob '{blob_key}' parse failed: {_je}")
+
+            elapsed = time.perf_counter() - _t0
+            loaded = sum(1 for k in self._BATCH_SECRET_KEYS if cached.get(k))
+            logger.info(
+                f"✅ Secrets bulk-loaded: {loaded}/{len(self._BATCH_SECRET_KEYS)} keys "
+                f"in {elapsed:.3f}s (1 HTTP call)"
+            )
+        else:
+            # ── STEP 2: Fallback — bulk fetch ব্যর্থ হলে পুরানো method ────
+            logger.warning(
+                "⚠️ Bulk secret fetch unavailable — falling back to individual fetches. "
+                "This will be slower (~0.7s × secret count)."
+            )
+
+            # Legacy JSON blob fetch (3 HTTP calls)
             try:
-                val = get_secret_vault().fetch_secret(secret_key, default="")
-                if val:
-                    cached[secret_key] = val
-            except Exception as _secret_err:
-                logger.debug(f"Secret {secret_key} not available during batch load: {_secret_err}")
+                llm_keys = get_secret_vault().fetch_json_secret("LLM_PROVIDER_KEYS", default={})
+                if llm_keys:
+                    cached["OPENAI_API_KEY"] = llm_keys.get("openai", "")
+                    cached["GEMINI_API_KEY"] = llm_keys.get("gemini", "")
+                    cached["GROQ_API_KEY"] = llm_keys.get("groq", "")
+                    cached["DEEPSEEK_API_KEY"] = llm_keys.get("deepseek", "")
+                    cached["NVIDIA_API_KEY"] = llm_keys.get("nvidia", "")
+                    cached["OPENROUTER_API_KEY"] = llm_keys.get("openrouter", "")
+                    cached["HF_API_KEY"] = llm_keys.get("huggingface", "")
+
+                db_config = get_secret_vault().fetch_json_secret("DATABASE_CONFIG", default={})
+                if db_config:
+                    cached["SUPABASE_DATABASE_URL_POOLER"] = db_config.get("pooler_url", "")
+                    cached["SUPABASE_URL"] = db_config.get("supabase_url", "")
+                    cached["SUPABASE_KEY"] = db_config.get("supabase_key", "")
+
+                auth_keys = get_secret_vault().fetch_json_secret("AUTH_KEYS", default={})
+                if auth_keys:
+                    cached["SUPREMEAI_JWT_SECRET"] = auth_keys.get("jwt_secret", "")
+                    cached["ENCRYPTION_KEY"] = auth_keys.get("encryption_key", "")
+                    cached["SUPREMEAI_API_KEY"] = auth_keys.get("supremeai_api_key", "")
+                    cached["SUPREMEAI_ADMIN_PASSWORD_HASH"] = auth_keys.get(
+                        "admin_password_hash", ""
+                    )
+
+            except Exception as e:
+                logger.debug(f"JSON blob fetch failed, falling back to individual: {e}")
+
+            # Individual per-secret fetch for remaining missing keys
+            for secret_key in self._BATCH_SECRET_KEYS:
+                if cached.get(secret_key):
+                    continue  # already loaded
+
+                try:
+                    val = get_secret_vault().fetch_secret(secret_key, default="")
+                    if val:
+                        cached[secret_key] = val
+                except Exception as _secret_err:
+                    logger.debug(
+                        f"Secret {secret_key} not available during batch load: {_secret_err}"
+                    )
+
+        # ── STEP 3: Individual fetch — bulk miss-এর safety net ───────────────
+        # bulk সফল হলেও কিছু key missing থাকতে পারে (নতুন secrets, path mismatch)
+        if bulk:
+            missing = [k for k in self._BATCH_SECRET_KEYS if not cached.get(k)]
+            if missing:
+                logger.debug(
+                    f"Fetching {len(missing)} secrets individually (not in bulk result): {missing}"
+                )
+                for secret_key in missing:
+                    try:
+                        val = get_secret_vault().fetch_secret(secret_key, default="")
+                        if val:
+                            cached[secret_key] = val
+                    except Exception as _secret_err:
+                        logger.debug(
+                            f"Secret {secret_key} not available individually: {_secret_err}"
+                        )
 
         state["_secrets_batch_loaded"] = True
 

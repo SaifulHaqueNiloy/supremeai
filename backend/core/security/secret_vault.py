@@ -21,7 +21,7 @@ from core.error_bus import with_error_bus
 from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 if TYPE_CHECKING:
-    from infisical_client import GetSecretOptions
+    from infisical_client import GetSecretOptions, ListSecretsOptions
 
 try:
     from infisical_client import (
@@ -29,6 +29,7 @@ try:
         ClientSettings,
         GetSecretOptions,
         InfisicalClient,
+        ListSecretsOptions,
         UniversalAuthMethod,
     )
 except ImportError as e:
@@ -453,6 +454,88 @@ class ProductionSecretVault:
 
     async def fetch_json_secret_async(self, secret_id: str, default: dict | None = None) -> dict:
         return await asyncio.to_thread(self.fetch_json_secret, secret_id, default)
+
+    def fetch_all_secrets(self, environment: str | None = None) -> dict[str, str]:
+        """Single bulk call — সব secrets এক HTTP call-এ ফেচ করে dict রিটার্ন করে।
+
+        বাংলা: `listSecrets()` ব্যবহার করে একটাই API call-এ পুরো environment-এর
+        সব secrets লোড করে in-memory cache-এ inject করে। Sequential per-secret
+        loop (~30s) থেকে এক call (~0.7s)-এ নামিয়ে আনে startup time।
+
+        Returns:
+            dict[str, str]: {"SECRET_KEY": "secret_value", ...}
+            Circuit breaker open বা client missing হলে empty dict।
+        """
+        if self._circuit_breaker_open:
+            logger.debug("fetch_all_secrets: circuit breaker open, skipping bulk fetch.")
+            return {}
+
+        if not self.client or not self.project_id:
+            logger.debug("fetch_all_secrets: no Infisical client/project_id, skipping.")
+            return {}
+
+        # Determine environment slug
+        if not environment:
+            infisical_env = os.environ.get("INFISICAL_ENV")
+            if not infisical_env:
+                if self.env == "production":
+                    infisical_env = "prod"
+                elif self.env == "staging":
+                    infisical_env = "staging"
+                else:
+                    infisical_env = "dev"
+        else:
+            infisical_env = environment
+
+        try:
+            import concurrent.futures
+
+            def _do_list():
+                return self.client.listSecrets(
+                    ListSecretsOptions(
+                        environment=infisical_env,
+                        project_id=self.project_id,
+                        path="/",
+                        expand_secret_references=True,
+                        attach_to_process_env=False,
+                        include_imports=True,
+                    )
+                )
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(_do_list)
+                secrets_list = future.result(timeout=INFISICAL_TIMEOUT)
+
+            result: dict[str, str] = {}
+            ttl = CACHE_TTL_SECONDS
+            for secret in secrets_list:
+                key = secret.secret_key
+                val = secret.secret_value or ""
+                result[key] = val
+                # Inject directly into TTL cache — individual fetch_secret() calls will hit cache
+                self._cache[key] = _CacheEntry(val, ttl=ttl)
+
+            logger.info(
+                f"✅ Bulk fetch complete: {len(result)} secrets loaded from Infisical "
+                f"(env={infisical_env}) in one HTTP call."
+            )
+            return result
+
+        except concurrent.futures.TimeoutError:
+            logger.warning(
+                f"fetch_all_secrets TIMEOUT after {INFISICAL_TIMEOUT}s. "
+                "Falling back to individual secret fetches."
+            )
+            return {}
+        except Exception as exc:
+            err_str = str(exc).lower()
+            if "not found" in err_str or "404" in err_str or "403" in err_str:
+                logger.warning(f"fetch_all_secrets: access error — {exc}. Falling back.")
+            else:
+                logger.opt(exception=True).warning(
+                    f"fetch_all_secrets: unexpected error — {exc}. Falling back."
+                )
+            return {}
 
     def invalidate_cache(self, secret_id: str | None = None) -> None:
         """Invalidate cache for a specific secret or clear all.
