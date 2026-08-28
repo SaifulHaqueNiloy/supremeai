@@ -265,6 +265,9 @@ class SettingsFieldsMixin:
         default=60, validation_alias="HEALTH_CHECK_INTERVAL_SECONDS"
     )
     skill_timeout_seconds: int = Field(default=30, validation_alias="SKILL_TIMEOUT_SECONDS")
+    redis_required_for_production: bool = Field(
+        default=False, validation_alias="REDIS_REQUIRED_FOR_PRODUCTION"
+    )
 
     # ── Self-Healing Config — env-driven ────────────────────────────────────
     self_heal_approval_webhook: str = Field(

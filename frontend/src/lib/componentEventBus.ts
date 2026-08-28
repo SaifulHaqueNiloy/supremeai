@@ -334,7 +334,10 @@ export function useComponentEvent<T = any>(
   deps: React.DependencyList = []
 ) {
   const callbackRef = useRef(callback);
-  callbackRef.current = callback;
+  
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
   
   useEffect(() => {
     return componentEventBus.on<T>(event, (data) => {
@@ -359,14 +362,14 @@ export function useComponentEvent<T = any>(
  */
 export function useComponentEventEmitter() {
   return {
-    emitServiceStatusChange: useCallback(componentEventBus.emitServiceStatusChange.bind(componentEventBus), []),
-    emitBrowserUrlChange: useCallback(componentEventBus.emitBrowserUrlChange.bind(componentEventBus), []),
-    emitSecurityScanComplete: useCallback(componentEventBus.emitSecurityScanComplete.bind(componentEventBus), []),
-    emitAIActionComplete: useCallback(componentEventBus.emitAIActionComplete.bind(componentEventBus), []),
-    emitMemoryItemCreated: useCallback(componentEventBus.emitMemoryItemCreated.bind(componentEventBus), []),
-    emitAlert: useCallback(componentEventBus.emitAlert.bind(componentEventBus), []),
-    emitDeploymentStatusUpdate: useCallback(componentEventBus.emitDeploymentStatusUpdate.bind(componentEventBus), []),
-    emit: useCallback(componentEventBus.emit.bind(componentEventBus), []),
+    emitServiceStatusChange: useCallback((...args: Parameters<typeof componentEventBus.emitServiceStatusChange>) => componentEventBus.emitServiceStatusChange(...args), []),
+    emitBrowserUrlChange: useCallback((...args: Parameters<typeof componentEventBus.emitBrowserUrlChange>) => componentEventBus.emitBrowserUrlChange(...args), []),
+    emitSecurityScanComplete: useCallback((...args: Parameters<typeof componentEventBus.emitSecurityScanComplete>) => componentEventBus.emitSecurityScanComplete(...args), []),
+    emitAIActionComplete: useCallback((...args: Parameters<typeof componentEventBus.emitAIActionComplete>) => componentEventBus.emitAIActionComplete(...args), []),
+    emitMemoryItemCreated: useCallback((...args: Parameters<typeof componentEventBus.emitMemoryItemCreated>) => componentEventBus.emitMemoryItemCreated(...args), []),
+    emitAlert: useCallback((...args: Parameters<typeof componentEventBus.emitAlert>) => componentEventBus.emitAlert(...args), []),
+    emitDeploymentStatusUpdate: useCallback((...args: Parameters<typeof componentEventBus.emitDeploymentStatusUpdate>) => componentEventBus.emitDeploymentStatusUpdate(...args), []),
+    emit: useCallback((...args: Parameters<typeof componentEventBus.emit>) => componentEventBus.emit(...args), []),
   };
 }
 

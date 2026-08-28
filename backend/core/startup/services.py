@@ -65,28 +65,10 @@ async def initialize_independent_services(app):
                         "✅ Database connection pool health check passed. Connected to Primary DB (Supabase)."
                     )
                 except Exception as primary_exc:
-                    logger.error(
-                        f"❌ Primary DB (Supabase) failed: {primary_exc}. Attempting fallback..."
-                    )
-                    # 2. Attempt Secondary DB (Neon)
-                    _neon_url = getattr(settings, "neon_database_url", None)
-                    if not _neon_url:
-                        raise Exception(
-                            f"Primary DB failed and no neon_database_url found. Error: {primary_exc}"
-                        ) from primary_exc
-
-                    try:
-                        pool = await _try_connect_and_check(_neon_url)
-                        logger.warning(
-                            "⚠️ Primary DB failed! Fallback to Secondary DB (Neon.tech) successful!"
-                        )
-                        app.state.subsystem_status["db"] = (
-                            "degraded"  # Mark as degraded since we are on fallback
-                        )
-                    except Exception as secondary_exc:
-                        raise Exception(
-                            f"Both Primary and Secondary DBs failed. Primary: {primary_exc}, Secondary: {secondary_exc}"
-                        ) from secondary_exc
+                    logger.error(f"❌ Primary DB (Supabase) failed: {primary_exc}.")
+                    raise Exception(
+                        f"Primary DB connection failed. Error: {primary_exc}"
+                    ) from primary_exc
 
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()
@@ -148,20 +130,33 @@ async def initialize_independent_services(app):
                 await ReliabilityController.restore_from_persistence()
         except Exception as e:
             logger.error(f"Failed to initialize Redis Manager: {e}")
-            app.state.subsystem_status["redis"] = "down"
+
+            is_critical = (
+                getattr(settings, "redis_required_for_production", False)
+                and settings.env == "production"
+            )
+
+            app.state.subsystem_status["redis"] = "down" if is_critical else "optional_offline"
             error_event_bus.emit(
                 ErrorEvent(
                     module="lifespan",
                     error_type="REDIS_INIT_FAILED",
                     message=str(e)[:200],
-                    severity="CRITICAL" if settings.env == "production" else "WARNING",
+                    severity="CRITICAL" if is_critical else "WARNING",
                     structured_context=ErrorContext(module="auto_fixed"),
-                    context={"env": settings.env},
+                    context={
+                        "env": settings.env,
+                        "redis_required": getattr(settings, "redis_required_for_production", False),
+                    },
                 )
             )
-            if settings.env == "production":
+            if is_critical:
                 logger.critical(
                     "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
+                )
+            else:
+                logger.warning(
+                    "⚠️ Redis is unavailable but marked as optional. Running safely without Redis."
                 )
 
     async def _init_cost_guard() -> None:

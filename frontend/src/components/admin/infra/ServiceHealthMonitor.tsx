@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { 
   Activity, Server, Database, Cloud, Wifi, WifiOff, 
   RefreshCw, AlertTriangle, CheckCircle, XCircle, Clock,
-  ArrowUp, ArrowDown, Minus, ExternalLink, Bell, BellOff,
+  Minus, ExternalLink, Bell, BellOff,
   GitBranch, Key, Shield
 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ interface ServiceHealth {
   responseTime: number | null;
   statusCode: number | null;
   error: string | null;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   uptime24h?: number | null;
   uptime7d?: number | null;
   uptime30d?: number | null;
