@@ -114,10 +114,9 @@ class SettingsValidationMixin:
         if self.env in {"production", "staging"} and self.docs_auth_enabled:
             pwd = self.docs_password.get_secret_value() if self.docs_password else ""
             if not pwd:
-                logger.warning(
-                    f"⚠️ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing — using fallback production password."
+                raise ValueError(
+                    f"❌ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing. Fail-fast triggered."
                 )
-                self.docs_password = SecretStr("supreme-admin-2026-prod")
 
         # Boot-time LLM secret check — silent failure প্রতিরোধ করে
         if self.env in {"production", "staging"}:
@@ -276,14 +275,9 @@ class SettingsValidationMixin:
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
             if not v:
-                logger.warning(
-                    f"⚠️ {env.capitalize()} ALLOWED_HOSTS missing — auto-populating default production hosts."
+                raise ValueError(
+                    f"❌ {env.capitalize()} ALLOWED_HOSTS missing or only contains localhost. Fail-fast triggered."
                 )
-                v = [
-                    "supremeai-backend.onrender.com",
-                    "supremeai-admin.web.app",
-                    "*.onrender.com",
-                ]
         return v
 
     @field_validator("user_cors_origins", "admin_cors_origins", mode="before")
