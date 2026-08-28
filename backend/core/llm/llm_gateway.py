@@ -29,6 +29,8 @@ from ..messaging.event_bus import (  # Fixed import path - using relative import
     ErrorEvent,
     error_event_bus,
 )
+from ..observability.interfaces import PrivacyMode
+from ..observability.providers.langfuse_adapter import LangfuseAdapter
 from ..prompt_handler import (
     compress_prompt_messages,
     normalize_prompt,  # Fixed import path - using relative import
@@ -96,6 +98,7 @@ class LLMGateway:
         self.mode = mode
         self.cloud_adapter = CloudProviderAdapter()
         self.local_adapter = OllamaLocalAdapter()
+        self.observability = LangfuseAdapter()
 
         self.routing_policy = self._load_routing_policy()
         self._setup_litellm_globals()
@@ -228,13 +231,7 @@ class LLMGateway:
         callbacks_failure = []
 
         # Integrate Langfuse Observability
-        from ..config import settings
-
-        if getattr(settings, "LANGFUSE_PUBLIC_KEY", None) and getattr(
-            settings, "LANGFUSE_SECRET_KEY", None
-        ):
-            callbacks_success.append("langfuse")
-            callbacks_failure.append("langfuse")
+        # Note: Litellm's internal 'langfuse' callback is removed in favor of explicit AIObservabilityProvider tracing
 
         def success_callback(kwargs, response_obj, start_time, end_time):
             try:
@@ -592,6 +589,14 @@ class LLMGateway:
                     logger.warning(f"[LLMGateway] Local execution failed: {e}")
                     if mode == ExecutionMode.LOCAL:
                         raise e
+                else:
+                    await self.observability.trace_generation(
+                        model=local_model,
+                        prompt=messages_payload,
+                        response_text=response["choices"][0]["message"]["content"],
+                        cost=0.0,
+                        privacy_mode=PrivacyMode.METADATA_ONLY,
+                    )
             elif mode == ExecutionMode.LOCAL:
                 raise RuntimeError("Local execution requested but Ollama is not healthy.")
 
@@ -659,6 +664,17 @@ class LLMGateway:
                             )
                         except Exception as evo_err:
                             logger.debug(f"EvolutionEngine.learn_from_success skipped: {evo_err}")
+
+                    await self.observability.trace_generation(
+                        model=current_model,
+                        prompt=messages_payload,
+                        response_text=response["choices"][0]["message"]["content"],
+                        usage=response.get("usage"),
+                        cost=cost,
+                        session_id=session_id,
+                        metadata={"task_type": task_type},
+                        privacy_mode=PrivacyMode.FULL,
+                    )
 
                     return {
                         "success": True,
