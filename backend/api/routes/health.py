@@ -80,7 +80,7 @@ async def readiness_check():
 @router.get("/live")
 async def liveness_check():
     """Kubernetes-style liveness probe."""
-    return {"status": "alive"}
+    return {"status": "alive", "alive": True, "timestamp": datetime.utcnow().isoformat()}
 
 
 async def _check_database() -> str:
