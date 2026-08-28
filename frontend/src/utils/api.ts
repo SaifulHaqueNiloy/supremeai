@@ -181,15 +181,6 @@ if ((import.meta.env.PROD) && !USER_BACKEND_URL && import.meta.env.VITE_PORTAL_T
 export const BACKEND_URL: string =
   import.meta.env.VITE_PORTAL_TYPE === 'admin' ? ADMIN_BACKEND_URL : USER_BACKEND_URL;
 
-/**
- * @deprecated পুরনো failover array — শুধু backward compatibility-র জন্য readonly রাখা হয়েছে।
- */
-export const RENDER_BACKENDS: readonly string[] = [USER_BACKEND_URL, ADMIN_BACKEND_URL] as const;
-
-// বাংলা মন্তব্য: switchActiveBackend() সরানো হয়েছে — user→admin (বা উল্টো) failover
-// আর্কিটেকচারাল আইসোলেশন ভাঙত এবং CORS/RBAC ঝুঁকি তৈরি করত।
-// নেটওয়ার্ক ব্যর্থতা বা 502/503/504-এ apiClient একই URL-এ backoff retry করে।
-
 export const getApiBaseUrl = (): string => {
   if (typeof window === 'undefined') {
     // বাংলা মন্তব্য: SSR/Node.js কনটেক্সটে সরাসরি backend URL
@@ -197,18 +188,17 @@ export const getApiBaseUrl = (): string => {
     return BACKEND_URL;
   }
 
-  const hostname = window.location.hostname;
-
-  // 🔥 ফিক্স: Firebase Hosting rewrite দিয়ে external URL-এ proxy করা যায় না,
-  // তাই Firebase (.web.app/.firebaseapp.com)-এ সরাসরি portal-নির্দিষ্ট backend URL ব্যবহার করি।
-  // Backend CORS ইতিমধ্যে admin domain allow করে রেখেছে।
-  // 🔧 DYNAMIC: Configure via VITE_RELATIVE_PATH_HOSTS env var
-  const relativePathHosts = (import.meta.env.VITE_RELATIVE_PATH_HOSTS || '').split(',').filter(Boolean);
-  if (relativePathHosts.length > 0 && relativePathHosts.some(h => hostname.includes(h))) {
+  // 🔧 DYNAMIC: Configure via explicit VITE_USE_RELATIVE_PATH boolean flag
+  if (import.meta.env.VITE_USE_RELATIVE_PATH === 'true') {
     return '';
   }
 
-  // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসরি backend URL
+  // 🔧 Vercel hosting supports external rewrite proxy — use relative path
+  if (window.location.hostname.endsWith('.vercel.app')) {
+    return '';
+  }
+
+  // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসররি backend URL
   return BACKEND_URL;
 };
 
