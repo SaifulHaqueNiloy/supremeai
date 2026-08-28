@@ -17,7 +17,7 @@ class OllamaLocalAdapter(ModelProvider):
 
     def __init__(self, default_api_base: str = "http://localhost:11434"):
         if "localhost" in default_api_base:
-            if settings.env == "local":
+            if settings.env == "local" or settings.env == "test":
                 pass
             else:
                 raise ValueError(
