@@ -13,8 +13,10 @@ episode triples + recency/keyword ranking) ব্যবহার হয়।
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 import time
+from pathlib import Path
 from typing import Any
 
 from loguru import logger
@@ -31,23 +33,34 @@ def _words(text: str) -> set[str]:
 def _asyncio_run(coro: Any) -> Any:
     """Run an async coroutine from a sync context safely (no nested loop)."""
     try:
-        asyncio.get_running_loop()
+        loop = asyncio.get_running_loop()
+        # If we are already in an event loop, we can't block with asyncio.run.
+        # So we spawn a task that will run in the background.
+        return loop.create_task(coro)
     except RuntimeError:
         return asyncio.run(coro)
-    # nested loop → যেকোনো sync caller-এ পাল কিউ করা হয় না; upstream-কে async-থেকেই call করুন
-    logger.warning("GraphitiMemoryAdapter: called from async context — returning None.")
-    return None
 
 
 class GraphitiMemoryAdapter:
     """Temporal knowledge-graph memory bridging optional Graphiti with zero-cost fallback."""
 
     def __init__(
-        self, uri: str | None = None, user: str | None = None, password: str | None = None
+        self,
+        uri: str | None = None,
+        user: str | None = None,
+        password: str | None = None,
+        data_dir: str = "data",
     ) -> None:
         self.enabled_flag = _ENABLED_FLAG
         self._graphiti = None
         self._triples: list[dict[str, Any]] = []
+
+        # Determine fallback storage path
+        self.data_dir = Path(__file__).resolve().parent.parent.parent / data_dir
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._fallback_path = self.data_dir / "graphiti_fallback.json"
+
+        self._load_fallback()
 
         if flag(_ENABLED_FLAG) and import_available("graphiti_core") and uri:
             try:
@@ -71,6 +84,35 @@ class GraphitiMemoryAdapter:
     def active(self) -> bool:
         return self._graphiti is not None
 
+    def _load_fallback(self) -> None:
+        if self._fallback_path.exists():
+            try:
+                with open(self._fallback_path, encoding="utf-8") as f:
+                    data = json.load(f)
+                    # Convert 'words' list back to set
+                    for t in data:
+                        if isinstance(t.get("words"), list):
+                            t["words"] = set(t["words"])
+                    self._triples = data
+            except Exception as e:
+                logger.warning(f"GraphitiMemoryAdapter: failed to load fallback data: {e}")
+                self._triples = []
+
+    def _save_fallback(self) -> None:
+        try:
+            # Convert sets to lists for JSON serialization
+            data_to_save = []
+            for t in self._triples:
+                t_copy = t.copy()
+                if isinstance(t_copy.get("words"), set):
+                    t_copy["words"] = list(t_copy["words"])
+                data_to_save.append(t_copy)
+
+            with open(self._fallback_path, "w", encoding="utf-8") as f:
+                json.dump(data_to_save, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning(f"GraphitiMemoryAdapter: failed to save fallback data: {e}")
+
     def add_episode(self, text: str) -> None:
         """Record a temporally-stamped memory episode."""
         text = (text or "").strip()
@@ -80,6 +122,7 @@ class GraphitiMemoryAdapter:
             _asyncio_run(self._graphiti.build_episode(text))  # type: ignore[union-attr]
             return
         self._triples.append({"text": text, "ts": time.time(), "words": _words(text)})
+        self._save_fallback()
 
     def search(self, query: str, top_k: int = 3, recency_weight: float = 0.0) -> list[str]:
         """Return top-k temporally relevant memories (recency + keyword)."""
