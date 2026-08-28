@@ -87,7 +87,7 @@ ADMIN_GUARDED_PATHS = [
     ("api.routes.browser", "/api/browser/browse"),
     ("api.routes.browser", "/api/browser/extract"),
     ("api.routes.browser", "/api/browser/urls/allowAll"),
-    ("api.routes.config_routes", "/config/{key}"),
+    ("api.routes.config_routes_routes", "/config/{key}"),
     ("api.routes.evolution", "/evolution/logs"),
     ("api.routes.evolution", "/evolution/quarantine"),
     ("api.routes.evolution", "/evolution/proposals"),
@@ -106,7 +106,7 @@ def test_sensitive_paths_require_admin_token(module_path, path):
 
 # ── Public paths must NOT carry an admin guard (fail-open prevention) ───────
 PUBLIC_PATHS = [
-    ("api.routes.config_routes", "/config/public"),
+    ("api.routes.config_routes_routes", "/config/public"),
 ]
 
 

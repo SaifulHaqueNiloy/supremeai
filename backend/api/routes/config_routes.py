@@ -10,7 +10,7 @@ from api.routes.admin_dashboard import require_admin_token
 
 # টেস্ট কম্প্যাটিবিলিটি:
 # `tests/test_api_new_endpoints.py::test_config_endpoint_admin_control` monkeypatch করে
-# `backend.api.routes.config_routes_routes.db.client` সেট করে।
+# `backend.api.routes.config_routes_routes_routes_routes.db.client` সেট করে।
 class _ConfigDBClientWrapper:
     def __init__(self):
         # টেস্ট monkeypatch করবে: config_route.db.client

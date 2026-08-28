@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 # বাংলা মন্তব্য: ল্যাগ-ফ্রি ও হাই-পারফর্মেন্স ইউনিট টেস্টিংয়ের জন্য সকেট/ইনফ্রাস্ট্রাকচার ডিপেনডেন্সি ছাড়াই হ্যান্ডলার মেথডগুলো সরাসরি কল করা হচ্ছে।
-from backend.api.routes.config_routes_routes import (
+from backend.api.routes.config_routes_routes_routes_routes import (
     _ConfigDBClientWrapper,
     db,
     get_config_by_key,
