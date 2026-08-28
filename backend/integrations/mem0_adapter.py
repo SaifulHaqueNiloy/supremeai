@@ -9,8 +9,10 @@ consolidation) ব্যবহার হয়। ফলে সবসময় '
 
 from __future__ import annotations
 
+import json
 import math
 import re
+from pathlib import Path
 from typing import Any
 
 from loguru import logger
@@ -28,10 +30,17 @@ def _tokens(text: str) -> list[str]:
 class Mem0MemoryAdapter:
     """Self-learning memory layer bridging optional mem0 with zero-cost fallback."""
 
-    def __init__(self) -> None:
+    def __init__(self, data_dir: str = "data") -> None:
         self.enabled_flag = _ENABLED_FLAG
         self._memory = None
         self._entries: list[dict[str, Any]] = []
+
+        # Determine fallback storage path
+        self.data_dir = Path(__file__).resolve().parent.parent.parent / data_dir
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._fallback_path = self.data_dir / "mem0_fallback.json"
+
+        self._load_fallback()
         # flag + dependency দুটোই লাগবে আসল mem0 ব্যবহার করতে
         if flag(_ENABLED_FLAG) and import_available("mem0"):
             try:
@@ -53,6 +62,22 @@ class Mem0MemoryAdapter:
         """True when the real upstream memory layer is in use."""
         return self._memory is not None
 
+    def _load_fallback(self) -> None:
+        if self._fallback_path.exists():
+            try:
+                with open(self._fallback_path, encoding="utf-8") as f:
+                    self._entries = json.load(f)
+            except Exception as e:
+                logger.warning(f"Mem0MemoryAdapter: failed to load fallback data: {e}")
+                self._entries = []
+
+    def _save_fallback(self) -> None:
+        try:
+            with open(self._fallback_path, "w", encoding="utf-8") as f:
+                json.dump(self._entries, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning(f"Mem0MemoryAdapter: failed to save fallback data: {e}")
+
     def record(self, messages: list[dict[str, str]], user_id: str = "default") -> None:
         """Persist a conversation turn into long-term memory."""
         if self.active:
@@ -66,6 +91,7 @@ class Mem0MemoryAdapter:
         text = " ".join(m.get("content", "") for m in messages).strip()
         if text:
             self._entries.append({"text": text, "tokens": _tokens(text)})
+            self._save_fallback()
 
     def search(self, query: str, user_id: str = "default", top_k: int = 3) -> list[str]:
         """Return the most relevant past memories by hybrid (semantic/keyword) ranking."""
