@@ -202,4 +202,8 @@ class BrowserAgent:
             logger.error(f"Playwright action failed: {e}")
             return {"success": False, "error": str(e), "url": url}
         finally:
-            await page.close()
+            # MEMLEAK-005: Enforce hard timeout on page.close() to prevent zombie pages
+            try:
+                await asyncio.wait_for(page.close(), timeout=2.0)
+            except Exception as e:
+                logger.warning(f"Failed to close Playwright page cleanly within timeout: {e}")

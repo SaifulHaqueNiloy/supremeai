@@ -5,6 +5,7 @@ Monitors and manages memory usage within 512MB constraint.
 
 import asyncio
 import gc
+import time
 from dataclasses import dataclass
 from functools import wraps
 
@@ -40,15 +41,14 @@ class FreeTierMemoryManager:
         try:
             self._process = psutil.Process()
         except (psutil.Error, OSError) as e:
-            # বাংলা মন্তব্য: PID সাময়িকভাবে অনুপলব্ধ/স্টেল হলে (কনটেইনার/স্যান্ডবক্স
-            # পরিবেশে বিরল ক্ষেত্রে ঘটে) constructor-এ ক্র্যাশ না করে None রেখে
-            # get_status()-এ পরে পুনরায় চেষ্টা করা হয় — এতে singleton স্থায়ীভাবে
-            # ভাঙে না ও পুরো অ্যাপ/মিডলওয়্যার ক্র্যাশ করে না।
             logger.warning(f"psutil.Process() unavailable at startup, will retry lazily: {e}")
             self._process = None
-        self._last_gc_time = 0
-        self._last_aggressive_cleanup_time = 0
-        self._gc_interval_seconds = 60  # Run GC every 60 seconds
+        self._last_gc_time = 0.0
+        self._last_aggressive_cleanup_time = 0.0
+        self._last_log_time = 0.0
+        self._gc_interval_seconds = 60.0  # Run GC every 60 seconds at most
+        self._log_interval_seconds = 60.0  # Throttle repeating logs
+        self._current_state = "NORMAL"
 
     def get_status(self) -> MemoryStatus:
         """Get current memory status."""
@@ -59,14 +59,8 @@ class FreeTierMemoryManager:
             try:
                 total_virtual = self._process.memory_info().rss / (1024 * 1024)
             except (psutil.NoSuchProcess, psutil.ZombieProcess):
-                # বাংলা মন্তব্য: cached Process handle স্টেল হয়ে গেলে একবার পুনরায়
-                # তৈরি করে চেষ্টা করা হচ্ছে (self-heal), বারবার একই এরর যেন সব
-                # পরবর্তী রিকোয়েস্টকেও ব্যর্থ না করে।
                 self._process = psutil.Process()
                 total_virtual = self._process.memory_info().rss / (1024 * 1024)
-
-            # Get system memory for context
-            psutil.virtual_memory()
 
             status = MemoryStatus(
                 total_mb=self.MAX_MEMORY_MB,
@@ -88,58 +82,87 @@ class FreeTierMemoryManager:
         status = self.get_status()
         return status.is_critical or status.is_warning
 
+    def _update_logging_state(self, status: MemoryStatus):
+        """State machine for logging to prevent spam."""
+        current_time = time.monotonic()
+        new_state = "NORMAL"
+        if status.is_critical:
+            new_state = "CRITICAL"
+        elif status.is_warning:
+            new_state = "WARNING"
+
+        if new_state != self._current_state:
+            # State transition
+            if new_state == "CRITICAL":
+                logger.critical(f"🚨 MEMORY CRITICAL ({status.percent_used}% used)")
+            elif new_state == "WARNING":
+                logger.warning(f"⚠️ MEMORY WARNING ({status.percent_used}% used)")
+            elif new_state == "NORMAL" and self._current_state != "NORMAL":
+                logger.success(f"✅ MEMORY RECOVERED ({status.percent_used}% used)")
+
+            self._current_state = new_state
+            self._last_log_time = current_time
+        else:
+            # Same state, throttle logs
+            if new_state != "NORMAL" and (
+                current_time - self._last_log_time >= self._log_interval_seconds
+            ):
+                if new_state == "CRITICAL":
+                    logger.critical(f"🚨 STILL CRITICAL ({status.percent_used}% used)")
+                elif new_state == "WARNING":
+                    logger.warning(f"⚠️ STILL WARNING ({status.percent_used}% used)")
+                self._last_log_time = current_time
+
     async def cleanup_if_needed(self, force: bool = False):
         """
         Run garbage collection and cleanup if memory is high.
 
         Args:
-            force: Force cleanup regardless of threshold
+            force: Force cleanup regardless of threshold and cooldown
         """
         status = self.get_status()
+        self._update_logging_state(status)
 
-        if force or status.is_critical:
-            logger.warning(
-                f"⚠️ Memory critical ({status.percent_used}%). Running aggressive cleanup..."
-            )
-            await self._aggressive_cleanup()
+        current_time = time.monotonic()
 
+        if force:
+            logger.warning(f"⚠️ Forced memory cleanup triggered ({status.percent_used}%)")
+            await self._aggressive_cleanup(force=True)
+            return
+
+        if status.is_critical:
+            if current_time - self._last_aggressive_cleanup_time >= self._gc_interval_seconds:
+                await self._aggressive_cleanup()
         elif status.is_warning:
-            logger.info(f"ℹ️ Memory warning ({status.percent_used}%). Running standard cleanup...")
-            await self._standard_cleanup()
+            if current_time - self._last_gc_time >= self._gc_interval_seconds:
+                await self._standard_cleanup()
 
     async def _standard_cleanup(self):
         """Standard garbage collection."""
-        # Force Python garbage collection
+        self._last_gc_time = time.monotonic()
+        logger.debug("Running standard GC...")
         gc.collect()
 
-        # Clear caches if they exist
         if hasattr(self, "_clear_caches"):
             self._clear_caches()
 
-    async def _aggressive_cleanup(self):
+    async def _aggressive_cleanup(self, force: bool = False):
         """Aggressive cleanup for critical memory situations."""
-        import time
-
-        current_time = time.time()
-        # Cooldown: Only run aggressive cleanup once every 60 seconds
-        if current_time - self._last_aggressive_cleanup_time < 60:
-            return
-
-        self._last_aggressive_cleanup_time = current_time
+        self._last_aggressive_cleanup_time = time.monotonic()
+        self._last_gc_time = time.monotonic()  # Aggressive also counts as standard
 
         logger.critical("🚨 Running AGGRESSIVE memory cleanup!")
 
         # 1. Force multiple GC passes
         for _ in range(3):
             gc.collect()
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.01)  # Reduced sleep to not block event loop as much
 
         # 2. Clear any object pools
         try:
             from core.ai_memory.vector_store import VectorStore
 
             if hasattr(VectorStore, "_connection_pool"):
-                # Don't close, just shrink
                 pass
         except asyncio.CancelledError:
             raise
@@ -147,9 +170,6 @@ class FreeTierMemoryManager:
             import logging
 
             logging.getLogger(__name__).exception(f"Silenced error: {e}")
-
-        # Note: Tracemalloc snapshotting was removed here because allocating memory for the
-        # snapshot during a critical OOM event actually exacerbates the crash and wastes CPU.
 
 
 # Singleton instance
@@ -174,23 +194,18 @@ def memory_aware(func):
     async def wrapper(*args, **kwargs):
         manager = get_memory_manager()
 
-        # Check before execution
         await manager.cleanup_if_needed()
 
         try:
-            # Execute function
             if asyncio.iscoroutinefunction(func):
                 result = await func(*args, **kwargs)
             else:
                 result = func(*args, **kwargs)
 
-            # Check after execution
             await manager.cleanup_if_needed()
-
             return result
 
         except MemoryError:
-            # Emergency cleanup on OOM
             logger.critical("💥 Out of memory! Emergency cleanup...")
             await manager.cleanup_if_needed(force=True)
             raise
@@ -208,22 +223,17 @@ class MemoryAwareMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         manager = get_memory_manager()
 
-        # Log memory status for monitoring
-        status = manager.get_status()
-
-        if status.is_critical:
-            logger.critical(f"🚨 CRITICAL MEMORY: {status.percent_used}% used")
-        elif status.is_warning:
-            logger.warning(f"⚠️ HIGH MEMORY: {status.percent_used}% used")
-
-        # Process request
         response = await call_next(request)
 
-        # Add memory headers for debugging
-        response.headers["X-Memory-Used-MB"] = str(status.used_mb)
-        response.headers["X-Memory-Percent"] = str(status.percent_used)
+        # Allow debugging memory in non-production environments or if requested
+        import os
 
-        # Cleanup after request
+        if os.getenv("ENV") != "production" or os.getenv("DEBUG_MEMORY_HEADERS") == "true":
+            status = manager.get_status()
+            response.headers["X-Memory-Used-MB"] = str(status.used_mb)
+            response.headers["X-Memory-Percent"] = str(status.percent_used)
+
+        # Throttled cleanup check after request
         await manager.cleanup_if_needed()
 
         return response

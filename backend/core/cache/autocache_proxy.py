@@ -17,6 +17,8 @@ class AutoCacheProxy:
         from cachetools import TTLCache  # type: ignore[import-untyped]
 
         self.request_history = TTLCache(maxsize=1000, ttl=300)
+        self._max_history_value_bytes = 50 * 1024  # 50 KB
+
         self.ttl_matrix = {
             "static_docs": 86400,  # 24 hours
             "skills_catalog": 43200,  # 12 hours
@@ -24,6 +26,13 @@ class AutoCacheProxy:
             "code_gen": 3600,  # 1 hour
             "user_dashboard": 0,  # Bypass cache / No TTL
         }
+
+    def add_to_request_history(self, key: str, value: Any) -> None:
+        """Add to history only if value is within bounds."""
+        if isinstance(value, str) and len(value.encode("utf-8")) > self._max_history_value_bytes:
+            logger.warning(f"[AutoCacheProxy] Skipping request_history for {key}: Value too large")
+            return
+        self.request_history[key] = value
 
     def infer_category_from_prompt(self, prompt: str, default_task: str = "general") -> str:
         """

@@ -52,7 +52,9 @@ class _InMemoryRedisStub:
     """বাংলা মন্তব্ব্য: Test/dev fallback — production-এ কখনো এটি ব্যবহার হবে না।"""
 
     # MEMLEAK-003 FIX: Bound the store to prevent OOM when Redis is down.
-    _MAX_STORE_SIZE = 5000
+    # REVISION 2: Reduced from 5000 to 1000
+    _MAX_STORE_SIZE = 1000
+    _MAX_VALUE_BYTES = 50 * 1024  # 50 KB max value size
 
     def __init__(self):
         from collections import OrderedDict
@@ -63,6 +65,13 @@ class _InMemoryRedisStub:
         return self._store.get(key)
 
     async def setex(self, key: str, ttl: int, value: str):
+        # REVISION 2: Enforce MAX_VALUE_BYTES
+        if len(value.encode("utf-8")) > self._MAX_VALUE_BYTES:
+            logger.warning(
+                f"[_InMemoryRedisStub] Skipping cache set for key {key}: Value exceeds {self._MAX_VALUE_BYTES} bytes"
+            )
+            return
+
         self._store[key] = value
         # MEMLEAK-003 FIX: Evict oldest when store exceeds max size
         if len(self._store) > self._MAX_STORE_SIZE:
@@ -432,8 +441,10 @@ class MultiLayerCache:
 
 
 # Level 4: Session Cache (In-memory TTLCache per worker)
-_session_cache: TTLCache = TTLCache(maxsize=2000, ttl=600)  # 10 minutes, per-worker
+# REVISION 2: Reduced from 2000 to 500
+_session_cache: TTLCache = TTLCache(maxsize=500, ttl=600)  # 10 minutes, per-worker
 _session_lock = threading.Lock()
+_SESSION_MAX_VALUE_BYTES = 50 * 1024  # 50 KB max value size
 
 
 def _session_key(session_id: str, prompt: str) -> str:
@@ -447,6 +458,13 @@ def _get_session_cache(session_id: str, prompt: str) -> str | None:
 
 
 def _set_session_cache(session_id: str, prompt: str, response: str) -> None:
+    # REVISION 2: Enforce MAX_LOCAL_CACHE_VALUE_BYTES
+    if len(response.encode("utf-8")) > _SESSION_MAX_VALUE_BYTES:
+        logger.warning(
+            f"[_set_session_cache] Skipping cache set for session {session_id}: Value exceeds {_SESSION_MAX_VALUE_BYTES} bytes"
+        )
+        return
+
     with _session_lock:
         _session_cache[_session_key(session_id, prompt)] = response
 

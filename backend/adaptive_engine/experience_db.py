@@ -9,7 +9,8 @@ from typing import Any
 from loguru import logger
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
-LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
+# REVISION 2: Default to true for 512MB RAM constraint to avoid SentenceTransformer memory hog
+LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "true").lower() == "true"
 
 
 def _check_module(name: str) -> bool:
