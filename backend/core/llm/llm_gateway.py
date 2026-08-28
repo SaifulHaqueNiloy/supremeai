@@ -527,7 +527,7 @@ class LLMGateway:
         # terminal logs, git diffs) before sending to LLM.
         # Rollback: set env TOKEN_JUICE_ENABLED=false to disable.
         # ──────────────────────────────────────────────────────────────────
-        if os.getenv("TOKEN_JUICE_ENABLED", "true").lower() == "true":
+        if settings.token_juice_enabled:
             try:
                 from engine.compression.token_juice import TokenJuice
 
@@ -648,7 +648,7 @@ class LLMGateway:
                     # in task.py) and never fed back into the evolution engine.
                     # Gated behind env ENABLE_EVOLUTION_LEARNING (default false) so
                     # admins can opt-in after verifying the EvolutionEngine works.
-                    if os.getenv("ENABLE_EVOLUTION_LEARNING", "false").lower() == "true":
+                    if settings.enable_evolution_learning:
                         try:
                             # SELF-EVOLVE FIX (real): wire EvolutionEngine to the SHARED
                             # FitnessEngine singleton (from api.deps.get_fitness_engine).

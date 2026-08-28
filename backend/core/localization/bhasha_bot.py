@@ -28,11 +28,11 @@ except ImportError:
     ModelRouter = None  # type: ignore[misc,assignment]
 
 
-# --- Zero hardcoded configuration - all from environment/settings ---
-DEFAULT_CACHE_TTL_HOURS = int(os.getenv("BHASHA_CACHE_TTL_HOURS") or "24")
-_bhasha_min_quality_raw = os.getenv("BHASHA_MIN_QUALITY", "0.7")
+# --- Config and Thresholds ---
+DEFAULT_CACHE_TTL_HOURS = settings.bhasha_cache_ttl_hours if settings else 24
+_bhasha_min_quality_raw = str(settings.bhasha_min_quality) if settings else "0.7"
 MIN_QUALITY_THRESHOLD = float(_bhasha_min_quality_raw) if _bhasha_min_quality_raw else 0.7
-MAX_CACHE_SIZE = int(os.getenv("BHASHA_MAX_CACHE") or "10000")
+MAX_CACHE_SIZE = settings.bhasha_max_cache if settings else 10000
 
 
 class BhashaBot:
@@ -293,7 +293,7 @@ Respond ONLY with the translated text. No explanations, no quotes around output.
         # বাংলা মন্তব্য: একসাথে অনেকগুলো আইটেম প্যারালাল অনুবাদ করা
         import asyncio
 
-        semaphore = asyncio.Semaphore(int(os.getenv("BHASHA_BATCH_CONCURRENCY") or "5"))
+        semaphore = asyncio.Semaphore(settings.bhasha_batch_concurrency if settings else 5)
 
         async def _translate_one(item: dict[str, Any]) -> dict[str, Any]:
             async with semaphore:

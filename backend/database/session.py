@@ -81,7 +81,9 @@ import time
 from sqlalchemy import event
 
 # বাংলা মন্তব্য: স্লো কুয়েরি ডিটেকশনের থ্রেশহোল্ড (ডিফল্ট: 0.2 সেকেন্ড / 200ms)
-SLOW_QUERY_THRESHOLD_SECONDS = float(os.getenv("DB_SLOW_QUERY_THRESHOLD", "0.2"))
+from core.config import settings
+
+SLOW_QUERY_THRESHOLD_SECONDS = settings.db_slow_query_threshold
 
 
 def _attach_query_listeners(async_engine: AsyncEngine) -> None:

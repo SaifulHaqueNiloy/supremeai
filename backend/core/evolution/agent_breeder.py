@@ -30,7 +30,6 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import settings
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from models.meta_ai import AgentGenome, AgentOffspring, AgentStatus, BreedingPool
 
@@ -53,6 +52,8 @@ class BreederConfig:
 
     @classmethod
     def from_settings(cls) -> BreederConfig:
+        from core.config import settings
+
         return cls(
             mutation_rate=getattr(settings, "breeder_mutation_rate", 0.08),
             crossover_rate=getattr(settings, "breeder_crossover_rate", 0.85),
@@ -162,6 +163,8 @@ class GaussianMutation:
 
     async def _llm_refine(self, text: str) -> str:
         """Ask LLM to refine/improve a text trait (prompt, description, etc.)."""
+        from core.config import settings
+
         prompt = (
             "You are an expert AI agent designer. Refine and improve the following "
             "agent trait to make it more effective, concise, and precise. "
