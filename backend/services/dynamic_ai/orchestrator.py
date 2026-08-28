@@ -153,9 +153,10 @@ class DynamicAIOrchestrator:
         logger.debug(
             f"   External providers: {len(self.registry.get_available_providers())} available"
         )
-        logger.debug(
-            f"   Local fallback: {'Ready' if await self.local_fallback.is_available() else 'Unavailable'}"
+        local_fallback_status = (
+            "Ready" if self.local_fallback and await self.local_fallback.is_available() else "Unavailable"
         )
+        logger.debug(f"   Local fallback: {local_fallback_status}")
 
     async def generate(
         self,
