@@ -43,8 +43,22 @@ interface SubTabContentProps {
 
  
 const MODULE_MAP: Record<string, React.FC<any>> = {
-  'dashboard': Dashboard,
-  'alerts': AdminAlertsTab,
+  'overview': Dashboard,
+  'topology': CommandCenter, // Topology map
+  'service-explorer': CloudOrchestrator,
+  'agents-swarm': EnhancedSkillMarketplace, // Or ModelRouter depending on context
+  'security': SecurityDashboard,
+  'audit': LiveLogs,
+  'incidents': AdminAlertsTab,
+  'deployments': CICDVisualizer,
+  'reliability': ObservabilityDashboard,
+  'recovery': BackupRestore,
+  'tenants-rbac': UserManager,
+  'finops': CostAuditor,
+  'rca-intelligence': ThreatDetection,
+  'configuration': ConfigEditor,
+  
+  // Keep legacy for fallback or command center
   'command-center': CommandCenter,
   'sandbox': SandboxView,
   'logs': LiveLogs,

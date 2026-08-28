@@ -62,7 +62,7 @@ export interface SystemAlert {
 }
 
 // বাংলা মন্তব্য: অ্যাডমিন সাবট্যাব ইউনিয়নে 'interactive-chat' ও 'alerts' যোগ করা হলো
-export type AdminSubTab = 'dashboard' | 'sandbox' | 'logs' | 'costs' | 'health' | 'users' | 'config' | 'command-center' | 'model-router' | 'skills' | 'memory' | 'cloud' | 'observability' | 'threats' | 'rules' | 'cicd' | 'github' | 'backups' | 'rate-limits' | 'security-dashboard' | 'interactive-chat' | 'alerts';
+export type AdminSubTab = 'overview' | 'topology' | 'service-explorer' | 'agents-swarm' | 'security' | 'audit' | 'incidents' | 'deployments' | 'reliability' | 'recovery' | 'tenants-rbac' | 'finops' | 'rca-intelligence' | 'configuration' | 'command-center';
 
 export interface CIReport {
   id: number;
