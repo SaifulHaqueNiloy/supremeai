@@ -51,14 +51,14 @@ export function LivingDashboardShell({ chatPanel, resolveDraggedContent, onOpenS
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <HITLModal pendingAction={pendingAction} onConfirm={confirmAction} onCancel={cancelAction} />
-      <div className="dashboard-aurora relative min-h-screen w-full flex text-foreground overflow-hidden">
+      <div className="surface-0 relative min-h-screen w-full flex overflow-hidden">
         {/* কোল্যাপসিবল লেফট সাইডবার — spring-based width animation, no layout thrash */}
         <motion.aside
           data-testid="living-sidebar"
           initial={false}
           animate={{ width: isSidebarCollapsed ? 64 : 256 }}
           transition={SIDEBAR_SPRING}
-          className="shrink-0 border-r border-white/10 bg-[var(--supremeai-color-bg-elevated-dark)] overflow-hidden"
+          className="surface-1 shrink-0 border-r border-border overflow-hidden"
         >
           <button
             onClick={toggleSidebar}
@@ -110,9 +110,9 @@ export function LivingDashboardShell({ chatPanel, resolveDraggedContent, onOpenS
         {/* ডান দিক: সবসময়-দৃশ্যমান Magic Window (Live Simulator) */}
         <aside
           data-testid="magic-window"
-          className="hidden lg:flex shrink-0 w-96 border-l border-white/10 bg-[var(--supremeai-color-bg-elevated-dark)] flex-col"
+          className="surface-1 hidden lg:flex shrink-0 w-96 border-l border-border flex-col"
         >
-          <div className="px-4 py-3 border-b border-white/10 text-xs font-semibold text-slate-300">
+          <div className="px-4 py-3 border-b border-border text-xs font-semibold text-text">
             Live Simulator — Transformation Map
           </div>
           <div className="flex-1 flex items-center justify-center text-xs text-slate-500">
