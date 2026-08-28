@@ -17,9 +17,10 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
+from api.dependencies import get_current_admin
 from core.config import settings
 
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
@@ -447,7 +448,7 @@ class TopologyResponse(BaseModel):
 
 
 @router.get("/service-topology", response_model=TopologyResponse)
-async def get_service_topology():
+async def get_service_topology(_admin: dict = Depends(get_current_admin)):
     """
     Get complete service topology with health status.
     Returns nodes/edges for graph visualization plus health data.
@@ -496,7 +497,7 @@ async def get_service_topology():
 
 
 @router.get("/ping-all")
-async def ping_all_services():
+async def ping_all_services(_admin: dict = Depends(get_current_admin)):
     """
     Quick ping test for all services.
     Simplified response for dashboard widgets.
@@ -520,7 +521,10 @@ async def ping_all_services():
 
 
 @router.get("/ping-service")
-async def ping_single_service(service_name: str = Query(..., description="Service name to ping")):
+async def ping_single_service(
+    service_name: str = Query(..., description="Service name to ping"),
+    _admin: dict = Depends(get_current_admin),
+):
     """
     Ping a specific service by name.
     Useful for debugging from admin panel.
@@ -535,7 +539,7 @@ async def ping_single_service(service_name: str = Query(..., description="Servic
 
 
 @router.get("/service-categories")
-async def get_service_categories():
+async def get_service_categories(_admin: dict = Depends(get_current_admin)):
     """
     Get all service categories with their services.
     Useful for filtering in UI.

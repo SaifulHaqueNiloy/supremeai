@@ -36,14 +36,21 @@ def _role_pool_sizes() -> tuple[int, int]:
 def _supabase_ssl_context() -> ssl.SSLContext:
     """Supabase (PgBouncer pooler 6543 / direct 5432) requires TLS for every connection.
 
-    asyncpg does not enable SSL by default, so we build an explicit context that encrypts
-    the session but does not enforce CA verification — equivalent to psycopg2's
-    ``sslmode=require`` (which is what the working bootstrap/schema path already uses).
-    This keeps the connection working across environments whose CA bundles differ.
+    asyncpg does not enable SSL by default, so we build an explicit context that both
+    encrypts the session AND verifies the server certificate (equivalent to
+    ``sslmode=verify-full``). A prior version of this context skipped verification
+    entirely, flagged as a critical MITM risk by the project's regression scanner —
+    apparently to work around minimal Docker images whose OS trust store doesn't
+    include the root CA in Supabase's certificate chain. certifi ships that CA bundle
+    directly (and is already a transitive dependency via `requests`), so loading it
+    explicitly restores real verification without reintroducing the connection
+    failures that earlier workaround was meant to avoid.
     """
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+    import certifi
+
+    ctx = ssl.create_default_context(cafile=certifi.where())
+    ctx.check_hostname = True
+    ctx.verify_mode = ssl.CERT_REQUIRED
     return ctx
 
 
