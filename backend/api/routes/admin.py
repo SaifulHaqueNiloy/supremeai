@@ -670,7 +670,232 @@ async def auto_scaling_status(
 
 @router.get("/automation/workflows")
 async def get_automation_workflows(admin_user: dict = Depends(get_current_admin)):
-    """Fetch all available automation workflows from the centralized registry."""
-    from core.automation.registry import AUTOMATION_REGISTRY
+    """
+    Fetch all automation workflows with full metadata (Plan Section 5).
+    বাংলা: আগে শুধু {key: route} dict ফেরত দিত। এখন প্রতিটি workflow-এর
+    full policy (timeout, retries, sync/async, sensitive, enabled, version)
+    দেখায় — admin UI-তে workflow management সহজ করে।
+    """
+    from core.automation.registry import list_workflow_definitions
 
-    return {"workflows": AUTOMATION_REGISTRY}
+    defs = list_workflow_definitions()
+    return {
+        "total": len(defs),
+        "workflows": [
+            {
+                "key": wf.key,
+                "route": wf.route,
+                "enabled": wf.enabled,
+                "timeout_seconds": wf.timeout_seconds,
+                "max_retries": wf.max_retries,
+                "synchronous": wf.synchronous,
+                "sensitive": wf.sensitive,
+                "version": wf.version,
+                "description": wf.description,
+            }
+            for wf in defs
+        ],
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Integration Governance — Plan Section 28 + 29
+# বাংলা: সব optional integration-এর observability endpoints। কোনো secret expose
+# করে না (Plan Section 29)। শুধু status, scope, fallback, capabilities দেখায়।
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/integrations")
+async def list_all_integrations(admin_user: dict = Depends(get_current_admin)):
+    """
+    Plan Section 29: সব optional integration-এর overview।
+    Admin dashboard-এ দেখানোর জন্য status, scope, fallback সহ।
+    কোনো secret expose করে না।
+    """
+    from core.integrations import list_integrations
+
+    integs = list_integrations()
+    return {
+        "total": len(integs),
+        "integrations": [
+            {
+                "key": i.key,
+                "name": i.name,
+                "category": i.category,
+                "scope": i.scope.value,
+                "enabled": i.enabled,
+                "status": i.status.value,
+                "required_for_core": i.required_for_core,
+                "fallback": i.fallback,
+                "privacy_mode": i.privacy_mode,
+                "capabilities": list(i.capabilities),
+                "config_note": i.config_note,
+            }
+            for i in integs
+        ],
+        "summary": {
+            "enabled": sum(1 for i in integs if i.enabled),
+            "disabled": sum(1 for i in integs if not i.enabled and i.status.value != "not-adopted"),
+            "not_adopted": sum(1 for i in integs if i.status.value == "not-adopted"),
+        },
+    }
+
+
+@router.get("/integrations/{key}/health")
+async def get_integration_health(
+    key: str,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 29: একটি specific integration-এর detailed health/status।
+    ভুল key দিলে 404। Secret কখনো expose হয় না।
+    """
+    from core.integrations import get_integration
+
+    info = get_integration(key)
+    if info is None:
+        raise HTTPException(status_code=404, detail=f"Unknown integration: {key}")
+
+    return {
+        "key": info.key,
+        "name": info.name,
+        "category": info.category,
+        "scope": info.scope.value,
+        "enabled": info.enabled,
+        "status": info.status.value,
+        "required_for_core": info.required_for_core,
+        "fallback": info.fallback,
+        "privacy_mode": info.privacy_mode,
+        "capabilities": list(info.capabilities),
+        "config_note": info.config_note,
+        "core_independence": (
+            "✅ Core works without this integration"
+            if not info.required_for_core
+            else "⚠️ Core depends on this integration"
+        ),
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Automation Execution History — Plan Section 7
+# বাংলা: dispatch lifecycle-এর audit trail। admin দেখতে পারে কোন event কখন
+# dispatch হয়েছিল, কী status পেয়েছিল, কত সময় লেগেছিল। secrets expose হয় না।
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get("/automation/executions")
+async def list_automation_executions(
+    limit: int = 50,
+    workflow_key: str = "",
+    status: str = "",
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 7: automation execution history (audit trail)।
+    optional filters: workflow_key, status। সর্বশেষ `limit` টা execution দেখায়।
+    """
+    try:
+        from database.session import get_db_session_context
+        from models.automation_execution import AutomationExecution
+        from sqlalchemy import select, desc
+
+        async with get_db_session_context() as session:
+            stmt = select(AutomationExecution).order_by(
+                desc(AutomationExecution.created_at)
+            ).limit(min(limit, 200))  # cap at 200
+            if workflow_key:
+                stmt = stmt.where(AutomationExecution.workflow_key == workflow_key)
+            if status:
+                stmt = stmt.where(AutomationExecution.status == status.upper())
+
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+
+            return {
+                "status": "success",
+                "total": len(records),
+                "executions": [
+                    {
+                        "id": r.id,
+                        "event_id": r.event_id,
+                        "workflow_key": r.workflow_key,
+                        "provider": r.provider,
+                        "status": r.status,
+                        "attempt": r.attempt,
+                        "started_at": r.started_at.isoformat() if r.started_at else None,
+                        "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                        "duration_ms": r.duration_ms,
+                        "http_status": r.http_status,
+                        "external_execution_id": r.external_execution_id,
+                        "trace_id": r.trace_id,
+                        "error_code": r.error_code,
+                        # error_message truncate করি — সম্ভাব্য sensitive data না ফাঁসাতে
+                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                    }
+                    for r in records
+                ],
+            }
+    except Exception as e:
+        logger.error(f"❌ automation executions list failed: {e}")
+        return {
+            "status": "error",
+            "message": f"Could not retrieve execution history: {e}",
+            "total": 0,
+            "executions": [],
+        }
+
+
+@router.get("/automation/executions/{event_id}")
+async def get_execution_by_event(
+    event_id: str,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """
+    Plan Section 7: একটি specific event_id-এর সব execution attempts দেখায়
+    (retry history সহ)।
+    """
+    try:
+        from database.session import get_db_session_context
+        from models.automation_execution import AutomationExecution
+        from sqlalchemy import select, desc
+
+        async with get_db_session_context() as session:
+            stmt = select(AutomationExecution).where(
+                AutomationExecution.event_id == event_id
+            ).order_by(desc(AutomationExecution.created_at))
+            result = await session.execute(stmt)
+            records = result.scalars().all()
+
+            if not records:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"No executions found for event_id: {event_id}",
+                )
+
+            return {
+                "status": "success",
+                "event_id": event_id,
+                "total_attempts": len(records),
+                "executions": [
+                    {
+                        "id": r.id,
+                        "workflow_key": r.workflow_key,
+                        "provider": r.provider,
+                        "status": r.status,
+                        "attempt": r.attempt,
+                        "started_at": r.started_at.isoformat() if r.started_at else None,
+                        "completed_at": r.completed_at.isoformat() if r.completed_at else None,
+                        "duration_ms": r.duration_ms,
+                        "http_status": r.http_status,
+                        "external_execution_id": r.external_execution_id,
+                        "error_code": r.error_code,
+                        "error_message": (r.error_message[:200] + "...") if r.error_message and len(r.error_message) > 200 else r.error_message,
+                    }
+                    for r in records
+                ],
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ execution lookup failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

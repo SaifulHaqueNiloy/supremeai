@@ -19,7 +19,18 @@ class MockMessagingAdapter:
 
 
 class MessagingDispatcher:
-    """Routes messaging operations to the configured MessagingProvider."""
+    """
+    Routes messaging operations to the configured MessagingProvider.
+
+    Plan Section 14: existing Telegram ও Email implementations এখন
+    MessagingProvider adapter হিসেবে wrapped। Dispatcher settings-এর উপর
+    ভিত্তি করে adapter select করে:
+      1. Telegram (যদি telegram configured)
+      2. Email (যদি email configured)
+      3. Mock (fallback — local dev এর জন্য)
+
+    সব provider optional — কোনোটা configured না থাকলে Mock fallback।
+    """
 
     _instance = None
     _provider: MessagingProvider | None = None
@@ -31,6 +42,11 @@ class MessagingDispatcher:
         return cls._instance
 
     def _initialize_provider(self) -> None:
+        """
+        Plan Section 14: adapter selection logic।
+        প্রতিটি adapter optional — import/initialize fail করলে পরেরটা try করে।
+        """
+        # 1. Try Appwrite messaging (if enabled)
         if getattr(settings, "appwrite_enabled", False):
             # If we had an AppwriteMessagingAdapter, we would load it here.
             # try:
@@ -42,9 +58,41 @@ class MessagingDispatcher:
             #     logger.warning(f"Could not load AppwriteMessagingAdapter: {e}")
             pass
 
-        # Fallback to local mock adapter
+        # 2. Try Telegram adapter (Plan Section 14: wrap existing Telegram)
+        telegram_token = getattr(settings, "telegram_bot_token", "") or ""
+        if telegram_token:
+            try:
+                from .adapters import TelegramMessagingAdapter
+
+                self._provider = TelegramMessagingAdapter()
+                if self._provider._handler is not None:
+                    logger.info("MessagingDispatcher initialized with TelegramMessagingAdapter.")
+                    return
+                else:
+                    logger.warning("TelegramMessagingAdapter init failed — trying next provider")
+                    self._provider = None
+            except Exception as e:
+                logger.warning(f"Could not load TelegramMessagingAdapter: {e}")
+
+        # 3. Try Email adapter (Plan Section 14: wrap existing Email)
+        email_api_key = getattr(settings, "resend_api_key", "") or ""
+        if email_api_key:
+            try:
+                from .adapters import EmailMessagingAdapter
+
+                self._provider = EmailMessagingAdapter()
+                if self._provider._service is not None:
+                    logger.info("MessagingDispatcher initialized with EmailMessagingAdapter.")
+                    return
+                else:
+                    logger.warning("EmailMessagingAdapter init failed — trying next provider")
+                    self._provider = None
+            except Exception as e:
+                logger.warning(f"Could not load EmailMessagingAdapter: {e}")
+
+        # 4. Fallback to mock adapter
         self._provider = MockMessagingAdapter()
-        logger.info("MessagingDispatcher initialized with MockMessagingAdapter.")
+        logger.info("MessagingDispatcher initialized with MockMessagingAdapter (fallback).")
 
     async def send(self, event: MessageEvent) -> MessageResult:
         if not self._provider:
@@ -52,6 +100,12 @@ class MessagingDispatcher:
                 success=False, provider="none", error="No messaging provider configured"
             )
         return await self._provider.send(event)
+
+    def get_active_provider_name(self) -> str:
+        """সবচেয়ে active provider-এর নাম (observability)।"""
+        if not self._provider:
+            return "none"
+        return getattr(self._provider, "provider", self._provider.__class__.__name__)
 
 
 messaging_dispatcher = MessagingDispatcher()
