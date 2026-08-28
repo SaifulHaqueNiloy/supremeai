@@ -142,8 +142,8 @@ class SettingsValidationMixin:
                     "সব AI feature কাজ করবে না। Infisical / env var চেক করুন।"
                 )
             elif missing:
-                logger.warning(
-                    f"⚠️ BOOT-TIME: {len(missing)} LLM key মিসিং ({missing}). "
+                logger.info(
+                    f"ℹ️ BOOT-TIME: {len(missing)} LLM key optional but missing ({missing}). "
                     f"Available: {available}. Partial AI functionality only."
                 )
             else:
@@ -174,6 +174,16 @@ class SettingsValidationMixin:
                 logger.warning(
                     f"⚠️ Production missing config vars: {', '.join(missing)}. Running in degraded zero-cost mode."
                 )
+
+        # ── Cross-Variable Consistency Validation ──
+        if self.n8n_enabled and not self.n8n_base_url:
+            raise ValueError("❌ N8N is enabled but N8N_BASE_URL is not configured.")
+        if self.appwrite_enabled and (not self.appwrite_endpoint or not self.appwrite_project_id):
+            raise ValueError(
+                "❌ Appwrite is enabled but APPWRITE_ENDPOINT or APPWRITE_PROJECT_ID is missing."
+            )
+        if self.openhands_enabled and not getattr(self, "openhands_server_url", None):
+            raise ValueError("❌ OpenHands is enabled but OPENHANDS_SERVER_URL is missing.")
 
         # Core Infrastructure Guard - Fail Fast for non-test environments
         if self.env in {"production", "staging"}:
