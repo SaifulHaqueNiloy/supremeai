@@ -404,9 +404,27 @@ class SettingsValidationMixin:
             _ = self.jwt_secret
 
             if not self.user_cors_origins and not self.admin_cors_origins:
-                raise ValueError(
-                    "❌ Production CORS origins not explicitly configured. Must set USER_CORS_ORIGINS and/or ADMIN_CORS_ORIGINS."
-                )
+                # 🔧 Dynamic fallback: derive an origin from the already-resolved
+                # allowed_hosts (which itself auto-discovers RENDER_EXTERNAL_URL /
+                # VERCEL_URL / etc). This avoids hardcoding a domain while still
+                # failing closed if truly nothing could be discovered.
+                derived = [
+                    f"https://{h}"
+                    for h in (self.allowed_hosts or [])
+                    if h and h != "onrender.com"
+                ]
+                if derived:
+                    logger.warning(
+                        f"⚠️ USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS not set explicitly. "
+                        f"Auto-derived from ALLOWED_HOSTS: {derived}. "
+                        f"Set USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS explicitly for full control."
+                    )
+                    self.user_cors_origins = derived
+                    self.admin_cors_origins = derived
+                else:
+                    raise ValueError(
+                        "❌ Production CORS origins not explicitly configured. Must set USER_CORS_ORIGINS and/or ADMIN_CORS_ORIGINS."
+                    )
 
         logger.info(f"✅ Configuration loaded successfully for environment: {self.env}")
         return self
