@@ -75,6 +75,15 @@ class N8nAutomationAdapter(AutomationProvider):
                 event_id=event.event_id,
             )
 
+        if not self.secret:
+            logger.error("N8N_WEBHOOK_SECRET is not configured! Enforcing fail-closed policy.")
+            return AutomationResult(
+                status=AutomationStatus.FAILED,
+                provider="n8n",
+                message="N8N_WEBHOOK_SECRET is not configured (FAIL CLOSED).",
+                event_id=event.event_id,
+            )
+
         if not self.base_url:
             return AutomationResult(
                 status=AutomationStatus.FAILED,
