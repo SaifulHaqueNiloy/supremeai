@@ -269,7 +269,7 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     internal_router = None  # type: ignore
 
 try:
-    from .config import router as config_router
+    from .config_routes import router as config_router
 
     _safe_imports["config_router"] = config_router
 except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):

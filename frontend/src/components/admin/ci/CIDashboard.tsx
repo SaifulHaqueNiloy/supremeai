@@ -92,7 +92,8 @@ import {
   Wifi,
   WifiOff,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Award
 } from 'lucide-react';
 import {
   LineChart,

@@ -7,7 +7,8 @@ import {
   Monitor, Smartphone, Tablet, ZoomIn, ZoomOut,
   Shield, Loader2, Code,
   Clock, ExternalLink, Lock, AlertTriangle,
-  Bot, Copy, Check
+  Bot, Copy, Check,
+  Database, Activity, Cloud, GitBranch, FileText, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

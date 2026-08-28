@@ -60,7 +60,10 @@ export type EventType =
   // User Interaction Events
   | 'user:action-performed'
   | 'user:preference-changed'
-  | 'user:feedback-submitted';
+  | 'user:feedback-submitted'
+  
+  // Legacy Events Support
+  | LegacyEventType;
 
 export type EventCallback<T = any> = (data: T) => void;
 export type EventDataMap = {
@@ -106,7 +109,7 @@ class ComponentEventBus {
    * @param callback - Function to call when event fires (will be removed after first call)
    * @returns Unsubscribe function
    */
-  once<T = any>(event: EventType, callback: EventCallback<T>): () => let {
+  once<T = any>(event: EventType, callback: EventCallback<T>): () => void {
     const wrapper: EventCallback<T> = (data) => {
       callback(data);
       this.off(event, wrapper);
