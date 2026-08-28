@@ -1,6 +1,6 @@
+from datetime import UTC, datetime, timezone
 from enum import StrEnum
 from typing import Any, Optional
-from datetime import datetime, timezone
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -47,14 +47,14 @@ class AutomationEvent(BaseModel):
         ...,
         description="The unique registry key identifying the target workflow (e.g., 'USER_REGISTERED').",
     )
-    trace_id: Optional[str] = Field(
+    trace_id: str | None = Field(
         default=None,
         description="OpenTelemetry/observability trace ID for distributed tracing.",
     )
 
     # ── Timing & provenance ─────────────────────────────────────────────────
     timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc),
+        default_factory=lambda: datetime.now(UTC),
         description="ISO-8601 timestamp of event creation (UTC).",
     )
     source: str = Field(
@@ -63,15 +63,15 @@ class AutomationEvent(BaseModel):
     )
 
     # ── Multi-tenancy & actor (Section 6) ───────────────────────────────────
-    tenant_id: Optional[str] = Field(
+    tenant_id: str | None = Field(
         default=None,
         description="Tenant identifier for multi-tenant isolation.",
     )
-    actor_type: Optional[str] = Field(
+    actor_type: str | None = Field(
         default=None,
         description="Actor type (e.g., 'agent', 'user', 'system').",
     )
-    actor_id: Optional[str] = Field(
+    actor_id: str | None = Field(
         default=None,
         description="Actor identifier (e.g., agent ID or user ID).",
     )
@@ -103,4 +103,3 @@ class AutomationResult(BaseModel):
         default=1,
         description="Which attempt this result represents (1-based, for retry tracking).",
     )
-
