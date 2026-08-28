@@ -20,7 +20,7 @@ class CloudPostgresStore:
     """
 
     def __init__(self):
-        self.conn_string = os.getenv("DATABASE_URL", os.getenv("SUPABASE_DATABASE_URL", ""))
+        self.conn_string = getattr(settings, "database_url", "")
         self._init_tables()
 
     def _get_conn(self):
