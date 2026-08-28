@@ -5,7 +5,6 @@ import { AdminTopNav } from '../shared/AdminTopNav';
 import { DashboardLayout } from '../../layout/DashboardLayout';
 import { ADMIN_SUBTAB_EVENT } from '../../../config/commandRegistry';
 import {
-  LayoutDashboard,
   GitMerge,
   Server,
   BarChart3,

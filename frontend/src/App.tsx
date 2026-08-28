@@ -10,7 +10,6 @@ import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 // Pages (Core Layouts & Auth)
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
-import { DashboardShell } from "@supremeai/ui-components";
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Maximize, Minimize, MousePointer, Keyboard, Hand } from 'lucide-react';
+import { MousePointer, Keyboard, Hand } from 'lucide-react';
 import { getWsBaseUrl } from '../../utils/api';
 
 interface ScreencastViewerProps {
@@ -11,8 +11,7 @@ interface ScreencastViewerProps {
 
 export function ScreencastViewer({ 
   sessionId, 
-  takeoverToken, 
-  onTakeoverComplete,
+  takeoverToken,
   onReturnControl 
 }: ScreencastViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);

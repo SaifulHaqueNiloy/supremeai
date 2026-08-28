@@ -70,6 +70,7 @@ def test_comprehensive_health_checker_initialization():
         "redis",
         "database",
         "external_services",
+        "integrations",
         "memory",
         "disk",
     ]
@@ -453,6 +454,7 @@ async def test_check_all_comprehensive():
         patch.object(checker, "check_redis") as mock_redis,
         patch.object(checker, "check_database") as mock_db,
         patch.object(checker, "check_external_services") as mock_ext,
+        patch.object(checker, "check_integrations") as mock_intg,
         patch.object(checker, "check_memory") as mock_mem,
         patch.object(checker, "check_disk") as mock_disk,
     ):
@@ -461,14 +463,15 @@ async def test_check_all_comprehensive():
         mock_redis.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Redis OK")
         mock_db.return_value = HealthCheckResult(HealthStatus.HEALTHY, "DB OK")
         mock_ext.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Ext OK")
+        mock_intg.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Intg OK")
         mock_mem.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Mem OK")
         mock_disk.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Disk OK")
 
         result = await checker.check_all()
 
         assert result["status"] == "healthy"
-        assert result["summary"]["total_checks"] == 6
-        assert result["summary"]["healthy"] == 6
+        assert result["summary"]["total_checks"] == 7
+        assert result["summary"]["healthy"] == 7
         assert result["summary"]["degraded"] == 0
         assert result["summary"]["unhealthy"] == 0
         assert result["summary"]["unknown"] == 0
@@ -485,6 +488,7 @@ async def test_check_all_with_degraded_component():
         patch.object(checker, "check_redis") as mock_redis,
         patch.object(checker, "check_database") as mock_db,
         patch.object(checker, "check_external_services") as mock_ext,
+        patch.object(checker, "check_integrations") as mock_intg,
         patch.object(checker, "check_memory") as mock_mem,
         patch.object(checker, "check_disk") as mock_disk,
     ):
@@ -493,6 +497,7 @@ async def test_check_all_with_degraded_component():
         mock_redis.return_value = HealthCheckResult(HealthStatus.DEGRADED, "Redis degraded")
         mock_db.return_value = HealthCheckResult(HealthStatus.HEALTHY, "DB OK")
         mock_ext.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Ext OK")
+        mock_intg.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Intg OK")
         mock_mem.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Mem OK")
         mock_disk.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Disk OK")
 
@@ -500,8 +505,8 @@ async def test_check_all_with_degraded_component():
 
         # Overall status should be degraded when one component is degraded
         assert result["status"] in ["degraded", "healthy"]  # Implementation may vary
-        assert result["summary"]["total_checks"] == 6
-        assert result["summary"]["healthy"] == 5
+        assert result["summary"]["total_checks"] == 7
+        assert result["summary"]["healthy"] == 6
         assert result["summary"]["degraded"] == 1
         assert result["summary"]["unhealthy"] == 0
 
@@ -517,6 +522,7 @@ async def test_check_all_with_unhealthy_component():
         patch.object(checker, "check_redis") as mock_redis,
         patch.object(checker, "check_database") as mock_db,
         patch.object(checker, "check_external_services") as mock_ext,
+        patch.object(checker, "check_integrations") as mock_intg,
         patch.object(checker, "check_memory") as mock_mem,
         patch.object(checker, "check_disk") as mock_disk,
     ):
@@ -525,6 +531,7 @@ async def test_check_all_with_unhealthy_component():
         mock_redis.return_value = HealthCheckResult(HealthStatus.UNHEALTHY, "Redis failed")
         mock_db.return_value = HealthCheckResult(HealthStatus.HEALTHY, "DB OK")
         mock_ext.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Ext OK")
+        mock_intg.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Intg OK")
         mock_mem.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Mem OK")
         mock_disk.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Disk OK")
 
@@ -532,7 +539,7 @@ async def test_check_all_with_unhealthy_component():
 
         # Overall status should be unhealthy when one component is unhealthy
         assert result["status"] == "unhealthy"
-        assert result["summary"]["total_checks"] == 6
+        assert result["summary"]["total_checks"] == 7
         assert result["summary"]["healthy"] == 5
         assert result["summary"]["degraded"] == 0
         assert result["summary"]["unhealthy"] == 1
@@ -551,12 +558,14 @@ async def test_check_all_with_exception():
         ),
         patch.object(checker, "check_database", new_callable=AsyncMock) as mock_db,
         patch.object(checker, "check_external_services", new_callable=AsyncMock) as mock_ext,
+        patch.object(checker, "check_integrations", new_callable=AsyncMock) as mock_intg,
         patch.object(checker, "check_memory", new_callable=AsyncMock) as mock_mem,
         patch.object(checker, "check_disk", new_callable=AsyncMock) as mock_disk,
     ):
         mock_app.return_value = HealthCheckResult(HealthStatus.HEALTHY, "App OK")
         mock_db.return_value = HealthCheckResult(HealthStatus.HEALTHY, "DB OK")
         mock_ext.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Ext OK")
+        mock_intg.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Intg OK")
         mock_mem.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Mem OK")
         mock_disk.return_value = HealthCheckResult(HealthStatus.HEALTHY, "Disk OK")
 
