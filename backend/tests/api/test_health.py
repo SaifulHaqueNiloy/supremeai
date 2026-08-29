@@ -31,7 +31,10 @@ def test_health_ready_returns_ok():
     # In a bare FastAPI context without mocked redis/db, this should now return 503
     assert resp.status_code in (200, 503)
     body = resp.json()
-    assert "status" in body
+    if resp.status_code == 200:
+        assert "status" in body
+    else:
+        assert "detail" in body
 
 
 def test_health_check_ok_without_subsystems():
