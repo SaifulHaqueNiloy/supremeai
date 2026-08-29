@@ -57,6 +57,7 @@ class SettingsSecretsMixin:
         "GITHUB_CLIENT_ID",
         "GITHUB_CLIENT_SECRET",
         "CI_WEBHOOK_SECRET",
+        "SUPABASE_DB_CA_CERT",
         "SUPABASE_URL",
         "SUPABASE_KEY",
         "SUPREMEAI_API_KEY",
@@ -256,6 +257,10 @@ class SettingsSecretsMixin:
     @property
     def supabase_database_url(self) -> str:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
+
+    @property
+    def supabase_db_ca_cert(self) -> str:
+        return self._get_cached_secret("SUPABASE_DB_CA_CERT")
 
     # বাংলা মন্তব্য: Anti-Hacking এবং OTP রাউটার সিক্রেটসমূহ (ঐচ্ছিক — মিসিং থাকলে সার্ভার ক্র্যাশ করবে না)
     @property

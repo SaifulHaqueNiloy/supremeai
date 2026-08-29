@@ -88,7 +88,6 @@ async def initialize_independent_services(app):
                     severity="CRITICAL" if settings.env == "production" else "WARNING",
                     structured_context=ErrorContext(module="auto_fixed"),
                     context={
-                        "_db_url": _db_url[:50] if _db_url else "",
                         "env": settings.env,
                     },
                 )
