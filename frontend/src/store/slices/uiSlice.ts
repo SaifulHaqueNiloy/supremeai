@@ -1,1 +1,1 @@
-export const createUiSlice = (set: any) => ({ ui: null });
+export const createUiSlice = (_set: unknown) => ({ ui: null });

@@ -109,13 +109,13 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
         }
       }
     });
-    set({ sseRef: sse as any, sessionId });
+    set({ sseRef: sse as unknown as EventSource, sessionId });
   },
 
   disconnectSSE: () => {
     const { sseRef } = get();
     if (sseRef) {
-      (sseRef as any).close();
+      (sseRef as EventSource).close();
       set({ sseRef: null });
     }
   },

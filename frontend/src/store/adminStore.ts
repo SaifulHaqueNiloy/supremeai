@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { getApiBaseUrl } from '../utils/api';
 import { getFirebaseAuth } from '../firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { eventBus, Events } from '../lib/componentEventBus';
@@ -87,7 +86,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   provisioningUri: '',
   setProvisioningUri: (val) => set({ provisioningUri: val }),
   handleAdminLogin: async (password?: string) => {
-    const { adminEmail, otpRequired, adminOtp, totpSetupRequired } = get();
+    const { adminEmail, otpRequired, adminOtp } = get();
     const cleanEmail = adminEmail.trim();
     const cleanPassword = password?.trim() || '';
 
@@ -131,8 +130,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
               totpSecret: setupData.secret,
               provisioningUri: setupData.provisioning_uri || buildProvisioningUri(cleanEmail, setupData.secret || '')
             });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (setupErr: any) {
-            const errStr = typeof setupErr.message === 'string' ? setupErr.message : 'Failed to setup TOTP.';
+            const errStr = typeof setupErr?.message === 'string' ? setupErr.message : 'Failed to setup TOTP.';
             set({ adminError: errStr });
           }
         } else if (data.token) {
@@ -168,8 +168,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           });
           
           set({ adminAuthenticated: true, otpRequired: false, totpSetupRequired: false, adminOtp: '' });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (verifyErr: any) {
-          const errStr = typeof verifyErr.message === 'string' ? verifyErr.message : 'Invalid verification code.';
+          const errStr = typeof verifyErr?.message === 'string' ? verifyErr.message : 'Invalid verification code.';
           set({ adminError: errStr });
         }
       }

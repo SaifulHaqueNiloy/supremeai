@@ -78,7 +78,7 @@ export interface MemoryItem {
   id: string;
   type: 'conversation' | 'browse-session' | 'agent-task' | 'user-action';
   summary: string;
-  content: any;
+  content: unknown;
   tags: string[];
   importanceScore: number;
   createdAt: number;
@@ -138,12 +138,12 @@ export interface UnifiedState {
   // ── USER CONTEXT (shared for personalization) ──
   currentUserId: string | null;
   setCurrentUserId: (userId: string | null) => void;
-  userPreferences: Record<string, any>;
-  setUserPreference: (key: string, value: any) => void;
+  userPreferences: Record<string, unknown>;
+  setUserPreference: (key: string, value: unknown) => void;
   
   // ── UTILITIES ──
   resetState: () => void;
-  getStateSnapshot: () => any;
+  getStateSnapshot: () => unknown;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -163,7 +163,7 @@ const initialState = {
   sidebarCollapsed: false,
   activeModule: null as string | null,
   currentUserId: null as string | null,
-  userPreferences: {} as Record<string, any>,
+  userPreferences: {} as Record<string, unknown>,
 };
 
 // ════════════════════════════════════════════════════════════════════

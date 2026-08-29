@@ -1,1 +1,1 @@
-export const createWorkspaceSlice = (set: any) => ({ workspace: null });
+export const createWorkspaceSlice = (_set: unknown) => ({ workspace: null });
