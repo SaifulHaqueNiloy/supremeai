@@ -22,7 +22,7 @@ class PluginManifestRegistry:
     ) -> list[PluginManifest]:
         query = select(PluginManifest)
         if active_only:
-            query = query.where(PluginManifest.is_active == True)
+            query = query.where(PluginManifest.is_active)
         result = await session.execute(query)
         return list(result.scalars().all())
 
