@@ -15,7 +15,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from core.logging_config import logger
-from monitoring import track_exception
 
 try:
     import psutil
@@ -370,6 +369,8 @@ class IntelligentErrorBus(ErrorEventBus):
 
         # Forward severe errors to Sentry via monitoring
         if event.severity in ["CRITICAL", "ERROR", "HIGH"]:
+            from monitoring import track_exception
+
             track_exception(
                 Exception(f"[{event.error_type}] {event.message}"),
                 context={

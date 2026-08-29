@@ -18,7 +18,7 @@ import sys
 import uuid
 from datetime import datetime
 
-from core.logging_config import logger
+from loguru import logger
 
 try:
     from starlette_context import context
@@ -35,9 +35,6 @@ except ImportError:
         request_id = "X-Request-ID"
 
 
-from core.config import settings
-
-
 class LoggingConfig:
     """Centralized logging configuration with correlation IDs and structured format."""
 
@@ -46,6 +43,8 @@ class LoggingConfig:
 
     def setup_logging(self):
         """Configure structured logging with correlation IDs."""
+        from core.config import settings
+
         # Remove default handlers to avoid duplication
         logger.remove()
 
@@ -83,6 +82,8 @@ class LoggingConfig:
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
+        from core.config import settings
+
         # Extract correlation ID from context if available
         correlation_id = "N/A"
         try:
