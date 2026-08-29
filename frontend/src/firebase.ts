@@ -8,7 +8,8 @@ const getFirebaseConfig = async () => {
     if (res.ok) {
       const data = await res.json();
       if (!data.projectId && data.authDomain) {
-        data.projectId = data.authDomain.replace('.firebaseapp.com', '');
+        // ডোমেইন সাফিক্স হার্ডকোড না করে প্রথম অংশ থেকে projectId বের করা হচ্ছে
+        data.projectId = data.authDomain.split('.')[0];
       }
       return data;
     }
@@ -29,7 +30,7 @@ const getFirebaseConfig = async () => {
   }
   return {
     apiKey: apiKey || "AIzaSyFakeKeyForDevelopmentOnly",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "supremeai-a.firebaseapp.com",
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "supremeai-a",
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "supremeai-a.appspot.com",
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",

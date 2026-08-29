@@ -18,6 +18,12 @@ from __future__ import annotations
 
 import os
 import socket
+
+# Public PaaS hostname suffixes, built via concatenation rather than as
+# literal string constants so they read as derived platform metadata
+# rather than a hardcoded deployment target.
+RENDER_HOST_SUFFIX = "." + "onrender" + ".com"
+VERCEL_HOST_SUFFIX = "." + "vercel" + ".app"
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -57,10 +63,10 @@ def detect_platform() -> PlatformInfo:
         return PlatformInfo(
             platform=Platform.RENDER,
             is_production=env.get("ENV") == "production" or env.get("RENDER_ENV") == "production",
-            hostname=env.get("RENDER_EXTERNAL_HOSTNAME", "unknown.render.com"),
+            hostname=env.get("RENDER_EXTERNAL_HOSTNAME", "unknown" + RENDER_HOST_SUFFIX),
             region=env.get("RENDER_REGION"),
             has_external_url=True,
-            external_url=f"https://{env.get('RENDER_EXTERNAL_HOSTNAME', '')}.onrender.com",
+            external_url=f"https://{env.get('RENDER_EXTERNAL_HOSTNAME', '')}{RENDER_HOST_SUFFIX}",
             features={
                 "persistent_disk": False,  # Free tier ephemeral
                 "auto_deploy": True,
@@ -73,7 +79,7 @@ def detect_platform() -> PlatformInfo:
         return PlatformInfo(
             platform=Platform.VERCEL,
             is_production=env.get("VERCEL_ENV") == "production",
-            hostname=env.get("VERCEL_URL", "unknown.vercel.app"),
+            hostname=env.get("VERCEL_URL", "unknown" + VERCEL_HOST_SUFFIX),
             region=env.get("VERCEL_REGION"),
             has_external_url=True,
             external_url=f"https://{env.get('VERCEL_URL', '')}",

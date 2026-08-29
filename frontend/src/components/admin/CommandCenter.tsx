@@ -59,7 +59,7 @@ export function CommandCenter() {
   const [showTerminal, setShowTerminal] = useState(true);
   const [terminalHistory, setTerminalHistory] = useState<string[]>(['$ SupremeAI Terminal v3.0 — Ready.', '$ Type a command and press Enter...']);
   const [terminalInput, setTerminalInput] = useState('');
-  const [browserUrl, setBrowserUrl] = useState('https://supremeai-a.web.app');
+  const [browserUrl, setBrowserUrl] = useState(import.meta.env.VITE_ADMIN_FRONTEND_URL || '');
   const setAdminSubTab = useAdminStore(state => state.setAdminSubTab);
   const { theme, toggleTheme } = useTheme();
 
