@@ -8,7 +8,7 @@ import os
 import time
 from typing import Any
 
-from core.logging_config import logger
+from .logging_config import logger
 
 _sentry_initialized = False
 
