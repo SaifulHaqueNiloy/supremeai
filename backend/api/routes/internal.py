@@ -57,7 +57,7 @@ async def run_daily_evolution(request: Request, payload: RunEvolutionRequest):
     try:
         from database.supabase_client import db as supabase_db
 
-        if supabase_db.client:
+        if supabase_db.service_client:
             supabase_db.append_evolution_log(report)
     except Exception as exc:
         logger.debug(f"Failed to persist evolution log to Supabase: {exc}")

@@ -90,13 +90,9 @@ class SentinelAgent:
                             if ep.path.startswith("http"):
                                 url = ep.path
                             else:
-                                base = getattr(
-                                    settings,
-                                    "backend_url",
-                                    os.environ.get(
-                                        "BACKEND_URL", "http://127.0.0.1:8080"
-                                    ),  # is_local()
-                                ).rstrip("/")
+                                # Internal endpoints should use loopback to bypass external TLS proxy issues
+                                port = os.environ.get("PORT", "8080")
+                                base = f"http://127.0.0.1:{port}"
                                 url = f"{base}{ep.path}"
 
                             # SSRF protection
@@ -127,10 +123,21 @@ class SentinelAgent:
                         except Exception as e:
                             ep.last_ping_status = "down"
                             ep.last_check_at = datetime.now(UTC)
+
+                            # Safely extract hostname for logging without exposing full URL paths
+                            from urllib.parse import urlparse
+
+                            parsed_url = urlparse(url)
+                            sanitized_host = parsed_url.hostname or "unknown-host"
+
+                            logger.error(
+                                f"[SentinelAgent] TLS/Connection error for {sanitized_host}: {e!s}"
+                            )
+
                             incident = SystemIncident(
                                 incident_type="api_endpoint_unreachable",
                                 severity="critical" if ep.is_critical else "warning",
-                                remediation_log=f"Exception connecting to {ep.path}: {e!s}",
+                                remediation_log=f"Exception connecting to {sanitized_host} (path: {ep.path}): {e!s}",
                             )
                             session.add(incident)
 

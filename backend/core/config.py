@@ -55,6 +55,7 @@ from dotenv import load_dotenv
 from loguru import logger
 from pydantic import (
     Field,
+    model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -102,6 +103,18 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
     RATE_LIMIT_USE_SIMPLIFIED: bool = Field(default=True)
     LLM_CACHE_MAX_SIZE: int = Field(default=500)
     LLM_CACHE_DEFAULT_TTL: int = Field(default=3600)
+
+    @model_validator(mode="after")
+    def _enforce_production_rate_limit(self) -> "Settings":
+        # In production, RATE_LIMIT_USE_SIMPLIFIED defaults to False unless explicitly set to true.
+        # But wait, if they didn't provide it in env, pydantic uses the default=True.
+        # So we override it to False if env is production and it wasn't explicitly set in env.
+        # A simpler way is to just force it to False in production unless os.environ says "true"
+        if self.env == "production":
+            env_val = os.getenv("RATE_LIMIT_USE_SIMPLIFIED", "false").lower()
+            if env_val not in ("true", "1", "yes"):
+                self.RATE_LIMIT_USE_SIMPLIFIED = False
+        return self
 
     # 🔬 NEW: Platform-aware defaults
     @property

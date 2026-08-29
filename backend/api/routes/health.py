@@ -10,7 +10,7 @@ Version: 1.0.0
 import time
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import text
@@ -37,12 +37,10 @@ _start_time = time.time()
 
 @router.get("/health")
 @router.get("/deep")
-async def deep_health_check():
+async def deep_health_check(response: Response):
     """
     Comprehensive health check endpoint.
-    LIVE-001 FIX: Return 200 with degraded status instead of crashing.
-    The health endpoint should ALWAYS return 200 with diagnostic info,
-    so monitoring tools can read the status. Only /ready should 503.
+    Sets status_code to 503 if any critical dependency is degraded, so orchestrators (Render/K8s) know it's unhealthy.
     """
     db_start = time.time()
     db_status = await _check_database()
@@ -61,9 +59,16 @@ async def deep_health_check():
         if overall_status == "healthy":
             overall_status = "degraded"
 
-    # Also capture subsystem status from app state if available
-    from fastapi import Request
-    # We can't easily access app.state here without Request, so we'll just return basic stats
+    # Capture subsystem status from agent_supervisor
+    from core.agent_supervisor import agent_supervisor
+
+    agents_status = agent_supervisor.get_health_status()
+    all_agents_healthy = all(a["status"] == "running" for a in agents_status.values())
+    if not all_agents_healthy:
+        overall_status = "degraded"
+
+    if overall_status == "degraded":
+        response.status_code = 503
 
     return HealthStatus(
         status=overall_status,
@@ -74,6 +79,7 @@ async def deep_health_check():
             "database": {"status": db_status, "latency_ms": db_latency},
             "redis": {"status": redis_status, "latency_ms": redis_latency},
             "cache": {"status": cache_status},
+            "agents": agents_status,
         },
         cache_stats=None,
     )
