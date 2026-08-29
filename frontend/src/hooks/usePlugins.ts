@@ -1,0 +1,100 @@
+import { useState, useCallback, useEffect } from 'react';
+
+export interface PluginManifest {
+    id: string;
+    name: string;
+    description: string;
+    icon_url: string;
+    category: string;
+    source: string;
+    auth_type: string;
+}
+
+export interface UserPluginInstallation {
+    id: string;
+    plugin_id: string;
+    status: string;
+    is_enabled: boolean;
+}
+
+export const usePlugins = () => {
+    const [marketplacePlugins, setMarketplacePlugins] = useState<PluginManifest[]>([]);
+    const [installedPlugins, setInstalledPlugins] = useState<UserPluginInstallation[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchPlugins = useCallback(async () => {
+        try {
+            setLoading(true);
+            
+            // Note: Replace with actual supremeai-api endpoint calls in production
+            const [marketRes, installedRes] = await Promise.all([
+                fetch('/api/v1/plugins/marketplace'),
+                fetch('/api/v1/plugins/installed', {
+                    headers: { 'Authorization': Bearer  }
+                })
+            ]);
+            
+            if (marketRes.ok) {
+                const data = await marketRes.json();
+                setMarketplacePlugins(data.plugins || []);
+            }
+            if (installedRes.ok) {
+                const data = await installedRes.json();
+                setInstalledPlugins(data.installations || []);
+            }
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPlugins();
+    }, [fetchPlugins]);
+
+    const installPlugin = async (pluginId: string, capabilities: string[]) => {
+        try {
+            const res = await fetch('/api/v1/plugins/install', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': Bearer 
+                },
+                body: JSON.stringify({ plugin_id: pluginId, granted_capabilities: capabilities })
+            });
+            if (!res.ok) throw new Error('Failed to install plugin');
+            await fetchPlugins();
+        } catch (err: any) {
+            setError(err.message);
+            throw err;
+        }
+    };
+
+    const uninstallPlugin = async (pluginId: string) => {
+        try {
+            const res = await fetch(/api/v1/plugins/uninstall/, {
+                method: 'DELETE',
+                headers: { 
+                    'Authorization': Bearer 
+                }
+            });
+            if (!res.ok) throw new Error('Failed to uninstall plugin');
+            await fetchPlugins();
+        } catch (err: any) {
+            setError(err.message);
+            throw err;
+        }
+    };
+
+    return {
+        marketplacePlugins,
+        installedPlugins,
+        loading,
+        error,
+        installPlugin,
+        uninstallPlugin,
+        refresh: fetchPlugins
+    };
+};
