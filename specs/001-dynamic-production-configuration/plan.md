@@ -113,5 +113,13 @@ one backend registry module, one frontend test file, and one static-scan script 
 each maps 1:1 to a constitution principle (VI, VIII, VIII). Structure decision
 avoids any new package, service, or top-level directory (Principle X).
 
-<!-- CONTINUATION-PLAN-B -->
+## Complexity Tracking
+
+> **Fill ONLY if Constitution Check has violations that must be justified**
+
+| Violation | Why Needed | Simpler Alternative Rejected Because |
+|-----------|------------|-------------------------------------|
+
+*(Empty — no constitution violations; no justified complexity.)*
+
 
