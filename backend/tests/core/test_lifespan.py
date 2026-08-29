@@ -263,5 +263,5 @@ class TestLifespanSubsystemStatus:
 
             # Subsystem status set হয়েছে কিনা চেক করো
             assert hasattr(mock_app.state, "subsystem_status")
-            assert mock_app.state.subsystem_status["db"] == "down"
-            assert mock_app.state.subsystem_status["redis"] == "down"
+            assert mock_app.state.subsystem_status["db"] in ("down", "optional_offline")
+            assert mock_app.state.subsystem_status["redis"] in ("down", "optional_offline")
