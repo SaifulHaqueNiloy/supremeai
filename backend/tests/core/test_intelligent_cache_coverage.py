@@ -259,7 +259,10 @@ def test_health_check_no_backend(cache):
     assert health["redis_connected"] is False
 
 
-def test_health_check_healthy(cache):
+def test_health_check_healthy(cache, monkeypatch):
+    monkeypatch.delenv("REDIS_URL", raising=False)
+    monkeypatch.delenv("UPSTASH_REDIS_REST_URL", raising=False)
+    cache._redis_client = None  # ensure no Redis client regardless of env
     cache._local_cache["k"] = {"value": 1}
     health = cache.health_check()
     assert health["redis_connected"] is False

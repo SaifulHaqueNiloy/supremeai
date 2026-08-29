@@ -48,6 +48,9 @@ class EmailService:
     @property
     def from_email(self) -> str:
         """বাংলা মন্তব্য: From email address."""
+        env_val = os.getenv("RESEND_FROM_EMAIL")
+        if env_val:
+            return env_val
         from core.config import settings
 
         return settings.resend_from_email

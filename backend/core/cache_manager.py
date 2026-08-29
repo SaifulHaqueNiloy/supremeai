@@ -84,6 +84,8 @@ class FreeTierCacheManager:
         """Set value in L1 cache (with eviction if needed)."""
         l1_key = self._l1_key(key)
 
+        self.l1_cache.pop(l1_key, None)
+
         # Evict oldest if at capacity
         if len(self.l1_cache) >= self.l1_max_size:
             # Remove first item (simple FIFO)
