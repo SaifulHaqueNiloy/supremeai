@@ -5,10 +5,10 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from pyerrorfix.config import load_config
 from pyerrorfix.core.issue import Issue, ScanResult
 from pyerrorfix.detectors import ALL_DETECTORS
 from pyerrorfix.fixers import ALL_FIXERS
+from pyerrorfix.pyerrorfix_config import load_config
 
 
 class Scanner:
