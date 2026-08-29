@@ -1,11 +1,23 @@
 import enum
+import hashlib
 import json
 import sqlite3
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from pydantic import BaseModel
+
+# ---------------------------------------------------------------------------
+# AUD-4 hardening (P0): the previous implementation stored approvals in plain
+# sqlite with NO tenant/owner binding (AUD-4.1), NO expiration (AUD-4.2),
+# unconditional status updates (replay of approved/rejected tasks was possible,
+# AUD-4.3), NO payload integrity check (AUD-4.4), NO duplicate-execution guard
+# (AUD-4.5) and NO atomic compare-and-set transition (concurrent approvals both
+# "succeeded", AUD-4.6). This module now enforces all of those invariants.
+# ---------------------------------------------------------------------------
+
+DEFAULT_APPROVAL_TTL_SECONDS = 24 * 60 * 60  # 24h approval validity window
 
 
 class TaskType(enum.StrEnum):
@@ -24,6 +36,26 @@ class TaskStatus(enum.StrEnum):
     CANCELLED = "CANCELLED"
 
 
+# AUD-4.6: legal transitions out of PENDING (single canonical state machine).
+_ALLOWED_FINAL_STATES = {TaskStatus.APPROVED, TaskStatus.REJECTED, TaskStatus.CANCELLED}
+
+
+class ApprovalStateError(Exception):
+    """Raised when an approval transition violates the state machine (AUD-4.3/4.5/4.6)."""
+
+
+class TaskExpiredError(ApprovalStateError):
+    """Raised when a decision is attempted on an expired approval (AUD-4.3)."""
+
+
+class TaskAlreadyResolvedError(ApprovalStateError):
+    """Raised when a decision is attempted on an already-resolved task (replay/duplicate)."""
+
+
+class PayloadTamperedError(ApprovalStateError):
+    """Raised when the stored payload hash does not match the recomputed hash (AUD-4.4)."""
+
+
 class PendingTask(BaseModel):
     task_id: str
     task_type: TaskType
@@ -33,16 +65,32 @@ class PendingTask(BaseModel):
     resolved_by: str | None = None
     resolved_at: str | None = None
     reason: str | None = None
+    # AUD-4.1: ownership / tenant binding.
+    created_by: str | None = None
+    tenant_id: str | None = None
+    # AUD-4.8: risk classification for approval-level routing.
+    risk_level: str = "medium"
+    # AUD-4.2: expiration bound.
+    expires_at: str | None = None
+    # AUD-4.4/4.9: tamper-evident integrity hash of the canonical payload.
+    payload_hash: str | None = None
 
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "pending_tasks.db"
 
 
+def compute_payload_hash(payload: dict) -> str:
+    """Canonical SHA-256 over the sorted-JSON payload (AUD-4.4 tamper evidence)."""
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _get_conn():
-    # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ও ইনডেক্স ইনিশিয়ালাইজেশন
+    # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ও ইনডেক্স ইনিশিয়ালাইজেশন
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS pending_tasks (
             task_id TEXT PRIMARY KEY,
@@ -52,31 +100,66 @@ def _get_conn():
             created_at TEXT NOT NULL,
             resolved_by TEXT,
             resolved_at TEXT,
-            reason TEXT
+            reason TEXT,
+            created_by TEXT,
+            tenant_id TEXT,
+            risk_level TEXT DEFAULT 'medium',
+            expires_at TEXT,
+            payload_hash TEXT
         )
         """)
     conn.execute("""
         CREATE INDEX IF NOT EXISTS idx_pending_status_time ON pending_tasks(status, created_at)
         """)
+    # Lightweight migration for pre-existing databases (add missing columns).
+    existing_cols = {r["name"] for r in conn.execute("PRAGMA table_info(pending_tasks)").fetchall()}
+    migrations = {
+        "created_by": "ALTER TABLE pending_tasks ADD COLUMN created_by TEXT",
+        "tenant_id": "ALTER TABLE pending_tasks ADD COLUMN tenant_id TEXT",
+        "risk_level": "ALTER TABLE pending_tasks ADD COLUMN risk_level TEXT DEFAULT 'medium'",
+        "expires_at": "ALTER TABLE pending_tasks ADD COLUMN expires_at TEXT",
+        "payload_hash": "ALTER TABLE pending_tasks ADD COLUMN payload_hash TEXT",
+    }
+    for col, ddl in migrations.items():
+        if col not in existing_cols:
+            conn.execute(ddl)
+    conn.commit()
     return conn
 
 
 def create_pending_task(
-    task_type: TaskType, payload: dict, created_by: str = "system"
+    task_type: TaskType,
+    payload: dict,
+    created_by: str = "system",
+    tenant_id: str | None = None,
+    risk_level: str = "medium",
+    ttl_seconds: int | None = None,
 ) -> PendingTask:
+    """Create a PENDING approval bound to its owner/tenant with a TTL (AUD-4.1/4.2)."""
+    now = datetime.now(UTC)
+    ttl = ttl_seconds if ttl_seconds is not None else DEFAULT_APPROVAL_TTL_SECONDS
     task = PendingTask(
         task_id=str(uuid.uuid4()),
         task_type=task_type,
         payload=payload,
         status=TaskStatus.PENDING,
-        created_at=datetime.now(UTC).isoformat(),
+        created_at=now.isoformat(),
+        created_by=created_by,
+        tenant_id=tenant_id,
+        risk_level=risk_level,
+        expires_at=(now + timedelta(seconds=ttl)).isoformat(),
+        payload_hash=compute_payload_hash(payload),
     )
     conn = _get_conn()
     cursor = conn.cursor()
     cursor.execute(
         """
-        INSERT INTO pending_tasks (task_id, task_type, payload, status, created_at, resolved_by, resolved_at, reason)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO pending_tasks (
+            task_id, task_type, payload, status, created_at,
+            resolved_by, resolved_at, reason,
+            created_by, tenant_id, risk_level, expires_at, payload_hash
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             task.task_id,
@@ -87,6 +170,11 @@ def create_pending_task(
             task.resolved_by,
             task.resolved_at,
             task.reason,
+            task.created_by,
+            task.tenant_id,
+            task.risk_level,
+            task.expires_at,
+            task.payload_hash,
         ),
     )
     conn.commit()
@@ -94,34 +182,147 @@ def create_pending_task(
     return task
 
 
-def list_pending() -> list[PendingTask]:
+def list_pending(tenant_id: str | None = None) -> list[PendingTask]:
+    """List pending approvals; optionally scoped to a tenant (AUD-2.2/4.1)."""
     conn = _get_conn()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM pending_tasks WHERE status = ?", (TaskStatus.PENDING,))
+    now_iso = datetime.now(UTC).isoformat()
+    if tenant_id is not None:
+        cursor.execute(
+            """
+            SELECT * FROM pending_tasks
+            WHERE status = ? AND tenant_id = ? AND (expires_at IS NULL OR expires_at > ?)
+            """,
+            (TaskStatus.PENDING, tenant_id, now_iso),
+        )
+    else:
+        cursor.execute(
+            "SELECT * FROM pending_tasks WHERE status = ? AND (expires_at IS NULL OR expires_at > ?)",
+            (TaskStatus.PENDING, now_iso),
+        )
     rows = cursor.fetchall()
     conn.close()
     return [row_to_task(row) for row in rows]
 
 
-def update_task_status(
-    task_id: str, status: TaskStatus, resolved_by: str, reason: str | None = None
-) -> PendingTask | None:
+def get_task(task_id: str) -> PendingTask | None:
     conn = _get_conn()
     cursor = conn.cursor()
-    resolved_at = datetime.now(UTC).isoformat() if status != TaskStatus.PENDING else None
-    cursor.execute(
-        """
-        UPDATE pending_tasks SET status = ?, resolved_by = ?, resolved_at = ?, reason = ?
-        WHERE task_id = ?
-        """,
-        (status, resolved_by, resolved_at, reason, task_id),
-    )
-    conn.commit()
-    # conn.close()  <-- বাংলা মন্তব্য: এখানে ডাবল কানেকশন ক্লোজ বাগ ফিক্স করা হলো
     cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
     row = cursor.fetchone()
     conn.close()
     return row_to_task(row) if row else None
+
+
+def update_task_status(
+    task_id: str,
+    status: TaskStatus,
+    resolved_by: str,
+    reason: str | None = None,
+    expected_payload_hash: str | None = None,
+) -> PendingTask | None:
+    """Atomically resolve a PENDING task (AUD-4.3/4.5/4.6).
+
+    The UPDATE is a compare-and-set: it only succeeds when the row is still
+    PENDING and unexpired, so concurrent decisions and replays of already
+    resolved tasks cannot go through. Raises:
+      * ``TaskAlreadyResolvedError`` — the task was already approved/rejected/cancelled/executed;
+      * ``TaskExpiredError`` — the approval TTL elapsed before the decision;
+      * ``PayloadTamperedError`` — the stored payload hash no longer matches
+        (or does not match ``expected_payload_hash`` when supplied).
+    Returns ``None`` when the task does not exist.
+    """
+    if status not in _ALLOWED_FINAL_STATES:
+        raise ApprovalStateError(f"Cannot transition task directly to {status}")
+
+    conn = _get_conn()
+    cursor = conn.cursor()
+    now_iso = datetime.now(UTC).isoformat()
+    resolved_at = now_iso
+
+    # AUD-4.4: verify payload integrity before deciding.
+    cursor.execute(
+        "SELECT payload, payload_hash, status, expires_at FROM pending_tasks WHERE task_id = ?",
+        (task_id,),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        conn.close()
+        return None
+
+    stored_hash = row["payload_hash"]
+    recomputed = compute_payload_hash(json.loads(row["payload"]))
+    if stored_hash is not None and stored_hash != recomputed:
+        conn.close()
+        raise PayloadTamperedError("Stored approval payload failed integrity check")
+    if expected_payload_hash is not None and expected_payload_hash != recomputed:
+        conn.close()
+        raise PayloadTamperedError("Supplied payload hash does not match the stored approval")
+
+    # AUD-4.3: expired approvals can no longer be decided.
+    expires_at = row["expires_at"]
+    if expires_at and expires_at <= now_iso:
+        conn.close()
+        raise TaskExpiredError(f"Approval {task_id} expired at {expires_at}")
+
+    # AUD-4.6: atomic compare-and-set — only PENDING rows can transition.
+    cursor.execute(
+        """
+        UPDATE pending_tasks
+        SET status = ?, resolved_by = ?, resolved_at = ?, reason = ?
+        WHERE task_id = ? AND status = ?
+        """,
+        (status, resolved_by, resolved_at, reason, task_id, TaskStatus.PENDING),
+    )
+    if cursor.rowcount == 0:
+        cursor.execute("SELECT status FROM pending_tasks WHERE task_id = ?", (task_id,))
+        current = cursor.fetchone()
+        conn.close()
+        if current is None:
+            return None
+        raise TaskAlreadyResolvedError(
+            f"Approval {task_id} already resolved (status={current['status']})"
+        )
+    conn.commit()
+    cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
+    task_row = cursor.fetchone()
+    conn.close()
+    return row_to_task(task_row) if task_row else None
+
+
+def mark_executed(task_id: str, executed_by: str) -> PendingTask | None:
+    """Record post-approval execution (AUD-4.5: duplicate executions are rejected)."""
+    conn = _get_conn()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        UPDATE pending_tasks
+        SET status = ?, resolved_by = ?, resolved_at = ?
+        WHERE task_id = ? AND status = ?
+        """,
+        (
+            TaskStatus.EXECUTED,
+            executed_by,
+            datetime.now(UTC).isoformat(),
+            task_id,
+            TaskStatus.APPROVED,
+        ),
+    )
+    if cursor.rowcount == 0:
+        conn.close()
+        raise TaskAlreadyResolvedError(
+            f"Task {task_id} is not in APPROVED state; cannot mark executed (duplicate guard)"
+        )
+    conn.commit()
+    cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row_to_task(row) if row else None
+
+
+def cancel_task(task_id: str, cancelled_by: str, reason: str | None = None) -> PendingTask | None:
+    """Authoritative cancellation — only PENDING tasks can be cancelled (AUD-4.7)."""
+    return update_task_status(task_id, TaskStatus.CANCELLED, cancelled_by, reason)
 
 
 def row_to_task(row: sqlite3.Row) -> PendingTask:
@@ -134,4 +335,9 @@ def row_to_task(row: sqlite3.Row) -> PendingTask:
         resolved_by=row["resolved_by"],
         resolved_at=row["resolved_at"],
         reason=row["reason"],
+        created_by=row["created_by"] if "created_by" in row else None,
+        tenant_id=row["tenant_id"] if "tenant_id" in row else None,
+        risk_level=row["risk_level"] if "risk_level" in row and row["risk_level"] else "medium",
+        expires_at=row["expires_at"] if "expires_at" in row else None,
+        payload_hash=row["payload_hash"] if "payload_hash" in row else None,
     )

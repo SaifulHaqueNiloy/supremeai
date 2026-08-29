@@ -257,9 +257,23 @@ async def approve_proposal(
             raise HTTPException(status_code=404, detail="Proposal not found")
 
         proposal.status = "approved"
+        # AUD-6.8: provenance — record WHO approved and WHEN (previously the
+        # approver identity was silently dropped).
+        proposal.metadata_json = {
+            **(proposal.metadata_json or {}),
+            "approval": {
+                "approved_by": admin.get("sub"),
+                "approved_at": datetime.now(UTC).isoformat(),
+                "role": admin.get("role"),
+            },
+        }
         # এখানে ভবিষ্যতে আমাদের অটোনোমাস মার্জ লজিক বা GitOps ট্রিগার কল হবে।
 
-    return {"status": "success", "message": f"Proposal {proposal_id} approved."}
+    return {
+        "status": "success",
+        "message": f"Proposal {proposal_id} approved by {admin.get('sub')}.",
+        "approved_by": admin.get("sub"),
+    }
 
 
 # 🛑 ZERO-GAP: Swarm Forge API Endpoints

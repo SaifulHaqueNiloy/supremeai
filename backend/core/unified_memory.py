@@ -36,8 +36,13 @@ class UnifiedMemoryInterface:
         task_type: str,
         content: str,
         metadata: dict[str, Any] | None = None,
+        user_id: str | None = None,
     ) -> bool:
-        """Store information in the long-term 'Eternal Brain' memory."""
+        """Store information in the long-term 'Eternal Brain' memory.
+
+        AUD-5.1: ``user_id`` binds the memory to its owner so retrieval can be
+        tenant-scoped. Callers MUST supply the authenticated user id.
+        """
         try:
             # Parse content and extract summary/structure using the service's built-in logic
             # This might need adjustment based on how content is passed
@@ -53,6 +58,7 @@ class UnifiedMemoryInterface:
                 agent_type=agent_type,
                 task_type=task_type,
                 metadata=metadata or {},
+                user_id=user_id,
             )
             return True
         except Exception as e:
@@ -60,12 +66,20 @@ class UnifiedMemoryInterface:
             return False
 
     def query_long_term_memory(
-        self, query: str, top_k: int = 5, session_id: str | None = None
+        self,
+        query: str,
+        top_k: int = 5,
+        session_id: str | None = None,
+        user_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Query the long-term 'Eternal Brain' memory."""
+        """Query the long-term 'Eternal Brain' memory.
+
+        AUD-5.1: when ``user_id`` is supplied, results are restricted to that
+        user's memories (no cross-tenant recall).
+        """
         try:
             return self.long_term_memory.query_context(
-                prompt=query, top_k=top_k, session_id=session_id
+                prompt=query, top_k=top_k, session_id=session_id, user_id=user_id
             )
         except Exception as e:
             logger.error(f"Failed to query long-term memory: {e}")

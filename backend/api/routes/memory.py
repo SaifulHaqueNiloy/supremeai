@@ -32,6 +32,17 @@ _checkpoint: CheckpointResume | None = None
 _window: SlidingWindowMemory | None = None
 
 
+def _checkpoint_prefix(user: dict) -> str:
+    """Owner prefix for checkpoint keys (AUD-5.1 tenant binding)."""
+    sub = user.get("sub") or "anonymous"
+    safe = str(sub).replace(":", "_").replace("/", "_")
+    return f"u:{safe}:"
+
+
+def _owned_checkpoint_key(user: dict, task_id: str) -> str:
+    return f"{_checkpoint_prefix(user)}{task_id}"
+
+
 def get_checkpoint() -> CheckpointResume:
     global _checkpoint
     if _checkpoint is None:
@@ -84,9 +95,13 @@ class ContextResponse(BaseModel):
 
 
 @router.post("/checkpoint", response_model=CheckpointResponse)
-def save_checkpoint(payload: CheckpointSaveRequest):
+def save_checkpoint(payload: CheckpointSaveRequest, user: dict = Depends(get_current_user_token)):
     store = get_checkpoint()
-    ok = store.save(payload.task_id, payload.step_index, payload.state)
+    # AUD-5.1 (IDOR fix): checkpoints were globally keyed by task_id with no owner
+    # binding — any authenticated user could read/clear another user's checkpoint.
+    # Namespace the stored key by the authenticated user.
+    owned_key = _owned_checkpoint_key(user, payload.task_id)
+    ok = store.save(owned_key, payload.step_index, payload.state)
     if not ok:
         raise HTTPException(status_code=500, detail="Failed to save checkpoint")
     return CheckpointResponse(
@@ -98,26 +113,34 @@ def save_checkpoint(payload: CheckpointSaveRequest):
 
 
 @router.get("/checkpoint/{task_id}", response_model=CheckpointResponse | None)
-def load_checkpoint(task_id: str):
+def load_checkpoint(task_id: str, user: dict = Depends(get_current_user_token)):
     store = get_checkpoint()
-    result = store.load(task_id)
+    result = store.load(_owned_checkpoint_key(user, task_id))
     if result is None:
         return None
+    result = dict(result)
+    result["task_id"] = task_id
     return CheckpointResponse(**result)
 
 
 @router.get("/checkpoints", response_model=list[dict[str, Any]])
-def list_checkpoints():
+def list_checkpoints(user: dict = Depends(get_current_user_token)):
     store = get_checkpoint()
-    return store.list_all()
+    prefix = _checkpoint_prefix(user)
+    scoped = []
+    for cp in store.list_all():
+        cp_id = str(cp.get("task_id", ""))
+        if cp_id.startswith(prefix):
+            scoped.append({**cp, "task_id": cp_id[len(prefix) :]})
+    return scoped
 
 
 @router.delete("/checkpoint/{task_id}")
-def clear_checkpoint(task_id: str):
+def clear_checkpoint(task_id: str, user: dict = Depends(get_current_user_token)):
     store = get_checkpoint()
-    ok = store.clear(task_id)
+    ok = store.clear(_owned_checkpoint_key(user, task_id))
     if not ok:
-        raise HTTPException(status_code=500, detail="Failed to clear checkpoint")
+        raise HTTPException(status_code=404, detail="Checkpoint not found")
     return {"status": "ok", "task_id": task_id}
 
 
@@ -181,20 +204,21 @@ class SessionSaveRequest(BaseModel):
 
 
 @router.post("/recall")
-async def vector_recall(req: VectorRecallRequest):
-    """Semantic-search the Eternal Brain for relevant past memories."""
+async def vector_recall(req: VectorRecallRequest, user: dict = Depends(get_current_user_token)):
+    """Semantic-search the Eternal Brain for relevant past memories (owner-scoped)."""
     from services.memory_service import recall_memories
 
     memories = await recall_memories(
         task_description=req.task_description,
         limit=req.limit,
         threshold=req.threshold,
+        user_id=user.get("sub"),  # AUD-5.1: no cross-tenant recall
     )
     return {"success": True, "memories": memories, "count": len(memories)}
 
 
 @router.post("/save")
-async def vector_save(req: VectorSaveRequest):
+async def vector_save(req: VectorSaveRequest, user: dict = Depends(get_current_user_token)):
     """Store a vector memory entry into Supabase/pgvector or cascade fallback."""
     from services.memory_service import save_memory
 
@@ -204,12 +228,13 @@ async def vector_save(req: VectorSaveRequest):
         task_type=req.task_type,
         agent_type=req.agent_type,
         metadata=req.metadata,
+        user_id=user.get("sub"),  # AUD-5.1: bind memory to owner
     )
     return result
 
 
 @router.post("/session")
-async def save_session(req: SessionSaveRequest):
+async def save_session(req: SessionSaveRequest, user: dict = Depends(get_current_user_token)):
     """Summarize a full chat session via LLM, then save as vector memory."""
     from services.memory_service import summarize_and_save_session
 
@@ -217,6 +242,7 @@ async def save_session(req: SessionSaveRequest):
         session_id=req.session_id,
         messages=req.messages,
         task_type=req.task_type,
+        user_id=user.get("sub"),
     )
     return result
 

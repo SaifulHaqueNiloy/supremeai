@@ -136,7 +136,9 @@ class AgentSupervisor:
         if self._monitor_task and not self._monitor_task.done():
             self._monitor_task.cancel()
             try:
-                await asyncio.wait([self._monitor_task], timeout=5.0)
+                await self._monitor_task
+            except asyncio.CancelledError:
+                pass  # expected
             except Exception as e:
                 import logging
 

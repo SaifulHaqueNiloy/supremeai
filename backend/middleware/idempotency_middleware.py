@@ -79,7 +79,21 @@ class IdempotencyMiddleware:
             await self.app(scope, receive, send)
             return
 
-        redis_key = f"idempotency:{idempotency_key}"
+        # AUD-3.7 (P1): the idempotency namespace is now scoped per caller
+        # credential. Previously the key space was global — user B replaying
+        # user A's Idempotency-Key would receive A's cached response. This
+        # middleware sits OUTSIDE AuthMiddleware in the ASGI stack, so the
+        # identity is derived from the raw credential (hashed — never stored
+        # in plaintext) instead of request.state.user.
+        import hashlib
+
+        credential = b""
+        for k, v in headers:
+            if k.lower() in (b"authorization", b"x-api-key"):
+                credential = v
+                break
+        caller_scope = hashlib.sha256(credential).hexdigest()[:16] if credential else "anon"
+        redis_key = f"idempotency:{caller_scope}:{idempotency_key}"
 
         # 1. Check if the request key exists in Redis
         existing = await redis.get(redis_key)

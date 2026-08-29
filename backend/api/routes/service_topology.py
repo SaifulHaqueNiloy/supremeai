@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from api.dependencies import get_current_admin
 from core.config import settings
 from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
+from core.security.ws_auth import authenticate_websocket
 
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
 
@@ -593,11 +594,19 @@ manager = ConnectionManager()
 
 
 @router.websocket("/health-stream")
-async def health_stream_websocket(websocket: WebSocket):
+async def health_stream_websocket(websocket: WebSocket, token: str | None = None):
     """
     Real-time health status stream over WebSocket.
     Clients connect and receive updates every 10 seconds.
+
+    AUD-2.1/AUD-2.6: this endpoint sits under the admin prefix but previously
+    performed NO authentication. A valid admin token is now required.
     """
+    token = token or websocket.query_params.get("token")
+    user = await authenticate_websocket(websocket, token, require_admin=True)
+    if user is None:
+        return
+
     await manager.connect(websocket)
 
     try:

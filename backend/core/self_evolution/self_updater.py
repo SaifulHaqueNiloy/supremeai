@@ -101,4 +101,9 @@ class SelfUpdater:
             return False, [str(exc)]
 
 
-self_updater = SelfUpdater(authorized=True)
+# AUD-6.1: the module-level singleton previously instantiated SelfUpdater with
+# authorized=True, exposing an uncalled-but-armed path that could write any
+# file under backend/ directly. Self-mutation is only permitted inside the
+# governed evolution pipeline (ChangeProposalManager + GovernancePolicy), so
+# the standalone updater now defaults to UNAUTHORIZED.
+self_updater = SelfUpdater(authorized=False)

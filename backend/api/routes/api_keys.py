@@ -238,6 +238,14 @@ async def key_stats(key_id: int, request: Request):
 
 @router.post("/{key_id}/usage")
 async def record_usage_hook(key_id: int, request: Request, payload: dict):
+    # AUD-2.5/2.7: usage recording previously accepted ANY key_id from any
+    # authenticated caller, allowing cross-user usage pollution. Enforce
+    # ownership (admin callers are exempt via the admin listing guard).
+    owner = _get_current_user(request)
+    rec = await get_api_key_by_id(key_id)
+    if not rec or rec["user_id"] != owner:
+        raise HTTPException(status_code=404, detail="API key not found")
+
     endpoint = payload.get("endpoint", "unknown")
     status_code = payload.get("status_code", 200)
     latency_ms = payload.get("latency_ms", 0.0)

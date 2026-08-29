@@ -53,6 +53,7 @@ from fastapi import APIRouter, HTTPException, Query, WebSocket
 from pydantic import BaseModel, Field
 
 from core.logging_config import logger
+from core.security.ws_auth import authenticate_websocket
 
 # Set up logging
 
@@ -583,8 +584,11 @@ async def ci_dashboard_websocket(websocket: WebSocket, token: str = Query(...)):
         "timestamp": "ISO-8601"
     }
     """
-    # Authenticate (in production, verify JWT/token)
-    # For now, accept connection
+    # AUD-2.1: the token query param was previously accepted but never verified —
+    # any anonymous client could stream CI runs/metrics/alerts. Verify it now.
+    user = await authenticate_websocket(websocket, token)
+    if user is None:
+        return
 
     _ws_connections.append(websocket)
     logger.info(f"WebSocket connected. Total clients: {len(_ws_connections)}")

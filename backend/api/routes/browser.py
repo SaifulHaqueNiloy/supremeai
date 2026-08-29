@@ -256,8 +256,11 @@ def get_requests():
     return {"requests": PERMISSION_REQUESTS}
 
 
-@router.post("/urls/requests/{id}/decision")
+@router.post("/urls/requests/{id}/decision", dependencies=[Depends(require_admin_token)])
 def decision(request_id: str, req: DecisionRequest):
+    """AUD-2.6/AUD-3.5: URL permission decisions grant browser access scope and
+    therefore require an admin token (previously any authenticated user could
+    self-approve URL permissions)."""
     for r in PERMISSION_REQUESTS:
         if r["id"] == request_id:
             r["status"] = "APPROVED" if req.approved else "DENIED"
@@ -270,7 +273,7 @@ def get_system_learning():
     return SYSTEM_LEARNING
 
 
-@router.post("/system-learning/toggle")
+@router.post("/system-learning/toggle", dependencies=[Depends(require_admin_token)])
 def toggle_learning(body: dict[str, bool]):
     SYSTEM_LEARNING["enabled"] = body.get("enabled", True)
     return {"success": True}

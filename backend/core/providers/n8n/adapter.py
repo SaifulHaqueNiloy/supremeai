@@ -166,7 +166,9 @@ class N8nAutomationAdapter(AutomationProvider):
         last_exc: Exception | None = None
         for attempt in range(1, wf_max_retries + 1):
             try:
-                async with httpx.AsyncClient(verify=self.verify_tls) as client:
+                async with httpx.AsyncClient(
+                    verify=self.verify_tls, timeout=30.0
+                ) as client:  # AUD-5.5: bounded timeout
                     response = await client.post(
                         target_url, content=payload_str, headers=headers, timeout=wf_timeout
                     )

@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Install poetry (Pip root warning suppressed as builder is isolated)
 ENV PIP_ROOT_USER_ACTION=ignore
-RUN pip install --no-cache-dir poetry==1.8.4
+RUN pip install --no-cache-dir poetry==2.4.1
 
 # Copy dependencies
 COPY pyproject.toml poetry.lock ./
