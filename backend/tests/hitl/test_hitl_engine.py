@@ -13,11 +13,20 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-from conftest import (
-    critical_risk_hitl_request,
-    low_risk_hitl_request,
-    sample_hitl_request,
-)
+
+# Fixtures should not be imported directly. Since this file is skipped,
+# we define dummy functions to prevent ImportError during pytest collection.
+def critical_risk_hitl_request(*args, **kwargs):
+    return {}
+
+
+def low_risk_hitl_request(*args, **kwargs):
+    return {}
+
+
+def sample_hitl_request(*args, **kwargs):
+    return {}
+
 
 # ============================================================
 # MARKER: All tests in this module are HITL tests
