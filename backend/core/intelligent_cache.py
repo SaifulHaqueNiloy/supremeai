@@ -227,7 +227,10 @@ class IntelligentCache:
         await self.record_predictive_access(key)
 
         if not self.config.enabled or not self._check_circuit_breaker():
-            return self._local_cache.get(key, default)
+            entry = self._local_cache.get(key)
+            if isinstance(entry, dict) and "value" in entry:
+                return entry.get("value", default)
+            return default
 
         try:
             if self._redis_client:
@@ -241,8 +244,13 @@ class IntelligentCache:
             logger.error(f"Redis GET error: {e}")
             self._open_circuit_breaker()
 
+        entry = self._local_cache.get(key)
+        if isinstance(entry, dict) and "value" in entry:
+            self.stats.hits += 1
+            return entry.get("value", default)
+
         self.stats.misses += 1
-        return self._local_cache.get(key, default)
+        return default
 
     async def set(
         self,

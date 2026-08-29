@@ -44,10 +44,10 @@ def cache():
 def redis_client():
     c = MagicMock()
     c.ping = MagicMock(return_value=True)
-    c.get = AsyncMock(return_value=None)
-    c.setex = AsyncMock(return_value=True)
-    c.keys = AsyncMock(return_value=[])
-    c.delete = AsyncMock(return_value=0)
+    c.get = MagicMock(return_value=None)
+    c.setex = MagicMock(return_value=True)
+    c.keys = MagicMock(return_value=[])
+    c.delete = MagicMock(return_value=0)
     c.info = MagicMock(return_value={"used_memory": 100, "db0": {"keys": 2}})
     return c
 
@@ -136,7 +136,7 @@ async def test_set_stores_local_and_redis(cache, redis_client):
     ok = await cache.set("k", {"v": 1})
     assert ok is True
     assert "k" in cache._local_cache
-    redis_client.setex.assert_awaited_once()
+    redis_client.setex.assert_called_once()
 
 
 async def test_set_disabled_returns_false(cache):
@@ -156,7 +156,7 @@ async def test_get_hit_from_redis(cache, redis_client):
     cache._redis_client = redis_client
     import json
 
-    redis_client.get = AsyncMock(return_value=json.dumps({"value": "hit"}))
+    redis_client.get = MagicMock(return_value=json.dumps({"value": "hit"}))
     val = await cache.get("k")
     assert val == "hit"
     assert cache.stats.hits == 1
@@ -164,7 +164,7 @@ async def test_get_hit_from_redis(cache, redis_client):
 
 async def test_get_redis_error_opens_circuit(cache, redis_client, monkeypatch):
     cache._redis_client = redis_client
-    redis_client.get = AsyncMock(side_effect=ConnectionError("boom"))
+    redis_client.get = MagicMock(side_effect=ConnectionError("boom"))
     await cache.get("k")
     assert cache._circuit_breaker_open is True
 
@@ -223,7 +223,7 @@ def test_invalidate_pattern_subset(cache):
 
 def test_invalidate_with_redis(cache, redis_client):
     cache._redis_client = redis_client
-    redis_client.keys = AsyncMock(return_value=["supremeai:foo", "supremeai:bar"])
+    redis_client.keys = MagicMock(return_value=["supremeai:foo", "supremeai:bar"])
     count = cache.invalidate("*")
     assert count == 2
 
@@ -232,7 +232,7 @@ def test_get_stats_with_redis_info(cache, redis_client):
     cache._redis_client = redis_client
     stats = cache.get_stats()
     assert "redis_memory_used_bytes" in stats
-    assert stats["redis_total_keys"] == 0
+    assert stats["redis_total_keys"] == 2
     assert stats["enabled"] is True
 
 

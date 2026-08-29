@@ -8,6 +8,9 @@ from core.mcp_client import MCPRegistryClient
 @pytest.mark.anyio
 async def test_mcp_client_fallback_when_no_servers_respond(monkeypatch):
     c = MCPRegistryClient()
+    monkeypatch.setattr(
+        "core.mcp_client.MCPSecurityGuard.is_safe_url", lambda url, enforce_https: True
+    )
 
     with patch("core.mcp_client.settings", MagicMock(mcp_server_urls=[])):
         with patch("core.mcp_client.httpx.AsyncClient") as client_cls:
@@ -26,13 +29,16 @@ async def test_mcp_client_fallback_when_no_servers_respond(monkeypatch):
 @pytest.mark.anyio
 async def test_mcp_client_filters_by_domain_tags(monkeypatch):
     c = MCPRegistryClient()
+    monkeypatch.setattr(
+        "core.mcp_client.MCPSecurityGuard.is_safe_url", lambda url, enforce_https: True
+    )
 
     fake_tools = [
         {"name": "t1", "tags": ["research_analysis"]},
         {"name": "t2", "tags": ["code_generation"]},
     ]
 
-    with patch("core.mcp_client.settings", MagicMock(mcp_server_urls=["http://srv1"])):
+    with patch("core.mcp_client.settings", MagicMock(mcp_server_urls=["https://srv1"])):
         with patch("core.mcp_client.httpx.AsyncClient") as client_cls:
             client = MagicMock()
             client.__aenter__ = AsyncMock(return_value=client)

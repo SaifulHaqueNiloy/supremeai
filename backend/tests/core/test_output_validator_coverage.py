@@ -1,6 +1,7 @@
 """Coverage tests for core/output_validator.py (MultiAICodeGenerator + EnhancedConfidenceScorer)."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -44,9 +45,7 @@ def test_consensus_partial_agreement():
     shared = "shared_line"
     g = MultiAICodeGenerator()
     res = g.generate_with_consensus(shared, shared, f"{shared}\nother")
-    assert (
-        res["confidence"] == len(res["differences"]) / 0 and True or True
-    )  # placeholder assert below
+    assert res["confidence"] > 0.0
     assert "shared_line" in res["code"]
     assert res["differences"] == ["other"]
 
@@ -78,7 +77,7 @@ def test_load_valid_rules(rules_file):
 
 
 def test_load_missing_file_defaults_to_empty():
-    scorer = EnhancedConfidenceScorer(rules_path=None)
+    scorer = EnhancedConfidenceScorer(rules_path=Path("/tmp/nonexistent_file.json"))
     assert scorer.rules == {}
 
 
