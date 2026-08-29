@@ -61,7 +61,9 @@ class ObservabilityMiddleware:
             if current_span and current_span.get_span_context().is_valid:
                 trace_id = f"{current_span.get_span_context().trace_id:032x}"
         except ImportError:
-            pass
+            import logging
+
+            logging.getLogger(__name__).warning("Silenced error in except-pass block")
 
         if not trace_id:
             trace_id = f"00-{uuid.uuid4().hex}-0000000000000001-01"

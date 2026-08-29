@@ -325,7 +325,9 @@ class InProcessAsyncQueue:
                 try:
                     await self._worker_task
                 except asyncio.CancelledError:
-                    pass
+                    import logging
+
+                    logging.getLogger(__name__).warning("Silenced error in except-pass block")
 
         # Cancel all active tasks
         async with self._lock:
@@ -480,7 +482,9 @@ class InProcessAsyncQueue:
                 try:
                     await async_task
                 except asyncio.CancelledError:
-                    pass
+                    import logging
+
+                    logging.getLogger(__name__).warning("Silenced error in except-pass block")
 
         task.status = TaskStatus.CANCELLED
         self._metrics.tasks_cancelled += 1
@@ -1532,7 +1536,9 @@ class PerformanceLearningEngine:
             try:
                 await self._tuning_task
             except asyncio.CancelledError:
-                pass
+                import logging
+
+                logging.getLogger(__name__).warning("Silenced error in except-pass block")
         logger.info("PerformanceLearningEngine stopped")
 
     async def record_metric(self, name: str, value: Any) -> None:
