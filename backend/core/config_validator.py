@@ -128,7 +128,7 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         severity=Severity.WARNING,
         pattern=r"^https?://.+",
         description="Public backend URL",
-        examples=["https://supremeai-backend-v2.onrender.com"],
+        examples=["https://api.example.com"],
     ),
     # --- CORS ---
     VarDefinition(

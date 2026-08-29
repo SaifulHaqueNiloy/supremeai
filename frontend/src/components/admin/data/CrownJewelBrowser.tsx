@@ -51,7 +51,7 @@ interface ConsoleMessage {
 
 interface AIBrowserAction {
   type: 'summarize' | 'explain' | 'extract_links' | 'find_issues' | 'interact';
-  payload?: any;
+  payload?: unknown;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -199,7 +199,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         });
       }
     } catch (err) { 
-      console.debug("Invalid URL parse attempt:", err);
+      console.warn("Invalid URL parse attempt:", err);
     }
     
     setIsLoading(true);
@@ -545,7 +545,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         onPageDetect?.({ title, url: activeTab?.url || '', type: 'page' });
       }
     } catch (err) {
-      console.debug("Cross-origin restriction:", err);
+      console.warn("Cross-origin restriction:", err);
     }
   };
 
@@ -1146,22 +1146,22 @@ async function getPageContent(): Promise<string> {
   return ''; // Implement based on your proxy setup
 }
 
-function formatLinksFromData(links: any[]): string {
+function formatLinksFromData(links: Record<string, unknown>[]): string {
   if (!links?.length) return 'No links found.';
   return `🔗 **Links Extracted (${links.length} found)**\n\n${
-    links.map((link: any, i: number) => `${i+1}. [${link.text || link.url}](${link.url})`).join('\n')
+    links.map((link: Record<string, unknown>, i: number) => `${i+1}. [${link.text || link.url}](${link.url})`).join('\n')
   }`;
 }
 
-function formatIssuesFromData(issues: any[]): string {
+function formatIssuesFromData(issues: Record<string, unknown>[]): string {
   if (!issues?.length) return '✅ No issues found!';
   
-  const critical = issues.filter((i: any) => i.severity === 'critical');
-  const warnings = issues.filter((i: any) => i.severity === 'warning');
+  const critical = issues.filter((i: Record<string, unknown>) => i.severity === 'critical');
+  const warnings = issues.filter((i: Record<string, unknown>) => i.severity === 'warning');
   
   return `🚨 **Issues Detected (${issues.length} total)**\n\n**Critical (${critical.length}):**\n${
-    critical.map((i: any) => `- ⚠️ ${i.message}`).join('\n') || 'None'
+    critical.map((i: Record<string, unknown>) => `- ⚠️ ${i.message}`).join('\n') || 'None'
   }\n\n**Warnings (${warnings.length}):**\n${
-    warnings.map((i: any) => `- ⚡ ${i.message}`).join('\n') || 'None'
+    warnings.map((i: Record<string, unknown>) => `- ⚡ ${i.message}`).join('\n') || 'None'
   }\n\n**Suggestions:** Run security scan for detailed remediation steps.`;
 }
