@@ -226,57 +226,17 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
 
     # বাংলা মন্তব্ব্য: মিডলওয়্যার চেইন — ORDER IS CRITICAL FOR SECURITY
-    # 1. RequestContextMiddleware - Always first to establish context
-    app.add_middleware(RequestContextMiddleware)
-
-    # 2. GZipMiddleware - Early to decode compressed request bodies
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
-
-    # 3. RequestIdMiddleware - Track requests
-    app.add_middleware(RequestIdMiddleware)
-
-    # 4. SecurityHeadersMiddleware - Add security headers
-    app.add_middleware(SecurityHeadersMiddleware)
-
-    # 4.1 RequestValidationMiddleware - SQLi/XSS check
-    app.add_middleware(RequestValidationMiddleware)
-
-    # 4.2 TrustedOriginMiddleware - Validate trusted origins before processing
-    app.add_middleware(TrustedOriginMiddleware)
-
-    # 5. SupremeContextMiddleware - Set up application context
-    app.add_middleware(SupremeContextMiddleware)
-
-    # 6. TenantExtractionMiddleware - Extract tenant information
-    app.add_middleware(TenantExtractionMiddleware)
-
-    # 7. ObservabilityMiddleware - Track metrics before security checks
-    app.add_middleware(ObservabilityMiddleware)
-
-    # 8. Authentication - MUST come before other security middleware
-    app.add_middleware(AuthMiddleware)
-
-    # 9. API Key validation - After authentication
-    app.add_middleware(APIKeyAuthMiddleware)
-
-    # 10. Security: AutonoGuard - After authentication to protect sensitive operations
-    app.add_middleware(AutonoGuardMiddleware)
-
-    # 11. Security: Honeypot - After authentication to only trap unauthorized access
-    app.add_middleware(HoneypotMiddleware)
-
-    # 12. Security: Chaos injection - After authentication for controlled testing
-    app.add_middleware(ChaosInjectorMiddleware)  # type: ignore
-
-    # 13. Idempotency middleware - After authentication to ensure idempotency per user
-    app.add_middleware(IdempotencyMiddleware)
-
-    # 14. Rate Limiting
-    from core.rate_limit import RateLimiter
-
-    app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
-
-    # 14. CORS: Re-added for unified app architecture.
+    #
+    # ⚠️ CORS FIRST (outermost): Starlette-এ যে middleware সবার আগে
+    # add_middleware() দিয়ে যোগ হয়, সেটাই সবচেয়ে বাইরের লেয়ার হয় (request-এ
+    # প্রথমে চলে, response-এ সবার শেষে)। RateLimit/Auth/AutonoGuard-এর মতো
+    # middleware যখন call_next() না ডেকে সরাসরি JSONResponse(429/401 ইত্যাদি)
+    # রিটার্ন করে (short-circuit), সেই রেসপন্স তখনই CORS হেডার পায় যদি CORS
+    # ওই middleware-গুলোর বাইরে থাকে। আগে CORS RateLimitMiddleware-এর পরে
+    # (অর্থাৎ এর ভেতরে) যোগ করা হতো, ফলে rate-limit-এর 429 রেসপন্স CORS
+    # middleware অতিক্রম না করেই ব্রাউজারে চলে যেত — ব্রাউজার তখন এটাকে
+    # ভুলভাবে "CORS blocked" হিসেবে রিপোর্ট করত, যদিও আসল কারণ ছিল 429।
+    # তাই CORS-কে সবার আগে (outermost) যোগ করা হলো।
     def _ensure_list(v):
         return [v] if isinstance(v, str) else list(v)
 
@@ -323,6 +283,58 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         allow_headers=["*"],
         expose_headers=["*"],
     )
+
+    # 1. RequestContextMiddleware - Always first to establish context
+    app.add_middleware(RequestContextMiddleware)
+
+    # 2. GZipMiddleware - Early to decode compressed request bodies
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # 3. RequestIdMiddleware - Track requests
+    app.add_middleware(RequestIdMiddleware)
+
+    # 4. SecurityHeadersMiddleware - Add security headers
+    app.add_middleware(SecurityHeadersMiddleware)
+
+    # 4.1 RequestValidationMiddleware - SQLi/XSS check
+    app.add_middleware(RequestValidationMiddleware)
+
+    # 4.2 TrustedOriginMiddleware - Validate trusted origins before processing
+    app.add_middleware(TrustedOriginMiddleware)
+
+    # 5. SupremeContextMiddleware - Set up application context
+    app.add_middleware(SupremeContextMiddleware)
+
+    # 6. TenantExtractionMiddleware - Extract tenant information
+    app.add_middleware(TenantExtractionMiddleware)
+
+    # 7. ObservabilityMiddleware - Track metrics before security checks
+    app.add_middleware(ObservabilityMiddleware)
+
+    # 8. Authentication - MUST come before other security middleware
+    app.add_middleware(AuthMiddleware)
+
+    # 9. API Key validation - After authentication
+    app.add_middleware(APIKeyAuthMiddleware)
+
+    # 10. Security: AutonoGuard - After authentication to protect sensitive operations
+    app.add_middleware(AutonoGuardMiddleware)
+
+    # 11. Security: Honeypot - After authentication to only trap unauthorized access
+    app.add_middleware(HoneypotMiddleware)
+
+    # 12. Security: Chaos injection - After authentication for controlled testing
+    app.add_middleware(ChaosInjectorMiddleware)  # type: ignore
+
+    # 13. Idempotency middleware - After authentication to ensure idempotency per user
+    app.add_middleware(IdempotencyMiddleware)
+
+    # 14. Rate Limiting — CORS (added above, first) wraps this, so a 429
+    # short-circuit response returned here still gets CORS headers on the
+    # way back out through the stack.
+    from core.rate_limit import RateLimiter
+
+    app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
 
     # 15. Response standardization - Last to standardize all responses
     app.add_middleware(ResponseStandardizationMiddleware)
