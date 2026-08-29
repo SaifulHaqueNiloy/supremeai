@@ -62,7 +62,7 @@ async def deep_health_check(response: Response):
     # Capture subsystem status from agent_supervisor
     from core.agent_supervisor import agent_supervisor
 
-    agents_status = agent_supervisor.get_health_status()
+    agents_status = agent_supervisor.get_health()
     all_agents_healthy = all(a["status"] == "running" for a in agents_status.values())
     if not all_agents_healthy:
         overall_status = "degraded"
