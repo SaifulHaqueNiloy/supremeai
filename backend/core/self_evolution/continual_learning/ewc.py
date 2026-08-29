@@ -52,7 +52,12 @@ except ImportError:
     TORCH_UTILS_AVAILABLE = False
 
 from loguru import logger
-from torch.utils.data import DataLoader
+
+# বাংলা মন্তব্য (DEP-AUDIT): এখানে একটি আনগার্ডেড ডুপ্লিকেট
+# `from torch.utils.data import DataLoader` ছিল — একই import উপরের
+# try/except ImportError ব্লকে (guarded, fallback None) ইতিমধ্যেই হয়ে গেছে।
+# torch core image-এ নেই (optional `ml` group), তাই ডুপ্লিকেটটি module import
+# ক্র্যাশ করাত — সরানো হলো। DataLoader guarded fallback (None) থেকেই আসবে।
 
 
 @dataclass
