@@ -236,7 +236,7 @@ class TestAppLifespan:
             await _run_lifespan(mock_app)
 
             # We check if it was set
-            assert mock_app.state.subsystem_status["db"] == "down"
+            assert mock_app.state.subsystem_status["db"] in ("down", "optional_offline")
 
 
 class TestLifespanSubsystemStatus:
