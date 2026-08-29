@@ -132,21 +132,19 @@ class AgentSupervisor:
         """
         self._shutdown_event.set()
 
-        if not self._agents:
-            logger.info("No agents to shut down.")
-            return
-
         # Cancel monitor task first
         if self._monitor_task and not self._monitor_task.done():
             self._monitor_task.cancel()
             try:
-                await asyncio.wait_for(self._monitor_task, timeout=5.0)
-            except asyncio.CancelledError:
-                raise
+                await asyncio.wait([self._monitor_task], timeout=5.0)
             except Exception as e:
                 import logging
 
                 logging.getLogger(__name__).exception(f"Silenced error: {e}")
+
+        if not self._agents:
+            logger.info("No agents to shut down.")
+            return
 
         # Signal all agents to stop
         for name in self._health:
