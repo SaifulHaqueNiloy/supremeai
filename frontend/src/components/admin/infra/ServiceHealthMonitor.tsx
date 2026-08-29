@@ -65,16 +65,6 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
     category: 'infrastructure',
   },
 
-  {
-    name: 'scraper_service',
-    displayName: 'Scraper Service',
-    url: import.meta.env.VITE_SCRAPER_BACKEND || 'https://supremeai-scraper-6nwi.onrender.com',
-    description: 'Playwright Browser Automation',
-    critical: false,
-    icon: <Activity size={16} />,
-    category: 'infrastructure',
-  },
-
   // ─── DATABASE & AUTH ──────────────────────────────────────────────────
   {
     name: 'supabase_db',
