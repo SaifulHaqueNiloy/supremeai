@@ -38,8 +38,8 @@ def test_health_ready_returns_ok():
 
 
 def test_health_check_ok_without_subsystems():
-    # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'degraded' ফেরত দেওয়া উচিত (কিন্তু HTTP 200)
+    # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'degraded' ফেরত দেওয়া উচিত (HTTP 503)
     client = TestClient(_build_client())
     resp = client.get("/health")
-    assert resp.status_code == 200
+    assert resp.status_code == 503
     assert resp.json()["status"] == "degraded"
