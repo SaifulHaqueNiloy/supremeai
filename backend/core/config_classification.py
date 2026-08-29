@@ -1828,6 +1828,34 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend"}),
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
+    ConfigSpec(
+        "RESEND_FROM_EMAIL",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend"}),
+        description="Auto-classified by CI drift remediation.",
+    ),
+    ConfigSpec(
+        "RETRY_BUDGET_REFILL_RATE",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend"}),
+        description="Auto-classified by CI drift remediation.",
+    ),
+    ConfigSpec(
+        "RUNPOD_API_URL",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend"}),
+        description="Auto-classified by CI drift remediation.",
+    ),
+    ConfigSpec(
+        "SANDBOX_PAYLOAD",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend"}),
+        description="Auto-classified by CI drift remediation.",
+    ),
 )
 
 BY_NAME: dict[str, ConfigSpec] = {spec.name: spec for spec in CONFIG_SPECS}
