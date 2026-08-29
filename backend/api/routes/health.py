@@ -36,15 +36,22 @@ _start_time = time.time()
 
 
 @router.get("/health")
-async def health_check():
+@router.get("/deep")
+async def deep_health_check():
     """
     Comprehensive health check endpoint.
     LIVE-001 FIX: Return 200 with degraded status instead of crashing.
     The health endpoint should ALWAYS return 200 with diagnostic info,
     so monitoring tools can read the status. Only /ready should 503.
     """
+    db_start = time.time()
     db_status = await _check_database()
+    db_latency = round((time.time() - db_start) * 1000, 2)
+
+    redis_start = time.time()
     redis_status = await _check_redis()
+    redis_latency = round((time.time() - redis_start) * 1000, 2)
+
     cache_status = "connected" if redis_manager.is_connected else "disabled"
 
     overall_status = "healthy"
@@ -54,15 +61,19 @@ async def health_check():
         if overall_status == "healthy":
             overall_status = "degraded"
 
+    # Also capture subsystem status from app state if available
+    from fastapi import Request
+    # We can't easily access app.state here without Request, so we'll just return basic stats
+
     return HealthStatus(
         status=overall_status,
         timestamp=datetime.utcnow().isoformat(),
         version="3.0.0-superai",
         uptime_seconds=round(time.time() - _start_time, 2),
         services={
-            "database": db_status,
-            "redis": redis_status,
-            "cache": cache_status,
+            "database": {"status": db_status, "latency_ms": db_latency},
+            "redis": {"status": redis_status, "latency_ms": redis_latency},
+            "cache": {"status": cache_status},
         },
         cache_stats=None,
     )
@@ -72,8 +83,11 @@ async def health_check():
 async def readiness_check():
     """Kubernetes-style readiness probe."""
     db_ok = await _check_database()
-    if db_ok != "healthy":
-        raise HTTPException(status_code=503, detail="Database not ready")
+    redis_ok = await _check_redis()
+
+    if db_ok != "healthy" or redis_ok != "healthy":
+        raise HTTPException(status_code=503, detail="Dependencies not ready")
+
     return {"status": "ok", "service": "supremeai-backend"}
 
 

@@ -134,7 +134,10 @@ class FreeTierMemoryManager:
 
         if status.is_critical:
             if current_time - self._last_aggressive_cleanup_time >= self._gc_interval_seconds:
-                await self._aggressive_cleanup()
+                # 🔧 Temporarily disabled aggressive cleanup as requested by user
+                # await self._aggressive_cleanup()
+                logger.warning("Aggressive memory cleanup is temporarily disabled")
+                self._last_aggressive_cleanup_time = current_time
         elif status.is_warning:
             if current_time - self._last_gc_time >= self._gc_interval_seconds:
                 await self._standard_cleanup()

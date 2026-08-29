@@ -199,7 +199,9 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
           message: `⚠️ Navigating to potentially down service: ${domain}`
         });
       }
-    } catch { /* Invalid URL, continue anyway */ }
+    } catch (err) { 
+      console.debug("Invalid URL parse attempt:", err);
+    }
     
     setIsLoading(true);
     setUrlInputValue(normalizedUrl);
@@ -543,8 +545,8 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         ));
         onPageDetect?.({ title, url: activeTab?.url || '', type: 'page' });
       }
-    } catch {
-      // Cross-origin restriction - expected
+    } catch (err) {
+      console.debug("Cross-origin restriction:", err);
     }
   };
 
