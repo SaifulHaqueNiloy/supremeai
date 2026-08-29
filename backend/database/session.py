@@ -53,6 +53,8 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
             _pool_size, _max_overflow = 2, 13
 
         # বাংলা মন্তব্য: asyncpg এর জন্য prepared statement সংক্রান্ত সেটিংস connect_args-এর ভেতরে থাকতে হবে
+        from core.db_ssl import build_supabase_ssl_context
+
         engine_kwargs.update(
             {
                 "pool_size": _pool_size,
@@ -66,6 +68,7 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
                     "statement_cache_size": 0,
                     "prepared_statement_cache_size": 0,
                     "max_cached_statement_lifetime": 0,
+                    "ssl": build_supabase_ssl_context(),
                 },
             }
         )

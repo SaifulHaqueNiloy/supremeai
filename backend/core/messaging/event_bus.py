@@ -51,7 +51,9 @@ class ErrorContext(BaseModel):
     task_id: str | None = None
     request_id: str | None = None
     # বাংলা মন্তব্য: কোন env-এ ঘটলো — staging vs production আলাদাভাবে alert হবে
-    env: str = "unknown"
+    env: str = Field(
+        default_factory=lambda: getattr(__import__("core.config").config.settings, "env", "unknown")
+    )
     system_state: dict[str, Any] = Field(default_factory=dict)
     extra: dict[str, Any] = Field(default_factory=dict)
 

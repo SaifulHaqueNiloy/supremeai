@@ -855,14 +855,12 @@ class CitationVerifier:
 
         # Perform verification
         try:
-            if HAS_REQUESTS:
-                response = requests.head(url, timeout=10, allow_redirects=True)
-                status_code = response.status_code
-                is_valid = 200 <= status_code < 400
-            else:
-                # Simulate for demo
-                status_code = 200
-                is_valid = True
+            import aiohttp
+
+            async with aiohttp.ClientSession() as session:
+                async with session.head(url, timeout=10, allow_redirects=True) as response:
+                    status_code = response.status
+                    is_valid = 200 <= status_code < 400
 
             # Get domain authority
             from urllib.parse import urlparse
