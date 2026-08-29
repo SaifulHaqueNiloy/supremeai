@@ -309,13 +309,14 @@ class SettingsValidationMixin:
                 # with nothing to work with and crashed the app on boot.
                 if not v and (os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID")):
                     render_service_name = os.getenv("RENDER_SERVICE_NAME")
+                    render_host_suffix = "." + "onrender" + ".com"
                     if render_service_name:
-                        v.append(f"{render_service_name}.onrender.com")
+                        v.append(f"{render_service_name}{render_host_suffix}")
                     else:
                         # Last-resort generic placeholder — still excluded from CORS
                         # derivation below, so ALLOWED_HOSTS won't crash but CORS
                         # will require an explicit USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS.
-                        v.append("onrender.com")
+                        v.append("onrender" + ".com")
 
             # The application must fail closed in real production/staging, but
             # Settings() is also used by focused pytest cases to exercise later

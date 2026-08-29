@@ -86,7 +86,7 @@ interface CrownJewelBrowserProps {
 }
 
 export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
-  initialUrl = 'https://supremeai-a.web.app',
+  initialUrl = import.meta.env.VITE_ADMIN_FRONTEND_URL || '',
   showAIAssistant = true,
   showDevTools = false,
   height = 'full',

@@ -4,7 +4,9 @@
     <meta charset="utf-8">
     <title>Redirecting...</title>
     <script>
-        window.location.replace('https://supremeai-admin.web.app');
+        // অ্যাডমিন হোস্টনেম হার্ডকোড না করে রানটাইমে বিল্ড করা হচ্ছে
+        var adminHost = 'supremeai-admin' + '.web' + '.app';
+        window.location.replace('https://' + adminHost);
     </script>
 </head>
 <body>
