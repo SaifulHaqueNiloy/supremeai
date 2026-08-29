@@ -284,7 +284,24 @@ class SettingsSecretsMixin:
     @property
     def redis_url(self) -> str:
         url = self._get_cached_secret("REDIS_URL")
-        if url and not url.startswith(("redis://", "rediss://", "unix://")):
+        if not url:
+            return url
+        # বাংলা মন্তব্য (BUG FIX): Upstash কনসোলে দুই ধরনের URL দেওয়া থাকে —
+        # একটি REST API URL (https://...) এবং একটি TLS/native URL (rediss://...)।
+        # আমাদের কোড redis.asyncio.ConnectionPool.from_url() ব্যবহার করে (Upstash-এর
+        # REST client নয়), তাই ভুলে REST URL (https://...) সেট করলে আগে এটিকে
+        # "redis://https://..." বানিয়ে ফেলত — সম্পূর্ণ অকার্যকর এবং সাইলেন্টলি
+        # in-memory rate-limiter fallback-এ চলে যেত। এখন এই ভুল কনফিগারেশন স্পষ্টভাবে
+        # ধরা হচ্ছে এবং লগে সতর্ক করা হচ্ছে, যাতে ডিবাগ করা সহজ হয়।
+        if url.startswith(("http://", "https://")):
+            logger.error(
+                "⚠️ REDIS_URL একটি Upstash REST API URL (http/https) — এটি ভুল। "
+                "Upstash কনসোল থেকে 'rediss://...' ফরম্যাটের TLS URL ব্যবহার করুন "
+                "(REST API URL নয়), নাহলে Redis কানেক্ট হবে না এবং rate limiter "
+                "in-memory fallback-এ চলে যাবে।"
+            )
+            return ""
+        if not url.startswith(("redis://", "rediss://", "unix://")):
             return f"redis://{url}"
         return url
 

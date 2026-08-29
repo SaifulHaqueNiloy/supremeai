@@ -65,9 +65,20 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
                 "connect_args": {
                     "command_timeout": 30,
                     "server_settings": {"application_name": f"supremeai_2_0_{_role}"},
+                    # বাংলা মন্তব্য (BUG FIX): PgBouncer transaction/statement pooling মোডে
+                    # asyncpg prepared statement cache বন্ধ রাখতে হবে, নাহলে
+                    # 'DuplicatePreparedStatementError' আসে (SentinelAgent.monitor_endpoints
+                    # সহ একাধিক জায়গায় দেখা গেছে)। শুধু statement_cache_size=0 ই যথেষ্ট এবং
+                    # একমাত্র বৈধ asyncpg connect() প্যারামিটার এই উদ্দেশ্যে।
+                    # আগে এখানে `prepared_statement_cache_size` নামে একটি key ছিল যা
+                    # asyncpg.connect()-এর বৈধ প্যারামিটার না (আসল নাম শুধু
+                    # `max_cached_statement_lifetime`, `max_cacheable_statement_size`,
+                    # `statement_cache_size`) — এটি TypeError তৈরি করতে পারত এবং
+                    # pgbouncer_pool.py-তে ইতিমধ্যে নথিভুক্ত একই বাগ। এছাড়া
+                    # `max_cached_statement_lifetime=0` মানে "cache আছে কিন্তু expiry নাই",
+                    # cache নিজেই বন্ধ করে না — তাই বাদ দেওয়া হলো, statement_cache_size=0
+                    # একাই cache সম্পূর্ণ নিষ্ক্রিয় করে।
                     "statement_cache_size": 0,
-                    "prepared_statement_cache_size": 0,
-                    "max_cached_statement_lifetime": 0,
                     "ssl": build_supabase_ssl_context(),
                 },
             }
