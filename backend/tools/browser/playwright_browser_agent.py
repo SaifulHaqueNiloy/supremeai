@@ -13,7 +13,13 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 from loguru import logger
-from playwright.sync_api import Page
+
+try:
+    from playwright.sync_api import Page
+except ImportError:
+    # বাংলা মন্তব্য (DEP-AUDIT): playwright এখন optional `browser` group-এ।
+    # Core image-এ না থাকলে module import ক্র্যাশ না করে Any-তে fallback হয়।
+    Page = Any  # type: ignore[assignment,misc]
 
 from brain.model_router import ModelRouter
 from core.security.secure_credential_store import SecureCredentialStore

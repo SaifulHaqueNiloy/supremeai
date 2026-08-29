@@ -14,7 +14,14 @@ from fastapi import (
     WebSocket,
     WebSocketDisconnect,
 )
-from playwright.async_api import Page
+
+try:
+    from playwright.async_api import Page
+except ImportError:
+    # বাংলা মন্তব্য (DEP-AUDIT): playwright এখন optional `browser` group-এ।
+    # Core image-এ না থাকলে module import ক্র্যাশ না করে Any-তে fallback হয়
+    # (রানটাইমে annotation evaluation-safe, isinstance-ও ভাঙে না)।
+    Page = Any  # type: ignore[assignment,misc]
 
 try:
     from PIL import Image

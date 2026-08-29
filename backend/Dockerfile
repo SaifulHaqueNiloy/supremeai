@@ -31,14 +31,11 @@ ENV PATH="/app/.venv/bin:$PATH"
 # Copy application code
 COPY . .
 
-# Install Playwright and its system dependencies (must be run as root)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    gnupg \
-    ca-certificates \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && playwright install --with-deps chromium
+# বাংলা মন্তব্য (DEP-AUDIT): playwright + Chromium আগে এখানে ইনস্টল হতো
+# (`playwright install --with-deps chromium`), যা production image-এ কয়েকশ MB
+# বাড়াতো। এখন playwright শুধু optional `browser` group-এ আছে — standalone
+# scraper service/image (backend/services/scraper) সেটি ইনস্টল করে। Core API
+# image আর browser runtime বহন করে না।
 
 # Create and use non-root user for security compliance
 RUN addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \

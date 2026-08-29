@@ -11,7 +11,12 @@ python = "^3.11"
 # কিন্তু এটি আগেই python-jose -> ecdsa এর transitive dependency ছিল,
 # যা আমরা PyJWT-এ মাইগ্রেট করেছি (pyjwt[crypto] -> cryptography)।
 # এখন আর ecdsa প্যাকেজ নেই — ঝুঁকি মুক্ত।
-fastapi = {extras = ["all"], version = "^0.136.0"}
+fastapi = "^0.136.0"
+# বাংলা মন্তব্য (DEP-AUDIT): `fastapi[all]` → `fastapi` (bare)। `[all]` extras-এর
+# শুধু httpx সত্যিই কোডে ব্যবহৃত হয় (httpx এখানে explicit রাখা হলো); itsdangerous,
+# jinja2, uvicorn[standard] duplicates আসলে অপ্রয়োজনীয়। python-multipart ও
+# email-validator আগেই explicit declared। core image-এ মৃত transitive deps আর নেই।
+httpx = "^0.28.1"
 uvicorn = {extras = ["standard"], version = "^0.51.0"}
 starlette-context = "^0.3"
 sqlalchemy = "^2.0.36"
@@ -101,9 +106,18 @@ langfuse = "^4.14.4"
 packaging = "^26.3"
 bcrypt = "^5.0.0"
 lxml = "^6.1.2"
-playwright = "^1.62.0"
 infisical-python = "2.3.5"
 aiofiles = "^25.1.0"
+# বাংলা মন্তব্য (DEP-AUDIT): playwright core [tool.poetry.dependencies] থেকে
+# সরিয়ে আলাদা optional `browser` group-এ রাখা হলো। Production Dockerfile
+# `poetry install --only main` চালায়, তাই Chromium + playwright এখন আর always-on
+# API image-এ নেই। Dev/CI-তে আগের মতোই playwright থাকবে (`--with dev --with browser`)।
+[tool.poetry.group.browser]
+optional = true
+
+[tool.poetry.group.browser.dependencies]
+playwright = "^1.62.0"
+
 [tool.poetry.group.ml]
 optional = true
 
@@ -131,7 +145,6 @@ pytest-xdist = "^3.6.1"
 respx = "^0.21.1"
 pytest-md = "^0.2.0"
 typeguard = "^4.2"
-playwright = "^1.49.0"
 pytest-html = "^4.1.1"
 [build-system]
 requires = ["poetry-core"]

@@ -18,8 +18,18 @@ except ImportError:
 from loguru import logger
 from pydantic import BaseModel
 
-from core.security import is_safe_url
-from services.scraper.web_scraper import WebScraper
+# বাংলা মন্তব্য: Dual-path import — standalone scraper-এ top-level `security`/
+# `web_scraper`, backend-এ embedded হলে `services.scraper.*`। Scraper-এর নিজস্ব
+# self-contained security.py ব্যবহার হয় (core.security টানে না — SSRF-minimal)।
+try:
+    from security import is_safe_url  # standalone scraper microservice
+except ImportError:  # embedded in main backend
+    from services.scraper.security import is_safe_url  # type: ignore[no-redef]
+
+try:
+    from web_scraper import WebScraper  # standalone scraper microservice
+except ImportError:  # embedded in main backend
+    from services.scraper.web_scraper import WebScraper  # type: ignore[no-redef]
 
 # 🔧 DYNAMIC BROWSER CONFIG: All values from environment variables
 _BROWSER_VIEWPORT_W = int(os.getenv("BROWSER_VIEWPORT_WIDTH", "1280"))

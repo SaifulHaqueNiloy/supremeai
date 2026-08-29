@@ -11,7 +11,13 @@ import httpx
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from services.scraper.security import is_safe_url
+# বাংলা মন্তব্য: Dual-path import — standalone scraper service-এ `security`
+# top-level (conftest sys.path), backend এর ভিতরে embedded হলে
+# `services.scraper.security`।
+try:
+    from security import is_safe_url  # standalone scraper microservice
+except ImportError:  # embedded in main backend
+    from services.scraper.security import is_safe_url  # type: ignore[no-redef]
 
 # 🔧 DYNAMIC CONFIG: User-Agent from env, with safe default
 _DEFAULT_USER_AGENT = os.getenv(
