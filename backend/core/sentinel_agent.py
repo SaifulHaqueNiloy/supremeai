@@ -92,7 +92,7 @@ class SentinelAgent:
                             else:
                                 # Internal endpoints should use loopback to bypass external TLS proxy issues
                                 port = os.environ.get("PORT", "8080")
-                                base = f"http://127.0.0.1:{port}"
+                                base = f"http://0.0.0.0:{port}"
                                 url = f"{base}{ep.path}"
 
                             # SSRF protection

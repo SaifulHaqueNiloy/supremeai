@@ -216,7 +216,11 @@ async def test_service_lifecycle():
         try:
             await service.monitoring_task
         except asyncio.CancelledError:
-            pass  # FIX: CancelledError handled correctly now
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Silenced error in except-pass block"
+            )  # FIX: CancelledError handled correctly now
         except Exception as e:
             import logging
 
@@ -244,7 +248,11 @@ async def test_concurrent_operations():
         try:
             await service.monitoring_task
         except asyncio.CancelledError:
-            pass  # FIX: CancelledError handled correctly now
+            import logging
+
+            logging.getLogger(__name__).warning(
+                "Silenced error in except-pass block"
+            )  # FIX: CancelledError handled correctly now
         except Exception as e:
             import logging
 

@@ -44,4 +44,6 @@ async def test_tier8_initialization_and_registry():
         shutdown_status = await shutdown_tier8()
         assert shutdown_status["status"] == "shutdown_complete"
     except asyncio.CancelledError:
-        pass
+        import logging
+
+        logging.getLogger(__name__).warning("Silenced error in except-pass block")

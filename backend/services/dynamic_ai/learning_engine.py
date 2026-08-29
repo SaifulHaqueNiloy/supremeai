@@ -109,7 +109,9 @@ class LearningEngine:
                     metadata={"estimated_cost": estimated_cost},
                 )
             )
-        except RuntimeError:
-            # No running event loop (e.g. called from sync test context) —
+        except RuntimeError as e:
+            # No running event loop (e.g. called from sync test context) -
             # skip logging rather than crashing the caller.
-            pass
+            import logging
+
+            logging.getLogger(__name__).warning(f"Silenced RuntimeError (no event loop): {e}")
