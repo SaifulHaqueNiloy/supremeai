@@ -65,7 +65,7 @@ class ViralReferralEngine:
         }
         if db.client:
             try:
-                db.client.table("referral_codes").upsert(record).execute()
+                db.service_client.table("referral_codes").upsert(record).execute()
             except Exception as exc:
                 logger.debug(f"Referral code persistence failed: {exc}")
         else:
@@ -80,7 +80,7 @@ class ViralReferralEngine:
         if db.client:
             try:
                 res = (
-                    db.client.table("referral_codes")
+                    db.service_client.table("referral_codes")
                     .select("*")
                     .eq("referrer_id", user_id)
                     .execute()
@@ -104,7 +104,7 @@ class ViralReferralEngine:
         if db.client:
             try:
                 res = (
-                    await db.client.table("referral_codes")
+                    await db.service_client.table("referral_codes")
                     .select("*")
                     .eq("code", referral_code)
                     .eq("status", "active")
@@ -146,9 +146,9 @@ class ViralReferralEngine:
         }
         if db.client:
             try:
-                await db.client.table("referral_redemptions").insert(redemption).execute()
+                await db.service_client.table("referral_redemptions").insert(redemption).execute()
                 await (
-                    db.client.table("referral_codes")
+                    db.service_client.table("referral_codes")
                     .update({"redeemed_count": record.get("redeemed_count", 0) + 1})
                     .eq("code", referral_code)
                     .execute()
@@ -177,7 +177,7 @@ class ViralReferralEngine:
         if db.client:
             try:
                 res = (
-                    db.client.table("referral_redemptions")
+                    db.service_client.table("referral_redemptions")
                     .select("*")
                     .eq("referrer_id", referrer_id)
                     .execute()
@@ -214,7 +214,7 @@ class ViralReferralEngine:
             )
             if db.client:
                 with contextlib.suppress(Exception):
-                    db.client.table("referral_codes").update({"fraud_score": 0.8}).eq(
+                    db.service_client.table("referral_codes").update({"fraud_score": 0.8}).eq(
                         "referrer_id", referrer_id
                     ).execute()
             return True
@@ -225,7 +225,7 @@ class ViralReferralEngine:
         if db.client:
             try:
                 res = (
-                    db.client.table("referral_redemptions")
+                    db.service_client.table("referral_redemptions")
                     .select("id", count="exact")
                     .eq("referrer_id", referrer_id)
                     .execute()
@@ -360,7 +360,7 @@ class ViralReferralEngine:
         }
         if db.client:
             try:
-                db.client.table("referral_redemptions").insert(event).execute()
+                db.service_client.table("referral_redemptions").insert(event).execute()
             except Exception as exc:
                 logger.debug(f"Social share persistence failed: {exc}")
         else:
