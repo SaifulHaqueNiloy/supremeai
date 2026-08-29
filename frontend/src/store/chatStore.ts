@@ -43,7 +43,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         count: response.data?.length || 0,
         timestamp: Date.now(),
       });
-    } catch (e) {
+    } catch (_e) {
       console.warn('[ChatStore] Could not load history from backend, using local only');
       set({ isLoading: false, error: null });
     }

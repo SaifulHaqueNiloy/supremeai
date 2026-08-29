@@ -12,7 +12,7 @@ describe('getDeviceFingerprint', () => {
       Object.defineProperty(window, 'crypto', { value: { subtle: {} } });
     }
     if (!window.crypto.subtle) {
-      window.crypto.subtle = {} as any;
+      window.crypto.subtle = {} as unknown as SubtleCrypto;
     }
     window.crypto.subtle.digest = vi.fn().mockResolvedValue(new ArrayBuffer(32));
 
