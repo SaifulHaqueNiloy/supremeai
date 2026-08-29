@@ -8,6 +8,7 @@ import os
 from datetime import datetime
 
 import httpx
+from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
@@ -76,16 +77,14 @@ SERVICE_REGISTRY = [
     {
         "name": "admin_backend",
         "display_name": "Admin Backend",
-        "url": os.environ.get("ADMIN_URL", "https://supremeai-admin.onrender.com")
-        + "/api/v1/health",
+        "url": os.environ.get("ADMIN_URL", ADMIN_URL_DEFAULT) + "/api/v1/health",
         "critical": True,
         "timeout": 8.0,
     },
     {
         "name": "scraper_service",
         "display_name": "Scraper Microservice",
-        "url": os.environ.get("SCRAPER_URL", "https://supremeai-scraper-6nwi.onrender.com")
-        + "/health",
+        "url": os.environ.get("SCRAPER_URL", SCRAPER_URL_DEFAULT) + "/health",
         "critical": False,
         "timeout": 8.0,
     },

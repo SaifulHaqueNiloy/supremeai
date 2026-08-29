@@ -17,6 +17,7 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
+from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
@@ -89,7 +90,7 @@ COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
         name="render_admin",
         display_name="Render Admin API",
         category="infrastructure",
-        url=os.environ.get("ADMIN_URL", "https://supremeai-admin.onrender.com"),
+        url=os.environ.get("ADMIN_URL", ADMIN_URL_DEFAULT),
         health_endpoint="/api/v1/health",
         critical=True,
         timeout=15.0,
@@ -98,7 +99,7 @@ COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
         name="scraper_service",
         display_name="Scraper Microservice",
         category="infrastructure",
-        url=os.environ.get("SCRAPER_URL", "https://supremeai-scraper-6nwi.onrender.com"),
+        url=os.environ.get("SCRAPER_URL", SCRAPER_URL_DEFAULT),
         health_endpoint="/health",
         critical=False,
         timeout=10.0,

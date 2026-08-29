@@ -1,5 +1,6 @@
 from typing import Any
 
+from core.deployment_fallback_defaults import BACKEND_URL_DEFAULT
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
 
 # বাংলা: একটি কেন্দ্রীয় require_admin_token import করা হচ্ছে।
@@ -39,7 +40,7 @@ async def get_public_config(response: Response):
     config_data = {
         "ENV": "production",
         # বাংলা মন্তব্য: সঠিক প্রাইমারি প্রোডাকশন ব্যাকএন্ড ইউআরএল সেট করা হলো
-        "BACKEND_URL": "https://supremeai-backend.onrender.com",
+        "BACKEND_URL": BACKEND_URL_DEFAULT,
         "FEATURES": {
             "morphic_rewrite": True,
             "sandbox_v2": True,
