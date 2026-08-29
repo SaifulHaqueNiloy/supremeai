@@ -102,16 +102,17 @@ frontend/
 └── src/utils/api.test.ts              # NEW: resolver tests (Vitest)
 
 scripts/
-└── check_hardcoded_hosts.py           # NEW: static scan (FR-011), CI-optional
+└── ci/check_hardcoded_deployment_config.py  # EXISTING scanner (FR-011) — extend exclusions (specs/, pyerrorfix)
 
 firebase.template.json                 # {{USER_BACKEND_URL}} placeholder — deploy check
 envs/                                  # machine-local env composition (untracked)
 ```
 
 **Structure Decision**: Reuse the existing polyglot layout. The only new files are
-one backend registry module, one frontend test file, and one static-scan script —
-each maps 1:1 to a constitution principle (VI, VIII, VIII). Structure decision
-avoids any new package, service, or top-level directory (Principle X).
+one backend registry module and one frontend test file; the static scan reuses the
+existing `scripts/ci/check_hardcoded_deployment_config.py` rather than introducing
+a duplicate (Principle VI). No new package, service, or top-level directory
+(Principle X).
 
 ## Complexity Tracking
 

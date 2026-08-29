@@ -14,7 +14,7 @@ Runnable scenarios proving the feature end-to-end. Implementation details live i
 ## Drill 1 — Static hostname scan (SC-002, FR-011)
 
 ```powershell
-python scripts/check_hardcoded_hosts.py
+python scripts/ci/check_hardcoded_deployment_config.py
 ```
 
 **Expected**: exit code 0, report shows `0 findings` across `backend/` and

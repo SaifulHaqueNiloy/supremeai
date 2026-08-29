@@ -13,7 +13,7 @@
 ## Phase 1: Setup (Shared Infrastructure)
 
 - [ ] T001 Create canonical configuration registry (classification, aliases, required-in-production, source) in backend/core/config_classification.py per data-model.md Entity 1 and contracts/config-contract.md
-- [ ] T002 [P] Create static hostname scan script scripts/check_hardcoded_hosts.py (scan backend/ + frontend/src for provider-specific production hostnames; exclude tests/fixtures/docs/pyerrorfix catalogs; record pre-implementation baseline) per research.md D6
+- [ ] T002 [P] Extend the existing scanner scripts/ci/check_hardcoded_deployment_config.py (add specs/ and backend/pyerrorfix/ to IGNORE_PATHS; verify pattern coverage) and run it to record the pre-implementation baseline (FR-011; research.md D6)
 
 **Checkpoint**: contract and enforcement tooling exist — foundational work can start.
 
@@ -100,7 +100,7 @@
 ## Phase 7: Polish & Cross-Cutting Concerns
 
 - [ ] T020 [P] Document the canonical contract for operators: update envs/README and .env.example files (names and classification references only — never values), linking to contracts/config-contract.md (FR-007)
-- [ ] T021 [P] Wire scripts/check_hardcoded_hosts.py into the existing pre-commit chain as advisory (non-blocking until baseline reaches zero) (FR-011)
+- [ ] T021 [P] Wire scripts/ci/check_hardcoded_deployment_config.py into the existing pre-commit chain as advisory (non-blocking until baseline reaches zero) (FR-011)
 - [ ] T022 Execute all quickstart.md drills (1–6) and record evidence (command output summaries) in this feature directory as verification.md (SC-001…SC-006)
 - [ ] T023 Reviewer pass on checklists/configuration.md (CHK001–CHK025) before merge request; resolve or formally accept any open items
 

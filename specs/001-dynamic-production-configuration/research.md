@@ -68,13 +68,15 @@ the wrong project — fail loud instead.
 
 ## D6 — Static hostname scan (FR-011)
 
-**Decision**: repo-local script `scripts/check_hardcoded_hosts.py` scanning
-`backend/` and `frontend/src` for provider-specific production hostnames
-(e.g. `*.onrender.com`, `*.vercel.app` literals), excluding tests, fixtures,
-docs, and `pyerrorfix` knowledge catalogs. Exit non-zero on findings. Wired into
-pre-commit as advisory; CI adoption deferred (adoption doc §11).
+**Decision**: Extend the **existing** scanner `scripts/ci/check_hardcoded_deployment_config.py`
+(already implements `.onrender.com` / `.vercel.app` / `.firebaseapp.com` / `.web.app`
+patterns with ignore lists and non-zero CI exit). Required extensions: add `specs/`
+(feature artifacts legitimately cite hostnames as evidence — they contain no
+secret values) and `backend/pyerrorfix/` (detector knowledge base) to
+`IGNORE_PATHS`; wire into pre-commit as advisory until baseline reaches zero.
 
-**Rationale**: cheapest possible enforcement — a script, not a service (Principle X).
+**Rationale**: The scanner already exists with the right design (Principle VI);
+duplicating it as a new `scripts/check_hardcoded_hosts.py` was rejected.
 
-**Alternatives**: pre-commit-only regex — rejected as insufficient for CI parity;
-third-party linter — rejected: new dependency for a 30-line check.
+**Alternatives**: new standalone script — rejected as duplication; third-party
+linter — rejected: new dependency for an existing 130-line check (Principle X).
