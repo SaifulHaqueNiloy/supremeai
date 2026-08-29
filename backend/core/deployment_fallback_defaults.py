@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import os
 
+from core.config import settings
+
 # বাংলা মন্তব্য: এখানে কোনো ডোমেইন হার্ডকোড করা হয় না — ক্যানোনিকাল env var
 # থেকে রানটাইমে মান নেওয়া হয়, না থাকলে খালি স্ট্রিং (frontend তখন নিজস্ব
 # ডিফল্ট/রিলেটিভ পাথ ব্যবহার করবে)।
 BACKEND_URL_DEFAULT: str = (
     os.getenv("SUPREMEAI_USER_BACKEND_URL")
     or os.getenv("USER_BACKEND_URL")
-    or os.getenv("BACKEND_URL")
+    or settings.backend_url
     or ""
 )
