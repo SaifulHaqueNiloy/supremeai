@@ -199,7 +199,7 @@ class QueryCache:
             logger.debug(f"💾 Cached {query_hash[:8]}... for {ttl}s")
             return True
 
-        except (RedisError, json.JSONEncodeError) as e:
+        except (RedisError, TypeError) as e:
             logger.warning(f"Cache set error: {e}")
             self._stats["errors"] += 1
             return False

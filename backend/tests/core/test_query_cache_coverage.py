@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from redis.exceptions import RedisError
 
-from core.cache import PREFIX_EXACT, PREFIX_SEMANTIC, QueryCache, get_cache
+from core.cache.query_cache import QueryCache, get_cache
 
 
 @pytest.fixture
@@ -33,10 +33,10 @@ def test_hash_query_metadata_changes_hash():
     assert a != b
 
 
-def test_disabled_cache_short_circuits():
+async def test_disabled_cache_short_circuits():
     cache = QueryCache(redis_url="redis://x", enabled=False)
-    assert cache.get("any") is None
-    assert cache.set("k", 1) is False
+    assert await cache.get("any") is None
+    assert await cache.set("k", 1) is False
 
 
 async def test_get_redis_connection_failure_disables():
@@ -83,7 +83,7 @@ async def test_set_success(fake_redis):
     assert ok is True
     fake_redis.setex.assert_awaited_once()
     args, _kwargs = fake_redis.setex.await_args
-    assert args[0] == f"{PREFIX_EXACT}k"
+    assert args[0] == f"{QueryCache.PREFIX_EXACT}k"
 
 
 async def test_set_redis_error_returns_false(fake_redis):
@@ -157,13 +157,14 @@ async def test_invalidate_success_and_failure(fake_redis):
     fake_redis.delete = AsyncMock(return_value=0)
     assert await cache.invalidate("abc") is False
     fake_redis.delete = AsyncMock(side_effect=RedisError("boom"))
-    assert await cache.invalidate("abc", prefix=PREFIX_SEMANTIC) is False
+    assert await cache.invalidate("abc", prefix=QueryCache.PREFIX_SEMANTIC) is False
 
 
 async def test_clear_pattern(fake_redis):
     cache = QueryCache(redis_url="redis://x")
     cache._redis = fake_redis
     fake_redis.keys = AsyncMock(return_value=["k1", "k2"])
+    fake_redis.delete = AsyncMock(return_value=2)
     n = await cache.clear_pattern("llm:*")
     assert n == 2
     fake_redis.keys = AsyncMock(return_value=[])
@@ -198,7 +199,7 @@ def test_get_stats_shape(fake_redis):
 
 
 async def test_get_cache_singleton(monkeypatch):
-    import core.cache as cmod
+    import core.cache.query_cache as cmod
 
     monkeypatch.setattr(cmod, "_global_cache", None)
     monkeypatch.setenv("REDIS_URL", "redis://x")
