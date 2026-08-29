@@ -25,19 +25,18 @@ from services.config_service import ConfigService
 
 security = HTTPBearer(auto_error=False)
 
+_BOUNDED_CACHE_MAX = int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 2000))
+
 try:
     import cachetools
 
-    fallback_cache: dict = cachetools.TTLCache(
-        maxsize=int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 2000)), ttl=3600
-    )
+    fallback_cache: dict = cachetools.TTLCache(maxsize=_BOUNDED_CACHE_MAX, ttl=3600)
 except ImportError:
     # RUNTIME-002 FIX: Use bounded OrderedDict instead of unbounded dict.
     # Previously: plain dict grew without limit → OOM if cachetools missing.
     from collections import OrderedDict
 
     _BoundedCache = OrderedDict()
-    _BOUNDED_CACHE_MAX = int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 2000))
 
     class _BoundedDict(OrderedDict):
         """Bounded dict that evicts oldest entries when max size is reached."""
