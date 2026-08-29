@@ -576,7 +576,9 @@ export function CIDashboard({
       setConnectionStatus('connecting');
       
       try {
-        ws = new WebSocket(wsEndpoint);
+        const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+        const finalWsEndpoint = token ? (wsEndpoint.includes('?') ? `${wsEndpoint}&token=${token}` : `${wsEndpoint}?token=${token}`) : wsEndpoint;
+        ws = new WebSocket(finalWsEndpoint);
         
         ws.onopen = () => {
           setConnectionStatus('connected');
