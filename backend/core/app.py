@@ -29,6 +29,12 @@ from core.memory_manager import MemoryAwareMiddleware
 app.add_middleware(MemoryAwareMiddleware)
 
 
+@app.get("/")
+async def root_welcome():
+    """Root endpoint to prevent 404s and provide a fast wake-up route."""
+    return {"message": "Welcome to SupremeAI Backend API", "status": "Active", "docs_url": "/docs"}
+
+
 @app.get("/health/aggregated")
 async def aggregated_health_check():
     try:

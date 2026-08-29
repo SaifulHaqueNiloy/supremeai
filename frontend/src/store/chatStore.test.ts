@@ -16,7 +16,7 @@ import { eventBus, Events } from '../lib/componentEventBus';
 describe('chatStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    eventBus.removeAllListeners();
+    eventBus.clear();
     useChatStore.setState({
       conversations: [],
       activeConversationId: null,
