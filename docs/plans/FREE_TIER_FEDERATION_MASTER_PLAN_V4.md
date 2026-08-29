@@ -287,7 +287,7 @@ serve(async (req) => {
   if (url.pathname.startsWith('/api/')) {
     const authHeader = req.headers.get('Authorization')
     // Verify JWT with Supabase, then proxy
-    const response = await fetch(`https://supremeai-backend.onrender.com${url.pathname}`, {
+    const response = await fetch(`https://supremeai-backend-v2.onrender.com${url.pathname}`, {
       method: req.method,
       headers: { Authorization: authHeader },
       body: req.body
@@ -575,7 +575,7 @@ export default {
       await env.KV.put(rateLimitKey, parseInt(requests) + 1, { expirationTtl: 60 });
       
       // Forward to Render
-      const response = await fetch(`https://supremeai-backend.onrender.com${url.pathname}${url.search}`, {
+      const response = await fetch(`https://supremeai-backend-v2.onrender.com${url.pathname}${url.search}`, {
         method: request.method,
         headers: request.headers,
         body: request.body
@@ -1069,7 +1069,7 @@ export function middleware(request: NextRequest) {
   if (country === 'BD' || country === 'IN') {
     // Route to Singapore region (closer to Bangladesh)
     const url = request.nextUrl.clone();
-    url.hostname = 'supremeai-backend.onrender.com';  # Render SG region
+    url.hostname = 'supremeai-backend-v2.onrender.com';  # Render SG region
     return NextResponse.rewrite(url);
   }
   
@@ -1208,10 +1208,10 @@ export default {
 
 | Monitor Name | URL | Type |
 |-------------|-----|------|
-| SupremeAI Backend | https://supremeai-backend.onrender.com/health | HTTP |
+| SupremeAI Backend | https://supremeai-backend-v2.onrender.com/health | HTTP |
 | Admin Portal | https://admin.supremeai.vercel.app | HTTP |
 | User App | https://app.supremeai.vercel.app | HTTP |
-| API Health | https://supremeai-backend.onrender.com/api/health | HTTP |
+| API Health | https://supremeai-backend-v2.onrender.com/api/health | HTTP |
 | Cloudflare Worker | https://supremeai-gateway.workers.dev/health | HTTP |
 | Supabase REST | https://your-project.supabase.co/rest/v1/ | HTTP |
 | Upstash Redis | redis://default:xxx.upstash.io:6379 | Port |
@@ -2008,7 +2008,7 @@ bucket_name = "supremeai-assets"
 # Environment variables
 [vars]
 ENVIRONMENT = "production"
-RENDER_BACKEND_URL = "https://supremeai-backend.onrender.com"
+RENDER_BACKEND_URL = "https://supremeai-backend-v2.onrender.com"
 ```
 
 ---

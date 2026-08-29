@@ -224,7 +224,7 @@ class KaggleOrchestrator:
     JOB_QUEUE_KEY = f"{REDIS_KEY_PREFIX}jobs:queue"
     JOB_STATUS_KEY = f"{REDIS_KEY_PREFIX}job:{{job_id}}"
     ACCOUNT_STATUS_KEY = f"{REDIS_KEY_PREFIX}account:{{account_id}}"
-    CALLBACK_URL = "https://supremeai-backend-docker.onrender.com/api/v1/kaggle/callback"
+    CALLBACK_URL = "https://supremeai-backend-v2.onrender.com/api/v1/kaggle/callback"
     
     def __init__(self, redis_url: str, accounts: List[KaggleAccount]):
         self.redis_client = redis.from_url(redis_url)
@@ -965,7 +965,7 @@ User Request ──→ [8 min] ──→ 🔄 CF Worker Pings ──→ [8 min] 
 
 const CONFIG = {
   // Target backend
-  BACKEND_URL: "https://supremeai-backend-docker.onrender.com",
+  BACKEND_URL: "https://supremeai-backend-v2.onrender.com",
   
   // Health check endpoint
   HEALTH_PATH: "/api/v1/health/live",
@@ -1310,7 +1310,7 @@ crons = ["*/10 * * * *"]
 
 # Environment variables (secrets set via wrangler secret put)
 # [vars]
-# BACKEND_URL = "https://supremeai-backend-docker.onrender.com"
+# BACKEND_URL = "https://supremeai-backend-v2.onrender.com"
 
 # Optional: Bindings for KV namespace if you want persistent rate limiting
 # [[kv_namespaces]]
@@ -1406,7 +1406,7 @@ Based on codebase analysis, you already have:
 │   └─────────────────────────────────────────────────────┘   │
 │                                                              │
 │   Both proxy API calls to:                                  │
-│   https://supremeai-backend-docker.onrender.com              │
+│   https://supremeai-backend-v2.onrender.com              │
 │                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -1433,11 +1433,11 @@ Based on codebase analysis, you already have:
       "rewrites": [
         {
           "source": "/api/v1/**",
-          "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**"
+          "destination": "https://supremeai-backend-v2.onrender.com/api/v1/**"
         },
         {
           "source": "/api/**",
-          "destination": "https://supremeai-backend-docker.onrender.com/api/**"
+          "destination": "https://supremeai-backend-v2.onrender.com/api/**"
         },
         {
           "source": "**",
@@ -1497,7 +1497,7 @@ Based on codebase analysis, you already have:
       "rewrites": [
         {
           "source": "/api/v1/**",
-          "destination": "https://supremeai-backend-docker.onrender.com/api/v1/**"
+          "destination": "https://supremeai-backend-v2.onrender.com/api/v1/**"
         },
         {
           "source": "**",
@@ -1531,7 +1531,7 @@ Based on codebase analysis, you already have:
   "regions": ["sin1"],  # Singapore - closer to Render backend
   "env": {
     "VITE_PORTAL_TYPE": "admin",
-    "NEXT_PUBLIC_API_URL": "https://supremeai-backend-docker.onrender.com"
+    "NEXT_PUBLIC_API_URL": "https://supremeai-backend-v2.onrender.com"
   },
   "headers": [
     {
@@ -1550,8 +1550,8 @@ Based on codebase analysis, you already have:
     }
   ],
   "rewrites": [
-    { "source": "/api/v1/:path*", "destination": "https://supremeai-backend-docker.onrender.com/api/v1/:path*" },
-    { "source": "/api/:path*", "destination": "https://supremeai-backend-docker.onrender.com/api/:path*" },
+    { "source": "/api/v1/:path*", "destination": "https://supremeai-backend-v2.onrender.com/api/v1/:path*" },
+    { "source": "/api/:path*", "destination": "https://supremeai-backend-v2.onrender.com/api/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
