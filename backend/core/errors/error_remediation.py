@@ -44,17 +44,10 @@ from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.resilience.circuit_breaker import CircuitBreaker
 
 # ── Embedding Provider ─────────────────────────────────────────────────────────
-_SENTENCE_TRANSFORMER_AVAILABLE = False
+# sentence_transformers is imported lazily inside _compute_embedding() to prevent
+# heavy model loading at module import time (avoids 30s+ timeout in CI/tests).
+_SENTENCE_TRANSFORMER_AVAILABLE: bool | None = None  # None = unchecked
 _SENTENCE_TRANSFORMER_MODEL = None
-
-try:
-    if os.getenv("LOW_MEMORY_MODE", "false").lower() == "true":
-        raise ImportError("Low memory mode enabled. Skipping sentence-transformers.")
-    from sentence_transformers import SentenceTransformer
-
-    _SENTENCE_TRANSFORMER_AVAILABLE = True
-except (ImportError, OSError, Exception):
-    _SENTENCE_TRANSFORMER_AVAILABLE = False
 
 
 def _compute_embedding(text: str, vector_size: int = 384) -> list[float]:
@@ -71,11 +64,25 @@ def _compute_embedding(text: str, vector_size: int = 384) -> list[float]:
     Returns:
         A list of floats of length `vector_size` representing the embedding.
     """
-    global _SENTENCE_TRANSFORMER_MODEL
+    global _SENTENCE_TRANSFORMER_AVAILABLE, _SENTENCE_TRANSFORMER_MODEL
+
+    # Lazy-check availability on first call only
+    if _SENTENCE_TRANSFORMER_AVAILABLE is None:
+        try:
+            if os.getenv("LOW_MEMORY_MODE", "false").lower() == "true":
+                raise ImportError("Low memory mode enabled.")
+            import importlib
+
+            importlib.import_module("sentence_transformers")
+            _SENTENCE_TRANSFORMER_AVAILABLE = True
+        except (ImportError, OSError, Exception):
+            _SENTENCE_TRANSFORMER_AVAILABLE = False
 
     if _SENTENCE_TRANSFORMER_AVAILABLE:
         try:
             if _SENTENCE_TRANSFORMER_MODEL is None:
+                from sentence_transformers import SentenceTransformer
+
                 # বাংলা মন্তব্য: Lazy load — all-MiniLM-L6-v2 (384-dim) Qdrant-এর সাথে compatible
                 _SENTENCE_TRANSFORMER_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
             embedding = _SENTENCE_TRANSFORMER_MODEL.encode(text, normalize_embeddings=True)
@@ -88,7 +95,7 @@ def _compute_embedding(text: str, vector_size: int = 384) -> list[float]:
     # ── Deterministic hash-based fallback ──────────────────────────────────────
     # বাংলা মন্তব্য: SHA-256-এর প্রতিটি বাইটকে [0,1] রেঞ্জে normalize করে
     # reproducible pseudo-embedding তৈরি করা হয়। এটি semantic নয় কিন্তু
-    # identical error strings-এর জন্য consistent result দেয়।
+    # identical error strings-এর জন্য consistent result দেয়.
     raw = hashlib.sha256(text.encode("utf-8")).digest()  # 32 bytes
     result: list[float] = []
     for i in range(vector_size):

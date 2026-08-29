@@ -33,8 +33,10 @@ class FreeTierMemoryManager:
     - Maximum: 512 MB (hard limit)
     """
 
-    WARNING_THRESHOLD = 70.0  # percentage
-    CRITICAL_THRESHOLD = 85.0  # percentage
+    WARNING_THRESHOLD = 80.0  # percentage (raised from 70 to reduce noise on Render)
+    CRITICAL_THRESHOLD = (
+        92.0  # percentage (raised from 85 to avoid false-positive aggressive cleanup)
+    )
     MAX_MEMORY_MB = 512  # Render free tier limit
 
     def __init__(self):

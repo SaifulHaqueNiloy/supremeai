@@ -78,7 +78,8 @@ async def initialize_independent_services(app):
         except Exception as exc:
             logger.error(f"❌ Failed to initialize DB Pool: {exc}")
             app.state.db_pool = None
-            app.state.subsystem_status["db"] = "down"
+            is_db_critical = settings.env == "production"
+            app.state.subsystem_status["db"] = "down" if is_db_critical else "optional_offline"
             error_event_bus.emit(
                 ErrorEvent(
                     module="lifespan",
@@ -124,10 +125,14 @@ async def initialize_independent_services(app):
     async def _init_redis() -> None:
         """Verify Redis connection and restore reliability state."""
         try:
-            if getattr(redis_manager, "client", None):
-                await redis_manager.client.ping()
-                logger.info("✅ Redis connection verified successfully.")
+            # Always call get_client_async() to trigger lazy init first
+            client = await redis_manager.get_client_async()
+            if client:
+                await client.ping()
+                logger.info("[OK] Redis connection verified successfully.")
                 await ReliabilityController.restore_from_persistence()
+            else:
+                raise ConnectionError("Redis client is None — check REDIS_URL env var.")
         except Exception as e:
             logger.error(f"Failed to initialize Redis Manager: {e}")
 
