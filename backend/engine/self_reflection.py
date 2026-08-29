@@ -7,8 +7,8 @@ import os
 from typing import Any
 
 import httpx
-from loguru import logger
 
+from core.logging_config import logger
 from memory.episodic_memory import EpisodicMemory
 
 

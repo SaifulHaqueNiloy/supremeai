@@ -2,9 +2,9 @@ import asyncio
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from database.supabase_client import db
 
 

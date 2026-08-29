@@ -2,7 +2,7 @@ import asyncio
 import os
 import random
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class ChaosEngine:

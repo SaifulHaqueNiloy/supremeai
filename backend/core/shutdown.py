@@ -2,11 +2,10 @@ import asyncio
 import os
 import time  # - Added for metrics collection
 
-from loguru import logger
-
 from core import services
 from core.agent_supervisor import agent_supervisor
 from core.cache.redis_manager import redis_manager
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector
 from core.persistence import pooled_pg

@@ -6,7 +6,8 @@
 import time
 
 from fastapi import HTTPException
-from loguru import logger
+
+from core.logging_config import logger
 
 API_KEY_LIMIT_PREFIX = "apikey:rate:"
 DEFAULT_MAX_REQUESTS_PER_MINUTE = 60

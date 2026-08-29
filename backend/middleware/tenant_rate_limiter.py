@@ -5,7 +5,8 @@
 """
 
 from fastapi import HTTPException, Request
-from loguru import logger
+
+from core.logging_config import logger
 
 
 async def enforce_tenant_rate_limit(request: Request):

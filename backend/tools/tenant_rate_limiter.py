@@ -1,9 +1,8 @@
 import time
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 
 
 class TenantRateLimiter:
@@ -27,7 +26,7 @@ class TenantRateLimiter:
 
             return redis_manager.client
         except (ImportError, AttributeError, RuntimeError) as e:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning(f"Failed to resolve redis_manager module: {e}")
             return None

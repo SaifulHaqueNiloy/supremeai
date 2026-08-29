@@ -24,9 +24,8 @@ Dependencies:
 import json
 from typing import Any
 
-from loguru import logger
-
 from core.llm.llm_gateway import llm_gateway
+from core.logging_config import logger
 from core.mcp_client import MCPRegistryClient
 from core.skills.base import BaseSkill
 from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check

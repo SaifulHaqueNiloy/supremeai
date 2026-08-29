@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
+from core.logging_config import logger
 from pydantic import BaseModel
 
 from admin.god import AdminGodLayer  # Your existing god.py

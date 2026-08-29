@@ -10,7 +10,8 @@ import zlib
 from typing import Any
 
 import redis.asyncio as redis
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class FreeTierCacheManager:

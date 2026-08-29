@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from loguru import logger
+
+from core.logging_config import logger
 
 router = APIRouter()
 

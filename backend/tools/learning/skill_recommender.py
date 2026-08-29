@@ -22,11 +22,10 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, cast
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from database.supabase_client import db
 from services.llm.llm_router import LLMRouter
 

@@ -18,7 +18,7 @@ import sys
 import uuid
 from datetime import datetime
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from starlette_context import context

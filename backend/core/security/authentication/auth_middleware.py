@@ -13,9 +13,9 @@ from typing import Any
 import jwt
 from jwt import ExpiredSignatureError
 from jwt import PyJWTError as JWTError
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from utils.environment import is_test_environment
 
 ASGIScope = dict[str, Any]

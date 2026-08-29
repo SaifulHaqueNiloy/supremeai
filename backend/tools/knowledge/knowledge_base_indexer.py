@@ -14,8 +14,7 @@ import hashlib
 import os
 from typing import Any, ClassVar
 
-from loguru import logger
-
+from core.logging_config import logger
 from memory.chromadb_store import ChromaDBStore
 
 

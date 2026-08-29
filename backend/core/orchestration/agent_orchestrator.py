@@ -3,11 +3,11 @@ import os
 import re
 from typing import Any
 
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext
 
 MAX_AGENT_TOKENS = settings.max_agent_tokens

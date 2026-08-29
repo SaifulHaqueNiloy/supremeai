@@ -32,8 +32,9 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Query
-from loguru import logger
 from pydantic import BaseModel
+
+from core.logging_config import logger
 
 # Import brain components
 # UNIFY FIX: removed 'backend.' prefix from imports — they were silently
@@ -389,7 +390,7 @@ def _get_last_learning_time() -> str | None:
 
             return result
         except Exception:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning("Ignored exception")
     return None

@@ -1,6 +1,6 @@
 import ast
 
-from loguru import logger
+from core.logging_config import logger
 
 # Testing Suite Color Codes
 GREEN = "\033[92m"

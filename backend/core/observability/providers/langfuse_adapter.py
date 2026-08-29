@@ -2,7 +2,7 @@ import json
 import uuid
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 from ..interfaces import AIObservabilityProvider, PrivacyMode
 

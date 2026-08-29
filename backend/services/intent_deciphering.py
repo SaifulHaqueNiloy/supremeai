@@ -12,9 +12,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
 from core.llm.advanced_model_router import DomainExpertAnalyzer, TaskComplexityAnalyzer
+from core.logging_config import logger
 from services.memory_service import CascadeMemoryService, hash_vectorize
 
 

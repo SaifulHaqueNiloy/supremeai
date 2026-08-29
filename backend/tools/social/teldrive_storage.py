@@ -14,9 +14,9 @@ import time
 from typing import Any
 
 from cryptography.fernet import Fernet
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from tools.social.telegram_bot import TelegramBotHandler
 
 

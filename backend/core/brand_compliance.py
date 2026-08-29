@@ -21,7 +21,7 @@ import re
 from dataclasses import dataclass
 from enum import Enum
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class Severity(Enum):

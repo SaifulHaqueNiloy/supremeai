@@ -16,10 +16,10 @@ import os
 import re
 
 import httpx
-from loguru import logger
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
+from core.logging_config import logger
 
 CHANNEL_DISCORD = "discord"
 CHANNEL_EMAIL = "email"

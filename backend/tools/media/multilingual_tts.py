@@ -6,10 +6,10 @@ from typing import Any, ClassVar
 import httpx
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
+from core.logging_config import logger
 
 router = APIRouter(prefix="/tts", tags=["multilingual-tts"])
 

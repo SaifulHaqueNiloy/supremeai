@@ -16,10 +16,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
 from core.llm.llm_gateway import GatewayManager
+from core.logging_config import logger
 
 CONSTITUTIONAL_PRINCIPLES: list[str] = [
     "Avoid generating harmful or dangerous content",

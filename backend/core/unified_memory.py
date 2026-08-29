@@ -10,8 +10,7 @@ within SupremeAI, abstracting the underlying implementations:
 
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from memory.sliding_window import SlidingWindowMemory
 
 # Import the underlying services

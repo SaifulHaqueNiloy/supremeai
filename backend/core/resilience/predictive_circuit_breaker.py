@@ -1,7 +1,6 @@
 import time
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.resilience.predictive_metrics import PredictiveMetricsTracker
 
 

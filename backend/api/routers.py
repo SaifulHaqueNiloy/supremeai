@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from fastapi import Depends, FastAPI
-from loguru import logger
 
 from api import register_router
 from api.deps import get_current_user_token
 from core.config import settings
+from core.logging_config import logger
 
 # Unified declarative registry of all routers.
 # Format: {"path": str, "prefix": str, "is_admin": bool, "is_critical": bool}

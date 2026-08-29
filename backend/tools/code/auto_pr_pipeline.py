@@ -10,8 +10,7 @@ SupremeAI Automated GitHub Pull Request (PR) Pipeline
 import os
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.security.intelligence.guardian_ai import guardian_ai
 
 

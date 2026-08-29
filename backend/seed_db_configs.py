@@ -5,10 +5,10 @@ import sys
 # Add backend to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from loguru import logger
 from sqlalchemy import select
 
 from core.config_cache import DEFAULT_CONFIGS
+from core.logging_config import logger
 from database.session import AsyncSessionLocal
 from models.system_config import SystemConfig
 from utils.branding import MODEL_DISPLAY, PROVIDER_DISPLAY

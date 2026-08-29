@@ -2,9 +2,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class GCPCloudFunctionClient:

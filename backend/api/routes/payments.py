@@ -1,7 +1,8 @@
 import os
 
 from fastapi import APIRouter, HTTPException, Request
-from loguru import logger
+
+from core.logging_config import logger
 
 try:
     import stripe

@@ -6,12 +6,12 @@ import uuid
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from loguru import logger
 
 from api.dependencies import get_current_user_token
 from byoc.cloud_connector import GCPCredentialManager
 from byoc.container_orchestrator import ContainerOrchestrator
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from models.byoc_payloads import BYOCCredentialsPayload, BYOCDeployRequest
 from models.deployment_logs import DeploymentJob
 

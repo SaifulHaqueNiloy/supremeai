@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from memory.episodic_memory import EpisodicMemory
 from memory.long_term_memory import LongTermMemory
 from tools.code.cot_reasoner import ChainOfThoughtReasoner

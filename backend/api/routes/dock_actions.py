@@ -2,9 +2,10 @@ import asyncio
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.logging_config import logger
 
 # STABILIZE FIX: PyGithub (`github` package) is an optional dependency.
 # Make it a lazy import so the app boots even when PyGithub is not installed.

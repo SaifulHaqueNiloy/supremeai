@@ -5,9 +5,8 @@ import traceback
 from dataclasses import dataclass
 from typing import Any
 
-from loguru import logger
-
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.performance_enhancer import get_performance_optimizer
 
 

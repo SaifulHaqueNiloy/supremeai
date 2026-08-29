@@ -29,7 +29,8 @@ from pathlib import Path
 from typing import Any
 
 import httpx as requests
-from loguru import logger
+
+from core.logging_config import logger
 
 BACKEND_ROOT = Path(__file__).parent.parent.resolve()
 COVERAGE_XML = BACKEND_ROOT / "coverage.xml"

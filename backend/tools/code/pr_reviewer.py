@@ -2,9 +2,8 @@ import json
 import re
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 
 try:
     from github import Github

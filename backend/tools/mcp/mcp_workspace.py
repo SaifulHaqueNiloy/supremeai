@@ -14,11 +14,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.config import settings
+from core.logging_config import logger
 
 mcp = FastMCP("workspace_mcp")
 

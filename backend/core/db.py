@@ -11,7 +11,6 @@ from collections.abc import Generator
 from contextlib import asynccontextmanager
 from functools import lru_cache
 
-from loguru import logger
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -21,6 +20,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.orm import DeclarativeBase
 
 from core.config import settings
+from core.logging_config import logger
 
 # ---------------------------------------------------------------------------
 # Configuration

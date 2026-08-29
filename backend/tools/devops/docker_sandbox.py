@@ -6,9 +6,8 @@ import subprocess
 import tempfile
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 
 
 class DockerSandbox:

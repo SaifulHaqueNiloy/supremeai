@@ -16,7 +16,7 @@ import shutil
 import threading
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # Conditional imports to avoid circular dependency issues
 # These are used inside methods but defined here for cleaner structure

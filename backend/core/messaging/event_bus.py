@@ -12,9 +12,9 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
-from loguru import logger
 from pydantic import BaseModel, Field
 
+from core.logging_config import logger
 from monitoring import track_exception
 
 try:

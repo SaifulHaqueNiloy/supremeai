@@ -13,9 +13,9 @@ import time
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class LocalModelHandler:

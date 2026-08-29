@@ -23,7 +23,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from google.cloud import firestore  # type: ignore[import-untyped]

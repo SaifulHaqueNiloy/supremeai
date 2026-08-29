@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class PermissionScope(StrEnum):

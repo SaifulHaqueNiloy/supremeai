@@ -7,8 +7,9 @@ import asyncio
 from datetime import UTC
 from typing import Any
 
-from loguru import logger
 from supabase import create_client
+
+from core.logging_config import logger
 
 
 class FreeTierOptimizedVectorStore:

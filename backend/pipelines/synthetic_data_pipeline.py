@@ -7,8 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from memory.episodic_memory import EpisodicMemory
 
 

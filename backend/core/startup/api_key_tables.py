@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import time
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.metrics_collector import record_db_operation
 from core.pgbouncer_pool import get_db_pool
 

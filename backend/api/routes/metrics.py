@@ -1,10 +1,10 @@
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
-from loguru import logger
 
 from api.dependencies import get_current_admin
 from core.config import settings
+from core.logging_config import logger
 
 # শেয়ার্ড ইউটিলিটি — Firestore ইনিশিয়ালাইজেশন কেন্দ্রীভূত
 from utils.firestore_helpers import get_firestore_db

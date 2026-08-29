@@ -16,11 +16,11 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 try:
     from core.self_evolution.auto_skill_creator import AutoSkillCreator

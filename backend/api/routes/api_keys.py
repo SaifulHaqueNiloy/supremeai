@@ -7,10 +7,10 @@ from __future__ import annotations
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from loguru import logger
 from pydantic import BaseModel, Field, field_validator
 
 from api.dependencies import get_current_user_token
+from core.logging_config import logger
 from core.rate_limiter import AsyncRateLimiter
 from core.security import generate_api_key, hash_api_key, mask_api_key, verify_api_key
 from models.api_key import create_api_key as db_create_api_key

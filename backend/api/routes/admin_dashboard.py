@@ -12,13 +12,13 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, WebSocket
 from fastapi.responses import StreamingResponse
 from fastapi.websockets import WebSocketDisconnect
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report
 from tools.billing.cost_auditor import CostAuditor

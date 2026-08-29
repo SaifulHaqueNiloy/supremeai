@@ -32,7 +32,7 @@ Bengali:
 
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 from .accessibility.wcag_compliance import (
     AccessibilityComplianceEngine,

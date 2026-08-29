@@ -16,10 +16,9 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
 from core.config_cache import config_cache
+from core.logging_config import logger
 from core.utils.time_utils import utc_now
 
 # Security: Allowed providers whitelist

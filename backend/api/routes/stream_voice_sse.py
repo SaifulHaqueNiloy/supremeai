@@ -26,9 +26,9 @@ from collections.abc import AsyncIterator
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
-from loguru import logger
 
 from api.deps import get_current_user_token
+from core.logging_config import logger
 from services.voice_service import VoiceService
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Voice Stream"])

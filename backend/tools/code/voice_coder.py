@@ -3,8 +3,8 @@ import tempfile
 from typing import Any
 
 from fastapi import APIRouter, File, UploadFile, WebSocket, WebSocketDisconnect
-from loguru import logger
 
+from core.logging_config import logger
 from core.upload_validator import validate_upload
 
 router = APIRouter(prefix="/voice", tags=["voice-coder"])

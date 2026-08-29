@@ -4,7 +4,8 @@ import time
 from typing import Any
 
 from fastapi import BackgroundTasks
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class CryptographicLedger:

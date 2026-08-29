@@ -2,9 +2,8 @@ import os
 import sqlite3
 from contextlib import contextmanager
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 from core.persistence import pooled_pg
 from core.persistence.write_behind import WriteBehindBatcher
 

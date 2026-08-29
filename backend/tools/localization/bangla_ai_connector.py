@@ -5,7 +5,8 @@
 from typing import Any
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class BanglaAiConnector:

@@ -17,13 +17,12 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
 from adapters.business_adapter import BusinessAdapter
 from adapters.dev_adapter import DevAdapter
 from adapters.ux_adapter import UXAdapter
 from core.advanced_reasoning import AdvancedReasoningEngine, ReasoningChain
 from core.evolution_module import EvolutionModule, EvolutionResult
+from core.logging_config import logger
 from evolution.auto_evolution_controller import AutoEvolutionController
 from learning.pattern_recognizer import PatternMatch, PatternRecognizer
 from services.dynamic_planner import DynamicPlanningEngine, TaskDAG, TaskNode

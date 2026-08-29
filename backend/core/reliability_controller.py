@@ -4,10 +4,10 @@ import time
 from typing import Any
 
 from fastapi import Request
-from loguru import logger
 
 from core.error_bus import with_error_bus
 from core.failure_fingerprint import make_fingerprint
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.request_context import get_correlation_id
 

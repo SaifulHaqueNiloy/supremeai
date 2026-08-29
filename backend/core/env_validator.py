@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class EnvSeverity(Enum):
@@ -371,69 +371,69 @@ class EnvironmentValidator:
 
     def print_report(self, result: ValidationResult) -> None:
         """Print validation report to console"""
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("\n" + "=" * 70)
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("🔍 SUPREMEAI ENVIRONMENT VALIDATION REPORT")
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("=" * 70)
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info(f"\n📊 Health Score: {result.score}/100")
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info(f"   Status: {'✅ PASS' if result.is_valid else '❌ FAIL'}\n")
 
         if result.errors:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("🚨 CRITICAL ERRORS (Must Fix):")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("-" * 70)
             for i, error in enumerate(result.errors, 1):
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.info(f"\n{i}. {error['variable']}")
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.info(f"   {error['message']}")
                 if "description" in error:
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.info(f"   📖 {error['description']}")
 
         if result.warnings:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("\n⚠️  WARNINGS (Recommended):")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("-" * 70)
             for i, warning in enumerate(result.warnings, 1):
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.info(f"\n{i}. {warning['variable']}")
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.info(f"   {warning['message']}")
 
         if result.info:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("\nℹ️  INFORMATION:")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info("-" * 70)
             for info in result.info[:5]:  # Show first 5
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.info(f"  • {info['variable']}: {info['message']}")
 
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("\n" + "=" * 70 + "\n")
 

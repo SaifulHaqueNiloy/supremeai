@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_tenant_db
@@ -9,6 +8,7 @@ from brain.supreme_learning_engine import get_learning_engine
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
 from core.llm.llm_gateway import llm_gateway
+from core.logging_config import logger
 
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(

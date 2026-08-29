@@ -17,9 +17,8 @@ import os
 import random
 import time
 
-from loguru import logger
-
 from core.health.health_probes import probe_database, probe_external_api, probe_redis
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 

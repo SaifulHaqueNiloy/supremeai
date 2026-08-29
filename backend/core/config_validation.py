@@ -6,8 +6,9 @@ import secrets
 import sys
 from typing import Any
 
-from loguru import logger
 from pydantic import SecretStr, ValidationInfo, field_validator, model_validator
+
+from core.logging_config import logger
 
 
 class SettingsValidationMixin:

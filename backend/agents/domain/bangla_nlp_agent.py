@@ -11,11 +11,10 @@ import hashlib
 import re
 from dataclasses import dataclass
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from services.llm.llm_router import LLMRouter
 
 BANGLA_CACHE_TTL = 3600

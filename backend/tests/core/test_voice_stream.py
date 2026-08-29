@@ -5,9 +5,9 @@ import os
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from loguru import logger
 
 from core.app import app as base_app
+from core.logging_config import logger
 
 
 @pytest.fixture()

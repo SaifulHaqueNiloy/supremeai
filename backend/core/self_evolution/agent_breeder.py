@@ -26,10 +26,10 @@ try:
     import litellm
 except ImportError:
     litellm = None  # type: ignore[assignment]
-from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from models.meta_ai import AgentGenome, AgentOffspring, AgentStatus, BreedingPool
 

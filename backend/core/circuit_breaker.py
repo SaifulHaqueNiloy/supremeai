@@ -29,8 +29,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, TypeVar
 
-from loguru import logger
-
+from core.logging_config import logger
 from services.config_service import ConfigService
 
 T = TypeVar("T")

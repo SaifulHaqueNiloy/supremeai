@@ -27,7 +27,7 @@ from enum import Enum
 from functools import wraps
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # Configure structured logging
 logging.basicConfig(

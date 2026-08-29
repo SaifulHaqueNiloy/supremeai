@@ -9,10 +9,10 @@ from __future__ import annotations
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
-from loguru import logger
 from pydantic import BaseModel
 
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 

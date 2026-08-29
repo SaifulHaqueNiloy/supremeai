@@ -3,9 +3,9 @@ import json
 
 import jwt
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorEvent, error_event_bus
 
 router = APIRouter(prefix="/ws/hitl", tags=["hitl"])

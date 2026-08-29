@@ -35,9 +35,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
-from loguru import logger
-
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 try:
     import bcrypt

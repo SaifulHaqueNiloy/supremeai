@@ -2,9 +2,9 @@ import asyncio
 from typing import Any
 
 from docker.errors import ContainerError
-from loguru import logger
 
 import docker
+from core.logging_config import logger
 
 
 class SandboxService:

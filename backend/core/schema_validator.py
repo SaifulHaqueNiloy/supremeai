@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import Any, TypeVar
 
-from loguru import logger
 from pydantic import BaseModel, ValidationError
+
+from core.logging_config import logger
 
 T = TypeVar("T", bound=BaseModel)
 

@@ -25,9 +25,9 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from loguru import logger
 
 from core.cache import get_cache
+from core.logging_config import logger
 from core.upload_validator import validate_upload
 from services.config_service import ConfigService
 from services.llm.llm_router import LLMRouter

@@ -23,8 +23,7 @@ try:
 except ImportError:
     TTLCache = dict  # fallback for lightweight environments lacking cachetools
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector, record_cache_access
 from core.swarm_pubsub import swarm_streamer

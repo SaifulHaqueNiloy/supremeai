@@ -7,7 +7,7 @@
 import importlib
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 def lazy_import(module_name: str, package_hint: str | None = None) -> Any:

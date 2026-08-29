@@ -7,10 +7,10 @@ import os
 from typing import Any
 
 import psycopg2
-from loguru import logger
 from psycopg2.extras import RealDictCursor
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class CloudPostgresStore:

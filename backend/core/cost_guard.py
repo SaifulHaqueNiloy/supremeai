@@ -17,7 +17,8 @@ Dependencies:
 from typing import Any
 
 from fastapi import HTTPException
-from loguru import logger
+
+from core.logging_config import logger
 
 from .messaging.event_bus import (
     ErrorContext,  # Fixed import path - using relative import

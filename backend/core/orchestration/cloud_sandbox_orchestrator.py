@@ -13,10 +13,10 @@ import os
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config_proxy import DynamicConfigProxy
 from core.health.self_healer import SelfHealerService
+from core.logging_config import logger
 from utils.firestore_helpers import get_firestore_db
 
 
@@ -47,15 +47,9 @@ class CloudSandboxOrchestrator:
 
         if self.provider == "runpod":
             # বাংলা মন্তব্য: Hardcoded "https://api.runpod.io/v2" রিমুভ করা হলো
-            return getattr(
-                settings,
-                "runpod_api_url",
-                os.environ.get("RUNPOD_API_URL", "https://api.runpod.io/v2"),
-            )
+            return settings.runpod_api_url or "https://api.runpod.io/v2"
         elif self.provider == "modal":
-            return getattr(
-                settings, "modal_api_url", os.environ.get("MODAL_API_URL", "https://api.modal.com")
-            )
+            return getattr(settings, "modal_api_url", "https://api.modal.com")
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")
 

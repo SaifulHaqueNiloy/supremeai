@@ -1,9 +1,9 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from loguru import logger
 
 from api.routes.auth import optional_current_user
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: ফ্রন্টএন্ডে নলেজ গ্রাফ ডেটা (Nodes & Edges) এবং লার্নিং পাথ এক্সপোজ করার API রাউটার।
 

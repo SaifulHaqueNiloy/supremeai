@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     import redis.asyncio as aioredis

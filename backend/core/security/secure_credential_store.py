@@ -5,7 +5,7 @@ import hashlib
 import os
 from abc import ABC, abstractmethod
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from cryptography.fernet import Fernet, InvalidToken

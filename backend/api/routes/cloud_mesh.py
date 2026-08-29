@@ -1,10 +1,10 @@
 import time
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 
 # For this demo/implementation we use dummy functions that would hook into actual services
 # (e.g. GCP, Cloudflare, Upstash, OpenAI keys manager).

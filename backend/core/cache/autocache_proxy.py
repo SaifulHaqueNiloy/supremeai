@@ -1,8 +1,7 @@
 from typing import Any
 
-from loguru import logger
-
 from core.cache.multi_layer_cache import MultiLayerCache
+from core.logging_config import logger
 
 
 class AutoCacheProxy:

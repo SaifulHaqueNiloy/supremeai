@@ -55,7 +55,7 @@ import os
 import sys
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে যাতে backend/ modules import করা যায়
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

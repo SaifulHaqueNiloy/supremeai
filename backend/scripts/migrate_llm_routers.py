@@ -10,7 +10,7 @@ import asyncio
 import sys
 from pathlib import Path
 
-from loguru import logger
+from core.logging_config import logger
 
 # Add backend to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))

@@ -8,7 +8,8 @@ import os
 
 from cryptography.fernet import Fernet
 from google.oauth2 import service_account
-from loguru import logger
+
+from core.logging_config import logger
 
 # Global encryption key management
 # বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে। ENCRYPTION_KEY অথবা ENCRYPTION_KEY উভয়টি চেক করা হচ্ছে (Zero Breakage নীতি)।

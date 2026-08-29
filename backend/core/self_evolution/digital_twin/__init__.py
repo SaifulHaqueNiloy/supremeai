@@ -10,7 +10,7 @@ Bengali:
 টপোলজি ম্যাপিং, ইম্প্যাক্ট সিমুলেশন এবং রিমেডিয়েশন ক্ষমতা একীকরণ করে
 """
 
-from loguru import logger
+from core.logging_config import logger
 
 from .remediation_engine import (
     RemediationAction,

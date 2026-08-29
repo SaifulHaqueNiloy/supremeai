@@ -3,7 +3,7 @@
 
 import ast
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class SecuritySandboxError(Exception):

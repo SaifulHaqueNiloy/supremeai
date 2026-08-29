@@ -14,8 +14,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from services.intent_deciphering import IntentAnalysis
 
 

@@ -49,18 +49,18 @@ class SupabaseStore(SQLiteMemoryStore):
                     self._pgvector_available = self._verify_pgvector_schema(client)
                     if self._pgvector_available:
                         self._provider = "supabase"
-                        from loguru import logger
+                        from core.logging_config import logger
 
                         logger.info("✅ Supabase pgvector connection established successfully")
                         return
             except Exception as e:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.warning(f"⚠️ Supabase init failed, using SQLite fallback: {e}")
 
         # Fall back to SQLite
         self._provider = "sqlite"
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("📦 Using SQLite as memory backend")
 
@@ -88,7 +88,7 @@ class SupabaseStore(SQLiteMemoryStore):
             ).execute()
             return True
         except Exception as e:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning(f"⚠️ pgvector schema verification failed: {e}")
             return False
@@ -137,12 +137,12 @@ class SupabaseStore(SQLiteMemoryStore):
                     if hasattr(client, "table") and hasattr(client, "rpc"):
                         self._supabase_client = client
                     else:
-                        from loguru import logger
+                        from core.logging_config import logger
 
                         logger.error("❌ Supabase client created but missing required methods")
                         return None
                 else:
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.error(
                         "❌ supabase.create_client is not callable - module may be corrupted"
@@ -150,7 +150,7 @@ class SupabaseStore(SQLiteMemoryStore):
                     return None
 
             except Exception as exc:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.error(f"❌ Supabase client initialization failed: {exc}")
                 return None
@@ -217,7 +217,7 @@ class SupabaseStore(SQLiteMemoryStore):
                     embedding = list(embedding) + [0.0] * (1536 - len(embedding))
                 return embedding[:1536]
             except Exception:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.warning("Ignored exception")
 
@@ -228,13 +228,13 @@ class SupabaseStore(SQLiteMemoryStore):
                 response = litellm.embedding(model="text-embedding-3-small", input=text)
                 return response.data[0]["embedding"]
             except Exception:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.warning("Ignored exception")
 
             # All methods failed
             try:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.error(f"Embedding generation failed: {e}")
             except asyncio.CancelledError:
@@ -283,7 +283,7 @@ class SupabaseStore(SQLiteMemoryStore):
             except Exception as e:
                 self._stats["pgvector_failure"] += 1
                 # CRITICAL FIX - fallback to SQLite on failure
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.error(f"Failed to save fact to Supabase, falling back to local SQLite: {e}")
                 try:
@@ -334,7 +334,7 @@ class SupabaseStore(SQLiteMemoryStore):
             except Exception as e:
                 self._stats["pgvector_failure"] += 1
                 try:
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.warning(f"pgvector RPC failed, falling back to ilike: {e}")
                 except asyncio.CancelledError:
@@ -362,7 +362,7 @@ class SupabaseStore(SQLiteMemoryStore):
                 ]
             except Exception as e:
                 try:
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.error(f"Fallback search failed: {e}")
                 except asyncio.CancelledError:
@@ -415,7 +415,7 @@ class SupabaseStore(SQLiteMemoryStore):
                             for row in response.data
                         ]
             except Exception as e:
-                from loguru import logger
+                from core.logging_config import logger
 
                 logger.warning(f"Similarity search failed: {e}")
 

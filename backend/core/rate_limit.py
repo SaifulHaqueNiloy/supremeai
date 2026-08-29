@@ -16,9 +16,9 @@ import redis.asyncio as aioredis
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from core.logging_config import logger
 from services.config_service import ConfigService
 
 # Configure logging

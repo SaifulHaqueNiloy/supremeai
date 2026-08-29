@@ -30,10 +30,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, TypeVar
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.config_cache import config_cache
+from core.logging_config import logger
 from core.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
 

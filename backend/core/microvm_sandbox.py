@@ -18,10 +18,9 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 # AST প্রি-এক্সিকিউশন স্ক্যানার — স্যান্ডবক্স বাইপাস প্রতিরোধ

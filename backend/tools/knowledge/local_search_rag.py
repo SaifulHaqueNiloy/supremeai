@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # Import BrowserAgent here to handle it separately
 from tools.ai_agents.browser_agent import BrowserAgent

@@ -2,9 +2,9 @@ import random
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from core.messaging.upstash_redis_queue import UpstashRedisQueue
 
 

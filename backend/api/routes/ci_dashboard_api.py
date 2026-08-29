@@ -50,8 +50,9 @@ from datetime import datetime, timedelta
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, WebSocket
-from loguru import logger
 from pydantic import BaseModel, Field
+
+from core.logging_config import logger
 
 # Set up logging
 

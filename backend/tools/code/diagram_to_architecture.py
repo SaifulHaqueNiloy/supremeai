@@ -4,8 +4,8 @@ import tempfile
 from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
-from loguru import logger
 
+from core.logging_config import logger
 from core.upload_validator import validate_upload
 
 router = APIRouter(prefix="/diagram", tags=["diagram-to-architecture"])

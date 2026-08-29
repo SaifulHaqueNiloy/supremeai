@@ -1,13 +1,12 @@
 from typing import Any
 
-from loguru import logger
-
 from admin.god import AdminGodLayer
 from brain.autonomous_agent import AutonomousAgent
 from brain.model_router import ModelRouter
 from brain.reasoning_orchestrator import ReasoningOrchestrator
 from core.config import settings
 from core.intent import IntentClassifier
+from core.logging_config import logger
 from tools.security_tools.vpn_switcher import VPNRotator
 
 

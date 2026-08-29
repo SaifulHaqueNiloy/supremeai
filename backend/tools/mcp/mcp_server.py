@@ -2,10 +2,10 @@
 import asyncio
 import json
 
-from loguru import logger
 from mcp import types
 from mcp.server import Server
 
+from core.logging_config import logger
 from tools.graph_service import GraphService
 
 # বাংলা মন্তব্য: নলেজ গ্রাফের জন্য একটি অফিসিয়াল MCP সার্ভার ইনিশিয়ালাইজ করা হচ্ছে

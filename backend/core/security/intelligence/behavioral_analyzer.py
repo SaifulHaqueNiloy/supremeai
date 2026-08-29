@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 @dataclass

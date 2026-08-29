@@ -24,10 +24,10 @@ import shutil
 from datetime import UTC, datetime
 
 import httpx
-from loguru import logger
 from sqlalchemy import select
 
 from core.config import settings
+from core.logging_config import logger
 from database.session import AsyncSessionLocal
 from models.sentinel import ApiEndpoint, SystemDependency, SystemIncident
 

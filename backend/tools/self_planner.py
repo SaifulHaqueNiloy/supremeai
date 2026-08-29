@@ -50,8 +50,9 @@ except ImportError:
 
     nx = _MockNetworkX()
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 from pydantic import BaseModel
+
+from core.logging_config import logger
 
 try:
     from brain.model_router import ModelRouter

@@ -1,8 +1,7 @@
 from typing import Any
 
-from loguru import logger
-
 from core.llm.llm_gateway import GatewayManager
+from core.logging_config import logger
 
 from .chromadb_store import ChromaDBStore
 

@@ -14,7 +14,7 @@ from collections.abc import Awaitable, Callable
 from enum import StrEnum
 from typing import Any, TypeVar
 
-from loguru import logger
+from core.logging_config import logger
 
 from ..config import settings  # Fixed import path - using relative import
 

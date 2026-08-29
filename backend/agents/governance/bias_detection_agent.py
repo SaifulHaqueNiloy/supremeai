@@ -9,11 +9,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from loguru import logger
-
 from core.cache.redis_manager import redis_manager
 from core.config_cache import config_cache
 from core.llm.token_deductor import TokenDeductor
+from core.logging_config import logger
 
 
 @dataclass

@@ -22,7 +22,8 @@ import grpc
 # We assume the protobuf compiler (protoc) will generate these files inside backend/protos
 import protos.supreme_engine_pb2 as pb2
 import protos.supreme_engine_pb2_grpc as pb2_grpc
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class WorkerGrpcClient:

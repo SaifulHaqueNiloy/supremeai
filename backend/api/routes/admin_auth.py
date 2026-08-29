@@ -8,9 +8,9 @@ import secrets
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 security = HTTPBearer()
 _in_memory_jwt_blacklist: set[str] = set()

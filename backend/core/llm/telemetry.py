@@ -22,9 +22,9 @@ from datetime import UTC, datetime
 from typing import Any
 
 try:
-    from loguru import logger
+    from core.logging_config import logger
 except ImportError:
-    from loguru import logger
+    from core.logging_config import logger
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 

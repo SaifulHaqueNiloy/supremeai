@@ -9,9 +9,9 @@ Fixes Applied (Autonomous Architecture Audit):
 from __future__ import annotations
 
 from fastapi import HTTPException, status
-from loguru import logger
 
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: Safe import with proper fallback — আর undefined NameError হবে না
 try:

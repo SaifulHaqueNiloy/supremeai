@@ -3,9 +3,9 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 # Ensure we are in the backend directory
 if os.path.exists(".env"):

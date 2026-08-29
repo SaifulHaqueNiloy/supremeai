@@ -13,8 +13,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.security.scanning.ast_scanner import ASTSandboxScanner
 
 

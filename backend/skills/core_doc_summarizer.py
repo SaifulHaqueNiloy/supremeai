@@ -1,9 +1,8 @@
 # backend/skills/core_doc_summarizer.py
 import os
 
-from loguru import logger
-
 from core.config_cache import config_cache
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: google-genai প্যাকেজ CI-তে ঠিকমতো install না থাকলে graceful fallback
 try:

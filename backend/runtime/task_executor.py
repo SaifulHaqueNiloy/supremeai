@@ -6,9 +6,8 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from loguru import logger
-
 from core.integration_layer import SupremeAIIntegrator
+from core.logging_config import logger
 from core.provider_rate_limiter import IntelligentRateLimiter, get_provider_rate_limiter
 from core.task_contract import TaskContract
 from runtime.task_context import TaskContext
