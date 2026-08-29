@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class VectorDatabaseClient:

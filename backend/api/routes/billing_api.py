@@ -8,7 +8,6 @@ from decimal import Decimal
 import httpx
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -19,6 +18,7 @@ from core.billing_plans import SUBSCRIPTION_PLANS, CheckoutRequest
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
 from core.llm.token_deductor import TokenDeductor
+from core.logging_config import logger
 from database.session import get_db_session
 from models.wallet import TransactionLedgerEntry, UserWallet
 

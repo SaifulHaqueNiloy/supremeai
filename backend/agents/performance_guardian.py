@@ -20,10 +20,9 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
 from core.config_cache import config_cache
+from core.logging_config import logger
 from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────

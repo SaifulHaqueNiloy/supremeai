@@ -17,12 +17,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from loguru import logger
-
 # Structured logging setup
 from config.settings import Settings, get_settings
 from core.adaptive_optimizer import AdaptiveOptimizer, get_optimizer
 from core.integration_layer import SupremeAIIntegrator
+from core.logging_config import logger
 from core.provider_rate_limiter import IntelligentRateLimiter, get_provider_rate_limiter
 from core.self_benchmark import SelfBenchmarkEngine
 from core.task_contract import RiskLevel, TaskBudget, TaskContract, VerificationPolicy

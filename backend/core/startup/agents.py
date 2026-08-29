@@ -1,9 +1,8 @@
 import asyncio
 
-from loguru import logger
-
 from core import services
 from core.agent_supervisor import agent_supervisor
+from core.logging_config import logger
 
 
 async def start_background_services(app):

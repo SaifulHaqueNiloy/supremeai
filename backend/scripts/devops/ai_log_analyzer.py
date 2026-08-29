@@ -2,7 +2,8 @@ import logging
 import os
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 # Configure standard logging
 logging.basicConfig(level=logging.INFO)

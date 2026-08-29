@@ -1,12 +1,12 @@
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_current_user_token
+from core.logging_config import logger
 from core.security.security_vault import decrypt_token
 from core.zero_cost_architecture.swarm_orchestrator_integration import ZeroCostSwarmOrchestrator
 from database.session import get_db_session

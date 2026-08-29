@@ -10,7 +10,8 @@
 from typing import Any
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: Anti-Silent Hanging — প্রতিটি HTTP কলে সর্বোচ্চ ১০ সেকেন্ড টাইমআউট এনফোর্সড
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=5.0)

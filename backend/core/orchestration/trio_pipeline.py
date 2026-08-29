@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class TrioPipeline:

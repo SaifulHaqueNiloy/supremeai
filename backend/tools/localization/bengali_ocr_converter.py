@@ -6,7 +6,8 @@ except ImportError:
     pd = None
 from google.cloud import vision
 from google.oauth2 import service_account
-from loguru import logger
+
+from core.logging_config import logger
 
 
 def setup_google_vision(credentials_path=None):

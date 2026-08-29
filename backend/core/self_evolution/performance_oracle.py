@@ -17,11 +17,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from loguru import logger
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
+from core.logging_config import logger
 from models.meta_ai import (
     MetricType,
     PerformanceMetric,

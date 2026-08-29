@@ -10,11 +10,11 @@ from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
+from core.logging_config import logger
 from core.pgbouncer_pool import get_db_pool
 from core.rate_limiter import AsyncRateLimiter
 from core.resilience.circuit_breaker import CircuitBreaker

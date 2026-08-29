@@ -14,13 +14,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
+
+from core.logging_config import logger
 
 # ROOT-CAUSE FIX (আগের fix অসম্পূর্ণ ছিল): `app` fixture-এ
 # os.environ["RATE_LIMIT_ENABLED"] = "false" সেট করা যথেষ্ট ছিল না, কারণ

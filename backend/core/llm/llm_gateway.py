@@ -13,10 +13,10 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.error_bus import with_error_bus
 from core.llm.telemetry import track_llm_call
+from core.logging_config import logger
 from utils.firestore_helpers import get_firestore_db
 
 from ..config import settings  # Fixed import path - using relative import

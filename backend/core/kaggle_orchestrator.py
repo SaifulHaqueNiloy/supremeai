@@ -13,9 +13,9 @@ from typing import Any
 
 import httpx
 import redis.asyncio as redis
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class KaggleTaskType(Enum):

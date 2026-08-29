@@ -13,10 +13,10 @@ from __future__ import annotations
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from loguru import logger
 
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.self_evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore

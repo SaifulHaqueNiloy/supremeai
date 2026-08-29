@@ -18,9 +18,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
-
 from core.cache import get_cache
+from core.logging_config import logger
 
 # ── Constants ────────────────────────────────────────────────────────────────
 URL_CACHE_TTL = 3600  # 1 hour

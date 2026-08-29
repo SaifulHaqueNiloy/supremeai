@@ -13,10 +13,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from core.logging_config import logger
 from engine.debate_engine import ConsensusOrchestrator, Proposal
 from engine.tree_of_thought import TreeOfThoughtReasoner
 

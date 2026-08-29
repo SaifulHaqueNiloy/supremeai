@@ -14,9 +14,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 from core.target_registry import TargetEntity, target_registry
 
 

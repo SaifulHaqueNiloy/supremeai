@@ -3,7 +3,7 @@ import json
 import sys
 from pathlib import Path
 
-from loguru import logger
+from core.logging_config import logger
 
 # Ensure backend directory is in sys.path
 backend_dir = Path(__file__).resolve().parent.parent

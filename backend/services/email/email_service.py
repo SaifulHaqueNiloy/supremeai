@@ -22,10 +22,10 @@ import os
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
@@ -48,7 +48,9 @@ class EmailService:
     @property
     def from_email(self) -> str:
         """বাংলা মন্তব্য: From email address."""
-        return os.getenv("RESEND_FROM_EMAIL", "noreply@supremeai.dev")
+        from core.config import settings
+
+        return settings.resend_from_email
 
     @with_error_bus("_send_email")
     async def _send_email(

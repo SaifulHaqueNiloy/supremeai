@@ -4,9 +4,9 @@ import time
 
 import httpx
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from core.security import verify_token
 from database.supabase_client import db
 from models.voice_interaction import VoiceInteractionLog

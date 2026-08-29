@@ -54,7 +54,8 @@ import time
 import uuid
 
 from fastapi import APIRouter, Body, Depends, HTTPException, status
-from loguru import logger
+
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: TOTP ব্রুট-ফোর্স প্রতিরোধে Redis lockout constants
 _TOTP_MAX_ATTEMPTS = 5

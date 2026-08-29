@@ -9,7 +9,8 @@ from typing import Any
 
 import boto3
 from google.cloud import storage
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class SeedDataLoader:

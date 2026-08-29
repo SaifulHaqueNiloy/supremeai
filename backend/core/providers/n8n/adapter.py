@@ -6,7 +6,8 @@ import time
 from typing import Optional
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 from ...automation.interfaces import AutomationProvider
 from ...automation.models import AutomationEvent, AutomationResult, AutomationStatus

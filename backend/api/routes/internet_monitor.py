@@ -5,7 +5,6 @@ API endpoints for the Internet Monitor Agent that tracks updates and system capa
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 
 from agents.internet_monitor_agent import (
     get_internet_updates,
@@ -15,6 +14,7 @@ from agents.internet_monitor_agent import (
     internet_monitor_agent,
 )
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 
 router = APIRouter(prefix="/internet-monitor", tags=["Internet Monitor"])
 

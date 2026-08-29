@@ -19,7 +19,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # ── Flag name constants ──────────────────────────────────────────────────────
 MEM0_FLAG = "SUPREMEAI_MEM0_ENABLED"

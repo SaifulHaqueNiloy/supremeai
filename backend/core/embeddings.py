@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 import os
 
-from loguru import logger
+from core.logging_config import logger
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
 _HAS_SENTENCE_TRANSFORMERS = False  # Disabled local 384-dim model to avoid zero-padding issues

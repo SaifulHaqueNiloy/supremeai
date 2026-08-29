@@ -11,7 +11,8 @@ from dataclasses import dataclass
 from enum import Enum
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class OllamaModelStatus(Enum):

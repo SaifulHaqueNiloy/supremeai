@@ -20,8 +20,7 @@ Key Components:
 import sqlite3
 from datetime import UTC, datetime
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.persistence import pooled_pg
 
 _PG_SCHEMA = (

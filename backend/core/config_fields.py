@@ -335,3 +335,14 @@ class SettingsFieldsMixin:
     appwrite_endpoint: str = Field(default="", validation_alias="APPWRITE_ENDPOINT")
     appwrite_project_id: str = Field(default="", validation_alias="APPWRITE_PROJECT_ID")
     appwrite_timeout_seconds: int = Field(default=10, validation_alias="APPWRITE_TIMEOUT_SECONDS")
+
+    # ── Missing Config Variables from env check ───────────────────────────────
+    resend_from_email: str = Field(
+        default="noreply@supremeai.dev", validation_alias="RESEND_FROM_EMAIL"
+    )
+    retry_budget_max_tokens: int = Field(default=20, validation_alias="RETRY_BUDGET_MAX_TOKENS")
+    retry_budget_refill_rate: float = Field(
+        default=1.0, validation_alias="RETRY_BUDGET_REFILL_RATE"
+    )
+    runpod_api_url: str = Field(default="", validation_alias="RUNPOD_API_URL")
+    sandbox_payload: str = Field(default="", validation_alias="SANDBOX_PAYLOAD")

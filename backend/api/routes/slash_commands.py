@@ -14,10 +14,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from core.logging_config import logger
 
 router = APIRouter(
     prefix="/api/commands",

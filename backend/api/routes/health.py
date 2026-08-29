@@ -11,12 +11,12 @@ import time
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Response
-from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import text
 
 from core.cache import get_cache
 from core.cache.redis_manager import redis_manager
+from core.logging_config import logger
 
 router = APIRouter()
 

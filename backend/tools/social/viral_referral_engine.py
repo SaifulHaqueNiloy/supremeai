@@ -4,9 +4,8 @@ import time
 import uuid
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 from database.supabase_client import db
 
 REWARD_TIERS = [

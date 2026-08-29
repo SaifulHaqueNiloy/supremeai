@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class VideoGenerator:

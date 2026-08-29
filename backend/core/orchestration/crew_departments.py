@@ -2,9 +2,8 @@
 # বাংলা মন্তব্য: মাস্টার প্ল্যানিং, কোড জেনারেশন ও স্যান্ডবক্স টেস্টিং এর জন্য স্পেশালাইজড সোয়ার্ম ডিপার্টমেন্ট।
 import asyncio
 
-from loguru import logger
-
 from core.llm.llm_gateway import llm_gateway
+from core.logging_config import logger
 from core.skill_manager import skill_manager
 from models.shared_workspace import SharedWorkspace
 
@@ -22,7 +21,7 @@ class SwarmAgentBase:
         try:
             return await self.use_skill(skill_name, workspace=workspace, **kwargs)
         except ValueError as e:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning(
                 f"{self.__class__.__name__}: Skill '{skill_name}' unavailable: {e}. Falling back to direct gateway call."
@@ -467,7 +466,7 @@ class IntegrationAgent(SwarmAgentBase):
         user_id: str,
         model_name: str = "gemini/gemini-2.5-flash",
     ):
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info(f"IntegrationAgent: Executing integration for intent {workspace.intent}")
         kwargs = getattr(workspace, "kwargs", {})

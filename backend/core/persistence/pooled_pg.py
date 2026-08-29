@@ -34,9 +34,8 @@ try:
     import psycopg2.pool
 except ImportError:
     psycopg2 = None
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 
 # Deliberately small: these 4 subsystems are secondary telemetry/state, not
 # primary request traffic. They must never meaningfully compete with the

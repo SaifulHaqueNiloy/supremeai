@@ -2,11 +2,12 @@ import os
 from contextlib import contextmanager
 from typing import Any
 
-from loguru import logger
 from opentelemetry import trace as otel_trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Span, Status, StatusCode, Tracer
+
+from core.logging_config import logger
 
 _tracer: Tracer | None = None
 

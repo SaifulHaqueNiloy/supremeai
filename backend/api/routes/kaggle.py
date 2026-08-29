@@ -7,10 +7,10 @@ import json
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from core.kaggle_orchestrator import KaggleOrchestrator, KaggleTaskType
+from core.logging_config import logger
 
 router = APIRouter(prefix="/api/v1/kaggle", tags=["kaggle"])
 

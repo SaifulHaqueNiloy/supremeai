@@ -76,7 +76,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                             mismatch = False
 
                 if caution:
-                    from loguru import logger as _logger
+                    from core.logging_config import logger as _logger
 
                     _logger.info(
                         f"CAUTION: partial context match for admin {admin_id} (same_ua/subnet, no OTP fired): {signal} vs last {last}"
@@ -100,7 +100,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                         cooldown_active = not bool(acquired)
 
                     if cooldown_active:
-                        from loguru import logger as _logger2
+                        from core.logging_config import logger as _logger2
 
                         _logger2.info(
                             f"OTP cooldown active for admin {admin_id} - suppressing duplicate send/notification."
@@ -139,7 +139,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                             },
                         )
                     # alert-only: log and continue
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.warning(
                         f"🔓 [ALERT-ONLY] Context mismatch for admin {admin_id}: {signal} vs last {last}"

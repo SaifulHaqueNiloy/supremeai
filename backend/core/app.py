@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import sys
 
-from loguru import logger
+from core.logging_config import logger
 
 # Ensure backend root is in sys.path to resolve top-level packages (api, core, utils)
 _backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

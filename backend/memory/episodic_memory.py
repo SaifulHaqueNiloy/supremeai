@@ -6,8 +6,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from memory.chromadb_store import ChromaDBStore
 
 

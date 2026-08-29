@@ -16,7 +16,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 def hamming_distance(s1: str, s2: str) -> int:

@@ -28,9 +28,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 
-from loguru import logger
-
 from core.health.proactive_healer import get_proactive_healer
+from core.logging_config import logger
 
 proactive_healer_instance = get_proactive_healer()
 

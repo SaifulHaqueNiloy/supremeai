@@ -13,10 +13,10 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, status
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 from core.repo_manager import repo_manager
 from core.target_registry import (
     PermissionScope,

@@ -13,9 +13,8 @@ import os
 import time
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 # Fixed import path - using relative import
 from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
@@ -33,7 +32,7 @@ try:
         UniversalAuthMethod,
     )
 except ImportError as e:
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.warning(f"Failed to import infisical_client: {e}")
     InfisicalClient = None  # type: ignore[assignment]

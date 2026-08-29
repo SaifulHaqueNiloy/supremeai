@@ -3,7 +3,8 @@ from collections.abc import AsyncGenerator, Sequence
 from typing import Any
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 from ...config import settings
 from ..interfaces import ModelProvider

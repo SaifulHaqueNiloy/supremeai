@@ -2,9 +2,9 @@ from datetime import datetime
 from typing import BinaryIO
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from core.storage.interfaces import StorageProvider
 from core.storage.models import StorageFile, StorageResult
 

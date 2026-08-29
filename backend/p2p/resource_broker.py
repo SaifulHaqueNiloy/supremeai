@@ -6,8 +6,7 @@
 import time
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.microvm_sandbox import execute_code_securely
 from p2p.credit_system import InsufficientCreditsError, credit_system
 

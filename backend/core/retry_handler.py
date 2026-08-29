@@ -7,7 +7,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 def retry_handler(

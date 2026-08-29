@@ -32,10 +32,10 @@ import time  # - Added for metrics collection
 from contextlib import asynccontextmanager
 
 import httpx
-from loguru import logger
 
 from core import services
 from core.config import settings
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector
 from core.orchestration.orchestrator import Orchestrator

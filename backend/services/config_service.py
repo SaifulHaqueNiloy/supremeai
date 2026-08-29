@@ -1,8 +1,8 @@
 import json
 
-from loguru import logger
 from sqlalchemy.orm import Session
 
+from core.logging_config import logger
 from models.system_config import SystemConfig
 
 

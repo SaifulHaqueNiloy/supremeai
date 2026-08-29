@@ -11,9 +11,8 @@ This agent is central to the SupremeAI's capability for automatic skill evolutio
 
 from typing import Any
 
-from loguru import logger
-
 from brain.model_router import ModelRouter
+from core.logging_config import logger
 
 
 class EvolutionReActAgent:

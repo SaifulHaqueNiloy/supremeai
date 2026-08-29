@@ -303,7 +303,7 @@ class SwarmOrchestrator:
 
         except Exception as e:
             # বাংলা মন্তব্য: অর্কেস্ট্রেটরের টপ-লেভেলে সব এরর ক্যাচ করার জন্য Exception ব্যবহার করা হয়েছে এবং ট্রেসব্যাক লগ করা হচ্ছে।
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.opt(exception=True).error(f"DAG execution failed: {e}")
 

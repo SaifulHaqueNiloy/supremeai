@@ -12,7 +12,7 @@ import time
 from collections import deque
 from typing import ASGI
 
-from loguru import logger
+from core.logging_config import logger
 
 # Configuration
 SLOW_REQUEST_MS = float(__import__("os").getenv("SLOW_REQUEST_MS", "2000"))

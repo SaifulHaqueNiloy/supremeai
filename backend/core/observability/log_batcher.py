@@ -1,9 +1,9 @@
 import asyncio
 from collections import deque
 
-from loguru import logger
 from sqlalchemy import insert
 
+from core.logging_config import logger
 from database.session import get_db_session
 from models.execution_log import ExecutionLog
 

@@ -2,9 +2,8 @@
 # এই মডিউলটি ইউজারের টাইপ করা কোডের আগের ও পরের কনটেক্সট পড়ে
 # GitHub Copilot-এর মত ডাইনামিক ইনলাইন কোড কমপ্লিশন জেনারেট করে।
 
-from loguru import logger
-
 from core.llm.llm_gateway import GatewayManager
+from core.logging_config import logger
 
 
 class LanguageServerBridge:

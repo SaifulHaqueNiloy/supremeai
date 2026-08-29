@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 

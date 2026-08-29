@@ -37,7 +37,7 @@ try:
 except ImportError:
     import httpx as requests  # type: ignore
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class WCAGPrinciple(Enum):

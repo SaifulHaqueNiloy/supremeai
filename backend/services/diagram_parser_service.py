@@ -23,9 +23,9 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter
-from loguru import logger
 
 from core.cache import get_cache
+from core.logging_config import logger
 from services.config_service import ConfigService
 from services.llm.llm_router import LLMRouter
 

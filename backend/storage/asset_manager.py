@@ -1,9 +1,9 @@
 import os
 
 from firebase_admin import storage as firebase_storage
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class AssetManager:

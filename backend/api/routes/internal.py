@@ -2,10 +2,10 @@ import secrets
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
+from core.logging_config import logger
 from core.security.authentication.rbac import get_current_admin
 from core.self_evolution.evolution_engine import EvolutionEngine
 

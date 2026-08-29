@@ -26,7 +26,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     import httpx as requests
@@ -887,7 +887,7 @@ class CitationVerifier:
             return citation
 
         except Exception as e:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning(f"Error: {e}")
             return VerifiedCitation(

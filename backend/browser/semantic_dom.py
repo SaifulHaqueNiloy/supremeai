@@ -10,9 +10,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from loguru import logger
-
 from core.embeddings import EmbeddingEngine
+from core.logging_config import logger
 
 
 class ElementNotFoundSemantically(Exception):

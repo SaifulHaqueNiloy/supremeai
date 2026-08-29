@@ -10,10 +10,10 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from core.feedback_loop import FeedbackLoop
+from core.logging_config import logger
 
 
 def _get_db_path() -> Path:

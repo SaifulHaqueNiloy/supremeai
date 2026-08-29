@@ -23,7 +23,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class Severity(Enum):
@@ -431,7 +431,7 @@ class SecurityAuditor:
                 return current >= min_ver
 
         except Exception:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.warning("Ignored error")
 
@@ -470,7 +470,7 @@ class SecurityAuditor:
                                         base_module = imp.split(".")[0].lower()
                                         imported_modules.add(base_module)
                         except Exception:
-                            from loguru import logger
+                            from core.logging_config import logger
 
                             logger.warning("Ignored error")
 
@@ -670,54 +670,54 @@ def run_security_audit(project_root: str | None = None) -> dict[str, Any]:
 
 def print_security_report(report: dict[str, Any]) -> None:
     """Pretty-print security report to console"""
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info("\n" + "=" * 70)
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info("🔒 SUPREMEAI SECURITY AUDIT REPORT")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info("=" * 70)
 
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"\n📊 Overall Score: {report['score']}/100 (Grade: {report['grade']})")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   Timestamp: {report['timestamp']}")
 
     summary = report["summary"]
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info("\n📋 Summary:")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   Total Vulnerabilities: {summary['total_vulnerabilities']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   🚨 Critical: {summary['critical']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   ⚠️  High: {summary['high']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   📋 Medium: {summary['medium']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   ℹ️  Low: {summary['low']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   Dependencies Scanned: {summary['dependencies_scanned']}")
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info(f"   Unused Dependencies: {summary['unused_dependencies']}")
 
     if report["vulnerabilities"]:
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("\n🐛 Vulnerabilities Found:")
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("-" * 70)
 
@@ -730,29 +730,29 @@ def print_security_report(report: dict[str, Any]) -> None:
                 "INFO": "💡",
             }.get(vuln["severity"], "❓")
 
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info(f"\n{severity_icon} [{vuln['severity']}] {vuln['title']}")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info(f"   Location: {vuln['location']}")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info(f"   Issue: {vuln['description']}")
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info(f"   Fix: {vuln['remediation']}")
 
     if report["recommendations"]:
-        from loguru import logger
+        from core.logging_config import logger
 
         logger.info("\n💡 Recommendations:")
         for rec in report["recommendations"]:
-            from loguru import logger
+            from core.logging_config import logger
 
             logger.info(f"   • {rec}")
 
-    from loguru import logger
+    from core.logging_config import logger
 
     logger.info("\n" + "=" * 70 + "\n")
 

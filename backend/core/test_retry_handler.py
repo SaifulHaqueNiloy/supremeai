@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import random
 
-from loguru import logger
+from core.logging_config import logger
 
 from .retry_handler import retry_handler, retry_with_budget
 

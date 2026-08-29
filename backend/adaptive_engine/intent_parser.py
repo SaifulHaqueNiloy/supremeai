@@ -2,9 +2,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
-from loguru import logger
-
 from brain.model_router import ModelRouter
+from core.logging_config import logger
 
 
 @dataclass

@@ -8,9 +8,8 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from loguru import logger
-
 from core.cache.redis_manager import redis_manager
+from core.logging_config import logger
 
 AUDIT_PREFIX = "audit:event:"
 AUDIT_LIST_PREFIX = "audit:recent:"

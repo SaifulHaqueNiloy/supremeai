@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from functools import wraps
 
 import psutil
-from loguru import logger
+
+from core.logging_config import logger
 
 
 @dataclass

@@ -3,9 +3,10 @@ import logging
 import os
 
 from dotenv import load_dotenv
-from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from core.logging_config import logger
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 

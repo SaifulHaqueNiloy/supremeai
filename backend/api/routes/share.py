@@ -13,10 +13,10 @@ from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from core.logging_config import logger
 from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/api/share", tags=["Sharing"])

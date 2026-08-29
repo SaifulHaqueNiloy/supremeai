@@ -7,12 +7,12 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
-from loguru import logger
 from pydantic import BaseModel, EmailStr
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.security import is_token_revoked, revoke_token
 from core.security.authentication.rbac import UserContext
 from database.supabase_client import db

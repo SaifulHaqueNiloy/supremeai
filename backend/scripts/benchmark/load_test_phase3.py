@@ -3,9 +3,8 @@ import sys
 import time
 from unittest.mock import AsyncMock, patch
 
-from loguru import logger
-
 from core.llm.llm_gateway import llm_gateway
+from core.logging_config import logger
 from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
 from utils.firestore_helpers import get_firestore_db
 

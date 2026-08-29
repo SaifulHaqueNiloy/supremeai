@@ -6,8 +6,7 @@ import os
 import uuid
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.utils.lazy_loader import lazy_import
 
 try:

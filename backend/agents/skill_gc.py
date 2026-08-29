@@ -6,8 +6,7 @@ import tarfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.utils.time_utils import utc_now
 from schemas.skill_index import SkillIndexManager
 from schemas.skill_manifest import SkillManifest, SkillStatus

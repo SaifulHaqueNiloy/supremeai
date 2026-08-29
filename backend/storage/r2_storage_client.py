@@ -3,7 +3,8 @@ import os
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class R2StorageClient:

@@ -5,8 +5,7 @@
 যেটা নিজেই free sentence-transformers দিয়ে embed করে।
 """
 
-from loguru import logger
-
+from core.logging_config import logger
 from engine.vector_db import vector_db
 
 

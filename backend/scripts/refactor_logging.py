@@ -20,9 +20,9 @@ def refactor_logging(root_dir):
                 ):
                     continue
 
-                # Replace from loguru import logger
+                # Replace from core.logging_config import logger
                 new_content = re.sub(
-                    r"import logging(\r?\n)", r"from loguru import logger\1", content
+                    r"import logging(\r?\n)", r"from core.logging_config import logger\1", content
                 )
 
                 # Replace  with nothing (loguru logger is already imported)

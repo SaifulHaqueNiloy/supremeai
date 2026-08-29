@@ -3,9 +3,9 @@ import uuid
 from typing import Any, ClassVar
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class ResourceCatalog:

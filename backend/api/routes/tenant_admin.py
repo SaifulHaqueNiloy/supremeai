@@ -14,10 +14,10 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 
 router = APIRouter(
     prefix="/admin/tenant-limits",

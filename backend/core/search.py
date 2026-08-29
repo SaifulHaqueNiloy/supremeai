@@ -10,7 +10,7 @@ from __future__ import annotations
 import importlib.util
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 def _ddgs_client():

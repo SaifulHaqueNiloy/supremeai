@@ -8,7 +8,7 @@ import secrets
 random = secrets.SystemRandom()
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 _ALLOWED_OPERATORS = {
     ast.Add: operator.add,

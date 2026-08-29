@@ -3,11 +3,11 @@ import hmac
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 router = APIRouter(prefix="/cdc", tags=["cdc"])
 

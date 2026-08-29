@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # Ensure backend root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

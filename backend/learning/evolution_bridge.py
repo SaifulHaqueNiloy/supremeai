@@ -6,8 +6,7 @@ Converts recurring LearningInsights into validated ChangeProposals.
 
 from __future__ import annotations
 
-from loguru import logger
-
+from core.logging_config import logger
 from evolution.change_proposal import (
     ChangeProposal,
     ChangeProposalManager,

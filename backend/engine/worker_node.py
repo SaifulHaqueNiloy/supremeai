@@ -5,8 +5,7 @@ import platform
 import uuid
 from datetime import UTC, datetime
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.messaging.nats_messaging import NATSClient
 
 

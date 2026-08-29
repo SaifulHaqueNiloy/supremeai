@@ -4,9 +4,9 @@ import json
 from typing import Any, Optional
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 from core.plugins.mcp_security import MCPSecurityGuard
 
 

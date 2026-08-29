@@ -1,11 +1,11 @@
 import asyncio
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_current_user_token
 from core.knowledge_base import get_from_memory, save_to_memory
+from core.logging_config import logger
 
 # 🛡️ SECURITY FIX: এই router-এর কোনো HTTP endpoint-এই আগে কোনো authentication
 # ছিল না — /agent/learn অন্য যেকোনো (unauthenticated) কলার একটা shared, global

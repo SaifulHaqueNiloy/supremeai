@@ -11,10 +11,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from loguru import logger
-
 from brain.reasoning_orchestrator import ReasoningOrchestrator
 from browser.autonomous_browser import AutonomousBrowserAgent
+from core.logging_config import logger
 
 
 class SwarmBrowser:

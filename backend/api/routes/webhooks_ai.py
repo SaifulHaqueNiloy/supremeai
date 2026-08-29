@@ -7,10 +7,10 @@ Handles outgoing alerts with inline approval buttons and incoming callbacks.
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, status
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
+from core.logging_config import logger
 
 router = APIRouter(prefix="/api/v1/webhooks/telegram", tags=["Webhooks AI"])
 

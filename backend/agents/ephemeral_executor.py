@@ -30,7 +30,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # Lazy import to avoid Docker dependency at module load
 if False:  # type-check only

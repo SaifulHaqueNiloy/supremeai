@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class MCPSecurityGuard:
     """
     Enforces security policies for MCP Server connections (SSRF prevention).
-    - Prevents connecting to localhost/127.0.0.1
+    - Prevents connecting to localhost / loopback addresses
     - Prevents connecting to private IP ranges (10.x, 192.168.x, 172.16.x)
     - Enforces HTTPS for external connections in production
     """

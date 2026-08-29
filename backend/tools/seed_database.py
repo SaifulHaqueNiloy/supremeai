@@ -4,7 +4,7 @@ import os
 import sqlite3
 import sys
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     import chromadb

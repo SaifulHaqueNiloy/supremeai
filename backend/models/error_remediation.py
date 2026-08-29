@@ -2,9 +2,9 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from loguru import logger
 from tenacity import RetryError, retry, stop_after_attempt, wait_exponential
 
+from core.logging_config import logger
 from core.resilience.circuit_breaker import CircuitBreaker, CircuitBreakerOpenError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

@@ -20,10 +20,10 @@ from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config_cache import config_cache
+from core.logging_config import logger
 
 router = APIRouter(prefix="/api/browser", tags=["browser-integration"])
 

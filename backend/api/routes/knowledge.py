@@ -3,10 +3,10 @@ API Endpoints for Knowledge Base Interaction.
 """
 
 from fastapi import APIRouter, Depends, Query
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
+from core.logging_config import logger
 from services.knowledge_qa import KnowledgeQAService
 
 router = APIRouter()

@@ -13,11 +13,10 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
-from loguru import logger
-
 from brain.model_registry import ModelRegistry
 from core.config import settings
 from core.health.self_healer import RemediationPipeline, SelfHealerService
+from core.logging_config import logger
 from core.resilience.circuit_breaker import CircuitBreaker
 
 

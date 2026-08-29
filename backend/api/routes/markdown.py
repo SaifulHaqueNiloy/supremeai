@@ -3,9 +3,9 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
+from core.logging_config import logger
 from database.supabase_client import db as supabase_db
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
 

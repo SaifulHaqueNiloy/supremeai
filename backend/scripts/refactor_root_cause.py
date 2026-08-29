@@ -3,9 +3,8 @@ import os
 import sys
 from pathlib import Path
 
-from loguru import logger
-
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 
 @with_error_bus("process_file")
@@ -51,7 +50,7 @@ def process_file(filepath: Path, dry_run: bool = False):
             prefix = prefix.replace("except Exception:", "except Exception as e:")
             var_name = "e"
 
-        replacement = f"{prefix}from loguru import logger\n"
+        replacement = f"{prefix}from core.logging_config import logger\n"
         indent = prefix.split("\n")[-1]
         replacement += f"{indent}logger.error(f'Caught exception: {{{var_name}}}')\n"
         replacement += f"{indent}from core.messaging.event_bus import error_event_bus, ErrorEvent\n"

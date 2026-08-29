@@ -3,10 +3,9 @@ from __future__ import annotations
 import os
 import time
 
-from loguru import logger
-
 from core.cache.redis_manager import redis_manager
 from core.config import settings
+from core.logging_config import logger
 
 
 class InMemoryFallbackLimiter:

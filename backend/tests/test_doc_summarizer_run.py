@@ -6,7 +6,8 @@ import sys
 import time
 
 from backend.skills.core_doc_summarizer import execute_tool
-from loguru import logger
+
+from core.logging_config import logger
 
 # প্রোডাকশন-গ্রেড লগিং সেটআপ
 logging.basicConfig(

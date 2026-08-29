@@ -276,7 +276,7 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
                                 if k in ["status", "version", "uptime", "latency"]
                             }
                 except Exception:
-                    from loguru import logger
+                    from core.logging_config import logger
 
                     logger.warning("Ignored exception")
 

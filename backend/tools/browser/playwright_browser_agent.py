@@ -12,7 +12,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, ClassVar
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from playwright.sync_api import Page

@@ -52,12 +52,13 @@ import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
-from loguru import logger
 from pydantic import (
     Field,
     model_validator,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from core.logging_config import logger
 
 from .config_fields import SettingsFieldsMixin
 from .config_secrets import SettingsSecretsMixin

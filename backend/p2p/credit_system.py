@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class CreditLedger:

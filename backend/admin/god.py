@@ -3,7 +3,7 @@ import threading
 import time
 from pathlib import Path
 
-from loguru import logger
+from core.logging_config import logger
 
 # শেয়ার্ড ইউটিলিটি — Firestore ও টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
 from utils.firestore_helpers import get_firestore_db

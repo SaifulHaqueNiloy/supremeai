@@ -16,8 +16,9 @@ from functools import wraps
 from typing import Any
 
 import redis.asyncio as aioredis
-from loguru import logger
 from redis.exceptions import RedisError
+
+from core.logging_config import logger
 
 # Configure logging
 

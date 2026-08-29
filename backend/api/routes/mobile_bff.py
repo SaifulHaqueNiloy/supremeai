@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
-from loguru import logger
 from pydantic import BaseModel
+
+from core.logging_config import logger
 
 router = APIRouter(prefix="/api/mobile/bff", tags=["mobile-bff"])
 

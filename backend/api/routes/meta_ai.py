@@ -25,11 +25,11 @@ from typing import Any
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.config import settings
+from core.logging_config import logger
 from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
 from core.self_evolution.performance_oracle import OracleConfig, PerformanceOracle
 from database.session import get_db_session

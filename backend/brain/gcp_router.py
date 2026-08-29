@@ -2,10 +2,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 import httpx
-from loguru import logger
 
 from core.config import settings
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 
 
 class GCPCloudRunRouter:

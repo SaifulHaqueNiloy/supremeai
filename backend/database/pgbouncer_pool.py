@@ -5,7 +5,7 @@ import os
 import ssl
 from contextlib import asynccontextmanager
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     import asyncpg

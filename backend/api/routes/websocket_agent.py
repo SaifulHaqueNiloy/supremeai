@@ -3,9 +3,9 @@ import json
 import os
 
 from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, status
-from loguru import logger
 
 from core.llm.llm_gateway import llm_gateway
+from core.logging_config import logger
 from core.queue.task_queue import task_queue
 from core.security import verify_token
 from database.supabase_client import SupabaseDB

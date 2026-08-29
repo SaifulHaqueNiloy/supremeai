@@ -2,10 +2,10 @@ import os
 from typing import Any
 
 import boto3
-from loguru import logger
 from supabase import Client, create_client
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class StorageClient:

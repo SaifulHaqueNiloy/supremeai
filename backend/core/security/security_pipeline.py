@@ -13,8 +13,9 @@ from collections.abc import Callable
 from typing import Any
 
 from fastapi import FastAPI, Request, Response
-from loguru import logger
 from starlette.middleware.base import BaseHTTPMiddleware
+
+from core.logging_config import logger
 
 
 class SupremeSecurityHeadersMiddleware(BaseHTTPMiddleware):

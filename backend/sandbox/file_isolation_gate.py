@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # AST প্রি-এক্সিকিউশন স্ক্যানার — স্যান্ডবক্স বাইপাস প্রতিরোধ
 # getattr/hasattr/__import__/eval/exec ইত্যাদি বিপজ্জনক প্যাটার্ন স্ক্যান করে

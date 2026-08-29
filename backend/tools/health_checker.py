@@ -6,9 +6,8 @@ import sys
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 
 
 class HealthChecker:

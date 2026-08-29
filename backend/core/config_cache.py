@@ -25,7 +25,7 @@ import threading
 import time
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 # ডিফল্ট কনফিগ — DB না থাকলেও অ্যাপ চালু থাকবে
 DEFAULT_CONFIGS: dict[str, Any] = {

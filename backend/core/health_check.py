@@ -18,7 +18,8 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
-from loguru import logger
+
+from core.logging_config import logger
 
 # Fixed import path - using relative import
 from .cache.redis_manager import redis_manager

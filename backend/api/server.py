@@ -19,13 +19,13 @@ from typing import Any
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
 from api.middleware import GlobalRateLimiterMiddleware
 from core.factory import SupremeAIFactory, get_factory
 from core.integration_layer import SupremeAIIntegrator
+from core.logging_config import logger
 
 ai_integrator: SupremeAIIntegrator | None = None
 factory: SupremeAIFactory | None = None

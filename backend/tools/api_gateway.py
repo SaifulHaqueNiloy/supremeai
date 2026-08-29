@@ -5,12 +5,12 @@ from typing import Any
 import httpx
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
-from loguru import logger
 from pydantic import BaseModel
 
 from core.automation.dispatcher import automation_dispatcher
 from core.automation.models import AutomationEvent
 from core.config import settings
+from core.logging_config import logger
 from core.rate_limiter import AsyncRateLimiter
 from core.security.authentication.auth_middleware import AuthMiddleware
 

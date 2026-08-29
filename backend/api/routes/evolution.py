@@ -9,13 +9,13 @@ from typing import Any
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from loguru import logger
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from api.dependencies import get_fitness_engine, get_tenant_db
 from core.config import settings
+from core.logging_config import logger
 from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
 from core.self_evolution.auto_skill_creator import AutoSkillCreator
 from core.self_evolution.fitness_engine import FitnessEngine

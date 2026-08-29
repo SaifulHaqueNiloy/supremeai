@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from .circuit_breaker import CircuitBreakerManager

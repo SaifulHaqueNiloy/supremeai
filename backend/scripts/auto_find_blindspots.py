@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class BlindspotFinder:

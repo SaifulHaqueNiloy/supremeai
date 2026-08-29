@@ -2,9 +2,9 @@ import asyncio
 import os
 
 import httpx
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 
 class VoiceInterface:

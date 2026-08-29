@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from loguru import logger
-
+from core.logging_config import logger
 from core.persistence import pooled_pg
 from core.persistence.write_behind import WriteBehindBatcher
 

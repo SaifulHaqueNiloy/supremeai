@@ -18,11 +18,11 @@ import re
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
 from core.config import settings
+from core.logging_config import logger
 
 router = APIRouter(prefix="/files", tags=["Workspace Files"])
 

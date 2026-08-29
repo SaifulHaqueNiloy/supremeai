@@ -10,10 +10,9 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-from loguru import logger
-
 from brain.causal.discovery import CausalDiscoveryEngine
 from brain.causal.interventions import InterventionTracker
+from core.logging_config import logger
 
 
 class RootCauseAnalyzer:

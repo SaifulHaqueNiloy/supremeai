@@ -11,9 +11,10 @@ so callers can retrieve a ``result`` variable if they set one.
 import ast
 from typing import Any
 
-from loguru import logger
 from RestrictedPython import compile_restricted
 from RestrictedPython.Eval import default_globals
+
+from core.logging_config import logger
 
 # Define a minimal safe builtins whitelist. Adjust as needed for the
 # application – currently only ``range`` and ``len`` are allowed because the

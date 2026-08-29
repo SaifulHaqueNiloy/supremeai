@@ -5,10 +5,10 @@ import time
 
 import jwt
 from fastapi import APIRouter, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from core.config import settings
+from core.logging_config import logger
 
 _sso_instance = None
 _sso_error = None

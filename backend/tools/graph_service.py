@@ -1,7 +1,7 @@
-from loguru import logger
 from neo4j import AsyncGraphDatabase
 
 from core.config import settings
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: স্কিল ইন্টিগ্রেশন এবং নলেজ গ্রাফ ম্যাপিং করার সার্ভিস লেয়ার।
 

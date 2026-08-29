@@ -5,7 +5,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from loguru import logger
+
+from core.logging_config import logger
 
 
 class TestEphemeralExecutorSecurity:

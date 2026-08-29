@@ -1,6 +1,6 @@
 from typing import Any
 
-from loguru import logger
+from core.logging_config import logger
 
 try:
     from playwright.async_api import Browser, Playwright, async_playwright

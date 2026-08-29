@@ -4,10 +4,10 @@ import os
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
 from pydantic import BaseModel
 
 from api.dependencies import get_current_user_token
+from core.logging_config import logger
 from tools.code.code_smell_detector import CodeSmellDetector
 from tools.devops.on_premise_deployer import OnPremiseDeployer
 from tools.learning.domain_adapter import DomainAdapter

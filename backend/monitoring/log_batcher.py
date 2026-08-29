@@ -1,8 +1,7 @@
 import threading
 import time
 
-from loguru import logger
-
+from core.logging_config import logger
 from database.supabase_client import db
 
 

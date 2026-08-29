@@ -38,7 +38,8 @@ import sys
 # অনুযায়ী সরিয়ে নেওয়া হলো — billion-laughs/XXE class attack একদম বন্ধ।
 import defusedxml.ElementTree as ET
 import psycopg2
-from loguru import logger
+
+from core.logging_config import logger
 
 # backend ডিরেক্টরি sys.path এ যোগ করা হচ্ছে, যাতে core.*, tools.* ইম্পোর্ট করা যায়
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))

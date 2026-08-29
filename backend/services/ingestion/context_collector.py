@@ -14,7 +14,7 @@ import subprocess
 import time
 from dataclasses import dataclass, field
 
-from loguru import logger
+from core.logging_config import logger
 
 # FIX: original used 'from backend.X.Y import ...' which only works when CWD
 # is the project root. Use absolute imports from backend/ as the root.

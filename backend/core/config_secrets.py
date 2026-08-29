@@ -7,8 +7,9 @@ import secrets
 import sys
 from typing import Any
 
-from loguru import logger
 from pydantic import PrivateAttr, SecretStr, model_serializer
+
+from core.logging_config import logger
 
 from .security.secret_vault import get_secret_vault
 

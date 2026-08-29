@@ -15,8 +15,9 @@ try:
 except ImportError:
     BeautifulSoup = None  # type: ignore[misc, assignment]
 
-from loguru import logger
 from pydantic import BaseModel
+
+from core.logging_config import logger
 
 # বাংলা মন্তব্য: Dual-path import — standalone scraper-এ top-level `security`/
 # `web_scraper`, backend-এ embedded হলে `services.scraper.*`। Scraper-এর নিজস্ব

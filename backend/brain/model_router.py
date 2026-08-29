@@ -25,10 +25,9 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
 from core.llm.llm_gateway import get_llm_gateway
+from core.logging_config import logger
 from core.performance_enhancer import get_performance_optimizer
 
 try:

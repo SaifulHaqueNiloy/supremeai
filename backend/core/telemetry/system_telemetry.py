@@ -1,8 +1,8 @@
 import asyncio
 
 import psutil
-from loguru import logger
 
+from core.logging_config import logger
 from core.messaging.event_bus import error_event_bus
 from core.swarm_pubsub import swarm_streamer
 

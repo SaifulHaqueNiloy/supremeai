@@ -10,13 +10,13 @@ from typing import Any
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from loguru import logger
 from pydantic import BaseModel
 
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
 

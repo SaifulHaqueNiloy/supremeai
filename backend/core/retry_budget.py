@@ -44,7 +44,9 @@ class RetryBudget:
 
 
 # গ্লোবাল রিট্রাই বাজেট ইনস্ট্যান্স
+from core.config import settings
+
 global_retry_budget = RetryBudget(
-    max_tokens=int(os.getenv("RETRY_BUDGET_MAX_TOKENS", "20")),
-    refill_rate_per_sec=float(os.getenv("RETRY_BUDGET_REFILL_RATE", "1.0")),
+    max_tokens=settings.retry_budget_max_tokens,
+    refill_rate_per_sec=settings.retry_budget_refill_rate,
 )

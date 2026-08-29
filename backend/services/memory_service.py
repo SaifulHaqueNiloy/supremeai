@@ -6,9 +6,8 @@ import sqlite3
 from datetime import UTC
 from typing import Any
 
-from loguru import logger
-
 from core.config import settings
+from core.logging_config import logger
 from core.persistence import pooled_pg
 
 # Using core.embeddings for 1536-dim embeddings to prevent zero-padding mismatch

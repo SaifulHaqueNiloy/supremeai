@@ -58,7 +58,7 @@ except ImportError:
     DataLoader = None  # type: ignore
     TORCH_UTILS_AVAILABLE = False
 
-from loguru import logger
+from core.logging_config import logger
 
 warnings.filterwarnings("ignore")
 

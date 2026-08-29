@@ -5,9 +5,9 @@ import base64
 import json
 
 from fastapi.responses import JSONResponse
-from loguru import logger
 
 from core.config import settings
+from core.logging_config import logger
 
 try:
     import redis.asyncio as aioredis

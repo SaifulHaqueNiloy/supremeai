@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from loguru import logger
+from core.logging_config import logger
 
 
 class ResourceGuard:
@@ -18,7 +18,9 @@ class ResourceGuard:
     import platform
 
     _default_sandbox = "C:\\tmp\\sandboxes" if platform.system() == "Windows" else "/tmp/sandboxes"
-    SANDBOX_ROOT = Path(os.getenv("SANDBOX_ROOT", _default_sandbox)).resolve()
+    from core.config import settings
+
+    SANDBOX_ROOT = Path(settings.sandbox_root or _default_sandbox).resolve()
 
     @classmethod
     def verify_path(cls, requested_path: str | Path) -> Path:
