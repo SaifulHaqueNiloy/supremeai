@@ -4,7 +4,7 @@ This module is intentionally metadata-only: it contains variable names, aliases,
 classification and source policy, never secret values.
 
 The goal is to give runtime configuration, CI drift checks and future admin tooling
-one stable vocabulary.  Secret values remain in Infisical/deployment environments.
+one stable vocabulary. Secret values remain in Infisical/deployment environments.
 """
 
 from __future__ import annotations
@@ -46,9 +46,9 @@ class ConfigSpec:
 
 
 # Canonical contract from specs/001-dynamic-production-configuration.
-# Keep this registry deliberately small and authoritative for names that affect
-# deployment topology, security boundaries, or secret provenance. Feature-specific
-# providers can be added here without changing the validator architecture.
+# Keep this registry authoritative for names affecting deployment topology,
+# security boundaries, or secret provenance. Feature-specific providers can be
+# added without changing the validator architecture.
 CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec("SUPREMEAI_USER_BACKEND_URL", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV, ConfigSource.DEPLOY}), frozenset({"backend", "deploy"}), description="Canonical user backend location."),
     ConfigSpec("SUPREMEAI_ADMIN_BACKEND_URL", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV, ConfigSource.DEPLOY}), frozenset({"backend", "deploy"}), description="Canonical admin backend location."),
@@ -58,7 +58,7 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec("RENDER_SERVICE_NAME", frozenset({ConfigClass.CONDITIONAL}), frozenset({ConfigSource.ENV, ConfigSource.GENERATED}), frozenset({"backend", "deploy"})),
     ConfigSpec("CORS_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), aliases=("USER_CORS_ORIGINS",)),
     ConfigSpec("ADMIN_CORS_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"})),
-    ConfigSpec("ALLOWED_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), aliases=("CORS_ORIGINS", "USER_CORS_ORIGINS"), description="Legacy compatibility input; canonical resolver owns interpretation."),
+    ConfigSpec("ALLOWED_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), aliases=("USER_CORS_ORIGINS",), description="Legacy compatibility input; canonical resolver owns interpretation."),
     ConfigSpec("ALLOWED_HOSTS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"})),
     ConfigSpec("VITE_USER_BACKEND", frozenset({ConfigClass.REQUIRED, ConfigClass.PUBLIC}), frozenset({ConfigSource.BUILD}), frozenset({"frontend"}), aliases=("VITE_API_URL",)),
     ConfigSpec("VITE_ADMIN_BACKEND", frozenset({ConfigClass.CONDITIONAL, ConfigClass.PUBLIC}), frozenset({ConfigSource.BUILD}), frozenset({"frontend"}), required_when="VITE_PORTAL_TYPE=admin"),
@@ -93,7 +93,6 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec("CLOUDFLARE_API_TOKEN", frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}), frozenset({ConfigSource.ENV, ConfigSource.VAULT}), frozenset({"ci"}), required_when="Cloudflare deployment enabled"),
     ConfigSpec("CLOUDFLARE_ACCOUNT_ID", frozenset({ConfigClass.CONDITIONAL}), frozenset({ConfigSource.ENV, ConfigSource.VAULT}), frozenset({"ci"}), required_when="Cloudflare Workers deployment enabled"),
 )
-
 
 BY_NAME: dict[str, ConfigSpec] = {spec.name: spec for spec in CONFIG_SPECS}
 ALIAS_TO_CANONICAL: dict[str, str] = {
