@@ -2,14 +2,20 @@ import time
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
+from api.deps import get_current_user_token
 from core.logging_config import logger
 from database.supabase_client import db as supabase_db
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
 
-router = APIRouter(prefix="/markdown", tags=["markdown"])
+# AUD-2.1: this router was previously PUBLIC (listed in SUPREMEAI_PUBLIC_PATHS)
+# and exposed codebase export (client-supplied root_dir/clone_url), global export
+# history and search with zero authentication. It now requires a valid JWT.
+router = APIRouter(
+    prefix="/markdown", tags=["markdown"], dependencies=[Depends(get_current_user_token)]
+)
 
 # In-memory store for jobs
 jobs_db: dict[str, dict[str, Any]] = {}
@@ -82,7 +88,11 @@ async def run_export_task(job_id: str, payload: MarkdownExportRequest):
 
 
 @router.post("/export")
-async def export_markdown(payload: MarkdownExportRequest, background_tasks: BackgroundTasks):
+async def export_markdown(
+    payload: MarkdownExportRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(get_current_user_token),
+):
     job_id = str(uuid.uuid4())
     jobs_db[job_id] = {
         "job_id": job_id,
@@ -90,6 +100,7 @@ async def export_markdown(payload: MarkdownExportRequest, background_tasks: Back
         "progress": 10,
         "repo_url": payload.clone_url or "local",
         "timestamp": time.time(),
+        "user_id": user.get("sub"),  # AUD-2.2: bind export job to requesting user
     }
     background_tasks.add_task(run_export_task, job_id, payload)
     return {"status": "success", "job_id": job_id}
@@ -170,13 +181,17 @@ async def share_to_ai(payload: ShareRequest):
 
 
 @router.get("/export/history")
-async def get_history():
+async def get_history(user: dict = Depends(get_current_user_token)):
+    """AUD-2.2: export history is scoped to the requesting user (previously a
+    global cross-tenant listing)."""
+    user_id = user.get("sub")
     history = []
     try:
         if supabase_db.client:
             res = (
                 await supabase_db.client.table("markdown_exports")
                 .select("*")
+                .eq("user_id", user_id)
                 .order("timestamp", desc=True)
                 .limit(50)
                 .execute()
@@ -189,6 +204,8 @@ async def get_history():
         logger.debug(f"Supabase markdown history fetch failed, using local fallback: {exc}")
 
     for job_id, job in sorted(jobs_db.items(), key=lambda x: x[1]["timestamp"], reverse=True):
+        if job.get("user_id") != user_id:  # AUD-2.2: only the owner sees the job
+            continue
         history.append(
             {
                 "job_id": job_id,

@@ -14,7 +14,9 @@ from core.pgbouncer_pool import get_db_pool
 
 
 async def shutdown_services(app):
-    logger.critical("🚨 Graceful Shutdown Sequence triggered via Cloud Run Orchestrator.")
+    logger.critical(
+        "🚨 Graceful Shutdown Sequence triggered (Render + Uvicorn lifespan)."
+    )  # AUD-1.6: wording drift fix (was "Cloud Run Orchestrator")
 
     # Shutdown Tier-8 Meta-Self Agents
     try:
@@ -161,6 +163,8 @@ async def shutdown_services(app):
                 context={"phase": "shutdown"},
             )
         )
-    logger.info("💀 Serverless runtime environment sequence successfully finalized.")
+    logger.info(
+        "💀 Graceful shutdown sequence successfully finalized."
+    )  # AUD-1.6: wording drift fix (was "Serverless runtime environment")
     # Record system shutdown
     await metrics_collector.set_gauge("system_shutdown_time", time.time())

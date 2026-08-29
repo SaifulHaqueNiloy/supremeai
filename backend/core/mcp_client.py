@@ -52,12 +52,43 @@ class MCPRegistryClient:
             logger.error(f"MCP connection error to {mcp_url}: {e}")
             raise
 
-    async def execute_tool(self, mcp_url: str, tool_name: str, params: dict[str, Any]) -> Any:
+    async def execute_tool(
+        self,
+        mcp_url: str,
+        tool_name: str,
+        params: dict[str, Any],
+        user: dict[str, Any] | None = None,
+    ) -> Any:
         """
         Executes a tool on a remote MCP server.
+
+        AUD-3.2/3.4 (P0): MCP tool invocations now pass the canonical tool
+        policy gateway (identity/tenant/role/risk + audit), and ``params``
+        must be a JSON-serializable mapping of scalar/list/dict values
+        (validated before the network call).
         """
         if not MCPSecurityGuard.is_safe_url(mcp_url, enforce_https=self.enforce_https):
             raise ValueError("URL blocked by SSRF / Security policy")
+
+        # AUD-3.4: basic argument validation — reject non-mapping payloads and
+        # values that cannot be serialized (prevents ambiguous/abusive calls).
+        if not isinstance(params, dict):
+            raise ValueError("MCP tool params must be a JSON object (dict)")
+        try:
+            import json as _json
+
+            _json.dumps(params)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"MCP tool params are not JSON-serializable: {exc}") from exc
+
+        # AUD-3.2/3.3: canonical policy decision before any side effect.
+        from core.security.tool_gateway import tool_policy_gateway
+
+        await tool_policy_gateway.enforce(
+            tool_name=f"mcp.{tool_name}",
+            user=user,
+            risk="medium",  # remote tools default to medium; unregistered callers require identity
+        )
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:

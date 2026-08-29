@@ -294,33 +294,51 @@ class SelfImprovementAgent(BaseSkill):
             )
 
     async def _run_dry_run(self, proposal: ImprovementProposal) -> bool:
-        """Execute a safe dry-run of the proposed patch."""
+        """Execute a safe dry-run of the proposed patch.
+
+        AUD-6.1 (P0): the previous implementation wrote the LLM patch into the
+        LIVE target file and restored it afterwards — on ``OSError``/``TimeoutError``
+        (or any other exception) the restore step was skipped, leaving the
+        unvalidated patch in the running codebase. The patch is now applied to
+        a temporary copy only; the live file is never touched.
+        """
         target = self._repo_root / proposal.target_file
         if not target.exists():
             return False
+        import tempfile
+        from pathlib import Path as _Path
+
+        tmp_path: _Path | None = None
         try:
-            original = target.read_text(encoding="utf-8")
-            # Apply patch to a temp copy (simplified: full replacement)
+            # Apply patch to a disposable temp copy (never the live file).
             patched = proposal.suggested_patch
-            target.write_text(patched, encoding="utf-8")
-            # Run ruff check
+            with tempfile.NamedTemporaryFile(
+                mode="w", suffix=_Path(proposal.target_file).suffix or ".py", delete=False
+            ) as tmp:
+                tmp.write(patched)
+                tmp_path = _Path(tmp.name)
+            # Run ruff check against the temp copy
             proc = await asyncio.create_subprocess_exec(
                 "python",
                 "-m",
                 "ruff",
                 "check",
-                str(target),
+                str(tmp_path),
                 "--quiet",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            _stdout, stderr = await proc.communicate()
-            # Restore original
-            target.write_text(original, encoding="utf-8")
-            # বাংলা মন্তব্য: Python 3.11+ এ asyncio.TimeoutError এর পরিবর্তে built-in TimeoutError ব্যবহার করা শ্রেয়
+            _stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120.0)
             return proc.returncode == 0 and not stderr
         except (OSError, TimeoutError):
             return False
+        finally:
+            # AUD-6.1: guaranteed cleanup of the temp artifact on every path.
+            if tmp_path is not None:
+                try:
+                    tmp_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
     async def _apply_approved(self) -> None:
         """Apply proposals that passed dry-run and have high confidence."""

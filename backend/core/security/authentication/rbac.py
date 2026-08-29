@@ -279,5 +279,16 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
 
 
 def get_current_admin(request: Any = None) -> dict[str, Any]:
-    """Enforce admin role for admin-facing endpoints."""
-    return get_current_user_token(request)
+    """Enforce admin role for admin-facing endpoints.
+
+    AUD-2.6 fix: this dependency previously delegated to `get_current_user_token`
+    without verifying the role, which let ANY authenticated user reach
+    admin-registered routers (e.g. tools_registry, internal). It now fails
+    closed unless the caller carries the `admin` role.
+    """
+    user = get_current_user_token(request)
+    if str(user.get("role", "")).lower() != "admin":
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return user

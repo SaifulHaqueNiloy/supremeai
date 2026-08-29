@@ -36,7 +36,10 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
 
     # Check multi-layer cache first
     cached_result = await multi_layer_cache.get(
-        prompt=payload.prompt, model_name=payload.model_name, session_id=session_id
+        prompt=payload.prompt,
+        model_name=payload.model_name,
+        session_id=session_id,
+        user_id=db.tenant_id,  # AUD-5.6: user-scoped cache keys
     )
 
     if cached_result:
@@ -69,7 +72,10 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             from services.memory_service import recall_memories
 
             rag_results = await recall_memories(
-                task_description=payload.prompt, limit=3, threshold=0.55
+                task_description=payload.prompt,
+                limit=3,
+                threshold=0.55,
+                user_id=db.tenant_id,  # AUD-5.1: only the caller's memories
             )
             if rag_results:
                 rag_facts = []
@@ -102,6 +108,7 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     response=response_text,
                     model_name=payload.model_name,
                     session_id=session_id,
+                    user_id=db.tenant_id,  # AUD-5.6: user-scoped cache keys
                 )
 
                 return {

@@ -204,6 +204,15 @@ ALL_ROUTERS = [
     # (tier_s_routes.py uses a tuple list, not @router decorators in-file.)
     {"path": "api.routes.global_memory", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.zero_cost", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    # AUD-3.5 / Phase 4: the HITL approval REST surface was previously never
+    # mounted (dead end: events were visible but could never be decided). The
+    # router itself enforces verify_admin_session_fail_closed on every route.
+    {
+        "path": "api.routes.approval_manager",
+        "prefix": "",
+        "is_admin": True,
+        "is_critical": False,
+    },
     # বাংলা: internet_monitor route আগে _safe_imports dict-এ ছিল যেটা কেউ consume করত না
     # (USAGE-A analysis-এ "ACTIVE LOADED, ROUTES UNWIRED" হিসেবে চিহ্নিত ছিল)।
     # এখন ALL_ROUTERS-এ registered — admin auth (get_current_admin) সব endpoint-এ আছে।

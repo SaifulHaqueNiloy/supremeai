@@ -31,10 +31,11 @@ import time
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from core.logging_config import logger
+from core.security.authentication.rbac import get_current_admin
 
 # Import brain components
 # UNIFY FIX: removed 'backend.' prefix from imports — they were silently
@@ -64,7 +65,12 @@ except ImportError:
     ECON_OPTIMIZER_AVAILABLE = False
 
 
-router = APIRouter(prefix="/api/living-brain", tags=["living-brain"])
+# AUD-2.6: this router is registered with is_admin=True in api/routers.py but the
+# registry only attaches a plain user-token dependency. Enforce the admin role
+# here as well (defense in depth, fail-closed).
+router = APIRouter(
+    prefix="/api/living-brain", tags=["living-brain"], dependencies=[Depends(get_current_admin)]
+)
 
 
 # ---------------------------------------------------------------------------

@@ -151,7 +151,8 @@ class SettingsFieldsMixin:
             "/api/voice/stream_audio",
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",
-            "/api/v1/markdown",
+            # AUD-2.1: "/api/v1/markdown" removed from public paths — the markdown
+            # export/search surface now requires authentication (router-level guard).
             "/api/config/public",
             "/api/task/stream",
             "/api/preferences/default/stream",

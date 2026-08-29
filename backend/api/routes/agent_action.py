@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.dependencies import get_current_user_token
 from core.logging_config import logger
 from core.security.security_vault import decrypt_token
+from core.security.tool_gateway import ToolPolicyViolation, tool_policy_gateway
 from core.zero_cost_architecture.swarm_orchestrator_integration import ZeroCostSwarmOrchestrator
 from database.session import get_db_session
 from models.integration import Integration
@@ -35,6 +36,17 @@ async def run_agent_action(
         raise HTTPException(status_code=401, detail="Invalid user token")
 
     platform = payload.target_platform.lower()
+
+    # AUD-3.2/3.3 (P0): external side-effecting actions now pass through the
+    # single canonical policy gateway (identity/tenant/role/risk/budget + audit).
+    try:
+        await tool_policy_gateway.enforce(
+            tool_name=f"platform_action.{platform}",
+            user=token_payload,
+            risk="high",  # external side effects (Slack/Notion/GitHub writes)
+        )
+    except ToolPolicyViolation as violation:
+        raise HTTPException(status_code=403, detail=violation.decision.reason) from violation
 
     # 1. Fetch encrypted token from database
     try:

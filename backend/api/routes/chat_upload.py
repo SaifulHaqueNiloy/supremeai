@@ -245,6 +245,12 @@ async def serve_upload(
     if metadata is None:
         raise HTTPException(status_code=404, detail="Attachment not found")
 
+    # AUD-2.5 (object-level authorization): the GET route previously served any
+    # attachment by ID alone, letting any authenticated user download another
+    # user's uploads. Enforce ownership now (404, mirroring the DELETE route).
+    if metadata.get("user_id") != user_id:
+        raise HTTPException(status_code=404, detail="Attachment not found")
+
     file_path = metadata["file_path"]
     if not os.path.isfile(file_path):
         raise HTTPException(status_code=404, detail="Attachment file not found on disk")

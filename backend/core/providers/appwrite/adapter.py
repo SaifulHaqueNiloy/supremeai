@@ -59,7 +59,7 @@ class AppwriteStorageAdapter:
             files = {"file": (key.split("/")[-1], content, content_type)}
             data = {"fileId": file_id}
 
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:  # AUD-5.5: bounded timeout
                 response = await client.post(url, headers=self.headers, data=data, files=files)
 
             if response.status_code in (200, 201):
@@ -90,7 +90,7 @@ class AppwriteStorageAdapter:
         info_url = f"{self.endpoint}/storage/buckets/{bucket}/files/{key}"
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:  # AUD-5.5: bounded timeout
                 # Need metadata to construct StorageFile properly
                 info_resp = await client.get(info_url, headers=self.headers)
                 if info_resp.status_code != 200:
@@ -132,7 +132,7 @@ class AppwriteStorageAdapter:
         url = f"{self.endpoint}/storage/buckets/{bucket}/files/{key}"
 
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:  # AUD-5.5: bounded timeout
                 response = await client.delete(url, headers=self.headers)
                 return response.status_code == 204
         except Exception as e:

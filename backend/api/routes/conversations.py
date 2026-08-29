@@ -78,7 +78,19 @@ async def add_message(
 
     db = SupabaseDB()
     try:
-        # The database policy should ensure the user owns the conversation
+        # AUD-2.3/2.5: verify the requesting user actually owns the conversation
+        # before writing into it. The service-role client used here bypasses RLS,
+        # so the previous "database policy should ensure" assumption did not hold.
+        ownership = (
+            await db.client.table("conversations")
+            .select("id")
+            .eq("id", conversation_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+        if not ownership.data:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+
         response = (
             await db.client.table("messages")
             .insert(

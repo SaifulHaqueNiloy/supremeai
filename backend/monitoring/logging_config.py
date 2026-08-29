@@ -51,13 +51,17 @@ class LoggingConfig:
         # Determine log level based on environment
         log_level = "DEBUG" if settings.debug else "INFO"
 
-        # Add JSON formatted handler with correlation ID
+        # AUD-2.9 (P1): loguru's ``diagnose=True`` renders variable values
+        # inside tracebacks. In production/staging that leaks secrets, tokens
+        # and cross-tenant data into logs, so variable disclosure is enabled
+        # only outside production.
+        is_prod_like = settings.env in ("production", "staging")
         logger.add(
             sys.stdout,
             format=self._json_format,
             level=log_level,
-            backtrace=True,
-            diagnose=True,
+            backtrace=not is_prod_like,
+            diagnose=not is_prod_like,
         )
 
         # Add file handler if needed (with rotation)

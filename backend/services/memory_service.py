@@ -688,6 +688,7 @@ async def summarize_and_save_session(
     session_id: str,
     messages: list[dict[str, str]],
     task_type: str = "general",
+    user_id: str | None = None,
 ) -> dict[str, Any]:
     """Summarize a chat session via the LLM gateway, then save as memory."""
     parts: list[str] = []
@@ -725,7 +726,7 @@ async def summarize_and_save_session(
         summary=summary,
         task_type=task_type,
         metadata={"message_count": len(messages)},
-        # Extract user_id from session_id if needed, but keeping signature clean
+        user_id=user_id,  # AUD-5.1: bind session memory to owner
     )
 
 

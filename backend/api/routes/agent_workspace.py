@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from api.dependencies import get_current_user_token
 from core.knowledge_base import get_from_memory, save_to_memory
 from core.logging_config import logger
+from core.security.ws_auth import authenticate_websocket
 
 # 🛡️ SECURITY FIX: এই router-এর কোনো HTTP endpoint-এই আগে কোনো authentication
 # ছিল না — /agent/learn অন্য যেকোনো (unauthenticated) কলার একটা shared, global
@@ -107,6 +108,11 @@ async def trigger_github_pr(request: PRRequest):
 
 @router.websocket("/agent/terminal-stream")
 async def terminal_stream(websocket: WebSocket):
+    # AUD-2.1: previously any anonymous client could open this terminal stream.
+    # A valid token (query param or first auth message) is now required.
+    user = await authenticate_websocket(websocket, websocket.query_params.get("token"))
+    if user is None:
+        return
     await websocket.accept()
     try:
         # এটি একটি ডামি স্ট্রিম। পরবর্তীতে আমরা এখানে docker_sandbox বা WebContainers-এর লগ স্ট্রিম করব।

@@ -158,15 +158,26 @@ class MultiLayerCache:
         return self._semantic_cache
 
     async def get(
-        self, prompt: str, model_name: str, session_id: str | None = None
+        self,
+        prompt: str,
+        model_name: str,
+        session_id: str | None = None,
+        user_id: str | None = None,
     ) -> dict[str, Any] | None:
-        """বাংলা মন্তব্ব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।"""
+        """বাংলা মন্তব্ব্য: সব ৫টি ক্যাশ লেয়ার ক্রমান্বয়ে চেক করে। None মানে AI model call দরকার।
+
+        AUD-5.6 (P0): when ``user_id`` is supplied, every cache key is
+        namespaced by that user so user B can never receive user A's cached
+        LLM response. Legacy callers without ``user_id`` keep the old
+        (global) key space for backward compatibility.
+        """
         start_time = time.time()
+        scope = f"{user_id}:" if user_id else ""
         try:
             # Layer 1: Exact Match Cache (Redis)
             exact_match_cache = self._get_exact_cache()
             exact_cache_key = (
-                f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
+                f"exact:{hashlib.sha256(f'{scope}{prompt}:{model_name}'.encode()).hexdigest()}"
             )
             cached_response = await exact_match_cache.get(exact_cache_key)
             if cached_response:
@@ -201,7 +212,9 @@ class MultiLayerCache:
         try:
             # Layer 2: Semantic Cache
             semantic_start = time.time()
-            semantic_result = await self._get_semantic_cache().query_similar(prompt)
+            semantic_result = await self._get_semantic_cache().query_similar(
+                prompt, user_id=user_id
+            )
             semantic_duration = time.time() - semantic_start
             if semantic_result:
                 logger.info("✅ L2 CACHE HIT: Semantic Match")
@@ -249,7 +262,7 @@ class MultiLayerCache:
             for i in candidate_lengths:
                 prefix = " ".join(words[:i])
                 prefix_keys.append(
-                    f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
+                    f"prefix:{hashlib.sha256(f'{scope}{prefix}:{model_name}'.encode()).hexdigest()}"
                 )
 
             if prefix_keys:
@@ -319,14 +332,25 @@ class MultiLayerCache:
         logger.info("❌ ALL CACHE LAYERS MISS - Calling AI Model")
         return None
 
-    async def set(self, prompt: str, response: str, model_name: str, session_id: str | None = None):
-        """বাংলা মন্তব্ব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।"""
+    async def set(
+        self,
+        prompt: str,
+        response: str,
+        model_name: str,
+        session_id: str | None = None,
+        user_id: str | None = None,
+    ):
+        """বাংলা মন্তব্ব্য: সব প্রযোজ্য ক্যাশ লেয়ারে রেসপন্স সংরক্ষণ করে।
+
+        AUD-5.6: keys are user-scoped when ``user_id`` is supplied (see ``get``).
+        """
         cache_set_start = time.time()
+        scope = f"{user_id}:" if user_id else ""
 
         try:
             exact_match_cache = self._get_exact_cache()
             exact_cache_key = (
-                f"exact:{hashlib.sha256(f'{prompt}:{model_name}'.encode()).hexdigest()}"
+                f"exact:{hashlib.sha256(f'{scope}{prompt}:{model_name}'.encode()).hexdigest()}"
             )
             await exact_match_cache.setex(exact_cache_key, 3600, response)
         except asyncio.CancelledError:
@@ -345,7 +369,9 @@ class MultiLayerCache:
 
         try:
             semantic_start = time.time()
-            await self._get_semantic_cache().set(prompt, response, task_type="general")
+            await self._get_semantic_cache().set(
+                prompt, response, task_type="general", user_id=user_id
+            )
             semantic_duration = time.time() - semantic_start
             await metrics_collector.observe_histogram(
                 "cache_write_duration_seconds", semantic_duration, {"layer": "semantic"}
@@ -381,15 +407,13 @@ class MultiLayerCache:
                 async with prefix_cache.pipeline(transaction=False) as pipe:
                     for i in candidate_lengths:
                         prefix = " ".join(words[:i])
-                        prefix_cache_key = f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
+                        prefix_cache_key = f"prefix:{hashlib.sha256(f'{scope}{prefix}:{model_name}'.encode()).hexdigest()}"
                         pipe.setex(prefix_cache_key, 1800, response)
                     await pipe.execute()
             else:
                 for i in candidate_lengths:
                     prefix = " ".join(words[:i])
-                    prefix_cache_key = (
-                        f"prefix:{hashlib.sha256(f'{prefix}:{model_name}'.encode()).hexdigest()}"
-                    )
+                    prefix_cache_key = f"prefix:{hashlib.sha256(f'{scope}{prefix}:{model_name}'.encode()).hexdigest()}"
                     await prefix_cache.setex(prefix_cache_key, 1800, response)
             prefix_duration = time.time() - prefix_start
             await metrics_collector.observe_histogram(

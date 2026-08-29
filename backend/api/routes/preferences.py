@@ -105,10 +105,21 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
 
 
 @router.get("/{user_id}/stream")
-async def stream_preferences(request: Request, user_id: str):
+async def stream_preferences(
+    request: Request, user_id: str, user: dict = Depends(get_current_user_token)
+):
     """
     SSE endpoint to listen for real-time theme and preference updates for a specific user.
+
+    AUD-2.5: previously any authenticated user could subscribe to another
+    user's preference stream. The "default" pseudo-user remains public (it is
+    the pre-login default theme channel); any other user_id must match the JWT sub.
     """
+    sub = user.get("sub")
+    if user_id != "default" and user_id != sub:
+        raise HTTPException(
+            status_code=403, detail="Forbidden: cannot stream another user's preferences"
+        )
 
     async def event_generator():
         queue = await theme_pubsub.subscribe(user_id)

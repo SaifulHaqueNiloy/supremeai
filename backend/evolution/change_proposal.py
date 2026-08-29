@@ -235,7 +235,21 @@ class ChangeProposalManager:
 
         # 4. Canary Testing Gate
         proposal.advance_state(ProposalState.CANARY_ACTIVE)
-        proposal.canary_success_rate = 1.0  # Canary passed
+        # AUD-6.6 (P1) honesty fix: the previous code hard-coded
+        # ``canary_success_rate = 1.0  # Canary passed`` — fabricated evidence
+        # that a canary ran when NO traffic splitting was ever performed. The
+        # real staged rollout lives in evolution.canary_manager
+        # (CanaryRolloutController) and requires live observations. We no
+        # longer fabricate a success rate: 0.0 observations are recorded as
+        # ``None`` semantics via canary_success_rate=0.0 plus an explicit
+        # audit note, and promotion here relies solely on the security +
+        # benchmark gates. Staged rollout with real observations must go
+        # through CanaryRolloutController.deploy_canary/evaluate_and_promote.
+        proposal.canary_success_rate = 0.0
+        proposal.benchmark_metrics["canary_gate"] = (
+            "auto_promoted_without_canary_observations; "
+            "use CanaryRolloutController for staged rollout evidence"
+        )
 
         # 5. Final Promotion
         proposal.advance_state(ProposalState.PROMOTED)
