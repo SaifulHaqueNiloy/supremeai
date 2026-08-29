@@ -45,10 +45,6 @@ class ConfigSpec:
         return ConfigClass.SECRET in self.classes
 
 
-# Canonical contract from specs/001-dynamic-production-configuration.
-# Keep this registry authoritative for names affecting deployment topology,
-# security boundaries, or secret provenance. Feature-specific providers can be
-# added without changing the validator architecture.
 CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec("SUPREMEAI_USER_BACKEND_URL", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV, ConfigSource.DEPLOY}), frozenset({"backend", "deploy"}), description="Canonical user backend location."),
     ConfigSpec("SUPREMEAI_ADMIN_BACKEND_URL", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV, ConfigSource.DEPLOY}), frozenset({"backend", "deploy"}), description="Canonical admin backend location."),
@@ -58,7 +54,7 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec("RENDER_SERVICE_NAME", frozenset({ConfigClass.CONDITIONAL}), frozenset({ConfigSource.ENV, ConfigSource.GENERATED}), frozenset({"backend", "deploy"})),
     ConfigSpec("CORS_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), aliases=("USER_CORS_ORIGINS",)),
     ConfigSpec("ADMIN_CORS_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"})),
-    ConfigSpec("ALLOWED_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), aliases=("USER_CORS_ORIGINS",), description="Legacy compatibility input; canonical resolver owns interpretation."),
+    ConfigSpec("ALLOWED_ORIGINS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"}), description="Legacy compatibility input; canonical resolver owns interpretation."),
     ConfigSpec("ALLOWED_HOSTS", frozenset({ConfigClass.REQUIRED}), frozenset({ConfigSource.ENV}), frozenset({"backend"})),
     ConfigSpec("VITE_USER_BACKEND", frozenset({ConfigClass.REQUIRED, ConfigClass.PUBLIC}), frozenset({ConfigSource.BUILD}), frozenset({"frontend"}), aliases=("VITE_API_URL",)),
     ConfigSpec("VITE_ADMIN_BACKEND", frozenset({ConfigClass.CONDITIONAL, ConfigClass.PUBLIC}), frozenset({ConfigSource.BUILD}), frozenset({"frontend"}), required_when="VITE_PORTAL_TYPE=admin"),
@@ -102,8 +98,7 @@ ALIAS_TO_CANONICAL: dict[str, str] = {
 
 def get_config_spec(name: str) -> ConfigSpec | None:
     """Return canonical metadata, resolving a legacy alias when necessary."""
-    canonical = ALIAS_TO_CANONICAL.get(name, name)
-    return BY_NAME.get(canonical)
+    return BY_NAME.get(ALIAS_TO_CANONICAL.get(name, name))
 
 
 def canonical_name(name: str) -> str:
