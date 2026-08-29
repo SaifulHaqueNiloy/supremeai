@@ -2,7 +2,7 @@
 
 import json
 import zlib
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -35,14 +35,13 @@ async def test_inmemory_set_and_get_roundtrip():
     assert await store.get("k") == r
 
 
-async def test_inmemory_expires_after_ttl(monkeypatch):
+async def test_inmemory_expires_after_ttl():
     store = InMemoryIdempotencyStore(max_size=10, ttl=100)
     r = _result()
     await store.set("k", r)
-    # advance time past ttl
-    import core.automation.idempotency as mod
-
-    monkeypatch.setattr(mod.time, "time", lambda: 999999.0)
+    # Directly backdate the stored timestamp to simulate TTL expiry
+    stored_result, _ = store._cache["k"]
+    store._cache["k"] = (stored_result, 0.0)  # set ts to epoch 0 — always expired
     assert await store.get("k") is None
     assert await store.size() == 0
 
@@ -107,7 +106,7 @@ async def test_redis_get_error_returns_none():
 
 async def test_redis_set_and_clear():
     client = AsyncMock()
-    client.scan_iter = AsyncMock(return_value=_agen([]))
+    client.scan_iter = MagicMock(return_value=_agen([]))
     store = RedisIdempotencyStore(client)
     await store.set("k", _result())
     args = client.set.await_args
@@ -118,7 +117,7 @@ async def test_redis_set_and_clear():
 
 async def test_redis_clear_iterates_keys():
     client = AsyncMock()
-    client.scan_iter = AsyncMock(return_value=_agen(["idemp:a", "idemp:b"]))
+    client.scan_iter = MagicMock(return_value=_agen(["idemp:a", "idemp:b"]))
     client.delete = AsyncMock()
     store = RedisIdempotencyStore(client)
     await store.clear()
@@ -127,21 +126,21 @@ async def test_redis_clear_iterates_keys():
 
 async def test_redis_clear_error_swallowed():
     client = AsyncMock()
-    client.scan_iter = AsyncMock(side_effect=ConnectionError("boom"))
+    client.scan_iter = MagicMock(side_effect=ConnectionError("boom"))
     store = RedisIdempotencyStore(client)
     await store.clear()  # must not raise
 
 
 async def test_redis_size_counts_keys():
     client = AsyncMock()
-    client.scan_iter = AsyncMock(return_value=_agen(["idemp:a", "idemp:b"]))
+    client.scan_iter = MagicMock(return_value=_agen(["idemp:a", "idemp:b"]))
     store = RedisIdempotencyStore(client)
     assert await store.size() == 2
 
 
 async def test_redis_size_error_returns_zero():
     client = AsyncMock()
-    client.scan_iter = AsyncMock(side_effect=ConnectionError("boom"))
+    client.scan_iter = MagicMock(side_effect=ConnectionError("boom"))
     store = RedisIdempotencyStore(client)
     assert await store.size() == 0
 

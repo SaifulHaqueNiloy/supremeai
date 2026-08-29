@@ -104,12 +104,12 @@ def embed_for_pgvector(text: str, pg_dim: int = _REMOTE_DIM) -> list[float] | No
         import litellm
 
         resp = litellm.embedding(model=_REMOTE_MODEL, input=text)
+        # Prevent unbounded memory growth — clear BEFORE storing new entry
+        if len(_embedding_cache) >= 5000:
+            _embedding_cache.clear()
+
         vec = resp.data[0]["embedding"]
         _embedding_cache[cache_key] = vec
-
-        # Prevent unbounded memory growth
-        if len(_embedding_cache) > 5000:
-            _embedding_cache.clear()
 
         return vec.copy()
     except Exception as exc:

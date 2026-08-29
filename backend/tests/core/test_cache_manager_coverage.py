@@ -121,7 +121,7 @@ async def test_get_l1_hit(redis_pair):
 
 async def test_get_from_redis_json(redis_pair):
     client, _ = redis_pair
-    client.get = AsyncMock(return_value=json.dumps({"result": 7}))
+    client.get = AsyncMock(return_value=json.dumps(7))
     m = FreeTierCacheManager(redis_url="redis://x")
     m.redis = client
     assert await m.get("k") == 7
@@ -134,7 +134,7 @@ async def test_get_from_redis_compressed_bytes(redis_pair):
     client, _ = redis_pair
     import zlib
 
-    payload = json.dumps({"result": "ok"}).encode()
+    payload = json.dumps("ok").encode()
     client.get = AsyncMock(return_value=zlib.compress(payload))
     m = FreeTierCacheManager(redis_url="redis://x")
     m.redis = client
@@ -229,7 +229,7 @@ def test_track_command_warns_past_limit():
     m = FreeTierCacheManager(redis_url="redis://x")
     m.daily_limit = 1
     m.command_count = 1
-    with pytest.raises(UserWarning):
+    with pytest.warns(UserWarning):
         m._track_command()
 
 

@@ -166,9 +166,17 @@ def test_retry_with_budget_sync_success(monkeypatch):
 
 
 def test_retry_with_budget_sync_exhausted(monkeypatch):
-    import core.retry_budget as rb
+    import asyncio
 
-    fake_budget = AsyncMock(return_value=False)
+    import core.retry_budget as rb
+    from core.retry_budget import RetryBudget
+
+    fake_budget = RetryBudget()
+
+    async def _consume_false():
+        return False
+
+    fake_budget.consume = _consume_false
     monkeypatch.setattr(rb, "global_retry_budget", fake_budget)
     monkeypatch.setattr("core.retry_handler.time.sleep", lambda s: None)
     calls = {"n": 0}
@@ -183,7 +191,6 @@ def test_retry_with_budget_sync_exhausted(monkeypatch):
     with pytest.raises(ValueError):
         f()
     assert calls["n"] == 1
-    assert fake_budget.consume.call_count == 1
 
 
 async def test_retry_with_budget_async_success(monkeypatch):

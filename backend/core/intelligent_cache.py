@@ -355,9 +355,13 @@ class IntelligentCache:
         elapsed_ms = (time.time() - start_time) * 1000
 
         # Update stats
-        self.stats.avg_response_time_ms = (
-            self.stats.avg_response_time_ms * (self.stats.hits + self.stats.misses - 1) + elapsed_ms
-        ) / (self.stats.hits + self.stats.misses)
+        total_ops = self.stats.hits + self.stats.misses
+        if total_ops > 0:
+            self.stats.avg_response_time_ms = (
+                self.stats.avg_response_time_ms * (total_ops - 1) + elapsed_ms
+            ) / total_ops
+        else:
+            self.stats.avg_response_time_ms = elapsed_ms
 
         # Store in cache
         await self.set(
