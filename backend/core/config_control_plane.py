@@ -4,12 +4,19 @@ The canonical vocabulary remains ``config_classification``. This module adds
 orchestration/health semantics without creating a second source of truth.
 Secret values are never returned; only presence and metadata are exposed.
 """
+
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
 
-from .config_classification import BY_NAME, ALIAS_TO_CANONICAL, ConfigClass, ConfigSource, canonical_name
+from .config_classification import (
+    ALIAS_TO_CANONICAL,
+    BY_NAME,
+    ConfigClass,
+    ConfigSource,
+    canonical_name,
+)
 
 
 @dataclass(frozen=True)
@@ -43,16 +50,18 @@ def health_snapshot() -> list[ConfigHealth]:
             status = "conditional-unset"
         else:
             status = "unset"
-        result.append(ConfigHealth(
-            name=name,
-            canonical_name=canonical_name(name),
-            present=present,
-            secret=ConfigClass.SECRET in spec.classes,
-            required=required,
-            scopes=tuple(sorted(spec.scopes)),
-            sources=tuple(sorted(s.value for s in spec.sources)),
-            status=status,
-        ))
+        result.append(
+            ConfigHealth(
+                name=name,
+                canonical_name=canonical_name(name),
+                present=present,
+                secret=ConfigClass.SECRET in spec.classes,
+                required=required,
+                scopes=tuple(sorted(spec.scopes)),
+                sources=tuple(sorted(s.value for s in spec.sources)),
+                status=status,
+            )
+        )
     return result
 
 
