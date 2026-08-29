@@ -31,7 +31,7 @@ export const usePlugins = () => {
             const [marketRes, installedRes] = await Promise.all([
                 fetch('/api/v1/plugins/marketplace'),
                 fetch('/api/v1/plugins/installed', {
-                    headers: { 'Authorization': Bearer  }
+                    headers: { 'Authorization': 'Bearer ' }
                 })
             ]);
             
@@ -60,7 +60,7 @@ export const usePlugins = () => {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': Bearer 
+                    'Authorization': 'Bearer ' 
                 },
                 body: JSON.stringify({ plugin_id: pluginId, granted_capabilities: capabilities })
             });
@@ -74,10 +74,10 @@ export const usePlugins = () => {
 
     const uninstallPlugin = async (pluginId: string) => {
         try {
-            const res = await fetch(/api/v1/plugins/uninstall/, {
+            const res = await fetch(`/api/v1/plugins/uninstall/${pluginId}`, {
                 method: 'DELETE',
                 headers: { 
-                    'Authorization': Bearer 
+                    'Authorization': 'Bearer ' 
                 }
             });
             if (!res.ok) throw new Error('Failed to uninstall plugin');
