@@ -140,7 +140,9 @@ class SupabaseDB:
                 self.service_client = create_client(self.url, self.service_key)
                 logger.info("Initialized Supabase Service-Role Client (RLS bypass, backend-only)")
             except Exception as e:
-                logger.warning(f"Supabase Service Client initialization failed: {e}. Falling back to primary client.")
+                logger.warning(
+                    f"Supabase Service Client initialization failed: {e}. Falling back to primary client."
+                )
                 self.service_client = self.client
         else:
             # সার্ভিস কী আলাদাভাবে সেট না থাকলে (ফলব্যাক কেসে supabase_service_key ==
@@ -809,7 +811,7 @@ class SupabaseDB:
                 "user_rating": user_rating,
                 "created_at": created_at,
             }
-            res = self.client.table("feedback_loop").insert(entry).execute()
+            res = self.service_client.table("feedback_loop").insert(entry).execute()
             return res.data[0] if res.data else None
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
@@ -956,7 +958,9 @@ class SupabaseDB:
     # এটি ইভেন্ট লুপকে ব্লক হওয়া থেকে বাঁচাবে।
     def __getattr__(self, name: str) -> Any:
         # বাংলা মন্তব্য: অসীম রিকার্সন এড়াতে প্রাইভেট বা নির্দিষ্ট ফিল্ড সরাসরি বাইপাস
-        if name in ("client", "url", "key", "service_client", "service_key") or name.startswith("_"):
+        if name in ("client", "url", "key", "service_client", "service_key") or name.startswith(
+            "_"
+        ):
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         if name.startswith("a") and hasattr(self, name[1:]):

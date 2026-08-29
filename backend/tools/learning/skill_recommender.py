@@ -446,7 +446,7 @@ class SkillRecommender:
             for item in scored:
                 try:
                     res = (
-                        db.client.table("tools_registry")
+                        db.service_client.table("tools_registry")
                         .select("*")
                         .eq("id", item["skill_id"])
                         .execute()

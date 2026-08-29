@@ -359,7 +359,7 @@ def seed_tools():
         )
 
     try:
-        db.client.table("tools_registry").upsert(records).execute()
+        db.service_client.table("tools_registry").upsert(records).execute()
         logger.success(f"✅ Seeded {len(records)} tools successfully.")
         return True
     except Exception as e:

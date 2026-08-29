@@ -434,7 +434,9 @@ class SettingsSecretsMixin:
     # এই env var আলাদাভাবে সেট করাটাই সঠিক নিরাপত্তা প্র্যাকটিস।
     @property
     def supabase_service_key(self) -> str:
-        return self._get_cached_secret("SUPABASE_SERVICE_ROLE_KEY") or self._get_cached_secret("SUPABASE_KEY")
+        return self._get_cached_secret("SUPABASE_SERVICE_ROLE_KEY") or self._get_cached_secret(
+            "SUPABASE_KEY"
+        )
 
     @property
     def firebase_service_account_json(self) -> str:
