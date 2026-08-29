@@ -21,7 +21,6 @@ def load_registry():
 
 
 def runtime_aliases() -> set[str]:
-    """Extract explicit Pydantic validation_alias values from config modules."""
     result: set[str] = set()
     for path in (ROOT / "backend" / "core").glob("config*.py"):
         try:
@@ -45,16 +44,14 @@ def main() -> int:
     known = set(by_name) | set(aliases)
     used = runtime_aliases()
     unknown = sorted(used - known)
-
     for name in unknown:
         print(f"::error::runtime configuration alias is not classified: {name}")
-
     print(f"runtime validation aliases: {len(used)}")
     print(f"unclassified runtime aliases: {len(unknown)}")
     if unknown:
-        print("❌ FAIL: runtime configuration and canonical registry have drifted")
+        print("FAIL: runtime configuration and canonical registry have drifted")
         return 1
-    print("✅ PASS: runtime configuration aliases are classified")
+    print("PASS: runtime configuration aliases are classified")
     return 0
 
 
