@@ -53,33 +53,44 @@ def runtime_aliases() -> dict[str, list[str]]:
     return found
 
 
-def main() -> int:
+def build_report() -> dict[str, object]:
     by_name, aliases = load_registry()
     runtime = runtime_aliases()
-    report = []
+    keys = []
     for key in sorted(runtime):
         canonical = aliases.get(key, key)
         spec = by_name.get(canonical)
-        report.append({
+        keys.append({
             "key": key,
             "canonical": canonical if spec else None,
             "status": "classified" if spec else "unclassified",
             "evidence": sorted(set(runtime[key])),
             "review_required": spec is None,
         })
-
-    payload = {
+    return {
         "schema_version": 1,
         "source": "backend/core/config*.py Field(validation_alias=...)",
-        "total_runtime_keys": len(report),
-        "classified": sum(x["status"] == "classified" for x in report),
-        "unclassified": sum(x["status"] == "unclassified" for x in report),
-        "keys": report,
+        "total_runtime_keys": len(keys),
+        "classified": sum(x["status"] == "classified" for x in keys),
+        "unclassified": sum(x["status"] == "unclassified" for x in keys),
+        "keys": keys,
     }
-    output = ROOT / "config_registry_evidence.json"
-    output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({k: payload[k] for k in ("total_runtime_keys", "classified", "unclassified")}, indent=2))
-    print(f"Wrote {output.relative_to(ROOT)}")
+
+
+def main() -> int:
+    report = build_report()
+    if len(sys.argv) == 2:
+        output = Path(sys.argv[1])
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        print(f"Wrote {output}")
+    else:
+        print(json.dumps(report, indent=2))
+    print(
+        f"runtime={report['total_runtime_keys']} "
+        f"classified={report['classified']} "
+        f"unclassified={report['unclassified']}"
+    )
     return 0
 
 
