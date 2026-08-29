@@ -8,11 +8,11 @@ import os
 from datetime import datetime
 
 import httpx
-from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
+from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from core.health.uptime_tracker import (
     get_history,
     get_uptime_summary,

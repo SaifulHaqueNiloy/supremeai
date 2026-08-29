@@ -17,12 +17,12 @@ from enum import StrEnum
 from typing import Any
 
 import httpx
-from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
 from core.config import settings
+from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 
 router = APIRouter(prefix="/admin-api", tags=["service-topology"])
 
