@@ -28,10 +28,10 @@ import argparse
 import json
 import sys
 
-from pyerrorfix.config import load_config
 from pyerrorfix.core.catalog import CATALOG, catalog_summary
 from pyerrorfix.core.reporter import to_console, to_json, to_markdown, to_sarif
 from pyerrorfix.core.scanner import Scanner
+from pyerrorfix.pyerrorfix_config import load_config
 
 
 def build_parser() -> argparse.ArgumentParser:
