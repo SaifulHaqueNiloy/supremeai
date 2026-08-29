@@ -60,6 +60,7 @@ class SettingsSecretsMixin:
         "SUPABASE_DB_CA_CERT",
         "SUPABASE_URL",
         "SUPABASE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
         "SUPREMEAI_API_KEY",
         "NEO4J_URI",
         "NEO4J_USER",
@@ -427,6 +428,14 @@ class SettingsSecretsMixin:
     def supabase_key(self) -> str:
         return self._get_cached_secret("SUPABASE_KEY")
 
+    # বাংলা মন্তব্য: backend-only/audit টেবিল (যেমন evolution_logs) RLS bypass করে
+    # লিখতে হলে service_role key দরকার। SUPABASE_SERVICE_ROLE_KEY সেট না থাকলে
+    # SUPABASE_KEY-তেই fallback করবে (আগের বিহেভিয়ার অক্ষুণ্ণ রাখতে), তবে production-এ
+    # এই env var আলাদাভাবে সেট করাটাই সঠিক নিরাপত্তা প্র্যাকটিস।
+    @property
+    def supabase_service_key(self) -> str:
+        return self._get_cached_secret("SUPABASE_SERVICE_ROLE_KEY") or self._get_cached_secret("SUPABASE_KEY")
+
     @property
     def firebase_service_account_json(self) -> str:
         return self._get_cached_secret("FIREBASE_SERVICE_ACCOUNT_JSON")
@@ -704,6 +713,7 @@ class SettingsSecretsMixin:
             "ci_webhook_secret",
             "supabase_url",
             "supabase_key",
+            "supabase_service_key",
             "langfuse_public_key",
             "langfuse_secret_key",
             "KAGGLE_API_TOKEN",

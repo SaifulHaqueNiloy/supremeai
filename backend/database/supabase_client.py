@@ -26,7 +26,10 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
 
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
-        if not self.client and func.__name__ not in (
+        # বাংলা মন্তব্য: কিছু মেথড (যেমন evolution_logs সংক্রান্ত) শুধুমাত্র service_client
+        # ব্যবহার করে, self.client না থাকলেও সেগুলো চালানো উচিত — তাই উভয় ক্লায়েন্ট চেক করা হচ্ছে।
+        has_any_client = bool(self.client) or bool(getattr(self, "service_client", None))
+        if not has_any_client and func.__name__ not in (
             "__init__",
             "_derive_supabase_url",
             "bootstrap_schema",
@@ -126,6 +129,23 @@ class SupabaseDB:
             logger.warning(
                 "SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/mock mode."
             )
+
+        # বাংলা মন্তব্য: RLS-protected backend-only/audit টেবিল (যেমন evolution_logs)-এ
+        # লিখতে হলে service_role key প্রয়োজন, যা RLS bypass করে। এই client কখনো
+        # ইউজার Authorization ফরওয়ার্ড করবে না — শুধু ব্যাকএন্ড সিস্টেম রাইটের জন্য ব্যবহৃত হবে।
+        self.service_key = settings.supabase_service_key
+        self.service_client: Client | None = None
+        if self.url and self.service_key and self.url.startswith(("http://", "https://")):
+            try:
+                self.service_client = create_client(self.url, self.service_key)
+                logger.info("Initialized Supabase Service-Role Client (RLS bypass, backend-only)")
+            except Exception as e:
+                logger.warning(f"Supabase Service Client initialization failed: {e}. Falling back to primary client.")
+                self.service_client = self.client
+        else:
+            # সার্ভিস কী আলাদাভাবে সেট না থাকলে (ফলব্যাক কেসে supabase_service_key ==
+            # supabase_key হয়ে যায়), তাই এখানে primary client-কেই ফলব্যাক ধরা হলো।
+            self.service_client = self.client
 
     @staticmethod
     def _derive_supabase_url(database_url: str | None) -> str | None:
@@ -796,29 +816,36 @@ class SupabaseDB:
             return None
 
     def append_evolution_log(self, entry: dict[str, Any]) -> Any | None:
-        if not self.client:
+        # বাংলা মন্তব্য: evolution_logs একটা RLS-protected audit টেবিল, ইচ্ছাকৃতভাবে
+        # কোনো authenticated/anon INSERT policy নেই। তাই service_client (service_role
+        # key, RLS bypass) ব্যবহার হচ্ছে — শুধু ব্যাকএন্ড সিস্টেম-লেভেল রাইট, ইউজার-ফেসিং নয়।
+        client = self.service_client
+        if not client:
             return None
         # বাংলা মন্তব্য: যদি এন্ট্রিতে 'event' কী না থাকে, তবে পুরো এন্ট্রিকে 'event' ফিল্ডে র‍্যাপ করা হচ্ছে
         if "event" not in entry:
             entry = {"event": entry}
-        # created_at যদি না থাকে তবে স্বয়ংক্রিয়ভাবে কারেন্ট টাইম এড করা হচ্ছে
+        # created_at যদি না থাকে তবে স্বয়ংক্রিয়ভাবে কারেন্ট টাইম এড করা হচ্ছে
         if "created_at" not in entry:
             from datetime import UTC, datetime
 
             entry["created_at"] = datetime.now(UTC).isoformat()
         try:
-            res = self.client.table("evolution_logs").insert(entry).execute()
+            res = client.table("evolution_logs").insert(entry).execute()
             return res.data[0] if res.data else None
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
             return None
 
     def get_evolution_logs(self, limit: int = 200) -> list[dict[str, Any]]:
-        if not self.client:
+        # বাংলা মন্তব্য: এই টেবিলে কোনো SELECT policy নেই (RLS ON + 0 policies),
+        # তাই পড়ার সময়ও service_client ব্যবহার করা হচ্ছে।
+        client = self.service_client
+        if not client:
             return []
         try:
             res = (
-                self.client.table("evolution_logs")
+                client.table("evolution_logs")
                 .select("*")
                 .order("created_at", desc=True)
                 .limit(limit)
@@ -929,7 +956,7 @@ class SupabaseDB:
     # এটি ইভেন্ট লুপকে ব্লক হওয়া থেকে বাঁচাবে।
     def __getattr__(self, name: str) -> Any:
         # বাংলা মন্তব্য: অসীম রিকার্সন এড়াতে প্রাইভেট বা নির্দিষ্ট ফিল্ড সরাসরি বাইপাস
-        if name in ("client", "url", "key") or name.startswith("_"):
+        if name in ("client", "url", "key", "service_client", "service_key") or name.startswith("_"):
             raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
 
         if name.startswith("a") and hasattr(self, name[1:]):
