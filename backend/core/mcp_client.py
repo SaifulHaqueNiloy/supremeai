@@ -69,3 +69,26 @@ class MCPRegistryClient:
         except Exception as e:
             logger.error(f"Failed to execute MCP tool {tool_name} at {mcp_url}: {e}")
             raise
+
+    async def discover_tools(self, domain: str) -> list[str]:
+        """
+        Discovers tools across all configured MCP servers that match the given domain (tag).
+        Falls back to default tools if discovery fails.
+        """
+        discovered = []
+        for url in getattr(settings, "mcp_server_urls", []):
+            try:
+                tools = await self.connect_and_discover(url)
+                for t in tools:
+                    if domain in t.get("tags", []):
+                        discovered.append(t.get("name"))
+            except Exception as e:
+                logger.warning(f"Error discovering tools from {url}: {e}")
+
+        if not discovered:
+            if domain == "research_analysis":
+                discovered = ["web_search"]
+            elif domain == "code_generation":
+                discovered = ["code_generator"]
+
+        return discovered
