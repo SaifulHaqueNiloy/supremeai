@@ -10,20 +10,20 @@ export const IntegrationsManager: React.FC = () => {
 
   const handleGithubConnect = () => {
     const API_BASE = getApiBaseUrl();
-    window.location.href = ${API_BASE}/api/v1/integrations/github/link;
+    window.location.href = `${API_BASE}/api/v1/integrations/github/link`;
   };
 
   return (
     <div className="w-full">
       <div className="flex border-b border-gray-200 mb-6 px-8 pt-8 max-w-7xl mx-auto">
         <button
-          className={py-3 px-6 font-medium text-sm focus:outline-none }
+          className={`py-3 px-6 font-medium text-sm focus:outline-none ${activeTab === 'plugins' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
           onClick={() => setActiveTab('plugins')}
         >
           Plugin Marketplace (V2.1)
         </button>
         <button
-          className={py-3 px-6 font-medium text-sm focus:outline-none }
+          className={`py-3 px-6 font-medium text-sm focus:outline-none ${activeTab === 'system' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
           onClick={() => setActiveTab('system')}
         >
           System Integrations (Legacy)
