@@ -1,12 +1,12 @@
 from typing import Any
 
-from core.deployment_fallback_defaults import BACKEND_URL_DEFAULT
 from fastapi import APIRouter, Body, Depends, HTTPException, Response
 
 # বাংলা: একটি কেন্দ্রীয় require_admin_token import করা হচ্ছে।
 # আগে এই module-এ duplicate local function ছিল —
 # তার ফলে test এ dependency_overrides কাজ করত না।
 from api.routes.admin_dashboard import require_admin_token
+from core.deployment_fallback_defaults import BACKEND_URL_DEFAULT
 
 
 # টেস্ট কম্প্যাটিবিলিটি:
