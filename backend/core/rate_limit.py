@@ -29,7 +29,7 @@ try:
     import cachetools
 
     fallback_cache: dict = cachetools.TTLCache(
-        maxsize=int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 10000)), ttl=3600
+        maxsize=int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 2000)), ttl=3600
     )
 except ImportError:
     # RUNTIME-002 FIX: Use bounded OrderedDict instead of unbounded dict.
@@ -37,7 +37,7 @@ except ImportError:
     from collections import OrderedDict
 
     _BoundedCache = OrderedDict()
-    _BOUNDED_CACHE_MAX = int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 10000))
+    _BOUNDED_CACHE_MAX = int(os.getenv("RATE_LIMIT_FALLBACK_MAX_KEYS", 2000))
 
     class _BoundedDict(OrderedDict):
         """Bounded dict that evicts oldest entries when max size is reached."""
@@ -79,12 +79,12 @@ class RateLimiter:
     def __init__(self, redis_url: str | None = None, enabled: bool = True):
         from core.config import settings
 
-        self.redis_url = redis_url or getattr(settings, "redis_url", None)
         self.enabled = enabled
         self._redis: aioredis.Redis | None = None
 
     async def _get_redis(self) -> aioredis.Redis | None:
-        """Lazy Redis initialization."""
+        """Lazy Redis initialization using centralized redis manager."""
+        from core.cache.redis_manager import redis_manager
         from core.config import settings
 
         if getattr(settings, "RATE_LIMIT_USE_SIMPLIFIED", False):
@@ -92,11 +92,9 @@ class RateLimiter:
 
         if not self._redis:
             try:
-                self._redis = aioredis.from_url(
-                    self.redis_url, decode_responses=True, socket_timeout=1
-                )
-                await self._redis.ping()
-            except Exception:
+                self._redis = await redis_manager.get_client_async()
+            except Exception as e:
+                logger.warning(f"Rate limiter failed to get redis client: {e}")
                 self._redis = None
         return self._redis
 

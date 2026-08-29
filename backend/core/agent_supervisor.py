@@ -256,18 +256,33 @@ class AgentSupervisor:
                 break
 
             except asyncio.CancelledError:
-                logger.info(f"Agent '{name}' cancelled. Shutting down.")
+                cause = (
+                    "Uvicorn shutdown or manual cancellation"
+                    if self._shutdown_event.is_set()
+                    else "Task cancellation"
+                )
+                logger.info(f"Agent '{name}' cancelled ({cause}). Shutting down.")
                 health.status = "stopped"
                 break
 
             except Exception as exc:
+                exc_type = type(exc).__name__
+                if "asyncpg" in exc.__class__.__module__ or "psycopg" in exc.__class__.__module__:
+                    cause = "DB dependency stall / connection error"
+                elif "redis" in exc.__class__.__module__:
+                    cause = "Redis dependency stall / connection error"
+                else:
+                    cause = "Unhandled exception / logic bug"
+
                 restart_count += 1
                 health.restart_count = restart_count
                 health.consecutive_failures += 1
                 health.last_error = str(exc)
                 health.status = "failed"
 
-                logger.error(f"❌ Agent '{name}' failed (attempt #{restart_count}): {exc}")
+                logger.error(
+                    f"❌ Agent '{name}' failed due to {cause} [{exc_type}] (attempt #{restart_count}): {exc}"
+                )
 
                 # Emit error event
                 try:
