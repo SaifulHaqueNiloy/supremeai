@@ -133,7 +133,7 @@ export const ServiceHealthBar: React.FC = () => {
   const { data, error, isLoading, isError } = useQuery<HealthData>({
     queryKey: ['public-health-status'],
     queryFn: fetchPublicHealth,
-    refetchInterval: isError ? false : 15000, // 15 seconds refresh
+    refetchInterval: (query) => (query.state.status === 'error' ? false : 15000), // 15 seconds refresh
     retry: 2,
     staleTime: 10_000,
     // বাংলা: Always enabled — login page-এও দেখাবে
