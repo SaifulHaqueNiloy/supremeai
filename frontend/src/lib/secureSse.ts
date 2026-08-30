@@ -50,6 +50,15 @@ export function createSecureEventSource(
       // reconnect logic কাজ করে।
       throw err;
     },
+  }).catch((err) => {
+    // বাংলা মন্তব্য: fetchEventSource()-এর রিটার্ন করা promise টা কোথাও await/catch করা হচ্ছিল না।
+    // onerror-এ throw করালে (উপরের ফিক্স) এই promise reject হয়, আর caller (useServerStream.ts,
+    // ThemeSyncProvider ইত্যাদি) সেটা কখনো ধরে না — ফলে ব্রাউজার কনসোলে/টেস্টে "Unhandled Promise
+    // Rejection" হিসেবে দেখা যায়। error আগেই options.onError দিয়ে রিপোর্ট করা হয়ে গেছে, তাই এখানে
+    // শুধু swallow করে দেওয়া হলো (যদি abort()-এর কারণে reject হয়, সেটাও নিরাপদে ignore করা হয়)।
+    if (err?.name !== 'AbortError') {
+      console.error('[secureSse] SSE stream terminated:', err);
+    }
   });
 
   return {
