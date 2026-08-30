@@ -26,8 +26,11 @@ from core.logging_config import logger
 # Configuration
 # ---------------------------------------------------------------------------
 SLOW_QUERY_THRESHOLD_MS = float(__import__("os").getenv("SLOW_QUERY_MS", "200"))
-POOL_SIZE = int(__import__("os").getenv("DB_POOL_SIZE", "10"))
-MAX_OVERFLOW = int(__import__("os").getenv("DB_MAX_OVERFLOW", "5"))
+# বাংলা মন্তব্য: Render Free tier (512 MiB) মেমরি চাপ কমাতে ডিফল্ট pool size
+# 10/5 থেকে কমিয়ে 3/2 করা হলো (database/session.py ও pgbouncer_pool.py-এর
+# ছোট bracket-এর সাথে সামঞ্জস্যপূর্ণ)। env var দিয়ে override করা যায়।
+POOL_SIZE = int(__import__("os").getenv("DB_POOL_SIZE", "3"))
+MAX_OVERFLOW = int(__import__("os").getenv("DB_MAX_OVERFLOW", "2"))
 POOL_RECYCLE = int(__import__("os").getenv("DB_POOL_RECYCLE", "3600"))  # 1 hour
 
 
@@ -93,6 +96,15 @@ def get_engine():
         engine_kwargs["pool_size"] = POOL_SIZE
         engine_kwargs["max_overflow"] = MAX_OVERFLOW
         engine_kwargs["pool_recycle"] = POOL_RECYCLE
+        # বাংলা মন্তব্য (BUG FIX): এই engine (core/db.py) database/session.py-এর
+        # মতো একই Supabase PgBouncer pooler-এর সাথে কানেক্ট করে, কিন্তু আগে এখানে
+        # statement_cache_size=0 সেট করা ছিল না। ফলে asyncpg prepared statement
+        # cache PgBouncer transaction/statement mode-এর সাথে conflict করে
+        # 'DuplicatePreparedStatementError' দিত (maintenance_pipeline.py-তে এই
+        # engine ব্যবহৃত হয়, যা report-এ উল্লেখিত affected module-গুলোর একটি)।
+        # database/session.py ও pgbouncer_pool.py-তে আগেই এই ফিক্স আছে; এখানেও
+        # একই fix প্রয়োগ করা হলো।
+        engine_kwargs["connect_args"] = {"statement_cache_size": 0}
 
     engine = create_async_engine(db_url, **engine_kwargs)
 
