@@ -172,29 +172,50 @@ def anyio_backend():
 
 
 # ============================================================
+# EVENT LOOP FIXTURE
+# ============================================================
+# বাংলা মন্তব্য (ROOT-CAUSE FIX — db_engine loop mismatch, ৪৯টা এরর):
+# pytest-asyncio 0.23.x-এ (আমাদের pin করা ভার্সন) fixture-লেভেল
+# `loop_scope=` কীওয়ার্ড সাপোর্টেড না (সেটা 0.24+-এ এসেছে)। এই ভার্সনে
+# পুরো session-এর জন্য একটাই event loop শেয়ার করার প্রচলিত উপায় হলো
+# global `event_loop` fixture-কে session scope-এ override করা। আগে এটা
+# করা হয়নি, ফলে প্রতিটা টেস্ট ফাংশনের নিজস্ব আলাদা loop ছিল, কিন্তু
+# session-scoped `db_engine` ভেতরে ভেতরে `asyncio.run()` দিয়ে নিজের
+# তৃতীয় আরেকটা loop বানিয়ে টেবিল তৈরি করত -- ফলে asyncpg
+# "attached to a different loop" / "Event loop is closed" এরর দিত,
+# NullPool ব্যবহার করা সত্ত্বেও (কারণ সমস্যাটা connection pooling-এর না,
+# বরং তিনটা ভিন্ন event loop-এর মধ্যে engine object শেয়ার করার)।
+@pytest.fixture(scope="session")
+def event_loop():
+    """সম্পূর্ণ টেস্ট session-এর জন্য একটাই event loop -- সব async fixture
+    এবং টেস্ট এই একই loop-এ চলবে, ফলে db_engine আর db_session-এর মধ্যে
+    কোনো cross-loop mismatch থাকবে না।
+    """
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+
+# ============================================================
 # DATABASE FIXTURES
 # ============================================================
-@pytest.fixture(scope="session")
-def db_engine(test_settings):
+@pytest_asyncio.fixture(scope="session")
+async def db_engine(test_settings):
     """Create async database engine for testing.
 
-    CI FIX (Option C — NullPool): pytest-asyncio 0.23 creates a separate
-    event loop per test, but session-scoped db_engine creates its connections
-    via asyncio.run() (a different loop). When db_session (function-scoped
-    async fixture) tries to use the engine, asyncpg complains:
-    "attached to a different loop" or "Event loop is closed".
-
-    Fix: use poolclass=NullPool — no connections are pooled, so every
-    checkout creates a fresh connection bound to the CURRENT event loop.
-    No dependency bump needed (unlike Option B), no per-test engine
-    creation overhead (unlike Option A).
+    ROOT-CAUSE FIX: এখন এটা একটা সত্যিকারের async fixture (আগে sync
+    fixture ছিল যেটা ভেতরে `asyncio.run()` দিয়ে setup চালাত)। session-scoped
+    `event_loop` fixture-এর কারণে এটা এখন সেই একই session loop-এই চলে,
+    এবং পরবর্তী প্রতিটা function-scoped `db_session` fixture-ও একই loop-এ
+    চলে -- তাই কোনো loop mismatch হয় না। NullPool এখনো রাখা হয়েছে যাতে
+    connection-level কোনো স্টেইল-স্টেট সমস্যা না হয়।
     """
     from sqlalchemy.pool import NullPool
 
     engine = create_async_engine(
         test_settings["DATABASE_URL"],
         echo=False,  # Set to True for SQL debugging
-        poolclass=NullPool,  # CI FIX: no cross-loop connection reuse
+        poolclass=NullPool,
         future=True,
     )
 
@@ -203,36 +224,22 @@ def db_engine(test_settings):
     # The project uses models.base.Base as its declarative base.
     from models.base import Base
 
-    async def setup_db():
-        try:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-        except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).warning(f"Database setup skipped/failed: {e}")
-
     try:
-        asyncio.run(setup_db())
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
-        logger.warning(f"Ignored error: {e}")
+        logger.warning(f"Database setup skipped/failed: {e}")
 
     yield engine
 
     # Drop all tables after tests
-    async def teardown_db():
-        try:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.drop_all)
-        except Exception as e:
-            logger.warning(f"Ignored error: {e}")
-        try:
-            await engine.dispose()
-        except Exception as e:
-            logger.warning(f"Ignored error: {e}")
-
     try:
-        asyncio.run(teardown_db())
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+    except Exception as e:
+        logger.warning(f"Ignored error: {e}")
+    try:
+        await engine.dispose()
     except Exception as e:
         logger.warning(f"Ignored error: {e}")
 

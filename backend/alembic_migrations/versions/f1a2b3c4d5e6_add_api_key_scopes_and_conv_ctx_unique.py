@@ -15,21 +15,22 @@ Revision ID: f1a2b3c4d5e6
 Revises: 358bcbe79a4a
 Create Date: 2026-08-30
 """
-from typing import Sequence, Union
+
+from typing import Union
+from collections.abc import Sequence
 
 from alembic import op
 import sqlalchemy as sa
 
 revision: str = "f1a2b3c4d5e6"
-down_revision: Union[str, Sequence[str], None] = "358bcbe79a4a"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "358bcbe79a4a"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
     op.execute(
-        "ALTER TABLE public.api_keys "
-        "ADD COLUMN IF NOT EXISTS scopes TEXT[] DEFAULT '{}'::text[];"
+        "ALTER TABLE public.api_keys ADD COLUMN IF NOT EXISTS scopes TEXT[] DEFAULT '{}'::text[];"
     )
     op.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS "
@@ -39,9 +40,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.execute(
-        "DROP INDEX IF EXISTS uq_conversation_context_session_id;"
-    )
-    op.execute(
-        "ALTER TABLE public.api_keys DROP COLUMN IF EXISTS scopes;"
-    )
+    op.execute("DROP INDEX IF EXISTS uq_conversation_context_session_id;")
+    op.execute("ALTER TABLE public.api_keys DROP COLUMN IF EXISTS scopes;")
