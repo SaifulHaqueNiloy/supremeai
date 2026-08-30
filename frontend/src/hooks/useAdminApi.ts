@@ -42,7 +42,7 @@ export function useInstallSkill() {
 export function useCheckpoints() {
   return useQuery({
     queryKey: ['checkpoints'],
-    queryFn: () => apiClient.get<import('../types').Checkpoint[]>('/memory/checkpoints'),
+    queryFn: () => apiClient.get<import('../types').Checkpoint[]>('/api/memory/checkpoints'),
     staleTime: 30_000,
   });
 }
@@ -50,7 +50,7 @@ export function useCheckpoints() {
 export function useDeleteCheckpoint() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (taskId: string) => apiClient.delete(`/memory/checkpoint/${taskId}`),
+    mutationFn: (taskId: string) => apiClient.delete(`/api/memory/checkpoint/${taskId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['checkpoints'] }),
   });
 }
