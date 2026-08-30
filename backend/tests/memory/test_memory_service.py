@@ -39,8 +39,8 @@ class TestCascadeMemoryService:
         assert service._use_pg
 
         # Verify schema execution for ai_memory
-        assert mock_pooled_pg.execute.called
-        call_args = mock_pooled_pg.execute.call_args[0][0]
+        assert mock_pooled_pg.execute_ddl.called
+        call_args = mock_pooled_pg.execute_ddl.call_args[0][0]
         assert "CREATE TABLE IF NOT EXISTS ai_memory" in call_args
         assert "embedding TEXT" in call_args
         assert "metadata JSONB" in call_args

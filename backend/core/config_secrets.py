@@ -208,6 +208,10 @@ class SettingsSecretsMixin:
         প্রথম কলেই সব সিক্রেট লোড করা হয়, এরপর শুধু মেমোরি থেকে রিটার্ন।
         """
         self._ensure_secrets_loaded()
+
+        if self._is_test_environment() and os.getenv(key):
+            return os.getenv(key)
+
         cached = self._get_private_state()["_cached_secrets"]
 
         if key not in cached:
