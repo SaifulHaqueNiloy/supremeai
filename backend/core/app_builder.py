@@ -235,16 +235,29 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # বাংলা মন্তব্ব্য: মিডলওয়্যার চেইন — ORDER IS CRITICAL FOR SECURITY
     #
-    # ⚠️ CORS FIRST (outermost): Starlette-এ যে middleware সবার আগে
-    # add_middleware() দিয়ে যোগ হয়, সেটাই সবচেয়ে বাইরের লেয়ার হয় (request-এ
-    # প্রথমে চলে, response-এ সবার শেষে)। RateLimit/Auth/AutonoGuard-এর মতো
-    # middleware যখন call_next() না ডেকে সরাসরি JSONResponse(429/401 ইত্যাদি)
-    # রিটার্ন করে (short-circuit), সেই রেসপন্স তখনই CORS হেডার পায় যদি CORS
-    # ওই middleware-গুলোর বাইরে থাকে। আগে CORS RateLimitMiddleware-এর পরে
-    # (অর্থাৎ এর ভেতরে) যোগ করা হতো, ফলে rate-limit-এর 429 রেসপন্স CORS
-    # middleware অতিক্রম না করেই ব্রাউজারে চলে যেত — ব্রাউজার তখন এটাকে
-    # ভুলভাবে "CORS blocked" হিসেবে রিপোর্ট করত, যদিও আসল কারণ ছিল 429।
-    # তাই CORS-কে সবার আগে (outermost) যোগ করা হলো।
+    # ⚠️ ROOT-CAUSE FIX: আগের কমেন্ট এখানে ভুল ধরে নিয়েছিল যে
+    # app.add_middleware() যেটা *সবার আগে* কল করা হয় সেটাই সবচেয়ে বাইরের
+    # (outermost) লেয়ার হয়ে যায়। বাস্তবে Starlette-এ এটা ঠিক উল্টো:
+    # add_middleware() প্রতিবার internal `user_middleware` লিস্টের *শুরুতে*
+    # insert করে (insert(0, ...)), আর app বানানোর সময় সেই লিস্টটা reversed
+    # order-এ wrap করা হয় — ফলে যে middleware *সবার শেষে* add_middleware()
+    # দিয়ে যোগ হয়, সেটাই runtime-এ সবচেয়ে বাইরের লেয়ার (request-এ সবার আগে
+    # চলে, response-এ সবার শেষে), আর যেটা *সবার প্রথমে* যোগ হয় সেটাই সবচেয়ে
+    # ভেতরের (router-এর সবচেয়ে কাছের)।
+    #
+    # এই ভুল বোঝাবুঝির কারণে CORSMiddleware আগে সবার প্রথমে add করা হতো —
+    # অর্থাৎ বাস্তবে সেটা ছিল সবচেয়ে *ভেতরের* লেয়ার। তাই AuthMiddleware,
+    # RateLimitMiddleware ইত্যাদি (যেগুলো CORS-এর পরে/বাইরে add হয়েছিল, তাই
+    # runtime-এ CORS-এর চেয়ে বেশি বাইরের লেয়ারে ছিল) যখন call_next() না ডেকে
+    # সরাসরি 401/429 JSONResponse রিটার্ন করত (short-circuit), সেই রেসপন্স
+    # CORSMiddleware পর্যন্ত পৌঁছাতই না — ফলে কোনো CORS header ছাড়াই ব্রাউজারে
+    # চলে যেত, আর ব্রাউজার সেটাকে "blocked by CORS policy" হিসেবে রিপোর্ট
+    # করত, যদিও আসল কারণ ছিল auth/rate-limit।
+    #
+    # ফিক্স: CORSMiddleware-এর add_middleware() কলটি এখন সব middleware-এর
+    # *পরে* (নিচে, ফাংশনের শেষে) করা হচ্ছে, যাতে এটি সত্যিকারের outermost
+    # layer হয় — origins/credentials নির্ণয়ের লজিক এখানেই থাকল, শুধু
+    # app.add_middleware(CORSMiddleware, ...) কলটা নিচে সরানো হয়েছে।
     def _ensure_list(v):
         return [v] if isinstance(v, str) else list(v)
 
@@ -282,15 +295,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 "Set USER_CORS_ORIGINS and/or ADMIN_CORS_ORIGINS env vars for strict security."
             )
             origins = [f"https://{h}" for h in settings.allowed_hosts if h != "testserver"]
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=cors_allow_credentials,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
-    )
 
     # 1. RequestContextMiddleware - Always first to establish context
     app.add_middleware(RequestContextMiddleware)
@@ -337,15 +341,29 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 13. Idempotency middleware - After authentication to ensure idempotency per user
     app.add_middleware(IdempotencyMiddleware)
 
-    # 14. Rate Limiting — CORS (added above, first) wraps this, so a 429
-    # short-circuit response returned here still gets CORS headers on the
-    # way back out through the stack.
+    # 14. Rate Limiting — CORS is added last (below), so it wraps this, and
+    # a 429 short-circuit response returned here still gets CORS headers on
+    # the way back out through the stack.
     from core.rate_limit import RateLimiter
 
     app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
 
-    # 15. Response standardization - Last to standardize all responses
+    # 15. Response standardization - runs before CORS wraps everything
     app.add_middleware(ResponseStandardizationMiddleware)
+
+    # 16. CORS — added LAST so it is the true outermost layer (see the
+    # ROOT-CAUSE FIX note above `origins = ...`). Any short-circuit response
+    # from any middleware above (401 from AuthMiddleware, 429 from
+    # RateLimitMiddleware, etc.) still passes through this on the way back
+    # out, so it always gets proper CORS headers.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=cors_allow_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
 
     # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
     # রাউটার রেজিস্ট্রেশনগুলো এখানে যোগ করুন
