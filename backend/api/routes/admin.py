@@ -1,5 +1,6 @@
 import json
 import secrets
+import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -49,7 +50,16 @@ async def update_constitutional_rule(
             "message": f"Rule {payload.key} updated to {payload.value}",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
+        # AUD-2.9 follow-up (MANUAL_STEPS 7.4): generic 500 + correlation id —
+        # raw exception text must not reach even admin clients (defense in depth).
+        correlation_id = uuid.uuid4().hex[:12]
+        logger.exception(
+            f"constitutional rule update failed key={payload.key!r} correlation_id={correlation_id}"
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error (correlation_id: {correlation_id})",
+        ) from e
 
 
 @router.post("/actions/{action_type}")

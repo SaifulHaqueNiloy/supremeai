@@ -1,5 +1,6 @@
 import asyncio
 import json
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
@@ -101,7 +102,14 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
             "adaptive_suggestions": suggestions,
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        # AUD-2.9 follow-up (MANUAL_STEPS 7.4): generic 500 + correlation id —
+        # raw exception text (DSN/SQL) must not reach clients.
+        correlation_id = uuid.uuid4().hex[:12]
+        logger.exception(f"preferences update failed correlation_id={correlation_id}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error (correlation_id: {correlation_id})",
+        ) from exc
 
 
 @router.get("/{user_id}/stream")

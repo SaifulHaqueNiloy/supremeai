@@ -1,8 +1,27 @@
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from core.logging_config import logger
 from core.security.authentication.rbac import get_current_user_token as verify_token_dependency
 from database.supabase_client import SupabaseDB
+
+
+def _internal_error(e: Exception) -> HTTPException:
+    """AUD-2.9 follow-up (MANUAL_STEPS 7.4): generic 500 with correlation id.
+
+    Raw exception text (DSN/SQL/provider payloads) must never reach clients;
+    full stack is logged server-side, the client gets a correlation id only.
+    Raises the HTTPException (so ``raise _internal_error(e)`` keeps typing).
+    """
+    correlation_id = uuid.uuid4().hex[:12]
+    logger.exception(f"conversations route failed correlation_id={correlation_id}")
+    raise HTTPException(
+        status_code=500,
+        detail=f"Internal server error (correlation_id: {correlation_id})",
+    ) from e
+
 
 router = APIRouter(prefix="/conversations", tags=["User Conversations"])
 
@@ -45,7 +64,7 @@ async def list_conversations(user: dict = Depends(verify_token_dependency)):
         )
         return [ConversationResponse(**row) for row in response.data]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _internal_error(e)
 
 
 @router.post("/", response_model=ConversationResponse)
@@ -65,7 +84,7 @@ async def create_conversation(
         )
         return ConversationResponse(**response.data[0])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _internal_error(e)
 
 
 @router.post("/{conversation_id}/messages", response_model=MessageResponse)
@@ -112,5 +131,9 @@ async def add_message(
         )
 
         return MessageResponse(**response.data[0])
+    except HTTPException:
+        # Audit fix: ownership 404 (AUD-2.5) must not be swallowed into a 500 —
+        # re-raise deliberate HTTP errors untouched.
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise _internal_error(e)

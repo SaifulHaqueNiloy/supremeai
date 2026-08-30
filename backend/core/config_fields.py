@@ -139,6 +139,12 @@ class SettingsFieldsMixin:
             "/api/v1/auth/token",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
+            # Audit fix (this session): /auth/refresh authenticates via the
+            # refresh-token JWT carried in the JSON body (type=refresh enforced,
+            # fail-closed inside the endpoint). It must NOT be gated by the
+            # access-token middleware — otherwise token refresh is unreachable
+            # (always 401) and clients can never renew sessions.
+            "/api/v1/auth/refresh",
             "/actuator",
             "/api/admin/firebase-auth",
             "/api/admin/firebase-login",
