@@ -190,7 +190,18 @@ class MaintenancePipeline:
                     f"🛡️ Immune System: Cleaned up {deleted_count} old automation executions."
                 )
         except Exception as e:
-            logger.error(f"Failed to cleanup automation executions: {e}")
+            # বাংলা মন্তব্য: "automation_executions" টেবিলটা মূল migration chain-এ
+            # কখনো CREATE হয়নি (শুধু ALTER/reference করা হতো) — এখন
+            # a1b2c3d4e5f6 migration দিয়ে সেটা ঠিক করা হয়েছে। তবু কোনো পুরনো/
+            # আংশিক-migrated environment-এ table এখনো না থাকলে যেন প্রতি cleanup
+            # cycle-এ ERROR log স্প্যাম না হয়, তাই সেই নির্দিষ্ট ক্ষেত্রে WARNING-এ নামানো হলো।
+            if "does not exist" in str(e) and "automation_executions" in str(e):
+                logger.warning(
+                    f"🛡️ Immune System: automation_executions table not found (run migrations "
+                    f"— see a1b2c3d4e5f6_add_automation_executions_table.py): {e}"
+                )
+            else:
+                logger.error(f"Failed to cleanup automation executions: {e}")
 
     async def auto_remediate(self, event=None):
         logger.warning("🚑 Immune System: Triggering self-healing remediation...")

@@ -212,14 +212,19 @@ async def initialize_independent_services(app):
             async with get_db_session_context() as db:
                 economic_opt = await get_economic_optimizer()
                 health_monitor = get_health_monitor()
-                await asyncio.gather(
-                    ModelRegistry.sync_from_db(db),
-                    economic_opt.sync_from_db(db),
-                    sync_branding(db),
-                    sync_circuit_breaker(db),
-                    health_monitor.sync_from_db(db),
-                    sync_health_middleware(db),
-                )
+                # বাংলা মন্তব্য (BUG FIX): একই AsyncSession (db) দিয়ে asyncio.gather()
+                # ব্যবহার করে 6টা coroutine সমান্তরালে চালানো হচ্ছিল — কিন্তু SQLAlchemy
+                # AsyncSession একইসাথে একাধিক concurrent operation সাপোর্ট করে না
+                # ("This session is provisioning a new connection; concurrent
+                # operations are not permitted"), ফলে config sync বারবার fail করে
+                # silently default value-তে fallback করত। একই session sequentially
+                # await করে ঠিক করা হলো — গতি সামান্য কমলেও এটাই সঠিক ও নিরাপদ পদ্ধতি।
+                await ModelRegistry.sync_from_db(db)
+                await economic_opt.sync_from_db(db)
+                await sync_branding(db)
+                await sync_circuit_breaker(db)
+                await health_monitor.sync_from_db(db)
+                await sync_health_middleware(db)
                 logger.info(
                     "✅ Core model registries and system thresholds synchronized from DB successfully."
                 )
