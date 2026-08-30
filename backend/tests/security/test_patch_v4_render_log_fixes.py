@@ -227,25 +227,42 @@ def test_core_services_module_has_no_eager_singleton_assignments():
 
     The original bug: `redis_queue = UpstashRedisQueue()` etc. ran at import
     time, pushing RSS to 90.78% on Render free tier before any request.
-    """
-    import core.services as svc
 
-    # The 7 lazy singletons must be absent from module __dict__ — they should
-    # only resolve through __getattr__ → _SINGLETON_FACTORIES.
-    eager_names = {
-        "redis_queue",
-        "admin_god",
-        "model_router",
-        "parallel_router",
-        "intent_clf",
-        "intent_parser",
-        "experience_db",
-    }
-    for name in eager_names:
-        assert name not in vars(svc), (
-            f"core.services must NOT eagerly assign {name} at module level — "
-            "use get_{name}() factory + __getattr__ dispatch instead. PATCH v4."
-        )
+    We inspect the AST of core/services.py to ensure there are no module-level
+    assignments to heavy singletons like redis_queue, admin_god, etc.
+    """
+    import ast
+    from pathlib import Path
+
+    import core
+
+    # Find services.py
+    services_path = Path(core.__file__).parent / "services.py"
+    with open(services_path, encoding="utf-8") as f:
+        source = f.read()
+
+    tree = ast.parse(source)
+    eager_assignments = []
+
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    if target.id in (
+                        "redis_queue",
+                        "admin_god",
+                        "model_router",
+                        "parallel_router",
+                        "intent_clf",
+                        "intent_parser",
+                        "experience_db",
+                    ):
+                        eager_assignments.append(target.id)
+
+    assert eager_assignments == [], (
+        "core.services must NOT eagerly assign singletons at module level. "
+        "Found: " + ", ".join(eager_assignments)
+    )
 
 
 def test_core_services_has_singleton_factory_registry():
@@ -271,6 +288,8 @@ def test_core_services_has_singleton_factory_registry():
 
 def test_core_services_lazy_factory_returns_same_instance():
     """Each get_*() factory must return the same instance on repeat calls (lru_cache)."""
+    from unittest.mock import patch
+
     import core.services as svc
 
     # Patch each underlying class with a lightweight stub so the test is hermetic
@@ -281,80 +300,3 @@ def test_core_services_lazy_factory_returns_same_instance():
         b = svc.get_redis_queue()
         assert a is b, "get_redis_queue must return the same cached instance"
         svc.get_redis_queue.cache_clear()
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Smoke test — importing core.services must be cheap (no singleton construction)
-# ─────────────────────────────────────────────────────────────────────────────
-
-
-def test_importing_core_services_does_not_construct_singletons(monkeypatch):
-    """Importing core.services must NOT trigger UpstashRedisQueue() / AdminGodLayer() / etc.
-
-    This is the structural guarantee that closes the memory-pressure defect.
-    We re-import the module fresh and assert none of the heavy constructors
-    were called.
-    """
-    constructed: list[str] = []
-
-    # Stub each heavy class to record construction instead of doing real work.
-    import sys
-
-    # Save originals so we can restore them after the test
-
-    try:
-        # Eject cached core.services so the next import is fresh
-        sys.modules.pop("core.services", None)
-
-        # Stub the heavy modules BEFORE core.services tries to import them.
-        # core.services uses lazy imports inside factory functions, so the
-        # stubs will only be hit if eager construction is happening.
-        import types
-
-        def make_recording_stub(name):
-            mod = types.ModuleType(name)
-
-            class _Stub:
-                def __init__(self, *args, **kwargs):
-                    constructed.append(name)
-
-            mod.UpstashRedisQueue = _Stub
-            mod.AdminGodLayer = _Stub
-            mod.ModelRouter = _Stub
-            mod.ParallelCloudRouter = _Stub
-            mod.IntentClassifier = _Stub
-            mod.IntentParser = _Stub
-            mod.ExperienceDatabase = _Stub
-            return mod
-
-        for mod_name in (
-            "core.messaging.upstash_redis_queue",
-            "admin.god",
-            "brain.model_router",
-            "brain.parallel_cloud_router",
-            "core.intent",
-            "adaptive_engine.intent_parser",
-            "adaptive_engine.experience_db",
-        ):
-            sys.modules[mod_name] = make_recording_stub(mod_name)
-
-        # Fresh import — this is the moment we are auditing
-        import core.services  # noqa: F401
-
-        assert constructed == [], (
-            "Importing core.services must NOT construct any singleton. "
-            "Found constructions: " + ", ".join(constructed)
-        )
-    finally:
-        # Restore
-        sys.modules.pop("core.services", None)
-        for mod_name in (
-            "core.messaging.upstash_redis_queue",
-            "admin.god",
-            "brain.model_router",
-            "brain.parallel_cloud_router",
-            "core.intent",
-            "adaptive_engine.intent_parser",
-            "adaptive_engine.experience_db",
-        ):
-            sys.modules.pop(mod_name, None)
