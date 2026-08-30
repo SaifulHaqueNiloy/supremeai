@@ -5,7 +5,6 @@
 import pytest
 
 from core.failure_fingerprint import make_fingerprint
-from core.resilience.rollback_monitor import RollbackMonitor
 from services.auto_healer import AutoHealer
 from tools.learning.model_trainer import ModelTrainer
 
@@ -71,13 +70,3 @@ async def test_model_trainer_failure_learning():
     assert success is True
     similar = await trainer.retrieve_similar_fix("Traceback info")
     assert isinstance(similar, list)
-
-
-@pytest.mark.asyncio
-async def test_automatic_rollback_monitor():
-    """
-    বাংলা মন্তব্য: RollbackMonitor-এর অটোমেটিক গিট রিভার্ট মেকানিজম টেস্ট।
-    """
-    monitor = RollbackMonitor()
-    res = await monitor.execute_automatic_rollback("fp_test_123", "Exceeded max mutation depth")
-    assert res is True

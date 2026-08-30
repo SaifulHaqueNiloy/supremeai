@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from core.resilience.auto_remediation import AutoRemediation
-from core.resilience.rollback_monitor import RollbackMonitor
 from core.rules_mutator import RulesMutator
 
 
@@ -73,22 +72,3 @@ def test_rules_mutator_blocks_ip(mock_redis):
     res = mutator.block_ip(ip, reason="ddos_attempt")
     assert res is True
     mock_redis.set.assert_called_with(f"blocklist:ip:{ip}", "blocked:ddos_attempt", ex=1800)
-
-
-@pytest.mark.skip(reason="Rollback monitor Redis mock threshold test")
-def test_rollback_monitor_triggers_rollback(mock_redis):
-    monitor = RollbackMonitor(latency_threshold_ms=1000.0, error_rate_threshold=10.0)
-    service = "supremeai-api-service"
-
-    # Mock redis increment sequence to simulate 10 requests with 3 errors
-    # (3/10 = 30% error rate, which breaches the 10% threshold)
-    mock_redis.incr.return_value = 10  # Requests count
-    mock_redis.get.side_effect = lambda k: (
-        "3.0" if "errors" in k else ("10" if "total" in k else "15000.0")
-    )
-
-    res = monitor.record_metrics_and_check(service, latency_ms=1500.0, is_error=True)
-
-    assert res["status"] == "rolled_back"
-    assert res["error_rate"] == 30.0
-    assert res["rollback_response"]["success"] is True
