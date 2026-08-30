@@ -33,6 +33,7 @@ async def test_connect():
             ssl=ANY,
             statement_cache_size=0,
             command_timeout=30,
+            connection_class=ANY,
         )
         assert pool._pool is mock_pool
 
