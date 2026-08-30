@@ -51,9 +51,7 @@ class ConfigService:
             # করত (config hot-reload silently কাজ করছিল না)। SQLAlchemy 2.0 async
             # style-এ select() + await db.execute() ব্যবহার করা হলো।
             result = await db.execute(
-                select(SystemConfig).where(
-                    SystemConfig.key == key, SystemConfig.is_active
-                )
+                select(SystemConfig).where(SystemConfig.key == key, SystemConfig.is_active)
             )
             config = result.scalars().first()
 
