@@ -32,10 +32,10 @@ def test_model_router_fallback():
             "cost": 0.0,
         }
 
-    router.async_route_and_generate = mock_async_route
-    res = router.route_and_generate("hello", "coding")
-    assert res["success"] is True
-    assert res["text"] == "local response"
+    with patch.object(router, "async_route_and_generate", mock_async_route):
+        res = router.route_and_generate("hello", "coding")
+        assert res["success"] is True
+        assert res["text"] == "local response"
 
 
 def test_orchestrator_admin_blocking():
@@ -70,15 +70,15 @@ def test_orchestrator_execution_flow():
 
 def test_route_and_generate_with_cot():
     router = ModelRouter()
-    router.cot_reasoner = MagicMock()
-    router.cot_reasoner.refine_loop.return_value = {
+    mock_cot = MagicMock()
+    mock_cot.refine_loop.return_value = {
         "status": "ok",
         "iterations": 1,
         "thoughts": [{"type": "thought", "content": "step one", "reasoning_depth": 0}],
         "final_answer": "42",
         "last_output": {},
     }
-    router.cot_reasoner.verify.return_value = {"matches": True}
+    mock_cot.verify.return_value = {"matches": True}
 
     def fake_route(self, prompt, task_type="general", max_cost=0.01):
         return {
@@ -88,15 +88,18 @@ def test_route_and_generate_with_cot():
             "cost": 0.0,
         }
 
-    router.route_and_generate = types.MethodType(fake_route, router)
-    result = router.route_and_generate_with_cot("1+1?", task_type="math")
+    with (
+        patch.object(router, "cot_reasoner", mock_cot),
+        patch.object(router, "route_and_generate", types.MethodType(fake_route, router)),
+    ):
+        result = router.route_and_generate_with_cot("1+1?", task_type="math")
 
-    assert result["success"] is True
-    assert "reasoning" in result
-    assert result["reasoning"]["iterations"] == 1
-    assert result["reasoning"]["final_answer"] == "42"
-    assert "cot_verification" in result
-    assert result["text"] == "<answer>42</answer>"
+        assert result["success"] is True
+        assert "reasoning" in result
+        assert result["reasoning"]["iterations"] == 1
+        assert result["reasoning"]["final_answer"] == "42"
+        assert "cot_verification" in result
+        assert result["text"] == "<answer>42</answer>"
 
 
 def test_query_local_rag():
@@ -113,11 +116,11 @@ def test_query_local_rag():
                 ],
             }
 
-    router._local_rag = FakeRAG()
-    result = router.query_local_rag("python tutorial")
+    with patch.object(router, "_local_rag", FakeRAG()):
+        result = router.query_local_rag("python tutorial")
 
-    assert result["status"] == "ok"
-    assert len(result.get("matches", [])) == 2
+        assert result["status"] == "ok"
+        assert len(result.get("matches", [])) == 2
 
 
 def test_route_and_stream():
@@ -128,8 +131,9 @@ def test_route_and_stream():
         yield "chunk1"
         yield "chunk2"
 
-    router._stream_ollama = mock_stream
-
-    with patch.object(router, "_pick_provider", return_value=("ollama", "qwen")):
+    with (
+        patch.object(router, "_stream_ollama", mock_stream),
+        patch.object(router, "_pick_provider", return_value=("ollama", "qwen")),
+    ):
         chunks = list(router.route_and_stream("test prompt", "general"))
         assert chunks == ["chunk1", "chunk2"]
