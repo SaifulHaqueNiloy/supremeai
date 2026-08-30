@@ -112,7 +112,7 @@ class LangfuseAdapter(AIObservabilityProvider):
                 endTime=None,
             )
 
-            self._langfuse.flush()
+            # Removed self._langfuse.flush() to allow background batching
             return trace_id
         except Exception as e:
             logger.warning(f"[LangfuseAdapter] Failed to trace generation: {e}")
@@ -135,7 +135,7 @@ class LangfuseAdapter(AIObservabilityProvider):
                 value=score,
                 comment=comment,
             )
-            self._langfuse.flush()
+            # Removed self._langfuse.flush() to allow background batching
         except Exception as e:
             logger.warning(f"[LangfuseAdapter] Failed to log evaluation: {e}")
 

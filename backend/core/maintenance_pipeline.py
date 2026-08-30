@@ -177,6 +177,20 @@ class MaintenancePipeline:
 
             factory = get_session_factory()
             async with factory() as session:
+                # Do not turn an expected schema drift into a recurring ERROR.
+                # The table is created by the Alembic migration
+                # a1b2c3d4e5f6 and extended by 358bcbe79a4a. Old/stale
+                # environments may legitimately not have it yet.
+                table_exists = await session.scalar(
+                    text("SELECT to_regclass('public.automation_executions')")
+                )
+                if table_exists is None:
+                    logger.warning(
+                        "🛡️ Immune System: automation_executions table is absent; "
+                        "skipping retention cleanup until migrations are applied."
+                    )
+                    return
+
                 # Delete executions older than 30 days (attempts will cascade delete)
                 result = await session.execute(
                     text(

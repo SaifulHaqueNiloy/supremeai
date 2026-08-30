@@ -415,7 +415,14 @@ class MultilingualTTS:
 
 
 # ── Singleton ─────────────────────────────────────────────────────────────────
-_tts = MultilingualTTS()
+_tts_tool_instance = None
+
+
+def get_tts_tool() -> MultilingualTTS:
+    global _tts_tool_instance
+    if _tts_tool_instance is None:
+        _tts_tool_instance = MultilingualTTS()
+    return _tts_tool_instance
 
 
 # ── REST Endpoints ────────────────────────────────────────────────────────────
@@ -429,7 +436,8 @@ async def synthesize_text(request: TTSRequest):
     if len(request.text) > 5000:
         raise HTTPException(status_code=400, detail="Text too long (max 5000 chars)")
 
-    result = await _tts.synthesize(
+    tool = get_tts_tool()
+    result = await tool.synthesize(
         text=request.text,
         voice_id=request.voice_id,
         language=request.language,
@@ -439,6 +447,26 @@ async def synthesize_text(request: TTSRequest):
     if result["status"] == "error":
         raise HTTPException(status_code=503, detail=result.get("error", "TTS failed"))
     return TTSResponse(**{k: v for k, v in result.items() if k in TTSResponse.__fields__})
+
+
+@router.post("/generate", response_model=dict[str, Any])
+async def api_generate_tts(req: TTSRequest):
+    try:
+        tool = get_tts_tool()
+        result = await tool.generate(
+            text=req.text,
+            language=req.language,
+            voice_id=req.voice_id,
+            provider=req.provider,
+            stability=req.stability,
+            similarity_boost=req.similarity_boost,
+            output_format=req.output_format,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    if result.get("status") == "error":
+        raise HTTPException(status_code=503, detail=result.get("error", "TTS failed"))
+    return result
 
 
 @router.get("/audio/{filename}")
@@ -470,7 +498,8 @@ async def list_languages():
 @router.get("/voices")
 async def list_voices():
     """List available ElevenLabs voices (requires API key)."""
-    return await _tts.get_voices()
+    tool = get_tts_tool()
+    return await tool.get_voices()
 
 
 @router.delete("/cache")

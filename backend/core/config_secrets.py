@@ -38,53 +38,21 @@ class SettingsSecretsMixin:
             self.__dict__["_secrets_batch_loaded"] = False
         return self.__dict__
 
-    # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য প্রয়োজনীয় সিক্রেট কীগুলোর তালিকা।
-    # startup-এ একবারে সব সিক্রেট লোড করা হবে, lazy per-property কল এড়াতে।
-    _BATCH_SECRET_KEYS: list[str] = [
+    # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য প্রয়োজনীয় কোর সিক্রেট কীগুলোর তালিকা।
+    # startup-এ একবারে শুধু কোর সিক্রেট লোড করা হবে, যাতে মেমরি এবং স্টার্টআপ টাইম কম লাগে।
+    # অপশনাল ইন্টিগ্রেশনগুলো (যেমন AI providers, Kaggle) দরকার হলে lazily লোড হবে।
+    _CORE_SECRET_KEYS: list[str] = [
         "SUPABASE_DATABASE_URL_POOLER",
-        "DISCORD_OTP_WEBHOOK_URL",
-        "RESEND_API_KEY",
-        "ADMIN_NOTIFICATION_EMAIL",
-        "REDIS_URL",
-        "OPENROUTER_API_KEY",
-        "HF_API_KEY",
-        "GEMINI_API_KEY",
-        "OPENAI_API_KEY",
-        "DEEPSEEK_API_KEY",
-        "GROQ_API_KEY",
-        "NVIDIA_API_KEY",
-        "FIRECRAWL_API_KEY",
-        "DISCORD_BOT_TOKEN",
-        "GITHUB_CLIENT_ID",
-        "GITHUB_CLIENT_SECRET",
-        "CI_WEBHOOK_SECRET",
         "SUPABASE_DB_CA_CERT",
         "SUPABASE_URL",
         "SUPABASE_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
-        "SUPREMEAI_API_KEY",
-        "NEO4J_URI",
-        "NEO4J_USER",
-        "NEO4J_PASSWORD",
-        "SUPREMEAI_ADMIN_PASSWORD_HASH",
+        "REDIS_URL",
         "SUPREMEAI_JWT_SECRET",
         "ENCRYPTION_KEY",
-        "STRIPE_API_KEY",
-        "STRIPE_WEBHOOK_SECRET",
-        "FIREBASE_SERVICE_ACCOUNT_JSON",
-        "LANGFUSE_PUBLIC_KEY",
-        "LANGFUSE_SECRET_KEY",
-        "TELEGRAM_BOT_TOKEN",
-        "ADMIN_TELEGRAM_CHAT_ID",
-        "KAGGLE_API_TOKEN",
-        "KAGGLE_API_TOKEN_1",
-        "KAGGLE_API_TOKEN_2",
-        "KAGGLE_API_TOKEN_3",
-        "KAGGLE_API_TOKEN_4",
-        "KAGGLE_API_TOKEN_5",
-        "KAGGLE_API_TOKEN_6",
-        "N8N_WEBHOOK_SECRET",
-        "APPWRITE_API_KEY",
+        "SUPREMEAI_ADMIN_PASSWORD_HASH",
+        "CI_WEBHOOK_SECRET",
+        "SUPREMEAI_API_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -152,9 +120,9 @@ class SettingsSecretsMixin:
                     logger.debug(f"JSON blob '{blob_key}' parse failed: {_je}")
 
             elapsed = time.perf_counter() - _t0
-            loaded = sum(1 for k in self._BATCH_SECRET_KEYS if cached.get(k))
+            loaded = sum(1 for k in self._CORE_SECRET_KEYS if cached.get(k))
             logger.info(
-                f"✅ Secrets bulk-loaded: {loaded}/{len(self._BATCH_SECRET_KEYS)} keys "
+                f"✅ Secrets bulk-loaded: {loaded}/{len(self._CORE_SECRET_KEYS)} core keys "
                 f"in {elapsed:.3f}s (1 HTTP call)"
             )
         else:
@@ -195,7 +163,7 @@ class SettingsSecretsMixin:
                 logger.debug(f"JSON blob fetch failed, falling back to individual: {e}")
 
             # Individual per-secret fetch for remaining missing keys
-            for secret_key in self._BATCH_SECRET_KEYS:
+            for secret_key in self._CORE_SECRET_KEYS:
                 if cached.get(secret_key):
                     continue  # already loaded
 
@@ -211,7 +179,7 @@ class SettingsSecretsMixin:
         # ── STEP 3: Individual fetch — bulk miss-এর safety net ───────────────
         # bulk সফল হলেও কিছু key missing থাকতে পারে (নতুন secrets, path mismatch)
         if bulk:
-            missing = [k for k in self._BATCH_SECRET_KEYS if not cached.get(k)]
+            missing = [k for k in self._CORE_SECRET_KEYS if not cached.get(k)]
             if missing:
                 logger.debug(
                     f"Fetching {len(missing)} secrets individually (not in bulk result): {missing}"
@@ -241,15 +209,22 @@ class SettingsSecretsMixin:
         """
         self._ensure_secrets_loaded()
         cached = self._get_private_state()["_cached_secrets"]
+
         if key not in cached:
-            if self._is_test_environment():
+            # Lazy load for optional keys
+            if not self._is_test_environment():
+                logger.info(f"Lazy loading optional secret: {key}")
+                try:
+                    val = get_secret_vault().fetch_secret(key, default="")
+                    cached[key] = val
+                except Exception as e:
+                    logger.warning(f"Failed to lazy load optional secret '{key}': {e}")
+                    cached[key] = ""
+            else:
                 logger.debug(
                     f"Secret '{key}' not found in cache after batch load - returning empty string"
                 )
-            else:
-                logger.warning(
-                    f"Secret '{key}' not found in cache after batch load - returning empty string"
-                )
+                cached[key] = ""
         return cached.get(key, "")
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
@@ -268,7 +243,7 @@ class SettingsSecretsMixin:
     @property
     def discord_otp_webhook_url(self) -> SecretStr | None:
         try:
-            url = get_secret_vault().fetch_secret("DISCORD_OTP_WEBHOOK_URL", default="")
+            url = self._get_cached_secret("DISCORD_OTP_WEBHOOK_URL")
         except Exception:
             url = ""
         return SecretStr(url) if url else None
@@ -418,7 +393,7 @@ class SettingsSecretsMixin:
     @property
     def discord_bot_token(self) -> str:
         try:
-            return get_secret_vault().fetch_secret("DISCORD_BOT_TOKEN", default="")
+            return self._get_cached_secret("DISCORD_BOT_TOKEN")
         except Exception:
             return ""
 

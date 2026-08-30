@@ -11,13 +11,22 @@ async def start_background_services(app):
     from core.sentinel_agent import sentinel
 
     # Agent 1: Sentinel Agent (periodic endpoint monitoring & dependency audit)
-    await agent_supervisor.start_agent(
-        "sentinel",
-        lambda: sentinel.run_periodic_loop(),
-        health_check_interval=60,
-        max_restarts=10,
-        restart_delay=1.0,
-    )
+    try:
+        import os
+
+        if os.getenv("ENABLE_SENTINEL_AGENT", "false").lower() == "true":
+            await agent_supervisor.start_agent(
+                "sentinel",
+                lambda: sentinel.run_periodic_loop(),
+                health_check_interval=60,
+                max_restarts=10,
+                restart_delay=1.0,
+            )
+            logger.info("✅ Sentinel Agent background loop started.")
+        else:
+            logger.info("ℹ️ Sentinel Agent disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ Sentinel Agent failed to start: {exc}")
 
     # Agent 2: Swarm Cache Invalidator (multi-layer cache maintenance)
     await agent_supervisor.start_agent(
@@ -45,16 +54,21 @@ async def start_background_services(app):
         logger.warning(f"⚠️ Task Queue Worker failed to start: {exc}")
 
     try:
-        from core.telemetry.system_telemetry import run_system_telemetry_loop
+        import os
 
-        await agent_supervisor.start_agent(
-            "system-telemetry",
-            run_system_telemetry_loop,
-            health_check_interval=60,
-            max_restarts=5,
-            restart_delay=2.0,
-        )
-        logger.info("✅ System Telemetry Broadcaster background loop started.")
+        if os.getenv("ENABLE_SYSTEM_TELEMETRY", "false").lower() == "true":
+            from core.telemetry.system_telemetry import run_system_telemetry_loop
+
+            await agent_supervisor.start_agent(
+                "system-telemetry",
+                run_system_telemetry_loop,
+                health_check_interval=60,
+                max_restarts=5,
+                restart_delay=2.0,
+            )
+            logger.info("✅ System Telemetry Broadcaster background loop started.")
+        else:
+            logger.info("ℹ️ System Telemetry Broadcaster disabled via environment variable.")
     except Exception as exc:
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
 
@@ -161,10 +175,10 @@ async def start_background_services(app):
 
             app.state.auto_healer = auto_healer_service
             app.state.auto_healer_task = _asyncio.create_task(
-                auto_healer_service.start_monitoring(interval_seconds=30.0)
+                auto_healer_service.start_monitoring(interval_seconds=300.0)
             )
             logger.info(
-                "✅ AutoHealerService started in background (DB/Redis healing active, 30s check interval)."
+                "✅ AutoHealerService started in background (DB/Redis healing active, 300s check interval)."
             )
         else:
             logger.info("ℹ️ AutoHealerService disabled via environment variable.")

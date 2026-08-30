@@ -38,6 +38,9 @@ class BandwidthOptimizer:
         return {"method": method, "url": url, "headers": headers or {}}
 
     def cache_response(self, url: str, data: Any):
+        if len(self._cache) >= self.cache_size:
+            # simple LRU eviction by clearing oldest item (insertion order in Python 3.7+)
+            self._cache.pop(next(iter(self._cache)))
         self._cache[url] = data
 
     def get_cached(self, url: str) -> Any | None:
