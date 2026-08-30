@@ -8,7 +8,7 @@ client = TestClient(app)
 
 
 def test_get_skill_graph_dry_run():
-    from core.security import create_access_token
+    from api.routes.auth import create_access_token
 
     token = create_access_token({"sub": "test_user", "role": "user"})
     headers = {"Authorization": f"Bearer {token}"}
@@ -23,7 +23,7 @@ def test_get_skill_graph_dry_run():
 
 
 def test_get_learning_path_dry_run():
-    from core.security import create_access_token
+    from api.routes.auth import create_access_token
 
     token = create_access_token({"sub": "test_user", "role": "user"})
     headers = {"Authorization": f"Bearer {token}"}

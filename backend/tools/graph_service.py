@@ -1,4 +1,7 @@
-from neo4j import AsyncGraphDatabase
+try:
+    from neo4j import AsyncGraphDatabase
+except ImportError:
+    AsyncGraphDatabase = None
 
 from core.config import settings
 from core.logging_config import logger
