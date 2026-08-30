@@ -56,8 +56,8 @@ def _get_database_url() -> str:
     except AttributeError:
         url = ""
     if not url:
-        # Direct env fallback — Render commonly provisions DATABASE_URL directly.
-        url = os.getenv("DATABASE_URL", "")
+        # Direct env fallback - Render commonly provisions DATABASE_URL directly.
+        url = os.environ.get("DATABASE_URL", "")
     if not url:
         logger.warning("No database URL configured, using SQLite fallback")
         return "sqlite+aiosqlite:///./local.db"
