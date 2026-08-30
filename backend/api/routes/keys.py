@@ -1,9 +1,11 @@
 import os
+import uuid
 
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from core.logging_config import logger
 from core.security.authentication.rbac import get_current_user_token as verify_token_dependency
 from database.supabase_client import SupabaseDB
 
@@ -64,7 +66,14 @@ async def create_or_update_key(key_data: KeyCreate, user: dict = Depends(verify_
         data = response.data[0]
         return KeyResponse(provider=data["provider"], created_at=data["created_at"])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # AUD-2.9 follow-up (MANUAL_STEPS 7.4): never echo raw exception text —
+        # internal errors (DSN, SQL, provider payloads) must not reach clients.
+        correlation_id = uuid.uuid4().hex[:12]
+        logger.exception(f"key upsert failed correlation_id={correlation_id}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error (correlation_id: {correlation_id})",
+        ) from e
 
 
 @router.get("/", response_model=list[KeyResponse])

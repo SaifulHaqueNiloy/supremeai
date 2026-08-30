@@ -217,6 +217,13 @@ ALL_ROUTERS = [
     # (USAGE-A analysis-এ "ACTIVE LOADED, ROUTES UNWIRED" হিসেবে চিহ্নিত ছিল)।
     # এখন ALL_ROUTERS-এ registered — admin auth (get_current_admin) সব endpoint-এ আছে।
     {"path": "api.routes.internet_monitor", "prefix": "", "is_admin": True, "is_critical": False},
+    # Audit fix (this session): service_topology (admin service health checker +
+    # admin-token WebSocket health-stream consumed by the CI dashboard) was never
+    # registered — doubly dead (missing ADMIN_URL_DEFAULT/SCRAPER_URL_DEFAULT
+    # imports fixed in core/deployment_fallback_defaults.py + absent here).
+    # Router enforces get_current_admin on routes and authenticate_websocket on
+    # the WS endpoint; is_admin=True additionally applies the token dependency.
+    {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
 ]
 
 

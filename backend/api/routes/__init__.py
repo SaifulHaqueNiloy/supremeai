@@ -184,8 +184,10 @@ except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
     site_actions_router = None  # type: ignore
 
 # বাংলা মন্তব্য: LLM Gateway ও System Rules কন্ট্রোলার রাউটার
+# Audit fix (this session): মডিউল নাম ভুল ছিল (`.llm_gateway` নেই — আসল
+# মডিউল `llm_gateway_routes`), ফলে প্রতি বুটে ভুয়া warning লগ হতো।
 try:
-    from .llm_gateway import router as llm_gateway_router
+    from .llm_gateway_routes import router as llm_gateway_router
 
     _safe_imports["llm_gateway_router"] = llm_gateway_router
 except (ImportError, AttributeError, SyntaxError, RuntimeError, ValueError):
