@@ -45,7 +45,7 @@ class TestRefreshPathReachability:
 
         # Request model requires the refresh_token field (422 if absent)
         with pytest.raises(Exception):
-            RefreshRequest()  # noqa: missing required field
+            RefreshRequest()  # noqa
 
         # Handler validates the JWT and rejects garbage — fail closed
         import asyncio

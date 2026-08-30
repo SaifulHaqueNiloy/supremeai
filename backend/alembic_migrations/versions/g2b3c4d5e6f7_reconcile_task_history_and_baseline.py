@@ -15,14 +15,16 @@ Revision ID: g2b3c4d5e6f7
 Revises: f1a2b3c4d5e6
 Create Date: 2026-08-30
 """
-from typing import Sequence, Union
+
+from typing import Union
+from collections.abc import Sequence
 
 from alembic import op
 
 revision: str = "g2b3c4d5e6f7"
-down_revision: Union[str, Sequence[str], None] = "f1a2b3c4d5e6"
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = "f1a2b3c4d5e6"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -37,8 +39,12 @@ def upgrade() -> None:
             task_type = COALESCE(task_type, approach)
         WHERE prompt IS NULL OR task_type IS NULL;
     """)
-    op.execute("COMMENT ON COLUMN public.task_history.task IS 'DEPRECATED legacy column, superseded by prompt/task_type.';")
-    op.execute("COMMENT ON COLUMN public.task_history.approach IS 'DEPRECATED legacy column, superseded by task_type.';")
+    op.execute(
+        "COMMENT ON COLUMN public.task_history.task IS 'DEPRECATED legacy column, superseded by prompt/task_type.';"
+    )
+    op.execute(
+        "COMMENT ON COLUMN public.task_history.approach IS 'DEPRECATED legacy column, superseded by task_type.';"
+    )
 
 
 def downgrade() -> None:
