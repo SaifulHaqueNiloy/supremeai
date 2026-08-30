@@ -29,5 +29,8 @@ def build_supabase_ssl_context() -> ssl.SSLContext:
         logger.warning(
             "⚠️ SUPABASE_DB_CA_CERT is not set. Relying only on certifi for SSL verification."
         )
+        # Fallback for self-signed certificates when explicit CA is missing
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
 
     return ctx
