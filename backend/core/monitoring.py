@@ -29,6 +29,19 @@ from typing import Any
 
 from core.logging_config import logger
 
+# Inject a default correlation_id to prevent ValueError in log formatting
+old_factory = logging.getLogRecordFactory()
+
+
+def record_factory(*args, **kwargs):
+    record = old_factory(*args, **kwargs)
+    if not hasattr(record, "correlation_id"):
+        record.correlation_id = "N/A"
+    return record
+
+
+logging.setLogRecordFactory(record_factory)
+
 # Configure structured logging
 logging.basicConfig(
     level=logging.INFO,
