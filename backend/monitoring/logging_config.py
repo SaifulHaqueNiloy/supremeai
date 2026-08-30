@@ -14,6 +14,7 @@ Critical Security Note: সমস্ত লগ এখন JSON ফরম্যা
 
 import asyncio
 import json
+import logging
 import sys
 import uuid
 from datetime import datetime
@@ -55,6 +56,23 @@ class LoggingConfig:
         # inside tracebacks. In production/staging that leaks secrets, tokens
         # and cross-tenant data into logs, so variable disclosure is enabled
         # only outside production.
+        # Add InterceptHandler to catch standard logging
+        class InterceptHandler(logging.Handler):
+            def emit(self, record):
+                try:
+                    level = logger.level(record.levelname).name
+                except ValueError:
+                    level = record.levelno
+
+                frame, depth = logging.currentframe(), 2
+                while frame and frame.f_code.co_filename == logging.__file__:
+                    frame = frame.f_back
+                    depth += 1
+
+                logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+
+        logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
+
         is_prod_like = settings.env in ("production", "staging")
         logger.add(
             sys.stdout,
