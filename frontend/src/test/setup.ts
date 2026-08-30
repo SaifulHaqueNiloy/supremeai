@@ -37,3 +37,24 @@ Object.defineProperty(global, 'EventSource', {
   value: EventSourceMock,
   writable: true,
 });
+
+// বাংলা মন্তব্য: কিছু component (যেমন ThemeSyncProvider, useServerStream) mount হওয়ার সাথে সাথেই
+// fetch/SSE কল করে। যেসব টেস্ট ফাইল নিজে global.fetch mock করে না (যেমন App.test.tsx), সেখানে
+// jsdom-এর AbortController-এর signal, Node-এর undici fetch-এর instanceof AbortSignal চেকে ফেল করে —
+// "RequestInit: Expected signal (...) to be an instance of AbortSignal" এই error থ্রো করে এবং
+// টেস্ট শেষ হওয়ার পরেও promise settle হওয়ায় "Unhandled Rejection" হিসেবে ধরা পড়ে (CI job fail করে)।
+// তাই ডিফল্ট একটি resolved fetch mock দেওয়া হলো, যাতে real network/AbortSignal validation স্পর্শ না হয়।
+// যেসব টেস্ট নিজে global.fetch = vi.fn(...) সেট করে (যেমন apiClient.test.ts), তারা এটিকে override করবে।
+Object.defineProperty(global, 'fetch', {
+  value: vi.fn(() =>
+    Promise.resolve({
+      ok: true,
+      status: 200,
+      headers: new Map(),
+      json: async () => ({}),
+      text: async () => '',
+    } as unknown as Response)
+  ),
+  writable: true,
+  configurable: true,
+});
