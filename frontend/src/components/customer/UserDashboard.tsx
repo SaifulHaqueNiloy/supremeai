@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bot, Play, FolderOpen, Zap, MessageSquare, Plus, ArrowRight } from 'lucide-react';
+import { Bot, FolderOpen, Zap, MessageSquare, Plus, ArrowRight } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 export const UserDashboard: React.FC = () => {

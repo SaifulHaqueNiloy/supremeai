@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { InteractiveChatTab } from '../../components/admin/InteractiveChatTab';
 import { BrowserPreview } from '../../components/customer/BrowserPreview';
 import { MobileSimulator } from '../../components/customer/MobileSimulator';
-import type { ChatMessage } from '../../components/customer/UserDashboard';
+import type { ChatMessage } from '../../services/chatService';
 import { Bot, Code, Smartphone } from 'lucide-react';
 
 export const AIStudio: React.FC = () => {

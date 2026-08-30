@@ -283,6 +283,8 @@ def verify_token(token: str) -> dict:
             import asyncio
             import threading
 
+            from core.cache.redis_manager import redis_manager
+
             def check_revoked():
                 try:
                     loop = asyncio.get_running_loop()
@@ -290,17 +292,15 @@ def verify_token(token: str) -> dict:
                     loop = None
 
                 if loop and loop.is_running():
-                    result = [False]
+                    # Use run_coroutine_threadsafe to avoid cross-loop Redis errors
+                    import concurrent.futures
 
-                    def run():
-                        new_loop = asyncio.new_event_loop()
-                        result[0] = new_loop.run_until_complete(is_token_revoked(jti))
-                        new_loop.close()
-
-                    t = threading.Thread(target=run)
-                    t.start()
-                    t.join()
-                    return result[0]
+                    future = asyncio.run_coroutine_threadsafe(is_token_revoked(jti), loop)
+                    try:
+                        return future.result(timeout=5)
+                    except (concurrent.futures.TimeoutError, Exception) as e:
+                        logger.warning(f"Token revocation check timed out or failed: {e}")
+                        return False
                 else:
                     return asyncio.run(is_token_revoked(jti))
 
@@ -310,6 +310,8 @@ def verify_token(token: str) -> dict:
                     detail="Token has been revoked",
                 )
         return payload
+    except HTTPException:
+        raise
     except Exception as e:
         if type(e).__name__ == "ExpiredSignatureError":
             raise HTTPException(

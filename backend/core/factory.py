@@ -168,7 +168,7 @@ class SupremeAIFactory:
             "confidence": task_res.confidence,
             "provider_used": task_res.provider_used,
             "latency_ms": task_res.execution_time_ms,
-            "verified": task_res.verification.verified,
+            "verified": getattr(getattr(task_res, "verification", None), "verified", None),
             "components_used": task_res.components_used,
             "task_id": task_res.task_id,
             "rate_limited": False
