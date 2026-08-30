@@ -180,7 +180,9 @@ python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
-    "critical",
+    "critical: fast, merge-blocking tests for core production paths",
+    "important: important backend regression tests for normal PR validation",
+    "overall: full backend test-suite classification marker",
     "hitl: marks tests that require human in the loop",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
