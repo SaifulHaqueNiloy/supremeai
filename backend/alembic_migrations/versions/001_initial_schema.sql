@@ -1,4 +1,20 @@
 -- ============================================================
+-- ⚠️ HISTORICAL / SUPERSEDED — DO NOT USE AS CURRENT SCHEMA REFERENCE
+-- ============================================================
+-- This file is kept for migration lineage/history integrity only. It does
+-- NOT reflect the current production database. Production has evolved to
+-- a different architecture (ai_memory, dynamic_agents, execution_logs,
+-- etc. replacing users/agents/memory_vectors/tool_executions/
+-- hitl_approvals from this file).
+--
+-- The single source of truth for what must exist in production is:
+--   backend/database/contracts/schema_contract.yaml
+-- enforced by:
+--   scripts/ci/check_database_schema.py (CI job: db-schema-check)
+--
+-- See audit findings 2026-08-30 (commit 627bec68db) for full context.
+-- ============================================================
+--
 -- SupremeAI - Initial Database Schema Migration
 -- Version: 001_initial
 -- Description: Creates core tables for users, agents, conversations, memory, HITL
