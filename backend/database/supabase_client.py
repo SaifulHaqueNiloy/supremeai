@@ -511,21 +511,94 @@ class SupabaseDB:
             END;
             $$;
             """,
+            # PATCH v4 (2026-08-30): Add automation_executions tables to bootstrap.
+            # Production logs showed `relation "automation_executions" does not exist`
+            # every cleanup cycle. Migration a1b2c3d4e5f6 exists but is never applied
+            # at boot (no `alembic upgrade head` in startup). Boot-time DDL is the
+            # only path that actually runs in production, so we mirror the migration
+            # DDL here. Column types match `models/automation_execution.py` to avoid
+            # Alembic drift if/when migrations are wired into deploy.
+            "CREATE TABLE IF NOT EXISTS automation_executions ("
+            "id VARCHAR(36) PRIMARY KEY,"
+            "event_id VARCHAR(36) NOT NULL,"
+            "idempotency_key VARCHAR(100),"
+            "workflow_key VARCHAR(100) NOT NULL,"
+            "provider VARCHAR(50) NOT NULL,"
+            "status VARCHAR(50) DEFAULT 'PENDING',"
+            "attempt INTEGER DEFAULT 1,"
+            "started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "completed_at TIMESTAMP WITH TIME ZONE,"
+            "duration_ms INTEGER,"
+            "http_status INTEGER,"
+            "external_execution_id VARCHAR(100),"
+            "trace_id VARCHAR(100),"
+            "error_code VARCHAR(100),"
+            "error_message VARCHAR(1024),"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_automation_executions_event_id ON automation_executions (event_id);",
+            "CREATE INDEX IF NOT EXISTS idx_automation_executions_idempotency_key ON automation_executions (idempotency_key);",
+            "CREATE INDEX IF NOT EXISTS idx_automation_executions_workflow_key ON automation_executions (workflow_key);",
+            "CREATE INDEX IF NOT EXISTS idx_automation_executions_status ON automation_executions (status);",
+            "CREATE INDEX IF NOT EXISTS idx_automation_executions_trace_id ON automation_executions (trace_id);",
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_automation_workflow_idempotency ON automation_executions (workflow_key, idempotency_key);",
+            "CREATE TABLE IF NOT EXISTS automation_execution_attempts ("
+            "id VARCHAR(36) PRIMARY KEY,"
+            "execution_id VARCHAR(36) NOT NULL REFERENCES automation_executions(id) ON DELETE CASCADE,"
+            "attempt INTEGER DEFAULT 1 NOT NULL,"
+            "status VARCHAR(50) DEFAULT 'PENDING',"
+            "started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "completed_at TIMESTAMP WITH TIME ZONE,"
+            "duration_ms INTEGER,"
+            "http_status INTEGER,"
+            "error_code VARCHAR(100),"
+            "error_message VARCHAR(1024),"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_automation_execution_attempts_execution_id ON automation_execution_attempts (execution_id);",
         ]
 
     def bootstrap_schema(self):
-        db_url = os.getenv("SUPABASE_DATABASE_URL")
+        """PATCH v4 (2026-08-30): Route DDL through the WRITER URL only.
+
+        Previous behaviour tried `SUPABASE_DATABASE_URL_POOLER` first — that
+        endpoint is read-only in our production Supabase tenant, so every
+        `CREATE TABLE IF NOT EXISTS` raised `ReadOnlySqlTransaction` and
+        cascaded to CRITICAL silent-pattern escalation. The fallback to
+        `SUPABASE_DATABASE_URL` (direct) was never reached because the
+        except-branch continued to the next URL only after logging a warning.
+
+        New behaviour:
+          1. Try `SUPABASE_DATABASE_URL_WRITER` (canonical writer).
+          2. Fall back to `SUPABASE_DATABASE_URL` (direct, typically writable).
+          3. NEVER try `SUPABASE_DATABASE_URL_POOLER` for DDL — it is read-only
+             in production.
+          4. If neither writer URL is configured, log a single error and
+             return (do NOT silently run DDL against the pooler).
+        """
+        # PATCH v4: writer-first ordering; pooler deliberately excluded.
+        writer_url = os.getenv("SUPABASE_DATABASE_URL_WRITER") or os.getenv("SUPABASE_DATABASE_URL")
         pooler_url = os.getenv("SUPABASE_DATABASE_URL_POOLER")
-        if not db_url and not pooler_url:
+        if not writer_url and not pooler_url:
             logger.error(
-                "SUPABASE_DATABASE_URL or SUPABASE_DATABASE_URL_POOLER is required for schema bootstrap."
+                "SUPABASE_DATABASE_URL_WRITER (or SUPABASE_DATABASE_URL) is required "
+                "for schema bootstrap. Pooler URL is read-only in production and is "
+                "no longer used for DDL."
+            )
+            return
+        if not writer_url and pooler_url:
+            logger.error(
+                "Only SUPABASE_DATABASE_URL_POOLER is configured, but it is read-only "
+                "for DDL. Set SUPABASE_DATABASE_URL_WRITER (or SUPABASE_DATABASE_URL "
+                "direct connection) to enable schema bootstrap."
             )
             return
 
         statements = self.get_bootstrap_statements()
 
         tried_urls = []
-        for candidate_url in (pooler_url, db_url):
+        # PATCH v4: writer only. Pooler removed from DDL candidates.
+        for candidate_url in (writer_url,):
             if not candidate_url:
                 continue
             tried_urls.append(candidate_url)
@@ -546,24 +619,32 @@ class SupabaseDB:
                     conn.close()
                 logger.info(
                     "Supabase schema bootstrap completed using %s.",
-                    (
-                        "SUPABASE_DATABASE_URL_POOLER"
-                        if candidate_url == pooler_url
-                        else "SUPABASE_DATABASE_URL"
-                    ),
+                    "SUPABASE_DATABASE_URL_WRITER"
+                    if candidate_url == writer_url
+                    else "SUPABASE_DATABASE_URL",
                 )
                 return
             except Exception as e:
-                logger.exception(f"Supabase operation error: {e}")
-                logger.warning(
-                    "Supabase schema bootstrap failed for %s: %s",
-                    (
-                        "SUPABASE_DATABASE_URL_POOLER"
-                        if candidate_url == pooler_url
-                        else "SUPABASE_DATABASE_URL"
-                    ),
-                    e,
-                )
+                # PATCH v4: ReadOnlySqlTransaction is now structurally impossible
+                # (writer-only), but we still downgrade DDL failures to WARNING
+                # to avoid the silent-pattern CRITICAL escalation seen in v3.
+                msg = str(e)
+                if "read-only" in msg.lower() or "ReadOnlySqlTransaction" in msg:
+                    logger.warning(
+                        "Supabase schema bootstrap failed (read-only endpoint): %s. "
+                        "Set SUPABASE_DATABASE_URL_WRITER to a writable endpoint. "
+                        "Continuing without schema bootstrap — out-of-band migrations required.",
+                        e,
+                    )
+                else:
+                    logger.exception(f"Supabase operation error: {e}")
+                    logger.warning(
+                        "Supabase schema bootstrap failed for %s: %s",
+                        "SUPABASE_DATABASE_URL_WRITER"
+                        if candidate_url == writer_url
+                        else "SUPABASE_DATABASE_URL",
+                        e,
+                    )
 
         logger.error(
             "Supabase schema bootstrap failed for all candidates: %s",

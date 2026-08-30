@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
-from core.tenant_db import TenantAwareFirestore, get_tenant_db
+from api.deps import get_tenant_db  # PATCH v4: get_tenant_db lives in api.deps, NOT core.tenant_db
+from database.tenant_db import (
+    TenantAwareFirestore,
+)  # PATCH v4: direct import (skip deprecation shim)
 from services.hitl.engine import HITLEngine
 
 router = APIRouter()

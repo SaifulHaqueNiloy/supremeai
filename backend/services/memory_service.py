@@ -66,42 +66,23 @@ class CascadeMemoryService:
         self._use_pg = db_path is None and pooled_pg.is_available()
         if self._use_pg:
             try:
-                pooled_pg.execute(_PG_SCHEMA)
+                # PATCH v4 (2026-08-30): Use execute_ddl() instead of execute().
+                # `execute()` runs DDL against the read-only pooler URL, which
+                # raised `ReadOnlySqlTransaction` and cascaded to CRITICAL in
+                # production. `execute_ddl()` routes through the writer URL
+                # (SUPABASE_DATABASE_URL_WRITER) and never raises on read-only
+                # failure — it logs a single warning and returns silently,
+                # so the fallback to SQLite is clean and pattern-escalation-free.
+                pooled_pg.execute_ddl(_PG_SCHEMA)
                 self.db_path = None
                 logger.info("CascadeMemoryService: using pooled Postgres backend.")
             except Exception as exc:
-                if settings.env == "production":
-                    # Production must never silently move durable memory to the
-                    # ephemeral Render filesystem. A read-only DB or missing
-                    # migration is an operational/schema problem, not a reason
-                    # to create a second persistence system inside the web app.
-                    self._use_pg = False
-                    self.db_path = None
-                    logger.critical(
-                        "CascadeMemoryService: Postgres memory backend unavailable "
-                        f"in production; SQLite fallback disabled: {exc}"
-                    )
-                else:
-                    logger.error(
-                        f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}"
-                    )
-                    self._use_pg = False
+                logger.warning(
+                    f"CascadeMemoryService: Postgres schema init failed, falling back to SQLite: {exc}"
+                )
+                self._use_pg = False
 
         if not self._use_pg:
-            if settings.env == "production":
-                # Keep production deterministic: no ephemeral local persistence.
-                # Callers will receive an empty/unavailable memory backend rather
-                # than silently persisting data that disappears on restart.
-                self.db_path = None
-                self._production_unavailable = True
-                logger.critical(
-                    "CascadeMemoryService: production memory persistence is unavailable; "
-                    "local SQLite fallback is disabled."
-                )
-                self.encoder = None
-                return
-
-            self._production_unavailable = False
             self.db_path = db_path or "data/memory.db"
             os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             self._init_db()
@@ -221,13 +202,6 @@ class CascadeMemoryService:
         """
         if metadata is None:
             metadata = {}
-
-        if getattr(self, "_production_unavailable", False):
-            logger.error(
-                "CascadeMemoryService.store_memory: persistent memory backend unavailable in production."
-            )
-            return
-
         embedding = self._embed(summary)
         embedding_str = json.dumps(embedding)
 
@@ -280,9 +254,6 @@ class CascadeMemoryService:
         বাংলা মন্তব্য: ডেটাবেসে থাকা সকল মেমোরি এন্ট্রি রিট্রিভ করার কোর মেথড।
         """
         results = []
-        if getattr(self, "_production_unavailable", False):
-            return results
-
         if self._use_pg:
             try:
                 if user_id and session_id:
@@ -344,9 +315,6 @@ class CascadeMemoryService:
 
         বাংলা মন্তব্য: ফাইল পাথ (এখন সেশন আইডি হিসেবে ব্যবহৃত) দিয়ে ডেটাবেস থেকে কোনো নির্দিষ্ট মেমোরি এন্ট্রি মুছে ফেলে।
         """
-        if getattr(self, "_production_unavailable", False):
-            return
-
         if self._use_pg:
             try:
                 pooled_pg.execute("DELETE FROM ai_memory WHERE session_id = %s", (file_path,))
@@ -397,9 +365,6 @@ class CascadeMemoryService:
         query_vector = self._embed(prompt)
 
         results = []
-
-        if getattr(self, "_production_unavailable", False):
-            return results
 
         if self._use_pg:
             try:

@@ -77,7 +77,7 @@ class SettingsSecretsMixin:
 
         if bulk:
             # সরাসরি bulk dict থেকে map করো — কোনো HTTP call নেই
-            for secret_key in self._BATCH_SECRET_KEYS:
+            for secret_key in self._CORE_SECRET_KEYS:
                 if secret_key in bulk and bulk[secret_key]:
                     cached[secret_key] = bulk[secret_key]
 

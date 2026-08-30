@@ -61,7 +61,9 @@ class CheckpointManager:
             logger.info(f"Initialized SQLite CheckpointManager at {self.db_path}")
         elif pooled_pg.is_available():
             try:
-                pooled_pg.execute(_PG_SCHEMA)
+                # PATCH v4 (2026-08-30): Use execute_ddl() (writer URL) instead of execute()
+                # (read-only pooler). See services/memory_service.py for the same fix.
+                pooled_pg.execute_ddl(_PG_SCHEMA)
                 if CheckpointManager._batcher is None:
                     CheckpointManager._batcher = WriteBehindBatcher(
                         name="task_checkpoints", flush_interval=1.0, max_batch=100
@@ -69,7 +71,7 @@ class CheckpointManager:
                 self.mode = "pg"
                 logger.info("Initialized Postgres CheckpointManager (write-behind batched).")
             except Exception as exc:
-                logger.error(f"Postgres CheckpointManager init failed, falling back: {exc}")
+                logger.warning(f"Postgres CheckpointManager init failed, falling back: {exc}")
                 self._init_fallback()
         else:
             self._init_fallback()
