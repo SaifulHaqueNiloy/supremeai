@@ -188,6 +188,23 @@ class AuthMiddleware:
             await self.app(scope, receive, send)
             return
 
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): CORS preflight (OPTIONS) request ব্রাউজার কখনোই
+        # Authorization header পাঠায় না — এটাই fetch/XHR স্পেকের normal আচরণ। কিন্তু এই
+        # মিডলওয়্যার আগে path পাবলিক না হলে OPTIONS-কেও token-বিহীন request ধরে সরাসরি
+        # raw ASGI 401 পাঠাত (_send_json_response), যেখানে কোনো CORS header যোগ হয় না।
+        # app_builder.py-তে middleware add করার ক্রম অনুযায়ী AuthMiddleware,
+        # CORSMiddleware/TrustedOriginMiddleware-এর চেয়ে বেশি বাইরের (outer) লেয়ারে থাকে
+        # (Starlette-এ add_middleware() প্রতিবার তালিকার শুরুতে insert করে, তাই সবার
+        # আগে-যোগ-করা middleware সবচেয়ে ভেতরের/router-এর কাছের স্তর হয়ে যায়) — ফলে
+        # preflight request CORSMiddleware-এ পৌঁছানোর আগেই এখানে 401 হয়ে যেত, আর ব্রাউজার
+        # সেটাকে "blocked by CORS policy: No 'Access-Control-Allow-Origin' header" হিসেবে
+        # রিপোর্ট করত, যদিও ADMIN_CORS_ORIGINS ঠিকভাবেই কনফিগার করা ছিল। তাই এখন OPTIONS
+        # request auth check ছাড়াই সরাসরি পরের middleware/app-এ পাঠানো হচ্ছে, যাতে
+        # CORSMiddleware/TrustedOriginMiddleware প্রকৃত preflight হ্যান্ডলিং করতে পারে।
+        if scope.get("method") == "OPTIONS":
+            await self.app(scope, receive, send)
+            return
+
         path = scope.get("path", "")
 
         if _is_public_path(path) or (is_test_environment() and settings.is_bypass_allowed):
