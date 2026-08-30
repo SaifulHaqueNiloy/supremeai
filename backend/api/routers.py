@@ -180,6 +180,12 @@ ALL_ROUTERS = [
     {"path": "api.routes.simulator_admin", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.site_actions", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.browser_routes", "prefix": "", "is_admin": True, "is_critical": False},
+    {
+        "path": "api.routes.hitl_admin",
+        "prefix": "/api/v1/hitl",
+        "is_admin": True,
+        "is_critical": False,
+    },
     {"path": "api.routes.evolution", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
     {"path": "api.routes.meta_ai", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
     {"path": "api.routes.admin_dashboard", "prefix": "", "is_admin": True, "is_critical": False},
