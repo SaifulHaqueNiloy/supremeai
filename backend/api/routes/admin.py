@@ -410,8 +410,15 @@ async def model_branding(admin_user: dict = Depends(get_current_admin)):
 
 @router.post("/configs/refresh")
 async def refresh_system_configs(admin_user: dict = Depends(get_current_admin)):
-    """Hot-Reload model registries and system thresholds from the database without a restart."""
-    import asyncio
+    """Hot-Reload model registries and system thresholds from the database without a restart.
+
+    PATCH v4 (2026-08-30): Replaced `asyncio.gather(6 × sync_from_db(db))` with
+    sequential `await` statements on the SAME shared `AsyncSession`. The
+    gather pattern triggered asyncpg `isce` ("concurrent operations are not
+    permitted") in production because SQLAlchemy AsyncSession does not support
+    concurrent operations on a single underlying connection. This is the
+    same fix already applied to `core/startup/services.py` in commit 3b6e09db05.
+    """
     from database.session import get_db_session_context
     from brain.model_registry import ModelRegistry
     from brain.economic_optimizer import get_economic_optimizer
@@ -425,14 +432,15 @@ async def refresh_system_configs(admin_user: dict = Depends(get_current_admin)):
         async with get_db_session_context() as db:
             economic_opt = await get_economic_optimizer()
             health_monitor = get_health_monitor()
-            await asyncio.gather(
-                ModelRegistry.sync_from_db(db),
-                economic_opt.sync_from_db(db),
-                sync_branding(db),
-                sync_circuit_breaker(db),
-                health_monitor.sync_from_db(db),
-                sync_health_middleware(db),
-            )
+            # Sequential awaits — sharing a single AsyncSession concurrently
+            # raises sqlalchemy.exc.InvalidRequestError (isce / "concurrent
+            # operations are not permitted"). See commit 3b6e09db05.
+            await ModelRegistry.sync_from_db(db)
+            await economic_opt.sync_from_db(db)
+            await sync_branding(db)
+            await sync_circuit_breaker(db)
+            await health_monitor.sync_from_db(db)
+            await sync_health_middleware(db)
         logger.info(f"✅ Hot-Reload executed successfully by {admin_user.get('sub')}")
         return {
             "status": "success",
