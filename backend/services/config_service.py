@@ -1,4 +1,6 @@
+import asyncio
 import json
+import weakref
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +15,20 @@ class ConfigService:
 
     CACHE_PREFIX = "sys_config:"
     DEFAULT_TTL = 300  # 5 minutes TTL for config cache
+
+    # A SQLAlchemy AsyncSession cannot execute overlapping operations. Several
+    # startup/config-sync paths can legitimately ask for different keys using
+    # the same session, so protect only the DB section per session rather than
+    # serializing Redis lookups or all sessions globally.
+    _db_locks: "weakref.WeakKeyDictionary[AsyncSession, asyncio.Lock]" = weakref.WeakKeyDictionary()
+
+    @classmethod
+    def _get_db_lock(cls, db: AsyncSession) -> asyncio.Lock:
+        lock = cls._db_locks.get(db)
+        if lock is None:
+            lock = asyncio.Lock()
+            cls._db_locks[db] = lock
+        return lock
 
     @classmethod
     async def get_config(cls, db: AsyncSession, key: str, default: any = None) -> any:
@@ -45,32 +61,31 @@ class ConfigService:
             return default
 
         try:
-            # বাংলা মন্তব্য (BUG FIX): db.query(...) SQLAlchemy 1.x sync ORM API —
-            # AsyncSession-এ এই attribute নেই ('AsyncSession' object has no attribute
-            # 'query'), ফলে প্রতিটা config fetch এই except ব্লকে পড়ে default রিটার্ন
-            # করত (config hot-reload silently কাজ করছিল না)। SQLAlchemy 2.0 async
-            # style-এ select() + await db.execute() ব্যবহার করা হলো।
-            result = await db.execute(
-                select(SystemConfig).where(SystemConfig.key == key, SystemConfig.is_active)
-            )
-            config = result.scalars().first()
+            # SQLAlchemy AsyncSession does not support overlapping execute()
+            # calls. Serialize only DB access for this specific session.
+            async with cls._get_db_lock(db):
+                result = await db.execute(
+                    select(SystemConfig).where(SystemConfig.key == key, SystemConfig.is_active)
+                )
+                config = result.scalars().first()
 
-            if config is not None:
+                if config is None:
+                    return default
+
                 val = config.value
-                # Cache in Redis
-                if redis:
-                    try:
-                        await redis.execute_with_retry(
-                            "setex",
-                            cache_key,
-                            cls.DEFAULT_TTL,
-                            json.dumps(val) if not isinstance(val, str) else val,
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to cache config {key} in Redis: {e}")
-                return val
 
-            return default
+            # Redis write is intentionally outside the DB-session lock.
+            if redis:
+                try:
+                    await redis.execute_with_retry(
+                        "setex",
+                        cache_key,
+                        cls.DEFAULT_TTL,
+                        json.dumps(val) if not isinstance(val, str) else val,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to cache config {key} in Redis: {e}")
+            return val
         except Exception as e:
             logger.error(f"DB error fetching config {key}: {e}")
             return default
