@@ -45,6 +45,19 @@ def _supabase_ssl_context() -> ssl.SSLContext:
     return build_supabase_ssl_context()
 
 
+def _random_name_connection_class():
+    """asyncpg-এর ডিফল্ট sequential prepared-statement নামের বদলে UUID-based random
+    নাম — PgBouncer transaction pooling-এ নাম-সংঘর্ষ এড়াতে (দেখুন
+    database/session.py-এর একই fix, একই root cause বিশ্লেষণ)।"""
+    from uuid import uuid4
+
+    class RandomNameConnection(Connection):
+        def _get_unique_id(self, prefix: str) -> str:
+            return f"__asyncpg_{prefix}_{uuid4().hex}__"
+
+    return RandomNameConnection
+
+
 class PgBouncerConnectionPool:
     def __init__(self, dsn: str):
         self._dsn = dsn
@@ -70,6 +83,7 @@ class PgBouncerConnectionPool:
             # নেই; এটি create_pool()-এর **connect_kwargs হয়ে connect()-এ গিয়ে
             # TypeError সৃষ্টি করে। statement_cache_size=0 যথেষ্ট।)
             statement_cache_size=0,
+            connection_class=_random_name_connection_class(),
             command_timeout=30,
         )
         logger.info(
