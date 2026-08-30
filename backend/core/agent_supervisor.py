@@ -241,10 +241,25 @@ class AgentSupervisor:
         restart_count = 0
 
         while not self._shutdown_event.is_set():
+            heartbeat_ticker: asyncio.Task | None = None
             try:
                 health.status = "running"
                 health.last_heartbeat = time.time()
                 self._restart_events[name].set()
+
+                # বাংলা মন্তব্য: আগে last_heartbeat শুধু agent শুরু হওয়ার সময় একবার সেট হতো,
+                # চলাকালীন কখনো আপডেট হতো না। ফলে ৯০ সেকেন্ড পরই সুস্থ agent-ও
+                # "no heartbeat" ওয়ার্নিং দিত (log noise-এর মূল কারণ)। এখন coroutine
+                # চলাকালীন একটি ব্যাকগ্রাউন্ড ticker নিয়মিত heartbeat রিফ্রেশ করবে —
+                # যতক্ষণ event loop-এ agent-এর task সচল থাকবে।
+                async def _tick_heartbeat() -> None:
+                    while True:
+                        await asyncio.sleep(10)
+                        health.last_heartbeat = time.time()
+
+                heartbeat_ticker = asyncio.create_task(
+                    _tick_heartbeat(), name=f"{name}-heartbeat-ticker"
+                )
 
                 # Run the agent's main coroutine
                 coro = coro_factory()
@@ -335,6 +350,14 @@ class AgentSupervisor:
                 )
                 await asyncio.sleep(delay)
 
+            finally:
+                if heartbeat_ticker is not None and not heartbeat_ticker.done():
+                    heartbeat_ticker.cancel()
+                    try:
+                        await heartbeat_ticker
+                    except (asyncio.CancelledError, Exception):
+                        pass
+
         # Cleanup
         health.status = "stopped"
         logger.info(f"Agent '{name}' supervisor loop ended.")
@@ -368,11 +391,20 @@ class AgentSupervisor:
                 # Check for dead agent (no heartbeat)
                 if health.last_heartbeat > 0:
                     time_since_heartbeat = time.time() - health.last_heartbeat
-                    if time_since_heartbeat > dead_threshold:
+                    is_dead = time_since_heartbeat > dead_threshold
+                    # বাংলা মন্তব্য: state-change-based logging — প্রতি ৩০ সেকেন্ডে repeat করে
+                    # warning না দিয়ে শুধু dead হওয়ার মুহূর্তে এবং recovery-তে log করা হয়,
+                    # যা log noise কমায় (রিপোর্টের item 5)।
+                    was_dead = getattr(health, "_reported_dead", False)
+                    if is_dead and not was_dead:
                         logger.warning(
                             f"⚠️ Agent '{name}' has no heartbeat for "
                             f"{time_since_heartbeat:.0f}s (threshold: {dead_threshold}s)."
                         )
+                        health._reported_dead = True
+                    elif not is_dead and was_dead:
+                        logger.info(f"✅ Agent '{name}' heartbeat recovered.")
+                        health._reported_dead = False
 
     async def start_monitor(self, check_interval: int = 30) -> None:
         """Start the background health monitor."""
