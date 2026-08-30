@@ -1,5 +1,7 @@
 import json
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from core.logging_config import logger
@@ -13,7 +15,7 @@ class ConfigService:
     DEFAULT_TTL = 300  # 5 minutes TTL for config cache
 
     @classmethod
-    async def get_config(cls, db: Session, key: str, default: any = None) -> any:
+    async def get_config(cls, db: AsyncSession, key: str, default: any = None) -> any:
         """
         Fetch configuration by key.
         1. Checks Redis cache.
@@ -43,11 +45,17 @@ class ConfigService:
             return default
 
         try:
-            config = (
-                db.query(SystemConfig)
-                .filter(SystemConfig.key == key, SystemConfig.is_active)
-                .first()
+            # বাংলা মন্তব্য (BUG FIX): db.query(...) SQLAlchemy 1.x sync ORM API —
+            # AsyncSession-এ এই attribute নেই ('AsyncSession' object has no attribute
+            # 'query'), ফলে প্রতিটা config fetch এই except ব্লকে পড়ে default রিটার্ন
+            # করত (config hot-reload silently কাজ করছিল না)। SQLAlchemy 2.0 async
+            # style-এ select() + await db.execute() ব্যবহার করা হলো।
+            result = await db.execute(
+                select(SystemConfig).where(
+                    SystemConfig.key == key, SystemConfig.is_active
+                )
             )
+            config = result.scalars().first()
 
             if config is not None:
                 val = config.value

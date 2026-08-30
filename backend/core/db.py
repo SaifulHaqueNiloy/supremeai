@@ -74,6 +74,21 @@ def _get_database_url() -> str:
     return url
 
 
+def _random_name_connection_class():
+    """asyncpg-এর ডিফল্ট sequential prepared-statement নামের বদলে UUID-based random
+    নাম — PgBouncer transaction pooling-এ ভিন্ন connection-এর নাম-সংঘর্ষ এড়াতে
+    (দেখুন database/session.py-এর একই fix, একই root cause বিশ্লেষণ)।"""
+    from uuid import uuid4
+
+    from asyncpg import Connection as _AsyncpgConnection
+
+    class RandomNameConnection(_AsyncpgConnection):
+        def _get_unique_id(self, prefix: str) -> str:
+            return f"__asyncpg_{prefix}_{uuid4().hex}__"
+
+    return RandomNameConnection
+
+
 @lru_cache
 def get_engine():
     """
@@ -96,15 +111,16 @@ def get_engine():
         engine_kwargs["pool_size"] = POOL_SIZE
         engine_kwargs["max_overflow"] = MAX_OVERFLOW
         engine_kwargs["pool_recycle"] = POOL_RECYCLE
-        # বাংলা মন্তব্য (BUG FIX): এই engine (core/db.py) database/session.py-এর
-        # মতো একই Supabase PgBouncer pooler-এর সাথে কানেক্ট করে, কিন্তু আগে এখানে
-        # statement_cache_size=0 সেট করা ছিল না। ফলে asyncpg prepared statement
-        # cache PgBouncer transaction/statement mode-এর সাথে conflict করে
-        # 'DuplicatePreparedStatementError' দিত (maintenance_pipeline.py-তে এই
-        # engine ব্যবহৃত হয়, যা report-এ উল্লেখিত affected module-গুলোর একটি)।
-        # database/session.py ও pgbouncer_pool.py-তে আগেই এই ফিক্স আছে; এখানেও
-        # একই fix প্রয়োগ করা হলো।
-        engine_kwargs["connect_args"] = {"statement_cache_size": 0}
+        # বাংলা মন্তব্য (BUG FIX v2 — 2026-08-30): শুধু statement_cache_size=0 যথেষ্ট
+        # নয় — SQLAlchemy-এর asyncpg dialect cache নির্বিশেষে সবসময় named prepared
+        # statement তৈরি করতে Connection.prepare() সরাসরি কল করে, এবং asyncpg-এর
+        # ডিফল্ট sequential নাম জেনারেটর PgBouncer transaction pooling-এ ভিন্ন
+        # connection-এর মধ্যে নাম-সংঘর্ষ তৈরি করতে পারে। UUID-based random নাম
+        # (connection_class) দিয়ে এই সংঘর্ষ সম্পূর্ণ এড়ানো হলো।
+        engine_kwargs["connect_args"] = {
+            "statement_cache_size": 0,
+            "connection_class": _random_name_connection_class(),
+        }
 
     engine = create_async_engine(db_url, **engine_kwargs)
 

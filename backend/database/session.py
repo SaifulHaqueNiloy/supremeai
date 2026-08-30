@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 from core.config import settings
 from core.logging_config import logger
@@ -39,6 +39,27 @@ _engine_instance: AsyncEngine | None = None
 _session_maker_instance: async_sessionmaker[AsyncSession] | None = None
 
 
+# বাংলা মন্তব্য (BUG FIX v2): asyncpg-এর ডিফল্ট statement-নাম জেনারেটর প্রতি Connection
+# object-এ ০ থেকে sequential counter ব্যবহার করে (__asyncpg_stmt_0__, _1__, ...)। PgBouncer
+# transaction pooling mode একই backend PostgreSQL সেশন একাধিক ভিন্ন asyncpg Connection-এর
+# মধ্যে ভাগ করে, ফলে দুটো ভিন্ন connection স্বাধীনভাবে গণনা করে একই নাম (যেমন
+# "__asyncpg_stmt_6__") তৈরি করতে পারে — pgbouncer সেগুলোকে একই backend-এ multiplex করলে
+# 'DuplicatePreparedStatementError' হয়। শুধু statement_cache_size=0 এই নাম-সংঘর্ষ ঠেকায় না
+# (SQLAlchemy-এর asyncpg dialect cache নির্বিশেষে সবসময় Connection.prepare() কল করে —
+# sqlalchemy/discussions/10246)। প্রকৃত সমাধান: UUID-ভিত্তিক সম্পূর্ণ random নাম, যাতে দুটো
+# ভিন্ন connection কখনো একই নাম জেনারেট না করে।
+def _build_random_name_connection_class():
+    from uuid import uuid4
+
+    from asyncpg import Connection as _AsyncpgConnection
+
+    class RandomNameConnection(_AsyncpgConnection):
+        def _get_unique_id(self, prefix: str) -> str:
+            return f"__asyncpg_{prefix}_{uuid4().hex}__"
+
+    return RandomNameConnection
+
+
 def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
     """বাংলা: async_url-এর ধরণ (sqlite/postgresql) অনুসারে engine kwargs তৈরি করে।"""
     engine_kwargs: dict[str, Any] = {"echo": False}
@@ -47,44 +68,30 @@ def _build_engine_kwargs(async_url: str) -> dict[str, Any]:
         engine_kwargs["connect_args"] = {"check_same_thread": False}
     elif async_url.startswith("postgresql"):
         _role = settings.service_role.lower()
-        if _role == "admin":
-            _pool_size, _max_overflow = 1, 2
-        else:
-            _pool_size, _max_overflow = 2, 13
 
         # বাংলা মন্তব্য: asyncpg এর জন্য prepared statement সংক্রান্ত সেটিংস connect_args-এর ভেতরে থাকতে হবে
         from core.db_ssl import build_supabase_ssl_context
 
         engine_kwargs.update(
             {
-                "pool_size": _pool_size,
-                "max_overflow": _max_overflow,
-                "pool_timeout": 30,
-                "pool_recycle": 1800,
+                # NullPool: SQLAlchemy নিজে connection পুল না রেখে প্রতিটি অপারেশনে নতুন
+                # connection নেয় ও ছাড়ে — PgBouncer-এর backend connection lifecycle-এর
+                # সাথে SQLAlchemy-এর নিজস্ব pooling "double-pooling" করে স্ট্যাল
+                # prepared-statement অবস্থা তৈরি করে না।
+                "poolclass": NullPool,
                 "pool_pre_ping": True,
                 "connect_args": {
                     "command_timeout": 30,
                     "server_settings": {"application_name": f"supremeai_2_0_{_role}"},
-                    # বাংলা মন্তব্য (BUG FIX): PgBouncer transaction/statement pooling মোডে
-                    # asyncpg prepared statement cache বন্ধ রাখতে হবে, নাহলে
-                    # 'DuplicatePreparedStatementError' আসে (SentinelAgent.monitor_endpoints
-                    # সহ একাধিক জায়গায় দেখা গেছে)। শুধু statement_cache_size=0 ই যথেষ্ট এবং
-                    # একমাত্র বৈধ asyncpg connect() প্যারামিটার এই উদ্দেশ্যে।
-                    # আগে এখানে `prepared_statement_cache_size` নামে একটি key ছিল যা
-                    # asyncpg.connect()-এর বৈধ প্যারামিটার না (আসল নাম শুধু
-                    # `max_cached_statement_lifetime`, `max_cacheable_statement_size`,
-                    # `statement_cache_size`) — এটি TypeError তৈরি করতে পারত এবং
-                    # pgbouncer_pool.py-তে ইতিমধ্যে নথিভুক্ত একই বাগ। এছাড়া
-                    # `max_cached_statement_lifetime=0` মানে "cache আছে কিন্তু expiry নাই",
-                    # cache নিজেই বন্ধ করে না — তাই বাদ দেওয়া হলো, statement_cache_size=0
-                    # একাই cache সম্পূর্ণ নিষ্ক্রিয় করে।
                     "statement_cache_size": 0,
+                    "connection_class": _build_random_name_connection_class(),
                     "ssl": build_supabase_ssl_context(),
                 },
             }
         )
         logger.info(
-            f"🔌 DB pool configured for SERVICE_ROLE='{_role}': pool_size={_pool_size}, max_overflow={_max_overflow}"
+            f"🔌 DB engine configured for SERVICE_ROLE='{_role}': poolclass=NullPool, "
+            f"statement_cache_size=0, random prepared-statement names (PgBouncer-safe)."
         )
     return engine_kwargs
 
