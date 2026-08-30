@@ -26,6 +26,22 @@ from services.llm.llm_router import (
     TokenBudget,
 )
 
+
+@pytest.fixture(autouse=True)
+def mock_api_keys(monkeypatch):
+    """Mock API keys so providers are properly initialized in tests."""
+
+    class MockSettings:
+        moonshot_api_key = "test_key"
+        deepseek_api_key = "test_key"
+        together_api_key = "test_key"
+        gemini_api_key = "test_key"
+        hf_api_key = "test_key"
+        env = "test"
+
+    monkeypatch.setattr("services.llm.providers.settings", MockSettings())
+
+
 # --- TokenBudget Tests ---
 
 

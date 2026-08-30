@@ -8,6 +8,7 @@ import sys
 import uuid
 from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -38,6 +39,52 @@ from core.logging_config import logger
 # সেট করা হলো, যেকোনো test file import হওয়ার আগে।
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 os.environ.setdefault("TESTING", "true")
+
+
+# ============================================================
+# CI TEST TIER CLASSIFICATION
+# ============================================================
+# Keep tiering in one place so CI can run a fast Critical/Important
+# subset without maintaining a large file list in GitHub Actions.
+# Critical paths mirror the production coverage policy.
+
+_TEST_ROOT = Path(__file__).resolve().parent
+
+_CRITICAL_TEST_PARTS = (
+    ("security",),
+    ("api", "auth"),
+    ("api", "routes", "agent"),
+    ("api", "routes", "api_keys"),
+    ("api", "routes", "billing"),
+    ("core", "llm"),
+    ("core", "orchestration"),
+    ("core", "security"),
+    ("core", "queue"),
+    ("core", "microvm_sandbox"),
+    ("services", "usage"),
+    ("services", "memory"),
+    ("tools", "checkpoint_manager"),
+    ("tools", "parallel_agent_executor"),
+)
+
+_IMPORTANT_TEST_PARTS = (
+    ("services",),
+    ("tools",),
+    ("api", "routes"),
+)
+
+
+def _matches_test_parts(test_file: Path, patterns: tuple[tuple[str, ...], ...]) -> bool:
+    relative = test_file.resolve().relative_to(_TEST_ROOT).parts
+    return any(
+        len(relative) >= len(pattern)
+        and all(
+            segment == pattern_segment
+            or (pattern_segment.endswith("*") and segment.startswith(pattern_segment[:-1]))
+            for segment, pattern_segment in zip(relative, pattern, strict=False)
+        )
+        for pattern in patterns
+    )
 
 
 class CustomAssertions:
@@ -730,6 +777,14 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "memory: marks tests related to memory service")
     config.addinivalue_line("markers", "hitl: marks tests related to HITL engine")
     config.addinivalue_line("markers", "security: marks tests related to security features")
+    config.addinivalue_line(
+        "markers", "critical: fast, merge-blocking tests for core production paths"
+    )
+    config.addinivalue_line(
+        "markers",
+        "important: important backend regression tests for normal PR validation",
+    )
+    config.addinivalue_line("markers", "overall: full backend test-suite classification marker")
 
 
 # Ignore slow tests by default unless explicitly requested
@@ -740,6 +795,16 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "slow" in item.keywords:
                 item.add_marker(skip_slow)
+
+    # Auto-classify collected tests into Critical/Important/Overall tiers
+    for item in items:
+        test_file = Path(str(item.fspath))
+        if _matches_test_parts(test_file, _CRITICAL_TEST_PARTS):
+            item.add_marker(pytest.mark.critical)
+        elif _matches_test_parts(test_file, _IMPORTANT_TEST_PARTS):
+            item.add_marker(pytest.mark.important)
+        else:
+            item.add_marker(pytest.mark.overall)
 
 
 def pytest_addoption(parser):
