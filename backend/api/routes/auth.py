@@ -21,12 +21,15 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 
-SECRET_KEY = settings.jwt_secret
 ALGORITHM = "HS256"
 # বাংলা: ২৪ ঘণ্টার টোকেন অনেক বেশি — অ্যাক্সেস টোকেন ১ ঘণ্টা, রিফ্রেশ টোকেন দীর্ঘ মেয়াদী।
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 # বাংলা: রিফ্রেশ টোকেন ৭ দিন — প্রোডাকশন স্ট্যান্ডার্ড।
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+
+def _get_secret_key() -> str:
+    return settings.jwt_secret
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
@@ -46,7 +49,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
             "type": "access",
         }
     )
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, _get_secret_key(), algorithm=ALGORITHM)
 
 
 def create_refresh_token(data: dict) -> str:
@@ -66,7 +69,7 @@ def create_refresh_token(data: dict) -> str:
             "type": "refresh",
         }
     )
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, _get_secret_key(), algorithm=ALGORITHM)
 
 
 @with_error_bus("optional_current_user")
@@ -76,9 +79,9 @@ async def optional_current_user(
     if not token or jwt is None:
         return None
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _get_secret_key(), algorithms=[ALGORITHM])
         # বাংলা: type=access ছাড়া অন্য টোকেন (যেমন refresh) ব্যবহার রোধ।
-        if payload.get("type") not in (None, "access"):
+        if payload.get("type") != "access":
             return None
         # বাংলা মন্তব্য (ROOT-CAUSE FIX, /logout ফিচারের অংশ): logout করা
         # (blacklist-এ থাকা) টোকেন যেন আর valid না ধরা হয়, নাহলে logout-এর
@@ -94,8 +97,8 @@ async def optional_current_user(
             role=role,
             email=payload.get("email") if isinstance(payload.get("email"), str) else None,
         )
-    except Exception:
-        logger.exception("Unhandled exception")
+    except (JWTError, ValueError):
+        logger.debug("JWT decode failed in optional_current_user", exc_info=True)
         return None
 
 
@@ -262,7 +265,7 @@ async def refresh_token_endpoint(body: RefreshRequest):
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWT service unavailable"
         )
     try:
-        payload = jwt.decode(body.refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(body.refresh_token, _get_secret_key(), algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
@@ -316,7 +319,7 @@ async def logout(token: str | None = Depends(oauth2_scheme)):
     if not token or jwt is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _get_secret_key(), algorithms=[ALGORITHM])
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
@@ -325,7 +328,7 @@ async def logout(token: str | None = Depends(oauth2_scheme)):
     jti = payload.get("jti")
     exp = payload.get("exp")
     if jti:
-        await revoke_token(jti, exp=int(exp) if exp else None)
+        await revoke_token(jti, exp=int(exp) if isinstance(exp, (int, float)) else None)
     return {"status": "logged_out"}
 
 

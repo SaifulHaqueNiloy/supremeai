@@ -5,14 +5,16 @@ import { getApiBaseUrl } from '../utils/api';
 // কারণ /api/v1/live শুধু প্রসেস লাইভনেস চেক করে, Redis/DB ডিপেন্ডেন্সি টাচ করে না তাই আরো লাইটওয়েট
 export const startAntiSleepHeartbeat = () => {
   // Initial ping 10 seconds after load
-  setTimeout(() => {
+  const timeoutId = setTimeout(() => {
     pingServers();
   }, 10_000);
 
   // Ping every 10 minutes
-  setInterval(() => {
+  const intervalId = setInterval(() => {
     pingServers();
   }, 10 * 60 * 1000);
+
+  return { timeoutId, intervalId };
 };
 
 const pingServers = () => {

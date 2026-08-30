@@ -297,7 +297,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                         )
                         body_bytes = b"{}"
                 elif hasattr(response, "body"):
-                    body_bytes = response.body if response.body else b"{}"
+                    body_bytes = response.body if response.body is not None else b"{}"
                 else:
                     body_bytes = b"{}"
 

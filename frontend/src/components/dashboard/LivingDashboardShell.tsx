@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { LiveSimulator } from './LiveSimulator';
 import { useAuthStore, AuthStatus } from '../../store/authStore';
 import { Link } from 'react-router-dom';

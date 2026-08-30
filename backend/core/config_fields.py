@@ -303,9 +303,6 @@ class SettingsFieldsMixin:
     bhasha_min_quality: float = Field(default=0.7, validation_alias="BHASHA_MIN_QUALITY")
     bhasha_max_cache: int = Field(default=10000, validation_alias="BHASHA_MAX_CACHE")
     bhasha_batch_concurrency: int = Field(default=5, validation_alias="BHASHA_BATCH_CONCURRENCY")
-    auto_remediation_dry_run: bool = Field(
-        default=True, validation_alias="AUTO_REMEDIATION_DRY_RUN"
-    )
 
     # ── Microservices Config — env-driven ─────────────────────────────────────
     # বাংলা মন্তব্য: Scraper microservic-এর লিভ সেনেন, Cloudflare Worker থেকে proxy করে।

@@ -13,7 +13,7 @@ import { RegisterPage } from './pages/auth/RegisterPage';
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
-import type { ChatMessage } from "./components/customer/UserDashboard";
+import type { ChatMessage } from "./services/chatService";
 
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
 const AdminShell = React.lazy(() => import("./pages/admin/AdminShell").then(m => ({ default: m.AdminShell })));
@@ -130,25 +130,7 @@ const AppContent: React.FC = () => {
   };
 
   const legacyWorkspace = (
-    <UserDashboard
-      customerMessages={chatMessages}
-      customerInput={chatInput}
-      setCustomerInput={setChatInput}
-      loading={false}
-      handleSendCustomer={handleSendCustomer}
-      theme={theme}
-      toggleTheme={toggleTheme}
-      code={code}
-      setCode={setCode}
-      isServerOnline={isServerOnline}
-      deployGate={deployGate}
-      user={null}
-      projects={[]}
-      chatHistory={chatMessages}
-      widgets={[]}
-      onSaveToProject={handleSaveToProject}
-      onPreview={handlePreview}
-    />
+    <UserDashboard />
   );
 
   return (
