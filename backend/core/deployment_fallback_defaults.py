@@ -29,6 +29,6 @@ BACKEND_URL_DEFAULT: str = (
 # `api/routes/health_aggregation.py` ও `api/routes/service_topology.py`
 # ImportError-এ লোড হতে ব্যর্থ হচ্ছিল — health-aggregation রাউটটি নিবন্ধিত
 # থাকা সত্ত্বেও অ্যাপে মাউন্টই হতো না (silent dead route)।
-ADMIN_URL_DEFAULT: str = os.getenv("ADMIN_URL") or settings.admin_url or ""
+ADMIN_URL_DEFAULT: str = settings.admin_url or ""
 
-SCRAPER_URL_DEFAULT: str = os.getenv("SCRAPER_URL") or settings.scraper_service_url or ""
+SCRAPER_URL_DEFAULT: str = settings.scraper_service_url or ""
