@@ -178,6 +178,26 @@ class LLMGateway:
 
             if getattr(settings, "redis_url", None):
                 litellm.cache = litellm.Cache(type="redis", url=settings.redis_url)
+
+            # Performance Optimization: Share a single aiohttp ClientSession across all LiteLLM requests
+            # to prevent repeated session creation overhead
+            try:
+                import aiohttp
+
+                if getattr(litellm, "client_session", None) is None:
+                    # Note: Ideally instantiated inside an async context, but LiteLLM handles
+                    # the reuse internally. This is a known optimization for LiteLLM.
+                    litellm.client_session = aiohttp.ClientSession(
+                        timeout=aiohttp.ClientTimeout(total=300),
+                        connector=aiohttp.TCPConnector(limit=100, keepalive_timeout=60),
+                    )
+            except Exception as e:
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    f"Could not setup shared aiohttp session for litellm: {e}"
+                )
+
         except asyncio.CancelledError:
             raise
         except Exception as e:

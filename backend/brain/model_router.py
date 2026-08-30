@@ -68,7 +68,18 @@ class ModelRouter:
     Enhanced with performance optimization and self-healing capabilities.
     """
 
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialized = False
+        return cls._instance
+
     def __init__(self):
+        if getattr(self, "_initialized", False):
+            return
+        self._initialized = True
         logger.info("Initializing refactored ModelRouter (LiteLLM Wrapper)")
         # বাংলা মন্তব্ব: ব্যাকওয়ার্ড কম্প্যাটিবিলিটি ও মকিংয়ের জন্য cot_reasoner মক অবজেক্ট যুক্ত করা হয়েছে
         self.cot_reasoner = None

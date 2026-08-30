@@ -231,7 +231,14 @@ class ImageToCode:
             return {"status": "error", "error": str(e)}
 
 
-image_to_code_tool = ImageToCode()
+_image_to_code_tool_instance = None
+
+
+def get_image_to_code_tool() -> ImageToCode:
+    global _image_to_code_tool_instance
+    if _image_to_code_tool_instance is None:
+        _image_to_code_tool_instance = ImageToCode()
+    return _image_to_code_tool_instance
 
 
 @router.post("/image-to-code")
@@ -246,12 +253,10 @@ async def api_image_to_code(
         if not contents:
             raise HTTPException(status_code=400, detail="Empty file provided")
 
-        result = await image_to_code_tool.generate_code_from_bytes(
-            contents, framework=framework, styling=styling
-        )
+        tool = get_image_to_code_tool()
+        result = await tool.generate_code_from_bytes(contents, framework=framework, styling=styling)
         if result.get("status") == "error":
             raise HTTPException(status_code=500, detail=result.get("error"))
-
         return result
     except Exception as e:
         logger.error(f"Failed to process image upload: {e}")
@@ -271,9 +276,8 @@ async def api_figma_to_component(
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        component = await image_to_code_tool.figma_to_react(
-            tmp_path, framework=framework, styling=styling
-        )
+        tool = get_image_to_code_tool()
+        component = await tool.figma_to_react(tmp_path, framework=framework, styling=styling)
         return {"status": "success", **component.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Component generation failed: {e}") from e
@@ -290,7 +294,8 @@ async def api_extract_palette(file: UploadFile = File(...)):
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        theme = await image_to_code_tool.extract_color_palette(tmp_path)
+        tool = get_image_to_code_tool()
+        theme = await tool.extract_color_palette(tmp_path)
         return {"status": "success", **theme.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Palette extraction failed: {e}") from e
@@ -307,7 +312,8 @@ async def api_detect_tree(file: UploadFile = File(...)):
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        hierarchy = await image_to_code_tool.detect_component_tree(tmp_path)
+        tool = get_image_to_code_tool()
+        hierarchy = await tool.detect_component_tree(tmp_path)
         return {"status": "success", **hierarchy.to_dict()}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Component tree detection failed: {e}") from e
