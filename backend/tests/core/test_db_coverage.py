@@ -21,7 +21,11 @@ def _reset_db():
 
 
 def test_get_database_url_empty(monkeypatch):
-    monkeypatch.setattr(core_db, "settings", SimpleNamespace(database_url=""))
+    # Audit fix (patch v3): canonical field is supabase_database_url; the old
+    # settings.database_url attribute never existed. DATABASE_URL env must be
+    # cleared for the fallback assertion to be hermetic.
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr(core_db, "settings", SimpleNamespace(supabase_database_url=""))
     assert core_db._get_database_url() == "sqlite+aiosqlite:///./local.db"
 
 
@@ -35,13 +39,15 @@ def test_get_database_url_empty(monkeypatch):
     ],
 )
 def test_get_database_url_conversions(monkeypatch, in_url, out_url):
-    monkeypatch.setattr(core_db, "settings", SimpleNamespace(database_url=in_url))
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    monkeypatch.setattr(core_db, "settings", SimpleNamespace(supabase_database_url=in_url))
     assert core_db._get_database_url() == out_url
 
 
 def test_get_engine_sqlite_memory(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setattr(
-        core_db, "settings", SimpleNamespace(database_url="sqlite+aiosqlite:///:memory:")
+        core_db, "settings", SimpleNamespace(supabase_database_url="sqlite+aiosqlite:///:memory:")
     )
     engine = core_db.get_engine()
     assert "sqlite" in engine.url.drivername
@@ -49,8 +55,9 @@ def test_get_engine_sqlite_memory(monkeypatch):
 
 
 def test_get_session_factory_returns_and_reuses(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setattr(
-        core_db, "settings", SimpleNamespace(database_url="sqlite+aiosqlite:///:memory:")
+        core_db, "settings", SimpleNamespace(supabase_database_url="sqlite+aiosqlite:///:memory:")
     )
     f1 = core_db.get_session_factory()
     f2 = core_db.get_session_factory()
@@ -59,7 +66,7 @@ def test_get_session_factory_returns_and_reuses(monkeypatch):
 
 async def test_get_db_commit_path(monkeypatch):
     monkeypatch.setattr(
-        core_db, "settings", SimpleNamespace(database_url="sqlite+aiosqlite:///:memory:")
+        core_db, "settings", SimpleNamespace(supabase_database_url="sqlite+aiosqlite:///:memory:")
     )
     core_db.get_engine.cache_clear()
     gen = core_db.get_db()
@@ -88,7 +95,7 @@ async def test_get_db_rollback_on_error(monkeypatch):
 
 async def test_db_session_context(monkeypatch):
     monkeypatch.setattr(
-        core_db, "settings", SimpleNamespace(database_url="sqlite+aiosqlite:///:memory:")
+        core_db, "settings", SimpleNamespace(supabase_database_url="sqlite+aiosqlite:///:memory:")
     )
     core_db.get_engine.cache_clear()
     async with core_db.db_session() as session:
@@ -104,7 +111,7 @@ async def test_check_db_health_unhealthy():
 
 async def test_check_db_health_healthy_and_slow_query(monkeypatch):
     monkeypatch.setattr(
-        core_db, "settings", SimpleNamespace(database_url="sqlite+aiosqlite:///:memory:")
+        core_db, "settings", SimpleNamespace(supabase_database_url="sqlite+aiosqlite:///:memory:")
     )
     core_db.get_engine.cache_clear()
     engine = core_db.get_engine()

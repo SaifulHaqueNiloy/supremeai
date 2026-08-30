@@ -158,15 +158,24 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         logger.debug("\n🏥 Registering health checks...")
 
         async def _check_database() -> bool:
+            # Audit fix (patch v3 session): two prior defects made this critical
+            # readiness check fail in EVERY environment:
+            #   1. ``from core.db import engine`` always yielded None (lazy
+            #      placeholder never resolved) → None.connect() AttributeError.
+            #   2. even with a real engine, the SYNC connect()/execute() API was
+            #      used against the ASYNC engine (asyncpg).
+            # Failures were also swallowed silently — now logged server-side.
             try:
                 from sqlalchemy import text
 
-                from core.db import engine
+                from core.db import get_engine
 
-                with engine.connect() as conn:
-                    conn.execute(text("SELECT 1"))
+                engine = get_engine()
+                async with engine.connect() as conn:
+                    await conn.execute(text("SELECT 1"))
                 return True
             except Exception:
+                logger.exception("❌ Database health check failed")
                 return False
 
         def _check_memory() -> bool:

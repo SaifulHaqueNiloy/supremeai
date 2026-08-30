@@ -38,12 +38,28 @@ class Base(DeclarativeBase):
 
 
 def _get_database_url() -> str:
-    """Get database URL from environment with validation."""
+    """Get database URL from environment with validation.
+
+    Audit fix (patch v3 session): previously read the nonexistent
+    ``settings.database_url`` attribute → AttributeError on every call → the
+    critical ``database`` readiness check failed silently (``/ready`` was
+    permanently 503 in all environments). Now uses the canonical
+    ``settings.supabase_database_url`` (SUPABASE_DATABASE_URL_POOLER, the same
+    field every other module consumes) with a direct ``DATABASE_URL`` env
+    fallback, then the SQLite dev fallback.
+    """
     import os
 
-    url = settings.database_url
+    url = ""
+    try:
+        url = settings.supabase_database_url or ""
+    except AttributeError:
+        url = ""
     if not url:
-        logger.warning("DATABASE_URL not set, using SQLite fallback")
+        # Direct env fallback — Render commonly provisions DATABASE_URL directly.
+        url = os.getenv("DATABASE_URL", "")
+    if not url:
+        logger.warning("No database URL configured, using SQLite fallback")
         return "sqlite+aiosqlite:///./local.db"
 
     # Convert postgres:// to postgresql+asyncpg:// for async
@@ -111,7 +127,7 @@ _async_session_factory = None
 
 def get_session_factory():
     """Return the module-level session factory, initializing lazily."""
-    global _engine, _async_session_factory
+    global _engine, _async_session_factory, engine, async_session_factory
     if _async_session_factory is None:
         _engine = get_engine()
         _async_session_factory = async_sessionmaker(
@@ -119,6 +135,11 @@ def get_session_factory():
             class_=AsyncSession,
             expire_on_commit=False,
         )
+        # Audit fix (patch v3 session): the backward-compat module-level names
+        # were documented as "resolved on first use" but never actually
+        # assigned — ``from core.db import engine`` always yielded None.
+        engine = _engine
+        async_session_factory = _async_session_factory
     return _async_session_factory
 
 
