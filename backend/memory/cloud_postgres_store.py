@@ -19,52 +19,58 @@ class CloudPostgresStore:
     Uses Supabase or Cloud SQL connection string.
     """
 
+    # Tables this store depends on. Schema ownership lives ONLY in Alembic
+    # migrations (backend/alembic_migrations/versions/) — this class must
+    # never CREATE TABLE at runtime. Runtime DDL previously caused silent
+    # drift between what the code expected and what production actually
+    # had (see backend/database/contracts/schema_contract.yaml and the
+    # 2026-08-30 incident where task_history was missing 5 columns that
+    # save_task() wrote to, so every write failed silently).
+    REQUIRED_TABLES = ("task_history", "conversation_context", "verification_queue")
+
     def __init__(self):
         self.conn_string = getattr(settings, "database_url", "")
-        self._init_tables()
+        self._verify_schema()
 
     def _get_conn(self):
         return psycopg2.connect(self.conn_string, cursor_factory=RealDictCursor)
 
-    def _init_tables(self):
-        """Initialize tables if not exist."""
-        with self._get_conn() as conn, conn.cursor() as cur:
-            cur.execute("""
-                    CREATE TABLE IF NOT EXISTS task_history (
-                        id SERIAL PRIMARY KEY,
-                        task_type VARCHAR(50),
-                        prompt TEXT,
-                        result TEXT,
-                        provider VARCHAR(100),
-                        cost DECIMAL(10,6),
-                        latency_ms INTEGER,
-                        success BOOLEAN DEFAULT true,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-            cur.execute("""
-                    CREATE TABLE IF NOT EXISTS conversation_context (
-                        id SERIAL PRIMARY KEY,
-                        session_id VARCHAR(100),
-                        user_id VARCHAR(100),
-                        messages JSONB,
-                        summary TEXT,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-            cur.execute("""
-                    CREATE TABLE IF NOT EXISTS verification_queue (
-                        id SERIAL PRIMARY KEY,
-                        email_target VARCHAR(255),
-                        otp_code VARCHAR(20),
-                        verification_link TEXT,
-                        processed BOOLEAN DEFAULT false,
-                        received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-            conn.commit()
-            logger.info("PostgreSQL tables initialized")
+    def _verify_schema(self):
+        """Verify required tables exist. Never creates or alters schema here.
+
+        Schema changes must go through Alembic migrations so that
+        production, staging, and CI stay on one source of truth. If a
+        required table is missing, we log a loud warning (and, in
+        production, raise) instead of silently creating a table that
+        drifts from the canonical schema contract.
+        """
+        try:
+            with self._get_conn() as conn, conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT table_name FROM information_schema.tables
+                    WHERE table_schema = 'public' AND table_name = ANY(%s)
+                    """,
+                    (list(self.REQUIRED_TABLES),),
+                )
+                found = {row["table_name"] for row in cur.fetchall()}
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"CloudPostgresStore: could not verify schema: {exc}")
+            return
+
+        missing = set(self.REQUIRED_TABLES) - found
+        if missing:
+            msg = (
+                f"CloudPostgresStore: missing required tables {sorted(missing)}. "
+                "Run `alembic upgrade head` (see backend/alembic_migrations/) "
+                "before starting the app. Refusing to auto-create tables at "
+                "runtime to avoid schema drift."
+            )
+            if getattr(settings, "environment", "development") == "production":
+                raise RuntimeError(msg)
+            logger.warning(msg)
+        else:
+            logger.info("CloudPostgresStore: schema verified OK")
 
     def save_task(self, task_data: dict[str, Any]) -> int:
         """Save task execution record."""
