@@ -283,7 +283,19 @@ async function getHealthyBackends(backends) {
     backends.map(async backend => {
       for (let attempt = 0; attempt < backend.retries; attempt++) {
         try {
-          const res = await fetch(backend.health, { signal: AbortSignal.timeout(backend.timeout) })
+          // ক্যাশ-বাস্টিং: প্রতিবার ইউনিক টাইমস্ট্যাম্প যোগ করা হচ্ছে, যাতে Cloudflare
+          // পুরনো/ক্যাশড রেসপন্স ফেরত না দিয়ে সত্যিকারের রিকোয়েস্ট Render পর্যন্ত পাঠায়
+          const bustUrl = `${backend.health}${backend.health.includes('?') ? '&' : '?'}t=${Date.now()}`;
+          const res = await fetch(bustUrl, {
+            signal: AbortSignal.timeout(backend.timeout),
+            cf: { cacheTtl: 0, cacheEverything: false },
+            headers: {
+              // আসল ব্রাউজারের মতো User-Agent, যাতে Render এটাকে বট হিসেবে ইগনোর না করে
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+              'Cache-Control': 'no-cache, no-store',
+              'Pragma': 'no-cache'
+            }
+          })
           if (res.ok) return backend
         } catch (_) {
           if (attempt === backend.retries - 1) return null
