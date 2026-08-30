@@ -3,11 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Badge, Skeleton } from '../ui';
 import { Search, MessageSquare, Clock, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { apiClient } from '../../services/apiClient';
 
 export function MemoryBrowser() {
   const { data: conversations, isLoading } = useQuery({
     queryKey: ['conversations'],
-    queryFn: () => fetch('/memory/conversations').then(r => r.json()),
+    queryFn: () => apiClient.get<any[]>('/api/memory/conversations'),
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConv, setSelectedConv] = useState<any | null>(null);
