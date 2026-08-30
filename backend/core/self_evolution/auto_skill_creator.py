@@ -418,38 +418,31 @@ asyncio.run(_supreme_test_run())
                 f"📜 Governed ChangeProposal [{proposal.proposal_id}] PROMOTED with Verified Integrity."
             )
 
-            # 4. Finalize Registration & Storage Deployment (ONLY AFTER PROMOTION & INTEGRITY GATE)
-            installer = SkillInstaller()
-            ok = installer.install_skill_from_source(
-                name=skill_name,
-                code=code_block,
-                version=uss.metadata.version,
-                description=uss.metadata.description,
-                dependencies=uss.execution.dependencies,
-                uss=schema_dict,
-            )
+            # 4. Suspend for Human-in-the-Loop (HITL) Approval
+            from services.hitl.engine import HITLEngine
 
-            if not ok:
-                raise RuntimeError("Failed to register and install validated skill.")
+            payload = {
+                "skill_name": skill_name,
+                "demand_justification": user_demand,
+                "code": code_block,
+                "version": uss.metadata.version,
+                "description": uss.metadata.description,
+                "dependencies": uss.execution.dependencies,
+                "uss": schema_dict,
+                "proposal_id": proposal.proposal_id,
+            }
+
+            hitl_engine = HITLEngine(db=self.db)
+            record_id = hitl_engine.suspend_for_approval(
+                target_resource=f"skills/{skill_name}", payload=payload
+            )
 
             # Clean up quarantine directory
             if quarantine_dir.exists():
                 shutil.rmtree(quarantine_dir)
 
-            # Firestore live deployment
-            now = datetime.now(UTC)
-            skill_meta = {
-                "skill_name": skill_name,
-                "demand_justification": user_demand,
-                "generated_code": code_block,
-                "status": "ACTIVE",
-                "deployed_at": now,
-                "uss": schema_dict,
-                "proposal_id": proposal.proposal_id,
-            }
-            self.skills_ref.document(skill_name).set(skill_meta)
             logger.info(
-                f"🏆 Deployed governed dynamic skill '{skill_name}' into Firestore. Ready for live orchestration!"
+                f"🛡️ Skill '{skill_name}' successfully governed and suspended for HITL approval (Record ID: {record_id})."
             )
 
             # Record successful experience for future pattern matching
@@ -468,7 +461,9 @@ asyncio.run(_supreme_test_run())
             return {
                 "success": True,
                 "skill_name": skill_name,
-                "message": "Autonomous evolution loop successfully completed. Skill is live.",
+                "status": "pending_approval",
+                "record_id": record_id,
+                "message": "Autonomous evolution loop completed. Skill suspended for Admin approval.",
             }
 
         except Exception as e:
