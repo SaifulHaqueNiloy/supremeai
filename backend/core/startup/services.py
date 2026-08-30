@@ -207,14 +207,12 @@ async def initialize_independent_services(app):
                 sync_from_db as sync_health_middleware,
             )
             from database.session import get_db_session_context
-            from services.smart_model_router import sync_from_db as sync_router
             from utils.branding import sync_from_db as sync_branding
 
             async with get_db_session_context() as db:
                 economic_opt = await get_economic_optimizer()
                 health_monitor = get_health_monitor()
                 await asyncio.gather(
-                    sync_router(db),
                     ModelRegistry.sync_from_db(db),
                     economic_opt.sync_from_db(db),
                     sync_branding(db),
