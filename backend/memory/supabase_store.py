@@ -18,7 +18,10 @@ class SupabaseStore(SQLiteMemoryStore):
             or os.getenv("SUPABASE_DATABASE_URL_POOLER")
             or os.getenv("SUPABASE_DATABASE_URL")
             or os.getenv("SUPABASE_DB_URL")
-            or settings.database_url
+            # Audit fix (patch v3): canonical settings field (the previous
+            # ``settings.database_url`` attribute does not exist → latent
+            # AttributeError when all env vars above are unset).
+            or getattr(settings, "supabase_database_url", "")
         )
         self.local_path = local_path or os.getenv("SQLITE_PATH", "data/supremeai.db")
         self._provider: str | None = None  # Will be determined after health check
