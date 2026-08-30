@@ -105,7 +105,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         """Internal method to fetch API key from database."""
         pool = await get_db_pool()
         return await pool.fetchrow(
-            "SELECT id, key_hash, revoked, rate_limit_rps, rate_limit_window, expires_at FROM api_keys WHERE key_hash = $1 LIMIT 1",
+            "SELECT id, key_hash, revoked, rate_limit_rps, rate_limit_window, expires_at, scopes FROM api_keys WHERE key_hash = $1 LIMIT 1",
             key_hash,
         )
 
@@ -169,6 +169,7 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         request.state.api_key = {
             "id": row["id"],
             "masked": mask_api_key(api_key_header),
+            "scopes": row.get("scopes", []),
         }
 
         # Non-critical: usage tracking failure should not block the request

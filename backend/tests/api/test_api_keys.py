@@ -200,14 +200,14 @@ class TestRouterStructure:
 
 class TestIntegrationViaHeaders:
     def test_endpoints_accessible_without_api_key(self, client):
-        resp = client.get("/api/api-keys/", headers={"Authorization": "Bearer mock-token"})
+        resp = client.get("/api/api-keys/", headers={})  # "Authorization": "Bearer mock-token"
         assert resp.status_code == 200
 
     def test_api_key_header_accepted_in_test_mode(self, client):
         resp = client.get(
             "/api/api-keys/",
             headers={
-                "Authorization": "Bearer mock-token",
+                # "Authorization": "Bearer mock-token",
                 "x-api-key": "sk-supreme-test123",
             },
         )

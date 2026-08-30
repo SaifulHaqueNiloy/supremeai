@@ -42,6 +42,11 @@ async def ensure_api_key_tables() -> None:
             )
             await conn.execute(
                 """
+                ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS scopes TEXT[];
+                """
+            )
+            await conn.execute(
+                """
                 CREATE TABLE IF NOT EXISTS api_key_usage (
                     id SERIAL PRIMARY KEY,
                     api_key_id INTEGER NOT NULL REFERENCES api_keys(id),

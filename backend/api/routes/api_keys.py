@@ -41,6 +41,7 @@ class CreateAPIKeyRequest(BaseModel):
     expires_in_days: int | None = Field(
         default=None, ge=1, description="Expires in N days, null = no expiry"
     )
+    scopes: list[str] | None = Field(default=None, description="List of access scopes/permissions")
 
     @field_validator("user_id", "name", mode="before")
     @classmethod
@@ -113,6 +114,7 @@ async def create_key(req: CreateAPIKeyRequest, request: Request):
         key_prefix=key_prefix,
         rate_limit_rps=req.rate_limit_rps,
         expires_at=expires_at,
+        scopes=req.scopes,
     )
     if not rec:
         raise HTTPException(status_code=500, detail="Failed to create API key")
@@ -126,6 +128,7 @@ async def create_key(req: CreateAPIKeyRequest, request: Request):
         "rate_limit_rps": rec["rate_limit_rps"],
         "expires_at": rec.get("expires_at"),
         "created_at": rec.get("created_at"),
+        "scopes": rec.get("scopes"),
         "warning": "Store this key securely. It will not be shown again.",
     }
 

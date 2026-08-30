@@ -23,15 +23,16 @@ async def create_api_key(
     key_prefix: str,
     rate_limit_rps: int = 6,
     expires_at: int | None = None,
+    scopes: list[str] | None = None,
 ) -> dict[str, Any] | None:
     pool = await get_db_pool()
     row = await pool.fetchrow(
         """
         INSERT INTO api_keys (user_id, name, key_hash, key_masked, key_prefix,
-                              rate_limit_rps, expires_at, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                              rate_limit_rps, expires_at, created_at, updated_at, scopes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id, user_id, name, key_masked, key_prefix, rate_limit_rps,
-                  revoked, expires_at, created_at, updated_at
+                  revoked, expires_at, created_at, updated_at, scopes
         """,
         user_id,
         name,
@@ -42,6 +43,7 @@ async def create_api_key(
         expires_at,
         now_epoch(),
         now_epoch(),
+        scopes or [],
     )
     return dict(row) if row else None
 
@@ -49,7 +51,7 @@ async def create_api_key(
 async def get_api_key_by_id(key_id: int) -> dict[str, Any] | None:
     pool = await get_db_pool()
     row = await pool.fetchrow(
-        "SELECT id, user_id, name, key_masked, key_prefix, rate_limit_rps, revoked, expires_at, created_at, updated_at FROM api_keys WHERE id = $1",
+        "SELECT id, user_id, name, key_masked, key_prefix, rate_limit_rps, revoked, expires_at, created_at, updated_at, scopes FROM api_keys WHERE id = $1",
         key_id,
     )
     return dict(row) if row else None
@@ -58,8 +60,8 @@ async def get_api_key_by_id(key_id: int) -> dict[str, Any] | None:
 async def get_api_keys_by_user(user_id: str) -> list[dict[str, Any]]:
     pool = await get_db_pool()
     rows = await pool.fetch(
-        "SELECT id, user_id, name, key_masked, key_prefix, revoked, rate_limit_rps, "
-        "expires_at, last_used_at, created_at FROM api_keys WHERE user_id = $1 "
+        "SELECT id, user_id, name, key_masked, key_prefix, rate_limit_rps, revoked, "
+        "expires_at, last_used_at, created_at, scopes FROM api_keys WHERE user_id = $1 "
         "ORDER BY created_at DESC",
         user_id,
     )
@@ -69,7 +71,7 @@ async def get_api_keys_by_user(user_id: str) -> list[dict[str, Any]]:
 async def get_api_key_by_hash(key_hash: str) -> dict[str, Any] | None:
     pool = await get_db_pool()
     row = await pool.fetchrow(
-        "SELECT id, user_id, name, key_hash, key_masked, revoked, expires_at FROM api_keys WHERE key_hash = $1",
+        "SELECT id, user_id, name, key_hash, key_masked, revoked, expires_at, scopes FROM api_keys WHERE key_hash = $1",
         key_hash,
     )
     return dict(row) if row else None
@@ -195,7 +197,7 @@ async def get_all_api_keys(limit: int = 100, offset: int = 0) -> list[dict[str, 
     pool = await get_db_pool()
     rows = await pool.fetch(
         "SELECT id, user_id, name, key_masked, key_prefix, rate_limit_rps, revoked, "
-        "expires_at, last_used_at, created_at FROM api_keys ORDER BY created_at DESC "
+        "expires_at, last_used_at, created_at, scopes FROM api_keys ORDER BY created_at DESC "
         "LIMIT $1 OFFSET $2",
         limit,
         offset,
