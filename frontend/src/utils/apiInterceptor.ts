@@ -48,8 +48,26 @@ export function setupGlobalFetchInterceptor() {
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
           // 🔥 ফিক্স: logout endpoint নিজে 401 দিলে recursive loop এ না যেতে guard
+          // 🔥 ROOT-CAUSE FIX: এই wrapper গ্লোবালি সব fetch (background queries, SSE stream
+          // সহ) ইন্টারসেপ্ট করে। আগে যেকোনো একটা non-critical/background রিকোয়েস্ট
+          // (যেমন /api/memory/checkpoints, /api/skills/search, /api/task/stream — SSE)
+          // থেকে ক্ষণস্থায়ী 401 (cold start, Redis blip, রেসিং রিকোয়েস্ট) আসলেই পুরো
+          // অ্যাডমিন সেশন logout হয়ে যেত — এই কারণেই TOTP verify সফল হওয়ার পরপরই
+          // ড্যাশবোর্ড auto-refresh হয়ে লগআউট হয়ে যাচ্ছিল। এখন শুধুমাত্র "critical" এন্ডপয়েন্ট
+          // (সরাসরি ইউজার-উদ্যোগে করা অ্যাডমিন অ্যাকশন কল) থেকে 401/403 এলেই logout ট্রিগার হবে;
+          // ব্যাকগ্রাউন্ড/নন-ক্রিটিক্যাল কলগুলো নিজেরাই তাদের error handle করবে।
+          const NON_CRITICAL_401_PATHS = [
+            '/api/memory/checkpoints',
+            '/api/skills/search',
+            '/api/task/stream',
+          ];
+          const isNonCritical =
+            typeof url === 'string' && NON_CRITICAL_401_PATHS.some((p) => url.includes(p));
+
           if (typeof url === 'string' && url.includes('/api/admin/logout')) {
             console.warn('[Interceptor] Logout endpoint returned 401 — user already logged out, skipping auto-logout.');
+          } else if (isNonCritical) {
+            console.warn(`[Interceptor] Non-critical endpoint returned ${response.status} — ignoring for session state:`, url);
           } else {
             import('../store/adminStore').then(({ useAdminStore }) => {
               const store = useAdminStore.getState();
