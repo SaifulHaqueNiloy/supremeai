@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThemeSyncContext } from './ThemeSyncContext';
 import { getApiBaseUrl } from '../utils/api';
-import { getRawToken } from '../services/apiClient';
+import { getRawToken, AUTH_CHANGED_EVENT } from '../services/apiClient';
 
 
 import { createSecureEventSource } from '../lib/secureSse';
@@ -15,31 +15,53 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
   const [theme, setThemeState] = useState<string>('dark');
 
   useEffect(() => {
-    // Listen for Server-Sent Events from FastAPI
-    const token = getRawToken();
-    const eventSource = createSecureEventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream`, token, {
-      onMessage: (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          // fetchEventSource passes event.type via event.type property now if we matched it, or we check data.event
-          if ((event.type === 'theme_changed' || data.event === 'theme_changed') && data.theme) {
-            console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
-            setThemeState(data.theme);
+    // বাংলা মন্তব্য: ROOT-CAUSE FIX — ThemeSyncProvider App root-এ (login page-সহ)
+    // globally mount থাকে। token না থাকলে authenticated /api/preferences/.../stream
+    // কল করার দরকার নেই (শুধু 401 log হয়), তাই সেক্ষেত্রে skip করা হচ্ছে —
+    // login হলে AUTH_CHANGED_EVENT ধরে reactively connect করবে।
+    let eventSource: { close: () => void } | null = null;
+
+    const connect = () => {
+      const token = getRawToken();
+      if (!token) return;
+      eventSource = createSecureEventSource(`${getApiBaseUrl()}/api/preferences/${userId}/stream`, token, {
+        onMessage: (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            // fetchEventSource passes event.type via event.type property now if we matched it, or we check data.event
+            if ((event.type === 'theme_changed' || data.event === 'theme_changed') && data.theme) {
+              console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
+              setThemeState(data.theme);
+            }
+          } catch (err) {
+            console.error('[ThemeSync] Error parsing SSE message:', err);
           }
-        } catch (err) {
-          console.error('[ThemeSync] Error parsing SSE message:', err);
+        },
+        onOpen: () => {
+          console.warn('[ThemeSync] Connected to SSE Stream for user:', userId);
+        },
+        onError: (err) => {
+          console.error('[ThemeSync] SSE Connection Error:', err);
         }
-      },
-      onOpen: () => {
-        console.warn('[ThemeSync] Connected to SSE Stream for user:', userId);
-      },
-      onError: (err) => {
-        console.error('[ThemeSync] SSE Connection Error:', err);
+      });
+    };
+
+    connect();
+
+    const onAuthChanged = (e: Event) => {
+      const hasToken = (e as CustomEvent<{ hasToken: boolean }>).detail?.hasToken;
+      if (hasToken && !eventSource) {
+        connect();
+      } else if (!hasToken && eventSource) {
+        eventSource.close();
+        eventSource = null;
       }
-    });
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
 
     return () => {
-      eventSource.close();
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+      eventSource?.close();
     };
   }, [userId]);
 

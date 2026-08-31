@@ -3,6 +3,7 @@ import { getFirebaseAuth } from '../firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { eventBus, Events } from '../lib/componentEventBus';
 import { authService } from '../services/authService';
+import { updateTokenCache } from '../services/apiClient';
 
 const decodeJwt = (token: string): Record<string, unknown> | null => {
   try {
@@ -156,6 +157,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           if (data.token) {
             localStorage.setItem('supreme_admin_jwt', data.token);
             localStorage.setItem('adminToken', data.token);
+            updateTokenCache(data.token);
             const decoded = decodeJwt(data.token);
             if (decoded && typeof decoded.role === 'string') {
               set({ adminRole: decoded.role });
@@ -187,6 +189,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       // অথচ adminTokenStore 'supreme_admin_jwt' পড়ে — ফলে স্টেল টোকেন জমে থাকত)
       const TOKEN_KEYS = ['adminToken', 'supreme_admin_jwt', 'supremeai_auth_token'];
       TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
+      updateTokenCache(null);
 
       // বাংলা মন্তব্য: backend-এ কোনো /api/admin/logout endpoint নাই (নিশ্চিত হয়ে দেখা গেছে)।
       // তাই সুইচ ব্যাকএন্ড অল বেস্ট-এফোর্ট call এড়িয়ে সরাসরি Firebase client signOut করা হলো।
