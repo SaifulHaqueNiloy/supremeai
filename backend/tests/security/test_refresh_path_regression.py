@@ -41,16 +41,21 @@ class TestRefreshPathReachability:
 
         The route handler itself must still reject invalid refresh tokens.
         """
-        from api.routes.auth import RefreshRequest, refresh_token_endpoint
-
-        # Request model requires the refresh_token field (422 if absent)
-        with pytest.raises(Exception):
-            RefreshRequest()  # noqa
-
         # Handler validates the JWT and rejects garbage — fail closed
         import asyncio
+        from unittest.mock import MagicMock
+
+        from fastapi import Request, Response
+
+        from api.routes.auth import RefreshRequest, refresh_token_endpoint
+
+        request_mock = MagicMock(spec=Request)
+        request_mock.cookies = {}
+        response_mock = MagicMock(spec=Response)
 
         bad = RefreshRequest(refresh_token="not-a-valid-jwt")
         with pytest.raises(Exception) as exc_info:
-            asyncio.run(refresh_token_endpoint(bad))
+            asyncio.run(
+                refresh_token_endpoint(body=bad, request=request_mock, response=response_mock)
+            )
         assert getattr(exc_info.value, "status_code", None) == 401
