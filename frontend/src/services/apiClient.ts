@@ -166,7 +166,7 @@ const handleResponse = async (res: Response) => {
         '/api/skills/search',
         '/api/task/stream',
       ];
-      const isNonCritical = NON_CRITICAL_401_PATHS.some((p) => res.url.includes(p));
+      const isNonCritical = NON_CRITICAL_401_PATHS.some((p) => res.url?.includes(p));
       if (res.status === 401 && !isNonCritical) {
         clearAuthToken();
       }
