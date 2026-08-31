@@ -14,6 +14,7 @@ vi.mock('./services/chatService', () => ({
 
 vi.mock('./services/apiClient', () => ({
   getRawToken: vi.fn().mockReturnValue(null),
+  AUTH_CHANGED_EVENT: 'AUTH_CHANGED_EVENT',
   apiClient: {
     get: vi.fn().mockImplementation((path: string) => {
       if (path === '/api/browser/sessions') return new Promise(() => {}); // never resolves
