@@ -12,12 +12,22 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from core.config import settings
 from core.logging_config import logger
 
-security = HTTPBearer()
+# বাংলা মন্তব্য (JWT-COOKIE-MIGRATION): auto_error=False করা হলো যাতে
+# Authorization header না থাকলে exception না ছুঁড়ে httpOnly cookie
+# ফলব্যাক চেক করা যায় (auth.py-এর /auth/login যে cookie সেট করে)।
+security = HTTPBearer(auto_error=False)
 _in_memory_jwt_blacklist: set[str] = set()
 
+ACCESS_COOKIE_NAME = "supreme_access_token"
 
-async def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+
+async def require_admin_token(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+):
+    token = credentials.credentials if credentials else request.cookies.get(ACCESS_COOKIE_NAME)
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required.")
     try:
         jwt_secret = settings.jwt_secret
         decoded = jwt.decode(token, jwt_secret, algorithms=["HS256"])
