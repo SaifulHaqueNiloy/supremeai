@@ -64,6 +64,6 @@
     "@webcontainer/api": "^1.6.4",
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
-    "rollup": "^4.63.0"
+    "rollup": "^4.63.1"
   }
 }
