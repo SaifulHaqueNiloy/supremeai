@@ -160,8 +160,15 @@ class SettingsFieldsMixin:
             # AUD-2.1: "/api/v1/markdown" removed from public paths — the markdown
             # export/search surface now requires authentication (router-level guard).
             "/api/config/public",
-            "/api/task/stream",
-            "/api/preferences/default/stream",
+            # বাংলা মন্তব্য (ROOT-CAUSE FIX): "/api/task/stream" ও
+            # "/api/preferences/default/stream" আগে এখানে (public paths) ছিল,
+            # অথচ দুটো রুটই router/route-level dependencies=[Depends(get_current_user_token)]
+            # দিয়ে auth বাধ্যতামূলক করে। AuthMiddleware public path হলে JWT decode করে
+            # request.state.user সেট করে না — ফলে get_current_user_token সবসময় "Missing or
+            # invalid authentication token" ধরে 401 দিত, ভ্যালিড Bearer token পাঠানো সত্ত্বেও।
+            # এটাই ছিল TOTP verify সফল হওয়ার পরপরই dashboard-এ SSE স্ট্রিম ও থিম sync
+            # 401 দিয়ে fail হওয়ার আসল কারণ। এখন middleware এই দুটো পাথেও টোকেন decode করে
+            # request.state.user সেট করবে, তাই ডাউনস্ট্রিম dependency ঠিকভাবে token পাবে।
         ],
         validation_alias="SUPREMEAI_PUBLIC_PATHS",
     )
