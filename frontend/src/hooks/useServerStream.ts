@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getApiBaseUrl } from '../utils/api';
-import { getRawToken } from '../services/apiClient';
+import { getRawToken, AUTH_CHANGED_EVENT } from '../services/apiClient';
 
 import { createSecureEventSource } from '../lib/secureSse';
 
@@ -13,7 +13,6 @@ export const useServerStream = () => {
 
   useEffect(() => {
     const API_BASE_URL = getApiBaseUrl();
-    const token = getRawToken();
     const sseEndpoint = `${API_BASE_URL}/api/task/stream`;
     let eventSource: { close: () => void } | null = null;
     let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -50,6 +49,16 @@ export const useServerStream = () => {
 
     const connect = () => {
       if (!isMounted) return;
+      // বাংলা মন্তব্য: ROOT-CAUSE FIX — এই hook App root-এ globally mount থাকে,
+      // তাই /login-এর মতো পাবলিক পেজেও চলে। token না থাকলে authenticated
+      // /api/task/stream কল করার কোনো মানে নেই — শুধু 401 → backend rate
+      // limiter-এ 429 storm তৈরি করে। token না থাকলে connect স্কিপ করে
+      // AUTH_CHANGED_EVENT-এর অপেক্ষায় থাকি (নিচে দেখুন)।
+      const token = getRawToken();
+      if (!token) {
+        setStreamStatus('disconnected');
+        return;
+      }
       if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
         console.error("🔴 Max SSE reconnect attempts reached. Giving up.");
         setServerStatus(false);
@@ -103,10 +112,28 @@ export const useServerStream = () => {
 
     connect();
 
+    // বাংলা মন্তব্য: login/logout হলে (একই SPA session-এ, remount ছাড়াই) token
+    // আসে/যায় — সেই মুহূর্তে reactively (re)connect বা disconnect করার জন্য।
+    const onAuthChanged = (e: Event) => {
+      const hasToken = (e as CustomEvent<{ hasToken: boolean }>).detail?.hasToken;
+      if (hasToken) {
+        reconnectAttempts = 0;
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        connect();
+      } else {
+        if (reconnectTimeout) clearTimeout(reconnectTimeout);
+        eventSource?.close();
+        eventSource = null;
+        setStreamStatus('disconnected');
+      }
+    };
+    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
+
     return () => {
       isMounted = false;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (healthTimer) clearInterval(healthTimer);
+      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
       console.warn("🔌 Cleaning up SSE Stream...");
       eventSource?.close();
     };
