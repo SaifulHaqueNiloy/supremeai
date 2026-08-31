@@ -155,9 +155,19 @@ const handleResponse = async (res: Response) => {
     }
     if (res.status === 401 || res.status === 403) {
       if (isDev()) console.warn("Authorization failure (401/403). Session invalidated.");
-      // বাংলা: 401/403 হলে টোকেন অবৈধ — পরবর্তী রিকোয়েস্টে পুরোনো টোকেন ব্যবহার রোধে ক্লিয়ার করি।
-      // শুধু 401 হলেই ক্লিয়ার করি — 403 মানে অথেনটিকেটেড কিন্তু অনুমতি নেই, টোকেন এখনও বৈধ।
-      if (res.status === 401) {
+      // বাংলা মন্তব্য (ROOT-CAUSE FIX): এই ফাংশন সব apiClient কল (background queries,
+      // SSE-এর মতো non-critical এন্ডপয়েন্টসহ) হ্যান্ডেল করে। আগে যেকোনো একটা ক্ষণস্থায়ী
+      // 401 (Redis blip, cold-start রেসিং কল) এলেই admin JWT ক্লিয়ার হয়ে যেত, ফলে পরের
+      // রিকোয়েস্টগুলোও token-less হয়ে ব্যর্থ হতো এবং পুরো সেশন কার্যত লগআউট হয়ে যেত —
+      // এটাই ছিল TOTP ভেরিফাই সফল হওয়ার পরপরই ড্যাশবোর্ড থেকে auto-logout হওয়ার মূল কারণ।
+      // তাই নন-ক্রিটিক্যাল/ব্যাকগ্রাউন্ড এন্ডপয়েন্ট থেকে 401 এলে টোকেন ক্লিয়ার করা হবে না।
+      const NON_CRITICAL_401_PATHS = [
+        '/api/memory/checkpoints',
+        '/api/skills/search',
+        '/api/task/stream',
+      ];
+      const isNonCritical = NON_CRITICAL_401_PATHS.some((p) => res.url.includes(p));
+      if (res.status === 401 && !isNonCritical) {
         clearAuthToken();
       }
       throw new ApiError(errMsg, res.status);
