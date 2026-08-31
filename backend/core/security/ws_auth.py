@@ -41,6 +41,10 @@ async def authenticate_websocket(
         The verified token payload, or ``None`` when the connection was closed.
     """
     payload: dict[str, Any] | None = None
+    # বাংলা (JWT-COOKIE-MIGRATION): query-token না থাকলে httpOnly cookie
+    # ফলব্যাক -- same-site WebSocket handshake-এ cookie ব্রাউজার নিজেই পাঠায়।
+    if not token:
+        token = websocket.cookies.get("supreme_access_token")
     try:
         if token:
             payload = verify_token(token)

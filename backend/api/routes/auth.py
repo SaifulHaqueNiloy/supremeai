@@ -4,7 +4,7 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
 from pydantic import BaseModel, EmailStr
@@ -26,6 +26,74 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 # বাংলা: রিফ্রেশ টোকেন ৭ দিন — প্রোডাকশন স্ট্যান্ডার্ড।
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+# বাংলা মন্তব্য (JWT-COOKIE-MIGRATION, ধাপ ১/২): টোকেন এখন থেকে httpOnly cookie
+# হিসেবেও সেট হবে, যাতে ফ্রন্টএন্ড JS (localStorage) থেকে টোকেন সরিয়ে আনা যায়।
+# ট্রানজিশন পিরিয়ডে response body-তেও টোকেন থাকছে (ব্রেকিং চেঞ্জ নয়) —
+# ফ্রন্টএন্ড পুরোপুরি cookie-নির্ভর হয়ে গেলে body থেকে টোকেন সরানো যাবে।
+ACCESS_COOKIE_NAME = "supreme_access_token"
+REFRESH_COOKIE_NAME = "supreme_refresh_token"
+CSRF_COOKIE_NAME = "supreme_csrf_token"
+
+
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str | None) -> None:
+    """বাংলা: access/refresh টোকেন httpOnly cookie হিসেবে সেট করা হয়, প্লাস একটা
+    non-httpOnly CSRF cookie (double-submit pattern) যাতে state-changing
+    request-এ CSRF protection করা যায় — JS এই CSRF cookie পড়ে হেডারে পাঠাবে।
+    """
+    import secrets
+
+    secure = settings.env == "production"
+    response.set_cookie(
+        key=ACCESS_COOKIE_NAME,
+        value=access_token,
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=True,
+        secure=secure,
+        samesite="lax",
+        path="/",
+    )
+    if refresh_token:
+        response.set_cookie(
+            key=REFRESH_COOKIE_NAME,
+            value=refresh_token,
+            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+            httponly=True,
+            secure=secure,
+            samesite="lax",
+            path="/auth",
+        )
+    response.set_cookie(
+        key=CSRF_COOKIE_NAME,
+        value=secrets.token_urlsafe(32),
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        httponly=False,
+        secure=secure,
+        samesite="lax",
+        path="/",
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    for name, path in (
+        (ACCESS_COOKIE_NAME, "/"),
+        (REFRESH_COOKIE_NAME, "/auth"),
+        (CSRF_COOKIE_NAME, "/"),
+    ):
+        response.delete_cookie(key=name, path=path)
+
+
+async def _token_from_header_or_cookie(
+    request: Request,
+    token: str | None = Depends(oauth2_scheme),
+) -> str | None:
+    """বাংলা: আগে Authorization header চেক করা হয় (backward-compat), না পেলে
+    httpOnly cookie থেকে fallback করা হয়। এতে পুরনো (localStorage-based)
+    এবং নতুন (cookie-based) দুই ধরনের ক্লায়েন্টই চলবে ট্রানজিশনের সময়।
+    """
+    if token:
+        return token
+    return request.cookies.get(ACCESS_COOKIE_NAME)
 
 
 def _get_secret_key() -> str:
@@ -74,7 +142,7 @@ def create_refresh_token(data: dict) -> str:
 
 @with_error_bus("optional_current_user")
 async def optional_current_user(
-    token: str | None = Depends(oauth2_scheme),
+    token: str | None = Depends(_token_from_header_or_cookie),
 ) -> UserContext | None:
     if not token or jwt is None:
         return None
@@ -129,11 +197,13 @@ class MeResponse(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str
+    # বাংলা: cookie-based ক্লায়েন্টের জন্য body ঐচ্ছিক — refresh token cookie
+    # থেকেও আসতে পারে।
+    refresh_token: str | None = None
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest, request: Request):
+async def login(body: LoginRequest, request: Request, response: Response):
     if not db.client:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -179,6 +249,7 @@ async def login(body: LoginRequest, request: Request):
             except Exception as exc:
                 logger.warning(f"Failed to register device fingerprint for {user_id}: {exc}")
 
+        _set_auth_cookies(response, access_token, refresh_token)
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -199,7 +270,7 @@ async def login(body: LoginRequest, request: Request):
 
 
 @router.post("/register", response_model=TokenResponse)
-async def register(body: RegisterRequest):
+async def register(body: RegisterRequest, response: Response):
     if not db.client:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -237,6 +308,7 @@ async def register(body: RegisterRequest):
         }
         access_token = create_access_token(token_data)
         refresh_token = create_refresh_token(token_data)
+        _set_auth_cookies(response, access_token, refresh_token)
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -255,7 +327,7 @@ async def register(body: RegisterRequest):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token_endpoint(body: RefreshRequest):
+async def refresh_token_endpoint(body: RefreshRequest, request: Request, response: Response):
     """বাংলা: রিফ্রেশ টোকেন দিয়ে নতুন অ্যাক্সেস টোকেন প্রদান।
 
     type=refresh চেক করে access token রিফ্রেশে ব্যবহার রোধ করা হয় — token confusion প্রতিরোধ।
@@ -264,8 +336,13 @@ async def refresh_token_endpoint(body: RefreshRequest):
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWT service unavailable"
         )
+    refresh_token_value = body.refresh_token or request.cookies.get(REFRESH_COOKIE_NAME)
+    if not refresh_token_value:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
+        )
     try:
-        payload = jwt.decode(body.refresh_token, _get_secret_key(), algorithms=[ALGORITHM])
+        payload = jwt.decode(refresh_token_value, _get_secret_key(), algorithms=[ALGORITHM])
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token"
@@ -284,6 +361,7 @@ async def refresh_token_endpoint(body: RefreshRequest):
     }
     new_access = create_access_token(token_data)
     new_refresh = create_refresh_token(token_data)
+    _set_auth_cookies(response, new_access, new_refresh)
 
     return TokenResponse(
         access_token=new_access,
@@ -308,14 +386,20 @@ async def me(current_user: UserContext | None = Depends(optional_current_user)):
 
 
 @router.post("/logout")
-async def logout(token: str | None = Depends(oauth2_scheme)):
+async def logout(
+    response: Response,
+    token: str | None = Depends(_token_from_header_or_cookie),
+):
     """বাংলা মন্তব্য (নতুন এন্ডপয়েন্ট): আগে /logout রুটটাই ছিল না (তাই 404
     আসত)। JWT stateless বলে সত্যিকারের "invalidate" সম্ভব না, কিন্তু ইতিমধ্যেই
     কোডবেসে থাকা Redis-ব্যাকড blacklist (core/security/revoke_token,
     is_token_revoked -- admin_auth.py-তে যেভাবে ব্যবহৃত হয়) পুনঃব্যবহার করে
     টোকেনের jti ব্ল্যাকলিস্ট করে দেওয়া হচ্ছে। এরপর optional_current_user
     (উপরে) revoke-চেক করে, তাই এই টোকেন দিয়ে /me আর কাজ করবে না।
+
+    বাংলা (JWT-COOKIE-MIGRATION): auth cookie থাকলে সেগুলোও ক্লিয়ার করা হচ্ছে।
     """
+    _clear_auth_cookies(response)
     if not token or jwt is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
