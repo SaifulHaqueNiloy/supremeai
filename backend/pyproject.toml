@@ -116,7 +116,7 @@ optional = true
 
 [tool.poetry.group.ml.dependencies]
 torch = "^2.5.0"
-sentence-transformers = "^3.3.0"
+sentence-transformers = ">=3.3,<7.0"
 # Heavy ML dependencies moved here to keep core image size small
 numpy = ">=1.26.4"
 opencv-python-headless = "^4.10.0"
