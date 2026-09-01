@@ -41,6 +41,6 @@ def test_missing_hostname_is_unsafe():
 
 def test_is_private_ip_helper():
     assert _is_private_ip("10.0.0.1") is True
-    assert _is_private_ip("127.0.0.1") is True
+    assert _is_private_ip("127.0.0.1") is True  # is_local()
     assert _is_private_ip("8.8.8.8") is False
     assert _is_private_ip("not-an-ip") is False

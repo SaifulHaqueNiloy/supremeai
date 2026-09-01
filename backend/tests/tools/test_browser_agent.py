@@ -54,7 +54,7 @@ async def test_is_safe_url_public(mock_gethostbyname, url, expected):
 @pytest.mark.parametrize(
     "url, unsafe_ip",
     [
-        ("http://localhost", "127.0.0.1"),
+        ("http://localhost", "127.0.0.1"),  # is_local()
         ("http://192.168.1.10", "192.168.1.10"),
         ("http://10.0.0.1", "10.0.0.1"),
         ("http://169.254.169.254/latest/meta-data", "169.254.169.254"),
@@ -127,7 +127,7 @@ async def test_navigate_and_interact_fallback_scraper(mock_get, mock_browser, mo
 @pytest.mark.asyncio
 async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
     """নিরাপদ নয় এমন URL ব্লক করে কিনা তা পরীক্ষা করে।"""
-    result = await agent.navigate_and_interact("http://localhost")
+    result = await agent.navigate_and_interact("http://localhost")  # is_local()
     assert result["success"] is False
     assert "SSRF check failed" in result["error"]
 

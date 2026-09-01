@@ -159,7 +159,7 @@ class TestVerifyAdminSessionFailClosed:
 
         mock_request = MagicMock()
         mock_request.headers.get.return_value = None
-        mock_request.client.host = "127.0.0.1"
+        mock_request.client.host = "127.0.0.1"  # is_local()
 
         with pytest.raises(HTTPException) as exc_info:
             import asyncio
@@ -261,7 +261,7 @@ class TestVerifyAdminSessionFailClosed:
     def test_master_admin_role_allowed(self):
         """master_admin রোল অনুমোদিত হয়।"""
         mock_request = MagicMock()
-        mock_request.client.host = "127.0.0.1"
+        mock_request.client.host = "127.0.0.1"  # is_local()
         mock_request.headers.get.return_value = "Bearer admin-token"
 
         with patch("core.security.authentication.auth_middleware.settings") as mock_settings:
@@ -277,7 +277,7 @@ class TestVerifyAdminSessionFailClosed:
     def test_admin_role_success(self):
         """অ্যাডমিন রোল সফল ভেরিফিকেশন।"""
         mock_request = MagicMock()
-        mock_request.client.host = "127.0.0.1"
+        mock_request.client.host = "127.0.0.1"  # is_local()
         mock_request.headers.get.return_value = "Bearer admin-token"
 
         with patch("core.security.authentication.auth_middleware.settings") as mock_settings:

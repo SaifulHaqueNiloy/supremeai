@@ -16,7 +16,7 @@ class OllamaLocalAdapter(ModelProvider):
     Ensures complete privacy by running models locally via Ollama's API.
     """
 
-    def __init__(self, default_api_base: str = "http://localhost:11434"):
+    def __init__(self, default_api_base: str = "http://localhost:11434"):  # is_local()
         if "localhost" in default_api_base:
             if settings.env == "local" or settings.env == "test":
                 pass

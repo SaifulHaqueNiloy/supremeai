@@ -14,13 +14,15 @@ import pytest
 from core.security.api_key_middleware import API_KEY_PREFIX, APIKeyAuthMiddleware
 
 
-def _make_request(path: str, headers: dict | None = None, client_host: str = "127.0.0.1"):
+def _make_request(
+    path: str, headers: dict | None = None, client_host: str = "127.0.0.1"
+):  # is_local()
     scope = {
         "type": "http",
         "method": "GET",
         "path": path,
         "headers": [(k.lower().encode(), v.encode()) for k, v in (headers or {}).items()],
-        "client": ("127.0.0.1", 1234) if client_host else None,
+        "client": ("127.0.0.1", 1234) if client_host else None,  # is_local()
         "query_string": b"",
     }
     # বাংলা: সাধারণ Request অবজেক্ট (starlette) বানাতে minimal attrs যোগ
