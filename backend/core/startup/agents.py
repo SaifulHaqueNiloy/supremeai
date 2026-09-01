@@ -137,14 +137,31 @@ async def start_background_services(app):
             _daily_learner = DailyLearner()
 
             async def _daily_learner_loop() -> None:
+                # Runs 24/7 by design, but only actually executes a learning
+                # cycle when memory headroom is good. If memory is high when
+                # a cycle is due, retry sooner (30 min) instead of skipping
+                # the whole day — this keeps the "runs continuously, works
+                # when memory is good" behavior without losing a full cycle.
+                from core.memory_manager import get_memory_manager
+
+                RETRY_DELAY_SECONDS = 1800  # 30 min
+                FULL_CYCLE_SECONDS = 86400  # 24h
+
                 while True:
-                    try:
-                        await _daily_learner.learn_and_plan(
-                            "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
+                    if get_memory_manager().is_safe_for_heavy_task():
+                        try:
+                            await _daily_learner.learn_and_plan(
+                                "Improve SupremeAI agent reasoning, error recovery, and free-tier efficiency"
+                            )
+                        except Exception as _exc:
+                            logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
+                        await asyncio.sleep(FULL_CYCLE_SECONDS)
+                    else:
+                        logger.info(
+                            "ℹ️ DailyLearner cycle deferred — memory usage too high, "
+                            f"retrying in {RETRY_DELAY_SECONDS // 60} min."
                         )
-                    except Exception as _exc:
-                        logger.warning(f"⚠️ DailyLearner cycle failed: {_exc}")
-                    await asyncio.sleep(86400)
+                        await asyncio.sleep(RETRY_DELAY_SECONDS)
 
             await agent_supervisor.start_agent(
                 "daily-learner",
