@@ -325,9 +325,7 @@ async def register(body: RegisterRequest, response: Response):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token_endpoint(
-    body: RefreshRequest, request: Request | None = None, response: Response | None = None
-):
+async def refresh_token_endpoint(body: RefreshRequest, request: Request, response: Response):
     """বাংলা: রিফ্রেশ টোকেন দিয়ে নতুন অ্যাক্সেস টোকেন প্রদান।
 
     type=refresh চেক করে access token রিফ্রেশে ব্যবহার রোধ করা হয় — token confusion প্রতিরোধ।
