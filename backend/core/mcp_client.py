@@ -123,3 +123,72 @@ class MCPRegistryClient:
                 discovered = ["code_generator"]
 
         return discovered
+
+
+class ControlTowerClient:
+    """Client for the SupremeAI MCP Control Tower (Native MCP SDK)."""
+
+    def __init__(self, use_sse: bool = False):
+        self.use_sse = use_sse
+        self._session = None
+        self._exit_stack = None
+        self._client_ctx = None
+
+    async def connect(self):
+        """Connect to the MCP Control Tower."""
+        import contextlib
+        import os
+
+        from mcp import StdioServerParameters
+        from mcp.client.session import ClientSession
+        from mcp.client.sse import sse_client
+        from mcp.client.stdio import stdio_client
+
+        self._exit_stack = contextlib.AsyncExitStack()
+
+        if self.use_sse:
+            url = os.environ.get("RENDER_MCP_URL", "http://localhost:3771")
+            sse_url = f"{url}/mcp"
+            # Optional API Key if control tower is secured
+            api_key = os.environ.get("MCP_API_KEY", "")
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+
+            logger.info(f"Connecting to MCP Control Tower (SSE) at {sse_url}")
+            self._client_ctx = sse_client(sse_url, headers=headers)
+        else:
+            # Local Stdio Connection (Assumes running in the same codebase)
+            script_path = os.path.join(
+                os.path.dirname(__file__), "../../infrastructure/mcp-control-plane/src/index.ts"
+            )
+            logger.info(f"Connecting to MCP Control Tower (STDIO) via tsx {script_path}")
+
+            server_params = StdioServerParameters(
+                command="npx", args=["tsx", script_path], env=os.environ.copy()
+            )
+            self._client_ctx = stdio_client(server_params)
+
+        # Enter the client context and initialize session
+        read, write = await self._exit_stack.enter_async_context(self._client_ctx)
+        self._session = await self._exit_stack.enter_async_context(ClientSession(read, write))
+
+        await self._session.initialize()
+        logger.info("✅ MCP Control Tower Connected & Initialized")
+
+    async def disconnect(self):
+        """Disconnect from the MCP Control Tower."""
+        if self._exit_stack:
+            await self._exit_stack.aclose()
+            logger.info("🔌 MCP Control Tower Disconnected")
+
+    async def call_tool(self, name: str, arguments: dict) -> Any:
+        """Call a specific tool on the Control Tower."""
+        if not self._session:
+            raise RuntimeError("Not connected to MCP Control Tower")
+
+        logger.info(f"Calling MCP Tool '{name}' with args: {arguments}")
+        result = await self._session.call_tool(name, arguments)
+        return result
+
+
+# Global singleton instance (can be used throughout the backend)
+control_tower = ControlTowerClient(use_sse=True)  # Use SSE by default for cross-service
