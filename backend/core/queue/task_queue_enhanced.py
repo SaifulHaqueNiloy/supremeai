@@ -578,7 +578,16 @@ try:
 
     celery_app = _Celery(
         "supremeai",
-        broker=getattr(settings, "redis_url", "redis://<your-redis-url>/0"),
+        broker=getattr(settings, "redis_url", "redis://localhost:6379/0"),
+        backend=getattr(settings, "redis_url", "redis://localhost:6379/0"),
+        include=["workers.chaos_worker"],  # add other worker modules as needed
+    )
+    celery_app.conf.update(
+        task_serializer="json",
+        accept_content=["json"],
+        result_serializer="json",
+        timezone="UTC",
+        enable_utc=True,
     )
 except ImportError as _celery_import_err:
     logger.warning(
