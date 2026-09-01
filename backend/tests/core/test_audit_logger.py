@@ -15,7 +15,7 @@ class TestLogSecurityEvent:
         event_id = await log_security_event(
             event_type="LOGIN_SUCCESS",
             user_id="user-123",
-            details={"ip": "127.0.0.1"},
+            details={"ip": "127.0.0.1"},  # is_local()
             severity="INFO",
         )
         assert isinstance(event_id, str)

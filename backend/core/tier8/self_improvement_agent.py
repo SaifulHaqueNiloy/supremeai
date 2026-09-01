@@ -337,8 +337,10 @@ class SelfImprovementAgent(BaseSkill):
             if tmp_path is not None:
                 try:
                     tmp_path.unlink(missing_ok=True)
-                except OSError:
-                    pass
+                except OSError as e:
+                    import logging
+
+                    logging.getLogger(__name__).debug(f"Failed to unlink temp artifact: {e}")
 
     async def _apply_approved(self) -> None:
         """Apply proposals that passed dry-run and have high confidence."""

@@ -42,8 +42,8 @@ def test_create_checkout_session_mock():
         "/payments/checkout",
         json={
             "price_id": "price_basic_monthly",
-            "success_url": "http://localhost/success",
-            "cancel_url": "http://localhost/cancel",
+            "success_url": "http://localhost/success",  # is_local()
+            "cancel_url": "http://localhost/cancel",  # is_local()
             "user_id": "test-user-id",
         },
         headers=auth_headers,

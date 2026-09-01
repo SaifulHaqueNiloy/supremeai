@@ -155,12 +155,12 @@ def test_settings_production_cors_validation():
         os.environ,
         {
             "ENV": "production",
-            "CORS_ORIGINS": '["http://localhost:3000", "https://example.com"]',
+            "CORS_ORIGINS": '["http://localhost:3000", "https://example.com"]',  # is_local()
         },
     ):
         settings = Settings()
         # localhost should be removed in production
-        assert "http://localhost:3000" not in settings.cors_origins
+        assert "http://localhost:3000" not in settings.cors_origins  # is_local()
         assert "https://example.com" in settings.cors_origins
 
 
@@ -209,7 +209,7 @@ def test_settings_production_no_wildcard_hosts():
         os.environ,
         {
             "ENV": "production",
-            "ALLOWED_HOSTS": "localhost,127.0.0.1,testserver,example.com",
+            "ALLOWED_HOSTS": "localhost,127.0.0.1,testserver,example.com",  # is_local()
             "SUPREMEAI_JWT_SECRET": "x" * 64,
             "ENCRYPTION_KEY": "x" * 32,
             "USER_CORS_ORIGINS": "https://supremeai-lac.vercel.app",
@@ -218,7 +218,7 @@ def test_settings_production_no_wildcard_hosts():
         settings = Settings()
         # Dangerous hosts should be filtered out
         assert "localhost" not in settings.allowed_hosts
-        assert "127.0.0.1" not in settings.allowed_hosts
+        assert "127.0.0.1" not in settings.allowed_hosts  # is_local()
         assert "testserver" not in settings.allowed_hosts
         assert "example.com" in settings.allowed_hosts
 

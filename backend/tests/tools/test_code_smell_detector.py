@@ -9,7 +9,7 @@ import pytest
 # 对环境变量做最小设置,避免导入时触发外部依赖
 os.environ.setdefault("OPENROUTER_API_KEY", "")
 os.environ.setdefault("HF_API_KEY", "")
-os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
+os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")  # is_local()
 
 
 # Bengali: CodeSmellDetector-এর مختلف মেথড সংক্রান্ত পরীক্ষা

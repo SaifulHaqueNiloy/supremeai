@@ -24,7 +24,7 @@ class TestValidateEndpointUrl:
         [
             ("https://api.example.com/v1/test", True),
             (
-                "http://localhost:8080/health",
+                "http://localhost:8080/health",  # is_local()
                 True,
             ),  # localhost allowed in non-production
             ("file:///etc/passwd", False),  # Block file scheme

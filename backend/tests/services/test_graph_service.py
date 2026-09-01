@@ -34,7 +34,7 @@ async def test_graph_service_real_connection():
         mock_driver.return_value = mock_instance
 
         with patch("tools.graph_service.settings") as mock_settings:
-            mock_settings.neo4j_uri = "bolt://localhost:7687"
+            mock_settings.neo4j_uri = "bolt://localhost:7687"  # is_local()
             mock_settings.neo4j_user = "neo4j"
             mock_settings.neo4j_password = "real_secret_pass"
 

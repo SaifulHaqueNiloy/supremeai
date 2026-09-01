@@ -139,7 +139,7 @@ class AgentSupervisor:
             try:
                 await self._monitor_task
             except asyncio.CancelledError:
-                pass  # expected
+                logger.debug("Monitor task gracefully cancelled.")
             except Exception as e:
                 import logging
 
@@ -373,7 +373,7 @@ class AgentSupervisor:
                     try:
                         await heartbeat_ticker
                     except asyncio.CancelledError:
-                        pass
+                        logger.debug("Heartbeat ticker cancelled.")
                     except Exception as e:
                         logger.error(f"Error cancelling heartbeat for agent '{name}': {e}")
 

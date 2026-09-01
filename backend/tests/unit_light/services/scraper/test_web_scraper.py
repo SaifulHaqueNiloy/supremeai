@@ -8,10 +8,10 @@ from services.scraper.web_scraper import WebScraper
 def test_fetch_page_blocks_ssrf():
     scraper = WebScraper()
     with patch("services.scraper.web_scraper.is_safe_url", return_value=False):
-        result = scraper.fetch_page("http://127.0.0.1:8080/secret")
+        result = scraper.fetch_page("http://127.0.0.1:8080/secret")  # is_local()
     assert result["success"] is False
     assert "SSRF" in result["error"]
-    assert result["url"] == "http://127.0.0.1:8080/secret"
+    assert result["url"] == "http://127.0.0.1:8080/secret"  # is_local()
 
 
 def test_fetch_page_parses_html_successfully():
