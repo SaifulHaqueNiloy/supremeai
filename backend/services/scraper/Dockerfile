@@ -5,11 +5,15 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-RUN pip install --no-cache-dir --upgrade pip
+ENV PIP_ROOT_USER_ACTION=ignore
+RUN pip install --no-cache-dir poetry==2.4.1
 
-# Install Python dependencies
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy dependencies
+COPY pyproject.toml poetry.lock ./
+
+# Install dependencies in project virtualenv including browser group
+RUN poetry config virtualenvs.in-project true \
+    && poetry install --no-interaction --no-ansi --only main,browser --no-root
 
 # Stage 2: Runtime — browser-ready image (Playwright + Chromium)
 FROM python:3.11-slim AS runtime
@@ -28,8 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder (brings in the playwright CLI)
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+# Copy only the virtualenv from builder
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Install Chromium + OS-level browser deps. MUST run AFTER the playwright
 # package is copied above — otherwise the `playwright` CLI does not exist
