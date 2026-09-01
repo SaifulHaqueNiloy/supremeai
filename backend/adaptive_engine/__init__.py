@@ -11,6 +11,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from adaptive_engine.capability_registry import (
+    Capability,
+    CapabilityLifecycleState,
+    CapabilityRegistry,
+    CapabilityRuntimeTier,
+)
 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from adaptive_engine.intent_parser import IntentParser
 from adaptive_engine.learning_loop import LearningLoop
@@ -32,6 +38,10 @@ __all__ = [
     "PlatformLearner",
     "PlatformProfile",
     "PlatformRegistry",
+    "Capability",
+    "CapabilityRegistry",
+    "CapabilityLifecycleState",
+    "CapabilityRuntimeTier",
 ]
 
 # Version tracking for adaptive engine components
