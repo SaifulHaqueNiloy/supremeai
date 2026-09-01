@@ -147,7 +147,14 @@ class ControlTowerClient:
         self._exit_stack = contextlib.AsyncExitStack()
 
         if self.use_sse:
-            url = os.environ.get("RENDER_MCP_URL", "http://localhost:3771")
+            url = os.environ.get("RENDER_MCP_URL")
+            if not url:
+                from core.config import settings
+
+                if settings.env == "local":
+                    url = "http://localhost:3771"  # is_local()
+                else:
+                    raise ValueError("RENDER_MCP_URL must be set in production environments.")
             sse_url = f"{url}/mcp"
             # Optional API Key if control tower is secured
             api_key = os.environ.get("MCP_API_KEY", "")

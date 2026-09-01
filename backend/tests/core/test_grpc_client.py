@@ -110,7 +110,10 @@ class TestWorkerGrpcClient:
                 client.stub = mock_stub
 
                 result = client.log_audit_event(
-                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
+                    "user_login",
+                    "user-123",
+                    "auth",
+                    {"ip": "127.0.0.1"},  # is_local()
                 )
                 assert result is True
 
@@ -127,6 +130,9 @@ class TestWorkerGrpcClient:
                 client.stub = mock_stub
 
                 result = client.log_audit_event(
-                    "user_login", "user-123", "auth", {"ip": "127.0.0.1"}
+                    "user_login",
+                    "user-123",
+                    "auth",
+                    {"ip": "127.0.0.1"},  # is_local()
                 )
                 assert result is False

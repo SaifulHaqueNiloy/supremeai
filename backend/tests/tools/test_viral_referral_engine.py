@@ -9,7 +9,9 @@ class TestViralReferralEngine:
         self.engine = ViralReferralEngine()
 
     def test_generate_referral_code_format(self):
-        with patch.dict("os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}):
+        with patch.dict(
+            "os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}
+        ):  # is_local()
             result = self.engine.generate_referral_code("user-123")
         assert result["status"] == "success"
         assert result["code"].startswith("SUPREME-")
@@ -17,7 +19,9 @@ class TestViralReferralEngine:
         assert result["expires_at"] > time.time()
 
     def test_generate_referral_code_unique(self):
-        with patch.dict("os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}):
+        with patch.dict(
+            "os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}
+        ):  # is_local()
             code1 = self.engine.generate_referral_code("user-1")["code"]
             code2 = self.engine.generate_referral_code("user-2")["code"]
         assert code1 != code2
@@ -43,7 +47,9 @@ class TestViralReferralEngine:
             assert result["credit_bonus"] == 1000
 
     def test_generate_deep_link_twitter(self):
-        with patch.dict("os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}):
+        with patch.dict(
+            "os.environ", {"STAGING_REPLICA_URL": "http://localhost:8000"}
+        ):  # is_local()
             link = self.engine.generate_deep_link("CODE123", "twitter")
         assert "twitter.com/intent/tweet" in link
         assert "CODE123" in link

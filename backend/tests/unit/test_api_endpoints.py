@@ -864,7 +864,7 @@ class TestCORSHeaders:
         # Make request with Origin header
         response = await client.get(
             "/api/v1/health",
-            headers={"Origin": "http://localhost:3000"},
+            headers={"Origin": "http://localhost:3000"},  # is_local()
         )
 
         # Check CORS headers

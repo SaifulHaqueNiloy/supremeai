@@ -50,10 +50,12 @@ def test_settings_cors_origins_parsing():
     """Test CORS origins parsing from environment."""
     from core.config import Settings
 
-    with patch.dict(os.environ, {"CORS_ORIGINS": "http://localhost:3000,http://localhost:5173"}):
+    with patch.dict(
+        os.environ, {"CORS_ORIGINS": "http://localhost:3000,http://localhost:5173"}
+    ):  # is_local()
         settings = Settings()
-        assert "http://localhost:3000" in settings.cors_origins
-        assert "http://localhost:5173" in settings.cors_origins
+        assert "http://localhost:3000" in settings.cors_origins  # is_local()
+        assert "http://localhost:5173" in settings.cors_origins  # is_local()
 
 
 def test_settings_jwt_secret_validation():

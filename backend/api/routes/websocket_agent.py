@@ -221,7 +221,9 @@ class DistributedConnectionManager:
                 logger.error(f"Redis pubsub error: {e}")
                 await asyncio.sleep(1)
 
-    async def connect(self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"):
+    async def connect(
+        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
+    ):  # is_local()
         import time
 
         if self._is_memory_pressure():
@@ -260,7 +262,9 @@ class DistributedConnectionManager:
         logger.info(f"🟢 [WS] Connected: {user_id} from {ip_address}")
         return True
 
-    def disconnect(self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"):
+    def disconnect(
+        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
+    ):  # is_local()
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)
@@ -283,7 +287,9 @@ class DistributedConnectionManager:
         await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
 
     async def _authenticate(
-        self, websocket: WebSocket, client_ip: str = "127.0.0.1"
+        self,
+        websocket: WebSocket,
+        client_ip: str = "127.0.0.1",  # is_local()
     ) -> dict | None:
         if not self._check_ip_rate_limit(client_ip):
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Rate limited")
@@ -326,7 +332,7 @@ async def websocket_chat_endpoint(
     Real-time bidirectional WebSocket for Token-by-Token streaming and Agentic Tool execution.
     Supports both plain text (Flutter) and JSON payloads with base64 images (Web Chat).
     """
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    client_ip = request.client.host if request.client else "127.0.0.1"  # is_local()
 
     auth_payload = await manager._authenticate(websocket, client_ip)
     if not auth_payload:

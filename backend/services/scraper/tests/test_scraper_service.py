@@ -59,15 +59,15 @@ def test_health_check(client):
 # ---------------------------------------------------------------------------
 
 SSRF_URLS = [
-    "http://127.0.0.1:8081/admin",
-    "http://localhost:5432",
+    "http://127.0.0.1:8081/admin",  # is_local()
+    "http://localhost:5432",  # is_local()
     "http://10.0.0.1/secret",
     "http://192.168.1.1/admin",
     "http://169.254.169.254/latest/meta-data/",
     "http://0.0.0.0:8080/",
     "file:///etc/passwd",
     "ftp://internal-server/file",
-    "gopher://127.0.0.1:6379/_FLUSHALL",
+    "gopher://127.0.0.1:6379/_FLUSHALL",  # is_local()
     "http://[::1]:8080/",
     "javascript:alert(1)",
     "data:text/html,<script>alert(1)</script>",
@@ -86,7 +86,9 @@ def test_scrape_ssf_blocked_various(client):
 
 def test_browse_ssrf_blocked(client):
     """Browse endpoint should enforce SSRF protection."""
-    resp = client.post("/browse", json={"url": "http://localhost:5432", "action": "fetch"})
+    resp = client.post(
+        "/browse", json={"url": "http://localhost:5432", "action": "fetch"}
+    )  # is_local()
     assert resp.status_code == 200
     data = resp.json()
     assert data["success"] is False
@@ -95,7 +97,9 @@ def test_browse_ssrf_blocked(client):
 
 def test_recipe_ssrf_blocked(client):
     """Recipe endpoint should reject internal initial_url."""
-    resp = client.post("/recipe", json={"steps": [], "initial_url": "http://127.0.0.1:8081/"})
+    resp = client.post(
+        "/recipe", json={"steps": [], "initial_url": "http://127.0.0.1:8081/"}
+    )  # is_local()
     assert resp.status_code == 400
     data = resp.json()
     assert "SSRF" in data["detail"]
@@ -245,8 +249,8 @@ async def test_concurrency_allows_limited_parallel(browser_agent):
     [
         ("https://example.com/page", True),
         ("http://example.com", True),
-        ("http://127.0.0.1:8080", False),
-        ("http://localhost:3000", False),
+        ("http://127.0.0.1:8080", False),  # is_local()
+        ("http://localhost:3000", False),  # is_local()
         ("http://10.0.0.1", False),
         ("http://172.16.0.1", False),
         ("http://192.168.1.1", False),
@@ -255,7 +259,7 @@ async def test_concurrency_allows_limited_parallel(browser_agent):
         ("http://[::1]:8080", False),
         ("file:///etc/passwd", False),
         ("ftp://example.com", False),
-        ("gopher://127.0.0.1:6379", False),
+        ("gopher://127.0.0.1:6379", False),  # is_local()
         ("javascript:alert(1)", False),
         ("data:text/html,<script>alert(1)</script>", False),
         ("", False),
@@ -284,7 +288,7 @@ def test_is_safe_url_none_raises():
 def test_web_scraper_ssrf_blocked():
     """WebScraper.fetch_page should block SSRF URLs."""
     scraper = WebScraper()
-    result = scraper.fetch_page("http://127.0.0.1:8081/admin")
+    result = scraper.fetch_page("http://127.0.0.1:8081/admin")  # is_local()
     assert result["success"] is False
     assert "SSRF" in result["error"]
 

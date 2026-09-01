@@ -198,7 +198,7 @@ def test_settings():
     """Test-specific settings that override production config."""
     return {
         "DATABASE_URL": _resolve_test_database_url(),
-        "REDIS_URL": "redis://localhost:6379/1",  # Use DB 1 for tests
+        "REDIS_URL": "redis://localhost:6379/1",  # Use DB 1 for tests  # is_local()
         "SECRET_KEY": "test-secret-key-for-testing-only-do-not-use-in-production",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
         "JWT_ALGORITHM": "HS256",

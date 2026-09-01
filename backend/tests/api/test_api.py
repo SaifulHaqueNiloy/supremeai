@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 
 os.environ["OPENROUTER_API_KEY"] = "mock-key-value"
 os.environ.setdefault("HF_API_KEY", "")
-os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
+os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")  # is_local()
 
 import core.services as services_mod
 from core import services

@@ -8,7 +8,7 @@ if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 os.environ.setdefault("OPENROUTER_API_KEY", "mock-key-value")
 os.environ.setdefault("HF_API_KEY", "")
-os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")
+os.environ.setdefault("OLLAMA_URL", "http://127.0.0.1:11434")  # is_local()
 
 from unittest.mock import MagicMock
 

@@ -253,7 +253,7 @@ class TestOperationContext:
         """Test OperationContext default values."""
         context = OperationContext(
             admin_id="admin",
-            ip_address="127.0.0.1",
+            ip_address="127.0.0.1",  # is_local()
             path="/test",
             method="POST",
         )

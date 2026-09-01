@@ -20,7 +20,7 @@ def _result_json():
 
 @pytest.fixture
 def manager():
-    return FreeTierCacheManager(redis_url="redis://localhost:6379/0")
+    return FreeTierCacheManager(redis_url="redis://localhost:6379/0")  # is_local()
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_init_default_limit(monkeypatch):
 
 async def test_connect_creates_and_is_idempotent(redis_pair):
     client, factory = redis_pair
-    m = FreeTierCacheManager(redis_url="redis://localhost")
+    m = FreeTierCacheManager(redis_url="redis://localhost")  # is_local()
     await m.connect()
     assert m.redis is client
     await m.connect()  # second connect is a no-op
@@ -62,7 +62,7 @@ async def test_connect_creates_and_is_idempotent(redis_pair):
 
 async def test_disconnect_resets(redis_pair):
     client, _ = redis_pair
-    m = FreeTierCacheManager(redis_url="redis://localhost")
+    m = FreeTierCacheManager(redis_url="redis://localhost")  # is_local()
     await m.connect()
     await m.disconnect()
     assert m.redis is None
@@ -246,7 +246,7 @@ async def test_get_cache_manager_raises_without_url(monkeypatch):
 async def test_get_cache_manager_creates_with_url(monkeypatch):
     import core.cache_manager as cm
 
-    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")  # is_local()
     monkeypatch.setattr(cm, "_cache_manager", None)
     client = AsyncMock()
     client.ping = AsyncMock(return_value=True)
