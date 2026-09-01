@@ -120,7 +120,7 @@ sentence-transformers = "^3.3.0"
 # Heavy ML dependencies moved here to keep core image size small
 numpy = ">=1.26.4"
 opencv-python-headless = "^4.10.0"
-pandas = "^2.2.3"
+pandas = ">=2.2.3,<4.0.0"
 plotly = "^5.24.1"
 scipy = "^1.14.1"
 
