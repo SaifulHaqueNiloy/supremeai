@@ -151,8 +151,8 @@ class HealthAggregator:
                         f"Possible cause: Deployment {deploy.deployment_id} (commit: {deploy.commit_sha}). "
                         f"Recommend rollback if condition persists."
                     )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"[Health Correlation] Error analyzing deployment correlation: {e}")
 
         return health
 

@@ -355,8 +355,10 @@ class AgentSupervisor:
                     heartbeat_ticker.cancel()
                     try:
                         await heartbeat_ticker
-                    except (asyncio.CancelledError, Exception):
+                    except asyncio.CancelledError:
                         pass
+                    except Exception as e:
+                        logger.error(f"Error cancelling heartbeat for agent '{name}': {e}")
 
         # Cleanup
         health.status = "stopped"
