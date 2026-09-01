@@ -85,6 +85,25 @@ class FreeTierMemoryManager:
         status = self.get_status()
         return status.is_critical or status.is_warning
 
+    # Threshold below which it's considered safe to run optional heavy
+    # background work (self-evolution cycles, adaptive-engine learning
+    # loops, etc.). Deliberately well under WARNING_THRESHOLD so these
+    # opt-in jobs never push memory into the warning/critical zone
+    # themselves. Overridable via env for tuning without a code change.
+    HEAVY_TASK_SAFE_THRESHOLD = 65.0  # percentage
+
+    def is_safe_for_heavy_task(self, threshold: float | None = None) -> bool:
+        """Whether memory headroom is good enough to run an optional,
+        non-critical background job (e.g. evolution/adaptive-learning
+        cycles) right now. These jobs are meant to run 24/7 but should
+        only actually do work when memory usage is comfortably low —
+        this lets the caller keep its loop alive and simply skip the
+        heavy part of a cycle when usage is high, retrying next cycle.
+        """
+        limit = threshold if threshold is not None else self.HEAVY_TASK_SAFE_THRESHOLD
+        status = self.get_status()
+        return status.percent_used < limit
+
     def _update_logging_state(self, status: MemoryStatus):
         """State machine for logging to prevent spam."""
         current_time = time.monotonic()

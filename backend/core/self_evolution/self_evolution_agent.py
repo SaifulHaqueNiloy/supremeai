@@ -96,11 +96,22 @@ class SelfEvolutionAgent:
 
     @with_error_bus("_loop")
     async def _loop(self) -> None:
+        # Runs continuously (24/7) by design, but each tick only does the
+        # actual evolution work when free-tier memory headroom is good —
+        # otherwise it skips this cycle and simply retries next interval.
+        from core.memory_manager import get_memory_manager
+
         while self._running:
             start = time.time()
             try:
-                if await self._acquire_lock():
-                    await self._tick()
+                if get_memory_manager().is_safe_for_heavy_task():
+                    if await self._acquire_lock():
+                        await self._tick()
+                else:
+                    logger.debug(
+                        "SelfEvolutionAgent skipping tick — memory usage too high "
+                        "right now, will retry next cycle."
+                    )
             except Exception:
                 logger.exception("Self-evolution tick failed")
             elapsed = time.time() - start
