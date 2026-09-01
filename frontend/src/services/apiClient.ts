@@ -50,8 +50,9 @@ export const clearAuthToken = (): void => {
     try {
       localStorage.removeItem('supremeai_auth_token');
       localStorage.removeItem('supreme_admin_jwt');
-    } catch {
+    } catch (e) {
       // বাংলা: localStorage অনুপস্থিত (incognito / SSR) — নীরবে বাদ দেওয়া।
+      console.warn("Failed to clear local storage", e);
     }
   }
 };
@@ -108,8 +109,9 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
   // IP/country-এর পাশাপাশি তৃতীয় কনটেক্সট সিগন্যাল হিসেবে
   try {
     headers['X-Device-Fingerprint'] = await getDeviceFingerprint();
-  } catch {
+  } catch (e) {
     // বাংলা: WebCrypto অনুপস্থিত থাকলে (পুরনো ব্রাউজার) নীরবে বাদ দেওয়া হচ্ছে — request ব্লক হবে না
+    console.warn("Failed to get device fingerprint", e);
   }
 
   return headers;
@@ -136,8 +138,9 @@ const handleResponse = async (res: Response) => {
       } else if (errData.message) {
         errMsg = typeof errData.message === 'string' ? errData.message : JSON.stringify(errData.message);
       }
-    } catch {
+    } catch (e) {
       // JSON parsing failure fallback
+      console.warn("Failed to parse error response JSON", e);
     }
 
     // 🛑 ZERO-GAP: Intercept specific critical HTTP exception statuses
