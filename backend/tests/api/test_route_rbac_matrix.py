@@ -147,12 +147,17 @@ def test_health_endpoint_not_admin_guarded():
 # ── Building blocks: admin token dependency must fail-closed ────────────────
 def test_require_admin_token_rejects_invalid_token():
     """A non-admin / malformed token must be rejected (fail-closed)."""
-    from fastapi import HTTPException
+    from unittest.mock import MagicMock
+
+    from fastapi import HTTPException, Request
 
     from api.routes.admin_auth import require_admin_token
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="not-a-valid-jwt")
+    request_mock = MagicMock(spec=Request)
+    request_mock.cookies = {}
+
     with pytest.raises(HTTPException) as exc_info:
         # require_admin_token is async; exercised via asyncio.run
-        asyncio.run(require_admin_token(creds))
+        asyncio.run(require_admin_token(request=request_mock, credentials=creds))
     assert exc_info.value.status_code in (401, 403)
