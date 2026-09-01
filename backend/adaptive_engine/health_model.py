@@ -131,6 +131,29 @@ class HealthAggregator:
                 ),
             )
             conn.commit()
+
+        # ROADMAP §15: Health + Deployment Correlation
+        if health.status in (HealthStatus.DEGRADED, HealthStatus.DOWN):
+            try:
+                import logging
+
+                from adaptive_engine.deployment_tracker import get_deployment_tracker
+
+                logger = logging.getLogger(__name__)
+
+                dt = get_deployment_tracker()
+                recent_deploys = dt.list_by_resource(health.resource_id, limit=1)
+                if recent_deploys:
+                    deploy = recent_deploys[0]
+                    # If health degraded right after a deployment, flag for rollback
+                    logger.warning(
+                        f"[Health Correlation] Resource {health.resource_id} is {health.status.value}. "
+                        f"Possible cause: Deployment {deploy.deployment_id} (commit: {deploy.commit_sha}). "
+                        f"Recommend rollback if condition persists."
+                    )
+            except Exception:
+                pass
+
         return health
 
     def latest(self, resource_id: str) -> UnifiedHealth | None:
