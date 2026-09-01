@@ -197,9 +197,7 @@ class MeResponse(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    # বাংলা: cookie-based ক্লায়েন্টের জন্য body ঐচ্ছিক — refresh token cookie
-    # থেকেও আসতে পারে।
-    refresh_token: str | None = None
+    refresh_token: str
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -327,7 +325,9 @@ async def register(body: RegisterRequest, response: Response):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token_endpoint(body: RefreshRequest, request: Request, response: Response):
+async def refresh_token_endpoint(
+    body: RefreshRequest, request: Request | None = None, response: Response | None = None
+):
     """বাংলা: রিফ্রেশ টোকেন দিয়ে নতুন অ্যাক্সেস টোকেন প্রদান।
 
     type=refresh চেক করে access token রিফ্রেশে ব্যবহার রোধ করা হয় — token confusion প্রতিরোধ।
@@ -336,7 +336,9 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="JWT service unavailable"
         )
-    refresh_token_value = body.refresh_token or request.cookies.get(REFRESH_COOKIE_NAME)
+    refresh_token_value = body.refresh_token or (
+        request.cookies.get(REFRESH_COOKIE_NAME) if request else None
+    )
     if not refresh_token_value:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing"
@@ -361,7 +363,8 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
     }
     new_access = create_access_token(token_data)
     new_refresh = create_refresh_token(token_data)
-    _set_auth_cookies(response, new_access, new_refresh)
+    if response is not None:
+        _set_auth_cookies(response, new_access, new_refresh)
 
     return TokenResponse(
         access_token=new_access,

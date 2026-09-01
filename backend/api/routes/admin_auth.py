@@ -22,10 +22,12 @@ ACCESS_COOKIE_NAME = "supreme_access_token"
 
 
 async def require_admin_token(
-    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    request: Request | None = None,
 ):
-    token = credentials.credentials if credentials else request.cookies.get(ACCESS_COOKIE_NAME)
+    token = credentials.credentials if credentials else (
+        request.cookies.get(ACCESS_COOKIE_NAME) if request else None
+    )
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required.")
     try:
