@@ -274,6 +274,16 @@ class LearningLoop:
             proposed_capability_id=row["proposed_capability_id"],
         )
 
+    def compute_ewc_loss_penalty(
+        self, current_weights: dict, old_weights: dict, fisher_info: dict, ewc_lambda: float = 0.5
+    ) -> float:
+        # Compatibility stub for test_phase3_intelligence.py
+        penalty = 0.0
+        for name in current_weights:
+            if name in old_weights and name in fisher_info:
+                penalty += fisher_info[name] * (current_weights[name] - old_weights[name]) ** 2
+        return (ewc_lambda / 2.0) * penalty
+
 
 # ---------------------------------------------------------------------------
 # Singleton
