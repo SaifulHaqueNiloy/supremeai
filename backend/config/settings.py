@@ -2,6 +2,23 @@
 """SupremeAI Configuration Manager.
 
 Centralized configuration with environment variable support.
+
+⚠️ DEPRECATED / NOT USED IN PRODUCTION:
+This dataclass-based config module is legacy and is NOT the config path
+that the running application actually uses. The live production config
+is core/config.py (+ core/config_fields.py + core/config_secrets.py),
+which is imported ~190 places across the codebase and has proper
+production-hardened defaults (no CORS wildcard, HTTPS-only origin
+enforcement, no insecure secret_key fallback, etc.).
+
+This file is still imported by a handful of legacy call sites
+(config/__init__.py, top-level backend/__init__.py fallback,
+core/factory.py, core/messaging/event_bus.py,
+core/security/governance_policy.py) and by some tests, so it has not
+been removed. Its defaults below (e.g. cors_origins=["*"],
+api_key_required=False, secret_key="change-me-in-production") do NOT
+reflect actual production behavior — do not use this file as a
+reference for what's currently deployed. See core/config.py instead.
 """
 
 from __future__ import annotations
