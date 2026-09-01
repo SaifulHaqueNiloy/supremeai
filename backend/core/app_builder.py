@@ -283,10 +283,10 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         # কনফিগার করা হয়।
         if env == "local":
             origins = [
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:5173",
+                "http://localhost:3000",  # is_local()
+                "http://localhost:5173",  # is_local()
+                "http://127.0.0.1:3000",  # is_local()
+                "http://127.0.0.1:5173",  # is_local()
             ]
         else:
             logger.warning(

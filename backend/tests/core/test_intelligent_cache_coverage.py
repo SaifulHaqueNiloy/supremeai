@@ -73,14 +73,14 @@ def test_initialize_redis_no_url(monkeypatch):
 
 
 def test_initialize_redis_success(monkeypatch, redis_client):
-    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")  # is_local()
     with patch("redis.from_url", return_value=redis_client):
         cache = IntelligentCache(config=CacheConfig(enabled=True))
         assert cache._redis_client is redis_client
 
 
 def test_initialize_redis_failure(monkeypatch):
-    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")  # is_local()
     with patch("redis.from_url", side_effect=ConnectionError("boom")):
         cache = IntelligentCache(config=CacheConfig(enabled=True))
     assert cache._redis_client is None

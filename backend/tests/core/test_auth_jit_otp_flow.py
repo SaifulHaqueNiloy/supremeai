@@ -124,7 +124,7 @@ class TestJITOTPFlow:
 
             from core.otp_router import _send_discord
 
-            result = await _send_discord("admin-123", "123456", {"ip": "127.0.0.1"})
+            result = await _send_discord("admin-123", "123456", {"ip": "127.0.0.1"})  # is_local()
         assert result is True
 
     @pytest.mark.asyncio

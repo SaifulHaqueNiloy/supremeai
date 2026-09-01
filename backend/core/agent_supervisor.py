@@ -25,6 +25,7 @@ from typing import Any
 
 from core.error_bus import with_error_bus
 from core.logging_config import logger
+from core.mcp_client import control_tower
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 
@@ -138,7 +139,7 @@ class AgentSupervisor:
             try:
                 await self._monitor_task
             except asyncio.CancelledError:
-                pass  # expected
+                logger.debug("Monitor task gracefully cancelled.")
             except Exception as e:
                 import logging
 
@@ -338,6 +339,22 @@ class AgentSupervisor:
                                 },
                             )
                         )
+
+                        # --- SupremeAI MCP Control Tower Integration ---
+                        logger.info(
+                            f"Triggering MCP Control Tower health sweep due to agent '{name}' failure..."
+                        )
+                        try:
+                            # Run in a background task so we don't block
+                            async def _trigger_mcp():
+                                await control_tower.connect()
+                                await control_tower.call_tool("health.sweep", {"force": True})
+                                await control_tower.disconnect()
+
+                            asyncio.create_task(_trigger_mcp())
+                        except Exception as mcp_err:
+                            logger.error(f"Failed to trigger MCP Control Tower: {mcp_err}")
+
                     except Exception as bus_exc:
                         logger.warning(f"Failed to emit permanent failure event: {bus_exc}")
                     break
@@ -356,7 +373,7 @@ class AgentSupervisor:
                     try:
                         await heartbeat_ticker
                     except asyncio.CancelledError:
-                        pass
+                        logger.debug("Heartbeat ticker cancelled.")
                     except Exception as e:
                         logger.error(f"Error cancelling heartbeat for agent '{name}': {e}")
 

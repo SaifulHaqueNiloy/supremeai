@@ -26,7 +26,7 @@ def test_router_weight_calculations():
     # Mock status active and valid URLs
     for _name, config in router.PROVIDERS.items():
         config["status"] = "active"
-        config["url"] = "http://127.0.0.1:8000"
+        config["url"] = "http://127.0.0.1:8000"  # is_local()
         config["latency_ms"] = 100.0
 
     # Should get a valid provider from active ones

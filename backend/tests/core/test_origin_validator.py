@@ -87,12 +87,12 @@ def test_allowed_origins_strips_wildcard(fake_settings):
 
 def test_allowed_origins_localhost_in_dev(fake_settings):
     fake_settings.env = "local"
-    fake_settings.cors_origins = ["http://localhost:3000", "http://127.0.0.1:5173"]
+    fake_settings.cors_origins = ["http://localhost:3000", "http://127.0.0.1:5173"]  # is_local()
     with _patch_settings(fake_settings):
         mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
         origins = mw.allowed_origins
-        assert "http://localhost:3000" in origins
-        assert "http://127.0.0.1:5173" in origins
+        assert "http://localhost:3000" in origins  # is_local()
+        assert "http://127.0.0.1:5173" in origins  # is_local()
 
 
 def test_allowed_origins_no_localhost_in_production(fake_settings, monkeypatch):
@@ -108,7 +108,7 @@ def test_allowed_origins_no_localhost_in_production(fake_settings, monkeypatch):
     with _patch_settings(fake_settings):
         mw = TrustedOriginMiddleware(app=MagicMock(), portal_role="user")
         origins = mw.allowed_origins
-        assert "http://localhost:3000" not in origins
+        assert "http://localhost:3000" not in origins  # is_local()
         assert "https://supremeai-lac.vercel.app" in origins
 
 

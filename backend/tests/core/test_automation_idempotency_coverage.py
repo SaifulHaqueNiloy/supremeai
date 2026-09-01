@@ -171,7 +171,7 @@ async def test_create_store_inmemory_when_no_redis(monkeypatch):
 
 
 async def test_create_store_redis_when_configured(monkeypatch):
-    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")  # is_local()
     client = AsyncMock()
     with patch("redis.asyncio.from_url", return_value=client):
         store = create_idempotency_store()
@@ -179,7 +179,7 @@ async def test_create_store_redis_when_configured(monkeypatch):
 
 
 async def test_create_store_falls_back_on_redis_error(monkeypatch):
-    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")  # is_local()
     with patch("redis.asyncio.from_url", side_effect=ConnectionError("down")):
         store = create_idempotency_store()
     assert isinstance(store, InMemoryIdempotencyStore)
