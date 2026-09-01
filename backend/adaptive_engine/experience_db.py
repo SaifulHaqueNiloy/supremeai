@@ -263,6 +263,37 @@ class ExperienceDatabase:
             self._upsert_vector_db(
                 exp_id, request_text, embedding, exp.result, response_text, exp.user_id
             )
+
+        # ROADMAP §13, §14: Experience -> Capability Promotion
+        # If success, check if it's a repeated pattern to promote to LearningLoop
+        if exp.result == "SUCCESS":
+            try:
+                import asyncio
+
+                from adaptive_engine.learning_loop import get_learning_loop
+
+                loop_instance = get_learning_loop()
+
+                # Check if we have seen this successful pattern multiple times
+                similar = self.find_similar(request_text, limit=3, threshold=0.85)
+                success_count = sum(1 for s in similar if s.get("result") == "SUCCESS")
+
+                if success_count >= 2:
+                    evidence = [s.get("request") for s in similar if s.get("result") == "SUCCESS"]
+                    coro = loop_instance.record_signal(
+                        kind="REPEATED_SUCCESS",
+                        description=f"Repeated success pattern detected: {request_text}",
+                        evidence=evidence,
+                        capability_hint=exp.action_taken,
+                    )
+                    # Fire and forget if in async context, otherwise block
+                    try:
+                        asyncio.get_running_loop().create_task(coro)
+                    except RuntimeError:
+                        asyncio.run(coro)
+            except Exception as e:
+                logger.error(f"[ExperienceDB] Failed to promote to LearningLoop: {e}")
+
         return exp_id
 
     def _upsert_vector_db(
