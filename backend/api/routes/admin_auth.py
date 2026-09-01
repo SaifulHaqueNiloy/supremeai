@@ -22,8 +22,8 @@ ACCESS_COOKIE_NAME = "supreme_access_token"
 
 
 async def require_admin_token(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
-    request: Request | None = None,
 ):
     token = (
         credentials.credentials
