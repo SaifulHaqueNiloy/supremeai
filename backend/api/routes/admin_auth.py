@@ -25,8 +25,10 @@ async def require_admin_token(
     credentials: HTTPAuthorizationCredentials | None = Depends(security),
     request: Request | None = None,
 ):
-    token = credentials.credentials if credentials else (
-        request.cookies.get(ACCESS_COOKIE_NAME) if request else None
+    token = (
+        credentials.credentials
+        if credentials
+        else (request.cookies.get(ACCESS_COOKIE_NAME) if request else None)
     )
     if not token:
         raise HTTPException(status_code=401, detail="Authentication required.")
