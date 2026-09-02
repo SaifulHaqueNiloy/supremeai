@@ -26,7 +26,8 @@ def test_get_database_url_empty(monkeypatch):
     # cleared for the fallback assertion to be hermetic.
     monkeypatch.delenv("DATABASE_URL", raising=False)
     monkeypatch.setattr(core_db, "settings", SimpleNamespace(supabase_database_url=""))
-    assert core_db._get_database_url() == "sqlite+aiosqlite:///./local.db"
+    with pytest.raises(RuntimeError, match="SQLite fallback is disabled"):
+        core_db._get_database_url()
 
 
 @pytest.mark.parametrize(
