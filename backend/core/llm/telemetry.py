@@ -200,8 +200,12 @@ def _ensure_store_started() -> None:
         store = get_learning_store()
         if store._task is None or store._task.done():
             store.start()
-    except Exception:
-        pass
+    except Exception as exc:  # best-effort store start — telemetry never blocks LLM call
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "[telemetry] LearningStore start failed (best-effort): %s", exc
+        )
 
 
 @asynccontextmanager

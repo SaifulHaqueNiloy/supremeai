@@ -249,8 +249,12 @@ def _validate_var(var_def: VarDefinition, settings_obj: Any = None) -> Validatio
                         raw_value = val.get_secret_value()
                     else:
                         raw_value = str(val)
-            except Exception:
-                pass
+            except Exception as exc:  # best-effort settings read — fallback to default
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    "[config_validator] failed to read '%s' from settings: %s", prop_name, exc
+                )
 
     value = raw_value if raw_value is not None else var_def.default
 

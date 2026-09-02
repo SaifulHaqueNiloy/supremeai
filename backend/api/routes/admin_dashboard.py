@@ -1448,7 +1448,7 @@ def get_admin_audit_logs(limit: int = 100):
                 "action": "system.ready",
                 "target": "commandcenter",
                 "result": "success",
-                "ip": "127.0.0.1",
+                "ip": "0.0.0.0",
                 "otp_verified": True,
             }
         )
@@ -1570,7 +1570,7 @@ def get_commandcenter_rate_limits():
         # Scan 429 events if available
         return {
             "current_429_events": 0,
-            "per_ip": {"127.0.0.1": {"limit": 100, "used": 12}},
+            "per_ip": {"[system]": {"limit": 100, "used": 12}},
             "per_tenant": {"default": {"limit": 1000, "used": 45}},
         }
     except Exception:
