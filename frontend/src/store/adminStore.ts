@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { eventBus, Events } from '../lib/componentEventBus';
 import { authService } from '../services/authService';
 import { updateTokenCache } from '../services/apiClient';
+import { clearCanonicalSession, LEGACY_ADMIN_TOKEN_KEY } from './authStore';
 
 const decodeJwt = (token: string): Record<string, unknown> | null => {
   try {
@@ -156,7 +157,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           const data = await authService.firebaseTotpVerify(idToken, adminOtp.trim());
           if (data.token) {
             localStorage.setItem('supreme_admin_jwt', data.token);
-            localStorage.setItem('adminToken', data.token);
+            // বাংলা: legacy 'adminToken' duplicate write সরানো হলো (single-frontend migration) —
+            // adminTokenStore শুধুই 'supreme_admin_jwt' পড়ে; দ্বিতীয় key লেখা অপ্রয়োজনীয় ছিল।
+            // পুরোনো key যদি থেকে থাকে, logout-এ পরিষ্কার হয়ে যাবে।
             updateTokenCache(data.token);
             const decoded = decodeJwt(data.token);
             if (decoded && typeof decoded.role === 'string') {
@@ -187,7 +190,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       const auth = await getFirebaseAuth();
       // 🔥 ফিক্স: সঠিক টোকেন keyগুলো পরিষ্কার করা হচ্ছে (আগে শুধু 'adminToken' remove হতো,
       // অথচ adminTokenStore 'supreme_admin_jwt' পড়ে — ফলে স্টেল টোকেন জমে থাকত)
-      const TOKEN_KEYS = ['adminToken', 'supreme_admin_jwt', 'supremeai_auth_token'];
+      // বাংলা (single-frontend migration): 'supremeai_auth_token' এখান থেকে সরানো হলো —
+      // admin logout আর user session ধ্বংস করবে না (আগের ক্রস-সেশন ডিস্ট্রাকশন বাগ)।
+      // User session পরিষ্কার করতে UI logout আলাদাভাবে clearCanonicalSession() ডাকবে।
+      const TOKEN_KEYS = [LEGACY_ADMIN_TOKEN_KEY, 'supreme_admin_jwt'];
       TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
       updateTokenCache(null);
 
@@ -204,6 +210,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       console.error('Logout failed:', e);
     }
     set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '', totpSetupRequired: false, totpSecret: '', provisioningUri: '' });
+    // বাংলা: logout করলে contextual state-ও পরিষ্কার হবে — admin user-এর canonical
+    // user session যদি একই ব্রাউজারে থেকে থাকে, তবে তা-ও রিসেট করা হয় (roadmap
+    // "Logout clears relevant contextual state")। clearCanonicalSession idempotent।
+    clearCanonicalSession();
   },
   resetTotpSetup: async () => {
     set({ adminError: '' });

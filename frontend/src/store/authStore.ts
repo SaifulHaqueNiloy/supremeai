@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiClient, updateTokenCache } from '../services/apiClient';
+import { isRole, normalizeRole, type Role } from '../config/permissions';
 
 // বাংলা মন্তব্য: erasableSyntaxOnly সক্রিয় থাকায় enum-এর বদলে const object + union type ব্যবহার করা হচ্ছে
 export const AuthStatus = {
@@ -17,9 +18,16 @@ interface UserProfile {
   avatarUrl?: string;
 }
 
+// বাংলা মন্তব্য: Single-frontend migration (roadmap Phase 2) — authStore এখন canonical
+// identity/session authority। role শুধুমাত্র backend response (login/register//auth/me)
+// থেকে resolve হয় — localStorage role key, URL বা UI state থেকে কখনোই নয়।
 interface AuthState {
   status: AuthStatus;
   user: UserProfile | null;
+  /** Canonical role resolved from trusted backend state (never client-computed). */
+  role: Role | null;
+  /** Backend-provided permission strings; empty/unknown = defer to backend RBAC. */
+  permissions: string[];
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
@@ -28,6 +36,31 @@ interface AuthState {
 
 const TOKEN_KEY = 'supremeai_auth_token';
 const USER_KEY = 'supremeai_auth_user';
+
+/**
+ * বাংলা: বাসি (stale) admin token key — legacy ডুপ্লিকেট। যেকোনো session পরিষ্কারের সময়
+ * এটিও মুছে ফেলা হয় যাতে পুরোনো সাইন-ইন অবস্থা কোথাও জমা না থাকে।
+ */
+export const LEGACY_ADMIN_TOKEN_KEY = 'adminToken';
+
+/**
+ * বাংলা: একক সেশন-পরিষ্কার হেল্পার। apiClient (401 handler) ও দুই store-এর logout —
+ * সবাই এটিই ব্যবহার করবে, যাতে token/cache/UI state কখনো একে অপরের থেকে সরে না যায়।
+ * NOTE: এটি শুধু canonical USER session পরিষ্কার করে; admin step-up state
+ * (supreme_admin_jwt + adminStore) আলাদা — handleAdminLogout তা-ই করে।
+ */
+export function clearCanonicalSession(): void {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
+  } catch {
+    // localStorage unavailable (SSR / incognito) — নীরবে এগিয়ে যাওয়া।
+  }
+  updateTokenCache(null);
+  persistUser(null);
+  useAuthStore.setState({ status: AuthStatus.LOGGED_OUT, user: null, role: null, permissions: [] });
+}
 
 // বাংলা মন্তব্য: JWT payload নিরাপদে ডিকোড করা হয় (reload-এ token থেকেই ইউজার প্রোফাইল রিস্টোর করার জন্য)।
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -73,6 +106,8 @@ const avatarUrl = (label: string) =>
 export const useAuthStore = create<AuthState>((set) => ({
   status: AuthStatus.UNINITIALIZED,
   user: null,
+  role: null,
+  permissions: [],
 
   login: async (email, password) => {
     try {
@@ -97,6 +132,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         status: AuthStatus.LOGGED_IN,
         user,
+        // বাংলা: backend primary_role ("admin" | "user") — canonical role এখান থেকেই আসে।
+        role: isRole(response.role) ? response.role : 'user',
+        permissions: Array.isArray(response.permissions) ? response.permissions : [],
       });
     } catch (error) {
       console.error("Login failed:", error);
@@ -128,6 +166,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         status: AuthStatus.LOGGED_IN,
         user,
+        role: isRole(response.role) ? response.role : 'user',
+        permissions: Array.isArray(response.permissions) ? response.permissions : [],
       });
     } catch (error) {
       console.error("Registration failed:", error);
@@ -136,10 +176,14 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    // বাংলা: unified clearing — token + cached profile + role/permissions একসাথে।
+    // admin step-up state ইচ্ছাকৃতভাবে অক্ষত থাকে (সেটি আলাদা identity flow);
+    // UI-তে admin context logout আলাদাভাবে handleAdminLogout() ডাকে।
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
     updateTokenCache(null);
     persistUser(null);
-    set({ status: AuthStatus.LOGGED_OUT, user: null });
+    set({ status: AuthStatus.LOGGED_OUT, user: null, role: null, permissions: [] });
   },
 
   initialize: async () => {
@@ -173,7 +217,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       avatarUrl: avatarUrl(payloadEmail || payloadName),
     };
 
-    set({ status: AuthStatus.LOGGED_IN, user: optimisticUser });
+    // বাংলা: JWT payload-এর role claim থাকলে তা optimistic role — পরে /auth/me দিয়ে verify হয়।
+    // এটি client-computed privilege নয় — backend-ই signed token-এ role বসায়।
+    const optimisticRole = normalizeRole(payload?.role) ?? normalizeRole(cachedUser && (cachedUser as UserProfile & { role?: string }).role) ?? 'user';
+
+    set({ status: AuthStatus.LOGGED_IN, user: optimisticUser, role: optimisticRole });
 
     // বাংলা মন্তব্য: ব্যাকগ্রাউন্ডে token ভ্যালিডেট করা হয় — শুধুমাত্র নিশ্চিত 401/403-এ
     // logout হবে; নেটওয়ার্ক/কোল্ড-স্টার্ট/5xx এরর হলে সেশন অক্ষত থাকে।
@@ -184,13 +232,18 @@ export const useAuthStore = create<AuthState>((set) => ({
       const freshUser: UserProfile = {
         id: response.user_id || optimisticUser.id,
         email: verifiedEmail,
-        name: response.name || response.role || optimisticUser.name,
-        avatarUrl: avatarUrl(verifiedEmail || response.role || optimisticUser.name),
+        // বাংলা: আগে response.role display-name fallback হিসেবে ভুল ব্যবহৃত হতো —
+        // এখন role আলাদা state হিসেবে store হয়, name থাকে name।
+        name: response.name || optimisticUser.name,
+        avatarUrl: avatarUrl(verifiedEmail || optimisticUser.name),
       };
       persistUser(freshUser);
       set({
         status: AuthStatus.LOGGED_IN,
         user: freshUser,
+        // বাংলা: verified canonical role — backend-ই source of truth।
+        role: isRole(response.role) ? response.role : normalizeRole(response.role) ?? optimisticRole,
+        permissions: Array.isArray(response.permissions) ? response.permissions : [],
       });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
