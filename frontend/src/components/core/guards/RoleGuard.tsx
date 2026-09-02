@@ -47,7 +47,6 @@ export interface RoleGuardProps {
  */
 export const RoleGuard = ({ children, requiredRole, deniedReason }: RoleGuardProps) => {
   const { isChecking, isAuthenticated } = useAuthStatus();
-  const role = useAuthStore((s) => s.role);
   const location = useLocation();
 
   if (isChecking) return <AuthLoadingSpinner />;
