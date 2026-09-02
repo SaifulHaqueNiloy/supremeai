@@ -172,7 +172,7 @@ class AgentSupervisor:
                     f"Remaining: {sum(1 for t in self._agents.values() if not t.done())} agents."
                 )
             except asyncio.CancelledError:
-                raise
+                logger.warning("⚠️ Agent shutdown was cancelled.")
             except Exception as e:
                 import logging
 
