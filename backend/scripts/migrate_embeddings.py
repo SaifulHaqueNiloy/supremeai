@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from core.config import settings
 from core.logging_config import logger
 
-# Ensure we are in the backend directory
 if os.path.exists(".env"):
     load_dotenv(".env")
 elif os.path.exists("../.env"):
@@ -17,14 +16,9 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def migrate_embeddings():
-    """
-    Fetches all records from the ai_memory table in Supabase,
-    re-encodes their summaries using the new 1536-dim (text-embedding-3-small) model via core.embeddings,
-    and updates the database.
-    """
+    """Re-encode ai_memory using the canonical 384-dimensional pgvector contract."""
     try:
         from supabase import create_client
-
         from core.embeddings import embed_for_pgvector
 
         url = settings.supabase_url
@@ -37,8 +31,6 @@ async def migrate_embeddings():
             return
 
         supabase = create_client(url, key)
-
-        # Fetch all records
         logger.info("Fetching existing records from ai_memory...")
         response = await supabase.table("ai_memory").select("id, summary, embedding").execute()
         records = response.data
@@ -47,42 +39,36 @@ async def migrate_embeddings():
             logger.info("No records found in ai_memory.")
             return
 
-        logger.info(f"Found {len(records)} records. Re-encoding to 1536 dimensions...")
+        logger.info(f"Found {len(records)} records. Re-encoding to 384 dimensions...")
 
         for i, record in enumerate(records):
             record_id = record.get("id")
             summary = record.get("summary")
-
             if not summary:
                 logger.warning(f"Record {record_id} has no summary. Skipping.")
                 continue
 
             try:
-                # Generate new 1536-dim embedding natively via LiteLLM
-                new_embedding = embed_for_pgvector(summary, pg_dim=1536)
+                new_embedding = embed_for_pgvector(summary, pg_dim=384)
+                if len(new_embedding) != 384:
+                    logger.error(
+                        f"[{i + 1}/{len(records)}] Refusing record {record_id}: embedding is {len(new_embedding)} dims."
+                    )
+                    continue
 
-                if new_embedding:
-                    # Update record in Supabase
-                    await (
-                        supabase.table("ai_memory")
-                        .update({"embedding": new_embedding})
-                        .eq("id", record_id)
-                        .execute()
-                    )
-                    logger.info(
-                        f"[{i + 1}/{len(records)}] Successfully re-encoded record {record_id}."
-                    )
-                else:
-                    logger.warning(
-                        f"[{i + 1}/{len(records)}] Failed to generate new embedding for record {record_id}."
-                    )
-            except Exception as e:
-                logger.error(f"Error processing record {record_id}: {e}")
+                await (
+                    supabase.table("ai_memory")
+                    .update({"embedding": new_embedding})
+                    .eq("id", record_id)
+                    .execute()
+                )
+                logger.info(f"[{i + 1}/{len(records)}] Re-encoded record {record_id}.")
+            except Exception as exc:
+                logger.error(f"Error processing record {record_id}: {exc}")
 
         logger.info("Migration complete!")
-
-    except Exception as e:
-        logger.error(f"Migration failed: {e}")
+    except Exception as exc:
+        logger.error(f"Migration failed: {exc}")
 
 
 if __name__ == "__main__":
