@@ -23,6 +23,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
 from core.logging_config import logger
 
 try:
@@ -51,6 +52,9 @@ class GCPFirestoreVerificationQueue:
         )
         self.client = None
         self._memory_conn: sqlite3.Connection | None = None
+        # P0 (Task 9-c2): bounded in-process degraded queue (set when the local
+        # SQLite fallback is refused in production). NEVER durable.
+        self._memory_rows: InMemoryRing | None = None
         self.mode = "local_sqlite"
         self.db_path = db_path or os.getenv("GCP_FIRESTORE_SQLITE_PATH")
 
@@ -68,6 +72,19 @@ class GCPFirestoreVerificationQueue:
                 logger.warning(f"Failed to initialize Firestore: {e}. Falling back to SQLite.")
 
         if self.client is None:
+            # P0 (Task 9-c2): production refusal is centralised in core.degraded_mode
+            # and NON-CRASHING — the queue degrades to a bounded in-process buffer.
+            if not sqlite_fallback_allowed("firestore_verification_queue"):
+                self.mode = "in_memory_degraded"
+                self.db_path = None
+                self._memory_rows = InMemoryRing()
+                logger.warning(
+                    "[P0] GCPFirestoreVerificationQueue degraded to a bounded IN-PROCESS "
+                    "queue — queued verifications are LOST on restart. Set "
+                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
+                    "fallback, or provision GCP Firestore."
+                )
+                return
             if not self.db_path:
                 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 self.db_path = os.path.join(base_dir, "data", "gcp_firestore_queue.db")
@@ -140,6 +157,30 @@ class GCPFirestoreVerificationQueue:
             }
 
         queue_id = uuid.uuid4().hex
+        if self._memory_rows is not None:
+            # P0: bounded in-process degraded mode — buffer the full record.
+            self._memory_rows.append(
+                {
+                    "queue_id": queue_id,
+                    "task_id": task_id,
+                    "payload": payload,
+                    "priority": int(priority),
+                    "metadata": dict(metadata or {}),
+                    "status": "pending",
+                    "created_at": now,
+                    "updated_at": now,
+                    "verified_at": None,
+                }
+            )
+            return {
+                "success": True,
+                "provider": self.mode,
+                "queue_id": queue_id,
+                "task_id": task_id,
+                "status": "pending",
+                "degraded": True,
+            }
+
         with self._get_connection() as conn:
             conn.execute(
                 """
@@ -176,6 +217,14 @@ class GCPFirestoreVerificationQueue:
                 .stream()
             )
             return [self._firestore_doc_to_dict(row) for row in rows]
+
+        if self._memory_rows is not None:
+            # P0: pending items from the bounded in-process buffer (priority desc).
+            rows = [
+                r for r in self._memory_rows.snapshot() if r.get("status") == "pending"
+            ]
+            rows.sort(key=lambda r: (-int(r.get("priority", 50)), r.get("created_at", "")))
+            return [dict(r) for r in rows[:limit]]
 
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
@@ -214,6 +263,27 @@ class GCPFirestoreVerificationQueue:
                 "verified": updated,
             }
 
+        if self._memory_rows is not None:
+            # P0: rewrite matching in-process records as verified.
+            rows = self._memory_rows.snapshot()
+            updated = 0
+            for row in rows:
+                if row.get("task_id") == task_id and row.get("status") == "pending":
+                    row["status"] = "verified"
+                    row["updated_at"] = now
+                    row["verified_at"] = now
+                    updated += 1
+            if updated:
+                self._memory_rows.remove_matching(lambda _r: True)
+                for row in rows:
+                    self._memory_rows.append(row)
+            return {
+                "success": True,
+                "provider": self.mode,
+                "task_id": task_id,
+                "verified": updated,
+            }
+
         with self._get_connection() as conn:
             cursor = conn.execute(
                 """
@@ -240,6 +310,17 @@ class GCPFirestoreVerificationQueue:
                 "provider": "gcp_firestore",
                 "queue_id": queue_id,
                 "deleted": True,
+            }
+
+        if self._memory_rows is not None:
+            removed = self._memory_rows.remove_matching(
+                lambda r: r.get("queue_id") == queue_id
+            )
+            return {
+                "success": True,
+                "provider": self.mode,
+                "queue_id": queue_id,
+                "deleted": removed > 0,
             }
 
         with self._get_connection() as conn:
@@ -276,6 +357,19 @@ class GCPFirestoreVerificationQueue:
                 "total": pending + verified,
             }
 
+        if self._memory_rows is not None:
+            snapshot = self._memory_rows.snapshot()
+            pending = sum(1 for r in snapshot if r.get("status") == "pending")
+            verified = sum(1 for r in snapshot if r.get("status") == "verified")
+            return {
+                "provider": self.mode,
+                "collection": self.collection_name,
+                "pending": pending,
+                "verified": verified,
+                "total": len(snapshot),
+                "degraded": True,
+            }
+
         with self._get_connection() as conn:
             pending = conn.execute(
                 "SELECT COUNT(*) FROM verification_queue WHERE status = 'pending'"
@@ -295,6 +389,7 @@ class GCPFirestoreVerificationQueue:
     def close(self) -> None:
         if self.client is not None:
             self.client = None
+        self._memory_rows = None
         if self._memory_conn is not None:
             self._memory_conn.close()
 

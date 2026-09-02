@@ -3,6 +3,7 @@ import threading
 import time
 from pathlib import Path
 
+from core.degraded_mode import sqlite_fallback_allowed
 from core.logging_config import logger
 
 # শেয়ার্ড ইউটিলিটি — Firestore ও টেস্ট এনভায়রনমেন্ট চেক কেন্দ্রীভূত
@@ -31,6 +32,25 @@ class AdminGodLayer:
 
         self.db_path = Path(db_path)
         import os
+
+        # P0 (Task 9-c2): SQLite-only-by-design rules fallback. In production
+        # without SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral
+        # constitutional_rules.db file is REFUSED (CRITICAL logged once by
+        # core.degraded_mode): the layer boots WITHOUT touching the filesystem,
+        # reads resolve to safe defaults ("not authorized" = fail-closed) and
+        # SQLite writes are skipped loudly. Firestore stays the primary store.
+        self._sqlite_refused = not sqlite_fallback_allowed("admin_god_rules")
+        if self._sqlite_refused:
+            logger.warning(
+                "[P0] AdminGodLayer running WITHOUT local SQLite rules store — rules "
+                "resolve to safe defaults (deny). Set SUPABASE_ALLOW_DB_DEGRADATION=true "
+                "to accept the ephemeral fallback, or provision Firestore."
+            )
+            self.sqlite_lock = threading.Lock()
+
+            self.collection_name = "constitutional_rules"
+            self._db = None
+            return
 
         data_dir_env = os.getenv("DATA_DIR")
         if data_dir_env:
@@ -126,6 +146,11 @@ class AdminGodLayer:
             except Exception as e:
                 logger.error(f"Error fetching rule {key} from Firestore: {e}")
 
+        # P0 (Task 9-c2): SQLite fallback refused in production — resolve to the
+        # safe default (deny) instead of ever touching the ephemeral file.
+        if getattr(self, "_sqlite_refused", False):
+            return default
+
         # বাংলা মন্তব্য: ফায়ারস্টোর নিষ্ক্রিয় বা টেস্ট মোডে থাকলে SQLite ব্যাকআপ থেকে রিড হবে
         from contextlib import closing
 
@@ -144,6 +169,14 @@ class AdminGodLayer:
                 return
             except Exception as e:
                 logger.error(f"Error setting rule {key} in Firestore: {e}. Falling back to SQLite.")
+
+        # P0 (Task 9-c2): SQLite fallback refused in production — skip the
+        # ephemeral file loudly instead of silently persisting there.
+        if getattr(self, "_sqlite_refused", False):
+            logger.warning(
+                f"[P0] rule {key!r} NOT persisted: SQLite fallback refused in production."
+            )
+            return
 
         # বাংলা মন্তব্য: SQLite ব্যাকআপ ডাটাবেসে রুল সংরক্ষণ করা হচ্ছে
         from contextlib import closing

@@ -3,6 +3,7 @@ import functools
 import os
 import time
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 # psycopg2 মডিউল না থাকলে যেন ডিরেক্ট ক্লায়েন্ট ইনিশিয়ালাইজেশন ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট করা হলো।
@@ -556,6 +557,169 @@ class SupabaseDB:
             "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
             ");",
             "CREATE INDEX IF NOT EXISTS idx_automation_execution_attempts_execution_id ON automation_execution_attempts (execution_id);",
+            # =========================================================================
+            # Sprint 2 — Persistent Learning Store (Self-Evolution Zero-Cost plan).
+            # PRIVACY RULE: none of the learning_* / task_outcomes / feedback_events /
+            # fitness_snapshots / provider_metrics / skill_metrics / prompt_candidates /
+            # improvement_* tables store raw prompt or response content — ONLY hashes
+            # (error_hash, template_hash), coarse categories (error_class, task_type,
+            # feedback_type) and numeric metrics. The `feedback` column on
+            # learning_events is a categorical tag (e.g. 'thumbs_up'), never user text.
+            # Prompt/response bodies MUST NEVER be written to these tables.
+            # =========================================================================
+            "-- PRIVACY: learning tables store hashes/categories/metrics only — NO raw prompt/response content.\n"
+            "CREATE TABLE IF NOT EXISTS learning_events ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "event_id UUID NOT NULL DEFAULT gen_random_uuid() UNIQUE,"
+            "ts TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),"
+            "tenant_id TEXT,"
+            "session_id TEXT,"
+            "request_id TEXT,"
+            "task_type TEXT,"
+            "skill_id TEXT,"
+            "provider TEXT,"
+            "model TEXT,"
+            "success BOOLEAN,"
+            "latency_ms INTEGER,"
+            "input_tokens INTEGER,"
+            "output_tokens INTEGER,"
+            "estimated_cost DOUBLE PRECISION,"
+            "actual_cost DOUBLE PRECISION,"
+            "error_class TEXT,"
+            "error_hash TEXT,"
+            "cache_hit BOOLEAN,"
+            "feedback TEXT,"
+            "metadata JSONB NOT NULL DEFAULT '{}'::jsonb"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_ts ON learning_events (ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_provider_ts ON learning_events (provider, ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_model_ts ON learning_events (model, ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_task_type_ts ON learning_events (task_type, ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_error_hash ON learning_events (error_hash);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_request_id ON learning_events (request_id);",
+            "CREATE INDEX IF NOT EXISTS idx_learning_events_tenant_ts ON learning_events (tenant_id, ts DESC);",
+            "CREATE TABLE IF NOT EXISTS task_outcomes ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "ts TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "tenant_id TEXT,"
+            "task_type TEXT,"
+            "skill_id TEXT,"
+            "provider TEXT,"
+            "model TEXT,"
+            "success BOOLEAN,"
+            "latency_ms INTEGER,"
+            "tokens_total INTEGER,"
+            "cost DOUBLE PRECISION,"
+            "quality DOUBLE PRECISION,"
+            "metadata JSONB DEFAULT '{}'::jsonb"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_task_outcomes_ts ON task_outcomes (ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_task_outcomes_task_type_ts ON task_outcomes (task_type, ts);",
+            "CREATE INDEX IF NOT EXISTS idx_task_outcomes_provider_ts ON task_outcomes (provider, ts);",
+            "CREATE TABLE IF NOT EXISTS fitness_snapshots ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "ts TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "subject_type TEXT NOT NULL,"
+            "subject_id TEXT NOT NULL,"
+            "composite DOUBLE PRECISION NOT NULL,"
+            "components JSONB DEFAULT '{}'::jsonb,"
+            "sample_size INTEGER"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_fitness_snapshots_subject_ts ON fitness_snapshots (subject_type, subject_id, ts DESC);",
+            "CREATE TABLE IF NOT EXISTS provider_metrics ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "window_start TIMESTAMP WITH TIME ZONE NOT NULL,"
+            "provider TEXT NOT NULL,"
+            "model TEXT NOT NULL,"
+            "requests INTEGER DEFAULT 0,"
+            "successes INTEGER DEFAULT 0,"
+            "failures INTEGER DEFAULT 0,"
+            "rate_limited INTEGER DEFAULT 0,"
+            "latency_p50_ms INTEGER,"
+            "latency_p95_ms INTEGER,"
+            "estimated_cost DOUBLE PRECISION DEFAULT 0,"
+            "actual_cost DOUBLE PRECISION DEFAULT 0,"
+            "updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "UNIQUE (window_start, provider, model)"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_provider_metrics_provider_window ON provider_metrics (provider, window_start DESC);",
+            "CREATE TABLE IF NOT EXISTS skill_metrics ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "window_start TIMESTAMP WITH TIME ZONE NOT NULL,"
+            "skill_id TEXT NOT NULL,"
+            "task_type TEXT,"
+            "requests INTEGER DEFAULT 0,"
+            "successes INTEGER DEFAULT 0,"
+            "failures INTEGER DEFAULT 0,"
+            "rate_limited INTEGER DEFAULT 0,"
+            "latency_p50_ms INTEGER,"
+            "latency_p95_ms INTEGER,"
+            "estimated_cost DOUBLE PRECISION DEFAULT 0,"
+            "actual_cost DOUBLE PRECISION DEFAULT 0,"
+            "updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "UNIQUE (window_start, skill_id)"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_skill_metrics_skill_window ON skill_metrics (skill_id, window_start DESC);",
+            "CREATE TABLE IF NOT EXISTS feedback_events ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "ts TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "tenant_id TEXT,"
+            "session_id TEXT,"
+            "request_id TEXT,"
+            "task_type TEXT,"
+            "skill_id TEXT,"
+            "provider TEXT,"
+            "model TEXT,"
+            "feedback_type TEXT NOT NULL CHECK (feedback_type IN ('thumbs_up','thumbs_down','retry','regenerate','follow_up','correction')),"
+            "weight DOUBLE PRECISION DEFAULT 1.0,"
+            "metadata JSONB DEFAULT '{}'::jsonb"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_feedback_events_ts ON feedback_events (ts DESC);",
+            "CREATE INDEX IF NOT EXISTS idx_feedback_events_type_ts ON feedback_events (feedback_type, ts);",
+            "CREATE INDEX IF NOT EXISTS idx_feedback_events_skill_ts ON feedback_events (skill_id, ts);",
+            "CREATE INDEX IF NOT EXISTS idx_feedback_events_provider_ts ON feedback_events (provider, ts);",
+            "CREATE TABLE IF NOT EXISTS prompt_candidates ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "template_id TEXT,"
+            "parent_version TEXT,"
+            "task_type TEXT,"
+            "template_hash TEXT NOT NULL,"
+            "status TEXT NOT NULL DEFAULT 'PROPOSED' CHECK (status IN ('PROPOSED','SHADOW','LIMITED','PROMOTED','REJECTED','ROLLED_BACK')),"
+            "metrics JSONB DEFAULT '{}'::jsonb,"
+            "metadata JSONB DEFAULT '{}'::jsonb"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_prompt_candidates_status ON prompt_candidates (status);",
+            "CREATE INDEX IF NOT EXISTS idx_prompt_candidates_task_type_created ON prompt_candidates (task_type, created_at DESC);",
+            "CREATE TABLE IF NOT EXISTS improvement_proposals ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "proposal_type TEXT NOT NULL,"
+            "target TEXT NOT NULL,"
+            "reason TEXT,"
+            "expected_benefit TEXT,"
+            "risk TEXT,"
+            "status TEXT NOT NULL DEFAULT 'PROPOSED' CHECK (status IN ('PROPOSED','STATIC_CHECKED','SECURITY_CHECKED','TESTED','BENCHMARKED','CANARY','PROMOTED','REJECTED','ROLLED_BACK')),"
+            "proposal JSONB DEFAULT '{}'::jsonb,"
+            "baseline JSONB DEFAULT '{}'::jsonb,"
+            "rollback_target JSONB,"
+            "created_by TEXT,"
+            "reviewed_by TEXT"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_improvement_proposals_status ON improvement_proposals (status);",
+            "CREATE INDEX IF NOT EXISTS idx_improvement_proposals_type_target ON improvement_proposals (proposal_type, target);",
+            "CREATE INDEX IF NOT EXISTS idx_improvement_proposals_created ON improvement_proposals (created_at DESC);",
+            "CREATE TABLE IF NOT EXISTS improvement_runs ("
+            "id BIGSERIAL PRIMARY KEY,"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "proposal_id BIGINT REFERENCES improvement_proposals(id) ON DELETE CASCADE,"
+            "run_type TEXT NOT NULL CHECK (run_type IN ('BASELINE','SHADOW','CANARY','PROMOTION','ROLLBACK')),"
+            "result TEXT,"
+            "metrics JSONB DEFAULT '{}'::jsonb,"
+            "notes TEXT"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_improvement_runs_proposal_created ON improvement_runs (proposal_id, created_at DESC);",
         ]
 
     def bootstrap_schema(self):
@@ -1033,6 +1197,263 @@ class SupabaseDB:
             return res.data or []  # type: ignore
         except Exception as e:
             logger.exception(f"Supabase operation error: {e}")
+            return []
+
+    # =========================================================================
+    # Sprint 2 — Persistent Learning Store repository (PostgREST only, NEVER
+    # SQLAlchemy). All writes go through service_client (service_role, RLS
+    # bypass) exactly like evolution_logs. Every method degrades gracefully:
+    # on failure it logs a WARNING and returns None/False/[] — never raises
+    # into the caller. PRIVACY: rows contain hashes/categories/metrics only.
+    # =========================================================================
+
+    def append_learning_event(self, event: dict[str, Any]) -> bool:
+        """Insert a single learning_events row. Returns True on success."""
+        client = self.service_client
+        if not client:
+            return False
+        row = dict(event or {})
+        row.setdefault("ts", datetime.now(UTC).isoformat())
+        try:
+            client.table("learning_events").insert(row).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"append_learning_event failed: {e}")
+            return False
+
+    def append_learning_events(self, events: list[dict[str, Any]]) -> int:
+        """Batch-insert learning_events rows in chunks of 100.
+
+        Returns the number of rows successfully appended; a failed chunk is
+        logged as WARNING and skipped (never raises into the caller).
+        """
+        client = self.service_client
+        if not client:
+            return 0
+        rows = [dict(e) for e in (events or []) if isinstance(e, dict)]
+        if not rows:
+            return 0
+        inserted = 0
+        chunk_size = 100
+        for start in range(0, len(rows), chunk_size):
+            chunk = rows[start : start + chunk_size]
+            try:
+                client.table("learning_events").insert(chunk).execute()
+                inserted += len(chunk)
+            except Exception as e:
+                logger.warning(
+                    f"append_learning_events chunk ({len(chunk)} rows) failed: {e}"
+                )
+        return inserted
+
+    def get_learning_events(
+        self,
+        limit: int = 100,
+        hours: int | None = None,
+        provider: str | None = None,
+        task_type: str | None = None,
+        error_hash: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Read learning_events (service_client; RLS bypass) newest-first."""
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            query = client.table("learning_events").select("*")
+            if hours is not None:
+                cutoff = (datetime.now(UTC) - timedelta(hours=hours)).isoformat()
+                query = query.gte("ts", cutoff)
+            if provider:
+                query = query.eq("provider", provider)
+            if task_type:
+                query = query.eq("task_type", task_type)
+            if error_hash:
+                query = query.eq("error_hash", error_hash)
+            res = query.order("ts", desc=True).limit(limit).execute()
+            return res.data or []  # type: ignore
+        except Exception as e:
+            logger.warning(f"get_learning_events failed: {e}")
+            return []
+
+    def append_feedback_event(self, feedback: dict[str, Any]) -> bool:
+        """Insert a single feedback_events row (categorical feedback only)."""
+        client = self.service_client
+        if not client:
+            return False
+        row = dict(feedback or {})
+        row.setdefault("ts", datetime.now(UTC).isoformat())
+        try:
+            client.table("feedback_events").insert(row).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"append_feedback_event failed: {e}")
+            return False
+
+    def get_feedback_events(
+        self, limit: int = 100, hours: int | None = None
+    ) -> list[dict[str, Any]]:
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            query = client.table("feedback_events").select("*")
+            if hours is not None:
+                cutoff = (datetime.now(UTC) - timedelta(hours=hours)).isoformat()
+                query = query.gte("ts", cutoff)
+            res = query.order("ts", desc=True).limit(limit).execute()
+            return res.data or []  # type: ignore
+        except Exception as e:
+            logger.warning(f"get_feedback_events failed: {e}")
+            return []
+
+    def upsert_provider_metric(self, row: dict[str, Any]) -> bool:
+        """Upsert into provider_metrics on UNIQUE (window_start, provider, model)."""
+        client = self.service_client
+        if not client:
+            return False
+        try:
+            client.table("provider_metrics").upsert(
+                dict(row), on_conflict="window_start,provider,model"
+            ).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"upsert_provider_metric failed: {e}")
+            return False
+
+    def get_provider_metrics(self, hours: int = 24) -> list[dict[str, Any]]:
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            cutoff = (datetime.now(UTC) - timedelta(hours=hours)).isoformat()
+            res = (
+                client.table("provider_metrics")
+                .select("*")
+                .gte("window_start", cutoff)
+                .order("window_start", desc=True)
+                .execute()
+            )
+            return res.data or []  # type: ignore
+        except Exception as e:
+            logger.warning(f"get_provider_metrics failed: {e}")
+            return []
+
+    def upsert_skill_metric(self, row: dict[str, Any]) -> bool:
+        """Upsert into skill_metrics on UNIQUE (window_start, skill_id)."""
+        client = self.service_client
+        if not client:
+            return False
+        try:
+            client.table("skill_metrics").upsert(
+                dict(row), on_conflict="window_start,skill_id"
+            ).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"upsert_skill_metric failed: {e}")
+            return False
+
+    def append_fitness_snapshot(self, row: dict[str, Any]) -> bool:
+        client = self.service_client
+        if not client:
+            return False
+        snapshot = dict(row or {})
+        snapshot.setdefault("ts", datetime.now(UTC).isoformat())
+        try:
+            client.table("fitness_snapshots").insert(snapshot).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"append_fitness_snapshot failed: {e}")
+            return False
+
+    def get_fitness_snapshots(
+        self, subject_type: str, subject_id: str, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            res = (
+                client.table("fitness_snapshots")
+                .select("*")
+                .eq("subject_type", subject_type)
+                .eq("subject_id", subject_id)
+                .order("ts", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            return res.data or []  # type: ignore
+        except Exception as e:
+            logger.warning(f"get_fitness_snapshots failed: {e}")
+            return []
+
+    def insert_improvement_proposal(self, row: dict[str, Any]) -> str | None:
+        """Insert an improvement_proposals row; returns the new id as str."""
+        client = self.service_client
+        if not client:
+            return None
+        proposal = dict(row or {})
+        proposal.setdefault("created_at", datetime.now(UTC).isoformat())
+        proposal.setdefault("updated_at", proposal["created_at"])
+        try:
+            res = client.table("improvement_proposals").insert(proposal).execute()
+            if res.data:
+                return str(res.data[0].get("id"))
+            return None
+        except Exception as e:
+            logger.warning(f"insert_improvement_proposal failed: {e}")
+            return None
+
+    def update_improvement_proposal_status(
+        self,
+        proposal_id: int | str,
+        status: str,
+        reviewed_by: str | None = None,
+    ) -> bool:
+        client = self.service_client
+        if not client:
+            return False
+        update: dict[str, Any] = {
+            "status": status,
+            "updated_at": datetime.now(UTC).isoformat(),
+        }
+        if reviewed_by is not None:
+            update["reviewed_by"] = reviewed_by
+        try:
+            client.table("improvement_proposals").update(update).eq(
+                "id", proposal_id
+            ).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"update_improvement_proposal_status failed: {e}")
+            return False
+
+    def insert_improvement_run(self, row: dict[str, Any]) -> bool:
+        client = self.service_client
+        if not client:
+            return False
+        run = dict(row or {})
+        run.setdefault("created_at", datetime.now(UTC).isoformat())
+        try:
+            client.table("improvement_runs").insert(run).execute()
+            return True
+        except Exception as e:
+            logger.warning(f"insert_improvement_run failed: {e}")
+            return False
+
+    def get_improvement_proposals(
+        self, status: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            query = client.table("improvement_proposals").select("*")
+            if status:
+                query = query.eq("status", status)
+            res = query.order("created_at", desc=True).limit(limit).execute()
+            return res.data or []  # type: ignore
+        except Exception as e:
+            logger.warning(f"get_improvement_proposals failed: {e}")
             return []
 
     # বাংলা মন্তব্য: 'a' দিয়ে শুরু হওয়া মেথডগুলোকে থ্রেডপুলে রান করানোর জন্য ডায়নামিক এসিঙ্ক প্রক্সি মেথড।

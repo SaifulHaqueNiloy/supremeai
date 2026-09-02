@@ -27,6 +27,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from core.degraded_mode import (
+    InMemoryDocumentStore,
+    SQLiteFallbackDisabledError,
+    require_sqlite_allowed,
+)
 from core.error_bus import with_error_bus
 from core.logging_config import logger
 
@@ -34,12 +39,32 @@ from core.logging_config import logger
 _FIRESTORE_CLIENT: Any | None = None
 _FIRESTORE_LOCK = threading.Lock()
 _SQLITE_FALLBACK_CONN: sqlite3.Connection | None = None
+_INMEMORY_FALLBACK_STORE: InMemoryDocumentStore | None = None
+
+
+def _get_inmemory_fallback() -> InMemoryDocumentStore:
+    """P0: bounded in-process document store used when SQLite fallback is refused.
+
+    Documents remain gettable in-process (get/stream) but are NEVER durable —
+    the bounded store is cleared when the process exits.
+    """
+    global _INMEMORY_FALLBACK_STORE
+    if _INMEMORY_FALLBACK_STORE is None:
+        _INMEMORY_FALLBACK_STORE = InMemoryDocumentStore()
+    return _INMEMORY_FALLBACK_STORE
 
 
 def _get_sqlite_fallback() -> sqlite3.Connection:
-    """Get or create SQLite fallback connection."""
+    """Get or create SQLite fallback connection.
+
+    P0 (Task 9-c): in production without ``SUPABASE_ALLOW_DB_DEGRADATION=true``
+    the SQLite fallback is refused — raises :class:`SQLiteFallbackDisabledError`
+    (callers degrade to the in-process document store instead of silently
+    writing to an ephemeral file).
+    """
     global _SQLITE_FALLBACK_CONN
     if _SQLITE_FALLBACK_CONN is None:
+        require_sqlite_allowed("firestore_fallback")
         db_path = os.getenv("FIRESTORE_SQLITE_PATH", "data/firestore_fallback.db")
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         _SQLITE_FALLBACK_CONN = sqlite3.connect(db_path, check_same_thread=False)
@@ -125,22 +150,39 @@ def get_firestore_db(
 
         except ImportError:
             logger.warning("⚠️ google-cloud-firestore not installed, using SQLite fallback")
-            _FIRESTORE_CLIENT = _get_sqlite_fallback()
+            try:
+                _FIRESTORE_CLIENT = _get_sqlite_fallback()
+            except SQLiteFallbackDisabledError:
+                # P0: production refused the ephemeral SQLite file — degrade to
+                # the bounded in-process document store (CRITICAL logged once).
+                logger.critical(
+                    "[P0] Firestore unavailable and SQLite fallback refused — degrading to "
+                    "bounded IN-PROCESS document store (documents are LOST on restart)."
+                )
+                _FIRESTORE_CLIENT = _get_inmemory_fallback()
             return _FIRESTORE_CLIENT
 
         except Exception as exc:
             logger.warning(f"⚠️ Firestore connection failed ({exc}), using SQLite fallback")
-            _FIRESTORE_CLIENT = _get_sqlite_fallback()
+            try:
+                _FIRESTORE_CLIENT = _get_sqlite_fallback()
+            except SQLiteFallbackDisabledError:
+                logger.critical(
+                    "[P0] Firestore unavailable and SQLite fallback refused — degrading to "
+                    "bounded IN-PROCESS document store (documents are LOST on restart)."
+                )
+                _FIRESTORE_CLIENT = _get_inmemory_fallback()
             return _FIRESTORE_CLIENT
 
 
 def reset_firestore_client() -> None:
     """Reset the singleton (useful for testing)."""
-    global _FIRESTORE_CLIENT, _SQLITE_FALLBACK_CONN
+    global _FIRESTORE_CLIENT, _SQLITE_FALLBACK_CONN, _INMEMORY_FALLBACK_STORE
     _FIRESTORE_CLIENT = None
     if _SQLITE_FALLBACK_CONN:
         _SQLITE_FALLBACK_CONN.close()
         _SQLITE_FALLBACK_CONN = None
+    _INMEMORY_FALLBACK_STORE = None
 
 
 @contextmanager

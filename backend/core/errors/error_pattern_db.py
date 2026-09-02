@@ -20,6 +20,7 @@ Key Components:
 import sqlite3
 from datetime import UTC, datetime
 
+from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
 from core.logging_config import logger
 from core.persistence import pooled_pg
 
@@ -50,6 +51,15 @@ _PG_SCHEMA = (
 
 
 class ErrorPatternDB:
+    """Manages storage/retrieval of historical AI error and mistake data.
+
+    P0 (Task 9-c2): in production without ``SUPABASE_ALLOW_DB_DEGRADATION=true``
+    the local SQLite fallback is refused (centralised gate in core.degraded_mode).
+    The DB then degrades to a bounded IN-PROCESS buffer: ``log_error``/``log_ai_mistake``
+    keep working in-process (so the feedback loop stays functional), reads return
+    in-process-only matches, and NOTHING is written to an ephemeral file.
+    """
+
     def __init__(self, db_path: str | None = None):
         # Ripple-Effect Guard: an explicitly-passed db_path (used by tests for
         # isolation, e.g. a temp file or ":memory:") must force local SQLite —
@@ -80,7 +90,22 @@ class ErrorPatternDB:
             else None
         )
         self._memory_keepalive = None
+        # P0 (Task 9-c2): bounded in-process degraded stores (SQLite refused).
+        self._use_memory = False
+        self._memory_errors: InMemoryRing | None = None
+        self._memory_mistakes: InMemoryRing | None = None
         if not self._use_pg:
+            if not explicit_path and not sqlite_fallback_allowed("error_patterns"):
+                self._use_memory = True
+                self._memory_errors = InMemoryRing()
+                self._memory_mistakes = InMemoryRing()
+                logger.warning(
+                    "[P0] ErrorPatternDB degraded to a bounded IN-PROCESS buffer — error "
+                    "patterns are NOT durable and are LOST on restart. Set "
+                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
+                    "fallback, or provision Postgres."
+                )
+                return
             if self._is_memory:
                 self._memory_keepalive = sqlite3.connect(
                     self._sqlite_uri, uri=True, check_same_thread=False
@@ -137,6 +162,17 @@ class ErrorPatternDB:
             except Exception as exc:
                 logger.error(f"ErrorPatternDB.log_error: Postgres write failed: {exc}")
                 return
+        if self._use_memory:
+            # P0: bounded in-process degraded mode — write stays functional in-process.
+            self._memory_errors.append(
+                {
+                    "output": output,
+                    "error_type": error_type,
+                    "correction": correction,
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
+            return
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
@@ -168,6 +204,21 @@ class ErrorPatternDB:
             except Exception as exc:
                 logger.error(f"ErrorPatternDB.log_ai_mistake: Postgres write failed: {exc}")
                 return
+        if self._use_memory:
+            # P0: bounded in-process degraded mode.
+            self._memory_mistakes.append(
+                {
+                    "model": mistake.get("model", "unknown"),
+                    "type": mistake.get("type", "unknown"),
+                    "task": mistake.get("task", "unknown"),
+                    "original": mistake.get("original", ""),
+                    "correct": mistake.get("correct", ""),
+                    "root_cause": mistake.get("root_cause", ""),
+                    "prevention": mistake.get("prevention", ""),
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
+            return
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
@@ -191,6 +242,17 @@ class ErrorPatternDB:
             except Exception as exc:
                 logger.error(f"ErrorPatternDB.get_prevention_strategy: Postgres read failed: {exc}")
                 return "No historical data - use default validation"
+        if self._use_memory:
+            # P0: in-process match only (bounded buffer, never durable).
+            counts: dict[str, int] = {}
+            for row in self._memory_mistakes.snapshot():
+                if row.get("model") == model and task_type in str(row.get("task", "")):
+                    strategy = str(row.get("prevention") or "")
+                    if strategy:
+                        counts[strategy] = counts.get(strategy, 0) + 1
+            if counts:
+                return max(counts.items(), key=lambda kv: kv[1])[0]
+            return "No historical data - use default validation"
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(
@@ -214,6 +276,16 @@ class ErrorPatternDB:
             except Exception as exc:
                 logger.error(f"ErrorPatternDB.check_pattern: Postgres read failed: {exc}")
                 return {"known_patterns": [], "should_prevent": False}
+        if self._use_memory:
+            # P0: mirror of the SQL semantics (query output CONTAINS stored output).
+            counts: dict[tuple, int] = {}
+            for row in self._memory_errors.snapshot():
+                stored = str(row.get("output") or "")
+                if stored and stored in output:
+                    key = (row.get("error_type"), row.get("correction"))
+                    counts[key] = counts.get(key, 0) + 1
+            patterns = [(k[0], k[1], v) for k, v in counts.items()]
+            return {"known_patterns": patterns, "should_prevent": len(patterns) > 0}
         conn = self._connect()
         cursor = conn.cursor()
         cursor.execute(

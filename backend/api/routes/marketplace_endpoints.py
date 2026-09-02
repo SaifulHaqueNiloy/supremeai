@@ -6,6 +6,7 @@ import uuid
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from core.degraded_mode import sqlite_fallback_allowed
 from core.error_bus import with_error_bus
 from core.logging_config import logger
 from database.supabase_client import db
@@ -28,9 +29,25 @@ DB_PATH = os.environ.get("SUPREMEAI_MARKETPLACE_DB", "data/marketplace.db")
 
 
 def _get_conn() -> sqlite3.Connection:
+    # P0 (Task 9-c2): SQLite-only-by-design legacy catalog. In production without
+    # SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral marketplace.db file is
+    # REFUSED (CRITICAL logged once by core.degraded_mode). To keep the API alive
+    # (no 500s) each call gets a fresh IN-MEMORY connection: schema auto-creates,
+    # searches return the remote results only, and local writes are per-request
+    # only — the ephemeral file is never created or read.
+    if not sqlite_fallback_allowed("marketplace_legacy_db"):
+        conn = sqlite3.connect(":memory:", check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        _ensure_schema(conn)
+        return conn
     (os.makedirs(os.path.dirname(DB_PATH), exist_ok=True) if os.path.dirname(DB_PATH) else None)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.row_factory = sqlite3.Row
+    _ensure_schema(conn)
+    return conn
+
+
+def _ensure_schema(conn: sqlite3.Connection) -> None:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS skills (
             id TEXT PRIMARY KEY,
@@ -44,7 +61,6 @@ def _get_conn() -> sqlite3.Connection:
         )
         """)
     conn.commit()
-    return conn
 
 
 _seeded = False
