@@ -1,18 +1,20 @@
 // SupremeAI Unified Command Registry
-// বাংলা মন্তব্য: একটাই command source-of-truth — Admin ও User দুই portal-ই এখান থেকে palette পায়।
+// বাংলা মন্তব্য: একটাই command source-of-truth — Admin ও User দুই context-ই এখান থেকে palette পায়।
 // CommandBar এই registry consume করে; নতুন command যোগ করতে হলে শুধু এখানে entry দিন।
+//
+// বাংলা (single-frontend migration, roadmap Phase 6): user navigation commands এখন
+// NAVIGATION_REGISTRY (navigationRegistry.ts) থেকে DERIVED হয় — দ্বিতীয় কোনো nav
+// route definition এখানে নেই। শুধু palette-specific metadata (title/shortcut override)
+// এখানে থাকে, কারণ সেটা command view-র বিষয়, navigation-এর নয়।
 
 import {
   Terminal,
-  Folder,
   Cpu,
   Shield,
   Zap,
   Sparkles,
   Layers,
   CreditCard,
-  User,
-  Plug,
   LayoutDashboard,
   Bell,
   HardDrive,
@@ -23,6 +25,7 @@ import {
   Users,
 } from 'lucide-react';
 import type { ElementType } from 'react';
+import { getNavigationForContext, type NavEntry } from './navigationRegistry';
 
 export type CommandCategory = 'Navigation' | 'Actions' | 'AI Models' | 'System';
 export type PortalType = 'user' | 'admin';
@@ -41,105 +44,74 @@ export interface CommandDefinition {
   portals: PortalType[];
 }
 
-export const COMMAND_REGISTRY: CommandDefinition[] = [
-  // ─── Navigation: shared ───────────────────────────────────────────
+// ─── Palette view metadata (titles/shortcuts only — routes live in NAVIGATION_REGISTRY) ───
+const NAV_COMMAND_VIEW: Record<string, { title: string; shortcut?: string }> = {
+  'nav-workspace': { title: 'User Workspace & Dashboard', shortcut: 'Shift+W' },
+  'nav-admin': { title: 'Admin Console (God Mode)', shortcut: 'Shift+M' },
+  'nav-ai-studio': { title: 'AI Studio (Live Workspace)' },
+  'nav-agents': { title: 'Agent Studio Workspace', shortcut: 'Shift+A' },
+  'nav-ide': { title: 'Cloud IDE Workspace', shortcut: 'Shift+I' },
+  'nav-swarm': { title: 'Swarm Telemetry & Heatmap', shortcut: 'Shift+S' },
+  'nav-evolution-forge': { title: 'Evolution Forge & Genetic Tuning', shortcut: 'Shift+E' },
+  'nav-architect-tower': { title: 'Architect Tower' },
+  'nav-skills': { title: 'Skills Catalog & Marketplace', shortcut: 'Shift+K' },
+  'nav-integrations': { title: 'Cloud Integrations & Vault' },
+  'nav-billing': { title: 'Billing & Token Usage' },
+  'nav-profile': { title: 'User Profile & Security' },
+};
+
+/**
+ * বাংলা: registry → command mapping। শুধু implemented route item-ই command হয়;
+ * planned item (যেমন /projects) কখনো palette-এ দেখাবে না — dead command নিষিদ্ধ।
+ */
+function navEntryToCommand(entry: NavEntry, portals: PortalType[]): CommandDefinition | null {
+  if (entry.kind !== 'route') return null;
+  const view = NAV_COMMAND_VIEW[entry.id];
+  return {
+    id: entry.id,
+    title: view?.title ?? entry.label,
+    category: 'Navigation',
+    icon: entry.icon,
+    route: entry.path,
+    shortcut: view?.shortcut,
+    portals,
+  };
+}
+
+// Context-switch commands (shared) — এগুলো sidebar registry-তে নেই কারণ এগুলোর কাজ
+// context switch; 'nav-home' (/workspace) ইতিমধ্যে 'nav-workspace' দিয়ে প্রকাশিত।
+const SHARED_NAV_COMMANDS: CommandDefinition[] = [
   {
     id: 'nav-workspace',
-    title: 'User Workspace & Dashboard',
+    title: NAV_COMMAND_VIEW['nav-workspace'].title,
     category: 'Navigation',
     icon: LayoutDashboard,
     route: '/workspace',
-    shortcut: 'Shift+W',
+    shortcut: NAV_COMMAND_VIEW['nav-workspace'].shortcut,
     portals: ['user', 'admin'],
   },
   {
     id: 'nav-admin',
-    title: 'Admin Console (God Mode)',
+    title: NAV_COMMAND_VIEW['nav-admin'].title,
     category: 'Navigation',
     icon: Shield,
     route: '/admin',
-    shortcut: 'Shift+M',
+    shortcut: NAV_COMMAND_VIEW['nav-admin'].shortcut,
     portals: ['admin'],
   },
+];
 
-  // ─── Navigation: user workspaces ─────────────────────────────────
-  {
-    id: 'nav-agent',
-    title: 'Agent Studio Workspace',
-    category: 'Navigation',
-    icon: Terminal,
-    route: '/workspace/agent',
-    shortcut: 'Shift+A',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-ide',
-    title: 'Cloud IDE Workspace',
-    category: 'Navigation',
-    icon: Folder,
-    route: '/workspace/ide',
-    shortcut: 'Shift+I',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-swarm',
-    title: 'Swarm Telemetry & Heatmap',
-    category: 'Navigation',
-    icon: Cpu,
-    route: '/swarm',
-    shortcut: 'Shift+S',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-evolution',
-    title: 'Evolution Forge & Genetic Tuning',
-    category: 'Navigation',
-    icon: Sparkles,
-    route: '/evolution-forge',
-    shortcut: 'Shift+E',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-architect',
-    title: 'Architect Tower',
-    category: 'Navigation',
-    icon: Shield,
-    route: '/architect-tower',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-skills',
-    title: 'Skills Catalog & Marketplace',
-    category: 'Navigation',
-    icon: Sparkles,
-    route: '/skills-catalog',
-    shortcut: 'Shift+K',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-integrations',
-    title: 'Cloud Integrations & Vault',
-    category: 'Navigation',
-    icon: Plug,
-    route: '/integrations',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-billing',
-    title: 'Billing & Token Usage',
-    category: 'Navigation',
-    icon: CreditCard,
-    route: '/billing',
-    portals: ['user'],
-  },
-  {
-    id: 'nav-profile',
-    title: 'User Profile & Security',
-    category: 'Navigation',
-    icon: User,
-    route: '/profile',
-    portals: ['user'],
-  },
+// User nav commands — NAVIGATION_REGISTRY থেকে generated (single source of truth)।
+const USER_NAV_COMMANDS: CommandDefinition[] = getNavigationForContext('user')
+  .flatMap((group) => group.items)
+  .filter((entry) => !(entry.kind === 'route' && entry.id === 'nav-home')) // covered by nav-workspace
+  .map((entry) => navEntryToCommand(entry, ['user']))
+  .filter((c): c is CommandDefinition => c !== null);
+
+export const COMMAND_REGISTRY: CommandDefinition[] = [
+  // ─── Navigation: context switches + registry-derived user nav ──────
+  ...SHARED_NAV_COMMANDS,
+  ...USER_NAV_COMMANDS,
 
   // ─── Actions ──────────────────────────────────────────────────────
   {

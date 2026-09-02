@@ -37,8 +37,9 @@ describe('commandRegistry', () => {
     }
   });
 
-  it('getCurrentPortal defaults to user for non-admin env', () => {
-    // বাংলা মন্তব্য: test env-এ VITE_PORTAL_TYPE unset — default 'user' হওয়া উচিত
+  it('getCurrentPortal defaults to user outside /admin routes', () => {
+    // বাংলা মন্তব্য (single-frontend migration): portal এখন runtime route context —
+    // test env (jsdom pathname='/') হলে default 'user' হওয়া উচিত
     expect(getCurrentPortal()).toBe('user');
   });
 
