@@ -576,10 +576,17 @@ EnhancedTaskQueue = TaskQueue
 try:
     from celery import Celery as _Celery
 
+    # বাংলা মন্তব্য: Localhost fallback is strictly guarded for local environments to prevent silent production failures.
+    _broker_url = getattr(
+        settings, "redis_url", "redis://localhost:6379/0" if settings.env == "local" else None
+    )
+    if not _broker_url:
+        raise ValueError("redis_url is required in non-local environments")
+
     celery_app = _Celery(
         "supremeai",
-        broker=getattr(settings, "redis_url", "redis://localhost:6379/0"),
-        backend=getattr(settings, "redis_url", "redis://localhost:6379/0"),
+        broker=_broker_url,
+        backend=_broker_url,
         include=["workers.chaos_worker"],  # add other worker modules as needed
     )
     celery_app.conf.update(
