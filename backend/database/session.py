@@ -138,18 +138,37 @@ def init_engine() -> None:
         return
 
     DATABASE_URL = settings.supabase_database_url
+    # Master audit 2026-09-02: env-gated production degradation.
+    # Default behaviour is UNCHANGED (fail-fast in production). When
+    # SUPABASE_ALLOW_DB_DEGRADATION=true is explicitly set (free-tier
+    # deployments where the DB pooler password is not provisioned yet), the
+    # server boots and serves all Supabase-REST-based features; raw
+    # SQLAlchemy/asyncpg routes fail per-request instead of killing the whole
+    # node in a crash loop. Set SUPABASE_DATABASE_URL_POOLER to re-enable the
+    # strict path — no code change needed, just remove/rename the opt-in var.
+    _ALLOW_DB_DEGRADATION = os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "").lower() == "true"
     if not DATABASE_URL:
         # বাংলা: production-এ missing DB URL = fail-fast। test/CI-এ SQLite fallback।
         current_env = (getattr(settings, "env", "") or "").lower()
         if current_env in ("production", "prod"):
-            logger.critical(
-                "FATAL: SUPABASE_DATABASE_URL_POOLER missing in PRODUCTION. "
-                "Refusing to boot with SQLite fallback (data loss risk)."
+            if _ALLOW_DB_DEGRADATION:
+                logger.critical(
+                    "DEGRADED BOOT (opt-in): SUPABASE_DATABASE_URL_POOLER missing in "
+                    "PRODUCTION — booting WITHOUT the SQLAlchemy engine "
+                    "(SUPABASE_ALLOW_DB_DEGRADATION=true). REST-based features work; "
+                    "SQL-dependent routes will error per-request until the pooler URL is set."
+                )
+            else:
+                logger.critical(
+                    "FATAL: SUPABASE_DATABASE_URL_POOLER missing in PRODUCTION. "
+                    "Refusing to boot with SQLite fallback (data loss risk). "
+                    "Set SUPABASE_ALLOW_DB_DEGRADATION=true to boot in degraded REST-only mode."
+                )
+                raise RuntimeError("Production environment requires SUPABASE_DATABASE_URL_POOLER")
+        else:
+            logger.warning(
+                "SUPABASE_DATABASE_URL_POOLER is missing. Falling back to SQLite in-memory (test/dev only)."
             )
-            raise RuntimeError("Production environment requires SUPABASE_DATABASE_URL_POOLER")
-        logger.warning(
-            "SUPABASE_DATABASE_URL_POOLER is missing. Falling back to SQLite in-memory (test/dev only)."
-        )
 
     _async_url = get_async_url(DATABASE_URL or "")
     engine_kwargs = _build_engine_kwargs(_async_url)
@@ -166,9 +185,14 @@ def init_engine() -> None:
     except Exception as exc:
         # বাংলা: production-ে ফেইল-ফাস্ট, test/staging-এ SQLite fallback।
         current_env = (getattr(settings, "env", "") or "").lower()
-        if current_env in ("production", "prod"):
+        if current_env in ("production", "prod") and not _ALLOW_DB_DEGRADATION:
             logger.critical(f"FATAL: Failed to create DB engine in PRODUCTION: {exc}")
             raise RuntimeError(f"Production DB engine creation failed: {exc}") from exc
+        if current_env in ("production", "prod") and _ALLOW_DB_DEGRADATION:
+            logger.critical(
+                f"DEGRADED BOOT (opt-in): DB engine creation failed in PRODUCTION: {exc}. "
+                "Booting WITHOUT the SQLAlchemy engine."
+            )
         logger.error(
             f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory."
         )
