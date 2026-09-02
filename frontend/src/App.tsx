@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useStore } from "./store/useStore";
 
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
@@ -12,8 +11,6 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
 import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
-import { UserDashboard } from "./components/customer/UserDashboard";
-import type { ChatMessage } from "./services/chatService";
 
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
 const AdminShell = React.lazy(() => import("./pages/admin/AdminShell").then(m => ({ default: m.AdminShell })));
@@ -32,8 +29,6 @@ const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 import { tierSUserRoutes } from './routes/tierSRoutes';
 
 // Services & Hooks
-import { getAethelResponse } from "./services/chatService";
-import type { ChatMessage as ApiChatMessage } from "./services/chatService";
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হয়
 import { useServerStream } from './hooks/useServerStream';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
@@ -84,54 +79,8 @@ export const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { isServerOnline, deployGate } = useStore();
-  // বাংলা মন্তব্য: SSE স্ট্রিম কানেক্ট করে সার্ভার অনলাইন স্ট্যাটাস ট্র্যাক করা হচ্ছে (এর আগে হুকটি কোথাও মাউন্ট ছিল না, তাই CORE সবসময় OFFLINE দেখাত)
+  // বাংলা মন্তব্য: SSE স্ট্রিম কানেক্ট করে সার্ভার অনলাইন স্ট্যাটাস ট্র্যাক করা হচ্ছে
   useServerStream();
-
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [code, setCode] = useState('// Click Preview or Save to interact with the workspace code');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-
-  const handleSendCustomer = async () => {
-    if (!chatInput.trim()) return;
-    const now = new Date().toLocaleTimeString();
-    const userMessage: ChatMessage = { id: Date.now(), sender: 'User', text: chatInput, timestamp: now };
-    const responseId = Date.now() + 1;
-
-    setChatMessages(prev => [
-      ...prev,
-      userMessage,
-      { id: responseId, sender: 'SupremeAI', text: `Analyzing request "${chatInput}"... Processing on central core.`, timestamp: now }
-    ]);
-    setChatInput('');
-
-    try {
-      const history: ApiChatMessage[] = [...chatMessages, userMessage].map(msg => ({
-        role: msg.sender === 'User' ? 'user' : 'assistant',
-        content: msg.text,
-      }));
-      const responseText = await getAethelResponse(chatInput, history);
-      setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: responseText } : msg));
-    } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unable to fetch response.';
-      setChatMessages(prev => prev.map(msg => msg.id === responseId ? { ...msg, text: `AI backend error: ${errMsg}` } : msg));
-    }
-  };
-
-  const handleSaveToProject = (code: string) => {
-    setCode(code);
-  };
-
-  const handlePreview = (code: string) => {
-    setCode(code);
-  };
-
-  const legacyWorkspace = (
-    <UserDashboard />
-  );
 
   return (
     <ErrorBoundary>
