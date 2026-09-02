@@ -52,26 +52,34 @@ interface AdminConsoleProps {
 }
 
 export function AdminConsole(props: AdminConsoleProps) {
-  return (
-    <div className="dashboard-aurora h-screen w-screen flex flex-col overflow-hidden">
+  // বাংলা (single-frontend migration): authenticated state-এ AuthenticatedView নিজেই
+  // UnifiedAppShell (full-screen shell) বয়ে আনে — তাই বাইরের h-screen wrapper সরানো
+  // হলো (nested full-screen হতো)। Login state-এ কোনো shell নেই, তাই সেখানেই
+  // min-h-screen container + dashboard-aurora background দরকার।
+  // Error boundary layering অপরিবর্তিত — দুই শাখাই DashboardErrorBoundary-র ভেতরে।
+  if (props.adminAuthenticated) {
+    return (
       <DashboardErrorBoundary>
-        {!props.adminAuthenticated ? (
-          <LoginView
-            adminEmail={props.adminEmail}
-            setAdminEmail={props.setAdminEmail}
-            adminError={props.adminError}
-            handleAdminLogin={props.handleAdminLogin}
-            otpRequired={props.otpRequired}
-            adminOtp={props.adminOtp}
-            setAdminOtp={props.setAdminOtp}
-            totpSetupRequired={props.totpSetupRequired}
-            provisioningUri={props.provisioningUri}
-            totpSecret={props.totpSecret}
-            onResetTotp={props.onResetTotp}
-          />
-        ) : (
-          <AuthenticatedView {...props} />
-        )}
+        <AuthenticatedView {...props} />
+      </DashboardErrorBoundary>
+    );
+  }
+  return (
+    <div className="dashboard-aurora min-h-screen w-full flex flex-col overflow-hidden">
+      <DashboardErrorBoundary>
+        <LoginView
+          adminEmail={props.adminEmail}
+          setAdminEmail={props.setAdminEmail}
+          adminError={props.adminError}
+          handleAdminLogin={props.handleAdminLogin}
+          otpRequired={props.otpRequired}
+          adminOtp={props.adminOtp}
+          setAdminOtp={props.setAdminOtp}
+          totpSetupRequired={props.totpSetupRequired}
+          provisioningUri={props.provisioningUri}
+          totpSecret={props.totpSecret}
+          onResetTotp={props.onResetTotp}
+        />
       </DashboardErrorBoundary>
     </div>
   );
