@@ -253,7 +253,7 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
 
 export const apiClient = {
   get: async <T>(path: string, options?: RequestInit): Promise<T> => {
-    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'GET',
       headers: await getAuthHeaders(),
       ...options,
@@ -262,7 +262,7 @@ export const apiClient = {
   },
 
   post: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
-    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'POST',
       headers: await getAuthHeaders(),
       body: body ? JSON.stringify(body) : undefined,
@@ -272,7 +272,7 @@ export const apiClient = {
   },
 
   put: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
-    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'PUT',
       headers: await getAuthHeaders(),
       body: body ? JSON.stringify(body) : undefined,
@@ -282,7 +282,7 @@ export const apiClient = {
   },
 
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
-    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'DELETE',
       headers: await getAuthHeaders(),
       ...options,
@@ -295,7 +295,7 @@ export const apiClient = {
     if (otpCode) {
       headers['X-JIT-OTP'] = otpCode;
     }
-    const res = await throttledFetch(`${getApiBaseUrl()}${path}`, {
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'POST',
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -310,7 +310,7 @@ export const apiClient = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
 
-      const res = await fetch(`${getApiBaseUrl()}${path}`, {
+      const res = await fetch(`${getApiBaseUrl(path)}${path}`, {
         method,
         headers: await getAuthHeaders(),
         body: body && method === 'POST' ? JSON.stringify(body) : undefined,

@@ -147,16 +147,18 @@ export async function fetchWithRetry(
   }
 
   throw lastError || new Error('All retries exhausted');
-}// বাংলা মন্তব্য: Portal-ভিত্তিক একক backend নির্ধারণ — কোনো cross-portal failover নেই।
-// Admin build (VITE_PORTAL_TYPE=admin) শুধু Admin backend-এ কথা বলে, User build শুধু User backend-এ।
+}// বাংলা (single-frontend migration, roadmap Phase 1/7): VITE_PORTAL_TYPE সরানো হয়েছে।
+// এক বিল্ডে User + Admin দুই context-ই থাকে, তাই backend নির্বাচন এখন RUNTIME সিদ্ধান্ত:
+//  - '/admin-api' path অথবা /admin/* route context → admin backend (থাকলে)
+//  - বাকি সব → user backend
 // Firebase hosting external rewrite proxy সাপোর্ট করে না, তাই Firebase-এ সরাসরি backend URL ব্যবহার হয় (CORS allow)।
 // Vercel-এ relative path ('') রাখা হয় কারণ Vercel external rewrite proxy সাপোর্ট করে।
 
-/** Admin portal-এর canonical backend URL (build-time resolved) */
+/** Admin-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
 export const ADMIN_BACKEND_URL: string =
   import.meta.env.VITE_ADMIN_BACKEND || '';
 
-/** User portal-এর canonical backend URL (build-time resolved) */
+/** User-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
 export const USER_BACKEND_URL: string =
   import.meta.env.VITE_USER_BACKEND ||
   import.meta.env.VITE_API_BASE ||
@@ -166,26 +168,47 @@ export const USER_BACKEND_URL: string =
 export const circuits = { api: apiCircuit, websocket: wsCircuit };
 export type { CircuitState };
 
-// 🔒 RUNTIME VALIDATION - Missing URLs = Error in production
-if ((import.meta.env.PROD) && !ADMIN_BACKEND_URL && import.meta.env.VITE_PORTAL_TYPE === 'admin') {
-  throw new Error('❌ VITE_ADMIN_BACKEND is required in production. Set it in render.yaml or .env');
-}
-if ((import.meta.env.PROD) && !USER_BACKEND_URL && import.meta.env.VITE_PORTAL_TYPE !== 'admin') {
+// 🔒 RUNTIME VALIDATION - Missing user backend = Error in production.
+// বাংলা: admin backend এখন optional — না থাকলে admin-context calls user backend-এ
+// fall back করে (একই FastAPI app /admin-api ও /api/v1 দুই-ই serve করে)।
+if ((import.meta.env.PROD) && !USER_BACKEND_URL) {
   throw new Error('❌ VITE_USER_BACKEND or VITE_API_URL is required in production. Set it in render.yaml or .env');
+}
+if ((import.meta.env.PROD) && !ADMIN_BACKEND_URL) {
+  console.warn('⚠️ VITE_ADMIN_BACKEND not set — admin-context API calls fall back to the user backend.');
 }
 
 /**
- * বর্তমান portal-এর canonical backend URL — heartbeat ও অন্যান্য সার্ভিস এটিই ব্যবহার করে।
- * বাংলা মন্তব্য: runtime hostname sniffing নয়, build-time VITE_PORTAL_TYPE দিয়ে নির্ধারিত।
+ * বাংলা: এই call টি admin-context কিনা — path prefix (per-call) অথবা
+ * current route context (/admin/*) দেখে নির্ধারিত হয়। Env var দিয়ে নয়।
  */
-export const BACKEND_URL: string =
-  import.meta.env.VITE_PORTAL_TYPE === 'admin' ? ADMIN_BACKEND_URL : USER_BACKEND_URL;
+export function isAdminContextPath(path?: string): boolean {
+  if (path && (path.startsWith('/admin-api') || path.startsWith('/api/admin'))) return true;
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) return true;
+  return false;
+}
 
-export const getApiBaseUrl = (): string => {
+/**
+ * বাংলা: runtime backend URL নির্বাচন — কোনো build-time portal identity নেই।
+ * @param path API call-এর path (যেমন '/admin-api/deploy') — থাকলে per-call precision
+ */
+export function getBackendUrl(path?: string): string {
+  if (isAdminContextPath(path) && ADMIN_BACKEND_URL) return ADMIN_BACKEND_URL;
+  return USER_BACKEND_URL || ADMIN_BACKEND_URL;
+}
+
+/**
+ * @deprecated বাংলা: পুরোনো portal-pinned constant — শুধু backward compatibility।
+ * নতুন কোডে getBackendUrl(path) / getApiBaseUrl(path) ব্যবহার করুন।
+ */
+export const BACKEND_URL: string = USER_BACKEND_URL;
+
+export const getApiBaseUrl = (path?: string): string => {
   if (typeof window === 'undefined') {
     // বাংলা মন্তব্য: SSR/Node.js কনটেক্সটে সরাসরি backend URL
-    if (!BACKEND_URL && import.meta.env.PROD) throw new Error('API URL missing in production');
-    return BACKEND_URL;
+    const backend = getBackendUrl(path);
+    if (!backend && import.meta.env.PROD) throw new Error('API URL missing in production');
+    return backend;
   }
 
   // 🔧 DYNAMIC: Configure via explicit VITE_USE_RELATIVE_PATH boolean flag
@@ -200,8 +223,8 @@ export const getApiBaseUrl = (): string => {
     return '';
   }
 
-  // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসররি backend URL
-  return BACKEND_URL;
+  // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসররি backend URL — runtime context অনুযায়ী
+  return getBackendUrl(path);
 };
 
 /**
@@ -237,12 +260,14 @@ export const getWebSocketBaseUrl = (): string => {
     return import.meta.env.VITE_WS_BASE_URL;
   }
 
+  // বাংলা (single-frontend migration): runtime context-aware backend
+  const backendUrl = getBackendUrl();
   const apiBase = getApiBaseUrl();
 
   // 🔥 ফিক্স: Firebase hosting-এ apiBase === '' (relative path)।
   // WebSocket Firebase rewrite proxy দিয়ে যায় না — সরাসরি Render-এর wss:// URL ব্যবহার করতে হবে।
   if (apiBase === '') {
-    return BACKEND_URL.replace(/^https:\/\//, 'wss://');
+    return backendUrl.replace(/^https:\/\//, 'wss://');
   }
 
   if (apiBase.startsWith('https://')) {
@@ -253,8 +278,8 @@ export const getWebSocketBaseUrl = (): string => {
   }
 
   const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = typeof window !== 'undefined' ? window.location.host : (BACKEND_URL ? BACKEND_URL.replace(/^https?:\/\//, '') : 'localhost:8000');
-  if (typeof window === 'undefined' && import.meta.env.PROD && !BACKEND_URL) {
+  const host = typeof window !== 'undefined' ? window.location.host : (backendUrl ? backendUrl.replace(/^https?:\/\//, '') : 'localhost:8000');
+  if (typeof window === 'undefined' && import.meta.env.PROD && !backendUrl) {
     throw new Error('❌ Backend URL is required in production SSR.');
   }
   return `${protocol}//${host}`;

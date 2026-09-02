@@ -7,24 +7,23 @@ import path from 'path'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-// বাংলা মন্তব্য: Portal-ভিত্তিক local dev proxy target — admin dev server কখনোই user backend-এ
-// (এবং উল্টোটাও) route করবে fix client-side routing and MIME issues
+// বাংলা (single-frontend migration, roadmap Phase 1/7): VITE_PORTAL_TYPE সম্পূর্ণ সরানো হয়েছে।
+// একটাই build, একটাই outDir (dist/)। দুটি backend URL (user + admin) একই বান্ডলে
+// embed থাকে; runtime-এ route context অনুযায়ী utils/api.ts সঠিকটি বেছে নেয়।
 // 🔧 DYNAMIC CONFIG: No hardcoded URLs — Fail-Fast in production
-const IS_ADMIN_PORTAL = process.env.VITE_PORTAL_TYPE === 'admin'
 const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || process.env.RENDER_SERVICE_URL || ''
 const USER_BACKEND = process.env.VITE_USER_BACKEND || process.env.VITE_API_URL || process.env.RENDER_SERVICE_URL || ''
 
-// 🔒 PRODUCTION GUARD: Missing backend URL = Build failure (not silent wrong URL)
-if (process.env.NODE_ENV === 'production' && !ADMIN_BACKEND && IS_ADMIN_PORTAL) {
-  console.error('❌ FATAL: VITE_ADMIN_BACKEND environment variable is required in production!')
-  process.exit(1)
-}
-if (process.env.NODE_ENV === 'production' && !USER_BACKEND && !IS_ADMIN_PORTAL) {
+// 🔒 PRODUCTION GUARD: Missing user backend URL = Build failure (not silent wrong URL)
+if (process.env.NODE_ENV === 'production' && !USER_BACKEND) {
   console.error('❌ FATAL: VITE_USER_BACKEND environment variable is required in production!')
   process.exit(1)
 }
-
-const PORTAL_BACKEND = IS_ADMIN_PORTAL ? ADMIN_BACKEND : USER_BACKEND
+// বাংলা: admin backend এখন optional — না থাকলে runtime admin-context calls
+// user backend-এ fall back করে (একই FastAPI app /admin-api ও /api/v1 দুই-ই serve করে)।
+if (process.env.NODE_ENV === 'production' && !ADMIN_BACKEND) {
+  console.warn('⚠️ VITE_ADMIN_BACKEND not set — admin-context API calls will fall back to the user backend.')
+}
 
 // 🔬 Evolution v3.0: Dump build config for debugging
 const buildInfoPlugin = () => {
@@ -34,8 +33,9 @@ const buildInfoPlugin = () => {
       if (process.env.NODE_ENV === 'production') {
         const buildInfo = {
           timestamp: new Date().toISOString(),
-          portalType: IS_ADMIN_PORTAL ? 'admin' : 'user',
-          backendUrl: PORTAL_BACKEND,
+          buildType: 'unified', // single frontend build (no portal split)
+          userBackendUrl: USER_BACKEND,
+          adminBackendUrl: ADMIN_BACKEND || USER_BACKEND,
           coopHeader: process.env.COOP_HEADER,
           coepHeader: process.env.COEP_HEADER,
         }
@@ -49,15 +49,15 @@ const buildInfoPlugin = () => {
 
 const devProxy = {
   '/api': {
-    target: PORTAL_BACKEND,
+    target: USER_BACKEND,
     changeOrigin: true
   },
   '/admin-api': {
-    target: ADMIN_BACKEND,
+    target: ADMIN_BACKEND || USER_BACKEND,
     changeOrigin: true
   },
   '/auth': {
-    target: PORTAL_BACKEND,
+    target: USER_BACKEND,
     changeOrigin: true
   }
 }
@@ -89,14 +89,15 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': process.env.COOP_HEADER || 'cross-origin',
       'Cross-Origin-Opener-Policy': process.env.COEP_HEADER || 'unsafe-none',
     },
-    // বাংলা মন্তব্য: প্রোডাকশন-গ্রেড ক্লাউড ব্যাকএন্ড টার্গেট সিঙ্ক (Render Admin/User Service)
+    // বাংলা মন্তব্য: dev proxy — user API → user backend, admin API → admin backend (fallback user)
     proxy: devProxy
   },
   preview: {
     proxy: devProxy
   },
   build: {
-    outDir: process.env.VITE_PORTAL_TYPE === 'admin' ? 'dist-admin' : 'dist-user',
+    // বাংলা: single production artifact — User + Admin দুই context একই bundle-এ
+    outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
       output: {
