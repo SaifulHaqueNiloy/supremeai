@@ -5,6 +5,30 @@
 import asyncio
 import os
 import sys
+
+# ROOT-CAUSE FIX (রেট লিমিট এবং অথ বাইপাস): `app` fixture-এ
+# os.environ["RATE_LIMIT_ENABLED"] = "false" সেট করার আগেই অনেক সময়
+# pytest collection phase-এ tests/api/*.py, tests/core/*.py-র মতো ফাইল
+# ইমপোর্ট হয়ে যেত যেখানে module-level-এ `from api.routes... import ...` বা
+# `from core.app import app` বা `from core.logging_config import logger` কল হতো।
+# ফলে API Key validation এবং CORS/Auth Middleware-এ `settings.is_bypass_allowed`
+# Pydantic Settings load হওয়ার সময় False হয়ে যেত।
+# তাই এখানে module লেভেলেই, যেকোনো internal module import হওয়ার আগে,
+# `RATE_LIMIT_ENABLED`, `ALLOW_TEST_AUTH_BYPASS`
+# এবং `ALLOW_TEST_ORIGIN_BYPASS` সেট করে দেওয়া হলো, যাতে `Settings` লোড
+# হওয়ার সময় এই ভ্যালুগুলো পেয়ে যায় এবং টেস্ট ফেজ-এ বাইপাস এনাবল থাকে।
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+os.environ["TESTING"] = "true"
+os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
+os.environ["ALLOW_TEST_ORIGIN_BYPASS"] = "true"
+os.environ["ENV"] = "test"
+
+# ROOT-CAUSE FIX: Ensure core.config is completely reloaded so Pydantic Settings
+# picks up the bypass env vars we just set.
+for _mod in list(sys.modules.keys()):
+    if _mod == "core.config" or _mod.startswith("core.config."):
+        del sys.modules[_mod]
+
 import uuid
 from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime, timedelta, timezone
@@ -23,23 +47,6 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from core.logging_config import logger
-
-# ROOT-CAUSE FIX (আগের fix অসম্পূর্ণ ছিল): `app` fixture-এ
-# os.environ["RATE_LIMIT_ENABLED"] = "false" সেট করা যথেষ্ট ছিল না, কারণ
-# pytest collection phase-এ tests/api/*.py, tests/core/*.py-র মতো অনেক
-# টেস্ট ফাইল module-level-এই `from api.routes... import ...` বা
-# `from core.app import app` করে -- যেটা api/routes/api_keys.py-র মতো
-# ফাইলে module-level `limiter = AsyncRateLimiter()` singleton তৈরি করে
-# দেয়, এবং AsyncRateLimiter.__init__() os.getenv("RATE_LIMIT_ENABLED")
-# পড়ে নেয় সেই মুহূর্তেই -- যা প্রথম টেস্টের `app` fixture রান হওয়ারও
-# অনেক আগে (pytest সব টেস্ট ফাইল collect করে তারপর fixture রান করে)।
-# ফলে register endpoint বারবার কল হলে real rate limiter 429 দিতে থাকত,
-# cascade হয়ে ৪০+ টেস্ট FAILED/ERROR হতো। conftest.py সবসময় সবচেয়ে
-# আগে import হয় (pytest guarantee), তাই এখানে module-level-এই env var
-# সেট করা হলো, যেকোনো test file import হওয়ার আগে।
-os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
-os.environ.setdefault("TESTING", "true")
-
 
 # ============================================================
 # CI TEST TIER CLASSIFICATION

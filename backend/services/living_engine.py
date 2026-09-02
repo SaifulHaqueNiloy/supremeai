@@ -28,6 +28,7 @@ from learning.pattern_recognizer import PatternMatch, PatternRecognizer
 from services.dynamic_planner import DynamicPlanningEngine, TaskDAG, TaskNode
 from services.intent_deciphering import IntentAnalysis, IntentDecipheringService
 from services.memory_service import CascadeMemoryService
+from services.memory_service import memory_service as global_memory_service
 from services.self_correction import SelfCorrectionService
 from services.tool_forge import ToolForgeService, ToolSpec
 
@@ -239,7 +240,7 @@ class LivingEngineOrchestrator:
         evolution_module: EvolutionModule | None = None,
         evolution_controller: AutoEvolutionController | None = None,
     ) -> None:
-        self.memory_service = memory_service or CascadeMemoryService()
+        self.memory_service = memory_service or global_memory_service
         self.intent_service = intent_service or IntentDecipheringService(
             memory_service=self.memory_service
         )

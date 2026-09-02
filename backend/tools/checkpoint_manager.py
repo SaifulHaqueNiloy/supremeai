@@ -343,3 +343,31 @@ class CheckpointManager:
         except Exception as exc:
             logger.error(f"Failed to clear Firestore checkpoint: {exc}")
             return False
+
+
+class LazyCheckpointManager:
+    """Proxy class that defers initializing CheckpointManager until first use."""
+
+    def __init__(self, db_path: str | None = None):
+        self._db_path = db_path
+        self._instance: CheckpointManager | None = None
+
+    def _get_instance(self) -> CheckpointManager:
+        if self._instance is None:
+            self._instance = CheckpointManager(db_path=self._db_path)
+        return self._instance
+
+    def save(self, task_id: str, step_index: int, state: dict[str, Any]) -> bool:
+        return self._get_instance().save(task_id, step_index, state)
+
+    def load(self, task_id: str) -> Checkpoint | None:
+        return self._get_instance().load(task_id)
+
+    def list_all(self) -> list[dict[str, Any]]:
+        return self._get_instance().list_all()
+
+    def clear(self, task_id: str) -> bool:
+        return self._get_instance().clear(task_id)
+
+
+checkpoint_manager = LazyCheckpointManager()
