@@ -97,6 +97,9 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
     # বাংলা মন্তব্য: env validate হবে — invalid value = startup crash
     env: str = Field(default="local", validation_alias="ENV")
     debug: bool = Field(default=False)
+    supremeai_service_role: str = Field(
+        default="monolith", validation_alias="SUPREMEAI_SERVICE_ROLE"
+    )
 
     # Free Tier Optimizations
     AUTO_HEALING_ENABLED: bool = Field(default=False)
