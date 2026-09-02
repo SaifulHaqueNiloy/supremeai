@@ -31,6 +31,9 @@ import { App } from './App';
 vi.mock('./components/core/AuthGuards', () => ({
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   GuestRoute: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  // single-frontend migration: App also imports these shared auth-state helpers
+  useAuthStatus: () => ({ isChecking: false, isAuthenticated: true }),
+  AuthLoadingSpinner: () => <div data-testid="auth-loading">Loading…</div>,
 }));
 
 // Mock ResizeObserver for ReactFlow in JSDOM
@@ -144,6 +147,16 @@ vi.mock('./services/adminTokenStore', () => ({
 // Mock getApiBaseUrl used by InteractiveChatTab and other components
 vi.mock('./utils/api', () => ({
   getApiBaseUrl: vi.fn().mockReturnValue('<backend-url>'),
+  // single-frontend migration: runtime backend selection helpers
+  getBackendUrl: vi.fn().mockReturnValue('<backend-url>'),
+  getWebSocketBaseUrl: vi.fn().mockReturnValue('<backend-url>'),
+  isAdminContextPath: vi.fn().mockReturnValue(false),
+}));
+
+// single-frontend migration: UnifiedAppShell renders GlobalHeader which consumes
+// the shared ThemeProvider — mock the hook (no provider in this test tree).
+vi.mock('./contexts/useTheme', () => ({
+  useTheme: () => ({ theme: 'dark', toggleTheme: vi.fn() }),
 }));
 
 // Mock useDashboardStore used by InteractiveChatTab
@@ -157,10 +170,27 @@ vi.mock('./store/dashboardStore', () => ({
   }),
 }));
 
-// Mock useAuthStore (used by the new props-free UserDashboard) so the
-// greeting stays deterministic in tests.
+// Mock useAuthStore (used by UserDashboard, GlobalHeader and auth/identity) so the
+// greeting stays deterministic in tests. The unified shell reads role via
+// getState() (non-hook access) and via selectors — both supported below.
+const mockAuthState = {
+  status: 'loggedIn',
+  user: null,
+  role: 'user' as const,
+  permissions: [] as string[],
+};
 vi.mock('./store/authStore', () => ({
-  useAuthStore: () => ({ user: null }),
+  useAuthStore: Object.assign(
+    (selector?: (state: typeof mockAuthState) => unknown) =>
+      selector ? selector(mockAuthState) : mockAuthState,
+    {
+      getState: () => mockAuthState,
+      setState: vi.fn(),
+    }
+  ),
+  AuthStatus: { UNINITIALIZED: 'uninitialized', LOGGED_OUT: 'loggedOut', LOGGED_IN: 'loggedIn' },
+  clearCanonicalSession: vi.fn(),
+  LEGACY_ADMIN_TOKEN_KEY: 'adminToken',
 }));
 
 describe('App component', () => {
@@ -189,10 +219,12 @@ describe('App component', () => {
 
     // Customer dashboard greeting
     expect(screen.getByText('What would you like to build today?')).toBeInTheDocument();
-    // Sidebar navigation
+    // Sidebar navigation (NAVIGATION_REGISTRY — implemented items only;
+    // planned items like Projects are intentionally not rendered)
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('AI Studio')).toBeInTheDocument();
-    expect(screen.getByText('Projects')).toBeInTheDocument();
+    expect(screen.getByText('Agents')).toBeInTheDocument();
+    expect(screen.queryByText('Projects')).not.toBeInTheDocument();
     // Dashboard sections
     expect(screen.getByText('Recent Conversations')).toBeInTheDocument();
   });
