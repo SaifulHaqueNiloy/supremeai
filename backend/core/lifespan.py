@@ -136,6 +136,9 @@ async def app_lifespan(app):
                 asyncio.to_thread(supabase_db.bootstrap_schema), timeout=timeout_val
             )
             logger.info("Supabase schema bootstrap complete")
+    except asyncio.CancelledError:
+        logger.info("Supabase schema bootstrap cancelled during shutdown")
+        raise
     except TimeoutError:
         logger.warning(
             f"Supabase schema bootstrap timed out after {timeout_val}s — continuing without full schema init."

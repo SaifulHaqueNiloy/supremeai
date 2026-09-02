@@ -51,7 +51,7 @@ async def shutdown_services(app):
         timeout_val = float(os.getenv("SHUTDOWN_TIMEOUT", "30"))
         await agent_supervisor.shutdown_all(timeout=timeout_val)
         logger.info("✅ All background agents shut down via centralized supervisor.")
-    except Exception as e:
+    except (Exception, asyncio.CancelledError) as e:
         logger.error(f"Error during agent supervisor shutdown: {e}")
         error_event_bus.emit(
             ErrorEvent(

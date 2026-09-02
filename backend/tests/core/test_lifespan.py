@@ -57,6 +57,7 @@ def _apply_common_patches(stack: contextlib.ExitStack) -> dict:
     mocks["redis_manager"].close = AsyncMock()
     mocks["orchestrator"] = stack.enter_context(patch("core.lifespan.Orchestrator"))
     stack.enter_context(patch("core.startup.services.maintenance_pipeline.start_monitoring"))
+    stack.enter_context(patch("database.supabase_client.SupabaseDB.bootstrap_schema"))
 
     def _closing_create_task(coro, **kwargs):
         # বাংলা মন্তব্য: coroutine বন্ধ না করলে asyncio "coroutine was never
@@ -196,7 +197,12 @@ class TestAppLifespan:
         with contextlib.ExitStack() as stack:
             mocks = _apply_common_patches(stack)
 
-            stack.enter_context(patch("asyncio.wait_for", side_effect=asyncio.CancelledError))
+            stack.enter_context(
+                patch(
+                    "core.shutdown.shutdown_services",
+                    new=AsyncMock(side_effect=asyncio.CancelledError),
+                )
+            )
 
             mock_pool = AsyncMock()
             mock_pool.close = AsyncMock()
@@ -209,15 +215,9 @@ class TestAppLifespan:
             mock_orch.stop = AsyncMock()
             mocks["orchestrator"].return_value = mock_orch
 
-            # CancelledError gracefully handle করা উচিত
-            try:
+            # CancelledError expected result হওয়া উচিত
+            with pytest.raises(asyncio.CancelledError):
                 await _run_lifespan(mock_app)
-            except asyncio.CancelledError:
-                raise
-            except Exception as e:
-                import logging
-
-                logging.getLogger(__name__).exception(f"Silenced error: {e}")
 
     @pytest.mark.anyio
     async def test_handles_teardown_errors(self):
