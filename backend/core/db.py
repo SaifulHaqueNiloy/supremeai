@@ -62,8 +62,7 @@ def _get_database_url() -> str:
         # Direct env fallback - Render commonly provisions DATABASE_URL directly.
         url = os.environ.get("DATABASE_URL", "")
     if not url:
-        logger.warning("No database URL configured, using SQLite fallback")
-        return "sqlite+aiosqlite:///./local.db"
+        raise RuntimeError("Production database URL is required; SQLite fallback is disabled")
 
     # Convert postgres:// to postgresql+asyncpg:// for async
     if url.startswith("postgres://"):
