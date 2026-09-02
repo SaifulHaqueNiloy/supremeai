@@ -5,6 +5,7 @@ import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
 import type { AdminSubTab, Skill, Checkpoint, ChatMessage, HealthMap } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
+import { useTheme } from "../../contexts/useTheme";
 
 export function AdminShell() {
   const {
@@ -43,19 +44,17 @@ export function AdminShell() {
   const [newUsername, setNewUsername] = useState("");
   const [newUserRole, setNewUserRole] = useState("Operator");
   const [newUserPerms, setNewUserPerms] = useState("read,write");
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [adminInput, setAdminInput] = useState("");
   const [rulesJson, setRulesJson] = useState("");
 
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  // বাংলা (single-frontend migration): আগে এখানে আলাদা useState theme +
+  // documentElement.classList effect ছিল — এটি shared ThemeProvider-এর সাথে
+  // একই <html> class attribute নিয়ে লড়ত (duplicate theme authority)। এখন
+  // একক ThemeProvider-ই owner; AdminShell শুধু consume করে।
+  // AdminConsole-এর interface 'dark'|'light' প্রত্যাশা করে — 4-theme value
+  // থেকে সামঞ্জস্যপূর্ণ mapping করা হলো (UI preview-only usage)।
+  const { theme, toggleTheme } = useTheme();
+  const consoleTheme: 'dark' | 'light' = theme === 'light' ? 'light' : 'dark';
 
   useEffect(() => {
     if (!adminAuthenticated) return;
@@ -171,7 +170,7 @@ export function AdminShell() {
       otpRequired={otpRequired}
       adminOtp={adminOtp}
       setAdminOtp={setAdminOtp}
-      theme={theme}
+      theme={consoleTheme}
       toggleTheme={toggleTheme}
     />
   );
