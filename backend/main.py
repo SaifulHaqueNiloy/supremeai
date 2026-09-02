@@ -1,6 +1,7 @@
 """SupremeAI 2.0 — Entry point. Handles ENV bootstrap, signal handling, and Uvicorn launch.
 
 বাংলা: রুট এন্ট্রি পয়েন্ট। ENV সেটআপ, সিগন্যাল হ্যান্ডলিং এবং সার্ভার লঞ্চ।
+Trigger backend CI pipeline via push!
 """
 
 import os
