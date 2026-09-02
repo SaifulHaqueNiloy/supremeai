@@ -111,7 +111,7 @@ class TestChurnProphet:
     @pytest.fixture
     def mock_llm_router(self):
         """Mock LLM router for testing."""
-        with patch("core.llm_router.LLMRouter") as mock:
+        with patch("backend.agents.churn_prophet.LLMRouter") as mock:
             instance = MagicMock()
             mock.return_value = instance
             yield instance
