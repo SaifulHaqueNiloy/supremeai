@@ -229,6 +229,38 @@ def _get_session_maker() -> async_sessionmaker[AsyncSession]:
     return _session_maker_instance
 
 
+# ── Import-safe placeholder for degraded REST-only mode ────────────────────
+# বাংলা মন্তব্য (PROD OUTAGE FIX 2026-09-02): P0 fail-closed fix-এর পর degraded
+# REST-only mode-এ module-level `from database.session import AsyncSessionLocal`
+# import-ই startup crash করাচ্ছিল — __getattr__ সাথে সাথে RuntimeError raise করত,
+# ফলে FastAPI lifespan fail → port bind fail → Render port-scan timeout →
+# update_failed loop (primary + scraper উভয় node প্রভাবিত)। এই placeholder
+# import-safe: ব্যবহার করার সময় (call/attribute) তবেই RuntimeError হয়, এবং engine
+# পরে initialize হলে (init_engine() প্রতি access-এ retry করে) স্বয়ংক্রিয়ভাবে
+# real session maker-এ delegate করে — কোনো stale binding ভাঙে না।
+class _UninitializedSessionMaker:
+    """Stands in for AsyncSessionLocal while the engine is unavailable.
+
+    Import-safe: importing it never raises. Any real USE (calling it to create a
+    session or touching an attribute) retries init_engine() and then either
+    delegates to the real session maker or raises the same helpful RuntimeError
+    as _get_session_maker() (degraded REST-only mode) — per-request, never at
+    import time, so a missing SUPABASE_DATABASE_URL_POOLER can no longer kill
+    application startup.
+    """
+
+    def __call__(self, *args: Any, **kwargs: Any) -> AsyncSession:
+        return _get_session_maker()(*args, **kwargs)
+
+    def __getattr__(self, name: str) -> Any:
+        # Attribute access also defers to the real maker or raises RuntimeError
+        # while degraded — never returns a fake object (fail-closed preserved).
+        return getattr(_get_session_maker(), name)
+
+    def __repr__(self) -> str:
+        return "<AsyncSessionLocal (uninitialized — degraded REST-only mode)>"
+
+
 # ── Module-level __getattr__ for lazy backward-compatible access ─────────────
 # বাংলা মন্তব্য: hundreds of files use `from database.session import engine, AsyncSessionLocal`.
 # __getattr__ ensures those imports still work — engine is initialized on first real access.
@@ -237,7 +269,10 @@ def __getattr__(name: str):
         init_engine()
         return _engine_instance
     if name == "AsyncSessionLocal":
-        return _get_session_maker()
+        init_engine()
+        if _session_maker_instance is not None:
+            return _session_maker_instance
+        return _UninitializedSessionMaker()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
