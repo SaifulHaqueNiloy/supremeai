@@ -20,7 +20,8 @@ import os
 import signal
 import subprocess
 import sys
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
@@ -56,8 +57,17 @@ def _spawn_celery() -> None:
         if ROLE != "worker" or not _celery_importable() or not _redis_url():
             return
         _state["celery_proc"] = subprocess.Popen(
-            [sys.executable, "-m", "celery", "-A", "workers.celery_app",
-             "worker", "--loglevel=INFO", "-c", "2"],
+            [
+                sys.executable,
+                "-m",
+                "celery",
+                "-A",
+                "workers.celery_app",
+                "worker",
+                "--loglevel=INFO",
+                "-c",
+                "2",
+            ],
             cwd=BACKEND_DIR,
             env=os.environ.copy(),
         )
