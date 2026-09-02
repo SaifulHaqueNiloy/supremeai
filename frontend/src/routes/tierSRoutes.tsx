@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import type { RouteObject } from 'react-router-dom';
+import { ProtectedRoute } from '../components/core/AuthGuards';
 
 // ─── Lazy load Tier-S pages ─────────────────────────────────────────────
 
@@ -18,6 +19,9 @@ const PromptTemplatePage = lazy(
  *
  * NOTE: /share/:shareId is intentionally a GUEST route (no ProtectedRoute
  * wrapper) so that anyone with a share link can view the conversation.
+ * বাংলা (single-frontend migration): /prompt-library আগে UNGUARDED ছিল — এখন
+ * ProtectedRoute দিয়ে wrap করা হলো (roadmap security matrix: সব authenticated
+ * user context route protected হবে)।
  */
 export const tierSUserRoutes: RouteObject[] = [
   {
@@ -37,15 +41,17 @@ export const tierSUserRoutes: RouteObject[] = [
   {
     path: '/prompt-library',
     element: (
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
-            <div className="animate-pulse">Loading prompt library…</div>
-          </div>
-        }
-      >
-        <PromptTemplatePage />
-      </Suspense>
+      <ProtectedRoute>
+        <Suspense
+          fallback={
+            <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
+              <div className="animate-pulse">Loading prompt library…</div>
+            </div>
+          }
+        >
+          <PromptTemplatePage />
+        </Suspense>
+      </ProtectedRoute>
     ),
   },
 ];

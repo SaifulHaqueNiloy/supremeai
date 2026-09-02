@@ -2,7 +2,10 @@ import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore, AuthStatus } from '../../store/authStore';
 
-const useAuthStatus = () => {
+// বাংলা (single-frontend migration): hook + spinner এখন export করা — App.tsx-এর
+// LandingRedirect ও অন্য guard-রাও (RoleGuard/PermissionGuard) একই auth-state
+// initialization pattern reuse করবে, দ্বিতীয় কোনো auth authority তৈরি না করে।
+export const useAuthStatus = () => {
   const status = useAuthStore((state) => state.status);
   const initialize = useAuthStore((state) => state.initialize);
 
@@ -18,7 +21,7 @@ const useAuthStatus = () => {
   return { isChecking, isAuthenticated };
 };
 
-const LoadingSpinner = () => (
+export const AuthLoadingSpinner = () => (
   <div className="flex h-screen w-full flex-col items-center justify-center bg-slate-950">
     <div className="relative flex items-center justify-center">
       <div className="absolute h-16 w-16 animate-ping rounded-full bg-[var(--supremeai-color-brand-primary-dark)] opacity-20"></div>
@@ -37,7 +40,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isChecking, isAuthenticated } = useAuthStatus();
 
   if (isChecking) {
-    return <LoadingSpinner />;
+    return <AuthLoadingSpinner />;
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
@@ -47,7 +50,7 @@ export const GuestRoute = ({ children }: { children: React.ReactNode }) => {
   const { isChecking, isAuthenticated } = useAuthStatus();
 
   if (isChecking) {
-    return <LoadingSpinner />;
+    return <AuthLoadingSpinner />;
   }
 
   return !isAuthenticated ? <>{children}</> : <Navigate to="/workspace" replace />;
