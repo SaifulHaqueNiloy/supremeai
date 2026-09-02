@@ -201,6 +201,8 @@ class TestRouterStructure:
 class TestIntegrationViaHeaders:
     def test_endpoints_accessible_without_api_key(self, client):
         resp = client.get("/api/api-keys/", headers={})  # "Authorization": "Bearer mock-token"
+        if resp.status_code != 200:
+            print("ERROR RESP:", resp.json())
         assert resp.status_code == 200
 
     def test_api_key_header_accepted_in_test_mode(self, client):

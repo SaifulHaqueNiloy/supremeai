@@ -15,7 +15,13 @@ from memory.sliding_window import SlidingWindowMemory
 
 # Import the underlying services
 from services.memory_service import CascadeMemoryService
-from tools.checkpoint_manager import CheckpointManager
+from services.memory_service import memory_service as global_memory_service
+from tools.checkpoint_manager import (
+    CheckpointManager,
+)
+from tools.checkpoint_manager import (
+    checkpoint_manager as global_checkpoint_manager,
+)
 
 
 class UnifiedMemoryInterface:
@@ -24,9 +30,9 @@ class UnifiedMemoryInterface:
     """
 
     def __init__(self):
-        self.long_term_memory = CascadeMemoryService()
+        self.long_term_memory = global_memory_service
         self.short_term_memory = SlidingWindowMemory()
-        self.checkpoint_manager = CheckpointManager()
+        self.checkpoint_manager = global_checkpoint_manager
 
     # --- Long-term Memory (Eternal Brain) ---
     def store_long_term_memory(

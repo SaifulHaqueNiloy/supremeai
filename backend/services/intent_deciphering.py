@@ -14,7 +14,13 @@ from typing import Any
 
 from core.llm.advanced_model_router import DomainExpertAnalyzer, TaskComplexityAnalyzer
 from core.logging_config import logger
-from services.memory_service import CascadeMemoryService, hash_vectorize
+from services.memory_service import (
+    CascadeMemoryService,
+    hash_vectorize,
+)
+from services.memory_service import (
+    memory_service as global_memory_service,
+)
 
 
 @dataclass
@@ -47,7 +53,7 @@ class IntentDecipheringService:
     """Interprets raw, ambiguous, or complex user/admin requests into structured execution goals."""
 
     def __init__(self, memory_service: CascadeMemoryService | None = None) -> None:
-        self.memory_service = memory_service or CascadeMemoryService()
+        self.memory_service = memory_service or global_memory_service
         self.domain_analyzer = DomainExpertAnalyzer()
         self.complexity_analyzer = TaskComplexityAnalyzer()
 

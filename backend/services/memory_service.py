@@ -497,8 +497,20 @@ class CascadeMemoryService:
         return self.retrieve_memories(user_id=user_id)[:limit]
 
 
-# Global instance
-memory_service = CascadeMemoryService()
+class LazyCascadeMemoryService:
+    def __init__(self) -> None:
+        self._instance: CascadeMemoryService | None = None
+
+    def _get_instance(self) -> CascadeMemoryService:
+        if self._instance is None:
+            self._instance = CascadeMemoryService()
+        return self._instance
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._get_instance(), name)
+
+
+memory_service = LazyCascadeMemoryService()
 
 
 def get_embedding(text: str) -> list[float]:

@@ -18,6 +18,7 @@ from typing import Any
 from core.logging_config import logger
 from services.dynamic_planner import TaskDAG, TaskNode
 from services.memory_service import CascadeMemoryService
+from services.memory_service import memory_service as global_memory_service
 
 
 @dataclass
@@ -46,7 +47,7 @@ class SelfCorrectionService:
         memory_service: CascadeMemoryService | None = None,
         max_retries: int = 3,
     ) -> None:
-        self.memory_service = memory_service or CascadeMemoryService()
+        self.memory_service = memory_service or global_memory_service
         self.max_retries = max_retries
 
     async def simulate_pre_execution(self, dag: TaskDAG) -> VerificationResult:
