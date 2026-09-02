@@ -189,8 +189,3 @@ class TestCostGuardAdminOverride:
             )
 
             assert response.status_code == 402
-
-
-# -----------------------------------------------------------------------------
-# FILE 10: tests/test_api_health.py — Health Endpoint Tests (NEW)
-# -----------------------------------------------------------------------------

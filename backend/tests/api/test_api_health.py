@@ -125,8 +125,3 @@ class TestConfigPublicEndpoint:
         sensitive_keys = ["jwt_secret", "api_key", "password", "database_url"]
         for key in sensitive_keys:
             assert key not in data, f"Sensitive key '{key}' exposed in public config"
-
-
-# -----------------------------------------------------------------------------
-# FILE 11: playwright.config.ts — Stable E2E Config
-# -----------------------------------------------------------------------------

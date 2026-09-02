@@ -216,8 +216,3 @@ async def check_db_health() -> dict[str, bool | str]:
             "healthy": False,
             "error": str(e)[:200],
         }
-
-
-# -----------------------------------------------------------------------------
-# FILE 6: backend/models/ai_memory.py — Vector Index Optimization
-# -----------------------------------------------------------------------------
