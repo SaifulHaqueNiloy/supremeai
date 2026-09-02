@@ -234,7 +234,14 @@ export function getCommandsForPortal(portal: PortalType): CommandDefinition[] {
   return COMMAND_REGISTRY.filter((cmd) => cmd.portals.includes(portal));
 }
 
-/** Runtime portal detect — VITE_PORTAL_TYPE env (user/admin) */
+/**
+ * বাংলা (single-frontend migration, roadmap Phase 1): এক বিল্ডে User + Admin দুইই থাকে,
+ * তাই portal এখন BUILD-TIME env নয় — RUNTIME route context থেকে detect হয়।
+ * /admin/* context-এ admin commands, বাকি সব জায়গায় user commands।
+ */
 export function getCurrentPortal(): PortalType {
-  return import.meta.env.VITE_PORTAL_TYPE === 'admin' ? 'admin' : 'user';
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    return 'admin';
+  }
+  return 'user';
 }
