@@ -92,6 +92,141 @@ async def get_evolution_logs(admin: dict = Depends(require_admin_token)):
         raise HTTPException(status_code=500, detail="Failed to read evolution logs") from e
 
 
+class CanaryObservation(BaseModel):
+    success: bool
+    latency_ms: float = 0.0
+
+
+@router.post("/canary/{proposal_id}/observation")
+async def record_canary_observation(
+    proposal_id: str,
+    observation: CanaryObservation,
+    admin: dict = Depends(require_admin_token),
+):
+    """Sprint 6: feed REAL canary observations into the rollout controller.
+
+    Closes the plan's canary gap: ``CanaryRolloutController.record_observation``
+    previously had no production caller, so staged rollouts could never
+    accumulate evidence. Requires admin token (HITL-gated by construction).
+    """
+    try:
+        from evolution.canary_manager import get_canary_controller
+
+        controller = get_canary_controller()
+        controller.record_observation(
+            proposal_id,
+            success=observation.success,
+            latency_ms=observation.latency_ms,
+        )
+        stats = controller.get_canary_stats(proposal_id)
+        return {"success": True, "canary_stats": stats}
+    except Exception as exc:
+        logger.error(f"canary observation failed: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/metrics")
+async def get_evolution_metrics(admin: dict = Depends(require_admin_token)):
+    """Plan §20 observability: one autonomous-evolution dashboard payload.
+
+    Every number is MEASURED from the durable learning store or the
+    improvement-proposal lifecycle — nothing is fabricated. When the store
+    is unavailable the endpoint reports ``available: false`` instead of
+    inventing values.
+    """
+    payload: dict[str, Any] = {"available": False}
+    try:
+        from database.supabase_client import db
+
+        if not db.client:
+            return payload
+
+        events = db.get_learning_events(limit=2000, hours=24) or []
+        total = len(events)
+        successes = sum(1 for e in events if e.get("success") is True)
+        failures = sum(1 for e in events if e.get("success") is False)
+        cache_hits = sum(1 for e in events if e.get("cache_hit") is True)
+        feedback_events = [e for e in events if e.get("feedback")]
+        est_cost = sum(float(e.get("estimated_cost") or 0) for e in events)
+        act_cost = sum(float(e.get("actual_cost") or 0) for e in events)
+
+        # Token estimation error: mean absolute ratio where both sides exist
+        ratios = [
+            (float(e["input_tokens"]) + float(e.get("output_tokens") or 0))
+            / float(e["metadata"]["estimated_tokens"])
+            for e in events
+            if e.get("input_tokens")
+            and isinstance(e.get("metadata"), dict)
+            and e["metadata"].get("estimated_tokens")
+        ]
+        est_error = round(sum(abs(r - 1.0) for r in ratios) / len(ratios), 4) if ratios else None
+
+        provider_rows = db.get_provider_metrics(hours=24) or []
+        providers = [
+            {
+                "provider": r.get("provider"),
+                "model": r.get("model"),
+                "requests": r.get("requests"),
+                "success_rate": (
+                    round(r.get("successes", 0) / max(1, r.get("successes", 0) + r.get("failures", 0)), 4)
+                    if (r.get("successes") is not None)
+                    else None
+                ),
+                "rate_limited": r.get("rate_limited"),
+                "latency_p95_ms": r.get("latency_p95_ms"),
+                "estimated_cost": r.get("estimated_cost"),
+                "actual_cost": r.get("actual_cost"),
+            }
+            for r in provider_rows
+        ]
+
+        proposals = db.get_improvement_proposals(limit=200) or []
+        by_status: dict[str, int] = {}
+        for p in proposals:
+            key = str(p.get("status") or "UNKNOWN")
+            by_status[key] = by_status.get(key, 0) + 1
+
+        payload = {
+            "available": True,
+            "window_hours": 24,
+            "learning_events_24h": total,
+            "successful_tasks": successes,
+            "failed_tasks": failures,
+            "cache_hit_rate_24h": round(cache_hits / total, 4) if total else None,
+            "feedback_events_24h": len(feedback_events),
+            "estimated_cost_24h": round(est_cost, 6),
+            "actual_cost_24h": round(act_cost, 6),
+            "token_estimation_error": est_error,
+            "providers_24h": providers,
+            "autonomous_changes": {
+                "proposals_by_status": by_status,
+                "total_proposals": len(proposals),
+                "rejected": by_status.get("REJECTED", 0),
+                "promoted": by_status.get("PROMOTED", 0),
+                "rolled_back": by_status.get("ROLLED_BACK", 0),
+            },
+            "learning_store": get_learning_store().get_stats(),
+            "calibration": get_calibration_stats(),
+        }
+        return payload
+    except Exception as exc:
+        logger.debug(f"evolution metrics degraded: {exc}")
+        payload["error"] = str(exc)[:200]
+        return payload
+
+
+def get_learning_store():
+    from core.learning import get_learning_store as _f
+
+    return _f()
+
+
+def get_calibration_stats():
+    from core.learning import get_calibration_stats as _f
+
+    return _f()
+
+
 class EvolutionRequest(BaseModel):
     skill_name: str
     user_demand: str

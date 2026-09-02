@@ -134,9 +134,18 @@ class LearningLoopAgent:
         try:
             from core.learning.store import aggregate_provider_metrics
 
+            provider_rows: list[dict] = []
             for row in aggregate_provider_metrics(events, window_start):
                 if db.upsert_provider_metric(row):
                     stats["provider_rows"] += 1
+                    provider_rows.append(row)
+            # Sprint 5: refresh the in-process provider-score snapshot the
+            # gateway reads (behind ENABLE_ADAPTIVE_ROUTING) — no network in
+            # the request path, bounded change (exploration candidate only).
+            if provider_rows:
+                from core.learning.provider_scorer import refresh_score_snapshot
+
+                refresh_score_snapshot(provider_rows)
         except Exception as exc:
             logger.debug(f"provider aggregation skipped: {exc}")
 

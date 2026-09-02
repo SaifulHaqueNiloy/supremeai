@@ -12,6 +12,7 @@ The system prioritizes cache hits across layers before falling back to AI model
 import asyncio
 import hashlib
 import json
+import os
 import threading
 import time  # - Added for performance metrics
 from typing import Any
@@ -352,7 +353,23 @@ class MultiLayerCache:
             exact_cache_key = (
                 f"exact:{hashlib.sha256(f'{scope}{prompt}:{model_name}'.encode()).hexdigest()}"
             )
-            await exact_match_cache.setex(exact_cache_key, 3600, response)
+            # Sprint 5 (§13.2): bounded smart TTL — only when the operator opts
+            # in (ENABLE_SMART_TTL=true) AND measured evidence exists. Default
+            # path is byte-identical to the previous fixed 3600s behavior.
+            exact_ttl = 3600
+            if os.getenv("ENABLE_SMART_TTL", "").strip().lower() == "true":
+                try:
+                    from core.learning.policies import smart_ttl
+
+                    stats = self.cache_stats
+                    hits = stats.get("exact_hits", 0) + stats.get("semantic_hits", 0)
+                    total = hits + max(1, stats.get("misses", 0))
+                    exact_ttl = smart_ttl(
+                        3600, hit_rate=hits / total, reuse_count=stats.get("exact_hits", 0)
+                    )
+                except Exception:
+                    exact_ttl = 3600
+            await exact_match_cache.setex(exact_cache_key, exact_ttl, response)
         except asyncio.CancelledError:
             raise
         except Exception as e:

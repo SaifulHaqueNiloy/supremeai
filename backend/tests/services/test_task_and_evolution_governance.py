@@ -49,6 +49,13 @@ async def test_change_proposal_lifecycle_and_promotion():
         target_module="backend/brain/model_router.py",
         current_fitness=0.82,
     )
+    # Sprint 6 (plan §19): autonomous promotion REQUIRES a rollback target —
+    # a proposal without one must be refused (tested below).
+    proposal.rollback_target = {
+        "kind": "parameter",
+        "module": "backend/brain/model_router.py",
+        "previous": {"temperature": 0.7},
+    }
 
     assert proposal.state == ProposalState.DRAFTED
 
@@ -68,6 +75,38 @@ async def test_change_proposal_lifecycle_and_promotion():
     assert promoted is True
     assert proposal.state == ProposalState.PROMOTED
     assert proposal.fitness_after == 0.89
+
+
+@pytest.mark.asyncio
+async def test_change_proposal_promotion_refused_without_rollback_target():
+    """Sprint 6 / plan §19: no rollback target = no autonomous promotion."""
+    manager = get_change_manager()
+
+    proposal = manager.create_proposal(
+        title="Irreversible change attempt",
+        description="No rollback target described",
+        change_type=ChangeType.ROUTING_POLICY,
+        diff_content={"priority": ["gemini"]},
+        target_module="backend/brain/model_router.py",
+        current_fitness=0.80,
+    )
+    assert proposal.rollback_target is None
+
+    async def mock_security_ok(prop):
+        return True
+
+    async def mock_benchmark_improved(prop):
+        return 0.95
+
+    promoted = await manager.evaluate_and_promote(
+        proposal_id=proposal.proposal_id,
+        security_scanner_cb=mock_security_ok,
+        benchmarker_cb=mock_benchmark_improved,
+    )
+
+    assert promoted is False
+    assert proposal.state == ProposalState.REJECTED
+    assert "rollback target" in (proposal.rejection_reason or "").lower()
 
 
 @pytest.mark.asyncio

@@ -15,6 +15,7 @@ const EventsExplorer = lazy(() => import('../modules/observe/EventsExplorer').th
 const CICDPipelines = lazy(() => import('../modules/observe/CICDPipelines').then(m => ({ default: m.default || m.CICDPipelines })));
 const HealthMap = lazy(() => import('../modules/observe/HealthMap').then(m => ({ default: m.default || m.HealthMap })));
 const TrafficMonitor = lazy(() => import('../modules/observe/TrafficMonitor').then(m => ({ default: m.default || m.TrafficMonitor })));
+const EvolutionPanel = lazy(() => import('../modules/observe/EvolutionPanel').then(m => ({ default: m.default || m.EvolutionPanel })));
 const Agents = lazy(() => import('../modules/operate/Agents').then(m => ({ default: m.default || m.Agents })));
 const Swarm = lazy(() => import('../modules/operate/Swarm').then(m => ({ default: m.default || m.Swarm })));
 const TasksQueues = lazy(() => import('../modules/operate/TasksQueues').then(m => ({ default: m.default || m.TasksQueues })));
@@ -47,6 +48,7 @@ const MODULE_MAP: Record<string, React.LazyExoticComponent<React.ComponentType>>
   ci: CICDPipelines,
   health: HealthMap,
   traffic: TrafficMonitor,
+  evolution: EvolutionPanel,
   agents: Agents,
   swarm: Swarm,
   tasks: TasksQueues,
