@@ -176,6 +176,39 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
 
+    # ── Sprint 3/4 (Self-Evolution Zero-Cost plan): Learning Loop ────────────
+    # Observe layer: start the LearningStore flush task ALWAYS (it is the
+    # durable-telemetry pipeline; buffering is harmless, zero LLM cost, and
+    # degrades to an in-process bounded buffer when the DB is unavailable).
+    try:
+        from core.learning import get_learning_store
+
+        await get_learning_store().flush()  # drain anything recorded before boot
+        get_learning_store().start()
+        logger.info("✅ LearningStore flush loop started (durable learning_events pipeline).")
+    except Exception as exc:
+        logger.warning(f"⚠️ LearningStore failed to start: {exc}")
+
+    # Analyze layer: env-gated periodic aggregate→snapshot→propose agent.
+    # Proposals are NEVER auto-applied (plan §10.3) — HITL/admin review only.
+    try:
+        if os.getenv("ENABLE_LEARNING_LOOP", "false").lower() == "true":
+            from core.learning.loop import get_learning_loop_agent
+
+            _learning_agent = get_learning_loop_agent()
+            await agent_supervisor.start_agent(
+                "learning-loop",
+                _learning_agent.start,
+                health_check_interval=300,
+                max_restarts=5,
+                restart_delay=30.0,
+            )
+            logger.info("✅ LearningLoopAgent registered with supervisor (5-min observe→propose cycle).")
+        else:
+            logger.info("ℹ️ LearningLoopAgent disabled via environment variable (ENABLE_LEARNING_LOOP).")
+    except Exception as exc:
+        logger.warning(f"⚠️ LearningLoopAgent failed to start: {exc}")
+
     # বাংলা মন্তব্ব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
     try:
         if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":

@@ -28,6 +28,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
+import re
 import time
 import uuid
 from collections import deque
@@ -294,6 +295,22 @@ class LearningStore:
         self._db_ok = True
         self._last_writer_failure_log = 0.0
         self._last_critical_log = 0.0
+        # Event-loop the async primitives are currently bound to. asyncio.Lock/
+        # Event objects are loop-bound: if the singleton outlives its loop
+        # (pytest per-test loops, app reloads), they must be RECREATED on the
+        # new loop or every operation raises "bound to a different event loop".
+        self._loop: asyncio.AbstractEventLoop | None = None
+
+    def _ensure_loop_primitives(self) -> None:
+        """Recreate loop-bound primitives when the running loop has changed."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return  # no running loop — sync context; keep current primitives
+        if self._loop is not loop:
+            self._loop = loop
+            self._lock = asyncio.Lock()
+            self._wake = asyncio.Event()
 
     # ------------------------------------------------------------------ API
 
@@ -417,6 +434,7 @@ class LearningStore:
 
     async def flush(self) -> int:
         """Drain buffer (+replay fallback) into the writer. Returns rows flushed."""
+        self._ensure_loop_primitives()
         async with self._lock:
             batch: list[dict[str, Any]] = []
             while self._fallback and len(batch) < self._max_batch:
@@ -471,8 +489,17 @@ class LearningStore:
 
     def start(self) -> None:
         """Start the background flush task (no-op without a running loop)."""
+        self._ensure_loop_primitives()
         if self._task is not None and not self._task.done():
-            return
+            # Abandon a task still pending on a DIFFERENT (likely closed) loop —
+            # it can never wake again; recreate on the current loop instead.
+            try:
+                if self._task.get_loop() is not asyncio.get_running_loop():
+                    self._task = None
+                else:
+                    return
+            except RuntimeError:  # no running loop
+                return
         self._stopped = False
         try:
             self._task = asyncio.get_running_loop().create_task(self._flush_loop())
@@ -485,6 +512,7 @@ class LearningStore:
     async def stop(self) -> None:
         """Stop the background task and flush remaining events best-effort."""
         self._stopped = True
+        self._ensure_loop_primitives()
         try:
             self._wake.set()
         except Exception:
