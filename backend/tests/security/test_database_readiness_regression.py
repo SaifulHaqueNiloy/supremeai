@@ -52,7 +52,9 @@ class TestDatabaseUrlResolution:
         )
         assert db._get_database_url() == "postgresql+asyncpg://u:p@host:5432/t"
 
-    def test_missing_url_falls_back_to_sqlite(self, monkeypatch):
+    def test_missing_url_raises_runtime_error_no_sqlite_fallback(self, monkeypatch):
+        import pytest
+
         import core.db as db
 
         monkeypatch.delenv("DATABASE_URL", raising=False)
@@ -62,7 +64,8 @@ class TestDatabaseUrlResolution:
             property(lambda self: ""),
             raising=False,
         )
-        assert db._get_database_url() == "sqlite+aiosqlite:///./local.db"
+        with pytest.raises(RuntimeError, match="SQLite fallback is disabled"):
+            db._get_database_url()
 
     def test_supabase_database_url_field_wins_over_env(self, monkeypatch):
         import core.db as db
