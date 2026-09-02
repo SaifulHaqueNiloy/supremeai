@@ -29,7 +29,7 @@ if not _CORE_API_URL_RAW:
     if _ENV not in ("local", "development", "test", "testing"):
         logger.error(
             "CORE_API_URL is not configured. Worker cannot reach Core API in production. "
-            "Set the CORE_API_URL environment variable (e.g. https://your-core.onrender.com)."
+            "Please set the CORE_API_URL environment variable."
         )
     # Fallback only for local dev — never silently connect to localhost in production
     _CORE_API_URL_RAW = "http://localhost:8000"
