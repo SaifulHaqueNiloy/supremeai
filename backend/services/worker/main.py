@@ -23,16 +23,17 @@ logger.info(f">>> booting SupremeAI ecosystem worker (env={os.getenv('ENV', 'pro
 
 REDIS_URL = os.getenv("REDIS_URL", "")
 _CORE_API_URL_RAW = os.getenv("CORE_API_URL", "")
-_ENV = os.getenv("ENV", "production").lower()
+env = os.getenv("ENV", "production").lower()
 
 if not _CORE_API_URL_RAW:
-    if _ENV not in ("local", "development", "test", "testing"):
+    if env == "local":
+        # Local development fallback — production must set CORE_API_URL explicitly.
+        _CORE_API_URL_RAW = "http://localhost:8000"
+    else:
         logger.error(
             "CORE_API_URL is not configured. Worker cannot reach Core API in production. "
             "Please set the CORE_API_URL environment variable."
         )
-    # Fallback only for local dev — never silently connect to localhost in production
-    _CORE_API_URL_RAW = "http://localhost:8000"
 
 CORE_API_URL = _CORE_API_URL_RAW
 POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "2.0"))
