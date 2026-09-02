@@ -1429,7 +1429,7 @@ def get_admin_audit_logs(limit: int = 100):
                             "action": entry.get("event_type", "system.action"),
                             "target": entry.get("details", {}).get("resource", "system"),
                             "result": "success" if entry.get("severity") == "INFO" else "failure",
-                            "ip": entry.get("details", {}).get("ip", "127.0.0.1"),
+                            "ip": entry.get("details", {}).get("ip") or "[system]",
                             "otp_verified": True,
                         }
                     )
