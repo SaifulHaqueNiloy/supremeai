@@ -31,6 +31,7 @@ import {
   FolderKanban,
   DatabaseBackup,
   Lock,
+  Repeat,
 } from 'lucide-react';
 import type {} from '../data/types';
 import { useCommandCenterStore } from '../state/useCommandCenterStore';
@@ -95,6 +96,7 @@ export function LeftRail({ badges = {} }: LeftRailProps) {
         { id: 'ci', label: 'CI/CD', module: 'ci', icon: <Rocket size={14} /> },
         { id: 'health', label: 'হেলথ ম্যাপ', module: 'health', icon: <HeartPulse size={14} /> },
         { id: 'traffic', label: 'ট্রাফিক', module: 'traffic', icon: <Activity size={14} /> },
+        { id: 'evolution', label: 'ইভোলিউশন', module: 'evolution', icon: <Repeat size={14} /> },
       ],
     },
     {

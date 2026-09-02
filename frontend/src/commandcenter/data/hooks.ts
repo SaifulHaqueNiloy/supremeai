@@ -73,6 +73,7 @@ export const cmdKeys = {
   secrets: ['cmd', 'secrets'] as const,
   ratelimits: ['cmd', 'ratelimits'] as const,
   deploy: ['cmd', 'deploy'] as const,
+  evolution: ['cmd', 'evolution'] as const,
 };
 
 // ─── Metrics ────────────────────────────────────────────────────────────────
@@ -495,6 +496,58 @@ export function useSecurityFindings() {
   return useQuery({
     queryKey: [...cmdKeys.security, 'findings'],
     queryFn: () => apiClient.get<SecurityFinding[]>('/admin-api/security-scan/findings'),
+    enabled: hasToken(),
+    staleTime: 30_000,
+  });
+}
+
+// ─── Evolution Observability (Self-Evolution plan §20) ──────────────────────
+export interface EvolutionProviderRow {
+  provider: string | null;
+  model: string | null;
+  requests: number | null;
+  success_rate: number | null;
+  rate_limited: number | null;
+  latency_p95_ms: number | null;
+  estimated_cost: number | null;
+  actual_cost: number | null;
+}
+
+export interface EvolutionMetrics {
+  available: boolean;
+  error?: string;
+  window_hours?: number;
+  learning_events_24h?: number;
+  successful_tasks?: number;
+  failed_tasks?: number;
+  cache_hit_rate_24h?: number | null;
+  feedback_events_24h?: number;
+  estimated_cost_24h?: number;
+  actual_cost_24h?: number;
+  token_estimation_error?: number | null;
+  providers_24h?: EvolutionProviderRow[];
+  autonomous_changes?: {
+    proposals_by_status: Record<string, number>;
+    total_proposals: number;
+    rejected: number;
+    promoted: number;
+    rolled_back: number;
+  };
+  learning_store?: {
+    queued: number;
+    dropped: number;
+    flushed: number;
+    last_flush_at: string | null;
+    db_ok: boolean;
+    fallback: number;
+  };
+}
+
+export function useEvolutionMetrics(refetchIntervalMs?: number | false) {
+  return useQuery({
+    queryKey: cmdKeys.evolution,
+    queryFn: () => apiClient.get<EvolutionMetrics>('/api/v1/evolution/metrics'),
+    refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: 30_000,
   });

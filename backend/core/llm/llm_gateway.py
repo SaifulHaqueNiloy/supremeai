@@ -6,6 +6,7 @@
 # CancelledError সবসময় re-raise।
 # import litellm lazy করা হলো — cold start কমাতে।
 import asyncio
+import contextlib
 import json
 import os
 import random
@@ -549,6 +550,29 @@ class LLMGateway:
 
         call_chain = self._build_call_chain(model, provider, task_type)
 
+        # Sprint 5 (§8.2): evidence-driven EXPLORATION — append at most ONE
+        # measured alternative candidate to the chain TAIL for limited
+        # measurement. The head of the chain (explicit routing policy) is
+        # never reordered; flag-gated; snapshot is refreshed by the
+        # LearningLoopAgent (no network here). Bounded + reversible.
+        try:
+            from core.learning.provider_scorer import (
+                exploration_candidate,
+                get_adaptive_routing_enabled,
+                score_snapshot,
+            )
+
+            if get_adaptive_routing_enabled() and score_snapshot:
+                _explorer = exploration_candidate(score_snapshot)
+                if _explorer is not None and _explorer.model not in call_chain:
+                    call_chain.append(_explorer.model)
+                    logger.info(
+                        f"[LLMGateway] adaptive exploration candidate appended: "
+                        f"{_explorer.model} (score={_explorer.score})"
+                    )
+        except Exception:
+            pass
+
         if isinstance(prompt, list):
             messages_payload = prompt
         else:
@@ -606,6 +630,27 @@ class LLMGateway:
         if stream:
             return self._stream_completion(messages_payload, call_chain, timeout)
 
+        # Sprint 5 (§13.3): single-flight request coalescing — identical
+        # in-flight requests share one upstream call. Flag-gated (default off);
+        # bounded map + bounded follower wait; any failure degrades to
+        # executing normally, so dedup can never reduce availability.
+        _coalescer = None
+        _dedup_k = None
+        _is_leader = False
+        if request_dedup_enabled() and call_chain:
+            from core.learning.dedup import dedup_key, get_request_coalescer
+
+            _coalescer = get_request_coalescer()
+            _dedup_k = dedup_key(call_chain[0], task_type, messages_payload)
+            _leader_entry = _coalescer.try_claim(_dedup_k)
+            if _leader_entry is not None:
+                _shared = await _coalescer.wait_for_leader(_leader_entry)
+                if _shared is not None:
+                    _shared["deduplicated"] = True
+                    logger.info("[LLMGateway] request coalesced onto in-flight duplicate")
+                    return _shared
+            _is_leader = _leader_entry is None
+
         last_exception: Exception | None = None
         mode = kwargs.pop("mode", getattr(self, "mode", ExecutionMode.AUTO))
 
@@ -621,12 +666,16 @@ class LLMGateway:
                         max_tokens=kwargs.get("max_tokens"),
                         timeout=timeout,
                     )
-                    return {
+                    _local_result = {
                         "success": True,
                         "text": response["choices"][0]["message"]["content"],
                         "model": local_model,
                         "cost": 0.0,
                     }
+                    if _is_leader and _coalescer is not None and _dedup_k:
+                        with contextlib.suppress(Exception):
+                            _coalescer.publish_success(_dedup_k, _local_result)
+                    return _local_result
                 except Exception as e:
                     logger.warning(f"[LLMGateway] Local execution failed: {e}")
                     if mode == ExecutionMode.LOCAL:
@@ -748,12 +797,16 @@ class LLMGateway:
                         privacy_mode=PrivacyMode.FULL,
                     )
 
-                    return {
+                    _result = {
                         "success": True,
                         "text": response["choices"][0]["message"]["content"],
                         "model": current_model,
                         "cost": cost,
                     }
+                    if _is_leader and _coalescer is not None and _dedup_k:
+                        with contextlib.suppress(Exception):
+                            _coalescer.publish_success(_dedup_k, _result)
+                    return _result
             except asyncio.CancelledError:
                 # বাংলা মন্তব্ব: CancelledError re-raise — কখনো suppress করা যাবে না
                 logger.warning(f"[LLMGateway] acompletion cancelled during model {current_model}")
@@ -843,6 +896,9 @@ class LLMGateway:
         final_exception = last_exception or RuntimeError(
             "All routing models failed to produce a completion."
         )
+        if _is_leader and _coalescer is not None and _dedup_k:
+            with contextlib.suppress(Exception):
+                _coalescer.publish_failure(_dedup_k, final_exception)
         if tenant_id:
             db = get_firestore_db()
             if db:

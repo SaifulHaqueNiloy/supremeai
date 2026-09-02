@@ -58,6 +58,10 @@ class ChangeProposal:
     rejection_reason: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
     promoted_at: datetime | None = None
+    # Sprint 6 (plan §19 Rollback Architecture): every autonomous change MUST
+    # carry a rollback target — a description of the exact prior state to
+    # restore (version/policy/config/artifact). Promotion is REFUSED without it.
+    rollback_target: dict[str, Any] | None = None
 
     def advance_state(self, new_state: ProposalState) -> None:
         logger.info(
@@ -84,6 +88,7 @@ class ChangeProposal:
             "rejection_reason": self.rejection_reason,
             "created_at": self.created_at.isoformat(),
             "promoted_at": self.promoted_at.isoformat() if self.promoted_at else None,
+            "rollback_target": self.rollback_target,
         }
 
 
@@ -251,11 +256,49 @@ class ChangeProposalManager:
             "use CanaryRolloutController for staged rollout evidence"
         )
 
-        # 5. Final Promotion
+        # 5. Rollback Gate (Sprint 6, plan §19: "No rollback target = no
+        # autonomous promotion.") A promotion without a described, restorable
+        # prior state is irreversible — therefore forbidden.
+        if not proposal.rollback_target or not isinstance(proposal.rollback_target, dict):
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = (
+                "No rollback target — autonomous promotion refused (plan §19)"
+            )
+            self._persist_proposal(proposal)
+            logger.critical(
+                f"🚫 [ROLLBACK GATE] Proposal [{proposal_id}] REJECTED: no rollback target."
+            )
+            return False
+
+        # Sprint 6: audit trail — every lifecycle transition lands in the
+        # durable improvement_runs store (best-effort; never blocks promotion).
+        self._audit_run(proposal, run_type="PROMOTION", result="promoted")
+
+        # 6. Final Promotion
         proposal.advance_state(ProposalState.PROMOTED)
         self._persist_proposal(proposal)
         logger.info(f"🎉 Change Proposal [{proposal_id}] successfully PROMOTED to production!")
         return True
+
+    def _audit_run(self, proposal: ChangeProposal, *, run_type: str, result: str) -> None:
+        """Best-effort durable audit row (improvement_runs) for a transition."""
+        try:
+            from database.supabase_client import db as supabase_db
+
+            supabase_db.insert_improvement_run(
+                {
+                    "proposal_id": proposal.proposal_id,
+                    "run_type": run_type,
+                    "result": result,
+                    "metrics": {
+                        "fitness_before": proposal.fitness_before,
+                        "fitness_after": proposal.fitness_after,
+                    },
+                    "notes": f"target={proposal.target_module} state={proposal.state.value}",
+                }
+            )
+        except Exception as exc:  # audit is best-effort; promotion continues
+            logger.debug(f"improvement_run audit skipped: {exc}")
 
     def rollback(self, proposal_id: str, reason: str) -> bool:
         proposal = self.proposals.get(proposal_id)
@@ -264,6 +307,7 @@ class ChangeProposalManager:
         proposal.advance_state(ProposalState.ROLLED_BACK)
         proposal.rejection_reason = f"Rolled back: {reason}"
         self._persist_proposal(proposal)
+        self._audit_run(proposal, run_type="ROLLBACK", result=f"rolled back: {reason}")
         logger.warning(f"⚠️ Change Proposal [{proposal_id}] rolled back: {reason}")
         return True
 
