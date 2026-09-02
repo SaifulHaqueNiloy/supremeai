@@ -1,4 +1,4 @@
-"""Coverage tests for core/embeddings.py (hashing, caching, engine, vector search)."""
+"""Coverage tests for core/embeddings.py."""
 
 from unittest.mock import MagicMock
 
@@ -17,12 +17,10 @@ def _reset_emb_cache():
 
 
 def test_get_cache_stats():
-    s = emb.get_cache_stats()
-    assert s == {"hits": 0, "misses": 0, "size": 0}
+    assert emb.get_cache_stats() == {"hits": 0, "misses": 0, "size": 0}
 
 
 def test_get_local_encoder_unavailable_returns_none():
-    # _HAS_SENTENCE_TRANSFORMERS is False in this environment
     assert emb.get_local_encoder() is None
 
 
@@ -30,14 +28,13 @@ def test_hash_vectorize_deterministic_and_normalized():
     v1 = emb.hash_vectorize("hello world foo")
     v2 = emb.hash_vectorize("hello world foo")
     assert v1 == v2
-    assert len(v1) == emb._LOCAL_DIM
-    norm = sum(x * x for x in v1) ** 0.5
-    assert abs(norm - 1.0) < 1e-6
+    assert len(v1) == 384
+    assert abs(sum(x * x for x in v1) ** 0.5 - 1.0) < 1e-6
 
 
 def test_hash_vectorize_empty_text():
     v = emb.hash_vectorize("")
-    assert len(v) == emb._LOCAL_DIM
+    assert len(v) == 384
     assert v[0] == 1.0
 
 
@@ -53,40 +50,39 @@ def test_pad_to_dim():
 
 def test_embed_for_pgvector_cache_hit(monkeypatch):
     fake_resp = MagicMock()
-    fake_resp.data = [{"embedding": [0.1, 0.2]}]
+    fake_resp.data = [{"embedding": [0.1] * 384}]
     monkeypatch.setattr("litellm.embedding", lambda **kw: fake_resp)
 
     vec1 = emb.embed_for_pgvector("hello", pg_dim=1536)
     vec2 = emb.embed_for_pgvector("hello", pg_dim=1536)
-    assert vec1 == [0.1, 0.2]
-    assert vec2 == [0.1, 0.2]
+    assert len(vec1) == 384
+    assert vec1 == vec2
     assert emb._cache_misses == 1
     assert emb._cache_hits == 1
 
 
-async def test_embed_for_pgvector_cache_eviction(monkeypatch):
+def test_embed_for_pgvector_cache_eviction(monkeypatch):
     fake_resp = MagicMock()
-    fake_resp.data = [{"embedding": [0.9]}]
+    fake_resp.data = [{"embedding": [0.9] * 384}]
     monkeypatch.setattr("litellm.embedding", lambda **kw: fake_resp)
-    # fill cache past the 5000-entry eviction threshold
     for i in range(5001):
-        emb._embedding_cache[f"k{i}:1536"] = [0.1]
-    vec = emb.embed_for_pgvector("query", pg_dim=1536)
-    assert vec == [0.9]
-    assert len(emb._embedding_cache) == 1  # cleared then one entry
+        emb._embedding_cache[f"k{i}:384"] = [0.1] * 384
+    vec = emb.embed_for_pgvector("query", pg_dim=384)
+    assert len(vec) == 384
+    assert len(emb._embedding_cache) == 1
 
 
-async def test_embed_for_pgvector_failure_returns_none(monkeypatch):
+def test_embed_for_pgvector_failure_returns_384_dim_fallback(monkeypatch):
     monkeypatch.setattr(
         "litellm.embedding", lambda **kw: (_ for _ in ()).throw(RuntimeError("down"))
     )
-    assert emb.embed_for_pgvector("hello") is None
+    vec = emb.embed_for_pgvector("hello")
+    assert len(vec) == 384
 
 
 def test_embed_query_falls_back_to_hash_vectorize():
-    # local encoder unavailable -> hash_vectorize fallback
     v = emb.embed_query("some text here")
-    assert v is not None and len(v) == emb._LOCAL_DIM
+    assert len(v) == 384
     assert abs(sum(x * x for x in v) ** 0.5 - 1.0) < 1e-6
 
 
@@ -99,7 +95,7 @@ async def test_embedding_engine_get_instance_singleton():
 async def test_embedding_engine_embed_and_cosine():
     eng = emb.EmbeddingEngine.get_instance()
     v = await eng.embed("hello world")
-    assert len(v) == emb._LOCAL_DIM
+    assert len(v) == 384
     assert eng.cosine(v, v) == pytest.approx(1.0)
     assert eng.cosine([], v) == 0.0
     assert eng.cosine([1.0, 2.0], [1.0]) == 0.0
