@@ -10,7 +10,10 @@ import sys
 from typing import Any
 
 if not os.getenv("ENV"):
-    os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
+    if os.getenv("RENDER"):
+        os.environ["ENV"] = "production"
+    else:
+        os.environ["ENV"] = os.getenv("SUPREMEAI_DEFAULT_ENV", "local")
 
 print(f">>> SUPREMEAI BOOTSTRAP STARTING (ENV={os.getenv('ENV')}) <<<", flush=True)
 
