@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { 
   Activity, Server, Database, Cloud, Wifi, WifiOff, 
   RefreshCw, AlertTriangle, CheckCircle, XCircle, Clock,
@@ -166,7 +166,7 @@ async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
       const data = await response.json();
       return data.global || { overall: 'unknown', checkedAt: new Date().toISOString(), totals: { healthy: 0, degraded: 0, unhealthy: 0, total: 0, unknown: 0 }, services: {}, criticalServicesHealthy: false };
     }
-  } catch (e) {
+  } catch {
     console.warn('[HealthMonitor] CF Worker health failed, trying direct...');
   }
 
