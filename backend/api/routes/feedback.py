@@ -80,6 +80,38 @@ def _persist_feedback(event_type: str, payload: dict[str, Any]) -> None:
         logger.error(f"feedback persist failed: {exc}")
 
 
+def _record_learning_feedback(event_type: str, payload: dict[str, Any]) -> None:
+    """Sprint 4: persist a categorical feedback event to the durable learning store.
+
+    Maps the route's event types onto the plan's feedback taxonomy
+    (thumbs_up / thumbs_down / retry / regenerate / follow_up / correction).
+    Privacy: only categorical data + identifiers are stored — payload text
+    is never forwarded (LearningStore scrubs raw-content keys anyway).
+    """
+    try:
+        from core.learning import record_feedback as _record_feedback
+
+        allowed = {"thumbs_up", "thumbs_down", "retry", "regenerate", "follow_up", "correction"}
+        feedback_type = event_type if event_type in allowed else "correction"
+        _record_feedback(
+            feedback_type,
+            task_type=str(payload.get("task_type") or "general"),
+            skill_id=str(payload.get("skill_id")) if payload.get("skill_id") else None,
+            provider=str(payload.get("provider")) if payload.get("provider") else None,
+            model=str(payload.get("model")) if payload.get("model") else None,
+            session_id=str(payload.get("session_id")) if payload.get("session_id") else None,
+            request_id=str(payload.get("request_id")) if payload.get("request_id") else None,
+            weight=float(payload.get("weight", 1.0)),
+            metadata={
+                "source": "api_feedback_route",
+                "original_event_type": event_type,
+                "accepted": feedback_type == event_type,
+            },
+        )
+    except Exception as exc:
+        logger.debug(f"learning-store feedback record skipped: {exc}")
+
+
 @asynccontextmanager
 async def feedback_lifespan(router: APIRouter):
     # P0: skip SQLite schema creation entirely when the fallback is refused —
@@ -115,6 +147,10 @@ async def ingest(event: FeedbackEvent) -> FeedbackResponse:
         payload = event.payload or {}
         handled = _feedback_loop.handle_feedback({"type": event.event_type, **payload})
         if handled.get("stored"):
+            # Sprint 4 (learning loop): durable, privacy-safe feedback event into
+            # the Postgres learning store (feedback_events). Categorical types map
+            # 1:1; anything else degrades to 'correction'. Never raises.
+            _record_learning_feedback(event.event_type, payload)
             _persist_feedback(event.event_type, payload)
             return FeedbackResponse(success=True)
         raise HTTPException(

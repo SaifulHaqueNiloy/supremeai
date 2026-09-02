@@ -483,6 +483,22 @@ class LLMGateway:
         if prompt_text and not stream:
             cached = await self.cache.query_similar(prompt_text, task_type=task_type)
             if cached:
+                # Sprint 3 (learning loop): durable cache-hit observation — evidence
+                # for cache-effectiveness measurement (plan §13.1). Best-effort.
+                try:
+                    from core.learning import record_llm_event as _cache_hit_event
+
+                    _cache_hit_event(
+                        provider="semantic-cache",
+                        model=str(getattr(cached, "model", "") or "unknown"),
+                        task_type=task_type,
+                        success=True,
+                        latency_ms=0,
+                        cache_hit=True,
+                        session_id=str(tenant_id or ""),
+                    )
+                except Exception:
+                    pass
                 return {
                     "success": True,
                     "text": cached.response,
@@ -626,7 +642,17 @@ class LLMGateway:
             elif mode == ExecutionMode.LOCAL:
                 raise RuntimeError("Local execution requested but Ollama is not healthy.")
 
-        for current_model in call_chain:
+        # Sprint 3: pre-call token estimate so actual-vs-estimated can be
+        # calibrated per provider/model (bounded EMA, see core.learning.calibration).
+        _estimated_tokens: int | None = None
+        try:
+            from core.prompt_handler import estimate_tokens as _estimate_tokens
+
+            _estimated_tokens = int(_estimate_tokens(prompt_text))
+        except Exception:
+            _estimated_tokens = None
+
+        for _chain_index, current_model in enumerate(call_chain):
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
@@ -647,7 +673,12 @@ class LLMGateway:
                     provider=provider_name,
                     model=current_model,
                     task_type=task_type,
+                    metadata={
+                        "fallback_count": _chain_index,
+                        "estimated_tokens": _estimated_tokens,
+                    },
                 ) as rec:
+                    rec.estimated_tokens = _estimated_tokens
                     response = await self.cloud_adapter.generate(
                         model=current_model,
                         messages=messages_payload,
@@ -661,6 +692,21 @@ class LLMGateway:
                         rec.tokens_prompt = response["usage"].get("prompt_tokens")
                         rec.tokens_completion = response["usage"].get("completion_tokens")
                     cb.mark_success()
+
+                    # Sprint 4: always-on learning-loop feed — record the execution in
+                    # the SHARED FitnessEngine metrics store so SelfEvolutionAgent._tick()
+                    # sees real traffic even when ENABLE_EVOLUTION_LEARNING is off.
+                    try:
+                        from api.deps import get_fitness_engine
+
+                        get_fitness_engine().track_execution(
+                            skill_name=task_type,
+                            success=True,
+                            latency=rec.latency_ms,
+                            token_cost=float(rec.tokens_completion or 0),
+                        )
+                    except Exception as fit_err:
+                        logger.debug(f"FitnessEngine.track_execution skipped: {fit_err}")
 
                     # FIX (ANALYSIS-D): Wire EvolutionEngine.learn_from_success into
                     # the success path. Original code never called this method, so
@@ -731,6 +777,27 @@ class LLMGateway:
                                 **kwargs,
                             )
                             cb.mark_success()
+                            # Sprint 3: record the successful 429-retry as its own
+                            # telemetry event (error_class="rate_limit" so provider
+                            # metrics can count rate-limit frequency per plan §8.1).
+                            try:
+                                from core.learning import record_llm_event as _retry_event
+
+                                _retry_event(
+                                    provider=provider_name,
+                                    model=current_model,
+                                    task_type=task_type,
+                                    success=True,
+                                    latency_ms=None,
+                                    input_tokens=(response.get("usage") or {}).get("prompt_tokens"),
+                                    output_tokens=(response.get("usage") or {}).get("completion_tokens"),
+                                    actual_cost=response.get("cost") or None,
+                                    error_class="rate_limit",
+                                    session_id=str(tenant_id or ""),
+                                    metadata={"retry_after_backoff": True},
+                                )
+                            except Exception:
+                                pass
                             return {
                                 "success": True,
                                 "text": response["choices"][0]["message"]["content"],

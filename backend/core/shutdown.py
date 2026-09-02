@@ -64,6 +64,16 @@ async def shutdown_services(app):
             )
         )
 
+    # Sprint 3 (learning loop): final durable-telemetry flush so buffered
+    # learning_events land in Postgres before the HTTP clients are torn down.
+    try:
+        from core.learning import get_learning_store
+
+        await get_learning_store().stop()
+        logger.info("✅ LearningStore flushed and stopped.")
+    except (Exception, asyncio.CancelledError) as e:
+        logger.warning(f"LearningStore shutdown skipped: {e}")
+
     # Flush write-behind batchers (audit_logger, checkpoint_manager) so any
     # buffered-but-not-yet-flushed rows land before we tear down connections.
     # This is the graceful-shutdown half of the write-behind tradeoff: a hard
