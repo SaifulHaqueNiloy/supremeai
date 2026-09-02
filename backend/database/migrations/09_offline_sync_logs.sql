@@ -27,3 +27,7 @@ CREATE TABLE IF NOT EXISTS offline_sync_conflicts (
 
 CREATE INDEX IF NOT EXISTS idx_offline_sync_user ON offline_sync_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_offline_sync_status ON offline_sync_logs(status);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE offline_sync_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE offline_sync_conflicts ENABLE ROW LEVEL SECURITY;

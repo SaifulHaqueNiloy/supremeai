@@ -40,3 +40,7 @@ CREATE TABLE IF NOT EXISTS sso_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_sso_sessions_tenant ON sso_sessions(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_sso_sessions_user ON sso_sessions(user_id);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE sso_configs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sso_sessions ENABLE ROW LEVEL SECURITY;

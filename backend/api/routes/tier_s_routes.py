@@ -29,25 +29,22 @@ if TYPE_CHECKING:
 
 # ---------------------------------------------------------------------------
 # Master list of all Tier-S routers with their mount prefixes and tags.
+# All routers define their own canonical prefix internally, so outer prefix is empty ("")
+# to avoid double prefix concatenation (e.g. /api/share/api/share).
 # ---------------------------------------------------------------------------
 TIER_S_ROUTERS: list[tuple[APIRouter, str, list[str]]] = [
-    (share_router, "/api/share", ["share"]),
-    (reasoning_router, "/api/reasoning", ["reasoning"]),
-    (artifacts_router, "/api/artifacts", ["artifacts"]),
-    (chat_upload_router, "/api/chat/upload", ["chat-upload"]),
-    (slash_commands_router, "/api/slash-commands", ["slash-commands"]),
-    (chat_search_router, "/api/chat/search", ["chat-search"]),
-    (chat_export_router, "/api/chat/export", ["chat-export"]),
-    # CI FIX: global_memory_router has its own prefix="/api/preferences/memory"
-    # (defined in global_memory.py:21). If we mount it with prefix="/api/global-memory",
-    # FastAPI concatenates both → /api/global-memory/api/preferences/memory/{id}
-    # which doesn't match what the frontend calls (/api/preferences/memory/{id}).
-    # Fix: mount with empty prefix so only the router's own prefix is used.
+    (share_router, "", ["share"]),
+    (reasoning_router, "", ["reasoning"]),
+    (artifacts_router, "", ["artifacts"]),
+    (chat_upload_router, "", ["chat-upload"]),
+    (slash_commands_router, "", ["slash-commands"]),
+    (chat_search_router, "", ["chat-search"]),
+    (chat_export_router, "", ["chat-export"]),
     (global_memory_router, "", ["global-memory"]),
-    (prompt_templates_router, "/api/prompt-templates", ["prompt-templates"]),
-    (branch_conversations_router, "/api/branch-conversations", ["branch-conversations"]),
-    (scheduled_tasks_router, "/api/scheduled-tasks", ["scheduled-tasks"]),
-    (deep_research_router, "/api/deep-research", ["deep-research"]),
+    (prompt_templates_router, "", ["prompt-templates"]),
+    (branch_conversations_router, "", ["branch-conversations"]),
+    (scheduled_tasks_router, "", ["scheduled-tasks"]),
+    (deep_research_router, "", ["deep-research"]),
 ]
 
 # Convenience flat list of just the router objects.
@@ -68,7 +65,6 @@ def register_tier_s_routes(app: FastAPI) -> None:
 
         from api.routes.tier_s_routes import register_tier_s_routes
 
-        app = FastAPI()
         register_tier_s_routes(app)
     """
     for router, prefix, tags in TIER_S_ROUTERS:

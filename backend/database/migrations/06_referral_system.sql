@@ -51,3 +51,9 @@ CREATE TABLE IF NOT EXISTS credit_ledger (
 );
 
 CREATE INDEX IF NOT EXISTS idx_ledger_user ON credit_ledger(user_id);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE referral_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referral_redemptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE credit_wallets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE credit_ledger ENABLE ROW LEVEL SECURITY;
