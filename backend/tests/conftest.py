@@ -72,6 +72,7 @@ _CRITICAL_TEST_PARTS = (
     ("services", "memory"),
     ("tools", "checkpoint_manager"),
     ("tools", "parallel_agent_executor"),
+    ("database",),
 )
 
 _IMPORTANT_TEST_PARTS = (

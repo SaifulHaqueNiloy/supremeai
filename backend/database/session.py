@@ -158,6 +158,7 @@ def init_engine() -> None:
                     "(SUPABASE_ALLOW_DB_DEGRADATION=true). REST-based features work; "
                     "SQL-dependent routes will error per-request until the pooler URL is set."
                 )
+                return
             else:
                 logger.critical(
                     "FATAL: SUPABASE_DATABASE_URL_POOLER missing in PRODUCTION. "
@@ -193,6 +194,7 @@ def init_engine() -> None:
                 f"DEGRADED BOOT (opt-in): DB engine creation failed in PRODUCTION: {exc}. "
                 "Booting WITHOUT the SQLAlchemy engine."
             )
+            return
         logger.error(
             f"Failed to create DB engine for '{_async_url}': {exc}. Falling back to SQLite in-memory."
         )
@@ -216,8 +218,12 @@ def init_engine() -> None:
 def _get_session_maker() -> async_sessionmaker[AsyncSession]:
     """বাংলা: get_db_session_context()-এর ভিতরে AsyncSessionLocal-এর জন্য internal accessor।"""
     init_engine()
-    # _session_maker_instance guaranteed non-None after init_engine()
-    return _session_maker_instance  # type: ignore[return-value]
+    if _session_maker_instance is None:
+        raise RuntimeError(
+            "Database engine is not initialized (running in degraded REST-only mode). "
+            "Set SUPABASE_DATABASE_URL_POOLER to enable SQL access."
+        )
+    return _session_maker_instance
 
 
 # ── Module-level __getattr__ for lazy backward-compatible access ─────────────
@@ -246,7 +252,15 @@ async def get_db_session_context() -> AsyncGenerator[AsyncSession, None]:
     from fastapi import HTTPException
     from sqlalchemy.exc import TimeoutError as SATimeoutError
 
-    session_maker = _get_session_maker()
+    try:
+        session_maker = _get_session_maker()
+    except RuntimeError as e:
+        logger.error(f"Database session requested but DB is degraded: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail="Database service unavailable (running in degraded REST-only mode).",
+        ) from e
+
     try:
         async with session_maker() as session:
             try:
@@ -283,6 +297,9 @@ async def check_engine_health() -> bool:
     try:
         init_engine()
         engine = _engine_instance
+        if engine is None:
+            logger.info("Database engine not initialized (degraded mode) — reporting unhealthy")
+            return False
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return True
