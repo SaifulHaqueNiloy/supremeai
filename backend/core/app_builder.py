@@ -361,8 +361,15 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         allow_origins=origins,
         allow_credentials=cors_allow_credentials,
         allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With",
+            "apikey",
+        ],
+        expose_headers=["Content-Length", "X-Pagination-Total"],
     )
 
     # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
