@@ -7,9 +7,9 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from core.degraded_mode import sqlite_fallback_allowed
 from api.dependencies import get_current_admin
 from core.config import settings
+from core.degraded_mode import sqlite_fallback_allowed
 
 router = APIRouter(
     prefix="/api/admin/site-actions",

@@ -29,11 +29,18 @@ from core.learning.provider_scorer import (
     refresh_score_snapshot,
 )
 
-
 # ----------------------------------------------------------- provider scoring
 
 
-def _metric_row(provider: str, model: str, requests: int, successes: int, rate_limited: int = 0, p95: int | None = 500, cost: float = 0.001) -> dict:
+def _metric_row(
+    provider: str,
+    model: str,
+    requests: int,
+    successes: int,
+    rate_limited: int = 0,
+    p95: int | None = 500,
+    cost: float = 0.001,
+) -> dict:
     return {
         "provider": provider,
         "model": model,
@@ -64,9 +71,7 @@ def test_insufficient_samples_never_preferred() -> None:
 
 
 def test_cautious_tier_discounted() -> None:
-    scores = refresh_score_snapshot(
-        [_metric_row("mid", "mid/m1", requests=30, successes=29)]
-    )
+    scores = refresh_score_snapshot([_metric_row("mid", "mid/m1", requests=30, successes=29)])
     assert scores[0].sample_tier == "cautious"
     assert scores[0].score <= 0.5 + 1e-6  # discounted 50% of bounded raw
 

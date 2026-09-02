@@ -1,5 +1,5 @@
 import React from 'react';
-import { PluginManifest } from '../../../hooks/usePlugins';
+import type { PluginManifest } from '../../../hooks/usePlugins';
 
 interface Props {
     plugin: PluginManifest;

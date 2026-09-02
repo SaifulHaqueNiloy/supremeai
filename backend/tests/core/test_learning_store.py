@@ -191,9 +191,7 @@ async def test_buffer_overflow_drops_oldest_without_exception(monkeypatch):
     store = LearningStore(max_buffer=10)
     monkeypatch.setattr(store_module, "_get_db", lambda: None)  # never used here
     for i in range(15):
-        assert store.record_event(
-            LearningEvent(provider="p", model="m", latency_ms=i)
-        ) is True
+        assert store.record_event(LearningEvent(provider="p", model="m", latency_ms=i)) is True
     stats = store.get_stats()
     assert stats["queued"] == 10  # bounded
     assert stats["dropped"] == 5  # oldest 5 evicted
@@ -272,9 +270,27 @@ async def test_fallback_replayed_on_successful_flush(monkeypatch):
 @pytest.mark.asyncio
 async def test_aggregate_provider_metrics_counts_and_percentiles():
     events = [
-        {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 100, "estimated_cost": 0.01},
-        {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 200, "estimated_cost": 0.02},
-        {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 300, "estimated_cost": 0.03},
+        {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "success": True,
+            "latency_ms": 100,
+            "estimated_cost": 0.01,
+        },
+        {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "success": True,
+            "latency_ms": 200,
+            "estimated_cost": 0.02,
+        },
+        {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "success": True,
+            "latency_ms": 300,
+            "estimated_cost": 0.03,
+        },
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 400},
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 500},
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 600},
@@ -282,10 +298,23 @@ async def test_aggregate_provider_metrics_counts_and_percentiles():
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 800},
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 900},
         {"provider": "openai", "model": "gpt-4o-mini", "success": True, "latency_ms": 1000},
-        {"provider": "openai", "model": "gpt-4o-mini", "success": False, "error_class": "rate_limit", "latency_ms": 50, "actual_cost": 0.0},
+        {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "success": False,
+            "error_class": "rate_limit",
+            "latency_ms": 50,
+            "actual_cost": 0.0,
+        },
         {"provider": "openai", "model": "gpt-4o-mini", "success": False, "error_class": "timeout"},
         {"provider": "groq", "model": "llama-3-70b", "success": True, "latency_ms": 42},
-        {"provider": "groq", "model": "llama-3-70b", "success": False, "error_class": "rate_limit", "latency_ms": 44},
+        {
+            "provider": "groq",
+            "model": "llama-3-70b",
+            "success": False,
+            "error_class": "rate_limit",
+            "latency_ms": 44,
+        },
         {"no_provider": True},  # skipped
     ]
     rows = aggregate_provider_metrics(events, window_start="2026-09-03T00:00:00+00:00")
@@ -331,14 +360,14 @@ async def test_record_feedback_rejects_invalid_type():
 
 @pytest.mark.asyncio
 async def test_record_feedback_accepts_valid_type(monkeypatch):
-    assert ALLOWED_FEEDBACK_TYPES == {
+    assert {
         "thumbs_up",
         "thumbs_down",
         "retry",
         "regenerate",
         "follow_up",
         "correction",
-    }
+    } == ALLOWED_FEEDBACK_TYPES
     store = LearningStore()
     assert (
         store.record_feedback(
@@ -478,22 +507,19 @@ def test_repository_degrades_without_client():
     assert instance.get_learning_events() in (None, [])
     assert instance.append_feedback_event({"feedback_type": "thumbs_up"}) in (None, False)
     assert instance.get_feedback_events() in (None, [])
-    assert (
-        instance.upsert_provider_metric(
-            {"window_start": "w", "provider": "p", "model": "m"}
-        )
-        in (None, False)
-    )
+    assert instance.upsert_provider_metric(
+        {"window_start": "w", "provider": "p", "model": "m"}
+    ) in (None, False)
     assert instance.get_provider_metrics() in (None, [])
     assert instance.upsert_skill_metric({"window_start": "w", "skill_id": "s"}) in (None, False)
-    assert (
-        instance.append_fitness_snapshot(
-            {"subject_type": "skill", "subject_id": "s", "composite": 0.5}
-        )
-        in (None, False)
-    )
+    assert instance.append_fitness_snapshot(
+        {"subject_type": "skill", "subject_id": "s", "composite": 0.5}
+    ) in (None, False)
     assert instance.get_fitness_snapshots("skill", "s") in (None, [])
     assert instance.insert_improvement_proposal({"proposal_type": "t", "target": "x"}) is None
     assert instance.update_improvement_proposal_status(1, "PROMOTED") in (None, False)
-    assert instance.insert_improvement_run({"proposal_id": 1, "run_type": "BASELINE"}) in (None, False)
+    assert instance.insert_improvement_run({"proposal_id": 1, "run_type": "BASELINE"}) in (
+        None,
+        False,
+    )
     assert instance.get_improvement_proposals() in (None, [])

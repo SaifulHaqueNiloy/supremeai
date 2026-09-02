@@ -1,58 +1,29 @@
 # backend/api/deps.py
-"""Enhanced dependency injection with standardized error handling.
+"""Canonical Dependency Re-export Module (Unified Auth DI - Audit B-006 Fix).
 
- replaces api/dependencies.py — integrates ErrorEventBus for all
-dependency failures and provides typed request/tenant extraction helpers.
+All authentication and infrastructure dependencies are canonically defined in
+`api.dependencies`. This module re-exports them so existing callers keep working
+with 100% architectural consistency and without duplicate authentication bypass logic.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from api.dependencies import (
+    get_ai_integrator,
+    get_current_admin,
+    get_current_user_token,
+    get_fitness_engine,
+    get_rate_limiter,
+    get_tenant_db,
+    verify_autonomous_agent_token,
+)
 
-from fastapi import Depends, HTTPException, Request
-
-from api.errors import raise_unauthorized
-from core.error_bus import with_error_bus
-from core.logging_config import logger
-from core.self_evolution.fitness_engine import FitnessEngine
-from core.tenant_db import TenantAwareFirestore
-from utils.environment import is_test_environment
-
-_fitness_engine = FitnessEngine()
-
-
-def get_fitness_engine() -> FitnessEngine:
-    return _fitness_engine
-
-
-@with_error_bus(component_name="AuthDependency")
-async def get_current_user_token(request: Request) -> dict[str, Any]:
-    user = getattr(request.state, "user", None)
-    if user:
-        return user
-
-    import sys
-
-    if "pytest" in sys.modules:
-        import os
-
-        admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
-        return {"sub": admin_email, "role": "admin"}
-
-    raise_unauthorized("Missing or invalid authentication token.")
-    return None  # type: ignore
-
-
-def get_tenant_db(
-    payload: dict[str, Any] = Depends(get_current_user_token),
-) -> TenantAwareFirestore:
-    """Extract tenant_id from JWT and return an isolated Firestore client."""
-    tenant_id = payload.get("sub")
-    if not tenant_id:
-        logger.error("Token payload missing 'sub' (tenant_id) claim.")
-        raise HTTPException(status_code=401, detail="Invalid token structure.")
-
-    return TenantAwareFirestore(tenant_id=tenant_id)
-
-
-__all__ = ["get_current_user_token", "get_fitness_engine", "get_tenant_db"]
+__all__ = [
+    "get_ai_integrator",
+    "get_current_admin",
+    "get_current_user_token",
+    "get_fitness_engine",
+    "get_rate_limiter",
+    "get_tenant_db",
+    "verify_autonomous_agent_token",
+]

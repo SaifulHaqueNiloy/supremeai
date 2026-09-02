@@ -220,9 +220,7 @@ class GCPFirestoreVerificationQueue:
 
         if self._memory_rows is not None:
             # P0: pending items from the bounded in-process buffer (priority desc).
-            rows = [
-                r for r in self._memory_rows.snapshot() if r.get("status") == "pending"
-            ]
+            rows = [r for r in self._memory_rows.snapshot() if r.get("status") == "pending"]
             rows.sort(key=lambda r: (-int(r.get("priority", 50)), r.get("created_at", "")))
             return [dict(r) for r in rows[:limit]]
 
@@ -313,9 +311,7 @@ class GCPFirestoreVerificationQueue:
             }
 
         if self._memory_rows is not None:
-            removed = self._memory_rows.remove_matching(
-                lambda r: r.get("queue_id") == queue_id
-            )
+            removed = self._memory_rows.remove_matching(lambda r: r.get("queue_id") == queue_id)
             return {
                 "success": True,
                 "provider": self.mode,

@@ -25,7 +25,6 @@ PROTECTED_CRITICAL_PATHS = (
     "core/security",
     "api/dependencies.py",
     "core/config",
-    "config/settings.py",
     ".env",
     "billing",
     "core/tenant_db.py",

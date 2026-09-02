@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PluginManifest } from '../../../hooks/usePlugins';
+import type { PluginManifest } from '../../../hooks/usePlugins';
 
 interface Props {
     isOpen: boolean;

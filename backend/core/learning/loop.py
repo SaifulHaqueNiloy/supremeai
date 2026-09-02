@@ -194,7 +194,14 @@ class LearningLoopAgent:
         self.cycles_run += 1
         self.last_cycle_at = datetime.now(UTC).isoformat()
         self.last_error = None
-        if any((stats["provider_rows"], stats["skill_rows"], stats["fitness_snapshots"], stats["proposals"])):
+        if any(
+            (
+                stats["provider_rows"],
+                stats["skill_rows"],
+                stats["fitness_snapshots"],
+                stats["proposals"],
+            )
+        ):
             logger.info(f"[LearningLoop] cycle #{self.cycles_run}: {stats}")
         return stats
 
@@ -208,7 +215,8 @@ class LearningLoopAgent:
                 continue
             key = (str(skill_id), str(event.get("task_type") or "general"))
             group = groups.setdefault(
-                key, {"requests": 0, "successes": 0, "failures": 0, "latencies": [], "actual_cost": 0.0}
+                key,
+                {"requests": 0, "successes": 0, "failures": 0, "latencies": [], "actual_cost": 0.0},
             )
             group["requests"] += 1
             if event.get("success") is True:
@@ -277,9 +285,7 @@ class LearningLoopAgent:
             # (1s reference), 10% cost (0.01 reference). Weights configurable later.
             latency_score = max(0.0, 1.0 - (avg_latency / 1000.0))
             cost_score = max(0.0, 1.0 - (group["cost"] / 0.01))
-            composite = round(
-                0.70 * success_rate + 0.20 * latency_score + 0.10 * cost_score, 4
-            )
+            composite = round(0.70 * success_rate + 0.20 * latency_score + 0.10 * cost_score, 4)
             snapshots[task_type] = {
                 "composite": min(1.0, max(0.0, composite)),
                 "components": {
@@ -287,9 +293,7 @@ class LearningLoopAgent:
                     "avg_latency_ms": int(avg_latency),
                     "cost_total": round(group["cost"], 6),
                     "samples": total,
-                    "sample_tier": (
-                        "normal" if total >= MIN_SAMPLES_NORMAL else "cautious"
-                    ),
+                    "sample_tier": ("normal" if total >= MIN_SAMPLES_NORMAL else "cautious"),
                 },
                 "sample_size": total,
             }
@@ -377,4 +381,3 @@ def get_learning_loop_agent() -> LearningLoopAgent:
     if _learning_loop_agent is None:
         _learning_loop_agent = LearningLoopAgent()
     return _learning_loop_agent
-

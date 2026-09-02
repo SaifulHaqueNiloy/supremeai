@@ -1241,9 +1241,7 @@ class SupabaseDB:
                 client.table("learning_events").insert(chunk).execute()
                 inserted += len(chunk)
             except Exception as e:
-                logger.warning(
-                    f"append_learning_events chunk ({len(chunk)} rows) failed: {e}"
-                )
+                logger.warning(f"append_learning_events chunk ({len(chunk)} rows) failed: {e}")
         return inserted
 
     def get_learning_events(
@@ -1419,9 +1417,7 @@ class SupabaseDB:
         if reviewed_by is not None:
             update["reviewed_by"] = reviewed_by
         try:
-            client.table("improvement_proposals").update(update).eq(
-                "id", proposal_id
-            ).execute()
+            client.table("improvement_proposals").update(update).eq("id", proposal_id).execute()
             return True
         except Exception as e:
             logger.warning(f"update_improvement_proposal_status failed: {e}")

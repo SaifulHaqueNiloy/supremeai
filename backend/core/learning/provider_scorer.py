@@ -106,9 +106,7 @@ def compute_provider_scores(rows: list[dict[str, Any]] | None) -> list[ProviderS
         total = max(1, successes + failures)
         quality = successes / float(total)
         reliability = max(0.0, 1.0 - (rate_limited / float(max(1, requests))))
-        latency_score = (
-            max(0.0, 1.0 - (float(p95) / _P95_REFERENCE_MS)) if p95 is not None else 0.5
-        )
+        latency_score = max(0.0, 1.0 - (float(p95) / _P95_REFERENCE_MS)) if p95 is not None else 0.5
         cost_score = max(0.0, 1.0 - (est_cost / _COST_REFERENCE_USD))
 
         components = {
@@ -149,7 +147,9 @@ def compute_provider_scores(rows: list[dict[str, Any]] | None) -> list[ProviderS
     return scores
 
 
-def exploration_candidate(scores: list[ProviderScore], epsilon: float = 0.05) -> ProviderScore | None:
+def exploration_candidate(
+    scores: list[ProviderScore], epsilon: float = 0.05
+) -> ProviderScore | None:
     """§8.2: return ONE alternative candidate for limited measurement.
 
     Deterministic (no RNG in request path): the best-scoring candidate whose

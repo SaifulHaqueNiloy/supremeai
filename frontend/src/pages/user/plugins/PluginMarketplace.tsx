@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { usePlugins, PluginManifest } from '../../../hooks/usePlugins';
+import { usePlugins, type PluginManifest } from '../../../hooks/usePlugins';
 import { PluginCard } from './PluginCard';
 import { InstallModal } from './InstallModal';
 

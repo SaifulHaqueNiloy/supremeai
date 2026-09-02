@@ -20,8 +20,8 @@ This is the data source for the self-evolving routing policies.
 
 
 import contextlib
-import re
 import json
+import re
 import time
 import uuid
 from collections.abc import AsyncIterator

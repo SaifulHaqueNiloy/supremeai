@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl
 
+from api.dependencies import get_current_user_token
 from core.mcp_client import MCPRegistryClient
 
 router = APIRouter(prefix="/api/v1/mcp", tags=["mcp"])
@@ -11,7 +12,10 @@ class MCPConnectRequest(BaseModel):
 
 
 @router.post("/discover")
-async def discover_mcp_server(req: MCPConnectRequest):
+async def discover_mcp_server(
+    req: MCPConnectRequest,
+    user: dict = Depends(get_current_user_token),
+):
     """
     Connects to a user-provided MCP server URL, validates it for SSRF,
     and returns the tools it provides.

@@ -234,18 +234,23 @@ CONFIG_SCHEMA: list[VarDefinition] = [
 def _validate_var(var_def: VarDefinition, settings_obj: Any = None) -> ValidationError | None:
     """Validate a single environment variable."""
     raw_value = os.getenv(var_def.name)
+    if not raw_value and var_def.name == "JWT_SECRET":
+        raw_value = os.getenv("SUPREMEAI_JWT_SECRET")
 
     if raw_value is None and settings_obj is not None:
         prop_name = var_def.name.lower()
         if hasattr(settings_obj, prop_name):
-            val = getattr(settings_obj, prop_name)
-            if val:
-                from pydantic import SecretStr
+            try:
+                val = getattr(settings_obj, prop_name)
+                if val:
+                    from pydantic import SecretStr
 
-                if isinstance(val, SecretStr):
-                    raw_value = val.get_secret_value()
-                else:
-                    raw_value = str(val)
+                    if isinstance(val, SecretStr):
+                        raw_value = val.get_secret_value()
+                    else:
+                        raw_value = str(val)
+            except Exception:
+                pass
 
     value = raw_value if raw_value is not None else var_def.default
 

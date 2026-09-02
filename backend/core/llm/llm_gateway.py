@@ -637,9 +637,9 @@ class LLMGateway:
         _coalescer = None
         _dedup_k = None
         _is_leader = False
-        if request_dedup_enabled() and call_chain:
-            from core.learning.dedup import dedup_key, get_request_coalescer
+        from core.learning.dedup import dedup_key, get_request_coalescer, request_dedup_enabled
 
+        if request_dedup_enabled() and call_chain:
             _coalescer = get_request_coalescer()
             _dedup_k = dedup_key(call_chain[0], task_type, messages_payload)
             _leader_entry = _coalescer.try_claim(_dedup_k)
@@ -843,7 +843,9 @@ class LLMGateway:
                                     success=True,
                                     latency_ms=None,
                                     input_tokens=(response.get("usage") or {}).get("prompt_tokens"),
-                                    output_tokens=(response.get("usage") or {}).get("completion_tokens"),
+                                    output_tokens=(response.get("usage") or {}).get(
+                                        "completion_tokens"
+                                    ),
                                     actual_cost=response.get("cost") or None,
                                     error_class="rate_limit",
                                     session_id=str(tenant_id or ""),

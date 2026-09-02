@@ -118,11 +118,15 @@ class RequestCoalescer:
         """Wait for the leader, bounded. None → follower must execute itself."""
         try:
             await asyncio.wait_for(entry.event.wait(), timeout=self._follower_timeout)
-        except (asyncio.TimeoutError, TimeoutError):
+        except TimeoutError:
             return None  # bounded wait: execute normally
         except asyncio.CancelledError:
             raise
-        if entry.future is not None and entry.future.done() and entry.future.exception() is not None:
+        if (
+            entry.future is not None
+            and entry.future.done()
+            and entry.future.exception() is not None
+        ):
             return None  # leader failed → follower executes normally
         if entry.response is None:
             return None

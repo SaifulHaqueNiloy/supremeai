@@ -12,7 +12,8 @@ def test_jwt_secret_validation_local():
     assert len(settings.jwt_secret) >= 64
 
 
-def test_jwt_secret_validation_production_valid():
+def test_jwt_secret_validation_production_valid(monkeypatch):
+    monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "a" * 64)
     settings = Settings(env="production")
     assert len(settings.jwt_secret) >= 64
 

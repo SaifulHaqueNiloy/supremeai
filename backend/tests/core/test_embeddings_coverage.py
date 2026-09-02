@@ -1,8 +1,11 @@
-"""Coverage tests for core/embeddings.py."""
-
+import sys
 from unittest.mock import MagicMock
 
 import pytest
+
+# Ensure litellm is mockable in CI/local test runners where it may not be installed
+if "litellm" not in sys.modules:
+    sys.modules["litellm"] = MagicMock()
 
 import core.embeddings as emb
 

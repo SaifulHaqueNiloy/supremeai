@@ -18,8 +18,8 @@ from datetime import datetime
 from typing import Any
 
 # Structured logging setup
-from config.settings import Settings, get_settings
 from core.adaptive_optimizer import AdaptiveOptimizer, get_optimizer
+from core.config import Settings, settings
 from core.integration_layer import SupremeAIIntegrator
 from core.logging_config import logger
 from core.provider_rate_limiter import IntelligentRateLimiter, get_provider_rate_limiter
@@ -50,8 +50,7 @@ class SupremeAIFactory:
         logger.info("🏭 Creating PRODUCTION-WIRED SupremeAI instance...")
         self._start_time = datetime.now()
 
-        # 1. Load settings
-        self._settings = get_settings()
+        self._settings = settings
 
         # 2. Initialize integrator (Phase 1, 2, 3)
         self._integrator = SupremeAIIntegrator(

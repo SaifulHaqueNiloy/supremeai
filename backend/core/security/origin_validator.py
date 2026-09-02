@@ -8,13 +8,13 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
-from core.cors_policy import (
+from core.logging_config import logger
+from middleware.cors_policy import (
     ADMIN_ORIGIN_DENYLIST,
     USER_ORIGIN_DENYLIST,
     resolve_admin_cors_origins,
     resolve_user_cors_origins,
 )
-from core.logging_config import logger
 
 
 def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:

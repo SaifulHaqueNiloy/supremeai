@@ -25,7 +25,7 @@ from core.config import settings
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
-from core.billing_plans import CheckoutRequest
+from services.billing.billing_plans import CheckoutRequest
 
 
 @router.post("/checkout")
@@ -105,7 +105,7 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
 # বাংলা মন্তব্য: সাবস্ক্রিপশন প্ল্যানগুলোর লিস্ট প্রদান করার জন্য এন্ডপয়েন্ট
 @router.get("/plans")
 async def get_plans():
-    from core.billing_plans import SUBSCRIPTION_PLANS
+    from services.billing.billing_plans import SUBSCRIPTION_PLANS
 
     return {"plans": SUBSCRIPTION_PLANS}
 

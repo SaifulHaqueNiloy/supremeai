@@ -46,7 +46,9 @@ def _normalize(provider: str | None, model: str | None) -> tuple[str, str]:
     return (str(provider or "unknown"), str(model or "unknown"))
 
 
-def update_ratio(provider: str | None, model: str | None, *, estimated: int, actual: int) -> float | None:
+def update_ratio(
+    provider: str | None, model: str | None, *, estimated: int, actual: int
+) -> float | None:
     """Fold one (estimated, actual) observation into the EMA. Returns new ratio.
 
     Bounded in every dimension; invalid inputs (<= 0) are ignored.
@@ -70,7 +72,9 @@ def update_ratio(provider: str | None, model: str | None, *, estimated: int, act
         target = min(MAX_RATIO, max(MIN_RATIO, raw))
         proposed = float(entry["ratio"]) + _EMA_ALPHA * (target - float(entry["ratio"]))
         # change-rate limit: never jump more than MAX_STEP in one update
-        proposed = min(float(entry["ratio"]) + MAX_STEP, max(float(entry["ratio"]) - MAX_STEP, proposed))
+        proposed = min(
+            float(entry["ratio"]) + MAX_STEP, max(float(entry["ratio"]) - MAX_STEP, proposed)
+        )
         entry["ratio"] = min(MAX_RATIO, max(MIN_RATIO, proposed))
         return float(entry["ratio"])
 
