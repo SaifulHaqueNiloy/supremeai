@@ -38,7 +38,9 @@ COPY . .
 # image আর browser runtime বহন করে না।
 
 # Create and use non-root user for security compliance
-RUN addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \
+# Update perl-base to fix CVE-2026-13221, CVE-2026-42496, CVE-2026-8376
+RUN apt-get update && apt-get install -y --only-upgrade perl-base && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \
     && chown -R supremeai:supremeai /app
 
 USER supremeai
