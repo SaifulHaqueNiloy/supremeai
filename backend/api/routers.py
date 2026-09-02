@@ -235,11 +235,27 @@ ALL_ROUTERS = [
 
 def register_all_routers(app: FastAPI) -> None:
     """Register all unified routers on the FastAPI app."""
+    current_role = getattr(settings, "supremeai_service_role", "monolith").lower()
+    logger.info(f"Registering routers for SERVICE_ROLE: {current_role}")
+
     for router_def in ALL_ROUTERS:
         path = router_def["path"]
         prefix = router_def["prefix"]
         is_admin = router_def["is_admin"]
         is_critical = router_def["is_critical"]
+
+        # OOM FIX: Service modularization based on SUPREMEAI_SERVICE_ROLE
+        is_scraper_route = "scraper" in path or "browser" in path
+        is_health_route = "health" in path or "service_topology" in path
+
+        if current_role == "scraper" and not (is_scraper_route or is_health_route):
+            continue
+
+        if current_role == "worker" and not is_health_route:
+            continue
+
+        if current_role == "core" and is_scraper_route:
+            continue
 
         deps = [Depends(get_current_user_token)] if is_admin else None
 
