@@ -47,6 +47,13 @@ class ConfigSpec:
 
 CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     ConfigSpec(
+        "SUPREMEAI_SERVICE_ROLE",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend"}),
+        description="Defines the service role (core, scraper, worker) to restrict routing.",
+    ),
+    ConfigSpec(
         "SUPREMEAI_USER_BACKEND_URL",
         frozenset({ConfigClass.REQUIRED}),
         frozenset({ConfigSource.ENV, ConfigSource.DEPLOY}),
