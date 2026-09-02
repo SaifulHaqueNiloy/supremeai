@@ -192,8 +192,3 @@ class AIMemory(Base):
         session.add(memory)
         await session.flush()
         return memory
-
-
-# -----------------------------------------------------------------------------
-# FILE 7: backend/api/middleware/query_timing.py — Query Performance Middleware
-# -----------------------------------------------------------------------------
