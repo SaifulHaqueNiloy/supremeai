@@ -10,6 +10,22 @@ from core.security.audit_logger import log_security_event
 class TestLogSecurityEvent:
     """Tests for log_security_event function."""
 
+    @pytest.fixture(autouse=True)
+    def reset_redis(self):
+        """Reset redis_manager state to prevent 'Event loop is closed' errors across tests."""
+        from core.cache.redis_manager import redis_manager
+
+        old_client = getattr(redis_manager, "_client", None)
+        old_init = getattr(redis_manager, "_initialized", False)
+
+        redis_manager._client = None
+        redis_manager._initialized = False
+
+        yield
+
+        redis_manager._client = old_client
+        redis_manager._initialized = old_init
+
     @pytest.mark.anyio
     async def test_log_event_returns_event_id(self):
         event_id = await log_security_event(
