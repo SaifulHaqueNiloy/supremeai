@@ -504,9 +504,7 @@ class LearningStore:
         try:
             self._task = asyncio.get_running_loop().create_task(self._flush_loop())
         except RuntimeError:
-            logger.debug(
-                "LearningStore.start() without running event loop; flush stays manual"
-            )
+            logger.debug("LearningStore.start() without running event loop; flush stays manual")
             self._task = None
 
     async def stop(self) -> None:
@@ -543,7 +541,7 @@ class LearningStore:
             while not self._stopped:
                 try:
                     await asyncio.wait_for(self._wake.wait(), timeout=self._flush_interval)
-                except (asyncio.TimeoutError, TimeoutError):
+                except TimeoutError:
                     pass
                 self._wake.clear()
                 if self._stopped:

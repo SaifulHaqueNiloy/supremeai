@@ -14,13 +14,13 @@ from sqlalchemy.future import select
 from sqlalchemy.orm.exc import StaleDataError
 
 from api.dependencies import get_current_user_token
-from core.billing_plans import SUBSCRIPTION_PLANS, CheckoutRequest
 from core.config import settings
 from core.gcp_firestore import get_firestore_client
 from core.llm.token_deductor import TokenDeductor
 from core.logging_config import logger
 from database.session import get_db_session
 from models.wallet import TransactionLedgerEntry, UserWallet
+from services.billing.billing_plans import SUBSCRIPTION_PLANS, CheckoutRequest
 
 router = APIRouter(prefix="/api/billing", tags=["Billing & Credit Wallet"])
 token_deductor = TokenDeductor()

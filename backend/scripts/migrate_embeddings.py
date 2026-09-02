@@ -19,6 +19,7 @@ async def migrate_embeddings():
     """Re-encode ai_memory using the canonical 384-dimensional pgvector contract."""
     try:
         from supabase import create_client
+
         from core.embeddings import embed_for_pgvector
 
         url = settings.supabase_url

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.billing_plans import SUBSCRIPTION_PLANS
+from services.billing.billing_plans import SUBSCRIPTION_PLANS
 from tools.tenant_rate_limiter import TenantRateLimiter
 
 
@@ -40,7 +40,6 @@ class TestBillingZeroCost:
         assert res["status"] == "success"
         assert res.get("billed", 0.0) == 0.0
 
-    @pytest.mark.skip(reason="TenantRateLimiter accumulated total_cost mock calculation variance")
     @pytest.mark.asyncio
     async def test_record_usage_calls_stripe_when_configured(self):
         """Test Stripe is called when API key is configured."""
@@ -50,7 +49,7 @@ class TestBillingZeroCost:
             mock_settings.stripe_api_key = "sk-test"
             with patch.dict("sys.modules", {"stripe": mock_stripe}):
                 res = await limiter.record_usage("tenant-1", cost=1.5, tokens=10)
-        assert res["total_cost"] == 10.0
+        assert res["total_cost"] == 10.0  # tokens fallback when redis is None
         mock_stripe.InvoiceItem.create.assert_called_once()
 
     @pytest.mark.asyncio

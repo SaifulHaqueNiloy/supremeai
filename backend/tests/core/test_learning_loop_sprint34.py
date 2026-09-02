@@ -35,7 +35,6 @@ from core.learning.loop import (
 )
 from core.llm.telemetry import LLMCallRecord, classify_llm_error, track_llm_call
 
-
 # --------------------------------------------------------------- classification
 
 
@@ -94,7 +93,9 @@ async def test_track_llm_call_records_error_fingerprint_on_failure() -> None:
 
 
 @pytest.mark.asyncio
-async def test_track_llm_call_sink_failure_never_propagates(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_track_llm_call_sink_failure_never_propagates(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The durable pipeline must not be able to affect the LLM call outcome."""
     import core.llm.telemetry as telemetry_mod
 
@@ -191,7 +192,9 @@ def test_error_pattern_proposals_need_min_occurrences() -> None:
     assert proposal["baseline"]["occurrences"] == 5
     assert proposal["created_by"] == "learning_loop_agent"
     # below threshold → no proposal (plan §10.2)
-    few = [dict(e, error_hash="bb" * 32) for e in _sample_events()[: ERROR_PATTERN_MIN_OCCURRENCES - 1]]
+    few = [
+        dict(e, error_hash="bb" * 32) for e in _sample_events()[: ERROR_PATTERN_MIN_OCCURRENCES - 1]
+    ]
     few = [e for e in few if e.get("success") is False]
     assert LearningLoopAgent._error_pattern_proposals(few) == []
 

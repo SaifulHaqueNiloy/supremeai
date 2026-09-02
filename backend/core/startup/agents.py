@@ -203,9 +203,13 @@ async def start_background_services(app):
                 max_restarts=5,
                 restart_delay=30.0,
             )
-            logger.info("✅ LearningLoopAgent registered with supervisor (5-min observe→propose cycle).")
+            logger.info(
+                "✅ LearningLoopAgent registered with supervisor (5-min observe→propose cycle)."
+            )
         else:
-            logger.info("ℹ️ LearningLoopAgent disabled via environment variable (ENABLE_LEARNING_LOOP).")
+            logger.info(
+                "ℹ️ LearningLoopAgent disabled via environment variable (ENABLE_LEARNING_LOOP)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ LearningLoopAgent failed to start: {exc}")
 

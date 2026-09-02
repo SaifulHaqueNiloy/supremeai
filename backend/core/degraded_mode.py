@@ -32,7 +32,8 @@ import os
 import sys
 import threading
 from collections import deque
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from core.logging_config import logger
 
@@ -131,7 +132,11 @@ def is_test_context() -> bool:
         return False
     if _effective_env() in _NON_PROD_STRICT_ENVS:
         return False
-    if "pytest" in sys.modules or os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
+    if (
+        "pytest" in sys.modules
+        or os.getenv("CI") == "true"
+        or os.getenv("GITHUB_ACTIONS") == "true"
+    ):
         return True
     return _effective_env() in _TEST_ENVS or (os.getenv("TESTING", "") or "").lower() == "true"
 
@@ -245,12 +250,12 @@ class _InMemoryDocumentSnapshot:
 
 
 class _InMemoryDocumentRef:
-    def __init__(self, store: "InMemoryDocumentStore", collection: str, doc_id: str):
+    def __init__(self, store: InMemoryDocumentStore, collection: str, doc_id: str):
         self._store = store
         self._collection = collection
         self.id = doc_id
 
-    def _col(self) -> "dict[str, dict]":
+    def _col(self) -> dict[str, dict]:
         return self._store._documents.setdefault(self._collection, {})
 
     def set(self, data: dict, merge: bool = False) -> None:
@@ -282,7 +287,7 @@ class _InMemoryDocumentRef:
         with self._store._lock:
             self._col().pop(self.id, None)
 
-    def collection(self, name: str) -> "_InMemoryCollection":
+    def collection(self, name: str) -> _InMemoryCollection:
         return self._store.collection(f"{self._collection}/{self.id}/{name}")
 
 
@@ -291,7 +296,7 @@ class _InMemoryQuery:
         self._docs = docs
         self._ids = ids
 
-    def where(self, field: str, op: str, value: Any) -> "_InMemoryQuery":
+    def where(self, field: str, op: str, value: Any) -> _InMemoryQuery:
         ops = {
             "==": lambda d: d.get(field) == value,
             "!=": lambda d: d.get(field) != value,
@@ -308,7 +313,7 @@ class _InMemoryQuery:
         self._ids = [p[1] for p in pairs]
         return self
 
-    def order_by(self, field: str, direction: str = "ASCENDING") -> "_InMemoryQuery":
+    def order_by(self, field: str, direction: str = "ASCENDING") -> _InMemoryQuery:
         reverse = str(direction).upper().startswith("DESC")
         pairs = sorted(
             zip(self._docs, self._ids, strict=True),
@@ -319,7 +324,7 @@ class _InMemoryQuery:
         self._ids = [p[1] for p in pairs]
         return self
 
-    def limit(self, count: int) -> "_InMemoryQuery":
+    def limit(self, count: int) -> _InMemoryQuery:
         self._docs = self._docs[:count]
         self._ids = self._ids[:count]
         return self
@@ -340,7 +345,7 @@ class _InMemoryQueryDoc:
 
 
 class _InMemoryCollection:
-    def __init__(self, store: "InMemoryDocumentStore", name: str):
+    def __init__(self, store: InMemoryDocumentStore, name: str):
         self._store = store
         self._name = name
 

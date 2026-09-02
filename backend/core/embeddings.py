@@ -70,7 +70,9 @@ def local_embed(text: str) -> list[float] | None:
             vec = enc.encode(text).tolist()
             if len(vec) == _LOCAL_DIM:
                 return vec
-            logger.warning(f"[embeddings] local encoder returned {len(vec)} dims; expected {_LOCAL_DIM}")
+            logger.warning(
+                f"[embeddings] local encoder returned {len(vec)} dims; expected {_LOCAL_DIM}"
+            )
         except Exception as exc:
             logger.warning(f"[embeddings] local encode failed: {exc}")
     return None
@@ -143,10 +145,10 @@ def embed_query(text: str) -> list[float]:
 class EmbeddingEngine:
     """Singleton embedding engine for local-first zero-cost semantic search."""
 
-    _instance: "EmbeddingEngine | None" = None
+    _instance: EmbeddingEngine | None = None
 
     @classmethod
-    def get_instance(cls) -> "EmbeddingEngine":
+    def get_instance(cls) -> EmbeddingEngine:
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance

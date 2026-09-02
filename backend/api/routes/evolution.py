@@ -168,7 +168,11 @@ async def get_evolution_metrics(admin: dict = Depends(require_admin_token)):
                 "model": r.get("model"),
                 "requests": r.get("requests"),
                 "success_rate": (
-                    round(r.get("successes", 0) / max(1, r.get("successes", 0) + r.get("failures", 0)), 4)
+                    round(
+                        r.get("successes", 0)
+                        / max(1, r.get("successes", 0) + r.get("failures", 0)),
+                        4,
+                    )
                     if (r.get("successes") is not None)
                     else None
                 ),

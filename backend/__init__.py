@@ -12,12 +12,12 @@ if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
 try:
-    from config.settings import get_settings
+    from core.config import settings
     from core.factory import SupremeAIFactory, get_ai, get_factory
     from core.integration_layer import SupremeAIIntegrator, get_integrator
 except ImportError:
     try:
-        from backend.config.settings import get_settings
+        from backend.core.config import settings
         from backend.core.factory import SupremeAIFactory, get_ai, get_factory
         from backend.core.integration_layer import SupremeAIIntegrator, get_integrator
     except ImportError:
@@ -27,7 +27,7 @@ except ImportError:
         get_ai = None
         get_factory = None
         get_integrator = None
-        get_settings = None
+        settings = None
 
 __version__ = "4.2.0-wired"
 __all__ = [
@@ -36,5 +36,5 @@ __all__ = [
     "get_ai",
     "get_factory",
     "get_integrator",
-    "get_settings",
+    "settings",
 ]

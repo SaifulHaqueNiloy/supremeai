@@ -6,8 +6,9 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from core.degraded_mode import sqlite_fallback_allowed
 from pydantic import BaseModel
+
+from core.degraded_mode import sqlite_fallback_allowed
 
 # ---------------------------------------------------------------------------
 # AUD-4 hardening (P0): the previous implementation stored approvals in plain

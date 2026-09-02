@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock
 
-from brain.agent_department import AgentDepartmentLegacy as AgentDepartment
+from core.agents.framework.agent_department import AgentDepartment
 
 
 def test_agent_department_coding_success():
