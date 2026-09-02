@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from core.degraded_mode import SQLiteFallbackDisabledError, require_sqlite_allowed
 from core.logging_config import logger
 from core.persistence import pooled_pg
 from core.persistence.write_behind import WriteBehindBatcher
@@ -44,7 +45,14 @@ class Checkpoint:
 class CheckpointManager:
     """Persists task execution state in Postgres (preferred, durable across restarts),
     Google Cloud Firestore (Serverless & Stateful, unchanged fallback), or local SQLite
-    (last-resort fallback / explicit test mode — NOT durable across restarts)."""
+    (last-resort fallback / explicit test mode — NOT durable across restarts).
+
+    P0 (Task 9-c): in production the SQLite last-resort fallback is env-gated via
+    core.degraded_mode. When it is refused, the manager marks itself UNAVAILABLE
+    (``available=False`` / ``mode="disabled"``) instead of silently landing on an
+    ephemeral ``checkpoints.db`` — checkpoints are then skipped (save→False,
+    load→None) and boot NEVER crashes.
+    """
 
     _batcher: WriteBehindBatcher | None = None
 
@@ -52,6 +60,8 @@ class CheckpointManager:
         self.collection_name = "checkpoints"
         self._db = None
         self.db_path = db_path
+        # P0: fail-closed flag — True unless the SQLite fallback was refused.
+        self.available = True
 
         # রিফ্যাক্টর: সরাসরি firestore.Client() এর বদলে শেয়ার্ড হেল্পার ব্যবহার
         if db_path or is_test_environment():
@@ -72,23 +82,47 @@ class CheckpointManager:
                 logger.info("Initialized Postgres CheckpointManager (write-behind batched).")
             except Exception as exc:
                 logger.warning(f"Postgres CheckpointManager init failed, falling back: {exc}")
-                self._init_fallback()
+                self._safe_init_fallback()
         else:
+            self._safe_init_fallback()
+
+    def _safe_init_fallback(self) -> None:
+        """P0: run the Firestore→SQLite fallback WITHOUT ever crashing boot.
+
+        When the SQLite fallback is refused in production, the manager is marked
+        unavailable (``mode="disabled"``) so checkpoints are skipped instead of
+        silently landing on an ephemeral SQLite file.
+        """
+        try:
             self._init_fallback()
+        except SQLiteFallbackDisabledError:
+            self.mode = "disabled"
+            self.available = False
+            self._db = None
+            logger.critical(
+                "[P0] CheckpointManager DISABLED: SQLite fallback refused in production "
+                "(no durable backend available) — checkpoints will NOT be persisted "
+                "(save()→False, load()→None). Set SUPABASE_ALLOW_DB_DEGRADATION=true to "
+                "accept ephemeral fallback."
+            )
 
     def _init_fallback(self) -> None:
-        """Firestore, then local SQLite as a last resort — unchanged prior behavior."""
+        """Firestore, then local SQLite as a last resort — SQLite now env-gated (P0)."""
         self._db = get_firestore_db()
         if self._db is not None:
             self.mode = "firestore"
             logger.info("Initialized Firestore CheckpointManager")
-        else:
-            self.mode = "sqlite"
-            self.db_path = "checkpoints.db"
-            self._init_sqlite()
-            logger.warning(
-                f"Initialized SQLite CheckpointManager at {self.db_path} — NOT durable across restarts."
-            )
+            return
+        # Firestore unavailable — the next step would be a local SQLite file.
+        # In production without the explicit opt-in flag this must FAIL CLOSED
+        # (SQLiteFallbackDisabledError) instead of silently degrading.
+        require_sqlite_allowed("checkpoints")
+        self.mode = "sqlite"
+        self.db_path = "checkpoints.db"
+        self._init_sqlite()
+        logger.warning(
+            f"Initialized SQLite CheckpointManager at {self.db_path} — NOT durable across restarts."
+        )
 
     def _init_sqlite(self):
         conn = sqlite3.connect(self.db_path)
@@ -107,6 +141,8 @@ class CheckpointManager:
             conn.close()
 
     def save(self, task_id: str, step_index: int, state: dict[str, Any]) -> bool:
+        if self.mode == "disabled":  # P0: fail-closed no-DB mode
+            return False
         if self.mode == "pg":
             try:
                 # `resumed` intentionally not reset here — ON CONFLICT preserves
@@ -171,6 +207,8 @@ class CheckpointManager:
             return False
 
     def load(self, task_id: str) -> Checkpoint | None:
+        if self.mode == "disabled":  # P0: fail-closed no-DB mode
+            return None
         if self.mode == "pg":
             try:
                 # Flush first: a task resuming immediately after a save() (same
@@ -251,6 +289,8 @@ class CheckpointManager:
             return None
 
     def list_all(self) -> list[dict[str, Any]]:
+        if self.mode == "disabled":  # P0: fail-closed no-DB mode
+            return []
         if self.mode == "pg":
             try:
                 CheckpointManager._batcher.flush()
@@ -314,6 +354,8 @@ class CheckpointManager:
             return []
 
     def clear(self, task_id: str) -> bool:
+        if self.mode == "disabled":  # P0: fail-closed no-DB mode
+            return False
         if self.mode == "pg":
             try:
                 CheckpointManager._batcher.flush()

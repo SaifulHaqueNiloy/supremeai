@@ -39,18 +39,110 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 # isolated test বা path resolution জটিলতায় KeyError: 'tools' এড়াতে dynamic safety import
+# P0 (Task 9-c2): FAIL-CLOSED security scanner import. The previous design
+# silently defined a no-op `run_sandbox_ast_check` dummy when the import failed,
+# which made the whole skill pipeline run UNSECURED without anyone noticing.
+# The scanner is now a hard dependency: if it cannot be imported, skill creation
+# must be unusable (never silently unsecured).
 try:
     from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
-except (ImportError, KeyError):
-    try:
-        from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
-    except (ImportError, KeyError):
-        # test env-এর জন্য fallback dummy definitions
-        class SecurityError(Exception):  # type: ignore[no-redef]
-            pass
+except Exception as _scanner_import_error:  # pragma: no cover - fail-closed path
+    logger.critical(
+        "P0: security scanner unavailable — skill creation FAILS CLOSED "
+        f"(import error: {_scanner_import_error!r}). AutoSkillCreator cannot be used "
+        "without tools.code.fuzz_sandbox; refusing to fall back to an unsecured dummy."
+    )
+    raise
 
-        def run_sandbox_ast_check(code: str) -> None:
-            pass
+
+class PersistenceUnavailableError(RuntimeError):
+    """P0: raised when AutoSkillCreator has NO durable skill store available.
+
+    Replaces the old silently-discarding MockRef sink: in non-test environments
+    we now fail closed at creation time instead of writing skills into the void.
+    """
+
+
+# P0 (Task 9-c2): module-level record of writes performed through the test-env
+# mock sink. Tests can assert against ``MOCKED_SKILL_WRITES`` — persistence in
+# test mode is now EXPLICIT and observable, never a silent no-op.
+MOCKED_SKILL_WRITES: list[dict[str, Any]] = []
+
+
+class _RecordingMockDoc:
+    """Test-env-only document mock that RECORDS writes instead of discarding."""
+
+    def set(self, data=None, merge=False, **kwargs):  # noqa: ANN001, ANN003
+        MOCKED_SKILL_WRITES.append({"data": data, "merge": merge, **kwargs})
+        return None
+
+
+class _RecordingMockRef:
+    """Test-env-only collection mock that RECORDS writes instead of discarding."""
+
+    def document(self, *args, **kwargs):  # noqa: ANN002, ANN003
+        return _RecordingMockDoc()
+
+
+def _resolve_firestore_client():
+    """Resolve the shared Firestore client (or None).
+
+    Kept as a module-level function so tests can monkeypatch the resolution
+    strategy (``monkeypatch.setattr(auto_skill_creator, "_resolve_firestore_client", ...)``).
+    """
+    try:
+        from core.gcp_firestore import get_firestore_client
+
+        return get_firestore_client()
+    except Exception as e:
+        try:
+            from core.messaging.event_bus import ErrorEvent, error_event_bus
+
+            error_event_bus.emit(
+                ErrorEvent(
+                    module="auto_skill_creator",
+                    error_type="FIRESTORE_INIT_FAILED",
+                    message=str(e),
+                    severity="WARNING",
+                    structured_context=ErrorContext(module="auto_fixed"),
+                )
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as emit_err:
+            import logging
+
+            logging.getLogger(__name__).exception(f"Silenced error: {emit_err}")
+        return None
+
+
+def _is_test_env() -> bool:
+    """P0: explicit test-environment detection for the MOCK persistence sink.
+
+    Production ALWAYS wins: a production environment is never treated as test
+    (mirrors core.degraded_mode.is_test_context / utils.environment).
+    """
+    try:
+        from core.degraded_mode import is_production
+
+        if is_production():
+            return False
+    except Exception:  # pragma: no cover - defensive
+        pass
+    if (os.getenv("ENV", "") or "").lower() in ("test", "testing"):
+        return True
+    if (os.getenv("TESTING", "") or "").lower() == "true":
+        return True
+    try:
+        from core.config import settings
+
+        if bool(getattr(settings, "testing", False)):
+            return True
+        if str(getattr(settings, "env", "") or "").lower() in ("test", "testing"):
+            return True
+    except Exception:  # pragma: no cover - defensive
+        pass
+    return False
 
 
 class AutoSkillCreator:
@@ -67,43 +159,25 @@ class AutoSkillCreator:
         if db is not None:
             self.skills_ref = self.db.collection("supreme_dynamic_skills")
         else:
-            # Try to obtain Firestore client; fall back to mock if unavailable
-            try:
-                from core.gcp_firestore import get_firestore_client
-
-                client = get_firestore_client()
-                if client is not None:
-                    self.skills_ref = client.collection("supreme_dynamic_skills")
-            except Exception as e:
-                try:
-                    from core.messaging.event_bus import ErrorEvent, error_event_bus
-
-                    error_event_bus.emit(
-                        ErrorEvent(
-                            module="auto_skill_creator",
-                            error_type="FIRESTORE_INIT_FAILED",
-                            message=str(e),
-                            severity="WARNING",
-                            structured_context=ErrorContext(module="auto_fixed"),
-                        )
-                    )
-                except asyncio.CancelledError:
-                    raise
-                except Exception as e:
-                    import logging
-
-                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
-            if self.skills_ref is None:
-
-                class MockDoc:
-                    def set(self, *args, **kwargs):
-                        pass
-
-                class MockRef:
-                    def document(self, *args, **kwargs):
-                        return MockDoc()
-
-                self.skills_ref = MockRef()
+            # P0 (Task 9-c2): resolve a durable store; NEVER install a silent
+            # no-op sink. Test env → explicit recording mock (writes captured
+            # in MOCKED_SKILL_WRITES); otherwise fail closed at creation time.
+            client = _resolve_firestore_client()
+            if client is not None:
+                self.skills_ref = client.collection("supreme_dynamic_skills")
+            elif _is_test_env():
+                logger.error(
+                    "[P0] skill persistence is MOCKED (test env): writes are recorded "
+                    "in core.self_evolution.auto_skill_creator.MOCKED_SKILL_WRITES and "
+                    "are NOT persisted anywhere."
+                )
+                self.skills_ref = _RecordingMockRef()
+            else:
+                raise PersistenceUnavailableError(
+                    "[P0] no durable skill store available for AutoSkillCreator "
+                    "(Firestore unresolvable and no db provided) — refusing to run "
+                    "with a silent no-op sink (fail-closed)."
+                )
         # Initialize FitnessEngine for telemetry
         self.fitness_engine = FitnessEngine(db=self.db)
 
@@ -234,18 +308,45 @@ class AutoSkillCreator:
             )
 
             # 🛡️ ৩. দ্য আলটিমেট স্যান্ডবক্স গেটকিপার ভ্যালিডেশন (The Iron Cage Check)
+            # P0 (Task 9-c2): explicit FAIL-CLOSED gate — a missing scanner, a
+            # scanner that throws, or ANY verdict that is not exactly True all
+            # reject the candidate. The historical "Security Sandbox Violation"
+            # error text is preserved for downstream compatibility.
+            if run_sandbox_ast_check is None:  # pragma: no cover - hard import guards this
+                logger.critical(
+                    "🚨 [EVOLUTION BLOCKED] security scanner unavailable — candidate "
+                    "rejected (fail-closed)."
+                )
+                raise SecurityError(
+                    "Security Sandbox Violation: security scanner unavailable — "
+                    "candidate rejected (fail-closed)"
+                )
             try:
                 is_safe = run_sandbox_ast_check(code_block)
-                if not is_safe:
-                    raise SecurityError("Generated code failed AST layout normalization.")
             except SecurityError as sec_err:
                 logger.critical(
                     f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {sec_err!s}"
                 )
-                return {
-                    "success": False,
-                    "error": f"Security Sandbox Violation: {sec_err!s}",
-                }
+                raise SecurityError(f"Security Sandbox Violation: {sec_err!s}") from sec_err
+            except Exception as scan_err:
+                logger.critical(
+                    "🚨 [EVOLUTION BLOCKED] security scanner crashed — candidate rejected "
+                    f"(fail-closed): {scan_err!s}"
+                )
+                raise SecurityError(
+                    "Security Sandbox Violation: security scanner failure — candidate "
+                    f"rejected (fail-closed): {scan_err!s}"
+                ) from scan_err
+            if is_safe is not True:
+                reason = (
+                    "Generated code failed AST layout normalization."
+                    if is_safe is False
+                    else f"Unexpected scanner verdict {is_safe!r} — treating as unsafe."
+                )
+                logger.critical(
+                    f"🚨 [EVOLUTION BLOCKED] AI generated a dangerous skill payload! Threat defused: {reason}"
+                )
+                raise SecurityError(f"Security Sandbox Violation: {reason}")
 
             # ৪. USS Pydantic Schema Validation
             # 🛡️ Governance Gate Pre-Validation
@@ -318,7 +419,8 @@ async def _supreme_test_run():
 asyncio.run(_supreme_test_run())
 """
                 is_safe_test = run_sandbox_ast_check(sandbox_script)
-                if not is_safe_test:
+                if is_safe_test is not True:
+                    # P0 (Task 9-c2): ANY non-True verdict rejects the harness.
                     raise SecurityError("Generated test harness failed AST layout normalization.")
                 run_res = await sandbox.execute_local_code(sandbox_script)
                 if not run_res.get("success"):
@@ -380,7 +482,13 @@ asyncio.run(_supreme_test_run())
             )
 
             async def _skill_security_scan(prop):
-                return run_sandbox_ast_check(code_block)
+                # P0 (Task 9-c2): fail-closed verdict for the governance gate.
+                verdict = run_sandbox_ast_check(code_block)
+                if verdict is not True:
+                    raise SecurityError(
+                        f"Security Sandbox Violation: scanner verdict={verdict!r} — promotion refused."
+                    )
+                return verdict
 
             async def _skill_benchmark(prop):
                 decision = get_benchmark_runner().compare_and_decide(

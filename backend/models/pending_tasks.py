@@ -6,6 +6,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from core.degraded_mode import sqlite_fallback_allowed
 from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------
@@ -86,11 +87,26 @@ def compute_payload_hash(payload: dict) -> str:
 
 
 def _get_conn():
-    # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ও ইনডেক্স ইনিশিয়ালাইজেশন
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH, timeout=30)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
+    # P0 (Task 9-c2): SQLite-only-by-design. In production without
+    # SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral pending_tasks.db file is
+    # REFUSED (CRITICAL logged once by core.degraded_mode). The module must not
+    # 500-crash its callers (approval routes, ecosystem workflow, tests), so the
+    # degraded mode hands out a fresh IN-MEMORY connection per call: the schema
+    # still auto-creates, reads return empty lists and writes are per-process
+    # only — the feature is loudly disabled, never silently persisted.
+    degraded = not sqlite_fallback_allowed("pending_tasks")
+    if degraded:
+        # Fresh per-call in-memory DB: schema auto-creates, but NOTHING survives
+        # the connection — persistence is loudly disabled, never falsely durable.
+        conn = sqlite3.connect(":memory:", timeout=30)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys=ON")
+    else:
+        # বাংলা মন্তব্য: ডাটাবেস ডিরেক্টরি তৈরি এবং অটোমেটিক টেবিল ও ইনডেক্স ইনিশিয়ালাইজেশন
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(DB_PATH, timeout=30)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS pending_tasks (
             task_id TEXT PRIMARY KEY,

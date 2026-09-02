@@ -12,6 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from core.degraded_mode import sqlite_fallback_allowed
 from core.feedback_loop import FeedbackLoop
 from core.logging_config import logger
 
@@ -56,6 +57,17 @@ def _ensure_db() -> None:
 
 
 def _persist_feedback(event_type: str, payload: dict[str, Any]) -> None:
+    # P0 (Task 9-c2): only the SQLite persistence is gated. The in-memory
+    # FeedbackLoop above keeps the route fully functional; when the SQLite
+    # fallback is refused in production we skip persistence loudly (CRITICAL
+    # logged once by core.degraded_mode) instead of crashing the route.
+    if not sqlite_fallback_allowed("feedback_events"):
+        logger.warning(
+            "[P0] feedback event NOT persisted: SQLite fallback refused in "
+            "production (in-memory handling only). Set SUPABASE_ALLOW_DB_DEGRADATION=true "
+            "to accept the ephemeral fallback."
+        )
+        return
     try:
         conn = sqlite3.connect(DB_PATH, check_same_thread=False)
         conn.execute(
@@ -70,7 +82,10 @@ def _persist_feedback(event_type: str, payload: dict[str, Any]) -> None:
 
 @asynccontextmanager
 async def feedback_lifespan(router: APIRouter):
-    _ensure_db()
+    # P0: skip SQLite schema creation entirely when the fallback is refused —
+    # the route keeps working with in-memory handling only.
+    if sqlite_fallback_allowed("feedback_events"):
+        _ensure_db()
     yield
 
 

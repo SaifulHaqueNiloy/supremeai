@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool, StaticPool
 
 from core.config import settings
+from core.degraded_mode import allow_db_degradation
 from core.logging_config import logger
 
 
@@ -146,7 +147,9 @@ def init_engine() -> None:
     # SQLAlchemy/asyncpg routes fail per-request instead of killing the whole
     # node in a crash loop. Set SUPABASE_DATABASE_URL_POOLER to re-enable the
     # strict path — no code change needed, just remove/rename the opt-in var.
-    _ALLOW_DB_DEGRADATION = os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "").lower() == "true"
+    # P0 (Task 9-c): the flag is now resolved via core.degraded_mode, the
+    # single source of truth shared by every subsystem SQLite-fallback gate.
+    _ALLOW_DB_DEGRADATION = allow_db_degradation()
     if not DATABASE_URL:
         # বাংলা: production-এ missing DB URL = fail-fast। test/CI-এ SQLite fallback।
         current_env = (getattr(settings, "env", "") or "").lower()

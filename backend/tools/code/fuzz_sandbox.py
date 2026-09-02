@@ -19,7 +19,25 @@ def run_sandbox_ast_check(code: str) -> bool:
     """
     try:
         tree = ast.parse(code)
-        banned_imports = {"os", "sys", "subprocess", "shutil", "socket", "pty"}
+        # P0 (Task 9-c2): ban list extended beyond the process/exec crowd to also
+        # cover network access (requests/urllib/http), code-loading primitives
+        # (importlib/runpy/marshal), FFI (ctypes) and deserialization (pickle).
+        banned_imports = {
+            "os",
+            "sys",
+            "subprocess",
+            "shutil",
+            "socket",
+            "pty",
+            "requests",
+            "urllib",
+            "http",
+            "importlib",
+            "ctypes",
+            "pickle",
+            "runpy",
+            "marshal",
+        }
         banned_keys = {
             "eval",
             "exec",
@@ -90,7 +108,22 @@ def generate_fuzz_payloads():
         payloads.append(("f = 'ev' + 'al'\nmain = globals()[f]", "String Concatenation Lookup"))
 
     # Category 2: Banned Imports & Aliasing
-    banned_imports = ["os", "sys", "subprocess", "shutil", "socket", "pty"]
+    banned_imports = [
+        "os",
+        "sys",
+        "subprocess",
+        "shutil",
+        "socket",
+        "pty",
+        "requests",
+        "urllib",
+        "http",
+        "importlib",
+        "ctypes",
+        "pickle",
+        "runpy",
+        "marshal",
+    ]
     for imp in banned_imports:
         payloads.append((f"import {imp}", "Direct Banned Import"))
         payloads.append((f"import {imp} as hacked_m", "Import Aliasing"))

@@ -7,6 +7,7 @@ from datetime import UTC
 from typing import Any
 
 from core.config import settings
+from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
 from core.logging_config import logger
 from core.persistence import pooled_pg
 
@@ -60,10 +61,18 @@ class CascadeMemoryService:
     Persists to pooled Postgres by default (durable across restarts). Pass an explicit `db_path`
     (or omit Postgres config) to force the local SQLite fallback — used by the __main__ self-test
     below so it never touches the live memory store.
+
+    P0 (Task 9-c): in production, the default SQLite fallback (``data/memory.db``) is
+    env-gated via core.degraded_mode. When refused, the service degrades to a bounded
+    IN-PROCESS buffer (5000 entries) — memories remain gettable in-process, are never
+    written to an ephemeral SQLite file, and the API stays alive.
     """
 
     def __init__(self, db_path: str | None = None):
         self._use_pg = db_path is None and pooled_pg.is_available()
+        # P0: bounded in-process degraded mode (no SQLite file, no data loss silence)
+        self._degraded_memory = False
+        self._memory_rows: InMemoryRing | None = None
         if self._use_pg:
             try:
                 # PATCH v4 (2026-08-30): Use execute_ddl() instead of execute().
@@ -83,12 +92,23 @@ class CascadeMemoryService:
                 self._use_pg = False
 
         if not self._use_pg:
-            self.db_path = db_path or "data/memory.db"
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-            self._init_db()
-            logger.warning(
-                f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."
-            )
+            if db_path is None and not sqlite_fallback_allowed("memory"):
+                self.db_path = None
+                self._degraded_memory = True
+                self._memory_rows = InMemoryRing()
+                logger.critical(
+                    "[P0] CascadeMemoryService degraded IN-PROCESS ONLY: SQLite fallback "
+                    "refused in production and Postgres unavailable — memories are kept in a "
+                    "bounded memory buffer (5000 entries) and are LOST on restart. Set "
+                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite fallback."
+                )
+            else:
+                self.db_path = db_path or "data/memory.db"
+                os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+                self._init_db()
+                logger.warning(
+                    f"CascadeMemoryService: running on local SQLite fallback at {self.db_path} — NOT durable across restarts."
+                )
         self.encoder = None
         # Relying on core.embeddings to fetch 1536-dim embeddings natively
 
@@ -227,6 +247,20 @@ class CascadeMemoryService:
                 logger.error(f"CascadeMemoryService.store_memory: Postgres write failed: {exc}")
             return
 
+        if self._degraded_memory:
+            # P0: bounded in-process buffer (upsert semantics on file_path key).
+            self._memory_rows.remove_matching(lambda r: r.get("file_path") == file_path)
+            self._memory_rows.append(
+                {
+                    "file_path": file_path,
+                    "content": content,
+                    "summary": summary,
+                    "structure": structure,
+                    "embedding": embedding_str,
+                }
+            )
+            return
+
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             # Update SQLite table schema to match ai_memory if needed, or keep file_memories for local dev
@@ -294,6 +328,17 @@ class CascadeMemoryService:
                 )
             return results
 
+        if self._degraded_memory:
+            return [
+                {
+                    "file_path": row.get("file_path"),
+                    "content": row.get("content"),
+                    "summary": row.get("summary"),
+                    "structure": row.get("structure"),
+                }
+                for row in self._memory_rows.snapshot()
+            ]
+
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -320,6 +365,10 @@ class CascadeMemoryService:
                 pooled_pg.execute("DELETE FROM ai_memory WHERE session_id = %s", (file_path,))
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.delete_memory: Postgres delete failed: {exc}")
+            return
+
+        if self._degraded_memory:
+            self._memory_rows.remove_matching(lambda r: r.get("file_path") == file_path)
             return
 
         with sqlite3.connect(self.db_path) as conn:
@@ -415,6 +464,26 @@ class CascadeMemoryService:
             results.sort(key=lambda x: x["score"], reverse=True)
             return results[:top_k]
 
+        if self._degraded_memory:
+            for row in self._memory_rows.snapshot():
+                try:
+                    stored_vector = json.loads(row.get("embedding") or "null")
+                    if not stored_vector:
+                        continue
+                    score = self._cosine_similarity(query_vector, stored_vector)
+                    results.append(
+                        {
+                            "file": row.get("file_path"),
+                            "summary": row.get("summary"),
+                            "structure": json.loads(row.get("structure") or "{}"),
+                            "score": score,
+                        }
+                    )
+                except Exception as e:
+                    logger.warning(f"Error calculating similarity for degraded memory row: {e}")
+            results.sort(key=lambda x: x["score"], reverse=True)
+            return results[:top_k]
+
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -466,6 +535,12 @@ class CascadeMemoryService:
                 pooled_pg.execute("DELETE FROM ai_memory WHERE user_id = %s", (user_id,))
             except Exception as exc:
                 logger.error(f"clear_user_memories PG failed: {exc}")
+            return
+
+        if self._degraded_memory:
+            self._memory_rows.remove_matching(
+                lambda r: str(r.get("file_path") or "").startswith(f"{user_id}/")
+            )
             return
 
         with sqlite3.connect(self.db_path) as conn:

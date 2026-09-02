@@ -7,6 +7,7 @@ import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from core.degraded_mode import sqlite_fallback_allowed
 from api.dependencies import get_current_admin
 from core.config import settings
 
@@ -21,8 +22,22 @@ _lock = threading.Lock()
 
 
 def _conn() -> sqlite3.Connection:
+    # P0 (Task 9-c2): SQLite-only-by-design. In production without
+    # SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral site_actions.db file is
+    # REFUSED (CRITICAL logged once by core.degraded_mode). To keep the admin
+    # API alive (no 500s) each call gets a fresh IN-MEMORY connection: schema
+    # auto-creates, reads return empty lists, writes are per-request only.
+    if not sqlite_fallback_allowed("site_actions"):
+        conn = sqlite3.connect(":memory:", check_same_thread=False)
+        _ensure_schema(conn)
+        return conn
     os.makedirs(os.path.dirname(DB_PATH) or ".", exist_ok=True)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    _ensure_schema(conn)
+    return conn
+
+
+def _ensure_schema(conn: sqlite3.Connection) -> None:
     conn.execute("""
         CREATE TABLE IF NOT EXISTS site_actions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,8 +65,6 @@ def _conn() -> sqlite3.Connection:
         conn.execute("ALTER TABLE site_actions ADD COLUMN selector_strategy TEXT DEFAULT 'exact'")
     if "health_score" not in columns:
         conn.execute("ALTER TABLE site_actions ADD COLUMN health_score INTEGER DEFAULT 100")
-
-    return conn
 
 
 class SiteActionIn(BaseModel):

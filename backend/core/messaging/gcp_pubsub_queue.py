@@ -5,9 +5,13 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from core.degraded_mode import DEFAULT_IN_MEMORY_MAXLEN, InMemoryRing, sqlite_fallback_allowed
 from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
+
+# P0: WARN-at-most-once flag for in-memory FIFO drop events.
+_drop_warned = False
 
 try:
     from google.cloud import pubsub_v1  # type: ignore[import-untyped]
@@ -38,6 +42,9 @@ class GCPPubSubQueue:
         self.publisher = None
         self.subscriber = None
         self._memory_conn = None
+        # P0 (Task 9-c2): bounded in-process degraded queue (set when the local
+        # SQLite fallback is refused in production). NEVER durable.
+        self._memory_queue: InMemoryRing | None = None
         self.mode = "local_sqlite"
 
         if PUBSUB_AVAILABLE and self.project_id:
@@ -54,12 +61,22 @@ class GCPPubSubQueue:
                 logger.warning(f"Pub/Sub unavailable, falling back to SQLite: {exc}")
 
         if self.mode == "local_sqlite":
-            # বাংলা মন্তব্য: P2 Fix — Production-এ SQLite fallback সম্পূর্ণ নিষিদ্ধ করা হলো।
-            # এটি Cloud Run-এ restarts ও ephemeral disk-এর কারণে data loss হওয়া প্রতিরোধ করবে।
-            if os.getenv("ENV", "local").lower() in ("production", "prod"):
-                raise RuntimeError(
-                    "CRITICAL: GCP Pub/Sub environment mismatch. SQLite fallback is disabled in production to prevent data loss."
+            # P0 (Task 9-c2): the production refusal is centralised in
+            # core.degraded_mode and is NON-CRASHING — the queue degrades to a
+            # bounded in-process buffer instead of raising from __init__ (boot
+            # must never die because of the gate). Dev/test behaviour unchanged.
+            if not sqlite_fallback_allowed("pubsub_queue"):
+                self.mode = "in_memory_degraded"
+                self.db_path = None
+                self._memory_queue = InMemoryRing(maxlen=DEFAULT_IN_MEMORY_MAXLEN)
+                logger.warning(
+                    "[P0] GCPPubSubQueue degraded to a bounded IN-PROCESS queue "
+                    f"(max {DEFAULT_IN_MEMORY_MAXLEN} messages) — messages are LOST on "
+                    "restart and dropped FIFO beyond the cap. Set "
+                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
+                    "fallback, or provision GCP Pub/Sub."
                 )
+                return
             if not self.db_path:
                 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 self.db_path = os.path.join(base_dir, "data", "gcp_pubsub_queue.db")
@@ -70,6 +87,17 @@ class GCPPubSubQueue:
     @property
     def provider(self) -> str:
         return self.mode
+
+    def _warn_drop(self) -> None:
+        """P0: announce FIFO drops loudly, but at most once per process."""
+        global _drop_warned
+        if not _drop_warned:
+            _drop_warned = True
+            logger.warning(
+                "[P0] GCPPubSubQueue in-memory buffer FULL — oldest messages are being "
+                "DROPPED (FIFO). Messages will be lost until a durable queue backend "
+                "(GCP Pub/Sub) or SUPABASE_ALLOW_DB_DEGRADATION=true is configured."
+            )
 
     def _init_db(self) -> None:
         if self.db_path == ":memory:":
@@ -122,6 +150,28 @@ class GCPPubSubQueue:
             }
 
         message_id = uuid.uuid4().hex
+        if self._memory_queue is not None:
+            # P0: bounded in-process degraded mode — accept, buffer, WARN on drop.
+            if len(self._memory_queue) >= self._memory_queue._maxlen:
+                self._warn_drop()
+            self._memory_queue.append(
+                {
+                    "message_id": message_id,
+                    "task_id": task_id,
+                    "payload": payload,
+                    "published_at": now,
+                    "acked": False,
+                }
+            )
+            return {
+                "success": True,
+                "provider": self.mode,
+                "topic": self.topic_id,
+                "message_id": message_id,
+                "task_id": task_id,
+                "degraded": True,
+            }
+
         with self._get_connection() as conn:
             conn.execute(
                 """
@@ -174,6 +224,20 @@ class GCPPubSubQueue:
                     )
             return messages
 
+        if self._memory_queue is not None:
+            # P0: serve unacked messages from the bounded in-process buffer (FIFO).
+            pending = [m for m in self._memory_queue.snapshot() if not m.get("acked")]
+            return [
+                {
+                    "message_id": m["message_id"],
+                    "task_id": m["task_id"],
+                    "payload": m["payload"],
+                    "attributes": {},
+                    "published_at": m["published_at"],
+                }
+                for m in pending[:max_messages]
+            ]
+
         with self._get_connection() as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
@@ -217,6 +281,18 @@ class GCPPubSubQueue:
                 )
                 raise
 
+        if self._memory_queue is not None:
+            # P0: acking in degraded mode removes the message from the ring buffer.
+            removed = self._memory_queue.remove_matching(
+                lambda m: m.get("message_id") == message_id
+            )
+            return {
+                "success": True,
+                "provider": self.mode,
+                "message_id": message_id,
+                "acked": removed > 0,
+            }
+
         with self._get_connection() as conn:
             cursor = conn.execute(
                 "UPDATE pubsub_queue SET acked = 1 WHERE message_id = ?", (message_id,)
@@ -237,6 +313,21 @@ class GCPPubSubQueue:
                 "subscription": self.subscription_id,
                 "pending": None,
                 "acked": None,
+            }
+
+        if self._memory_queue is not None:
+            snapshot = self._memory_queue.snapshot()
+            pending = sum(1 for m in snapshot if not m.get("acked"))
+            acked = len(snapshot) - pending
+            return {
+                "provider": self.mode,
+                "db_path": None,
+                "topic": self.topic_id,
+                "subscription": self.subscription_id,
+                "pending": pending,
+                "acked": acked,
+                "total": pending + acked,
+                "degraded": True,
             }
 
         with self._get_connection() as conn:
@@ -261,6 +352,7 @@ class GCPPubSubQueue:
             self.subscriber.transport.close()
         self.publisher = None
         self.subscriber = None
+        self._memory_queue = None
         if self._memory_conn is not None:
             self._memory_conn.close()
 

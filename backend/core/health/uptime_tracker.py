@@ -7,6 +7,12 @@ health check result and computes rolling uptime percentages (24h / 7d / 30d).
 Uses a small local SQLite file so it works out of the box on Render's free
 tier without needing a Postgres migration. Safe for concurrent async access
 because each call opens/closes its own short-lived connection.
+
+P0 (Task 9-c2): this module is SQLite-only by design. In production without
+``SUPABASE_ALLOW_DB_DEGRADATION=true`` the uptime history is DISABLED loudly
+(CRITICAL logged once via core.degraded_mode): ``record_check`` becomes a
+no-op, and read helpers return "no data" (None / []) instead of ever touching
+an ephemeral file. Dev/test behaviour is unchanged.
 """
 
 from __future__ import annotations
@@ -17,6 +23,8 @@ import sqlite3
 import threading
 from datetime import datetime, timedelta
 
+from core.degraded_mode import sqlite_fallback_allowed
+
 _DB_PATH = os.environ.get(
     "UPTIME_DB_PATH",
     os.path.join(
@@ -25,6 +33,11 @@ _DB_PATH = os.environ.get(
 )
 _LOCK = threading.Lock()
 _LOGGER = logging.getLogger(__name__)
+
+
+def _sqlite_ok() -> bool:
+    """P0 gate — lazy, evaluated at first use so boot never crashes."""
+    return sqlite_fallback_allowed("uptime_tracker")
 
 
 def _connect() -> sqlite3.Connection:
@@ -55,6 +68,9 @@ def record_check(service_name: str, status: str, response_time_ms: float | None 
     however, logged with a traceback so storage incidents remain observable.
     """
     try:
+        if not _sqlite_ok():
+            # P0: uptime history disabled in production (no durable backend).
+            return
         with _LOCK, _connect() as conn:
             conn.execute(
                 "INSERT INTO uptime_checks (service_name, status, response_time_ms, checked_at) "
@@ -74,6 +90,9 @@ def record_check(service_name: str, status: str, response_time_ms: float | None 
 def get_uptime_percentage(service_name: str, hours: int) -> float | None:
     """Return % of checks that were 'healthy' in the last `hours`, or None if no data."""
     try:
+        if not _sqlite_ok():
+            # P0: no history is recorded when the SQLite fallback is refused.
+            return None
         cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
         with _connect() as conn:
             row = conn.execute(
@@ -108,6 +127,9 @@ def get_uptime_summary(service_name: str) -> dict:
 def get_history(service_name: str, hours: int = 24) -> list[dict]:
     """Return raw check history for charting (oldest first)."""
     try:
+        if not _sqlite_ok():
+            # P0: no history is recorded when the SQLite fallback is refused.
+            return []
         cutoff = (datetime.utcnow() - timedelta(hours=hours)).isoformat()
         with _connect() as conn:
             rows = conn.execute(

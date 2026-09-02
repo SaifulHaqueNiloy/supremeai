@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from core.degraded_mode import sqlite_fallback_allowed
 from core.logging_config import logger
 
 # বাংলা মন্তব্য: রেন্ডার ফ্রি টায়ারে মেমোরি সংকট এড়াতে LOW_MEMORY_MODE চেক করা হচ্ছে
@@ -25,6 +26,23 @@ def _check_module(name: str) -> bool:
 HAS_SENTENCE_TRANSFORMERS = _check_module("sentence_transformers")
 HAS_CHROMADB = _check_module("chromadb")
 HAS_QDRANT = _check_module("qdrant_client")
+
+# P0 (Task 9-c2): warn at most once per process about the disabled store.
+_degrade_warned = False
+
+
+def _warn_degraded_once() -> None:
+    """P0: announce the pass-through degraded state loudly, but only once."""
+    global _degrade_warned
+    if not _degrade_warned:
+        _degrade_warned = True
+        logger.warning(
+            "[P0] ExperienceDatabase DISABLED (pass-through): SQLite experience store "
+            "refused in production and no vector backend available — writes are DROPPED "
+            "and queries return no matches (semantic cache = cache-miss only). Set "
+            "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral fallback, or "
+            "provision Supabase pgvector."
+        )
 
 
 @dataclass
@@ -48,6 +66,27 @@ class Experience:
 class ExperienceDatabase:
     def __init__(self, db_path: str | None = None):
         import os
+
+        # P0 (Task 9-c2): this DB backs the semantic cache used by llm_gateway.
+        # When the SQLite fallback is refused in production (no explicit db_path,
+        # no SUPABASE_ALLOW_DB_DEGRADATION=true) the database becomes a
+        # PASS-THROUGH NO-OP: queries return no matches, writes no-op with a
+        # WARN — the gateway NEVER crashes and imports NEVER break. The gate is
+        # evaluated lazily here (first use), never at import time.
+        self._degraded_no_store = False
+        if db_path is None and not sqlite_fallback_allowed("experience_db"):
+            self._degraded_no_store = True
+            self.db_path = Path(":memory:")
+            self.encoder = None
+            self.chroma_collection: Any = None
+            self._chroma_initialized = True
+            self.qdrant_client: Any = None
+            self._qdrant_initialized = True
+            self.qdrant_collection = "experience"
+            self.vector_backend_degraded = True
+            self.supabase_backend: Any = None
+            _warn_degraded_once()
+            return
 
         if not db_path:
             db_path = os.getenv("EXPERIENCE_DB_PATH", "data/experience.db")
@@ -219,6 +258,10 @@ class ExperienceDatabase:
         return None
 
     def record_experience(self, exp: Experience) -> int:
+        # P0: pass-through degraded mode — writes no-op with a WARN (never crash).
+        if getattr(self, "_degraded_no_store", False):
+            _warn_degraded_once()
+            return 0
         timestamp = (
             exp.timestamp
             or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
@@ -369,6 +412,9 @@ class ExperienceDatabase:
     def find_similar(
         self, query: str, limit: int = 5, threshold: float = 0.7, user_id: str | None = None
     ) -> list[dict[str, Any]]:
+        # P0: pass-through degraded mode — "no matches" (semantic cache miss).
+        if getattr(self, "_degraded_no_store", False):
+            return []
         embedding = self._embed(query)
         if not embedding:
             return []
@@ -466,6 +512,9 @@ class ExperienceDatabase:
         return hits
 
     def get_experiences(self, limit: int = 50) -> list[Experience]:
+        # P0: pass-through degraded mode — no durable experiences to return.
+        if getattr(self, "_degraded_no_store", False):
+            return []
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -501,6 +550,11 @@ class ExperienceDatabase:
 
         import loguru
         from google.cloud import storage
+
+        # P0: pass-through degraded mode — there is no local DB file to sync.
+        if getattr(self, "_degraded_no_store", False):
+            loguru.logger.warning("[P0] ExperienceDatabase disabled — GCS sync skipped.")
+            return
 
         try:
             if str(self.db_path) == ":memory:":
