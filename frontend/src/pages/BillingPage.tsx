@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { Zap, CheckCircle2, ShieldCheck, CreditCard } from 'lucide-react';
-import { NavRail } from '../components/layout/NavRail';
+import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 
 export const BillingPage: React.FC = () => {
   const plans = [
@@ -39,9 +39,10 @@ export const BillingPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-slate-950 text-slate-100 overflow-hidden">
-      <NavRail />
-      <main className="flex-1 overflow-y-auto p-8 max-w-6xl mx-auto">
+    // বাংলা (single-frontend migration): page-level NavRail shell সরিয়ে একক shared
+    // shell-এ আনা হলো (roadmap Rule 8: no duplicate global shells)।
+    <WorkspaceLayout>
+      <main className="p-8 max-w-6xl mx-auto w-full">
         <header className="mb-10">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
@@ -115,7 +116,7 @@ export const BillingPage: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>
+    </WorkspaceLayout>
   );
 };
 
