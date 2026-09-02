@@ -98,12 +98,3 @@ def get_timing_stats() -> dict:
         "slow_count": sum(1 for d in durations if d > SLOW_REQUEST_MS),
         "slow_pct": round(sum(1 for d in durations if d > SLOW_REQUEST_MS) / n * 100, 1),
     }
-
-
-# =============================================================================
-# PART 3: TEST SUITE HEALTH
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-# FILE 8: tests/conftest.py — Shared Test Fixtures
-# -----------------------------------------------------------------------------
