@@ -22,7 +22,19 @@ logger = logging.getLogger("supremeai.worker")
 logger.info(f">>> booting SupremeAI ecosystem worker (env={os.getenv('ENV', 'production')})")
 
 REDIS_URL = os.getenv("REDIS_URL", "")
-CORE_API_URL = os.getenv("CORE_API_URL", "http://localhost:8000")
+_CORE_API_URL_RAW = os.getenv("CORE_API_URL", "")
+_ENV = os.getenv("ENV", "production").lower()
+
+if not _CORE_API_URL_RAW:
+    if _ENV not in ("local", "development", "test", "testing"):
+        logger.error(
+            "CORE_API_URL is not configured. Worker cannot reach Core API in production. "
+            "Set the CORE_API_URL environment variable (e.g. https://your-core.onrender.com)."
+        )
+    # Fallback only for local dev — never silently connect to localhost in production
+    _CORE_API_URL_RAW = "http://localhost:8000"
+
+CORE_API_URL = _CORE_API_URL_RAW
 POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "2.0"))
 WORKER_ID = f"worker-{os.getpid()}"
 

@@ -498,8 +498,8 @@ class LLMGateway:
                         cache_hit=True,
                         session_id=str(tenant_id or ""),
                     )
-                except Exception:
-                    pass
+                except Exception as exc:  # best-effort telemetry — never block cache-hit
+                    logger.warning("[LLMGateway] cache-hit telemetry record failed: %s", exc)
                 return {
                     "success": True,
                     "text": cached.response,
@@ -570,8 +570,8 @@ class LLMGateway:
                         f"[LLMGateway] adaptive exploration candidate appended: "
                         f"{_explorer.model} (score={_explorer.score})"
                     )
-        except Exception:
-            pass
+        except Exception as exc:  # best-effort adaptive routing — never block main call
+            logger.warning("[LLMGateway] adaptive routing scorer failed: %s", exc)
 
         if isinstance(prompt, list):
             messages_payload = prompt
@@ -851,8 +851,12 @@ class LLMGateway:
                                     session_id=str(tenant_id or ""),
                                     metadata={"retry_after_backoff": True},
                                 )
-                            except Exception:
-                                pass
+                            except (
+                                Exception
+                            ) as exc:  # best-effort telemetry — never block retry success
+                                logger.warning(
+                                    "[LLMGateway] retry telemetry record failed: %s", exc
+                                )
                             return {
                                 "success": True,
                                 "text": response["choices"][0]["message"]["content"],
