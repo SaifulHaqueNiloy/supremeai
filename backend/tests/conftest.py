@@ -205,6 +205,7 @@ def test_settings():
     """Test-specific settings that override production config."""
     return {
         "DATABASE_URL": _resolve_test_database_url(),
+        "SUPABASE_DATABASE_URL_POOLER": _resolve_test_database_url(),
         "REDIS_URL": "redis://localhost:6379/1",  # Use DB 1 for tests  # is_local()
         "SECRET_KEY": "test-secret-key-for-testing-only-do-not-use-in-production",
         "JWT_SECRET_KEY": "test-jwt-secret-key-for-testing-only",
@@ -281,6 +282,28 @@ async def db_engine(test_settings):
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            await conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS rules (
+                    id SERIAL PRIMARY KEY,
+                    rule_key VARCHAR(255) NOT NULL,
+                    category VARCHAR(255) NOT NULL,
+                    value TEXT NOT NULL,
+                    is_enabled BOOLEAN DEFAULT TRUE,
+                    key VARCHAR(255)
+                );
+            """)
+            )
+            await conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS skills (
+                    id SERIAL PRIMARY KEY,
+                    code TEXT NOT NULL,
+                    skill_name VARCHAR(255) NOT NULL,
+                    status VARCHAR(50) DEFAULT 'active'
+                );
+            """)
+            )
     except Exception as e:
         logger.warning(f"Database setup skipped/failed: {e}")
 
@@ -336,6 +359,7 @@ async def app(test_settings):
     # Override settings before importing app
     os.environ["TESTING"] = "true"
     os.environ["DATABASE_URL"] = test_settings["DATABASE_URL"]
+    os.environ["SUPABASE_DATABASE_URL_POOLER"] = test_settings["SUPABASE_DATABASE_URL_POOLER"]
     os.environ["REDIS_URL"] = test_settings["REDIS_URL"]
     os.environ["SECRET_KEY"] = test_settings["SECRET_KEY"]
     os.environ["JWT_SECRET_KEY"] = test_settings["JWT_SECRET_KEY"]

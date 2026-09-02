@@ -154,9 +154,8 @@ async def initialize_independent_services(app):
                 )
             )
             if is_critical:
-                logger.critical(
-                    "🔥 PRODUCTION REDIS UNAVAILABLE — running in degraded mode. Redis-dependent features will fallback to memory or fail."
-                )
+                logger.critical("🚨 PRODUCTION REDIS UNAVAILABLE - blocking startup!")
+                raise RuntimeError("Redis is required for production but unavailable.") from e
             else:
                 logger.warning(
                     "⚠️ Redis is unavailable but marked as optional. Running safely without Redis."
@@ -195,6 +194,8 @@ async def initialize_independent_services(app):
     for idx, result in enumerate(init_results):
         if isinstance(result, BaseException):
             logger.error(f"Startup initialization failed for component {idx}: {result}")
+            if isinstance(result, RuntimeError):
+                raise result
 
     # Sync DB-backed Model Registries after DB is initialized
     if app.state.subsystem_status.get("db") != "down":

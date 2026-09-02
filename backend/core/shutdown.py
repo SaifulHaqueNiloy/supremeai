@@ -87,10 +87,9 @@ async def shutdown_services(app):
 
     # Database pool cleanup — single close with proper state tracking
     try:
-        pool = await get_db_pool()
-        if pool:
-            await pool.close()
-            logger.info("✅ Database connection pool closed successfully.")
+        from core.pgbouncer_pool import dispose_db_pool
+
+        await dispose_db_pool()
     except Exception as e:
         logger.error(f"Error closing DB pool: {e}")
         error_event_bus.emit(
