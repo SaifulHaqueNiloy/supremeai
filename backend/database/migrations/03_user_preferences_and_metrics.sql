@@ -26,3 +26,7 @@ CREATE TABLE IF NOT EXISTS usage_metrics (
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_user_preferences_updated_at ON user_preferences(updated_at);
 CREATE INDEX IF NOT EXISTS idx_usage_metrics_date ON usage_metrics(date DESC);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+ALTER TABLE usage_metrics ENABLE ROW LEVEL SECURITY;

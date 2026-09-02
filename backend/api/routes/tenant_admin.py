@@ -20,8 +20,15 @@ from api.dependencies import get_current_admin
 from core.logging_config import logger
 
 router = APIRouter(
-    prefix="/admin/tenant-limits",
+    prefix="/admin-api/tenant-limits",
     tags=["tenant-admin"],
+    dependencies=[Depends(get_current_admin)],
+)
+
+# Secondary router for /admin-api/tenants endpoints
+tenants_router = APIRouter(
+    prefix="/admin-api/tenants",
+    tags=["tenants"],
     dependencies=[Depends(get_current_admin)],
 )
 
@@ -349,7 +356,9 @@ async def get_usage(tenant_id: str):
     }
 
 
+@router.post("/{tenant_id}/reset")
 @router.post("/{tenant_id}/reset-usage")
+@tenants_router.post("/{tenant_id}/reset")
 async def reset_usage(tenant_id: str):
     """Reset today's request/token counters for a tenant (Redis)."""
     try:
@@ -388,3 +397,7 @@ async def reset_usage(tenant_id: str):
 async def get_tier_defaults():
     """Return the default limits for each billing tier."""
     return {"status": "success", "tiers": TIER_DEFAULTS}
+
+
+# Include secondary router for full compatibility
+router.include_router(tenants_router)

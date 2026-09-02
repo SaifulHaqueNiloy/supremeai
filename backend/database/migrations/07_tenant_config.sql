@@ -28,3 +28,7 @@ CREATE TABLE IF NOT EXISTS tenant_usage (
 
 CREATE INDEX IF NOT EXISTS idx_tenant_limits_tier ON tenant_limits(billing_tier);
 CREATE INDEX IF NOT EXISTS idx_tenant_usage_tenant ON tenant_usage(tenant_id);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE tenant_limits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tenant_usage ENABLE ROW LEVEL SECURITY;

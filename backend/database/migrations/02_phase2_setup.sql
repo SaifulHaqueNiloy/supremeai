@@ -53,3 +53,9 @@ CREATE TABLE IF NOT EXISTS audit_logs_2026_06 PARTITION OF audit_logs
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_dynamic_skills_status ON dynamic_skills(status);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE tools_registry ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dynamic_skills ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE audit_logs_2026_06 ENABLE ROW LEVEL SECURITY;

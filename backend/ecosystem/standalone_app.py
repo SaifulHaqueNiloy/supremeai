@@ -186,7 +186,15 @@ app.add_middleware(
     allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "apikey",
+        "X-Ecosystem-Token",
+    ],
     expose_headers=["*"],
 )
 

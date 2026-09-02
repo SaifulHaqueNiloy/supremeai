@@ -34,3 +34,8 @@ CREATE TABLE IF NOT EXISTS feature_flags (
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_github_repos_stars ON github_repos(stars DESC);
 CREATE INDEX IF NOT EXISTS idx_system_config_category ON system_config(category);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE github_repos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE system_config ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feature_flags ENABLE ROW LEVEL SECURITY;
