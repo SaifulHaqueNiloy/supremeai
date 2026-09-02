@@ -50,10 +50,22 @@ export const clearAuthToken = (): void => {
     try {
       localStorage.removeItem('supremeai_auth_token');
       localStorage.removeItem('supreme_admin_jwt');
+      localStorage.removeItem('adminToken'); // বাংলা: legacy duplicate key — migration sweep
     } catch (e) {
       // বাংলা: localStorage অনুপস্থিত (incognito / SSR) — নীরবে বাদ দেওয়া।
       console.warn("Failed to clear local storage", e);
     }
+  }
+  // বাংলা (single-frontend migration, roadmap Phase 2): টোকেন মুছলেই store status রিসেট
+  // হতে হবে — নাহলে ProtectedRoute পুরোনো authStore.status='loggedIn' দেখে guarded page
+  // দেখাতে থাকে (token/store desync বাগ)। Dynamic import ব্যবহার হচ্ছে circular
+  // dependency এড়াতে (authStore এই মডিউলকে statically import করে)।
+  if (typeof window !== 'undefined') {
+    import('../store/authStore')
+      .then(({ clearCanonicalSession }) => clearCanonicalSession())
+      .catch(() => {
+        // বাংলা: authStore লোড ব্যর্থ হলেও token পরিষ্কার হয়ে গেছে — নীরবে এগোনো যথেষ্ট।
+      });
   }
 };
 
