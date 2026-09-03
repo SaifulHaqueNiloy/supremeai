@@ -8,7 +8,7 @@ import { eventBus, Events, type EventCallback } from '../lib/componentEventBus';
 
 interface UseEventBusReturn {
   emit: typeof eventBus.emit;
-  subscribe: typeof eventBus.subscribe;
+  subscribe: (event: keyof typeof Events | string, callback: EventCallback) => () => void;
   getListenerCount: typeof eventBus.getListenerCount;
 }
 

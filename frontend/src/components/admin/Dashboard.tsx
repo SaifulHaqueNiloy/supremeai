@@ -10,8 +10,8 @@ export default function Dashboard() {
 
   const dashRps = metrics?.requests_per_second ?? 0;
   const safeCpu = metrics?.cpu_percent ?? metrics?.cpu_usage_percent ?? Math.min(100, Math.round((dashRps / 50) * 100));
-  const activeIncidents = threats?.filter(t => t.severity === 'high' || t.severity === 'critical') || [];
-  const activeDeployments = ciReports?.filter(c => c.status === 'in_progress') || [];
+  const activeIncidents = threats?.findings?.filter(t => t.severity === 'high' || t.severity === 'critical') || [];
+  const activeDeployments = ciReports?.filter(c => c.status === 'running') || [];
 
   return (
     <div className="flex-1 flex flex-col min-h-screen bg-surface-0 overflow-y-auto">
@@ -111,7 +111,7 @@ export default function Dashboard() {
                     <div key={idx} className="flex items-start gap-4 p-3 rounded-lg surface-2 border border-border">
                       <div className="mt-0.5"><Activity size={16} className="text-secondary" /></div>
                       <div>
-                        <p className="text-sm text-text font-medium">{e.description || e.name}</p>
+                        <p className="text-sm text-text font-medium">{e.message || e.source}</p>
                         <p className="text-xs text-secondary mt-1 font-mono">{new Date(e.timestamp).toLocaleTimeString()}</p>
                       </div>
                     </div>

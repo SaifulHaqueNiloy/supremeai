@@ -19,7 +19,7 @@ export function VisualRulesBuilder() {
   const saveRules = useSaveRules();
 
   const [localRules, setLocalRules] = useState<Rule[] | null>(null);
-  const rules = localRules ?? fetchedRules ?? [];
+  const rules: Rule[] = localRules ?? (fetchedRules as Rule[] | undefined) ?? [];
 
   const updateRules = (next: Rule[]) => {
     setLocalRules(next);          // optimistic UI update

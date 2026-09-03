@@ -107,9 +107,10 @@ class DistributedConnectionManager:
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
         self.redis = None
-        self.pubsub = None
-
-        # New DoS tracking
+  self.pubsub = None
+  self._redis_listener_task: asyncio.Task | None = None
+  
+  # New DoS tracking
         self._ip_connections: dict[str, int] = defaultdict(int)
         self._auth_attempts: dict[str, list[float]] = defaultdict(list)
         self._last_activity: dict[int, float] = {}  # id(ws) -> float
@@ -196,7 +197,9 @@ class DistributedConnectionManager:
             self.redis = aioredis.from_url(redis_url, decode_responses=True)
             self.pubsub = self.redis.pubsub()
             await self.pubsub.subscribe("ws_broadcast")
-            asyncio.create_task(self._listen_to_redis())
+            from core.utils.background_tasks import track_task
+
+            self._redis_listener_task = track_task(asyncio.create_task(self._listen_to_redis()))
         return self.redis
 
     async def _listen_to_redis(self):

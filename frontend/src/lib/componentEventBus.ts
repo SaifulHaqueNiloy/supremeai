@@ -81,8 +81,8 @@ export type EventDataMap = {
 // ════════════════════════════════════════════════════════════════════
 
 class ComponentEventBus {
-  private listeners = new Map<EventType, Set<EventCallback>>();
-  private eventHistory: Array<{ type: EventType; data: any; timestamp: number }> = [];
+  private listeners = new Map<string, Set<EventCallback>>();
+  private eventHistory: Array<{ type: string; data: any; timestamp: number }> = [];
   private maxHistorySize = 100;
   
   /**
@@ -91,7 +91,7 @@ class ComponentEventBus {
    * @param callback - Function to call when event fires
    * @returns Unsubscribe function (call to stop listening)
    */
-  on<T = any>(event: EventType, callback: EventCallback<T>): () => void {
+  on<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
@@ -109,7 +109,11 @@ class ComponentEventBus {
    * @param callback - Function to call when event fires (will be removed after first call)
    * @returns Unsubscribe function
    */
-  once<T = any>(event: EventType, callback: EventCallback<T>): () => void {
+  subscribe<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
+    return this.on(event, callback);
+  }
+
+  once<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
     const wrapper: EventCallback<T> = (data) => {
       callback(data);
       this.off(event, wrapper);
@@ -122,7 +126,7 @@ class ComponentEventBus {
    * @param event - The event type
    * @param callback - The specific callback to remove
    */
-  off<T = any>(event: EventType, callback: EventCallback<T>): void {
+  off<T = any>(event: EventType | string, callback: EventCallback<T>): void {
     this.listeners.get(event)?.delete(callback);
   }
   
@@ -131,7 +135,7 @@ class ComponentEventBus {
    * @param event - The event type to emit
    * @param data - Optional data to pass to subscribers
    */
-  emit<T = any>(event: EventType, data?: T): void {
+  emit<T = any>(event: EventType | string, data?: T): void {
     // Store in history for debugging
     this.eventHistory.push({ type: event, data, timestamp: Date.now() });
     if (this.eventHistory.length > this.maxHistorySize) {
@@ -183,7 +187,7 @@ class ComponentEventBus {
    * Get the number of listeners for a specific event
    * @param event - The event type to check
    */
-  getListenerCount(event: EventType): number {
+  getListenerCount(event: EventType | string): number {
     return this.listeners.get(event)?.size || 0;
   }
   
@@ -329,7 +333,7 @@ import { useEffect, useRef, useCallback } from 'react';
  * ```
  */
 export function useComponentEvent<T = any>(
-  event: EventType, 
+  event: EventType | string, 
   callback: EventCallback<T>,
   deps: React.DependencyList = []
 ) {
@@ -426,7 +430,7 @@ export const Events = {
   BROWSER_ERROR: 'browser:error',
   IFRAME_CONSOLE_ERROR: 'iframe:console_error', // For AI self-healing
 
-  // ─── EVOLUTION & LEARNING EVENTS ─────────────────────────
+  // ──��� EVOLUTION & LEARNING EVENTS ─────────────────────────
   SKILL_AUTO_CREATED: 'evolution:skill_auto_created',
   SKILL_APPROVAL_NEEDED: 'evolution:skill_approval_needed',
   PATTERN_DETECTED: 'evolution:pattern_detected',

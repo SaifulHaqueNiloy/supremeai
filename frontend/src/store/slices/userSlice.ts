@@ -1,1 +1,1 @@
-export const createUserSlice = (_set: unknown) => ({ user: null });
+export const createUserSlice = (..._args: unknown[]) => ({ user: null });

@@ -46,7 +46,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       id: crypto.randomUUID(),
       role: 'user',
       content: input.trim(),
-      timestamp: new Date().toISOString(),
+      timestamp: Date.now(),
       project_id: projectId,
     };
 
@@ -93,7 +93,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
               id: assistantId,
               role: 'assistant',
               content: assistantContent,
-              timestamp: new Date().toISOString(),
+              timestamp: Date.now(),
               project_id: projectId,
             };
 
@@ -113,7 +113,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           id: assistantId,
           role: 'assistant',
           content: assistantContent || 'No response received.',
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
           project_id: projectId,
         };
 
@@ -148,7 +148,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           id: crypto.randomUUID(),
           role: 'assistant',
           content: data.response || data.message || 'No response received.',
-          timestamp: new Date().toISOString(),
+          timestamp: Date.now(),
           project_id: projectId,
           metadata: { model: data.model, tokens: data.tokens },
         };

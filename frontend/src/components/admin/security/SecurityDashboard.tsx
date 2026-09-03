@@ -171,7 +171,7 @@ export function SecurityDashboard() {
             {lastSecurityScan?.issues && lastSecurityScan.issues.length > 0 ? (
               lastSecurityScan.issues.map((issue, idx) => (
                 <div key={idx} className="flex items-start gap-2">
-                  <span className={issue.severity === 'critical' ? 'text-rose-500' : issue.severity === 'warning' ? 'text-amber-400' : 'text-emerald-400'}>
+                  <span className={issue.severity === 'critical' ? 'text-rose-500' : (issue.severity === 'high' || issue.severity === 'medium') ? 'text-amber-400' : 'text-emerald-400'}>
                     [{issue.severity.toUpperCase()}]
                   </span>
                   <span>{issue.message}</span>

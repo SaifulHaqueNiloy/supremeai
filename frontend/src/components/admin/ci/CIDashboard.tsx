@@ -194,6 +194,7 @@ interface CISummaryData {
   insights: CIInsight[];
   trends?: {
     available: boolean;
+    total_analyzed?: number;
     recent_success_rate?: number;
     overall_success_rate?: number;
     trend_direction?: string;

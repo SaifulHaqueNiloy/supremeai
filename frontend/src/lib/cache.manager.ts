@@ -24,7 +24,7 @@ async function compress(data: string): Promise<string> {
   try {
     if (typeof CompressionStream !== 'undefined') {
       const encoder = new TextEncoder();
-      const compressed = new Blob([encoder.encode(data)]).stream()
+      const compressed = new Blob([data]).stream()
         .pipeThrough(new CompressionStream('gzip'));
       const reader = compressed.getReader();
       const chunks: Uint8Array[] = [];
@@ -60,12 +60,12 @@ async function decompress(data: string): Promise<string> {
   try {
     if (typeof DecompressionStream !== 'undefined' && data.length > 256) {
       const binary = atob(data);
-      const bytes = new Uint8Array(binary.length);
+      const compressedBytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
+        compressedBytes[i] = binary.charCodeAt(i);
       }
       
-      const decompressed = new Blob([bytes]).stream()
+      const decompressed = new Blob([compressedBytes]).stream()
         .pipeThrough(new DecompressionStream('gzip'));
       const reader = decompressed.getReader();
       const chunks: Uint8Array[] = [];
@@ -76,8 +76,14 @@ async function decompress(data: string): Promise<string> {
         chunks.push(value);
       }
       
-      const decoder = new TextDecoder();
-      return decoder.decode(await new Blob(chunks).text());
+      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+      const bytes = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.length;
+      }
+      return new TextDecoder().decode(bytes);
     }
   } catch (e) {
     console.warn('Decompression failed, returning raw:', e);
@@ -140,7 +146,7 @@ export async function cachedFetch<T>(
 ): Promise<T> {
   const {
     ttl = CACHE_TTL.MEDIUM,
-    compress = true,
+    compress: compressionEnabled = true,
   } = options;
 
   const fullKey = `superai:${cacheKey}`;
@@ -168,7 +174,7 @@ export async function cachedFetch<T>(
     
     // ✅ Store COMPRESSED data in cache (saves memory!)
     const serialized = JSON.stringify(data);
-    const compressed = await compress(serialized);
+    const compressed = compressionEnabled ? await compress(serialized) : serialized;
     await redis.set(fullKey, compressed, { ex: ttl });
     
     cacheStats.misses++;
@@ -189,9 +195,16 @@ export async function batchGet<T>(keys: string[]): Promise<(T | null)[]> {
   keys.forEach(key => pipeline.get(`superai:${key}`));
   
   const results = await pipeline.exec();
-  return Promise.all(results.map(async result => 
-    result ? JSON.parse(await decompress(result as string)) : null  // ✅ Decompress batch results
-  ));
+  return Promise.all(results.map(async result => {
+    if (!result) return null;
+    try {
+      return JSON.parse(await decompress(String(result))) as T;
+    } catch (error) {
+      cacheStats.errors++;
+      console.warn('[cache] Ignoring corrupted batch entry:', error);
+      return null;
+    }
+  }));
 }
 
 // ✅ NEW: Prefetch commonly accessed keys (call on app startup)

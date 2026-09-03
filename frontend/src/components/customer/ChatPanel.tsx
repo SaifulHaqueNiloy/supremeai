@@ -32,26 +32,28 @@ export function ChatPanel({ messages, input, onInputChange, onSend, loading, onS
         <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950/30 text-emerald-400 border border-emerald-900/30 font-mono">ONLINE</span>
       </div>
       <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-4">
-        {messages.map(msg => {
+        {messages.map((msg, index) => {
           // বাংলা মন্তব্য: sender এর টাইপ 'user' বা 'User' যেকোনো কেস এ আসলেই সঠিকভাবে হ্যান্ডেল করার জন্য toLowerCase() চেক যোগ করা হলো
-          const isUser = msg.sender?.toLowerCase() === 'user';
+          const isUser = (msg.sender ?? msg.role)?.toLowerCase() === 'user';
+          const bubbleText = msg.text ?? msg.content ?? '';
+          const bubbleTimestamp = msg.timestamp != null ? String(msg.timestamp) : undefined;
+          const bubbleKey = msg.id ?? `msg_${index}`;
           return (
-            <div key={msg.id} className="group relative">
+            <div key={bubbleKey} className="group relative">
               <UnifiedChatBubble
-                text={msg.text}
+                text={bubbleText}
                 sender={isUser ? 'user' : 'system'}
-                timestamp={msg.timestamp}
-                action={msg.action}
+                timestamp={bubbleTimestamp}
                 onSaveToProject={onSaveToProject}
               />
               {/* Copy button on hover */}
               {!isUser && (
                 <button
-                  onClick={() => handleCopy(msg.text, String(msg.id))}
+                  onClick={() => handleCopy(bubbleText, String(bubbleKey))}
                   className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
                   title="Copy message"
                 >
-                  {copiedId === String(msg.id) ? 'Copied!' : 'Copy'}
+                  {copiedId === String(bubbleKey) ? 'Copied!' : 'Copy'}
                 </button>
               )}
             </div>

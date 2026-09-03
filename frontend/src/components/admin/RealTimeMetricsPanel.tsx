@@ -175,7 +175,7 @@ export function RealTimeMetricsPanel() {
                 color: isSimple ? '#0f172a' : '#e2e8f0',
               }}
               labelFormatter={(ts) =>
-                new Date(ts).toLocaleTimeString([], {
+                new Date(ts as string | number).toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                   second: '2-digit',

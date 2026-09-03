@@ -48,6 +48,7 @@ interface ServiceConfig {
   description: string;
   critical: boolean;
   icon: React.ReactNode;
+  category: string;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -261,7 +262,7 @@ async function fetchServiceHealth(serviceName: string): Promise<ServiceHealth | 
 // ══════════════════════════════════════════════════════════════════════════════
 
 interface ServiceHealthMonitorProps {
-  autoRefresh?: boolean;       // Auto-refresh interval (seconds)
+  autoRefresh?: number;        // Auto-refresh interval (seconds)
   showDetails?: boolean;       // Show detailed panel
   compact?: boolean;           // Compact mode for sidebars
   onServiceClick?: (service: ServiceConfig) => void;
