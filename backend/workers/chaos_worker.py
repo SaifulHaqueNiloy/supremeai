@@ -82,12 +82,16 @@ class NightlyChaosAuditor:
     def __init__(self) -> None:
         self.db = get_firestore_db()
         self.gate_ref = self.db.collection("deploy_gate").document("status") if self.db else None
-        self.target_url = os.getenv("STAGING_REPLICA_URL", "http://localhost:8000")  # is_local()
+        self.target_url = os.getenv("STAGING_REPLICA_URL", "").rstrip("/")
+        if not self.target_url:
+            logger.warning("Chaos auditor disabled: STAGING_REPLICA_URL is not configured")
         self.circuit_breaker = CircuitBreaker(failure_threshold=3, cooldown_seconds=300)
         self.stats = {"total_audits": 0, "passed": 0, "failed": 0}
 
     @with_error_bus("chaos_audit_run")
     async def execute_audit_sequence(self) -> bool:
+        if not self.target_url:
+            return False
         start_time = time.perf_counter()
         self.stats["total_audits"] += 1
 

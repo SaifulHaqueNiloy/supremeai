@@ -59,7 +59,7 @@ interface AIBrowserAction {
 // ════════════════════════════════════════════════════════════════════
 
 const DEFAULT_BOOKMARKS: Bookmark[] = [
-  { id: 'b2', url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || 'http://localhost:8080', title: 'Main Backend', category: 'service', icon: <Database size={12} /> },
+  { id: 'b2', url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || '', title: 'Main Backend', category: 'service', icon: <Database size={12} /> },
   { id: 'b4', url: 'https://dash.cloudflare.com', title: 'Cloudflare Dashboard', category: 'tool', icon: <Cloud size={12} /> },
   { id: 'b5', url: 'https://dashboard.render.com', title: 'Render Dashboard', category: 'tool', icon: <Monitor size={12} /> },
   { id: 'b6', url: 'https://github.com/SaifulHaqueNiloy/supremeai', title: 'GitHub Repository', category: 'tool', icon: <GitBranch size={12} /> },

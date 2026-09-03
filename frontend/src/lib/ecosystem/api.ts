@@ -117,7 +117,11 @@ export function clearSession(): void {
 // ---------------------------------------------------------------------------
 
 const DEFAULT_BACKEND_URL =
-  process.env.NEXT_PUBLIC_ECOSYSTEM_API_URL || 'http://localhost:8010'
+  import.meta.env.VITE_ECOSYSTEM_API_URL ||
+  import.meta.env.VITE_API_BASE ||
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  ''
 
 export function getBackendUrl(): string {
   if (typeof window === 'undefined') return DEFAULT_BACKEND_URL

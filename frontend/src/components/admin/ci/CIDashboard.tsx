@@ -540,7 +540,7 @@ export function CIDashboard({
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
-      const url = apiUrl || `${process.env.NEXT_PUBLIC_API_URL || ''}/api/ci/latest-summary`;
+      const url = apiUrl || `${import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || ''}/api/ci/latest-summary`;
       const response = await fetch(url);
       
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -561,7 +561,7 @@ export function CIDashboard({
   
   // WebSocket connection for real-time updates
   useEffect(() => {
-    const wsEndpoint = wsUrl || process.env.NEXT_PUBLIC_DASHBOARD_WS_URL;
+    const wsEndpoint = wsUrl || import.meta.env.VITE_DASHBOARD_WS_URL;
     
     if (!wsEndpoint) {
       // Fallback to polling
