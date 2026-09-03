@@ -6,11 +6,11 @@ import socket
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
@@ -34,11 +34,11 @@ class AutomationSessionRequest(BaseModel):
 
 
 class BrowserActionRequest(BaseModel):
-    session_id: str
-    action: str
-    url: str | None = None
-    selector: str | None = None
-    value: str | None = None
+    session_id: str = Field(min_length=1, max_length=128)
+    action: Literal["navigate", "click", "fill", "type", "screenshot", "content", "extract"]
+    url: str | None = Field(default=None, max_length=2048)
+    selector: str | None = Field(default=None, min_length=1, max_length=512)
+    value: str | None = Field(default=None, max_length=20_000)
     full_page: bool = False
 
 
