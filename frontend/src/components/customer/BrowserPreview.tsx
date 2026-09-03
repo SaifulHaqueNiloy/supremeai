@@ -3,9 +3,9 @@
  * Features: Device viewport switcher, CORS proxy, landscape mode
  */
 
-import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, RotateCcw, Maximize, ExternalLink } from 'lucide-react';
-import { getApiBaseUrl } from '../../utils/api';
+import React, { useEffect, useState } from 'react';
+import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw } from 'lucide-react';
+import { browserService } from '../../services/browserService';
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
 
@@ -56,26 +56,94 @@ interface BrowserPreviewProps {
 
 
 
-export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
+export function BrowserPreview({
+  url = '',
+  html,
+  showDeviceToolbar = true,
+  onUrlChange,
+}: BrowserPreviewProps) {
   const [currentUrl, setCurrentUrl] = useState(url);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [device, setDevice] = useState<DevicePreset>('desktop');
   const [isLandscape, setIsLandscape] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [automationError, setAutomationError] = useState<string | null>(null);
+  const [automationStatus, setAutomationStatus] = useState<string | null>(null);
+  const [pageContent, setPageContent] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const runBrowserAction = async (action: 'content' | 'screenshot') => {
+    if (!sessionId) {
+      setAutomationError('Start a browser session by navigating to a URL first.');
+      return;
+    }
+
     setIsLoading(true);
-    setReloadKey(value => value + 1);
-    window.setTimeout(() => setIsLoading(false), 250);
+    setAutomationError(null);
+    setAutomationStatus(null);
+    try {
+      const result = await browserService.execute(sessionId, {
+        action,
+        ...(action === 'screenshot' ? { full_page: true } : {}),
+      });
+      if (action === 'content') {
+        setPageContent(result.content ?? 'No readable page content was returned.');
+      } else {
+        setAutomationStatus('Screenshot captured successfully.');
+      }
+    } catch (error) {
+      setAutomationError(error instanceof Error ? error.message : 'Browser action failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const proxied = (src: string): string => {
-    if (/^https?:\/\//i.test(src)) {
-      const token = localStorage.getItem('token') || '';
-      return `${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(src)}&token=${token}`;
+  const closeBrowserSession = async () => {
+    if (!sessionId) return;
+    setIsLoading(true);
+    try {
+      await browserService.closeSession(sessionId);
+      setSessionId(null);
+      setPageContent(null);
+      setAutomationStatus('Browser session closed.');
+    } catch (error) {
+      setAutomationError(error instanceof Error ? error.message : 'Could not close browser session');
+    } finally {
+      setIsLoading(false);
     }
-    return src;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        void browserService.closeSession(sessionId).catch(() => undefined);
+      }
+    };
+  }, [sessionId]);
+
+  useEffect(() => {
+    setCurrentUrl(url);
+  }, [url]);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setAutomationError(null);
+    setReloadKey(value => value + 1);
+
+    if (!html && /^https?:\/\//i.test(currentUrl)) {
+      try {
+        const session = sessionId
+          ? { session_id: sessionId }
+          : await browserService.createSession();
+        setSessionId(session.session_id);
+        await browserService.execute(session.session_id, { action: 'navigate', url: currentUrl });
+      } catch (error) {
+        setAutomationError(error instanceof Error ? error.message : 'Browser session unavailable');
+      }
+    }
+
+    setIsLoading(false);
   };
 
   return (
@@ -85,7 +153,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
           🌐 Browser Preview
         </h2>
         <div className="flex items-center gap-2">
-          <div className="flex bg-slate-900 rounded border border-slate-700/50 p-1">
+          {showDeviceToolbar && <div className="flex bg-slate-900 rounded border border-slate-700/50 p-1">
             {(Object.keys(DEVICE_PRESETS) as DevicePreset[]).map((key) => (
               <button
                 key={key}
@@ -104,7 +172,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
             >
               <RotateCcw size={14} />
             </button>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -115,7 +183,10 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
             <input
               type="text"
               value={currentUrl}
-              onChange={e => setCurrentUrl(e.target.value)}
+              onChange={e => {
+                setCurrentUrl(e.target.value);
+                onUrlChange?.(e.target.value);
+              }}
               className="flex-1 bg-transparent text-xs text-white outline-none font-mono"
             />
           </div>
@@ -126,9 +197,46 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
             <RefreshCw size={12} />
           </button>
         </form>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void runBrowserAction('content')}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-cyan-500/60 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Read page
+          </button>
+          <button
+            type="button"
+            onClick={() => void runBrowserAction('screenshot')}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-cyan-500/60 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Capture screenshot
+          </button>
+          <button
+            type="button"
+            onClick={() => void closeBrowserSession()}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-red-900/70 px-2 py-1 text-[11px] text-red-300 transition-colors hover:border-red-500/70 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Close session
+          </button>
+          {automationStatus && <span role="status" className="text-[11px] text-emerald-300">{automationStatus}</span>}
+        </div>
+        {pageContent && (
+          <pre className="mt-2 max-h-24 overflow-auto rounded border border-slate-800 bg-slate-950 px-2 py-1 text-[10px] leading-relaxed text-slate-400">
+            {pageContent}
+          </pre>
+        )}
       </div>
 
       <div className="flex-1 relative bg-slate-950 overflow-auto flex justify-center items-start pt-8 pb-8">
+        {automationError && (
+          <div role="alert" className="absolute top-3 left-3 right-3 z-20 rounded border border-red-500/40 bg-red-950/80 px-3 py-2 text-xs text-red-200">
+            {automationError}
+          </div>
+        )}
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
@@ -149,7 +257,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
         >
           <iframe
             key={reloadKey}
-            src={html ? undefined : proxied(currentUrl)}
+            src={html ? undefined : currentUrl || 'about:blank'}
             srcDoc={html || undefined}
             title="Preview"
             className="w-full h-full border-none"
@@ -165,6 +273,5 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
 // Icon imports (assuming Lucide React)
 function Globe(props: any) { return null; }
 function ArrowRight(props: any) { return null; }
-function RefreshCw(props: any) { return null; }
 function Loader2(props: any) { return null; }
 function Wifi(props: any) { return null; }

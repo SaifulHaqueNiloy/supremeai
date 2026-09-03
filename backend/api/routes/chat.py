@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
+
+from core.orchestration.conversation_orchestrator import (
+    ConversationCommand,
+    get_conversation_orchestrator,
+)
 
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
@@ -21,8 +26,73 @@ router = APIRouter(
 
 
 class ChatPayload(BaseModel):
-    prompt: str
+    prompt: str = Field(min_length=1, max_length=20_000)
     model_name: str = "gemini-2.5-pro"
+
+
+class OrchestratedChatPayload(BaseModel):
+    prompt: str = Field(min_length=1, max_length=20_000)
+    project_id: str | None = Field(default=None, max_length=128)
+    conversation_id: str | None = Field(default=None, max_length=128)
+    session_id: str | None = Field(default=None, max_length=128)
+    url: str | None = Field(default=None, max_length=2048)
+    title: str | None = Field(default=None, max_length=256)
+    artifact_type: str | None = Field(default=None, max_length=32)
+    content: str | None = Field(default=None, max_length=500_000)
+    confirmation: bool = False
+
+
+@router.post("/orchestrate")
+async def orchestrate_chat(
+    payload: OrchestratedChatPayload,
+    user: dict = Depends(get_current_user_token),
+):
+    """Canonical governed hub for conversational capability dispatch."""
+    principal = user.get("tenant_id") or user.get("sub")
+    if not principal:
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
+    result = await get_conversation_orchestrator().dispatch(ConversationCommand(
+        prompt=payload.prompt, user_id=str(user.get("sub") or principal),
+        tenant_id=str(principal), role=str(user.get("role", "user")),
+        project_id=payload.project_id, conversation_id=payload.conversation_id,
+        confirmation=payload.confirmation,
+        metadata={"session_id": payload.session_id, "url": payload.url,
+                   "title": payload.title, "artifact_type": payload.artifact_type,
+                   "content": payload.content},
+    ))
+    status_code = 202 if result.status == "confirmation_required" else 200
+    if result.status == "denied":
+        status_code = 403
+    return JSONResponse(status_code=status_code, content={
+        "success": result.status == "completed",
+        "status": result.status,
+        "correlation_id": result.correlation_id,
+        "capability": result.capability,
+        "response": result.response,
+        "requires_confirmation": result.requires_confirmation,
+        "error": result.error,
+        "events": result.events,
+    })
+
+
+@router.get("/capabilities")
+async def list_chat_capabilities():
+    """Discover connected spokes without exposing implementation details."""
+    return {"success": True, "capabilities": get_conversation_orchestrator().capabilities()}
+
+
+@router.get("/tasks/{task_id}")
+async def get_chat_task(task_id: str, user: dict = Depends(get_current_user_token)):
+    """Read durable task state through Chat with strict tenant ownership checks."""
+    from ecosystem.task_engine import TaskEngine
+
+    tenant_id = user.get("tenant_id") or user.get("sub")
+    if not tenant_id:
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
+    task = TaskEngine().get(task_id)
+    if not task or task.tenant_id != str(tenant_id) or task.created_by != str(user.get("sub")):
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True, "task": task.model_dump(mode="json")}
 
 
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
@@ -294,7 +364,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",  # nginx বাফারিং রোধে
-            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প্রয়োজন
+            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প��রয���োজন
         },
     )
 
