@@ -67,13 +67,13 @@ SUPREMEAI CONTROL PLANE
   Capability registry • Resource registry
   Provider registry • Cost/quota model
   HITL • Audit • Evidence
-       ┌──┴─────────────┐
-       ▼                ▼
-   Supabase           Upstash
- durable state      cache/queue/locks
-       └───────┬────────────┘
-               ▼
-      EXECUTION ROUTER
+       ├───┴─────────────┬───────────────────────────┐
+       ▼                 ▼                           ▼
+   Supabase            Upstash              MCP CONTROL TOWER
+ durable state       cache/queue/locks    (Node 4: Tool & Universal Data Bridge)
+       └────────┬────────┘                           │
+                ▼                                    │
+       EXECUTION ROUTER ◄────────────────────────────┘
        │       │       │
        ▼       ▼       ▼
      Edge    Core    Async/Batch
@@ -185,6 +185,32 @@ request → wake → admit task → return job ID → async execution elsewhere
 Cold start becomes UX latency, not a system failure.
 
 ---
+
+---
+
+## 3.3.1 Render Node 4 — MCP Control Tower (Zero-Cost Universal Tool & Context Bridge)
+
+SupremeAI operates a dedicated, isolated Render Free microservice node (supremeai-mcp-tower / Node 4) implementing the **Model Context Protocol (MCP)** specification.
+
+### Purpose and Value
+
+- **Universal Context Bridge:** Aggregates live metadata, state, and resources across 17+ integrated cloud services (Render, Supabase, Firebase Admin SDK, Infisical, GitHub, Upstash Redis, Cloudflare, Resend, Stripe, etc.) through standardized MCP resources (mcp://context/*).
+- **Standardized Tool Surface:** Exposes tools (mcp://tools/*) to client agents, IDE extensions, and the core planner without hardcoded bindings or sensitive token leaks to thin clients.
+- **Resource & Quota Protection:** Maintains per-tool rate limiting, caching, and circuit breaking before hitting downstream APIs.
+- **Zero-Cost Keepalive Integration:** Enrolled in the Cloudflare Edge Worker cron (*/8 * * * *) and GitHub keepalive pipeline alongside the primary, worker, and scraper nodes, ensuring 24/7 readiness at  infrastructure cost.
+
+### MCP Control Tower should own
+
+- Unified MCP server protocol endpoints (/mcp/v1, /health, /sse, /tools/call)
+- Dynamic service capability discovery and tool introspection
+- Secure credential delegation (mediated strictly through Infisical vault)
+- Standardized execution telemetry for tool invocations
+
+### MCP Control Tower should not own
+
+- Long-running heavy batch workloads (delegated to Async/Worker Node)
+- Durable relational database storage (delegated to Supabase pgvector)
+- Direct user-facing web frontend rendering (delegated to Firebase/Cloudflare)
 
 ## 3.4 Supabase — Durable Intelligence Memory
 
@@ -467,12 +493,12 @@ Do not blindly retry.
 | Class | Example | Preferred surface |
 |---|---|---|
 | A: Edge | cache, auth pre-check, dedup | Cloudflare |
-| B: Core | planning, policy, task admission | Render |
-| C: Async I/O | webhooks, external waits | queue + lightweight worker |
-| D: Repository-native | test/build/security | GitHub Actions |
-| E: Research/batch | benchmark/model experiment | Kaggle/Colab where permitted |
-| F: Heavy production | GPU, video, large inference | authorized external/paid compute |
-
+| B: Core | planning, policy, task admission | Render (Primary Node) |
+| C: Async I/O | webhooks, external waits | queue + lightweight worker (Worker Node) |
+| D: Tool & Context | unified 17+ service MCP context & tools | Render Node 4 (supremeai-mcp-tower) |
+| E: Repository-native | test/build/security | GitHub Actions |
+| F: Research/batch | benchmark/model experiment | Kaggle/Colab where permitted |
+| G: Heavy production | GPU, video, large inference | authorized external/paid compute |
 ---
 
 # 6. Cost- and Quota-Aware Router
