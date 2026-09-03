@@ -100,5 +100,5 @@ async def auto_save_session_memory(session_id: str, task_type: str = "general") 
             logger.info(f"Auto-saved session memory: {session_id}")
         else:
             logger.warning(f"Auto-save session memory non-critical notice: {result.get('error')}")
-    except Exception as exc:
+    except Exception:
         logger.exception("Auto-save session memory failed for %s", session_id)

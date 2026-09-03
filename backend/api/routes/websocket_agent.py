@@ -149,7 +149,9 @@ class DistributedConnectionManager:
         self.pubsub = None
         self.redis = None
 
-        sockets = [socket for connections in self.active_connections.values() for socket in connections]
+        sockets = [
+            socket for connections in self.active_connections.values() for socket in connections
+        ]
         for socket in sockets:
             try:
                 await socket.close(code=1001, reason="Server shutting down")
@@ -242,7 +244,9 @@ class DistributedConnectionManager:
             redis_url = None
 
         if not redis_url or "<your-redis-url>" in redis_url:
-            logger.warning("[WS] Redis is not configured; continuing without cross-instance broadcast")
+            logger.warning(
+                "[WS] Redis is not configured; continuing without cross-instance broadcast"
+            )
             return None
 
         try:
@@ -257,7 +261,9 @@ class DistributedConnectionManager:
 
             self._redis_listener_task = track_task(asyncio.create_task(self._listen_to_redis()))
         except Exception as exc:
-            logger.warning(f"[WS] Redis unavailable; continuing locally: {type(exc).__name__}: {exc}")
+            logger.warning(
+                f"[WS] Redis unavailable; continuing locally: {type(exc).__name__}: {exc}"
+            )
             self.redis = None
             self.pubsub = None
         return self.redis
@@ -348,7 +354,9 @@ class DistributedConnectionManager:
     async def broadcast_to_user(self, user_id: str, content: str):
         redis = await self._get_redis()
         if redis is not None:
-            await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
+            await redis.publish(
+                "ws_broadcast", json.dumps({"user_id": user_id, "content": content})
+            )
             return
 
         for websocket in list(self.active_connections.get(user_id, [])):
