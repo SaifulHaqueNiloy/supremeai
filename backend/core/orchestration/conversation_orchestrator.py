@@ -95,8 +95,16 @@ class ConversationOrchestrator:
         return "chat"
 
     async def dispatch(self, command: ConversationCommand) -> OrchestrationResult:
-        correlation_id = f"corr_{uuid.uuid4().hex}"
-        capability_name = self.classify(command.prompt)
+        correlation_id = str(command.metadata.get("correlation_id") or f"corr_{uuid.uuid4().hex}")
+        capability_name = str(command.metadata.get("capability") or self.classify(command.prompt))
+        chain = list(command.metadata.get("capability_chain", []))
+        if capability_name in chain or len(chain) >= 5:
+            return OrchestrationResult(
+                correlation_id, "failed", capability_name,
+                error="Capability delegation loop or depth limit",
+                events=[{"type": "orchestration.rejected", "correlation_id": correlation_id}],
+            )
+        command = replace(command, metadata={**command.metadata, "capability_chain": [*chain, capability_name]})
         capability = self._capabilities.get(capability_name)
         event = {"type": "orchestration.started", "correlation_id": correlation_id,
                  "conversation_id": command.conversation_id, "tenant_id": command.tenant_id,
@@ -172,19 +180,19 @@ def get_conversation_orchestrator() -> ConversationOrchestrator:
     global _orchestrator
     if _orchestrator is None:
         _orchestrator = ConversationOrchestrator()
-        _orchestrator.register(Capability("chat", "low", _chat_handler))
-        _orchestrator.register(Capability("memory", "low", _memory_handler))
-        _orchestrator.register(Capability("browser", "medium", _browser_handler))
+        _orchestrator.register(Capability("chat", "low", _chat_handler, description="LLM response generation"))
+        _orchestrator.register(Capability("memory", "low", _memory_handler, description="Tenant-scoped memory recall"))
+        _orchestrator.register(Capability("browser", "medium", _browser_handler, description="Owner-scoped browser navigation"))
         from core.orchestration.capability_adapters import (
             admin_handler, artifact_handler, evolution_handler, external_handler,
             realtime_handler, task_handler,
         )
-        _orchestrator.register(Capability("task", "medium", task_handler))
-        _orchestrator.register(Capability("realtime", "low", realtime_handler))
-        _orchestrator.register(Capability("artifact", "medium", artifact_handler))
-        _orchestrator.register(Capability("external", "high", external_handler, admin_only=True))
-        _orchestrator.register(Capability("admin", "high", admin_handler, admin_only=True))
-        _orchestrator.register(Capability("evolution", "high", evolution_handler, admin_only=True, destructive=True))
+        _orchestrator.register(Capability("task", "medium", task_handler, description="Durable task submission"))
+        _orchestrator.register(Capability("realtime", "low", realtime_handler, description="Shared event publication"))
+        _orchestrator.register(Capability("artifact", "medium", artifact_handler, description="Scoped artifact handoff"))
+        _orchestrator.register(Capability("external", "high", external_handler, admin_only=True, description="Governed external tools"))
+        _orchestrator.register(Capability("admin", "high", admin_handler, admin_only=True, description="Privileged administration"))
+        _orchestrator.register(Capability("evolution", "high", evolution_handler, admin_only=True, destructive=True, description="Approved evolution workflow"))
     return _orchestrator
 
 

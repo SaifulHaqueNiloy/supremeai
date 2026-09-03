@@ -18,6 +18,9 @@ async def _status(command: ConversationCommand, spoke: str, message: str) -> dic
         "message": message,
         "tenant_id": command.tenant_id,
         "project_id": command.project_id,
+        "conversation_id": command.conversation_id,
+        "capability_chain": command.metadata.get("capability_chain", []),
+        "handoff_ready": True,
     }
 
 
