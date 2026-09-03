@@ -135,9 +135,23 @@ class TaskSubmission(BaseModel):
 
 
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
-    # The worker contract is intentionally capability-neutral. Domain executors can
-    # consume this payload later without changing the frontend lifecycle contract.
-    return {"message": "Task accepted by worker", "goal": payload["goal"], "metadata": payload.get("metadata", {})}
+    """Execute the first real capability while preserving a stable task contract."""
+    metadata = payload.get("metadata", {})
+    capability = metadata.get("capability", "acknowledge")
+    if capability == "scrape":
+        import httpx
+
+        scraper_url = os.getenv("SCRAPER_URL", "http://scraper:8082").rstrip("/")
+        url = metadata.get("url")
+        if not isinstance(url, str) or not url:
+            raise ValueError("metadata.url is required for scrape tasks")
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            response = await client.post(f"{scraper_url}/scrape", json={"url": url})
+            response.raise_for_status()
+            return {"capability": capability, "data": response.json()}
+    if capability != "acknowledge":
+        raise ValueError(f"Unsupported worker capability: {capability}")
+    return {"capability": capability, "goal": payload["goal"], "metadata": metadata}
 
 
 @app.post("/tasks")
