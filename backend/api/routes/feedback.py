@@ -33,15 +33,24 @@ _feedback_loop = FeedbackLoop()
 
 
 def _ensure_db() -> None:
+    global DB_PATH
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     except asyncio.CancelledError:
         raise
     except Exception as e:
-        import logging
-
-        logging.getLogger(__name__).exception(f"Silenced error: {e}")
-    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        logger.warning(
+            f"Could not initialize feedback DB at {DB_PATH}: {e}. Falling back to tempdir."
+        )
+        fallback = Path(tempfile.gettempdir()) / "supremeai_feedback"
+        try:
+            fallback.mkdir(parents=True, exist_ok=True)
+            DB_PATH = fallback / "feedback.db"
+            conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+        except Exception as fallback_exc:
+            logger.error(f"Fallback feedback DB initialization failed: {fallback_exc}")
+            return
     try:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS feedback_events (

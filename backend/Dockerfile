@@ -24,24 +24,19 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PORT=8080
 
-# Copy only the virtualenv from builder
-COPY --from=builder /app/.venv /app/.venv
+# Create non-root user for security compliance & update perl-base
+RUN apt-get update && apt-get install -y --only-upgrade perl-base && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system supremeai && adduser --system supremeai --ingroup supremeai
+
+# Copy only the virtualenv from builder with correct ownership
+COPY --from=builder --chown=supremeai:supremeai /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
 
-# Copy application code
-COPY . .
+# Copy application code with non-root ownership
+COPY --chown=supremeai:supremeai . .
 
-# বাংলা মন্তব্য (DEP-AUDIT): playwright + Chromium আগে এখানে ইনস্টল হতো
-# (`playwright install --with-deps chromium`), যা production image-এ কয়েকশ MB
-# বাড়াতো। এখন playwright শুধু optional `browser` group-এ আছে — standalone
-# scraper service/image (backend/services/scraper) সেটি ইনস্টল করে। Core API
-# image আর browser runtime বহন করে না।
-
-# Create and use non-root user for security compliance
-# Update perl-base to fix CVE-2026-13221, CVE-2026-42496, CVE-2026-8376
-RUN apt-get update && apt-get install -y --only-upgrade perl-base && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system supremeai && adduser --system supremeai --ingroup supremeai \
-    && chown -R supremeai:supremeai /app
+# Ensure data directory exists with non-root ownership
+RUN mkdir -p /app/data && chown -R supremeai:supremeai /app/data
 
 USER supremeai
 

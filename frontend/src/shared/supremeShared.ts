@@ -28,9 +28,9 @@ function getEnvVar(key: string, fallback?: string): string {
 }
 
 const getProdBackendUrl = () => {
-  const url = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND;
+  const url = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || import.meta.env.VITE_USER_BACKEND;
   if (import.meta.env.PROD && !url) {
-    throw new Error('❌ VITE_BACKEND_URL or VITE_USER_BACKEND must be set in production.');
+    throw new Error('❌ VITE_BACKEND_URL or VITE_API_URL must be set in production.');
   }
   return url || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000');
 };
