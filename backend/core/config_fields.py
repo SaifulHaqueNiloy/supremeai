@@ -54,6 +54,10 @@ class SettingsFieldsMixin:
     # CORS origins property is implemented dynamically below to support validation.
 
     # 🔧 DYNAMIC: Empty default — must be explicitly configured in production
+    cors_origins: str | list[str] = Field(
+        default=[],
+        validation_alias="CORS_ORIGINS",
+    )
     user_cors_origins: str | list[str] = Field(
         default=[],  # 🔧 CHANGED: No hardcoded domains! Set USER_CORS_ORIGINS in env.
         validation_alias="USER_CORS_ORIGINS",
