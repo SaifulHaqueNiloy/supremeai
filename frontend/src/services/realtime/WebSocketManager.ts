@@ -1,4 +1,4 @@
-import { BaseWebSocketManager, BaseWebSocketManagerOptions } from '@supremeai/shared-services';
+import { BaseWebSocketManager, type BaseWebSocketManagerOptions } from '@supremeai/shared-services';
 
 export interface WebSocketManagerHandlers {
   onOpen?: (event: Event) => void;

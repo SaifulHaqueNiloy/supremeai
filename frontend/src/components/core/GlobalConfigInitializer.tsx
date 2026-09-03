@@ -37,7 +37,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
     const applyConfig = (data: unknown) => {
       if (cancelled) return;
       const cfg = data as { maxConcurrency?: number; features?: { selfHealing?: boolean } } | null;
-      setConfig(data);
+      if (cfg) setConfig({ ...cfg, features: { selfHealing: false, costGuard: false, ...cfg.features } });
       if (cfg?.maxConcurrency) {
         setApiConcurrency(cfg.maxConcurrency);
       }

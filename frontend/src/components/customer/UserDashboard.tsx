@@ -15,7 +15,7 @@ export const UserDashboard: React.FC = () => {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-semibold text-text tracking-tight">
-              Good morning{user?.username ? `, ${user.username}` : ''}.
+              Good morning{user?.name ? `, ${user.name}` : ''}.
             </h1>
             <p className="text-secondary mt-1">What would you like to build today?</p>
           </div>

@@ -38,13 +38,13 @@ export const fetchSkillCatalog = async (): Promise<CatalogResponse> => {
       timestamp: Date.now(),
     });
     
-    return response.data;
+    return response;
   } catch (error) {
     if (error instanceof ApiError && error.status === 429) {
       // Rate limited - notify user
       eventBus.emit(Events.RATE_LIMIT_HIT, {
         service: 'skills_catalog',
-        retryAfter: error.headers?.['retry-after'],
+        retryAfter: undefined,
         timestamp: Date.now(),
       });
     }

@@ -189,14 +189,14 @@ export const ChatInterface: React.FC = () => {
             <UnifiedChatBubble
               text={msg.content}
               sender={msg.role === 'user' ? 'user' : 'system'}
-              timestamp={new Date(msg.timestamp).toLocaleTimeString()}
+              timestamp={new Date(msg.timestamp ?? Date.now()).toLocaleTimeString()}
             />
             
             {/* S11: Branch Button */}
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <BranchButton
                 conversationId="current_conv"
-                messageId={msg.id.toString()}
+                messageId={msg.id ?? `message-${msg.timestamp ?? Date.now()}`}
                 onBranchCreated={(newId) => { void newId; }}
               />
             </div>
@@ -219,8 +219,7 @@ export const ChatInterface: React.FC = () => {
         <div className="flex gap-2">
           {/* S4: Image Upload */}
           <ImageUploadButton
-            conversationId="current_conv"
-            onUploadComplete={(attachment) => { void attachment; }}
+            onUpload={(attachment) => { void attachment; }}
           />
 
           <textarea
@@ -243,11 +242,21 @@ export const ChatInterface: React.FC = () => {
       </div>
 
       {/* Dialogs & Menus */}
-      <ShareDialog />
-      <ChatSearchDialog />
+      {shareDialogOpen && shareConversationId && (
+        <ShareDialog
+          conversationId={shareConversationId}
+          isOpen={shareDialogOpen}
+          onClose={closeShareDialog}
+        />
+      )}
+      <ChatSearchDialog isOpen={searchDialogOpen} onClose={closeSearchDialog} />
       <SlashCommandMenu
+        isOpen={slashMenuOpen}
+        position={slashPosition}
+        filter={slashFilter}
+        onClose={closeSlashMenu}
         onSelect={(cmd) => {
-          setInput(prev => prev.replace(/(^|\s)\/\S*$/, `$1${cmd.trigger} `));
+          setInput(prev => prev.replace(/(^|\s)\/\S*$/, `$1${cmd} `));
           closeSlashMenu();
         }}
       />
