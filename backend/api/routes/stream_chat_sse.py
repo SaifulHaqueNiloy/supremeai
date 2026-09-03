@@ -133,12 +133,15 @@ class SafeSSEGenerator:
         yield self._make_event("connected", {"user_id": self.user_id})
 
         try:
-            # Try streaming path first
-            streaming_worked = await self._try_streaming_path()
+            # Try streaming path first. The streaming path is an async generator,
+            # so consume it directly instead of awaiting the generator object.
+            async for event in self._try_streaming_path():
+                yield event
 
-            if not streaming_worked:
-                # Fallback to non-streaming
-                await self._fallback_path()
+            if self.state == StreamState.ERROR:
+                # Fallback to non-streaming only after the stream path fails.
+                async for event in self._fallback_path():
+                    yield event
 
             # Success - emit done
             self.state = StreamState.DONE
