@@ -22,9 +22,6 @@ async def safe_fetch(url: str, **kwargs: Any) -> httpx.Response:
         return await client.get(url, **kwargs)
 
 
-async_client = httpx.AsyncClient(timeout=DEFAULT_TIMEOUT)
-
-
 def create_async_client(
     timeout: float | httpx.Timeout = DEFAULT_TIMEOUT,
     **kwargs: Any,
