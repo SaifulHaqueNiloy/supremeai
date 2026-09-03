@@ -22,6 +22,11 @@ from core.security.secure_credential_store import SecureCredentialStore
 from core.browser_session_manager import session_manager
 
 
+router = APIRouter(
+    prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
+)
+
+
 class AutomationSessionRequest(BaseModel):
     """Create an isolated browser context for the authenticated caller."""
 
@@ -108,9 +113,6 @@ def get_credential_store() -> SecureCredentialStore:
     return SecureCredentialStore()
 
 
-router = APIRouter(
-    prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
-)
 BROWSER_STATUS: dict[str, Any] = {"browsing": False, "currentUrl": "about:blank"}
 RECENT_ACTIVITIES: list[dict[str, Any]] = []
 CREDENTIALS: list[dict[str, Any]] = []
