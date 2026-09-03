@@ -43,6 +43,7 @@ async def test_dispatch_non_admin_request():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"user-agent", b"test-agent"),
@@ -75,6 +76,7 @@ async def test_dispatch_admin_request_no_previous_context():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"cf-ipcountry", b"US"),
@@ -120,6 +122,7 @@ async def test_dispatch_admin_request_matching_context():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"cf-ipcountry", b"US"),
@@ -388,6 +391,7 @@ async def test_dispatch_with_redis_disabled():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"cf-ipcountry", b"US"),
@@ -423,6 +427,7 @@ async def test_dispatch_with_redis_client_none():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"cf-ipcountry", b"US"),
@@ -459,6 +464,7 @@ async def test_dispatch_admin_no_sub_attribute():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"user-agent", b"test-agent"),
@@ -487,6 +493,7 @@ async def test_dispatch_admin_user_none():
             "type": "http",
             "method": "GET",
             "path": "/test",
+            "client": ("192.168.1.100", 12345),
             "headers": [
                 (b"x-forwarded-for", b"192.168.1.100"),
                 (b"user-agent", b"test-agent"),

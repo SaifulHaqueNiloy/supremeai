@@ -22,6 +22,10 @@ def _make_request(ip: str, country: str, ua: str, fingerprint: str, admin_id: st
         "x-device-fingerprint": fingerprint,
     }
     req.state = SimpleNamespace(user={"sub": admin_id})
+    # বাংলা মন্তব্য: utils/client_ip.get_client_ip() production Request.client.host
+    # আশা করে (proxy-aware IP extraction); সরাসরি এক্সপোজারে trusted_proxy_count=0
+    # হওয়ায় raw_host-ই ফেরত আসে, তাই এখানে .client-কে সরাসরি ইনপুট `ip`-এ সেট করা হচ্ছে।
+    req.client = SimpleNamespace(host=ip)
     return req
 
 
