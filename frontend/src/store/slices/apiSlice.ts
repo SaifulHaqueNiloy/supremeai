@@ -1,1 +1,1 @@
-export const createApiSlice = (_set: unknown) => ({ api: null });
+export const createApiSlice = (..._args: unknown[]) => ({ api: null });

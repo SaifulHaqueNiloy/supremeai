@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, RotateCcw, Maximize } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, RotateCcw, Maximize, ExternalLink } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
@@ -62,6 +62,13 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [device, setDevice] = useState<DevicePreset>('desktop');
   const [isLandscape, setIsLandscape] = useState(false);
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setReloadKey(value => value + 1);
+    window.setTimeout(() => setIsLoading(false), 250);
+  };
 
   const proxied = (src: string): string => {
     if (/^https?:\/\//i.test(src)) {

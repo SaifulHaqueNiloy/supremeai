@@ -13,14 +13,19 @@
 // ═══════════════════════════════════════════════════════════════
 
 export interface UnifiedChatMessage {
-  id: string;
+  id?: string;
   role: ChatRole;
   content: string;
-  timestamp: number; // Standardized field name (was 'ts' in some places)
+  timestamp?: number | string;
+  /** Legacy aliases accepted at UI boundaries while callers migrate. */
+  sender?: string;
+  text?: string;
+  action?: string;
+  project_id?: string;
   metadata?: MessageMetadata;
 }
 
-export type ChatRole = 'user' | 'assistant' | 'system' | 'tool' | 'function';
+export type ChatRole = 'user' | 'assistant' | 'ai' | 'system' | 'tool' | 'function';
 
 export interface MessageMetadata {
   model?: string;

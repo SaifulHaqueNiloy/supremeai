@@ -212,7 +212,7 @@ export const getApiBaseUrl = (path?: string): string => {
     return '';
   }
 
-  // Firebase, Vercel ও বাকি সব হোস্টে সরাসরি backend URL — runtime context অনুযায়ী
+  // Firebase, Vercel ও বাকি সব হোস্টে সরাসর��� backend URL — runtime context অনুযায়ী
 
   // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসররি backend URL — runtime context অনুযায়ী
   return getBackendUrl(path);
@@ -244,6 +244,8 @@ export async function checkBackendHealth(): Promise<{
     };
   }
 }
+
+export const getWsBaseUrl = (): string => getWebSocketBaseUrl();
 
 export const getWebSocketBaseUrl = (): string => {
   // বাংলা মন্তব্য: এক্সপ্লিসিট override সবার আগে

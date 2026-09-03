@@ -4,8 +4,8 @@ import { ChatPanel } from './ChatPanel';
 import type { ChatMessage } from '../../types';
 
 const baseMessages: ChatMessage[] = [
-  { id: '1', sender: 'user', text: 'Hello AI', timestamp: '10:00 AM' },
-  { id: '2', sender: 'ai', text: 'Hi user!', timestamp: '10:01 AM' },
+  { id: '1', role: 'user', content: 'Hello AI', sender: 'user', text: 'Hello AI', timestamp: '10:00 AM' },
+  { id: '2', role: 'assistant', content: 'Hi user!', sender: 'ai', text: 'Hi user!', timestamp: '10:01 AM' },
 ];
 
 describe('ChatPanel', () => {
