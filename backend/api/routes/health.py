@@ -130,5 +130,6 @@ async def _check_redis() -> str:
             await cache._redis.ping()
             return "healthy"
         return "not_configured"
-    except Exception as e:
-        return f"unhealthy: {str(e)}"
+    except Exception:
+        logger.warning("Redis health check failed", exc_info=True)
+        return "unhealthy"
