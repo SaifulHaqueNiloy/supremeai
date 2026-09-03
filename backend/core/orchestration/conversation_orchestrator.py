@@ -111,12 +111,16 @@ class ConversationOrchestrator:
                  "project_id": command.project_id, "user_id": command.user_id,
                  "capability": capability_name}
         if not capability or not capability.is_available:
+            event.update(type="orchestration.unavailable", status="unavailable")
             return OrchestrationResult(correlation_id, "unavailable", capability_name,
                                        error="Capability unavailable", events=[event])
         if (capability.admin_only or capability.destructive) and command.role != "admin":
+            event.update(type="orchestration.denied", status="denied", reason="admin_required")
             return OrchestrationResult(correlation_id, "denied", capability_name,
                                        error="Admin permission required", events=[event])
         if capability.destructive and not command.confirmation:
+            event.update(type="orchestration.approval_required", status="blocked",
+                         approval_scope=capability.name)
             return OrchestrationResult(correlation_id, "confirmation_required", capability_name,
                                        requires_confirmation=True, events=[event])
         decision = await self.policy.evaluate(capability.name,
@@ -125,6 +129,7 @@ class ConversationOrchestrator:
              "role": command.role},
             risk=capability.risk, action="conversation.dispatch")
         if not decision.allowed:
+            event.update(type="orchestration.denied", status="denied", reason=decision.reason)
             return OrchestrationResult(correlation_id, "denied", capability_name,
                                        error=decision.reason, events=[event])
         try:
