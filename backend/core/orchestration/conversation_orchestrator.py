@@ -39,6 +39,13 @@ class Capability:
     handler: Callable[[ConversationCommand], Awaitable[Any]]
     admin_only: bool = False
     destructive: bool = False
+    # A registered handler is not automatically proof of a live dependency.
+    availability: str = "connected"
+    description: str = ""
+
+    @property
+    def is_available(self) -> bool:
+        return self.availability == "connected"
 
 
 class ConversationOrchestrator:
@@ -52,8 +59,19 @@ class ConversationOrchestrator:
         self._capabilities[capability.name] = capability
         self.policy.register_tool(capability.name, capability.risk)
 
-    def capabilities(self) -> list[dict[str, str]]:
-        return [{"name": c.name, "risk": c.risk} for c in self._capabilities.values()]
+    def capabilities(self) -> list[dict[str, str | bool]]:
+        return [
+            {
+                "name": c.name,
+                "risk": c.risk,
+                "availability": c.availability,
+                "connected": c.is_available,
+                "admin_only": c.admin_only,
+                "destructive": c.destructive,
+                "description": c.description,
+            }
+            for c in self._capabilities.values()
+        ]
 
     @staticmethod
     def classify(prompt: str) -> str:
@@ -83,8 +101,8 @@ class ConversationOrchestrator:
         event = {"type": "orchestration.started", "correlation_id": correlation_id,
                  "conversation_id": command.conversation_id, "tenant_id": command.tenant_id,
                  "user_id": command.user_id, "capability": capability_name}
-        if not capability:
-            return OrchestrationResult(correlation_id, "failed", capability_name,
+        if not capability or not capability.is_available:
+            return OrchestrationResult(correlation_id, "unavailable", capability_name,
                                        error="Capability unavailable", events=[event])
         if (capability.admin_only or capability.destructive) and command.role != "admin":
             return OrchestrationResult(correlation_id, "denied", capability_name,
