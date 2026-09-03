@@ -112,6 +112,7 @@ class DistributedConnectionManager:
 
         # New DoS tracking
         self._ip_connections: dict[str, int] = defaultdict(int)
+        self._connection_ips: dict[int, str] = {}
         self._auth_attempts: dict[str, list[float]] = defaultdict(list)
         self._last_activity: dict[int, float] = {}  # id(ws) -> float
 
@@ -155,6 +156,16 @@ class DistributedConnectionManager:
     def _total_connections(self) -> int:
         return sum(len(conns) for conns in self.active_connections.values())
 
+    def _remove_connection_tracking(self, websocket: WebSocket) -> None:
+        """Remove all bookkeeping for a socket exactly once."""
+        socket_id = id(websocket)
+        ip_address = self._connection_ips.pop(socket_id, None)
+        if ip_address is not None:
+            self._ip_connections[ip_address] = max(0, self._ip_connections[ip_address] - 1)
+            if self._ip_connections[ip_address] == 0:
+                self._ip_connections.pop(ip_address, None)
+        self._last_activity.pop(socket_id, None)
+
     async def _cleanup_stale_connections(self):
         import time
 
@@ -171,8 +182,7 @@ class DistributedConnectionManager:
                                 await ws.close(code=1001)
                             except Exception as e:
                                 logger.warning(f"Ignored error: {e}")
-                            if id(ws) in self._last_activity:
-                                del self._last_activity[id(ws)]
+                            self._remove_connection_tracking(ws)
                         else:
                             active.append(ws)
                     if active:
@@ -256,8 +266,10 @@ class DistributedConnectionManager:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
 
+        socket_id = id(websocket)
         self._ip_connections[ip_address] += 1
-        self._last_activity[id(websocket)] = time.time()
+        self._connection_ips[socket_id] = ip_address
+        self._last_activity[socket_id] = time.time()
 
         await self._get_redis()
         await self.start_background_tasks()
@@ -274,9 +286,7 @@ class DistributedConnectionManager:
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
 
-        self._ip_connections[ip_address] -= 1
-        if id(websocket) in self._last_activity:
-            del self._last_activity[id(websocket)]
+        self._remove_connection_tracking(websocket)
 
         logger.info(f"🔴 [WS] Client Disconnected: {user_id}")
 
