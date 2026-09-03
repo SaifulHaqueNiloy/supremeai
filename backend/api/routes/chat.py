@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from core.orchestration.conversation_orchestrator import (
@@ -34,24 +34,31 @@ class OrchestratedChatPayload(BaseModel):
     prompt: str = Field(min_length=1, max_length=20_000)
     project_id: str | None = Field(default=None, max_length=128)
     conversation_id: str | None = Field(default=None, max_length=128)
+    session_id: str | None = Field(default=None, max_length=128)
+    url: str | None = Field(default=None, max_length=2048)
     confirmation: bool = False
 
 
 @router.post("/orchestrate")
-async def orchestrate_chat(payload: OrchestratedChatPayload, db=Depends(get_tenant_db)):
+async def orchestrate_chat(
+    payload: OrchestratedChatPayload,
+    user: dict = Depends(get_current_user_token),
+):
     """Canonical governed hub for conversational capability dispatch."""
-    principal = getattr(db, "tenant_id", None)
+    principal = user.get("tenant_id") or user.get("sub")
     if not principal:
         raise HTTPException(status_code=401, detail="Authenticated tenant required")
     result = await get_conversation_orchestrator().dispatch(ConversationCommand(
-        prompt=payload.prompt, user_id=str(principal), tenant_id=str(principal),
+        prompt=payload.prompt, user_id=str(user.get("sub") or principal),
+        tenant_id=str(principal), role=str(user.get("role", "user")),
         project_id=payload.project_id, conversation_id=payload.conversation_id,
         confirmation=payload.confirmation,
+        metadata={"session_id": payload.session_id, "url": payload.url},
     ))
     status_code = 202 if result.status == "confirmation_required" else 200
     if result.status == "denied":
         status_code = 403
-    return {
+    return JSONResponse(status_code=status_code, content={
         "success": result.status == "completed",
         "status": result.status,
         "correlation_id": result.correlation_id,
@@ -60,7 +67,7 @@ async def orchestrate_chat(payload: OrchestratedChatPayload, db=Depends(get_tena
         "requires_confirmation": result.requires_confirmation,
         "error": result.error,
         "events": result.events,
-    }
+    })
 
 
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
