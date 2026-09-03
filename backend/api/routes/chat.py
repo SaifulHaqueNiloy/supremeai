@@ -70,6 +70,12 @@ async def orchestrate_chat(
     })
 
 
+@router.get("/capabilities")
+async def list_chat_capabilities():
+    """Discover connected spokes without exposing implementation details."""
+    return {"success": True, "capabilities": get_conversation_orchestrator().capabilities()}
+
+
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
 @router.post("/get_completion")
 async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_tenant_db)):
