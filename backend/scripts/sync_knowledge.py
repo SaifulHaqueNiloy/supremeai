@@ -6,8 +6,9 @@ from pathlib import Path
 backend_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_dir))
 
-from core.logger import get_logger
-
+# FIX (import): 'core.logger' module does not exist; canonical logger lives in
+# monitoring.logging (core.logging is only a deprecation shim re-exporting it).
+from monitoring.logging import get_logger
 from services.memory_service import CascadeMemoryService
 
 logger = get_logger("knowledge_sync")

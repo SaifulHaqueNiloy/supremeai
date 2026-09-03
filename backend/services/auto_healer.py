@@ -605,7 +605,9 @@ class AutoHealer:
             # কপি — core.intelligent_cache-এ MEMLEAK-002 বাউন্ডেড-LRU ফিক্স
             # ও predictive cache engine যোগ হয়েছিল কিন্তু এই একমাত্র importer
             # সেটা কখনো পায়নি। canonical মডিউল থেকে import করা হলো।
-            from backend.core.intelligent_cache import get_cache
+            # FIX (import): 'backend.core.*' prefix never resolves at runtime
+            # (process runs from backend/ cwd). Canonical module is core.intelligent_cache.
+            from core.intelligent_cache import get_cache
 
             get_cache()
 

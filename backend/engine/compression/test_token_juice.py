@@ -4,7 +4,7 @@ import json
 
 import pytest
 
-from backend.engine.compression.token_juice import TokenJuice
+from engine.compression.token_juice import TokenJuice
 
 
 @pytest.fixture

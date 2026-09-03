@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 import time
 
 import httpx
@@ -15,13 +16,22 @@ router = APIRouter(prefix="/ws", tags=["Voice Engine Stream"])
 
 
 class VoiceConnectionManager:
+    # FIX (DoS): connection cap — unbounded list previously let memory grow
+    # without limit (Render free tier has 512MB). Matches websocket_agent.py policy.
+    MAX_CONNECTIONS = int(os.getenv("WS_MAX_CONNECTIONS", "50"))
+
     def __init__(self):
         self.active_connections: list[WebSocket] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> bool:
+        if len(self.active_connections) >= self.MAX_CONNECTIONS:
+            await websocket.close(code=1013, reason="Too many connections")
+            logger.warning(f"🛡️ [WS] Voice connection rejected: cap {self.MAX_CONNECTIONS} reached")
+            return False
         await websocket.accept()
         self.active_connections.append(websocket)
         logger.info("🟢 [WS] Voice Client Connected to SupremeAI Nexus.")
+        return True
 
     def disconnect(self, websocket: WebSocket):
         if websocket in self.active_connections:
@@ -124,7 +134,9 @@ async def websocket_voice_endpoint(
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
-    await manager.connect(websocket)
+    connected = await manager.connect(websocket)
+    if not connected:
+        return
 
     # Store audio chunks in memory
     audio_buffer = bytearray()
