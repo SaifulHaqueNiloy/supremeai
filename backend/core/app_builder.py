@@ -288,7 +288,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         return [v] if isinstance(v, str) else list(v)
 
     origins = list(
-        set(_ensure_list(settings.user_cors_origins) + _ensure_list(settings.admin_cors_origins))
+        set(
+            _ensure_list(getattr(settings, "cors_origins", []))
+            + _ensure_list(settings.user_cors_origins)
+            + _ensure_list(settings.admin_cors_origins)
+        )
     )
 
     # C-03 Fix: If origin is wildcard, credentials must not be allowed
