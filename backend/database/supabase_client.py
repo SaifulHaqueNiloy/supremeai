@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import inspect
 import os
 import time
 from collections.abc import Callable
@@ -23,7 +24,40 @@ from core.config import settings
 
 
 def _supabase_retry_decorator(func: Callable) -> Callable:
-    """Decorator to retry Supabase operations with exponential backoff and consolidated logging."""
+    """Retry sync and async Supabase operations without blocking async workers."""
+
+    if inspect.iscoroutinefunction(func):
+
+        @functools.wraps(func)
+        async def async_wrapper(self, *args, **kwargs):
+            has_any_client = bool(self.client) or bool(getattr(self, "service_client", None))
+            if not has_any_client and func.__name__ not in (
+                "__init__", "_derive_supabase_url", "bootstrap_schema",
+                "get_bootstrap_statements", "_is_schema_cache_error",
+                "_execute_response_with_retry",
+            ):
+                return None
+            for attempt in range(3):
+                try:
+                    return await func(self, *args, **kwargs)
+                except Exception as error:
+                    if attempt == 2:
+                        logger.warning(
+                            f"Supabase operation '{func.__name__}' failed after 3 retries: {error}"
+                        )
+                        if func.__name__.startswith("get_"):
+                            return None
+                        if func.__name__.startswith("is_"):
+                            return False
+                        return None
+                    delay = 2**attempt
+                    logger.warning(
+                        f"Supabase operation '{func.__name__}' failed: {error}. Retrying in {delay}s..."
+                    )
+                    await asyncio.sleep(delay)
+            return None
+
+        return async_wrapper
 
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -1069,7 +1103,7 @@ class SupabaseDB:
         client = self.service_client
         if not client:
             return None
-        # বাংলা মন্তব্য: যদি এন্ট্রিতে 'event' কী না থাকে, তবে পুরো এন্ট্রিকে 'event' ফিল্ডে র‍্যাপ করা হচ্ছে
+        # বাংলা মন্তব্���: যদি এন্ট্রিতে 'event' কী না থাকে, তবে পুরো এন্ট্রিকে 'event' ফিল্ডে র‍্যাপ করা হচ্ছে
         if "event" not in entry:
             entry = {"event": entry}
         # created_at যদি না থাকে তবে স্বয়ংক্রিয়ভাবে কারেন্ট টাইম এড করা হচ্ছে
