@@ -51,7 +51,7 @@ describe('useAiActions', () => {
     const onOutput = vi.fn();
     const onLoading = vi.fn();
     act(() => {
-      result.current.runWithContext(null, onOutput, () => {});
+      result.current.runWithContext(null, onOutput, async () => {});
     });
     expect(getSharedServices).not.toHaveBeenCalled();
     expect(onOutput).toHaveBeenCalledWith(

@@ -9,9 +9,9 @@ const { mockEmit, mockSubscribe, mockGetListenerCount } = vi.hoisted(() => ({
 
 vi.mock('../lib/componentEventBus', () => ({
     eventBus: {
-    emit: (...args: [string, unknown]) => mockEmit(...args),
-    subscribe: (...args: [string, (data: unknown) => void]) => mockSubscribe(...args),
-    getListenerCount: (...args: [string]) => mockGetListenerCount(...args),
+    emit: (...args: Parameters<typeof mockEmit>) => mockEmit(...args),
+    subscribe: (...args: Parameters<typeof mockSubscribe>) => mockSubscribe(...args),
+    getListenerCount: (...args: Parameters<typeof mockGetListenerCount>) => mockGetListenerCount(...args),
   },
   Events: {},
 }));
@@ -27,10 +27,11 @@ describe('useEventBus', () => {
     const cb = vi.fn();
     const { unmount } = renderHook(() => useEventBus('TEST_EVENT', cb));
     expect(mockSubscribe).toHaveBeenCalled();
-    const wrapper = mockSubscribe.mock.calls[0]?.[1] as ((data: unknown) => void) | undefined;
+    const subscribeCall = mockSubscribe.mock.calls[0] as unknown as [string, (data: unknown) => void] | undefined;
+    const wrapper = subscribeCall?.[1];
     expect(wrapper).toBeDefined();
     act(() => {
-      wrapper('payload');
+      wrapper?.('payload');
     });
     expect(cb).toHaveBeenCalledWith('payload');
     unmount();

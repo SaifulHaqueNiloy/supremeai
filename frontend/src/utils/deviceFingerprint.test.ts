@@ -11,10 +11,8 @@ describe('getDeviceFingerprint', () => {
     if (!window.crypto) {
       Object.defineProperty(window, 'crypto', { value: { subtle: {} } });
     }
-    if (!window.crypto.subtle) {
-      window.crypto.subtle = {} as unknown as SubtleCrypto;
-    }
-    window.crypto.subtle.digest = vi.fn().mockResolvedValue(new ArrayBuffer(32));
+    const cryptoObject = window.crypto as Crypto & { subtle: SubtleCrypto };
+    Object.defineProperty(cryptoObject, 'subtle', { configurable: true, value: { digest: vi.fn().mockResolvedValue(new ArrayBuffer(32)) } });
 
     const fp1 = await getDeviceFingerprint();
     expect(fp1).toBeTypeOf('string');
