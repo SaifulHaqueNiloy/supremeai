@@ -14,7 +14,7 @@ interface ActionDetails {
   impact?: string;
   priority?: string;
   requiresOtp?: boolean;
-  actionId?: string;
+  actionId: string;
 }
 
 interface AuditEntry {

@@ -18,7 +18,7 @@ vi.mock('../../store/authStore', () => ({
   useAuthStore: () => mockUseAuthStore(),
 }));
 
-const renderDashboard = (user: { username: string } | null = { username: 'TestUser' }) => {
+const renderDashboard = (user: { name: string } | null = { name: 'TestUser' }) => {
   mockUseAuthStore.mockReturnValue({ user });
   mockedUseNavigate.mockClear();
   return render(
@@ -34,12 +34,12 @@ describe('UserDashboard', () => {
   });
 
   it('renders greeting with username', () => {
-    renderDashboard({ username: 'TestUser' });
+    renderDashboard({ name: 'TestUser' });
     expect(screen.getByText('Good morning, TestUser.')).toBeInTheDocument();
   });
 
   it('renders greeting without username when user has no username', () => {
-    renderDashboard({});
+    renderDashboard({ name: '' });
     expect(screen.getByText('Good morning.')).toBeInTheDocument();
   });
 
