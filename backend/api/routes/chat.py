@@ -36,6 +36,9 @@ class OrchestratedChatPayload(BaseModel):
     conversation_id: str | None = Field(default=None, max_length=128)
     session_id: str | None = Field(default=None, max_length=128)
     url: str | None = Field(default=None, max_length=2048)
+    title: str | None = Field(default=None, max_length=256)
+    artifact_type: str | None = Field(default=None, max_length=32)
+    content: str | None = Field(default=None, max_length=500_000)
     confirmation: bool = False
 
 
@@ -53,7 +56,9 @@ async def orchestrate_chat(
         tenant_id=str(principal), role=str(user.get("role", "user")),
         project_id=payload.project_id, conversation_id=payload.conversation_id,
         confirmation=payload.confirmation,
-        metadata={"session_id": payload.session_id, "url": payload.url},
+        metadata={"session_id": payload.session_id, "url": payload.url,
+                   "title": payload.title, "artifact_type": payload.artifact_type,
+                   "content": payload.content},
     ))
     status_code = 202 if result.status == "confirmation_required" else 200
     if result.status == "denied":
@@ -345,7 +350,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",  # nginx বাফারিং রোধে
-            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প্রয়োজন
+            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প��রয়োজন
         },
     )
 
