@@ -107,10 +107,10 @@ class DistributedConnectionManager:
         self.active_connections: dict[str, list[WebSocket]] = {}
         self._pref_tasks: dict[str, set[asyncio.Task]] = {}
         self.redis = None
-  self.pubsub = None
-  self._redis_listener_task: asyncio.Task | None = None
-  
-  # New DoS tracking
+        self.pubsub = None
+        self._redis_listener_task: asyncio.Task | None = None
+
+        # New DoS tracking
         self._ip_connections: dict[str, int] = defaultdict(int)
         self._auth_attempts: dict[str, list[float]] = defaultdict(list)
         self._last_activity: dict[int, float] = {}  # id(ws) -> float

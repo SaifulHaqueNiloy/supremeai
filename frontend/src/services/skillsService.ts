@@ -38,7 +38,7 @@ export const fetchSkillCatalog = async (): Promise<CatalogResponse> => {
       timestamp: Date.now(),
     });
     
-    return response.data;
+    return response;
   } catch (error) {
     if (error instanceof ApiError && error.status === 429) {
       // Rate limited - notify user
@@ -111,7 +111,7 @@ export const installSkill = async (skillId: string): Promise<InstallResult> => {
     timestamp: Date.now(),
   });
   
-  return response.data;
+  return response;
 };
 
 export const uninstallSkill = async (skillId: string): Promise<void> => {
