@@ -40,26 +40,31 @@ export interface ControlPlaneHealth {
   services: ServiceHealth[]
 }
 
+import { getAuthHeaders } from './apiClient'
+
 async function getJson<T>(path: string): Promise<T> {
   const correlationId = globalThis.crypto?.randomUUID?.() ?? `cp-${Date.now()}`
+  const authHeaders = await getAuthHeaders().catch(() => ({}))
   const response = await fetchWithRetry(path.startsWith('http') ? path : `${getApiBaseUrl(path)}${path}`, {
-    headers: { Accept: 'application/json', 'X-Correlation-ID': correlationId },
+    headers: { Accept: 'application/json', 'X-Correlation-ID': correlationId, ...authHeaders },
     signal: AbortSignal.timeout(10000),
   })
   if (!response.ok) throw new Error(`Control plane request failed: ${response.status}`)
   return response.json() as Promise<T>
-  }
+}
 
-  async function postJson<T>(path: string, body: unknown): Promise<T> {
+async function postJson<T>(path: string, body: unknown): Promise<T> {
+  const correlationId = globalThis.crypto?.randomUUID?.() ?? `cp-${Date.now()}`
+  const authHeaders = await getAuthHeaders().catch(() => ({}))
   const response = await fetchWithRetry(path.startsWith('http') ? path : `${getApiBaseUrl(path)}${path}`, {
     method: 'POST',
-    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Correlation-ID': correlationId, ...authHeaders },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(10000),
   })
   if (!response.ok) throw new Error(`Control plane request failed: ${response.status}`)
   return response.json() as Promise<T>
-  }
+}
 
   export interface TaskSubmission {
   goal: string
