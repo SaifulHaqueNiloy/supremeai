@@ -361,6 +361,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         allow_origins=origins,
         allow_credentials=cors_allow_credentials,
         allow_methods=["*"],
+        # ROOT-CAUSE FIX: ফ্রন্টএন্ড (services/apiClient.ts → getAuthHeaders) প্রতিটি
+        # রিকোয়েস্টে X-Device-Fingerprint পাঠায়, আর X-CSRF-Token / X-JIT-OTP
+        # শর্তসাপেক্ষে পাঠায়। এই হেডারগুলো allow_headers-এ না থাকায় Starlette
+        # CORSMiddleware preflight-এ "400 Disallowed CORS headers" দিত — ফলে
+        # তিনটি ফ্রন্টএন্ড (Firebase user/admin, Vercel) থেকেই সব API কল ব্রাউজারে
+        # ব্লক হচ্ছিল, যদিও origin allow-list ঠিক ছিল। তালিকাটি এখন
+        # TrustedOriginMiddleware-এর ডিফল্ট হেডার সেটের সাথে সমন্বিত।
         allow_headers=[
             "Authorization",
             "Content-Type",
@@ -368,6 +375,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             "Origin",
             "X-Requested-With",
             "apikey",
+            "X-API-Key",
+            "X-Device-Fingerprint",
+            "X-CSRF-Token",
+            "X-JIT-OTP",
+            "X-Request-ID",
+            "X-Tenant-ID",
+            "X-Correlation-ID",
         ],
         expose_headers=["Content-Length", "X-Pagination-Total"],
     )
