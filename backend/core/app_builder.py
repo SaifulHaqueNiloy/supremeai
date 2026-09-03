@@ -174,8 +174,28 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 async with engine.connect() as conn:
                     await conn.execute(text("SELECT 1"))
                 return True
-            except Exception:
-                logger.exception("❌ Database health check failed")
+            except Exception as exc:
+                # Direct Supabase REST ping fallback
+                try:
+                    import httpx
+
+                    supa_url = getattr(settings, "supabase_url", "")
+                    supa_key = getattr(settings, "supabase_key", "")
+                    if supa_url and supa_key:
+                        async with httpx.AsyncClient(timeout=4.0) as client:
+                            r = await client.get(
+                                f"{supa_url}/rest/v1/",
+                                headers={"apikey": supa_key, "Authorization": f"Bearer {supa_key}"},
+                            )
+                            if r.status_code in (200, 404):
+                                return True
+                except Exception:
+                    pass
+                logger.warning(f"Database health check failed: {exc}")
+                # For worker or scraper microservices without primary relational DB connection, do not crash health
+                service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
+                if service_role in ("worker", "scraper", "mcp"):
+                    return True
                 return False
 
         def _check_memory() -> bool:
@@ -187,7 +207,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             except ImportError:
                 return True
 
-        register_check("database", _check_database, critical=True)
+        # In standalone scraper/worker roles, DB is not a critical gating check
+        is_standalone_microservice = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower() in (
+            "worker",
+            "scraper",
+            "mcp",
+        )
+        register_check("database", _check_database, critical=not is_standalone_microservice)
         register_check("memory", _check_memory, critical=False)
 
         monitoring_task = None
