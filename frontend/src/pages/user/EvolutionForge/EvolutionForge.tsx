@@ -268,7 +268,7 @@ const EvolutionForgeCanvas = () => {
         timestamp: Date.now(),
       });
       
-      eventBus.emit('deployment_status' as Events, {
+      eventBus.emit('deployment_status', {
         type: 'skill_published',
         skillId: (result as any).data?.skillId || `skill_${Date.now()}`,
         status: 'pending',

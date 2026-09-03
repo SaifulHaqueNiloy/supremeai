@@ -125,7 +125,7 @@ export const IdeWorkspace: React.FC = () => {
 
   // Monaco onMount — inline completion + context menu (VS Code extension equivalent)
   const handleEditorMount = useCallback(
-    (editor: Parameters<React.ComponentProps<typeof Editor>['onMount']>[0], monaco: Parameters<React.ComponentProps<typeof Editor>['onMount']>[1]) => {
+    (editor: Parameters<NonNullable<React.ComponentProps<typeof Editor>['onMount']>>[0], monaco: Parameters<NonNullable<React.ComponentProps<typeof Editor>['onMount']>>[1]) => {
       setupMonacoAi(editor, monaco, {
         onOutput: (title, content) => setAiOutput({ title, content, kind: "plain" }),
       });
