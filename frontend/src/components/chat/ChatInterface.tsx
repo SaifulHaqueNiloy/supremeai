@@ -189,14 +189,14 @@ export const ChatInterface: React.FC = () => {
             <UnifiedChatBubble
               text={msg.content}
               sender={msg.role === 'user' ? 'user' : 'system'}
-              timestamp={new Date(msg.timestamp ?? Date.now()).toLocaleTimeString()}
+              timestamp={msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
             />
             
             {/* S11: Branch Button */}
             <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <BranchButton
                 conversationId="current_conv"
-                messageId={msg.id ?? `message-${msg.timestamp ?? Date.now()}`}
+                messageId={msg.id ?? `message-${msg.timestamp ?? 'unknown'}`}
                 onBranchCreated={(newId) => { void newId; }}
               />
             </div>
