@@ -124,10 +124,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
 
+        from api.routes.websocket_agent import manager as websocket_manager
+
         if os.getenv("OPENAPI_GENERATION", "false").lower() == "true":
             logger.info("🛠️ OPENAPI_GENERATION mode active. Bypassing lifespan checks.")
             async with app_lifespan(app):
                 yield
+            await websocket_manager.shutdown()
             return
 
         logger.debug("\n" + "=" * 60)
@@ -233,6 +236,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
         logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
+        await websocket_manager.shutdown()
 
         if settings.AUTO_HEALING_ENABLED and monitoring_task and healer:
             healer.stop_monitoring()
