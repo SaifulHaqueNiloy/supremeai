@@ -74,7 +74,7 @@ async def deep_health_check(response: Response):
 
     return HealthStatus(
         status=overall_status,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(timezone.utc).isoformat(),
         version="3.0.0-superai",
         uptime_seconds=round(time.time() - _start_time, 2),
         services={
@@ -93,16 +93,20 @@ async def readiness_check():
     db_ok = await _check_database()
     redis_ok = await _check_redis()
 
-    if db_ok != "healthy" or redis_ok != "healthy":
-        raise HTTPException(status_code=503, detail="Dependencies not ready")
+    if db_ok != "healthy":
+        raise HTTPException(status_code=503, detail="Database not ready")
 
-    return {"status": "ok", "service": "supremeai-backend"}
+    return {
+        "status": "ok",
+        "service": "supremeai-backend",
+        "cache": "healthy" if redis_ok == "healthy" else "degraded",
+    }
 
 
 @router.get("/live")
 async def liveness_check():
     """Kubernetes-style liveness probe."""
-    return {"status": "alive", "alive": True, "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "alive", "alive": True, "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
 async def _check_database() -> str:
@@ -113,9 +117,9 @@ async def _check_database() -> str:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return "healthy"
-    except Exception as e:
-        logger.warning(f"Database health check failed: {e}")
-        return f"unhealthy: {str(e)}"
+    except Exception:
+        logger.warning("Database health check failed", exc_info=True)
+        return "unhealthy"
 
 
 async def _check_redis() -> str:
