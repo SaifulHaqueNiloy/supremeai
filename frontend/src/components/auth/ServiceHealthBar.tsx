@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // বাংলা মন্তব্য: লগইন পেজের জন্য Public Service Health Bar — কোনো Authentication লাগবে না
-// এটি Backend, Database, Redis, Memory এর Real-time Status দেখাবে
+import { getApiBaseUrl } from '../../utils/api';
 
 interface HealthCheckResult {
   status: string;
@@ -96,7 +96,7 @@ const ServiceStatusItem: React.FC<ServiceStatusProps> = ({ name, status, respons
 
 // বাংলা মন্তব্য: Public Health Check Function — কোনো Auth Header ছাড়াই কল হবে
 const fetchPublicHealth = async (): Promise<HealthData> => {
-  const apiBaseUrl = import.meta.env.VITE_API_URL || '';
+  const apiBaseUrl = getApiBaseUrl();
   
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for health check

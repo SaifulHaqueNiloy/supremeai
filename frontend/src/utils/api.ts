@@ -212,12 +212,7 @@ export const getApiBaseUrl = (path?: string): string => {
     return '';
   }
 
-  // 🔧 Vercel hosting supports external rewrite proxy — use relative path
-  // (ডোমেইন সাফিক্স স্ট্রিং কনক্যাটেনেশন দিয়ে তৈরি, যাতে হার্ডকোড-চেকার এটিকে literal deployment URL হিসেবে না ধরে)
-  const vercelHostSuffix = '.vercel' + '.app';
-  if (window.location.hostname.endsWith(vercelHostSuffix)) {
-    return '';
-  }
+  // Firebase, Vercel ও বাকি সব হোস্টে সরাসরি backend URL — runtime context অনুযায়ী
 
   // Firebase ও বাকি হোস্টে (local dev ইত্যাদি) সরাসররি backend URL — runtime context অনুযায়ী
   return getBackendUrl(path);
