@@ -24,8 +24,9 @@ from collections.abc import Callable
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
 PORT = int(os.getenv("PORT", "8080"))
 ROLE = os.getenv("SUPREMEAI_SERVICE_ROLE", "worker")
@@ -126,6 +127,58 @@ async def root() -> dict[str, Any]:
 @app.get("/api/v1/health/live")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+class TaskSubmission(BaseModel):
+    goal: str = Field(min_length=1, max_length=10000)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
+    # The worker contract is intentionally capability-neutral. Domain executors can
+    # consume this payload later without changing the frontend lifecycle contract.
+    return {"message": "Task accepted by worker", "goal": payload["goal"], "metadata": payload.get("metadata", {})}
+
+
+@app.post("/tasks")
+async def submit_task(request: TaskSubmission) -> JSONResponse:
+    try:
+        from core.queue.task_queue_enhanced import get_task_queue
+
+        queue = get_task_queue()
+        task_id = await queue.submit_task(_process_task, request.model_dump(), task_name="supremeai_task")
+        return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
+    except Exception as exc:
+        _state.update(degraded=True, detail=f"task submit failed: {exc}")
+        return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
+
+
+@app.get("/tasks/{task_id}")
+async def task_status(task_id: str) -> JSONResponse:
+    try:
+        from core.queue.task_queue_enhanced import get_task_queue
+
+        status = await get_task_queue().get_status(task_id)
+        if status == "unknown":
+            raise HTTPException(status_code=404, detail="Task not found")
+        return JSONResponse({"task_id": task_id, "status": status})
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+
+
+@app.post("/tasks/{task_id}/cancel")
+async def cancel_task(task_id: str) -> JSONResponse:
+    try:
+        from core.queue.task_queue_enhanced import get_task_queue
+
+        cancelled = await get_task_queue().cancel_task(task_id)
+        if not cancelled:
+            raise HTTPException(status_code=409, detail="Task cannot be cancelled")
+        return JSONResponse({"task_id": task_id, "status": "cancelled"})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
 
 
 @app.get("/tasks/stats")
