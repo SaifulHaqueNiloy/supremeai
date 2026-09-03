@@ -59,7 +59,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'render_backend',
     displayName: 'Render Backend',
-    url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || 'http://localhost:8080',
+    url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || '',
     description: 'Python/FastAPI Core API',
     critical: true,
     icon: <Server size={16} />,
@@ -70,7 +70,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'supabase_db',
     displayName: 'Supabase DB',
-    url: 'https://<project>.supabase.co',
+    url: import.meta.env.VITE_SUPABASE_URL || '',
     description: 'PostgreSQL Database & Auth',
     critical: true,
     icon: <Database size={16} />,
@@ -79,7 +79,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'firebase_auth',
     displayName: 'Firebase Auth',
-    url: 'https://identitytoolkit.googleapis.com',
+    url: import.meta.env.VITE_FIREBASE_AUTH_URL || '',
     description: 'Authentication Service',
     critical: true,
     icon: <Shield size={16} />,
@@ -88,7 +88,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'firebase_firestore',
     displayName: 'Firestore',
-    url: 'https://firestore.googleapis.com',
+    url: import.meta.env.VITE_FIRESTORE_URL || '',
     description: 'NoSQL Document Store',
     critical: true,
     icon: <Database size={16} />,
@@ -99,7 +99,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'cloudflare_worker',
     displayName: 'Edge Worker',
-    url: 'https://supremeai-edge.workers.dev',
+    url: import.meta.env.VITE_EDGE_WORKER_URL || '',
     description: 'Cloudflare Edge Proxy',
     critical: true,
     icon: <Cloud size={16} />,
@@ -110,7 +110,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'github_api',
     displayName: 'GitHub API',
-    url: 'https://api.github.com',
+    url: import.meta.env.VITE_GITHUB_API_URL || '',
     description: 'Git Repository & Actions',
     critical: false,
     icon: <GitBranch size={16} />,
@@ -119,7 +119,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'vercel_deploy',
     displayName: 'Vercel',
-    url: 'https://vercel.com',
+    url: import.meta.env.VITE_VERCEL_API_URL || '',
     description: 'Frontend Deployment',
     critical: false,
     icon: <Cloud size={16} />,
@@ -130,7 +130,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'krogger',
     displayName: 'Krogger',
-    url: 'https://krogger.io',
+    url: import.meta.env.VITE_KROGGER_URL || '',
     description: 'Uptime Monitoring',
     critical: false,
     icon: <Activity size={16} />,
@@ -141,7 +141,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'infisical',
     displayName: 'Infisical',
-    url: 'https://app.infisical.com',
+    url: import.meta.env.VITE_INFISICAL_URL || '',
     description: 'Secrets Manager',
     critical: true,
     icon: <Key size={16} />,

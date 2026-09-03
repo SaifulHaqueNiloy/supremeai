@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from services.scraper.browser_agent import BrowserAgent, BrowseRequest
 from services.scraper.security import is_safe_url
@@ -51,6 +51,10 @@ async def health_check():
 async def scrape(request: ScrapeRequest):
     if not request.url:
         raise HTTPException(status_code=400, detail="URL is required")
+    if not is_safe_url(request.url):
+        raise HTTPException(
+            status_code=400, detail="SSRF check failed: Unauthorized internal access"
+        )
     result = _scraper.fetch_page(request.url)
     return result
 
@@ -59,6 +63,10 @@ async def scrape(request: ScrapeRequest):
 async def browse(request: BrowseRequest):
     if not request.url:
         raise HTTPException(status_code=400, detail="URL is required")
+    if not is_safe_url(request.url):
+        raise HTTPException(
+            status_code=400, detail="SSRF check failed: Unauthorized internal access"
+        )
     result = await _agent.navigate_and_interact(
         url=request.url,
         action=request.action or "fetch",
@@ -70,7 +78,7 @@ async def browse(request: BrowseRequest):
 
 
 class RecipeRequest(BaseModel):
-    steps: list = []
+    steps: list[dict] = Field(default_factory=list, max_length=50)
     initial_url: str | None = None
 
 

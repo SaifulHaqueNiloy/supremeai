@@ -12,13 +12,13 @@ class ServiceDefinition:
     id: str
     display_name: str
     role: str
-    base_url_env: str
+    base_url_env: tuple[str, ...]
     health_path: str
     capabilities: tuple[str, ...]
     critical: bool = False
 
     def public_dict(self) -> dict[str, Any]:
-        configured = bool(os.getenv(self.base_url_env))
+        configured = bool(service_url(self))
         return {
             "id": self.id,
             "display_name": self.display_name,
@@ -27,24 +27,44 @@ class ServiceDefinition:
             "critical": self.critical,
             "configured": configured,
             "health_path": self.health_path,
+            "configuration_source": next(
+                (key for key in self.base_url_env if os.getenv(key)), None
+            ),
         }
 
 
 SERVICE_REGISTRY: tuple[ServiceDefinition, ...] = (
     ServiceDefinition(
-        "core-api", "Core API", "core", "BACKEND_URL", "/api/v1/health/live",
-        ("chat", "memory", "artifacts", "orchestration"), True,
+        "core-api",
+        "Core API",
+        "core",
+        ("BACKEND_URL", "USER_BACKEND_URL"),
+        "/api/v1/health/live",
+        ("chat", "memory", "artifacts", "orchestration"),
+        True,
     ),
     ServiceDefinition(
-        "async-worker", "Async Worker", "worker", "WORKER_URL", "/health",
+        "async-worker",
+        "Async Worker",
+        "worker",
+        ("WORKER_URL", "RENDER_WORKER_URL"),
+        "/health",
         ("tasks.submit", "tasks.status", "tasks.cancel"),
     ),
     ServiceDefinition(
-        "scraper", "Scraper", "scraper", "SCRAPER_URL", "/health",
+        "scraper",
+        "Scraper",
+        "scraper",
+        ("SCRAPER_URL", "SCRAPER_SERVICE_URL", "RENDER_SCRAPER_URL"),
+        "/health",
         ("browser.research", "browser.scrape", "browser.artifacts"),
     ),
     ServiceDefinition(
-        "mcp-control-plane", "MCP Control Plane", "mcp", "MCP_URL", "/health",
+        "mcp-control-plane",
+        "MCP Control Plane",
+        "mcp",
+        ("MCP_URL", "RENDER_MCP_URL"),
+        "/health",
         ("mcp.discover", "mcp.call", "infrastructure.health"),
     ),
 )
@@ -59,8 +79,11 @@ def public_registry() -> list[dict[str, Any]]:
 
 
 def service_url(service: ServiceDefinition) -> str | None:
-    value = os.getenv(service.base_url_env)
-    return value.rstrip("/") if value else None
+    for key in service.base_url_env:
+        value = os.getenv(key)
+        if value:
+            return value.rstrip("/")
+    return None
 
 
 def public_capabilities() -> list[dict[str, Any]]:
@@ -71,4 +94,16 @@ def public_capabilities() -> list[dict[str, Any]]:
     ]
 
 
-__all__ = ["SERVICE_REGISTRY", "ServiceDefinition", "get_service", "public_capabilities", "public_registry", "service_url"]
+def get_service_registry() -> tuple[ServiceDefinition, ...]:
+    return SERVICE_REGISTRY
+
+
+__all__ = [
+    "SERVICE_REGISTRY",
+    "ServiceDefinition",
+    "get_service",
+    "get_service_registry",
+    "public_capabilities",
+    "public_registry",
+    "service_url",
+]
