@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any, Awaitable, Callable
 
 from core.security.tool_gateway import ToolPolicyGateway, tool_policy_gateway
@@ -99,7 +99,11 @@ class ConversationOrchestrator:
             return OrchestrationResult(correlation_id, "denied", capability_name,
                                        error=decision.reason, events=[event])
         try:
-            response = await capability.handler(command)
+            handler_command = replace(
+                command,
+                metadata={**command.metadata, "correlation_id": correlation_id},
+            )
+            response = await capability.handler(handler_command)
             event.update(type="orchestration.completed", status="completed")
             return OrchestrationResult(correlation_id, "completed", capability_name,
                                        response=response, events=[event])
