@@ -62,6 +62,18 @@ class ConversationOrchestrator:
             return "browser"
         if any(word in text for word in ("memory", "remember", "knowledge")):
             return "memory"
+        if any(word in text for word in ("task", "job", "run this", "queue")):
+            return "task"
+        if any(word in text for word in ("realtime", "live update", "event", "stream")):
+            return "realtime"
+        if any(word in text for word in ("file", "artifact", "document")):
+            return "artifact"
+        if any(word in text for word in ("evolution", "improve yourself", "self improve")):
+            return "evolution"
+        if any(word in text for word in ("admin", "system setting", "user management")):
+            return "admin"
+        if any(word in text for word in ("external tool", "integration", "mcp", "send to")):
+            return "external"
         return "chat"
 
     async def dispatch(self, command: ConversationCommand) -> OrchestrationResult:
@@ -135,6 +147,16 @@ def get_conversation_orchestrator() -> ConversationOrchestrator:
         _orchestrator.register(Capability("chat", "low", _chat_handler))
         _orchestrator.register(Capability("memory", "low", _memory_handler))
         _orchestrator.register(Capability("browser", "medium", _browser_handler))
+        from core.orchestration.capability_adapters import (
+            admin_handler, artifact_handler, evolution_handler, external_handler,
+            realtime_handler, task_handler,
+        )
+        _orchestrator.register(Capability("task", "medium", task_handler))
+        _orchestrator.register(Capability("realtime", "low", realtime_handler))
+        _orchestrator.register(Capability("artifact", "medium", artifact_handler))
+        _orchestrator.register(Capability("external", "high", external_handler, admin_only=True))
+        _orchestrator.register(Capability("admin", "high", admin_handler, admin_only=True))
+        _orchestrator.register(Capability("evolution", "high", evolution_handler, admin_only=True, destructive=True))
     return _orchestrator
 
 
