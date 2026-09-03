@@ -19,10 +19,89 @@ from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
+from core.browser_session_manager import session_manager
+
+
+class AutomationSessionRequest(BaseModel):
+    """Create an isolated browser context for the authenticated caller."""
+
+    pass
+
+
+class BrowserActionRequest(BaseModel):
+    session_id: str
+    action: str
+    url: str | None = None
+    selector: str | None = None
+    value: str | None = None
+    full_page: bool = False
+
+
+class BrowserSessionResponse(BaseModel):
+    session_id: str
+    status: str
+    url: str
 
 
 def get_audit() -> AuditLogger:
     return AuditLogger()
+
+
+@router.post("/automation/sessions", response_model=BrowserSessionResponse)
+async def create_automation_session(
+    req: AutomationSessionRequest,
+    user_token: str = Depends(get_current_user_token),
+):
+    session = await session_manager.create(user_token)
+    return BrowserSessionResponse(
+        session_id=session.id, status="ready", url=session.page.url
+    )
+
+
+@router.get("/automation/sessions")
+async def list_automation_sessions(user_token: str = Depends(get_current_user_token)):
+    return {"sessions": [s for s in session_manager.snapshot() if s["owner_id"] == user_token]}
+
+
+@router.delete("/automation/sessions/{session_id}")
+async def close_automation_session(
+    session_id: str, user_token: str = Depends(get_current_user_token)
+):
+    if not await session_manager.close(session_id, user_token):
+        raise HTTPException(status_code=404, detail="Browser session not found")
+    return {"success": True}
+
+
+@router.post("/automation/actions")
+async def execute_automation_action(
+    req: BrowserActionRequest, user_token: str = Depends(get_current_user_token)
+):
+    from core.security import is_safe_url
+
+    session = await session_manager.get(req.session_id, user_token)
+    page = session.page
+    action = req.action.lower()
+    if action == "navigate":
+        if not req.url or not is_safe_url(req.url):
+            raise HTTPException(status_code=400, detail="Unsafe or invalid URL")
+        await page.goto(req.url, wait_until="domcontentloaded", timeout=30_000)
+    elif action == "click":
+        if not req.selector:
+            raise HTTPException(status_code=422, detail="selector is required")
+        await page.locator(req.selector).click(timeout=15_000)
+    elif action in {"fill", "type"}:
+        if not req.selector or req.value is None:
+            raise HTTPException(status_code=422, detail="selector and value are required")
+        await page.locator(req.selector).fill(req.value, timeout=15_000)
+    elif action == "screenshot":
+        image = await page.screenshot(type="png", full_page=req.full_page)
+        import base64
+        return {"success": True, "action": action, "url": page.url, "screenshot": base64.b64encode(image).decode("ascii")}
+    elif action in {"content", "extract"}:
+        return {"success": True, "action": action, "url": page.url, "content": await page.locator("body").inner_text(timeout=15_000)}
+    else:
+        raise HTTPException(status_code=422, detail="Unsupported browser action")
+    return {"success": True, "action": action, "url": page.url}
 
 
 def get_credential_store() -> SecureCredentialStore:
