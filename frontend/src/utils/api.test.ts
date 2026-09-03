@@ -133,10 +133,10 @@ describe('api.ts — runtime context-based backend resolution', () => {
       expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
 
-    it('Vercel ডোমেইনে relative path ("") রিটার্ন করে', async () => {
+    it('Vercel ডোমেইনে সরাসরি backend URL রিটার্ন করে (explicit Render URL resolution)', async () => {
       setLocation('supremeai-lac.vercel.app');
       const { getApiBaseUrl } = await loadApi();
-      expect(getApiBaseUrl()).toBe('');
+      expect(getApiBaseUrl()).toBe('https://api.test-domain.com');
     });
   });
 
