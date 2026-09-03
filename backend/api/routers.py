@@ -233,6 +233,8 @@ ALL_ROUTERS = [
     # Router enforces get_current_admin on routes and authenticate_websocket on
     # the WS endpoint; is_admin=True additionally applies the token dependency.
     {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
+    # Canonical browser-facing broker for service discovery and health.
+    {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
 ]
 
 
