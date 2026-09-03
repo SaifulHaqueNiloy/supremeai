@@ -336,7 +336,7 @@ class SettingsValidationMixin:
                 )
         return v
 
-    @field_validator("user_cors_origins", "admin_cors_origins", mode="before")
+    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         if isinstance(v, str):
@@ -349,7 +349,7 @@ class SettingsValidationMixin:
                 return [o.strip() for o in v.split(",") if o.strip()]
         return v or []
 
-    @field_validator("user_cors_origins", "admin_cors_origins", mode="after")
+    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="after")
     @classmethod
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
         env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
