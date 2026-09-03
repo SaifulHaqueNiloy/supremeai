@@ -26,7 +26,7 @@ interface AuditEntry {
 }
 
 const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onApproval, onCancel, actionDetails }) => {
-  const details = actionDetails as ActionDetails;
+  const details = actionDetails as unknown as ActionDetails;
   const [step, setStep] = useState<number>(1);
   const [reason, setReason] = useState<string>('');
   const [auditTrail, setAuditTrail] = useState<AuditEntry[]>([]);
@@ -50,7 +50,7 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
   useEffect(() => {
     // Load audit trail when component mounts
     setAuditTrail([
-      { step: 1, status: 'completed', timestamp: new Date().toISOString(), actor: user?.email || 'system', action: 'Action identified and logged' },
+      { step: 1, status: 'completed', timestamp: new Date().toISOString(), actor: 'system', action: 'Action identified and logged' },
       { step: 2, status: 'completed', timestamp: new Date().toISOString(), actor: 'risk_engine', action: 'Automated risk assessment completed' },
       { step: 3, status: 'pending', timestamp: new Date().toISOString(), actor: 'notification_service', action: 'Notifying stakeholders...' }
     ]);
@@ -63,7 +63,7 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
         step: step + 1,
         status: 'pending',
         timestamp: new Date().toISOString(),
-        actor: user?.email || 'system',
+        actor: 'system',
         action: `Step ${step + 1} initiated`
       }]);
     }

@@ -111,7 +111,7 @@ export const installSkill = async (skillId: string): Promise<InstallResult> => {
     timestamp: Date.now(),
   });
   
-  return response.data;
+  return response;
 };
 
 export const uninstallSkill = async (skillId: string): Promise<void> => {

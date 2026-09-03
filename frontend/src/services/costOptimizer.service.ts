@@ -262,7 +262,7 @@ export class CostOptimizerService {
    * Get full optimization report (for admin dashboard)
    */
   getOptimizationReport(): {
-    rateLimits: ReturnType<typeof this.rateLimiter>;
+    rateLimits: unknown;
     cacheStats: ReturnType<typeof getCacheStats>;
     config: CostOptimizerConfig;
     savings: {
