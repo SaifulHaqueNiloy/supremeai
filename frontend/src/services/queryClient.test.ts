@@ -43,7 +43,6 @@ describe('classifyError', () => {
 describe('smartRetryDecision', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
-    // @ts-expect-error clear injected override
     delete (window as any).__VITE_MAX_RETRIES;
   });
 

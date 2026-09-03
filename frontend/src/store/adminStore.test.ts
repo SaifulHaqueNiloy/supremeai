@@ -36,8 +36,6 @@ vi.mock('../services/authService', () => ({
 }));
 
 import { useAdminStore } from './adminStore';
-import { Events } from '../lib/componentEventBus';
-
 const reset = () =>
   useAdminStore.setState({
     adminAuthenticated: false,

@@ -64,7 +64,7 @@ describe('skillsService', () => {
 
   it('fetchSkillCatalog emits RATE_LIMIT_HIT and rethrows on 429', async () => {
     (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
-      new ApiError('rate', 429, { 'retry-after': '5' })
+      new ApiError('rate', 429)
     );
     await expect(fetchSkillCatalog()).rejects.toThrow('rate');
     expect(mockEmit).toHaveBeenCalledWith(mockEvents.RATE_LIMIT_HIT, expect.any(Object));
