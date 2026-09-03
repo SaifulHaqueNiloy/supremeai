@@ -3,7 +3,7 @@
  * Features: Device viewport switcher, CORS proxy, landscape mode
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw } from 'lucide-react';
 import { browserService } from '../../services/browserService';
 
@@ -56,7 +56,12 @@ interface BrowserPreviewProps {
 
 
 
-export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
+export function BrowserPreview({
+  url = '',
+  html,
+  showDeviceToolbar = true,
+  onUrlChange,
+}: BrowserPreviewProps) {
   const [currentUrl, setCurrentUrl] = useState(url);
   const [reloadKey, setReloadKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,6 +69,18 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
   const [isLandscape, setIsLandscape] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [automationError, setAutomationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (sessionId) {
+        void browserService.closeSession(sessionId).catch(() => undefined);
+      }
+    };
+  }, [sessionId]);
+
+  useEffect(() => {
+    setCurrentUrl(url);
+  }, [url]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -93,7 +110,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
           🌐 Browser Preview
         </h2>
         <div className="flex items-center gap-2">
-          <div className="flex bg-slate-900 rounded border border-slate-700/50 p-1">
+          {showDeviceToolbar && <div className="flex bg-slate-900 rounded border border-slate-700/50 p-1">
             {(Object.keys(DEVICE_PRESETS) as DevicePreset[]).map((key) => (
               <button
                 key={key}
@@ -112,7 +129,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
             >
               <RotateCcw size={14} />
             </button>
-          </div>
+          </div>}
         </div>
       </div>
 
@@ -123,7 +140,10 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
             <input
               type="text"
               value={currentUrl}
-              onChange={e => setCurrentUrl(e.target.value)}
+              onChange={e => {
+                setCurrentUrl(e.target.value);
+                onUrlChange?.(e.target.value);
+              }}
               className="flex-1 bg-transparent text-xs text-white outline-none font-mono"
             />
           </div>
