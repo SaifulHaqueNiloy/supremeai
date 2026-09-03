@@ -8,7 +8,7 @@ Version: 1.0.0
 """
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
@@ -56,6 +56,8 @@ async def deep_health_check(response: Response):
     if db_status != "healthy":
         overall_status = "degraded"
     if redis_status != "healthy" or cache_status != "connected":
+        # Redis is an optional cache/broadcast dependency. Its outage should be
+        # observable in deep health, but must not prevent the API from receiving traffic.
         if overall_status == "healthy":
             overall_status = "degraded"
 
