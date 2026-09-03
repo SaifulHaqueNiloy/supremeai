@@ -20,7 +20,7 @@
     "knip": "knip",
     "knip:fix": "knip --fix",
     "typecheck:strict": "tsc --noEmit --strict --noImplicitAny",
-    "lint:strict": "eslint src/ --ext .ts,.tsx --max-warnings=0",
+    "lint:strict": "eslint src/ --ext .ts,.tsx --quiet",
     "quality": "run-s typecheck:strict lint:strict test"
   },
   "dependencies": {
