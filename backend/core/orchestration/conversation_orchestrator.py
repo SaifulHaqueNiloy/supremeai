@@ -100,7 +100,8 @@ class ConversationOrchestrator:
         capability = self._capabilities.get(capability_name)
         event = {"type": "orchestration.started", "correlation_id": correlation_id,
                  "conversation_id": command.conversation_id, "tenant_id": command.tenant_id,
-                 "user_id": command.user_id, "capability": capability_name}
+                 "project_id": command.project_id, "user_id": command.user_id,
+                 "capability": capability_name}
         if not capability or not capability.is_available:
             return OrchestrationResult(correlation_id, "unavailable", capability_name,
                                        error="Capability unavailable", events=[event])
@@ -111,7 +112,9 @@ class ConversationOrchestrator:
             return OrchestrationResult(correlation_id, "confirmation_required", capability_name,
                                        requires_confirmation=True, events=[event])
         decision = await self.policy.evaluate(capability.name,
-            {"sub": command.user_id, "tenant_id": command.tenant_id, "role": command.role},
+            {"sub": command.user_id, "tenant_id": command.tenant_id,
+             "project_id": command.project_id, "conversation_id": command.conversation_id,
+             "role": command.role},
             risk=capability.risk, action="conversation.dispatch")
         if not decision.allowed:
             return OrchestrationResult(correlation_id, "denied", capability_name,
@@ -123,6 +126,9 @@ class ConversationOrchestrator:
             )
             response = await capability.handler(handler_command)
             event.update(type="orchestration.completed", status="completed")
+            if isinstance(response, dict):
+                response = {**response, "correlation_id": correlation_id,
+                            "capability": capability_name}
             return OrchestrationResult(correlation_id, "completed", capability_name,
                                        response=response, events=[event])
         except Exception:
