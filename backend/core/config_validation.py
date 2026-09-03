@@ -336,7 +336,10 @@ class SettingsValidationMixin:
                 )
         return v
 
-    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="before")
+    # NOTE: "cors_origins" itself is a dynamic @property (config_secrets.py), not a
+    # pydantic field, so it must NOT appear in field_validator() below — Pydantic
+    # would raise a schema error for validating a non-existent field.
+    @field_validator("user_cors_origins", "admin_cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         if isinstance(v, str):
@@ -349,7 +352,7 @@ class SettingsValidationMixin:
                 return [o.strip() for o in v.split(",") if o.strip()]
         return v or []
 
-    @field_validator("cors_origins", "user_cors_origins", "admin_cors_origins", mode="after")
+    @field_validator("user_cors_origins", "admin_cors_origins", mode="after")
     @classmethod
     def validate_cors_origins(cls, v: list[str], info: ValidationInfo) -> list[str]:
         env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
@@ -357,7 +360,7 @@ class SettingsValidationMixin:
             return v
         if env in {"production", "staging"}:
             field = getattr(info, "field_name", None) or ""
-            if field in {"user_cors_origins", "admin_cors_origins", "cors_origins"} or not field:
+            if field in {"user_cors_origins", "admin_cors_origins"} or not field:
                 v = [o for o in v if "local" not in o and "127." not in o]
         return v
 

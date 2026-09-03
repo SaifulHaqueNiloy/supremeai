@@ -51,13 +51,11 @@ class SettingsFieldsMixin:
     backend_url: str = Field(default="", validation_alias="BACKEND_URL")
     app_base_url: str = Field(default="", validation_alias="APP_BASE_URL")
 
-    # CORS origins property is implemented dynamically below to support validation.
+    # CORS origins is implemented as a dynamic @property on SettingsSecretsMixin
+    # (see config_secrets.py). It must NOT be redeclared as a static Field here —
+    # a static Field on this mixin would shadow the property in the MRO and
+    # silently disable env-driven CORS validation (incl. STRICT_CORS_TEST bypass).
 
-    # 🔧 DYNAMIC: Empty default — must be explicitly configured in production
-    cors_origins: str | list[str] = Field(
-        default=[],
-        validation_alias="CORS_ORIGINS",
-    )
     user_cors_origins: str | list[str] = Field(
         default=[],  # 🔧 CHANGED: No hardcoded domains! Set USER_CORS_ORIGINS in env.
         validation_alias="USER_CORS_ORIGINS",
