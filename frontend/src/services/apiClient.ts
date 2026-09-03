@@ -81,7 +81,7 @@ export const getRawToken = (): string | null => {
 };
 
 const isDev = () => {
-  return typeof process !== 'undefined' && (process.env.NODE_ENV === 'development' || process.env.VITE_ENV === 'development');
+  return Boolean(import.meta.env?.DEV);
 };
 
 const getCSRFToken = (): string => {

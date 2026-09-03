@@ -33,14 +33,15 @@ export const useChatStore = create<ChatState>((set, get) => ({
   loadConversations: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await apiClient.get<ChatConversation[]>('/api/memory/conversations');
+      const response = await apiClient.get<ChatConversation[] | { data: ChatConversation[] }>('/api/memory/conversations');
+      const data = Array.isArray(response) ? response : (response as any)?.data || [];
       set({
-        conversations: response.data || [],
+        conversations: data,
         isLoading: false,
       });
       eventBus.emit(Events.METRICS_UPDATE_AVAILABLE, {
         source: 'chat_store_load',
-        count: response.data?.length || 0,
+        count: data.length,
         timestamp: Date.now(),
       });
     } catch (_e) {

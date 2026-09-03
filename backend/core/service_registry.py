@@ -56,7 +56,7 @@ SERVICE_REGISTRY: tuple[ServiceDefinition, ...] = (
         "Scraper",
         "scraper",
         ("SCRAPER_URL", "SCRAPER_SERVICE_URL", "RENDER_SCRAPER_URL"),
-        "/health",
+        "/api/v1/health/live",
         ("browser.research", "browser.scrape", "browser.artifacts"),
     ),
     ServiceDefinition(
