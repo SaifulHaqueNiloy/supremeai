@@ -109,11 +109,33 @@ async def _memory_handler(command: ConversationCommand) -> Any:
                                  threshold=0.55, user_id=command.user_id)
 
 
+_orchestrator: ConversationOrchestrator | None = None
+
+
+async def _browser_handler(command: ConversationCommand) -> Any:
+    """Browser spoke: create or reuse an owner-scoped session and navigate."""
+    from core.browser_session_manager import session_manager
+
+    session_id = command.metadata.get("session_id")
+    url = command.metadata.get("url")
+    if not url:
+        return {"status": "ready", "message": "Browser capability connected; provide a URL to navigate."}
+    from core.security import is_safe_url
+    if not is_safe_url(str(url)):
+        raise ValueError("Unsafe URL")
+    session = await session_manager.get(session_id, command.user_id) if session_id else await session_manager.create(command.user_id)
+    await session.page.goto(str(url), wait_until="domcontentloaded")
+    return {"session_id": session.id, "status": "navigated", "url": session.page.url}
+
+
 def get_conversation_orchestrator() -> ConversationOrchestrator:
-    orchestrator = ConversationOrchestrator()
-    orchestrator.register(Capability("chat", "low", _chat_handler))
-    orchestrator.register(Capability("memory", "low", _memory_handler))
-    return orchestrator
+    global _orchestrator
+    if _orchestrator is None:
+        _orchestrator = ConversationOrchestrator()
+        _orchestrator.register(Capability("chat", "low", _chat_handler))
+        _orchestrator.register(Capability("memory", "low", _memory_handler))
+        _orchestrator.register(Capability("browser", "medium", _browser_handler))
+    return _orchestrator
 
 
 __all__ = ["Capability", "ConversationCommand", "ConversationOrchestrator", "OrchestrationResult", "get_conversation_orchestrator"]
