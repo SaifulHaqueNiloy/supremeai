@@ -56,8 +56,10 @@ async def stream_session(
                     }
         finally:
             batcher.unsubscribe(session_id, queue)
-            # Fire-and-forget vector memory auto-save if session buffer has messages
-            asyncio.create_task(auto_save_session_memory(session_id))
+            # Keep the task alive and surface failures through the shared tracker.
+            from core.utils.background_tasks import track_task
+
+            track_task(asyncio.create_task(auto_save_session_memory(session_id)))
 
     return EventSourceResponse(event_generator())
 
@@ -99,4 +101,4 @@ async def auto_save_session_memory(session_id: str, task_type: str = "general") 
         else:
             logger.warning(f"Auto-save session memory non-critical notice: {result.get('error')}")
     except Exception as exc:
-        logger.debug(f"Auto-save session memory exception (non-blocking): {exc}")
+        logger.exception("Auto-save session memory failed for %s", session_id)
