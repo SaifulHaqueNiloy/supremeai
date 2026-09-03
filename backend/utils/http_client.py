@@ -15,10 +15,15 @@ from core.logging_config import logger
 
 # বাংলা মন্তব্য: Anti-Silent Hanging — প্রতিটি HTTP কলে সর্বোচ্চ ১০ সেকেন্ড টাইমআউট এনফোর্সড
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=5.0)
+# বাংলা মন্তব্য: Unbounded outbound concurrency রোধে bounded connection pool।
+DEFAULT_LIMITS = httpx.Limits(max_connections=100, max_keepalive_connections=20)
 
 
 async def safe_fetch(url: str, **kwargs: Any) -> httpx.Response:
-    async with httpx.AsyncClient(timeout=DEFAULT_TIMEOUT) as client:
+    async with httpx.AsyncClient(
+        timeout=DEFAULT_TIMEOUT,
+        limits=DEFAULT_LIMITS,
+    ) as client:
         return await client.get(url, **kwargs)
 
 
@@ -35,6 +40,7 @@ def create_async_client(
     Returns:
         httpx.AsyncClient ইন্সট্যান্স (context manager হিসেবে ব্যবহার করুন)।
     """
+    kwargs.setdefault("limits", DEFAULT_LIMITS)
     return httpx.AsyncClient(timeout=timeout, **kwargs)
 
 
