@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from core.orchestration.conversation_orchestrator import (
+    ConversationCommand,
+    get_conversation_orchestrator,
+)
 
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
@@ -21,8 +26,41 @@ router = APIRouter(
 
 
 class ChatPayload(BaseModel):
-    prompt: str
+    prompt: str = Field(min_length=1, max_length=20_000)
     model_name: str = "gemini-2.5-pro"
+
+
+class OrchestratedChatPayload(BaseModel):
+    prompt: str = Field(min_length=1, max_length=20_000)
+    project_id: str | None = Field(default=None, max_length=128)
+    conversation_id: str | None = Field(default=None, max_length=128)
+    confirmation: bool = False
+
+
+@router.post("/orchestrate")
+async def orchestrate_chat(payload: OrchestratedChatPayload, db=Depends(get_tenant_db)):
+    """Canonical governed hub for conversational capability dispatch."""
+    principal = getattr(db, "tenant_id", None)
+    if not principal:
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
+    result = await get_conversation_orchestrator().dispatch(ConversationCommand(
+        prompt=payload.prompt, user_id=str(principal), tenant_id=str(principal),
+        project_id=payload.project_id, conversation_id=payload.conversation_id,
+        confirmation=payload.confirmation,
+    ))
+    status_code = 202 if result.status == "confirmation_required" else 200
+    if result.status == "denied":
+        status_code = 403
+    return {
+        "success": result.status == "completed",
+        "status": result.status,
+        "correlation_id": result.correlation_id,
+        "capability": result.capability,
+        "response": result.response,
+        "requires_confirmation": result.requires_confirmation,
+        "error": result.error,
+        "events": result.events,
+    }
 
 
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
