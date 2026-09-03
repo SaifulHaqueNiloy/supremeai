@@ -22,6 +22,20 @@ class ConversationCommand:
 
 
 @dataclass
+class ExecutionRecord:
+    """Canonical, serializable truth record for one governed dispatch."""
+    execution_id: str
+    correlation_id: str
+    user_id: str
+    tenant_id: str
+    project_id: str | None
+    conversation_id: str | None
+    capability: str
+    status: str = "started"
+    evidence: list[dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
 class OrchestrationResult:
     correlation_id: str
     status: str
@@ -31,6 +45,7 @@ class OrchestrationResult:
     task_id: str | None = None
     error: str | None = None
     events: list[dict[str, Any]] = field(default_factory=list)
+    execution: ExecutionRecord | None = None
 
 
 @dataclass(frozen=True)
@@ -106,6 +121,12 @@ class ConversationOrchestrator:
                 events=[{"type": "orchestration.rejected", "correlation_id": correlation_id}],
             )
         command = replace(command, metadata={**command.metadata, "capability_chain": [*chain, capability_name]})
+        execution = ExecutionRecord(
+            execution_id=f"exec_{uuid.uuid4().hex}", correlation_id=correlation_id,
+            user_id=command.user_id, tenant_id=command.tenant_id,
+            project_id=command.project_id, conversation_id=command.conversation_id,
+            capability=capability_name,
+        )
         capability = self._capabilities.get(capability_name)
         event = {"type": "orchestration.started", "correlation_id": correlation_id,
                  "conversation_id": command.conversation_id, "tenant_id": command.tenant_id,
@@ -113,17 +134,23 @@ class ConversationOrchestrator:
                  "capability": capability_name}
         if not capability or not capability.is_available:
             event.update(type="orchestration.unavailable", status="unavailable")
+            execution.status = "unavailable"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "unavailable", capability_name,
-                                       error="Capability unavailable", events=[event])
+                                       error="Capability unavailable", events=[event], execution=execution)
         if (capability.admin_only or capability.destructive) and command.role != "admin":
             event.update(type="orchestration.denied", status="denied", reason="admin_required")
+            execution.status = "denied"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "denied", capability_name,
-                                       error="Admin permission required", events=[event])
+                                       error="Admin permission required", events=[event], execution=execution)
         if capability.destructive and not command.confirmation:
             event.update(type="orchestration.approval_required", status="blocked",
                          approval_scope=capability.name)
+            execution.status = "confirmation_required"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "confirmation_required", capability_name,
-                                       requires_confirmation=True, events=[event])
+                                       requires_confirmation=True, events=[event], execution=execution)
         decision = await self.policy.evaluate(capability.name,
             {"sub": command.user_id, "tenant_id": command.tenant_id,
              "project_id": command.project_id, "conversation_id": command.conversation_id,
@@ -131,8 +158,10 @@ class ConversationOrchestrator:
             risk=capability.risk, action="conversation.dispatch")
         if not decision.allowed:
             event.update(type="orchestration.denied", status="denied", reason=decision.reason)
+            execution.status = "denied"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "denied", capability_name,
-                                       error=decision.reason, events=[event])
+                                       error=decision.reason, events=[event], execution=execution)
         try:
             handler_command = replace(
                 command,
@@ -146,16 +175,22 @@ class ConversationOrchestrator:
             if isinstance(response, dict):
                 response = {**response, "correlation_id": correlation_id,
                             "capability": capability_name}
+            execution.status = "completed"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "completed", capability_name,
-                                       response=response, events=[event])
+                                       response=response, events=[event], execution=execution)
         except asyncio.TimeoutError:
             event.update(type="orchestration.timed_out", status="failed", retryable=True)
+            execution.status = "timed_out"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "failed", capability_name,
-                                       error="Capability execution timed out", events=[event])
+                                       error="Capability execution timed out", events=[event], execution=execution)
         except Exception:
             event.update(type="orchestration.failed", status="failed", retryable=False)
+            execution.status = "failed"
+            execution.evidence.append(event)
             return OrchestrationResult(correlation_id, "failed", capability_name,
-                                       error="Capability execution failed", events=[event])
+                                       error="Capability execution failed", events=[event], execution=execution)
 
 
 async def _chat_handler(command: ConversationCommand) -> Any:
@@ -209,4 +244,4 @@ def get_conversation_orchestrator() -> ConversationOrchestrator:
     return _orchestrator
 
 
-__all__ = ["Capability", "ConversationCommand", "ConversationOrchestrator", "OrchestrationResult", "get_conversation_orchestrator"]
+__all__ = ["Capability", "ConversationCommand", "ConversationOrchestrator", "ExecutionRecord", "OrchestrationResult", "get_conversation_orchestrator"]
