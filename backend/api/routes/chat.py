@@ -245,15 +245,8 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     yield "data: [DONE]\n\n"
                     await main_llm_circuit.record_success()
 
-                    try:
-                        # Full response text would normally be collected here to learn from
-                        # We simulate it with empty string for now in streaming
-                        # In production we'd collect chunks
-                        pass
-                    except Exception:
-                        logger.warning("Ignored exception")
-
                     return
+
                 except Exception as e:
                     logger.warning(f"External LLM API stream fail: {e!s} — falling back")
                     await main_llm_circuit.record_failure()
