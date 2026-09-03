@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, s
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
 from core.queue.task_queue import task_queue
-from core.security import verify_token
+from core.security import verify_token_async
 from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/ws", tags=["Neural Engine Stream"])
@@ -303,7 +303,7 @@ class DistributedConnectionManager:
                 logger.warning("[WS] Rejected unauthenticated WS connection")
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
                 return None
-            return verify_token(token)
+            return await verify_token_async(token)
         except Exception as e:
             self._record_auth_attempt(client_ip)
             logger.warning(f"[WS] Invalid token: {e}")

@@ -24,8 +24,21 @@ Dependencies:
 import json
 from typing import Any
 
-from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
+
+
+def _get_llm_gateway():
+    """R2-MEM fix: resolve the gateway LAZILY.
+
+    `from core.llm.llm_gateway import llm_gateway` triggered the module's
+    lazy __getattr__ AT IMPORT TIME, constructing LLMGateway during boot and
+    dragging in litellm (~240MB RSS) on every cold start even when no skill
+    ever runs. Resolving on first use keeps boot light (512MB free tier)."""
+    from core.llm.llm_gateway import get_llm_gateway
+
+    return get_llm_gateway()
+
+
 from core.mcp_client import MCPRegistryClient
 from core.skills.base import BaseSkill
 from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
@@ -190,7 +203,7 @@ class SkillManager:
         """
         # বাংলা: আগে model_filters=["claude-3-5-sonnet"] হার্ডকোড ছিল — claude unavailable হলে skill synthesis ব্যর্থ হতো।
         # এখন task_type="coding" দিয়ে gateway নিজে best available coding model বেছে নেবে, failover সহ।
-        response = await llm_gateway.acompletion(
+        response = await _get_llm_gateway().acompletion(
             prompt=prompt,
             system_prompt=system_prompt,
             task_type="coding",

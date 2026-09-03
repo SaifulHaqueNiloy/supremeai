@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect, status
 
 from core.config import settings
 from core.logging_config import logger
-from core.security import verify_token
+from core.security import verify_token_async
 from database.supabase_client import db
 from models.voice_interaction import VoiceInteractionLog
 
@@ -44,7 +44,7 @@ class VoiceConnectionManager:
             token = auth_msg.get("token")
             if auth_msg.get("type") != "auth" or not token:
                 return None
-            return verify_token(token)
+            return await verify_token_async(token)
         except Exception as e:
             import jwt
 

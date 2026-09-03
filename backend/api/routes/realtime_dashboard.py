@@ -20,7 +20,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
 from core.error_bus import with_error_bus
 from core.logging_config import logger
-from core.security import verify_token
+from core.security import verify_token_async
 from core.swarm_pubsub import get_swarm_streamer
 
 router = APIRouter(prefix="/ws", tags=["Real-time Dashboard"])
@@ -190,7 +190,7 @@ async def websocket_dashboard_endpoint(websocket: WebSocket):
         return
 
     try:
-        auth_payload = verify_token(token)
+        auth_payload = await verify_token_async(token)
         if not auth_payload:
             logger.warning("Dashboard WebSocket connection rejected - invalid token")
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)

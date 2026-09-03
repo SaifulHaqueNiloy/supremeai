@@ -12,12 +12,14 @@ This module provides centralized access to security components:
 """
 
 
+import asyncio
 import hashlib
 import hmac
 import ipaddress
 import os
 import secrets
 import socket
+import threading
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from urllib.parse import urlparse
@@ -60,6 +62,7 @@ __all__ = [
     "verify_api_key",
     "verify_api_key_with_expiry",
     "verify_token",
+    "verify_token_async",
 ]
 
 # Global instances
@@ -274,30 +277,83 @@ async def is_token_revoked(jti: str) -> bool:
         return False
 
 
+async def verify_token_async(token: str) -> dict:
+    """Non-blocking async token verification.
+
+    বাংলা মন্তব্য: async কনটেক্সট (SSE/WS/route handler) থেকে ব্যবহার করুন —
+    revocation check সরাসরি await করে, ইভেন্ট লুপ কখনো ব্লক হয় না।
+    (R2-01 fix: sync verify_token() লুপের ভেতর থেকে ডাকলে ৫ সেকেন্ড deadlock হতো।)
+    """
+    try:
+        payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
+        jti = payload.get("jti")
+        if jti and await is_token_revoked(jti):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+            )
+        return payload
+    except HTTPException:
+        raise
+    except Exception as e:
+        if type(e).__name__ == "ExpiredSignatureError":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"
+            ) from None
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        ) from None
+
+
+# Dedicated background-thread event loop for sync verify_token callers that
+# must run the async revocation check without deadlocking the caller's loop.
+# (R2-01 fix: previously run_coroutine_threadsafe was aimed at the CALLER'S
+# OWN running loop, then .result(5) blocked that very loop → guaranteed 5s
+# freeze per SSE chat start / WS connect on a single-worker deployment.)
+_revocation_loop: asyncio.AbstractEventLoop | None = None
+_revocation_thread: threading.Thread | None = None
+
+
+def _get_revocation_loop() -> asyncio.AbstractEventLoop:
+    global _revocation_loop, _revocation_thread
+
+    if _revocation_loop is None or _revocation_loop.is_closed():
+        new_loop = asyncio.new_event_loop()
+
+        def _run_loop(loop: asyncio.AbstractEventLoop) -> None:
+            asyncio.set_event_loop(loop)
+            loop.run_forever()
+
+        _revocation_thread = threading.Thread(
+            target=_run_loop, args=(new_loop,), daemon=True, name="jwt-revocation-check"
+        )
+        _revocation_thread.start()
+        _revocation_loop = new_loop
+    return _revocation_loop
+
+
 def verify_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
         jti = payload.get("jti")
         if jti:
-            # Sync wrapper for sync verify_token callers
-            import asyncio
-            import threading
-
-            from core.cache.redis_manager import redis_manager
 
             def check_revoked():
                 try:
-                    loop = asyncio.get_running_loop()
+                    caller_loop = asyncio.get_running_loop()
                 except RuntimeError:
-                    loop = None
+                    caller_loop = None
 
-                if loop and loop.is_running():
-                    # Use run_coroutine_threadsafe to avoid cross-loop Redis errors
+                if caller_loop and caller_loop.is_running():
+                    # R2-01 FIX: schedule on the DEDICATED background loop —
+                    # never on the caller's own running loop (that deadlocks:
+                    # .result() blocks the only thread that could serve it).
                     import concurrent.futures
 
-                    future = asyncio.run_coroutine_threadsafe(is_token_revoked(jti), loop)
+                    target_loop = _get_revocation_loop()
+                    future = asyncio.run_coroutine_threadsafe(is_token_revoked(jti), target_loop)
                     try:
-                        return future.result(timeout=5)
+                        return future.result(timeout=3)
                     except (concurrent.futures.TimeoutError, Exception) as e:
                         logger.warning(f"Token revocation check timed out or failed: {e}")
                         return False
@@ -313,6 +369,7 @@ def verify_token(token: str) -> dict:
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"verify_token decoding/check failed: {type(e).__name__}: {e}")
         if type(e).__name__ == "ExpiredSignatureError":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired"

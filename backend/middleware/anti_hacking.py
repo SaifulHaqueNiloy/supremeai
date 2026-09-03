@@ -40,8 +40,10 @@ def _octet3(ip: str) -> str:
 
 class AntiHackingContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
+        from utils.client_ip import get_client_ip
+
         signal = {
-            "ip": request.headers.get("x-forwarded-for", "").split(",")[0].strip(),
+            "ip": get_client_ip(request),
             "country": request.headers.get("cf-ipcountry", "unknown"),
             "ua": request.headers.get("user-agent", "unknown"),
             "fingerprint": request.headers.get("x-device-fingerprint", "unknown"),
