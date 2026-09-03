@@ -90,7 +90,7 @@ export function ThreatDetection() {
             <div className="text-center py-8 text-slate-500 font-mono text-xs">No threats detected. System secure.</div>
           ) : (
             threats.map(t => {
-            const config = severityConfig[t.severity] || severityConfig.low;
+            const config = severityConfig[t.severity ?? 'low'] || severityConfig.low;
             return (
               <div key={t.id} className="p-3 rounded-lg border border-slate-800 bg-slate-900/30 flex items-center gap-4">
                 <config.icon size={14} className={`flex-shrink-0 ${
@@ -101,7 +101,7 @@ export function ThreatDetection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-bold text-white font-mono">{t.type}</span>
-                    <Badge variant={config.variant}>{t.severity.toUpperCase()}</Badge>
+                    <Badge variant={config.variant}>{(t.severity ?? 'low').toUpperCase()}</Badge>
                     {t.blocked ? <Badge variant="success"><CheckCircle2 size={10} /> BLOCKED</Badge> : <Badge variant="warning"><XCircle size={10} /> ALLOWED</Badge>}
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono">

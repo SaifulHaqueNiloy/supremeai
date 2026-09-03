@@ -377,7 +377,7 @@ export function InteractiveChatTab({
               <UnifiedChatBubble
                 key={msg.id}
                 text={msg.text}
-                sender={msg.sender}
+                sender={msg.sender === 'user' ? 'user' : 'system'}
                 timestamp={msg.timestamp}
                 action={msg.action}
                 onSaveToProject={onSaveToProject}

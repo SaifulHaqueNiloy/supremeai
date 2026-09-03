@@ -164,7 +164,7 @@ export function CommandCenter() {
     }
   };
 
-  const handleNodeClick = (_, node) => {
+  const handleNodeClick = (_: React.MouseEvent, node: { id: string; data?: { type?: string } }) => {
     if (node.id === 'central-orb') {
       setIsCentralPanelOpen(prev => !prev);
     } else if (node.data?.type) {

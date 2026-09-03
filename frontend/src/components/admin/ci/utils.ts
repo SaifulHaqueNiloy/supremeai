@@ -1,3 +1,5 @@
+import type { CISummaryData } from './CIDashboard';
+
 export function convertToCSV(data: CISummaryData): string {
   const headers = ['Job Name', 'Status', 'Duration (s)', 'Errors', 'Warnings'];
   const rows = data.jobs.map(job => [
