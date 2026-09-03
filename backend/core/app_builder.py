@@ -121,6 +121,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         import asyncio
 
         from api.routes.websocket_agent import manager as websocket_manager
+        from core.browser_session_manager import shutdown_browser_sessions
         from core.config_validator import print_config_summary, validate_config
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
@@ -129,6 +130,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             logger.info("🛠️ OPENAPI_GENERATION mode active. Bypassing lifespan checks.")
             async with app_lifespan(app):
                 yield
+            await shutdown_browser_sessions()
             await websocket_manager.shutdown()
             return
 
@@ -235,6 +237,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
         logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
+        await shutdown_browser_sessions()
         await websocket_manager.shutdown()
 
         if settings.AUTO_HEALING_ENABLED and monitoring_task and healer:
