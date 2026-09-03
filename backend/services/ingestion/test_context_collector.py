@@ -2,7 +2,7 @@
 
 import pytest
 
-from backend.services.ingestion.context_collector import (
+from services.ingestion.context_collector import (
     DeveloperContextCollector,
     WorkspaceSnapshot,
 )

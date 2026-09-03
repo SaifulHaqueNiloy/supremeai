@@ -14,6 +14,7 @@ Channels:
 
 import asyncio
 import json
+import os
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
@@ -31,13 +32,22 @@ class DashboardWebSocketManager:
     Bridges SwarmPubSub events to connected WebSocket clients.
     """
 
+    # FIX (DoS): connection cap — previously unbounded dict (512MB free-tier survival).
+    MAX_CONNECTIONS = int(os.getenv("WS_MAX_CONNECTIONS", "50"))
+
     def __init__(self):
         self.active_connections: dict[WebSocket, dict] = {}
         self.swarm_streamer = get_swarm_streamer()
         self.subscription_task = None
 
-    async def connect(self, websocket: WebSocket, user_auth: dict):
+    async def connect(self, websocket: WebSocket, user_auth: dict) -> bool:
         """Accept WebSocket connection and register user."""
+        if len(self.active_connections) >= self.MAX_CONNECTIONS:
+            await websocket.close(code=1013, reason="Too many connections")
+            logger.warning(
+                f"🛡️ [WS] Dashboard connection rejected: cap {self.MAX_CONNECTIONS} reached"
+            )
+            return False
         await websocket.accept()
         self.active_connections[websocket] = {
             "auth": user_auth,
@@ -45,6 +55,7 @@ class DashboardWebSocketManager:
             "connected_at": asyncio.get_event_loop().time(),
         }
         logger.info(f"📈 Dashboard WebSocket connected for user {user_auth.get('sub', 'unknown')}")
+        return True
 
         # Start subscription task if not already running
         if self.subscription_task is None or self.subscription_task.done():
@@ -193,7 +204,9 @@ async def websocket_dashboard_endpoint(websocket: WebSocket):
     channels_param = websocket.query_params.get("channels", "")
     desired_channels = set(channels_param.split(",")) if channels_param else {"all"}
 
-    await dashboard_manager.connect(websocket, auth_payload)
+    connected = await dashboard_manager.connect(websocket, auth_payload)
+    if not connected:
+        return
 
     # Subscribe to requested channels
     for channel in desired_channels:

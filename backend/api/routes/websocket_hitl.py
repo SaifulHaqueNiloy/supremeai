@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 
 import jwt
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
@@ -12,18 +13,29 @@ router = APIRouter(prefix="/ws/hitl", tags=["hitl"])
 
 
 class HITLConnectionManager:
+    # FIX (DoS): connection cap — previously unbounded set (512MB free-tier survival).
+    MAX_CONNECTIONS = int(os.getenv("WS_MAX_CONNECTIONS", "50"))
+
     def __init__(self):
         # Set ব্যবহার করা হয়েছে যাতে O(1) কমপ্লেক্সিটিতে কানেকশন রিমুভ করা যায় এবং ডুপ্লিকেট এড়ানো যায়।
         self.active_connections: set[WebSocket] = set()
         self._lock = asyncio.Lock()  # রেস কন্ডিশন এড়ানোর জন্য অ্যাসিনক্রোনাস লক
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket) -> bool:
+        async with self._lock:
+            if len(self.active_connections) >= self.MAX_CONNECTIONS:
+                await websocket.close(code=1013, reason="Too many connections")
+                logger.warning(
+                    f"🛡️ [WS] HITL connection rejected: cap {self.MAX_CONNECTIONS} reached"
+                )
+                return False
         await websocket.accept()
         async with self._lock:
             self.active_connections.add(websocket)
         logger.info(
             f"New HITL WebSocket connection. Total connections: {len(self.active_connections)}"
         )
+        return True
 
     async def disconnect(self, websocket: WebSocket):
         async with self._lock:
@@ -137,7 +149,9 @@ async def websocket_hitl_endpoint(websocket: WebSocket):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
-    await manager.connect(websocket)
+    connected = await manager.connect(websocket)
+    if not connected:
+        return
     try:
         while True:
             # Ping/Pong Heartbeat to keep connection alive and detect drops
