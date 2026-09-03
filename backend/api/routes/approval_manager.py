@@ -24,6 +24,7 @@ from core.logging_config import logger
 from core.security.authentication.auth_middleware import verify_admin_session_fail_closed
 from core.security.ws_auth import authenticate_websocket
 from models.pending_tasks import (
+    ApprovalStateError,
     TaskStatus,
     cancel_task,
     list_pending,
@@ -116,7 +117,12 @@ def approve_task(
         # AUD-4.3/4.4/4.5/4.6: replay, expiry, tampering and races are rejected here.
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "rejected", str(exc))
-        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+        safe_msg = (
+            str(exc)
+            if isinstance(exc, ApprovalStateError)
+            else "Approval request could not be processed"
+        )
+        raise HTTPException(status_code=status_code, detail=safe_msg) from exc
     if not task:
         _audit("decision", task_id, req.resolved_by, "not_found")
         raise HTTPException(status_code=404, detail="Task not found")
@@ -162,7 +168,7 @@ def approve_task(
         except Exception as e:
             logger.error(f"Failed to execute approved skill generation: {e}")
             _audit("execution", task_id, req.resolved_by, "failed", str(e))
-            raise HTTPException(status_code=500, detail=f"Execution failed: {e}") from e
+            raise HTTPException(status_code=500, detail="Skill execution failed") from e
 
     _audit("decision", task_id, req.resolved_by, "approved")
     return {"status": "approved", "task": task.model_dump()}
@@ -180,7 +186,12 @@ def reject_task(
     except Exception as exc:
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "rejected", str(exc))
-        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+        safe_msg = (
+            str(exc)
+            if isinstance(exc, ApprovalStateError)
+            else "Reject request could not be processed"
+        )
+        raise HTTPException(status_code=status_code, detail=safe_msg) from exc
     if not task:
         _audit("decision", task_id, req.resolved_by, "not_found")
         raise HTTPException(status_code=404, detail="Task not found")
@@ -201,7 +212,12 @@ def cancel_task_route(
     except Exception as exc:
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "cancel_rejected", str(exc))
-        raise HTTPException(status_code=status_code, detail=str(exc)) from exc
+        safe_msg = (
+            str(exc)
+            if isinstance(exc, ApprovalStateError)
+            else "Cancellation request could not be processed"
+        )
+        raise HTTPException(status_code=status_code, detail=safe_msg) from exc
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     _audit("decision", task_id, req.resolved_by, "cancelled", req.reason)

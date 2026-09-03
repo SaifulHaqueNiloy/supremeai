@@ -87,7 +87,12 @@ class ConfigValidationResult:
             lines.append(f"\n{icon} [{err.severity.value.upper()}] {err.var_name}")
             lines.append(f"   {err.message}")
             if err.actual_value:
-                lines.append(f"   Actual value: '{err.actual_value}'")
+                sensitive = any(
+                    token in err.var_name.upper()
+                    for token in ("SECRET", "KEY", "TOKEN", "PASSWORD", "CREDENTIAL")
+                )
+                display_value = "[REDACTED]" if sensitive else err.actual_value
+                lines.append(f"   Actual value: '{display_value}'")
             if err.suggestion:
                 lines.append(f"   💡 Suggestion: {err.suggestion}")
 
@@ -107,9 +112,9 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         name="ENV",
         var_type=VarType.ENUM,
         required=True,
-        allowed_values=["development", "staging", "production"],
+        allowed_values=["local", "development", "test", "staging", "production"],
         description="Application environment",
-        examples=["development", "production"],
+        examples=["development", "production", "local", "test"],
     ),
     VarDefinition(
         name="PORT",
