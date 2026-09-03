@@ -121,6 +121,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         import asyncio
 
         from api.routes.websocket_agent import manager as websocket_manager
+        from core.browser_session_manager import shutdown_browser_sessions
         from core.config_validator import print_config_summary, validate_config
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
@@ -129,6 +130,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             logger.info("🛠️ OPENAPI_GENERATION mode active. Bypassing lifespan checks.")
             async with app_lifespan(app):
                 yield
+            await shutdown_browser_sessions()
             await websocket_manager.shutdown()
             return
 
@@ -235,6 +237,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
         logger.debug("\n🛑 SupremeAI shutting down...")
         set_liveness(False)
+        await shutdown_browser_sessions()
         await websocket_manager.shutdown()
 
         if settings.AUTO_HEALING_ENABLED and monitoring_task and healer:
@@ -419,8 +422,12 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         expose_headers=["Content-Length", "X-Pagination-Total"],
     )
 
-    # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
-    # রাউটার রেজিস্ট্রেশনগুলো এখানে যোগ করুন
+    # বাংলা মন্তব্ব্য: canonical browser session/action routes
+    # Keep browser routes mounted explicitly so route discovery cannot depend on
+    # the optional safe-import registry in api.routes.__init__.
+    from api.routes.browser import router as browser_router
+
+    app.include_router(browser_router)
 
     # বাংলা মন্তব্ব্য: মেট্রিক্স এন্ডপয়েন্ট যোগ করা
     if settings.MONITORING_DETAILED:
