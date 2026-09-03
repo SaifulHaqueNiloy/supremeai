@@ -69,6 +69,49 @@ export function BrowserPreview({
   const [isLandscape, setIsLandscape] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [automationError, setAutomationError] = useState<string | null>(null);
+  const [automationStatus, setAutomationStatus] = useState<string | null>(null);
+  const [pageContent, setPageContent] = useState<string | null>(null);
+
+  const runBrowserAction = async (action: 'content' | 'screenshot') => {
+    if (!sessionId) {
+      setAutomationError('Start a browser session by navigating to a URL first.');
+      return;
+    }
+
+    setIsLoading(true);
+    setAutomationError(null);
+    setAutomationStatus(null);
+    try {
+      const result = await browserService.execute(sessionId, {
+        action,
+        ...(action === 'screenshot' ? { full_page: true } : {}),
+      });
+      if (action === 'content') {
+        setPageContent(result.content ?? 'No readable page content was returned.');
+      } else {
+        setAutomationStatus('Screenshot captured successfully.');
+      }
+    } catch (error) {
+      setAutomationError(error instanceof Error ? error.message : 'Browser action failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeBrowserSession = async () => {
+    if (!sessionId) return;
+    setIsLoading(true);
+    try {
+      await browserService.closeSession(sessionId);
+      setSessionId(null);
+      setPageContent(null);
+      setAutomationStatus('Browser session closed.');
+    } catch (error) {
+      setAutomationError(error instanceof Error ? error.message : 'Could not close browser session');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -154,6 +197,38 @@ export function BrowserPreview({
             <RefreshCw size={12} />
           </button>
         </form>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void runBrowserAction('content')}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-cyan-500/60 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Read page
+          </button>
+          <button
+            type="button"
+            onClick={() => void runBrowserAction('screenshot')}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-cyan-500/60 hover:text-cyan-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Capture screenshot
+          </button>
+          <button
+            type="button"
+            onClick={() => void closeBrowserSession()}
+            disabled={!sessionId || isLoading}
+            className="rounded border border-red-900/70 px-2 py-1 text-[11px] text-red-300 transition-colors hover:border-red-500/70 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Close session
+          </button>
+          {automationStatus && <span role="status" className="text-[11px] text-emerald-300">{automationStatus}</span>}
+        </div>
+        {pageContent && (
+          <pre className="mt-2 max-h-24 overflow-auto rounded border border-slate-800 bg-slate-950 px-2 py-1 text-[10px] leading-relaxed text-slate-400">
+            {pageContent}
+          </pre>
+        )}
       </div>
 
       <div className="flex-1 relative bg-slate-950 overflow-auto flex justify-center items-start pt-8 pb-8">
