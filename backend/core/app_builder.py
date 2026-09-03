@@ -422,8 +422,12 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         expose_headers=["Content-Length", "X-Pagination-Total"],
     )
 
-    # বাংলা মন্তব্ব্য: রাউটার রেজিস্টার করা
-    # রাউটার রেজিস্ট্রেশনগুলো এখানে যোগ করুন
+    # বাংলা মন্তব্ব্য: canonical browser session/action routes
+    # Keep browser routes mounted explicitly so route discovery cannot depend on
+    # the optional safe-import registry in api.routes.__init__.
+    from api.routes.browser import router as browser_router
+
+    app.include_router(browser_router)
 
     # বাংলা মন্তব্ব্য: মেট্রিক্স এন্ডপয়েন্ট যোগ করা
     if settings.MONITORING_DETAILED:
