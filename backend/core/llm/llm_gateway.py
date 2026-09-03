@@ -108,8 +108,11 @@ class LLMGateway:
         self.observability = LangfuseAdapter()
 
         self.routing_policy = self._load_routing_policy()
-        self._setup_litellm_globals()
-        self._setup_callbacks()
+        # R2-MEM fix: litellm import costs ~240MB RSS. Constructing the gateway
+        # happens during BOOT (multiple eager import chains), so setting up
+        # litellm here loaded 240MB into every cold start even when no LLM call
+        # was ever made. Defer to first completion call (see _ensure_litellm_ready).
+        self._litellm_ready = False
         # Use centralized circuit breaker manager instead of local dict
         self._circuit_breaker_manager = get_shared_circuit_breaker
 
@@ -158,6 +161,14 @@ class LLMGateway:
     @cache.setter
     def cache(self, value):
         self._cache = value
+
+    def _ensure_litellm_ready(self) -> None:
+        """One-time lazy litellm setup (R2-MEM fix) — runs at first LLM call."""
+        if self._litellm_ready:
+            return
+        self._setup_litellm_globals()
+        self._setup_callbacks()
+        self._litellm_ready = True
 
     def _setup_litellm_globals(self) -> None:
         """
@@ -472,6 +483,8 @@ class LLMGateway:
     ) -> Any:
         """বাংলা মন্তব্ব: Main async completion interface।"""
         import asyncio
+
+        self._ensure_litellm_ready()
 
         import litellm  # lazy import
 
@@ -935,6 +948,7 @@ class LLMGateway:
         timeout: float,
     ) -> AsyncGenerator[str, None]:
         """বাংলা মন্তব্ব: Streaming completion — fallback chain সহ।"""
+        self._ensure_litellm_ready()
         import asyncio
 
         import litellm  # lazy import

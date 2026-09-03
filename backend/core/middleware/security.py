@@ -165,10 +165,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
     def _get_client_ip(self, request: Request) -> str:
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-        return request.client.host if request.client else "unknown"
+        # R2-08: proxy-aware, spoof-resistant extraction (shared helper)
+        from utils.client_ip import get_client_ip
+
+        return get_client_ip(request)
 
     async def _check_rate_limit(self, client_ip: str, path: str) -> bool:
         """Simple in-memory rate limiting with path specificity."""

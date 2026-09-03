@@ -261,7 +261,26 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                 logger.error(f"Payment intent {payment_intent['id']} missing user_id in metadata.")
                 return {"status": "ignored", "reason": "missing metadata"}
 
+            # R2-06 FIX (idempotency): Stripe delivers at-least-once — replays of
+            # payment_intent.succeeded used to double-credit wallets. Mirror the
+            # SSLCommerz pattern: ledger pre-check + 200 "already processed" so
+            # Stripe stops retrying instead of getting a 500 forever.
             async with session.begin():
+                existing_tx = await session.execute(
+                    select(TransactionLedgerEntry).where(
+                        TransactionLedgerEntry.transaction_id == payment_intent["id"]
+                    )
+                )
+                if existing_tx.scalars().first():
+                    logger.info(
+                        f"Stripe payment_intent {payment_intent['id']} already processed. "
+                        "Returning idempotent success."
+                    )
+                    return {
+                        "status": "processed",
+                        "message": "Transaction already credited via Stripe.",
+                    }
+
                 result = await session.execute(
                     select(UserWallet).where(UserWallet.user_id == user_id)
                 )

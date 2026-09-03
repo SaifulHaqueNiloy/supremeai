@@ -20,15 +20,10 @@ import uuid
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from core.error_bus import with_error_bus
-
-try:
-    import litellm
-except ImportError:
-    litellm = None  # type: ignore[assignment]
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from models.meta_ai import AgentGenome, AgentOffspring, AgentStatus, BreedingPool
@@ -172,7 +167,13 @@ class GaussianMutation:
             f"Trait text:\n{text}\n\nImproved version:"
         )
 
+        # R2-MEM fix: litellm costs ~240MB RSS when imported. It is only needed
+        # for this optional trait-refinement call, so import it lazily — the
+        # eager module-level import previously loaded 240MB into EVERY boot
+        # (rendered free-tier 512MB OOM-risk) even when breeding never runs.
         try:
+            import litellm
+
             response = await litellm.acompletion(
                 model=self._llm_model_name,
                 messages=[{"role": "user", "content": prompt}],

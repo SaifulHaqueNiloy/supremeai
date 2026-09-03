@@ -267,14 +267,11 @@ class RateLimiter:
         if user and hasattr(user, "id"):
             return f"user:{user.id}"
 
-        # Fall back to IP address
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return f"ip:{forwarded.split(',')[0].strip()}"
+        # Fall back to IP address (R2-08: proxy-aware, spoof-resistant)
+        from utils.client_ip import get_client_ip
 
-        client_ip = request.client.host if request.client else None
-        if not client_ip:
-            # Generate a consistent anonymous ID for the session to prevent global block
+        client_ip = get_client_ip(request)
+        if not client_ip or client_ip == "unknown":
             session_id = request.headers.get("User-Agent", "unknown_agent")
             return f"ip:unknown:{hash(session_id)}"
         return f"ip:{client_ip}"

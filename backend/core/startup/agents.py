@@ -39,17 +39,21 @@ async def start_background_services(app):
 
     # Agent 3: Task Queue Worker
     try:
-        # Import to register handlers
-        from core.queue.task_queue import task_queue
+        # R2-03 FIX: the worker is now LAZY — it auto-starts on the first
+        # enqueue() and stops after 5 idle minutes. An eager `BLPOP` loop
+        # burned ~17k Upstash commands/day (> entire free-tier quota) even
+        # with zero tasks. On boot we only register handlers.
+        from core.queue.task_queue import redis_configured, task_queue
 
-        await agent_supervisor.start_agent(
-            "task-queue-worker",
-            task_queue.worker_loop,
-            health_check_interval=60,
-            max_restarts=10,
-            restart_delay=2.0,
-        )
-        logger.info("✅ Task Queue Worker background loop started.")
+        if redis_configured():
+            logger.info(
+                "ℹ️ Task Queue Worker will start lazily on first enqueue (Upstash quota-safe)."
+            )
+        else:
+            logger.info(
+                "ℹ️ Task Queue disabled — no real REDIS_URL configured "
+                "(enqueue() fails soft; set REDIS_URL to enable background tasks)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ Task Queue Worker failed to start: {exc}")
 

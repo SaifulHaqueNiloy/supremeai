@@ -41,7 +41,7 @@ from fastapi.responses import StreamingResponse
 
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
-from core.security import verify_token
+from core.security import verify_token_async
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Chat Stream"])
 
@@ -289,8 +289,8 @@ async def stream_chat_sse(
     - Graceful error recovery
     - Backward compatible API
     """
-    # Verify authentication
-    payload = verify_token(token)
+    # Verify authentication (R2-01: async path — no event-loop deadlock)
+    payload = await verify_token_async(token)
     user_id = payload.get("sub") or payload.get("user_id") or "anonymous"
 
     return StreamingResponse(
