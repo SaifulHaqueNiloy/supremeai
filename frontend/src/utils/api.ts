@@ -154,28 +154,24 @@ export async function fetchWithRetry(
 // Firebase hosting external rewrite proxy সাপোর্ট করে না, তাই Firebase-এ সরাসরি backend URL ব্যবহার হয় (CORS allow)।
 // Vercel-এ relative path ('') রাখা হয় কারণ Vercel external rewrite proxy সাপোর্ট করে।
 
-/** Admin-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
-export const ADMIN_BACKEND_URL: string =
-  import.meta.env.VITE_ADMIN_BACKEND || '';
-
 /** User-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
 export const USER_BACKEND_URL: string =
   import.meta.env.VITE_USER_BACKEND ||
   import.meta.env.VITE_API_BASE ||
-  import.meta.env.VITE_API_URL || '';
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL || '';
+
+/** Admin-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
+export const ADMIN_BACKEND_URL: string =
+  import.meta.env.VITE_ADMIN_BACKEND || USER_BACKEND_URL;
 
 // 🔬 Export circuits for monitoring
 export const circuits = { api: apiCircuit, websocket: wsCircuit };
 export type { CircuitState };
 
-// 🔒 RUNTIME VALIDATION - Missing user backend = Error in production.
-// বাংলা: admin backend এখন optional — না থাকলে admin-context calls user backend-এ
-// fall back করে (একই FastAPI app /admin-api ও /api/v1 দুই-ই serve করে)।
+// 🔒 RUNTIME VALIDATION - Missing backend = Error in production.
 if ((import.meta.env.PROD) && !USER_BACKEND_URL) {
-  throw new Error('❌ VITE_USER_BACKEND or VITE_API_URL is required in production. Set it in render.yaml or .env');
-}
-if ((import.meta.env.PROD) && !ADMIN_BACKEND_URL) {
-  console.warn('⚠️ VITE_ADMIN_BACKEND not set — admin-context API calls fall back to the user backend.');
+  throw new Error('❌ VITE_API_URL or VITE_BACKEND_URL is required in production. Set it in .env');
 }
 
 /**

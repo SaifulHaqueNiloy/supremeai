@@ -58,7 +58,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'render_backend',
     displayName: 'Render Backend',
-    url: import.meta.env.VITE_USER_BACKEND,
+    url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || 'http://localhost:8080',
     description: 'Python/FastAPI Core API',
     critical: true,
     icon: <Server size={16} />,
