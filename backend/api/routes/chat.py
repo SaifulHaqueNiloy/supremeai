@@ -81,6 +81,20 @@ async def list_chat_capabilities():
     return {"success": True, "capabilities": get_conversation_orchestrator().capabilities()}
 
 
+@router.get("/tasks/{task_id}")
+async def get_chat_task(task_id: str, user: dict = Depends(get_current_user_token)):
+    """Read durable task state through Chat with strict tenant ownership checks."""
+    from ecosystem.task_engine import TaskEngine
+
+    tenant_id = user.get("tenant_id") or user.get("sub")
+    if not tenant_id:
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
+    task = TaskEngine().get(task_id)
+    if not task or task.tenant_id != str(tenant_id) or task.created_by != str(user.get("sub")):
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True, "task": task.model_dump(mode="json")}
+
+
 # ⚡ ১. Fully Async Standard Completion with Multi-Layer Caching
 @router.post("/get_completion")
 async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_tenant_db)):
@@ -350,7 +364,7 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",  # nginx বাফারিং রোধে
-            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প��রয়োজন
+            "Content-Encoding": "identity",  # কম্প্রেশন বন্ধ — SSE-এর জন্য প��রয���োজন
         },
     )
 
