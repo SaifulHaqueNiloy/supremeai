@@ -141,7 +141,14 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
     if capability == "scrape":
         import httpx
 
-        scraper_url = os.getenv("SCRAPER_URL", "http://scraper:8082").rstrip("/")
+        scraper_url = (
+            os.getenv("SCRAPER_URL")
+            or os.getenv("SCRAPER_SERVICE_URL")
+            or os.getenv("RENDER_SCRAPER_URL")
+        )
+        if not scraper_url:
+            raise RuntimeError("A scraper service URL is required for scrape tasks")
+        scraper_url = scraper_url.rstrip("/")
         url = metadata.get("url")
         if not isinstance(url, str) or not url:
             raise ValueError("metadata.url is required for scrape tasks")
