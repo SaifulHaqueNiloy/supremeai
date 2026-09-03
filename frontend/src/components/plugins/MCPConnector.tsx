@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { apiClient } from '../../services/apiClient';
 
+type DiscoveredTool = {
+    name: string;
+    description?: string;
+};
+
 export const MCPConnector: React.FC = () => {
     const [mcpUrl, setMcpUrl] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [discoveredTools, setDiscoveredTools] = useState<any[] | null>(null);
+    const [discoveredTools, setDiscoveredTools] = useState<DiscoveredTool[] | null>(null);
 
     const handleConnect = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -14,7 +19,7 @@ export const MCPConnector: React.FC = () => {
         setDiscoveredTools(null);
 
         try {
-            const data = await apiClient.post<{ status: string; tools: any[] }>('/api/v1/mcp/discover', {
+            const data = await apiClient.post<{ status: string; tools: DiscoveredTool[] }>('/api/v1/mcp/discover', {
                 mcp_url: mcpUrl,
             });
             setDiscoveredTools(data.tools);
@@ -27,7 +32,7 @@ export const MCPConnector: React.FC = () => {
 
     return (
         <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm mt-8">
-            <h2 className="text-xl font-bold mb-2">🔌 Connect Custom MCP Server</h2>
+            <h2 className="text-xl font-bold mb-2">Connect Custom MCP Server</h2>
             <p className="text-sm text-gray-600 mb-6">
                 Connect your own Model Context Protocol (MCP) compatible server to add custom tools.
             </p>
@@ -51,7 +56,7 @@ export const MCPConnector: React.FC = () => {
             </form>
 
             {error && (
-                <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 text-sm">
+                <div role="alert" className="bg-red-50 text-red-700 p-4 rounded-lg mb-4 text-sm">
                     {error}
                 </div>
             )}

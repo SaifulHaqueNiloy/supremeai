@@ -135,9 +135,30 @@ class TaskSubmission(BaseModel):
 
 
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
-    # The worker contract is intentionally capability-neutral. Domain executors can
-    # consume this payload later without changing the frontend lifecycle contract.
-    return {"message": "Task accepted by worker", "goal": payload["goal"], "metadata": payload.get("metadata", {})}
+    """Execute the first real capability while preserving a stable task contract."""
+    metadata = payload.get("metadata", {})
+    capability = metadata.get("capability", "acknowledge")
+    if capability == "scrape":
+        import httpx
+
+        scraper_url = (
+            os.getenv("SCRAPER_URL")
+            or os.getenv("SCRAPER_SERVICE_URL")
+            or os.getenv("RENDER_SCRAPER_URL")
+        )
+        if not scraper_url:
+            raise RuntimeError("A scraper service URL is required for scrape tasks")
+        scraper_url = scraper_url.rstrip("/")
+        url = metadata.get("url")
+        if not isinstance(url, str) or not url:
+            raise ValueError("metadata.url is required for scrape tasks")
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            response = await client.post(f"{scraper_url}/scrape", json={"url": url})
+            response.raise_for_status()
+            return {"capability": capability, "data": response.json()}
+    if capability != "acknowledge":
+        raise ValueError(f"Unsupported worker capability: {capability}")
+    return {"capability": capability, "goal": payload["goal"], "metadata": metadata}
 
 
 @app.post("/tasks")
@@ -146,7 +167,9 @@ async def submit_task(request: TaskSubmission) -> JSONResponse:
         from core.queue.task_queue_enhanced import get_task_queue
 
         queue = get_task_queue()
-        task_id = await queue.submit_task(_process_task, request.model_dump(), task_name="supremeai_task")
+        task_id = await queue.submit_task(
+            _process_task, request.model_dump(), task_name="supremeai_task"
+        )
         return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
     except Exception as exc:
         _state.update(degraded=True, detail=f"task submit failed: {exc}")
