@@ -73,7 +73,26 @@ async def evolution_handler(command: ConversationCommand) -> dict[str, Any]:
 
 
 async def artifact_handler(command: ConversationCommand) -> dict[str, Any]:
-    return await _status(command, "artifact", "Artifact and file operations are connected and remain scope-bound.")
+    """Create a scoped artifact when chat provides content; otherwise expose handoff."""
+    content = command.metadata.get("content")
+    if not content:
+        return await _status(command, "artifact", "Artifact handoff ready; provide content to create an artifact.")
+    from uuid import uuid4
+    from database.supabase_client import SupabaseDB
+
+    row = {
+        "id": str(uuid4()),
+        "user_id": command.user_id,
+        "title": str(command.metadata.get("title") or "Chat artifact")[:256],
+        "artifact_type": str(command.metadata.get("artifact_type") or "code"),
+        "content": str(content),
+        "conversation_id": command.conversation_id,
+    }
+    response = await SupabaseDB().client.table("artifacts").insert(row).execute()
+    if not response.data:
+        raise RuntimeError("Artifact persistence returned no record")
+    return {"spoke": "artifact", "status": "created", "artifact": response.data[0],
+            "tenant_id": command.tenant_id, "project_id": command.project_id}
 
 
 async def external_handler(command: ConversationCommand) -> dict[str, Any]:
