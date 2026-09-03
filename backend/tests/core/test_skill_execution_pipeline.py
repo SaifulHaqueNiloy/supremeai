@@ -86,6 +86,12 @@ class TestSkillExecutionPipeline:
         async def mock_synthesize(*args, **kwargs):
             return {"text": '{"success": true, "skill_name": "NewSkill"}'}
 
-        monkeypatch.setattr("core.skill_manager.llm_gateway.acompletion", mock_synthesize)
+        class _FakeGateway:
+            acompletion = staticmethod(mock_synthesize)
+
+        # বাংলা মন্তব্য: skill_manager এখন `core.llm.llm_gateway.get_llm_gateway()` দিয়ে
+        # gateway lazily fetch করে (module-level `llm_gateway` নাম আর নেই), তাই
+        # `_get_llm_gateway` হেল্পারটাই patch করা হচ্ছে যাতে mock gateway ফেরত আসে।
+        monkeypatch.setattr("core.skill_manager._get_llm_gateway", lambda: _FakeGateway())
         result = await manager.synthesize_skill_schema("test task")
         assert result["success"] is True

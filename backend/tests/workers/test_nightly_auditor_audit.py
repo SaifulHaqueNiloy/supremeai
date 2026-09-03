@@ -17,7 +17,13 @@ from workers import chaos_worker
 
 
 def _make_auditor():
-    with patch("workers.chaos_worker.get_firestore_db", return_value=None):
+    # বাংলা: STAGING_REPLICA_URL সেট না থাকলে auditor নিজেকে disable করে দেয়
+    # (target_url খালি -> execute_audit_sequence সবসময় False), তাই এই
+    # নিরাপত্তা-টার্গেটেড unit test-গুলোর জন্য একটা ডামি URL সেট করা হচ্ছে।
+    with (
+        patch("workers.chaos_worker.get_firestore_db", return_value=None),
+        patch.dict("os.environ", {"STAGING_REPLICA_URL": "https://staging.example.com"}),
+    ):
         return chaos_worker.NightlyChaosAuditor()
 
 

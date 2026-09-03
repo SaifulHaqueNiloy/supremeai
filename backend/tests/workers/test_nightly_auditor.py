@@ -16,7 +16,11 @@ def test_server_error_threshold_constant():
     assert chaos_worker.SERVER_ERROR_THRESHOLD == 500
 
 
-def test_auditor_init_with_db():
+def test_auditor_init_with_db(monkeypatch):
+    # বাংলা মন্তব্য: NightlyChaosAuditor ইচ্ছাকৃতভাবে STAGING_REPLICA_URL না থাকলে
+    # target_url খালি রাখে ও chaos audit disable করে (production safety) --
+    # তাই এখানে explicit ভাবে সেট করে দিয়ে "http দিয়ে শুরু হয়" চেক করা হচ্ছে।
+    monkeypatch.setenv("STAGING_REPLICA_URL", "https://staging.example.com")
     fake_db = MagicMock()
     with patch("workers.chaos_worker.get_firestore_db", return_value=fake_db):
         auditor = chaos_worker.NightlyChaosAuditor()
