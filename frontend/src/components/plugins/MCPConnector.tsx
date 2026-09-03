@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiClient } from '../../services/apiClient';
 
 export const MCPConnector: React.FC = () => {
     const [mcpUrl, setMcpUrl] = useState('');
@@ -13,21 +14,9 @@ export const MCPConnector: React.FC = () => {
         setDiscoveredTools(null);
 
         try {
-            const res = await fetch('/api/v1/mcp/discover', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': Bearer 
-                },
-                body: JSON.stringify({ mcp_url: mcpUrl })
+            const data = await apiClient.post<{ status: string; tools: any[] }>('/api/v1/mcp/discover', {
+                mcp_url: mcpUrl,
             });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.detail || 'Failed to connect to MCP server');
-            }
-
             setDiscoveredTools(data.tools);
         } catch (err: any) {
             setError(err.message);
