@@ -8,7 +8,7 @@ Version: 1.0.0
 """
 
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
@@ -74,7 +74,7 @@ async def deep_health_check(response: Response):
 
     return HealthStatus(
         status=overall_status,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
         version="3.0.0-superai",
         uptime_seconds=round(time.time() - _start_time, 2),
         services={
@@ -106,7 +106,7 @@ async def readiness_check():
 @router.get("/live")
 async def liveness_check():
     """Kubernetes-style liveness probe."""
-    return {"status": "alive", "alive": True, "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "alive", "alive": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
 async def _check_database() -> str:

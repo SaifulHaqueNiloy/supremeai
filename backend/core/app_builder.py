@@ -120,11 +120,10 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         # 🔬 Evolution v3.0: Enhanced lifespan with validation & health checks
         import asyncio
 
+        from api.routes.websocket_agent import manager as websocket_manager
         from core.config_validator import print_config_summary, validate_config
         from core.health_routes import register_check, set_liveness
         from utils.platform_detect import DETECTED_PLATFORM, auto_set_platform_env
-
-        from api.routes.websocket_agent import manager as websocket_manager
 
         if os.getenv("OPENAPI_GENERATION", "false").lower() == "true":
             logger.info("🛠️ OPENAPI_GENERATION mode active. Bypassing lifespan checks.")

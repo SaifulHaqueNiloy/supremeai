@@ -32,8 +32,11 @@ def _supabase_retry_decorator(func: Callable) -> Callable:
         async def async_wrapper(self, *args, **kwargs):
             has_any_client = bool(self.client) or bool(getattr(self, "service_client", None))
             if not has_any_client and func.__name__ not in (
-                "__init__", "_derive_supabase_url", "bootstrap_schema",
-                "get_bootstrap_statements", "_is_schema_cache_error",
+                "__init__",
+                "_derive_supabase_url",
+                "bootstrap_schema",
+                "get_bootstrap_statements",
+                "_is_schema_cache_error",
                 "_execute_response_with_retry",
             ):
                 return None
