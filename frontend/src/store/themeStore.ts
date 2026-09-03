@@ -53,8 +53,8 @@ export const useThemeStore = create<ThemeState>()(
       
       initializeFromBackend: async () => {
         try {
-          const response = await apiClient.get('/api/user/preferences');
-          const prefs = response.data;
+          const response = await apiClient.get<any>('/api/user/preferences');
+          const prefs = response && typeof response === 'object' && 'data' in response ? response.data : response;
           
           if (prefs?.theme && ['light', 'dark', 'system'].includes(prefs.theme)) {
             set({ 
