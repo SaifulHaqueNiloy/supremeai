@@ -53,9 +53,7 @@ describe('skillsService', () => {
   });
 
   it('fetchSkillCatalog returns data and emits a metrics event', async () => {
-    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { skills: [], total: 0, user_role: 'user' },
-    });
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ skills: [], total: 0, user_role: 'user' });
     const res = await fetchSkillCatalog();
     expect(apiClient.get).toHaveBeenCalledWith('/api/skills/catalog');
     expect(res.total).toBe(0);
@@ -112,9 +110,7 @@ describe('skillsService', () => {
   });
 
   it('installSkill posts and emits SKILL_AUTO_CREATED', async () => {
-    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      data: { success: true, skillId: 's1', installedVersion: '1.0', message: 'ok' },
-    });
+    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true, skillId: 's1', installedVersion: '1.0', message: 'ok' });
     const res = await installSkill('s1');
     expect(apiClient.post).toHaveBeenCalledWith('/api/skills/s1/install');
     expect(res.success).toBe(true);
