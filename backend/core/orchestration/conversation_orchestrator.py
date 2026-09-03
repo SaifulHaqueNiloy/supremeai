@@ -1,6 +1,7 @@
 """Governed chat-centered hub-and-spoke orchestration runtime."""
 from __future__ import annotations
 
+import asyncio
 import uuid
 from dataclasses import dataclass, field, replace
 from typing import Any, Awaitable, Callable
@@ -137,15 +138,22 @@ class ConversationOrchestrator:
                 command,
                 metadata={**command.metadata, "correlation_id": correlation_id},
             )
-            response = await capability.handler(handler_command)
+            timeout_seconds = min(max(float(command.metadata.get("timeout_seconds", 60)), 1), 300)
+            response = await asyncio.wait_for(
+                capability.handler(handler_command), timeout=timeout_seconds
+            )
             event.update(type="orchestration.completed", status="completed")
             if isinstance(response, dict):
                 response = {**response, "correlation_id": correlation_id,
                             "capability": capability_name}
             return OrchestrationResult(correlation_id, "completed", capability_name,
                                        response=response, events=[event])
+        except asyncio.TimeoutError:
+            event.update(type="orchestration.timed_out", status="failed", retryable=True)
+            return OrchestrationResult(correlation_id, "failed", capability_name,
+                                       error="Capability execution timed out", events=[event])
         except Exception:
-            event.update(type="orchestration.failed", status="failed")
+            event.update(type="orchestration.failed", status="failed", retryable=False)
             return OrchestrationResult(correlation_id, "failed", capability_name,
                                        error="Capability execution failed", events=[event])
 
