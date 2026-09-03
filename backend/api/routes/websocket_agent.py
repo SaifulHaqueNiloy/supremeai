@@ -195,21 +195,35 @@ class DistributedConnectionManager:
                 logger.error(f"[WS] Cleanup error: {e}")
 
     async def _get_redis(self):
-        if not self.redis:
+        if self.redis is not None:
+            return self.redis
+
+        try:
+            from core.config import settings
+
+            redis_url = getattr(settings, "redis_url", None) or getattr(settings, "REDIS_URL", None)
+        except (ImportError, AttributeError):
+            redis_url = None
+
+        if not redis_url or "<your-redis-url>" in redis_url:
+            logger.warning("[WS] Redis is not configured; continuing without cross-instance broadcast")
+            return None
+
+        try:
             import redis.asyncio as aioredis
 
-            try:
-                from core.config import settings
-
-                redis_url = getattr(settings, "redis_url", getattr(settings, "REDIS_URL", None))
-            except ImportError:
-                redis_url = "redis://<your-redis-url>"
-            self.redis = aioredis.from_url(redis_url, decode_responses=True)
+            candidate = aioredis.from_url(redis_url, decode_responses=True)
+            await candidate.ping()
+            self.redis = candidate
             self.pubsub = self.redis.pubsub()
             await self.pubsub.subscribe("ws_broadcast")
             from core.utils.background_tasks import track_task
 
             self._redis_listener_task = track_task(asyncio.create_task(self._listen_to_redis()))
+        except Exception as exc:
+            logger.warning(f"[WS] Redis unavailable; continuing locally: {type(exc).__name__}: {exc}")
+            self.redis = None
+            self.pubsub = None
         return self.redis
 
     async def _listen_to_redis(self):
@@ -297,7 +311,15 @@ class DistributedConnectionManager:
 
     async def broadcast_to_user(self, user_id: str, content: str):
         redis = await self._get_redis()
-        await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
+        if redis is not None:
+            await redis.publish("ws_broadcast", json.dumps({"user_id": user_id, "content": content}))
+            return
+
+        for websocket in list(self.active_connections.get(user_id, [])):
+            try:
+                await websocket.send_text(content)
+            except Exception as exc:
+                logger.warning(f"[WS] Local broadcast failed: {type(exc).__name__}: {exc}")
 
     async def _authenticate(
         self,
@@ -371,7 +393,7 @@ async def websocket_chat_endpoint(
 
     try:
         while True:
-            # ১. ফ্রন্টএন্ড থেকে ইউজার প্রম্পট রিসিভ করা
+            # ১. ফ্রন্টএন্ড থেকে ই��জার প্রম্পট রিসিভ করা
             user_message = await websocket.receive_text()
             await manager.record_activity(websocket)
 
