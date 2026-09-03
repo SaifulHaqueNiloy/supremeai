@@ -60,7 +60,8 @@ export function getSharedServices() {
     return _svc;
   }
 
-  const backendUrl = (getApiBaseUrl() || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000').replace(/\/$/, '');
+  const backendUrl = (getApiBaseUrl() || import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+  if (!backendUrl) throw new Error('A backend URL must be configured via VITE_BACKEND_URL or VITE_API_URL.');
 
   const service = new SupremeAIService(
     {
