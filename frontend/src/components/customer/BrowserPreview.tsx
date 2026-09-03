@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Monitor, Tablet, Smartphone, RotateCcw, Maximize, ExternalLink } from 'lucide-react';
-import { getApiBaseUrl } from '../../utils/api';
+import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw } from 'lucide-react';
+import { browserService } from '../../services/browserService';
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
 
@@ -62,20 +62,28 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [device, setDevice] = useState<DevicePreset>('desktop');
   const [isLandscape, setIsLandscape] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [automationError, setAutomationError] = useState<string | null>(null);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
+    setAutomationError(null);
     setReloadKey(value => value + 1);
-    window.setTimeout(() => setIsLoading(false), 250);
-  };
 
-  const proxied = (src: string): string => {
-    if (/^https?:\/\//i.test(src)) {
-      const token = localStorage.getItem('token') || '';
-      return `${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(src)}&token=${token}`;
+    if (!html && /^https?:\/\//i.test(currentUrl)) {
+      try {
+        const session = sessionId
+          ? { session_id: sessionId }
+          : await browserService.createSession();
+        setSessionId(session.session_id);
+        await browserService.execute(session.session_id, { action: 'navigate', url: currentUrl });
+      } catch (error) {
+        setAutomationError(error instanceof Error ? error.message : 'Browser session unavailable');
+      }
     }
-    return src;
+
+    setIsLoading(false);
   };
 
   return (
@@ -129,6 +137,11 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
       </div>
 
       <div className="flex-1 relative bg-slate-950 overflow-auto flex justify-center items-start pt-8 pb-8">
+        {automationError && (
+          <div role="alert" className="absolute top-3 left-3 right-3 z-20 rounded border border-red-500/40 bg-red-950/80 px-3 py-2 text-xs text-red-200">
+            {automationError}
+          </div>
+        )}
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
@@ -149,7 +162,7 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
         >
           <iframe
             key={reloadKey}
-            src={html ? undefined : proxied(currentUrl)}
+            src={html ? undefined : currentUrl || 'about:blank'}
             srcDoc={html || undefined}
             title="Preview"
             className="w-full h-full border-none"
@@ -165,6 +178,5 @@ export function BrowserPreview({ url = '', html }: BrowserPreviewProps) {
 // Icon imports (assuming Lucide React)
 function Globe(props: any) { return null; }
 function ArrowRight(props: any) { return null; }
-function RefreshCw(props: any) { return null; }
 function Loader2(props: any) { return null; }
 function Wifi(props: any) { return null; }
