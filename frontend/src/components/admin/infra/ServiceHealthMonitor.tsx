@@ -8,6 +8,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../../services/apiClient';
+import { controlPlane } from '../../../services/controlPlane';
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -156,66 +157,32 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
  * Fetch global health summary from Cloudflare Worker
  */
 async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
-  try {
-    // Try Cloudflare Worker health endpoint first
-    const response = await fetch('/api/edge/health', {
-      headers: { 'Accept': 'application/json' },
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      return data.global || { overall: 'unknown', checkedAt: new Date().toISOString(), totals: { healthy: 0, degraded: 0, unhealthy: 0, total: 0, unknown: 0 }, services: {}, criticalServicesHealthy: false };
-    }
-  } catch {
-    console.warn('[HealthMonitor] CF Worker health failed, trying direct...');
+  const data = await controlPlane.health();
+  const aliases: Record<string, string> = {
+    'core-api': 'render_backend',
+    'async-worker': 'render_worker',
+    scraper: 'render_scraper',
+    'mcp-control-plane': 'render_mcp',
+  };
+  const services: Record<string, string> = {};
+  for (const service of data.services) {
+    services[service.id] = service.status;
+    if (aliases[service.id]) services[aliases[service.id]] = service.status;
   }
-
-  // Fallback: Direct health checks to each service
-  const results = await Promise.allSettled(
-    SERVICE_REGISTRY.map(async (service) => {
-      const start = Date.now();
-      try {
-        const res = await fetch(`${service.url}/api/v1/health`, {
-          signal: AbortSignal.timeout(8000),
-        });
-        return {
-          service: service.name,
-          status: res.ok ? 'healthy' as const : 'unhealthy' as const,
-          responseTime: Date.now() - start,
-          statusCode: res.status,
-        };
-      } catch (err) {
-        return {
-          service: service.name,
-          status: 'unhealthy' as const,
-          responseTime: Date.now() - start,
-          error: err instanceof Error ? err.message : 'Unknown error',
-        };
-      }
-    })
-  );
-
-  const serviceResults = results.map(r => 
-    r.status === 'fulfilled' ? r.value : { service: 'unknown', status: 'unknown' as const }
-  );
-
-  const healthy = serviceResults.filter(s => s.status === 'healthy').length;
-  const unhealthy = serviceResults.filter(s => s.status === 'unhealthy').length;
+  const counts = data.services.reduce((acc, service) => {
+    if (service.status === 'healthy') acc.healthy += 1;
+    else if (service.status === 'degraded') acc.degraded += 1;
+    else if (service.status === 'unhealthy' || service.status === 'unreachable' || service.status === 'timeout') acc.unhealthy += 1;
+    else acc.unknown += 1;
+    return acc;
+  }, { healthy: 0, degraded: 0, unhealthy: 0, unknown: 0 });
 
   return {
-    overall: unhealthy > 0 ? 'unhealthy' : 'healthy',
-    checkedAt: new Date().toISOString(),
-    totals: {
-      healthy,
-      degraded: 0,
-      unhealthy,
-      total: serviceResults.length,
-      unknown: serviceResults.length - healthy - unhealthy,
-    },
-    services: Object.fromEntries(serviceResults.map(s => [s.service, s.status])),
-    criticalServicesHealthy: serviceResults
-      .filter(s => SERVICE_REGISTRY.find(reg => reg.name === s.service)?.critical)
-      .every(s => s.status === 'healthy'),
+    overall: data.overall_status === 'healthy' ? 'healthy' : 'degraded',
+    checkedAt: data.timestamp,
+    totals: { ...counts, total: data.services.length },
+    services,
+    criticalServicesHealthy: data.services.filter((service) => service.critical).every((service) => service.status === 'healthy'),
   };
 }
 
@@ -266,15 +233,27 @@ function matchUptime(
  */
 async function fetchServiceHealth(serviceName: string): Promise<ServiceHealth | null> {
   try {
-    const response = await fetch(`/api/edge/health/detailed?service=${serviceName}`);
-    if (response.ok) {
-      const data = await response.json();
-      return data.services[serviceName] || null;
-    }
+    const data = await controlPlane.health();
+    const canonicalId = Object.entries({
+      render_backend: 'core-api',
+      render_worker: 'async-worker',
+      render_scraper: 'scraper',
+      render_mcp: 'mcp-control-plane',
+    }).find(([alias]) => alias === serviceName)?.[1] ?? serviceName;
+    const service = data.services.find((item) => item.id === canonicalId);
+    if (!service) return null;
+    return {
+      service: service.id,
+      timestamp: service.checked_at,
+      status: service.status === 'healthy' ? 'healthy' : service.status === 'degraded' ? 'degraded' : 'unhealthy',
+      responseTime: service.latency_ms ?? null,
+      statusCode: service.status_code ?? null,
+      error: service.error ?? null,
+    };
   } catch (e) {
     console.warn(`[HealthMonitor] Failed to fetch health for ${serviceName}:`, e);
+    return null;
   }
-  return null;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
