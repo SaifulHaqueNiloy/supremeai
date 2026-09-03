@@ -124,6 +124,42 @@ class DistributedConnectionManager:
             self._cleanup_task = asyncio.create_task(self._cleanup_stale_connections())
             logger.info("🛡️ [WS] DoS protection enabled - background cleanup started")
 
+    async def shutdown(self) -> None:
+        """Stop background tasks and release all WebSocket/Redis resources."""
+        tasks = [task for task in (self._cleanup_task, self._redis_listener_task) if task]
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
+        self._cleanup_task = None
+        self._redis_listener_task = None
+
+        if self.pubsub is not None:
+            try:
+                await self.pubsub.unsubscribe("ws_broadcast")
+                await self.pubsub.close()
+            except Exception:
+                logger.warning("[WS] Failed to close Redis pubsub", exc_info=True)
+        if self.redis is not None:
+            try:
+                await self.redis.close()
+            except Exception:
+                logger.warning("[WS] Failed to close Redis client", exc_info=True)
+        self.pubsub = None
+        self.redis = None
+
+        sockets = [socket for connections in self.active_connections.values() for socket in connections]
+        for socket in sockets:
+            try:
+                await socket.close(code=1001, reason="Server shutting down")
+            except Exception:
+                logger.debug("[WS] Socket already closed during shutdown", exc_info=True)
+        self.active_connections.clear()
+        self._connection_ips.clear()
+        self._ip_connections.clear()
+        self._last_activity.clear()
+
     def _get_memory_usage_mb(self) -> float:
         try:
             import resource
@@ -385,7 +421,7 @@ async def websocket_chat_endpoint(
 
     chat_history = deque(maxlen=50)  # Keep last 50 messages max
 
-    # বাংলা মন্তব্য: কানেক্টেড ইউজারের পূর্ববর্তী প্রেফারেন্স ডাটাবেজ থেকে রিড করা হচ্ছে
+    # বাংলা মন্তব্য: কানে���্টেড ইউজারের পূর্ববর্তী প্রেফারেন্স ডাটাবেজ থেকে রিড করা হচ্ছে
     db = SupabaseDB()
     user_pref_record = await asyncio.to_thread(db.get_user_preferences, user_id)
     user_pref_record = user_pref_record or {}
