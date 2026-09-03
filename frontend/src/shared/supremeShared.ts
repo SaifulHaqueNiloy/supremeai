@@ -32,7 +32,7 @@ const getProdBackendUrl = () => {
   if (import.meta.env.PROD && !url) {
     throw new Error('❌ VITE_BACKEND_URL or VITE_API_URL must be set in production.');
   }
-  return url || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8000` : 'http://localhost:8000');
+  return url || '';
 };
 
 export const CONFIG: EnvConfig = {
