@@ -50,33 +50,33 @@ describe('UserDashboard', () => {
 
   it('renders subtitle text', () => {
     renderDashboard();
-    expect(screen.getByText('What would you like to build today?')).toBeInTheDocument();
+    expect(screen.getByText('What would you like SupremeAI to accomplish?')).toBeInTheDocument();
   });
 
   it('renders primary input with correct placeholder', () => {
     renderDashboard();
     expect(
-      screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...')
+      screen.getByPlaceholderText('Research, automate, analyze, or build...')
     ).toBeInTheDocument();
   });
 
   it('navigates to workspace/live on Enter key in input', () => {
     renderDashboard();
-    const input = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...');
+    const input = screen.getByPlaceholderText('Research, automate, analyze, or build...');
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(mockedUseNavigate).toHaveBeenCalledWith('/workspace/live');
   });
 
   it('does not navigate on non-Enter keys', () => {
     renderDashboard();
-    const input = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...');
+    const input = screen.getByPlaceholderText('Research, automate, analyze, or build...');
     fireEvent.keyDown(input, { key: 'Escape' });
     expect(mockedUseNavigate).not.toHaveBeenCalled();
   });
 
   it('renders the arrow right button', () => {
     renderDashboard();
-    const inputContainer = screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...').closest('div');
+    const inputContainer = screen.getByPlaceholderText('Research, automate, analyze, or build...').closest('div');
     const arrowButton = inputContainer?.querySelector('button');
     expect(arrowButton).toBeInTheDocument();
   });
