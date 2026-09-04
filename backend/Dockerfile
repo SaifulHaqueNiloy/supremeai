@@ -45,7 +45,7 @@ EXPOSE 8080
 
 # 🔬 Evolution v3.0: Health check for container orchestration
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/v1/health/live')" || exit 1
+  CMD python -c "import os, urllib.request; p=os.getenv('PORT','8080'); urllib.request.urlopen(f'http://localhost:{p}/api/v1/health/live')" || exit 1
 
 # Start command
 CMD ["python", "main.py"]

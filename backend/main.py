@@ -149,6 +149,9 @@ def run_server() -> None:
             except Exception as sentry_exc:
                 logger.warning(f"Failed to report error to Sentry: {sentry_exc}")
         sys.exit(1)
+    except BaseException as exc:
+        logger.critical(f"Server exited unexpectedly: {exc}", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
