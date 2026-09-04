@@ -13,13 +13,10 @@ from typing import Any
 from core.logging_config import logger
 
 try:
-    import aioredis
-
-    if not hasattr(aioredis, "Redis"):
-        import redis.asyncio as aioredis
+    import redis.asyncio as aioredis
 except ImportError:
     try:
-        import redis.asyncio as aioredis
+        import aioredis
     except ImportError:
         aioredis = None
 
