@@ -1,15 +1,16 @@
 import React, { useMemo } from 'react';
-import ReactFlow, {
-  Node,
-  Edge,
+import {
+  ReactFlow,
+  type Node,
+  type Edge,
   Background,
   Controls,
   MiniMap,
   useNodesState,
   useEdgesState,
   MarkerType,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { useHealthMap, useProviders } from '../../data/hooks';
 import { HealthNode, Provider } from '../../data/types';
 

@@ -1,6 +1,8 @@
-// src/components/graph/SkillGraph.tsx
 import { useEffect, useCallback } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
+  type Node,
+  type Edge,
   Background,
   Controls,
   MiniMap,
@@ -8,9 +10,9 @@ import ReactFlow, {
   useEdgesState,
   addEdge,
   MarkerType
-} from 'reactflow';
-import type { Connection, Edge } from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import type { Connection } from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
 // বাংলা মন্তব্য: এপিআই থেকে আসা ডেটার টাইপ ডিফাইন করা হচ্ছে
 interface GraphData {
@@ -22,8 +24,8 @@ import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
 
 export default function SkillGraph() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   // বাংলা মন্তব্য: ব্যাকএন্ড থেকে গ্রাফ ডেটা ফেচ করার ফাংশন
   const fetchGraphData = async () => {
