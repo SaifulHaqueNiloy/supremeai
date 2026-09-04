@@ -1,4 +1,5 @@
 """Provider-neutral task envelope and idempotency primitives."""
+
 from __future__ import annotations
 
 import hashlib
@@ -30,7 +31,11 @@ class TaskEnvelope:
     attempt: int = 0
 
     def __post_init__(self) -> None:
-        for name, value in (("task_id", self.task_id), ("tenant_id", self.tenant_id), ("idempotency_key", self.idempotency_key)):
+        for name, value in (
+            ("task_id", self.task_id),
+            ("tenant_id", self.tenant_id),
+            ("idempotency_key", self.idempotency_key),
+        ):
             if not _ID_RE.fullmatch(value):
                 raise ValueError(f"invalid {name}")
         if not self.task_type or len(self.task_type) > 80:
