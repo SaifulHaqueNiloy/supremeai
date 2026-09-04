@@ -243,16 +243,66 @@ class QueryOptimizer:
         self.query_cache.put(cache_key, optimized_query)
 
         return optimized_query
+    
+    def get_cache_stats(self) -> dict[str, Any]:
+        """Get cache statistics for the query optimizer."""
+        return {
+            "hits": getattr(self.query_cache, 'hits', 0),
+            "misses": getattr(self.query_cache, 'misses', 0),
+            "size": len(self.query_cache.cache),
+            "max_size": self.query_cache.maxsize,
+        }
 
 
 class AsyncPoolManager:
     """Manager for async resource pools to optimize resource usage."""
 
-    def __init__(self, max_connections: int = 10):
+    def __init__(self, max_connections: int = 10, pool_name: str = "default", min_connections: int = 2, max_idle_time: int = 300):
         self.max_connections = max_connections
+        self.pool_name = pool_name
+        self.min_connections = min_connections
+        self.max_idle_time = max_idle_time
         self.available_connections: Any = asyncio.Queue()
         self.active_connections: set[Any] = set()
         self._initialized = False
+        self._all_connections: list[Any] = []
+    
+    def acquire_connection(self):
+        """Synchronous wrapper for acquiring a connection."""
+        import asyncio
+        
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        if not self._initialized:
+            loop.run_until_complete(self.initialize())
+        
+        return loop.run_until_complete(self.acquire())
+    
+    def release_connection(self, conn):
+        """Synchronous wrapper for releasing a connection."""
+        import asyncio
+        
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        loop.run_until_complete(self.release(conn))
+    
+    def get_pool_stats(self):
+        """Get pool statistics (synchronous)."""
+        stats = self.stats()
+        return {
+            "available": stats.get("available", 0),
+            "active": stats.get("active", 0),
+            "current_size": len(self._all_connections),
+            "max": self.max_connections,
+        }
 
     async def initialize(self):
         """Initialize the connection pool."""
@@ -263,6 +313,7 @@ class AsyncPoolManager:
             # Create a mock connection object (replace with actual connection logic)
             conn = await self._create_connection()
             await self.available_connections.put(conn)
+            self._all_connections.append(conn)
 
         self._initialized = True
 

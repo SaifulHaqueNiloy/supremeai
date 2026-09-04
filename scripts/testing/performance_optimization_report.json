@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-09-04T14:20:14.321367",
+  "total_benchmark_time_sec": 3.32,
+  "benchmarks_run": 5,
+  "benchmarks_failed": 0,
+  "detailed_results": {
+    "cache": {
+      "sync_put_ops_sec": 11100.21,
+      "sync_get_ops_sec": 1871713.51,
+      "sync_put_time_ms": 900.88,
+      "sync_get_time_ms": 5.34,
+      "cache_hits": 1000,
+      "cache_misses": 14000,
+      "hit_rate": 6.67,
+      "async_put_ops_sec": 11134.16,
+      "async_get_ops_sec": 847022.13,
+      "async_put_time_ms": 898.14,
+      "async_get_time_ms": 11.81
+    },
+    "query_optimizer": {
+      "queries_processed": 400,
+      "total_time_ms": 0.06,
+      "queries_per_sec": 6359300.47,
+      "cache_hits": 0,
+      "cache_misses": 0
+    },
+    "connection_pool": {
+      "successful_acquisitions": 1000,
+      "total_time_ms": 1134.82,
+      "acquisitions_per_sec": 881.2,
+      "pool_size": 10,
+      "available_connections": 10
+    },
+    "batch_processor": {
+      "items_processed": 1000,
+      "total_time_ms": 280.75,
+      "items_per_sec": 3561.87,
+      "batch_size": 100,
+      "workers": 4
+    },
+    "memory": {
+      "current_memory_mb": 6.67,
+      "peak_memory_mb": 6.67,
+      "cache_entries": 5000,
+      "memory_per_entry_kb": 1.3662
+    }
+  }
+}
