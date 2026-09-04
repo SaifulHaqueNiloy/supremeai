@@ -36,7 +36,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY --chown=supremeai:supremeai . .
 
 # Ensure data directory exists with non-root ownership
-RUN mkdir -p /app/data && chown -R supremeai:supremeai /app/data
+RUN mkdir -p /app/data /app/uploads /app/logs /app/tmp RUN mkdir -p /app/data && chown -R supremeai:supremeai /app/dataRUN mkdir -p /app/data && chown -R supremeai:supremeai /app/data chown -R supremeai:supremeai /app/data /app/uploads /app/logs /app/tmp
 
 USER supremeai
 
