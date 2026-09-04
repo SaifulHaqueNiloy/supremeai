@@ -131,6 +131,10 @@ class Settings(BaseSettings, SettingsFieldsMixin, SettingsSecretsMixin, Settings
             return False
         return _PLATFORM in ("render", "vercel", "firebase", "github_actions")
 
+    def is_local(self) -> bool:
+        """Return True if running in local environment."""
+        return (self.env or "").lower() in ("local", "dev", "development")
+
     @property
     def auto_backend_url(self) -> str:
         """Generate backend URL from platform detection."""
