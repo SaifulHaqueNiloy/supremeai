@@ -193,8 +193,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                             )
                             if r.status_code in (200, 404):
                                 return True
-                except Exception:
-                    pass
+                except Exception as rest_exc:
+                    logger.debug(f"Supabase REST health fallback check failed: {rest_exc}")
                 logger.warning(f"Database health check failed: {exc}")
                 # For worker or scraper microservices without primary relational DB connection, do not crash health
                 service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()

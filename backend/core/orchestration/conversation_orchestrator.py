@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field, replace
 from typing import Any
 
+from core.automation.execution_recorder import execution_recorder
 from core.security.tool_gateway import ToolPolicyGateway, tool_policy_gateway
 
 
@@ -114,6 +115,20 @@ class ConversationOrchestrator:
         return "chat"
 
     async def dispatch(self, command: ConversationCommand) -> OrchestrationResult:
+        """Governed dispatch entry point.
+
+        Delegates to the inner dispatch logic and then persists the canonical
+        ExecutionRecord durably (best-effort). DB unavailability never blocks
+        the dispatch — persistence is fire-and-forget with graceful degradation.
+        """
+        result = await self._dispatch(command)
+        if result.execution is not None:
+            # Durable truth record bridge (Board TODO: "Persist ExecutionRecord
+            # durably"). ExecutionRecorder swallows DB errors and continues.
+            await execution_recorder.persist_execution(result.execution)
+        return result
+
+    async def _dispatch(self, command: ConversationCommand) -> OrchestrationResult:
         correlation_id = str(command.metadata.get("correlation_id") or f"corr_{uuid.uuid4().hex}")
         capability_name = str(command.metadata.get("capability") or self.classify(command.prompt))
         chain = list(command.metadata.get("capability_chain", []))

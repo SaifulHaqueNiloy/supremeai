@@ -225,7 +225,7 @@ export async function prefetchCommonKeys(): Promise<void> {
         // Trigger fetch (will be cached)
       }
     } catch (e) {
-      // Silently continue
+      console.warn(`[CacheManager] Failed to check cache key ${key}:`, e);
     }
   }
 }
