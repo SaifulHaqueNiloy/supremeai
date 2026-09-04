@@ -17,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from core.cache import get_cache
 from core.cache.redis_manager import redis_manager
+from core.degraded_mode import db_degraded
 from core.logging_config import logger
 
 router = APIRouter()
@@ -30,6 +31,7 @@ class HealthStatus(BaseModel):
     version: str
     uptime_seconds: float
     services: dict
+    persistence_mode: str
     cache_stats: dict | None = None
 
 
@@ -52,10 +54,11 @@ async def deep_health_check(response: Response):
     redis_latency = round((time.time() - redis_start) * 1000, 2)
 
     cache_status = "connected" if redis_manager.is_connected else "disabled"
+    persistence_mode = "healthy" if db_status == "healthy" else ("degraded" if db_degraded() else "unavailable")
 
     overall_status = "healthy"
-    if db_status != "healthy":
-        overall_status = "degraded"
+    if persistence_mode != "healthy":
+        overall_status = "degraded" if persistence_mode == "degraded" else "unavailable"
     if redis_status != "healthy" or cache_status != "connected":
         # Redis is an optional cache/broadcast dependency. Its outage should be
         # observable in deep health, but must not prevent the API from receiving traffic.
@@ -70,7 +73,7 @@ async def deep_health_check(response: Response):
     if not all_agents_healthy:
         overall_status = "degraded"
 
-    if overall_status == "degraded":
+    if overall_status == "unavailable":
         response.status_code = 503
 
     return HealthStatus(
@@ -80,10 +83,12 @@ async def deep_health_check(response: Response):
         uptime_seconds=round(time.time() - _start_time, 2),
         services={
             "database": {"status": db_status, "latency_ms": db_latency},
+            "persistence": {"mode": persistence_mode},
             "redis": {"status": redis_status, "latency_ms": redis_latency},
             "cache": {"status": cache_status},
             "agents": agents_status,
         },
+        persistence_mode=persistence_mode,
         cache_stats=None,
     )
 
@@ -94,12 +99,14 @@ async def readiness_check():
     db_ok = await _check_database()
     redis_ok = await _check_redis()
 
-    if db_ok != "healthy":
-        raise HTTPException(status_code=503, detail="Database not ready")
+    persistence_mode = "healthy" if db_ok == "healthy" else ("degraded" if db_degraded() else "unavailable")
+    if persistence_mode == "unavailable":
+        raise HTTPException(status_code=503, detail="Database unavailable")
 
     return {
-        "status": "ok",
+        "status": "ok" if persistence_mode == "healthy" else "degraded",
         "service": "supremeai-backend",
+        "persistence_mode": persistence_mode,
         "cache": "healthy" if redis_ok == "healthy" else "degraded",
     }
 
