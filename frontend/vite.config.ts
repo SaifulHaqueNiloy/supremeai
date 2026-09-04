@@ -98,7 +98,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
-          'vendor-flow': ['reactflow'],
+          'vendor-flow': ['@xyflow/react'],
           'vendor-query': ['@tanstack/react-query'],
         },
       },

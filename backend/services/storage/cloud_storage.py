@@ -18,6 +18,7 @@ from fastapi import HTTPException, status
 
 from core.config import settings
 from core.logging_config import logger
+from utils.http_client import DEFAULT_TIMEOUT, create_async_client
 
 
 class CloudStorageManager:
@@ -52,8 +53,8 @@ class CloudStorageManager:
         }
 
         try:
-            # বাংলা কমেন্ট: নন-ব্লকিং অ্যাসিঙ্ক ক্লায়েন্ট ব্যবহার করে রিকোয়েস্ট পাঠানো হচ্ছে।
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            # বাংলা কমেন্ট: শেয়ার্ড ক্লায়েন্ট পুল ব্যবহার করে রিকোয়েস্ট পাঠানো হচ্ছে।
+            async with create_async_client(timeout=10.0) as client:
                 response = await client.post(url, content=file_bytes, headers=headers)
 
             if response.status_code != 200:

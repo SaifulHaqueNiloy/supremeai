@@ -139,7 +139,7 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
     metadata = payload.get("metadata", {})
     capability = metadata.get("capability", "acknowledge")
     if capability == "scrape":
-        import httpx
+        from utils.http_client import create_async_client
 
         scraper_url = (
             os.getenv("SCRAPER_URL")
@@ -152,7 +152,7 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
         url = metadata.get("url")
         if not isinstance(url, str) or not url:
             raise ValueError("metadata.url is required for scrape tasks")
-        async with httpx.AsyncClient(timeout=45.0) as client:
+        async with create_async_client(timeout=45.0) as client:
             response = await client.post(f"{scraper_url}/scrape", json={"url": url})
             response.raise_for_status()
             return {"capability": capability, "data": response.json()}
