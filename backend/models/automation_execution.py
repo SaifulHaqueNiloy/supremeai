@@ -37,6 +37,19 @@ class AutomationExecution(Base):
     error_code = Column(String(100), nullable=True)
     error_message = Column(String(1024), nullable=True)
 
+    # Orchestrator ExecutionRecord bridge (Plan Section 7 / Board TODO:
+    # "Persist ExecutionRecord durably with policy, budget, tool-call, and
+    # timestamp history"). These columns let the canonical orchestration truth
+    # record (core.orchestration.conversation_orchestrator.ExecutionRecord)
+    # land in the same durable table as automation dispatches.
+    correlation_id = Column(String(100), index=True, nullable=True)
+    tenant_id = Column(String(100), index=True, nullable=True)
+    project_id = Column(String(100), nullable=True)
+    conversation_id = Column(String(100), nullable=True)
+    capability = Column(String(100), nullable=True)
+    evidence = Column(JSON, nullable=True)
+    policy = Column(JSON, nullable=True)
+
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     __table_args__ = (

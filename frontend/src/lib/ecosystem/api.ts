@@ -250,8 +250,8 @@ async function request<T>(
       else if (typeof data?.detail === 'object' && data.detail !== null) {
         detail = JSON.stringify(data.detail)
       } else if (typeof data === 'string') detail = data
-    } catch {
-      // keep statusText
+    } catch (parseErr) {
+      console.debug('[EcosystemApi] Unable to parse error JSON payload:', parseErr)
     }
     throw new EcosystemApiError(res.status, detail)
   }
@@ -452,8 +452,8 @@ export const ecosystemApi = {
           try {
             const data = await res.json()
             if (typeof data?.detail === 'string') detail = data.detail
-          } catch {
-            /* ignore */
+          } catch (parseErr) {
+            console.debug('[EcosystemApi] Unable to parse SSE error JSON payload:', parseErr)
           }
           onError?.(new EcosystemApiError(res.status, detail))
           return

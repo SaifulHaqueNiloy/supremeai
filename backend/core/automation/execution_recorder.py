@@ -18,12 +18,15 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from uuid import uuid4
 
 from core.logging_config import logger
 
 from .models import AutomationEvent, AutomationResult, AutomationStatus
+
+if TYPE_CHECKING:
+    from core.orchestration.conversation_orchestrator import ExecutionRecord
 
 
 class ExecutionRecorder:
@@ -147,6 +150,64 @@ class ExecutionRecorder:
             logger.warning(
                 f"⚠️ ExecutionRecorder.record_completion failed: {e!r} — dispatch result unaffected"
             )
+
+
+async def persist_execution(
+    self,
+    record: ExecutionRecord,
+    policy: dict[str, Any] | None = None,
+) -> str | None:
+    """
+    Durable bridge for the canonical orchestration `ExecutionRecord`.
+
+    বাংলা: orchestration dispatch-এর ExecutionRecord কে automation_executions
+    টেবিলে লেখে — correlation/tenant/project/conversation লিংক + evidence +
+    policy decision সহ। Best-effort: DB unavailable হলে dispatch কখনো block হয়
+    না (শুধু warning log) — core-operation isolation নীতি (Plan Section 10)।
+    """
+    if record is None:
+        return None
+    execution_id = str(uuid4())
+    try:
+        from database.session import get_db_session_context
+        from models.automation_execution import AutomationExecution
+
+        now = datetime.now(UTC)
+        async with get_db_session_context() as session:
+            db_record = AutomationExecution(
+                id=execution_id,
+                event_id=record.execution_id,
+                workflow_key=f"orchestrator:{record.capability}",
+                idempotency_key=record.correlation_id,
+                provider="orchestrator",
+                status=record.status.upper(),
+                attempt=1,
+                trace_id=record.correlation_id,
+                started_at=now,
+                completed_at=now,
+                correlation_id=record.correlation_id,
+                tenant_id=record.tenant_id,
+                project_id=record.project_id,
+                conversation_id=record.conversation_id,
+                capability=record.capability,
+                evidence=record.evidence or None,
+                policy=policy,
+            )
+            session.add(db_record)
+            await session.commit()
+            logger.debug(
+                f"📋 ExecutionRecorder: orchestration ExecutionRecord persisted "
+                f"(execution_id={execution_id[:8]}, capability={record.capability}, "
+                f"status={record.status})"
+            )
+            return execution_id
+    except Exception as e:
+        # Plan Section 10: DB failure কখনো orchestration dispatch-কে block করে না
+        logger.warning(
+            f"⚠️ ExecutionRecorder.persist_execution failed (DB unavailable?): {e!r} — "
+            f"orchestration continues without durable persistence"
+        )
+        return None
 
 
 # Singleton instance

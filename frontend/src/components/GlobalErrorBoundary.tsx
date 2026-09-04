@@ -42,8 +42,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       }).catch((telemetryError) => {
         console.warn('[telemetry] Failed to report frontend error:', telemetryError);
       });
-    } catch {
-      // no-op
+    } catch (reportError) {
+      console.warn('[GlobalErrorBoundary] Error reporting telemetry failed:', reportError);
     }
   }
 
