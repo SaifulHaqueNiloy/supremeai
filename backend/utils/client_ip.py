@@ -32,8 +32,12 @@ def _trusted_proxy_count() -> int:
         configured = getattr(settings, "trusted_proxy_count", None)
         if configured is not None:
             return max(0, int(configured))
-    except Exception:  # noqa: BLE001 — settings may be unavailable early in boot
-        pass
+    except Exception as exc:  # noqa: BLE001 — settings may be unavailable early in boot
+        import logging
+
+        logging.getLogger(__name__).debug(
+            f"Unable to read trusted_proxy_count from settings: {exc}"
+        )
 
     if os.getenv("RENDER"):
         return 1

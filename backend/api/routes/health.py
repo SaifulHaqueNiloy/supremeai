@@ -13,6 +13,7 @@ from datetime import UTC, datetime, timezone
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from core.cache import get_cache
 from core.cache.redis_manager import redis_manager
@@ -117,7 +118,7 @@ async def _check_database() -> str:
         async with engine.connect() as conn:
             await conn.execute(text("SELECT 1"))
         return "healthy"
-    except Exception:
+    except (SQLAlchemyError, OSError, TimeoutError):
         logger.warning("Database health check failed", exc_info=True)
         return "unhealthy"
 
