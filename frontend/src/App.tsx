@@ -107,8 +107,11 @@ const AppContent: React.FC = () => {
       <QueryClientProvider client={queryClient}>
         <GlobalConfigInitializer>
           <React.Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen bg-slate-950 text-slate-400">
-              <div className="animate-pulse">Loading Workspace...</div>
+            <div className="flex min-h-screen items-center justify-center bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
+              <div className="flex items-center gap-3 text-sm font-medium">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--sa-primary)]" aria-hidden="true" />
+                <span>Preparing your workspace</span>
+              </div>
             </div>
           }>
             <Routes>

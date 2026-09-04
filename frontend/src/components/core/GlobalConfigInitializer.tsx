@@ -58,7 +58,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
         setError(null); // Clear the error banner if the delayed fetch succeeded
       } catch (err) {
         if (cancelled) return;
-        console.error("Config fetch error:", err);
+        console.warn("[Config] Public config unavailable; continuing with safe defaults:", err);
         selfHealingState.reportError(String(err), 'CONFIG_FETCH_FAILED');
 
         // বাংলা মন্তব্য: সেলফ-হিলিং চালু থাকলে bounded retry করবে, নাহলে সরাসরি safe-default।
@@ -75,7 +75,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
         // বাংলা মন্তব্য: শুধু তখনই fallback করব যদি এখনও কোনো কনফিগ লোড না হয়ে থাকে
         if (!useStore.getState().isConfigLoaded) {
           applyConfig(AppDefaults);
-          setError("Failed to connect to SupremeAI core. Using safe-default configurations.");
+            setError(null);
         }
       }
     };
@@ -102,7 +102,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
           if (!useStore.getState().isConfigLoaded) {
             console.warn(`[Config] Deadline ${CONFIG_DEADLINE_MS}ms exceeded. Falling back to safe defaults.`);
             applyConfig(AppDefaults);
-            setError("Connecting to SupremeAI core is taking longer than expected. Showing safe-default view.");
+            setError(null);
           }
         }, CONFIG_DEADLINE_MS);
 

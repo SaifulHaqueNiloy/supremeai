@@ -221,6 +221,54 @@ body.matrix {
   to { background-position: 1800px 0; }
 }
 
+/* Lightweight live atmosphere for operational shells. CSS-only, pointer-safe, and
+   automatically quiet when the user prefers reduced motion. */
+.dashboard-live-shell {
+  isolation: isolate;
+  position: relative;
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--accent-primary) 10%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--accent-secondary) 8%, transparent), transparent 30%),
+    var(--background);
+}
+
+.dashboard-live-shell > *:not(.dashboard-live-orb) {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-live-orb {
+  position: absolute;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(70px);
+  opacity: 0.14;
+  z-index: 0;
+  will-change: transform;
+  background: var(--accent-primary);
+  animation: dashboard-orb-drift 24s ease-in-out infinite alternate;
+}
+
+.dashboard-live-orb-one { top: -18rem; left: 8%; }
+.dashboard-live-orb-two {
+  right: -16rem;
+  bottom: -18rem;
+  background: var(--accent-secondary);
+  animation-delay: -9s;
+  animation-duration: 30s;
+}
+
+@keyframes dashboard-orb-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(0.96); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-live-orb { animation: none; }
+}
+
 /* ═══════════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════════ */
@@ -414,6 +462,113 @@ body.matrix {
    ═══════════════════════════════════════════════════════ */
 .glass-hover {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SUPREMEAI CALM COMMAND CENTER FOUNDATION
+   Lightweight operational identity: quiet telemetry, clear hierarchy, no glow.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sa-canvas: #f6f7f4;
+  --sa-surface: #ffffff;
+  --sa-surface-muted: #eef1ee;
+  --sa-ink: #111615;
+  --sa-ink-muted: #66716d;
+  --sa-border: #dce3de;
+  --sa-primary: #176b5b;
+  --sa-primary-soft: #ddf3ea;
+  --sa-action: #2563eb;
+  --sa-action-soft: #e5eeff;
+  --sa-success: #16805b;
+  --sa-warning: #b7791f;
+  --sa-danger: #c24141;
+  --sa-radius: 12px;
+  --sa-radius-sm: 8px;
+  --sa-shadow-sm: 0 1px 2px rgb(17 22 21 / 0.05);
+  --sa-shadow-md: 0 12px 30px rgb(17 22 21 / 0.08);
+}
+
+:root.dark,
+[data-theme="dark"] {
+  --sa-canvas: #0d1412;
+  --sa-surface: #141d1a;
+  --sa-surface-muted: #1b2823;
+  --sa-ink: #f1f5f2;
+  --sa-ink-muted: #9aa9a2;
+  --sa-border: #2b3a34;
+  --sa-primary: #62d7b2;
+  --sa-primary-soft: #173c32;
+  --sa-action: #7ea8ff;
+  --sa-action-soft: #1c2e52;
+  --sa-success: #62d7b2;
+  --sa-warning: #f3c969;
+  --sa-danger: #f38b8b;
+  --sa-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.18);
+  --sa-shadow-md: 0 16px 36px rgb(0 0 0 / 0.24);
+}
+
+/* Prefer the calm product canvas for the default shell. Existing specialty
+   themes can still opt into their own surfaces through more specific rules. */
+body {
+  background: var(--sa-canvas);
+  color: var(--sa-ink);
+  font-family: Inter, Outfit, system-ui, sans-serif;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.sa-surface {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius);
+  box-shadow: var(--sa-shadow-sm);
+}
+
+.sa-surface-raised {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius);
+  box-shadow: var(--sa-shadow-md);
+}
+
+.sa-eyebrow {
+  color: var(--sa-ink-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.sa-operational-pulse {
+  align-items: center;
+  color: var(--sa-success);
+  display: inline-flex;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.sa-operational-pulse::before {
+  background: currentColor;
+  border-radius: 999px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 14%, transparent);
+  content: '';
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.sa-operational-pulse[data-state="degraded"] { color: var(--sa-warning); }
+.sa-operational-pulse[data-state="unavailable"] { color: var(--sa-danger); }
+
+/* Keep feedback meaningful and inexpensive; never animate for users who opt out. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .glass-hover:hover {

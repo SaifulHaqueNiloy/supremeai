@@ -125,17 +125,27 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
         <div className="hidden md:flex items-center rounded-lg border border-border overflow-hidden text-xs font-semibold" role="navigation" aria-label="Role context">
           <button
             type="button"
-            onClick={() => navigate('/workspace')}
+            onClick={() => navigate('/workspace?viewAs=user')}
             className={`px-3 py-1.5 transition-colors ${isActiveContext('user') ? 'surface-3 text-accent-primary' : 'text-secondary hover:text-text hover:surface-2'}`}
           >
-            User Workspace
+            View as user
           </button>
           <button
             type="button"
             onClick={() => navigate('/admin')}
             className={`px-3 py-1.5 transition-colors ${isActiveContext('admin') ? 'surface-3 text-accent-primary' : 'text-secondary hover:text-text hover:surface-2'}`}
           >
-            Admin Console
+            Admin console
+          </button>
+        </div>
+      )}
+
+      {adminAuthorized && context === 'user' && (
+        <div className="hidden lg:flex items-center gap-2 rounded-full border border-accent-primary/30 bg-accent-primary/10 px-3 py-1 text-[11px] font-mono text-accent-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-accent-primary" aria-hidden="true" />
+          Admin preview mode
+          <button type="button" onClick={() => navigate('/admin')} className="font-semibold underline underline-offset-2 hover:text-text">
+            Return to admin
           </button>
         </div>
       )}
@@ -148,7 +158,7 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
         title={isServerOnline ? 'Core backend online' : 'Core backend unreachable'}
       >
         {isServerOnline ? <Wifi size={13} className="text-emerald-400" /> : <WifiOff size={13} className="text-rose-400" />}
-        {isServerOnline ? 'CORE ONLINE' : 'CORE OFFLINE'}
+        {isServerOnline ? 'SYSTEM OPERATIONAL' : 'SYSTEM UNAVAILABLE'}
       </span>
 
       {actions}
