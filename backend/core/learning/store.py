@@ -335,9 +335,7 @@ class LearningStore:
                 payload = event.to_dict()
             elif isinstance(event, dict):
                 payload = {
-                    k: v
-                    for k, v in event.items()
-                    if k in LEARNING_EVENT_FIELDS or k == "metadata"
+                    k: v for k, v in event.items() if k in LEARNING_EVENT_FIELDS or k == "metadata"
                 }
                 payload["metadata"] = sanitize_metadata(payload.get("metadata"))
             else:
