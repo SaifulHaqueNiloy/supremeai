@@ -59,17 +59,24 @@ async def test_change_proposal_lifecycle_and_promotion():
 
     assert proposal.state == ProposalState.DRAFTED
 
-    # Mock security scanner & benchmark callbacks
+    # Mock security scanner, benchmark & canary callbacks
     async def mock_security_ok(prop):
         return True
 
     async def mock_benchmark_improved(prop):
         return 0.89  # Improved from 0.82
 
+    async def mock_canary_runner(prop):
+        return {"success_rate": 1.0, "observations": 10}
+
+    # Explicit human approval before promotion
+    manager.approve(proposal.proposal_id, approver="admin")
+
     promoted = await manager.evaluate_and_promote(
         proposal_id=proposal.proposal_id,
         security_scanner_cb=mock_security_ok,
         benchmarker_cb=mock_benchmark_improved,
+        canary_runner_cb=mock_canary_runner,
     )
 
     assert promoted is True

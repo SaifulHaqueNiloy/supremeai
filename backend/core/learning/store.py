@@ -104,6 +104,7 @@ _ALLOWED_METADATA_KEYS = frozenset(
 _MAX_METADATA_LIST_ITEMS = 20
 _MAX_COERCED_STR = 200
 _MAX_METADATA_DEPTH = 3
+_FORBIDDEN_METADATA_MARKERS = ("prompt", "response", "content")
 
 
 def sanitize_metadata(metadata: Mapping[str, Any] | None, _depth: int = 0) -> dict[str, Any]:
@@ -118,12 +119,19 @@ def sanitize_metadata(metadata: Mapping[str, Any] | None, _depth: int = 0) -> di
     clean: dict[str, Any] = {}
     for key, value in metadata.items():
         key_str = str(key)
-        if key_str.lower() not in _ALLOWED_METADATA_KEYS:
-            continue  # privacy: only known operational metadata is persisted
+        key_lower = key_str.lower()
+        if any(marker in key_lower for marker in _FORBIDDEN_METADATA_MARKERS):
+            continue  # privacy: never serialize prompt, response or content
         if isinstance(value, Mapping):
             if _depth < _MAX_METADATA_DEPTH:
                 clean[key_str] = sanitize_metadata(value, _depth + 1)
             continue
+        if (
+            _depth == 0
+            and not isinstance(value, (list, tuple))
+            and key_lower not in _ALLOWED_METADATA_KEYS
+        ):
+            continue  # only known operational metadata or structured items allowed at top level
         if isinstance(value, (str, int, float, bool)) or value is None:
             clean[key_str] = value
         elif isinstance(value, (list, tuple)):

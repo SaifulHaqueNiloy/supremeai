@@ -26,7 +26,7 @@ async def get_global_browser() -> Browser:
     if _global_browser is None:
         async with _browser_start_lock:
             if _global_browser is None:
-                logger.info("Starting a new headless global browser instance")
+                logger.info("🚀 Starting a new headless Global Chromium instance...")
                 import sys
 
                 current_module = sys.modules.get(

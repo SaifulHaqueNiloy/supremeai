@@ -274,7 +274,21 @@ class ChangeProposalManager:
 
         proposal.advance_state(ProposalState.BENCHMARKED)
 
-        # 4. Canary Testing Gate. A callback and real observations are
+        # 4. Rollback and human-approval gates (Sprint 6, plan §19: "No rollback target = no
+        # autonomous promotion.") A promotion without a described, restorable
+        # prior state is irreversible — therefore forbidden.
+        if not proposal.rollback_target or not isinstance(proposal.rollback_target, dict):
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = (
+                "No rollback target — autonomous promotion refused (plan §19)"
+            )
+            self._persist_proposal(proposal)
+            logger.critical(
+                f"🚫 [ROLLBACK GATE] Proposal [{proposal_id}] REJECTED: no rollback target."
+            )
+            return False
+
+        # 5. Canary Testing Gate. A callback and real observations are
         # mandatory; never promote based on a fabricated/default rate.
         if canary_runner_cb is None:
             proposal.advance_state(ProposalState.REJECTED)
@@ -306,20 +320,6 @@ class ChangeProposalManager:
                 f"Canary regression: {proposal.canary_success_rate:.3f} < {minimum_canary_rate:.3f}"
             )
             self._persist_proposal(proposal)
-            return False
-
-        # 5. Rollback and human-approval gates (Sprint 6, plan §19: "No rollback target = no
-        # autonomous promotion.") A promotion without a described, restorable
-        # prior state is irreversible — therefore forbidden.
-        if not proposal.rollback_target or not isinstance(proposal.rollback_target, dict):
-            proposal.advance_state(ProposalState.REJECTED)
-            proposal.rejection_reason = (
-                "No rollback target — autonomous promotion refused (plan §19)"
-            )
-            self._persist_proposal(proposal)
-            logger.critical(
-                f"🚫 [ROLLBACK GATE] Proposal [{proposal_id}] REJECTED: no rollback target."
-            )
             return False
 
         if not proposal.human_approved or not proposal.approved_by:
