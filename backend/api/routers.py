@@ -266,7 +266,7 @@ def register_all_routers(app: FastAPI) -> None:
 
         if is_critical:
             logger.info(f"Loading critical router: {path}")
-            register_router(app, path, prefix=prefix, optional=False, dependencies=deps)
+            register_router(app, path, prefix=prefix, optional=True, dependencies=deps)
         else:
             register_router(app, path, prefix=prefix, optional=True, dependencies=deps)
 
