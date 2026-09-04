@@ -68,13 +68,166 @@ def content_hash(record: dict[str, Any]) -> str:
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
+ROLLBACK_COLUMNS = (
+    "title",
+    "domain",
+    "namespace",
+    "content",
+    "source",
+    "metadata",
+    "content_hash",
+    "status",
+    "confidence",
+    "risk_level",
+    "source_version",
+    "review_after",
+)
+
+
+def _jsonify(value: Any) -> Any:
+    """Normalizes values for JSONB parameters (dicts/lists must serialize)."""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    return value
+
+
+def capture_rollback_snapshot(cur: Any, keys: list[str]) -> dict[str, dict[str, Any] | None]:
+    """Snapshots pre-import row state for every manifest knowledge_key.
+
+    None means the row did not exist before this import (delete on rollback).
+    The snapshot is stored inside the audit entry's `evidence` JSON so a later
+    `--rollback <rollback_id>` can restore the previous state exactly.
+    """
+    if not keys:
+        return {}
+    cur.execute(
+        "SELECT knowledge_key, title, domain, namespace, content, source, "
+        "metadata, content_hash, status, confidence, risk_level, source_version, "
+        "review_after FROM knowledge_base WHERE knowledge_key = ANY(%s)",
+        (keys,),
+    )
+    existing: dict[str, dict[str, Any] | None] = {}
+    for row in cur.fetchall():
+        existing[row[0]] = {
+            "title": row[1],
+            "domain": row[2],
+            "namespace": row[3],
+            "content": row[4],
+            "source": row[5],
+            "metadata": row[6],
+            "content_hash": row[7],
+            "status": row[8],
+            "confidence": row[9],
+            "risk_level": row[10],
+            "source_version": row[11],
+            "review_after": row[12].isoformat() if row[12] is not None else None,
+        }
+    return {k: existing.get(k) for k in keys}
+
+
+def rollback_knowledge(cur: Any, snapshot: dict[str, dict[str, Any] | None]) -> tuple[int, int]:
+    """Restores rows captured in `capture_rollback_snapshot`.
+
+    Rows that did not exist before the import (snapshot None) are deleted;
+    rows that existed are restored to their pre-import values.
+    Returns (deleted, restored) row counts.
+    """
+    deleted = 0
+    restored = 0
+    for key, prev in snapshot.items():
+        if prev is None:
+            cur.execute("DELETE FROM knowledge_base WHERE knowledge_key = %s", (key,))
+            deleted += cur.rowcount
+            continue
+        cur.execute(
+            "UPDATE knowledge_base SET title=%s, domain=%s, namespace=%s, "
+            "content=%s, source=%s, metadata=%s::jsonb, content_hash=%s, "
+            "status=%s, confidence=%s, risk_level=%s, source_version=%s, "
+            "review_after=%s, updated_at=NOW() WHERE knowledge_key=%s",
+            (
+                prev.get("title"),
+                prev.get("domain"),
+                prev.get("namespace"),
+                prev.get("content"),
+                prev.get("source"),
+                _jsonify(prev.get("metadata")),
+                prev.get("content_hash"),
+                prev.get("status"),
+                prev.get("confidence"),
+                prev.get("risk_level"),
+                prev.get("source_version"),
+                prev.get("review_after"),
+                key,
+            ),
+        )
+        restored += cur.rowcount
+    return deleted, restored
+
+
+def run_rollback(rollback_id: str) -> int:
+    """Restores the database to its pre-import state for a given rollback_id.
+
+    Uses the rollback snapshot embedded in knowledge_import_audits.evidence at
+    import time. Best-effort restores only the rows the import touched and
+    records `rolled_back_at` on the audit row for external verification.
+    """
+    import psycopg2
+
+    conn = psycopg2.connect(os.environ["DATABASE_URL"])
+    with conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT manifest_hash, source_version, imported_count, evidence "
+                "FROM knowledge_import_audits WHERE rollback_id = %s",
+                (rollback_id,),
+            )
+            row = cur.fetchone()
+            if row is None:
+                raise SystemExit(f"Unknown rollback_id: {rollback_id}")
+            evidence = row[3]
+            if isinstance(evidence, str):
+                evidence = json.loads(evidence)
+            snapshot = evidence.get("rollback") if isinstance(evidence, dict) else None
+            if not snapshot:
+                raise SystemExit(f"No rollback snapshot found for {rollback_id} — cannot rollback")
+            deleted, restored = rollback_knowledge(cur, snapshot)
+            cur.execute(
+                "UPDATE knowledge_import_audits SET "
+                "evidence = evidence::jsonb || %s::jsonb WHERE rollback_id = %s",
+                (
+                    json.dumps({"rolled_back_at": datetime.now(UTC).isoformat()}),
+                    rollback_id,
+                ),
+            )
+    print(
+        json.dumps(
+            {
+                "rollback_id": rollback_id,
+                "deleted_rows": deleted,
+                "restored_rows": restored,
+                "rolled_back": True,
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "manifest", nargs="?", default="backend/data/supremeai_long_term_knowledge_v1.json"
     )
     parser.add_argument("--validate-only", action="store_true")
+    parser.add_argument(
+        "--rollback",
+        help="Roll back a previous import using its rollback_id (see audit evidence)",
+    )
     args = parser.parse_args()
+    if args.rollback:
+        if args.validate_only:
+            raise SystemExit("--rollback cannot be combined with --validate-only")
+        return run_rollback(args.rollback)
     payload = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
     records = payload.get("records", [])
     errors = validate(records)
@@ -100,6 +253,9 @@ def main() -> int:
     rollback_id = f"knowledge-import-{uuid.uuid4()}"
     with conn:
         with conn.cursor() as cur:
+            keys = [record["knowledge_key"] for record in records]
+            # Pre-import snapshot so `--rollback <rollback_id>` can restore state.
+            snapshot = capture_rollback_snapshot(cur, keys)
             for record in records:
                 digest = content_hash(record)
                 metadata = {
@@ -136,7 +292,9 @@ def main() -> int:
                         {
                             "tool": "import_knowledge_base.py",
                             "timestamp": datetime.now(UTC).isoformat(),
-                        }
+                            **({"rollback": snapshot} if snapshot else {}),
+                        },
+                        default=str,
                     ),
                 ),
             )
