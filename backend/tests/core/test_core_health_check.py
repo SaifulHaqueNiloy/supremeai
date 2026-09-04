@@ -224,7 +224,7 @@ async def test_check_external_services_all_configured():
         result = await checker.check_external_services()
 
         assert result.status == HealthStatus.HEALTHY
-        assert "All external services configured" in result.message
+        assert "All essential external services configured" in result.message
         assert result.details["llm_provider_configured"] is True
         assert result.details["redis_configured"] is True
         assert result.details["stripe_configured"] is True
@@ -247,7 +247,11 @@ async def test_check_external_services_some_missing():
         assert "Some external services not configured" in result.message
         assert result.details["llm_provider_configured"] is True
         assert result.details["redis_configured"] is False
-        assert result.details["stripe_configured"] is False
+        # বাংলা: stripe_api_key None হলে check_external_services() ইচ্ছাকৃতভাবে
+        # "stripe_configured" key-টাই checks dict-এ যোগ করে না (stripe এখন
+        # optional/non-essential -- না থাকলে overall status ডিগ্রেড করে না),
+        # তাই details-এ কী-টা সম্পূর্ণ অনুপস্থিত থাকবে, False না।
+        assert "stripe_configured" not in result.details
 
 
 @pytest.mark.asyncio
@@ -384,15 +388,20 @@ async def test_check_disk_high_usage():
     with patch.dict("sys.modules", {"psutil": MagicMock()}):
         mock_psutil = __import__("psutil")
         mock_disk = MagicMock()
-        mock_disk.used = 85 * 1024**3  # 85GB used
+        # বাংলা: check_disk()-এর থ্রেশহোল্ড ইচ্ছাকৃতভাবে widen করা হয়েছিল
+        # (Render/Docker হোস্টের root volume সাধারণত 70-85% ব্যবহার দেখায় কিন্তু
+        # আসলে অনেক GB ফাঁকা থাকে) -- তাই এখন শুধু usage% কম হলেই না, free space
+        # কম থাকলেও DEGRADED ধরা হয়। DEGRADED ট্রিগার করতে usage>=88% বা
+        # free<10GB লাগবে, সাথে usage<95% বা free>=2GB (নাহলে UNHEALTHY)।
+        mock_disk.used = 92 * 1024**3  # 92GB used
         mock_disk.total = 100 * 1024**3  # 100GB total
-        mock_disk.free = 15 * 1024**3  # 15GB free
+        mock_disk.free = 8 * 1024**3  # 8GB free
         mock_psutil.disk_usage.return_value = mock_disk
 
         result = await checker.check_disk()
 
         assert result.status == HealthStatus.DEGRADED
-        assert "high" in result.message
+        assert "elevated" in result.message
 
 
 @pytest.mark.asyncio
@@ -403,9 +412,10 @@ async def test_check_disk_critical_usage():
     with patch.dict("sys.modules", {"psutil": MagicMock()}):
         mock_psutil = __import__("psutil")
         mock_disk = MagicMock()
-        mock_disk.used = 95 * 1024**3  # 95GB used
+        # বাংলা: UNHEALTHY ট্রিগার করতে এখন usage>=95% এবং free<2GB দুটোই লাগবে।
+        mock_disk.used = 99 * 1024**3  # 99GB used
         mock_disk.total = 100 * 1024**3  # 100GB total
-        mock_disk.free = 5 * 1024**3  # 5GB free
+        mock_disk.free = 1 * 1024**3  # 1GB free
         mock_psutil.disk_usage.return_value = mock_disk
 
         result = await checker.check_disk()
