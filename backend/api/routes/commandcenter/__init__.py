@@ -67,7 +67,7 @@ async def command_metrics():
 
     # 2. Background service status — env-driven (default off, so we show what's enabled)
     metrics["services"] = {
-        "auto_healer_enabled": os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true",
+        "auto_healer_enabled": os.getenv("ENABLE_AUTO_HEALER", "false").lower() == "true",
         "evolution_enabled": os.getenv("ENABLE_EVOLUTION", "false").lower() == "true",
         "daily_learner_enabled": os.getenv("ENABLE_DAILY_LEARNER", "false").lower() == "true",
         "tier8_enabled": os.getenv("ENABLE_TIER8", "false").lower() == "true",
