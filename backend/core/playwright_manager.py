@@ -1,3 +1,5 @@
+import asyncio
+import os
 from typing import Any
 
 from core.logging_config import logger
@@ -11,33 +13,48 @@ except ImportError:
 
 _playwright_runner: Playwright | None = None
 _global_browser: Browser | None = None
+_browser_start_lock = asyncio.Lock()
+_browser_max_pages = max(1, int(os.getenv("BROWSER_MAX_CONCURRENT_PAGES", "2")))
+_browser_page_semaphore = asyncio.Semaphore(_browser_max_pages)
 
 
 async def get_global_browser() -> Browser:
     """গ্লোবাল ব্রাউজার ইনস্ট্যান্স রিটার্ন করে (Lazy Initialization Pattern)"""
     global _playwright_runner, _global_browser
     if _global_browser is None:
-        logger.info("🚀 Starting a new headless Global Chromium instance...")
-        import sys
+        async with _browser_start_lock:
+            if _global_browser is None:
+                logger.info("Starting a new headless global browser instance")
+                import sys
 
-        current_module = sys.modules.get(__name__, sys.modules.get("core.playwright_manager"))
-        current_async_playwright = (
-            getattr(current_module, "async_playwright", async_playwright)
-            if current_module
-            else async_playwright
-        )
-        if not callable(current_async_playwright):
-            raise RuntimeError("Playwright is not installed.")
-        _playwright_runner = await current_async_playwright().start()
-        _global_browser = await _playwright_runner.chromium.launch(
-            headless=True,
-            args=[
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-            ],
-        )
+                current_module = sys.modules.get(__name__, sys.modules.get("core.playwright_manager"))
+                current_async_playwright = (
+                    getattr(current_module, "async_playwright", async_playwright)
+                    if current_module
+                    else async_playwright
+                )
+                if not callable(current_async_playwright):
+                    raise RuntimeError("Playwright is not installed.")
+                _playwright_runner = await current_async_playwright().start()
+                try:
+                    _global_browser = await _playwright_runner.chromium.launch(
+                        headless=True,
+                        args=[
+                            "--no-sandbox",
+                            "--disable-setuid-sandbox",
+                            "--disable-dev-shm-usage",
+                        ],
+                    )
+                except Exception:
+                    await _playwright_runner.stop()
+                    _playwright_runner = None
+                    raise
     return _global_browser
+
+
+async def browser_page_slot():
+    """Bounded slot for browser work; prevents unbounded page concurrency."""
+    return _browser_page_semaphore
 
 
 async def shutdown_global_browser():
