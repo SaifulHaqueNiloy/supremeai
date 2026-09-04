@@ -221,6 +221,54 @@ body.matrix {
   to { background-position: 1800px 0; }
 }
 
+/* Lightweight live atmosphere for operational shells. CSS-only, pointer-safe, and
+   automatically quiet when the user prefers reduced motion. */
+.dashboard-live-shell {
+  isolation: isolate;
+  position: relative;
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--accent-primary) 10%, transparent), transparent 28%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--accent-secondary) 8%, transparent), transparent 30%),
+    var(--background);
+}
+
+.dashboard-live-shell > *:not(.dashboard-live-orb) {
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-live-orb {
+  position: absolute;
+  width: 28rem;
+  height: 28rem;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(70px);
+  opacity: 0.14;
+  z-index: 0;
+  will-change: transform;
+  background: var(--accent-primary);
+  animation: dashboard-orb-drift 24s ease-in-out infinite alternate;
+}
+
+.dashboard-live-orb-one { top: -18rem; left: 8%; }
+.dashboard-live-orb-two {
+  right: -16rem;
+  bottom: -18rem;
+  background: var(--accent-secondary);
+  animation-delay: -9s;
+  animation-duration: 30s;
+}
+
+@keyframes dashboard-orb-drift {
+  from { transform: translate3d(-2%, -1%, 0) scale(0.96); }
+  to { transform: translate3d(5%, 4%, 0) scale(1.05); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-live-orb { animation: none; }
+}
+
 /* ═══════════════════════════════════════════════════════
    SCROLLBAR
    ═══════════════════════════════════════════════════════ */
