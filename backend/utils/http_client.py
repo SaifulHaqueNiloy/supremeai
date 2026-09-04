@@ -13,18 +13,47 @@ import httpx
 
 from core.logging_config import logger
 
+_shared_client: httpx.AsyncClient | None = None
+
+
+async def close_shared_client() -> None:
+    """Close the process-wide client during application shutdown."""
+    global _shared_client
+    if _shared_client is not None:
+        await _shared_client.aclose()
+        _shared_client = None
+
+
+def set_shared_client(client: httpx.AsyncClient | None) -> None:
+    """Register the application-managed client used by helper functions."""
+    global _shared_client
+    _shared_client = client
+
+
+def get_shared_client() -> httpx.AsyncClient | None:
+    """Return the application-managed client, if the app lifespan is active."""
+    return _shared_client
+
+
 # বাংলা মন্তব্য: Anti-Silent Hanging — প্রতিটি HTTP কলে সর্বোচ্চ ১০ সেকেন্ড টাইমআউট এনফোর্সড
 DEFAULT_TIMEOUT = httpx.Timeout(10.0, connect=5.0)
 # বাংলা মন্তব্য: Unbounded outbound concurrency রোধে bounded connection pool।
 DEFAULT_LIMITS = httpx.Limits(max_connections=100, max_keepalive_connections=20)
 
 
-async def safe_fetch(url: str, **kwargs: Any) -> httpx.Response:
-    async with httpx.AsyncClient(
-        timeout=DEFAULT_TIMEOUT,
-        limits=DEFAULT_LIMITS,
-    ) as client:
-        return await client.get(url, **kwargs)
+async def safe_fetch(
+    url: str,
+    *,
+    client: httpx.AsyncClient | None = None,
+    **kwargs: Any,
+) -> httpx.Response:
+    """Fetch with the lifespan-managed pool when one is available."""
+    managed = client or get_shared_client()
+    if managed is not None:
+        return await managed.get(url, **kwargs)
+
+    async with create_async_client() as fallback:
+        return await fallback.get(url, **kwargs)
 
 
 def create_async_client(
@@ -92,14 +121,24 @@ async def safe_api_call(
         ব্যর্থ হলে (False, error_message_str)।
     """
     try:
-        async with create_async_client(timeout=timeout) as client:
-            response = await client.request(
+        managed = get_shared_client()
+        if managed is not None:
+            response = await managed.request(
                 method,
                 url,
                 headers=headers,
                 json=json_data,
                 params=params,
             )
+        else:
+            async with create_async_client(timeout=timeout) as fallback:
+                response = await fallback.request(
+                    method,
+                    url,
+                    headers=headers,
+                    json=json_data,
+                    params=params,
+                )
             response.raise_for_status()
             return (True, response.json())
     except httpx.HTTPStatusError as e:
