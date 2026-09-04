@@ -9,6 +9,7 @@ import contextlib
 import functools
 import inspect
 import json
+import os
 import time
 import uuid
 from collections import OrderedDict
@@ -20,6 +21,21 @@ from typing import Any
 from core.config import settings
 from core.error_bus import with_error_bus
 from core.logging_config import logger
+
+
+# ── Bounded Queue Helpers ───────────────────────────────────────────────────
+class TaskQueueOverflowError(RuntimeError):
+    """Raised when the bounded local asyncio queue cannot accept a task.
+    Callers must map this to HTTP 429 backpressure instead of letting the in-memory queue grow until OOM.
+    """
+
+
+def _default_local_queue_maxsize() -> int:
+    """Bounded local queue capacity — env-overridable, default 100."""
+    try:
+        return max(1, int(os.getenv("TASK_QUEUE_MAX_SIZE", "100")))
+    except (TypeError, ValueError):
+        return 100
 
 
 # ── Data Models ────────────────────────────────────────────────────────────────
@@ -87,6 +103,7 @@ class TaskQueue:
         redis_url: str | None = None,
         project_id: str | None = None,
         max_tracked_tasks: int = 10_000,
+        local_queue_maxsize: int | None = None,
     ):
         self.default_backend = default_backend
         self.redis_url = redis_url or getattr(settings, "redis_url", None)
@@ -110,13 +127,20 @@ class TaskQueue:
             "evicted": 0,
         }
 
-        # বাংলা মন্তব্য: backends lazily initialized — module import time-এ network call নেই
-        self.local_queue: asyncio.Queue = asyncio.Queue()
+        # বাংলা মন্তব্য: bounded local queue — full queue overflows (TaskQueueOverflowError) instead of OOM
+        self.local_queue: asyncio.Queue = asyncio.Queue(
+            maxsize=(
+                local_queue_maxsize
+                if local_queue_maxsize is not None
+                else _default_local_queue_maxsize()
+            )
+        )
         self._worker_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
         logger.info(
-            f"[TaskQueue] Initialized with backend={default_backend.value}, max_tracked={max_tracked_tasks}"
+            f"[TaskQueue] Initialized with backend={default_backend.value}, "
+            f"max_tracked={max_tracked_tasks}, local_queue_maxsize={self.local_queue.maxsize}"
         )
 
     @functools.cached_property
@@ -350,8 +374,15 @@ class TaskQueue:
     async def _submit_to_asyncio(
         self, func: Callable, task_id: str, args: tuple, kwargs: dict
     ) -> None:
-        """বাংলা মন্তব্য: Local asyncio queue-এ submit এবং worker ensure।"""
-        await self.local_queue.put((func, task_id, args, kwargs))
+        """বাংলা মন্তব্য: Local asyncio queue-এ submit এবং worker ensure।
+        Bounded queue: full থাকলে TaskQueueOverflowError রেইজ করে backpressure দেবে।
+        """
+        try:
+            self.local_queue.put_nowait((func, task_id, args, kwargs))
+        except asyncio.QueueFull as exc:
+            raise TaskQueueOverflowError(
+                f"task queue full (capacity {self.local_queue.maxsize}) — try again later"
+            ) from exc
         if self._worker_task is None or self._worker_task.done():
             self._worker_task = asyncio.create_task(
                 self._asyncio_worker(), name=f"task_queue_worker_{int(time.time())}"

@@ -197,7 +197,13 @@ class TestRequestModels:
         assert body.username == "user@example.com"
         assert body.password == "pass"
 
-    def test_login_request_missing_username(self):
+    def test_login_request_with_email_only(self):
+        body = LoginRequest(email="user@example.com", password="pass")
+        assert body.username == "user@example.com"
+        assert body.email == "user@example.com"
+        assert body.password == "pass"
+
+    def test_login_request_missing_username_and_email(self):
         with pytest.raises(ValidationError):
             LoginRequest(password="pass")
 

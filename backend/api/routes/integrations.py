@@ -1,3 +1,7 @@
+import base64
+import hashlib
+import hmac
+import time
 from urllib.parse import urlencode
 
 import httpx
@@ -13,11 +17,38 @@ from core.security.security_vault import encrypt_token
 from database.session import get_db_session
 from models.integration import Integration
 
-# বাংলা মন্তব্য: GitHub OAuth — রিয়েল ইউজার আইডি ও DB পার্সিস্টেন্স সহ সম্পূর্ণ ফ্লো
-# আগের ভার্সনে user_id_placeholder = "test_user_id" হার্ডকোডেড ছিল এবং টোকেন DB-তে সেভ হতো না।
-# এখন JWT থেকে প্রকৃত user_id নেওয়া হচ্ছে এবং encrypted token DB-তে সংরক্ষিত হচ্ছে।
+# বাংলা মন্তব্য: GitHub OAuth — HMAC-SHA256 সাইনড স্টেট টোকেন দ্বারা সুরক্ষিত
+# CSRF অ্যাটাক প্রতিরোধে signed, user-bound, 10-মিনিটের TTL স্টেট টোকেন বাধ্যতামূলক করা হয়েছে।
+# এছাড়া Least-Privilege নীতি অনুযায়ী অপ্রয়োজনীয় 'user' স্কোপ পরিহার করে শুধুমাত্র 'repo' স্কোপ রাখা হয়েছে।
 
 router = APIRouter()
+
+_OAUTH_STATE_TTL_SECONDS = 600
+
+
+def _sign_oauth_state(user_id: str, expires_at: int) -> str:
+    """Creates a URL-safe signed state token binding user_id and expiration."""
+    msg = f"{user_id}|{expires_at}".encode()
+    sig = hmac.new(settings.jwt_secret.encode(), msg, hashlib.sha256).hexdigest()[:32]
+    raw = f"{user_id}|{expires_at}|{sig}".encode()
+    return base64.urlsafe_b64encode(raw).decode()
+
+
+def _verify_oauth_state(state: str, user_id: str) -> bool:
+    """Verifies HMAC signature, expiry, and user matching of an OAuth state token."""
+    try:
+        raw = base64.urlsafe_b64decode(state.encode()).decode()
+        state_user, expires_at_str, sig = raw.split("|", 2)
+        expires_at = int(expires_at_str)
+        msg = f"{state_user}|{expires_at}".encode()
+        expected = hmac.new(settings.jwt_secret.encode(), msg, hashlib.sha256).hexdigest()[:32]
+        if not hmac.compare_digest(sig, expected):
+            return False
+        if expires_at < int(time.time()):
+            return False
+        return state_user == str(user_id)
+    except Exception:
+        return False
 
 
 def _build_github_redirect_uri() -> str:
@@ -30,16 +61,22 @@ def _build_github_redirect_uri() -> str:
 
 
 @router.get("/integrations/github/link")
-async def link_github():
+async def link_github(
+    token_payload: dict = Depends(get_current_user_token),
+):
     """
     ইউজারকে GitHub OAuth লগইন পেইজে রিডাইরেক্ট করে।
-    redirect_uri এখন ডায়নামিক — settings.frontend_base_url থেকে নেওয়া হয়।
+    CSRF প্রটেকশনের জন্য HMAC সাইনড স্টেট টোকেন জেনারেট করে যুক্ত করা হয়।
     """
+    user_id = str(token_payload.get("sub") or "")
     redirect_uri = _build_github_redirect_uri()
+    expires_at = int(time.time()) + _OAUTH_STATE_TTL_SECONDS
+    state = _sign_oauth_state(user_id, expires_at)
     params = {
         "client_id": settings.github_client_id,
-        "scope": "repo user",
+        "scope": "repo",
         "redirect_uri": redirect_uri,
+        "state": state,
     }
     github_auth_url = f"https://github.com/login/oauth/authorize?{urlencode(params)}"
     return RedirectResponse(url=github_auth_url)
@@ -49,12 +86,13 @@ async def link_github():
 async def github_callback(
     code: str,
     request: Request,
+    state: str = "",
     token_payload: dict = Depends(get_current_user_token),
     db: AsyncSession = Depends(get_db_session),
 ):
     """
     GitHub OAuth কলব্যাক হ্যান্ডলার।
-    কোড এক্সচেঞ্জ করে access_token নেয়, এনক্রিপ্ট করে, এবং DB-তে সংরক্ষণ করে।
+    কোড এক্সচেঞ্জ করার আগে অবশ্যই সাইনড স্টেট ভ্যালিডেট করে CSRF অ্যাটাক ব্লক করে।
     """
     # ১. JWT থেকে প্রকৃত user_id বের করা
     user_id = token_payload.get("sub")
@@ -62,6 +100,15 @@ async def github_callback(
         logger.error("GitHub OAuth callback: Token payload missing 'sub' claim.")
         return RedirectResponse(
             url=f"{settings.frontend_base_url}/integrations?status=error&message=Invalid token"
+        )
+
+    # ০. CSRF State Verification
+    if not state or not _verify_oauth_state(state, str(user_id)):
+        logger.warning(
+            f"GitHub OAuth callback: invalid or expired state for user '{user_id}' — rejecting"
+        )
+        return RedirectResponse(
+            url=f"{settings.frontend_base_url}/integrations?status=error&message=Invalid or expired state"
         )
 
     redirect_uri = _build_github_redirect_uri()

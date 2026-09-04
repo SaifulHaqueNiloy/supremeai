@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
@@ -171,8 +172,23 @@ async def optional_current_user(
 
 
 class LoginRequest(BaseModel):
-    username: EmailStr
+    username: EmailStr | None = None
+    email: EmailStr | None = None
     password: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def reconcile_username_email(cls, values: Any) -> Any:
+        if isinstance(values, dict):
+            email_val = values.get("email")
+            user_val = values.get("username")
+            if not user_val and not email_val:
+                raise ValueError("Either 'username' or 'email' must be provided")
+            if not user_val and email_val:
+                values["username"] = email_val
+            elif not email_val and user_val:
+                values["email"] = user_val
+        return values
 
 
 class RegisterRequest(BaseModel):
