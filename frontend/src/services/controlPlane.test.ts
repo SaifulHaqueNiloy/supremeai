@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { controlPlane, capabilityAvailable, ControlPlaneRegistry } from './controlPlane';
+import { controlPlane, capabilityAvailable } from './controlPlane';
+import type { ControlPlaneRegistry } from './controlPlane';
 import * as apiUtils from '../utils/api';
 
 vi.mock('../utils/api', () => ({
