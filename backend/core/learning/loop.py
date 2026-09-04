@@ -82,9 +82,9 @@ class LearningLoopAgent:
             try:
                 await self._task
             except asyncio.CancelledError:
-                pass
-            except Exception:  # pragma: no cover
-                pass
+                logger.debug("LearningLoopAgent task cancelled successfully during stop")
+            except Exception as loop_stop_err:  # pragma: no cover
+                logger.debug(f"LearningLoopAgent task stop error: {loop_stop_err}")
             self._task = None
         logger.info("LearningLoopAgent stopped.")
 

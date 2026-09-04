@@ -340,8 +340,8 @@ class LearningStore:
             if len(self._buffer) >= self._flush_threshold:
                 try:
                     self._wake.set()
-                except Exception:  # pragma: no cover - cross-thread edge
-                    pass
+                except Exception as wake_exc:  # pragma: no cover - cross-thread edge
+                    logger.debug(f"LearningStore wake signal failed: {wake_exc}")
             return True
         except Exception as exc:  # record_event NEVER raises
             logger.debug(f"record_event failed: {exc}")
@@ -416,8 +416,8 @@ class LearningStore:
         enriched.setdefault("feedback_type", feedback_type)
         try:
             enriched.setdefault("weight", float(weight))
-        except (TypeError, ValueError):
-            pass
+        except (TypeError, ValueError) as weight_err:
+            logger.debug(f"Invalid feedback weight {weight!r}: {weight_err}")
         return self.record_event(
             LearningEvent(
                 feedback=feedback_type,
@@ -513,8 +513,8 @@ class LearningStore:
         self._ensure_loop_primitives()
         try:
             self._wake.set()
-        except Exception:
-            pass
+        except Exception as wake_err:
+            logger.debug(f"LearningStore wake signal during stop failed: {wake_err}")
         task = self._task
         self._task = None
         for _ in range(10):  # bounded: 10 * max_batch covers fallback capacity
@@ -529,9 +529,9 @@ class LearningStore:
             try:
                 await task
             except asyncio.CancelledError:
-                pass
-            except Exception:  # pragma: no cover
-                pass
+                logger.debug("LearningStore task cancelled successfully during stop")
+            except Exception as task_err:  # pragma: no cover
+                logger.debug(f"LearningStore task stop encountered error: {task_err}")
 
     # ------------------------------------------------------- internals
 
@@ -542,7 +542,9 @@ class LearningStore:
                 try:
                     await asyncio.wait_for(self._wake.wait(), timeout=self._flush_interval)
                 except TimeoutError:
-                    pass
+                    logger.debug(
+                        "LearningStore flush loop wait timeout (proceeding with scheduled flush)"
+                    )
                 self._wake.clear()
                 if self._stopped:
                     break
