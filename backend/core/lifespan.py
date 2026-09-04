@@ -65,22 +65,30 @@ async def app_lifespan(app):
         await StartupValidator.validate()
     except Exception as e:
         logger.error(f"StartupValidator failed (continuing in degraded mode): {e}")
-        error_event_bus.emit(ErrorEvent(
-            module="lifespan", error_type="STARTUP_VALIDATOR_FAILED",
-            message=str(e)[:200], severity="WARNING",
-            structured_context=ErrorContext(module="auto_fixed"),
-            context={"component": "startup_validator"},
-        ))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="STARTUP_VALIDATOR_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "startup_validator"},
+            )
+        )
     try:
         await ReliabilityController.initialize()
     except Exception as e:
         logger.error(f"ReliabilityController init failed (continuing in degraded mode): {e}")
-        error_event_bus.emit(ErrorEvent(
-            module="lifespan", error_type="RELIABILITY_CTRL_INIT_FAILED",
-            message=str(e)[:200], severity="WARNING",
-            structured_context=ErrorContext(module="auto_fixed"),
-            context={"component": "reliability_controller"},
-        ))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="RELIABILITY_CTRL_INIT_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "reliability_controller"},
+            )
+        )
     app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
 
     # Update metrics with subsystem status
@@ -123,12 +131,16 @@ async def app_lifespan(app):
         await initialize_independent_services(app)
     except Exception as e:
         logger.error(f"initialize_independent_services failed (continuing in degraded mode): {e}")
-        error_event_bus.emit(ErrorEvent(
-            module="lifespan", error_type="INDEPENDENT_SERVICES_INIT_FAILED",
-            message=str(e)[:200], severity="WARNING",
-            structured_context=ErrorContext(module="auto_fixed"),
-            context={"component": "independent_services"},
-        ))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="INDEPENDENT_SERVICES_INIT_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "independent_services"},
+            )
+        )
 
     # ── Sequential Phase 2: Services that depend on Phase 1 ─────────────────
     # Orchestrator initialization (depends on HTTP client + DB)
@@ -193,12 +205,16 @@ async def app_lifespan(app):
         await start_background_services(app)
     except Exception as e:
         logger.error(f"start_background_services failed (continuing in degraded mode): {e}")
-        error_event_bus.emit(ErrorEvent(
-            module="lifespan", error_type="BACKGROUND_SERVICES_START_FAILED",
-            message=str(e)[:200], severity="WARNING",
-            structured_context=ErrorContext(module="auto_fixed"),
-            context={"component": "background_services"},
-        ))
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="BACKGROUND_SERVICES_START_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "background_services"},
+            )
+        )
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
 

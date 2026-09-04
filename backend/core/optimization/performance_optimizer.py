@@ -244,15 +244,75 @@ class QueryOptimizer:
 
         return optimized_query
 
+    def get_cache_stats(self) -> dict[str, Any]:
+        """Get cache statistics for the query optimizer."""
+        return {
+            "hits": getattr(self.query_cache, "hits", 0),
+            "misses": getattr(self.query_cache, "misses", 0),
+            "size": len(self.query_cache.cache),
+            "max_size": self.query_cache.maxsize,
+        }
+
 
 class AsyncPoolManager:
     """Manager for async resource pools to optimize resource usage."""
 
-    def __init__(self, max_connections: int = 10):
+    def __init__(
+        self,
+        max_connections: int = 10,
+        pool_name: str = "default",
+        min_connections: int = 2,
+        max_idle_time: int = 300,
+    ):
         self.max_connections = max_connections
+        self.pool_name = pool_name
+        self.min_connections = min_connections
+        self.max_idle_time = max_idle_time
         self.available_connections: Any = asyncio.Queue()
         self.active_connections: set[Any] = set()
         self._initialized = False
+        self._all_connections: list[Any] = []
+
+    def acquire_connection(self):
+        """Synchronous wrapper for acquiring a connection."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            # If called inside an existing running event loop
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                return executor.submit(lambda: asyncio.run(self.acquire())).result()
+
+        return asyncio.run(self.acquire())
+
+    def release_connection(self, conn):
+        """Synchronous wrapper for releasing a connection."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                return executor.submit(lambda: asyncio.run(self.release(conn))).result()
+
+        return asyncio.run(self.release(conn))
+
+    def get_pool_stats(self) -> dict[str, Any]:
+        """Get pool statistics (synchronous)."""
+        stats = self.stats()
+        return {
+            "available": stats.get("available", 0),
+            "active": stats.get("active", 0),
+            "current_size": len(self._all_connections),
+            "max": self.max_connections,
+        }
 
     async def initialize(self):
         """Initialize the connection pool."""
@@ -263,6 +323,7 @@ class AsyncPoolManager:
             # Create a mock connection object (replace with actual connection logic)
             conn = await self._create_connection()
             await self.available_connections.put(conn)
+            self._all_connections.append(conn)
 
         self._initialized = True
 
