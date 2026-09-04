@@ -219,7 +219,7 @@ async def start_background_services(app):
 
     # বাংলা মন্তব্ব্য: AutoHealerService শুরু করা — DB/Redis স্বয়ংক্রিয়ভাবে ঠিক করে।
     try:
-        if os.getenv("ENABLE_AUTO_HEALER", "true").lower() == "true":
+        if os.getenv("ENABLE_AUTO_HEALER", "false").lower() == "true":
             # FIX: original import was 'from core.errors.auto_healer import auto_healer_service'
             # but core/errors/auto_healer.py does NOT exist. The real module is
             # services/auto_healer.py and exports get_healer() returning AutoHealer.

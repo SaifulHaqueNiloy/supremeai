@@ -62,6 +62,11 @@ class ChangeProposal:
     # carry a rollback target — a description of the exact prior state to
     # restore (version/policy/config/artifact). Promotion is REFUSED without it.
     rollback_target: dict[str, Any] | None = None
+    # Promotion is never autonomous: an authorized human must explicitly
+    # approve the fully validated proposal before it can be promoted.
+    human_approved: bool = False
+    approved_by: str | None = None
+    approved_at: datetime | None = None
 
     def advance_state(self, new_state: ProposalState) -> None:
         logger.info(
@@ -89,13 +94,19 @@ class ChangeProposal:
             "created_at": self.created_at.isoformat(),
             "promoted_at": self.promoted_at.isoformat() if self.promoted_at else None,
             "rollback_target": self.rollback_target,
+            "human_approved": self.human_approved,
+            "approved_by": self.approved_by,
+            "approved_at": self.approved_at.isoformat() if self.approved_at else None,
         }
 
 
 class ChangeProposalManager:
     """Governs the full lifecycle of AI self-modifications with persistent audit trail."""
 
-    def __init__(self, storage_dir: str | None = None) -> None:
+    def __init__(
+        self, storage_dir: str | None = None, config: dict[str, Any] | None = None
+    ) -> None:
+        self.config = config or {}
         self.storage_dir = Path(storage_dir or os.path.expanduser("~/.supremeai/proposals"))
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         self.proposals: dict[str, ChangeProposal] = {}
@@ -124,6 +135,12 @@ class ChangeProposalManager:
                         created_at=datetime.fromisoformat(data["created_at"]),
                         promoted_at=datetime.fromisoformat(data["promoted_at"])
                         if data.get("promoted_at")
+                        else None,
+                        rollback_target=data.get("rollback_target"),
+                        human_approved=data.get("human_approved", False),
+                        approved_by=data.get("approved_by"),
+                        approved_at=datetime.fromisoformat(data["approved_at"])
+                        if data.get("approved_at")
                         else None,
                     )
                     self.proposals[proposal.proposal_id] = proposal
@@ -176,11 +193,26 @@ class ChangeProposalManager:
         logger.info(f"📝 Created new Change Proposal: {proposal.proposal_id} ({title})")
         return proposal
 
+    def approve(self, proposal_id: str, approver: str) -> bool:
+        """Record explicit human approval after reviewing the proposal."""
+        proposal = self.proposals.get(proposal_id)
+        if not proposal or not approver.strip():
+            return False
+        if proposal.state in {ProposalState.REJECTED, ProposalState.ROLLED_BACK, ProposalState.PROMOTED}:
+            return False
+        proposal.human_approved = True
+        proposal.approved_by = approver.strip()
+        proposal.approved_at = datetime.now()
+        self._persist_proposal(proposal)
+        self._audit_run(proposal, run_type="APPROVAL", result=f"approved by {approver.strip()}")
+        return True
+
     async def evaluate_and_promote(
         self,
         proposal_id: str,
         security_scanner_cb: Callable[[ChangeProposal], Any] | None = None,
         benchmarker_cb: Callable[[ChangeProposal], Any] | None = None,
+        canary_runner_cb: Callable[[ChangeProposal], Any] | None = None,
     ) -> bool:
         """Run full gate: Static Scan -> Benchmark -> Canary Gate -> Promotion."""
         proposal = self.proposals.get(proposal_id)
@@ -238,25 +270,42 @@ class ChangeProposalManager:
 
         proposal.advance_state(ProposalState.BENCHMARKED)
 
-        # 4. Canary Testing Gate
+        # 4. Canary Testing Gate. A callback and real observations are
+        # mandatory; never promote based on a fabricated/default rate.
+        if canary_runner_cb is None:
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = "Canary runner required before promotion"
+            self._persist_proposal(proposal)
+            return False
         proposal.advance_state(ProposalState.CANARY_ACTIVE)
-        # AUD-6.6 (P1) honesty fix: the previous code hard-coded
-        # ``canary_success_rate = 1.0  # Canary passed`` — fabricated evidence
-        # that a canary ran when NO traffic splitting was ever performed. The
-        # real staged rollout lives in evolution.canary_manager
-        # (CanaryRolloutController) and requires live observations. We no
-        # longer fabricate a success rate: 0.0 observations are recorded as
-        # ``None`` semantics via canary_success_rate=0.0 plus an explicit
-        # audit note, and promotion here relies solely on the security +
-        # benchmark gates. Staged rollout with real observations must go
-        # through CanaryRolloutController.deploy_canary/evaluate_and_promote.
-        proposal.canary_success_rate = 0.0
-        proposal.benchmark_metrics["canary_gate"] = (
-            "auto_promoted_without_canary_observations; "
-            "use CanaryRolloutController for staged rollout evidence"
-        )
+        canary_result = await canary_runner_cb(proposal)
+        if not isinstance(canary_result, dict):
+            canary_result = {}
+        success_rate = canary_result.get("success_rate")
+        observations = canary_result.get("observations", 0)
+        if not isinstance(success_rate, (int, float)) or not 0 <= success_rate <= 1:
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = "Canary result must include a success_rate in [0, 1]"
+            self._persist_proposal(proposal)
+            return False
+        if not isinstance(observations, int) or observations < 1:
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = "Canary result must include at least one observation"
+            self._persist_proposal(proposal)
+            return False
+        proposal.canary_success_rate = float(success_rate)
+        proposal.benchmark_metrics["canary"] = canary_result
+        minimum_canary_rate = float(self.config.get("minimum_canary_success_rate", 0.99))
+        if proposal.canary_success_rate < minimum_canary_rate:
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = (
+                f"Canary regression: {proposal.canary_success_rate:.3f} < "
+                f"{minimum_canary_rate:.3f}"
+            )
+            self._persist_proposal(proposal)
+            return False
 
-        # 5. Rollback Gate (Sprint 6, plan §19: "No rollback target = no
+        # 5. Rollback and human-approval gates (Sprint 6, plan §19: "No rollback target = no
         # autonomous promotion.") A promotion without a described, restorable
         # prior state is irreversible — therefore forbidden.
         if not proposal.rollback_target or not isinstance(proposal.rollback_target, dict):
@@ -268,6 +317,12 @@ class ChangeProposalManager:
             logger.critical(
                 f"🚫 [ROLLBACK GATE] Proposal [{proposal_id}] REJECTED: no rollback target."
             )
+            return False
+
+        if not proposal.human_approved or not proposal.approved_by:
+            proposal.advance_state(ProposalState.REJECTED)
+            proposal.rejection_reason = "Explicit human approval required before promotion"
+            self._persist_proposal(proposal)
             return False
 
         # Sprint 6: audit trail — every lifecycle transition lands in the

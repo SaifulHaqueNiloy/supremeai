@@ -83,9 +83,23 @@ LEARNING_EVENT_FIELDS: tuple[str, ...] = (
     "feedback",
 )
 
-# Privacy: metadata keys containing these markers are dropped before any
-# serialization, so raw prompt/response content can never reach Postgres.
-_FORBIDDEN_KEY_MARKERS: tuple[str, ...] = ("prompt", "response", "content")
+# Privacy: metadata is an explicit allowlist. Unknown fields are discarded before
+# serialization so raw user content cannot reach Postgres under an unexpected key.
+_ALLOWED_METADATA_KEYS = frozenset(
+    {
+        "route",
+        "provider",
+        "model",
+        "region",
+        "cache_status",
+        "error_class",
+        "latency_bucket",
+        "task_category",
+        "feature_flag",
+        "feedback_type",
+        "weight",
+    }
+)
 
 _MAX_METADATA_LIST_ITEMS = 20
 _MAX_COERCED_STR = 200
@@ -104,8 +118,8 @@ def sanitize_metadata(metadata: Mapping[str, Any] | None, _depth: int = 0) -> di
     clean: dict[str, Any] = {}
     for key, value in metadata.items():
         key_str = str(key)
-        if any(marker in key_str.lower() for marker in _FORBIDDEN_KEY_MARKERS):
-            continue  # privacy: raw-content fields never leave the process
+        if key_str.lower() not in _ALLOWED_METADATA_KEYS:
+            continue  # privacy: only known operational metadata is persisted
         if isinstance(value, Mapping):
             if _depth < _MAX_METADATA_DEPTH:
                 clean[key_str] = sanitize_metadata(value, _depth + 1)
@@ -323,7 +337,7 @@ class LearningStore:
                 payload = {
                     k: v
                     for k, v in event.items()
-                    if not any(m in str(k).lower() for m in _FORBIDDEN_KEY_MARKERS)
+                    if k in LEARNING_EVENT_FIELDS or k == "metadata"
                 }
                 payload["metadata"] = sanitize_metadata(payload.get("metadata"))
             else:
@@ -469,9 +483,16 @@ class LearningStore:
             self._db_ok = True
             self._last_flush_at = datetime.now(UTC).isoformat()
             if inserted < len(batch):
+                # Preserve the unwritten tail for a later retry. The repository
+                # returns the number of rows accepted in input order.
+                remainder = batch[inserted:]
+                for item in reversed(remainder):
+                    if len(self._fallback) == self._fallback.maxlen:
+                        self._dropped += 1
+                    self._fallback.appendleft(item)
                 logger.warning(
                     f"LearningStore partial flush: {inserted}/{len(batch)} rows "
-                    "written; remainder skipped (see repository warnings)"
+                    f"written; {len(remainder)} rows requeued for retry"
                 )
             return inserted
 
