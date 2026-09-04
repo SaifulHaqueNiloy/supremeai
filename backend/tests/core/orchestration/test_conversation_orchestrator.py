@@ -44,9 +44,9 @@ async def test_timeout_is_explicit_and_evidenced():
 
     runtime = ConversationOrchestrator()
     runtime.register(Capability("chat", "low", handler))
-    result = await runtime.dispatch(ConversationCommand(
-        "hello", "u1", "tenant-1", metadata={"timeout_seconds": 0.01}
-    ))
+    result = await runtime.dispatch(
+        ConversationCommand("hello", "u1", "tenant-1", metadata={"timeout_seconds": 0.01})
+    )
     assert result.status == "failed"
     assert result.execution is not None
     assert result.execution.status == "timed_out"

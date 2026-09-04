@@ -126,10 +126,16 @@ async def shutdown_browser_sessions() -> None:
     await session_manager.shutdown()
 
 
-__all__ = ["BrowserSession", "BrowserSessionManager", "session_manager", "shutdown_browser_sessions"]
+__all__ = [
+    "BrowserSession",
+    "BrowserSessionManager",
+    "session_manager",
+    "shutdown_browser_sessions",
+]
 
 
 # বাংলা মন্তব্য: সেশন সীমা environment দিয়ে সামঞ্জস্য করা যায়, কিন্তু নিরাপদ default বজায় থাকে।
+
 
 def configure_session_manager(max_sessions: int, idle_timeout_seconds: int) -> None:
     if max_sessions < 1 or idle_timeout_seconds < 1:
