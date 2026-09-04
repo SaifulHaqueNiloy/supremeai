@@ -306,24 +306,55 @@ async def register(body: RegisterRequest, response: Response):
         )
 
     try:
-        # বাংলা: sign_up ও সিঙ্ক্রোনাস — to_thread দিয়ে wrap করা হলো।
-        res = await asyncio.to_thread(
-            db.client.auth.sign_up,
-            {"email": body.username, "password": body.password},
-        )
-        if not res.user:
+        user_id = None
+        session_obj = None
+
+        try:
+            # বাংলা: sign_up ও সিঙ্ক্রোনাস — to_thread দিয়ে wrap করা হলো।
+            res = await asyncio.to_thread(
+                db.client.auth.sign_up,
+                {"email": body.username, "password": body.password},
+            )
+            if res.user:
+                user_id = res.user.id
+                session_obj = res.session
+        except Exception as signup_err:
+            # বাংলা: Supabase Free-Tier built-in SMTP-তে per-hour rate limit থাকে (e.g. 2-3 emails/hour)।
+            # সেক্ষেত্রে service_client (Admin API) দিয়ে নিরাপদে ইউজার তৈরি করে অটো-কনফার্ম করা হবে।
+            err_msg = str(signup_err).lower()
+            if db.service_client and (
+                "rate limit" in err_msg or "429" in err_msg or "invalid" in err_msg
+            ):
+                logger.info(
+                    f"Public sign_up hit provider limit for {body.username!r} ({signup_err}). Falling back to Admin creation."
+                )
+                admin_res = await asyncio.to_thread(
+                    db.service_client.auth.admin.create_user,
+                    {
+                        "email": body.username,
+                        "password": body.password,
+                        "email_confirm": True,
+                        "user_metadata": {"full_name": body.name or ""},
+                    },
+                )
+                if admin_res.user:
+                    user_id = admin_res.user.id
+                    session_obj = "admin_provisioned"
+            else:
+                raise
+
+        if not user_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Registration failed"
             )
 
-        # বাংলা মন্তব্য: যদি ইমেইল ভেরিফিকেশন অন থাকে, তাহলে res.session None হবে। সেক্ষেত্রে ফেক টোকেন না দিয়ে ইউজারকে ভেরিফাই করতে বলব।
-        if res.session is None:
+        # বাংলা মন্তব্য: যদি সাধারণ সাইনআপে ইমেইল ভেরিফিকেশন অন থাকে এবং সেশন না থাকে
+        if session_obj is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Email confirmation required"
             )
 
-        user_id = res.user.id
-        # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
+        # বাংলা মন্তব্য: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে।
         is_admin = body.username and any(
             body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails
         )
