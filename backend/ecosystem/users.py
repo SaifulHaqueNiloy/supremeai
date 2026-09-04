@@ -18,6 +18,7 @@ import enum
 import hashlib
 import hmac
 import json
+import logging
 import os
 import secrets
 import sqlite3
@@ -30,6 +31,8 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from ecosystem._store import ensure_columns, get_conn, get_db_path
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Paths + config
@@ -54,8 +57,8 @@ def _resolve_secret() -> str:
     # Best-effort chmod — fine if it fails (e.g. Windows).
     try:
         _SECRET_FILE.chmod(0o600)
-    except OSError:
-        pass
+    except OSError as chmod_err:
+        logger.debug(f"Could not chmod secret file: {chmod_err}")
     return new_secret
 
 

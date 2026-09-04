@@ -7,12 +7,15 @@ Safe actions auto-allowed; HIGH/CRITICAL require approval (§28).
 from __future__ import annotations
 
 import enum
+import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
 from ecosystem._store import get_conn, jdump
+
+logger = logging.getLogger(__name__)
 
 
 class ActionRisk(enum.StrEnum):
@@ -146,8 +149,8 @@ class GovernanceEngine:
         if explicit_risk:
             try:
                 return ActionRisk(str(explicit_risk).upper())
-            except ValueError:
-                pass
+            except ValueError as val_err:
+                logger.debug(f"Invalid explicit risk {explicit_risk!r}: {val_err}")
         if ctx.get("requires_approval"):
             return ActionRisk.HIGH
         if ctx.get("external"):

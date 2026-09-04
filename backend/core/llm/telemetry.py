@@ -58,8 +58,8 @@ def classify_llm_error(exc: BaseException | None) -> str:
         try:
             if int(status) >= 500:
                 return "server_error"
-        except (TypeError, ValueError):
-            pass
+        except (TypeError, ValueError) as status_err:
+            logger.debug(f"Failed to parse HTTP status {status!r}: {status_err}")
     if re.search(r"\b5\d{2}\b", text):
         return "server_error"
     if "timeout" in text or "timed out" in text:
@@ -232,8 +232,8 @@ async def track_llm_call(
             if value is not None and hasattr(record, key):
                 try:
                     setattr(record, key, value)
-                except Exception:
-                    pass
+                except Exception as set_err:
+                    logger.debug(f"Failed to set telemetry record attribute {key!r}: {set_err}")
     _ensure_store_started()
     t0 = time.perf_counter()
     try:
