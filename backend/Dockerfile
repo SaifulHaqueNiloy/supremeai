@@ -43,9 +43,11 @@ USER supremeai
 # Expose port
 EXPOSE 8080
 
-# 🔬 Evolution v3.0: Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD python -c "import os, urllib.request; p=os.getenv('PORT','8080'); urllib.request.urlopen(f'http://localhost:{p}/api/v1/health/live')" || exit 1
+# Container liveness probe. Keep this aligned with the FastAPI route and Render's health path.
+# The app exposes /health/live (not /api/v1/health/live); a wrong path marks a healthy
+# container as unhealthy and can cause Render to roll back the deployment.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+  CMD python -c "import os, urllib.request; p=os.getenv('PORT','8080'); urllib.request.urlopen(f'http://127.0.0.1:{p}/health/live', timeout=4)" || exit 1
 
 # Start command
 CMD ["python", "main.py"]
