@@ -4,7 +4,7 @@ import * as apiUtils from '../utils/api';
 
 vi.mock('../utils/api', () => ({
   fetchWithRetry: vi.fn(),
-  getApiBaseUrl: vi.fn((path: string) => `https://supremeai-primary-node.onrender.com`),
+  getApiBaseUrl: vi.fn((_path: string) => `https://supremeai-primary-node.onrender.com`),
 }));
 
 vi.mock('./apiClient', () => ({
@@ -27,7 +27,7 @@ describe('controlPlane service', () => {
     vi.mocked(apiUtils.fetchWithRetry).mockResolvedValueOnce({
       ok: true,
       json: async () => mockRegistry,
-    } as any);
+    } as unknown as Response);
 
     const result = await controlPlane.registry();
     expect(apiUtils.fetchWithRetry).toHaveBeenCalledWith(
@@ -46,7 +46,7 @@ describe('controlPlane service', () => {
     vi.mocked(apiUtils.fetchWithRetry).mockResolvedValueOnce({
       ok: false,
       status: 503,
-    } as any);
+    } as unknown as Response);
 
     await expect(controlPlane.health()).rejects.toThrow('Control plane request failed: 503');
   });
@@ -56,7 +56,7 @@ describe('controlPlane service', () => {
     vi.mocked(apiUtils.fetchWithRetry).mockResolvedValueOnce({
       ok: true,
       json: async () => mockResponse,
-    } as any);
+    } as unknown as Response);
 
     const taskPayload = { goal: 'test goal', metadata: { run: 1 } };
     const result = await controlPlane.submitTask(taskPayload);
@@ -76,7 +76,7 @@ describe('controlPlane service', () => {
     vi.mocked(apiUtils.fetchWithRetry).mockResolvedValueOnce({
       ok: true,
       json: async () => mockStatus,
-    } as any);
+    } as unknown as Response);
 
     const result = await controlPlane.taskStatus('task-123');
     expect(apiUtils.fetchWithRetry).toHaveBeenCalledWith(
@@ -91,7 +91,7 @@ describe('controlPlane service', () => {
     vi.mocked(apiUtils.fetchWithRetry).mockResolvedValueOnce({
       ok: true,
       json: async () => mockCancel,
-    } as any);
+    } as unknown as Response);
 
     const result = await controlPlane.cancelTask('task-123');
     expect(apiUtils.fetchWithRetry).toHaveBeenCalledWith(
