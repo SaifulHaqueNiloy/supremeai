@@ -184,7 +184,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                     import httpx
 
                     supa_url = getattr(settings, "supabase_url", "")
-                    supa_key = getattr(settings, "supabase_key", "")
+                    supa_key = getattr(settings, "supabase_service_key", "") or getattr(
+                        settings, "supabase_key", ""
+                    )
                     if supa_url and supa_key:
                         async with httpx.AsyncClient(timeout=4.0) as client:
                             r = await client.get(
@@ -196,7 +198,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 except Exception as rest_exc:
                     logger.debug(f"Supabase REST health fallback check failed: {rest_exc}")
                 logger.warning(f"Database health check failed: {exc}")
-                # For worker or scraper microservices without primary relational DB connection, do not crash health
+                # If Supabase allows degraded mode or running as worker/scraper/mcp, do not fail critical check
+                if os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true":
+                    return True
                 service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
                 if service_role in ("worker", "scraper", "mcp"):
                     return True
