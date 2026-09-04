@@ -15,12 +15,12 @@ class EmbeddingService:
     def __init__(self, model_name: str = "local:all-MiniLM-L6-v2"):
         self.model_name = model_name
 
-    async def generate_embedding(self, text: str, pg_dim: int = 1536) -> list[float]:
+    async def generate_embedding(self, text: str, pg_dim: int = 384) -> list[float]:
         """Generates a vector embedding for a single text string (local-first)."""
         return await asyncio.to_thread(embed_for_pgvector, text, pg_dim)
 
     async def generate_embeddings_batch(
-        self, texts: list[str], pg_dim: int = 1536
+        self, texts: list[str], pg_dim: int = 384
     ) -> list[list[float]]:
         """Generates vector embeddings for a batch of texts (local-first)."""
         return [await self.generate_embedding(t, pg_dim) for t in texts]
