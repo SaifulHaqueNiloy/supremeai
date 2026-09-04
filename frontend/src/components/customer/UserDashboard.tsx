@@ -8,33 +8,48 @@ export const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex-1 flex flex-col min-h-screen bg-surface-0 overflow-y-auto">
-      <div className="max-w-6xl mx-auto w-full p-8 space-y-8">
-        
-        {/* Greeting & Primary Input */}
-        <div className="space-y-6">
+    <main className="flex-1 flex flex-col min-h-screen overflow-y-auto bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
+      <div className="mx-auto w-full max-w-6xl space-y-10 p-5 sm:p-8">
+        <section className="flex flex-col gap-6 border-b border-[var(--sa-border)] pb-8 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-text tracking-tight">
+            <div className="sa-operational-pulse mb-4" role="status">System operational</div>
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Good morning{user?.name ? `, ${user.name}` : ''}.
             </h1>
-            <p className="text-secondary mt-1">What would you like to build today?</p>
+            <p className="mt-2 max-w-xl text-[var(--sa-ink-muted)]">What would you like SupremeAI to accomplish?</p>
           </div>
-          
-          <div className="relative max-w-2xl">
-            <input 
-              type="text" 
-              placeholder="Ask SupremeAI to generate, analyze, or deploy..." 
-              className="w-full bg-surface-1 border border-border rounded-xl pl-4 pr-12 py-4 text-text placeholder:text-muted focus:outline-none focus:border-accent-primary transition-colors shadow-sm"
+          <div className="sa-eyebrow">User workspace / Ready</div>
+        </section>
+
+        {/* Signature prompt surface */}
+        <section className="sa-surface-raised max-w-4xl p-5 sm:p-7" aria-labelledby="prompt-heading">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="sa-eyebrow mb-2">Start with an intention</p>
+              <h2 id="prompt-heading" className="text-lg font-semibold">Ask SupremeAI to plan, build, or execute.</h2>
+            </div>
+            <span className="hidden text-xs text-[var(--sa-ink-muted)] sm:block">Enter to open Studio</span>
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              aria-label="Ask SupremeAI what to accomplish"
+              placeholder="Research, automate, analyze, or build..."
+              className="w-full rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-canvas)] px-4 py-4 pr-14 text-[var(--sa-ink)] placeholder:text-[var(--sa-ink-muted)] outline-none transition focus:border-[var(--sa-primary)] focus:ring-4 focus:ring-[var(--sa-primary-soft)]"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  navigate('/workspace/live');
-                }
+                if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) navigate('/workspace/live');
               }}
             />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-lg bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20 transition-colors">
+            <button type="button" aria-label="Open SupremeAI Studio" onClick={() => navigate('/workspace/live')} className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] text-white transition hover:opacity-90 focus:outline-none focus:ring-4 focus:ring-[var(--sa-primary-soft)]">
               <ArrowRight size={16} />
             </button>
           </div>
+          <div className="mt-4 flex flex-wrap gap-2" aria-label="Suggested tasks">
+            {['Research a topic', 'Automate a workflow', 'Analyze a file', 'Browse a website'].map((suggestion) => (
+              <button key={suggestion} type="button" onClick={() => navigate('/workspace/live')} className="rounded-full border border-[var(--sa-border)] px-3 py-1.5 text-xs text-[var(--sa-ink-muted)] transition hover:border-[var(--sa-primary)] hover:bg-[var(--sa-primary-soft)] hover:text-[var(--sa-primary)]">{suggestion}</button>
+            ))}
+          </div>
+        </section>
 
           <div className="flex flex-wrap items-center gap-3">
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-1 border border-border text-sm font-medium hover:surface-2 transition-colors">
@@ -47,7 +62,6 @@ export const UserDashboard: React.FC = () => {
               <Zap size={16} className="text-emerald-400" /> Deploy Service
             </button>
           </div>
-        </div>
 
         {/* Bento Grid layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -157,6 +171,6 @@ export const UserDashboard: React.FC = () => {
         </div>
 
       </div>
-    </div>
+    </main>
   );
 };

@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { ServiceHealthBar } from '../../components/auth/ServiceHealthBar';
 
-// বাংলা মন্তব্য: ইউজার লগইন পেজ (নিয়ন থিম) — ব্লার-মুক্ত ও শার্প টেক্সটের জন্য রিফ্যাক্টর করা হয়েছে
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,80 +62,50 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] flex flex-col items-center justify-center relative overflow-hidden p-4">
-      {/* বাংলা মন্তব্য: নিয়ন পালস ইফেক্ট (কার্ডের বাইরে, কার্ড ব্লার-মুক্ত থাকবে) */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-accent-primary/10 via-transparent to-transparent pointer-events-none"></div>
-
-      {/* 🆕 Public Service Health Status Bar — No Auth Required */}
-      <div className="z-10 w-full max-w-md mb-4">
-        <ServiceHealthBar />
-      </div>
-
-      <div className="z-10 w-full max-w-md p-8 bg-[var(--supremeai-color-bg-elevated-light)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] shadow-2xl rounded-3xl">
-        <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent">
-          ⚡ SUPREME AI
-        </h1>
-        <p className="text-center text-neon-blue font-semibold tracking-wide mb-8">Enter the Core</p>
-
-        {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-950/40 border border-red-800/50 text-red-300 text-sm font-medium backdrop-blur-sm">
-            <div className="flex items-start gap-2">
-              <span className="text-base mt-0.5">⚠️</span>
-              <span>{error}</span>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <input
-              type="email"
-              placeholder="Email / Identity"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="Passphrase"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-accent-primary to-neon-purple hover:brightness-110 text-white font-bold transition-all disabled:opacity-50 disabled:pointer-events-none"
-          >
-            {isLoading ? 'INITIALIZING...' : 'INITIALIZE SESSION'}
-          </button>
-
-          <button
-            type="button"
-            className="w-full py-3 rounded-xl border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] hover:bg-neon-blue/10 text-text-secondary transition-all mt-4 font-semibold"
-          >
-            Authenticate with Google
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-text-secondary mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-neon-blue font-medium hover:underline ml-1">
-            Sign Up
+    <main className="min-h-screen bg-[var(--supremeai-color-bg-void-light)] px-5 py-6 text-[var(--supremeai-color-text-primary-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] dark:text-[var(--supremeai-color-text-primary-dark)] sm:px-8 lg:px-12">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl flex-col">
+        <header className="flex items-center justify-between gap-4 py-2">
+          <Link to="/" className="flex items-center gap-3" aria-label="SupremeAI home">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--supremeai-color-primary-light)] text-sm font-bold text-white shadow-sm dark:bg-[var(--supremeai-color-primary-dark)]">S</span>
+            <span className="font-semibold tracking-tight">SupremeAI</span>
           </Link>
-        </p>
-        {/* 
-          বাংলা মন্তব্য: প্রোডাকশনে লেটেস্ট বিল্ড ডিপ্লয় হয়েছে কিনা তা সহজে চেক করার জন্য 
-          এই Build Timestamp টি নিচে দেখানো হচ্ছে। 
-        */}
-        <div className="absolute bottom-4 right-4 text-[10px] text-text-secondary/50 font-mono">
-          Build: {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Secure workspace access</span>
+        </header>
+
+        <div className="grid flex-1 items-center gap-12 py-12 lg:grid-cols-[1fr_420px] lg:gap-20">
+          <section className="hidden max-w-xl lg:block">
+            <p className="mb-5 font-mono text-xs uppercase tracking-[0.2em] text-[var(--supremeai-color-primary-light)] dark:text-[var(--supremeai-color-primary-dark)]">Your command center</p>
+            <h1 className="max-w-lg text-4xl font-semibold leading-tight tracking-[-0.04em] sm:text-5xl">Turn intent into reliable action.</h1>
+            <p className="mt-6 max-w-md text-base leading-7 text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Coordinate agents, automate repeatable work, and keep every important decision in view.</p>
+            <div className="mt-10 grid max-w-md grid-cols-3 gap-3" aria-label="SupremeAI capabilities">
+              {['Agents', 'Automations', 'Oversight'].map((item) => <div key={item} className="rounded-2xl border border-[var(--supremeai-color-border-default-light)] bg-white/70 p-4 text-xs font-medium dark:border-[var(--supremeai-color-border-default-dark)] dark:bg-white/[0.03]">{item}</div>)}
+            </div>
+          </section>
+
+          <section className="w-full">
+            <div className="mb-4"><ServiceHealthBar /></div>
+            <div className="rounded-3xl border border-[var(--supremeai-color-border-default-light)] bg-white p-7 shadow-[0_18px_50px_rgba(17,22,21,0.08)] dark:border-[var(--supremeai-color-border-default-dark)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] dark:shadow-none sm:p-9">
+              <div className="mb-8">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Welcome back</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">Sign in to continue</h2>
+                <p className="mt-2 text-sm text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Access your workspace and active tasks.</p>
+              </div>
+
+              {error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">{error}</div>}
+
+              <form onSubmit={handleLogin} className="space-y-5">
+                <label className="block text-sm font-medium" htmlFor="login-email">Email address<input id="login-email" name="email" autoComplete="email" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--supremeai-color-border-default-light)] bg-[var(--supremeai-color-bg-void-light)] px-4 py-3 outline-none transition focus:border-[var(--supremeai-color-primary-light)] focus:ring-4 focus:ring-[var(--supremeai-color-primary-soft-light)] dark:border-[var(--supremeai-color-border-default-dark)] dark:bg-[var(--supremeai-color-bg-void-dark)] dark:focus:border-[var(--supremeai-color-primary-dark)]" /></label>
+                <label className="block text-sm font-medium" htmlFor="login-password">Password<input id="login-password" name="password" autoComplete="current-password" type="password" placeholder="Enter your password" value={password} onChange={e => setPassword(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--supremeai-color-border-default-light)] bg-[var(--supremeai-color-bg-void-light)] px-4 py-3 outline-none transition focus:border-[var(--supremeai-color-primary-light)] focus:ring-4 focus:ring-[var(--supremeai-color-primary-soft-light)] dark:border-[var(--supremeai-color-border-default-dark)] dark:bg-[var(--supremeai-color-bg-void-dark)] dark:focus:border-[var(--supremeai-color-primary-dark)]" /></label>
+                <button type="submit" disabled={isLoading} className="w-full rounded-xl bg-[var(--supremeai-color-primary-light)] px-4 py-3 font-semibold text-white transition hover:brightness-95 focus:outline-none focus:ring-4 focus:ring-[var(--supremeai-color-primary-soft-light)] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[var(--supremeai-color-primary-dark)]">{isLoading ? 'Signing in…' : 'Sign in'}</button>
+                <button type="button" className="w-full rounded-xl border border-[var(--supremeai-color-border-default-light)] px-4 py-3 text-sm font-medium transition hover:bg-[var(--supremeai-color-bg-muted-light)] dark:border-[var(--supremeai-color-border-default-dark)] dark:hover:bg-[var(--supremeai-color-bg-muted-dark)]">Continue with Google</button>
+              </form>
+
+              <p className="mt-7 text-center text-sm text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Don&apos;t have an account? <Link to="/register" className="font-semibold text-[var(--supremeai-color-primary-light)] hover:underline dark:text-[var(--supremeai-color-primary-dark)]">Create one</Link></p>
+            </div>
+          </section>
         </div>
+        <footer className="flex items-center justify-between border-t border-[var(--supremeai-color-border-default-light)] py-5 text-[10px] text-[var(--supremeai-color-text-secondary-light)] dark:border-[var(--supremeai-color-border-default-dark)] dark:text-[var(--supremeai-color-text-secondary-dark)]"><span>Private by design.</span><span className="font-mono">Build {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}</span></footer>
       </div>
-    </div>
+    </main>
   );
 };

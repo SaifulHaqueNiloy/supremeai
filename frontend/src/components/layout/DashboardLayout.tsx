@@ -12,7 +12,9 @@ const SIDEBAR_SPRING = { type: 'spring', stiffness: 320, damping: 32 } as const;
 
 export function DashboardLayout({ header, sidebar, children, isSidebarCollapsed = false }: DashboardLayoutProps) {
   return (
-    <div className="surface-0 h-screen w-screen flex flex-col overflow-hidden text-text font-sans">
+    <div className="dashboard-live-shell surface-0 h-screen w-screen flex flex-col overflow-hidden text-text font-sans">
+      <div className="dashboard-live-orb dashboard-live-orb-one" aria-hidden="true" />
+      <div className="dashboard-live-orb dashboard-live-orb-two" aria-hidden="true" />
       {header && (
         <header className="surface-1 z-30 shrink-0">
           {header}

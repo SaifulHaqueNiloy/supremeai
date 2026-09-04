@@ -105,8 +105,14 @@ export function setupGlobalFetchInterceptor() {
           console.error('🚨 [INTERCEPTOR_ERROR]: Failed to parse error response', e);
         }
 
+        const isPublicHealthProbe = typeof url === 'string' && url.includes('/api/health-aggregation');
+        const isBackgroundRequest = typeof url === 'string' && (
+          isPublicHealthProbe ||
+          url.includes('/api/config') ||
+          url.includes('/api/health')
+        );
         const win = window as unknown as { showGlobalToast?: (type: string, msg: string) => void };
-        if (win.showGlobalToast) {
+        if (win.showGlobalToast && !isBackgroundRequest) {
           win.showGlobalToast('error', errorMsg);
         }
       }
@@ -118,7 +124,12 @@ export function setupGlobalFetchInterceptor() {
       // ইউজারকে না দেখিয়ে নীরবে caller-কে throw করব; GlobalConfigInitializer নিজেই fallback দেখাবে।
       const isAbort = error instanceof Error &&
         (error.name === 'AbortError' || error.message.includes('aborted') || error.message.includes('aborted without reason'));
-      if (!isAbort && win.showGlobalToast) {
+      const isBackgroundRequest = typeof url === 'string' && (
+        url.includes('/api/health-aggregation') ||
+        url.includes('/api/config') ||
+        url.includes('/api/health')
+      );
+      if (!isAbort && win.showGlobalToast && !isBackgroundRequest) {
         win.showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
       throw error;
