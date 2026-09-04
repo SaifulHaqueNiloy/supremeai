@@ -112,7 +112,7 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
   const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for health check
 
   try {
-    const res = await fetch(`${apiBaseUrl}/health/aggregated`, {
+    const res = await fetch(`${apiBaseUrl}/api/health-aggregation`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
