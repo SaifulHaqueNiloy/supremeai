@@ -247,11 +247,24 @@ async def login(body: LoginRequest, request: Request, response: Response):
             )
 
         user_id = res.user.id
-        # বাংলা: ইমেইলটি settings.admin_emails তালিকায় আছে কি না তা দেখে রোল অ্যাসাইন করা হচ্ছে (ঝুঁকিপূর্ণ "admin" in username চেক প্রতিস্থাপিত)।
-        is_admin = body.username and any(
-            body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails
+        # বাংলা: ডাটাবেসের app_metadata/user_metadata এবং settings.admin_emails উভয় উৎস থেকে রোল যাচাই।
+        user_meta_role = (
+            res.user.app_metadata.get("role")
+            if hasattr(res.user, "app_metadata") and isinstance(res.user.app_metadata, dict)
+            else None
+        ) or (
+            res.user.user_metadata.get("role")
+            if hasattr(res.user, "user_metadata") and isinstance(res.user.user_metadata, dict)
+            else None
         )
-        primary_role = "admin" if is_admin else "user"
+        is_admin = user_meta_role == "admin" or (
+            body.username
+            and any(
+                body.username.lower() == admin_email.lower()
+                for admin_email in settings.admin_emails
+            )
+        )
+        primary_role = "admin" if is_admin else (user_meta_role or "user")
         token_data = {
             "sub": user_id,
             "role": primary_role,
