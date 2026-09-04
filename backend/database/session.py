@@ -27,7 +27,10 @@ def get_async_url(url: str) -> str:
         return url.replace("postgres://", "postgresql+asyncpg://", 1)
     if url.startswith(("sqlite://", "sqlite+aiosqlite://", "postgresql+asyncpg://")):
         return url
-    return "sqlite+aiosqlite:///:memory:"
+    raise ValueError(
+        "Unsupported database URL scheme; refusing silent SQLite fallback. "
+        "Use PostgreSQL/asyncpg or an explicit SQLite URL for local tests."
+    )
 
 
 # ── Lazy Engine Initialization ──────────────────────────────────────────────
