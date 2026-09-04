@@ -380,12 +380,12 @@ class ProviderRegistry:
         Validate API key without making expensive calls
         Returns True if key appears valid
         """
-        import httpx
+        from utils.http_client import create_async_client
 
         # Provider-specific validation logic
         if config.provider_id == "gemini":
             # Gemini: Try to list models (lightweight call)
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with create_async_client(timeout=10.0) as client:
                 resp = await client.get(
                     f"{config.base_url}/models?key={config.api_key}",
                     headers={"Content-Type": "application/json"},
@@ -394,7 +394,7 @@ class ProviderRegistry:
 
         elif config.provider_id in ["openai", "deepseek", "moonshot", "together", "nvidia", "groq"]:
             # OpenAI-compatible: Try models list
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with create_async_client(timeout=10.0) as client:
                 resp = await client.get(
                     f"{config.base_url}/models",
                     headers={
@@ -406,7 +406,7 @@ class ProviderRegistry:
 
         elif config.provider_id == "huggingface":
             # HF: Simple authenticated request
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with create_async_client(timeout=10.0) as client:
                 resp = await client.get(
                     f"{config.base_url}", headers={"Authorization": f"Bearer {config.api_key}"}
                 )
@@ -414,7 +414,7 @@ class ProviderRegistry:
 
         elif config.provider_id == "openrouter":
             # OpenRouter: Check credits/key validity
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with create_async_client(timeout=10.0) as client:
                 resp = await client.get(
                     "https://openrouter.ai/api/v1/auth/key",
                     headers={"Authorization": f"Bearer {config.api_key}"},
