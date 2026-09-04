@@ -11,6 +11,7 @@ from core.metrics_collector import metrics_collector
 from core.persistence import pooled_pg
 from core.persistence.write_behind import flush_all as flush_write_behind_batchers
 from core.pgbouncer_pool import get_db_pool
+from utils.http_client import set_shared_client
 
 
 async def shutdown_services(app):
@@ -141,6 +142,8 @@ async def shutdown_services(app):
     try:
         if services.global_http_client:
             await services.global_http_client.aclose()
+        set_shared_client(None)
+        services.global_http_client = None
         logger.info("✅ Global HTTP connection pool closed successfully.")
     except Exception as e:
         logger.error(f"Error during HTTP connection pool drainage: {e!s}")
