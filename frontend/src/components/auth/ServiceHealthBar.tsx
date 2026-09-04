@@ -16,14 +16,7 @@ interface HealthData {
   status: string;
   timestamp: number;
   total_response_time_ms: number;
-  checks: {
-    application: HealthCheckResult;
-    redis: HealthCheckResult;
-    database: HealthCheckResult;
-    external_services: HealthCheckResult;
-    memory: HealthCheckResult;
-    disk: HealthCheckResult;
-  };
+  checks: Record<string, HealthCheckResult>;
   summary: {
     total_checks: number;
     healthy: number;
@@ -38,6 +31,23 @@ interface ServiceStatusProps {
   status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown' | 'loading';
   responseTime?: number;
 }
+
+const SERVICE_LABEL_MAP: Record<string, string> = {
+  application: 'Backend Core',
+  database: 'Data Store (Postgres)',
+  redis: 'Cache Cluster (Redis)',
+  memory: 'Compute Memory',
+  disk: 'Storage Node',
+  external_services: 'External AI Gateways',
+  integrations: 'Integrations Bus',
+};
+
+const getServiceLabel = (key: string): string => {
+  if (SERVICE_LABEL_MAP[key]) return SERVICE_LABEL_MAP[key];
+  return key
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 const StatusDot: React.FC<{ status: ServiceStatusProps['status'] }> = ({ status }) => {
   const colors = {
@@ -155,14 +165,6 @@ export const ServiceHealthBar: React.FC = () => {
     enabled: true,
   });
 
-  // Services list for diagnostics
-  const services: { key: keyof HealthData['checks']; label: string }[] = [
-    { key: 'application', label: 'Backend Core' },
-    { key: 'database', label: 'Data Store' },
-    { key: 'redis', label: 'Cache Cluster' },
-    { key: 'memory', label: 'Compute Engine' },
-    { key: 'disk', label: 'Storage Node' },
-  ];
 
   const getServiceStatus = (check: HealthCheckResult): ServiceStatusProps['status'] => {
     if (!check || !check.status) return 'unknown';
@@ -256,18 +258,15 @@ export const ServiceHealthBar: React.FC = () => {
                 Probing clusters...
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {services.map(({ key, label }) => {
-                  const check = data.checks[key];
-                  return (
-                    <ServiceStatusItem
-                      key={key}
-                      name={label}
-                      status={getServiceStatus(check)}
-                      responseTime={check?.response_time_ms}
-                    />
-                  );
-                })}
+              <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                {Object.entries(data.checks || {}).map(([key, check]) => (
+                  <ServiceStatusItem
+                    key={key}
+                    name={getServiceLabel(key)}
+                    status={getServiceStatus(check)}
+                    responseTime={check?.response_time_ms}
+                  />
+                ))}
               </div>
             )}
 
