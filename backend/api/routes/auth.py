@@ -18,6 +18,14 @@ from core.security import is_token_revoked, revoke_token
 from core.security.authentication.rbac import UserContext
 from database.supabase_client import db
 
+try:
+    from supabase_auth.errors import AuthApiError
+except ImportError:
+    try:
+        from gotrue.errors import AuthApiError  # type: ignore[no-redef]
+    except ImportError:
+        AuthApiError = None  # type: ignore[assignment]
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
@@ -274,6 +282,12 @@ async def login(body: LoginRequest, request: Request, response: Response):
         # বাংলা: নিজে রেইজ করা HTTPException পুনরায় রেইজ করি — বাকি সব exception 500।
         raise
     except Exception as e:
+        if AuthApiError is not None and isinstance(e, AuthApiError):
+            logger.warning(f"Authentication rejected for email={body.username!r}: {e.message}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=e.message or "Invalid credentials",
+            ) from e
         # বাংলা: অন্য কোনো exception (network, DB, Supabase internal) — ক্লায়েন্টকে
         # generic বার্তা দেখাচ্ছি, কিন্তু server-side এ পূর্ণ stack লগ করছি।
         logger.exception(f"Unexpected login error for email={body.username!r}")
@@ -332,6 +346,12 @@ async def register(body: RegisterRequest, response: Response):
     except HTTPException:
         raise
     except Exception as e:
+        if AuthApiError is not None and isinstance(e, AuthApiError):
+            logger.warning(f"Registration rejected for email={body.username!r}: {e.message}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=e.message or "Registration failed",
+            ) from e
         # বাংলা: registration-এর ক্ষেত্রেও internal error লিক করছি না।
         logger.exception(f"Unexpected registration error for email={body.username!r}")
         raise HTTPException(
