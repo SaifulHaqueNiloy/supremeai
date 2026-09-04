@@ -198,7 +198,11 @@ class ChangeProposalManager:
         proposal = self.proposals.get(proposal_id)
         if not proposal or not approver.strip():
             return False
-        if proposal.state in {ProposalState.REJECTED, ProposalState.ROLLED_BACK, ProposalState.PROMOTED}:
+        if proposal.state in {
+            ProposalState.REJECTED,
+            ProposalState.ROLLED_BACK,
+            ProposalState.PROMOTED,
+        }:
             return False
         proposal.human_approved = True
         proposal.approved_by = approver.strip()
@@ -299,8 +303,7 @@ class ChangeProposalManager:
         if proposal.canary_success_rate < minimum_canary_rate:
             proposal.advance_state(ProposalState.REJECTED)
             proposal.rejection_reason = (
-                f"Canary regression: {proposal.canary_success_rate:.3f} < "
-                f"{minimum_canary_rate:.3f}"
+                f"Canary regression: {proposal.canary_success_rate:.3f} < {minimum_canary_rate:.3f}"
             )
             self._persist_proposal(proposal)
             return False
