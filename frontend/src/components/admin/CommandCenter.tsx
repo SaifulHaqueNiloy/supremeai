@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo, useRef } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
+  type Node,
+  type Edge,
   Background,
   useNodesState,
   useEdgesState,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import './AethelCoreStyles.css';
 import {
   Cpu,
@@ -47,8 +50,8 @@ const initialChat = [
 ];
 
 export function CommandCenter() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [chatMessages, setChatMessages] = useState(initialChat);
   const [chatInput, setChatInput] = useState('');
   const [isCentralPanelOpen, setIsCentralPanelOpen] = useState(false);
