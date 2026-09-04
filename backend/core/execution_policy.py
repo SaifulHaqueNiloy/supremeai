@@ -86,7 +86,9 @@ def choose_execution(
     if byoc_available and not urgent:
         return ExecutionDecision(ExecutionMode.BYOC, None, "provider_quota_exhausted")
     if task_class is TaskClass.RESEARCH:
-        return ExecutionDecision(ExecutionMode.RESEARCH, None, "provider_supported_research_only")
+        return ExecutionDecision(
+            ExecutionMode.RESEARCH, None, "provider_supported_research_only", degraded=True
+        )
     return ExecutionDecision(ExecutionMode.UNAVAILABLE, None, "no_authorized_capacity")
 
 
