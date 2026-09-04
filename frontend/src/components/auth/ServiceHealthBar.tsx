@@ -113,11 +113,25 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
 
     clearTimeout(timeoutId);
 
+    const contentType = res.headers.get('content-type') || '';
+    const body = await res.text();
+
     if (!res.ok) {
-      throw new Error(`Health check failed with status ${res.status}`);
+      throw new Error(`Health check failed with status ${res.status} from ${res.url}`);
     }
 
-    return await res.json();
+    if (!contentType.toLowerCase().includes('application/json')) {
+      const preview = body.replace(/\s+/g, ' ').trim().slice(0, 120);
+      throw new Error(
+        `Health check returned ${contentType || 'non-JSON'} from ${res.url}${preview ? `: ${preview}` : ''}`,
+      );
+    }
+
+    try {
+      return JSON.parse(body) as HealthData;
+    } catch {
+      throw new Error(`Health check returned invalid JSON from ${res.url}`);
+    }
   } catch (error) {
     clearTimeout(timeoutId);
     
