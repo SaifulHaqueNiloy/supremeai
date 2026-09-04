@@ -218,7 +218,7 @@ describe('App component', () => {
     );
 
     // Customer dashboard greeting
-    expect(screen.getByText('What would you like to build today?')).toBeInTheDocument();
+    expect(screen.getByText('What would you like SupremeAI to accomplish?')).toBeInTheDocument();
     // Sidebar navigation (NAVIGATION_REGISTRY — implemented items only;
     // planned items like Projects are intentionally not rendered)
     expect(screen.getByText('Home')).toBeInTheDocument();
@@ -239,7 +239,7 @@ describe('App component', () => {
     );
 
     expect(
-      screen.getByPlaceholderText('Ask SupremeAI to generate, analyze, or deploy...')
+      screen.getByPlaceholderText('Research, automate, analyze, or build...')
     ).toBeInTheDocument();
   });
 
