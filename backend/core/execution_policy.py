@@ -4,6 +4,7 @@ This module deliberately never rotates credentials or keeps third-party notebook
 alive. It centralizes admission, degradation, and offload decisions so adapters
 can remain small and testable.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -66,7 +67,8 @@ def choose_execution(
         return ExecutionDecision(ExecutionMode.BYOC, None, "explicit_user_owned_execution")
 
     eligible = [
-        p for p in providers
+        p
+        for p in providers
         if p.healthy and p.supports_task and p.authorized and p.remaining_ratio > 0
     ]
     eligible.sort(key=lambda p: p.remaining_ratio, reverse=True)
@@ -74,8 +76,12 @@ def choose_execution(
         provider = eligible[0]
         degraded = provider.remaining_ratio < 0.30
         if task_class in (TaskClass.QUEUED_HEAVY, TaskClass.BROWSER_ONLY, TaskClass.RESEARCH):
-            return ExecutionDecision(ExecutionMode.QUEUED, provider.name, "bounded_async_execution", degraded)
-        return ExecutionDecision(ExecutionMode.SERVER, provider.name, "authorized_quota_available", degraded)
+            return ExecutionDecision(
+                ExecutionMode.QUEUED, provider.name, "bounded_async_execution", degraded
+            )
+        return ExecutionDecision(
+            ExecutionMode.SERVER, provider.name, "authorized_quota_available", degraded
+        )
 
     if byoc_available and not urgent:
         return ExecutionDecision(ExecutionMode.BYOC, None, "provider_quota_exhausted")

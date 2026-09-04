@@ -3,6 +3,7 @@
 The planner only emits an execution contract. Actual adapters must enforce their
 own authentication and ownership checks; no credentials are rotated here.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -64,7 +65,7 @@ def build_execution_plan(
     providers: tuple[ProviderBudget, ...] = (),
 ) -> ExecutionPlan:
     """Build a safe plan with deterministic client/BYOC failover semantics.
-    
+
     Order: cache → client/BYOC (if authorized) → healthy provider → queued → unavailable.
     No credential rotation or notebook keep-alive.
     """
