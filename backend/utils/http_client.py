@@ -139,8 +139,9 @@ async def safe_api_call(
                     json=json_data,
                     params=params,
                 )
-            response.raise_for_status()
-            return (True, response.json())
+
+        response.raise_for_status()
+        return (True, response.json())
     except httpx.HTTPStatusError as e:
         error_msg = handle_api_error(e, e.response.status_code)
         logger.warning(f"HTTP error calling {url}: {error_msg}")

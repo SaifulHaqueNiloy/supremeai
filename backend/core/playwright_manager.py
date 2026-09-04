@@ -1,5 +1,7 @@
 import asyncio
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from core.logging_config import logger
@@ -55,8 +57,18 @@ async def get_global_browser() -> Browser:
 
 
 async def browser_page_slot():
-    """Bounded slot for browser work; prevents unbounded page concurrency."""
+    """Return the bounded semaphore for callers that manage acquire/release."""
     return _browser_page_semaphore
+
+
+@asynccontextmanager
+async def browser_page_capacity() -> AsyncIterator[None]:
+    """Reserve one bounded browser-work slot and always release it."""
+    await _browser_page_semaphore.acquire()
+    try:
+        yield
+    finally:
+        _browser_page_semaphore.release()
 
 
 async def shutdown_global_browser():
