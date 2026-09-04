@@ -1,4 +1,4 @@
- 
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -144,59 +144,24 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
 };
 
 export const ServiceHealthBar: React.FC = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   const { data, error, isLoading, isError } = useQuery<HealthData>({
     queryKey: ['public-health-status'],
     queryFn: fetchPublicHealth,
-    refetchInterval: (query) => (query.state.status === 'error' ? false : 15000), // 15 seconds refresh
+    refetchInterval: (query) => (query.state.status === 'error' ? false : 20000), // 20 seconds refresh
     retry: 2,
-    staleTime: 10_000,
-    // বাংলা: Always enabled — login page-এও দেখাবে
+    staleTime: 12_000,
     enabled: true,
   });
 
-  // বাংলা: Error state — backend unreachable
-  if (isError) {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md mb-4 p-3 rounded-xl bg-red-950/60 border border-red-800/50 backdrop-blur-sm"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-sm font-semibold text-red-300">⚠️ System Unreachable</span>
-          </div>
-          <p className="text-xs text-red-400/80">
-            Backend server is not responding. Please try again in a few moments.
-          </p>
-          <p className="text-[10px] text-red-500/60 mt-1 font-mono">
-            {error?.message || 'Network error or CORS issue'}
-          </p>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  // বাংলা: Loading state
-  if (isLoading || !data) {
-    return (
-      <div className="w-full max-w-md mb-4 p-3 rounded-xl bg-black/30 border border-white/5 backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-          <span className="text-sm font-medium text-gray-400">Checking system status...</span>
-        </div>
-      </div>
-    );
-  }
-
-  // বাংলা: Parse health data for display
+  // Services list for diagnostics
   const services: { key: keyof HealthData['checks']; label: string }[] = [
-    { key: 'application', label: 'Backend API' },
-    { key: 'database', label: 'Database' },
-    { key: 'redis', label: 'Redis Cache' },
-    { key: 'memory', label: 'Memory' },
-    { key: 'disk', label: 'Disk' },
+    { key: 'application', label: 'Backend Core' },
+    { key: 'database', label: 'Data Store' },
+    { key: 'redis', label: 'Cache Cluster' },
+    { key: 'memory', label: 'Compute Engine' },
+    { key: 'disk', label: 'Storage Node' },
   ];
 
   const getServiceStatus = (check: HealthCheckResult): ServiceStatusProps['status'] => {
@@ -204,85 +169,122 @@ export const ServiceHealthBar: React.FC = () => {
     return check.status as ServiceStatusProps['status'];
   };
 
-  const overallStatus = data.status;
+  const overallStatus = data?.status || (isError ? 'unhealthy' : 'loading');
   const isHealthy = overallStatus === 'healthy';
   const isDegraded = overallStatus === 'degraded';
   const isUnhealthy = overallStatus === 'unhealthy';
 
-  // বাংলা: Overall status banner color
-  const bannerColor = isHealthy 
-    ? 'border-emerald-800/40 bg-emerald-950/30' 
-    : isDegraded 
-      ? 'border-amber-800/40 bg-amber-950/30'
-      : 'border-red-800/40 bg-red-950/30';
+  // Subtle label for public users
+  const publicStatusLabel = isLoading
+    ? 'Connecting to Node...'
+    : isError
+      ? 'Sync Pending'
+      : isHealthy
+        ? 'Network Optimal'
+        : isDegraded
+          ? 'High Concurrency'
+          : 'Connecting...';
 
-  const textColor = isHealthy ? 'text-emerald-300' : isDegraded ? 'text-amber-300' : 'text-red-300';
+  // Subtle accent dot colors
+  const dotColor = isLoading
+    ? 'bg-blue-400 animate-pulse shadow-blue-400/40'
+    : isError
+      ? 'bg-amber-500/80 shadow-amber-500/30'
+      : isHealthy
+        ? 'bg-emerald-400 shadow-emerald-400/50'
+        : isDegraded
+          ? 'bg-amber-400 shadow-amber-400/40'
+          : 'bg-rose-500 shadow-rose-500/40';
+
+  const avgLatency = data?.total_response_time_ms
+    ? `${Math.round(data.total_response_time_ms)}ms`
+    : isHealthy
+      ? '<50ms'
+      : 'Synced';
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`w-full max-w-md mb-4 p-4 rounded-xl border backdrop-blur-sm ${bannerColor}`}
+    <div className="relative flex flex-col items-center select-none">
+      {/* 🚀 Stealth Ambient Chip: Looks like a sleek tech design pill to normal users */}
+      <motion.button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="group relative flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-cyan-500/30 backdrop-blur-md shadow-lg transition-all duration-200 cursor-pointer"
+        title="Diagnostic Matrix (Click to toggle)"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${
-              isHealthy ? 'bg-emerald-500 shadow-emerald-500/50' :
-              isDegraded ? 'bg-amber-500 animate-pulse shadow-amber-500/50' :
-              'bg-red-500 animate-pulse shadow-red-500/50'
-            }`} />
-            <span className={`text-sm font-bold ${textColor}`}>
-              {isHealthy ? '✓ All Systems Operational' :
-               isDegraded ? '⚠ System Degraded' :
-               '✕ System Issues Detected'}
-            </span>
-          </div>
-          <span className="text-[10px] text-gray-500 font-mono">
-            {data.summary.healthy}/{data.summary.total_checks} OK
-          </span>
-        </div>
+        <span className="relative flex h-2 w-2">
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-60 ${dotColor}`} />
+          <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+        </span>
 
-        {/* Service Status Grid */}
-        <div className="space-y-1.5">
-          {services.map(({ key, label }) => {
-            const check = data.checks[key];
-            return (
-              <ServiceStatusItem
-                key={key}
-                name={label}
-                status={getServiceStatus(check)}
-                responseTime={check?.response_time_ms}
-              />
-            );
-          })}
-        </div>
+        <span className="text-[11px] font-mono tracking-wide text-gray-400 group-hover:text-gray-200 transition-colors">
+          {publicStatusLabel}
+        </span>
 
-        {/* Footer */}
-        {(isDegraded || isUnhealthy) && (
+        <span className="text-[10px] font-mono text-gray-600 group-hover:text-cyan-400/80 transition-colors border-l border-white/10 pl-2">
+          {data?.summary ? `${data.summary.healthy}/${data.summary.total_checks}` : avgLatency}
+        </span>
+      </motion.button>
+
+      {/* 🔍 Secret Diagnostics Modal/Dropdown for those who know */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-3 pt-3 border-t border-white/5"
+            initial={{ opacity: 0, y: -8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ duration: 0.16 }}
+            className="absolute top-10 z-50 w-80 p-3.5 rounded-2xl bg-black/85 border border-white/10 backdrop-blur-xl shadow-2xl shadow-black/80 text-left"
           >
-            <p className="text-[11px] text-gray-400">
-              {isDegraded 
-                ? 'Some services are experiencing slow response times. Login may take longer than usual.'
-                : 'Critical services are down. You may experience issues during login.'}
-            </p>
+            <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10">
+              <div className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full ${dotColor}`} />
+                <span className="text-xs font-mono font-semibold text-gray-200">System Telemetry</span>
+              </div>
+              <span className="text-[10px] font-mono text-gray-500">
+                {data?.timestamp ? new Date(data.timestamp * 1000).toLocaleTimeString() : 'Live'}
+              </span>
+            </div>
+
+            {isError ? (
+              <div className="py-2 text-[11px] font-mono text-rose-400">
+                Connection check: {error?.message || 'Server unreachable'}
+              </div>
+            ) : isLoading || !data ? (
+              <div className="py-3 text-center text-xs font-mono text-gray-400 animate-pulse">
+                Probing clusters...
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {services.map(({ key, label }) => {
+                  const check = data.checks[key];
+                  return (
+                    <ServiceStatusItem
+                      key={key}
+                      name={label}
+                      status={getServiceStatus(check)}
+                      responseTime={check?.response_time_ms}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[9px] font-mono text-gray-500">
+              <span>Status: {overallStatus.toUpperCase()}</span>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="hover:text-cyan-400 text-gray-400 underline cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </motion.div>
         )}
-
-        {/* Response Time */}
-        <div className="mt-2 flex justify-end">
-          <span className="text-[10px] text-gray-600 font-mono">
-            Checked: {new Date(data.timestamp * 1000).toLocaleTimeString()}
-          </span>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </div>
   );
 };
 
