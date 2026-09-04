@@ -54,7 +54,9 @@ async def deep_health_check(response: Response):
     redis_latency = round((time.time() - redis_start) * 1000, 2)
 
     cache_status = "connected" if redis_manager.is_connected else "disabled"
-    persistence_mode = "healthy" if db_status == "healthy" else ("degraded" if db_degraded() else "unavailable")
+    persistence_mode = (
+        "healthy" if db_status == "healthy" else ("degraded" if db_degraded() else "unavailable")
+    )
 
     overall_status = "healthy"
     if persistence_mode != "healthy":
@@ -73,7 +75,7 @@ async def deep_health_check(response: Response):
     if not all_agents_healthy:
         overall_status = "degraded"
 
-    if overall_status == "unavailable":
+    if overall_status in ("degraded", "unavailable"):
         response.status_code = 503
 
     return HealthStatus(
@@ -99,7 +101,9 @@ async def readiness_check():
     db_ok = await _check_database()
     redis_ok = await _check_redis()
 
-    persistence_mode = "healthy" if db_ok == "healthy" else ("degraded" if db_degraded() else "unavailable")
+    persistence_mode = (
+        "healthy" if db_ok == "healthy" else ("degraded" if db_degraded() else "unavailable")
+    )
     if persistence_mode == "unavailable":
         raise HTTPException(status_code=503, detail="Database unavailable")
 
