@@ -54,7 +54,11 @@ class SettingsFieldsMixin:
     @property
     def frontend_base_url(self) -> str:
         """Compatibility property for routes using frontend_base_url."""
-        return self.frontend_url or "http://localhost:3000"
+        if self.frontend_url:
+            return self.frontend_url
+        if self.is_local():
+            return "http://localhost:3000"
+        return ""
 
     # CORS origins is implemented as a dynamic @property on SettingsSecretsMixin
     # (see config_secrets.py). It must NOT be redeclared as a static Field here —

@@ -12,6 +12,10 @@ IP টি XFF-এর **শেষে** যোগ করে। এই হেল্
 
 from __future__ import annotations
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def _trusted_proxy_count() -> int:
     """How many proxy hops sit between the internet and this process."""
@@ -22,8 +26,8 @@ def _trusted_proxy_count() -> int:
     if explicit:
         try:
             return max(0, int(explicit))
-        except ValueError:
-            pass
+        except ValueError as err:
+            logger.debug(f"Invalid TRUSTED_PROXY_COUNT value {explicit!r}: {err}")
 
     # 2) Render always fronts web services with its proxy (appends client IP)
     try:

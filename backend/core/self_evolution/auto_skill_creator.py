@@ -127,8 +127,8 @@ def _is_test_env() -> bool:
 
         if is_production():
             return False
-    except Exception:  # pragma: no cover - defensive
-        pass
+    except Exception as prod_err:  # pragma: no cover - defensive
+        logger.debug(f"is_production check failed in auto_skill_creator: {prod_err}")
     if (os.getenv("ENV", "") or "").lower() in ("test", "testing"):
         return True
     if (os.getenv("TESTING", "") or "").lower() == "true":
@@ -140,8 +140,8 @@ def _is_test_env() -> bool:
             return True
         if str(getattr(settings, "env", "") or "").lower() in ("test", "testing"):
             return True
-    except Exception:  # pragma: no cover - defensive
-        pass
+    except Exception as settings_err:  # pragma: no cover - defensive
+        logger.debug(f"settings test check failed in auto_skill_creator: {settings_err}")
     return False
 
 
