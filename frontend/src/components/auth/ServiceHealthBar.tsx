@@ -155,7 +155,6 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
 
 export const ServiceHealthBar: React.FC = () => {
   const [isOpen, setIsOpen] = React.useState(false);
-
   const { data, error, isLoading, isError } = useQuery<HealthData>({
     queryKey: ['public-health-status'],
     queryFn: fetchPublicHealth,
@@ -212,7 +211,7 @@ export const ServiceHealthBar: React.FC = () => {
         onClick={() => setIsOpen((prev) => !prev)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        className="group relative flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-cyan-500/30 backdrop-blur-md shadow-lg transition-all duration-200 cursor-pointer"
+        className="group relative flex items-center gap-2.5 rounded-full border border-[var(--sa-border)] bg-[var(--sa-surface)] px-3.5 py-1.5 shadow-sm transition-colors hover:border-[var(--sa-primary)] cursor-pointer"
         title="Diagnostic Matrix (Click to toggle)"
       >
         <span className="relative flex h-2 w-2">
@@ -220,11 +219,11 @@ export const ServiceHealthBar: React.FC = () => {
           <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
         </span>
 
-        <span className="text-[11px] font-mono tracking-wide text-gray-400 group-hover:text-gray-200 transition-colors">
+        <span className="text-[11px] font-mono tracking-wide text-[var(--sa-ink-muted)] group-hover:text-[var(--sa-ink)] transition-colors">
           {publicStatusLabel}
         </span>
 
-        <span className="text-[10px] font-mono text-gray-600 group-hover:text-cyan-400/80 transition-colors border-l border-white/10 pl-2">
+        <span className="border-l border-[var(--sa-border)] pl-2 text-[10px] font-mono text-[var(--sa-ink-muted)] transition-colors group-hover:text-[var(--sa-primary)]">
           {data?.summary ? `${data.summary.healthy}/${data.summary.total_checks}` : avgLatency}
         </span>
       </motion.button>
