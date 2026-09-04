@@ -2,11 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from core.orchestration.conversation_orchestrator import (
-    ConversationCommand,
-    get_conversation_orchestrator,
-)
-
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
 from brain.supreme_learning_engine import get_learning_engine
@@ -14,6 +9,10 @@ from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
+from core.orchestration.conversation_orchestrator import (
+    ConversationCommand,
+    get_conversation_orchestrator,
+)
 
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(
@@ -51,28 +50,40 @@ async def orchestrate_chat(
     principal = user.get("tenant_id") or user.get("sub")
     if not principal:
         raise HTTPException(status_code=401, detail="Authenticated tenant required")
-    result = await get_conversation_orchestrator().dispatch(ConversationCommand(
-        prompt=payload.prompt, user_id=str(user.get("sub") or principal),
-        tenant_id=str(principal), role=str(user.get("role", "user")),
-        project_id=payload.project_id, conversation_id=payload.conversation_id,
-        confirmation=payload.confirmation,
-        metadata={"session_id": payload.session_id, "url": payload.url,
-                   "title": payload.title, "artifact_type": payload.artifact_type,
-                   "content": payload.content},
-    ))
+    result = await get_conversation_orchestrator().dispatch(
+        ConversationCommand(
+            prompt=payload.prompt,
+            user_id=str(user.get("sub") or principal),
+            tenant_id=str(principal),
+            role=str(user.get("role", "user")),
+            project_id=payload.project_id,
+            conversation_id=payload.conversation_id,
+            confirmation=payload.confirmation,
+            metadata={
+                "session_id": payload.session_id,
+                "url": payload.url,
+                "title": payload.title,
+                "artifact_type": payload.artifact_type,
+                "content": payload.content,
+            },
+        )
+    )
     status_code = 202 if result.status == "confirmation_required" else 200
     if result.status == "denied":
         status_code = 403
-    return JSONResponse(status_code=status_code, content={
-        "success": result.status == "completed",
-        "status": result.status,
-        "correlation_id": result.correlation_id,
-        "capability": result.capability,
-        "response": result.response,
-        "requires_confirmation": result.requires_confirmation,
-        "error": result.error,
-        "events": result.events,
-    })
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "success": result.status == "completed",
+            "status": result.status,
+            "correlation_id": result.correlation_id,
+            "capability": result.capability,
+            "response": result.response,
+            "requires_confirmation": result.requires_confirmation,
+            "error": result.error,
+            "events": result.events,
+        },
+    )
 
 
 @router.get("/capabilities")

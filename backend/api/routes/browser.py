@@ -14,13 +14,12 @@ from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
+from core.browser_session_manager import session_manager
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
-from core.browser_session_manager import session_manager
-
 
 router = APIRouter(
     prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
@@ -58,9 +57,7 @@ async def create_automation_session(
     user_token: str = Depends(get_current_user_token),
 ):
     session = await session_manager.create(user_token)
-    return BrowserSessionResponse(
-        session_id=session.id, status="ready", url=session.page.url
-    )
+    return BrowserSessionResponse(session_id=session.id, status="ready", url=session.page.url)
 
 
 @router.get("/automation/sessions")
@@ -101,9 +98,20 @@ async def execute_automation_action(
     elif action == "screenshot":
         image = await page.screenshot(type="png", full_page=req.full_page)
         import base64
-        return {"success": True, "action": action, "url": page.url, "screenshot": base64.b64encode(image).decode("ascii")}
+
+        return {
+            "success": True,
+            "action": action,
+            "url": page.url,
+            "screenshot": base64.b64encode(image).decode("ascii"),
+        }
     elif action in {"content", "extract"}:
-        return {"success": True, "action": action, "url": page.url, "content": await page.locator("body").inner_text(timeout=15_000)}
+        return {
+            "success": True,
+            "action": action,
+            "url": page.url,
+            "content": await page.locator("body").inner_text(timeout=15_000),
+        }
     else:
         raise HTTPException(status_code=422, detail="Unsupported browser action")
     return {"success": True, "action": action, "url": page.url}

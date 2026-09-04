@@ -1,6 +1,9 @@
 import pytest
 
-from core.orchestration.conversation_orchestrator import ConversationCommand, get_conversation_orchestrator
+from core.orchestration.conversation_orchestrator import (
+    ConversationCommand,
+    get_conversation_orchestrator,
+)
 
 
 @pytest.mark.asyncio
