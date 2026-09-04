@@ -41,6 +41,7 @@ from core.metrics_collector import metrics_collector
 from core.orchestration.orchestrator import Orchestrator
 from core.reliability_controller import ReliabilityController
 from core.startup_validator import StartupValidator
+from utils.http_client import set_shared_client
 
 
 @asynccontextmanager
@@ -120,6 +121,7 @@ async def app_lifespan(app):
         headers={"User-Agent": "SupremeAI-Orchestrator/2.0"},
     )
     app.state.http_client = services.global_http_client
+    set_shared_client(services.global_http_client)
     services.model_router._http_client = services.global_http_client
     logger.info("✅ Global HTTP Connection Pool initialized [Max Cons: 200].")
 
@@ -142,7 +144,7 @@ async def app_lifespan(app):
             )
         )
 
-    # ── Sequential Phase 2: Services that depend on Phase 1 ─────────────────
+    # ── Sequential Phase 2: Services that depend on Phase 1 ───────��─────────
     # Orchestrator initialization (depends on HTTP client + DB)
     try:
         orch_inst = Orchestrator()
