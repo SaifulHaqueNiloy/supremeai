@@ -1,4 +1,4 @@
-import { fetchWithRetry, getApiBaseUrl } from '@/utils/api'
+import { fetchWithRetry, getApiBaseUrl } from '../utils/api'
 
 export type ServiceStatus = 'healthy' | 'degraded' | 'unconfigured' | 'timeout' | 'unreachable' | 'unhealthy'
 

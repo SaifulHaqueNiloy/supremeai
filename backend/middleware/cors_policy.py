@@ -32,7 +32,11 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
 
 USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
     "CORS_ORIGINS",
-    (),
+    (
+        "https://supremeai-lac.vercel.app",
+        "https://supremeai-a.web.app",
+        "https://supremeai-admin.web.app",
+    ),
 )
 
 ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins("ADMIN_CORS_ORIGINS", ())

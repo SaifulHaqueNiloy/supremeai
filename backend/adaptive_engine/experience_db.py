@@ -246,15 +246,23 @@ class ExperienceDatabase:
             try:
                 return self.encoder.encode(text).tolist()
             except Exception as embed_err:
-                # বাংলা মন্তব্য: embedding তৈরি ব্যর্থ হলে সতর্ক লগ দিই — নীরবে None ফেরানো বন্ধ
                 logger.warning(
-                    f"[ExperienceDB] Embedding generation failed. "
-                    f"encoder={type(self.encoder).__name__!r} "
-                    f"text_length={len(text)} "
-                    f"error={embed_err!r}. "
-                    f"Semantic memory will degrade for this entry."
+                    f"[ExperienceDB] SentenceTransformer embedding failed: {embed_err!r}. "
+                    f"Falling back to embed_for_pgvector."
                 )
-                return None
+
+        # Fallback to zero-cost canonical embedder (embed_for_pgvector, 384-dim)
+        try:
+            from core.embeddings import embed_for_pgvector
+
+            vec = embed_for_pgvector(text)
+            if vec:
+                return vec
+        except Exception as fallback_err:
+            logger.warning(
+                f"[ExperienceDB] Fallback embedder failed: {fallback_err!r}. "
+                f"Semantic memory degraded for this entry."
+            )
         return None
 
     def record_experience(self, exp: Experience) -> int:
