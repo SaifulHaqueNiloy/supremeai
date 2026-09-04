@@ -73,6 +73,53 @@ class SupremeContextMiddleware(BaseHTTPMiddleware):
                 raise
 
 
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """Enforce the readable-cookie/header double-submit CSRF contract.
+
+    Bearer-token clients remain compatible because CSRF is only required when
+    authentication is supplied by the httpOnly access-token cookie.
+    """
+
+    SAFE_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
+    BOOTSTRAP_PATHS = {
+        "/auth/login",
+        "/auth/register",
+        "/auth/refresh",
+        "/auth/logout",
+    }
+    SIGNED_WEBHOOK_PREFIXES = ("/webhooks/", "/api/v1/webhooks/", "/cdc/")
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method in self.SAFE_METHODS:
+            return await call_next(request)
+
+        path = request.url.path
+        if path in self.BOOTSTRAP_PATHS or path.startswith(self.SIGNED_WEBHOOK_PREFIXES):
+            return await call_next(request)
+
+        # Authorization-header requests are protected by the bearer token and
+        # do not expose a browser cookie attack surface.
+        if request.headers.get("Authorization"):
+            return await call_next(request)
+
+        access_cookie = request.cookies.get("supreme_access_token")
+        if access_cookie:
+            cookie_token = request.cookies.get("supreme_csrf_token")
+            header_token = request.headers.get("X-CSRF-Token")
+            if not cookie_token or not header_token or cookie_token != header_token:
+                correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": "CSRF validation failed",
+                        "correlation_id": correlation_id,
+                    },
+                    headers={"X-Correlation-ID": correlation_id},
+                )
+
+        return await call_next(request)
+
+
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Inject X-Request-ID into every response for distributed tracing."""
 

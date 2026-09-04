@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
-from api.middleware import GlobalRateLimiterMiddleware
+from api.middleware import CSRFMiddleware, GlobalRateLimiterMiddleware
 from core.factory import SupremeAIFactory, get_factory
 from core.integration_layer import SupremeAIIntegrator
 from core.logging_config import logger
@@ -89,11 +89,13 @@ app.add_middleware(
         "Accept",
         "Origin",
         "X-Requested-With",
+        "X-CSRF-Token",
         "apikey",
     ],
 )
 
 app.add_middleware(GlobalRateLimiterMiddleware, limit=100, window=60)
+app.add_middleware(CSRFMiddleware)
 
 
 # Request/Response Models
