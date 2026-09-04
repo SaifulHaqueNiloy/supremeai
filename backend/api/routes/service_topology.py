@@ -241,7 +241,9 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
     full_url = f"{service.url}{service.health_endpoint}"
 
     try:
-        async with httpx.AsyncClient(timeout=service.timeout) as client:
+        from utils.http_client import create_async_client
+
+        async with create_async_client(timeout=service.timeout) as client:
             if service.check_type == "dns":
                 # DNS check via DoH (DNS over HTTPS)
                 response = await client.get(
