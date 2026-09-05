@@ -1,5 +1,4 @@
-from .agent_session import AgentSession
-from .automation_execution import AutomationExecution
+from .crawler import CrawlHistoryModel, CrawlPolicyModel, DomainRuleModel
 from .dynamic_agent import DynamicAgent
 from .execution_log import ExecutionLog
 from .integration import Integration
@@ -14,6 +13,9 @@ __all__ = [
     "AgentSession",
     "ApiEndpoint",
     "AutomationExecution",
+    "CrawlHistoryModel",
+    "CrawlPolicyModel",
+    "DomainRuleModel",
     "DynamicAgent",
     "DynamicCapability",
     "ExecutionChain",
