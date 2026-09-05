@@ -235,6 +235,8 @@ ALL_ROUTERS = [
     {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
     # Canonical browser-facing broker for service discovery and health.
     {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
+    # Admin Command Center aggregated metrics, controls and submodules
+    {"path": "api.routes.commandcenter", "prefix": "", "is_admin": True, "is_critical": False},
 ]
 
 

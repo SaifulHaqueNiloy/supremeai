@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from api.dependencies import get_current_admin
 
 router = APIRouter(
-    prefix="/admin-api/commandcenter",
+    prefix="",
     tags=["Command Center"],
     dependencies=[Depends(get_current_admin)],
 )

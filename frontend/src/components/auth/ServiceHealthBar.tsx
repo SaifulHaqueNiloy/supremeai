@@ -184,9 +184,9 @@ export const ServiceHealthBar: React.FC = () => {
     queryKey: ['public-health-status'],
     queryFn: fetchPublicHealth,
     refetchInterval: (query) => (query.state.status === 'error' ? false : 20000), // 20 seconds refresh
-    retry: 2,
     staleTime: 12_000,
     enabled: true,
+
   });
 
 
