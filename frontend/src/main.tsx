@@ -33,7 +33,7 @@ createRoot(document.getElementById('root')!).render(
     <ToastProvider>
       <ThemeProvider>
         <SharedProviders>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <GlobalErrorBoundary>
               <App />
             </GlobalErrorBoundary>

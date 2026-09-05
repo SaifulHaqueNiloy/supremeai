@@ -211,7 +211,7 @@ describe('App component', () => {
   it('renders the workspace shell with the customer dashboard at /workspace', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <App />
         </MemoryRouter>
       </ToastProvider>
@@ -220,11 +220,11 @@ describe('App component', () => {
     // Customer dashboard greeting
     expect(screen.getByText('What would you like SupremeAI to accomplish?')).toBeInTheDocument();
     // Sidebar navigation (NAVIGATION_REGISTRY — implemented items only;
-    // planned items like Projects are intentionally not rendered)
+    // Projects is now implemented as a foundation workspace module route)
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('AI Studio')).toBeInTheDocument();
     expect(screen.getByText('Agents')).toBeInTheDocument();
-    expect(screen.queryByText('Projects')).not.toBeInTheDocument();
+    expect(screen.getByText('Projects')).toBeInTheDocument();
     // Dashboard sections
     expect(screen.getByText('Recent Conversations')).toBeInTheDocument();
   });
@@ -232,7 +232,7 @@ describe('App component', () => {
   it('renders the customer dashboard prompt input', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <App />
         </MemoryRouter>
       </ToastProvider>
@@ -246,7 +246,7 @@ describe('App component', () => {
   it('renders the active agents and usage summary in the dashboard', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']}>
+        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <App />
         </MemoryRouter>
       </ToastProvider>
