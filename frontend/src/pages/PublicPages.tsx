@@ -1,110 +1,64 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, Check, FileText, History, Menu, Paperclip, Plus, Sparkles, Wrench, X } from 'lucide-react';
+import { ArrowUp, Check, ChevronDown, FileText, History, Menu, Paperclip, Plus, Search, Sparkles, WandSparkles, Wrench, X, Zap } from 'lucide-react';
 
 const publicLinks = [
+  { to: '/', label: 'Chat' },
+  { to: '/models', label: 'Models' },
   { to: '/features', label: 'Features' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/docs', label: 'Docs' },
   { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' },
+];
+
+const capabilityItems = [
+  { title: 'History', text: 'Save and revisit conversations', icon: History },
+  { title: 'Files', text: 'Bring your own context', icon: FileText },
+  { title: 'Tools', text: 'Connect actions and workflows', icon: Wrench },
+];
+
+const intents = [
+  { label: 'Research', prompt: 'Help me research a topic and organize the key findings.', icon: Search },
+  { label: 'Write', prompt: 'Help me write a clear, useful first draft.', icon: WandSparkles },
+  { label: 'Build', prompt: 'Help me turn an idea into a practical build plan.', icon: Zap },
+  { label: 'Analyze', prompt: 'Help me analyze this problem and decide what to do next.', icon: Sparkles },
+];
+
+const models = [
+  { name: 'Supreme Auto', detail: 'Best balance for everyday work', tag: 'Recommended' },
+  { name: 'Reasoning Pro', detail: 'Deep analysis and complex planning', tag: 'Reasoning' },
+  { name: 'Fast Chat', detail: 'Quick answers and brainstorming', tag: 'Fast' },
 ];
 
 export function PublicHeader() {
   const [menuOpen, setMenuOpen] = React.useState(false);
-  return (
-    <header className="absolute inset-x-0 top-0 z-20 px-4 py-4 sm:px-8 sm:py-5">
-      <div className="mx-auto flex max-w-6xl items-center justify-between">
-        <Link to="/" aria-label="SupremeAI home" className="flex items-center gap-3 text-sm font-semibold tracking-[0.18em] text-slate-100">
-          <span className="flex size-8 items-center justify-center rounded-xl bg-cyan-300 font-mono text-sm font-bold text-slate-950">S</span>
-          <span className="hidden sm:inline">SUPREMEAI</span>
-        </Link>
-        <nav className="hidden items-center gap-4 lg:gap-7 sm:flex" aria-label="Public navigation">
-          {publicLinks.map((link) => <Link key={link.to} to={link.to} className="text-sm text-slate-500 transition hover:text-slate-200">{link.label}</Link>)}
-        </nav>
-        <div className="flex items-center gap-3">
-          <Link to="/login" className="hidden text-sm text-slate-400 transition hover:text-slate-100 sm:block">Sign in</Link>
-          <Link to="/register" className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-200">Get started</Link>
-          <button type="button" onClick={() => setMenuOpen((open) => !open)} className="rounded-lg p-2 text-slate-400 md:hidden" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>
-        </div>
-      </div>
-      {menuOpen && <nav className="mx-auto mt-3 flex max-w-6xl flex-col gap-1 rounded-2xl border border-white/10 bg-slate-900/95 p-3 sm:hidden" aria-label="Mobile navigation">{publicLinks.map((link) => <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">{link.label}</Link>)}<Link to="/login" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">Sign in</Link></nav>}
-    </header>
-  );
+  return <header className="absolute inset-x-0 top-0 z-20 border-b border-white/[0.06] px-4 py-4 sm:px-8 sm:py-5">
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <Link to="/" aria-label="SupremeAI home" className="flex shrink-0 items-center gap-3 text-sm font-semibold tracking-[0.18em] text-slate-100"><span className="flex size-8 items-center justify-center rounded-xl bg-cyan-300 font-mono text-sm font-bold text-slate-950 shadow-[0_0_24px_rgba(103,232,249,0.25)]">S</span><span className="hidden sm:inline">SUPREMEAI</span></Link>
+      <nav className="hidden items-center gap-4 md:flex lg:gap-6" aria-label="Public navigation">{publicLinks.map((link) => <Link key={link.to} to={link.to} className="text-sm text-slate-500 transition hover:text-slate-100">{link.label}</Link>)}</nav>
+      <div className="flex items-center gap-2 sm:gap-3"><span className="hidden items-center gap-2 text-xs text-slate-600 lg:flex"><span className="size-1.5 rounded-full bg-emerald-400" />Guest mode</span><Link to="/login" className="hidden text-sm text-slate-400 transition hover:text-slate-100 sm:block">Sign in</Link><Link to="/register" className="rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 shadow-[0_0_24px_rgba(103,232,249,0.15)] transition hover:bg-cyan-200">Get started</Link><button type="button" onClick={() => setMenuOpen((open) => !open)} className="rounded-lg p-2 text-slate-400 md:hidden" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button></div>
+    </div>
+    {menuOpen && <nav className="mx-auto mt-3 flex max-w-7xl flex-col gap-1 rounded-2xl border border-white/10 bg-slate-900/95 p-3 md:hidden" aria-label="Mobile navigation">{publicLinks.map((link) => <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">{link.label}</Link>)}<Link to="/login" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">Sign in</Link></nav>}
+  </header>;
 }
 
-export function PublicLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-[#0d0f12] text-slate-100">{children}</div>;
-}
-
-const capabilityItems = [
-  { title: 'History', text: 'Save and revisit conversations', icon: History },
-  { title: 'Files', text: 'Work with your own context', icon: FileText },
-  { title: 'Tools', text: 'Connect actions and workflows', icon: Wrench },
-];
-
-function responseFor(input: string) {
-  const text = input.toLowerCase();
-  if (text.includes('plan') || text.includes('build')) return 'I can help you turn that idea into a practical plan. Start with the outcome, then add the context and constraints that matter.';
-  if (text.includes('file') || text.includes('document')) return 'That is a great use for SupremeAI. With an account, you can bring files into the conversation and keep the source context attached.';
-  if (text.includes('automat') || text.includes('workflow')) return 'We can shape that into a repeatable workflow. Sign in when you want to save it, connect tools, and run it with approval.';
-  return 'I can help you think that through. Ask me to plan, explain, summarize, or turn an idea into your next action.';
-}
+export function PublicLayout({ children }: { children: React.ReactNode }) { return <div className="min-h-screen bg-[#0d0f12] text-slate-100">{children}</div>; }
 
 type Message = { role: 'user' | 'assistant'; text: string };
+function responseFor(input: string) { const text = input.toLowerCase(); if (text.includes('plan') || text.includes('build')) return 'I can help turn that idea into a practical plan. Start with the outcome, then add the context and constraints that matter.'; if (text.includes('research')) return 'I can help structure the research, compare the important signals, and turn the findings into a clear next step.'; if (text.includes('file') || text.includes('document')) return 'That is a great use for SupremeAI. Sign in when you want to bring files into the conversation and keep source context attached.'; return 'I can help you think that through. Ask me to plan, explain, summarize, research, or turn an idea into your next action.'; }
+
+function ModelPicker({ onSelect }: { onSelect: (model: string) => void }) { const [open, setOpen] = React.useState(false); const [selected, setSelected] = React.useState(models[0]); return <div className="relative"><button type="button" onClick={() => setOpen((value) => !value)} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-400 transition hover:bg-white/5 hover:text-slate-200" aria-expanded={open}> <span className="size-1.5 rounded-full bg-cyan-300" />{selected.name}<ChevronDown size={13} /></button>{open && <div className="absolute bottom-full right-0 mb-2 w-64 rounded-2xl border border-white/10 bg-[#171a20] p-2 shadow-2xl">{models.map((model) => <button key={model.name} type="button" onClick={() => { setSelected(model); onSelect(model.name); setOpen(false); }} className="flex w-full items-start justify-between rounded-xl p-3 text-left transition hover:bg-white/5"><span><span className="block text-sm text-slate-200">{model.name}</span><span className="mt-1 block text-xs text-slate-500">{model.detail}</span></span><span className="text-[10px] text-cyan-300">{model.tag}</span></button>)}</div>}</div>; }
 
 export function GuestChatPage() {
-  const [messages, setMessages] = React.useState<Message[]>([]);
-  const [input, setInput] = React.useState('');
-  const [showCapabilities, setShowCapabilities] = React.useState(false);
-  const inputRef = React.useRef<HTMLTextAreaElement>(null);
-
-  const submit = (event?: React.FormEvent) => {
-    event?.preventDefault();
-    const value = input.trim();
-    if (!value) return;
-    setMessages((current) => [...current, { role: 'user', text: value }, { role: 'assistant', text: responseFor(value) }]);
-    setInput('');
-    setShowCapabilities(true);
-  };
-
-  const reset = () => {
-    setMessages([]);
-    setInput('');
-    inputRef.current?.focus();
-  };
-
-  return <PublicLayout><PublicHeader /><main className="relative flex min-h-screen flex-col overflow-hidden px-4 pb-8 pt-28 sm:px-8">
-    <div className="pointer-events-none absolute left-1/2 top-[48%] size-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-950/35 blur-3xl" aria-hidden="true" />
-    <div className="pointer-events-none absolute left-1/2 top-[48%] size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/[0.06] blur-3xl" aria-hidden="true" />
-    <section className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center">
-      <div className="mb-7 text-center transition-all duration-500" data-chat-start={messages.length === 0}>
-        {messages.length === 0 ? <><div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300"><Sparkles size={23} aria-hidden="true" /></div><h1 className="text-balance text-3xl font-medium tracking-tight text-slate-200 sm:text-5xl">What can I help you with?</h1><p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-500">Chat with SupremeAI for free. No account needed to get started.</p></> : <div className="max-h-[38vh] space-y-4 overflow-y-auto px-1 text-left" aria-live="polite">{messages.map((message, index) => <div key={`${message.role}-${index}`} className={message.role === 'user' ? 'ml-auto max-w-[85%] rounded-3xl bg-slate-800 px-5 py-3 text-sm leading-6 text-slate-100' : 'max-w-[85%] px-5 py-3 text-sm leading-6 text-slate-400'}>{message.text}</div>)}</div>}
-      </div>
-
-      <form onSubmit={submit} className="relative rounded-[1.65rem] border border-white/10 bg-[#202124] p-3 shadow-[0_18px_80px_rgba(0,0,0,0.3)] focus-within:border-cyan-300/35" aria-label="Guest chat">
-        <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); submit(); } }} rows={2} placeholder="Ask SupremeAI anything..." className="min-h-14 w-full resize-none bg-transparent px-2 py-1 text-base leading-7 text-slate-100 outline-none placeholder:text-slate-600" aria-label="Message SupremeAI" />
-        <div className="flex items-center justify-between gap-3 pt-2"><div className="flex items-center gap-1"><button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-white/10 hover:text-slate-300" aria-label="Attach a file"><Paperclip size={18} /></button><button type="button" onClick={reset} className="rounded-full p-2 text-slate-500 transition hover:bg-white/10 hover:text-slate-300" aria-label="Start a new chat"><Plus size={19} /></button><span className="hidden text-xs text-slate-600 sm:inline">Guest chat · temporary session</span></div><button type="submit" disabled={!input.trim()} className="flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Send message"><ArrowUp size={18} /></button></div>
-      </form>
-
-      {showCapabilities && <div className="mt-7 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-center"><p className="text-sm text-slate-400">Enjoying the conversation? Sign in to keep going with more context.</p><div className="mt-4 flex flex-wrap justify-center gap-2">{capabilityItems.map(({ title, icon: Icon, text }) => <Link key={title} to="/register" className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-slate-400 transition hover:border-cyan-300/40 hover:text-cyan-200" title={text}><Icon size={14} />{title}</Link>)}<Link to="/register" className="flex items-center gap-2 rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-200"><Check size={14} />Continue with an account</Link></div></div>}
-    </section>
-    <p className="relative mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-slate-600">SupremeAI may make mistakes. For saved history, file context, tools, and extended conversations, <Link to="/login" className="text-slate-400 underline underline-offset-4 hover:text-cyan-200">sign in</Link>.</p>
-  </main></PublicLayout>;
+  const [messages, setMessages] = React.useState<Message[]>([]); const [input, setInput] = React.useState(''); const [model, setModel] = React.useState(models[0].name); const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const submit = (event?: React.FormEvent) => { event?.preventDefault(); const value = input.trim(); if (!value) return; setMessages((current) => [...current, { role: 'user', text: value }, { role: 'assistant', text: responseFor(value) }]); setInput(''); };
+  const reset = () => { setMessages([]); setInput(''); inputRef.current?.focus(); };
+  return <PublicLayout><PublicHeader /><main className="relative flex min-h-screen flex-col overflow-hidden px-4 pb-8 pt-28 sm:px-8"><div className="pointer-events-none absolute left-1/2 top-[48%] size-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-950/35 blur-3xl" aria-hidden="true" /><div className="pointer-events-none absolute left-1/2 top-[48%] size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/[0.06] blur-3xl" aria-hidden="true" /><section className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center"><div className="mb-7 transition-all duration-500" data-chat-start={messages.length === 0}>{messages.length === 0 ? <><div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300 shadow-[0_0_40px_rgba(103,232,249,0.1)]"><Sparkles size={23} aria-hidden="true" /></div><h1 className="text-balance text-center text-3xl font-medium tracking-tight text-slate-200 sm:text-5xl">What would you like to work on?</h1><p className="mx-auto mt-4 max-w-md text-center text-sm leading-6 text-slate-500">Start with a question. SupremeAI helps you find the right way forward.</p><div className="mt-8 flex flex-wrap justify-center gap-2">{intents.map(({ label, prompt, icon: Icon }) => <button key={label} type="button" onClick={() => setInput(prompt)} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.02] px-3 py-2 text-xs text-slate-400 transition hover:border-cyan-300/30 hover:bg-cyan-300/[0.05] hover:text-cyan-200"><Icon size={14} />{label}</button>)}</div></> : <div className="mx-auto max-h-[38vh] max-w-2xl space-y-4 overflow-y-auto px-1" aria-live="polite">{messages.map((message, index) => <div key={`${message.role}-${index}`} className={message.role === 'user' ? 'ml-auto max-w-[85%] rounded-3xl bg-slate-800 px-5 py-3 text-sm leading-6 text-slate-100' : 'max-w-[85%] px-5 py-3 text-sm leading-6 text-slate-400'}>{message.text}</div>)}</div>}</div><form onSubmit={submit} className="relative rounded-[1.65rem] border border-white/10 bg-[#202124] p-3 shadow-[0_18px_80px_rgba(0,0,0,0.3)] transition focus-within:border-cyan-300/35 focus-within:shadow-[0_0_45px_rgba(34,211,238,0.1)]" aria-label="Guest chat"><textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); submit(); } }} rows={2} placeholder="Ask, write, research, or build..." className="min-h-14 w-full resize-none bg-transparent px-2 py-1 text-base leading-7 text-slate-100 outline-none placeholder:text-slate-600" aria-label="Message SupremeAI" /><div className="flex flex-wrap items-center justify-between gap-2 pt-2"><div className="flex items-center gap-1"><button type="button" className="rounded-full p-2 text-slate-500 transition hover:bg-white/10 hover:text-slate-300" aria-label="Attach a file"><Paperclip size={18} /></button><button type="button" onClick={reset} className="rounded-full p-2 text-slate-500 transition hover:bg-white/10 hover:text-slate-300" aria-label="Start a new chat"><Plus size={19} /></button><ModelPicker onSelect={setModel} /><span className="hidden text-xs text-slate-600 lg:inline">{model} · temporary session</span></div><button type="submit" disabled={!input.trim()} className="flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-30" aria-label="Send message"><ArrowUp size={18} /></button></div></form>{messages.length > 0 && <div className="mt-7 rounded-2xl border border-white/8 bg-white/[0.03] p-4 text-center"><p className="text-sm text-slate-400">Your conversation is temporary. Sign in to save it and keep working with more context.</p><div className="mt-4 flex flex-wrap justify-center gap-2">{capabilityItems.map(({ title, icon: Icon, text }) => <Link key={title} to="/register" className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-xs text-slate-400 transition hover:border-cyan-300/40 hover:text-cyan-200" title={text}><Icon size={14} />{title}</Link>)}<Link to="/register" className="flex items-center gap-2 rounded-full bg-cyan-300 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-cyan-200"><Check size={14} />Save this chat</Link></div></div>}</section><p className="relative mx-auto mt-6 max-w-2xl text-center text-xs leading-5 text-slate-600">SupremeAI can make mistakes. <Link to="/login" className="text-slate-400 underline underline-offset-4 hover:text-cyan-200">Sign in</Link> for saved history, files, tools, and extended conversations.</p></main></PublicLayout>;
 }
 
-const pageCopy: Record<string, { eyebrow: string; title: string; description: string }> = {
-  '/pricing': { eyebrow: 'Plans', title: 'Start free, then scale with context.', description: 'Try the core conversation experience first. Create an account when you need history, files, tools, and longer-running work.' },
-  '/features': { eyebrow: 'Features', title: 'A simple conversation can become useful work.', description: 'Start with a question. Add context, tools, and repeatable workflows as your needs grow.' },
-  '/docs': { eyebrow: 'Docs', title: 'From first question to governed execution.', description: 'Learn how guest chat, saved conversations, context, tools, and workspaces fit together.' },
-  '/about': { eyebrow: 'About', title: 'AI that starts simple and grows with you.', description: 'SupremeAI makes intelligent work approachable at the first message and dependable at scale.' },
-  '/contact': { eyebrow: 'Contact', title: 'Bring your hardest workflow.', description: 'Tell us what you want to make simpler and we will help you find the right starting point.' },
-};
+export function ModelsPage() { return <PublicLayout><PublicHeader /><main className="mx-auto max-w-6xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">Model intelligence</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">Choose the outcome. We help find the model.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">Explore capability-first recommendations instead of navigating a wall of model names.</p><div className="mt-12 grid gap-3 md:grid-cols-3">{models.map((model) => <article key={model.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-cyan-300/30"><div className="flex items-center justify-between"><span className="size-2 rounded-full bg-cyan-300" /><span className="text-xs text-cyan-300">{model.tag}</span></div><h2 className="mt-10 font-medium text-slate-200">{model.name}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{model.detail}</p><Link to="/" className="mt-6 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-cyan-200">Try in chat <ArrowUp size={14} className="rotate-45" /></Link></article>)}</div></main></PublicLayout>; }
 
-export function PublicInfoPage({ kind }: { kind: '/features' | '/pricing' | '/docs' | '/about' | '/contact' }) {
-  const copy = pageCopy[kind];
-  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-5xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">{copy.eyebrow}</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">{copy.title}</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">{copy.description}</p><div className="mt-14 grid gap-3 sm:grid-cols-3">{capabilityItems.map(({ title, text, icon: Icon }) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><Icon size={19} className="text-cyan-300" /><h2 className="mt-8 font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></article>)}</div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Try SupremeAI <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
-}
-
+const pageCopy: Record<string, { eyebrow: string; title: string; description: string }> = { '/pricing': { eyebrow: 'Plans', title: 'Start free, then scale with context.', description: 'Try the core conversation experience first. Create an account when you need history, files, tools, and longer-running work.' }, '/features': { eyebrow: 'Features', title: 'A simple conversation can become useful work.', description: 'Start with a question. Add context, tools, and repeatable workflows as your needs grow.' }, '/docs': { eyebrow: 'Docs', title: 'From first question to governed execution.', description: 'Learn how guest chat, saved conversations, context, tools, and workspaces fit together.' }, '/about': { eyebrow: 'About', title: 'AI that starts simple and grows with you.', description: 'SupremeAI makes intelligent work approachable at the first message and dependable at scale.' }, '/contact': { eyebrow: 'Contact', title: 'Bring your hardest workflow.', description: 'Tell us what you want to make simpler and we will help you find the right starting point.' } };
+export function PublicInfoPage({ kind }: { kind: '/features' | '/pricing' | '/docs' | '/about' | '/contact' }) { const copy = pageCopy[kind]; return <PublicLayout><PublicHeader /><main className="mx-auto max-w-5xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">{copy.eyebrow}</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">{copy.title}</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">{copy.description}</p><div className="mt-14 grid gap-3 sm:grid-cols-3">{capabilityItems.map(({ title, text, icon: Icon }) => <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><Icon size={19} className="text-cyan-300" /><h2 className="mt-8 font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></article>)}</div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Try SupremeAI <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>; }
 export function PricingPage() { return <PublicInfoPage kind="/pricing" />; }
 export default GuestChatPage;
