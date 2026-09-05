@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from core.browser_session_manager import session_manager
+from core.browser_compat_store import browser_compat_store
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
 from core.logging_config import logger
@@ -121,6 +122,8 @@ def get_credential_store() -> SecureCredentialStore:
     return SecureCredentialStore()
 
 
+# Legacy UI state is retained for compatibility while canonical automation is owner-scoped.
+# New endpoints should use browser_compat_store; these aliases are migration shims.
 BROWSER_STATUS: dict[str, Any] = {"browsing": False, "currentUrl": "about:blank"}
 RECENT_ACTIVITIES: list[dict[str, Any]] = []
 CREDENTIALS: list[dict[str, Any]] = []
