@@ -156,3 +156,21 @@ async def command_events(limit: int = 50):
     except Exception as exc:
         logger.warning(f"[commandcenter] events fetch failed: {exc}")
         return {"count": 0, "events": [], "error": str(exc)[:100]}
+
+
+# Sub-routers inclusion
+from .build import router as build_router
+from .money import router as money_router
+from .observe import router as observe_router
+from .operate import router as operate_router
+from .overview import router as overview_router
+from .secure import router as secure_router
+from .system import router as system_router
+
+router.include_router(overview_router)
+router.include_router(build_router)
+router.include_router(secure_router)
+router.include_router(money_router)
+router.include_router(operate_router)
+router.include_router(observe_router)
+router.include_router(system_router)

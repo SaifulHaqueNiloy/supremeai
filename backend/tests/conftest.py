@@ -63,11 +63,13 @@ _CRITICAL_TEST_PARTS = (
     ("api", "routes", "agent"),
     ("api", "routes", "api_keys"),
     ("api", "routes", "billing"),
+    ("api", "routes", "commandcenter"),
     ("core", "llm"),
     ("core", "orchestration"),
     ("core", "security"),
     ("core", "queue"),
     ("core", "microvm_sandbox"),
+    ("core", "plugins"),
     ("services", "usage"),
     ("services", "memory"),
     ("tools", "checkpoint_manager"),
@@ -79,6 +81,7 @@ _IMPORTANT_TEST_PARTS = (
     ("services",),
     ("tools",),
     ("api", "routes"),
+    ("api", "test_errors"),
 )
 
 
