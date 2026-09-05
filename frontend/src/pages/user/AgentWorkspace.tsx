@@ -47,10 +47,16 @@ export const AgentWorkspace: React.FC = () => {
         xtermRef.current = term;
         fitAddonRef.current = fitAddon;
 
-        term.writeln('🚀 \x1b[1;34mSupremeAI Hybrid Engine\x1b[0m initializing...');
-        term.writeln('⏳ Booting Zero-Cost Node.js environment in browser...');
+        term.writeln('SupremeAI Hybrid Engine initializing...');
+        term.writeln('Booting Zero-Cost Node.js environment in browser...');
 
         try {
+          if (!window.crossOriginIsolated) {
+            term.writeln('\r\n[System] Browser sandbox unavailable: this page is not cross-origin isolated.');
+            term.writeln('[System] Use the Vite dev/preview server with COOP=same-origin and COEP=require-corp, then reload.');
+            return;
+          }
+
           // ২. WebContainer বুট করা (Zero-Cost Environment)
           const { WebContainer } = await import('@webcontainer/api');
           const webcontainerInstance = await WebContainer.boot();
@@ -77,8 +83,8 @@ export const AgentWorkspace: React.FC = () => {
           });
 
         } catch (error) {
-          term.writeln('\r\n❌ \x1b[1;31mFailed to boot WebContainer. Please check Vite COOP/COEP headers.\x1b[0m');
-          console.error(error);
+          term.writeln('\r\n[System] WebContainer could not start. Confirm the page is served with COOP=same-origin and COEP=require-corp.');
+          console.error('[v0] WebContainer boot failed:', error);
         }
 
         const handleResize = () => {
