@@ -81,8 +81,8 @@ export default defineConfig({
   server: {
     // 🔧 DYNAMIC SECURITY HEADERS from environment
     headers: {
-      'Cross-Origin-Embedder-Policy': process.env.COOP_HEADER || 'cross-origin',
-      'Cross-Origin-Opener-Policy': process.env.COEP_HEADER || 'unsafe-none',
+      'Cross-Origin-Opener-Policy': process.env.COOP_HEADER || 'same-origin',
+      'Cross-Origin-Embedder-Policy': process.env.COEP_HEADER || 'require-corp',
     },
     // বাংলা মন্তব্য: dev proxy — user API → user backend, admin API → admin backend (fallback user)
     proxy: devProxy
