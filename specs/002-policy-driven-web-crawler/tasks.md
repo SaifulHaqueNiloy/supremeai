@@ -10,8 +10,8 @@
 
 **Purpose**: Module structure and package initialization
 
-- [ ] T001 Initialize `backend/scout/` directory structure and package exports in `backend/scout/__init__.py`
-- [ ] T002 [P] Create test scaffolding directory in `backend/tests/scout/__init__.py`
+- [x] T001 Initialize `backend/scout/` directory structure and package exports in `backend/scout/__init__.py`
+- [x] T002 [P] Create test scaffolding directory in `backend/tests/scout/__init__.py`
 
 ---
 
@@ -19,8 +19,8 @@
 
 **Purpose**: Core data schemas and database models that all user stories depend on
 
-- [ ] T003 [P] Implement Pydantic data schemas for `CrawlPolicy`, `DomainRule`, `CrawlPageResult`, and `CrawlResponse` in `backend/scout/models.py`
-- [ ] T004 [P] Implement database models for `CrawlPolicy`, `DomainRule`, and `CrawlHistory` in `backend/database/models/crawler.py`
+- [x] T003 [P] Implement Pydantic data schemas for `CrawlPolicy`, `DomainRule`, `CrawlPageResult`, and `CrawlResponse` in `backend/scout/models.py`
+- [x] T004 [P] Implement database models for `CrawlPolicy`, `DomainRule`, and `CrawlHistory` in `backend/database/models/crawler.py`
 
 **Checkpoint**: Foundation ready — user story implementation can now begin.
 
@@ -33,13 +33,13 @@
 **Independent Test**: Configure a policy with allowed and disallowed domains; crawl with depth > 2; verify disallowed domains are blocked, depth is capped, and requests are paced without violating rate limits.
 
 ### Tests for User Story 1
-- [ ] T005 [P] [US1] Unit test for domain allowlist and SSRF URL validation in `backend/tests/scout/test_crawler_policy.py`
-- [ ] T006 [P] [US1] Unit test for per-domain rate limiting and depth caps in `backend/tests/scout/test_crawler_policy.py`
+- [x] T005 [P] [US1] Unit test for domain allowlist and SSRF URL validation in `backend/tests/scout/test_crawler_policy.py`
+- [x] T006 [P] [US1] Unit test for per-domain rate limiting and depth caps in `backend/tests/scout/test_crawler_policy.py`
 
 ### Implementation for User Story 1
-- [ ] T007 [US1] Implement `PolicyEngine` in `backend/scout/policy.py` validating domains, trust levels, depth, and integrating `core.security.is_safe_url`
-- [ ] T008 [US1] Implement primary `CrawlerService` async fetch loop using `httpx.AsyncClient` pacing via `middleware.rate_limiter.AsyncRateLimiter` in `backend/scout/crawler.py`
-- [ ] T009 [US1] Upgrade `backend/scout/web_crawler_agent.py` to delegate to `CrawlerService`
+- [x] T007 [US1] Implement `PolicyEngine` in `backend/scout/policy.py` validating domains, trust levels, depth, and integrating `core.security.is_safe_url`
+- [x] T008 [US1] Implement primary `CrawlerService` async fetch loop using `httpx.AsyncClient` pacing via `middleware.rate_limiter.AsyncRateLimiter` in `backend/scout/crawler.py`
+- [x] T009 [US1] Upgrade `backend/scout/web_crawler_agent.py` to delegate to `CrawlerService`
 
 **Checkpoint**: User Story 1 (MVP) is fully functional and independently testable.
 
@@ -52,13 +52,13 @@
 **Independent Test**: Feed multiple webpages with shared boilerplate and identical articles; verify duplicate pages are omitted and an extractive summary is produced with zero AI provider calls.
 
 ### Tests for User Story 2
-- [ ] T010 [P] [US2] Unit test for exact SHA-256 and Jaccard similarity deduplication in `backend/tests/scout/test_dedup.py`
-- [ ] T011 [P] [US2] Unit test for zero-token extractive summarizer in `backend/tests/scout/test_extractor.py`
+- [x] T010 [P] [US2] Unit test for exact SHA-256 and Jaccard similarity deduplication in `backend/tests/scout/test_dedup.py`
+- [x] T011 [P] [US2] Unit test for zero-token extractive summarizer in `backend/tests/scout/test_extractor.py`
 
 ### Implementation for User Story 2
-- [ ] T012 [P] [US2] Implement `ContentDeduplicator` in `backend/scout/dedup.py` with 3-word shingling and Jaccard similarity calculation
-- [ ] T013 [P] [US2] Implement `ExtractiveSummarizer` in `backend/scout/extractor.py` with frequency-weighted sentence ranking and character budgeting
-- [ ] T014 [US2] Integrate deduplication and extractive summarization into `CrawlerService` pipeline in `backend/scout/crawler.py`
+- [x] T012 [P] [US2] Implement `ContentDeduplicator` in `backend/scout/dedup.py` with 3-word shingling and Jaccard similarity calculation
+- [x] T013 [P] [US2] Implement `ExtractiveSummarizer` in `backend/scout/extractor.py` with frequency-weighted sentence ranking and character budgeting
+- [x] T014 [US2] Integrate deduplication and extractive summarization into `CrawlerService` pipeline in `backend/scout/crawler.py`
 
 **Checkpoint**: User Stories 1 and 2 work together independently.
 
@@ -71,12 +71,12 @@
 **Independent Test**: Run a crawl; query the admin API endpoints `/api/v1/admin/crawler/policies` and `/api/v1/admin/crawler/history`; verify events and dedup stats are returned.
 
 ### Tests for User Story 3
-- [ ] T015 [P] [US3] Unit test for event publishing and history retrieval in `backend/tests/scout/test_crawler_observability.py`
+- [x] T015 [P] [US3] Unit test for event publishing and history retrieval in `backend/tests/scout/test_crawler_observability.py`
 
 ### Implementation for User Story 3
-- [ ] T016 [US3] Implement crawl event emitter dispatching to `core.messaging.event_bus.error_event_bus` in `backend/scout/telemetry.py`
-- [ ] T017 [US3] Implement FastAPI admin routes for managing policies and inspecting history in `backend/api/routes/crawler_admin.py`
-- [ ] T018 [US3] Centralize router registration in `backend/api/routers.py`
+- [x] T016 [US3] Implement crawl event emitter dispatching to `core.messaging.event_bus.error_event_bus` in `backend/scout/telemetry.py`
+- [x] T017 [US3] Implement FastAPI admin routes for managing policies and inspecting history in `backend/api/routes/crawler_admin.py`
+- [x] T018 [US3] Centralize router registration in `backend/api/routers.py`
 
 **Checkpoint**: User Stories 1, 2, and 3 are fully operational and observable.
 
@@ -89,19 +89,19 @@
 **Independent Test**: Crawl a slow/failing domain and a JS-only domain; verify cache hits return instant responses and timeouts degrade gracefully with partial results.
 
 ### Tests for User Story 4
-- [ ] T019 [P] [US4] Unit test for cache hit and timeout degradation in `backend/tests/scout/test_crawler_resilience.py`
+- [x] T019 [P] [US4] Unit test for cache hit and timeout degradation in `backend/tests/scout/test_crawler_resilience.py`
 
 ### Implementation for User Story 4
-- [ ] T020 [US4] Implement content caching layer backed by `core.cache.redis_manager` in `backend/scout/cache.py`
-- [ ] T021 [US4] Implement Playwright browser-render delegation fallback for `render_js: True` domains in `backend/scout/crawler.py`
+- [x] T020 [US4] Implement content caching layer backed by `core.cache.redis_manager` in `backend/scout/cache.py`
+- [x] T021 [US4] Implement Playwright browser-render delegation fallback for `render_js: True` domains in `backend/scout/crawler.py`
 
 ---
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T022 [P] Run all test suites in `backend/tests/scout/` and verify 100% pass rate
-- [ ] T023 Run `quickstart.md` in-process smoke test validation
-- [ ] T024 Code formatting and linting check via `ruff`
+- [x] T022 [P] Run all test suites in `backend/tests/scout/` and verify 100% pass rate
+- [x] T023 Run `quickstart.md` in-process smoke test validation
+- [x] T024 Code formatting and linting check via `ruff`
 
 ---
 
