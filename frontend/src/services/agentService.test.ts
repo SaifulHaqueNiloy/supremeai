@@ -22,18 +22,19 @@ describe('agentService', () => {
       status: 'done',
     });
     const res = await agentService.executeAgentTask('a1', 'do it');
-    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/agents/execute', {
-      instruction: 'do it',
+    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/agent/execute', {
+      prompt: 'do it',
+      project_id: 'a1',
     });
     expect(res.status).toBe('done');
   });
 
   it('listAgents gets the agents endpoint', async () => {
-    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: 'a' },
-    ]);
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      agents: [{ id: 'a' }],
+    });
     const res = await agentService.listAgents();
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/agents');
+    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/agents/');
     expect(res).toHaveLength(1);
   });
 

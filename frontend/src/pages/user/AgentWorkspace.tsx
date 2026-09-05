@@ -130,23 +130,20 @@ export const AgentWorkspace: React.FC = () => {
     try {
       // ব্যাকএন্ড API কল (আপনার FastAPI সার্ভারের URL)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = await apiClient.post<any>('/agent/execute', {
-        prompt: prompt,
-        project_id: 'proj_123'
+      const data = await apiClient.post<any>('/api/v1/agents/execute', {
+        prompt,
+        project_id: 'default',
       });
 
       if (data.status === 'success') {
-        // এআই এর রেসপন্স এবং সোর্স (API নাকি Memory) অ্যাড করা
         setMessages([
           ...newMessages,
           {
             role: 'agent',
-            content: data.message,
-            source: data.source
+            content: data.result,
+            source: 'ai_api'
           }
         ]);
-        // Monaco Editor এ কোড আপডেট করা
-        setGeneratedCode(data.code);
       }
     } catch (error) {
       console.error("Error executing agent command:", error);
@@ -190,14 +187,14 @@ export const AgentWorkspace: React.FC = () => {
         if (retryCount < 2) {
           term.writeln(`\r\n⚠️ \x1b[1;33m[Auto-Heal] Code failed with exit code ${exitCode}. Requesting AI fix...\x1b[0m`);
 
-          // ব্যাকএন্ডে এরর মেসেজসহ ফিক্সের জন্য রিকোয়েস্ট পাঠানো
+          // ব্যাকএন্ডে এরর মেসেজসহ ���িক্সের জন্য রিকোয়েস্ট পাঠানো
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const fixData = await apiClient.post<any>('/agent/execute', {
+          const fixData = await apiClient.post<any>('/api/v1/agents/execute', {
             prompt: `I tried to run this code but got an error. \n\nCODE:\n${codeToRun}\n\nERROR:\n${processOutput}\n\nPlease fix the bug and return ONLY the full working code.`,
-            project_id: 'proj_123'
+            project_id: 'default',
           });
           if (fixData.status === 'success') {
-            const fixedCode = fixData.code;
+            const fixedCode = fixData.code || fixData.result || '';
             setGeneratedCode(fixedCode); // এডিটরে নতুন কোড বসবে
             setMessages(prev => [...prev, { role: 'agent', content: `🔧 I analyzed the error and fixed the code. Retrying...` }]);
 
@@ -212,7 +209,7 @@ export const AgentWorkspace: React.FC = () => {
         term.writeln(`\r\n✅ \x1b[1;32m[Success] Execution flawless! Committing to Memory Vault...\x1b[0m`);
 
         // ব্যাকএন্ডকে কনফার্ম করা যে কোডটি কাজ করেছে, মেমোরিতে সেভ করো
-        await apiClient.post('/agent/learn', {
+        await apiClient.post('/api/v1/agent/learn', {
           prompt: prompt, // অরিজিনাল প্রম্পট
           working_code: codeToRun
         });
@@ -223,7 +220,7 @@ export const AgentWorkspace: React.FC = () => {
         term.writeln(`\r\n🐙 \x1b[1;34m[GitHub] Pushing verified code to repository as a PR...\x1b[0m`);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const prData = await apiClient.post<any>('/agent/github/pr', {
+        const prData = await apiClient.post<any>('/api/v1/agent/github/pr', {
           user_id: 'admin_123', // TODO: Fetch from session
           repo_name: import.meta.env.VITE_GITHUB_REPO || 'supremeai/test_repo',
           file_path: 'src/auto_generated.js',
