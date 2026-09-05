@@ -87,8 +87,8 @@ export interface NavGroup {
 
 export const NAVIGATION_REGISTRY: NavGroup[] = [
   {
-    id: 'workspace',
-    label: 'Workspace',
+    id: 'build',
+    label: 'Build',
     contexts: ['user'],
     items: [
       { id: 'nav-home', label: 'Home', icon: Home, kind: 'route', path: '/workspace', contexts: ['user'], status: 'implemented', priority: 10 },
@@ -100,8 +100,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     ],
   },
   {
-    id: 'discover',
-    label: 'Discover',
+    id: 'extend',
+    label: 'Extend',
     contexts: ['user'],
     items: [
       { id: 'nav-skills', label: 'Skills', icon: Box, kind: 'route', path: '/skills-catalog', contexts: ['user'], status: 'implemented', priority: 10 },
@@ -110,8 +110,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     ],
   },
   {
-    id: 'automation',
-    label: 'Automation',
+    id: 'observe',
+    label: 'Observe',
     contexts: ['user'],
     items: [
       { id: 'nav-swarm', label: 'Swarm Map', icon: Network, kind: 'route', path: '/swarm', contexts: ['user'], status: 'implemented', priority: 10 },
@@ -121,8 +121,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     ],
   },
   {
-    id: 'insights',
-    label: 'Insights',
+    id: 'govern',
+    label: 'Govern',
     contexts: ['user'],
     items: [
       { id: 'nav-usage', label: 'Usage', icon: Activity, kind: 'route', path: '/usage', contexts: ['user'], status: 'planned', priority: 10 },
