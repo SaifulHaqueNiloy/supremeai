@@ -112,7 +112,10 @@ async def _issue_trusted_browser(uid: str, email: str, response: Response) -> No
         max_age=_TRUSTED_BROWSER_TTL,
         httponly=True,
         secure=getattr(settings, "env", "local").lower() == "production",
-        samesite="lax",
+        # The admin portal and API are commonly on different origins in production.
+        # SameSite=None is required for credentialed cross-origin fetches; local HTTP
+        # development keeps the cookie usable without the Secure requirement.
+        samesite="none" if getattr(settings, "env", "local").lower() == "production" else "lax",
         path="/",
     )
 

@@ -90,7 +90,7 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
                     {renderHealth?.live_uptime_seconds ? 'Process Uptime' : 'Historical Uptime'}
                   </div>
                   <div className="text-xl font-bold text-[#00f3ff]">
-                    {renderHealth?.live_uptime_seconds ? formatUptime(localRenderTick) : renderHealth?.uptime_sla || '99.90%'}
+                    {renderHealth?.live_uptime_seconds ? formatUptime(localRenderTick) : renderHealth?.uptime_sla ?? '—'}
                   </div>
                 </div>
               </div>
@@ -121,7 +121,7 @@ export const SystemUptimeWidget: React.FC<SystemUptimeWidgetProps> = ({ healthMa
                 <div className="text-right">
                   <div className="text-[10px] text-slate-500 uppercase mb-1">Historical SLA</div>
                   <div className="text-xl font-bold text-[#b5179e]">
-                    {frontendHealth?.uptime_sla || '99.99%'}
+                    {frontendHealth?.uptime_sla ?? '—'}
                   </div>
                 </div>
               </div>

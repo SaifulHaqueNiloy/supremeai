@@ -3,26 +3,15 @@ import { Card, Badge } from '../../ui';
 import { AlertTriangle, TrendingUp } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { useUnifiedStore } from '../../../store/unifiedStore';
+import { useMetrics } from '../../../hooks/useDashboardData';
 
-const latencyData = [
-  { time: '10:00', p50: 200, p95: 450, p99: 900 },
-  { time: '11:00', p50: 210, p95: 470, p99: 920 },
-  { time: '12:00', p50: 240, p95: 510, p99: 980 },
-  { time: '13:00', p50: 220, p95: 480, p99: 940 },
-  { time: '14:00', p50: 190, p95: 420, p99: 850 },
-  { time: '15:00', p50: 180, p95: 400, p99: 820 },
-];
-
-const endpointErrors = [
-  { endpoint: '/api/chat', errors: 12, total: 1240 },
-  { endpoint: '/api/tts', errors: 3, total: 450 },
-  { endpoint: '/api/embed', errors: 0, total: 890 },
-  { endpoint: '/api/skill', errors: 7, total: 320 },
-];
+const latencyData: Array<{ time: string; p50: number; p95: number; p99: number }> = [];
+const endpointErrors: Array<{ endpoint: string; errors: number; total: number }> = [];
 
 export function ObservabilityDashboard() {
   const [range, setRange] = useState<'1h' | '6h' | '24h' | '7d'>('6h');
   const storeAlerts = useUnifiedStore(s => s.alerts).slice(0, 5);
+  const { data: metrics } = useMetrics();
 
   return (
     <div className="flex-grow p-6 overflow-y-auto bg-[#030611] text-[var(--foreground)]">
@@ -47,23 +36,23 @@ export function ObservabilityDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card title="QPS" banglaHint="প্রতি সেকেন্ডে মোট রিকোয়েস্ট বা কুয়েরির সংখ্যা।">
-          <div className="text-2xl font-bold text-[var(--foreground)] font-mono">142</div>
+          <div className="text-2xl font-bold text-[var(--foreground)] font-mono">{metrics?.requests_per_second ?? '—'}</div>
           <div className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
             <TrendingUp size={10} /> +12% from last hour
           </div>
         </Card>
         <Card title="P50 Latency" banglaHint="৫০% রিকোয়েস্টের গড় প্রসেসিং সময় বা লেটেন্সি।">
-          <div className="text-2xl font-bold text-[var(--foreground)] font-mono">180ms</div>
+          <div className="text-2xl font-bold text-[var(--foreground)] font-mono">{metrics?.latency_p50_ms != null ? `${metrics.latency_p50_ms}ms` : '—'}</div>
           <div className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
             <TrendingUp size={10} /> -5% improvement
           </div>
         </Card>
         <Card title="P99 Latency" banglaHint="৯৯% রিকোয়েস্টের সর্বোচ্চ প্রসেসিং সময় বা লেটেন্সি।">
-          <div className="text-2xl font-bold text-[#00f3ff] font-mono">820ms</div>
+          <div className="text-2xl font-bold text-[#00f3ff] font-mono">{metrics?.latency_p99_ms != null ? `${metrics.latency_p99_ms}ms` : '—'}</div>
           <div className="text-[10px] text-yellow-400 font-mono">Above threshold (800ms)</div>
         </Card>
         <Card title="Error Rate" banglaHint="মোট রিকোয়েস্টের সাপেক্ষে ফেইল হওয়া এরর পার্সেন্টেজ।">
-          <div className="text-2xl font-bold text-emerald-400 font-mono">2.1%</div>
+          <div className="text-2xl font-bold text-emerald-400 font-mono">{metrics?.error_rate != null ? `${metrics.error_rate}%` : '—'}</div>
           <div className="text-[10px] text-slate-400 font-mono">Within acceptable range</div>
         </Card>
       </div>

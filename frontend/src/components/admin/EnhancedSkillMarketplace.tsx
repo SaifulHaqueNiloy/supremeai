@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge, Skeleton } from '../ui';
 import { Star, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
@@ -13,6 +13,17 @@ export function EnhancedSkillMarketplace() {
   });
 
   const [filter, setFilter] = useState<'all' | 'installed' | 'available'>('all');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const skillAction = useMutation({
+    mutationFn: ({ skillId, action }: { skillId: string; action: 'APPROVE' | 'APPROVE_AS_EPHEMERAL' }) =>
+      apiClient.post('/api/admin/librarian/process', { skill_id: skillId, action }),
+    onSuccess: () => {
+      setActionMessage('Skill action queued successfully.');
+      queryClient.invalidateQueries({ queryKey: ['skills', 'marketplace'] });
+    },
+    onError: (error: Error) => setActionMessage(error.message || 'Skill action failed.'),
+  });
 
   const filtered = (Array.isArray(skills) ? skills : [])?.filter((s: any) => {
     if (filter === 'installed') return s.installed;
@@ -40,6 +51,12 @@ export function EnhancedSkillMarketplace() {
           ))}
         </div>
       </div>
+
+      {actionMessage && (
+        <div role="status" className="mb-4 rounded border border-[#00f3ff]/30 bg-[#00f3ff]/10 px-3 py-2 text-xs text-[#00f3ff]">
+          {actionMessage}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -87,12 +104,20 @@ export function EnhancedSkillMarketplace() {
                   <span className="text-[9px] text-slate-400 ml-1">4.0</span>
                 </div>
                 {!skill.installed ? (
-                  <button className="bg-[#00f3ff]/10 hover:bg-[#00f3ff]/20 text-[#00f3ff] border border-[#00f3ff]/30 text-[10px] font-bold px-3 py-1 rounded transition-all font-mono">
-                    INSTALL
+                  <button
+                    disabled={skillAction.isPending}
+                    onClick={() => skillAction.mutate({ skillId: skill.id, action: 'APPROVE' })}
+                    className="bg-[#00f3ff]/10 hover:bg-[#00f3ff]/20 disabled:opacity-50 text-[#00f3ff] border border-[#00f3ff]/30 text-[10px] font-bold px-3 py-1 rounded transition-all font-mono"
+                  >
+                    {skillAction.isPending ? 'QUEUING…' : 'INSTALL'}
                   </button>
                 ) : (
-                  <button className="text-[10px] text-slate-400 hover:text-white font-mono flex items-center gap-1">
-                    <RefreshCw size={10} /> UPDATE
+                  <button
+                    disabled={skillAction.isPending}
+                    onClick={() => skillAction.mutate({ skillId: skill.id, action: 'APPROVE_AS_EPHEMERAL' })}
+                    className="text-[10px] text-slate-400 hover:text-white disabled:opacity-50 font-mono flex items-center gap-1"
+                  >
+                    <RefreshCw size={10} /> {skillAction.isPending ? 'QUEUING…' : 'UPDATE'}
                   </button>
                 )}
               </div>

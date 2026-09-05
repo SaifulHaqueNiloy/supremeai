@@ -9,8 +9,8 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       id: "gcp",
       name: "Google Cloud Platform",
       status: "ACTIVE",
-      latency: healthMap?.gcp?.latency || "42ms",
-      region: healthMap?.gcp?.region || "us-central1",
+      latency: healthMap?.gcp?.latency ?? "—",
+      region: healthMap?.gcp?.region ?? "—",
       endpoint: "https://gcp.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
@@ -20,8 +20,8 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       id: "railway",
       name: "Railway Host",
       status: "ACTIVE",
-      latency: healthMap?.railway?.latency || "78ms",
-      region: healthMap?.railway?.region || "us-east1",
+      latency: healthMap?.railway?.latency ?? "—",
+      region: healthMap?.railway?.region ?? "—",
       endpoint: "https://railway.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
@@ -30,9 +30,9 @@ export function HealthMap({ healthMap }: HealthMapProps) {
     {
       id: "render",
       name: "Render Deploy",
-      status: "DEGRADED",
-      latency: healthMap?.render?.latency || "250ms",
-      region: healthMap?.render?.region || "singapore",
+      status: healthMap?.render?.status ?? "UNKNOWN",
+      latency: healthMap?.render?.latency ?? "—",
+      region: healthMap?.render?.region ?? "—",
       endpoint: "https://render.supremeai.dev/health",
       colorClass: "bg-yellow-950/80 text-yellow-400 border-yellow-900/60",
       statusDot: "bg-yellow-400",
@@ -41,9 +41,9 @@ export function HealthMap({ healthMap }: HealthMapProps) {
     {
       id: "cloudflare",
       name: "Cloudflare Edge",
-      status: "ACTIVE",
-      latency: "12ms",
-      region: "global-anycast",
+      status: healthMap?.cloudflare?.status ?? "UNKNOWN",
+      latency: healthMap?.cloudflare?.latency ?? "—",
+      region: healthMap?.cloudflare?.region ?? "—",
       endpoint: "https://cf.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
@@ -57,7 +57,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
         <h3 className="text-sm font-bold text-slate-200 tracking-wider font-mono">📡 SYSTEM HEALTH MAP</h3>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="text-[10px] text-emerald-400 font-mono">ALL SYSTEMS OPERATIONAL</span>
+          <span className="text-[10px] text-emerald-400 font-mono">{healthMap?.overall_status ?? 'STATUS UNKNOWN'}</span>
         </div>
       </div>
 
@@ -65,19 +65,19 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-[#090a0f] border border-slate-900 rounded-xl p-4 flex flex-col">
           <span className="text-[10px] text-slate-400 font-mono uppercase">Overall Uptime</span>
-          <span className="text-xl font-bold text-white mt-1 font-mono">99.97%</span>
+          <span className="text-xl font-bold text-white mt-1 font-mono">{healthMap?.overall_uptime ?? '—'}</span>
         </div>
         <div className="bg-[#090a0f] border border-slate-900 rounded-xl p-4 flex flex-col">
           <span className="text-[10px] text-slate-400 font-mono uppercase">Edge Latency</span>
-          <span className="text-xl font-bold text-[#00f3ff] mt-1 font-mono">18ms</span>
+          <span className="text-xl font-bold text-[#00f3ff] mt-1 font-mono">{healthMap?.edge_latency ?? '—'}</span>
         </div>
         <div className="bg-[#090a0f] border border-slate-900 rounded-xl p-4 flex flex-col">
           <span className="text-[10px] text-slate-400 font-mono uppercase">Active Clusters</span>
-          <span className="text-xl font-bold text-white mt-1 font-mono">4 / 4</span>
+          <span className="text-xl font-bold text-white mt-1 font-mono">{healthMap?.active_clusters ?? '—'}</span>
         </div>
         <div className="bg-[#090a0f] border border-slate-900 rounded-xl p-4 flex flex-col">
           <span className="text-[10px] text-slate-400 font-mono uppercase">Error Rate (24h)</span>
-          <span className="text-xl font-bold text-[#00ff66] mt-1 font-mono">0.02%</span>
+          <span className="text-xl font-bold text-[#00ff66] mt-1 font-mono">{healthMap?.error_rate_24h ?? '—'}</span>
         </div>
       </div>
 

@@ -26,6 +26,7 @@ from api.middleware import CSRFMiddleware, GlobalRateLimiterMiddleware
 from core.factory import SupremeAIFactory, get_factory
 from core.integration_layer import SupremeAIIntegrator
 from core.logging_config import logger
+from core.startup.services import initialize_independent_services
 
 ai_integrator: SupremeAIIntegrator | None = None
 factory: SupremeAIFactory | None = None
@@ -35,6 +36,13 @@ factory: SupremeAIFactory | None = None
 async def lifespan(app: FastAPI):
     """Lifespan management - initialize factory on startup, cleanup on shutdown."""
     global ai_integrator, factory
+    app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
+    try:
+        await initialize_independent_services(app)
+    except Exception as exc:
+        logger.error(f"Independent service initialization failed: {exc}")
+        app.state.subsystem_status["db"] = "down"
+
     factory = get_factory()
     ai_integrator = await factory.create_production_instance()
     yield
