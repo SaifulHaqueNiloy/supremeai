@@ -106,7 +106,9 @@ class TaskRecord(BaseModel):
     task_id: str = Field(default_factory=lambda: f"task-{uuid.uuid4().hex[:16]}")
     goal: str
     owner: TaskOwner = TaskOwner.USER
-    scope: str = "USER_WORKSPACE"  # USER_WORKSPACE | ADMIN/INFRASTRUCTURE | SYSTEM/INFRASTRUCTURE
+    scope: str | dict[str, Any] = (
+        "USER_WORKSPACE"  # USER_WORKSPACE | ADMIN/INFRASTRUCTURE | SYSTEM/INFRASTRUCTURE or dict
+    )
     state: TaskState = TaskState.RECEIVED
     plan: list[dict[str, Any]] = Field(default_factory=list)
     capability_requirements: list[dict[str, Any]] = Field(default_factory=list)
@@ -185,10 +187,10 @@ class TaskEngine:
 
     def submit(
         self,
-        goal: str,
+        goal: str | TaskRecord,
         *,
         owner: TaskOwner = TaskOwner.USER,
-        scope: str = "USER_WORKSPACE",
+        scope: str | dict[str, Any] = "USER_WORKSPACE",
         created_by: str = "system",
         tenant_id: str | None = None,
         success_criteria: dict[str, Any] | None = None,
@@ -197,23 +199,32 @@ class TaskEngine:
         retry_limit: int = DEFAULT_RETRY_LIMIT,
         time_limit_seconds: int = DEFAULT_TIME_LIMIT_SECONDS,
     ) -> TaskRecord:
-        """Submit a new goal. Captures the active correlation context (ROADMAP §44)."""
+        """Submit a new goal or existing TaskRecord. Captures the active correlation context (ROADMAP §44)."""
         corr = current_correlation()
-        task = TaskRecord(
-            goal=goal,
-            owner=owner,
-            scope=scope,
-            created_by=created_by,
-            tenant_id=tenant_id,
-            success_criteria=success_criteria or {},
-            capability_requirements=capability_requirements or [],
-            risk_level=risk_level,
-            retry_limit=retry_limit,
-            time_limit_seconds=time_limit_seconds,
-            correlation=corr.child(task_id=None).as_headers(),
-            audit_id=corr.audit_id,
-            started_at=datetime.now(UTC).isoformat(),
-        )
+        if isinstance(goal, TaskRecord):
+            task = goal
+            if not task.correlation:
+                task.correlation = corr.child(task_id=None).as_headers()
+            if not task.audit_id:
+                task.audit_id = corr.audit_id
+            if not task.started_at:
+                task.started_at = datetime.now(UTC).isoformat()
+        else:
+            task = TaskRecord(
+                goal=goal,
+                owner=owner,
+                scope=scope,
+                created_by=created_by,
+                tenant_id=tenant_id,
+                success_criteria=success_criteria or {},
+                capability_requirements=capability_requirements or [],
+                risk_level=risk_level,
+                retry_limit=retry_limit,
+                time_limit_seconds=time_limit_seconds,
+                correlation=corr.child(task_id=None).as_headers(),
+                audit_id=corr.audit_id,
+                started_at=datetime.now(UTC).isoformat(),
+            )
         # persist the task_id into the correlation for downstream spans
         task.correlation["x-correlation-task-id"] = task.task_id
         with get_conn() as conn:
@@ -394,7 +405,7 @@ class TaskEngine:
             t.task_id,
             t.goal,
             t.owner,
-            t.scope,
+            jdump(t.scope) if isinstance(t.scope, (dict, list)) else t.scope,
             t.state,
             jdump(t.plan),
             jdump(t.capability_requirements),
@@ -420,11 +431,17 @@ class TaskEngine:
         )
 
     def _from_row(self, row: Any) -> TaskRecord:
+        raw_scope = row["scope"]
+        parsed_scope = (
+            jload(raw_scope, raw_scope)
+            if isinstance(raw_scope, str) and raw_scope.startswith("{")
+            else raw_scope
+        )
         return TaskRecord(
             task_id=row["task_id"],
             goal=row["goal"],
             owner=TaskOwner(row["owner"]),
-            scope=row["scope"],
+            scope=parsed_scope,
             state=TaskState(row["state"]),
             plan=jload(row["plan"], []),
             capability_requirements=jload(row["capability_requirements"], []),
