@@ -14,7 +14,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       endpoint: "https://gcp.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
-      uptime: "99.98%"
+      uptime: "—"
     },
     {
       id: "railway",
@@ -25,7 +25,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       endpoint: "https://railway.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
-      uptime: "99.95%"
+      uptime: "—"
     },
     {
       id: "render",
@@ -36,7 +36,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       endpoint: "https://render.supremeai.dev/health",
       colorClass: "bg-yellow-950/80 text-yellow-400 border-yellow-900/60",
       statusDot: "bg-yellow-400",
-      uptime: "98.40%"
+      uptime: "—"
     },
     {
       id: "cloudflare",
@@ -47,7 +47,7 @@ export function HealthMap({ healthMap }: HealthMapProps) {
       endpoint: "https://cf.supremeai.dev/health",
       colorClass: "bg-emerald-950 text-emerald-400 border-emerald-900/60",
       statusDot: "bg-emerald-400",
-      uptime: "100.00%"
+      uptime: "—"
     }
   ];
 
