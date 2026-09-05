@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
@@ -71,6 +72,17 @@ async def initialize_independent_services(app):
 
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()
+
+                # Automatically run Alembic migrations on startup if enabled
+                if os.getenv("AUTO_MIGRATE", "false").lower() == "true":
+                    try:
+                        from scripts.db.auto_migrate import run_migrations
+
+                        logger.info("🔄 Running automatic Alembic migrations on startup...")
+                        await asyncio.to_thread(run_migrations)
+                        logger.info("✅ Automatic Alembic migrations completed.")
+                    except Exception as mig_err:
+                        logger.warning(f"⚠️ Automatic migration notice: {mig_err}")
 
                 # Optimize queries with connection pooling best practices
                 app.state.db_pool = pool

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupremeProviderLabel } from '../../lib/modelBranding';
-import { getApiBaseUrl, getWebSocketBaseUrl } from '../../utils/api';
+import { getWebSocketBaseUrl } from '../../utils/api';
 import { apiClient } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';

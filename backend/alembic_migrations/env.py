@@ -16,8 +16,14 @@ from models.base import Base
 # access to the values within the .ini file in use.
 config = context.config
 
-# বাংলা মন্তব্য: SUPABASE_DATABASE_URL_POOLER থেকে কানেকশন ইউআরএলটি ডাইনামিকলি সেট করা হচ্ছে
-config.set_main_option("sqlalchemy.url", settings.supabase_database_url)
+# বাংলা মন্তব্য: মাইগ্রেশনের জন্য ডিরেক্ট রাইটার (SUPABASE_DATABASE_URL_WRITER) অগ্রাধিকার পাবে,
+# কারণ PgBouncer ট্রানজ্যাকশন পুলে DDL / মাইগ্রেশন লকিং স্টেটমেন্ট প্রত্যাখ্যাত হতে পারে।
+migration_url = (
+    os.getenv("SUPABASE_DATABASE_URL_WRITER")
+    or getattr(settings, "database_url", None)
+    or settings.supabase_database_url
+)
+config.set_main_option("sqlalchemy.url", migration_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
