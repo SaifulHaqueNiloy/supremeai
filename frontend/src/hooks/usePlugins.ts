@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
+import { getApiBaseUrl } from '../utils/api';
+import { getAuthHeaders } from '../services/apiClient';
 
 export interface PluginManifest {
     id: string;
@@ -27,12 +29,11 @@ export const usePlugins = () => {
         try {
             setLoading(true);
             
-            // Note: Replace with actual supremeai-api endpoint calls in production
+            const baseUrl = getApiBaseUrl('/api/v1/plugins/marketplace');
+            const authHeaders = await getAuthHeaders();
             const [marketRes, installedRes] = await Promise.all([
-                fetch('/api/v1/plugins/marketplace'),
-                fetch('/api/v1/plugins/installed', {
-                    headers: { 'Authorization': 'Bearer ' }
-                })
+                fetch(`${baseUrl}/api/v1/plugins/marketplace`, { headers: authHeaders }),
+                fetch(`${baseUrl}/api/v1/plugins/installed`, { headers: authHeaders })
             ]);
             
             if (marketRes.ok) {
@@ -56,11 +57,11 @@ export const usePlugins = () => {
 
     const installPlugin = async (pluginId: string, capabilities: string[]) => {
         try {
-            const res = await fetch('/api/v1/plugins/install', {
+            const res = await fetch(`${getApiBaseUrl('/api/v1/plugins/install')}/api/v1/plugins/install`, {
                 method: 'POST',
-                headers: { 
+                headers: {
+                    ...(await getAuthHeaders()),
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' 
                 },
                 body: JSON.stringify({ plugin_id: pluginId, granted_capabilities: capabilities })
             });
@@ -74,11 +75,9 @@ export const usePlugins = () => {
 
     const uninstallPlugin = async (pluginId: string) => {
         try {
-            const res = await fetch(`/api/v1/plugins/uninstall/${pluginId}`, {
+            const res = await fetch(`${getApiBaseUrl('/api/v1/plugins/uninstall')}/api/v1/plugins/uninstall/${pluginId}`, {
                 method: 'DELETE',
-                headers: { 
-                    'Authorization': 'Bearer ' 
-                }
+                headers: await getAuthHeaders(),
             });
             if (!res.ok) throw new Error('Failed to uninstall plugin');
             await fetchPlugins();
