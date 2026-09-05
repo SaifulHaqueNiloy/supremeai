@@ -11,9 +11,9 @@ interface AdminTopNavProps {
 // বাংলা মন্তব্য: সুপ্রিমএআই ড্যাশবোর্ডের জন্য ওপরের নেভিগেশন বার (Admin Top Navigation Bar)
 // এটি রেফারেন্স ইমেজ অনুযায়ী তৈরি করা হয়েছে এবং এতে লোগো, অপারেটর নেম, সিস্টেম অনলাইন ইন্ডিকেটর ও ইউজার প্রোফাইল শো করা হচ্ছে।
 export const AdminTopNav: React.FC<AdminTopNavProps> = ({
-  operatorName = 'COMMANDER_ALPHA',
-  uptime = '99.8% UPTIME',
-  userName = 'ALEX R.',
+  operatorName = 'UNASSIGNED',
+  uptime = 'STATUS UNKNOWN',
+  userName = 'OPERATOR',
   onLogout
 }) => {
   return (

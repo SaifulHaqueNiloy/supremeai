@@ -4,7 +4,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { eventBus, Events } from '../lib/componentEventBus';
 import { authService } from '../services/authService';
 import { updateTokenCache } from '../services/apiClient';
-import { clearCanonicalSession, LEGACY_ADMIN_TOKEN_KEY } from './authStore';
+import { LEGACY_ADMIN_TOKEN_KEY } from './authStore';
 
 const decodeJwt = (token: string): Record<string, unknown> | null => {
   try {
@@ -218,10 +218,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       console.error('Logout failed:', e);
     }
     set({ adminAuthenticated: false, adminRole: null, otpRequired: false, adminOtp: '', adminError: '', totpSetupRequired: false, totpSecret: '', provisioningUri: '' });
-    // বাংলা: logout করলে contextual state-ও পরিষ্কার হবে — admin user-এর canonical
-    // user session যদি একই ব্রাউজারে থেকে থাকে, তবে তা-ও রিসেট করা হয় (roadmap
-    // "Logout clears relevant contextual state")। clearCanonicalSession idempotent।
-    clearCanonicalSession();
+    // Admin logout only clears admin credentials; the user workspace session is independent.
+
   },
   resetTotpSetup: async () => {
     set({ adminError: '' });
