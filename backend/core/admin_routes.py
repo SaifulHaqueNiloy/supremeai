@@ -72,6 +72,7 @@ def _trusted_browser_key(token: str) -> str:
 
 async def _get_redis_client():
     from core.cache.redis_manager import redis_manager
+
     return redis_manager.client
 
 
@@ -100,14 +101,34 @@ async def _issue_trusted_browser(uid: str, email: str, response: Response) -> No
     metadata = {"id": browser_id, "uid": uid, "email": email, "created_at": int(time.time())}
     await redis.setex(_trusted_browser_key(token), _TRUSTED_BROWSER_TTL, json.dumps(metadata))
     await redis.sadd(f"admin:trusted-browsers:{uid}", browser_id)
-    await redis.setex(f"admin:trusted-browser-record:{uid}:{browser_id}", _TRUSTED_BROWSER_TTL, json.dumps({"token_key": _trusted_browser_key(token), **metadata}))
-    response.set_cookie(_TRUSTED_BROWSER_COOKIE, token, max_age=_TRUSTED_BROWSER_TTL, httponly=True, secure=getattr(settings, "env", "local").lower() == "production", samesite="lax", path="/")
+    await redis.setex(
+        f"admin:trusted-browser-record:{uid}:{browser_id}",
+        _TRUSTED_BROWSER_TTL,
+        json.dumps({"token_key": _trusted_browser_key(token), **metadata}),
+    )
+    response.set_cookie(
+        _TRUSTED_BROWSER_COOKIE,
+        token,
+        max_age=_TRUSTED_BROWSER_TTL,
+        httponly=True,
+        secure=getattr(settings, "env", "local").lower() == "production",
+        samesite="lax",
+        path="/",
+    )
 
 
 async def _issue_admin_jwt(uid: str) -> str:
     import jwt
+
     now = int(time.time())
-    payload = {"sub": uid, "uid": uid, "role": "admin", "exp": now + 3600 * int(os.environ.get("ADMIN_JWT_EXPIRY_HOURS", 24)), "iat": now, "jti": uuid.uuid4().hex}
+    payload = {
+        "sub": uid,
+        "uid": uid,
+        "role": "admin",
+        "exp": now + 3600 * int(os.environ.get("ADMIN_JWT_EXPIRY_HOURS", 24)),
+        "iat": now,
+        "jti": uuid.uuid4().hex,
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
