@@ -52,3 +52,22 @@ async def test_track_task_returns_task_and_runs():
     task = track_task(asyncio.create_task(coro()))
     assert isinstance(task, asyncio.Task)
     assert await task == 42
+
+
+@pytest.mark.asyncio
+async def test_safe_create_task_and_error_logging(caplog):
+    import logging
+
+    from core.utils.background_tasks import safe_create_task
+
+    async def faulty_coro():
+        raise ValueError("simulated background error")
+
+    with caplog.at_level(logging.ERROR):
+        task = safe_create_task(faulty_coro(), name="test_faulty")
+        try:
+            await task
+        except ValueError:
+            pass
+
+    assert any("simulated background error" in record.message for record in caplog.records)

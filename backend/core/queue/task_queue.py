@@ -128,8 +128,13 @@ class RedisTaskQueue:
                     idle_seconds = 0.0
                     _, task_json = result
                     task_data = json.loads(task_json)
-                    # Run in background to avoid blocking other pop requests
-                    asyncio.create_task(self._process_task(task_data))
+                    # Run in background to avoid blocking other pop requests; track and log errors
+                    from core.utils.background_tasks import safe_create_task
+
+                    safe_create_task(
+                        self._process_task(task_data),
+                        name=f"task_queue_{task_data.get('task_id', 'unknown')}",
+                    )
                 else:
                     idle_seconds += self.MAX_BLPOP_TIMEOUT
             except asyncio.CancelledError:
