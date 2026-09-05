@@ -12,8 +12,8 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
-from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from brain.model_registry import ModelRegistry
+from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from core.health.uptime_tracker import (
     get_history,
     get_uptime_summary,
@@ -332,7 +332,9 @@ async def check_dependencies():
         "supabase": {"status": "unknown"},
         "llm_providers": {
             provider: {"status": "unvalidated"}
-            for provider in sorted({entry["provider"] for entry in ModelRegistry.readiness_snapshot().values()})
+            for provider in sorted(
+                {entry["provider"] for entry in ModelRegistry.readiness_snapshot().values()}
+            )
         },
     }
 
