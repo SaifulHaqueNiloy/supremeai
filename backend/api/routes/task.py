@@ -57,6 +57,25 @@ class TaskRequest(BaseModel):
     messages: list[dict] | None = None
     session_id: str | None = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def harmonize_fields(cls, data: Any) -> Any:
+        """বাংলা: ফ্রন্টএন্ড কনট্র্যাক্ট হারমোনাইজ — message→task, history→messages।
+
+        FIX (API-contract audit): chatService.sendMessage() ঐতিহাসিকভাবে
+        ``{message, history}`` পাঠাত, অথচ canonical TaskRequest ফিল্ড হলো
+        ``task``/``messages`` — ফলে প্রতিটি কল Pydantic 422 খাত। এখন দুই
+        শেপই গ্রহণযোগ্য (ChatStreamRequest.harmonize_fields-এর একই প্যাটার্ন)।
+        """
+        if isinstance(data, dict):
+            if not data.get("task") and data.get("message"):
+                data["task"] = data["message"]
+            if not data.get("messages") and data.get("history"):
+                data["messages"] = data["history"]
+            if not data.get("task"):
+                raise ValueError("Either 'task' or 'message' must be provided.")
+        return data
+
 
 class TaskResponse(BaseModel):
     success: bool

@@ -46,6 +46,13 @@ from core.security import verify_token_async
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Chat Stream"])
 
+# FIX (API-contract audit): the legacy `/api/chat/stream` alias previously used
+# a stacked decorator on this PREFIXED router, which FastAPI resolves as
+# `/api/v1/stream/api/chat/stream` — a dead path that never served traffic.
+# The alias now lives on this prefix-less router and is mounted explicitly in
+# core/app.py.
+legacy_router = APIRouter(tags=["SSE Chat Stream (Legacy)"])
+
 HEARTBEAT_SECONDS = 15
 MAX_CHUNK_SIZE = 8192  # 8KB max per SSE data frame
 
@@ -300,7 +307,7 @@ class ChatStreamRequest(BaseModel):
 
 
 @router.post("/chat")
-@router.post("/api/chat/stream")
+@legacy_router.post("/api/chat/stream")
 async def stream_chat_post(
     request: Request,
     body: ChatStreamRequest,
@@ -308,7 +315,8 @@ async def stream_chat_post(
     """
     Production-grade SSE stream using HTTP POST and Authorization header.
     Completely eliminates JWT tokens in URLs.
-    Supports both /api/v1/stream/chat and /api/chat/stream interchangeably.
+    Serves both /api/v1/stream/chat (primary) and /api/chat/stream (legacy
+    alias via the prefix-less `legacy_router`, mounted in core/app.py).
     """
     auth_header = request.headers.get("Authorization", "")
     token = ""

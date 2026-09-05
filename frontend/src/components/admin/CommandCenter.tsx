@@ -77,7 +77,10 @@ export function CommandCenter() {
     const service = new AudioPlaybackService();
     setPlaybackService(service);
 
-    const wsUrl = `${getWebSocketBaseUrl()}/api/voice/ws/voice`;
+    // FIX (API-contract audit): backend serves the voice WS at /ws/voice
+    // (websocket_voice.py, prefix /ws). The old /api/voice/ws/voice path never
+    // existed — the connection silently failed.
+    const wsUrl = `${getWebSocketBaseUrl()}/ws/voice`;
     recorderRef.current = new AudioRecorderService(wsUrl);
 
     recorderRef.current.onTranscript((text) => {

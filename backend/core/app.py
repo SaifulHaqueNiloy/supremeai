@@ -50,6 +50,14 @@ async def aggregated_health_check():
 app.include_router(admin_router)
 register_all_routers(app)
 
+# FIX (API-contract audit): legacy `/api/chat/stream` alias — previously a dead
+# path (prefixed router concatenation). Exported prefix-less from
+# stream_chat_sse and mounted here so the existing frontend/vscode-extension
+# clients keep working alongside the new /api/v1/stream/chat pipeline.
+from api.routes.stream_chat_sse import legacy_router as chat_stream_legacy_router
+
+app.include_router(chat_stream_legacy_router)
+
 from api.routes.tier_s_routes import register_tier_s_routes
 
 register_tier_s_routes(app)

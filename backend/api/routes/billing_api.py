@@ -455,3 +455,31 @@ class TopUpRequest(BaseModel):
 
 
 get_balance = get_wallet_balance
+
+
+# ==========================================
+# 📊 ROUTE: Cost Analytics (CostDashboard feed)
+# ==========================================
+@router.get("/analytics")
+async def get_billing_analytics(
+    token_payload: dict = Depends(get_current_user_token),
+):
+    """বাংলা: CostDashboard.tsx-এর প্রাথমিক ডেটা সোর্স।
+
+    FIX (API-contract audit): ফ্রন্টএন্ড দীর্ঘদিন GET /api/billing/analytics
+    কল করছিল কিন্তু এন্ডপয়েন্টটি ছিলই না → 404 → পেজ 'Error loading cost
+    metrics' দেখাত। ``total_spent`` সত্যিকারের মান (cost_guard Redis কাউন্টার
+    aggregate); বাকি ফিল্ডগুলো এখন ইচ্ছাকৃত 0 — ফ্রন্টএন্ডের `||` ডিফল্ট
+    fallback ব্যবহার করবে। ভবিষ্যতে usage_metrics/cost_auditor দিয়ে সমৃদ্ধ
+    করা যাবে।
+    """
+    from api.routes.realtime_dashboard import aggregate_cost_guard_spend
+
+    total_spent, breakdown = await aggregate_cost_guard_spend()
+    return {
+        "total_spent": total_spent,
+        "total_saved": 0.0,
+        "cached_queries": 0,
+        "free_tier_pct": 0.0,
+        "provider_breakdown": breakdown,
+    }

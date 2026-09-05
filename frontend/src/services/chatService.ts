@@ -37,7 +37,10 @@ export async function sendMessageStream(
   
   try {
     // 🔒 SECURITY FIX: Now includes authentication headers (previously missing)
-    const res = await fetch(`${API_BASE}/api/chat/stream`, {
+    // FIX (API-contract audit): migrated to the hardened SSE pipeline
+    // (POST /api/v1/stream/chat) — state machine, 15s heartbeat, chunk
+    // sanitization. Body sends { message }; backend harmonizes to `prompt`.
+    const res = await fetch(`${API_BASE}/api/v1/stream/chat`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -116,9 +119,11 @@ export async function sendMessageStream(
 
 export const chatService = {
   sendMessage: async (message: string, history: ChatMessage[] = []): Promise<ChatResponse> => {
+    // FIX (API-contract audit): TaskRequest requires `task`; `history` maps to
+    // `messages`. The old {message, history} shape hit Pydantic 422.
     return apiClient.post<ChatResponse>('/api/task/execute', {
-      message,
-      history,
+      task: message,
+      messages: history,
     });
   },
 

@@ -116,6 +116,17 @@ ALL_ROUTERS = [
     # {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
     # R10 FIX: SSE stream for the /voice route
     {"path": "api.routes.stream_voice_sse", "prefix": "", "is_admin": False, "is_critical": False},
+    # FIX (API-contract audit): এই তিনটি রাউটারের ফ্রন্টএন্ড কনজিউমার দীর্ঘদিন
+    # সক্রিয় ছিল কিন্তু রাউটারগুলো কখনো মাউন্টই হয়নি — ফলে সব রিয়েলটাইম
+    # সংযোগ নীরবে ব্যর্থ হতো:
+    #   - events            → GET /api/dashboard/stream (SSE) — ServiceHealthMetrics,
+    #                          AutomationQueuePage, useDashboardData
+    #   - session_takeover  → WS /ws/session/{id}/takeover — ScreencastViewer,
+    #                          sessionCockpitStore
+    #   - websocket_voice   → WS /ws/voice — CommandCenter voice realtime
+    {"path": "api.routes.events", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.session_takeover", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "tools.collaborative_editor",
         "prefix": "/api/v1",
