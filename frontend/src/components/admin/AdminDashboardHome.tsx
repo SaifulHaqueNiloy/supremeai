@@ -46,14 +46,14 @@ export const AdminDashboardHome: React.FC = () => {
   // Dynamic hex values based on real metrics with fallback to loading state
   const hexValues = metrics
     ? [
-        metrics.cpu_usage_percent ?? metrics.cpu_percent ?? 20,
-        metrics.gpu_usage_percent ?? 30,
-        metrics.memory_usage_percent ?? metrics.memory_percent ?? 40,
-        Math.round((metrics.latency_p95_ms || 30) * 0.8 + 25),
-        Math.round((metrics.requests_per_second || 5) * 10),
-        Math.round(Math.min((metrics.cost_per_hour || 0) * 100 + 20, 100)),
+        metrics.cpu_usage_percent ?? metrics.cpu_percent ?? null,
+        metrics.gpu_usage_percent ?? null,
+        metrics.memory_usage_percent ?? metrics.memory_percent ?? null,
+        metrics.latency_p95_ms != null ? Math.round(metrics.latency_p95_ms) : null,
+        metrics.requests_per_second != null ? Math.round(metrics.requests_per_second * 10) : null,
+        metrics.cost_per_hour != null ? Math.round(Math.min(metrics.cost_per_hour * 100, 100)) : null,
       ]
-    : metricsLoading ? [null, null, null, null, null, null] : [20, 30, 40, 45, 50, 20];
+    : [null, null, null, null, null, null];
 
   return (
     <div className="relative flex-1 overflow-y-auto bg-[var(--sa-canvas)] p-4 font-mono text-[var(--sa-ink)] sm:p-6"><div className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(circle_at_55%_0%,rgba(34,211,238,0.10),transparent_62%)]" aria-hidden="true" /><div className="relative mb-6 flex flex-col gap-3 border-b border-[var(--sa-border)] pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="sa-eyebrow">Operations overview</p><h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--sa-ink)]">Command center</h1><p className="mt-1 font-sans text-sm text-[var(--sa-ink-muted)]">A live view of models, workflows, and system health.</p></div><div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--sa-ink-muted)]"><span className="size-2 rounded-full bg-emerald-400" />{currentTime}</div></div>
@@ -107,24 +107,18 @@ export const AdminDashboardHome: React.FC = () => {
             </div>
             {/* Mini bar animated chart - Dynamic data from metrics */}
             <div className="flex items-end gap-1.5 h-10">
-              {metrics && metrics.requests_per_second
+              {metrics?.requests_per_second != null
                 ? Array.from({ length: 9 }, (_, i) => {
-                    const baseHeight = (metrics.requests_per_second || 5) * 10;
+                    const baseHeight = metrics.requests_per_second * 10;
                     return Math.min(Math.max(baseHeight + (i * 5) - ((i * 7) % 10), 10), 100);
                   }).map((h, i) => (
                     <div
                       key={i}
                       style={{ height: `${h}%` }}
-                      className="w-1.5 bg-gradient-to-t from-purple-800 to-[#b5179e] rounded-sm"
+                      className="w-1.5 rounded-sm bg-gradient-to-t from-purple-800 to-[#b5179e]"
                     />
                   ))
-                : [20, 45, 15, 60, 30, 80, 50, 95, 40].map((h, i) => (
-                    <div
-                      key={i}
-                      style={{ height: `${h}%` }}
-                      className="w-1.5 bg-gradient-to-t from-purple-800 to-[#b5179e] rounded-sm"
-                    />
-                  ))}
+                : <span className="text-xs text-[var(--sa-ink-muted)]">No data</span>}
             </div>
           </div>
 
@@ -175,15 +169,15 @@ export const AdminDashboardHome: React.FC = () => {
             <div>
               <div className="text-[9px] text-slate-400">F1-Score</div>
               <div className="text-emerald-400 text-lg font-bold">
-                {metrics?.model_call_distribution?.['NEURAL_CORE_v5']
-                  ? (metrics.model_call_distribution['NEURAL_CORE_v5'] / 100).toFixed(3)
-                  : '0.965'}
+                {metrics?.model_call_distribution?.[modelId]
+                  ? (metrics.model_call_distribution[modelId] / 100).toFixed(3)
+                  : '—'}
               </div>
             </div>
             <div>
               <div className="text-[9px] text-slate-400">Loss</div>
               <div className="text-rose-500 text-lg font-bold">
-                {metrics?.error_rate ? (1 - metrics.error_rate).toFixed(3) : '0.112'}
+                {metrics?.error_rate != null ? (1 - metrics.error_rate).toFixed(3) : '—'}
               </div>
             </div>
           </div>
