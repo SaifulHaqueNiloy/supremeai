@@ -57,6 +57,14 @@ class ProposalState(enum.StrEnum):
     EXPIRED = "EXPIRED"
 
 
+class ProposalStateError(RuntimeError):
+    """Raised when an illegal proposal state transition is requested."""
+
+
+class ProposalCooldownError(RuntimeError):
+    """Raised when a proposal is submitted during its active cooldown window."""
+
+
 # বাংলা: কোন risk level-এর জন্য approval করা বাধ্যতামূলক (ROADMAP §28)।
 _MANDATORY_APPROVAL: set[str] = {
     "high",
@@ -448,4 +456,6 @@ __all__ = [
     "ApprovalDecision",
     "ApprovalWorkflow",
     "get_approval_workflow",
+    "ProposalStateError",
+    "ProposalCooldownError",
 ]
