@@ -17,6 +17,7 @@ class AdminFirebaseTotpSetupRequest(BaseModel):
 class AdminFirebaseTotpVerifyRequest(BaseModel):
     id_token: str = Field(..., description="Firebase ID token")
     otp: str = Field(..., description="TOTP MFA OTP code")
+    remember_browser: bool = Field(default=False, description="Trust this browser for seven days")
 
 
 class AdminEasyLoginRequest(BaseModel):

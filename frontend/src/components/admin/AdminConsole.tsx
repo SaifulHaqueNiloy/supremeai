@@ -47,6 +47,8 @@ interface AdminConsoleProps {
   otpRequired: boolean;
   adminOtp: string;
   setAdminOtp: (val: string) => void;
+  rememberBrowser: boolean;
+  setRememberBrowser: (val: boolean) => void;
   theme: 'dark' | 'light';
   toggleTheme: () => void;
 }
@@ -75,6 +77,8 @@ export function AdminConsole(props: AdminConsoleProps) {
           otpRequired={props.otpRequired}
           adminOtp={props.adminOtp}
           setAdminOtp={props.setAdminOtp}
+          rememberBrowser={props.rememberBrowser}
+          setRememberBrowser={props.setRememberBrowser}
           totpSetupRequired={props.totpSetupRequired}
           provisioningUri={props.provisioningUri}
           totpSecret={props.totpSecret}
