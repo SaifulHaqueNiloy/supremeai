@@ -8,6 +8,8 @@ interface LoginViewProps {
   otpRequired: boolean;
   adminOtp: string;
   setAdminOtp: (val: string) => void;
+  rememberBrowser: boolean;
+  setRememberBrowser: (val: boolean) => void;
   totpSetupRequired: boolean;
   provisioningUri: string;
   totpSecret: string;
@@ -25,6 +27,8 @@ export function LoginView({
   otpRequired,
   adminOtp,
   setAdminOtp,
+  rememberBrowser,
+  setRememberBrowser,
   totpSetupRequired,
   provisioningUri,
   totpSecret,
@@ -227,6 +231,7 @@ export function LoginView({
           )}
 
           {otpRequired && (
+            <>
             <div>
               <label htmlFor="admin-otp" className="sr-only">Enter 6-digit OTP</label>
               <input
@@ -244,6 +249,13 @@ export function LoginView({
                 aria-invalid={localError ? 'true' : 'false'}
               />
             </div>
+            {!totpSetupRequired && (
+              <label className="flex items-center gap-2 text-[11px] text-slate-400 font-mono cursor-pointer">
+                <input type="checkbox" checked={rememberBrowser} onChange={(e) => setRememberBrowser(e.target.checked)} className="accent-cyan-400" />
+                Trust this browser for 7 days
+              </label>
+            )}
+            </>
           )}
 
           {(adminError || localError) && (

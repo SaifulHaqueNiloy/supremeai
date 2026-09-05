@@ -18,6 +18,8 @@ export function AdminShell() {
     otpRequired,
     adminOtp,
     setAdminOtp,
+    rememberBrowser,
+    setRememberBrowser,
     totpSetupRequired,
     provisioningUri,
     totpSecret,
@@ -170,6 +172,8 @@ export function AdminShell() {
       otpRequired={otpRequired}
       adminOtp={adminOtp}
       setAdminOtp={setAdminOtp}
+      rememberBrowser={rememberBrowser}
+      setRememberBrowser={setRememberBrowser}
       theme={consoleTheme}
       toggleTheme={toggleTheme}
     />

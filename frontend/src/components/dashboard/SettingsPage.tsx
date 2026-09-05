@@ -1,6 +1,6 @@
 // বাংলা মন্তব্য: Devin-স্টাইল সেটিংস পেজ — ব্যাকএন্ড /preferences/ এপিআই দিয়ে ইউজার প্রেফারেন্স লোড/সেভ করা হয়
 import { useState, useEffect } from 'react';
-import { Save, Loader2 } from 'lucide-react';
+import { Save, Loader2, Shield, Trash2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 // বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম + ক্যানোনিক্যাল মডেল লিস্ট
 import { getSupremeModelLabel, SUPREME_AVAILABLE_MODELS } from '../../lib/modelBranding';
@@ -33,6 +33,8 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
+  const [trustedBrowsers, setTrustedBrowsers] = useState<Array<{ id: string; created_at: number }>>([]);
+  const [trustedBrowserStatus, setTrustedBrowserStatus] = useState('');
 
   useEffect(() => {
     apiClient
@@ -41,6 +43,34 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
       .catch(() => setStatus('Failed to load preferences — using defaults.'))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    apiClient.get<{ browsers: Array<{ id: string; created_at: number }> }>('/api/admin/trusted-browsers')
+      .then((data) => setTrustedBrowsers(data.browsers || []))
+      .catch(() => setTrustedBrowsers([]));
+  }, []);
+
+  const revokeBrowser = async (id: string) => {
+    setTrustedBrowserStatus('Revoking...');
+    try {
+      await apiClient.delete(`/api/admin/trusted-browsers/${encodeURIComponent(id)}`);
+      setTrustedBrowsers((items) => items.filter((item) => item.id !== id));
+      setTrustedBrowserStatus('Browser revoked.');
+    } catch (error) {
+      setTrustedBrowserStatus(error instanceof Error ? error.message : 'Unable to revoke browser.');
+    }
+  };
+
+  const revokeAllBrowsers = async () => {
+    setTrustedBrowserStatus('Revoking all...');
+    try {
+      await apiClient.delete('/api/admin/trusted-browsers');
+      setTrustedBrowsers([]);
+      setTrustedBrowserStatus('All trusted browsers revoked.');
+    } catch (error) {
+      setTrustedBrowserStatus(error instanceof Error ? error.message : 'Unable to revoke browsers.');
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -160,6 +190,32 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
               className="w-4 h-4 accent-blue-600"
             />
           </label>
+        </div>
+
+        <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-5">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div className="flex items-start gap-2">
+              <Shield size={16} className="text-amber-300 mt-0.5" />
+              <div>
+                <h2 className="text-sm font-medium text-white">Authorized browsers</h2>
+                <p className="text-[11px] text-slate-400">Admin browsers trusted for seven days without another TOTP prompt.</p>
+              </div>
+            </div>
+            {trustedBrowsers.length > 0 && <button onClick={revokeAllBrowsers} className="text-[11px] text-red-300 hover:text-red-200">Revoke all</button>}
+          </div>
+          {trustedBrowsers.length === 0 ? (
+            <p className="text-xs text-slate-500">No trusted browsers found, or this account is not an admin.</p>
+          ) : (
+            <div className="space-y-2">
+              {trustedBrowsers.map((browser) => (
+                <div key={browser.id} className="flex items-center justify-between rounded-lg border border-white/10 px-3 py-2">
+                  <span className="text-xs text-slate-300">Browser authorized {new Date(browser.created_at * 1000).toLocaleDateString()}</span>
+                  <button aria-label="Revoke browser" onClick={() => revokeBrowser(browser.id)} className="text-slate-400 hover:text-red-300"><Trash2 size={14} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+          {trustedBrowserStatus && <p className="text-[11px] text-slate-400 mt-3">{trustedBrowserStatus}</p>}
         </div>
 
         <div className="flex items-center gap-3">
