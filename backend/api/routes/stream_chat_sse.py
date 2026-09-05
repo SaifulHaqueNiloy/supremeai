@@ -38,6 +38,7 @@ from typing import Any
 
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field, model_validator
 
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
@@ -143,14 +144,16 @@ class SafeSSEGenerator:
                 async for event in self._fallback_path():
                     yield event
 
-            # Success - emit done
+            # Success - emit done and legacy [DONE]
             self.state = StreamState.DONE
             yield self._make_event("done", {"user_id": self.user_id})
+            yield "data: [DONE]\n\n"
 
         except asyncio.CancelledError:
             logger.info(f"[SSE] Client disconnected for user {self.user_id}")
             self.state = StreamState.DONE
             yield self._make_event("done", {"user_id": self.user_id, "reason": "cancelled"})
+            yield "data: [DONE]\n\n"
             raise
 
         except Exception as e:
@@ -160,11 +163,10 @@ class SafeSSEGenerator:
                 "error", {"error": str(e), "error_type": type(e).__name__, "user_id": self.user_id}
             )
 
-    async def _try_streaming_path(self) -> bool:
+    async def _try_streaming_path(self) -> AsyncIterator[str]:
         """
         Attempt streaming completion via LLM gateway.
-
-        Returns True if successful, False if should fall back.
+        Yields properly framed token events.
         """
         self.state = StreamState.STREAMING
 
@@ -175,12 +177,11 @@ class SafeSSEGenerator:
                 stream=True,
             )
 
-            # Validate we got an async iterable
+            # Defensive validation of stream object
             if not hasattr(response_stream, "__aiter__"):
-                logger.warning("[SSE] acompletion(stream=True) did not return async iterable")
-                # STABILIZE FIX: 'return False' is illegal in async generator
-                # (function uses yield). Just return None to end iteration.
-                # Caller can check self.state == StreamState.ERROR for failure.
+                logger.warning(
+                    f"[SSE] Response stream is not async iterable (type: {type(response_stream)})"
+                )
                 self.state = StreamState.ERROR
                 return
 
@@ -191,25 +192,24 @@ class SafeSSEGenerator:
                     yield self._make_heartbeat()
                     self._last_heartbeat = now
 
-                # Sanitize and emit
+                # Sanitize and emit (both token and delta for 100% frontend contract compatibility)
                 sanitized = self._sanitize_chunk(raw_chunk)
                 if sanitized:
-                    yield self._make_event("token", {"delta": sanitized, "user_id": self.user_id})
+                    yield self._make_event(
+                        "token",
+                        {"delta": sanitized, "token": sanitized, "user_id": self.user_id},
+                    )
 
-            # STABILIZE FIX: 'return True' is illegal in async generator.
-            # Just return None — success is implicit if we reach the end.
             return
 
         except Exception as e:
             logger.warning(
                 f"[SSE] Streaming path failed ({type(e).__name__}: {e}); falling back to non-stream"
             )
-            # STABILIZE FIX: 'return False' illegal in async generator.
-            # Caller will detect fallback via self.state == StreamState.ERROR
             self.state = StreamState.ERROR
             return
 
-    async def _fallback_path(self) -> None:
+    async def _fallback_path(self) -> AsyncIterator[str]:
         """
         Non-streaming fallback - emits complete response as single token.
         """
@@ -234,11 +234,17 @@ class SafeSSEGenerator:
             else:
                 text = str(response)
 
-            # Sanitize and emit as single token
+            # Sanitize and emit as single token (both token and delta supported)
             sanitized = self._sanitize_chunk(text)
             if sanitized:
                 yield self._make_event(
-                    "token", {"delta": sanitized, "user_id": self.user_id, "source": "fallback"}
+                    "token",
+                    {
+                        "delta": sanitized,
+                        "token": sanitized,
+                        "user_id": self.user_id,
+                        "source": "fallback",
+                    },
                 )
 
         except Exception as e:
@@ -261,18 +267,40 @@ async def _event_stream(prompt: str, user_id: str, task_type: str = "chat") -> A
         yield event
 
 
-from pydantic import BaseModel, Field
-
-
 class ChatStreamRequest(BaseModel):
-    """Payload for secure POST SSE chat streaming."""
+    """Payload for secure POST SSE chat streaming with backward compatible fields."""
 
-    prompt: str = Field(..., description="User prompt to stream")
+    prompt: str | None = Field(None, description="User prompt to stream")
+    message: str | None = Field(None, description="Legacy/UI alias for prompt")
     task_type: str = Field("chat", description="Task type classification")
     session_id: str | None = Field(None, description="Optional session or conversation ID")
+    sessionId: str | None = Field(None, description="Legacy/UI camelCase alias for session_id")
+    messages: list[dict] | None = Field(None, description="Optional list of historical messages")
+    context: dict | None = Field(None, description="Optional editor or workspace context")
+
+    @model_validator(mode="before")
+    @classmethod
+    def harmonize_contract(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            # Resolve prompt from message if prompt is missing
+            if not data.get("prompt") and data.get("message"):
+                data["prompt"] = data["message"]
+            elif not data.get("message") and data.get("prompt"):
+                data["message"] = data["prompt"]
+
+            # Resolve session_id from sessionId if missing
+            if not data.get("session_id") and data.get("sessionId"):
+                data["session_id"] = data["sessionId"]
+            elif not data.get("sessionId") and data.get("session_id"):
+                data["sessionId"] = data["session_id"]
+
+            if not data.get("prompt"):
+                raise ValueError("Either 'prompt' or 'message' must be provided.")
+        return data
 
 
 @router.post("/chat")
+@router.post("/api/chat/stream")
 async def stream_chat_post(
     request: Request,
     body: ChatStreamRequest,
@@ -280,6 +308,7 @@ async def stream_chat_post(
     """
     Production-grade SSE stream using HTTP POST and Authorization header.
     Completely eliminates JWT tokens in URLs.
+    Supports both /api/v1/stream/chat and /api/chat/stream interchangeably.
     """
     auth_header = request.headers.get("Authorization", "")
     token = ""
@@ -294,8 +323,9 @@ async def stream_chat_post(
         except Exception as e:
             logger.warning(f"[SSE Chat POST] Token verification fallback: {e}")
 
+    effective_prompt = body.prompt or body.message or ""
     return StreamingResponse(
-        _event_stream(body.prompt, user_id, body.task_type),
+        _event_stream(effective_prompt, user_id, body.task_type),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache, no-transform",
