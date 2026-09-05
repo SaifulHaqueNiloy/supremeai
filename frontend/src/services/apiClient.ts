@@ -88,7 +88,7 @@ const getCSRFToken = (): string => {
   // Get CSRF token from cookie or meta tag
   const metaTag = document.querySelector('meta[name="csrf-token"]');
   if (metaTag) return metaTag.getAttribute('content') || '';
-  const cookieMatch = document.cookie.match(/csrf_token=([^;]+)/);
+  const cookieMatch = document.cookie.match(/(?:^|;\s*)supreme_csrf_token=([^;]+)/);
   return cookieMatch ? cookieMatch[1] : '';
 };
 
