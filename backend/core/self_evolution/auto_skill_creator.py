@@ -26,8 +26,11 @@ from core.self_evolution.fitness_engine import FitnessEngine
 from core.tenant_db import TenantAwareFirestore
 
 try:
-    from skills.installer import SkillInstaller
-except ModuleNotFoundError:
+    try:
+        from skills.installer import SkillInstaller
+    except (ImportError, ModuleNotFoundError):
+        from skills import SkillInstaller
+except Exception:
     logger.warning(
         "⚠️ 'skills.installer' not found; dynamic SkillInstaller functionality will operate in fallback mode."
     )

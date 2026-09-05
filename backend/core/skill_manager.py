@@ -22,6 +22,7 @@ Dependencies:
 
 # backend/core/skill_manager.py
 import json
+import threading
 from typing import Any
 
 from core.logging_config import logger
@@ -226,5 +227,26 @@ class SkillManager:
             raise ValueError("Invalid JSON configuration from Skill Factory.") from e
 
 
-# Global singleton instance
-skill_manager = SkillManager()
+# Global thread-safe singleton
+_skill_manager_lock = threading.Lock()
+_global_skill_manager: SkillManager | None = None
+
+
+def get_skill_manager() -> SkillManager:
+    """Thread-safe singleton getter for SkillManager."""
+    global _global_skill_manager
+    if _global_skill_manager is None:
+        with _skill_manager_lock:
+            if _global_skill_manager is None:
+                _global_skill_manager = SkillManager()
+    return _global_skill_manager
+
+
+class _LazySkillManagerProxy:
+    """Proxy object so 'from core.skill_manager import skill_manager' stays backwards compatible."""
+
+    def __getattr__(self, item: str) -> Any:
+        return getattr(get_skill_manager(), item)
+
+
+skill_manager = _LazySkillManagerProxy()

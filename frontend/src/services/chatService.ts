@@ -72,9 +72,10 @@ export async function sendMessageStream(
           if (payload === '[DONE]') continue;
           try {
             const parsed = JSON.parse(payload);
-            if (parsed.token) {
-              _fullText += parsed.token;
-              onToken(parsed.token);
+            const token = parsed.token || parsed.delta;
+            if (token) {
+              _fullText += token;
+              onToken(token);
             }
           } catch {
             // flat token fallback
