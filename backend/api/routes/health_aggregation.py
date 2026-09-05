@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
 from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
+from brain.model_registry import ModelRegistry
 from core.health.uptime_tracker import (
     get_history,
     get_uptime_summary,
@@ -310,22 +311,28 @@ async def get_health_map():
     return health_map
 
 
+@router.get("/provider-readiness")
+async def get_provider_readiness():
+    """Return safe model diagnostics; readiness is never inferred from key presence."""
+    return {
+        "status": "ready" if not ModelRegistry.validate() else "degraded",
+        "registry_issues": ModelRegistry.validate(),
+        "models": ModelRegistry.readiness_snapshot(),
+    }
+
+
 @router.get("/dependencies")
 async def check_dependencies():
     """
     Check external dependencies (database, Redis, LLM providers).
     """
-    # This would integrate with your actual dependency checks
-    # For now, returning placeholder implementation
-
     return {
-        "database": {"status": "healthy", "connection_pool_active": 5},
-        "redis": {"status": "healthy", "memory_usage_mb": 12},
-        "supabase": {"status": "healthy", "connections": 3},
+        "database": {"status": "unknown"},
+        "redis": {"status": "unknown"},
+        "supabase": {"status": "unknown"},
         "llm_providers": {
-            "openrouter": {"status": "healthy", "latency_ms": 145},
-            "openai": {"status": "healthy", "latency_ms": 89},
-            "gemini": {"status": "degraded", "latency_ms": 1200, "error": "Elevated latency"},
+            provider: {"status": "unvalidated"}
+            for provider in sorted({entry["provider"] for entry in ModelRegistry.readiness_snapshot().values()})
         },
     }
 
