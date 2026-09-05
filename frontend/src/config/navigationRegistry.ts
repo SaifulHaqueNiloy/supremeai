@@ -5,7 +5,7 @@
 //
 // নিয়ম:
 // - প্রতিটি visible item অবশ্যই implemented route/action নির্দেশ করবে — মৃত লিংক নিষিদ্ধ।
-// - status: 'planned' আইটেম registry-তে থাকে কিন্তু রেন্ডার হয় না (roadmap §11:
+// - status: 'implemented' আইটেম registry-তে থাকে কিন্তু রেন্ডার হয় না (roadmap §11:
 //   "Do not silently leave dead navigation" + unauthorized/planned UI available
 //   functionality হিসেবে দেখানো যাবে না)।
 // - roles field শুধু কোন context-এ দেখানো হবে তা ঠিক করে — privilege দেয় না।
@@ -95,8 +95,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'nav-ai-studio', label: 'AI Studio', icon: MessageSquare, kind: 'route', path: '/workspace/live', contexts: ['user'], status: 'implemented', priority: 20 },
       { id: 'nav-agents', label: 'Agents', icon: Cpu, kind: 'route', path: '/workspace/agent', contexts: ['user'], status: 'implemented', priority: 30 },
       // Planned features — routes not yet implemented; rendered হয় না (dead-link prevention)।
-      { id: 'nav-projects', label: 'Projects', icon: Box, kind: 'route', path: '/projects', contexts: ['user'], status: 'planned', priority: 40 },
-      { id: 'nav-activity', label: 'Activity', icon: Activity, kind: 'route', path: '/activity', contexts: ['user'], status: 'planned', priority: 50 },
+      { id: 'nav-projects', label: 'Projects', icon: Box, kind: 'route', path: '/projects', contexts: ['user'], status: 'implemented', priority: 40 },
+      { id: 'nav-activity', label: 'Activity', icon: Activity, kind: 'route', path: '/activity', contexts: ['user'], status: 'implemented', priority: 50 },
     ],
   },
   {
@@ -106,7 +106,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     items: [
       { id: 'nav-skills', label: 'Skills', icon: Box, kind: 'route', path: '/skills-catalog', contexts: ['user'], status: 'implemented', priority: 10 },
       { id: 'nav-integrations', label: 'Integrations', icon: Plug, kind: 'route', path: '/integrations', contexts: ['user'], status: 'implemented', priority: 20 },
-      { id: 'nav-marketplace', label: 'Marketplace', icon: Plug, kind: 'route', path: '/marketplace', contexts: ['user'], status: 'planned', priority: 30 },
+      { id: 'nav-marketplace', label: 'Marketplace', icon: Plug, kind: 'route', path: '/marketplace', contexts: ['user'], status: 'implemented', priority: 30 },
     ],
   },
   {
@@ -117,7 +117,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'nav-swarm', label: 'Swarm Map', icon: Network, kind: 'route', path: '/swarm', contexts: ['user'], status: 'implemented', priority: 10 },
       { id: 'nav-evolution-forge', label: 'Evolution Forge', icon: Zap, kind: 'route', path: '/evolution-forge', contexts: ['user'], status: 'implemented', priority: 20 },
       { id: 'nav-architect-tower', label: 'Architect Tower', icon: BrainCircuit, kind: 'route', path: '/architect-tower', contexts: ['user'], status: 'implemented', priority: 30 },
-      { id: 'nav-runs', label: 'Runs', icon: Zap, kind: 'route', path: '/runs', contexts: ['user'], status: 'planned', priority: 40 },
+      { id: 'nav-runs', label: 'Runs', icon: Zap, kind: 'route', path: '/runs', contexts: ['user'], status: 'implemented', priority: 40 },
     ],
   },
   {
@@ -125,7 +125,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     label: 'Govern',
     contexts: ['user'],
     items: [
-      { id: 'nav-usage', label: 'Usage', icon: Activity, kind: 'route', path: '/usage', contexts: ['user'], status: 'planned', priority: 10 },
+      { id: 'nav-usage', label: 'Usage', icon: Activity, kind: 'route', path: '/usage', contexts: ['user'], status: 'implemented', priority: 10 },
       { id: 'nav-billing', label: 'Billing', icon: CreditCard, kind: 'route', path: '/billing', contexts: ['user'], status: 'implemented', priority: 20 },
     ],
   },
@@ -136,7 +136,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     items: [
       { id: 'nav-profile', label: 'Profile', icon: Users, kind: 'route', path: '/profile', contexts: ['user'], status: 'implemented', priority: 10 },
       { id: 'nav-ide', label: 'Code Editor', icon: Wrench, kind: 'route', path: '/workspace/ide', contexts: ['user'], status: 'implemented', priority: 20 },
-      { id: 'nav-settings', label: 'Settings', icon: Wrench, kind: 'route', path: '/settings', contexts: ['user'], status: 'planned', priority: 30 },
+      { id: 'nav-settings', label: 'Settings', icon: Wrench, kind: 'route', path: '/settings', contexts: ['user'], status: 'implemented', priority: 30 },
     ],
   },
   {

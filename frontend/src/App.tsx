@@ -36,6 +36,8 @@ import { useServerStream } from './hooks/useServerStream';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import { primeDeviceFingerprint } from "./utils/deviceFingerprint";
 import { CommandBar } from './components/layout/CommandBar';
+import GuestChatPage, { PublicInfoPage, PricingPage } from './pages/PublicPages';
+import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 
 primeDeviceFingerprint(); // বাংলা মন্তব্য: অ্যাপ বুট হওয়ার সাথে সাথে ব্যাকগ্রাউন্ডে ফিঙ্গারপ্রিন্ট হ্যাশ প্রিলোড হচ্ছে
 
@@ -130,8 +132,13 @@ const AppContent: React.FC = () => {
                   <RegisterPage />
                 </GuestRoute>
               } />
-              {/* Runtime landing: Guest → /login · User → /workspace · Admin → /admin */}
-              <Route path="/" element={<LandingRedirect />} />
+              {/* Public funnel: guest chat first, then progressive auth when value is clear. */}
+              <Route path="/" element={<GuestChatPage />} />
+              <Route path="/features" element={<PublicInfoPage kind="/features" />} />
+              <Route path="/pricing" element={<PricingPage />} />
+              <Route path="/docs" element={<PublicInfoPage kind="/docs" />} />
+              <Route path="/about" element={<PublicInfoPage kind="/about" />} />
+              <Route path="/contact" element={<PublicInfoPage kind="/contact" />} />
 
               {/* AUTHENTICATED USER STATE */}
               <Route path="/workspace/agent" element={
@@ -197,9 +204,15 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute>
                   <ProfilePage />
                 </ProtectedRoute>
-              } />
-              {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
-              <Route path="/workspace" element={
+  } />
+  <Route path="/projects" element={<ProtectedRoute><WorkspaceModulePage module="projects" /></ProtectedRoute>} />
+  <Route path="/activity" element={<ProtectedRoute><WorkspaceModulePage module="activity" /></ProtectedRoute>} />
+  <Route path="/marketplace" element={<ProtectedRoute><WorkspaceModulePage module="marketplace" /></ProtectedRoute>} />
+  <Route path="/runs" element={<ProtectedRoute><WorkspaceModulePage module="runs" /></ProtectedRoute>} />
+  <Route path="/usage" element={<ProtectedRoute><WorkspaceModulePage module="usage" /></ProtectedRoute>} />
+  <Route path="/settings" element={<ProtectedRoute><WorkspaceModulePage module="settings" /></ProtectedRoute>} />
+  {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
+  <Route path="/workspace" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
                     {legacyWorkspace}
