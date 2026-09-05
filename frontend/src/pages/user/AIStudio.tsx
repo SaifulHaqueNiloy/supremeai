@@ -31,37 +31,35 @@ export const AIStudio: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-surface-0 overflow-hidden">
-      {/* Top contextual header for AI Studio */}
-      <div className="h-12 border-b border-border surface-1 flex items-center justify-between px-4 shrink-0">
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_64%)]" aria-hidden="true" />
+      {/* AI Studio contextual header */}
+      <div className="relative flex min-h-16 shrink-0 items-center justify-between border-b border-[var(--sa-border)] bg-[var(--sa-surface)]/80 px-4 backdrop-blur sm:px-6">
         <div className="flex items-center gap-4 text-xs font-medium">
           <button 
             onClick={() => setActiveTab('chat')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${activeTab === 'chat' ? 'surface-3 text-accent-primary' : 'text-secondary hover:text-text hover:surface-2'}`}
+            className={`flex items-center gap-2 rounded-[var(--sa-radius-sm)] border px-3 py-2 text-xs transition-colors ${activeTab === 'chat' ? 'border-[var(--sa-primary)] bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]' : 'border-transparent text-[var(--sa-ink-muted)] hover:border-[var(--sa-border)] hover:bg-[var(--sa-surface-raised)] hover:text-[var(--sa-ink)]'}`}
           >
             <Bot size={14} /> Conversation
           </button>
           <button 
             onClick={() => setActiveTab('preview')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${activeTab === 'preview' ? 'surface-3 text-accent-primary' : 'text-secondary hover:text-text hover:surface-2'}`}
+            className={`flex items-center gap-2 rounded-[var(--sa-radius-sm)] border px-3 py-2 text-xs transition-colors ${activeTab === 'preview' ? 'border-[var(--sa-primary)] bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]' : 'border-transparent text-[var(--sa-ink-muted)] hover:border-[var(--sa-border)] hover:bg-[var(--sa-surface-raised)] hover:text-[var(--sa-ink)]'}`}
           >
             <Code size={14} /> Browser Preview
           </button>
           <button 
             onClick={() => setActiveTab('mobile')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${activeTab === 'mobile' ? 'surface-3 text-accent-primary' : 'text-secondary hover:text-text hover:surface-2'}`}
+            className={`flex items-center gap-2 rounded-[var(--sa-radius-sm)] border px-3 py-2 text-xs transition-colors ${activeTab === 'mobile' ? 'border-[var(--sa-primary)] bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]' : 'border-transparent text-[var(--sa-ink-muted)] hover:border-[var(--sa-border)] hover:bg-[var(--sa-surface-raised)] hover:text-[var(--sa-ink)]'}`}
           >
             <Smartphone size={14} /> Mobile Simulator
           </button>
         </div>
         
-        <div className="flex items-center gap-3 text-[10px] uppercase tracking-widest text-muted">
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Agent: Alpha
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent-primary"></span> Model: Supreme-Core
-          </span>
+        <div className="hidden items-center gap-4 text-[10px] uppercase tracking-widest text-[var(--sa-ink-muted)] sm:flex">
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-400" />Agent: Alpha</span>
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[var(--sa-primary)]" />Model: Supreme-Core</span>
+          <span className="rounded-full border border-[var(--sa-border)] px-2 py-1 text-[var(--sa-ink-muted)]">Context ready</span>
         </div>
       </div>
 

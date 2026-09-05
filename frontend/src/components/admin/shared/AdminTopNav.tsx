@@ -17,20 +17,20 @@ export const AdminTopNav: React.FC<AdminTopNavProps> = ({
   onLogout
 }) => {
   return (
-    <header className="surface-2 h-16 border-b px-6 flex items-center justify-between font-mono text-text select-none z-50">
+    <header className="flex h-16 select-none items-center justify-between border-b border-[var(--sa-border)] bg-[var(--sa-surface)] px-4 font-mono text-[var(--sa-ink)] sm:px-6">
       {/* বাম পাশ: লোগো ও অর্কেস্ট্রেশন প্ল্যাটফর্ম টেক্সট */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
           {/* গ্লোয়িং সুপ্রিমএআই লোগো */}
-          <div className="w-6 h-6 rounded-md bg-[#00f3ff] flex items-center justify-center shadow-[0_0_12px_#00f3ff]">
-            <span className="text-black font-black text-xs">S</span>
+          <div className="flex size-7 items-center justify-center rounded-lg bg-[var(--sa-primary)] text-xs font-black text-white shadow-[0_0_18px_rgba(34,211,238,0.35)]">
+            S
           </div>
-          <span className="font-sans font-bold text-lg tracking-wider text-white drop-shadow-[0_0_8px_rgba(0,243,255,0.4)]">
-            Supreme<span className="text-[#00f3ff]">AI</span>
+          <span className="font-sans text-lg font-semibold tracking-tight text-[var(--sa-ink)]">
+            Supreme<span className="text-[var(--sa-primary)]">AI</span>
           </span>
         </div>
-        <div className="hidden md:block w-[1px] h-6 bg-slate-800" />
-        <span className="hidden md:inline text-xs text-slate-400 tracking-[0.15em] uppercase font-sans">
+        <div className="hidden h-6 w-px bg-[var(--sa-border)] md:block" />
+        <span className="hidden font-sans text-xs uppercase tracking-[0.15em] text-[var(--sa-ink-muted)] md:inline">
           Orchestration Platform
         </span>
       </div>
