@@ -167,8 +167,9 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
           summary: { total_checks: payload.database ? 2 : 1, healthy: healthy ? (payload.database === 'healthy' ? 2 : 1) : 0, degraded: healthy ? (payload.database === 'healthy' ? 0 : 1) : 1, unhealthy: 0, unknown: 0 },
         };
       }
-    } catch {
+    } catch (fallbackError) {
       // Fall through to the user-facing connection state below.
+      console.debug?.('Fallback health check skipped:', fallbackError);
     }
 
     if (error instanceof DOMException && error.name === 'AbortError') {
