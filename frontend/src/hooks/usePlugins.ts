@@ -29,7 +29,7 @@ export const usePlugins = () => {
         try {
             setLoading(true);
             
-            const baseUrl = getApiBaseUrl('/api/v1/plugins/marketplace');
+            const baseUrl = getApiBaseUrl();
             const authHeaders = await getAuthHeaders();
             const [marketRes, installedRes] = await Promise.all([
                 fetch(`${baseUrl}/api/v1/plugins/marketplace`, { headers: authHeaders }),
@@ -57,7 +57,7 @@ export const usePlugins = () => {
 
     const installPlugin = async (pluginId: string, capabilities: string[]) => {
         try {
-            const res = await fetch(`${getApiBaseUrl('/api/v1/plugins/install')}/api/v1/plugins/install`, {
+            const res = await fetch(`${getApiBaseUrl()}/api/v1/plugins/install`, {
                 method: 'POST',
                 headers: {
                     ...(await getAuthHeaders()),
@@ -75,7 +75,7 @@ export const usePlugins = () => {
 
     const uninstallPlugin = async (pluginId: string) => {
         try {
-            const res = await fetch(`${getApiBaseUrl('/api/v1/plugins/uninstall')}/api/v1/plugins/uninstall/${pluginId}`, {
+            const res = await fetch(`${getApiBaseUrl()}/api/v1/plugins/uninstall/${pluginId}`, {
                 method: 'DELETE',
                 headers: await getAuthHeaders(),
             });
