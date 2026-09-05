@@ -1,0 +1,1560 @@
+{
+  "routes": {
+    "total_routes": 122,
+    "mounted_count": 97,
+    "unmounted_count": 25,
+    "unmounted_details": [
+      {
+        "file": "admin_auth",
+        "path": "backend/api/routes/admin_auth.py",
+        "loc": 103,
+        "prefix": "",
+        "tags": [],
+        "endpoint_count": 0,
+        "endpoints": []
+      },
+      {
+        "file": "advanced_router",
+        "path": "backend/api/routes/advanced_router.py",
+        "loc": 54,
+        "prefix": "/api/v1/router",
+        "tags": [
+          "Advanced Model Router"
+        ],
+        "endpoint_count": 1,
+        "endpoints": [
+          "POST /route"
+        ]
+      },
+      {
+        "file": "agent_tasks",
+        "path": "backend/api/routes/agent_tasks.py",
+        "loc": 140,
+        "prefix": "/api/v1/agents",
+        "tags": [
+          "agents"
+        ],
+        "endpoint_count": 0,
+        "endpoints": []
+      },
+      {
+        "file": "artifacts",
+        "path": "backend/api/routes/artifacts.py",
+        "loc": 450,
+        "prefix": "/api/artifacts",
+        "tags": [
+          "Artifacts"
+        ],
+        "endpoint_count": 6,
+        "endpoints": [
+          "POST /",
+          "GET /conversation/{conversation_id}",
+          "GET /{artifact_id}",
+          "PATCH /{artifact_id}",
+          "DELETE /{artifact_id}",
+          "GET /{artifact_id}/preview"
+        ]
+      },
+      {
+        "file": "async_task_router",
+        "path": "backend/api/routes/async_task_router.py",
+        "loc": 35,
+        "prefix": "/api/task",
+        "tags": [
+          "async-task"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "GET /{task_id}",
+          "GET /_stats"
+        ]
+      },
+      {
+        "file": "branch_conversations",
+        "path": "backend/api/routes/branch_conversations.py",
+        "loc": 410,
+        "prefix": "/api/conversations",
+        "tags": [
+          "Branch Conversations"
+        ],
+        "endpoint_count": 4,
+        "endpoints": [
+          "POST /{conversation_id}/branch",
+          "GET /{conversation_id}/branches",
+          "GET /tree",
+          "PATCH /{conversation_id}/merge"
+        ]
+      },
+      {
+        "file": "browser",
+        "path": "backend/api/routes/browser.py",
+        "loc": 928,
+        "prefix": "/api/browser",
+        "tags": [
+          "browser"
+        ],
+        "endpoint_count": 59,
+        "endpoints": [
+          "POST /automation/sessions",
+          "GET /automation/sessions",
+          "DELETE /automation/sessions/{session_id}",
+          "POST /automation/actions",
+          "GET /surf/status",
+          "POST /surf/start"
+        ]
+      },
+      {
+        "file": "cdc_webhooks",
+        "path": "backend/api/routes/cdc_webhooks.py",
+        "loc": 98,
+        "prefix": "/cdc",
+        "tags": [
+          "cdc"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "POST /webhook",
+          "GET /health"
+        ]
+      },
+      {
+        "file": "chat",
+        "path": "backend/api/routes/chat.py",
+        "loc": 387,
+        "prefix": "/api/chat",
+        "tags": [
+          "AI-Orchestration"
+        ],
+        "endpoint_count": 6,
+        "endpoints": [
+          "POST /orchestrate",
+          "GET /capabilities",
+          "GET /tasks/{task_id}",
+          "POST /get_completion",
+          "POST /stream_chat",
+          "GET /learning/stats"
+        ]
+      },
+      {
+        "file": "chat_export",
+        "path": "backend/api/routes/chat_export.py",
+        "loc": 352,
+        "prefix": "/api/chat",
+        "tags": [
+          "Chat Export"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "GET /export/formats",
+          "POST /export"
+        ]
+      },
+      {
+        "file": "chat_search",
+        "path": "backend/api/routes/chat_search.py",
+        "loc": 244,
+        "prefix": "/api/chat/search",
+        "tags": [
+          "Chat Search"
+        ],
+        "endpoint_count": 1,
+        "endpoints": [
+          "GET /"
+        ]
+      },
+      {
+        "file": "chat_upload",
+        "path": "backend/api/routes/chat_upload.py",
+        "loc": 327,
+        "prefix": "/api/chat/upload",
+        "tags": [
+          "Chat Upload"
+        ],
+        "endpoint_count": 3,
+        "endpoints": [
+          "POST /",
+          "GET /{attachment_id}",
+          "DELETE /{attachment_id}"
+        ]
+      },
+      {
+        "file": "deep_research",
+        "path": "backend/api/routes/deep_research.py",
+        "loc": 692,
+        "prefix": "/api/research",
+        "tags": [
+          "Deep Research"
+        ],
+        "endpoint_count": 4,
+        "endpoints": [
+          "POST /deep",
+          "POST /deep/stream",
+          "GET /history",
+          "GET /{research_id}"
+        ]
+      },
+      {
+        "file": "hybrid_search",
+        "path": "backend/api/routes/hybrid_search.py",
+        "loc": 53,
+        "prefix": "/api/v1/rag",
+        "tags": [
+          "RAG Hybrid Search"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "POST /index",
+          "POST /hybrid-search"
+        ]
+      },
+      {
+        "file": "ide_trio",
+        "path": "backend/api/routes/ide_trio.py",
+        "loc": 92,
+        "prefix": "/api/v1/ide-trio",
+        "tags": [
+          "ide-trio"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "POST /execute",
+          "GET /status"
+        ]
+      },
+      {
+        "file": "mcp_marketplace",
+        "path": "backend/api/routes/mcp_marketplace.py",
+        "loc": 31,
+        "prefix": "/api/v1/mcp",
+        "tags": [
+          "mcp"
+        ],
+        "endpoint_count": 1,
+        "endpoints": [
+          "POST /discover"
+        ]
+      },
+      {
+        "file": "plugin_submissions",
+        "path": "backend/api/routes/plugin_submissions.py",
+        "loc": 41,
+        "prefix": "/api/v1/plugins/community",
+        "tags": [
+          "community_plugins"
+        ],
+        "endpoint_count": 1,
+        "endpoints": [
+          "POST /submit"
+        ]
+      },
+      {
+        "file": "plugins",
+        "path": "backend/api/routes/plugins.py",
+        "loc": 62,
+        "prefix": "/api/v1/plugins",
+        "tags": [
+          "plugins"
+        ],
+        "endpoint_count": 4,
+        "endpoints": [
+          "GET /marketplace",
+          "GET /installed",
+          "POST /install",
+          "DELETE /uninstall/{plugin_id}"
+        ]
+      },
+      {
+        "file": "prompt_templates",
+        "path": "backend/api/routes/prompt_templates.py",
+        "loc": 651,
+        "prefix": "/api/prompt-templates",
+        "tags": [
+          "Prompt Templates"
+        ],
+        "endpoint_count": 6,
+        "endpoints": [
+          "GET /",
+          "POST /",
+          "GET /{template_id}",
+          "PUT /{template_id}",
+          "DELETE /{template_id}",
+          "POST /{template_id}/use"
+        ]
+      },
+      {
+        "file": "reasoning",
+        "path": "backend/api/routes/reasoning.py",
+        "loc": 340,
+        "prefix": "/api/reasoning",
+        "tags": [
+          "Reasoning"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "POST /think",
+          "POST /think/stream"
+        ]
+      },
+      {
+        "file": "scheduled_tasks",
+        "path": "backend/api/routes/scheduled_tasks.py",
+        "loc": 633,
+        "prefix": "/api/schedule",
+        "tags": [
+          "Scheduled Tasks"
+        ],
+        "endpoint_count": 8,
+        "endpoints": [
+          "POST /",
+          "GET /",
+          "GET /history",
+          "GET /{task_id}",
+          "PUT /{task_id}",
+          "DELETE /{task_id}"
+        ]
+      },
+      {
+        "file": "selector_healing",
+        "path": "backend/api/routes/selector_healing.py",
+        "loc": 141,
+        "prefix": "/api/admin/selector-healing",
+        "tags": [
+          "Selector Healing"
+        ],
+        "endpoint_count": 3,
+        "endpoints": [
+          "GET /",
+          "POST /{event_id}/decision",
+          "POST /selectors/audit"
+        ]
+      },
+      {
+        "file": "share",
+        "path": "backend/api/routes/share.py",
+        "loc": 399,
+        "prefix": "/api/share",
+        "tags": [
+          "Sharing"
+        ],
+        "endpoint_count": 4,
+        "endpoints": [
+          "POST /generate",
+          "GET /{share_id}",
+          "GET /list",
+          "DELETE /{share_id}"
+        ]
+      },
+      {
+        "file": "slash_commands",
+        "path": "backend/api/routes/slash_commands.py",
+        "loc": 655,
+        "prefix": "/api/commands",
+        "tags": [
+          "Slash Commands"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "GET /",
+          "POST /execute"
+        ]
+      },
+      {
+        "file": "webhooks_ai",
+        "path": "backend/api/routes/webhooks_ai.py",
+        "loc": 90,
+        "prefix": "/api/v1/webhooks/telegram",
+        "tags": [
+          "Webhooks AI"
+        ],
+        "endpoint_count": 2,
+        "endpoints": [
+          "POST /send-alert",
+          "POST /callback"
+        ]
+      }
+    ]
+  },
+  "backend_subsystems": {
+    "total_subsystem_files": 413,
+    "unreferenced_count": 87,
+    "unreferenced_files": [
+      {
+        "file": "adaptive_engine/self_improving_agent.py",
+        "subsystem": "adaptive_engine",
+        "references": 0
+      },
+      {
+        "file": "admin/test_god.py",
+        "subsystem": "admin",
+        "references": 0
+      },
+      {
+        "file": "agents/base_pydantic_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/devops/cloud_watchman.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/devops/cost_sage.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/domain/bangla_nlp_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/evolution_agents/adversarial_defense_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/evolution_agents/federated_learning_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/evolution_agents/meta_learning_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/evolution_agents/multi_agent_collaboration_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/governance/bias_detection_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/governance/ethics_monitor_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/governance/explainability_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/governance/governance_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/monitoring/competitor_analysis_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/monitoring/compliance_monitor_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/monitoring/predictive_analytics_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/monitoring/technology_radar_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "agents/ux/accessibility_agent.py",
+        "subsystem": "agents",
+        "references": 0
+      },
+      {
+        "file": "brain/gcp_router.py",
+        "subsystem": "brain",
+        "references": 0
+      },
+      {
+        "file": "brain/performance_aware_router.py",
+        "subsystem": "brain",
+        "references": 0
+      },
+      {
+        "file": "byoc/resource_manager.py",
+        "subsystem": "byoc",
+        "references": 0
+      },
+      {
+        "file": "ecosystem/standalone_app.py",
+        "subsystem": "ecosystem",
+        "references": 0
+      },
+      {
+        "file": "engine/cost_optimizer.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/forge_compiler.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/self_reflection.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/smart_router.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/worker_node.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/worker_registry.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "engine/compression/test_token_juice.py",
+        "subsystem": "engine",
+        "references": 0
+      },
+      {
+        "file": "learning/evolution_bridge.py",
+        "subsystem": "learning",
+        "references": 0
+      },
+      {
+        "file": "learning/hypothesis_engine.py",
+        "subsystem": "learning",
+        "references": 0
+      },
+      {
+        "file": "memory/mcp_server.py",
+        "subsystem": "memory",
+        "references": 0
+      },
+      {
+        "file": "memory/summary_tree.py",
+        "subsystem": "memory",
+        "references": 0
+      },
+      {
+        "file": "memory/test_hierarchical_tree.py",
+        "subsystem": "memory",
+        "references": 0
+      },
+      {
+        "file": "memory/unified_db_manager.py",
+        "subsystem": "memory",
+        "references": 0
+      },
+      {
+        "file": "memory/vector_store_config.py",
+        "subsystem": "memory",
+        "references": 0
+      },
+      {
+        "file": "models/agent_session.py",
+        "subsystem": "models",
+        "references": 0
+      },
+      {
+        "file": "models/handoff_event.py",
+        "subsystem": "models",
+        "references": 0
+      },
+      {
+        "file": "models/local_model_handler.py",
+        "subsystem": "models",
+        "references": 0
+      },
+      {
+        "file": "models/target_platform_credential.py",
+        "subsystem": "models",
+        "references": 0
+      },
+      {
+        "file": "monitoring/causal_debugger.py",
+        "subsystem": "monitoring",
+        "references": 0
+      },
+      {
+        "file": "p2p/resource_broker.py",
+        "subsystem": "p2p",
+        "references": 0
+      },
+      {
+        "file": "p2p/secure_tunnel.py",
+        "subsystem": "p2p",
+        "references": 0
+      },
+      {
+        "file": "pipelines/code_to_db_sync.py",
+        "subsystem": "pipelines",
+        "references": 0
+      },
+      {
+        "file": "pipelines/synthetic_data_pipeline.py",
+        "subsystem": "pipelines",
+        "references": 0
+      },
+      {
+        "file": "sandbox/file_isolation_gate.py",
+        "subsystem": "sandbox",
+        "references": 0
+      },
+      {
+        "file": "scout/knowledge_extractor.py",
+        "subsystem": "scout",
+        "references": 0
+      },
+      {
+        "file": "services/diagram_parser_service.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/escrow_service.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/internet_monitor_service.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/minio_client.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/project_context_service.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/rider_tracker.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/sandbox_service.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/video_to_code_pipeline.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "services/ingestion/test_context_collector.py",
+        "subsystem": "services",
+        "references": 0
+      },
+      {
+        "file": "skills/core_doc_summarizer.py",
+        "subsystem": "skills",
+        "references": 0
+      },
+      {
+        "file": "storage/asset_manager.py",
+        "subsystem": "storage",
+        "references": 0
+      },
+      {
+        "file": "tools/agent_tools.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/ai_federation_protocol.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/bandwidth_optimizer.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/conversation_manager.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/ensemble_router.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/freebuff_client.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/langchain_agent_example.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/meta_architect.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/plan_sorter.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/preference_memory.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/seed_database.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/_bootstrap.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/billing/monthly_cost_reporter.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/browser/mcp_tools.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/browser/stealth_http_client.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/browser/web_fallback_agent.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/code/lsp_bridge.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/creative/creative_agents_registry.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/devops/gcp_cloud_functions.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/localization/bangla_ai_connector.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/localization/bengali_ocr_converter.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/localization/local_ocr_extractor.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/mcp/mcp_ide_trio.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/mcp/mcp_observability.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/mcp/mcp_server.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/media/music_generator.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/media/presentation_generator.py",
+        "subsystem": "tools",
+        "references": 0
+      },
+      {
+        "file": "tools/media/threed_model_generator.py",
+        "subsystem": "tools",
+        "references": 0
+      }
+    ],
+    "semi_referenced_count": 69,
+    "semi_referenced_files": [
+      {
+        "file": "adapters/base_adapter.py",
+        "subsystem": "adapters",
+        "references": 4,
+        "ref_files": [
+          "backend/adapters/business_adapter.py",
+          "backend/adapters/dev_adapter.py",
+          "backend/adapters/ux_adapter.py"
+        ]
+      },
+      {
+        "file": "adaptive_engine/platform_learner.py",
+        "subsystem": "adaptive_engine",
+        "references": 1,
+        "ref_files": [
+          "backend/adaptive_engine/__init__.py"
+        ]
+      },
+      {
+        "file": "adaptive_engine/supabase_vector_backend.py",
+        "subsystem": "adaptive_engine",
+        "references": 1,
+        "ref_files": [
+          "backend/adaptive_engine/experience_db.py"
+        ]
+      },
+      {
+        "file": "agents/ephemeral_executor.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/headless_terminal_agent.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/morphic_adapter.py",
+        "subsystem": "agents",
+        "references": 2,
+        "ref_files": [
+          "backend/agents/skill_ingestor.py",
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/performance_guardian.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/skill_gc.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/skill_ingestor.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "agents/vulnerability_prophet.py",
+        "subsystem": "agents",
+        "references": 1,
+        "ref_files": [
+          "backend/agents/__init__.py"
+        ]
+      },
+      {
+        "file": "brain/task_execution_engine.py",
+        "subsystem": "brain",
+        "references": 1,
+        "ref_files": [
+          "backend/brain/reasoning_orchestrator.py"
+        ]
+      },
+      {
+        "file": "brain/causal/discovery.py",
+        "subsystem": "brain",
+        "references": 2,
+        "ref_files": [
+          "backend/brain/causal/root_cause.py",
+          "backend/brain/causal/__init__.py"
+        ]
+      },
+      {
+        "file": "brain/causal/interventions.py",
+        "subsystem": "brain",
+        "references": 2,
+        "ref_files": [
+          "backend/brain/causal/root_cause.py",
+          "backend/brain/causal/__init__.py"
+        ]
+      },
+      {
+        "file": "browser/browsing_memory.py",
+        "subsystem": "browser",
+        "references": 1,
+        "ref_files": [
+          "backend/browser/autonomous_browser.py"
+        ]
+      },
+      {
+        "file": "ecosystem/mcp_skeleton.py",
+        "subsystem": "ecosystem",
+        "references": 1,
+        "ref_files": [
+          "backend/ecosystem/__init__.py"
+        ]
+      },
+      {
+        "file": "ecosystem/seed_ecosystem.py",
+        "subsystem": "ecosystem",
+        "references": 1,
+        "ref_files": [
+          "backend/ecosystem/standalone_app.py"
+        ]
+      },
+      {
+        "file": "ecosystem/source_governance.py",
+        "subsystem": "ecosystem",
+        "references": 1,
+        "ref_files": [
+          "backend/ecosystem/__init__.py"
+        ]
+      },
+      {
+        "file": "engine/vector_db.py",
+        "subsystem": "engine",
+        "references": 1,
+        "ref_files": [
+          "backend/engine/memory_middleware.py"
+        ]
+      },
+      {
+        "file": "evolution/advanced_evolution_engine.py",
+        "subsystem": "evolution",
+        "references": 2,
+        "ref_files": [
+          "backend/evolution/auto_evolution_controller.py",
+          "backend/evolution/__init__.py"
+        ]
+      },
+      {
+        "file": "evolution/auto_tuner.py",
+        "subsystem": "evolution",
+        "references": 2,
+        "ref_files": [
+          "backend/evolution/auto_evolution_controller.py",
+          "backend/evolution/__init__.py"
+        ]
+      },
+      {
+        "file": "evolution/memory_consolidator.py",
+        "subsystem": "evolution",
+        "references": 2,
+        "ref_files": [
+          "backend/evolution/auto_evolution_controller.py",
+          "backend/evolution/__init__.py"
+        ]
+      },
+      {
+        "file": "evolution/strategy_optimizer.py",
+        "subsystem": "evolution",
+        "references": 2,
+        "ref_files": [
+          "backend/evolution/auto_evolution_controller.py",
+          "backend/evolution/__init__.py"
+        ]
+      },
+      {
+        "file": "integrations/browser_use_adapter.py",
+        "subsystem": "integrations",
+        "references": 1,
+        "ref_files": [
+          "backend/integrations/__init__.py"
+        ]
+      },
+      {
+        "file": "integrations/e2b_adapter.py",
+        "subsystem": "integrations",
+        "references": 1,
+        "ref_files": [
+          "backend/integrations/__init__.py"
+        ]
+      },
+      {
+        "file": "integrations/graphiti_adapter.py",
+        "subsystem": "integrations",
+        "references": 1,
+        "ref_files": [
+          "backend/integrations/__init__.py"
+        ]
+      },
+      {
+        "file": "integrations/mem0_adapter.py",
+        "subsystem": "integrations",
+        "references": 1,
+        "ref_files": [
+          "backend/integrations/__init__.py"
+        ]
+      },
+      {
+        "file": "integrations/openhands_adapter.py",
+        "subsystem": "integrations",
+        "references": 1,
+        "ref_files": [
+          "backend/integrations/__init__.py"
+        ]
+      },
+      {
+        "file": "learning/evidence_analyzer.py",
+        "subsystem": "learning",
+        "references": 1,
+        "ref_files": [
+          "backend/learning/hypothesis_engine.py"
+        ]
+      },
+      {
+        "file": "learning/outcome_analyzer.py",
+        "subsystem": "learning",
+        "references": 2,
+        "ref_files": [
+          "backend/learning/evolution_bridge.py",
+          "backend/learning/__init__.py"
+        ]
+      },
+      {
+        "file": "memory/cloud_postgres_store.py",
+        "subsystem": "memory",
+        "references": 1,
+        "ref_files": [
+          "backend/memory/unified_db_manager.py"
+        ]
+      },
+      {
+        "file": "memory/rag_pipeline.py",
+        "subsystem": "memory",
+        "references": 1,
+        "ref_files": [
+          "backend/memory/mcp_server.py"
+        ]
+      },
+      {
+        "file": "models/morphic.py",
+        "subsystem": "models",
+        "references": 1,
+        "ref_files": [
+          "backend/models/__init__.py"
+        ]
+      },
+      {
+        "file": "p2p/credit_system.py",
+        "subsystem": "p2p",
+        "references": 1,
+        "ref_files": [
+          "backend/p2p/resource_broker.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/asyncio_err.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/auth_security.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/core_python.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/infra_deploy.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/linter_quality.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/typing_err.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/detectors/web_api.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/detectors/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/fixers/await_fixer.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/fixers/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/fixers/except_fixer.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/fixers/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/fixers/fstring_log_fixer.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/fixers/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/fixers/import_fixer.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/fixers/__init__.py"
+        ]
+      },
+      {
+        "file": "pyerrorfix/fixers/with_fixer.py",
+        "subsystem": "pyerrorfix",
+        "references": 1,
+        "ref_files": [
+          "backend/pyerrorfix/fixers/__init__.py"
+        ]
+      },
+      {
+        "file": "runtime/budget_guard.py",
+        "subsystem": "runtime",
+        "references": 2,
+        "ref_files": [
+          "backend/runtime/task_runtime.py",
+          "backend/runtime/__init__.py"
+        ]
+      },
+      {
+        "file": "runtime/task_executor.py",
+        "subsystem": "runtime",
+        "references": 2,
+        "ref_files": [
+          "backend/runtime/task_runtime.py",
+          "backend/runtime/__init__.py"
+        ]
+      },
+      {
+        "file": "scout/web_crawler_agent.py",
+        "subsystem": "scout",
+        "references": 1,
+        "ref_files": [
+          "backend/scout/__init__.py"
+        ]
+      },
+      {
+        "file": "services/dynamic_planner.py",
+        "subsystem": "services",
+        "references": 2,
+        "ref_files": [
+          "backend/services/living_engine.py",
+          "backend/services/self_correction.py"
+        ]
+      },
+      {
+        "file": "services/intelligent_cache.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/auto_healer.py"
+        ]
+      },
+      {
+        "file": "services/intent_deciphering.py",
+        "subsystem": "services",
+        "references": 2,
+        "ref_files": [
+          "backend/services/dynamic_planner.py",
+          "backend/services/living_engine.py"
+        ]
+      },
+      {
+        "file": "services/self_correction.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/living_engine.py"
+        ]
+      },
+      {
+        "file": "services/tool_forge.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/living_engine.py"
+        ]
+      },
+      {
+        "file": "services/dynamic_ai/provider_registry.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/dynamic_ai/orchestrator.py"
+        ]
+      },
+      {
+        "file": "services/hitl/hitl_ledger.py",
+        "subsystem": "services",
+        "references": 2,
+        "ref_files": [
+          "backend/services/hitl/engine.py",
+          "backend/services/hitl/__init__.py"
+        ]
+      },
+      {
+        "file": "services/ide_trio/cline_checker.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/ide_trio/__init__.py"
+        ]
+      },
+      {
+        "file": "services/ide_trio/gemini_writer.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/ide_trio/__init__.py"
+        ]
+      },
+      {
+        "file": "services/ide_trio/kilo_reviewer.py",
+        "subsystem": "services",
+        "references": 1,
+        "ref_files": [
+          "backend/services/ide_trio/__init__.py"
+        ]
+      },
+      {
+        "file": "services/ingestion/context_collector.py",
+        "subsystem": "services",
+        "references": 2,
+        "ref_files": [
+          "backend/services/ingestion/test_context_collector.py",
+          "backend/services/ingestion/__init__.py"
+        ]
+      },
+      {
+        "file": "skills/provisioner.py",
+        "subsystem": "skills",
+        "references": 1,
+        "ref_files": [
+          "backend/skills/__init__.py"
+        ]
+      },
+      {
+        "file": "skills/skill_registry.py",
+        "subsystem": "skills",
+        "references": 2,
+        "ref_files": [
+          "backend/skills/provisioner.py",
+          "backend/skills/__init__.py"
+        ]
+      },
+      {
+        "file": "tools/browser/browser_stealth.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/browser/playwright_browser_agent.py"
+        ]
+      },
+      {
+        "file": "tools/code/safe_executor.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/code/cot_reasoner.py"
+        ]
+      },
+      {
+        "file": "tools/creative/audio_engineering_agent.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/creative/creative_agents_registry.py"
+        ]
+      },
+      {
+        "file": "tools/creative/brand_identity_agent.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/creative/creative_agents_registry.py"
+        ]
+      },
+      {
+        "file": "tools/creative/game_design_agent.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/creative/creative_agents_registry.py"
+        ]
+      },
+      {
+        "file": "tools/creative/video_production_agent.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/creative/creative_agents_registry.py"
+        ]
+      },
+      {
+        "file": "tools/social/teldrive_storage.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/social/telegram_bot.py"
+        ]
+      },
+      {
+        "file": "tools/social/telegram_security.py",
+        "subsystem": "tools",
+        "references": 1,
+        "ref_files": [
+          "backend/tools/social/telegram_bot.py"
+        ]
+      }
+    ]
+  },
+  "frontend": {
+    "total_components": 247,
+    "orphan_count": 41,
+    "orphan_components": [
+      {
+        "component": "commandcenter/realtime/CommandCenterRealtimeProvider.tsx",
+        "folder": "commandcenter"
+      },
+      {
+        "component": "components/FixPreviewModal.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/LiveSujonBackground.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/OperatorStudio.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/SupremeComponents.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/AdminDashboardHome.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/HealthBanner.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/LibrarianQueue.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/ScreencastViewer.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/auth/ConsentMatrixModal.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/infra/DeploymentModal.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/infra/ServiceHealthMonitor.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/shared/AdminTopNav.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/admin/shared/DynamicPanel.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/AutomationQueuePage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/ConnectedPlatformsVault.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/GuardrailsPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/HealingLogPanel.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/HumanInTheLoopProtocol.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/KnowledgePage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/LlmGatewayPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SecretsPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SessionDetailPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SettingsPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SidebarSettings.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SiteActionsPage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/SujonCoreCockpit.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dashboard/UsagePage.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/dock/DynamicActionDock.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/layout/MainLayout.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/memory/MemoryPanel.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/Onboarding/OnboardingWizard.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/plugins/MCPConnector.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/research/DeepResearchPanel.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/schedule/ScheduledTasksPanel.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/swarm/SwarmHealthDashboard.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "components/widgets/EvolutionForgeWidget.tsx",
+        "folder": "components"
+      },
+      {
+        "component": "pages/auth/LoginScreen.tsx",
+        "folder": "pages"
+      },
+      {
+        "component": "pages/auth/RegisterScreen.tsx",
+        "folder": "pages"
+      },
+      {
+        "component": "pages/user/CostDashboard.tsx",
+        "folder": "pages"
+      },
+      {
+        "component": "providers/MockSwarmProvider.tsx",
+        "folder": "providers"
+      }
+    ]
+  }
+}

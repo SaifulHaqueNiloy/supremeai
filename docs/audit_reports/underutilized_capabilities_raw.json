@@ -1,0 +1,1466 @@
+{
+  "underutilized_classes": [
+    {
+      "class_name": "ApiRouter",
+      "filepath": "backend/brain/api_router.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "dispatch"
+      ],
+      "dormant_methods": [
+        "register",
+        "capabilities",
+        "supports"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "ModelRegistry",
+      "filepath": "backend/brain/model_registry.py",
+      "class_references": 5,
+      "total_methods": 4,
+      "used_methods": [
+        "sync_from_db"
+      ],
+      "dormant_methods": [
+        "get_model",
+        "get_by_tier",
+        "validate"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "ParallelCloudRouter",
+      "filepath": "backend/brain/parallel_cloud_router.py",
+      "class_references": 2,
+      "total_methods": 4,
+      "used_methods": [],
+      "dormant_methods": [
+        "get_provider_for_request",
+        "route_parallel",
+        "get_distribution_stats",
+        "rebalance"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "ReasoningOrchestrator",
+      "filepath": "backend/brain/reasoning_orchestrator.py",
+      "class_references": 3,
+      "total_methods": 7,
+      "used_methods": [
+        "get_instance",
+        "route"
+      ],
+      "dormant_methods": [
+        "plan",
+        "build_enriched_prompt",
+        "decide",
+        "synthesize",
+        "execute_decomposed_tasks"
+      ],
+      "utilization_rate": 28.6
+    },
+    {
+      "class_name": "TokenJuice",
+      "filepath": "backend/engine/compression/token_juice.py",
+      "class_references": 4,
+      "total_methods": 8,
+      "used_methods": [
+        "compress",
+        "detect_content_type"
+      ],
+      "dormant_methods": [
+        "estimate_tokens",
+        "compress_dom",
+        "compress_json",
+        "compress_terminal_logs",
+        "compress_git_diff",
+        "compress_generic_text"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "CloudPostgresStore",
+      "filepath": "backend/memory/cloud_postgres_store.py",
+      "class_references": 3,
+      "total_methods": 4,
+      "used_methods": [
+        "save_task"
+      ],
+      "dormant_methods": [
+        "get_conversation",
+        "update_conversation",
+        "get_stats"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "LongTermMemory",
+      "filepath": "backend/memory/long_term_memory.py",
+      "class_references": 2,
+      "total_methods": 6,
+      "used_methods": [
+        "build_context"
+      ],
+      "dormant_methods": [
+        "remember_fact",
+        "recall_facts",
+        "save_summary",
+        "store_user_preference",
+        "get_context_for_user"
+      ],
+      "utilization_rate": 16.7
+    },
+    {
+      "class_name": "RAGPipeline",
+      "filepath": "backend/memory/rag_pipeline.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "ingest_document"
+      ],
+      "dormant_methods": [
+        "chunk_text",
+        "retrieve_context",
+        "retrieve_context_hyde"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "SupabaseStore",
+      "filepath": "backend/memory/supabase_store.py",
+      "class_references": 3,
+      "total_methods": 10,
+      "used_methods": [
+        "get_stats",
+        "search_facts",
+        "save_learned_fact"
+      ],
+      "dormant_methods": [
+        "provider",
+        "save_conversation",
+        "get_conversation",
+        "save_learned_fact_async",
+        "batch_save_facts",
+        "similarity_search",
+        "force_reconnect"
+      ],
+      "utilization_rate": 30.0
+    },
+    {
+      "class_name": "ChurnProphet",
+      "filepath": "backend/agents/churn_prophet.py",
+      "class_references": 5,
+      "total_methods": 4,
+      "used_methods": [],
+      "dormant_methods": [
+        "analyze_user",
+        "get_retention_strategy",
+        "batch_analyze",
+        "get_at_risk_users"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "EphemeralExecutor",
+      "filepath": "backend/agents/ephemeral_executor.py",
+      "class_references": 1,
+      "total_methods": 6,
+      "used_methods": [],
+      "dormant_methods": [
+        "sandbox",
+        "validate_skill_id",
+        "execute_use_and_throw",
+        "execute_async",
+        "get_execution_history",
+        "get_stats"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "HeadlessTerminalAgent",
+      "filepath": "backend/agents/headless_terminal_agent.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "execute",
+        "suggest",
+        "explain_output"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "InsightMage",
+      "filepath": "backend/agents/insight_mage.py",
+      "class_references": 5,
+      "total_methods": 4,
+      "used_methods": [
+        "generate_report"
+      ],
+      "dormant_methods": [
+        "analyze_trends",
+        "detect_anomalies",
+        "get_cached_report"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "InternetMonitorAgent",
+      "filepath": "backend/agents/internet_monitor_agent.py",
+      "class_references": 1,
+      "total_methods": 11,
+      "used_methods": [],
+      "dormant_methods": [
+        "initialize",
+        "cleanup",
+        "get_system_capabilities",
+        "monitor_github_trending",
+        "monitor_ai_world_updates",
+        "compare_system_vs_updates",
+        "monitor_system_health_and_gaps",
+        "get_latest_updates",
+        "get_update_summary",
+        "start_monitoring_loop",
+        "get_update_history"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "PerformanceGuardian",
+      "filepath": "backend/agents/performance_guardian.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "check_health",
+        "analyze_bottleneck",
+        "get_scaling_recommendation"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "VulnerabilityProphet",
+      "filepath": "backend/agents/vulnerability_prophet.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "analyze_code",
+        "analyze_project",
+        "generate_report"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "PerformanceTuningAgent",
+      "filepath": "backend/agents/infrastructure/performance_tuning_agent.py",
+      "class_references": 2,
+      "total_methods": 6,
+      "used_methods": [
+        "get_performance_summary",
+        "run_continuous_tuning"
+      ],
+      "dormant_methods": [
+        "collect_performance_metrics",
+        "analyze_performance_trends",
+        "apply_optimization",
+        "get_optimization_recommendations"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "ApprovalWorkflow",
+      "filepath": "backend/adaptive_engine/approval_workflow.py",
+      "class_references": 2,
+      "total_methods": 7,
+      "used_methods": [],
+      "dormant_methods": [
+        "propose",
+        "decide",
+        "mark_executed",
+        "get",
+        "list_pending",
+        "list_decisions",
+        "requires_approval"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "CapabilityRegistry",
+      "filepath": "backend/adaptive_engine/capability_registry.py",
+      "class_references": 3,
+      "total_methods": 9,
+      "used_methods": [],
+      "dormant_methods": [
+        "register",
+        "get",
+        "find_by_signature",
+        "list",
+        "transition",
+        "promote",
+        "archive",
+        "record_usage",
+        "search_for_requirement"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "DeploymentTracker",
+      "filepath": "backend/adaptive_engine/deployment_tracker.py",
+      "class_references": 2,
+      "total_methods": 6,
+      "used_methods": [],
+      "dormant_methods": [
+        "start",
+        "finish",
+        "get",
+        "list_by_resource",
+        "list_by_commit",
+        "trace"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "GovernanceEngine",
+      "filepath": "backend/adaptive_engine/governance.py",
+      "class_references": 2,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "classify",
+        "authorize",
+        "record_budget_use"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "HealthAggregator",
+      "filepath": "backend/adaptive_engine/health_model.py",
+      "class_references": 2,
+      "total_methods": 6,
+      "used_methods": [],
+      "dormant_methods": [
+        "record",
+        "latest",
+        "all_latest",
+        "composite_status",
+        "top_memory_consumers",
+        "detect_memory_regression"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "IntentParser",
+      "filepath": "backend/adaptive_engine/intent_parser.py",
+      "class_references": 3,
+      "total_methods": 3,
+      "used_methods": [
+        "extract_context"
+      ],
+      "dormant_methods": [
+        "parse_intent",
+        "extract_goal"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "LearningLoop",
+      "filepath": "backend/adaptive_engine/learning_loop.py",
+      "class_references": 8,
+      "total_methods": 7,
+      "used_methods": [
+        "record_signal"
+      ],
+      "dormant_methods": [
+        "list_signals",
+        "surface_opportunity",
+        "advance_stage",
+        "get_opportunity",
+        "list_opportunities",
+        "compute_ewc_loss_penalty"
+      ],
+      "utilization_rate": 14.3
+    },
+    {
+      "class_name": "PlatformRegistry",
+      "filepath": "backend/adaptive_engine/registry.py",
+      "class_references": 2,
+      "total_methods": 3,
+      "used_methods": [
+        "register_platform"
+      ],
+      "dormant_methods": [
+        "get_platform",
+        "list_platforms"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "BaseProviderAdapter",
+      "filepath": "backend/adaptive_engine/resource_registry.py",
+      "class_references": 2,
+      "total_methods": 9,
+      "used_methods": [],
+      "dormant_methods": [
+        "list_resources",
+        "get_resource",
+        "get_health",
+        "get_metrics",
+        "get_logs",
+        "get_deployment",
+        "restart",
+        "deploy",
+        "rollback"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "ResourceRegistry",
+      "filepath": "backend/adaptive_engine/resource_registry.py",
+      "class_references": 3,
+      "total_methods": 8,
+      "used_methods": [
+        "register",
+        "get",
+        "list"
+      ],
+      "dormant_methods": [
+        "register_adapter",
+        "resolve_adapter",
+        "update_state",
+        "link_deployment",
+        "control"
+      ],
+      "utilization_rate": 37.5
+    },
+    {
+      "class_name": "SourceGovernance",
+      "filepath": "backend/adaptive_engine/source_governance.py",
+      "class_references": 2,
+      "total_methods": 8,
+      "used_methods": [],
+      "dormant_methods": [
+        "discover",
+        "transition_source",
+        "is_allowed",
+        "add_policy",
+        "match_policy",
+        "record_learned",
+        "list_learned",
+        "prune_low_value"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "CanaryRolloutController",
+      "filepath": "backend/evolution/canary_manager.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "record_observation",
+        "get_canary_stats"
+      ],
+      "dormant_methods": [
+        "deploy_canary",
+        "evaluate_and_promote",
+        "trigger_rollback"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "PerformanceMonitor",
+      "filepath": "backend/evolution/performance_monitor.py",
+      "class_references": 3,
+      "total_methods": 8,
+      "used_methods": [
+        "get_current_metrics",
+        "get_triggers"
+      ],
+      "dormant_methods": [
+        "start_collection",
+        "stop_collection",
+        "collect_all_metrics",
+        "record_metric",
+        "generate_report",
+        "get_statistics"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "BrowsingMemory",
+      "filepath": "backend/browser/browsing_memory.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "observe"
+      ],
+      "dormant_methods": [
+        "site_intel",
+        "preflight_actions"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "GraphService",
+      "filepath": "backend/tools/graph_service.py",
+      "class_references": 2,
+      "total_methods": 4,
+      "used_methods": [
+        "get_skill_path"
+      ],
+      "dormant_methods": [
+        "close",
+        "sync_skills_to_graph",
+        "create_relationship"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "HealthChecker",
+      "filepath": "backend/tools/health_checker.py",
+      "class_references": 4,
+      "total_methods": 5,
+      "used_methods": [],
+      "dormant_methods": [
+        "run_health_check",
+        "log_error",
+        "detect_anomalies",
+        "report_to_admin",
+        "propose_solutions"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "ResourceCatalog",
+      "filepath": "backend/tools/resource_catalog.py",
+      "class_references": 1,
+      "total_methods": 6,
+      "used_methods": [
+        "close",
+        "search"
+      ],
+      "dormant_methods": [
+        "search_awesome_selfhosted",
+        "search_awesome_python",
+        "search_github_repos",
+        "search_libraries_io"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "SSOIntegrator",
+      "filepath": "backend/tools/sso_integrator.py",
+      "class_references": 1,
+      "total_methods": 11,
+      "used_methods": [
+        "get_metadata",
+        "process_sso_response",
+        "get_oidc_auth_url",
+        "process_oidc_response"
+      ],
+      "dormant_methods": [
+        "get_sso_url",
+        "map_roles",
+        "get_logout_url",
+        "process_slo_response",
+        "validate_token",
+        "parse_saml_response",
+        "exchange_oidc_code"
+      ],
+      "utilization_rate": 36.4
+    },
+    {
+      "class_name": "TenantRateLimiter",
+      "filepath": "backend/tools/tenant_rate_limiter.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "set_tier"
+      ],
+      "dormant_methods": [
+        "get_tier",
+        "check_quota",
+        "record_usage"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "PlaywrightBrowserAgent",
+      "filepath": "backend/tools/browser/playwright_browser_agent.py",
+      "class_references": 2,
+      "total_methods": 11,
+      "used_methods": [
+        "screenshot",
+        "click",
+        "text",
+        "upload_file"
+      ],
+      "dormant_methods": [
+        "is_available",
+        "start",
+        "stop",
+        "perform_task",
+        "open",
+        "cross_verify_prompt",
+        "execute_goal"
+      ],
+      "utilization_rate": 36.4
+    },
+    {
+      "class_name": "AutoTestGenerator",
+      "filepath": "backend/tools/code/auto_test_generator.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "generate_and_save"
+      ],
+      "dormant_methods": [
+        "generate",
+        "batch_generate"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "CodeSmellDetector",
+      "filepath": "backend/tools/code/code_smell_detector.py",
+      "class_references": 2,
+      "total_methods": 8,
+      "used_methods": [
+        "analyze_python_file",
+        "analyze_directory",
+        "analyze_js_ts_file"
+      ],
+      "dormant_methods": [
+        "compute_coupling_metrics",
+        "run_jscpd",
+        "generate_sarif",
+        "install_pre_commit_hook",
+        "track_history"
+      ],
+      "utilization_rate": 37.5
+    },
+    {
+      "class_name": "ChainOfThoughtReasoner",
+      "filepath": "backend/tools/code/cot_reasoner.py",
+      "class_references": 1,
+      "total_methods": 8,
+      "used_methods": [
+        "build_prompt",
+        "tree_search",
+        "monte_carlo_search"
+      ],
+      "dormant_methods": [
+        "parse",
+        "verify",
+        "symbolic_verify",
+        "evaluate_thought",
+        "refine_loop"
+      ],
+      "utilization_rate": 37.5
+    },
+    {
+      "class_name": "KnowledgeBaseIndexer",
+      "filepath": "backend/tools/knowledge/knowledge_base_indexer.py",
+      "class_references": 2,
+      "total_methods": 8,
+      "used_methods": [
+        "index_scraped_data",
+        "search_knowledge"
+      ],
+      "dormant_methods": [
+        "index_seed_data",
+        "record_search_feedback",
+        "record_thumbs",
+        "prune_low_quality",
+        "rebuild_index",
+        "index_single_file_ast"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "LocalSearchRAG",
+      "filepath": "backend/tools/knowledge/local_search_rag.py",
+      "class_references": 2,
+      "total_methods": 10,
+      "used_methods": [
+        "search",
+        "semantic_search"
+      ],
+      "dormant_methods": [
+        "build_search_url",
+        "asearch",
+        "fetch_and_summarize",
+        "afetch_and_summarize",
+        "asemantic_search",
+        "astore_documents",
+        "summarize",
+        "asummarize"
+      ],
+      "utilization_rate": 20.0
+    },
+    {
+      "class_name": "DomainAdapter",
+      "filepath": "backend/tools/learning/domain_adapter.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "adapt_request"
+      ],
+      "dormant_methods": [
+        "get_prompt",
+        "register_domain",
+        "list_domains"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "ModelTrainer",
+      "filepath": "backend/tools/learning/model_trainer.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "trigger_lora_finetune"
+      ],
+      "dormant_methods": [
+        "get_job_status",
+        "learn_from_execution_failure",
+        "retrieve_similar_fix"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "SkillRecommender",
+      "filepath": "backend/tools/learning/skill_recommender.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "record_and_recommend"
+      ],
+      "dormant_methods": [
+        "recommend",
+        "recommend_async"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "StyleLearner",
+      "filepath": "backend/tools/learning/style_learner.py",
+      "class_references": 2,
+      "total_methods": 4,
+      "used_methods": [
+        "generate_style_prompt"
+      ],
+      "dormant_methods": [
+        "analyze_codebase",
+        "generate_with_style",
+        "sync_team_style"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "VoiceInterface",
+      "filepath": "backend/tools/media/voice.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "speech_to_text_async",
+        "text_to_speech_async"
+      ],
+      "dormant_methods": [
+        "speech_to_text",
+        "text_to_speech",
+        "stream_tts_chunks"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "Account",
+      "filepath": "backend/tools/security_tools/multi_account_rotator.py",
+      "class_references": 6,
+      "total_methods": 4,
+      "used_methods": [],
+      "dormant_methods": [
+        "is_available",
+        "get_health_score",
+        "record_request",
+        "record_rate_limit"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "Provider",
+      "filepath": "backend/tools/security_tools/multi_account_rotator.py",
+      "class_references": 40,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "get_available_accounts",
+        "get_best_account",
+        "add_account"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "VPNRotator",
+      "filepath": "backend/tools/security_tools/vpn_switcher.py",
+      "class_references": 1,
+      "total_methods": 10,
+      "used_methods": [
+        "rotate"
+      ],
+      "dormant_methods": [
+        "current",
+        "rotate_agent",
+        "configure_endpoints",
+        "add_endpoint",
+        "history_since",
+        "status",
+        "rotate_on_block",
+        "get_free_proxy",
+        "get_premium_proxy"
+      ],
+      "utilization_rate": 10.0
+    },
+    {
+      "class_name": "EmailAgent",
+      "filepath": "backend/tools/social/email_agent.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "connect_gmail_oauth",
+        "connect_imap"
+      ],
+      "dormant_methods": [
+        "receive_otp",
+        "extract_otp",
+        "signup_flow"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "TelegramBotHandler",
+      "filepath": "backend/tools/social/telegram_bot.py",
+      "class_references": 2,
+      "total_methods": 13,
+      "used_methods": [
+        "send_message",
+        "configured",
+        "send_document"
+      ],
+      "dormant_methods": [
+        "get_me",
+        "answer_callback_query",
+        "send_typing",
+        "set_webhook",
+        "sync_bot_profile",
+        "handle_message",
+        "is_admin",
+        "handle_update",
+        "run_polling",
+        "start_webhook"
+      ],
+      "utilization_rate": 23.1
+    },
+    {
+      "class_name": "AutoHealer",
+      "filepath": "backend/services/auto_healer.py",
+      "class_references": 2,
+      "total_methods": 9,
+      "used_methods": [
+        "start_monitoring"
+      ],
+      "dormant_methods": [
+        "stop_monitoring",
+        "get_instance",
+        "get_circuit_breaker",
+        "get_retry_policy",
+        "diagnose",
+        "auto_fix",
+        "auto_heal",
+        "generate_report"
+      ],
+      "utilization_rate": 11.1
+    },
+    {
+      "class_name": "KnowledgeQAService",
+      "filepath": "backend/services/knowledge_qa.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "answer"
+      ],
+      "dormant_methods": [
+        "audit_logger",
+        "retrieve"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "CascadeMemoryService",
+      "filepath": "backend/services/memory_service.py",
+      "class_references": 7,
+      "total_methods": 14,
+      "used_methods": [
+        "store_memory",
+        "query_context",
+        "retrieve_memories"
+      ],
+      "dormant_methods": [
+        "delete_memory",
+        "chunk_and_embed",
+        "store",
+        "get_memories",
+        "search_memories",
+        "delete",
+        "clear_user_memories",
+        "get_context_window",
+        "update_context_window",
+        "semantic_search",
+        "get_recent_interactions"
+      ],
+      "utilization_rate": 21.4
+    },
+    {
+      "class_name": "SelfCorrectionService",
+      "filepath": "backend/services/self_correction.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [
+        "execute_with_self_healing"
+      ],
+      "dormant_methods": [
+        "simulate_pre_execution",
+        "audit_post_execution",
+        "consolidate_learning"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "ToolForgeService",
+      "filepath": "backend/services/tool_forge.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "forge_tool",
+        "execute_tool"
+      ],
+      "dormant_methods": [
+        "verify_code_safety",
+        "get_tool",
+        "list_tools"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "DynamicAIOrchestrator",
+      "filepath": "backend/services/dynamic_ai/orchestrator.py",
+      "class_references": 2,
+      "total_methods": 3,
+      "used_methods": [
+        "generate"
+      ],
+      "dormant_methods": [
+        "initialize",
+        "get_system_status"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "ProviderConfig",
+      "filepath": "backend/services/dynamic_ai/provider_registry.py",
+      "class_references": 2,
+      "total_methods": 5,
+      "used_methods": [
+        "api_key",
+        "is_available"
+      ],
+      "dormant_methods": [
+        "reset_daily_counters",
+        "reset_minute_counter",
+        "success_rate"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "EmailService",
+      "filepath": "backend/services/email/email_service.py",
+      "class_references": 1,
+      "total_methods": 7,
+      "used_methods": [],
+      "dormant_methods": [
+        "api_key",
+        "from_email",
+        "send_welcome_email",
+        "send_password_reset",
+        "send_billing_notification",
+        "draft",
+        "optimal_send_hour"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "LLMRouter",
+      "filepath": "backend/services/llm/llm_router.py",
+      "class_references": 15,
+      "total_methods": 4,
+      "used_methods": [
+        "route"
+      ],
+      "dormant_methods": [
+        "async_generate",
+        "health_check_all",
+        "get_cost_report"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "GroqProvider",
+      "filepath": "backend/services/llm/providers.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "health_check"
+      ],
+      "dormant_methods": [
+        "chat",
+        "stream_chat"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "GCPFirestoreVerificationQueue",
+      "filepath": "backend/services/storage/gcp_firestore.py",
+      "class_references": 3,
+      "total_methods": 8,
+      "used_methods": [
+        "provider",
+        "enqueue"
+      ],
+      "dormant_methods": [
+        "get_pending",
+        "peek",
+        "mark_verified",
+        "delete",
+        "stats",
+        "close"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "SecureRedisManager",
+      "filepath": "backend/core/cache/redis_manager.py",
+      "class_references": 1,
+      "total_methods": 12,
+      "used_methods": [
+        "client",
+        "set_cache",
+        "get_cache"
+      ],
+      "dormant_methods": [
+        "get_client_async",
+        "is_connected",
+        "close",
+        "set",
+        "get",
+        "delete",
+        "set_json",
+        "get_json",
+        "incrbyfloat"
+      ],
+      "utilization_rate": 25.0
+    },
+    {
+      "class_name": "MultiLevelCache",
+      "filepath": "backend/core/cache/redis_manager.py",
+      "class_references": 1,
+      "total_methods": 6,
+      "used_methods": [
+        "get",
+        "set"
+      ],
+      "dormant_methods": [
+        "local_cache",
+        "invalidate_local",
+        "invalidate",
+        "cleanup_expired_l1"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "CryptographicLedger",
+      "filepath": "backend/core/security/cryptographic_ledger.py",
+      "class_references": 1,
+      "total_methods": 4,
+      "used_methods": [],
+      "dormant_methods": [
+        "record_entry_sync",
+        "record_entry_async",
+        "compute_merkle_root",
+        "verify_chain_integrity"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "InputSanitizer",
+      "filepath": "backend/core/security/input_sanitizer.py",
+      "class_references": 3,
+      "total_methods": 5,
+      "used_methods": [
+        "sanitize"
+      ],
+      "dormant_methods": [
+        "detect_ambiguity",
+        "validate_scope",
+        "extract_constraints",
+        "strip_pii"
+      ],
+      "utilization_rate": 20.0
+    },
+    {
+      "class_name": "TrustedOriginMiddleware",
+      "filepath": "backend/core/security/origin_validator.py",
+      "class_references": 3,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "portal_role",
+        "allowed_origins",
+        "dispatch"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "RotatingFernet",
+      "filepath": "backend/core/security/secure_credential_store.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "encrypt",
+        "decrypt"
+      ],
+      "dormant_methods": [
+        "primary",
+        "encrypt_at_time",
+        "decrypt_at_time"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "ToolPolicyGateway",
+      "filepath": "backend/core/security/tool_gateway.py",
+      "class_references": 1,
+      "total_methods": 5,
+      "used_methods": [
+        "register_tool",
+        "evaluate"
+      ],
+      "dormant_methods": [
+        "get_risk",
+        "enforce",
+        "audited_execution"
+      ],
+      "utilization_rate": 40.0
+    },
+    {
+      "class_name": "RoleBasedAccessControl",
+      "filepath": "backend/core/security/authentication/rbac.py",
+      "class_references": 2,
+      "total_methods": 3,
+      "used_methods": [
+        "require"
+      ],
+      "dormant_methods": [
+        "has_permission",
+        "check"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "InputSanitizer",
+      "filepath": "backend/core/security/injections/sql_prevention.py",
+      "class_references": 3,
+      "total_methods": 5,
+      "used_methods": [],
+      "dormant_methods": [
+        "sanitize_string",
+        "sanitize_identifier",
+        "contains_sql_injection",
+        "sanitize_numeric",
+        "sanitize_boolean"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "BehaviorTracker",
+      "filepath": "backend/core/security/intelligence/behavioral_analyzer.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [
+        "get_recent_ips"
+      ],
+      "dormant_methods": [
+        "record_event",
+        "get_user_pattern"
+      ],
+      "utilization_rate": 33.3
+    },
+    {
+      "class_name": "AnomalyDetector",
+      "filepath": "backend/core/security/intelligence/behavioral_analyzer.py",
+      "class_references": 8,
+      "total_methods": 4,
+      "used_methods": [],
+      "dormant_methods": [
+        "detect_ip_churn",
+        "detect_unusual_time",
+        "detect_rapid_actions",
+        "detect_new_user_pattern"
+      ],
+      "utilization_rate": 0.0
+    },
+    {
+      "class_name": "SSRFProtection",
+      "filepath": "backend/core/security/protection/ssrf_protection.py",
+      "class_references": 1,
+      "total_methods": 3,
+      "used_methods": [],
+      "dormant_methods": [
+        "validate_url",
+        "clear_dns_cache",
+        "dns_cache_size"
+      ],
+      "utilization_rate": 0.0
+    }
+  ],
+  "underutilized_routes": [
+    {
+      "route_file": "api_keys",
+      "prefix": "/api/api-keys",
+      "total_endpoints": 12,
+      "dormant_endpoints": [
+        "/",
+        "/{key_id}",
+        "/{key_id}/revoke",
+        "/{key_id}",
+        "/{key_id}/rotate",
+        "/{key_id}/usage"
+      ],
+      "dormant_count": 9
+    },
+    {
+      "route_file": "artifacts",
+      "prefix": "/api/artifacts",
+      "total_endpoints": 6,
+      "dormant_endpoints": [
+        "/",
+        "/{artifact_id}",
+        "/{artifact_id}",
+        "/{artifact_id}",
+        "/{artifact_id}/preview"
+      ],
+      "dormant_count": 5
+    },
+    {
+      "route_file": "branch_conversations",
+      "prefix": "/api/conversations",
+      "total_endpoints": 4,
+      "dormant_endpoints": [
+        "/{conversation_id}/branch",
+        "/{conversation_id}/branches",
+        "/{conversation_id}/merge"
+      ],
+      "dormant_count": 3
+    },
+    {
+      "route_file": "chat_upload",
+      "prefix": "/api/chat/upload",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/",
+        "/{attachment_id}",
+        "/{attachment_id}"
+      ],
+      "dormant_count": 3
+    },
+    {
+      "route_file": "cloud_mesh",
+      "prefix": "/api/admin/cloud-mesh",
+      "total_endpoints": 4,
+      "dormant_endpoints": [
+        "/kill-switch",
+        "/defcon",
+        "/purge-cache",
+        "/rotate-keys"
+      ],
+      "dormant_count": 4
+    },
+    {
+      "route_file": "config_routes",
+      "prefix": "/config",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/{key}",
+        "/{key}"
+      ],
+      "dormant_count": 2
+    },
+    {
+      "route_file": "conversations",
+      "prefix": "/conversations",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{conversation_id}/messages"
+      ],
+      "dormant_count": 3
+    },
+    {
+      "route_file": "localization",
+      "prefix": "/localization",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/ai-translate",
+        "/voice-command"
+      ],
+      "dormant_count": 2
+    },
+    {
+      "route_file": "payments",
+      "prefix": "/payments",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/checkout",
+        "/webhook"
+      ],
+      "dormant_count": 2
+    },
+    {
+      "route_file": "preferences",
+      "prefix": "/preferences",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{user_id}/stream"
+      ],
+      "dormant_count": 3
+    },
+    {
+      "route_file": "prompt_templates",
+      "prefix": "/api/prompt-templates",
+      "total_endpoints": 6,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{template_id}",
+        "/{template_id}",
+        "/{template_id}",
+        "/{template_id}/use"
+      ],
+      "dormant_count": 6
+    },
+    {
+      "route_file": "repos",
+      "prefix": "/repos",
+      "total_endpoints": 4,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{repo_id}",
+        "/{repo_id}"
+      ],
+      "dormant_count": 4
+    },
+    {
+      "route_file": "sandbox_api",
+      "prefix": "/api/v1/sandbox",
+      "total_endpoints": 5,
+      "dormant_endpoints": [
+        "/{sandbox_id}/execute",
+        "/{sandbox_id}/logs",
+        "/{sandbox_id}"
+      ],
+      "dormant_count": 3
+    },
+    {
+      "route_file": "scheduled_tasks",
+      "prefix": "/api/schedule",
+      "total_endpoints": 8,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{task_id}",
+        "/{task_id}",
+        "/{task_id}",
+        "/{task_id}/run"
+      ],
+      "dormant_count": 7
+    },
+    {
+      "route_file": "selector_healing",
+      "prefix": "/api/admin/selector-healing",
+      "total_endpoints": 3,
+      "dormant_endpoints": [
+        "/",
+        "/{event_id}/decision"
+      ],
+      "dormant_count": 2
+    },
+    {
+      "route_file": "site_actions",
+      "prefix": "/api/admin/site-actions",
+      "total_endpoints": 5,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{action_id}",
+        "/{action_id}"
+      ],
+      "dormant_count": 4
+    },
+    {
+      "route_file": "sso",
+      "prefix": "/auth/sso",
+      "total_endpoints": 6,
+      "dormant_endpoints": [
+        "/oidc/discovery",
+        "/oidc/{provider}/authorize",
+        "/oidc/{provider}/callback",
+        "/oidc/{provider}/logout",
+        "/saml"
+      ],
+      "dormant_count": 5
+    },
+    {
+      "route_file": "tenant_admin",
+      "prefix": "/admin-api/tenant-limits",
+      "total_endpoints": 9,
+      "dormant_endpoints": [
+        "",
+        "",
+        "/{tenant_id}",
+        "/{tenant_id}",
+        "/{tenant_id}",
+        "/{tenant_id}/usage"
+      ],
+      "dormant_count": 8
+    },
+    {
+      "route_file": "tools_registry",
+      "prefix": "/api/v1/tools-registry",
+      "total_endpoints": 4,
+      "dormant_endpoints": [
+        "/",
+        "/",
+        "/{tool_id}",
+        "/{tool_id}"
+      ],
+      "dormant_count": 4
+    }
+  ],
+  "underutilized_frontend": []
+}
