@@ -80,25 +80,43 @@ def buffer_session_message(session_id: str, role: str, content: str) -> None:
         _session_message_buffers[session_id] = _session_message_buffers[session_id][-50:]
 
 
-async def auto_save_session_memory(session_id: str, task_type: str = "general") -> None:
+async def auto_save_session_memory(
+    session_id: str,
+    task_type: str = "general",
+    max_retries: int = 2,
+) -> None:
     """Call this when a session ends (e.g. client disconnects).
 
-    Summarizes the buffered messages and saves to ai_memory vector table.
+    Summarizes the buffered messages and saves to ai_memory vector table
+    with exponential backoff retries if network/database blips occur.
     """
     messages = _session_message_buffers.pop(session_id, [])
     if not messages:
         return
-    try:
-        from services.memory_service import summarize_and_save_session
 
-        result = await summarize_and_save_session(
-            session_id=session_id,
-            messages=messages,
-            task_type=task_type,
-        )
-        if result.get("success"):
-            logger.info(f"Auto-saved session memory: {session_id}")
-        else:
-            logger.warning(f"Auto-save session memory non-critical notice: {result.get('error')}")
-    except Exception:
-        logger.exception("Auto-save session memory failed for %s", session_id)
+    from services.memory_service import summarize_and_save_session
+
+    backoff = 1.0
+    for attempt in range(max_retries + 1):
+        try:
+            result = await summarize_and_save_session(
+                session_id=session_id,
+                messages=messages,
+                task_type=task_type,
+            )
+            if result.get("success"):
+                logger.info(f"Auto-saved session memory: {session_id} (attempt {attempt + 1})")
+                return
+            logger.warning(
+                f"Auto-save session memory notice (attempt {attempt + 1}): {result.get('error')}"
+            )
+            if attempt < max_retries:
+                await asyncio.sleep(backoff)
+                backoff *= 2.0
+        except Exception:
+            logger.exception(
+                f"Auto-save session memory error for {session_id} (attempt {attempt + 1}/{max_retries + 1})"
+            )
+            if attempt < max_retries:
+                await asyncio.sleep(backoff)
+                backoff *= 2.0

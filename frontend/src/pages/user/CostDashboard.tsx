@@ -66,18 +66,22 @@ export const CostDashboard: React.FC = () => {
         wsRef.current.onopen = () => setIsRealtime(true);
         
         wsRef.current.onmessage = (event) => {
-          const update = JSON.parse(event.data);
-          setMetrics(prev => prev ? { ...prev, ...update } : update);
-          
-          // Check thresholds
-          if (update.total >= (update.monthlyLimit || 100) * 0.8) {
-            eventBus.emit(Events.COST_THRESHOLD_REACHED, {
-              current: update.total,
-              limit: update.monthlyLimit || 100,
-              threshold: 80,
-              timestamp: Date.now(),
-              details: 'Approaching monthly limit'
-            });
+          try {
+            const update = JSON.parse(event.data);
+            setMetrics(prev => prev ? { ...prev, ...update } : update);
+            
+            // Check thresholds
+            if (update.total >= (update.monthlyLimit || 100) * 0.8) {
+              eventBus.emit(Events.COST_THRESHOLD_REACHED, {
+                current: update.total,
+                limit: update.monthlyLimit || 100,
+                threshold: 80,
+                timestamp: Date.now(),
+                details: 'Approaching monthly limit'
+              });
+            }
+          } catch (err) {
+            console.warn('[CostDashboard] Failed to parse WebSocket message:', err);
           }
         };
         

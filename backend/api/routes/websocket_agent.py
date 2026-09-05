@@ -269,10 +269,12 @@ class DistributedConnectionManager:
         return self.redis
 
     async def _listen_to_redis(self):
+        backoff = 1.0
         while True:
             try:
                 message = await self.pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
                 if message and message["type"] == "message":
+                    backoff = 1.0  # Reset backoff upon healthy message receipt
                     data = json.loads(message["data"])
                     user_id = data.get("user_id")
                     content = data.get("content")
@@ -283,12 +285,20 @@ class DistributedConnectionManager:
                             except asyncio.CancelledError:
                                 raise
                             except Exception as e:
-                                import logging
-
-                                logging.getLogger(__name__).exception(f"Silenced error: {e}")
+                                logger.warning(
+                                    f"[WS] Failed sending broadcast message to user {user_id}: {e}"
+                                )
+                else:
+                    backoff = 1.0
+            except asyncio.CancelledError:
+                logger.info("[WS] Redis pubsub listener cancelled.")
+                break
             except Exception as e:
-                logger.error(f"Redis pubsub error: {e}")
-                await asyncio.sleep(1)
+                logger.error(
+                    f"[WS] Redis pubsub error: {e}. Retrying in {backoff:.1f}s...", exc_info=True
+                )
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2.0, 30.0)
 
     async def connect(
         self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"

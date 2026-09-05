@@ -34,14 +34,15 @@ export function ScreencastViewer({
     };
     
     wsRef.current.onmessage = async (event) => {
-      const message = JSON.parse(event.data);
-      
-      if (message.channel === 'screencast' && message.type === 'frame') {
-        // Decode JPEG frame
-        const img = new Image();
-        img.onload = () => {
-          const canvas = canvasRef.current;
-          if (!canvas) return;
+      try {
+        const message = JSON.parse(event.data);
+        
+        if (message.channel === 'screencast' && message.type === 'frame') {
+          // Decode JPEG frame
+          const img = new Image();
+          img.onload = () => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
           
           const ctx = canvas.getContext('2d');
           canvas.width = img.width;
@@ -64,7 +65,10 @@ export function ScreencastViewer({
         console.error('Screencast unavailable:', message.message);
         setIsConnected(false);
       }
-    };
+    } catch (err) {
+      console.warn('[ScreencastViewer] Failed parsing WebSocket payload:', err);
+    }
+  };
     
     wsRef.current.onclose = () => {
       setIsConnected(false);

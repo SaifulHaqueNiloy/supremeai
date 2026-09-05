@@ -80,11 +80,21 @@ class GodModeAuditLog:
 
                 key = f"{cls._REDIS_KEY_PREFIX}:{entry.get('session_id', 'unknown')}"
                 raw = json.dumps(entry, ensure_ascii=False)
-                # Use create_task to keep record() sync.
-                asyncio.get_running_loop().create_task(redis_manager.client.rpush(key, raw))
+                # Use track_task to keep record() sync, prevent GC, and log errors if Redis fails.
+                from core.utils.background_tasks import track_task
+
+                loop = asyncio.get_running_loop()
+                track_task(
+                    loop.create_task(redis_manager.client.rpush(key, raw), name="audit_rpush")
+                )
                 # TTL so infinite growth is bounded without deleting data.
-                asyncio.get_running_loop().create_task(redis_manager.client.expire(key, 86400 * 14))
-        except Exception:  # Anti-silent failure: never crash audit path.
+                track_task(
+                    loop.create_task(
+                        redis_manager.client.expire(key, 86400 * 14), name="audit_expire"
+                    )
+                )
+        except Exception as e:
+            logger.warning(f"Admin audit record non-fatal warning: {e}")
             return
 
     @classmethod
