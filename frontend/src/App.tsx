@@ -36,7 +36,7 @@ import { useServerStream } from './hooks/useServerStream';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import { primeDeviceFingerprint } from "./utils/deviceFingerprint";
 import { CommandBar } from './components/layout/CommandBar';
-import GuestChatPage, { PublicInfoPage, PricingPage } from './pages/PublicPages';
+import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 
 primeDeviceFingerprint(); // বাংলা মন্তব্য: অ্যাপ বুট হওয়ার সাথে সাথে ব্যাকগ্রাউন্ডে ফিঙ্গারপ্রিন্ট হ্যাশ প্রিলোড হচ্ছে
@@ -135,6 +135,7 @@ const AppContent: React.FC = () => {
               {/* Public funnel: guest chat first, then progressive auth when value is clear. */}
               <Route path="/" element={<GuestChatPage />} />
               <Route path="/features" element={<PublicInfoPage kind="/features" />} />
+              <Route path="/models" element={<ModelsPage />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/docs" element={<PublicInfoPage kind="/docs" />} />
               <Route path="/about" element={<PublicInfoPage kind="/about" />} />
