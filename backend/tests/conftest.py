@@ -357,6 +357,26 @@ async def cleanup_database(db_session: AsyncSession):
     # Cleanup is handled by rollback in db_session fixture
 
 
+@pytest.fixture(autouse=True)
+def reset_model_registry():
+    """Ensure ModelRegistry.MODELS is restored to its default configuration before/after tests."""
+    from brain.model_registry import ModelRegistry
+
+    # Snapshot default state if not already captured
+    if not hasattr(ModelRegistry, "_DEFAULT_MODELS_BACKUP"):
+        ModelRegistry._DEFAULT_MODELS_BACKUP = dict(ModelRegistry.MODELS)
+
+    # Ensure baseline models are present
+    ModelRegistry.MODELS.clear()
+    ModelRegistry.MODELS.update(dict(ModelRegistry._DEFAULT_MODELS_BACKUP))
+
+    yield
+
+    # Restore after test completes
+    ModelRegistry.MODELS.clear()
+    ModelRegistry.MODELS.update(dict(ModelRegistry._DEFAULT_MODELS_BACKUP))
+
+
 # ============================================================
 # APPLICATION FIXTURES
 # ============================================================

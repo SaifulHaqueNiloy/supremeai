@@ -249,10 +249,9 @@ class ModelRegistry:
         """Sync MODELS from the database configuration."""
         try:
             configs = await ConfigService.get_config(db, "model_registry", cls.MODELS)
-            if configs:
-                cls.MODELS.clear()
+            if configs and isinstance(configs, dict):
                 cls.MODELS.update(configs)
-                logger.info(f"✅ Synced {len(cls.MODELS)} model_registry entries from DB.")
+                logger.info(f"✅ Synced {len(configs)} model_registry entries from DB.")
         except Exception as e:
             logger.error(f"❌ Failed to sync model_registry from DB: {e}")
 
