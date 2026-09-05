@@ -3,7 +3,7 @@
 // কনটেন্ট NAVIGATION_REGISTRY থেকে generate হয়; দ্বিতীয় কোনো nav definition নেই।
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { getNavigationForContext, type NavEntry } from '../../config/navigationRegistry';
 
 export interface RoleAwareNavRailProps {
@@ -17,6 +17,7 @@ export interface RoleAwareNavRailProps {
 
 export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction }: RoleAwareNavRailProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const groups = getNavigationForContext(context);
 
   // বাংলা: আগের UserSidebar-এর active semantics হুবহু — exact match, অথবা non-root
@@ -42,6 +43,10 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
         <Link
           key={item.id}
           to={item.path}
+          onClick={(event) => {
+            event.preventDefault();
+            navigate(item.path);
+          }}
           title={titleAttr}
           className={`${baseCls} ${active
             ? 'surface-3 text-accent-primary border-l-2 border-accent-primary'
