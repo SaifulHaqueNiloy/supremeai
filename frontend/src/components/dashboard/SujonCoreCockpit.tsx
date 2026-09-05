@@ -28,7 +28,9 @@ const SujonCoreCockpit: React.FC<SujonCoreCockpitProps> = ({ authToken }) => {
   useEffect(() => {
     // বাংলা মন্তব্য: ফায়ারবেস ওয়েব অ্যাপে স্ট্যাটিক হোস্ট বাইপাস করে রেন্ডার WSS সকেটে সংযোগ
     const baseUrl = getWebSocketBaseUrl();
-    const wsUrl = `${baseUrl}/api/ws/dashboard?token=${authToken}&channels=logs.stream,metrics.update`;
+    // FIX (API-contract audit): realtime_dashboard.py serves /ws/dashboard
+    // (prefix /ws). The old /api/ws/dashboard path matched no backend route.
+    const wsUrl = `${baseUrl}/ws/dashboard?token=${authToken}&channels=logs.stream,metrics.update`;
     const wsManager = new WebSocketManager(wsUrl, {
       onOpen: () => {
         console.warn('Connected to Sujon Core WebSocket');

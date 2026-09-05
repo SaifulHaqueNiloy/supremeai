@@ -30,9 +30,11 @@ describe('chatService', () => {
       tokens_used: 3,
     });
     const res = await chatService.sendMessage('hello', []);
+    // FIX (API-contract audit): TaskRequest requires `task`; `history` maps to
+    // `messages`. The old {message, history} shape hit Pydantic 422.
     expect(apiClient.post).toHaveBeenCalledWith('/api/task/execute', {
-      message: 'hello',
-      history: [],
+      task: 'hello',
+      messages: [],
     });
     expect(res.response).toBe('hi');
   });

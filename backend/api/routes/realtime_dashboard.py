@@ -258,3 +258,90 @@ async def websocket_dashboard_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"Unexpected error in dashboard WebSocket: {e}")
         dashboard_manager.disconnect(websocket)
+
+
+async def aggregate_cost_guard_spend() -> tuple[float, dict[str, float]]:
+    """বাংলা: cost_guard-এর Redis কাউন্টার থেকে সত্যিকারের স্পেন্ড অ্যাগ্রিগেট।
+
+    cost_guard.record_spend() কী লেআউট ``cost_guard:{tenant}:{tier}:spent``
+    হিসেবে সংরক্ষণ করে। এখানে সেগুলো স্ক্যান করে (total, per-tier breakdown)
+    রিটার্ন করা হয়। Redis অকার্যকর হলে (0.0, {}) রিটার্ন করে — কখনোই বানানো
+    সংখ্যা তৈরি করে না।
+    """
+    total = 0.0
+    breakdown: dict[str, float] = {}
+    try:
+        from core.cache.redis_manager import redis_manager
+
+        client = await redis_manager.get_client_async()
+        if client:
+            keys = await client.keys("cost_guard:*:*:spent")
+            for key in keys:
+                try:
+                    raw = await client.get(key)
+                    value = float(raw) if raw is not None else 0.0
+                except (TypeError, ValueError):
+                    continue
+                total += value
+                parts = key.split(":")
+                if len(parts) >= 3:
+                    breakdown[parts[2]] = breakdown.get(parts[2], 0.0) + value
+    except Exception as exc:
+        logger.warning(f"[CostUpdates] Failed to aggregate spend: {exc}")
+    return round(total, 6), breakdown
+
+
+@router.websocket("/cost-updates")
+async def websocket_cost_updates_endpoint(websocket: WebSocket):
+    """
+    বাংলা: CostDashboard-এর রিয়েল-টাইম খরচ আপডেট স্ট্রিম (WS /ws/cost-updates)।
+
+    FIX (API-contract audit): ফ্রন্টএন্ড CostDashboard.tsx দীর্ঘদিন ধরে এই
+    পাথে সংযোগ করছিল কিন্তু ব্যাকএন্ডে কোনো রাউটই ছিল না — কম্পোনেন্ট সবসময়
+    'Polling' মোডে আটকে ছিল। প্রতি COST_UPDATES_INTERVAL_SECONDS (ডিফল্ট ৩০ সে)
+    অন্তর cost_guard Redis কাউন্টার থেকে সত্যিকারের snapshot পুশ করা হয়।
+
+    Message shape (CostDashboard CostMetrics-compatible):
+        {"total_spent_usd": float, "total": float, "monthlyLimit": float,
+         "provider_breakdown": {tier: usd}}
+    """
+    token = websocket.query_params.get("token")
+    if not token:
+        logger.warning("Cost-updates WebSocket rejected - no token provided")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    try:
+        auth_payload = await verify_token_async(token)
+        if not auth_payload:
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    except Exception as e:
+        logger.warning(f"Cost-updates WebSocket authentication failed: {e}")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await websocket.accept()
+    interval = int(os.getenv("COST_UPDATES_INTERVAL_SECONDS", "30"))
+    monthly_limit = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "100"))
+    try:
+        while True:
+            total, breakdown = await aggregate_cost_guard_spend()
+            await websocket.send_json(
+                {
+                    "total_spent_usd": total,
+                    "total": total,
+                    "monthlyLimit": monthly_limit,
+                    "provider_breakdown": breakdown,
+                }
+            )
+            await asyncio.sleep(interval)
+    except WebSocketDisconnect:
+        logger.info("Cost-updates WebSocket client disconnected")
+    except Exception as e:
+        logger.warning(f"Cost-updates WebSocket error: {e}")
+    finally:
+        try:
+            await websocket.close()
+        except Exception:  # pragma: no cover - double-close is harmless
+            pass
