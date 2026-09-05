@@ -53,6 +53,13 @@ class SettingsSecretsMixin:
         "SUPREMEAI_ADMIN_PASSWORD_HASH",
         "CI_WEBHOOK_SECRET",
         "SUPREMEAI_API_KEY",
+        "GEMINI_API_KEY",
+        "GROQ_API_KEY",
+        "OPENAI_API_KEY",
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
+        "HF_API_KEY",
+        "NVIDIA_API_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -209,8 +216,10 @@ class SettingsSecretsMixin:
         """
         self._ensure_secrets_loaded()
 
-        if self._is_test_environment() and os.getenv(key):
-            return os.getenv(key)
+        # 12-factor: Process environment variables ALWAYS take precedence
+        env_val = os.getenv(key)
+        if env_val:
+            return env_val
 
         cached = self._get_private_state()["_cached_secrets"]
 

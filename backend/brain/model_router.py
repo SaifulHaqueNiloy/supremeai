@@ -364,6 +364,30 @@ class ModelRouter:
             return self._local_rag.semantic_search(query)
         return {"status": "error", "message": "RAG engine not initialized"}
 
+    async def async_route_and_stream(
+        self, prompt: str, task_type: str = "general", max_cost: float = 0.01, *args, **kwargs
+    ):
+        """Asynchronous streaming generator via LLMGateway."""
+        try:
+            gateway = get_llm_gateway()
+            response_stream = await gateway.acompletion(
+                prompt=prompt,
+                task_type=task_type,
+                stream=True,
+                **kwargs,
+            )
+            if hasattr(response_stream, "__aiter__"):
+                async for chunk in response_stream:
+                    if chunk:
+                        yield chunk
+                return
+        except Exception as e:
+            logger.warning(f"[ModelRouter] async_route_and_stream error: {e}")
+
+        # Fallback to sync streaming if gateway stream unavailable
+        for chunk in self.route_and_stream(prompt, task_type, *args, **kwargs):
+            yield chunk
+
     def route_and_stream(self, prompt: str, task_type: str = "general", *args, **kwargs):
         # বাংলা মন্তব্য: স্ট্রিমিং ফলব্যাক মেথড যুক্ত করা হয়েছে
         if hasattr(self, "_stream_ollama") and callable(self._stream_ollama):
