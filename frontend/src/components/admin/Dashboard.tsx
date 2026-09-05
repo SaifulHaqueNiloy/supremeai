@@ -44,7 +44,7 @@ export default function Dashboard() {
               </span>
               <span className="text-text font-mono text-xs">Global</span>
             </div>
-            <div className="text-3xl font-bold text-text font-mono">124<span className="text-lg text-secondary">ms</span></div>
+            <div className="text-3xl font-bold text-text font-mono">{metrics?.latency_p95_ms != null ? metrics.latency_p95_ms : '—'}{metrics?.latency_p95_ms != null && <span className="text-lg text-secondary">ms</span>}</div>
           </div>
 
           <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
@@ -92,11 +92,11 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-secondary">Agent Swarm Capacity</span>
-                    <span className="font-mono text-text">42 / 100</span>
+                    <span className="text-secondary">Active Agents</span>
+                    <span className="font-mono text-text">{metrics?.active_agents ?? '—'}</span>
                   </div>
                   <div className="w-full h-2 rounded-full surface-2 overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[42%]"></div>
+                    {metrics?.active_agents != null ? <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, metrics.active_agents)}%` }}></div> : null}
                   </div>
                 </div>
               </div>
