@@ -32,9 +32,9 @@ export default function Dashboard() {
               <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
                 <Activity size={14} className="text-accent-primary" /> Availability
               </span>
-              <span className="text-emerald-400 font-mono text-xs">99.99%</span>
+              <span className="text-emerald-400 font-mono text-xs">'—'</span>
             </div>
-            <div className="text-3xl font-bold text-text font-mono">100%</div>
+            <div className="text-3xl font-bold text-text font-mono">'—'</div>
           </div>
           
           <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
