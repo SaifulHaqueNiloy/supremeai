@@ -82,6 +82,7 @@ _IMPORTANT_TEST_PARTS = (
     ("tools",),
     ("api", "routes"),
     ("api", "test_errors"),
+    ("api", "test_stream_chat_contract"),
     ("scout_tests",),
 )
 

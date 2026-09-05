@@ -44,6 +44,22 @@ except ImportError:
             return self._skills.get(skill_id)
 
 
+try:
+    from skills.installer import ALLOWED_SKILL_DEPENDENCIES, SkillInstaller
+except ImportError:
+    try:
+        import os
+        import sys
+
+        _root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        if _root not in sys.path:
+            sys.path.insert(0, _root)
+        from skills.installer import ALLOWED_SKILL_DEPENDENCIES, SkillInstaller
+    except ImportError:
+        SkillInstaller = None
+        ALLOWED_SKILL_DEPENDENCIES = frozenset()
+
+
 __all__ = [
     "BaseSkill",
     "SystemDesignSkill",
@@ -58,4 +74,6 @@ __all__ = [
     "GithubSyncSkill",
     "SkillRegistry",
     "SkillProvisioner",
+    "SkillInstaller",
+    "ALLOWED_SKILL_DEPENDENCIES",
 ]

@@ -14,7 +14,7 @@ from typing import Any
 import anyio
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 # --- Local Imports ---
 # Moved imports to the top of the file to improve performance by avoiding repeated imports inside functions.
@@ -82,10 +82,28 @@ class CompletionResponse(BaseModel):
 
 
 class ChatStreamRequest(BaseModel):
-    message: str
+    message: str | None = None
+    prompt: str | None = None
     sessionId: str | None = None  # -- camelCase required to match frontend JSON API contract
+    session_id: str | None = None
     messages: list[dict] | None = None
     context: dict | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def harmonize_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("message") and data.get("prompt"):
+                data["message"] = data["prompt"]
+            elif not data.get("prompt") and data.get("message"):
+                data["prompt"] = data["message"]
+            if not data.get("sessionId") and data.get("session_id"):
+                data["sessionId"] = data["session_id"]
+            elif not data.get("session_id") and data.get("sessionId"):
+                data["session_id"] = data["sessionId"]
+            if not data.get("message"):
+                raise ValueError("Either 'message' or 'prompt' must be provided.")
+        return data
 
 
 class ActionStreamRequest(BaseModel):
@@ -105,7 +123,8 @@ def _build_completion_prompt(prefix: str, suffix: str) -> str:
 
 def _build_chat_prompt(req: ChatStreamRequest) -> str:
     context = req.context or {}
-    parts = [f"User: {req.message}"]
+    text_content = req.message or req.prompt or ""
+    parts = [f"User: {text_content}"]
     if context.get("codeSnippet"):
         parts.append(f"Code snippet:\n{context['codeSnippet']}")
     if context.get("filePath"):
@@ -152,7 +171,7 @@ async def stream_chat(req: ChatStreamRequest):
             max_cost=0.01,
         ):
             token = chunk.decode("utf-8") if isinstance(chunk, bytes) else str(chunk)
-            yield f"data: {json.dumps({'token': token})}\n\n"
+            yield f"data: {json.dumps({'token': token, 'delta': token})}\n\n"
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(

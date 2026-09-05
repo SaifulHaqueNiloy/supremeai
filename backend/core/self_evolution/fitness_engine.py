@@ -26,9 +26,10 @@ except ImportError:
     db = None  # type: ignore[assignment]
 
 try:
-    from core.skill_manager import SkillManager
+    from core.skill_manager import SkillManager, get_skill_manager
 except ImportError:
     SkillManager = None  # type: ignore[assignment]
+    get_skill_manager = None  # type: ignore[assignment]
 
 
 class FitnessEngineError(ValueError):
@@ -134,8 +135,10 @@ class FitnessEngine:
         # রেস কন্ডিশন এবং ফাইল করাপশন এড়াতে থ্রেড লক ব্যবহার করা হচ্ছে
         self._lock = threading.Lock()
 
-        # Initialize SkillManager - uses conditional import at top to avoid circular dependency
-        if SkillManager is not None:
+        # Initialize SkillManager singleton - uses conditional import at top to avoid circular dependency
+        if get_skill_manager is not None:
+            self.registry = get_skill_manager()
+        elif SkillManager is not None:
             self.registry = SkillManager()
         else:
             self.registry = None
