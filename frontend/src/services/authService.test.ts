@@ -40,7 +40,7 @@ describe('authService', () => {
     expect(res.secret).toBe('s');
   });
 
-  it('firebaseTotpVerify posts the id_token and otp', async () => {
+  it('firebaseTotpVerify posts the id_token, otp, and remember_browser flag', async () => {
     (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       status: 'ok',
       token: 'tok',
@@ -49,7 +49,16 @@ describe('authService', () => {
     expect(apiClient.post).toHaveBeenCalledWith('/api/admin/firebase-totp-verify', {
       id_token: 'idt',
       otp: '123456',
+      remember_browser: false,
     });
     expect(res.token).toBe('tok');
+
+    // Test with rememberBrowser = true
+    await authService.firebaseTotpVerify('idt', '123456', true);
+    expect(apiClient.post).toHaveBeenCalledWith('/api/admin/firebase-totp-verify', {
+      id_token: 'idt',
+      otp: '123456',
+      remember_browser: true,
+    });
   });
 });
