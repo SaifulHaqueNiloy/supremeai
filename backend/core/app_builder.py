@@ -422,6 +422,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             "X-Request-ID",
             "X-Tenant-ID",
             "X-Correlation-ID",
+            "Cache-Control",
         ],
         expose_headers=["Content-Length", "X-Pagination-Total"],
     )
