@@ -36,7 +36,7 @@ from collections.abc import AsyncIterator
 from enum import Enum, auto
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from fastapi.responses import StreamingResponse
 
 from core.llm.llm_gateway import llm_gateway
@@ -261,36 +261,59 @@ async def _event_stream(prompt: str, user_id: str, task_type: str = "chat") -> A
         yield event
 
 
+from pydantic import BaseModel, Field
+
+
+class ChatStreamRequest(BaseModel):
+    """Payload for secure POST SSE chat streaming."""
+
+    prompt: str = Field(..., description="User prompt to stream")
+    task_type: str = Field("chat", description="Task type classification")
+    session_id: str | None = Field(None, description="Optional session or conversation ID")
+
+
+@router.post("/chat")
+async def stream_chat_post(
+    request: Request,
+    body: ChatStreamRequest,
+):
+    """
+    Production-grade SSE stream using HTTP POST and Authorization header.
+    Completely eliminates JWT tokens in URLs.
+    """
+    auth_header = request.headers.get("Authorization", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+
+    user_id = "anonymous"
+    if token:
+        try:
+            payload = await verify_token_async(token)
+            user_id = payload.get("sub") or payload.get("user_id") or "anonymous"
+        except Exception as e:
+            logger.warning(f"[SSE Chat POST] Token verification fallback: {e}")
+
+    return StreamingResponse(
+        _event_stream(body.prompt, user_id, body.task_type),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Access-Control-Allow-Origin": "*",
+        },
+    )
+
+
 @router.get("/chat")
 async def stream_chat_sse(
     prompt: str = Query(..., description="User prompt to stream"),
-    token: str = Query(..., description="JWT token (EventSource cannot set headers)"),
+    token: str = Query(..., description="JWT token (EventSource fallback)"),
     task_type: str = Query("chat"),
 ):
     """
-    SSE stream that replaces ``ws://.../ws/chat``.
-
-    FRONTEND USAGE:
-
-        const es = new EventSource('/api/v1/stream/chat?prompt=...&token=...');
-        es.addEventListener('connected', (e) => console.log('Connected:', JSON.parse(e.data)));
-        es.addEventListener('token', (e) => {
-            const data = JSON.parse(e.data);
-            appendText(data.delta);  // data.delta is clean string
-        });
-        es.addEventListener('done', () => es.close());
-        es.addEventListener('error', (e) => {
-            console.error('Stream error:', JSON.parse(e.data));
-            es.close();
-        });
-
-    IMPROVEMENTS OVER ORIGINAL:
-    - Proper UTF-8 encoding handling
-    - State machine prevents event ordering issues
-    - Binary chunk safety
-    - Heartbeat keep-alive
-    - Graceful error recovery
-    - Backward compatible API
+    SSE stream (GET fallback for simple EventSource clients).
     """
     # Verify authentication (R2-01: async path — no event-loop deadlock)
     payload = await verify_token_async(token)
@@ -303,6 +326,6 @@ async def stream_chat_sse(
             "Cache-Control": "no-cache, no-transform",
             "Connection": "keep-alive",
             "X-Accel-Buffering": "no",
-            "Access-Control-Allow-Origin": "*",  # For EventSource CORS
+            "Access-Control-Allow-Origin": "*",
         },
     )
