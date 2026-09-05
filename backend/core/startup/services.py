@@ -81,8 +81,8 @@ async def initialize_independent_services(app):
                         logger.info("🔄 Running automatic Alembic migrations on startup...")
                         await asyncio.to_thread(run_migrations)
                         logger.info("✅ Automatic Alembic migrations completed.")
-                    except Exception as mig_err:
-                        logger.warning(f"⚠️ Automatic migration notice: {mig_err}")
+                    except BaseException as mig_err:
+                        logger.warning(f"⚠️ Automatic migration notice (non-fatal): {mig_err}")
 
                 # Optimize queries with connection pooling best practices
                 app.state.db_pool = pool
