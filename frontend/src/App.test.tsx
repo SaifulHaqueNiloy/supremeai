@@ -218,7 +218,7 @@ describe('App component', () => {
     );
 
     // Customer dashboard greeting
-    expect(screen.getByText('What would you like SupremeAI to accomplish?')).toBeInTheDocument();
+    expect(screen.getByText('What should SupremeAI accomplish?')).toBeInTheDocument();
     // Sidebar navigation (NAVIGATION_REGISTRY — implemented items only;
     // Projects is now implemented as a foundation workspace module route)
     expect(screen.getByText('Home')).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe('App component', () => {
     expect(screen.getByText('Agents')).toBeInTheDocument();
     expect(screen.getByText('Projects')).toBeInTheDocument();
     // Dashboard sections
-    expect(screen.getByText('Recent Conversations')).toBeInTheDocument();
+    expect(screen.getByText('Recent work')).toBeInTheDocument();
   });
 
   it('renders the customer dashboard prompt input', () => {
@@ -252,7 +252,7 @@ describe('App component', () => {
       </ToastProvider>
     );
 
-    expect(screen.getByText('Active Agents')).toBeInTheDocument();
-    expect(screen.getByText('Usage (Pro Plan)')).toBeInTheDocument();
+    expect(screen.getByText('Active agents')).toBeInTheDocument();
+    expect(screen.getByText('Workspace usage')).toBeInTheDocument();
   });
 });

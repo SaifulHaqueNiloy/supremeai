@@ -56,12 +56,12 @@ export const AdminDashboardHome: React.FC = () => {
     : metricsLoading ? [null, null, null, null, null, null] : [20, 30, 40, 45, 50, 20];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 font-mono text-slate-300">
+    <div className="relative flex-1 overflow-y-auto bg-[var(--sa-canvas)] p-4 font-mono text-[var(--sa-ink)] sm:p-6"><div className="pointer-events-none absolute inset-x-0 top-0 h-52 bg-[radial-gradient(circle_at_55%_0%,rgba(34,211,238,0.10),transparent_62%)]" aria-hidden="true" /><div className="relative mb-6 flex flex-col gap-3 border-b border-[var(--sa-border)] pb-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="sa-eyebrow">Operations overview</p><h1 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--sa-ink)]">Command center</h1><p className="mt-1 font-sans text-sm text-[var(--sa-ink-muted)]">A live view of models, workflows, and system health.</p></div><div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-[var(--sa-ink-muted)]"><span className="size-2 rounded-full bg-emerald-400" />{currentTime}</div></div>
 
       {/* 1. TOP SECTION: AI Fleet Status */}
-      <section className="mb-6 bg-slate-950/60 border border-[#00f3ff]/15 rounded-xl p-5 shadow-[0_0_15px_rgba(0,243,255,0.02)]">
+      <section className="mb-6 rounded-[var(--sa-radius)] border border-[var(--sa-border)] bg-[var(--sa-surface)] p-5 shadow-[var(--sa-shadow)]">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xs uppercase tracking-widest text-[#00f3ff] font-bold">AI Fleet Status</h2>
+          <h2 className="sa-eyebrow text-[var(--sa-primary)]">AI fleet status</h2>
           <button className="text-[10px] text-slate-400 hover:text-white border border-slate-800 rounded px-2 py-0.5 transition-all">
             VIEW DETAILS
           </button>
@@ -69,7 +69,7 @@ export const AdminDashboardHome: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Active Agents Gauge */}
-          <div className="bg-[#040814]/80 border border-slate-900 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-surface-raised)] p-4">
             <div>
               <span className="text-[10px] text-slate-400 uppercase block mb-1">Active Agents</span>
               {metricsLoading ? (
@@ -94,7 +94,7 @@ export const AdminDashboardHome: React.FC = () => {
           </div>
 
           {/* Active Tasks Bar Chart */}
-          <div className="bg-[#040814]/80 border border-slate-900 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-surface-raised)] p-4">
             <div>
               <span className="text-[10px] text-slate-400 uppercase block mb-1">Active Tasks</span>
               {metricsLoading ? (
@@ -129,7 +129,7 @@ export const AdminDashboardHome: React.FC = () => {
           </div>
 
           {/* Latency Metric */}
-          <div className="bg-[#040814]/80 border border-slate-900 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center justify-between rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-surface-raised)] p-4">
             <div>
               <span className="text-[10px] text-slate-400 uppercase block mb-1">Network Latency</span>
               {metricsLoading ? (
