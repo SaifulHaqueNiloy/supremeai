@@ -1275,9 +1275,11 @@ class SupabaseDB:
         for start in range(0, len(rows), chunk_size):
             chunk = rows[start : start + chunk_size]
             try:
-                response = client.table("learning_events").upsert(
-                    chunk, on_conflict="event_id", ignore_duplicates=True
-                ).execute()
+                response = (
+                    client.table("learning_events")
+                    .upsert(chunk, on_conflict="event_id", ignore_duplicates=True)
+                    .execute()
+                )
                 # PostgREST may omit ignored duplicates from the response. Count
                 # only rows actually returned so the caller retries anything not
                 # durably accepted instead of dropping it.
