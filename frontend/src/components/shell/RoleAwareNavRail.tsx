@@ -76,8 +76,8 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
   };
 
   return (
-    <div className="flex flex-col h-full py-4 bg-surface-1 overflow-y-auto w-full">
-      <div className="flex-1 px-3 space-y-6">
+    <nav aria-label={`${context === 'admin' ? 'Admin' : 'Workspace'} navigation`} className="flex flex-col h-full py-4 bg-surface-1 overflow-y-auto w-full">
+      <div className="flex-1 px-3 space-y-5">
         {groups.map((group) => (
           <div key={group.id} className="space-y-1">
             {!collapsed && (
@@ -97,6 +97,6 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
           </div>
         </div>
       )}
-    </div>
+    </nav>
   );
 }

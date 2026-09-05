@@ -176,29 +176,38 @@ body.dark {
 
 /* Sky Blue — অ্যানিমেটেড ক্লাউড ব্যাকগ্রাউন্ড */
 body.light {
-  background: linear-gradient(180deg, #60a5fa 0%, #93c5fd 40%, #e0f2fe 100%);
+  --background: #f5f7fb;
+  --foreground: #172033;
+  --card-bg: #ffffff;
+  --card-border: #dbe3ef;
+  --sidebar-bg: #ffffff;
+  --tabbar-bg: #eef3f8;
+  --border-color: #dbe3ef;
+  --card-text: #56657a;
+  --card-title-text: #172033;
+  --input-bg: #ffffff;
+  --input-border: #cbd6e4;
+  --panel-bg: #ffffff;
+  --bg-main: #f5f7fb;
+  --text-main: #172033;
+  --text-secondary: #56657a;
+  --bg-panel: #ffffff;
+  --bg-cell: #eef3f8;
+  --border-accent: #dbe3ef;
+  --accent-primary: #087f8c;
+  --accent-secondary: #0e7490;
+  --node-bg: #ffffff;
+  --node-text: #172033;
+  --node-border: #cbd6e4;
+  --chat-bg: #ffffff;
+  --chat-input-bg: #f8fafc;
+  --waveform-bg: #eef3f8;
+  background: #f5f7fb;
 }
 
-body.light::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: -2;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='400' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M60,140 Q80,80 140,100 Q180,60 220,100 Q280,80 300,140 Z' fill='%23ffffff' opacity='0.7'/%3E%3C/svg%3E");
-  background-size: 600px 300px;
-  animation: clouds-drift 80s linear infinite;
-}
-
+body.light::before,
 body.light::after {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='300' height='150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M40,100 Q60,50 100,70 Q130,30 170,70 Q210,50 230,100 Z' fill='%23ffffff' opacity='0.5'/%3E%3C/svg%3E");
-  background-size: 450px 225px;
-  animation: clouds-drift 120s linear infinite reverse;
+  display: none;
 }
 
 /* Sunset Ember — আগুন-কণা ইফেক্ট */
