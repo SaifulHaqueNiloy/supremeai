@@ -237,6 +237,8 @@ ALL_ROUTERS = [
     {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
     # Admin Command Center aggregated metrics, controls and submodules
     {"path": "api.routes.commandcenter", "prefix": "", "is_admin": True, "is_critical": False},
+    # Policy-Driven Web Crawler Admin API
+    {"path": "api.routes.crawler_admin", "prefix": "", "is_admin": True, "is_critical": False},
 ]
 
 

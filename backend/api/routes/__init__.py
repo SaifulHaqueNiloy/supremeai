@@ -56,6 +56,7 @@ _ROUTER_DEFINITIONS: list[tuple[str, str, str]] = [
     ("artifacts_router", ".artifacts", "router"),
     ("chat_router", ".chat", "router"),
     ("sse_router", ".stream_chat_sse", "router"),
+    ("crawler_admin_router", ".crawler_admin", "router"),
 ]
 
 for _var_name, _mod_path, _attr_name in _ROUTER_DEFINITIONS:
