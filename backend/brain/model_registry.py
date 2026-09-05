@@ -271,7 +271,30 @@ class ModelRegistry:
             provider = meta.get("provider")
             needs_or = provider not in ("ollama",)
             if needs_or and not meta.get("openrouter_id") and not meta.get("ollama_id"):
-                issues.append(f"{mid}: missing openrouter_id or ollama_id")
+                issues.append(f"{mid}: missing provider model id")
             if meta.get("tier") not in (0, 1, 2, 3, 5):
                 issues.append(f"{mid}: invalid tier {meta.get('tier')}")
+            if not meta.get("context_length"):
+                issues.append(f"{mid}: missing context_length")
         return issues
+
+    @classmethod
+    def provider_model_id(cls, model_id: str) -> str | None:
+        """Return the provider-native identifier; never send the display name upstream."""
+        meta = cls.get_model(model_id)
+        return meta.get("openrouter_id") or meta.get("ollama_id") or meta.get("provider_model_id")
+
+    @classmethod
+    def readiness_snapshot(cls) -> dict[str, dict[str, Any]]:
+        """Return safe diagnostics without exposing credentials or making network calls."""
+        snapshot: dict[str, dict[str, Any]] = {}
+        for model_id, meta in cls.MODELS.items():
+            provider_model_id = cls.provider_model_id(model_id)
+            snapshot[model_id] = {
+                "provider": meta.get("provider"),
+                "provider_model_id": provider_model_id,
+                "status": "UNVALIDATED" if provider_model_id else "MODEL_NOT_CONFIGURED",
+                "capabilities": list(meta.get("capabilities", [])),
+                "context_length": meta.get("context_length"),
+            }
+        return snapshot

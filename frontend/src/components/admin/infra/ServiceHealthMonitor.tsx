@@ -159,6 +159,14 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
  */
 async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
   const data = await controlPlane.health();
+  let mcpSummary: Awaited<ReturnType<typeof controlPlane.mcpSummary>> | null = null;
+  if (import.meta.env.VITE_MCP_CONTROL_PLANE_URL) {
+    try {
+      mcpSummary = await controlPlane.mcpSummary();
+    } catch {
+      mcpSummary = null;
+    }
+  }
   const aliases: Record<string, string> = {
     'core-api': 'render_backend',
     'async-worker': 'render_worker',
@@ -169,6 +177,11 @@ async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
   for (const service of data.services) {
     services[service.id] = service.status;
     if (aliases[service.id]) services[aliases[service.id]] = service.status;
+  }
+  if (mcpSummary) {
+    for (const service of mcpSummary.services) {
+      services[`mcp-${service.provider}`] = service.status;
+    }
   }
   const counts = data.services.reduce((acc, service) => {
     if (service.status === 'healthy') acc.healthy += 1;
@@ -181,7 +194,7 @@ async function fetchGlobalHealth(): Promise<GlobalHealthSummary> {
   return {
     overall: data.overall_status === 'healthy' ? 'healthy' : 'degraded',
     checkedAt: data.timestamp,
-    totals: { ...counts, total: data.services.length },
+    totals: { ...counts, total: data.services.length + (mcpSummary?.serviceCount ?? 0) },
     services,
     criticalServicesHealthy: data.services.filter((service) => service.critical).every((service) => service.status === 'healthy'),
   };

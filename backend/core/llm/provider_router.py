@@ -17,6 +17,8 @@ from core.config import settings
 class ProviderStats:
     name: str
     base_weight: float
+    ready: bool = False
+    readiness_status: str = "UNVALIDATED"
     latencies: deque = field(default_factory=lambda: deque(maxlen=settings.LATENCY_WINDOW_SIZE))
     successes: int = 0
     failures: int = 0
@@ -58,8 +60,26 @@ class LatencyAwareWeightedRouter:
             for name, weight in default_providers.items()
         }
         self._lock = asyncio.Lock()
+        self._readiness_enforced = False
+
+    async def set_readiness(self, provider: str, ready: bool, status: str = "READY") -> None:
+        """Allow provider health checks to gate routing without exposing credentials."""
+        async with self._lock:
+            stats = self.stats.setdefault(provider, ProviderStats(name=provider, base_weight=1.0))
+            stats.ready = ready
+            stats.readiness_status = status
+            self._readiness_enforced = True
+
+    async def readiness(self) -> dict[str, dict[str, str | bool]]:
+        async with self._lock:
+            return {
+                name: {"ready": stats.ready, "status": stats.readiness_status}
+                for name, stats in self.stats.items()
+            }
 
     def _effective_weight(self, s: ProviderStats) -> float:
+        if self._readiness_enforced and not s.ready:
+            return 0.0
         if s.is_circuit_open():
             return 0.0
         normalized_latency = s.avg_latency_ms / settings.LATENCY_NORMALIZATION_MS

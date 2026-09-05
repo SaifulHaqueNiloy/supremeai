@@ -40,6 +40,20 @@ export interface ControlPlaneHealth {
   services: ServiceHealth[]
 }
 
+export interface McpHealthDashboard {
+  snapshots: Record<string, Record<string, unknown>>
+  dependencies: Record<string, string[]>
+  timestamp: string
+}
+
+export interface McpHealthSummary {
+  status: 'healthy' | 'degraded' | 'unknown'
+  serviceCount: number
+  unhealthyCount: number
+  services: Array<{ provider: string; status: string; checkedAt: string; latencyMs?: number }>
+  timestamp: string
+}
+
 import { getAuthHeaders } from './apiClient'
 
 async function getJson<T>(path: string): Promise<T> {
@@ -81,6 +95,9 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   export const controlPlane = {
   registry: () => getJson<ControlPlaneRegistry>('/api/v1/control-plane/registry'),
   health: () => getJson<ControlPlaneHealth>('/api/v1/control-plane/health'),
+  mcpSummary: () => getJson<McpHealthSummary>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/summary`),
+  mcpDashboard: () => getJson<McpHealthDashboard>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/dashboard`),
+  mcpSweep: () => postJson<Record<string, unknown>>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/sweep`, {}),
   submitTask: (payload: TaskSubmission) => postJson<TaskHandle>(workerUrl('/tasks'), payload),
   taskStatus: (taskId: string) => getJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}`)),
   cancelTask: (taskId: string) => postJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}/cancel`), {}),
