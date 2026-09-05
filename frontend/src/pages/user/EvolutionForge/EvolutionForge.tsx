@@ -77,7 +77,14 @@ const EvolutionForgeCanvas = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('supremeai_auth_token');
-    const sse = new EventSource(`${getApiBaseUrl()}/api/v1/swarm/stream${token ? `?token=${encodeURIComponent(token)}` : ''}`);
+    if (!token) return;
+
+    const sse = new EventSource(`${getApiBaseUrl()}/api/v1/swarm/stream?token=${encodeURIComponent(token)}`);
+    sse.onerror = () => {
+      // The stream is optional for the canvas; avoid a browser reconnect storm
+      // when the backend deployment does not expose this optional endpoint.
+      sse.close();
+    };
 
     sse.onmessage = (event) => {
       try {
