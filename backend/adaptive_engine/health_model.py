@@ -28,6 +28,16 @@ class HealthStatus(enum.StrEnum):
     MAINTENANCE = "MAINTENANCE"
 
 
+class MemoryInfo(BaseModel):
+    """Memory usage snapshot."""
+
+    current_mb: float = 0.0
+    peak_mb: float = 0.0
+    limit_mb: float = 0.0
+    percent: float = 0.0
+    trend: str = "stable"
+
+
 # বাংলা: ROADMAP §41 — severity ordering, composite scoring-এ ব্যবহৃত।
 _SEVERITY = {
     HealthStatus.HEALTHY: 0,
@@ -265,6 +275,7 @@ def get_health_aggregator() -> HealthAggregator:
 
 __all__ = [
     "HealthStatus",
+    "MemoryInfo",
     "UnifiedHealth",
     "HealthAggregator",
     "get_health_aggregator",

@@ -29,6 +29,14 @@ class DeploymentStatus(enum.StrEnum):
     SUPERSEDED = "SUPERSEDED"
 
 
+class DeploymentStateError(RuntimeError):
+    """Raised when an illegal deployment transition occurs."""
+
+
+class DeploymentNotFoundError(KeyError):
+    """Raised when a deployment record is not found."""
+
+
 class DeploymentRecord(BaseModel):
     """ROADMAP §40 — unified deployment tracking record."""
 
@@ -252,4 +260,6 @@ __all__ = [
     "DeploymentRecord",
     "DeploymentTracker",
     "get_deployment_tracker",
+    "DeploymentStateError",
+    "DeploymentNotFoundError",
 ]

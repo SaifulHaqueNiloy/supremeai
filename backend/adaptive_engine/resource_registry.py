@@ -48,6 +48,18 @@ class ResourceState(enum.StrEnum):
     OFFLINE = "OFFLINE"
 
 
+class ResourceExistsError(KeyError):
+    """Raised when registering a resource that already exists."""
+
+
+class ResourceNotFoundError(KeyError):
+    """Raised when a resource is not found."""
+
+
+class AdapterNotRegisteredError(KeyError):
+    """Raised when an adapter for a provider kind is not registered."""
+
+
 class ResourceRecord(BaseModel):
     """A single registered resource (ROADMAP §38)."""
 
@@ -372,4 +384,7 @@ __all__ = [
     "BaseProviderAdapter",
     "ResourceRegistry",
     "get_resource_registry",
+    "ResourceExistsError",
+    "ResourceNotFoundError",
+    "AdapterNotRegisteredError",
 ]

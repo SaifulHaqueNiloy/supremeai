@@ -16,12 +16,11 @@ from __future__ import annotations
 import enum
 from typing import Any
 
-from adaptive_engine.governance import ActionRisk, get_governance_engine
-
 from adaptive_engine._store import jdump
 from adaptive_engine.capability_registry import get_capability_registry
 from adaptive_engine.correlation import current_correlation
 from adaptive_engine.deployment_tracker import get_deployment_tracker
+from adaptive_engine.governance import ActionRisk, get_governance_engine
 from adaptive_engine.health_model import get_health_aggregator
 from adaptive_engine.resource_registry import get_resource_registry
 
@@ -32,6 +31,18 @@ class MCPOperationCategory(enum.StrEnum):
     OBSERVE = "observe"  # read-only
     ANALYZE = "analyze"  # inference / correlation
     ACT = "act"  # mutating — governance-gated
+
+
+class MCPOperationError(RuntimeError):
+    """Base error for MCP operations."""
+
+
+class MCPOperationNotRegisteredError(KeyError):
+    """Raised when an operation is not registered in the MCP skeleton."""
+
+
+class MCPActionDenied(PermissionError):
+    """Raised when an action is denied by governance."""
 
 
 # বাংলা: ROADMAP §45 — MCP-তে expose হওয়া high-level operations।
@@ -362,4 +373,7 @@ __all__ = [
     "MCPOperationCategory",
     "MCPSkeleton",
     "get_mcp_skeleton",
+    "MCPOperationError",
+    "MCPOperationNotRegisteredError",
+    "MCPActionDenied",
 ]

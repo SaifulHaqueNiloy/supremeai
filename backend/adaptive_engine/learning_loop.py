@@ -47,6 +47,10 @@ class LearningStage(enum.StrEnum):
     ARCHIVED = "ARCHIVED"
 
 
+class LearningStageError(RuntimeError):
+    """Raised when an illegal learning stage transition occurs."""
+
+
 class EvolutionSignal(BaseModel):
     """ROADMAP §25 — proactive evolution signals."""
 
@@ -305,4 +309,5 @@ __all__ = [
     "LearningOpportunity",
     "LearningLoop",
     "get_learning_loop",
+    "LearningStageError",
 ]

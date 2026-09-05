@@ -88,6 +88,18 @@ class TaskRetryExhausted(Exception):
     pass
 
 
+class TaskRetryExceeded(TaskRetryExhausted):
+    pass
+
+
+class TaskNotFoundError(KeyError):
+    pass
+
+
+class TaskTimeoutError(TimeoutError):
+    pass
+
+
 class TaskRecord(BaseModel):
     """A single task (ROADMAP §22)."""
 
@@ -459,6 +471,9 @@ __all__ = [
     "TaskEngine",
     "TaskStateError",
     "TaskRetryExhausted",
+    "TaskRetryExceeded",
+    "TaskNotFoundError",
+    "TaskTimeoutError",
     "get_task_engine",
     "DEFAULT_RETRY_LIMIT",
     "DEFAULT_TIME_LIMIT_SECONDS",
