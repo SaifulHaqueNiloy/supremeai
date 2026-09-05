@@ -16,7 +16,12 @@ ENV PYTHONPATH="/app"
 # NATS_TOKEN এবং NATS_URL রানটাইমে environment variable হিসেবে পাস করতে হবে।
 # বাংলা মন্তব্য: Hardcoded secrets Dockerfile-এ রাখা নিরাপদ নয়।
 # ব্যবহার: docker run -e NATS_TOKEN=$NATS_TOKEN -e NATS_URL=nats://... image
-# অথবা docker-compose.yml-এ environment section-এ পাস করুন।
+# NATS_URL default for container-to-host connectivity:
 ENV NATS_URL="nats://host.docker.internal:4222"
+
+# Create and switch to non-root user for security compliance (Trap #97)
+RUN addgroup --system supremeai && adduser --system supremeai --ingroup supremeai && \
+    chown -R supremeai:supremeai /app
+USER supremeai
 
 CMD ["python", "engine/worker_node.py"]
