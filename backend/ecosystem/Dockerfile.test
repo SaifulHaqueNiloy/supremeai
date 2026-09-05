@@ -5,4 +5,9 @@ COPY . /app/ecosystem/
 WORKDIR /app/ecosystem
 ENV PYTHONPATH=/app
 EXPOSE 8000
+# Create and switch to non-root user for security compliance (Trap #97)
+RUN addgroup --system appuser && adduser --system appuser --ingroup appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
 CMD ["python", "-c", "import sys; sys.path.insert(0, '/app'); from ecosystem.standalone_app import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=int(__import__('os').getenv('PORT', '8000')))"]

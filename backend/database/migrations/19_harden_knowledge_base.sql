@@ -29,5 +29,6 @@ CREATE TABLE IF NOT EXISTS knowledge_import_audits (
   evidence JSONB NOT NULL DEFAULT '{}'::jsonb, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_import_audits ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS knowledge_base_service_read ON knowledge_base;
 CREATE POLICY knowledge_base_service_read ON knowledge_base FOR SELECT USING (status = 'approved');
