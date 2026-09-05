@@ -70,8 +70,8 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
-    {"path": "api.routes.websocket_agent", "prefix": "", "is_admin": False, "is_critical": False},
-    # R10 FIX: SSE shim for the WS /chat route (additive — WS route stays active while WS_FALLBACK=true)
+    # {"path": "api.routes.websocket_agent", "prefix": "", "is_admin": False, "is_critical": False},
+    # R10 FIX: SSE stream for the /chat route (lightweight HTTP transport)
     {"path": "api.routes.stream_chat_sse", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.agent_workspace",
@@ -92,8 +92,8 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
-    {"path": "api.routes.websocket_hitl", "prefix": "", "is_admin": False, "is_critical": False},
-    # R10 FIX: SSE shim for the WS HITL route
+    # {"path": "api.routes.websocket_hitl", "prefix": "", "is_admin": False, "is_critical": False},
+    # R10 FIX: SSE stream for the HITL route
     {"path": "api.routes.stream_hitl_sse", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.syncguard", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {
@@ -113,8 +113,8 @@ ALL_ROUTERS = [
     {"path": "api.routes.scraper", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.kaggle", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.dock_actions", "prefix": "/api", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
-    # R10 FIX: SSE shim for the WS /voice route
+    # {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
+    # R10 FIX: SSE stream for the /voice route
     {"path": "api.routes.stream_voice_sse", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "tools.collaborative_editor",
