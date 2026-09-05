@@ -394,7 +394,7 @@ class UnifiedRouter:
         decision = await router.route(
             RoutingCriteria(prompt="Hello", task_type="chat")
         )
-        print(decision.model.name)  # Best model for this request
+        logger.info(decision.model.name)  # Best model for this request
     """
 
     _instance = None

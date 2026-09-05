@@ -16,6 +16,7 @@ import asyncio
 import atexit
 import contextlib
 import importlib.util
+import logging
 import os
 import signal
 import subprocess
@@ -27,6 +28,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
 
 PORT = int(os.getenv("PORT", "8080"))
 ROLE = os.getenv("SUPREMEAI_SERVICE_ROLE", "worker")
@@ -72,7 +75,7 @@ def _spawn_celery() -> None:
             cwd=BACKEND_DIR,
             env=os.environ.copy(),
         )
-        print(f"[worker_service] celery spawned pid={_state['celery_proc'].pid}", flush=True)
+        logger.info("[worker_service] celery spawned pid=%s", _state["celery_proc"].pid)
     except Exception as exc:  # HTTP service must survive celery/redis failures
         _state.update(degraded=True, detail=f"celery spawn failed: {exc}")
 
