@@ -144,8 +144,33 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
     }
   } catch (error) {
     clearTimeout(timeoutId);
-    
-    // বাংলা: Backend unreachable হলে fallback response
+
+    // The aggregate endpoint may be unavailable while the canonical liveness
+    // endpoint is healthy. Keep the status chip truthful instead of reporting
+    // individual services as down from a stale/degraded aggregate response.
+    try {
+      const fallback = await fetch(`${apiBaseUrl}/api/v1/health`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (fallback.ok) {
+        const payload = await fallback.json() as { status?: string; database?: string };
+        const healthy = payload.status === 'healthy';
+        return {
+          status: healthy ? 'healthy' : 'degraded',
+          timestamp: Date.now(),
+          total_response_time_ms: 0,
+          checks: {
+            application: { status: healthy ? 'healthy' : 'degraded', message: 'Canonical health endpoint' },
+            ...(payload.database ? { database: { status: payload.database, message: 'Canonical health endpoint' } } : {}),
+          },
+          summary: { total_checks: payload.database ? 2 : 1, healthy: healthy ? (payload.database === 'healthy' ? 2 : 1) : 0, degraded: healthy ? (payload.database === 'healthy' ? 0 : 1) : 1, unhealthy: 0, unknown: 0 },
+        };
+      }
+    } catch {
+      // Fall through to the user-facing connection state below.
+    }
+
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error('Backend health check timed out');
     }
