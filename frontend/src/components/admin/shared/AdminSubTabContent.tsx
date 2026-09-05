@@ -132,18 +132,9 @@ export function SubTabContent(props: SubTabContentProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-main)] relative transition-colors duration-500">
       {!isDashboardOrCanvas && (
-        <div className="flex justify-between items-center p-4 border-b border-[var(--border-accent)] bg-[var(--bg-cell)] transition-colors duration-500 z-50">
-          <span className="text-sm font-bold tracking-widest text-[var(--accent-primary)] uppercase flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-secondary)] animate-pulse"></span>
-            MODULE: {adminSubTab.replace('-', ' ')}
-          </span>
-          <button
-            onClick={() => setAdminSubTab('command-center')}
-            className="p-1.5 hover:opacity-80 rounded-lg transition-colors group"
-            title="Close Module & Return to Canvas"
-          >
-            <X size={18} className="text-[var(--text-secondary)] group-hover:text-red-500" />
-          </button>
+        <div className="flex items-center justify-between border-b border-[var(--sa-border)] bg-[var(--sa-surface)] px-5 py-3 transition-colors duration-500">
+          <div className="flex items-center gap-3"><span className="size-2 rounded-full bg-[var(--sa-primary)] shadow-[0_0_12px_var(--sa-primary)]" /><div><p className="sa-eyebrow">Admin module</p><span className="text-sm font-semibold capitalize text-[var(--sa-ink)]">{adminSubTab.replace('-', ' ')}</span></div></div>
+          <button onClick={() => setAdminSubTab('command-center')} className="rounded-lg p-2 text-[var(--sa-ink-muted)] transition hover:bg-[var(--sa-primary-soft)] hover:text-[var(--sa-ink)]" title="Close module and return to canvas" aria-label="Close module and return to canvas"><X size={17} /></button>
         </div>
       )}
 
