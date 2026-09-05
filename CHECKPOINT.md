@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-05 17:05 UTC
+- **Date:** 2026-09-05 17:10 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,41 +10,15 @@
   - (see git log for details)
 
 ## Files Changed
-  - `specs/002-policy-driven-web-crawler/data-model.md`
-  - `specs/002-policy-driven-web-crawler/quickstart.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/handlers/api_routes.js`
-  - `_archive/firebase_functions_removed_20260825/ocrTrigger.ts`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/handlers/firestore_triggers.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/middleware/cors.js`
-  - `specs/002-policy-driven-web-crawler/plan.md`
-  - `specs/002-policy-driven-web-crawler/contracts/crawler-admin-api.yaml`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/middleware/auth.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/server-connection-monitor.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/chatClassifier.ts`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/scrapeHistoryManager.ts`
-  - `CHECKPOINT.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/package.json`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/scrapeEngine.ts`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/tsconfig.json`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/deployment-monitor.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/email_handler.ts`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/index.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/handlers/scheduled_tasks.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/.env.example`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/scrapeSchema.yaml`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/system-health.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/utils/externalClient.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/swagger.yaml`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/.docs/MERMD.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/api-router.js`
-  - `specs/002-policy-driven-web-crawler/research.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/.npmignore`
   - `specs/002-policy-driven-web-crawler/contracts/python-interface.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/providers-smart.js`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/README_BD.md`
+  - `specs/002-policy-driven-web-crawler/research.md`
+  - `specs/002-policy-driven-web-crawler/contracts/crawler-admin-api.yaml`
+  - `specs/002-policy-driven-web-crawler/quickstart.md`
+  - `CHECKPOINT.md`
+  - `specs/002-policy-driven-web-crawler/plan.md`
+  - `specs/002-policy-driven-web-crawler/tasks.md`
+  - `specs/002-policy-driven-web-crawler/data-model.md`
   - `specs/002-policy-driven-web-crawler/spec.md`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/src/index.ts`
-  - `_archive/firebase_functions_removed_20260825/firebase_functions_v1/health-smart.js`
 
 ## Pending (Carry Forward)
 - (All pending tasks completed for this session!)
