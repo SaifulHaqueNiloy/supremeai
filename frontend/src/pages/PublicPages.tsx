@@ -6,6 +6,8 @@ const publicLinks = [
   { to: '/features', label: 'Features' },
   { to: '/pricing', label: 'Pricing' },
   { to: '/docs', label: 'Docs' },
+  { to: '/about', label: 'About' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 export function PublicHeader() {
@@ -17,7 +19,7 @@ export function PublicHeader() {
           <span className="flex size-8 items-center justify-center rounded-xl bg-cyan-300 font-mono text-sm font-bold text-slate-950">S</span>
           <span className="hidden sm:inline">SUPREMEAI</span>
         </Link>
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Public navigation">
+        <nav className="hidden items-center gap-4 lg:gap-7 sm:flex" aria-label="Public navigation">
           {publicLinks.map((link) => <Link key={link.to} to={link.to} className="text-sm text-slate-500 transition hover:text-slate-200">{link.label}</Link>)}
         </nav>
         <div className="flex items-center gap-3">
@@ -26,7 +28,7 @@ export function PublicHeader() {
           <button type="button" onClick={() => setMenuOpen((open) => !open)} className="rounded-lg p-2 text-slate-400 md:hidden" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen}>{menuOpen ? <X size={18} /> : <Menu size={18} />}</button>
         </div>
       </div>
-      {menuOpen && <nav className="mx-auto mt-3 flex max-w-6xl flex-col gap-1 rounded-2xl border border-white/10 bg-slate-900/95 p-3 md:hidden" aria-label="Mobile navigation">{publicLinks.map((link) => <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">{link.label}</Link>)}<Link to="/login" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">Sign in</Link></nav>}
+      {menuOpen && <nav className="mx-auto mt-3 flex max-w-6xl flex-col gap-1 rounded-2xl border border-white/10 bg-slate-900/95 p-3 sm:hidden" aria-label="Mobile navigation">{publicLinks.map((link) => <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">{link.label}</Link>)}<Link to="/login" className="rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5">Sign in</Link></nav>}
     </header>
   );
 }
@@ -72,8 +74,9 @@ export function GuestChatPage() {
     inputRef.current?.focus();
   };
 
-  return <PublicLayout><main className="relative flex min-h-screen flex-col overflow-hidden px-4 pb-8 pt-24 sm:px-8">
-    <div className="pointer-events-none absolute left-1/2 top-[31%] size-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-950/35 blur-3xl" aria-hidden="true" />
+  return <PublicLayout><PublicHeader /><main className="relative flex min-h-screen flex-col overflow-hidden px-4 pb-8 pt-28 sm:px-8">
+    <div className="pointer-events-none absolute left-1/2 top-[48%] size-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-950/35 blur-3xl" aria-hidden="true" />
+    <div className="pointer-events-none absolute left-1/2 top-[48%] size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-300/[0.06] blur-3xl" aria-hidden="true" />
     <section className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center">
       <div className="mb-7 text-center transition-all duration-500" data-chat-start={messages.length === 0}>
         {messages.length === 0 ? <><div className="mx-auto mb-5 flex size-12 items-center justify-center rounded-2xl bg-cyan-300/10 text-cyan-300"><Sparkles size={23} aria-hidden="true" /></div><h1 className="text-balance text-3xl font-medium tracking-tight text-slate-200 sm:text-5xl">What can I help you with?</h1><p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-500">Chat with SupremeAI for free. No account needed to get started.</p></> : <div className="max-h-[38vh] space-y-4 overflow-y-auto px-1 text-left" aria-live="polite">{messages.map((message, index) => <div key={`${message.role}-${index}`} className={message.role === 'user' ? 'ml-auto max-w-[85%] rounded-3xl bg-slate-800 px-5 py-3 text-sm leading-6 text-slate-100' : 'max-w-[85%] px-5 py-3 text-sm leading-6 text-slate-400'}>{message.text}</div>)}</div>}
