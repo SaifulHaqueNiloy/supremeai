@@ -15,7 +15,7 @@ export const authService = {
   },
 
   // বাংলা মন্তব্য: ফায়ারবেস ওটিপি কোড ৭ ডিজিট যাচাইকরণ সার্ভিস এন্ডপয়েন্ট
-  firebaseTotpVerify: async (idToken: string, otp: string): Promise<{ status: string; token: string }> => {
-    return apiClient.post<{ status: string; token: string }>('/api/admin/firebase-totp-verify', { id_token: idToken, otp });
+  firebaseTotpVerify: async (idToken: string, otp: string, rememberBrowser = false): Promise<{ status: string; token: string }> => {
+    return apiClient.post<{ status: string; token: string }>('/api/admin/firebase-totp-verify', { id_token: idToken, otp, remember_browser: rememberBrowser });
   },
 };

@@ -56,6 +56,8 @@ interface AdminState {
   setOtpRequired: (val: boolean) => void;
   adminOtp: string;
   setAdminOtp: (val: string) => void;
+  rememberBrowser: boolean;
+  setRememberBrowser: (val: boolean) => void;
   totpSetupRequired: boolean;
   setTotpSetupRequired: (val: boolean) => void;
   totpSecret: string;
@@ -81,6 +83,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setOtpRequired: (val) => set({ otpRequired: val }),
   adminOtp: '',
   setAdminOtp: (val) => set({ adminOtp: val }),
+  rememberBrowser: false,
+  setRememberBrowser: (val) => set({ rememberBrowser: val }),
   totpSetupRequired: false,
   setTotpSetupRequired: (val) => set({ totpSetupRequired: val }),
   totpSecret: '',
@@ -88,7 +92,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   provisioningUri: '',
   setProvisioningUri: (val) => set({ provisioningUri: val }),
   handleAdminLogin: async (password?: string) => {
-    const { adminEmail, otpRequired, adminOtp } = get();
+    const { adminEmail, otpRequired, adminOtp, rememberBrowser } = get();
     const cleanEmail = adminEmail.trim();
     const cleanPassword = password?.trim() || '';
 
@@ -138,7 +142,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             set({ adminError: errStr });
           }
         } else if (data.token) {
-            // Already logged in without OTP (if that logic exists)
+            localStorage.setItem('supreme_admin_jwt', data.token);
+            updateTokenCache(data.token);
+            const decoded = decodeJwt(data.token);
+            set({ adminAuthenticated: true, adminRole: decoded?.role === 'admin' ? 'admin' : null });
+            eventBus.emit(Events.AUTH_LOGIN, { source: 'admin_store', timestamp: Date.now() });
         } else {
           set({ adminError: 'Not authorized as admin.' });
         }
@@ -154,7 +162,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         idToken = await user.getIdToken();
 
         try {
-          const data = await authService.firebaseTotpVerify(idToken, adminOtp.trim());
+          const data = await authService.firebaseTotpVerify(idToken, adminOtp.trim(), rememberBrowser);
           if (data.token) {
             localStorage.setItem('supreme_admin_jwt', data.token);
             // বাংলা: legacy 'adminToken' duplicate write সরানো হলো (single-frontend migration) —

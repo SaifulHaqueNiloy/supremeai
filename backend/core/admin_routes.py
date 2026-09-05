@@ -48,18 +48,68 @@ Dependencies:
 import base64
 import hashlib
 import hmac
+import json
 import os
+import secrets
 import struct
 import time
 import uuid
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
 
 from core.logging_config import logger
 
 # বাংলা মন্তব্য: TOTP ব্রুট-ফোর্স প্রতিরোধে Redis lockout constants
 _TOTP_MAX_ATTEMPTS = 5
 _TOTP_LOCKOUT_SECONDS = 600  # 10 minutes
+_TRUSTED_BROWSER_COOKIE = "supreme_admin_trusted_browser"
+_TRUSTED_BROWSER_TTL = 7 * 24 * 60 * 60
+
+
+def _trusted_browser_key(token: str) -> str:
+    return "admin:trusted-browser:" + hashlib.sha256(token.encode()).hexdigest()
+
+
+async def _get_redis_client():
+    from core.cache.redis_manager import redis_manager
+    return redis_manager.client
+
+
+async def _trusted_browser_uid(request: Request) -> str | None:
+    token = request.cookies.get(_TRUSTED_BROWSER_COOKIE)
+    if not token:
+        return None
+    redis = await _get_redis_client()
+    if not redis:
+        return None
+    try:
+        value = await redis.get(_trusted_browser_key(token))
+        raw = value.decode() if isinstance(value, bytes) else value
+        return json.loads(raw).get("uid") if raw else None
+    except Exception as exc:
+        logger.warning("Trusted browser lookup failed: %s", exc)
+        return None
+
+
+async def _issue_trusted_browser(uid: str, email: str, response: Response) -> None:
+    token = secrets.token_urlsafe(32)
+    redis = await _get_redis_client()
+    if not redis:
+        raise HTTPException(status_code=503, detail="Trusted browser service unavailable")
+    browser_id = uuid.uuid4().hex
+    metadata = {"id": browser_id, "uid": uid, "email": email, "created_at": int(time.time())}
+    await redis.setex(_trusted_browser_key(token), _TRUSTED_BROWSER_TTL, json.dumps(metadata))
+    await redis.sadd(f"admin:trusted-browsers:{uid}", browser_id)
+    await redis.setex(f"admin:trusted-browser-record:{uid}:{browser_id}", _TRUSTED_BROWSER_TTL, json.dumps({"token_key": _trusted_browser_key(token), **metadata}))
+    response.set_cookie(_TRUSTED_BROWSER_COOKIE, token, max_age=_TRUSTED_BROWSER_TTL, httponly=True, secure=getattr(settings, "env", "local").lower() == "production", samesite="lax", path="/")
+
+
+async def _issue_admin_jwt(uid: str) -> str:
+    import jwt
+    now = int(time.time())
+    payload = {"sub": uid, "uid": uid, "role": "admin", "exp": now + 3600 * int(os.environ.get("ADMIN_JWT_EXPIRY_HOURS", 24)), "iat": now, "jti": uuid.uuid4().hex}
+    return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+
 
 from api.dependencies import get_current_user_token
 from core import services
@@ -91,7 +141,7 @@ auth = get_firebase_auth()
 
 
 @router.post("/api/admin/firebase-login")
-def admin_firebase_login(payload: AdminFirebaseLoginRequest):
+async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Request):
     id_token = payload.id_token
     is_production = getattr(settings, "env", "local").lower() == "production"
 
@@ -158,6 +208,9 @@ def admin_firebase_login(payload: AdminFirebaseLoginRequest):
             status_code=403, detail="Forbidden: Not authorized as an admin role user"
         )
 
+    if await _trusted_browser_uid(request) == uid:
+        return {"status": "trusted_browser", "uid": uid, "token": await _issue_admin_jwt(uid)}
+
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
 
@@ -211,7 +264,7 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
 
 
 @router.post("/api/admin/firebase-totp-verify")
-async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
+async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, response: Response):
     id_token = payload.id_token
     otp = payload.otp
     is_production = getattr(settings, "env", "local").lower() == "production"
@@ -338,7 +391,62 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest):
     jwt_secret = settings.jwt_secret
     token = jwt.encode(jwt_payload, jwt_secret, algorithm="HS256")
 
+    if payload.remember_browser:
+        await _issue_trusted_browser(uid, "", response)
+
     return {"status": "success", "token": token}
+
+
+@router.get("/admin/trusted-browsers")
+async def list_trusted_browsers(admin: dict = Depends(get_current_admin)):
+    redis = await _get_redis_client()
+    if not redis:
+        raise HTTPException(status_code=503, detail="Trusted browser service unavailable")
+    uid = str(admin.get("sub"))
+    browser_ids = await redis.smembers(f"admin:trusted-browsers:{uid}")
+    browsers = []
+    for raw_id in browser_ids:
+        browser_id = raw_id.decode() if isinstance(raw_id, bytes) else raw_id
+        record = await redis.get(f"admin:trusted-browser-record:{uid}:{browser_id}")
+        if record:
+            parsed = json.loads(record.decode() if isinstance(record, bytes) else record)
+            parsed.pop("token_key", None)
+            browsers.append(parsed)
+    return {"browsers": browsers}
+
+
+@router.delete("/admin/trusted-browsers/{browser_id}")
+async def revoke_trusted_browser(browser_id: str, admin: dict = Depends(get_current_admin)):
+    redis = await _get_redis_client()
+    if not redis:
+        raise HTTPException(status_code=503, detail="Trusted browser service unavailable")
+    uid = str(admin.get("sub"))
+    record_key = f"admin:trusted-browser-record:{uid}:{browser_id}"
+    record = await redis.get(record_key)
+    if not record:
+        raise HTTPException(status_code=404, detail="Trusted browser not found")
+    parsed = json.loads(record.decode() if isinstance(record, bytes) else record)
+    await redis.delete(parsed["token_key"], record_key)
+    await redis.srem(f"admin:trusted-browsers:{uid}", browser_id)
+    return {"ok": True}
+
+
+@router.delete("/admin/trusted-browsers")
+async def revoke_all_trusted_browsers(admin: dict = Depends(get_current_admin)):
+    redis = await _get_redis_client()
+    if not redis:
+        raise HTTPException(status_code=503, detail="Trusted browser service unavailable")
+    uid = str(admin.get("sub"))
+    browser_ids = await redis.smembers(f"admin:trusted-browsers:{uid}")
+    for raw_id in browser_ids:
+        browser_id = raw_id.decode() if isinstance(raw_id, bytes) else raw_id
+        record_key = f"admin:trusted-browser-record:{uid}:{browser_id}"
+        record = await redis.get(record_key)
+        if record:
+            parsed = json.loads(record.decode() if isinstance(record, bytes) else record)
+            await redis.delete(parsed["token_key"], record_key)
+        await redis.srem(f"admin:trusted-browsers:{uid}", browser_id)
+    return {"ok": True}
 
 
 @router.get("/admin/cloud-distribution")
