@@ -1,4 +1,11 @@
-"""Admin API routes for managing crawl policies, rules, and inspecting crawl history."""
+"""Admin API routes for managing crawl policies, rules, and inspecting crawl history.
+
+SECURITY FIX (AUDIT-SEC-6, HIGH): আগে এই admin router-এ কোনো auth guard ছিল না —
+রেজিস্ট্রির is_admin=True শুধু get_current_user_token যোগ করত, অর্থাৎ যেকোনো
+সাধারণ ইউজার সব টেন্যান্টের crawl policy তৈরি/বদলাতে পারত। এখন router-level
+get_current_admin guard বাধ্যতামূলক, এবং in-memory store-এ সাইজ-ক্যাপ বসানো হয়েছে
+(আনবাউন্ডেড মেমোরি গ্রোথ / DoS প্রতিরোধ)।
+"""
 
 from __future__ import annotations
 
@@ -7,13 +14,23 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from api.dependencies import get_current_admin
 from scout.models import CrawlHistoryRecord, CrawlPolicy, DomainRule, TrustLevel
 
-router = APIRouter(prefix="/api/v1/admin/crawler", tags=["crawler-admin"])
+router = APIRouter(
+    prefix="/api/v1/admin/crawler",
+    tags=["crawler-admin"],
+    dependencies=[Depends(get_current_admin)],
+)
 
 # In-memory policy and history store with fallback to persistence
 _TENANT_POLICIES: dict[str, list[CrawlPolicy]] = {}
 _CRAWL_HISTORY: list[CrawlHistoryRecord] = []
+
+# SECURITY FIX: unbounded in-memory growth (memory DoS) রোধে হার্ড ক্যাপ।
+_MAX_TENANTS = 500
+_MAX_POLICIES_PER_TENANT = 50
+_MAX_HISTORY = 1000
 
 
 class PolicyCreatePayload(BaseModel):
@@ -30,11 +47,14 @@ class PolicyCreatePayload(BaseModel):
 @router.get("/policies", response_model=list[CrawlPolicy])
 async def list_policies(tenant_id: str = "default") -> list[CrawlPolicy]:
     """Lists all crawl policies for the tenant."""
+    if len(tenant_id) > 128:
+        raise HTTPException(status_code=400, detail="tenant_id too long")
     policies = _TENANT_POLICIES.get(tenant_id)
     if not policies:
         # Default policy returned if none customized
         default_pol = CrawlPolicy(tenant_id=tenant_id, name="Default Policy")
-        _TENANT_POLICIES[tenant_id] = [default_pol]
+        if len(_TENANT_POLICIES) < _MAX_TENANTS:
+            _TENANT_POLICIES[tenant_id] = [default_pol]
         return [default_pol]
     return policies
 
@@ -57,6 +77,12 @@ async def create_or_update_policy(
     )
 
     tenant_list = _TENANT_POLICIES.setdefault(tenant_id, [])
+    # SECURITY FIX: প্রতি টেন্যান্টে policy সংখ্যার ক্যাপ — unbounded append রোধ।
+    if len(tenant_list) >= _MAX_POLICIES_PER_TENANT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Policy limit reached for tenant; delete old policies first",
+        )
     # Replace active policy or append
     tenant_list.append(new_policy)
     return new_policy

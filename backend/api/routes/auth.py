@@ -221,7 +221,10 @@ class MeResponse(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str
+    # FIX (AUDIT-CONTRACT-4): cookie-based refresh সমর্থনে ফিল্ডটি optional —
+    # এন্ডপয়েন্ট এমনিতেই REFRESH_COOKIE_NAME থেকে fallback করে; কিন্তু বাধ্যতামূলক
+    # ফিল্ড থাকায় cookie-only ক্লায়েন্ট (EventSource/SSE) 422-তে আটকে যেত।
+    refresh_token: str | None = None
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -247,14 +250,14 @@ async def login(body: LoginRequest, request: Request, response: Response):
             )
 
         user_id = res.user.id
-        # বাংলা: ডাটাবেসের app_metadata/user_metadata এবং settings.admin_emails উভয় উৎস থেকে রোল যাচাই।
+        # বাংলা: ডাটাবেসের app_metadata এবং settings.admin_emails উভয় উৎস থেকে রোল যাচাই।
+        # SECURITY FIX (AUDIT-SEC-1, CRITICAL): user_metadata এন্ড-ইউজার নিজেই লিখতে পারে
+        # (supabase.auth.updateUser({data:{role:"admin"}})) — এটাতে বিশ্বাস করলে যেকোনো
+        # ইউজার নিজেকে admin JWT বানিয়ে ফেলত (privilege escalation)। রোল এখন শুধু
+        # সার্ভার-রাইটেবল app_metadata বা ADMIN_EMAILS অ্যালোলিস্ট থেকে আসবে।
         user_meta_role = (
             res.user.app_metadata.get("role")
             if hasattr(res.user, "app_metadata") and isinstance(res.user.app_metadata, dict)
-            else None
-        ) or (
-            res.user.user_metadata.get("role")
-            if hasattr(res.user, "user_metadata") and isinstance(res.user.user_metadata, dict)
             else None
         )
         is_admin = user_meta_role == "admin" or (
@@ -335,9 +338,11 @@ async def register(body: RegisterRequest, response: Response):
             # বাংলা: Supabase Free-Tier built-in SMTP-তে per-hour rate limit থাকে (e.g. 2-3 emails/hour)।
             # সেক্ষেত্রে service_client (Admin API) দিয়ে নিরাপদে ইউজার তৈরি করে অটো-কনফার্ম করা হবে।
             err_msg = str(signup_err).lower()
-            if db.service_client and (
-                "rate limit" in err_msg or "429" in err_msg or "invalid" in err_msg
-            ):
+            # SECURITY FIX (AUDIT-SEC-5, HIGH): "invalid" substring সরানো হলো —
+            # password-policy বা invalid-email রিজেকশনও এই fallback-এ ঢুকে admin-API
+            # দিয়ে auto-confirm অ্যাকাউন্ট তৈরি হয়ে যেত (email confirmation bypass)।
+            # এখন শুধুমাত্র সত্যিকারের provider rate-limit-এ fallback চলবে।
+            if db.service_client and ("rate limit" in err_msg or "429" in err_msg):
                 logger.info(
                     f"Public sign_up hit provider limit for {body.username!r} ({signup_err}). Falling back to Admin creation."
                 )
@@ -433,6 +438,15 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is not a refresh token"
         )
 
+    # SECURITY FIX (AUDIT-SEC-3, CRITICAL): আগে /refresh কখনো revocation blacklist
+    # চেক করত না — logout-এর পরেও চুরি হওয়া refresh token ৭ দিন পর্যন্ত
+    # নতুন access token বানিয়ে যেত। এখন refresh jti-ও ব্ল্যাকলিস্টে চেক হয়।
+    refresh_jti = payload.get("jti")
+    if refresh_jti and await is_token_revoked(refresh_jti):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
+        )
+
     token_data = {
         "sub": payload.get("sub", "unknown"),
         "role": payload.get("role", "viewer"),
@@ -468,6 +482,7 @@ async def me(current_user: UserContext | None = Depends(optional_current_user)):
 
 @router.post("/logout")
 async def logout(
+    request: Request,
     response: Response,
     token: str | None = Depends(_token_from_header_or_cookie),
 ):
@@ -494,6 +509,24 @@ async def logout(
     exp = payload.get("exp")
     if jti:
         await revoke_token(jti, exp=int(exp) if isinstance(exp, (int, float)) else None)
+
+    # SECURITY FIX (AUDIT-SEC-3, CRITICAL): শুধু access token ব্ল্যাকলিস্ট করলে হয় না —
+    # refresh token-এর jti-ও ব্ল্যাকলিস্ট করতে হবে, নাহলে logout-এর পরেও stolen
+    # refresh token ৭ দিন (REFRESH_TOKEN_EXPIRE_DAYS) নতুন access token মাখতে পারে।
+    refresh_token_value = request.cookies.get(REFRESH_COOKIE_NAME) if request else None
+    if refresh_token_value:
+        try:
+            r_payload = jwt.decode(refresh_token_value, _get_secret_key(), algorithms=[ALGORITHM])
+            r_jti = r_payload.get("jti")
+            r_exp = r_payload.get("exp")
+            if r_jti:
+                await revoke_token(
+                    r_jti,
+                    exp=int(r_exp) if isinstance(r_exp, (int, float)) else None,
+                )
+        except Exception:
+            # বাংলা: refresh cookie invalid/expired হলে access revocation-ই যথেষ্ট।
+            logger.debug("Logout: refresh cookie absent or undecodable; access revoked only")
     return {"status": "logged_out"}
 
 

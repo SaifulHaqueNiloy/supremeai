@@ -47,7 +47,16 @@ def _get_token_from_query(scope: ASGIScope) -> str | None:
 
     বাংলা: EventSource Authorization হেডার পাঠাতে পারে না, তাই SSE এন্ডপয়েন্টে
     টোকেন query parameter হিসাবে গ্রহণ করা হয়।
+
+    SECURITY FIX (AUDIT-SEC-8, HIGH): query-string token সব পাথে গ্রহণ করলে
+    JWT সার্ভার access log, reverse-proxy log, browser history ও Referer
+    হেডারে লিক হয়। তাই এখন query token শুধুমাত্র SSE/স্ট্রিমিং পাথে
+    (path-এ '/stream' থাকলে) গ্রহণ করা হবে — বাকি সব এন্ডপয়েন্টে
+    Authorization header/httpOnly cookie ছাড়া কোনো টোকেন নয়।
     """
+    path = (scope.get("path") or "").lower()
+    if "/stream" not in path:
+        return None
     qs = scope.get("query_string", b"")
     if not qs:
         return None

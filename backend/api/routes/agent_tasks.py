@@ -20,6 +20,11 @@ agent_router = APIRouter(
     dependencies=[Depends(get_current_user_token)],
 )
 
+# FIX (AUDIT-WIRE-1): রেজিস্ট্রির register_router() সবসময় module-এর 'router'
+# attribute খোঁজে — এই ফাইল শুধু 'agent_router' এক্সপোর্ট করত বলে ALL_ROUTERS-এ
+# যোগ করলেও এটি silently no-op হত। ক্যানোনিকাল alias যোগ করা হলো।
+router = agent_router
+
 model_router = ModelRouter()
 orchestrator = SupremeOrchestrator()
 autonomous_agent = AutonomousAgent()
