@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { InteractiveChatTab } from '../../components/admin/InteractiveChatTab';
 import { BrowserPreview } from '../../components/customer/BrowserPreview';
 import { MobileSimulator } from '../../components/customer/MobileSimulator';
-import type { ChatMessage } from '../../services/chatService';
+import { sendMessageStream, type ChatMessage } from '../../services/chatService';
 import { Bot, Code, Smartphone } from 'lucide-react';
 
 export const AIStudio: React.FC = () => {
@@ -15,19 +15,27 @@ export const AIStudio: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim()) return;
     const userMsg: ChatMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+    const draftMessage: ChatMessage = { role: 'ai', content: '' };
+    setMessages(prev => [...prev, userMsg, draftMessage]);
     setInput('');
     setLoading(true);
 
-    try {
-      // Stub implementation. Connect to real chatService here if needed.
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', content: 'This is a response from SupremeAI.' }]);
+    let streamed = '';
+    await sendMessageStream(
+      userMsg.content,
+      (token) => {
+        streamed += token;
+        setMessages(prev => {
+          const withoutDraft = prev.filter((message) => message !== draftMessage);
+          return [...withoutDraft, { role: 'ai', content: streamed }];
+        });
+      },
+      () => setLoading(false),
+      (error) => {
+        setMessages(prev => [...prev, { role: 'ai', content: `Unable to reach SupremeAI: ${error}` }]);
         setLoading(false);
-      }, 1000);
-    } catch (e) {
-      setLoading(false);
-    }
+      },
+    );
   };
 
   return (
