@@ -77,10 +77,10 @@ export function SecurityDashboard() {
   }
 
   return (
-    <div className="flex-grow p-6 overflow-y-auto bg-[#030611]">
+    <div className="flex-grow overflow-y-auto bg-[var(--sa-canvas)] p-6 text-[var(--sa-ink)]">
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-[#00f3ff]/15">
         <h2 className="text-lg font-bold font-['Space_Grotesk'] tracking-widest text-[#00f3ff] uppercase">
-          🧠 Memory & Background Security Dashboard
+          Memory & background security
         </h2>
         <div className="flex gap-2">
           <Badge variant="success">All Tasks Tracked</Badge>
