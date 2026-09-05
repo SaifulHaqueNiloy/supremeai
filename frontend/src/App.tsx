@@ -136,38 +136,52 @@ const AppContent: React.FC = () => {
               {/* AUTHENTICATED USER STATE */}
               <Route path="/workspace/agent" element={
                 <ProtectedRoute>
-                  <AgentWorkspace />
+                  <WorkspaceLayout>
+                    <AgentWorkspace />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/workspace/ide" element={
                 <ProtectedRoute>
-                  <IdeWorkspace />
+                  <WorkspaceLayout>
+                    <IdeWorkspace />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/integrations" element={
                 <ProtectedRoute>
-                  <IntegrationsManager />
+                  <WorkspaceLayout>
+                    <IntegrationsManager />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/architect-tower" element={
                 <ProtectedRoute>
-                  <ArchitectTower />
+                  <WorkspaceLayout>
+                    <ArchitectTower />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/swarm" element={
                 <ProtectedRoute>
-                  <SwarmMap />
+                  <WorkspaceLayout>
+                    <SwarmMap />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/evolution-forge" element={
                 <ProtectedRoute>
-                  <EvolutionForge />
+                  <WorkspaceLayout>
+                    <EvolutionForge />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               {/* বাংলা: /skills-catalog রাউট — রোল-ফিল্টারড ডাইনামিক ক্যাটালগ পেজ */}
               <Route path="/skills-catalog" element={
                 <ProtectedRoute>
-                  <SkillCatalog />
+                  <WorkspaceLayout>
+                    <SkillCatalog />
+                  </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/billing" element={
