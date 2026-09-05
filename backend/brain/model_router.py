@@ -370,12 +370,14 @@ class ModelRouter:
         """Asynchronous streaming generator via LLMGateway."""
         try:
             gateway = get_llm_gateway()
-            response_stream = await gateway.acompletion(
+            response_stream = gateway.acompletion(
                 prompt=prompt,
                 task_type=task_type,
                 stream=True,
                 **kwargs,
             )
+            if inspect.isawaitable(response_stream):
+                response_stream = await response_stream
             if hasattr(response_stream, "__aiter__"):
                 async for chunk in response_stream:
                     if chunk:

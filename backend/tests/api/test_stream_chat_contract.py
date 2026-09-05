@@ -5,12 +5,32 @@ Tests both /api/chat/stream and /api/v1/stream/chat with both 'prompt' and 'mess
 
 from unittest.mock import AsyncMock, MagicMock
 
+from brain.model_router import ModelRouter
+
 import pytest
 from fastapi.testclient import TestClient
 
 from core.app import app
 
 client = TestClient(app)
+
+
+@pytest.mark.asyncio
+async def test_async_route_and_stream_consumes_direct_async_iterator(monkeypatch):
+    """A direct async iterator must not be awaited before token consumption."""
+    router = ModelRouter.__new__(ModelRouter)
+
+    async def token_stream():
+        for token in ("Hello", " world"):
+            yield token
+
+    class Gateway:
+        def acompletion(self, **kwargs):
+            return token_stream()
+
+    monkeypatch.setattr("brain.model_router.get_llm_gateway", lambda: Gateway())
+    tokens = [token async for token in router.async_route_and_stream("hello")]
+    assert tokens == ["Hello", " world"]
 
 
 @pytest.fixture
