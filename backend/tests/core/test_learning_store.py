@@ -426,7 +426,7 @@ class _FakeTable:
         self._pending = [dict(rows)] if isinstance(rows, dict) else list(rows)
         return self
 
-    def upsert(self, rows, on_conflict=None):
+    def upsert(self, rows, on_conflict=None, ignore_duplicates=None):
         self._pending = [dict(rows)] if isinstance(rows, dict) else list(rows)
         self._upserts.append(on_conflict)
         return self
