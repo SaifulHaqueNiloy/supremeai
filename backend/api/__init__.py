@@ -15,6 +15,11 @@ from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
+# AUDIT-FF FIX: রেজিস্ট্রেশন ব্যর্থতার রানটাইম রিপোর্ট — "No router is loaded
+# silently" দাবিটি সত্য করতে, প্রতিটি ব্যর্থতা এখানে রেকর্ড হয় এবং
+# routers.register_all_routers() স্টার্টআপের শেষে এর সারসংক্ষেপ লগ করে।
+_registration_report: list[dict] = []
+
 
 @with_error_bus("register_router")
 def register_router(
@@ -48,6 +53,9 @@ def register_router(
         logger.debug(f"Router registered: {router_module!r} -> prefix={prefix!r}")
     except ImportError as exc:
         msg = f"Optional router {router_module!r} not found: {exc}"
+        _registration_report.append(
+            {"module": router_module, "error_type": type(exc).__name__, "message": str(exc)}
+        )
         if optional:
             logger.warning(msg)
             error_event_bus.emit(
@@ -75,6 +83,9 @@ def register_router(
             raise
     except (AttributeError, TypeError) as exc:
         msg = f"Critical error loading router {router_module!r}: {exc}"
+        _registration_report.append(
+            {"module": router_module, "error_type": type(exc).__name__, "message": str(exc)}
+        )
         if optional:
             logger.warning(msg)
         else:
@@ -97,6 +108,9 @@ def register_router(
         # ইন্টিগ্রেশন misconfigured থাকলে সম্পূর্ণ অ্যাপ ক্র্যাশ করবে না (Self-Healing Engine নীতি)।
         # অপশনাল নয় এমন রাউটারের জন্য আগের মতোই raise করে fail-fast আচরণ বজায় থাকে।
         msg = f"Unexpected error loading router {router_module!r}: {exc}"
+        _registration_report.append(
+            {"module": router_module, "error_type": type(exc).__name__, "message": str(exc)}
+        )
         if optional:
             logger.warning(msg)
             error_event_bus.emit(

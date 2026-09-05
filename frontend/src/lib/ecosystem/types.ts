@@ -29,8 +29,13 @@ export interface AuthResponse {
   session_id: string
 }
 
+// FIX (AUDIT-CONTRACT-1): ব্যাকএন্ড TokenResponse `access_token` ফিল্ডে টোকেন দেয়
+// (আগের `token` ফিল্ড ব্যাকএন্ডে নেই — refresh সবসময় undefined পড়ত)।
 export interface RefreshResponse {
-  token: string
+  access_token: string
+  refresh_token?: string
+  /** @deprecated লেগেসি ফিল্ড — ব্যাকএন্ড আর পাঠায় না */
+  token?: string
 }
 
 // ---------------------------------------------------------------------------

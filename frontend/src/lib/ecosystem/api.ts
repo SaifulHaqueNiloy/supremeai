@@ -286,7 +286,9 @@ export const ecosystemApi = {
   /** A1 — POST /api/v1/auth/register */
   async register(email: string, password: string, name?: string): Promise<AuthResponse> {
     const res = await request<AuthResponse>('POST', '/api/v1/auth/register', {
-      body: { email, password, name: name || '' },
+      // FIX (AUDIT-CONTRACT-2): ব্যাকএন্ড RegisterRequest `username: EmailStr`
+      // চায় — শুধু `email` পাঠালে 422 Validation Error আসত।
+      body: { username: email, email, password, name: name || '' },
       skipAuth: true,
     })
     setSession(res)
@@ -319,8 +321,25 @@ export const ecosystemApi = {
 
   /** A7 — POST /api/v1/auth/refresh (rotates the token) */
   async refreshToken(): Promise<RefreshResponse> {
-    const res = await post<RefreshResponse>('/api/v1/auth/refresh')
-    if (typeof window !== 'undefined') window.localStorage.setItem(TOKEN_KEY, res.token)
+    // FIX (AUDIT-CONTRACT-3): ব্যাকএন্ড RefreshRequest.refresh_token ফিল্ড চায় —
+    // খালি body পাঠালে 422 আসত; আর response থেকে `res.token` (অসম্ভর ফিল্ড)
+    // পড়ত, ফলে null টোকেন store হয়ে যেত। এখন সঠিক ফিল্ড পাঠানো/পড়া হয়।
+    let storedRefresh: string | null = null
+    if (typeof window !== 'undefined') {
+      try {
+        storedRefresh = window.localStorage.getItem('ecosystem.refreshToken')
+      } catch {
+        storedRefresh = null
+      }
+    }
+    const res = await post<RefreshResponse>('/api/v1/auth/refresh', {
+      refresh_token: storedRefresh || '',
+    })
+    const newToken = res.access_token || res.token
+    if (typeof window !== 'undefined' && newToken) {
+      window.localStorage.setItem(TOKEN_KEY, newToken)
+      if (res.refresh_token) window.localStorage.setItem('ecosystem.refreshToken', res.refresh_token)
+    }
     return res
   },
 

@@ -109,7 +109,13 @@ def get_current_user_token(request: Request) -> dict:
         return user
 
     # 2. Test Environment fallback
-    if is_test_environment():
+    # SECURITY FIX (AUDIT-SEC-9, HIGH): আগে শুধু ENV != production এবং CI=true
+    # (বা pytest/GITHUB_ACTIONS) থাকলেই এখানে role=admin ফেরত দেওয়া হত — কোনো
+    # টোকেন ছাড়াই পুরো admin API খোলা পড়ত। একটা ভুল কনফিগ বা accidentally-set
+    # CI env var-ই যথেষ্ট ছিল বাইপাসের জন্য। এখন explicit ALLOW_TEST_AUTH_BYPASS=true
+    # (settings.is_bypass_allowed, production-এ hardcoded False) ছাড়া এই fallback
+    # কাজ করবে না — টেস্টগুলোকে স্পষ্টভাবে opt-in করতে হবে।
+    if is_test_environment() and settings.is_bypass_allowed:
         import os
 
         admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")

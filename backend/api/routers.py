@@ -250,13 +250,51 @@ ALL_ROUTERS = [
     {"path": "api.routes.commandcenter", "prefix": "", "is_admin": True, "is_critical": False},
     # Policy-Driven Web Crawler Admin API
     {"path": "api.routes.crawler_admin", "prefix": "", "is_admin": True, "is_critical": False},
+    # ── AUDIT-WIRE FIX (isolated-routes audit): এই ১২টি রাউটার মডিউল বিদ্যমান,
+    # import-যাচাইকৃত এবং সঠিক 'router' attribute সহ — কিন্তু রেজিস্ট্রিতে ছিল না
+    # বলে তাদের ২৪+ এন্ডপয়েন্ট প্রোডাকশনে 404 দিত। এখন মাউন্ট করা হলো।
+    # মাউন্ট-নিরাপত্তা নোট: chat.py-এর chat-router ফ্রন্টএন্ড ExportMenu/
+    # ImageUploadButton/ChatSearchDialog এভendpoints কল করে।
+    # মাউন্ট-নোট: এই মডিউলগুলোর প্রতিটির নিজস্ব APIRouter prefix আছে, তাই
+    # রেজিস্ট্রি prefix অবশ্যই "" (নইলে URL দ্বিগুণ হয়ে যায়)।
+    {"path": "api.routes.chat", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.advanced_router", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.agent_tasks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.async_task_router", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.cdc_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.hybrid_search", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.ide_trio", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.mcp_marketplace", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.plugin_submissions",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "api.routes.plugins", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.selector_healing", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.webhooks_ai", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 
 def register_all_routers(app: FastAPI) -> None:
-    """Register all unified routers on the FastAPI app."""
+    """Register all unified routers on the FastAPI app.
+
+    FIX (AUDIT-FF, HIGH): আগে is_critical ফ্ল্যাগটি মৃত কোড ছিল — critical ও সাধারণ
+    দুই শাখাই optional=True পাঠাত, ফলে যেকোনো critical রাউটার (llm_gateway,
+    knowledge, billing, control_plane) সাইলেন্টলি আনমাউন্ট থেকে যেত এবং অ্যাপ
+    সবুজ হেলথ-চেক সহ চলত (প্রমাণিত: billing_api stripe-import ব্যর্থ হলে পুরো
+    payments/webhook সারফেস 404 দেয় অথচ স্টার্টআপ সফল হয়)। এখন:
+      1. is_critical=True রাউটার optional=False — import ব্যর্থ হলে স্টার্টআপ fail-fast।
+      2. রেজিস্ট্রেশন শেষে mounted-vs-registered হিসাব লগ হয়; অনুপাত সন্দেহজনক
+         হলে (০ বা অর্ধেকের কম) warning সহ কাউন্ট রিপোর্ট হয়।
+    """
     current_role = getattr(settings, "supremeai_service_role", "monolith").lower()
     logger.info(f"Registering routers for SERVICE_ROLE: {current_role}")
+
+    registered = 0
+    mounted = 0
+    from api import _registration_report
 
     for router_def in ALL_ROUTERS:
         path = router_def["path"]
@@ -278,18 +316,37 @@ def register_all_routers(app: FastAPI) -> None:
             continue
 
         deps = [Depends(get_current_user_token)] if is_admin else None
+        registered += 1
 
         if is_critical:
+            # AUDIT-FF: critical রাউটার সাইলেন্টলি মিস হওয়া যাবে না — fail-fast।
             logger.info(f"Loading critical router: {path}")
-            register_router(app, path, prefix=prefix, optional=True, dependencies=deps)
+            register_router(app, path, prefix=prefix, optional=False, dependencies=deps)
+            mounted += 1
         else:
+            before = len(_registration_report)
             register_router(app, path, prefix=prefix, optional=True, dependencies=deps)
+            if len(_registration_report) == before:
+                mounted += 1
 
-    # BYOC Router logic remains unchanged
     if settings.encryption_key and settings.encryption_key.get_secret_value():
         register_router(app, "api.routes.byoc_api", "", optional=True)
     else:
         logger.warning("Universal BYOC router not loaded: ENCRYPTION_KEY missing")
+
+    # AUDIT-FF: স্টার্টআপে মাউন্ট-রিপোর্ট — সাইলেন্ট আনমাউন্ট এখন দৃশ্যমান।
+    failed = list(_registration_report)
+    logger.info(f"Router registration complete: mounted={mounted}/{registered} registry entries")
+    if failed:
+        logger.warning(
+            f"Router registration FAILURES ({len(failed)}): "
+            + ", ".join(f"{r['module']} ({r['error_type']}: {r['message'][:80]})" for r in failed)
+        )
+    if registered and mounted < registered / 2:
+        logger.error(
+            f"Less than half of registry routers mounted ({mounted}/{registered}) — "
+            "API surface is likely broken; check the failure list above."
+        )
 
 
 def include_user_routers(app: FastAPI) -> None:

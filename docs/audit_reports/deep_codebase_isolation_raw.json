@@ -1,8 +1,8 @@
 {
   "routes": {
     "total_routes": 122,
-    "mounted_count": 97,
-    "unmounted_count": 25,
+    "mounted_count": 109,
+    "unmounted_count": 13,
     "unmounted_details": [
       {
         "file": "admin_auth",
@@ -10,30 +10,6 @@
         "loc": 103,
         "prefix": "",
         "tags": [],
-        "endpoint_count": 0,
-        "endpoints": []
-      },
-      {
-        "file": "advanced_router",
-        "path": "backend/api/routes/advanced_router.py",
-        "loc": 54,
-        "prefix": "/api/v1/router",
-        "tags": [
-          "Advanced Model Router"
-        ],
-        "endpoint_count": 1,
-        "endpoints": [
-          "POST /route"
-        ]
-      },
-      {
-        "file": "agent_tasks",
-        "path": "backend/api/routes/agent_tasks.py",
-        "loc": 140,
-        "prefix": "/api/v1/agents",
-        "tags": [
-          "agents"
-        ],
         "endpoint_count": 0,
         "endpoints": []
       },
@@ -53,20 +29,6 @@
           "PATCH /{artifact_id}",
           "DELETE /{artifact_id}",
           "GET /{artifact_id}/preview"
-        ]
-      },
-      {
-        "file": "async_task_router",
-        "path": "backend/api/routes/async_task_router.py",
-        "loc": 35,
-        "prefix": "/api/task",
-        "tags": [
-          "async-task"
-        ],
-        "endpoint_count": 2,
-        "endpoints": [
-          "GET /{task_id}",
-          "GET /_stats"
         ]
       },
       {
@@ -101,38 +63,6 @@
           "POST /automation/actions",
           "GET /surf/status",
           "POST /surf/start"
-        ]
-      },
-      {
-        "file": "cdc_webhooks",
-        "path": "backend/api/routes/cdc_webhooks.py",
-        "loc": 98,
-        "prefix": "/cdc",
-        "tags": [
-          "cdc"
-        ],
-        "endpoint_count": 2,
-        "endpoints": [
-          "POST /webhook",
-          "GET /health"
-        ]
-      },
-      {
-        "file": "chat",
-        "path": "backend/api/routes/chat.py",
-        "loc": 387,
-        "prefix": "/api/chat",
-        "tags": [
-          "AI-Orchestration"
-        ],
-        "endpoint_count": 6,
-        "endpoints": [
-          "POST /orchestrate",
-          "GET /capabilities",
-          "GET /tasks/{task_id}",
-          "POST /get_completion",
-          "POST /stream_chat",
-          "GET /learning/stats"
         ]
       },
       {
@@ -194,76 +124,6 @@
         ]
       },
       {
-        "file": "hybrid_search",
-        "path": "backend/api/routes/hybrid_search.py",
-        "loc": 53,
-        "prefix": "/api/v1/rag",
-        "tags": [
-          "RAG Hybrid Search"
-        ],
-        "endpoint_count": 2,
-        "endpoints": [
-          "POST /index",
-          "POST /hybrid-search"
-        ]
-      },
-      {
-        "file": "ide_trio",
-        "path": "backend/api/routes/ide_trio.py",
-        "loc": 92,
-        "prefix": "/api/v1/ide-trio",
-        "tags": [
-          "ide-trio"
-        ],
-        "endpoint_count": 2,
-        "endpoints": [
-          "POST /execute",
-          "GET /status"
-        ]
-      },
-      {
-        "file": "mcp_marketplace",
-        "path": "backend/api/routes/mcp_marketplace.py",
-        "loc": 31,
-        "prefix": "/api/v1/mcp",
-        "tags": [
-          "mcp"
-        ],
-        "endpoint_count": 1,
-        "endpoints": [
-          "POST /discover"
-        ]
-      },
-      {
-        "file": "plugin_submissions",
-        "path": "backend/api/routes/plugin_submissions.py",
-        "loc": 41,
-        "prefix": "/api/v1/plugins/community",
-        "tags": [
-          "community_plugins"
-        ],
-        "endpoint_count": 1,
-        "endpoints": [
-          "POST /submit"
-        ]
-      },
-      {
-        "file": "plugins",
-        "path": "backend/api/routes/plugins.py",
-        "loc": 62,
-        "prefix": "/api/v1/plugins",
-        "tags": [
-          "plugins"
-        ],
-        "endpoint_count": 4,
-        "endpoints": [
-          "GET /marketplace",
-          "GET /installed",
-          "POST /install",
-          "DELETE /uninstall/{plugin_id}"
-        ]
-      },
-      {
         "file": "prompt_templates",
         "path": "backend/api/routes/prompt_templates.py",
         "loc": 651,
@@ -314,21 +174,6 @@
         ]
       },
       {
-        "file": "selector_healing",
-        "path": "backend/api/routes/selector_healing.py",
-        "loc": 141,
-        "prefix": "/api/admin/selector-healing",
-        "tags": [
-          "Selector Healing"
-        ],
-        "endpoint_count": 3,
-        "endpoints": [
-          "GET /",
-          "POST /{event_id}/decision",
-          "POST /selectors/audit"
-        ]
-      },
-      {
         "file": "share",
         "path": "backend/api/routes/share.py",
         "loc": 399,
@@ -347,7 +192,7 @@
       {
         "file": "slash_commands",
         "path": "backend/api/routes/slash_commands.py",
-        "loc": 655,
+        "loc": 650,
         "prefix": "/api/commands",
         "tags": [
           "Slash Commands"
@@ -357,26 +202,12 @@
           "GET /",
           "POST /execute"
         ]
-      },
-      {
-        "file": "webhooks_ai",
-        "path": "backend/api/routes/webhooks_ai.py",
-        "loc": 90,
-        "prefix": "/api/v1/webhooks/telegram",
-        "tags": [
-          "Webhooks AI"
-        ],
-        "endpoint_count": 2,
-        "endpoints": [
-          "POST /send-alert",
-          "POST /callback"
-        ]
       }
     ]
   },
   "backend_subsystems": {
     "total_subsystem_files": 413,
-    "unreferenced_count": 87,
+    "unreferenced_count": 85,
     "unreferenced_files": [
       {
         "file": "adaptive_engine/self_improving_agent.py",
@@ -471,11 +302,6 @@
       {
         "file": "agents/ux/accessibility_agent.py",
         "subsystem": "agents",
-        "references": 0
-      },
-      {
-        "file": "brain/gcp_router.py",
-        "subsystem": "brain",
         "references": 0
       },
       {
@@ -760,11 +586,6 @@
       },
       {
         "file": "tools/creative/creative_agents_registry.py",
-        "subsystem": "tools",
-        "references": 0
-      },
-      {
-        "file": "tools/devops/gcp_cloud_functions.py",
         "subsystem": "tools",
         "references": 0
       },

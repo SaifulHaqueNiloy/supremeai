@@ -19,13 +19,43 @@ import time
 from datetime import datetime
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from api.dependencies import get_current_admin
 from core.config_cache import config_cache
 from core.logging_config import logger
 
-router = APIRouter(prefix="/api/browser", tags=["browser-integration"])
+# SECURITY FIX (AUDIT-SEC-2, CRITICAL): আগে এই রাউটারে কোনো auth guard ছিল না —
+# রেজিস্ট্রির is_admin=True শুধু সাধারণ user-token যোগ করত, ফলে যেকোনো লগইন করা
+# ইউজার অভ্যন্তরীণ নেটওয়ার্ক (localhost / 169.254.169.254 / Redis / Postgres)
+# screenshot + scan করে তথ্য বের করতে পারত (SSRF)। এখন router-level admin guard
+# + প্রতিটি user-supplied URL-এ hard SSRF gate বসানো হয়েছে।
+router = APIRouter(
+    prefix="/api/browser",
+    tags=["browser-integration"],
+    dependencies=[Depends(get_current_admin)],
+)
+
+
+def _assert_safe_public_url(url: str) -> None:
+    """SECURITY FIX (AUDIT-SEC-2): hard SSRF gate.
+
+    বাংলা: আগে SSRF চেকের ফলাফল শুধু "issue" হিসেবে রিপোর্ট হতো, enforce হতো না;
+    আর কোডটি অসম্ভর মেথড (SSRFProtection.is_safe_url — ক্লাসে বিদ্যমানই নেই) কল করত,
+    তাই রানটাইমে AttributeError হয়ে চেকটি আসলে কখনোই কার্যকর হতো না। এখন
+    validate_url() ব্যবহার করে অসুরক্ষিত URL-এ request 403-এ ব্লক করা হয়।
+    """
+    from core.security.protection.ssrf_protection import SSRFProtection
+
+    result = SSRFProtection().validate_url(url)
+    if not result.is_safe:
+        logger.warning(f"[SSRF-GATE] Blocked outbound request to {url!r}: {result.reason}")
+        raise HTTPException(
+            status_code=403,
+            detail="Requested URL is not allowed (internal/private network target)",
+        )
+
 
 # ════════════════════════════════════════════════════════════════════
 # REQUEST/RESPONSE MODELS
@@ -125,7 +155,10 @@ async def browser_ai_action(req: AIActionRequest):
     - **extract_links**: Extract and categorize all links
     - **find_issues**: Detect security, performance, accessibility issues
     - **interact**: Q&A about specific page elements
+
+    SECURITY FIX (AUDIT-SEC-2): SSRF hard gate added before any processing.
     """
+    _assert_safe_public_url(req.url)
     start_time = time.time()
 
     try:
@@ -310,6 +343,10 @@ async def browser_security_scan(req: SecurityScanRequest):
         if not hostname:
             raise HTTPException(status_code=400, detail="Invalid URL provided")
 
+        # SECURITY FIX (AUDIT-SEC-2): scan শুরুর আগেই hard SSRF gate — ভেতরের নেটওয়ার্কে
+        # টার্গেট করা URL এখন আগেই 403-তে ব্লক হবে (আগে শুধু report হতো)।
+        _assert_safe_public_url(req.url)
+
         # ── CHECK 1: SSL/TLS Validation ──
         checks_performed.append("ssl_validation")
         ssl_score, ssl_issues = await check_ssl_security(req.url)
@@ -320,10 +357,12 @@ async def browser_security_scan(req: SecurityScanRequest):
         header_score, header_issues = await check_security_headers(req.url)
         issues_found.extend(header_issues)
 
-        # ── CHECK 3: SSRF Protection ──
+        # ── CHECK 3: SSRF Protection (reported as issue; enforcement already done
+        # above via _assert_safe_public_url) ──
         checks_performed.append("ssrf_check")
         ssrf_protector = SSRFProtection()
-        if await ssrf_protector.is_safe_url(req.url):
+        ssrf_result = ssrf_protector.validate_url(req.url)
+        if ssrf_result.is_safe:
             pass  # URL is safe
         else:
             issues_found.append(
@@ -532,6 +571,9 @@ async def browser_screenshot(req: ScreenshotRequest):
     Returns screenshot as image blob that can be displayed or downloaded.
     """
     try:
+        # SECURITY FIX (AUDIT-SEC-2): Playwright দিয়ে যেকোনো URL-এ goto করা যেত —
+        # এখন internal/private নেটওয়ার্ক টার্গেট আগেই ব্লক হবে।
+        _assert_safe_public_url(req.url)
         # FIX (import + api-drift): 'PlaywrightManager' never existed in
         # core.playwright_manager — the real API is get_global_browser().
         # Rewritten against the canonical API so the endpoint actually works.

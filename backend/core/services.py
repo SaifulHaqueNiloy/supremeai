@@ -168,6 +168,45 @@ def get_experience_db():
     return ExperienceDatabase()
 
 
+# AUDIT-WIRE FIX (latent AttributeError + Part-A/D connect): admin_routes.py
+# `/admin/gcp/health` এবং `/admin/gcp/*` রুটগুলো `services.gcp_router`,
+# `services.verification_queue`, `services.gcp_pubsub_queue`,
+# `services.cloud_function_client` reference করে — কিন্তু এই নামগুলোর কোনো
+# factory ছিল না, ফলে প্রথম কলেই AttributeError (ল্যাটেন্ট প্রোডাকশন বাগ)।
+# প্রকৃত ক্লাসগুলো কোডবেসে বিদ্যমান ছিল (গুলোর একটি — GCPCloudRunRouter —
+# isolated-catalog-এর "Part D" তালিকায় ছিল); এখন lazy singleton হিসেবে wired।
+@functools.lru_cache(maxsize=1)
+def get_gcp_router():
+    """Lazy factory for the GCP Cloud Run router singleton."""
+    from brain.gcp_router import GCPCloudRunRouter
+
+    return GCPCloudRunRouter()
+
+
+@functools.lru_cache(maxsize=1)
+def get_verification_queue():
+    """Lazy factory for the GCP Firestore verification queue singleton."""
+    from services.storage.gcp_firestore import GCPFirestoreVerificationQueue
+
+    return GCPFirestoreVerificationQueue()
+
+
+@functools.lru_cache(maxsize=1)
+def get_gcp_pubsub_queue():
+    """Lazy factory for the GCP Pub/Sub queue singleton."""
+    from core.messaging.gcp_pubsub_queue import GCPPubSubQueue
+
+    return GCPPubSubQueue()
+
+
+@functools.lru_cache(maxsize=1)
+def get_cloud_function_client():
+    """Lazy factory for the GCP Cloud Functions client singleton."""
+    from tools.devops.gcp_cloud_functions import GCPCloudFunctionClient
+
+    return GCPCloudFunctionClient()
+
+
 # PATCH v4: singleton factories registry — used by `__getattr__` below to
 # resolve legacy `services.<name>` attribute access lazily.
 _SINGLETON_FACTORIES: dict[str, Callable[[], Any]] = {
@@ -178,6 +217,11 @@ _SINGLETON_FACTORIES: dict[str, Callable[[], Any]] = {
     "intent_clf": get_intent_clf,
     "intent_parser": get_intent_parser,
     "experience_db": get_experience_db,
+    # AUDIT-WIRE FIX: admin_routes.py /admin/gcp/* রুটগুলোর জন্য প্রয়োজনীয়।
+    "gcp_router": get_gcp_router,
+    "verification_queue": get_verification_queue,
+    "gcp_pubsub_queue": get_gcp_pubsub_queue,
+    "cloud_function_client": get_cloud_function_client,
 }
 
 
