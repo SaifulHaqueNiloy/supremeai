@@ -88,6 +88,36 @@ export function SecurityDashboard() {
         </div>
       </div>
 
+      <Card title="Manual Security Follow-up" className="mb-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-3 rounded-lg border border-amber-400/20 bg-amber-400/5 p-3">
+            <ShieldAlert size={18} className="mt-0.5 shrink-0 text-amber-400" aria-hidden="true" />
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-semibold text-amber-200">Audit only — no credentials were changed</span>
+                <Badge variant="warning">Manual task list</Badge>
+              </div>
+              <p className="text-xs leading-relaxed text-slate-400">
+                Complete these actions manually after reviewing the current production environment and Git history.
+              </p>
+            </div>
+          </div>
+          <ul className="grid gap-2 text-xs text-slate-300 md:grid-cols-2" aria-label="Manual security follow-up tasks">
+            {[
+              'Rotate Render, GitHub, and any other exposed credentials.',
+              'Remove exposed values from the working tree and deployment configuration.',
+              'Clean affected Git history, then rescan the repository and deployment logs.',
+              'Review destructive operational scripts and require explicit confirmation or move them to protected tooling.',
+            ].map((task) => (
+              <li key={task} className="flex items-start gap-2 rounded-md border border-slate-800 bg-slate-900/30 p-3">
+                <span className="mt-0.5 text-amber-400" aria-hidden="true">□</span>
+                <span>{task}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card title="Background Task Group">
           <div className="flex items-center gap-3">
