@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { ProtectedRoute } from '../components/core/AuthGuards';
+import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 
 // ─── Lazy load Tier-S pages ─────────────────────────────────────────────
 
@@ -49,7 +50,9 @@ export const tierSUserRoutes: RouteObject[] = [
             </div>
           }
         >
-          <PromptTemplatePage />
+          <WorkspaceLayout>
+            <PromptTemplatePage />
+          </WorkspaceLayout>
         </Suspense>
       </ProtectedRoute>
     ),
