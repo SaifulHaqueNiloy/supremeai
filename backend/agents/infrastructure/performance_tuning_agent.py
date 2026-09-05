@@ -434,33 +434,17 @@ class PerformanceTuningAgent:
     async def _execute_optimization(
         self, optimization_name: str, parameters: dict[str, Any]
     ) -> bool:
-        """Execute a specific optimization technique."""
-        try:
-            if optimization_name not in self.available_optimizations:
-                logger.warning(f"Unknown optimization: {optimization_name}")
-                return False
-
-            # In a real implementation, this would actually execute the optimization
-            # For simulation, we'll just log the intended action
-            logger.info(
-                f"Executing optimization: {optimization_name} with parameters: {parameters}"
-            )
-
-            # Simulate the optimization action
-            # This would typically involve:
-            # - Adjusting system configurations
-            # - Updating database indexes
-            # - Changing caching strategies
-            # - Modifying resource allocations
-            # etc.
-
-            # For now, just simulate success
-            await asyncio.sleep(0.1)  # Simulate processing time
-
-            return True
-        except Exception as e:
-            logger.error(f"Error executing optimization {optimization_name}: {e}")
+        """Execute only registered real executors; recommendations stay advisory."""
+        if optimization_name not in self.available_optimizations:
+            logger.warning("Unknown optimization: %s", optimization_name)
             return False
+
+        # This agent has no durable executor, approval workflow, or rollback
+        # contract for these changes. Never report a simulated sleep as success.
+        logger.warning(
+            "Optimization %s is advisory-only; no mutation was applied", optimization_name
+        )
+        return False
 
     def _calculate_performance_improvement(
         self, before: PerformanceMetric, after: PerformanceMetric
