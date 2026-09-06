@@ -45,7 +45,7 @@ export function classifyError(error: unknown): {
  * 🔬 Smart retry decision function
  */
 export function smartRetryDecision(failureCount: number, error: unknown): boolean {
-  const { retryable, category } = classifyError(error);
+  const { retryable, category: _category } = classifyError(error);
   
   // Never retry auth/client errors more than once
   if (!retryable) return false;
@@ -53,7 +53,7 @@ export function smartRetryDecision(failureCount: number, error: unknown): boolea
   // Max 3 retries for retryable errors
   const maxRetries = parseInt(
     typeof window !== 'undefined' 
-      ? (window as any).__VITE_MAX_RETRIES || import.meta.env.VITE_MAX_RETRIES || '3'
+      ? (window as unknown as { __VITE_MAX_RETRIES?: string }).__VITE_MAX_RETRIES || import.meta.env.VITE_MAX_RETRIES || '3'
       : '3',
     10
   );

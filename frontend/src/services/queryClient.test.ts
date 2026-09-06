@@ -43,7 +43,7 @@ describe('classifyError', () => {
 describe('smartRetryDecision', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
-    delete (window as any).__VITE_MAX_RETRIES;
+    delete (window as unknown as { __VITE_MAX_RETRIES?: string }).__VITE_MAX_RETRIES;
   });
 
   it('does not retry non-retryable errors', () => {

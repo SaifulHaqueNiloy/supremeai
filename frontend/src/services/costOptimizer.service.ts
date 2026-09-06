@@ -103,7 +103,7 @@ class RateLimiter {
         const parsed = JSON.parse(stored);
         this.requests = new Map(Object.entries(parsed));
       }
-    } catch (e) {
+    } catch {
       // Storage not available
     }
   }
@@ -115,7 +115,7 @@ class RateLimiter {
         obj[key] = value;
       });
       localStorage.setItem('superai_rate_limits', JSON.stringify(obj));
-    } catch (e) {
+    } catch {
       // Storage not available or full
     }
   }
@@ -126,7 +126,7 @@ class RateLimiter {
 // ═══════════════════════════════════════════════════════════════
 
 class RequestDeduplicator {
-  private recentRequests: Map<string, { timestamp: number; response: any }> = new Map();
+  private recentRequests: Map<string, { timestamp: number; response: unknown }> = new Map();
   private windowMs: number = 120000; // 2 minutes
   
   constructor(windowMs?: number) {
@@ -274,7 +274,7 @@ export class CostOptimizerService {
     const hitRate = cacheStats.hits / (cacheStats.hits + cacheStats.misses) || 0;
     
     return {
-      rateLimits: this.rateLimiter as any,
+      rateLimits: this.rateLimiter as unknown,
       cacheStats,
       config: this.config,
       savings: {

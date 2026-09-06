@@ -34,7 +34,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.get<ChatConversation[] | { data: ChatConversation[] }>('/api/memory/conversations');
-      const data = Array.isArray(response) ? response : (response as any)?.data || [];
+      const data = Array.isArray(response)
+        ? response
+        : (response && typeof response === 'object' && 'data' in response && Array.isArray((response as { data: unknown }).data))
+          ? (response as { data: ChatConversation[] }).data
+          : [];
       set({
         conversations: data,
         isLoading: false,
@@ -44,7 +48,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         count: data.length,
         timestamp: Date.now(),
       });
-    } catch (_e) {
+    } catch {
       console.warn('[ChatStore] Could not load history from backend, using local only');
       set({ isLoading: false, error: null });
     }
