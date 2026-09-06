@@ -49,7 +49,7 @@ export const IdeWorkspace: React.FC = () => {
         xtermRef.current = term;
         fitAddonRef.current = fitAddon;
 
-        term.writeln('🚀 \x1b[1;34mSupremeAI Morphic IDE\x1b[0m initializing...');
+        term.writeln('🚀 \x1b[1;34mSupremeAI Code Editor\x1b[0m initializing...');
         term.writeln('⏳ Booting Zero-Cost Node.js environment in browser...');
 
         try {

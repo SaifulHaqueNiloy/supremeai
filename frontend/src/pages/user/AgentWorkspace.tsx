@@ -6,17 +6,10 @@ import type { WebContainer } from '@webcontainer/api';
 import 'xterm/css/xterm.css';
 import { apiClient } from '../../services/apiClient';
 import { BrowserPreview } from '../../components/customer/BrowserPreview';
-import { Activity, Bot, ChevronLeft, ChevronRight, Eye, EyeOff, FileCode2, History, Maximize2, MessageSquare, PanelLeft, Play, Plus, Send, Settings2, TerminalSquare, X } from 'lucide-react';
+import { Activity, Bot, ChevronRight, Eye, EyeOff, FileCode2, History, Maximize2, MessageSquare, PanelLeft, Play, Plus, Settings2, TerminalSquare } from 'lucide-react';
 
 interface Message { role: 'user' | 'agent'; content: string; source?: 'ai_api' | 'memory'; }
 type Panel = 'chat' | 'terminal' | 'browser';
-
-const sessions = [
-  { title: 'Codebase issue identification', meta: 'Today · 12 tool calls', active: true },
-  { title: 'GitHub Repo Audit & Analysis', meta: 'Yesterday · completed' },
-  { title: 'Multi-Agent Codebase Audit', meta: 'Yesterday · 8 tool calls' },
-  { title: 'Update Docs with Current Context', meta: 'Sep 5 · completed' },
-];
 
 export const AgentWorkspace: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -80,7 +73,7 @@ export const AgentWorkspace: React.FC = () => {
     <div className="flex min-h-0 w-full flex-1 overflow-hidden bg-[#0d0f12] text-slate-100">
       <aside className={`${historyOpen ? 'w-64' : 'w-14'} flex shrink-0 flex-col border-r border-white/[0.08] bg-[#111318] transition-[width] duration-300 max-md:absolute max-md:inset-y-0 max-md:left-0 max-md:z-30 max-md:shadow-2xl max-md:shadow-cyan-500/10`}>
         <div className="flex h-14 items-center justify-between border-b border-white/[0.08] px-3"><button className="rounded-lg p-2 text-slate-400 transition hover:bg-cyan-400/10 hover:text-cyan-200 hover:shadow-[0_0_16px_rgba(34,211,238,0.2)]" aria-label="Toggle session history" onClick={() => setHistoryOpen(!historyOpen)}>{historyOpen ? <PanelLeft size={17} /> : <ChevronRight size={17} />}</button>{historyOpen && <button className="rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white" aria-label="New session"><Plus size={17} /></button>}</div>
-        {historyOpen && <><div className="border-b border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-left text-xs font-semibold text-slate-950"><Plus size={14} /> New session</button></div><div className="flex-1 overflow-y-auto p-3"><div className="mb-3 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"><History size={12} /> Session history</div><div className="flex flex-col gap-1">{sessions.map(session => <button key={session.title} className={`rounded-lg p-3 text-left transition ${session.active ? 'bg-white/[0.1] ring-1 ring-white/[0.08]' : 'hover:bg-white/[0.05]'}`}><div className="truncate text-xs font-medium">{session.title}</div><div className="mt-1 text-[10px] text-slate-500">{session.meta}</div></button>)}</div></div><div className="border-t border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg p-2 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white"><Settings2 size={14} /> Workspace settings</button></div></>}
+        {historyOpen && <><div className="border-b border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-left text-xs font-semibold text-slate-950"><Plus size={14} /> New session</button></div><div className="flex-1 overflow-y-auto p-3"><div className="mb-3 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"><History size={12} /> Session history</div><div className="rounded-lg border border-dashed border-white/[0.1] p-3 text-[11px] leading-relaxed text-slate-500">No sessions yet. Your completed agent runs will appear here.</div></div><div className="border-t border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg p-2 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white"><Settings2 size={14} /> Workspace settings</button></div></>}
       </aside>
 
       <main className="flex min-w-0 flex-1 flex-col">
