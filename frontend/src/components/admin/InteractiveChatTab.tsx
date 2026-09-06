@@ -141,8 +141,9 @@ export function InteractiveChatTab({
         try {
           const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
           token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? '';
-        } catch {
+        } catch (parseError) {
           // Non-JSON SSE payloads are treated as plain text tokens.
+          console.debug('[v0] Received plain-text admin stream payload', parseError);
         }
         if (!token) return;
         fullText += token;
@@ -372,7 +373,7 @@ export function InteractiveChatTab({
             </div>
           </div>
 
-          {/* চ্যატ */}
+          {/* চ্য��ტ */}
           <div className={`flex-1 p-4 overflow-y-auto flex flex-col gap-4 ${isSimple ? 'bg-indigo-50/20' : 'bg-[#030509]/30'}`}>
             {activeMessages.map((msg) => (
               <UnifiedChatBubble

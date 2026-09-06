@@ -87,8 +87,9 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           try {
             const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
             token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? '';
-          } catch {
+          } catch (parseError) {
             // Plain-text SSE payloads are valid fallbacks.
+            console.debug('[v0] Received plain-text chat stream payload', parseError);
           }
           assistantContent += token;
         };
