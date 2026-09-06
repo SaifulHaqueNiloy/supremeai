@@ -1,4 +1,5 @@
 """Memory candidate, learning promotion, realtime, and frontend envelopes."""
+
 from __future__ import annotations
 
 import hashlib
@@ -46,10 +47,18 @@ class RealtimeEnvelope:
     payload: dict[str, Any]
 
     def to_client_dict(self) -> dict[str, Any]:
-        return {"topic": self.topic, "event": self.event, "sequence": self.sequence, "payload": redact(self.payload), "correlation_id": self.context.correlation_id}
+        return {
+            "topic": self.topic,
+            "event": self.event,
+            "sequence": self.sequence,
+            "payload": redact(self.payload),
+            "correlation_id": self.context.correlation_id,
+        }
 
 
-def frontend_request(context: ExecutionContext, action: str, payload: dict[str, Any]) -> dict[str, Any]:
+def frontend_request(
+    context: ExecutionContext, action: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     if not action or len(action) > 80:
         raise ValueError("invalid frontend action")
     return {"action": action, "context": context.to_dict(), "payload": redact(payload)}

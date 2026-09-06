@@ -1,13 +1,27 @@
 from datetime import timedelta
 
 import pytest
-
-from backend.core.contracts.canonical import ApprovalRequest, ApprovalStatus, EventEnvelope, ExecutionContext, ExecutionResult, ExecutionStatus, utc_now
+from backend.core.contracts.canonical import (
+    ApprovalRequest,
+    ApprovalStatus,
+    EventEnvelope,
+    ExecutionContext,
+    ExecutionResult,
+    ExecutionStatus,
+    utc_now,
+)
 from backend.core.contracts.fake_store import FakeExecutionStore
 
 
 def context(tenant="tenant-a", key="request-1"):
-    return ExecutionContext(tenant_id=tenant, actor_id="actor-1", workspace_id="workspace-1", correlation_id="corr-1", idempotency_key=key, capability="task.execute")
+    return ExecutionContext(
+        tenant_id=tenant,
+        actor_id="actor-1",
+        workspace_id="workspace-1",
+        correlation_id="corr-1",
+        idempotency_key=key,
+        capability="task.execute",
+    )
 
 
 def test_context_requires_tenant_and_actor():
@@ -38,9 +52,18 @@ def test_approval_can_only_be_consumed_once_after_approval():
     ctx = context()
     with pytest.raises(ValueError):
         ApprovalRequest("approval-1", ctx, "deploy").consume()
-    approved = ApprovalRequest("approval-1", ctx, "deploy", ApprovalStatus.APPROVED, expires_at=utc_now() + timedelta(minutes=5))
+    approved = ApprovalRequest(
+        "approval-1",
+        ctx,
+        "deploy",
+        ApprovalStatus.APPROVED,
+        expires_at=utc_now() + timedelta(minutes=5),
+    )
     assert approved.consume().status is ApprovalStatus.CONSUMED
 
 
 def test_result_is_serializable():
-    assert ExecutionResult(ExecutionStatus.SUCCEEDED, output={"ok": True}).to_dict()["status"] == "succeeded"
+    assert (
+        ExecutionResult(ExecutionStatus.SUCCEEDED, output={"ok": True}).to_dict()["status"]
+        == "succeeded"
+    )

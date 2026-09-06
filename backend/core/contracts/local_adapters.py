@@ -1,4 +1,5 @@
 """Deterministic local adapters for offline contract verification."""
+
 from __future__ import annotations
 
 import uuid
@@ -14,9 +15,13 @@ class LocalArtifactStore:
     artifacts: dict[str, bytes] = field(default_factory=dict)
     metadata: dict[str, Artifact] = field(default_factory=dict)
 
-    def put(self, context: ExecutionContext, name: str, content: bytes, kind: ArtifactKind) -> Artifact:
+    def put(
+        self, context: ExecutionContext, name: str, content: bytes, kind: ArtifactKind
+    ) -> Artifact:
         content_type, size, digest = validate_artifact(name, content)
-        artifact = Artifact(f"artifact_{uuid.uuid4().hex}", context, name, content_type, size, digest, kind)
+        artifact = Artifact(
+            f"artifact_{uuid.uuid4().hex}", context, name, content_type, size, digest, kind
+        )
         self.artifacts[artifact.artifact_id] = bytes(content)
         self.metadata[artifact.artifact_id] = artifact
         return artifact
@@ -34,7 +39,12 @@ class LocalTaskAdapter:
 
     def enqueue(self, context: ExecutionContext, task_type: str, payload: dict) -> str:
         task_id = f"task_{uuid.uuid4().hex}"
-        self.tasks[task_id] = {"tenant_id": context.tenant_id, "type": task_type, "payload": payload, "state": "queued"}
+        self.tasks[task_id] = {
+            "tenant_id": context.tenant_id,
+            "type": task_type,
+            "payload": payload,
+            "state": "queued",
+        }
         return task_id
 
     def cancel(self, context: ExecutionContext, task_id: str) -> None:
@@ -51,7 +61,9 @@ class LocalBrowserAdapter:
     workspace: str
     sessions: dict[str, dict] = field(default_factory=dict)
 
-    def open(self, context: ExecutionContext, url: str, mode: SandboxMode = SandboxMode.READ_ONLY) -> str:
+    def open(
+        self, context: ExecutionContext, url: str, mode: SandboxMode = SandboxMode.READ_ONLY
+    ) -> str:
         if not (url.startswith("https://") or url.startswith("http://localhost")):
             raise ValueError("browser adapter only permits HTTPS or localhost URLs")
         session_id = f"browser_{uuid.uuid4().hex}"

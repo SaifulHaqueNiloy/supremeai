@@ -1,13 +1,26 @@
 from pathlib import Path
 
 import pytest
-
 from backend.core.contracts.canonical import ApprovalRequest, ApprovalStatus, ExecutionContext
-from backend.core.contracts.security_policy import Actor, CapabilityPolicy, PolicyDenied, authorize, validate_workspace_path
+from backend.core.contracts.security_policy import (
+    Actor,
+    CapabilityPolicy,
+    PolicyDenied,
+    authorize,
+    validate_workspace_path,
+)
 
 
 def context(tenant="tenant-a", actor="actor-a", risk="high"):
-    return ExecutionContext(tenant_id=tenant, actor_id=actor, workspace_id="w", correlation_id="c", idempotency_key="k", capability="deploy", risk_level=risk)
+    return ExecutionContext(
+        tenant_id=tenant,
+        actor_id=actor,
+        workspace_id="w",
+        correlation_id="c",
+        idempotency_key="k",
+        capability="deploy",
+        risk_level=risk,
+    )
 
 
 def test_cross_tenant_and_forged_actor_are_denied():

@@ -1,12 +1,24 @@
 import tempfile
 from pathlib import Path
 
-from backend.core.contracts.canonical import EventEnvelope, ExecutionContext, ExecutionResult, ExecutionStatus
+from backend.core.contracts.canonical import (
+    EventEnvelope,
+    ExecutionContext,
+    ExecutionResult,
+    ExecutionStatus,
+)
 from backend.core.contracts.sqlite_store import SQLiteExecutionStore
 
 
 def make_context(key="key-1"):
-    return ExecutionContext(tenant_id="tenant-a", actor_id="actor-a", workspace_id="workspace-a", correlation_id="corr-a", idempotency_key=key, capability="task.execute")
+    return ExecutionContext(
+        tenant_id="tenant-a",
+        actor_id="actor-a",
+        workspace_id="workspace-a",
+        correlation_id="corr-a",
+        idempotency_key=key,
+        capability="task.execute",
+    )
 
 
 def test_sqlite_store_survives_reopen_and_replays_idempotency():

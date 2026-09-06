@@ -1,12 +1,22 @@
 import pytest
-
 from backend.core.contracts.adapters import ArtifactKind
 from backend.core.contracts.canonical import ExecutionContext
-from backend.core.contracts.local_adapters import LocalArtifactStore, LocalBrowserAdapter, LocalTaskAdapter
+from backend.core.contracts.local_adapters import (
+    LocalArtifactStore,
+    LocalBrowserAdapter,
+    LocalTaskAdapter,
+)
 
 
 def context(tenant="tenant-a"):
-    return ExecutionContext(tenant_id=tenant, actor_id="actor", workspace_id="workspace", correlation_id="corr", idempotency_key="key-" + tenant, capability="task.execute")
+    return ExecutionContext(
+        tenant_id=tenant,
+        actor_id="actor",
+        workspace_id="workspace",
+        correlation_id="corr",
+        idempotency_key="key-" + tenant,
+        capability="task.execute",
+    )
 
 
 def test_artifacts_are_tenant_scoped():

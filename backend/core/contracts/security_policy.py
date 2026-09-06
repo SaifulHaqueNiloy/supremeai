@@ -1,4 +1,5 @@
 """Local authorization, approval, and sandbox policy primitives."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,13 +37,22 @@ class CapabilityPolicy:
 _RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
 
 
-def authorize(actor: Actor, context: ExecutionContext, policy: CapabilityPolicy, approval: ApprovalRequest | None = None) -> None:
+def authorize(
+    actor: Actor,
+    context: ExecutionContext,
+    policy: CapabilityPolicy,
+    approval: ApprovalRequest | None = None,
+) -> None:
     if actor.tenant_id != context.tenant_id or actor.actor_id != context.actor_id:
         raise PolicyDenied("actor does not belong to execution tenant")
     if not actor.roles.intersection(policy.allowed_roles):
         raise PolicyDenied("actor lacks capability role")
     if _RISK_ORDER.get(context.risk_level, 99) >= _RISK_ORDER[policy.minimum_approval_risk]:
-        if approval is None or approval.status is not ApprovalStatus.APPROVED or approval.context.execution_id != context.execution_id:
+        if (
+            approval is None
+            or approval.status is not ApprovalStatus.APPROVED
+            or approval.context.execution_id != context.execution_id
+        ):
             raise PolicyDenied("explicit approval required")
 
 
@@ -54,4 +64,11 @@ def validate_workspace_path(root: Path, requested: Path) -> Path:
     return target
 
 
-__all__ = ["Actor", "CapabilityPolicy", "PolicyDenied", "SandboxMode", "authorize", "validate_workspace_path"]
+__all__ = [
+    "Actor",
+    "CapabilityPolicy",
+    "PolicyDenied",
+    "SandboxMode",
+    "authorize",
+    "validate_workspace_path",
+]
