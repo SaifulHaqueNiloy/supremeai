@@ -281,16 +281,23 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     db = get_firestore_client()
     if db:
         try:
-            db.collection("admin_users").document(uid).set({
-                "temp_totp_secret": secret,
-                "recovery_code_hashes": recovery_hashes,
-            }, merge=True)
+            db.collection("admin_users").document(uid).set(
+                {
+                    "temp_totp_secret": secret,
+                    "recovery_code_hashes": recovery_hashes,
+                },
+                merge=True,
+            )
         except Exception as e:
             logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
 
     # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি রিকোয়েস্ট করা হলো
     provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
-    return {"secret": secret, "provisioning_uri": provisioning_uri, "recovery_codes": recovery_codes}
+    return {
+        "secret": secret,
+        "provisioning_uri": provisioning_uri,
+        "recovery_codes": recovery_codes,
+    }
 
 
 class AdminRecoveryRequest(BaseModel):
@@ -304,7 +311,9 @@ def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
     try:
         if payload.id_token.startswith("mock-"):
             if getattr(settings, "env", "local").lower() == "production":
-                raise HTTPException(status_code=403, detail="Mock tokens are forbidden in production")
+                raise HTTPException(
+                    status_code=403, detail="Mock tokens are forbidden in production"
+                )
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
         elif auth:
