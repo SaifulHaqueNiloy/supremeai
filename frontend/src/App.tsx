@@ -12,7 +12,6 @@ import { resolveLandingPath } from './auth/identity';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { WorkspaceLayout } from "./components/layout/WorkspaceLayout";
-import { LivingDashboardShell } from "./components/dashboard/LivingDashboardShell";
 import { UserDashboard } from "./components/customer/UserDashboard";
 
 // বাংলা মন্তব্য: ক্লায়েন্ট বান্ডেল সাইজ অপ্টিমাইজ করার জন্য হেভি ওয়ার্কস্পেস পেজগুলো ডাইনামিকভাবে অলস লোড (lazy load) করা হলো।
@@ -224,7 +223,7 @@ const AppContent: React.FC = () => {
               <Route path="/workspace/live" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <LivingDashboardShell chatPanel={<AIStudio />} />
+                    <AIStudio />
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
