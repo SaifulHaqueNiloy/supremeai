@@ -120,7 +120,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     category: 'Actions',
     icon: Zap,
     shortcut: 'Ctrl+H',
-    action: () => { console.warn('Self healer triggered'); },
+    action: () => { window.dispatchEvent(new CustomEvent('supremeai-command-action', { detail: 'self-heal' })); },
     portals: ['user', 'admin'],
   },
   {
@@ -128,7 +128,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     title: 'Run Gap Finder Codebase Audit',
     category: 'Actions',
     icon: Shield,
-    action: () => { console.warn('Gap finder triggered'); },
+    action: () => { window.dispatchEvent(new CustomEvent('supremeai-command-action', { detail: 'gap-finder' })); },
     portals: ['admin'],
   },
   {
@@ -136,7 +136,7 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     title: 'Inject Multi-Model Knowledge Vector',
     category: 'Actions',
     icon: Layers,
-    action: () => { console.warn('Knowledge injection triggered'); },
+    action: () => { window.dispatchEvent(new CustomEvent('supremeai-command-action', { detail: 'knowledge-injection' })); },
     portals: ['admin'],
   },
 

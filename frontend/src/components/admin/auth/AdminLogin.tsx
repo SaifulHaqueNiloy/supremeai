@@ -14,6 +14,7 @@ interface LoginViewProps {
   provisioningUri: string;
   totpSecret: string;
   onResetTotp: () => void;
+  onAuthorize: () => void;
   recoveryCode: string;
   setRecoveryCode: (val: string) => void;
   recoverTotp: () => void;
@@ -37,6 +38,7 @@ export function LoginView({
   provisioningUri,
   totpSecret,
   onResetTotp,
+  onAuthorize,
   recoveryCode,
   setRecoveryCode,
   recoverTotp,
@@ -138,6 +140,9 @@ export function LoginView({
           onSubmit={handleSubmit}
           aria-label="Admin authentication form"
         >
+          <button type="button" onClick={onAuthorize} className="self-end text-[10px] font-mono text-[#00f3ff] underline underline-offset-2 hover:text-white">
+            AUTHORIZE
+          </button>
           {!otpRequired && (
             <>
               <div>
