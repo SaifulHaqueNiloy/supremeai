@@ -14,11 +14,16 @@ from __future__ import annotations
 
 import os
 
-from browser_agent import BrowserAgent, BrowseRequest
+try:
+    from browser_agent import BrowserAgent, BrowseRequest
+    from security import is_safe_url
+    from web_scraper import WebScraper
+except ImportError:
+    from services.scraper.browser_agent import BrowserAgent, BrowseRequest
+    from services.scraper.security import is_safe_url
+    from services.scraper.web_scraper import WebScraper
 from fastapi import APIRouter, FastAPI, HTTPException
 from pydantic import BaseModel
-from security import is_safe_url
-from web_scraper import WebScraper
 
 MAX_CONCURRENCY = int(os.getenv("SCRAPER_MAX_CONCURRENCY", "3"))
 TIMEOUT_SECONDS = int(os.getenv("SCRAPER_TIMEOUT_SECONDS", "45"))
