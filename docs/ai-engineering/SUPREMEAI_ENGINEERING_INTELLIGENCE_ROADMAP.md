@@ -77,12 +77,12 @@ The repository index is an acceleration layer, never the sole authorization sour
 
 Deliverables:
 
-- [ ] Create a change-risk vocabulary: `low`, `medium`, `high`, `critical`.
-- [ ] Define protected paths: auth, migrations, secrets, deployment, CI, billing, tenant isolation, and production configuration.
-- [ ] Define change classes and approval requirements.
-- [ ] Define a standard impact report and evidence bundle schema.
+- [x] Create a change-risk vocabulary: `low`, `medium`, `high`, `critical`.
+- [x] Define protected paths: auth, migrations, secrets, deployment, CI, billing, tenant isolation, and production configuration.
+- [x] Define change classes and approval requirements.
+- [x] Define a standard impact report and evidence bundle schema.
 - [ ] Record baseline commands for backend, frontend, CI, packaging, and deployment checks.
-- [ ] Add a decision log for false positives, false negatives, and accepted risks.
+- [x] Add a decision log for false positives, false negatives, and accepted risks.
 
 Exit evidence: policy is documented, reviewed, and usable without an AI model.
 
