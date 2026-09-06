@@ -1204,7 +1204,11 @@ def _load_json_data(file_path: str, default_data: Any) -> Any:
     try:
         with open(file_path, encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as exc:
+        logger.warning(
+            f"[admin_dashboard] Failed to load JSON data from {file_path}, returning default: {exc}",
+            exc_info=True,
+        )
         return default_data
 
 
