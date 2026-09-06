@@ -6,7 +6,8 @@ import { apiClient } from './apiClient';
 export const authService = {
   // বাংলা মন্তব্য: ফায়ারবেস অথেনটিকেশন, রোল ভেরিফিকেশন এবং টিওটিপি ফ্লো
   firebaseLogin: async (idToken: string): Promise<{ status: string; token?: string; uid?: string; email?: string }> => {
-    return apiClient.post<{ status: string; token?: string; uid?: string; email?: string }>('/api/admin/firebase-login', { id_token: idToken });
+    const response = await apiClient.post<{ status: string; token?: string; access_token?: string; jwt?: string; uid?: string; email?: string }>('/api/admin/firebase-login', { id_token: idToken });
+    return { ...response, token: response.token ?? response.access_token ?? response.jwt };
   },
 
   // বাংলা মন্তব্য: ফায়ারবেস টিওটিপি ৭ ডিজিট কনফিগারেশন সেটআপ সার্ভিস এন্ডপয়েন্ট

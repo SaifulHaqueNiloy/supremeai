@@ -38,6 +38,13 @@ const decodeJwt = (token: string): Record<string, unknown> | null => {
 const buildProvisioningUri = (email: string, secret: string): string =>
   `otpauth://totp/SupremeAI:${encodeURIComponent(email)}?secret=${secret}&issuer=SupremeAI&digits=6&period=30`;
 
+const persistAdminToken = (token: unknown): token is string => {
+  if (typeof token !== 'string' || token.trim().length < 20) return false;
+  localStorage.setItem('supreme_admin_jwt', token);
+  updateTokenCache(token);
+  return true;
+};
+
 interface AdminState {
   adminAuthenticated: boolean;
   adminRole: string | null;
@@ -143,6 +150,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         // Step 2: Send Firebase Token to Backend for Role/TOTP check
         const data = await authService.firebaseLogin(idToken);
 
+        if (data.status === 'trusted_browser' && persistAdminToken(data.token)) {
+          const decoded = decodeJwt(data.token);
+          set({ adminAuthenticated: true, adminRole: decoded?.role === 'admin' ? 'admin' : null });
+          eventBus.emit(Events.AUTH_LOGIN, { source: 'admin_store', timestamp: Date.now() });
+          return;
+        }
+
         if (data.status === 'otp_required') {
           set({ otpRequired: true });
         } else if (data.status === 'totp_setup_required') {
@@ -161,10 +175,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             const errStr = typeof setupErr?.message === 'string' ? setupErr.message : 'Failed to setup TOTP.';
             set({ adminError: errStr });
           }
-        } else if (data.token) {
-            localStorage.setItem('supreme_admin_jwt', data.token);
-            updateTokenCache(data.token);
+        } else if (persistAdminToken(data.token)) {
             const decoded = decodeJwt(data.token);
+            if (!decoded) {
+              set({ adminError: 'Authentication token is invalid. Please sign in again.' });
+              return;
+            }
             set({ adminAuthenticated: true, adminRole: decoded?.role === 'admin' ? 'admin' : null });
             eventBus.emit(Events.AUTH_LOGIN, { source: 'admin_store', timestamp: Date.now() });
         } else {
@@ -183,16 +199,17 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
         try {
           const data = await authService.firebaseTotpVerify(idToken, adminOtp.trim(), rememberBrowser);
-          if (data.token) {
-            localStorage.setItem('supreme_admin_jwt', data.token);
+          if (persistAdminToken(data.token)) {
             // বাংলা: legacy 'adminToken' duplicate write সরানো হলো (single-frontend migration) —
             // adminTokenStore শুধুই 'supreme_admin_jwt' পড়ে; দ্বিতীয় key লেখা অপ্রয়োজনীয় ছিল।
             // পুরোনো key যদি থেকে থাকে, logout-এ পরিষ্কার হয়ে যাবে।
-            updateTokenCache(data.token);
             const decoded = decodeJwt(data.token);
             if (decoded && typeof decoded.role === 'string') {
               set({ adminRole: decoded.role });
             }
+          } else {
+            set({ adminError: 'Authentication token missing. Please sign in again.' });
+            return;
           }
           
           eventBus.emit(Events.AUTH_LOGIN, {
