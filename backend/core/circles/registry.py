@@ -3,7 +3,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from .event_journal import circle_event_journal
 from .contracts import (
     CapabilityRequest,
     CircleManifest,
@@ -11,6 +10,7 @@ from .contracts import (
     ExecutionResult,
     ExecutionStatus,
 )
+from .event_journal import circle_event_journal
 
 CapabilityHandler = Callable[[CapabilityRequest], Awaitable[Any] | Any]
 
