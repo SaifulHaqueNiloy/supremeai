@@ -343,5 +343,5 @@ async def websocket_cost_updates_endpoint(websocket: WebSocket):
     finally:
         try:
             await websocket.close()
-        except Exception:  # pragma: no cover - double-close is harmless
-            pass
+        except Exception as close_error:  # pragma: no cover - double-close is harmless
+            logger.debug("Cost-updates WebSocket was already closed: %s", close_error)

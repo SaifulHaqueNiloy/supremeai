@@ -191,7 +191,11 @@ export const ProfilePage: React.FC = () => {
                       onClick={() => {
                         const next = !darkMode;
                         setDarkMode(next);
-                        try { localStorage.setItem('supremeai_theme', next ? 'dark' : 'light'); } catch { /* storage unavailable */ }
+                        try {
+                          localStorage.setItem('supremeai_theme', next ? 'dark' : 'light');
+                        } catch (storageError) {
+                          console.warn('[v0] Theme preference could not be saved', storageError);
+                        }
                       }}
                       className={`w-12 h-6 rounded-full transition-colors relative ${
                         darkMode ? 'bg-cyan-500' : 'bg-slate-800'

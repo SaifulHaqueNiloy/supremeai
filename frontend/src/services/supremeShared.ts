@@ -41,7 +41,8 @@ class LocalStorageTokenProvider {
         localStorage.getItem('supreme_admin_jwt') ||
         localStorage.getItem('supremeai_auth_token')
       );
-    } catch {
+    } catch (storageError) {
+      console.warn('[v0] Auth token storage is unavailable', storageError);
       return null;
     }
   }
