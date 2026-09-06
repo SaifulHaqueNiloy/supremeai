@@ -150,6 +150,13 @@ export const useAdminStore = create<AdminState>((set, get) => ({
         // Step 2: Send Firebase Token to Backend for Role/TOTP check
         const data = await authService.firebaseLogin(idToken);
 
+        if (data.status === 'trusted_browser' && persistAdminToken(data.token)) {
+          const decoded = decodeJwt(data.token);
+          set({ adminAuthenticated: true, adminRole: decoded?.role === 'admin' ? 'admin' : null });
+          eventBus.emit(Events.AUTH_LOGIN, { source: 'admin_store', timestamp: Date.now() });
+          return;
+        }
+
         if (data.status === 'otp_required') {
           set({ otpRequired: true });
         } else if (data.status === 'totp_setup_required') {
@@ -170,6 +177,10 @@ export const useAdminStore = create<AdminState>((set, get) => ({
           }
         } else if (persistAdminToken(data.token)) {
             const decoded = decodeJwt(data.token);
+            if (!decoded) {
+              set({ adminError: 'Authentication token is invalid. Please sign in again.' });
+              return;
+            }
             set({ adminAuthenticated: true, adminRole: decoded?.role === 'admin' ? 'admin' : null });
             eventBus.emit(Events.AUTH_LOGIN, { source: 'admin_store', timestamp: Date.now() });
         } else {
