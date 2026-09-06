@@ -24,17 +24,27 @@ class CDCEvent(BaseModel):
 
 
 async def _verify_webhook_signature(request: Request, body: bytes) -> bool:
+    # বাংলা মন্তব্য: Webhook secret configure না থাকলে fail-closed নীতি অনুসরণ করা হচ্ছে
+    # আগে এই ফাংশন True রিটার্ন করত, যার ফলে সব webhook accept হতো
     if not SUPABASE_WEBHOOK_SECRET:
-        return True
+        logger.warning(
+            "SUPABASE_WEBHOOK_SECRET is not configured. "
+            "Rejecting all CDC webhooks under fail-closed policy."
+        )
+        return False
     signature = request.headers.get("x-supabase-signature", "")
     if not signature:
+        logger.warning("CDC webhook rejected: missing x-supabase-signature header")
         return False
     expected = hmac.new(
         SUPABASE_WEBHOOK_SECRET.encode(),
         body,
         hashlib.sha256,
     ).hexdigest()
-    return hmac.compare_digest(f"sha256={expected}", signature)
+    if not hmac.compare_digest(f"sha256={expected}", signature):
+        logger.warning("CDC webhook rejected: invalid signature")
+        return False
+    return True
 
 
 async def _delete_from_vector_db(user_id: str, doc_id: str | None = None) -> None:

@@ -1,4 +1,5 @@
 import os
+from datetime import UTC
 from typing import Any, ClassVar
 from urllib.parse import parse_qs, urlparse
 
@@ -131,6 +132,124 @@ class SSOIntegrator:
 
         # Fallback XML parsing (python-saml not available)
         return self._fallback_parse_saml_response(post_data)
+
+    def _fallback_parse_saml_response(self, post_data: dict[str, Any]) -> dict[str, Any]:
+        """Fallback SAML response parser without signature verification.
+
+        বাংলা মন্তব্য: এই method কোনো signature verification করে না।
+        Production-এ python-saml লাইব্রেরি ব্যবহার করার পরামর্শ দেওয়া হচ্ছে।
+        """
+        # Disable fallback in production unless explicitly allowed
+        if os.environ.get("SUPREMEAI_ENV", "").lower() == "production":
+            if os.environ.get("SAML_ALLOW_FALLBACK", "").lower() != "true":
+                logger.error(
+                    "SAML fallback parsing is disabled in production. "
+                    "Install python-saml library or set SAML_ALLOW_FALLBACK=true to enable."
+                )
+                return {
+                    "status": "error",
+                    "message": "SAML fallback parsing disabled in production. Please install python-saml.",
+                }
+
+        try:
+            import base64
+            from datetime import datetime, timezone
+
+            saml_response_raw = post_data.get("SAMLResponse", "")
+            if not saml_response_raw:
+                return {"status": "error", "message": "Missing SAMLResponse"}
+
+            # Decode if base64 encoded
+            try:
+                saml_xml = base64.b64decode(saml_response_raw).decode("utf-8")
+            except Exception:
+                saml_xml = saml_response_raw
+
+            root = ET.fromstring(saml_xml)
+            logger.info("SAML XML parsed successfully.")
+
+            # Timestamp validation - NotBefore and NotOnOrAfter
+            conditions = root.find(".//{urn:oasis:names:tc:SAML:2.0:assertion}Conditions")
+            if conditions is not None:
+                not_before_str = conditions.get("NotBefore")
+                not_on_or_after_str = conditions.get("NotOnOrAfter")
+
+                now = datetime.now(UTC)
+
+                if not_before_str:
+                    try:
+                        not_before = datetime.fromisoformat(not_before_str.replace("Z", "+00:00"))
+                        if now < not_before:
+                            logger.warning(
+                                f"SAML assertion not yet valid. NotBefore={not_before_str}"
+                            )
+                            return {
+                                "status": "error",
+                                "message": "SAML assertion not yet valid",
+                            }
+                    except ValueError as e:
+                        logger.warning(f"Failed to parse NotBefore timestamp: {e}")
+
+                if not_on_or_after_str:
+                    try:
+                        not_on_or_after = datetime.fromisoformat(
+                            not_on_or_after_str.replace("Z", "+00:00")
+                        )
+                        if now >= not_on_or_after:
+                            logger.warning(
+                                f"SAML assertion expired. NotOnOrAfter={not_on_or_after_str}"
+                            )
+                            return {
+                                "status": "error",
+                                "message": "SAML assertion expired",
+                            }
+                    except ValueError as e:
+                        logger.warning(f"Failed to parse NotOnOrAfter timestamp: {e}")
+
+            # Audience restriction check
+            sp_entity_id = self.saml_settings.get("sp_entity_id", "")
+            if sp_entity_id:
+                audience_restriction = root.find(
+                    ".//{urn:oasis:names:tc:SAML:2.0:assertion}Conditions/"
+                    "{urn:oasis:names:tc:SAML:2.0:assertion}AudienceRestriction/"
+                    "{urn:oasis:names:tc:SAML:2.0:assertion}Audience"
+                )
+                if audience_restriction is not None and audience_restriction.text:
+                    if audience_restriction.text.strip() != sp_entity_id:
+                        logger.warning(
+                            f"SAML audience mismatch. Expected={sp_entity_id}, Got={audience_restriction.text}"
+                        )
+                        return {
+                            "status": "error",
+                            "message": "SAML audience restriction mismatch",
+                        }
+
+            user_id = root.findtext(
+                ".//{urn:oasis:names:tc:SAML:2.0:assertion}Subject/{urn:oasis:names:tc:SAML:2.0:assertion}NameID",
+                default="",
+            )
+            groups_el = root.findall(
+                ".//{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement//{urn:oasis:names:tc:SAML:2.0:assertion}Attribute[@Name='groups']/{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue"
+            )
+            groups = [el.text for el in groups_el if el.text]
+            email_el = root.find(
+                ".//{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement//{urn:oasis:names:tc:SAML:2.0:assertion}Attribute[@Name='email']/{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue"
+            )
+            email = email_el.text if email_el is not None else ""
+            return {
+                "status": "success",
+                "user_id": user_id,
+                "email": email,
+                "groups": groups,
+                "roles": self.map_roles(groups),
+                "method": "xml_fallback",
+            }
+        except ET.ParseError as exc:
+            logger.error(f"Fallback SAML parsing failed: {exc}")
+            return {"status": "error", "message": "Invalid SAML response"}
+        except Exception as exc:
+            logger.error(f"Unexpected error in fallback SAML parsing: {exc}")
+            return {"status": "error", "message": "SAML parsing failed"}
 
     def map_roles(self, sso_groups: list[str]) -> list[str]:
         internal_roles: list[str] = []
