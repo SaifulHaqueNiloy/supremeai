@@ -374,17 +374,17 @@ export function CommandCenter() {
 
               {/* Panel Toggle Buttons */}
               <div className="flex items-center gap-2">
-                <button onClick={() => setShowChat(p => !p)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showChat ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Chat">
+                <button type="button" onClick={() => setShowChat(current => !current)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showChat ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Chat">
                   <MessageSquare size={10} />
                   {showChat ? <Eye size={9} /> : <EyeOff size={9} />}
                   Chat
                 </button>
-                <button onClick={() => setShowBrowser(p => !p)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showBrowser ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Browser">
+                <button type="button" onClick={() => setShowBrowser(current => !current)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showBrowser ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Browser">
                   <Globe size={10} />
                   {showBrowser ? <Eye size={9} /> : <EyeOff size={9} />}
                   Browser
                 </button>
-                <button onClick={() => setShowTerminal(p => !p)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showTerminal ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Terminal">
+                <button type="button" onClick={() => setShowTerminal(current => !current)} className={`flex items-center gap-1 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider transition-all ${showTerminal ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30' : 'text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-accent)]'}`} title="Toggle Terminal">
                   <TerminalSquare size={10} />
                   {showTerminal ? <Eye size={9} /> : <EyeOff size={9} />}
                   Terminal
