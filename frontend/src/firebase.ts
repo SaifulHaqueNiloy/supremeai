@@ -19,23 +19,21 @@ const getFirebaseConfig = async () => {
       throw new Error("Firebase initialization failed: Configuration endpoint is unreachable.");
     }
   }
-  const apiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-  if (!apiKey) {
-    if (import.meta.env.PROD) {
-      console.error("🔥 VITE_FIREBASE_API_KEY is missing in production environment!");
-      throw new Error("VITE_FIREBASE_API_KEY missing in production.");
-    } else {
-      console.warn("⚠️ Using fake Firebase API key for local development. Please copy .env.example to .env and configure Firebase.");
-    }
-  }
-  return {
-    apiKey: apiKey || "AIzaSyFakeKeyForDevelopmentOnly",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "supremeai-a",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "supremeai-a.appspot.com",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1234567890",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1234567890:web:fakeappid"
+  const config = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
   };
+  const missingKeys = Object.entries(config)
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+  if (missingKeys.length > 0) {
+    throw new Error(`Firebase configuration is incomplete: ${missingKeys.join(", ")}`);
+  }
+  return config;
 };
 
 // Initialize Firebase app asynchronously or return existing instance
