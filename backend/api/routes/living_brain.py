@@ -156,6 +156,7 @@ async def get_brain_status():
                 },
             }
         except Exception as e:
+            logger.warning(f"[LivingBrain] Learning engine status check failed: {e}", exc_info=True)
             components["learning_engine"] = {"status": "error", "error": str(e)}
     else:
         components["learning_engine"]["status"] = "unavailable"
@@ -181,6 +182,7 @@ async def get_brain_status():
                 },
             }
         except Exception as e:
+            logger.warning(f"[LivingBrain] Memory store status check failed: {e}", exc_info=True)
             components["memory"] = {"status": "error", "error": str(e)}
     else:
         components["memory"]["status"] = "unavailable"
