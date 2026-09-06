@@ -86,7 +86,23 @@ class EscrowService:
 
         Returns:
             Escrow ID.
+
+        Raises:
+            ValueError: If amount is invalid.
         """
+        # বাংলা মন্তব্য: Amount validation - negative বা zero amount গ্রহণযোগ্য নয়
+        if amount <= 0:
+            raise ValueError(f"Escrow amount must be positive, got {amount}")
+
+        # বাংলা মন্তব্য: Amount precision check (max 2 decimal places for USD)
+        if round(amount, 2) != amount:
+            raise ValueError(f"Escrow amount has too many decimal places: {amount}")
+
+        # বাংলা মন্তব্য: Maximum escrow amount limit
+        max_amount = 1_000_000.0  # $1M limit
+        if amount > max_amount:
+            raise ValueError(f"Escrow amount exceeds maximum limit of ${max_amount:,.2f}")
+
         escrow_id = f"escrow_{secrets.token_hex(16)}"
 
         escrow = Escrow(
@@ -120,6 +136,19 @@ class EscrowService:
         conditions: list[str] | None = None,
         expires_in_days: int = 30,
     ) -> Escrow:
+        # বাংলা মন্তব্য: Amount validation - negative বা zero amount গ্রহণযোগ্য নয়
+        if amount <= 0:
+            raise ValueError(f"Escrow amount must be positive, got {amount}")
+
+        # বাংলা মন্তব্য: Amount precision check (max 2 decimal places for USD)
+        if round(amount, 2) != amount:
+            raise ValueError(f"Escrow amount has too many decimal places: {amount}")
+
+        # বাংলা মন্তব্য: Maximum escrow amount limit
+        max_amount = 1_000_000.0  # $1M limit
+        if amount > max_amount:
+            raise ValueError(f"Escrow amount exceeds maximum limit of ${max_amount:,.2f}")
+
         escrow_id = f"esc_{secrets.token_hex(8)}"
         escrow = Escrow(
             escrow_id=escrow_id,

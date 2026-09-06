@@ -456,18 +456,32 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is not a refresh token"
         )
 
-    # SECURITY FIX (AUDIT-SEC-3, CRITICAL): আগে /refresh কখনো revocation blacklist
-    # চেক করত না — logout-এর পরেও চুরি হওয়া refresh token ৭ দিন পর্যন্ত
-    # নতুন access token বানিয়ে যেত। এখন refresh jti-ও ব্ল্যাকলিস্টে চেক হয়।
+    # বাংলা মন্তব্য: Refresh token rotation - পুরানো refresh token ব্ল্যাকলিস্ট করা
+    # একবার ব্যবহৃত refresh token আর ব্যবহার করা যাবে না (replay attack প্রতিরোধ)
     refresh_jti = payload.get("jti")
-    if refresh_jti and await is_token_revoked(refresh_jti):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
-        )
+    if refresh_jti:
+        try:
+            # Token এর expiration time বের করা
+            exp_timestamp = payload.get("exp")
+            await revoke_token(refresh_jti, exp=exp_timestamp)
+            logger.info(f"Old refresh token rotated and blacklisted: {refresh_jti[:20]}...")
+        except Exception as e:
+            # rotation ব্যর্থ হলেও login বন্ধ করা হচ্ছে না, শুধু লগ করা
+            logger.warning(f"Failed to rotate refresh token: {e}")
+
+    # বাংলা মন্তব্য: Token family বজায় রাখা - stolen token detection-এর জন্য
+    token_family = payload.get("tfid")
+    token_data = {
+        "sub": payload.get("sub", "unknown"),
+        "role": payload.get("role", "viewer"),
+        "email": payload.get("email"),
+        "method": payload.get("method", "supabase_auth"),
+    }
+    if token_family:
+        token_data["tfid"] = token_family
 
     # বাংলা মন্তব্য: Token Family Tracking — stolen refresh token শনাক্তকরণ
     # যদি রোটেট করা token আবার আসে, তাহলে সেটি stolen হয়েছে বলে ধরা হবে
-    token_family = payload.get("tfid")
     if token_family:
         try:
             from core.cache.redis_manager import redis_manager

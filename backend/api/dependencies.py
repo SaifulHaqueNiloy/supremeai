@@ -219,6 +219,45 @@ async def verify_idempotency(request: Request) -> None:
         )
 
     # বাংলা মন্তব্য: Lock অ্যাকোয়ার হলে request state-এ key রাখা হচ্ছে
+    request.state.idempotency_key = idempotency_key
+
+    # বাংলা মন্তব্য: Exception হলেও lock release হবে এমন ব্যবস্থা করা
+    # response send হলে বা exception হলে উভয় ক্ষেত্রেই lock release হবে
+    import asyncio
+
+    from starlette.middleware.base import BaseHTTPMiddleware
+
+    # বাংলা মন্তব্য: Background task দিয়ে request complete হলে lock release করা
+    # এটি response middleware হিসেবে কাজ করে
+
+    # পদ্ধতি: Request state-এ cleanup function store করা, যা response পাঠানোর পর call হবে
+    async def cleanup_idempotency_lock():
+        """Idempotency lock release করার জন্য callback।
+        বাংলা মন্তব্য: এটি response middleware দ্বারা call হবে।
+        """
+        try:
+            from core.cache.redis_manager import release_idempotency_lock
+
+            await release_idempotency_lock(idempotency_key)
+            logger.debug(f"[Idempotency Dep] Lock released for key: {idempotency_key}")
+        except Exception as e:
+            logger.warning(f"[Idempotency Dep] Failed to release lock: {e}")
+
+    # বাংলা মন্তব্য: Request state-এ cleanup function register করা
+    if not hasattr(request.state, "_cleanup_callbacks"):
+        request.state._cleanup_callbacks = []
+    request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
+    request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
+    request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
+    # বাংলা মন্তব্য: ডুপ্লিকেট রিকোয়েস্ট প্রসেসিং ব্লক করা হচ্ছে
+    acquired = await acquire_idempotency_lock(idempotency_key, 120)
+    if not acquired:
+        raise HTTPException(
+            status_code=409,
+            detail="Conflict: Request is already being processed. Duplicate execution blocked.",
+        )
+
+    # বাংলা মন্তব্য: Lock অ্যাকোয়ার হলে request state-এ key রাখা হচ্ছে
     # যাতে response পাঠানোর পরে lock release করা যায়
     request.state.idempotency_key = idempotency_key
 

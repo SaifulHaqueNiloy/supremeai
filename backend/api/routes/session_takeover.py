@@ -215,6 +215,30 @@ async def request_takeover(payload: TakeoverRequest, request: Request) -> dict:
     }
 
 
+async def release_takeover(session_id: str, request: Request) -> dict:
+    """HTTP endpoint: Admin releases a session takeover."""
+    _require_admin(request)
+
+    # বাংলা মন্তব্য: Redis থেকে session-এর সব takeover token মুছে দাও
+    try:
+        client = await _redis_client()
+        if client is not None:
+            # বাংলা মন্তব্য: session_id দিয়ে সব token খুঁজে মুছে দাও
+            # (একটি session-এর জন্য একাধিক token থাকতে পারে)
+            pattern = "takeover_token:*"
+            async for key in client.scan_iter(match=pattern):
+                token_data = await client.get(key)
+                if token_data:
+                    data = json.loads(token_data)
+                    if data.get("session_id") == session_id:
+                        await client.delete(key)
+                        logger.info(f"Deleted takeover token for session {session_id}")
+    except Exception as e:
+        logger.warning(f"Failed to clean up takeover tokens: {e}")
+
+    return {"status": "released", "session_id": session_id}
+
+
 def release_takeover(session_id: str, request: Request) -> dict:
     """HTTP endpoint: Admin releases a session takeover."""
     _require_admin(request)
