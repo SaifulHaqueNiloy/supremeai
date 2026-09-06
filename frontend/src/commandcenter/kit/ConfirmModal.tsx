@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { X, AlertTriangle } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -15,6 +16,7 @@ interface ConfirmModalProps {
   loading?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  children?: ReactNode;
 }
 
 export function ConfirmModal({
@@ -27,6 +29,7 @@ export function ConfirmModal({
   loading,
   onConfirm,
   onCancel,
+  children,
 }: ConfirmModalProps) {
   if (!open) return null;
 
@@ -42,7 +45,8 @@ export function ConfirmModal({
             <X size={16} />
           </button>
         </div>
-        <p className="text-xs font-mono text-[var(--sa-text-1)] mb-6">{message}</p>
+        <p className="text-xs font-mono text-[var(--sa-text-1)] mb-4">{message}</p>
+        {children}
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}

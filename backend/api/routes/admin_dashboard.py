@@ -419,7 +419,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
     return "empty-env"
 
 
-# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যান্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
+# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা��্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
 @with_error_bus("_acquire_env_lock")
 def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     import core.services as app_mod
@@ -1461,31 +1461,32 @@ def get_admin_audit_logs(limit: int = 100):
 
 @router.get("/approvals")
 def get_commandcenter_approvals():
-    """Bridge for CommandCenter ApprovalQueue."""
+    """Return the canonical pending-task view used by every admin surface."""
     from models.pending_tasks import list_pending
 
-    pending = list_pending()
     items = []
-    for t in pending:
+    for task in list_pending():
         items.append(
             {
-                "id": t.task_id,
-                "action": t.task_type,
-                "target": str(t.payload.get("skill_name") or t.payload.get("target") or "system"),
-                "requested_by": t.requested_by or "system",
-                "requested_at": t.created_at.isoformat()
-                if hasattr(t.created_at, "isoformat")
-                else str(t.created_at),
-                "reason": str(t.payload.get("description") or t.task_type),
-                "status": "pending",
+                "id": task.task_id,
+                "action": task.task_type.value if hasattr(task.task_type, "value") else str(task.task_type),
+                "target": str(task.payload.get("skill_name") or task.payload.get("target") or "system"),
+                "requested_by": task.created_by or "system",
+                "requested_at": task.created_at,
+                "reason": str(task.payload.get("description") or task.task_type),
+                "risk_level": task.risk_level,
+                "expires_at": task.expires_at,
+                "status": task.status.value if hasattr(task.status, "value") else str(task.status),
+                "execution_status": "pending",
             }
         )
-    return items
+    return {"items": items, "total": len(items)}
 
 
 class ApprovalDecisionPayload(BaseModel):
     id: str
-    approve: bool
+    approve: bool | None = None
+    action: str | None = None
     reason: str = ""
     otp: str = ""
 
@@ -1494,16 +1495,19 @@ class ApprovalDecisionPayload(BaseModel):
 def decide_commandcenter_approval(
     payload: ApprovalDecisionPayload, admin: dict = Depends(get_current_admin)
 ):
-    """Process an approval decision from CommandCenter."""
-    from models.pending_tasks import TaskStatus, update_task_status
+    """Compatibility bridge delegating decisions to the canonical HITL lifecycle."""
+    from api.routes.approval_manager import ApproveRequest, approve_task, cancel_task_route, reject_task
 
     actor = admin.get("uid") or admin.get("email") or "admin"
-    status = TaskStatus.APPROVED if payload.approve else TaskStatus.REJECTED
-    try:
-        update_task_status(payload.id, status, resolved_by=actor, reason=payload.reason)
-        return {"status": "success", "message": f"Task {payload.id} {status.value}"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+    request = ApproveRequest(resolved_by=actor, reason=payload.reason)
+    action = payload.action or ("approve" if payload.approve else "reject")
+    if action == "approve":
+        return approve_task(payload.id, request, {})
+    if action == "reject":
+        return reject_task(payload.id, request, {})
+    if action == "cancel":
+        return cancel_task_route(payload.id, request, {})
+    raise HTTPException(status_code=422, detail="Unsupported approval action")
 
 
 @router.get("/rules")
