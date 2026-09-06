@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../../services/apiClient';
 
 interface PlatformCredential {
   id: string;
@@ -11,44 +12,21 @@ interface PlatformCredential {
 }
 
 const ConnectedPlatformsVault: React.FC = () => {
-  const [platforms, setPlatforms] = useState<PlatformCredential[]>([
-    {
-      id: 'gh_123',
-      name: 'GitHub Integration',
-      platform: 'GitHub',
-      connected: true,
-      lastAccessed: '2026-07-25T10:30:00Z',
-      permissions: ['read:org', 'repo', 'workflow'],
-      status: 'active'
-    },
-    {
-      id: 'gc_456',
-      name: 'Google Cloud',
-      platform: 'Google Cloud',
-      connected: true,
-      lastAccessed: '2026-07-25T09:15:00Z',
-      permissions: ['cloud-platform', 'bigquery'],
-      status: 'active'
-    },
-    {
-      id: 'aws_789',
-      name: 'AWS Account',
-      platform: 'AWS',
-      connected: false,
-      lastAccessed: '2026-07-20T14:22:00Z',
-      permissions: ['s3:ReadWrite', 'ec2:*'],
-      status: 'expired'
-    },
-    {
-      id: 'do_101',
-      name: 'DigitalOcean',
-      platform: 'DigitalOcean',
-      connected: true,
-      lastAccessed: '2026-07-24T16:45:00Z',
-      permissions: ['read', 'write'],
-      status: 'active'
-    }
-  ]);
+  const [platforms, setPlatforms] = useState<PlatformCredential[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<PlatformCredential[] | { platforms?: PlatformCredential[] }>('/api/v1/integrations')
+      .then((response) => {
+        if (!active) return;
+        setPlatforms(Array.isArray(response) ? response : response.platforms ?? []);
+      })
+      .catch(() => { if (active) setLoadError('Unable to load connected platforms.'); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [newPlatform, setNewPlatform] = useState({
@@ -132,7 +110,10 @@ const ConnectedPlatformsVault: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {loading && <p className="rounded-lg border border-dashed border-gray-600 p-6 text-sm text-gray-400">Loading connected platforms...</p>}
+      {!loading && loadError && <p className="rounded-lg border border-red-500/30 p-6 text-sm text-red-300">{loadError}</p>}
+      {!loading && !loadError && platforms.length === 0 && <p className="rounded-lg border border-dashed border-gray-600 p-6 text-sm text-gray-400">No platforms connected yet. Add a supported integration to get started.</p>}
+      {!loading && platforms.length > 0 && <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {platforms.map((platform) => (
           <div
             key={platform.id}
@@ -208,7 +189,7 @@ const ConnectedPlatformsVault: React.FC = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* Add Platform Modal */}
       {showAddModal && (

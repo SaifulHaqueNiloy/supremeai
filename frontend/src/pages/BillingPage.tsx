@@ -75,7 +75,7 @@ export const BillingPage: React.FC = () => {
                 </div>
                 <p className="text-sm text-slate-400 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature) => (
+                  {(plan.features ?? []).map((feature) => (
                     <li key={feature} className="flex items-center gap-3 text-sm text-slate-300">
                       <CheckCircle2 className="h-4 w-4 text-cyan-400" />
                       <span>{feature}</span>
