@@ -30,4 +30,16 @@ def test_package_change_without_lockfile_requires_review(tmp_path: Path):
     (tmp_path / "package.json").write_text("{}", encoding="utf-8")
     report = analyze(tmp_path, ["package.json"])
     assert report["status"] == "review"
+    assert report["risk"] == "medium"
+    assert report["risk_score"] == 3
     assert report["findings"][0]["category"] == "lockfile_drift"
+
+
+def test_multiple_high_risk_findings_become_critical(tmp_path: Path):
+    source = tmp_path / "app.py"
+    source.write_text("from .missing import value\n", encoding="utf-8")
+    report = analyze(tmp_path, ["app.py", ".github/workflows/ci.yml"])
+    assert report["status"] == "blocked"
+    assert report["risk"] == "critical"
+    assert report["risk_score"] >= 10
+    assert len(report["risk_reasons"]) == 2

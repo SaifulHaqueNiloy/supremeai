@@ -12,8 +12,8 @@ from pathlib import Path
 PROTECTED_PREFIXES = (".github/", ".clinerules/", ".specify/", "infrastructure/", "backend/alembic_migrations/")
 PROTECTED_NAMES = {".env", ".env.local", ".env.production", "Dockerfile"}
 IMPORT_PATTERNS = (
-    re.compile(r"(?:from|import)\s+[\"']([^\"']+)[\"']"),
-    re.compile(r"(?:from|import)\s+([.][A-Za-z0-9_./]+)"),
+    re.compile(r"^\s*(?:from|import)\s+[\"']([^\"']+)[\"']"),
+    re.compile(r"^\s*(?:from|import)\s+([.][A-Za-z0-9_./]+)"),
 )
 
 @dataclass(frozen=True)
@@ -22,6 +22,14 @@ class Finding:
     category: str
     path: str
     message: str
+
+
+SEVERITY_POINTS = {"LOW": 1, "MEDIUM": 3, "HIGH": 6, "CRITICAL": 10}
+CATEGORY_POINTS = {
+    "broken_import": 4,
+    "protected_path": 3,
+    "lockfile_drift": 2,
+}
 
 
 def git_changed_files(root: Path, base: str = "") -> list[str]:
@@ -58,15 +66,33 @@ def scan_imports(root: Path, changed: set[str]) -> list[Finding]:
     return findings
 
 
+def risk_details(findings: list[Finding]) -> tuple[int, list[str]]:
+    score = 0
+    reasons: list[str] = []
+    for finding in findings:
+        points = max(SEVERITY_POINTS.get(finding.severity, 1), CATEGORY_POINTS.get(finding.category, 0))
+        score += points
+        reasons.append(f"{finding.category} in {finding.path} (+{points})")
+    return score, reasons
+
+
 def analyze(root: Path, changed: list[str]) -> dict:
     findings = scan_imports(root, set(changed))
     findings.extend(Finding("HIGH", "protected_path", path, "Changed path requires explicit human review") for path in changed if is_protected(path))
     manifests = {"package.json", "pnpm-lock.yaml", "yarn.lock", "package-lock.json"}
     if any(path.endswith("package.json") for path in changed) and not any(path in manifests - {"package.json"} for path in changed):
         findings.append(Finding("MEDIUM", "lockfile_drift", "package.json", "package.json changed without a lockfile change"))
-    risk = "critical" if any(item.severity == "CRITICAL" for item in findings) else "high" if any(item.severity == "HIGH" for item in findings) else "medium" if findings else "low"
+    score, reasons = risk_details(findings)
+    risk = "critical" if score >= 10 else "high" if score >= 6 else "medium" if score >= 2 else "low"
     status = "blocked" if risk in {"high", "critical"} else "review" if risk == "medium" else "pass"
-    return {"status": status, "risk": risk, "changed_files": changed, "findings": [asdict(item) for item in findings]}
+    return {
+        "status": status,
+        "risk": risk,
+        "risk_score": score,
+        "risk_reasons": reasons,
+        "changed_files": changed,
+        "findings": [asdict(item) for item in findings],
+    }
 
 
 def main() -> int:
