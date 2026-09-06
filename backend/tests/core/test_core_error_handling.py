@@ -34,8 +34,19 @@ class TestErrorPatternDB:
             correction="Add null check before subscripting",
         )
 
-        # Verify it was logged
-        assert True  # Error logging should not raise
+        # Verify it was logged in either in-memory ring or sqlite table
+        if db._use_memory:
+            assert len(db._memory_errors) >= 1
+            assert db._memory_errors[-1]["error_type"] == "TypeError"
+        elif not db._use_pg:
+            conn = db._connect()
+            row = (
+                conn.cursor()
+                .execute("SELECT error_type FROM errors WHERE error_type = 'TypeError'")
+                .fetchone()
+            )
+            assert row is not None
+            assert row[0] == "TypeError"
 
     def test_log_ai_mistake(self):
         """Test logging AI mistake."""
@@ -44,13 +55,24 @@ class TestErrorPatternDB:
         db = ErrorPatternDB(db_path=":memory:")
 
         mistake = {
-            "error": "ValueError",
-            "output": "Invalid input provided",
-            "context": "string_parsing",
+            "type": "ValueError",
+            "original": "Invalid input provided",
+            "task": "string_parsing",
         }
 
         db.log_ai_mistake(mistake)
-        assert True
+        if db._use_memory:
+            assert len(db._memory_mistakes) >= 1
+            assert db._memory_mistakes[-1]["mistake_type"] == "ValueError"
+        elif not db._use_pg:
+            conn = db._connect()
+            row = (
+                conn.cursor()
+                .execute("SELECT mistake_type FROM ai_mistakes WHERE mistake_type = 'ValueError'")
+                .fetchone()
+            )
+            assert row is not None
+            assert row[0] == "ValueError"
 
     def test_get_prevention_strategy(self):
         """Test getting prevention strategy."""
