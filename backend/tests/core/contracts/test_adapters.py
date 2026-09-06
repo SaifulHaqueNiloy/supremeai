@@ -1,5 +1,4 @@
 import pytest
-
 from backend.core.contracts.adapters import validate_artifact
 
 

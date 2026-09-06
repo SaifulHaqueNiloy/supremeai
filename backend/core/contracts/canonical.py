@@ -2,13 +2,14 @@
 
 These contracts are intentionally serializable and contain no persistence or provider code.
 """
+
 from __future__ import annotations
 
 import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from enum import StrEnum
 from typing import Any
 
@@ -30,7 +31,7 @@ class ApprovalStatus(StrEnum):
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _required(value: str, name: str) -> str:
@@ -52,11 +53,29 @@ class ExecutionContext:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        for name in ("execution_id", "tenant_id", "actor_id", "workspace_id", "correlation_id", "idempotency_key", "capability"):
+        for name in (
+            "execution_id",
+            "tenant_id",
+            "actor_id",
+            "workspace_id",
+            "correlation_id",
+            "idempotency_key",
+            "capability",
+        ):
             _required(getattr(self, name), name)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"execution_id": self.execution_id, "tenant_id": self.tenant_id, "actor_id": self.actor_id, "workspace_id": self.workspace_id, "correlation_id": self.correlation_id, "idempotency_key": self.idempotency_key, "capability": self.capability, "risk_level": self.risk_level, "metadata": self.metadata}
+        return {
+            "execution_id": self.execution_id,
+            "tenant_id": self.tenant_id,
+            "actor_id": self.actor_id,
+            "workspace_id": self.workspace_id,
+            "correlation_id": self.correlation_id,
+            "idempotency_key": self.idempotency_key,
+            "capability": self.capability,
+            "risk_level": self.risk_level,
+            "metadata": self.metadata,
+        }
 
 
 @dataclass(frozen=True)
@@ -68,7 +87,13 @@ class ExecutionResult:
     evidence: tuple[dict[str, Any], ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        return {"status": self.status.value, "output": self.output, "error_code": self.error_code, "error_message": self.error_message, "evidence": list(self.evidence)}
+        return {
+            "status": self.status.value,
+            "output": self.output,
+            "error_code": self.error_code,
+            "error_message": self.error_message,
+            "evidence": list(self.evidence),
+        }
 
 
 @dataclass(frozen=True)
@@ -82,11 +107,28 @@ class EventEnvelope:
 
     @property
     def fingerprint(self) -> str:
-        raw = json.dumps({"event_type": self.event_type, "execution_id": self.context.execution_id, "payload": self.payload}, sort_keys=True, separators=(",", ":"), default=str)
+        raw = json.dumps(
+            {
+                "event_type": self.event_type,
+                "execution_id": self.context.execution_id,
+                "payload": self.payload,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        )
         return hashlib.sha256(raw.encode()).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
-        return {"event_id": self.event_id, "event_type": self.event_type, "context": self.context.to_dict(), "payload": self.payload, "occurred_at": self.occurred_at.isoformat(), "sequence": self.sequence, "fingerprint": self.fingerprint}
+        return {
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "context": self.context.to_dict(),
+            "payload": self.payload,
+            "occurred_at": self.occurred_at.isoformat(),
+            "sequence": self.sequence,
+            "fingerprint": self.fingerprint,
+        }
 
 
 @dataclass(frozen=True)
@@ -98,12 +140,26 @@ class ApprovalRequest:
     reason: str = ""
     expires_at: datetime | None = None
 
-    def consume(self) -> "ApprovalRequest":
+    def consume(self) -> ApprovalRequest:
         if self.status is not ApprovalStatus.APPROVED:
             raise ValueError("approval must be approved before consumption")
         if self.expires_at and self.expires_at <= utc_now():
             raise ValueError("approval expired")
-        return ApprovalRequest(self.approval_id, self.context, self.action, ApprovalStatus.CONSUMED, self.reason, self.expires_at)
+        return ApprovalRequest(
+            self.approval_id,
+            self.context,
+            self.action,
+            ApprovalStatus.CONSUMED,
+            self.reason,
+            self.expires_at,
+        )
 
 
-__all__ = ["ApprovalRequest", "ApprovalStatus", "EventEnvelope", "ExecutionContext", "ExecutionResult", "ExecutionStatus"]
+__all__ = [
+    "ApprovalRequest",
+    "ApprovalStatus",
+    "EventEnvelope",
+    "ExecutionContext",
+    "ExecutionResult",
+    "ExecutionStatus",
+]

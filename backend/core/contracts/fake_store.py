@@ -2,6 +2,7 @@
 
 The same interface can be implemented by Supabase/Postgres after manual setup.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -22,7 +23,9 @@ class FakeExecutionStore:
         if existing and existing != context.execution_id:
             return False
         self.idempotency[key] = context.execution_id
-        self.executions.setdefault(context.execution_id, {"context": context.to_dict(), "result": None})
+        self.executions.setdefault(
+            context.execution_id, {"context": context.to_dict(), "result": None}
+        )
         return True
 
     def finish(self, execution_id: str, result: ExecutionResult) -> None:
@@ -33,7 +36,14 @@ class FakeExecutionStore:
     def append_event(self, event: EventEnvelope) -> EventEnvelope:
         if any(item.fingerprint == event.fingerprint for item in self.events):
             return next(item for item in self.events if item.fingerprint == event.fingerprint)
-        event = EventEnvelope(event.event_type, event.context, event.payload, event.event_id, event.occurred_at, len(self.events) + 1)
+        event = EventEnvelope(
+            event.event_type,
+            event.context,
+            event.payload,
+            event.event_id,
+            event.occurred_at,
+            len(self.events) + 1,
+        )
         self.events.append(event)
         return event
 
