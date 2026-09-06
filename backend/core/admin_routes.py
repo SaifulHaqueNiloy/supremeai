@@ -234,7 +234,10 @@ async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Requ
         )
 
     if await _trusted_browser_uid(request) == uid:
-        return {"status": "trusted_browser", "uid": uid, "token": await _issue_admin_jwt(uid)}
+        trusted_token = await _issue_admin_jwt(uid)
+        if not trusted_token:
+            raise HTTPException(status_code=401, detail="Authentication token missing")
+        return {"status": "trusted_browser", "uid": uid, "token": trusted_token}
 
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}

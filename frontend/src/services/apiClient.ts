@@ -99,7 +99,7 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
 
   // 🟢 Sprint 5: Backend API Integration
   if (cachedToken === null) {
-    cachedToken = localStorage.getItem('supremeai_auth_token') || '';
+    cachedToken = localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
   }
 
   // 🔥 ফিক্স: admin-api endpoint গুলো admin-role JWT (`supreme_admin_jwt`) চায়।
