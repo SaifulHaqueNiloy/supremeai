@@ -43,6 +43,45 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["start_skill", "end_skill"],
             },
         ),
+        types.Tool(
+            name="get_render_deploy_preflight",
+            description="Returns capability-aware preflight overview, limits, and deployment authorization across Render roles.",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+            },
+        ),
+        types.Tool(
+            name="get_render_account_status",
+            description="Fetch the latest known state, plan, usage, and cooldown for a Render account role.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "account_role": {
+                        "type": "string",
+                        "description": "Render account role, e.g. 'core', 'worker', 'scraper', 'mcp'",
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="refresh_render_account_status",
+            description="Live query of Render deployment history and quota usage, updating database state and audit log.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "account_role": {
+                        "type": "string",
+                        "description": "Render account role to refresh",
+                    },
+                    "force": {
+                        "type": "boolean",
+                        "description": "Force audit even if currently in cooldown (admin only)",
+                    },
+                },
+                "required": ["account_role"],
+            },
+        ),
     ]
 
 
@@ -53,7 +92,32 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
         arguments = {}
 
     try:
-        if name == "get_skill_dependencies":
+        if name == "get_render_deploy_preflight":
+            from services.render_account_service import RenderAccountService
+
+            overview = RenderAccountService.get_status_overview()
+            return [types.TextContent(type="text", text=json.dumps(overview, indent=2))]
+
+        elif name == "get_render_account_status":
+            from services.render_account_service import RenderAccountService
+
+            role = arguments.get("account_role")
+            from database.supabase_client import db
+
+            states = db.get_render_account_states(role=role)
+            return [types.TextContent(type="text", text=json.dumps(states, indent=2))]
+
+        elif name == "refresh_render_account_status":
+            from services.render_account_service import RenderAccountService
+
+            role = arguments.get("account_role", "")
+            force = bool(arguments.get("force", False))
+            result = RenderAccountService.refresh_account_status(
+                account_role=role, force=force, manual_by="mcp_tool"
+            )
+            return [types.TextContent(type="text", text=json.dumps(result, indent=2))]
+
+        elif name == "get_skill_dependencies":
             # ডাটাবেস সেশন বা মক ডেটা থেকে কনটেক্সট গ্যাদারিং
             if graph_service.dry_run:
                 graph_data = {

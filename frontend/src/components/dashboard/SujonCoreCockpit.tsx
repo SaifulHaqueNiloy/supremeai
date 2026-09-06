@@ -26,13 +26,21 @@ const SujonCoreCockpit: React.FC<SujonCoreCockpitProps> = ({ authToken }) => {
 
   // Initialize WebSocket for real-time log streaming
   useEffect(() => {
-    // বাংলা মন্তব্য: ফায়ারবেস ওয়েব অ্যাপে স্ট্যাটিক হোস্ট বাইপাস করে রেন্ডার WSS সকেটে সংযোগ
+    // SECURITY FIX (audit S-2): token removed from URL; sent as first-message auth frame.
     const baseUrl = getWebSocketBaseUrl();
     // FIX (API-contract audit): realtime_dashboard.py serves /ws/dashboard
     // (prefix /ws). The old /api/ws/dashboard path matched no backend route.
-    const wsUrl = `${baseUrl}/ws/dashboard?token=${authToken}&channels=logs.stream,metrics.update`;
+    const wsUrl = `${baseUrl}/ws/dashboard`;
     const wsManager = new WebSocketManager(wsUrl, {
       onOpen: () => {
+        // Send auth frame immediately on connect — never in the URL.
+        const token = authToken || localStorage.getItem('supremeai_auth_token');
+        if (token) {
+          // WebSocketManager.send is called via its internal ws; use onOpen callback
+          // to trigger the first-message auth right after the socket opens.
+          // We rely on the wsManager's own ws reference through the callback.
+          wsManager.send(JSON.stringify({ type: 'auth', payload: { token } }));
+        }
         console.warn('Connected to Sujon Core WebSocket');
         setIsConnected(true);
       },

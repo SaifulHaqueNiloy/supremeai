@@ -32,15 +32,40 @@ interface SearchResult {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
+// SECURITY FIX (audit V-2 / S-3): The previous implementation passed user-
+// provided text directly to dangerouslySetInnerHTML without escaping. Two fixes:
+// 1. highlightMatch now escapes HTML in the text first, then wraps matches in
+//    <mark> — so injected HTML in message content is rendered as literal text.
+// 2. result.highlighted (from backend) is stripped of all tags except <mark>
+//    before rendering to prevent stored XSS via backend response.
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function highlightMatch(text: string, query: string): string {
-  if (!query) return text;
+  // Escape HTML first, then apply highlighting to the safe string.
+  const safeText = escapeHtml(text);
+  if (!query) return safeText;
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
-  return text.replace(
+  return safeText.replace(
     regex,
     '<mark class="bg-amber-200 dark:bg-amber-500/30 text-amber-900 dark:text-amber-200 rounded px-0.5">$1</mark>'
   );
 }
+
+/** Allow only <mark> tags from backend-provided highlighted strings. */
+function sanitizeHighlighted(html: string): string {
+  // Strip every HTML tag except <mark> and </mark>.
+  return html.replace(/<(?!\/?mark\b)[^>]+>/gi, '');
+}
+
 
 function formatScore(score: number): string {
   return `${Math.round(score * 100)}%`;
@@ -110,7 +135,8 @@ function ResultItem({
               className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed"
               dangerouslySetInnerHTML={{
                 __html: result.highlighted
-                  ? result.highlighted
+                  // SECURITY FIX (audit S-3): sanitize backend HTML — allow only <mark>.
+                  ? sanitizeHighlighted(result.highlighted)
                   : highlightMatch(result.snippet, query),
               }}
             />

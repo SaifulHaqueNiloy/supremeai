@@ -32,16 +32,48 @@ interface SharedConversationData {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
 
-function formatMessageContent(content: string): string {
-  // Basic markdown-like rendering: preserve whitespace and line breaks
-  return content
+// SECURITY FIX (audit S-3 / V-1): The previous implementation escaped HTML
+// first, then re-injected raw <strong>/<code> tags whose $1 capture groups were
+// NOT re-escaped — creating a potential XSS bypass for mixed input.
+// Correct order: (1) extract code spans to protect them, (2) escape all HTML in
+// the remaining text, (3) restore code spans with their content escaped too,
+// (4) apply bold/linebreak patterns to the already-escaped plain text.
+function escapeHtml(text: string): string {
+  return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-sm font-mono">$1</code>')
-    .replace(/\n/g, '<br/>');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
 }
+
+function formatMessageContent(content: string): string {
+  // Step 1: Pull out inline code spans so their content is never treated as markup.
+  const codeSlots: string[] = [];
+  const withPlaceholders = content.replace(/`([^`]+)`/g, (_, inner) => {
+    const escaped = escapeHtml(inner);
+    const slot = `\x00CODE${codeSlots.length}\x00`;
+    codeSlots.push(`<code class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-sm font-mono">${escaped}</code>`);
+    return slot;
+  });
+
+  // Step 2: HTML-escape everything that remains (including any AI-injected tags).
+  const escaped = escapeHtml(withPlaceholders);
+
+  // Step 3: Apply safe markdown patterns on the now-escaped string.
+  const formatted = escaped
+    // Bold — capture group is already HTML-escaped, safe to wrap.
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Line breaks
+    .replace(/\n/g, '<br/>');
+
+  // Step 4: Restore code spans (already escaped in step 1).
+  return codeSlots.reduce(
+    (str, html, i) => str.replace(`\x00CODE${i}\x00`, html),
+    formatted
+  );
+}
+
 
 function formatTime(timestamp: string): string {
   return new Date(timestamp).toLocaleTimeString('en-US', {

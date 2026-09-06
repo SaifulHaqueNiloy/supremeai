@@ -76,42 +76,74 @@ const EvolutionForgeCanvas = () => {
   const [deployError, setDeployError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('supremeai_auth_token');
+    // SECURITY FIX (audit S-2): native EventSource cannot set headers, so it was
+    // forced to pass the token as a URL query param (?token=...) — a credential
+    // leak vector via browser history and server logs.
+    // Solution: fetch-based SSE using the Authorization header instead.
+    const token =
+      localStorage.getItem('supremeai_auth_token') ||
+      localStorage.getItem('supreme_admin_jwt');
     if (!token) return;
 
-    const sse = new EventSource(`${getApiBaseUrl()}/api/v1/swarm/stream?token=${encodeURIComponent(token)}`);
-    sse.onerror = () => {
-      // The stream is optional for the canvas; avoid a browser reconnect storm
-      // when the backend deployment does not expose this optional endpoint.
-      sse.close();
-    };
+    let abortController = new AbortController();
 
-    sse.onmessage = (event) => {
+    const connectSSE = async () => {
       try {
-        const payload = JSON.parse(event.data);
-        if (payload.type === 'DEBATE_UPDATE') {
-          setIsDebateOpen(true);
-          const logData = payload.data;
+        const response = await fetch(`${getApiBaseUrl()}/api/v1/swarm/stream`, {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: abortController.signal,
+        });
 
-          let message = '';
-          if (logData.state === 'PROPOSING') message = `Starting Debate Cycle ${logData.iteration || ''}`;
-          if (logData.proposals_count) message = `Generated ${logData.proposals_count} proposals. Judge evaluating...`;
-          if (logData.feedback) message = `Rethinking based on feedback: ${logData.feedback}`;
-          if (logData.winning_agent) message = `Consensus reached by ${logData.winning_agent}`;
+        if (!response.ok || !response.body) return; // Endpoint optional — fail silently
 
-          setDebateLogs(prev => [...prev, {
-            agentName: 'ConsensusEngine',
-            status: logData.state,
-            message: message || `Status updated to ${logData.state}`
-          }]);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() ?? '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const payload = JSON.parse(line.slice(6));
+              if (payload.type === 'DEBATE_UPDATE') {
+                setIsDebateOpen(true);
+                const logData = payload.data;
+
+                let message = '';
+                if (logData.state === 'PROPOSING') message = `Starting Debate Cycle ${logData.iteration || ''}`;
+                if (logData.proposals_count) message = `Generated ${logData.proposals_count} proposals. Judge evaluating...`;
+                if (logData.feedback) message = `Rethinking based on feedback: ${logData.feedback}`;
+                if (logData.winning_agent) message = `Consensus reached by ${logData.winning_agent}`;
+
+                setDebateLogs(prev => [...prev, {
+                  agentName: 'ConsensusEngine',
+                  status: logData.state,
+                  message: message || `Status updated to ${logData.state}`
+                }]);
+              }
+            } catch (err) {
+              console.error('SSE Parse error', err);
+            }
+          }
         }
       } catch (err) {
-        console.error("SSE Parse error", err);
+        if ((err as Error)?.name !== 'AbortError') {
+          // Stream is optional; avoid console noise for missing endpoint.
+          console.debug('[EvolutionForge] SSE stream ended:', err);
+        }
       }
     };
 
-    return () => sse.close();
+    connectSSE();
+    return () => { abortController.abort(); };
   }, []);
+
 
   // Listen for newly installed skills
   useEffect(() => {

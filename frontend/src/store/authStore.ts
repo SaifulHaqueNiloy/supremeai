@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { apiClient, updateTokenCache } from '../services/apiClient';
 import { isRole, normalizeRole, type Role } from '../config/permissions';
+import { useCustomerStore } from './customerStore';
 
 // বাংলা মন্তব্য: erasableSyntaxOnly সক্রিয় থাকায় enum-এর বদলে const object + union type ব্যবহার করা হচ্ছে
 export const AuthStatus = {
@@ -183,6 +184,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
     updateTokenCache(null);
     persistUser(null);
+    // SECURITY FIX (audit P-7): clear customerStore to prevent PII leakage
+    // between users on shared devices (profile, projects, chat history).
+    useCustomerStore.getState().clearSession();
     set({ status: AuthStatus.LOGGED_OUT, user: null, role: null, permissions: [] });
   },
 

@@ -13,8 +13,10 @@ import time
 
 import httpx as requests
 
-# --- hardcoded secret (security) ---
-API_KEY = "sk-1234567890abcdef1234567890abcdef"  # placeholder
+import os
+
+# --- hardcoded secret (security) - resolved via environment ---
+API_KEY = os.getenv("API_KEY", "")
 
 # --- unused import + wildcard already above (unused-import) ---
 import json  # noqa: F401  (unused, used by detector demo)

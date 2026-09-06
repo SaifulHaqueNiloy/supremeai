@@ -570,25 +570,32 @@ export function CIDashboard({
       return;
     }
     
-    let ws: WebSocket;
-    let reconnectTimeout: NodeJS.Timeout;
-    
+    let reconnectAttempt = 0;
+    const MAX_RECONNECT = 8;
+    let destroyed = false;
+
     const connect = () => {
+      if (destroyed) return;
       setConnectionStatus('connecting');
-      
+
       try {
-        const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
-        const finalWsEndpoint = token ? (wsEndpoint.includes('?') ? `${wsEndpoint}&token=${token}` : `${wsEndpoint}?token=${token}`) : wsEndpoint;
-        ws = new WebSocket(finalWsEndpoint);
-        
+        // SECURITY FIX (audit S-2): token must NOT be in the URL.
+        // Strip any ?token= that the caller might have embedded in wsEndpoint.
+        const cleanWsEndpoint = wsEndpoint.replace(/([?&])token=[^&]*/g, '$1').replace(/[?&]$/, '');
+        ws = new WebSocket(cleanWsEndpoint);
+
         ws.onopen = () => {
+          // First-message auth frame — token never appears in URL or logs.
+          const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+          if (token) ws.send(JSON.stringify({ type: 'auth', token }));
+          reconnectAttempt = 0;
           setConnectionStatus('connected');
         };
-        
+
         ws.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
-            
+
             if (message.channel === 'ci.summary' || message.type === 'ci_update') {
               setData(message.data);
               setLastUpdated(new Date());
@@ -597,18 +604,21 @@ export function CIDashboard({
             console.error('WebSocket parse error:', err);
           }
         };
-        
+
         ws.onclose = () => {
           setConnectionStatus('disconnected');
-          // Reconnect after 5 seconds
-          reconnectTimeout = setTimeout(connect, 5000);
+          if (destroyed || reconnectAttempt >= MAX_RECONNECT) return;
+          // Exponential backoff with jitter
+          const delay = Math.min(1_000 * Math.pow(2, reconnectAttempt) + Math.random() * 1_000, 30_000);
+          reconnectAttempt++;
+          reconnectTimeout = setTimeout(connect, delay);
         };
-        
+
         ws.onerror = () => {
           setConnectionStatus('error');
           ws.close();
         };
-        
+
       } catch (err) {
         console.error('WebSocket connection failed:', err);
         setConnectionStatus('error');
@@ -616,14 +626,16 @@ export function CIDashboard({
         fetchData();
       }
     };
-    
+
     connect();
-    
+
     return () => {
+      destroyed = true;
       clearTimeout(reconnectTimeout);
       if (ws) ws.close();
     };
   }, [wsUrl, fetchData]);
+
   
   // Auto-refresh polling
   useEffect(() => {

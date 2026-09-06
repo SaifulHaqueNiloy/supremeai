@@ -19,6 +19,9 @@ const plainStorage = {
 interface CustomerStoreState extends CustomerState {
   hydrated: boolean;
   setHydrated: (val: boolean) => void;
+  /** SECURITY FIX (audit P-7): Clears all user data on logout to prevent
+   *  data leakage between users on shared devices. */
+  clearSession: () => void;
 }
 
 export const useCustomerStore = create<CustomerStoreState>()(
@@ -45,6 +48,18 @@ export const useCustomerStore = create<CustomerStoreState>()(
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
       reorderWidgets: (widgets) => set({ widgets }),
       setHydrated: (val) => set({ hydrated: val }),
+      // SECURITY FIX (audit P-7): Wipe all PII / session data on logout.
+      clearSession: () => {
+        set({
+          user: null,
+          projects: [],
+          activeProjectId: null,
+          chatHistory: [],
+          widgets: [],
+        });
+        // Remove the persisted localStorage entry so next user gets a clean state.
+        try { localStorage.removeItem(STORAGE_KEY); } catch { /* SSR/incognito */ }
+      },
     }),
     {
       name: STORAGE_KEY,
