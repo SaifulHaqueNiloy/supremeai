@@ -49,7 +49,7 @@ describe('useAiActions', () => {
   it('runWithContext warns when no active file', () => {
     const { result } = renderHook(() => useAiActions());
     const onOutput = vi.fn();
-    const onLoading = vi.fn();
+    const _onLoading = vi.fn();
     act(() => {
       result.current.runWithContext(null, onOutput, async () => {});
     });

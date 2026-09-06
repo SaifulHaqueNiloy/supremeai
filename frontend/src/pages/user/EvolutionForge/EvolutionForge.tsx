@@ -85,7 +85,7 @@ const EvolutionForgeCanvas = () => {
       localStorage.getItem('supreme_admin_jwt');
     if (!token) return;
 
-    let abortController = new AbortController();
+    const abortController = new AbortController();
 
     const connectSSE = async () => {
       try {

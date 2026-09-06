@@ -18,7 +18,7 @@ export default class WebSocketManager extends BaseWebSocketManager {
     this.url = url;
     
     // We pass only handlers to store them
-    const { maxReconnectAttempts, reconnectBaseDelayMs, heartbeatIntervalMs, ...handlers } = options;
+    const { maxReconnectAttempts: _maxReconnectAttempts, reconnectBaseDelayMs: _reconnectBaseDelayMs, heartbeatIntervalMs: _heartbeatIntervalMs, ...handlers } = options;
     this.handlers = handlers;
   }
 
