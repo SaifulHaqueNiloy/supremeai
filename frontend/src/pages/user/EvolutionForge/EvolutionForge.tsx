@@ -236,10 +236,10 @@ const EvolutionForgeCanvas = () => {
       setIsExecuting(true);
       const payload = buildForgePayload(`Swarm_${Date.now()}`, toObject());
 
-      // We use a dummy flow_id for now, in a real app this would be the saved swarm ID
-      const flowId = `flow_${Date.now()}`;
-
-      await apiClient.post(`/api/v1/swarm/forge/${flowId}/execute`, payload);
+      await apiClient.post('/api/v1/evolution/forge', {
+        ...payload,
+        action: 'execute',
+      });
 
       showToast('success', 'Swarm execution started successfully! 🚀 Check Swarm Health Dashboard for live telemetry.');
     } catch (error: any) {
