@@ -79,29 +79,30 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         let assistantContent = '';
+        let pending = '';
         const assistantId = crypto.randomUUID();
+        const applyPayload = (payload: string) => {
+          if (!payload || payload === '[DONE]') return;
+          let token = payload;
+          try {
+            const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
+            token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? '';
+          } catch {
+            // Plain-text SSE payloads are valid fallbacks.
+          }
+          assistantContent += token;
+        };
 
         if (reader) {
           while (true) {
             const { done, value } = await reader.read();
+            pending += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+            const lines = pending.split(/\r?\n/);
+            pending = lines.pop() ?? '';
+            lines.forEach((line) => {
+              if (line.startsWith('data:')) applyPayload(line.slice(5).trim());
+            });
             if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split(/\r?\n/);
-            const tokens = lines
-              .filter((line) => line.startsWith('data:'))
-              .map((line) => line.slice(5).trim())
-              .filter((payload) => payload && payload !== '[DONE]')
-              .map((payload) => {
-                try {
-                  const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
-                  return parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? '';
-                } catch {
-                  return payload;
-                }
-              })
-              .join('');
-            assistantContent += tokens || (lines.some((line) => !line.startsWith('data:')) ? chunk : '');
 
             const partialMsg: ChatMessage = {
               id: assistantId,
@@ -121,6 +122,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
               return [...prev, partialMsg];
             });
           }
+          if (pending.startsWith('data:')) applyPayload(pending.slice(5).trim());
         }
 
         const finalMsg: ChatMessage = {
