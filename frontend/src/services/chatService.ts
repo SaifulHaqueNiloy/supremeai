@@ -63,31 +63,34 @@ export async function sendMessageStream(
 
     const decoder = new TextDecoder();
     let _fullText = '';
+    let pending = '';
+
+    const consumeLine = (line: string) => {
+      if (!line.startsWith('data:')) return;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string };
+        const token = parsed.token ?? parsed.delta ?? parsed.content;
+        if (token) {
+          _fullText += token;
+          onToken(token);
+        }
+      } catch {
+        _fullText += payload;
+        onToken(payload);
+      }
+    };
 
     while (true) {
       const { value, done } = await reader.read();
+      pending += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+      const lines = pending.split(/\r?\n/);
+      pending = lines.pop() ?? '';
+      lines.forEach(consumeLine);
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const payload = line.slice(6).trim();
-          if (payload === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(payload);
-            const token = parsed.token || parsed.delta;
-            if (token) {
-              _fullText += token;
-              onToken(token);
-            }
-          } catch {
-            // flat token fallback
-            _fullText += payload;
-            onToken(payload);
-          }
-        }
-      }
     }
+    if (pending) consumeLine(pending);
 
     // Prompt-to-Action metadata fallback (legacy path only)
     try {

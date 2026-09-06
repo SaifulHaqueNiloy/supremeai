@@ -75,8 +75,8 @@ export function InteractiveChatTab({
   const activeMessages = propMessages
     ? propMessages.map((m, idx) => ({
         id: m.id ? String(m.id) : String(idx),
-        sender: String(m.sender).toLowerCase() === 'user' ? 'user' : ('system' as const),
-        text: m.text,
+        sender: String(m.sender ?? m.role).toLowerCase() === 'user' ? 'user' : ('system' as const),
+        text: String(m.text ?? m.content ?? ''),
         timestamp: m.timestamp || new Date().toLocaleTimeString(),
         action: m.action || undefined,
       }))
