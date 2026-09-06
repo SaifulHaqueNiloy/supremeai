@@ -177,6 +177,11 @@ jobs:
           python scripts/ci/generate_route_graph.py
           git diff --exit-code -- docs/generated/route_inventory.json docs/generated/route_knowledge_graph.json
 
+      - name: Local release acceptance gate
+        run: |
+          python -m unittest discover -s tests -p 'test_release_acceptance_gate.py' -v
+          python scripts/ci/release_acceptance_gate.py ci-reports/release-acceptance.local.json
+
       - name: Blocking Call Detector (Audit Mode)
         continue-on-error: true
         run: python scripts/advanced_analysis/blocking_call_detector.py || echo "[WARN] Blocking calls found"
