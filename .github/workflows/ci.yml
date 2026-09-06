@@ -186,9 +186,14 @@ jobs:
         if: always()
         run: python scripts/ai/repository_metadata_index.py --output ci-reports/repository-metadata.json
 
+      - name: Build cited change plan
+        if: always()
+        continue-on-error: true
+        run: python scripts/ai/cited_change_planner.py --impact change-impact-report.json --drift drift-check-report.json --metadata ci-reports/repository-metadata.json --output ci-reports/cited-change-plan.json
+
       - name: Build commit-linked evidence bundle
         if: always()
-        run: python scripts/ai/evidence_bundle.py --output ci-reports/evidence-bundle.json change-impact-report.json drift-check-report.json ci-reports/repository-metadata.json
+        run: python scripts/ai/evidence_bundle.py --output ci-reports/evidence-bundle.json change-impact-report.json drift-check-report.json ci-reports/repository-metadata.json ci-reports/cited-change-plan.json
 
       - name: Upload evidence bundle
         if: always()
