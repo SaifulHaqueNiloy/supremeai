@@ -50,8 +50,9 @@ def _get_allowed_skills_dir() -> str:
 
 
 class ApproveRequest(BaseModel):
-    resolved_by: str
+    resolved_by: str = "admin"
     reason: str | None = None
+    otp: str | None = None
 
 
 def _audit(event: str, task_id: str, actor: str, outcome: str, detail: str | None = None) -> None:
