@@ -81,7 +81,7 @@ Deliverables:
 - [x] Define protected paths: auth, migrations, secrets, deployment, CI, billing, tenant isolation, and production configuration.
 - [x] Define change classes and approval requirements.
 - [x] Define a standard impact report and evidence bundle schema.
-- [ ] Record baseline commands for backend, frontend, CI, packaging, and deployment checks.
+- [x] Record baseline commands for backend, frontend, CI, packaging, and deployment checks in `scripts/ai/baseline_commands.json`.
 - [x] Add a decision log for false positives, false negatives, and accepted risks.
 
 Exit evidence: policy is documented, reviewed, and usable without an AI model.
