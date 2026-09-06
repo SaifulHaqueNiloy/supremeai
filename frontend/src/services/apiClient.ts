@@ -176,13 +176,14 @@ const handleResponse = async (res: Response) => {
       // রিকোয়েস্টগুলোও token-less হয়ে ব্যর্থ হতো এবং পুরো সেশন কার্যত লগআউট হয়ে যেত —
       // এটাই ছিল TOTP ভেরিফাই সফল হওয়ার পরপরই ড্যাশবোর্ড থেকে auto-logout হওয়ার মূল কারণ।
       // তাই নন-ক্রিটিক্যাল/ব্যাকগ্রাউন্ড এন্ডপয়েন্ট থেকে 401 এলে টোকেন ক্লিয়ার করা হবে না।
-      const NON_CRITICAL_401_PATHS = [
-        '/api/memory/checkpoints',
-        '/api/skills/search',
-        '/api/task/stream',
+      const SESSION_VALIDATION_PATHS = [
+        '/api/v1/auth/me',
+        '/api/v1/auth/logout',
       ];
-      const isNonCritical = NON_CRITICAL_401_PATHS.some((p) => res.url?.includes(p));
-      if (res.status === 401 && !isNonCritical) {
+      const isSessionValidation = SESSION_VALIDATION_PATHS.some((p) => res.url?.includes(p));
+      // A failed background or feature request must not destroy a valid login.
+      // Only the auth session endpoints can prove that the persisted token is invalid.
+      if ((res.status === 401 || res.status === 403) && isSessionValidation) {
         clearAuthToken();
       }
       throw new ApiError(errMsg, res.status);
