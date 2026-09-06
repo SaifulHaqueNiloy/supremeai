@@ -34,7 +34,7 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
-import { getRawToken } from '../../services/apiClient';
+import { getAuthHeaders } from '../../services/apiClient';
 
 
 export function InteractiveChatTab({
@@ -97,7 +97,7 @@ export function InteractiveChatTab({
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/chat/prompt-action`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
         body: JSON.stringify({ message: prompt }),
       });
       if (!res.ok) return undefined;
@@ -123,8 +123,8 @@ export function InteractiveChatTab({
     try {
       const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: userPrompt }),
+        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
+        body: JSON.stringify({ message: userPrompt, idempotency_key: crypto.randomUUID() }),
         signal: (abortControllerRef.current = new AbortController()).signal,
       });
 
@@ -134,32 +134,33 @@ export function InteractiveChatTab({
       if (!reader) throw new Error('No stream body');
 
       const decoder = new TextDecoder();
+      let pending = '';
+      const appendPayload = (payload: string) => {
+        if (!payload || payload === '[DONE]') return;
+        let token = payload;
+        try {
+          const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
+          token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? '';
+        } catch {
+          // Non-JSON SSE payloads are treated as plain text tokens.
+        }
+        if (!token) return;
+        fullText += token;
+        setInternalMessages(prev =>
+          prev.map(m => m.id === botMsgId ? { ...m, text: fullText } : m)
+        );
+      };
       while (true) {
         const { value, done } = await reader.read();
+        pending += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+        const lines = pending.split(/\r?\n/);
+        pending = lines.pop() ?? '';
+        lines.forEach((line) => {
+          if (line.startsWith('data:')) appendPayload(line.slice(5).trim());
+        });
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const payload = line.slice(6).trim();
-            if (payload === '[DONE]') continue;
-            try {
-              const parsed = JSON.parse(payload);
-              if (parsed.token) {
-                fullText += parsed.token;
-                setInternalMessages(prev =>
-                  prev.map(m => m.id === botMsgId ? { ...m, text: fullText } : m)
-                );
-              }
-            } catch {
-              fullText += payload;
-              setInternalMessages(prev =>
-                prev.map(m => m.id === botMsgId ? { ...m, text: fullText } : m)
-              );
-            }
-          }
-        }
       }
+      if (pending.startsWith('data:')) appendPayload(pending.slice(5).trim());
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         let errorTitle = 'Network Error';
@@ -214,7 +215,7 @@ export function InteractiveChatTab({
     }
     await streamChatResponse(inputVal);
 
-    // শেষ বাবলের action সেট করা হয় এবং আপডেট করা হয়
+    // শেষ বাবলের action সেট কর��� হয় এবং আপডেট করা হয়
     setInternalMessages(prev => {
       const last = prev[prev.length - 1];
       if (last && last.sender === 'system' && actionMeta) {
@@ -389,7 +390,7 @@ export function InteractiveChatTab({
             <div ref={chatEndRef} />
           </div>
 
-          {/* ইনপুট */}
+          {/* ইনপু�� */}
           <div className={`p-4 border-t ${isSimple ? 'bg-white border-slate-200' : 'bg-[#05070c] border-slate-800'}`}>
             <div className="flex gap-2">
               <input
@@ -484,7 +485,7 @@ export function InteractiveChatTab({
             <div className="flex-1 bg-white overflow-y-auto">
               <iframe
                 title="Browser sandbox"
-                src={`${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(browserUrl)}&token=${encodeURIComponent(getRawToken() || '')}`}
+                src={`${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(browserUrl)}`}
                 sandbox="allow-scripts allow-forms allow-popups"
                 className="w-full h-full border-none bg-white"
                 onError={() => console.error('Iframe load error')}

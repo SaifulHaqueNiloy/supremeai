@@ -56,6 +56,7 @@ import time
 import uuid
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel
 
 from core.logging_config import logger
 
@@ -161,7 +162,7 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
 auth = get_firebase_auth()
 
 
-# বাংলা মন্তব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
+# বাংলা মন্��ব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
 
 
 @router.post("/api/admin/firebase-login")
@@ -274,16 +275,65 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
         raise HTTPException(status_code=401, detail=f"Token decoding failed: {e!s}") from e
 
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
+    recovery_codes = [secrets.token_urlsafe(10) for _ in range(8)]
+    recovery_hashes = [hashlib.sha256(code.encode()).hexdigest() for code in recovery_codes]
 
     db = get_firestore_client()
     if db:
         try:
-            db.collection("admin_users").document(uid).set({"temp_totp_secret": secret}, merge=True)
+            db.collection("admin_users").document(uid).set({
+                "temp_totp_secret": secret,
+                "recovery_code_hashes": recovery_hashes,
+            }, merge=True)
         except Exception as e:
             logger.error(f"Failed to store temp TOTP secret in Firestore: {e}")
 
     # বাংলা মন্তব্য: ৬ ডিজিটের ওটিপি রিকোয়েস্ট করা হলো
     provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
+    return {"secret": secret, "provisioning_uri": provisioning_uri, "recovery_codes": recovery_codes}
+
+
+class AdminRecoveryRequest(BaseModel):
+    id_token: str
+    recovery_code: str
+
+
+@router.post("/api/admin/firebase-totp-recover")
+def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
+    """Consume one single-use recovery code and issue a fresh TOTP enrollment."""
+    try:
+        if payload.id_token.startswith("mock-"):
+            if getattr(settings, "env", "local").lower() == "production":
+                raise HTTPException(status_code=403, detail="Mock tokens are forbidden in production")
+            uid = "mock-admin-uid"
+            email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
+        elif auth:
+            decoded = auth.verify_id_token(payload.id_token)
+            uid = decoded.get("uid", decoded.get("sub"))
+            email = decoded.get("email", "")
+        else:
+            raise HTTPException(status_code=401, detail="Authentication service unavailable")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Authentication failed") from exc
+
+    db = get_firestore_client()
+    if not db:
+        raise HTTPException(status_code=503, detail="Security database unavailable")
+    ref = db.collection("admin_users").document(uid)
+    doc = ref.get()
+    data = doc.to_dict() if doc.exists else {}
+    digest = hashlib.sha256(payload.recovery_code.strip().encode()).hexdigest()
+    hashes = data.get("recovery_code_hashes", [])
+    if digest not in hashes:
+        raise HTTPException(status_code=401, detail="Invalid or already used recovery code")
+
+    secret = base64.b32encode(os.urandom(10)).decode("utf-8")
+    remaining = [item for item in hashes if item != digest]
+    ref.set({"temp_totp_secret": secret, "recovery_code_hashes": remaining}, merge=True)
+    provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
+    logger.warning("Admin %s used a single-use TOTP recovery code", uid)
     return {"secret": secret, "provisioning_uri": provisioning_uri}
 
 
@@ -330,7 +380,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
             logger.error(f"Failed to retrieve TOTP secret: {e}")
 
     # বাংলা মন্তব্য: temp_totp_secret (সবচেয়ে নতুন setup request) আগে ব্যবহার করা হয়।
-    # পুরনো totp_secret থাকলেও reset/regenerate-এর পরে নতুন সিক্রেট দিয়েই OTP যাচাই হবে।
+    # পুরনো totp_secret থাকলেও reset/regenerate-এর পরে নতুন সিক্রেট দিয়েই OTP ���াচাই হবে।
     secret_to_use = temp_totp_secret or totp_secret
     if not secret_to_use:
         secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")

@@ -11,6 +11,10 @@ interface AdminConsoleProps {
   provisioningUri: string;
   totpSecret: string;
   onResetTotp: () => void;
+  recoveryCode: string;
+  setRecoveryCode: (val: string) => void;
+  recoverTotp: () => void;
+  recoveryCodes: string[];
   adminError: string;
   handleAdminLogin: (password?: string) => void;
   handleAdminOtpVerify: () => void;
@@ -83,6 +87,10 @@ export function AdminConsole(props: AdminConsoleProps) {
           provisioningUri={props.provisioningUri}
           totpSecret={props.totpSecret}
           onResetTotp={props.onResetTotp}
+          recoveryCode={props.recoveryCode}
+          setRecoveryCode={props.setRecoveryCode}
+          recoverTotp={props.recoverTotp}
+          recoveryCodes={props.recoveryCodes}
         />
       </DashboardErrorBoundary>
     </div>

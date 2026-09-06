@@ -10,8 +10,12 @@ export const authService = {
   },
 
   // বাংলা মন্তব্য: ফায়ারবেস টিওটিপি ৭ ডিজিট কনফিগারেশন সেটআপ সার্ভিস এন্ডপয়েন্ট
-  firebaseTotpSetup: async (idToken: string): Promise<{ secret: string; provisioning_uri: string }> => {
-    return apiClient.post<{ secret: string; provisioning_uri: string }>('/api/admin/firebase-totp-setup', { id_token: idToken });
+  firebaseTotpSetup: async (idToken: string): Promise<{ secret: string; provisioning_uri: string; recovery_codes?: string[] }> => {
+    return apiClient.post<{ secret: string; provisioning_uri: string; recovery_codes?: string[] }>('/api/admin/firebase-totp-setup', { id_token: idToken });
+  },
+
+  firebaseTotpRecover: async (idToken: string, recoveryCode: string): Promise<{ secret: string; provisioning_uri: string }> => {
+    return apiClient.post<{ secret: string; provisioning_uri: string }>('/api/admin/firebase-totp-recover', { id_token: idToken, recovery_code: recoveryCode });
   },
 
   // বাংলা মন্তব্য: ফায়ারবেস ওটিপি কোড ৭ ডিজিট যাচাইকরণ সার্ভিস এন্ডপয়েন্ট
