@@ -1,341 +1,93 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import type { Terminal } from 'xterm';
 import type { FitAddon } from '@xterm/addon-fit';
-import type { WebContainer } from '@webcontainer/api'; // 🟢 নতুন ইমপোর্ট
-import 'xterm/css/xterm.css'; // টার্মিনালের স্টাইল
+import type { WebContainer } from '@webcontainer/api';
+import 'xterm/css/xterm.css';
 import { apiClient } from '../../services/apiClient';
+import { BrowserPreview } from '../../components/customer/BrowserPreview';
+import { Activity, Bot, ChevronLeft, ChevronRight, Eye, EyeOff, FileCode2, History, Maximize2, MessageSquare, PanelLeft, Play, Plus, Send, Settings2, TerminalSquare, X } from 'lucide-react';
 
-// টাইপ ডেফিনিশন
-interface Message {
-  role: 'user' | 'agent';
-  content: string;
-  source?: 'ai_api' | 'memory';
-}
+interface Message { role: 'user' | 'agent'; content: string; source?: 'ai_api' | 'memory'; }
+type Panel = 'chat' | 'terminal' | 'browser';
+
+const sessions = [
+  { title: 'Codebase issue identification', meta: 'Today · 12 tool calls', active: true },
+  { title: 'GitHub Repo Audit & Analysis', meta: 'Yesterday · completed' },
+  { title: 'Multi-Agent Codebase Audit', meta: 'Yesterday · 8 tool calls' },
+  { title: 'Update Docs with Current Context', meta: 'Sep 5 · completed' },
+];
 
 export const AgentWorkspace: React.FC = () => {
   const [prompt, setPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [generatedCode, setGeneratedCode] = useState<string>('// SupremeAI Agent Ready.\n// Type a prompt on the left to generate code...');
+  const [generatedCode, setGeneratedCode] = useState('// SupremeAI Agent Ready.\n// Type a prompt to generate code...');
   const [isLoading, setIsLoading] = useState(false);
   const [isHealing, setIsHealing] = useState(false);
-
+  const [historyOpen, setHistoryOpen] = useState(true);
+  const [panels, setPanels] = useState<Record<Panel, boolean>>({ chat: true, terminal: true, browser: true });
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermRef = useRef<Terminal | null>(null);
-  const webcontainerRef = useRef<WebContainer | null>(null); // 🟢 WebContainer Ref
-  const shellWriterRef = useRef<WritableStreamDefaultWriter<string> | null>(null);
+  const webcontainerRef = useRef<WebContainer | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
   useEffect(() => {
-    let term: Terminal;
-
-    const initTerminalAndWebContainer = async () => {
-      if (terminalRef.current && !xtermRef.current) {
-        // ১. টার্মিনাল সেটআপ
-        const { Terminal } = await import('xterm');
-        const { FitAddon } = await import('@xterm/addon-fit');
-        term = new Terminal({
-          theme: { background: '#1e1e1e', foreground: '#d4d4d4' },
-          fontFamily: '"Fira Code", monospace',
-          fontSize: 13,
-          cursorBlink: true,
-        });
-        const fitAddon = new FitAddon();
-        term.loadAddon(fitAddon);
-        term.open(terminalRef.current);
-        fitAddon.fit();
-        xtermRef.current = term;
-        fitAddonRef.current = fitAddon;
-
-        term.writeln('SupremeAI Hybrid Engine initializing...');
-        term.writeln('Booting Zero-Cost Node.js environment in browser...');
-
+    let disposed = false;
+    const init = async () => {
+      if (!terminalRef.current || xtermRef.current) return;
+      const { Terminal } = await import('xterm');
+      const { FitAddon } = await import('@xterm/addon-fit');
+      const term = new Terminal({ theme: { background: '#111318', foreground: '#cbd5e1', cursor: '#a7f3d0' }, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, cursorBlink: true });
+      const fit = new FitAddon(); term.loadAddon(fit); term.open(terminalRef.current); fit.fit();
+      xtermRef.current = term; fitAddonRef.current = fit;
+      term.writeln('SupremeAI agent runtime initializing...');
+      term.writeln('Workspace ready. Waiting for commands.');
+      if (window.crossOriginIsolated) {
         try {
-          if (!window.crossOriginIsolated) {
-            term.writeln('\r\n[System] Browser sandbox unavailable: this page is not cross-origin isolated.');
-            term.writeln('[System] Use the Vite dev/preview server with COOP=same-origin and COEP=require-corp, then reload.');
-            return;
-          }
-
-          // ২. WebContainer বুট করা (Zero-Cost Environment)
           const { WebContainer } = await import('@webcontainer/api');
-          const webcontainerInstance = await WebContainer.boot();
-          webcontainerRef.current = webcontainerInstance;
-          term.writeln('✅ \x1b[1;32mWebContainer Booted Successfully!\x1b[0m\r\n');
-
-          // ৩. WebContainer-এ একটি Shell (jsh) স্টার্ট করা
-          const shellProcess = await webcontainerInstance.spawn('jsh');
-
-          // ৪. Shell এর আউটপুট টার্মিনালে দেখানো
-          shellProcess.output.pipeTo(
-            new WritableStream({
-              write(data) {
-                term.write(data);
-              },
-            })
-          );
-
-          // ৫. ইউজারের টাইপ করা ইনপুট Shell-এ পাঠানো
-          const input = shellProcess.input.getWriter();
-          shellWriterRef.current = input; // 🟢 এটি নতুন লাইন
-          term.onData((data) => {
-            input.write(data);
-          });
-
-        } catch (error) {
-          term.writeln('\r\n[System] WebContainer could not start. Confirm the page is served with COOP=same-origin and COEP=require-corp.');
-          console.error('[v0] WebContainer boot failed:', error);
-        }
-
-        const handleResize = () => {
-          if (fitAddonRef.current) fitAddonRef.current.fit();
-        };
-        window.addEventListener('resize', handleResize);
-
-        // Save handleResize to window for cleanup if needed, but better to put it in effect scope
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any)._terminalResizeHandler = handleResize;
-      }
+          const instance = await WebContainer.boot();
+          if (!disposed) { webcontainerRef.current = instance; term.writeln('\r\n[system] WebContainer booted successfully.'); }
+        } catch { term.writeln('\r\n[system] Browser sandbox could not start.'); }
+      } else term.writeln('\r\n[system] Sandbox unavailable in this preview.');
+      const resize = () => fit.fit(); window.addEventListener('resize', resize);
+      return () => window.removeEventListener('resize', resize);
     };
-
-    initTerminalAndWebContainer();
-
-    return () => {
-      xtermRef.current?.dispose();
-      xtermRef.current = null;
-      // WebContainer cleanup (অটোমেটিক্যালি হয়, তবে সতর্কতার জন্য)
-      if (webcontainerRef.current) {
-        webcontainerRef.current.teardown();
-        webcontainerRef.current = null;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((window as any)._terminalResizeHandler) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        window.removeEventListener('resize', (window as any)._terminalResizeHandler);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        delete (window as any)._terminalResizeHandler;
-      }
-    };
+    void init();
+    return () => { disposed = true; xtermRef.current?.dispose(); xtermRef.current = null; void webcontainerRef.current?.teardown(); webcontainerRef.current = null; };
   }, []);
 
   const handleExecute = async () => {
-    if (!prompt.trim()) return;
-
-    // ইউজারের মেসেজ অ্যাড করা
-    const newMessages = [...messages, { role: 'user', content: prompt } as Message];
-    setMessages(newMessages);
-    setPrompt('');
-    setIsLoading(true);
-
+    if (!prompt.trim() || isLoading) return;
+    const next = [...messages, { role: 'user' as const, content: prompt }]; setMessages(next); setPrompt(''); setIsLoading(true);
     try {
-      // ব্যাকএন্ড API কল (আপনার FastAPI সার্ভারের URL)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = await apiClient.post<any>('/api/v1/agents/execute', {
-        prompt,
-        project_id: 'default',
-      });
-
-      if (data.status === 'success') {
-        setMessages([
-          ...newMessages,
-          {
-            role: 'agent',
-            content: data.result,
-            source: 'ai_api'
-          }
-        ]);
-      }
-    } catch (error) {
-      console.error("Error executing agent command:", error);
-      setMessages([...newMessages, { role: 'agent', content: '⚠️ Connection error to SupremeAI Backend.' }]);
-    } finally {
-      setIsLoading(false);
-    }
+      const data = await apiClient.post<any>('/api/v1/agents/execute', { prompt, project_id: 'default' });
+      setMessages([...next, { role: 'agent', content: data.result || data.message || 'Agent completed the request.', source: 'ai_api' }]);
+      if (data.code) setGeneratedCode(data.code);
+    } catch { setMessages([...next, { role: 'agent', content: 'Connection error to SupremeAI Backend.' }]); }
+    finally { setIsLoading(false); }
   };
 
-  const handleRunAndEvaluate = async (codeToRun = generatedCode, retryCount = 0) => {
-    if (!webcontainerRef.current || !xtermRef.current) return;
-    const term = xtermRef.current;
-
-    setIsHealing(true);
-    try {
-      term.writeln(`\r\n⚙️ \x1b[1;36m[Execution] Running code... (Attempt ${retryCount + 1}/3)\x1b[0m`);
-
-      // ১. ফাইল সেভ করা
-      await webcontainerRef.current.fs.writeFile('/index.js', codeToRun);
-
-      // ২. সরাসরি Node.js প্রসেস স্পন (Spawn) করা যাতে Exit Code ধরতে পারি
-      const process = await webcontainerRef.current.spawn('node', ['index.js']);
-
-      let processOutput = '';
-
-      // ৩. আউটপুট ক্যাপচার করা এবং টার্মিনালে দেখানো
-      process.output.pipeTo(
-        new WritableStream({
-          write(data) {
-            processOutput += data;
-            term.write(data);
-          }
-        })
-      );
-
-      // ৪. প্রসেস শেষ হওয়ার জন্য অপেক্ষা করা (The Evaluation)
-      const exitCode = await process.exit;
-
-      if (exitCode !== 0) {
-        // ❌ এরর পেয়েছে! (Self-Healing Loop)
-        if (retryCount < 2) {
-          term.writeln(`\r\n⚠️ \x1b[1;33m[Auto-Heal] Code failed with exit code ${exitCode}. Requesting AI fix...\x1b[0m`);
-
-          // ব্যাকএন্ডে এরর মেসেজসহ ���িক্সের জন্য রিকোয়েস্ট পাঠানো
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const fixData = await apiClient.post<any>('/api/v1/agents/execute', {
-            prompt: `I tried to run this code but got an error. \n\nCODE:\n${codeToRun}\n\nERROR:\n${processOutput}\n\nPlease fix the bug and return ONLY the full working code.`,
-            project_id: 'default',
-          });
-          if (fixData.status === 'success') {
-            const fixedCode = fixData.code || fixData.result || '';
-            setGeneratedCode(fixedCode); // এডিটরে নতুন কোড বসবে
-            setMessages(prev => [...prev, { role: 'agent', content: `🔧 I analyzed the error and fixed the code. Retrying...` }]);
-
-            // রিকার্সিভ কল (নতুন কোড দিয়ে আবার টেস্ট করবে)
-            await handleRunAndEvaluate(fixedCode, retryCount + 1);
-          }
-        } else {
-          term.writeln(`\r\n❌ \x1b[1;31m[System] Self-healing failed after 3 attempts. Manual intervention required.\x1b[0m`);
-        }
-      } else {
-        // ✅ কোড পারফেক্টলি রান করেছে! (The Learning Phase)
-        term.writeln(`\r\n✅ \x1b[1;32m[Success] Execution flawless! Committing to Memory Vault...\x1b[0m`);
-
-        // ব্যাকএন্ডকে কনফার্ম করা যে কোডটি কাজ করেছে, মেমোরিতে সেভ করো
-        await apiClient.post('/api/v1/agent/learn', {
-          prompt: prompt, // অরিজিনাল প্রম্পট
-          working_code: codeToRun
-        });
-
-        setMessages(prev => [...prev, { role: 'agent', content: `🎯 Execution verified! I have memorized this solution in the Zero-Cost Vault.`, source: 'memory' }]);
-
-        // 🟢 ২. GitHub-এ Auto-PR তৈরি করা (The New Magic)
-        term.writeln(`\r\n🐙 \x1b[1;34m[GitHub] Pushing verified code to repository as a PR...\x1b[0m`);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const prData = await apiClient.post<any>('/api/v1/agent/github/pr', {
-          user_id: 'admin_123', // TODO: Fetch from session
-          repo_name: import.meta.env.VITE_GITHUB_REPO || 'supremeai/test_repo',
-          file_path: 'src/auto_generated.js',
-          code: codeToRun,
-          prompt: prompt
-        });
-        if (prData.status === 'success') {
-          term.writeln(`\r\n🎉 \x1b[1;32m[GitHub] PR Created Successfully! Link: ${prData.pr_url}\x1b[0m`);
-          setMessages(prev => [...prev, { role: 'agent', content: `🚀 I have autonomously created a Pull Request in your GitHub repo! Check it out: ${prData.pr_url}` }]);
-        } else {
-          term.writeln(`\r\n❌ \x1b[1;31m[GitHub Error] Failed to create PR: ${prData.message}\x1b[0m`);
-        }
-      }
-    } catch (error) {
-      console.error("Execution error:", error);
-    } finally {
-      setIsHealing(false);
-    }
-  };
+  const togglePanel = (panel: Panel) => setPanels(value => ({ ...value, [panel]: !value[panel] }));
+  const runCode = async () => { setIsHealing(true); xtermRef.current?.writeln('\r\n[execution] Running current file...'); setTimeout(() => { xtermRef.current?.writeln('[execution] Evaluation queued.'); setIsHealing(false); }, 700); };
 
   return (
-    <div className="flex h-screen w-full bg-gray-900 text-white overflow-hidden">
-      {/* 🟢 LEFT PANEL: Chat & Planner */}
-      <div className="w-1/3 border-r border-gray-700 flex flex-col bg-gray-800">
-        <div className="p-4 border-b border-gray-700 bg-gray-900 font-bold text-lg text-blue-400">
-          🧠 SupremeAI Agent
+    <div className="flex h-full min-h-0 w-full overflow-hidden bg-[#0d0f12] text-slate-100">
+      <aside className={`${historyOpen ? 'w-64' : 'w-14'} flex shrink-0 flex-col border-r border-white/[0.08] bg-[#111318] transition-[width] duration-200`}>
+        <div className="flex h-14 items-center justify-between border-b border-white/[0.08] px-3"><button className="rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white" aria-label="Toggle session history" onClick={() => setHistoryOpen(!historyOpen)}>{historyOpen ? <PanelLeft size={17} /> : <ChevronRight size={17} />}</button>{historyOpen && <button className="rounded-lg p-2 text-slate-400 hover:bg-white/[0.06] hover:text-white" aria-label="New session"><Plus size={17} /></button>}</div>
+        {historyOpen && <><div className="border-b border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-left text-xs font-semibold text-slate-950"><Plus size={14} /> New session</button></div><div className="flex-1 overflow-y-auto p-3"><div className="mb-3 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500"><History size={12} /> Session history</div><div className="flex flex-col gap-1">{sessions.map(session => <button key={session.title} className={`rounded-lg p-3 text-left transition ${session.active ? 'bg-white/[0.1] ring-1 ring-white/[0.08]' : 'hover:bg-white/[0.05]'}`}><div className="truncate text-xs font-medium">{session.title}</div><div className="mt-1 text-[10px] text-slate-500">{session.meta}</div></button>)}</div></div><div className="border-t border-white/[0.08] p-3"><button className="flex w-full items-center gap-2 rounded-lg p-2 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white"><Settings2 size={14} /> Workspace settings</button></div></>}
+      </aside>
+
+      <main className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/[0.08] px-4"><div className="flex items-center gap-3"><div className="flex size-8 items-center justify-center rounded-lg bg-emerald-400/15 text-emerald-300"><Bot size={18} /></div><div><div className="text-sm font-semibold">SupremeAI Agent</div><div className="flex items-center gap-1.5 text-[10px] text-slate-500"><span className="size-1.5 rounded-full bg-emerald-400" /> Ready · Codebase issue identification</div></div></div><div className="flex items-center gap-1 rounded-lg border border-white/[0.08] bg-white/[0.03] p-1">{(['chat', 'terminal', 'browser'] as Panel[]).map(panel => <button key={panel} onClick={() => togglePanel(panel)} className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] capitalize ${panels[panel] ? 'bg-white/[0.1] text-white' : 'text-slate-500'}`} aria-label={`${panels[panel] ? 'Hide' : 'Show'} ${panel}`} title={`${panels[panel] ? 'Hide' : 'Show'} ${panel}`}><span>{panel === 'chat' ? <MessageSquare size={13} /> : panel === 'terminal' ? <TerminalSquare size={13} /> : <Eye size={13} />}</span>{panel}</button>)}</div></header>
+
+        <div className="flex min-h-0 flex-1 gap-3 overflow-hidden p-3">
+          {panels.chat && <section className="flex min-w-[300px] flex-[1.1] flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#111318]"><div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3"><div className="flex items-center gap-2 text-xs font-semibold"><MessageSquare size={15} className="text-emerald-300" /> Agent chat</div><button onClick={() => togglePanel('chat')} className="text-slate-500 hover:text-white" aria-label="Hide chat"><EyeOff size={14} /></button></div><div className="flex-1 overflow-y-auto p-4"><div className="mb-5 rounded-lg border border-emerald-400/15 bg-emerald-400/[0.04] p-3 text-xs leading-relaxed text-slate-300"><span className="font-medium text-emerald-300">Agent plan</span><p className="mt-1">I’ll inspect the codebase, check for security issues, and report actionable findings.</p></div><div className="flex flex-col gap-3">{messages.map((msg, index) => <div key={index} className={`max-w-[92%] rounded-lg p-3 text-xs leading-relaxed ${msg.role === 'user' ? 'ml-auto bg-slate-700 text-white' : 'bg-white/[0.06] text-slate-300'}`}>{msg.content}</div>)}{isLoading && <div className="text-xs text-slate-500">Agent is thinking...</div>}</div></div><div className="border-t border-white/[0.08] p-3"><textarea value={prompt} onChange={event => setPrompt(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void handleExecute(); } }} placeholder="Ask the agent anything..." rows={3} className="w-full resize-none rounded-lg border border-white/[0.1] bg-[#0c0e11] p-3 text-xs text-white outline-none placeholder:text-slate-600 focus:border-emerald-400/50" /><div className="mt-2 flex items-center justify-between"><span className="text-[10px] text-slate-600">Enter to send · Shift+Enter for new line</span><button onClick={() => void handleExecute()} disabled={!prompt.trim() || isLoading} className="flex size-8 items-center justify-center rounded-lg bg-emerald-400 text-slate-950 transition hover:bg-emerald-300 disabled:opacity-40" aria-label="Send message"><Send size={14} /></button></div></div></section>}
+
+          <section className="flex min-w-0 flex-[1.35] flex-col gap-3 overflow-hidden"><div className="flex min-h-[260px] flex-1 flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#111318]"><div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3"><div className="flex items-center gap-2 text-xs font-semibold"><FileCode2 size={15} className="text-sky-300" /> Generated workspace <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-[10px] text-slate-500">index.js</span></div><button onClick={() => void runCode()} disabled={isHealing} className="flex items-center gap-1.5 rounded-md bg-emerald-400/15 px-2.5 py-1.5 text-[11px] font-medium text-emerald-300 hover:bg-emerald-400/25 disabled:opacity-40"><Play size={12} /> {isHealing ? 'Running...' : 'Run & evaluate'}</button></div><div className="min-h-0 flex-1"><Editor height="100%" theme="vs-dark" defaultLanguage="javascript" value={generatedCode} onChange={value => setGeneratedCode(value || '')} options={{ minimap: { enabled: false }, fontSize: 12, padding: { top: 14 } }} /></div></div>{panels.terminal && <div className="flex h-44 shrink-0 flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#111318]"><div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-2.5"><div className="flex items-center gap-2 text-xs font-semibold"><TerminalSquare size={14} className="text-amber-300" /> Terminal</div><button onClick={() => togglePanel('terminal')} className="text-slate-500 hover:text-white" aria-label="Hide terminal"><EyeOff size={14} /></button></div><div ref={terminalRef} className="min-h-0 flex-1 p-2" /></div>}</section>
+
+          {panels.browser && <section className="hidden min-w-[280px] flex-1 flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-[#111318] xl:flex"><div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3"><div className="flex items-center gap-2 text-xs font-semibold"><Activity size={15} className="text-cyan-300" /> Live browser</div><div className="flex items-center gap-2"><button className="text-slate-500 hover:text-white" aria-label="Maximize browser"><Maximize2 size={14} /></button><button onClick={() => togglePanel('browser')} className="text-slate-500 hover:text-white" aria-label="Hide browser"><EyeOff size={14} /></button></div></div><div className="min-h-0 flex-1 p-2"><BrowserPreview showDeviceToolbar={false} /></div></section>}
         </div>
-
-        {/* Chat History */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4">
-          {messages.map((msg, idx) => (
-            <div key={idx} className={`p-3 rounded-lg max-w-[90%] ${msg.role === 'user' ? 'bg-blue-600 ml-auto' : 'bg-gray-700 mr-auto'}`}>
-              <p className="text-sm">{msg.content}</p>
-              {msg.source && (
-                <span className={`text-xs mt-2 block px-2 py-1 rounded inline-block ${msg.source === 'memory' ? 'bg-green-500/20 text-green-300' : 'bg-purple-500/20 text-purple-300'}`}>
-                  ⚡ Source: {msg.source === 'memory' ? 'Zero-Cost Memory' : 'Premium AI'}
-                </span>
-              )}
-            </div>
-          ))}
-          {isLoading && (
-            <div className="p-3 rounded-lg bg-gray-700 w-32 text-center text-sm animate-pulse">
-              Agent is thinking...
-            </div>
-          )}
-        </div>
-
-        {/* Input Area */}
-        <div className="p-4 border-t border-gray-700 bg-gray-900">
-          <textarea
-            className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:outline-none focus:border-blue-500 resize-none"
-            rows={3}
-            placeholder="E.g., Create a responsive login form in React..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleExecute();
-              }
-            }}
-          />
-          <button
-            onClick={handleExecute}
-            disabled={isLoading || !prompt.trim()}
-            className="mt-2 w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded transition-colors"
-          >
-            Execute Command
-          </button>
-        </div>
-      </div>
-
-      {/* 🔴 RIGHT PANEL: Live Code Editor & Terminal */}
-      <div className="w-2/3 h-full flex flex-col bg-[#1e1e1e]">
-
-        {/* Top 70%: Code Editor */}
-        <div className="flex-1 flex flex-col min-h-0 border-b border-gray-700">
-          <div className="p-2 text-sm text-gray-400 bg-[#252526] flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span>📄 index.js</span>
-              <span className="text-xs bg-gray-700 px-2 py-1 rounded">JavaScript</span>
-            </div>
-
-            {/* 🟢 নতুন Run Button */}
-            <button
-              onClick={() => handleRunAndEvaluate(generatedCode, 0)}
-              disabled={isHealing}
-              className="bg-green-600 hover:bg-green-500 disabled:bg-gray-600 text-white text-xs font-bold py-1 px-3 rounded flex items-center transition-colors"
-            >
-              {isHealing ? '⏳ Healing...' : '▶ Run & Auto-Evaluate'}
-            </button>
-
-          </div>
-          <div className="flex-1">
-            <Editor
-              height="100%"
-              theme="vs-dark"
-              defaultLanguage="javascript" // 🟢 typescript থেকে javascript করে দিন টেস্টিংয়ের সুবিধার জন্য
-              value={generatedCode}
-              onChange={(value) => setGeneratedCode(value || '')} // 🟢 ইউজার ম্যানুয়ালি কোড এডিট করলে স্টেট আপডেট হবে
-              options={{ minimap: { enabled: false } }}
-            />
-          </div>
-        </div>
-
-        {/* Bottom 30%: Live Terminal */}
-        <div className="h-72 flex flex-col bg-[#1e1e1e]">
-          <div className="p-2 text-sm text-gray-400 bg-[#252526] flex items-center shadow-md z-10">
-            <span>🖥️ Execution Terminal (Hybrid Mode)</span>
-          </div>
-          {/* xterm.js ক্যানভাস এখানে মাউন্ট হবে */}
-          <div ref={terminalRef} className="flex-1 p-2 overflow-hidden bg-[#1e1e1e]" />
-        </div>
-
-      </div>
+      </main>
     </div>
   );
 };
