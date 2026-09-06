@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from collections.abc import Mapping
+from datetime import UTC, datetime, timezone
 from enum import StrEnum
-from typing import Any, Mapping
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -93,7 +94,7 @@ class ExecutionResult(BaseModel):
     circle: CircleName
     capability: str
     started_at: datetime | None = None
-    finished_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    finished_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class EventEnvelope(BaseModel):
@@ -107,7 +108,7 @@ class EventEnvelope(BaseModel):
     actor_id: str
     tenant_id: str
     circle: CircleName
-    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     payload: Mapping[str, Any] = Field(default_factory=dict)
 
 

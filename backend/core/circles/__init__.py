@@ -1,3 +1,4 @@
+from .bootstrap import build_circle_registry
 from .contracts import (
     CapabilityRef,
     CapabilityRequest,
@@ -10,7 +11,6 @@ from .contracts import (
     PolicyDecision,
     RiskLevel,
 )
-from .bootstrap import build_circle_registry
 from .event_journal import CircleEventJournal, circle_event_journal
 from .manifests import default_manifests
 from .registry import CircleRegistry, circle_registry

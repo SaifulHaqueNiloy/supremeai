@@ -18,7 +18,9 @@ class CircleEventJournal:
             self._events.append(event)
         return event
 
-    def replay(self, *, tenant_id: str, after_event_id: str | None = None) -> tuple[EventEnvelope, ...]:
+    def replay(
+        self, *, tenant_id: str, after_event_id: str | None = None
+    ) -> tuple[EventEnvelope, ...]:
         with self._lock:
             events = tuple(self._events)
         if after_event_id is None:

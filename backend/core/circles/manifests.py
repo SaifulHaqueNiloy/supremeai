@@ -25,42 +25,78 @@ def default_manifests() -> tuple[CircleManifest, ...]:
             name=CircleName.TASK,
             display_name="Tasks and workers",
             owner="backend/core/queue",
-            capabilities=(CapabilityRef(name="task.submit", owner_circle=CircleName.TASK, risk_level=RiskLevel.MEDIUM),),
+            capabilities=(
+                CapabilityRef(
+                    name="task.submit", owner_circle=CircleName.TASK, risk_level=RiskLevel.MEDIUM
+                ),
+            ),
         ),
         CircleManifest(
             name=CircleName.BROWSER,
             display_name="Browser automation",
             owner="backend/core/browser_session_manager.py",
-            capabilities=(CapabilityRef(name="browser.navigate", owner_circle=CircleName.BROWSER, risk_level=RiskLevel.HIGH, approval_required=True),),
+            capabilities=(
+                CapabilityRef(
+                    name="browser.navigate",
+                    owner_circle=CircleName.BROWSER,
+                    risk_level=RiskLevel.HIGH,
+                    approval_required=True,
+                ),
+            ),
         ),
         CircleManifest(
             name=CircleName.MCP,
             display_name="MCP external tools",
             owner="infrastructure/mcp-control-plane",
-            capabilities=(CapabilityRef(name="mcp.invoke", owner_circle=CircleName.MCP, risk_level=RiskLevel.HIGH, approval_required=True),),
+            capabilities=(
+                CapabilityRef(
+                    name="mcp.invoke",
+                    owner_circle=CircleName.MCP,
+                    risk_level=RiskLevel.HIGH,
+                    approval_required=True,
+                ),
+            ),
         ),
         CircleManifest(
             name=CircleName.ADMIN,
             display_name="Admin governance",
             owner="backend/api/routes/approval_manager.py",
-            capabilities=(CapabilityRef(name="admin.approve", owner_circle=CircleName.ADMIN, risk_level=RiskLevel.CRITICAL, approval_required=True),),
+            capabilities=(
+                CapabilityRef(
+                    name="admin.approve",
+                    owner_circle=CircleName.ADMIN,
+                    risk_level=RiskLevel.CRITICAL,
+                    approval_required=True,
+                ),
+            ),
         ),
         CircleManifest(
             name=CircleName.REALTIME,
             display_name="Realtime events",
             owner="backend/api/routes/stream_hitl_sse.py",
-            capabilities=(CapabilityRef(name="realtime.publish", owner_circle=CircleName.REALTIME),),
+            capabilities=(
+                CapabilityRef(name="realtime.publish", owner_circle=CircleName.REALTIME),
+            ),
         ),
         CircleManifest(
             name=CircleName.ARTIFACT,
             display_name="Artifacts and projects",
             owner="backend/storage",
-            capabilities=(CapabilityRef(name="artifact.describe", owner_circle=CircleName.ARTIFACT),),
+            capabilities=(
+                CapabilityRef(name="artifact.describe", owner_circle=CircleName.ARTIFACT),
+            ),
         ),
         CircleManifest(
             name=CircleName.EVOLUTION,
             display_name="Evolution and learning",
             owner="backend/evolution",
-            capabilities=(CapabilityRef(name="evolution.evaluate", owner_circle=CircleName.EVOLUTION, risk_level=RiskLevel.HIGH, approval_required=True),),
+            capabilities=(
+                CapabilityRef(
+                    name="evolution.evaluate",
+                    owner_circle=CircleName.EVOLUTION,
+                    risk_level=RiskLevel.HIGH,
+                    approval_required=True,
+                ),
+            ),
         ),
     )
