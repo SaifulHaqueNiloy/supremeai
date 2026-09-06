@@ -80,6 +80,12 @@ export function AdminShell() {
     resetTotpSetup();
   };
 
+  const handleAuthorize = () => {
+    setAdminEmail((adminEmail || '').trim());
+    setActionStatus('AUTHORIZATION READY');
+    setTimeout(() => setActionStatus(''), 2000);
+  };
+
   const installSkillMutation = useInstallSkill();
   const handleInstallSkill = (name: string) => {
     installSkillMutation.mutate(name);
@@ -140,6 +146,7 @@ export function AdminShell() {
       provisioningUri={provisioningUri}
       totpSecret={totpSecret}
       onResetTotp={handleResetTotp}
+      onAuthorize={handleAuthorize}
       recoveryCode={recoveryCode}
       setRecoveryCode={setRecoveryCode}
       recoverTotp={recoverTotp}

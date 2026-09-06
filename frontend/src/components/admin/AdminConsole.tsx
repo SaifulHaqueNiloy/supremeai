@@ -11,6 +11,7 @@ interface AdminConsoleProps {
   provisioningUri: string;
   totpSecret: string;
   onResetTotp: () => void;
+  onAuthorize: () => void;
   recoveryCode: string;
   setRecoveryCode: (val: string) => void;
   recoverTotp: () => void;
@@ -87,6 +88,7 @@ export function AdminConsole(props: AdminConsoleProps) {
           provisioningUri={props.provisioningUri}
           totpSecret={props.totpSecret}
           onResetTotp={props.onResetTotp}
+          onAuthorize={props.onAuthorize}
           recoveryCode={props.recoveryCode}
           setRecoveryCode={props.setRecoveryCode}
           recoverTotp={props.recoverTotp}

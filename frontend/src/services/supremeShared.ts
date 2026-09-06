@@ -22,6 +22,7 @@ import {
   type PlatformPrompt,
 } from '@supremeai/shared-services';
 import { getApiBaseUrl } from '../utils/api';
+import { getAuthHeaders } from './apiClient';
 
 // ---------- Platform ----------
 const platform = createElectronPlatform();
@@ -96,11 +97,11 @@ export function apiCall(options: {
   if (typeof window !== 'undefined' && window.supremeDesktopAPI) {
     return window.supremeDesktopAPI.apiCall(options);
   }
-  return fetch(`${getApiBaseUrl()}${options.endpoint}`, {
+  return getAuthHeaders().then((authHeaders) => fetch(`${getApiBaseUrl()}${options.endpoint}`, {
     method: options.method || 'GET',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: { 'Content-Type': 'application/json', ...authHeaders, ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined,
-  }).then(async (res) => {
+  })).then(async (res) => {
     let data;
     try {
       data = await res.json();
