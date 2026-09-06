@@ -14,6 +14,10 @@ interface LoginViewProps {
   provisioningUri: string;
   totpSecret: string;
   onResetTotp: () => void;
+  recoveryCode: string;
+  setRecoveryCode: (val: string) => void;
+  recoverTotp: () => void;
+  recoveryCodes: string[];
 }
 
 const MAX_ATTEMPTS = 5;
@@ -33,6 +37,10 @@ export function LoginView({
   provisioningUri,
   totpSecret,
   onResetTotp,
+  recoveryCode,
+  setRecoveryCode,
+  recoverTotp,
+  recoveryCodes,
 }: LoginViewProps) {
   const [localPassword, setLocalPassword] = useState('');
   const [localError, setLocalError] = useState('');
@@ -220,7 +228,19 @@ export function LoginView({
             </div>
           )}
 
+          {recoveryCodes.length > 0 && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-left">
+              <p className="text-[10px] font-mono text-amber-300">Save these one-time recovery codes securely:</p>
+              <code className="mt-2 block select-all break-words text-[10px] text-amber-200">{recoveryCodes.join(' · ')}</code>
+            </div>
+          )}
+
           {otpRequired && !totpSetupRequired && (
+            <>
+            <div className="flex gap-2">
+              <input aria-label="Recovery code" value={recoveryCode} onChange={(e) => setRecoveryCode(e.target.value)} placeholder="Recovery code" className="flex-1 rounded-xl border border-slate-800 bg-[#07090f] px-3 py-2 text-xs text-white font-mono" />
+              <button type="button" onClick={recoverTotp} className="rounded-xl border border-[#00f3ff]/40 px-3 text-[10px] text-[#00f3ff]">Recover</button>
+            </div>
             <button
               type="button"
               onClick={onResetTotp}
@@ -228,6 +248,7 @@ export function LoginView({
             >
               Lost your authenticator? Generate a new QR code
             </button>
+            </>
           )}
 
           {otpRequired && (

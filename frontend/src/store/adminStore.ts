@@ -64,6 +64,10 @@ interface AdminState {
   setTotpSecret: (val: string) => void;
   provisioningUri: string;
   setProvisioningUri: (val: string) => void;
+  recoveryCodes: string[];
+  recoveryCode: string;
+  setRecoveryCode: (val: string) => void;
+  recoverTotp: () => Promise<void>;
   resetTotpSetup: () => Promise<void>;
 }
 
@@ -91,6 +95,21 @@ export const useAdminStore = create<AdminState>((set, get) => ({
   setTotpSecret: (val) => set({ totpSecret: val }),
   provisioningUri: '',
   setProvisioningUri: (val) => set({ provisioningUri: val }),
+  recoveryCodes: [],
+  recoveryCode: '',
+  setRecoveryCode: (val) => set({ recoveryCode: val }),
+  recoverTotp: async () => {
+    set({ adminError: '' });
+    try {
+      const auth = await getFirebaseAuth();
+      const user = auth.currentUser;
+      if (!user) throw new Error('Session expired. Please login again.');
+      const data = await authService.firebaseTotpRecover(await user.getIdToken(true), get().recoveryCode);
+      set({ totpSetupRequired: true, otpRequired: true, totpSecret: data.secret, provisioningUri: data.provisioning_uri, recoveryCode: '' });
+    } catch (err) {
+      set({ adminError: err instanceof Error ? err.message : 'Recovery failed.' });
+    }
+  },
   handleAdminLogin: async (password?: string) => {
     const { adminEmail, otpRequired, adminOtp, rememberBrowser } = get();
     const cleanEmail = adminEmail.trim();
@@ -133,8 +152,9 @@ export const useAdminStore = create<AdminState>((set, get) => ({
             set({
               totpSetupRequired: true,
               otpRequired: true,
-              totpSecret: setupData.secret,
-              provisioningUri: setupData.provisioning_uri || buildProvisioningUri(cleanEmail, setupData.secret || '')
+      totpSecret: setupData.secret,
+      recoveryCodes: setupData.recovery_codes || [],
+      provisioningUri: setupData.provisioning_uri || buildProvisioningUri(cleanEmail, setupData.secret || '')
             });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (setupErr: any) {
