@@ -793,7 +793,16 @@ jobs:
           RENDER_PREFLIGHT_TOKEN: ${{ secrets.RENDER_PREFLIGHT_TOKEN }}
           RENDER_ACCOUNTS_JSON: ${{ secrets.RENDER_ACCOUNTS_JSON }}
           RENDER_REQUIRED_ROLES: ${{ vars.RENDER_REQUIRED_ROLES }}
+          PREFLIGHT_EVIDENCE_PATH: ci-reports/render-deploy-preflight.json
         run: python scripts/ci/render_deploy_preflight.py
+      - name: Upload deployment preflight evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: render-deploy-preflight-evidence
+          path: ci-reports/render-deploy-preflight.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   # -----------------------------------------------------------------
   # Publish Images to GHCR
