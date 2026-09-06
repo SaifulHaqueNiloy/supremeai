@@ -181,6 +181,18 @@ jobs:
           name: drift-check-report
           path: drift-check-report.json
           if-no-files-found: warn
+
+      - name: Build commit-linked evidence bundle
+        if: always()
+        run: python scripts/ai/evidence_bundle.py --output ci-reports/evidence-bundle.json change-impact-report.json drift-check-report.json
+
+      - name: Upload evidence bundle
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: commit-linked-evidence
+          path: ci-reports/evidence-bundle.json
+          if-no-files-found: warn
       
       - name: Verify Core GitHub Secrets
         env:
