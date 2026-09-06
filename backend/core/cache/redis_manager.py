@@ -236,6 +236,26 @@ def acquire_idempotency_lock(key: str, ttl: int = 60, fail_closed: bool = True):
     return _AcquireIdempotencyLockContext(key, ttl=ttl, fail_closed=fail_closed)
 
 
+async def release_idempotency_lock(key: str) -> bool:
+    """Release an idempotency lock immediately.
+
+    বাংলা মন্তব্য: idempotency lock manually release করার জন্য।
+    যখন একটি অনুরোধ সফলভাবে সম্পন্ন হয়, তখন lock release করা উচিত।
+    """
+    try:
+        redis_key = f"idempotency:{key}"
+        deleted = await redis_manager.delete(redis_key)
+        if deleted:
+            logger.debug(f"Idempotency lock released for key: {key}")
+            return True
+        else:
+            logger.warning(f"Idempotency lock not found for key: {key}")
+            return False
+    except Exception as exc:
+        logger.error(f"Failed to release idempotency lock for key {key}: {exc}")
+        return False
+
+
 class _TTLCacheItem:
     """TTL-ভিত্তিক ক্যাশ আইটেম — স্বয়ংক্রিয় মেয়াদোত্তীর্ণ (Bangla: TTL-based cache item with auto-expiry)"""
 

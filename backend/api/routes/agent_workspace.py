@@ -48,6 +48,23 @@ async def execute_agent_command(
     command: WorkspaceCommand, _user: dict = Depends(get_current_user_token)
 ):
     # 🟢 Step 1: Zero-Cost Memory Check (Project Auto-Didact)
+    # বাংলা মন্তব্য: user_id যোগ করা হয়েছে tenant-scoped memory জন্য (cache poisoning প্রতিরোধ)
+    user_id = _user.get("sub", "anonymous")
+    cached_solution = get_from_memory(command.prompt, user_id=user_id)
+    if cached_solution:
+        return {
+            "status": "success",
+            "source": "memory",  # মেমোরি থেকে আসায় এপিআই খরচ ০!
+            "message": "Found in local memory.",
+            "code": cached_solution,
+        }
+
+
+@router.post("/agent/execute")
+async def execute_agent_command(
+    command: WorkspaceCommand, _user: dict = Depends(get_current_user_token)
+):
+    # 🟢 Step 1: Zero-Cost Memory Check (Project Auto-Didact)
     cached_solution = get_from_memory(command.prompt)
     if cached_solution:
         return {

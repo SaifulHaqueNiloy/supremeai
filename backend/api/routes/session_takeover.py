@@ -4,6 +4,7 @@ import json
 import os
 import secrets
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import (
@@ -174,11 +175,39 @@ def _require_admin(request: Request) -> dict:
     return user
 
 
-def request_takeover(payload: TakeoverRequest, request: Request) -> dict:
-    """HTTP endpoint: Admin requests a session takeover token."""
+async def request_takeover(payload: TakeoverRequest, request: Request) -> dict:
+    """HTTP endpoint: Admin requests a session takeover token.
+
+    বাংলা মন্তব্য: টোকেন তৈরি করে Redis-এ store করা হয় যাতে verify করা সম্ভয় হয়।
+    """
     # বাংলা মন্তব্য: Admin validation fail-closed
     _require_admin(request)
     token = f"tok_{secrets.token_urlsafe(32)}"
+
+    # বাংলা মন্তব্য: টোকেন Redis-এ store করা (TTL সহ)
+    try:
+        client = await _redis_client()
+        if client is not None:
+            token_data = json.dumps(
+                {
+                    "session_id": payload.session_id,
+                    "created_at": datetime.now(UTC).isoformat(),
+                    "created_by": getattr(request.state, "user", {}).get("sub", "unknown"),
+                }
+            )
+            await client.set(f"takeover_token:{token}", token_data, ex=300)
+            logger.info(f"Takeover token created for session {payload.session_id}")
+        else:
+            # বাংলা মন্তব্য: Redis না থাকলে fallback - env var এ add করা
+            logger.warning("Redis unavailable for takeover token storage")
+            existing = os.environ.get("ALLOWED_TAKEOVER_TOKENS", "")
+            if existing:
+                os.environ["ALLOWED_TAKEOVER_TOKENS"] = f"{existing},{token}"
+            else:
+                os.environ["ALLOWED_TAKEOVER_TOKENS"] = token
+    except Exception as e:
+        logger.error(f"Failed to store takeover token: {e}")
+
     return {
         "token": token,
         "session_id": payload.session_id,
@@ -260,30 +289,44 @@ async def verify_takeover_token(token: str) -> bool:
     """
     Validates the takeover token, then consumes it as single-use in Redis (when available)
     to block replay of a leaked/logged token.
+
+    বাংলা মন্তব্য: টোকেন প্রথমে Redis-এ খোঁজা হয় (request_takeover-এ store করা টোকেন),
+    তারপর env var এ fallback করা হয়।
     """
     if not token or not token.startswith("tok_"):
         return False
 
     try:
-        valid_tokens = os.environ.get("ALLOWED_TAKEOVER_TOKENS", "").split(",")
-        if token not in valid_tokens:
-            logger.warning(f"Unauthorized takeover attempt with token: {token[:10]}...")
-            return False
-
+        # বাংলা মন্তব্য: প্রথমে Redis-এ টোকেন আছে কিনা চেক করা
         client = await _redis_client()
+        token_found_in_redis = False
+
         if client is not None:
             try:
-                # SETNX-স্টাইল single-use consumption — token একবার ব্যবহার হলে ৫ মিনিটের জন্য লক থাকে
-                consumed = await client.set(f"takeover_used:{token}", "1", nx=True, ex=300)
-                if not consumed:
-                    logger.warning(
-                        f"Replay attempt detected for already-used takeover token: {token[:10]}..."
-                    )
-                    return False
+                # বাংলা মন্তব্য: টোকেন Redis-এ আছে কিনা চেক করা
+                stored_data = await client.get(f"takeover_token:{token}")
+                if stored_data:
+                    token_found_in_redis = True
+                    # বাংলা মন্তব্য: টোকেন ব্যবহৃহীত হিসেবে mark করা (single-use)
+                    await client.delete(f"takeover_token:{token}")
+                    logger.info(f"Takeover token verified and consumed from Redis: {token[:10]}...")
             except Exception as exc:
-                logger.warning(
-                    f"Redis single-use check failed, allowing on base validation only: {exc}"
-                )
+                logger.warning(f"Redis token lookup failed: {exc}")
+
+        # বাংলা মন্তব্য: Redis-এ না থাকলে env var এ fallback চেক
+        if not token_found_in_redis:
+            valid_tokens = os.environ.get("ALLOWED_TAKEOVER_TOKENS", "").split(",")
+            if token not in valid_tokens:
+                logger.warning(f"Unauthorized takeover attempt with token: {token[:10]}...")
+                return False
+            logger.info(f"Takeover token verified from env var: {token[:10]}...")
+
+        # বাংলা মন্তব্য: Replay protection - ব্যবহৃত টোকেন mark করা
+        if client is not None:
+            try:
+                await client.set(f"takeover_used:{token}", "1", ex=300)
+            except Exception as exc:
+                logger.warning(f"Failed to mark token as used: {exc}")
 
         return True
     except Exception as e:
