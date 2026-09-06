@@ -182,9 +182,13 @@ jobs:
           path: drift-check-report.json
           if-no-files-found: warn
 
+      - name: Build repository metadata index
+        if: always()
+        run: python scripts/ai/repository_metadata_index.py --output ci-reports/repository-metadata.json
+
       - name: Build commit-linked evidence bundle
         if: always()
-        run: python scripts/ai/evidence_bundle.py --output ci-reports/evidence-bundle.json change-impact-report.json drift-check-report.json
+        run: python scripts/ai/evidence_bundle.py --output ci-reports/evidence-bundle.json change-impact-report.json drift-check-report.json ci-reports/repository-metadata.json
 
       - name: Upload evidence bundle
         if: always()
