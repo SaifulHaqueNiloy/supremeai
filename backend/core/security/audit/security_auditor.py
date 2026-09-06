@@ -430,10 +430,12 @@ class SecurityAuditor:
                 min_ver = v.parse(range_spec[2:].strip())
                 return current >= min_ver
 
-        except Exception:
+        except Exception as exc:
             from core.logging_config import logger
 
-            logger.warning("Ignored error")
+            logger.warning(
+                f"[SecurityAuditor] Version parsing failed for range '{range_spec}': {exc}"
+            )
 
         return False
 
@@ -469,10 +471,12 @@ class SecurityAuditor:
                                         # Get base module name
                                         base_module = imp.split(".")[0].lower()
                                         imported_modules.add(base_module)
-                        except Exception:
+                        except Exception as exc:
                             from core.logging_config import logger
 
-                            logger.warning("Ignored error")
+                            logger.debug(
+                                f"[SecurityAuditor] Could not scan imports in {filepath}: {exc}"
+                            )
 
             # Compare with installed packages
             for dep_name, dep_info in self.dependencies.items():
