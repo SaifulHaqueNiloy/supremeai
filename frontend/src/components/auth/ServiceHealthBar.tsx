@@ -269,8 +269,10 @@ export const ServiceHealthBar: React.FC = () => {
                 <div className={`w-2 h-2 rounded-full ${dotColor}`} />
                 <span className="text-xs font-mono font-semibold text-gray-200">System Telemetry</span>
               </div>
-              <span className="text-[10px] font-mono text-gray-500">
-                {data?.timestamp ? new Date(data.timestamp * 1000).toLocaleTimeString() : 'Live'}
+              <span className="text-[10px] font-mono text-gray-500" title="Time of the latest backend health check">
+                {data?.timestamp
+                  ? `Last check ${new Date(data.timestamp < 10_000_000_000 ? data.timestamp * 1000 : data.timestamp).toLocaleTimeString()}`
+                  : 'Live'}
               </span>
             </div>
 

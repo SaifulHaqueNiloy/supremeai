@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ThemeSyncContext } from './ThemeSyncContext';
 import { getApiBaseUrl } from '../utils/api';
 import { getRawToken, AUTH_CHANGED_EVENT } from '../services/apiClient';
+import { eventBus, Events } from '../lib/componentEventBus';
 
 
 import { createSecureEventSource } from '../lib/secureSse';
@@ -12,8 +13,6 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
   children,
   userId = 'default'
 }) => {
-  const [theme, setThemeState] = useState<string>('dark');
-
   useEffect(() => {
     // বাংলা মন্তব্য: ROOT-CAUSE FIX — ThemeSyncProvider App root-এ (login page-সহ)
     // globally mount থাকে। token না থাকলে authenticated /api/preferences/.../stream
@@ -30,8 +29,12 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
             const data = JSON.parse(event.data);
             // fetchEventSource passes event.type via event.type property now if we matched it, or we check data.event
             if ((event.type === 'theme_changed' || data.event === 'theme_changed') && data.theme) {
-              console.warn('[ThemeSync] Theme updated via SSE:', data.theme);
-              setThemeState(data.theme);
+              eventBus.emit(Events.THEME_CHANGED, {
+                theme: data.theme,
+                isDark: data.theme === 'dark' || data.theme === 'matrix',
+                timestamp: Date.now(),
+                source: 'theme_sync_sse',
+              });
             }
           } catch (err) {
             console.error('[ThemeSync] Error parsing SSE message:', err);
@@ -65,33 +68,19 @@ export const ThemeSyncProvider: React.FC<{ children: React.ReactNode; userId?: s
     };
   }, [userId]);
 
-  // Apply theme class to HTML body/root whenever it changes
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('dark', 'light', 'sunset');
-
-    // Add the new theme class if it's not the default root theme
-    if (theme === 'dark' || theme === 'sunset') {
-      root.classList.add(theme);
-    }
-  }, [theme]);
-
+  // ThemeProvider is the only owner of theme state and DOM classes.
+  // This provider only bridges remote SSE changes and preserves the legacy API.
   const setTheme = async (newTheme: string) => {
-    setThemeState(newTheme);
-    // Push the change to backend
-    try {
-      await fetch(`${getApiBaseUrl()}/api/preferences/?user_id=${userId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme: newTheme }),
-      });
-    } catch (err) {
-      console.error('[ThemeSync] Failed to push theme to API:', err);
-    }
+    eventBus.emit(Events.THEME_CHANGED, {
+      theme: newTheme,
+      isDark: newTheme === 'dark' || newTheme === 'matrix',
+      timestamp: Date.now(),
+      source: 'theme_sync_bridge',
+    });
   };
 
   return (
-    <ThemeSyncContext.Provider value={{ theme, setTheme }}>
+    <ThemeSyncContext.Provider value={{ theme: 'dark', setTheme }}>
       {children}
     </ThemeSyncContext.Provider>
   );

@@ -62,7 +62,7 @@ export default defineConfig({
   base: process.env.ELECTRON === 'true' ? './' : '/', // Use './' for Electron, '/' for Web to fix client-side routing and MIME issues
   define: {
     // বাংলা মন্তব্য: লগইন পেজে বিল্ড টাইম দেখানোর জন্য, যাতে প্রোডাকশনে ঠিকমতো ডিপ্লয় হয়েছে কি না বোঝা যায়
-    __APP_BUILD_TIME__: JSON.stringify(new Date().toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })),
+    __APP_BUILD_TIME__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [
     react({ jsxRuntime: 'automatic' }),

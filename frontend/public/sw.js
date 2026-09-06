@@ -1,4 +1,4 @@
-const CACHE_NAME = 'supremeai-pwa-cache-v2';
+const CACHE_NAME = 'supremeai-pwa-cache-v3';
 
 // বাংলা মন্তব্য: যেসব রিসোর্স ক্যাশ করা হবে — শুধু নিশ্চিত ফাইলগুলো রাখা হয়েছে
 const PRECACHE_URLS = [
@@ -58,15 +58,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  const isHtmlRequest = event.request.headers.get('accept')?.includes('text/html');
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Cache successful GET responses from http/https (skip chrome-extension, etc)
-        if (response.status === 200 && event.request.url.startsWith('http')) {
+        // Never cache HTML: stale index.html can point at an older deployment bundle.
+        if (!isHtmlRequest && response.status === 200 && event.request.url.startsWith('http')) {
           const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
         return response;
       })

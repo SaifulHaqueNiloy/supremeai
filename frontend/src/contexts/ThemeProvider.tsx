@@ -16,34 +16,30 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // বাংলা মন্তব্য: Race Condition এড়াতে AbortController ব্যবহার করা হয়েছে
     const controller = new AbortController();
     const token = adminTokenStore.getDecodedToken();
+    const storageKey = 'supremeai-theme-storage';
+    const stored = localStorage.getItem(storageKey);
+    const legacy = localStorage.getItem('supremeai_theme');
+    const localTheme = stored ? JSON.parse(stored)?.state?.theme : legacy;
+    if (localTheme && THEME_ORDER.includes(localTheme as Theme)) {
+      setTheme(localTheme as Theme);
+      localStorage.removeItem('supremeai_theme');
+    }
 
-    if (!token) return;
-
-    // বাংলা মন্তব্য: set-state-in-effect ফিক্স — থিম লোডিং async ফাংশনের ভেতরে করা হয়েছে
     const loadTheme = async () => {
-      // 1. লোকাল স্টোরেজ থেকে থিম পড়া (Optimistic Load)
-      const localTheme = localStorage.getItem('supremeai_theme') as Theme | null;
-      if (localTheme && THEME_ORDER.includes(localTheme)) {
-        setTheme(localTheme);
-      }
-
-      // 2. ব্যাকএন্ড থেকে ফেচ করা (Cross-device sync)
+      if (!token) return;
       try {
         const response = await apiClient.get<any>('/api/v1/preferences', { signal: controller.signal });
-        if (response.data?.theme) {
-          setTheme(response.data.theme);
-          localStorage.setItem('supremeai_theme', response.data.theme);
+        const remoteTheme = response.data?.theme;
+        if (remoteTheme && THEME_ORDER.includes(remoteTheme as Theme)) {
+          setTheme(remoteTheme as Theme);
         }
       } catch (err: any) {
-        if (err.name !== 'AbortError' && err.name !== 'CanceledError') {
-          console.error('Theme sync failed:', err);
-        }
+        if (err.name !== 'AbortError' && err.name !== 'CanceledError') console.error('Theme sync failed:', err);
       }
     };
 
     loadTheme();
 
-    // Listen for external theme changes (from other tabs/components)
     const unsub = eventBus.subscribe(Events.THEME_CHANGED, (data) => {
       if (data.theme && THEME_ORDER.includes(data.theme as Theme)) setTheme(data.theme as Theme);
     });
@@ -70,7 +66,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // Optimistic UI Update
     setTheme(newTheme);
-    localStorage.setItem('supremeai_theme', newTheme);
+    localStorage.setItem('supremeai-theme-storage', JSON.stringify({ state: { theme: newTheme }, version: 0 }));
+    localStorage.removeItem('supremeai_theme');
 
     // ব্যাকএন্ডে async সিঙ্ক করা
     apiClient.post('/api/v1/preferences', { theme: newTheme })
