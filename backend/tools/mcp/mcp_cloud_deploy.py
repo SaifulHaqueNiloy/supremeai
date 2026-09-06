@@ -335,5 +335,81 @@ async def cloud_list_services() -> str:
     return json.dumps({"services": services, "count": len(services)}, ensure_ascii=False)
 
 
+@mcp.tool(
+    name="get_render_account_status",
+    annotations={
+        "title": "Get Render Account Status",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def get_render_account_status_tool(account_role: str | None = None) -> str:
+    """
+    রিটার্ন করে নির্দিষ্ট বা সমস্ত Render অ্যাকাউন্ট রোলের বর্তমান স্ট্যাটাস ও কোটা লিমিট।
+    """
+    from backend.services.render_preflight_service import RenderPreflightService
+
+    svc = RenderPreflightService()
+    result = svc.get_account_status(account_role)
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+@mcp.tool(
+    name="refresh_render_account_status",
+    annotations={
+        "title": "Refresh Render Account Status",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def refresh_render_account_status_tool(account_role: str, force: bool = False) -> str:
+    """
+    Render API কুয়েরি করে নির্দিষ্ট অ্যাকাউন্ট রোলের স্ট্যাটাস রিফ্রেশ ও অডিট ইভেন্ট রেকর্ড করে।
+    """
+    if force and not is_admin_authorized():
+        return json.dumps(
+            {"error": "Admin authorization required for force refresh"}, ensure_ascii=False
+        )
+
+    from backend.services.render_preflight_service import RenderPreflightService
+
+    svc = RenderPreflightService()
+    api_key = _get_render_api_key()
+    svc_id = os.getenv("RENDER_PRIMARY_SVC_ID", "")
+
+    result = svc.refresh_account_status(
+        account_role=account_role,
+        service_id=svc_id,
+        api_key=api_key,
+        force=force,
+    )
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
+@mcp.tool(
+    name="get_render_deploy_preflight",
+    annotations={
+        "title": "Get Render Deploy Preflight Summary",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def get_render_deploy_preflight_tool() -> str:
+    """
+    সমস্ত কনফিগার করা Render রোলের সামারি, ব্লকিং কারণ ও ডিপ্লয় অনুমতি রিটার্ন করে।
+    """
+    from backend.services.render_preflight_service import RenderPreflightService
+
+    svc = RenderPreflightService()
+    result = svc.get_deploy_preflight()
+    return json.dumps(result, indent=2, ensure_ascii=False)
+
+
 if __name__ == "__main__":
     mcp.run()

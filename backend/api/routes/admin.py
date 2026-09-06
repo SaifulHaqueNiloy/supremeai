@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 import uuid
 from datetime import UTC, datetime
@@ -947,3 +948,83 @@ async def get_execution_by_event(
     except Exception as e:
         logger.error(f"❌ execution lookup failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class RenderOverrideRequest(BaseModel):
+    reason: str
+
+
+class RenderRecheckRequest(BaseModel):
+    force: bool = True
+
+
+@router.get("/render/preflight")
+async def get_admin_render_preflight(admin_user: dict = Depends(get_current_admin)):
+    """Expose operator-friendly Render deploy preflight and role statuses."""
+    try:
+        from services.render_preflight_service import RenderPreflightService
+
+        svc = RenderPreflightService()
+        return {
+            "status": "success",
+            "data": svc.get_deploy_preflight(),
+            "events": svc.store.get_events(limit=20),
+        }
+    except Exception as e:
+        logger.error(f"Render preflight query failed: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch preflight data")
+
+
+@router.post("/render/accounts/{role}/recheck")
+async def recheck_admin_render_account(
+    role: str,
+    payload: RenderRecheckRequest = RenderRecheckRequest(),
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Trigger manual recheck for a specific Render role."""
+    try:
+        from services.render_preflight_service import RenderPreflightService
+
+        svc = RenderPreflightService()
+        api_key_env = f"RENDER_API_KEY_{role.upper()}"
+        api_key = os.getenv(api_key_env) or os.getenv("RENDER_API_KEY", "")
+        svc_id = os.getenv(f"RENDER_{role.upper()}_SVC_ID", "")
+
+        result = svc.refresh_account_status(
+            account_role=role,
+            service_id=svc_id,
+            api_key=api_key,
+            force=payload.force,
+        )
+        return {"status": "success", "data": result}
+    except Exception as e:
+        logger.error(f"Render recheck failed for role {role}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to recheck role {role}")
+
+
+@router.post("/render/accounts/{role}/override")
+async def override_admin_render_account(
+    role: str,
+    payload: RenderOverrideRequest,
+    admin_user: dict = Depends(get_current_admin),
+):
+    """Manual override for a blocked/cooldown Render role with mandatory reason."""
+    if not payload.reason or len(payload.reason.strip()) < 5:
+        raise HTTPException(
+            status_code=400, detail="A valid reason (min 5 chars) is required for manual override."
+        )
+
+    try:
+        from services.render_preflight_service import RenderPreflightService
+
+        svc = RenderPreflightService()
+        approved_by = admin_user.get("sub", "admin")
+        result = svc.manual_override(
+            account_role=role, approved_by=approved_by, reason=payload.reason
+        )
+        return {"status": "success", "data": result}
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
+    except Exception as e:
+        logger.error(f"Render manual override failed for role {role}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to apply manual override")

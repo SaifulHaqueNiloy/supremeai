@@ -1,5 +1,6 @@
+import base64
 import os
-from datetime import UTC
+from datetime import UTC, datetime, timezone
 from typing import Any, ClassVar
 from urllib.parse import parse_qs, urlparse
 
@@ -152,9 +153,6 @@ class SSOIntegrator:
                 }
 
         try:
-            import base64
-            from datetime import datetime, timezone
-
             saml_response_raw = post_data.get("SAMLResponse", "")
             if not saml_response_raw:
                 return {"status": "error", "message": "Missing SAMLResponse"}
