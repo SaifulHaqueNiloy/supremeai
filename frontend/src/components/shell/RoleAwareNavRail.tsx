@@ -34,7 +34,7 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
     );
     const labelEl = !collapsed ? <span>{item.label}</span> : null;
     const baseCls =
-      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200';
+      'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300/60';
     const titleAttr = collapsed ? item.label : undefined;
 
     if (item.kind === 'route') {
@@ -49,8 +49,8 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
           }}
           title={titleAttr}
           className={`${baseCls} ${active
-            ? 'surface-3 text-accent-primary border-l-2 border-accent-primary'
-            : 'text-secondary hover:surface-2 hover:text-text'}`}
+            ? 'surface-3 text-accent-primary border-l-2 border-accent-primary shadow-[0_0_18px_rgba(34,211,238,0.14)]'
+            : 'text-secondary hover:surface-2 hover:text-text hover:shadow-[0_0_16px_rgba(34,211,238,0.12)]'}`}
         >
           {iconEl}
           {labelEl}
@@ -76,7 +76,7 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
   };
 
   return (
-    <nav aria-label={`${context === 'admin' ? 'Admin' : 'Workspace'} navigation`} className="flex flex-col h-full py-4 bg-surface-1 overflow-y-auto w-full">
+    <nav aria-label={`${context === 'admin' ? 'Admin' : 'Workspace'} navigation`} className="flex h-full w-full flex-col overflow-y-auto bg-surface-1 py-4 max-md:bg-surface-1/95 max-md:backdrop-blur-xl">
       <div className="flex-1 px-3 space-y-5">
         {groups.map((group) => (
           <div key={group.id} className="space-y-1">
