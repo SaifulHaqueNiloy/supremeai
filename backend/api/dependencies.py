@@ -219,8 +219,30 @@ async def verify_idempotency(request: Request) -> None:
         )
 
     # বাংলা মন্তব্য: Lock অ্যাকোয়ার হলে request state-এ key রাখা হচ্ছে
-    # যাতে route handler lock release করতে পারে
+    # যাতে response পাঠানোর পরে lock release করা যায়
     request.state.idempotency_key = idempotency_key
+
+    # বাংলা মন্তব্য: Response পাঠানোর পরে lock release করা
+    # এটি নিশ্চিত করে যে ডুপ্লিকেট রিকোয়েস্ট ব্লক হলেও
+    # প্রথম রিকোয়েস্ট সম্পন্ন হলে lock মুক্ত হয়
+    original_send = request.scope.get("send")
+
+    async def release_lock_on_response(message):
+        if message["type"] == "http.response.body" and not message.get("more_body"):
+            try:
+                from core.cache.redis_manager import release_idempotency_lock
+
+                await release_idempotency_lock(idempotency_key)
+                logger.debug(f"[Idempotency Dep] Lock released for key: {idempotency_key}")
+            except Exception as e:
+                logger.warning(f"[Idempotency Dep] Failed to release lock: {e}")
+        if original_send:
+            await original_send(message)
+
+    # বাংলা মন্তব্য: Middleware-এর send function override করা
+    # এটি response পাঠানোর পরে lock release করবে
+    if "send" in request.scope:
+        request.scope["send"] = release_lock_on_response
 
 
 __all__ = [

@@ -41,7 +41,12 @@ async def _verify_webhook_signature(request: Request, body: bytes) -> bool:
         body,
         hashlib.sha256,
     ).hexdigest()
-    if not hmac.compare_digest(f"sha256={expected}", signature):
+    # বাংলা মন্তব্য: Supabase x-supabase-signature header-এ সাধারণত শুধু hex digest থাকে
+    # যদি header-এ "sha256=" prefix থাকে, তবে সেটি strip করে compare করা হচ্ছে
+    sig_value = signature
+    if sig_value.startswith("sha256="):
+        sig_value = sig_value[7:]
+    if not hmac.compare_digest(expected, sig_value):
         logger.warning("CDC webhook rejected: invalid signature")
         return False
     return True

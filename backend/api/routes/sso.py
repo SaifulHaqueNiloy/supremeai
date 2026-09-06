@@ -30,6 +30,35 @@ def get_sso_service():
 
 router = APIRouter(prefix="/auth/sso", tags=["sso"])
 _oidc_state_store: dict[str, float] = {}
+_oidc_state_ttl_seconds = 600  # 10 minutes TTL for OIDC state
+_last_oidc_cleanup = 0.0
+_oidc_cleanup_interval = 300.0  # Cleanup every 5 minutes
+
+
+def _cleanup_expired_oidc_states():
+    """Clean up expired OIDC state entries to prevent memory leak.
+
+    বাংলা মন্তব্য: OIDC state store-এ পুরনো entry মুছে দেওয়া হচ্ছে
+    যাতে memory leak না হয়। প্রতি ৫ মিনিটে একবার cleanup হয়।
+    """
+    import time
+
+    global _last_oidc_cleanup
+
+    now = time.time()
+    if now - _last_oidc_cleanup < _oidc_cleanup_interval:
+        return
+
+    _last_oidc_cleanup = now
+    expired_keys = [
+        key
+        for key, timestamp in _oidc_state_store.items()
+        if now - timestamp > _oidc_state_ttl_seconds
+    ]
+    for key in expired_keys:
+        del _oidc_state_store[key]
+    if expired_keys:
+        logger.debug(f"Cleaned up {len(expired_keys)} expired OIDC state entries")
 
 
 class SAMLAssertionRequest(BaseModel):
@@ -72,6 +101,7 @@ class ProviderSSORequest(BaseModel):
 
 @router.post("/oidc/discovery", response_model=OIDCLoginResponse)
 async def oidc_discovery(payload: OIDCDiscoveryRequest):
+    _cleanup_expired_oidc_states()
     state = secrets.token_urlsafe(16)
     _oidc_state_store[state] = time.time()
     auth_url = (
@@ -87,6 +117,7 @@ async def oidc_discovery(payload: OIDCDiscoveryRequest):
 
 @router.post("/oidc/{provider}/authorize", response_model=OIDCLoginResponse)
 async def oidc_provider_authorize(provider: str, payload: ProviderSSORequest):
+    _cleanup_expired_oidc_states()
     sso_service = get_sso_service()
     if sso_service is None:
         raise HTTPException(status_code=503, detail="SSO service is unavailable")

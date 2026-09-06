@@ -214,3 +214,145 @@ class TestIntegrationViaHeaders:
             },
         )
         assert resp.status_code == 200
+
+
+class TestAPIKeyEndpoints:
+    def test_create_key_endpoint(self, client):
+        mock_rec = {
+            "id": 1,
+            "name": "Integration Key",
+            "rate_limit_rps": 10,
+            "expires_at": None,
+            "created_at": "2026-09-07T00:00:00Z",
+            "scopes": ["read", "write"],
+        }
+        with patch("api.routes.api_keys.db_create_api_key", return_value=mock_rec):
+            resp = client.post(
+                "/api/api-keys/create",
+                json={"user_id": "test_owner", "name": "Integration Key", "rate_limit_rps": 10},
+            )
+            assert resp.status_code == 201
+            data = resp.json()
+            assert data["id"] == 1
+            assert data["name"] == "Integration Key"
+            assert "key" in data
+            assert data["warning"] is not None
+
+    def test_get_key_endpoint_success_and_not_found(self, client):
+        with patch(
+            "api.routes.api_keys.get_api_key_by_id",
+            return_value={"id": 1, "user_id": "test_owner", "name": "Key 1"},
+        ):
+            resp = client.get("/api/api-keys/1")
+            assert resp.status_code == 200
+            assert resp.json()["id"] == 1
+
+        with patch(
+            "api.routes.api_keys.get_api_key_by_id",
+            return_value={"id": 2, "user_id": "other_owner"},
+        ):
+            resp = client.get("/api/api-keys/2")
+            assert resp.status_code == 404
+
+    def test_revoke_and_delete_endpoints(self, client):
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                return_value={"id": 1, "user_id": "test_owner"},
+            ),
+            patch("api.routes.api_keys.db_revoke_api_key", return_value={"id": 1, "revoked": True}),
+        ):
+            resp = client.post("/api/api-keys/1/revoke")
+            assert resp.status_code == 200
+            assert resp.json()["status"] == "revoked"
+
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                return_value={"id": 1, "user_id": "test_owner"},
+            ),
+            patch("api.routes.api_keys.delete_api_key", return_value=True),
+        ):
+            resp = client.delete("/api/api-keys/1")
+            assert resp.status_code == 200
+            assert resp.json()["status"] == "deleted"
+
+    def test_rotate_key_success_and_mismatch(self, client):
+        fake_key = generate_api_key()
+        fake_hash = hash_api_key(fake_key)
+
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                return_value={"id": 1, "user_id": "test_owner", "key_hash": fake_hash},
+            ),
+            patch(
+                "api.routes.api_keys.db_rotate_api_key",
+                return_value={"id": 1, "key_masked": "sk-supreme-1***"},
+            ),
+            patch("api.routes.api_keys.record_api_key_event"),
+        ):
+            resp = client.post(
+                "/api/api-keys/1/rotate", json={"old_key": fake_key, "grace_period_hours": 12}
+            )
+            assert resp.status_code == 200
+            assert resp.json()["status"] == "rotated"
+            assert "new_key" in resp.json()
+
+        # Mismatch
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                return_value={"id": 1, "user_id": "test_owner", "key_hash": fake_hash},
+            ),
+            patch("api.routes.api_keys.record_api_key_event"),
+        ):
+            resp = client.post("/api/api-keys/1/rotate", json={"old_key": "wrong_key"})
+            assert resp.status_code == 400
+
+    def test_usage_and_stats_endpoints(self, client):
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                return_value={"id": 1, "user_id": "test_owner"},
+            ),
+            patch(
+                "api.routes.api_keys.get_api_key_usage", return_value=[{"endpoint": "/api/chat"}]
+            ),
+            patch(
+                "api.routes.api_keys.get_api_key_usage_stats", return_value={"total_requests": 25}
+            ),
+            patch("api.routes.api_keys.record_api_key_usage"),
+        ):
+            resp_usage = client.get("/api/api-keys/1/usage")
+            assert resp_usage.status_code == 200
+
+            resp_stats = client.get("/api/api-keys/1/stats")
+            assert resp_stats.status_code == 200
+            assert resp_stats.json()["total_requests"] == 25
+
+            resp_record = client.post(
+                "/api/api-keys/1/usage", json={"endpoint": "/api/test", "status_code": 200}
+            )
+            assert resp_record.status_code == 200
+
+            resp_alert = client.get("/api/api-keys/1/admin/quota-alert")
+            assert resp_alert.status_code == 200
+            assert resp_alert.json()["alert"] is False
+
+    def test_admin_bulk_delete(self, client):
+        with (
+            patch(
+                "api.routes.api_keys.get_api_key_by_id",
+                side_effect=lambda kid: {"id": kid, "user_id": "u1"} if kid == 1 else None,
+            ),
+            patch("api.routes.api_keys.delete_api_key", return_value=True),
+            patch(
+                "api.routes.api_keys._require_admin", return_value={"sub": "admin", "role": "admin"}
+            ),
+        ):
+            resp = client.post("/api/api-keys/admin/bulk-delete", json={"key_ids": [1, 2]})
+            assert resp.status_code == 200
+            data = resp.json()
+            assert 1 in data["deleted"]
+            assert 2 in data["failed"]

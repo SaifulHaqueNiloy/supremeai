@@ -163,6 +163,20 @@ def sample_user_data():
 
 
 @pytest.fixture
+def user_factory():
+    from tests.factories import UserFactory
+
+    return UserFactory
+
+
+@pytest.fixture
+def agent_factory():
+    from tests.factories import AgentFactory
+
+    return AgentFactory
+
+
+@pytest.fixture
 def sample_operator_data():
     return {"id": "operator-123", "role": "operator"}
 

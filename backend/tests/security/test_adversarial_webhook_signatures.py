@@ -72,13 +72,10 @@ async def test_cdc_wrong_secret_rejected(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_cdc_no_secret_configured_pins_dev_skip(monkeypatch):
-    """Current behavior: unconfigured secret skips verification (dev mode).
-
-    Pinned here so a future prod hardening (fail-closed) is a deliberate change.
-    """
+    """Hardened behavior (P0 fail-closed): unconfigured secret rejects webhook."""
     monkeypatch.setattr("api.routes.cdc_webhooks.SUPABASE_WEBHOOK_SECRET", "")
     body = b'{"type":"INSERT"}'
-    assert await verify_cdc(DummyRequest({}), body) is True
+    assert await verify_cdc(DummyRequest({}), body) is False
 
 
 # ---------------------------------------------------------------------------
