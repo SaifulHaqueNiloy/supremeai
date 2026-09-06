@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 EXCLUDED = {".git", "node_modules", "__pycache__", ".venv"}
@@ -16,12 +17,31 @@ def file_entry(root: Path, path: Path) -> dict:
     return {"path": str(path.relative_to(root)), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "suffix": path.suffix}
 
 
+def git_commit(root: Path) -> str | None:
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
 def build_index(root: Path) -> dict:
     entries = []
     for path in sorted(root.rglob("*")):
         if path.is_file() and not EXCLUDED.intersection(path.parts) and (path.suffix in TEXT_SUFFIXES or path.name in {"Dockerfile", "Makefile"}):
             entries.append(file_entry(root, path))
-    return {"schema_version": "1.0", "root": str(root), "file_count": len(entries), "files": entries}
+    return {
+        "schema_version": "1.1",
+        "root": str(root),
+        "commit": git_commit(root),
+        "file_count": len(entries),
+        "files": entries,
+    }
 
 
 def main() -> int:
