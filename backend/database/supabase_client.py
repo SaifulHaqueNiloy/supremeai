@@ -775,6 +775,35 @@ class SupabaseDB:
             "CREATE INDEX IF NOT EXISTS idx_browser_credentials_owner_id ON browser_credentials (owner_id);",
             "CREATE INDEX IF NOT EXISTS idx_browser_credentials_provider ON browser_credentials (provider);",
             "CREATE INDEX IF NOT EXISTS idx_browser_credentials_is_revoked ON browser_credentials (is_revoked);",
+            # Render account states and preflight audit events
+            "CREATE TABLE IF NOT EXISTS render_account_states ("
+            "id VARCHAR(36) PRIMARY KEY,"
+            "account_key VARCHAR(120) NOT NULL UNIQUE,"
+            "role VARCHAR(80) NOT NULL,"
+            "plan VARCHAR(40) NOT NULL DEFAULT 'unknown',"
+            "status VARCHAR(32) NOT NULL DEFAULT 'unknown',"
+            "reason VARCHAR(120),"
+            "usage_minutes DOUBLE PRECISION,"
+            "usage_period_start TIMESTAMP WITH TIME ZONE,"
+            "recheck_at TIMESTAMP WITH TIME ZONE,"
+            "last_checked_at TIMESTAMP WITH TIME ZONE,"
+            "last_error TEXT,"
+            "retry_count INTEGER NOT NULL DEFAULT 0,"
+            "metadata JSONB DEFAULT '{}'::jsonb,"
+            "created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),"
+            "updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()"
+            ");",
+            "CREATE INDEX IF NOT EXISTS ix_render_account_states_status_recheck ON render_account_states (status, recheck_at);",
+            "CREATE TABLE IF NOT EXISTS render_preflight_events ("
+            "id VARCHAR(36) PRIMARY KEY,"
+            "account_key VARCHAR(120) NOT NULL,"
+            "status VARCHAR(32) NOT NULL,"
+            "reason VARCHAR(120),"
+            "usage_minutes DOUBLE PRECISION,"
+            "observed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),"
+            "metadata JSONB DEFAULT '{}'::jsonb"
+            ");",
+            "CREATE INDEX IF NOT EXISTS ix_render_preflight_events_account_observed ON render_preflight_events (account_key, observed_at);",
         ]
 
     def bootstrap_schema(self):
