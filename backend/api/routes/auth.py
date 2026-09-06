@@ -142,8 +142,11 @@ def create_refresh_token(data: dict) -> str:
         {
             "exp": expire,
             "iat": now,
-            "jti": f"jti-{_uuid.uuid4().hex[:16]}",
             "type": "refresh",
+            # বাংলা মন্তব্য: Token family ID — সব refresh token একই family-এ থাকবে
+            # stolen token শনাক্ত করতে reuse detection-এ ব্যবহৃত হয়
+            "tfid": data.get("tfid") or f"tfid-{_uuid.uuid4().hex[:12]}",
+            "jti": f"jti-{_uuid.uuid4().hex[:16]}",
         }
     )
     return jwt.encode(to_encode, _get_secret_key(), algorithm=ALGORITHM)
@@ -166,6 +169,21 @@ async def optional_current_user(
         jti = payload.get("jti")
         if jti and await is_token_revoked(jti):
             return None
+        # বাংলা মন্তব্য: User-level revocation চেক — token family reuse detected হলে
+        # পুরো user-এর সব session revoke করা হয়
+        user_id_check = payload.get("sub", "")
+        if user_id_check:
+            try:
+                from core.cache.redis_manager import redis_manager
+
+                if redis_manager.client and await redis_manager.client.get(
+                    f"user_revoked:{user_id_check}"
+                ):
+                    logger.warning(f"User {user_id_check} is revoked due to suspected token theft")
+                    return None
+            except Exception:
+                pass  # Redis না থাকলে skip, fail-open
+
         # বাংলা মন্তব্য: JWT ডিকোড সফল হলে UserContext তৈরি করে return করা হচ্ছে।
         user_id = payload.get("sub", "unknown")
         role = payload.get("role", "viewer")
@@ -447,11 +465,60 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked"
         )
 
+    # বাংলা মন্তব্য: Token Family Tracking — stolen refresh token শনাক্তকরণ
+    # যদি রোটেট করা token আবার আসে, তাহলে সেটি stolen হয়েছে বলে ধরা হবে
+    token_family = payload.get("tfid")
+    if token_family:
+        try:
+            from core.cache.redis_manager import redis_manager
+
+            if redis_manager.client:
+                family_key = f"refresh_family:{token_family}"
+                is_reuse = await redis_manager.client.get(family_key)
+                if is_reuse:
+                    # বাংলা মন্তব্য: Token reuse detected! পুরো family revoke করা
+                    logger.critical(
+                        f"Refresh token reuse detected for family {token_family}. "
+                        f"Possible token theft. Revoking entire token family."
+                    )
+                    # পুরো user-এর সব session revoke করা
+                    user_sub = payload.get("sub", "")
+                    await redis_manager.client.setex(
+                        f"user_revoked:{user_sub}",
+                        int(timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()),
+                        "1",
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Token reuse detected. All sessions revoked.",
+                    )
+                # এই token use হয়েছে হিসেবে চিহ্নিত করা
+                await redis_manager.client.setex(
+                    family_key,
+                    int(timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS).total_seconds()),
+                    "used",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Token family tracking failed: {e}")
+
+    # বাংলা মন্তব্য: Refresh Token Rotation — পুরনো refresh token ব্ল্যাকলিস্টে যোগ করা
+    # যাতে একবার ব্যবহৃত refresh token আর ব্যবহার করা না যায় (replay attack প্রতিরোধ)
+    if refresh_jti:
+        try:
+            await revoke_token(refresh_jti, REFRESH_TOKEN_EXPIRE_DAYS * 86400)
+            logger.info(f"Old refresh token {refresh_jti[:8]}... blacklisted (rotation)")
+        except Exception as e:
+            logger.warning(f"Failed to blacklist old refresh token: {e}")
+
     token_data = {
         "sub": payload.get("sub", "unknown"),
         "role": payload.get("role", "viewer"),
         "email": payload.get("email"),
         "method": payload.get("method", "supabase_auth"),
+        # বাংলা মন্তব্য: Token family ID একই রাখা — rotation-এ family অব্যাহত থাকে
+        "tfid": payload.get("tfid", ""),
     }
     new_access = create_access_token(token_data)
     new_refresh = create_refresh_token(token_data)

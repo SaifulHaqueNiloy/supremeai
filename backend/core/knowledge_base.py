@@ -44,6 +44,42 @@ except PermissionError:
         json.dump({}, f)
 
 
+def get_from_memory(prompt: str, user_id: str | None = None):
+    """ইউজারের প্রম্পটটি আগে সমাধান করা হয়েছে কি না, তা চেক করবে
+
+    বাংলা মন্তব্য: user_id যোগ করা হয়েছে tenant-scoped memory জন্য (cache poisoning প্রতিরোধ)
+    """
+    with open(MEMORY_FILE_PATH) as f:
+        memory = json.load(f)
+        # বাংলা মন্তব্য: user_id থাকলে user-specific key ব্যবহার করা
+        if user_id:
+            key = f"{user_id}:{prompt}"
+        else:
+            key = prompt
+        return memory.get(key, None)
+
+
+def save_to_memory(prompt: str, solution_code: str, user_id: str | None = None):
+    """নতুন সমাধান শিখলে সেটি জিরো-কস্ট মেমোরিতে সেভ করে রাখবে
+
+    বাংলা মন্তব্য: user_id যোগ করা হয়েছে tenant-scoped memory জন্য (cache poisoning প্রতিরোধ)
+    """
+    with open(MEMORY_FILE_PATH) as f:
+        memory = json.load(f)
+
+    # বাংলা মন্তব্য: user_id থাকলে user-specific key ব্যবহার করা
+    if user_id:
+        key = f"{user_id}:{prompt}"
+    else:
+        key = prompt
+
+    memory[key] = solution_code
+
+    with open(MEMORY_FILE_PATH, "w") as f:
+        json.dump(memory, f, indent=4)
+    logger.info("🧠 [Auto-Didact] New skill learned and saved to memory vault!")
+
+
 def get_from_memory(prompt: str):
     """ইউজারের প্রম্পটটি আগে সমাধান করা হয়েছে কি না, তা চেক করবে"""
     with open(MEMORY_FILE_PATH) as f:

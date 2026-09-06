@@ -321,10 +321,16 @@ async def verify_takeover_token(token: str) -> bool:
                 return False
             logger.info(f"Takeover token verified from env var: {token[:10]}...")
 
-        # বাংলা মন্তব্য: Replay protection - ব্যবহৃত টোকেন mark করা
+        # বাংলা মন্তব্য: Replay protection - Redis এ SETNX-স্টাইল single-use consumption
+        # token একবার ব্যবহার হলে ৫ মিনিটের জন্য লক থাকে, দ্বিতীয়বার set ফেইল করবে
         if client is not None:
             try:
-                await client.set(f"takeover_used:{token}", "1", ex=300)
+                consumed = await client.set(f"takeover_used:{token}", "1", nx=True, ex=300)
+                if not consumed:
+                    logger.warning(
+                        f"Replay attempt detected for already-used takeover token: {token[:10]}..."
+                    )
+                    return False
             except Exception as exc:
                 logger.warning(f"Failed to mark token as used: {exc}")
 

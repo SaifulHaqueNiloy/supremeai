@@ -277,6 +277,66 @@ async def is_token_revoked(jti: str) -> bool:
         return False
 
 
+# বাংলা মন্তব্য: ব্যবহারকারীর সব সেশন ট্র্যাক করার জন্য Redis key pattern
+USER_SESSIONS_PREFIX = "jwt:user_sessions:"
+
+
+async def track_user_session(user_id: str, jti: str, exp: int | None = None) -> bool:
+    """বাংলা মন্তব্য: ব্যবহারকারীর সেশন ট্র্যাক করা — revoke_all_user_sessions এর জন্য প্রয়োজন।"""
+    import time
+
+    from core.cache.redis_manager import redis_manager
+
+    if not redis_manager or not getattr(redis_manager, "client", None):
+        return False
+
+    try:
+        ttl = max(1, (exp - int(time.time())) if exp else BLACKLIST_TTL)
+        ttl = min(ttl, BLACKLIST_TTL)
+        key = f"{USER_SESSIONS_PREFIX}{user_id}"
+        await redis_manager.client.sadd(key, jti)
+        await redis_manager.client.expire(key, ttl)
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to track session for user {user_id}: {e}")
+        return False
+
+
+async def revoke_all_user_sessions(user_id: str) -> int:
+    """বাংলা মন্তব্য: ব্যবহারকারীর সব সেশন ব্ল্যাকলিস্ট করা — token theft প্রতিরোধে।"""
+    from core.cache.redis_manager import redis_manager
+
+    if not redis_manager or not getattr(redis_manager, "client", None):
+        logger.warning(f"Redis unavailable, cannot revoke all sessions for user {user_id}")
+        return 0
+
+    try:
+        key = f"{USER_SESSIONS_PREFIX}{user_id}"
+        jtis = await redis_manager.client.smembers(key)
+        if not jtis:
+            return 0
+
+        # বাংলা মন্তব্য: সব jti ব্ল্যাকলিস্ট করা
+        count = 0
+        for jti in jtis:
+            _IN_MEMORY_BLACKLIST.add(jti)
+            try:
+                await redis_manager.client.setex(
+                    f"{BLACKLIST_PREFIX}{jti}", BLACKLIST_TTL, "revoked"
+                )
+                count += 1
+            except Exception as e:
+                logger.error(f"Failed to revoke session {jti}: {e}")
+
+        # বাংলা মন্তব্য: সেশন ট্র্যাকিং key মুছে ফেলা
+        await redis_manager.client.delete(key)
+        logger.info(f"Revoked {count} sessions for user {user_id}")
+        return count
+    except Exception as e:
+        logger.error(f"Failed to revoke all sessions for user {user_id}: {e}")
+        return 0
+
+
 async def verify_token_async(token: str) -> dict:
     """Non-blocking async token verification.
 
