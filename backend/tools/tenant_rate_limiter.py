@@ -137,8 +137,8 @@ class TenantRateLimiter:
                     "limit": tier["rpd"],
                 }
         except Exception as exc:
-            logger.debug(f"Redis quota check failed: {exc}")
-            return {"allowed": True, "reason": "redis_error", "tier": tier_key}
+            logger.error("Redis quota check failed; rejecting request", exc_info=exc)
+            return {"allowed": False, "reason": "quota_unavailable", "tier": tier_key}
 
         return {"allowed": True, "reason": "ok", "tier": tier_key}
 
