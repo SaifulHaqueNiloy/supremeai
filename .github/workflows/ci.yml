@@ -795,6 +795,13 @@ jobs:
           RENDER_REQUIRED_ROLES: ${{ vars.RENDER_REQUIRED_ROLES }}
           PREFLIGHT_EVIDENCE_PATH: ci-reports/render-deploy-preflight.json
         run: python scripts/ci/render_deploy_preflight.py
+      - name: Verify deployment preflight evidence
+        if: always()
+        run: |
+          python -m unittest discover -s tests -p 'test_preflight_evidence.py' -v
+          if test -f ci-reports/render-deploy-preflight.json; then
+            python scripts/ci/verify_preflight_evidence.py ci-reports/render-deploy-preflight.json
+          fi
       - name: Upload deployment preflight evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
