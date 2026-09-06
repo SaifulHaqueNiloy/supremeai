@@ -1469,8 +1469,12 @@ def get_commandcenter_approvals():
         items.append(
             {
                 "id": task.task_id,
-                "action": task.task_type.value if hasattr(task.task_type, "value") else str(task.task_type),
-                "target": str(task.payload.get("skill_name") or task.payload.get("target") or "system"),
+                "action": task.task_type.value
+                if hasattr(task.task_type, "value")
+                else str(task.task_type),
+                "target": str(
+                    task.payload.get("skill_name") or task.payload.get("target") or "system"
+                ),
                 "requested_by": task.created_by or "system",
                 "requested_at": task.created_at,
                 "reason": str(task.payload.get("description") or task.task_type),
@@ -1496,7 +1500,12 @@ def decide_commandcenter_approval(
     payload: ApprovalDecisionPayload, admin: dict = Depends(get_current_admin)
 ):
     """Compatibility bridge delegating decisions to the canonical HITL lifecycle."""
-    from api.routes.approval_manager import ApproveRequest, approve_task, cancel_task_route, reject_task
+    from api.routes.approval_manager import (
+        ApproveRequest,
+        approve_task,
+        cancel_task_route,
+        reject_task,
+    )
 
     actor = admin.get("uid") or admin.get("email") or "admin"
     request = ApproveRequest(resolved_by=actor, reason=payload.reason)
