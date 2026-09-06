@@ -130,6 +130,29 @@ async def add_funds(
     session: AsyncSession = Depends(get_db_session),
     token_payload: dict = Depends(get_current_user_token),
 ):
+    # বাংলা মন্তব্য: Amount validation - NaN, Infinity, এবং reasonable limit চেক
+    import math
+
+    if math.isnan(amount) or math.isinf(amount):
+        raise HTTPException(status_code=400, detail="Invalid amount: must be a finite number.")
+
+    if amount <= 0.0:
+        raise HTTPException(status_code=400, detail="Topup amount must be greater than zero.")
+
+    # বাংলা মন্তব্য: Maximum topup limit (anti-money-laundering)
+    MAX_TOPUP_AMOUNT = 10000.0  # $10,000 USD
+    if amount > MAX_TOPUP_AMOUNT:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Topup amount exceeds maximum limit of ${MAX_TOPUP_AMOUNT:.2f}.",
+        )
+
+    # বাংলা মন্তব্য: দশমিক সীমা চেক (2 decimal places max)
+    if round(amount, 2) != amount:
+        raise HTTPException(
+            status_code=400,
+            detail="Amount must have at most 2 decimal places.",
+        )
     if amount <= 0.0:
         raise HTTPException(status_code=400, detail="Topup amount must be greater than zero.")
 
@@ -393,7 +416,27 @@ async def sslcommerz_webhook_listener(
 
         # idempotency check: `val_id` has unique mapping to `transaction_id` in ledger for SSLCommerz
         async with session.begin():
-            # SSLCommerz-এর unique `val_id` দিয়ে ledger এ অলরেডি এন্ট্রি আছে কিনা চেক করি
+            # বাংলা মন্তব্য: Race condition প্রতিরোধ - wallet row lock করা
+            # SELECT ... FOR UPDATE ব্যবহার করে concurrent request গুলো serialize হবে
+            from sqlalchemy import text as sa_text
+
+            # প্রথমে wallet row lock করা (FOR UPDATE)
+            result = await session.execute(
+                select(UserWallet)
+                .where(UserWallet.user_id == user_id)
+                .with_for_update(nowait=False)
+            )
+            wallet = result.scalars().first()
+
+            if not wallet:
+                logger.error(f"Wallet not found for user: {user_id} during SSLCommerz top-up.")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User wallet not found",
+                )
+
+            # বাংলা মন্তব্য: Idempotency check - একই val_id দিয়ে দুইবার credit হবে না
+            # এখন wallet lock করা আছে, তাই এই check atomic
             existing_tx = await session.execute(
                 select(TransactionLedgerEntry).where(
                     TransactionLedgerEntry.transaction_id == val_id
@@ -407,16 +450,6 @@ async def sslcommerz_webhook_listener(
                     "status": "processed",
                     "message": "Transaction already credited via SSLCommerz.",
                 }
-
-            result = await session.execute(select(UserWallet).where(UserWallet.user_id == user_id))
-            wallet = result.scalars().first()
-
-            if not wallet:
-                logger.error(f"Wallet not found for user: {user_id} during SSLCommerz top-up.")
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="User wallet not found",
-                )
 
             wallet.balance_usd += amount_usd
 

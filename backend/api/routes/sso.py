@@ -33,6 +33,11 @@ _oidc_state_store: dict[str, float] = {}
 _oidc_state_ttl_seconds = 600  # 10 minutes TTL for OIDC state
 _last_oidc_cleanup = 0.0
 _oidc_cleanup_interval = 300.0  # Cleanup every 5 minutes
+_oidc_state_max_size = 10000  # Maximum number of states to prevent unbounded growth
+_oidc_state_store: dict[str, float] = {}
+_oidc_state_ttl_seconds = 600  # 10 minutes TTL for OIDC state
+_last_oidc_cleanup = 0.0
+_oidc_cleanup_interval = 300.0  # Cleanup every 5 minutes
 
 
 def _cleanup_expired_oidc_states():
@@ -59,6 +64,19 @@ def _cleanup_expired_oidc_states():
         del _oidc_state_store[key]
     if expired_keys:
         logger.debug(f"Cleaned up {len(expired_keys)} expired OIDC state entries")
+
+    # বাংলা মন্তব্য: যদি store-এর আকার সীমার বাইরে হয়, তাহলে পুরনো entry মুছে দাও
+    if len(_oidc_state_store) > _oidc_state_max_size:
+        # সবচেয়ে পুরনো entry মুছে দাও (FIFO-style)
+        sorted_states = sorted(_oidc_state_store.items(), key=lambda x: x[1])
+        keys_to_remove = [
+            k for k, _ in sorted_states[: len(_oidc_state_store) - _oidc_state_max_size]
+        ]
+        for key in keys_to_remove:
+            del _oidc_state_store[key]
+        logger.warning(
+            f"OIDC state store exceeded max size. Removed {len(keys_to_remove)} oldest entries."
+        )
 
 
 class SAMLAssertionRequest(BaseModel):

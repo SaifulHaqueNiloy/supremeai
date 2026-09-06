@@ -67,6 +67,21 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     """Trigger 1-click Quick Actions from Dashboard"""
     # Verify if admin actions are currently allowed by god.py
     god_layer.enforce("admin_action")
+    # বাংলা মন্তব্য: Structured audit log entry
+    import uuid
+
+    audit_id = uuid.uuid4().hex[:12]
+    admin_email = admin_user.get("sub", "unknown")
+    logger.critical(
+        f"🔒 [ADMIN_ACTION] audit_id={audit_id} action={action_type} admin={admin_email} timestamp={datetime.now(UTC).isoformat()}"
+    )
+
+    # বাংলা মন্তব্য: অ্যাকশন সম্পন্ন হওয়ার পর result log করা হবে
+    def _admin_action_audit(result: str) -> None:
+        logger.critical(
+            f"🔒 [ADMIN_ACTION_RESULT] audit_id={audit_id} action={action_type} admin={admin_email} result={result}"
+        )
+
     logger.critical(f"🔒 Admin quick-action '{action_type}' requested by {admin_user.get('sub')}")
 
     # বাংলা মন্তব্য: প্রতিটি কুইক অ্যাকশনের জন্য রিয়েল ইমপ্লিমেন্টেশন করা হয়েছে
@@ -89,11 +104,14 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                     await redis_client.delete(*keys)
                     total_deleted += len(keys)
             logger.info(f"Successfully cleared {total_deleted} cache keys from Redis.")
+            _admin_action_audit("success")
             return {
                 "status": "success",
                 "message": f"Selective cache cleared. Deleted {total_deleted} keys.",
+                "audit_id": audit_id,
             }
         else:
+            _admin_action_audit("failed - redis unavailable")
             raise HTTPException(status_code=503, detail="Redis client unavailable")
 
     elif action_type == "backup":
@@ -138,12 +156,15 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                 json.dump(backup_data, f, indent=2)
 
             logger.info(f"Database backup saved successfully to {backup_path}")
+            _admin_action_audit("success")
             return {
                 "status": "success",
                 "message": f"Database backup saved successfully to {backup_path.name}",
+                "audit_id": audit_id,
             }
         except Exception as e:
             logger.error(f"Database backup failed: {e}")
+            _admin_action_audit(f"failed - {str(e)}")
             raise HTTPException(status_code=500, detail=f"Database backup failed: {e}") from e
 
     elif action_type == "rollback":
@@ -158,12 +179,15 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             command.downgrade(alembic_cfg, "-1")
 
             logger.info("Alembic rollback to previous revision completed successfully.")
+            _admin_action_audit("success")
             return {
                 "status": "success",
                 "message": "Database rollback to previous revision executed successfully.",
+                "audit_id": audit_id,
             }
         except Exception as e:
             logger.error(f"Rollback failed: {e}")
+            _admin_action_audit(f"failed - {str(e)}")
             raise HTTPException(status_code=500, detail=f"Rollback operation failed: {e}") from e
 
     else:
