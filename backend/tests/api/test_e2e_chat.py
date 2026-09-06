@@ -9,16 +9,25 @@ class TestE2EChatBasic:
 
     def test_chat_component_exists(self):
         """Test that chat component is properly defined."""
-        # This tests the component structure exists
-        # Actual browser tests would run in Playwright
-        assert True  # Placeholder for browser-based assertions
+        from pathlib import Path
+
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        component_path = (
+            backend_dir.parent / "frontend" / "src" / "components" / "chat" / "ChatInterface.tsx"
+        )
+        assert component_path.exists(), f"Expected chat component at {component_path}"
+        content = component_path.read_text(encoding="utf-8")
+        assert len(content) > 0, "ChatInterface component file should not be empty"
 
     def test_chat_spec_file_exists(self):
         """Verify chat spec file exists for E2E tests."""
         from pathlib import Path
 
-        spec_path = Path(__file__).parent / "e2e" / "chat.spec.ts"
-        assert spec_path.exists() or True  # File should exist for actual E2E
+        backend_dir = Path(__file__).resolve().parent.parent.parent
+        spec_path = backend_dir.parent / "frontend" / "e2e"
+        assert spec_path.exists() and spec_path.is_dir(), (
+            f"Expected e2e test directory at {spec_path}"
+        )
 
 
 class TestChatAPI:
