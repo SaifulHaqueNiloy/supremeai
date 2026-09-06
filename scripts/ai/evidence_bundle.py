@@ -25,14 +25,19 @@ def sha256(path: Path) -> str:
 def build_bundle(root: Path, reports: list[Path]) -> dict:
     commit = git_value(root, "rev-parse", "HEAD")
     entries = []
+    missing = []
     for report in sorted(reports, key=lambda item: str(item)):
         if report.exists() and report.is_file():
             entries.append({"path": str(report), "sha256": sha256(report), "bytes": report.stat().st_size})
+        else:
+            missing.append(str(report))
     return {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "commit": commit,
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "status": "complete" if not missing else "incomplete",
         "reports": entries,
+        "missing_reports": missing,
     }
 
 
