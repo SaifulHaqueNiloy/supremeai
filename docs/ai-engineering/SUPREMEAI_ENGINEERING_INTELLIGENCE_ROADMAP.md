@@ -1,4 +1,4 @@
-# SupremeAI Intelligence Engineering Roadmap
+# SupremeAI Engineering Intelligence Roadmap
 
 **Status:** Proposed execution roadmap
 **Version:** 1.0
