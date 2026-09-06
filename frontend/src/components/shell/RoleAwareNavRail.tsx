@@ -4,6 +4,7 @@
 
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { PanelLeft, PanelLeftClose } from 'lucide-react';
 import { getNavigationForContext, type NavEntry } from '../../config/navigationRegistry';
 
 export interface RoleAwareNavRailProps {
@@ -13,9 +14,10 @@ export interface RoleAwareNavRailProps {
   activeActionId?: string;
   /** Admin context: handler for action items (admin subtab switch). */
   onAction?: (actionId: string) => void;
+  onToggleCollapsed?: () => void;
 }
 
-export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction }: RoleAwareNavRailProps) {
+export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction, onToggleCollapsed }: RoleAwareNavRailProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const groups = getNavigationForContext(context);
@@ -77,6 +79,7 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction 
 
   return (
     <nav aria-label={`${context === 'admin' ? 'Admin' : 'Workspace'} navigation`} className="flex h-full w-full flex-col overflow-y-auto bg-surface-1 py-4 max-md:bg-surface-1/95 max-md:backdrop-blur-xl">
+      <div className={`mb-4 flex items-center ${collapsed ? 'justify-center' : 'justify-end'} px-3`}><button type="button" onClick={onToggleCollapsed} className="rounded-lg p-2 text-secondary transition hover:bg-surface-2 hover:text-accent-primary" aria-label={collapsed ? 'Expand navigation' : 'Collapse navigation'}>{collapsed ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}</button></div>
       <div className="flex-1 px-3 space-y-5">
         {groups.map((group) => (
           <div key={group.id} className="space-y-1">
