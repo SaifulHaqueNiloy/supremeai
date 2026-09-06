@@ -1,14 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 import { StatusPill, EmptyState } from '../../kit';
+import { useAuthStore } from '../../../store/authStore';
 
 export function SecretsHealth() {
+  // SECURITY FIX: replaced localStorage.getItem('admin_token') with Zustand
+  // auth store check — tokens are read by the store, never directly here.
+  const isAdminAuthenticated = useAuthStore((s) => s.role === 'admin' && s.status === 'loggedIn');
   const { data: secrets, isLoading } = useQuery({
     queryKey: ['cmd', 'secrets'],
     queryFn: () => apiClient.get<{ status: string; secrets: Array<{ name: string; healthy: boolean; last_rotated?: string }> }>('/admin-api/secrets-health'),
-    enabled: !!localStorage.getItem('admin_token'),
+    enabled: isAdminAuthenticated,
     staleTime: 60_000,
   });
+
 
   if (!secrets && isLoading) {
     return <EmptyState title="সিক্রেট লোড হচ্ছে..." message="সিক্রেট হেল্থ চেক করা হচ্ছে..." loading />;
