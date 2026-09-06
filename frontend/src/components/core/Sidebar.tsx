@@ -56,8 +56,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 <Link
                   to={item.path}
                   data-testid={`nav-${item.id}`}
+                  onClick={onClose}
+                  aria-current={location.pathname === item.path || location.pathname.startsWith(`${item.path}/`) ? 'page' : undefined}
                   className={`flex items-center px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
-                    location.pathname === item.path
+                    location.pathname === item.path || location.pathname.startsWith(`${item.path}/`)
                       ? "bg-gradient-to-r from-indigo-500/20 to-fuchsia-500/10 text-indigo-700 dark:text-indigo-300 border-r-2 border-indigo-500 shadow-[inset_0_0_12px_rgba(99,102,241,0.12)]"
                       : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:translate-x-0.5"
                   }`}

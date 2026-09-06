@@ -27,6 +27,10 @@ export function AdminShell() {
     actionStatus,
     setActionStatus,
     resetTotpSetup,
+    recoveryCode,
+    setRecoveryCode,
+    recoverTotp,
+    recoveryCodes,
   } = useAdminStore();
 
   const [adminSubTab, setAdminSubTab] = useState<AdminSubTab>("overview");
@@ -136,6 +140,10 @@ export function AdminShell() {
       provisioningUri={provisioningUri}
       totpSecret={totpSecret}
       onResetTotp={handleResetTotp}
+      recoveryCode={recoveryCode}
+      setRecoveryCode={setRecoveryCode}
+      recoverTotp={recoverTotp}
+      recoveryCodes={recoveryCodes}
       adminError={adminError}
       handleAdminLogin={handleAdminLogin}
       handleAdminOtpVerify={handleAdminOtpVerify}
