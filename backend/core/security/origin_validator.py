@@ -58,7 +58,10 @@ class TrustedOriginMiddleware(BaseHTTPMiddleware):
             return str(self._portal_role_override).lower()
         try:
             role = str(getattr(settings, "service_role", "user") or "user").lower()
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                f"[TrustedOriginMiddleware] Failed to read settings.service_role, falling back to 'user': {exc}"
+            )
             role = "user"
         return "admin" if role == "admin" else "user"
 

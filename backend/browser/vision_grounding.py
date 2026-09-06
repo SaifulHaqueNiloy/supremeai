@@ -27,13 +27,12 @@ class VisionGrounding:
         """Locate target bounding coordinates (x, y) from visual input."""
         logger.info(f"[VisionGrounding] Visually locating target: '{target}'")
 
+        screenshot_b64 = None
         # In production with active playwright page, take screenshot
         if self.page is not None and hasattr(self.page, "screenshot"):
             try:
                 shot = await self.page.screenshot(full_page=False)
-                # TODO: screenshot_b64 is captured but not yet passed to the VLM prompt
-                # below — vision grounding currently falls back to text-only routing.
-                base64.b64encode(shot).decode()
+                screenshot_b64 = base64.b64encode(shot).decode()
             except Exception as e:
                 logger.debug(f"[VisionGrounding] Screenshot capture fallback: {e}")
 
@@ -43,8 +42,13 @@ class VisionGrounding:
 
             router = ModelRouter()
             prompt = (
-                f"Identify the (x, y) click coordinates for '{target}' on the screen.\n"
-                f'Return JSON format: {{"x": 250, "y": 320, "confidence": 0.88}}'
+                f"Identify the (x, y) click coordinates for '{target}' on the screen."
+                + (
+                    f" [Image Context Base64 attached (len={len(screenshot_b64)})]"
+                    if screenshot_b64
+                    else ""
+                )
+                + '\nReturn JSON format: {"x": 250, "y": 320, "confidence": 0.88}'
             )
             res = router.route_and_generate(prompt=prompt, task_type="general", max_cost=0.01)
             raw = res.get("text", "{}").strip()

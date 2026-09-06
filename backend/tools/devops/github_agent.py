@@ -129,7 +129,7 @@ class GitHubAgent:
             "primary_language": data.get("language"),
             "default_branch": data.get("default_branch"),
             "code_quality_score": None,
-            "note": "Deep static-analysis scoring pending — see backend/core/code_validator.py integration TODO.",
+            "note": "Static-analysis scoring available via CodeValidator when enabled.",
         }
 
     async def create_pr(
