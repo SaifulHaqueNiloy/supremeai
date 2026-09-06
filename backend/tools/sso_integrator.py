@@ -75,6 +75,11 @@ class SSOIntegrator:
     async def process_sso_response(
         self, post_data: dict[str, Any], relay_state: str | None = None
     ) -> dict[str, Any]:
+        """Process SSO response - uses python-saml if available, otherwise fallback.
+
+        বাংলা মন্তব্য: SSO response process করা। python-saml লাইব্রেরি থাকলে
+        signature verification সহ নিরাপদে parse করে, না থাকলে fallback ব্যবহার করে।
+        """
         if self.onelogin:
             try:
                 settings_obj = self._build_settings()
@@ -123,32 +128,9 @@ class SSOIntegrator:
                 }
             except Exception as exc:
                 logger.error(f"SAML response processing failed: {exc}")
-        try:
-            root = ET.fromstring(post_data.get("SAMLResponse", ""))
-            logger.info("SAML XML parsed successfully.")
-            user_id = root.findtext(
-                ".//{urn:oasis:names:tc:SAML:2.0:assertion}Subject/{urn:oasis:names:tc:SAML:2.0:assertion}NameID",
-                default="",
-            )
-            groups_el = root.findall(
-                ".//{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement//{urn:oasis:names:tc:SAML:2.0:assertion}Attribute[@Name='groups']/{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue"
-            )
-            groups = [el.text for el in groups_el if el.text]
-            email_el = root.find(
-                ".//{urn:oasis:names:tc:SAML:2.0:assertion}AttributeStatement//{urn:oasis:names:tc:SAML:2.0:assertion}Attribute[@Name='email']/{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue"
-            )
-            email = email_el.text if email_el is not None else ""
-            return {
-                "status": "success",
-                "user_id": user_id,
-                "email": email,
-                "groups": groups,
-                "roles": self.map_roles(groups),
-                "method": "xml_fallback",
-            }
-        except ET.ParseError as exc:
-            logger.error(f"Fallback SAML parsing failed: {exc}")
-            return {"status": "error", "message": "Invalid SAML response"}
+
+        # Fallback XML parsing (python-saml not available)
+        return self._fallback_parse_saml_response(post_data)
 
     def map_roles(self, sso_groups: list[str]) -> list[str]:
         internal_roles: list[str] = []
