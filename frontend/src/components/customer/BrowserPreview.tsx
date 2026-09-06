@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw } from 'lucide-react';
+import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw, Pause, Play } from 'lucide-react';
 import { browserService } from '../../services/browserService';
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
@@ -50,6 +50,8 @@ interface BrowserPreviewProps {
   html?: string;
   showDeviceToolbar?: boolean;
   onUrlChange?: (url: string) => void;
+  agentPaused?: boolean;
+  onAgentPauseToggle?: () => void;
 }
 
 
@@ -61,6 +63,8 @@ export function BrowserPreview({
   html,
   showDeviceToolbar = true,
   onUrlChange,
+  agentPaused = false,
+  onAgentPauseToggle,
 }: BrowserPreviewProps) {
   const [currentUrl, setCurrentUrl] = useState(url);
   const [reloadKey, setReloadKey] = useState(0);
@@ -222,6 +226,8 @@ export function BrowserPreview({
           >
             Close session
           </button>
+          {onAgentPauseToggle && <button type="button" onClick={onAgentPauseToggle} className="flex items-center gap-1 rounded border border-amber-500/40 px-2 py-1 text-[11px] text-amber-200 transition-colors hover:bg-amber-500/10" aria-pressed={agentPaused}>{agentPaused ? <Play size={11} /> : <Pause size={11} />} {agentPaused ? 'Resume automation' : 'Pause for manual input'}</button>}
+          {agentPaused && <span role="status" className="text-[11px] text-amber-200">Manual control active. You can type secrets directly in the browser.</span>}
           {automationStatus && <span role="status" className="text-[11px] text-emerald-300">{automationStatus}</span>}
         </div>
         {pageContent && (

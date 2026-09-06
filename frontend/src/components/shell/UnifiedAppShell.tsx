@@ -55,6 +55,7 @@ export function UnifiedAppShell({
           collapsed={isSidebarCollapsed}
           activeActionId={activeActionId}
           onAction={onAction}
+          onToggleCollapsed={useWorkspaceSettings.getState().toggleSidebar}
         />
       }
       isSidebarCollapsed={isSidebarCollapsed}
