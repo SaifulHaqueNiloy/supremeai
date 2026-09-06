@@ -84,6 +84,7 @@ class SafeSSEGenerator:
         self.task_type = task_type
         self.state = StreamState.CONNECTED
         self._buffer: list[str] = []
+        self._emitted_tokens = False
         self._last_heartbeat = asyncio.get_event_loop().time()
 
     def _sanitize_chunk(self, chunk: Any) -> str:
@@ -146,8 +147,9 @@ class SafeSSEGenerator:
             async for event in self._try_streaming_path():
                 yield event
 
-            if self.state == StreamState.ERROR:
-                # Fallback to non-streaming only after the stream path fails.
+            if self.state == StreamState.ERROR or not self._emitted_tokens:
+                # Some providers return a valid async iterator that emits no tokens.
+                # Treat that as a failed stream and use the working completion path.
                 async for event in self._fallback_path():
                     yield event
 
@@ -202,6 +204,7 @@ class SafeSSEGenerator:
                 # Sanitize and emit (both token and delta for 100% frontend contract compatibility)
                 sanitized = self._sanitize_chunk(raw_chunk)
                 if sanitized:
+                    self._emitted_tokens = True
                     yield self._make_event(
                         "token",
                         {"delta": sanitized, "token": sanitized, "user_id": self.user_id},
@@ -244,6 +247,7 @@ class SafeSSEGenerator:
             # Sanitize and emit as single token (both token and delta supported)
             sanitized = self._sanitize_chunk(text)
             if sanitized:
+                self._emitted_tokens = True
                 yield self._make_event(
                     "token",
                     {
