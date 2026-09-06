@@ -144,6 +144,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Validate intelligence baseline registry
+        run: python scripts/ai/baseline_commands.py
+
       - name: Change impact preflight (advisory)
         id: change-impact
         continue-on-error: true
