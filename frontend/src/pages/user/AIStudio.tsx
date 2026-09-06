@@ -69,8 +69,8 @@ export const AIStudio: React.FC = () => {
         </div>
         
         <div className="hidden items-center gap-4 text-[10px] uppercase tracking-widest text-[var(--sa-ink-muted)] sm:flex">
-          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-400" />Agent: Alpha</span>
-          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[var(--sa-primary)]" />Model: Supreme-Core</span>
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-400" />Agent: SupremeAI</span>
+          <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-[var(--sa-primary)]" />Model: Configured backend</span>
           <span className="rounded-full border border-[var(--sa-border)] px-2 py-1 text-[var(--sa-ink-muted)]">Context ready</span>
         </div>
       </div>

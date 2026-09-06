@@ -55,7 +55,7 @@ describe('UserDashboard', () => {
     expect(screen.getByText('Recent work')).toBeInTheDocument();
     expect(screen.getByText('Active agents')).toBeInTheDocument();
     expect(screen.getByText('Workspace usage')).toBeInTheDocument();
-    expect(screen.getByText('Support intelligence brief')).toBeInTheDocument();
+    expect(screen.getByText('No recent work yet.')).toBeInTheDocument();
     expect(screen.getByText('Review usage')).toBeInTheDocument();
   });
 });
