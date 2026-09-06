@@ -164,6 +164,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install astroid loguru requests httpx pyyaml
           
+      - name: Production-critical mismatch gate
+        run: python scripts/ci/production_mismatch_gate.py --summary "$GITHUB_STEP_SUMMARY"
+
       - name: Blocking Call Detector (Audit Mode)
         continue-on-error: true
         run: python scripts/advanced_analysis/blocking_call_detector.py || echo "[WARN] Blocking calls found"
@@ -347,7 +350,7 @@ jobs:
 
       # বাংলা মন্তব্য: auto-fixable ruff error (import sort, formatting ইত্যাদি)
       # যাতে pipeline-কে ব্লক না করে, তাই শুধুমাত্র `push` ইভেন্টে (সরাসরি
-      # main/protected ব্রাঞ্চে push, fork PR নয়) auto-fix চালিয়ে সাথে সাথেই
+      # main/protected ব���রাঞ্চে push, fork PR নয়) auto-fix চালিয়ে সাথে সাথেই
       # কমিট+পুশ করে দেওয়া হয়। pull_request (বিশেষত fork থেকে) ইভেন্টে এটা
       # স্কিপ করা হয় কারণ (ক) fork-এর GITHUB_TOKEN read-only, push সম্ভব না,
       # (খ) contributor-এর নিজের branch-এ না জানিয়ে commit push করা ঠিক না।
