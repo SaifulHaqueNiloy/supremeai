@@ -22,7 +22,7 @@ import secrets
 import signal
 import subprocess
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 import uvicorn
@@ -158,7 +158,7 @@ def _queue_call(op: str, *args: Any, **kwargs: Any) -> Any:
     from core.queue import task_queue_enhanced as tq
 
     async def _inner() -> Any:
-        result: Callable[..., Any] = getattr(tq, op)(*args, **kwargs)
+        result: Coroutine[Any, Any, Any] = getattr(tq, op)(*args, **kwargs)
         return await result
 
     return asyncio.run(_inner())

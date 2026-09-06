@@ -434,7 +434,7 @@ def is_safe_url(url: str) -> bool:
     with comprehensive logging. Falls back to inline check if module unavailable.
     """
     try:
-        from core.security.ssrf_protection import is_safe_url as _ssrf_check
+        from core.security.protection.ssrf_protection import is_safe_url as _ssrf_check
 
         return _ssrf_check(url)
     except ImportError:

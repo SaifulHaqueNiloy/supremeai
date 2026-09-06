@@ -5,6 +5,7 @@ import json
 import socket
 import urllib.error
 import urllib.request
+import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal
 from urllib.parse import urlparse
@@ -519,19 +520,19 @@ def delete_credential(
     return {"id": target_id, "success": True}
 
 
-@router.post("/surf/resume")
+@router.post("/surf/resume", dependencies=[Depends(require_admin_token)])
 def resume_surf(body: dict[str, str]):
     PAUSED_STATE["paused"] = False
     return {"status": "resumed"}
 
 
-@router.post("/surf/skip-auth")
+@router.post("/surf/skip-auth", dependencies=[Depends(require_admin_token)])
 def skip_auth(body: dict[str, str]):
     PAUSED_STATE["paused"] = False
     return {"status": "auth_skipped"}
 
 
-@router.post("/surf/pause-manual")
+@router.post("/surf/pause-manual", dependencies=[Depends(require_admin_token)])
 def pause_manual(body: dict[str, str]):
     PAUSED_STATE["paused"] = True
     return {"status": "paused_for_manual"}
@@ -559,7 +560,7 @@ def get_denied_urls(userId: str = "default"):
 @router.post("/urls/allowed", dependencies=[Depends(require_admin_token)])
 def add_allowed_url(req: UrlPermissionRequest):
     perm = req.model_dump()
-    perm["id"] = f"perm_{len(URL_PERMISSIONS) + 1}"
+    perm["id"] = f"perm_{uuid.uuid4().hex[:12]}"
     perm["type"] = "allowed"
     URL_PERMISSIONS.append(perm)
     return perm
@@ -568,7 +569,7 @@ def add_allowed_url(req: UrlPermissionRequest):
 @router.post("/urls/denied", dependencies=[Depends(require_admin_token)])
 def add_denied_url(req: UrlPermissionRequest):
     perm = req.model_dump()
-    perm["id"] = f"perm_{len(URL_PERMISSIONS) + 1}"
+    perm["id"] = f"perm_{uuid.uuid4().hex[:12]}"
     perm["type"] = "denied"
     URL_PERMISSIONS.append(perm)
     return perm
@@ -577,7 +578,7 @@ def add_denied_url(req: UrlPermissionRequest):
 @router.post("/urls/allowAll", dependencies=[Depends(require_admin_token)])
 def allow_all_urls(userId: str = "default"):
     perm = {
-        "id": f"perm_{len(URL_PERMISSIONS) + 1}",
+        "id": f"perm_{uuid.uuid4().hex[:12]}",
         "urlPattern": "*",
         "userId": userId,
         "type": "allowAll",
@@ -629,7 +630,7 @@ def get_tasks():
 
 @router.post("/tasks")
 def create_task(req: GoalRequest):
-    task_id = f"task_{len(TASKS) + 1}"
+    task_id = f"task_{uuid.uuid4().hex[:12]}"
     task = {
         "id": task_id,
         "goal": req.goal,
@@ -780,7 +781,9 @@ def simulate_activity(body: dict[str, str]):
 
 @router.post("/browse-session")
 def browse_session(body: dict[str, Any]):
-    return {"success": True, "session_id": f"sess_{hash(body.get('url'))}"}
+    raw_url = str(body.get("url") or "")
+    session_hash = hashlib.sha256(raw_url.encode("utf-8")).hexdigest()[:16]
+    return {"success": True, "session_id": f"sess_{session_hash}"}
 
 
 @router.post("/ai-action")
@@ -999,6 +1002,14 @@ async def extract(url: str, extraction_prompt: str):
     Now proxies to the standalone scraper microservice for browser automation,
     then performs AI extraction on the returned content.
     """
+    from core.security.protection.ssrf_protection import is_safe_url
+
+    if not is_safe_url(url):
+        raise HTTPException(
+            status_code=400,
+            detail="URL is not allowed: restricted by SSRF protection policy",
+        )
+
     from tools.browser.ai_web_extractor import AIWebExtractor
 
     extractor = AIWebExtractor()

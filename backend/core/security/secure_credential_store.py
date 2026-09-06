@@ -121,8 +121,8 @@ class LocalFernetProvider(EncryptionProvider):
             logger.error(f"Encryption failed: {exc}")
             return plaintext, None
 
-    def decrypt(self, ciphertext: str, key_ref: str | None, ttl: int | None = None) -> str:
-        if not self.enabled or not self.rotating_fernet or key_ref:
+    def decrypt(self, ciphertext: str, key_ref: str | None = None, ttl: int | None = None) -> str:
+        if not self.enabled or not self.rotating_fernet:
             return ciphertext
         try:
             token = base64.urlsafe_b64decode(ciphertext.encode())
