@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { User, Shield, Key, Bell, Check, Lock, Moon, Sun } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { apiClient } from '../services/apiClient';
+import { useToast } from '../contexts/useToast';
 
 export const ProfilePage: React.FC = () => {
   const [saved, setSaved] = useState(false);
@@ -9,15 +11,28 @@ export const ProfilePage: React.FC = () => {
   const [preferredModel, setPreferredModel] = useState('DeepSeek-V3');
   const [jitOtpEnabled, setJitOtpEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
+  const { showToast } = useToast();
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
     digest: false
   });
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await apiClient.put('/api/user/preferences', {
+        profile: { name, email },
+        preferred_model: preferredModel,
+        security: { jit_otp_enabled: jitOtpEnabled },
+        notifications,
+        theme: darkMode ? 'dark' : 'light',
+      });
+      setSaved(true);
+      showToast('success', 'Profile preferences saved.');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Unable to save preferences.');
+    }
   };
 
   const toggleNotification = (type: keyof typeof notifications) => {
