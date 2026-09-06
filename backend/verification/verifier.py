@@ -19,9 +19,6 @@ from runtime.task_result import CriterionResult, VerificationSummary
 class VerifierEngine:
     """Evaluates task execution output against constraints, AST syntax, and success criteria."""
 
-    def __init__(self) -> None:
-        pass
-
     async def verify(
         self,
         task: TaskContract,
