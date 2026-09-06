@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSkillCatalog, getStatusBadge } from '../../services/skillsService';
 import type { SkillManifest, SkillStatus } from '../../services/skillsService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
+import { useAuthStore } from '../../store/authStore';
 
 const CATEGORY_ICONS: Record<string, string> = {
   knowledge: '🧠',
@@ -89,6 +90,7 @@ export const SkillCatalog: React.FC = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedSkill, setSelectedSkill] = useState<SkillManifest | null>(null);
+  const { role } = useAuthStore();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['skills-catalog'],
@@ -98,7 +100,7 @@ export const SkillCatalog: React.FC = () => {
   });
 
   const skills = data?.skills ?? [];
-  const userRole = data?.user_role ?? 'Standard_User';
+  const userRole = data?.user_role ?? role ?? 'user';
 
   // ক্যাটাগরি লিস্ট ডায়নামিক্যালি তৈরি
   const categories = ['all', ...Array.from(new Set(skills.map((s) => s.category).filter(Boolean)))];

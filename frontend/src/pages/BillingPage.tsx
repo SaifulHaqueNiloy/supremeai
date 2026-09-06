@@ -2,41 +2,33 @@
 // Subscription & Token Billing Page
 // বাংলা মন্তব্য: বিলিং ও সাবস্ক্রিপশন ব্যবস্থাপনা পেজ — সম্পূর্ণ ফ্রি-টিয়ার এবং অন-ডিমান্ড টোকেন প্ল্যান।
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '../services/apiClient';
 import { Zap, CheckCircle2, ShieldCheck, CreditCard } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 
+interface BillingPlan {
+  name: string;
+  price: string | number;
+  period?: string;
+  description?: string;
+  features?: string[];
+  current?: boolean;
+  buttonText?: string;
+}
+
 export const BillingPage: React.FC = () => {
-  const plans = [
-    {
-      name: 'Zero-Cost Free Tier',
-      price: '$0',
-      period: 'forever',
-      description: 'Ideal for solo developers utilizing free AI provider quotas.',
-      features: [
-        '500 Free AI Executions / day',
-        'Access to SupremeAI Deep & SupremeAI Reason',
-        'Standard Rate Limiting (60 req/min)',
-        'Community Discord Support',
-      ],
-      current: true,
-      buttonText: 'Current Plan',
-    },
-    {
-      name: 'Pro Autonomous Agent',
-      price: '$19',
-      period: 'per month',
-      description: 'For power users needing multi-agent swarm orchestration.',
-      features: [
-        'Unlimited AI Swarm Executions',
-        'Priority LiteLLM Smart Routing',
-        'High-speed JIT OTP Security Shield',
-        'Dedicated 24/7 Support Escalation',
-      ],
-      current: false,
-      buttonText: 'Upgrade to Pro',
-    },
-  ];
+  const [plans, setPlans] = useState<BillingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    apiClient.get<{ plans?: BillingPlan[] }>('/api/v1/billing/plans')
+      .then((response) => { if (active) setPlans(response.plans ?? []); })
+      .catch(() => { if (active) setPlans([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   return (
     // বাংলা (single-frontend migration): page-level NavRail shell সরিয়ে একক shared
@@ -57,6 +49,8 @@ export const BillingPage: React.FC = () => {
 
         {/* Pricing Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {loading && <div className="md:col-span-2 rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-sm text-slate-400">Loading available plans...</div>}
+          {!loading && plans.length === 0 && <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center text-sm text-slate-400">No billing plans are currently available.</div>}
           {plans.map((plan) => (
             <div
               key={plan.name}
@@ -107,7 +101,7 @@ export const BillingPage: React.FC = () => {
           <div className="flex items-center gap-4">
             <ShieldCheck className="h-8 w-8 text-emerald-400" />
             <div>
-              <h3 className="font-semibold text-slate-200">Zero-Cost Free Tier Guarantee</h3>
+              <h3 className="font-semibold text-slate-200">Plan protection</h3>
               <p className="text-xs text-slate-400">All basic workloads are routed automatically through free-tier providers.</p>
             </div>
           </div>

@@ -1,22 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Shield, Key, Bell, Check, Lock, Moon, Sun } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 import { apiClient } from '../services/apiClient';
 import { useToast } from '../contexts/useToast';
+import { useAuthStore } from '../store/authStore';
 
 export const ProfilePage: React.FC = () => {
   const [saved, setSaved] = useState(false);
-  const [name, setName] = useState('Supreme Developer');
-  const [email, setEmail] = useState('developer@supremeai.io');
+  const { user } = useAuthStore();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [preferredModel, setPreferredModel] = useState('DeepSeek-V3');
   const [jitOtpEnabled, setJitOtpEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem('supremeai_theme') !== 'light'; } catch { return true; }
+  });
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
     digest: false
   });
+
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name || user.email.split('@')[0]);
+    setEmail(user.email);
+  }, [user]);
 
   const handleSave = async () => {
     try {
@@ -178,7 +188,11 @@ export const ProfilePage: React.FC = () => {
                       <p className="text-xs text-slate-400">Enable dark theme for better eye comfort</p>
                     </div>
                     <button
-                      onClick={() => setDarkMode(!darkMode)}
+                      onClick={() => {
+                        const next = !darkMode;
+                        setDarkMode(next);
+                        try { localStorage.setItem('supremeai_theme', next ? 'dark' : 'light'); } catch { /* storage unavailable */ }
+                      }}
                       className={`w-12 h-6 rounded-full transition-colors relative ${
                         darkMode ? 'bg-cyan-500' : 'bg-slate-800'
                       }`}

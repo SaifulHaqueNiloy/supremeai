@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Bot, FileText, FolderKanban, History, Plus, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, Bot, FileText, FolderKanban, Plus, Sparkles, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 
@@ -7,12 +7,6 @@ const quickStarts = [
   { label: 'Research a topic', detail: 'Synthesize sources and surface a clear answer.', icon: Sparkles, href: '/workspace/live' },
   { label: 'Build a workflow', detail: 'Turn a repeatable task into an agent run.', icon: Zap, href: '/agents' },
   { label: 'Analyze a file', detail: 'Bring context into a focused workspace.', icon: FileText, href: '/files' },
-];
-
-const recentWork = [
-  { title: 'Support intelligence brief', type: 'Research project', time: '12 min ago', href: '/projects' },
-  { title: 'Release readiness review', type: 'Conversation', time: 'Yesterday', href: '/workspace/live' },
-  { title: 'Weekly operations run', type: 'Scheduled run', time: '2 days ago', href: '/runs' },
 ];
 
 export const UserDashboard: React.FC = () => {
@@ -46,8 +40,8 @@ export const UserDashboard: React.FC = () => {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-          <div className="sa-surface-raised p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="sa-eyebrow">Continue working</p><h2 className="mt-2 text-lg font-semibold">Recent work</h2></div><Link to="/activity" className="text-xs font-medium text-[var(--sa-primary)]">View activity</Link></div><div className="flex flex-col gap-2">{recentWork.map((item) => <Link key={item.title} to={item.href} className="group flex items-center gap-4 rounded-[var(--sa-radius-sm)] border border-transparent p-3 transition hover:border-[var(--sa-border)] hover:bg-[var(--sa-canvas)]"><div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]"><History size={16} /></div><div className="min-w-0 flex-1"><h3 className="truncate text-sm font-medium group-hover:text-[var(--sa-primary)]">{item.title}</h3><p className="mt-1 text-xs text-[var(--sa-ink-muted)]">{item.type}</p></div><span className="hidden text-xs text-[var(--sa-ink-muted)] sm:block">{item.time}</span><ArrowRight size={15} className="text-[var(--sa-ink-muted)]" /></Link>)}</div></div>
-          <div className="flex flex-col gap-5"><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]"><Bot size={17} /></div><div><p className="sa-eyebrow">Active agents</p><h2 className="mt-1 text-lg font-semibold">2 ready</h2></div></div><div className="mt-5 flex flex-col gap-3 text-sm"><div className="flex items-center justify-between"><span>Code generator</span><span className="text-xs text-emerald-400">Running</span></div><div className="flex items-center justify-between"><span>QA reviewer</span><span className="text-xs text-[var(--sa-ink-muted)]">Idle</span></div></div></div><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><FolderKanban size={17} className="text-[var(--sa-primary)]" /><div><p className="sa-eyebrow">Workspace usage</p><h2 className="mt-1 text-lg font-semibold">42% used</h2></div></div><div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--sa-canvas)]"><div className="h-full w-[42%] rounded-full bg-[var(--sa-primary)]" /></div><Link to="/usage" className="mt-4 inline-flex text-xs font-medium text-[var(--sa-primary)]">Review usage <ArrowRight size={13} className="ml-1" /></Link></div></div>
+          <div className="sa-surface-raised p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="sa-eyebrow">Continue working</p><h2 className="mt-2 text-lg font-semibold">Recent work</h2></div><Link to="/activity" className="text-xs font-medium text-[var(--sa-primary)]">View activity</Link></div><div className="rounded-[var(--sa-radius-sm)] border border-dashed border-[var(--sa-border)] p-5 text-sm text-[var(--sa-ink-muted)]"><p>No recent work yet.</p><Link to="/workspace/live" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--sa-primary)]">Start your first conversation <ArrowRight size={13} /></Link></div></div>
+          <div className="flex flex-col gap-5"><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]"><Bot size={17} /></div><div><p className="sa-eyebrow">Active agents</p><h2 className="mt-1 text-lg font-semibold">No agents yet</h2></div></div><Link to="/agents" className="mt-5 inline-flex text-xs font-medium text-[var(--sa-primary)]">Create an agent <ArrowRight size={13} className="ml-1" /></Link></div><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><FolderKanban size={17} className="text-[var(--sa-primary)]" /><div><p className="sa-eyebrow">Workspace usage</p><h2 className="mt-1 text-lg font-semibold">No usage yet</h2></div></div><p className="mt-4 text-xs text-[var(--sa-ink-muted)]">Usage will appear after your first run.</p><Link to="/usage" className="mt-4 inline-flex text-xs font-medium text-[var(--sa-primary)]">Review usage <ArrowRight size={13} className="ml-1" /></Link></div></div>
         </section>
       </div>
     </main>

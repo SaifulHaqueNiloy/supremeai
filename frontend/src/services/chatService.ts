@@ -66,12 +66,13 @@ export async function sendMessageStream(
     let pending = '';
 
     const consumeLine = (line: string) => {
-      if (!line.startsWith('data:')) return;
-      const payload = line.slice(5).trim();
+      const normalized = line.trim();
+      if (!normalized) return;
+      const payload = normalized.startsWith('data:') ? normalized.slice(5).trim() : normalized;
       if (!payload || payload === '[DONE]') return;
       try {
-        const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string };
-        const token = parsed.token ?? parsed.delta ?? parsed.content;
+        const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string; result?: string };
+        const token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? parsed.result;
         if (token) {
           _fullText += token;
           onToken(token);
@@ -91,7 +92,6 @@ export async function sendMessageStream(
       if (done) break;
     }
     if (pending) consumeLine(pending);
-
     // Prompt-to-Action metadata fallback (legacy path only)
     try {
       const actionHeaders = await getAuthHeaders();  // 🔒 Auth for action endpoint too
