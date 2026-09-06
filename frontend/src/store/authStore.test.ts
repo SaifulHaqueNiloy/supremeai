@@ -86,5 +86,29 @@ describe('authStore', () => {
     getMock.mockRejectedValue({ status: 500 });
     await useAuthStore.getState().initialize();
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
+    expect(localStorage.getItem('supremeai_auth_token')).toBe(tok);
+  });
+
+  it('restores the persisted profile after a browser restart', async () => {
+    const tok = token({ email: 'me@x.com', name: 'Me', sub: 'u9' });
+    localStorage.setItem('supremeai_auth_token', tok);
+    localStorage.setItem('supremeai_auth_user', JSON.stringify({
+      id: 'u9', email: 'me@x.com', name: 'Me', avatarUrl: 'avatar',
+    }));
+    getMock.mockRejectedValue(new Error('backend temporarily unavailable'));
+
+    await useAuthStore.getState().initialize();
+
+    expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
+    expect(useAuthStore.getState().user).toMatchObject({ id: 'u9', email: 'me@x.com', name: 'Me' });
+    expect(localStorage.getItem('supremeai_auth_token')).toBe(tok);
+  });
+
+  it('does not clear a session for a non-authenticated request failure', async () => {
+    const tok = token({ email: 'me@x.com' });
+    localStorage.setItem('supremeai_auth_token', tok);
+    getMock.mockRejectedValue({ status: 403 });
+    await useAuthStore.getState().initialize();
+    expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_OUT);
   });
 });

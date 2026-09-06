@@ -52,6 +52,34 @@ describe('apiClient', () => {
     await expect(apiClient.get('/secure')).rejects.toThrow('Unauthorized');
   });
 
+  it('does not clear the persisted login for a feature endpoint 401', async () => {
+    localStorage.setItem('supremeai_auth_token', 'persisted-token');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      url: 'https://api.test-domain.com/api/v1/projects',
+      json: async () => ({ detail: 'Unauthorized' }),
+    });
+
+    await expect(apiClient.get('/api/v1/projects')).rejects.toThrow('Unauthorized');
+    expect(localStorage.getItem('supremeai_auth_token')).toBe('persisted-token');
+  });
+
+  it('clears the persisted login when auth validation returns 401', async () => {
+    localStorage.setItem('supremeai_auth_token', 'expired-token');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: false,
+      status: 401,
+      url: 'https://api.test-domain.com/api/v1/auth/me',
+      json: async () => ({ detail: 'Unauthorized' }),
+    });
+
+    await expect(apiClient.get('/api/v1/auth/me')).rejects.toThrow('Unauthorized');
+    expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
+  });
+
   it('should throw ApiError with status 429 on rate limit', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (global.fetch as any).mockResolvedValueOnce({
