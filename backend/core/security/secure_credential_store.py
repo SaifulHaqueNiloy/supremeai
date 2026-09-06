@@ -95,7 +95,12 @@ class LocalFernetProvider(EncryptionProvider):
         self.enabled = False
         self.rotating_fernet: RotatingFernet | None = None
         if CRYPTO_AVAILABLE:
-            raw_key = encryption_key or os.getenv("SUPREMEAI_CREDENTIAL_ENC_KEY", "")
+            raw_key = (
+                encryption_key
+                or os.getenv("BROWSER_CREDENTIALS_ENCRYPTION_KEY", "")
+                or os.getenv("SUPREMEAI_CREDENTIAL_ENC_KEY", "")
+                or os.getenv("ENCRYPTION_KEY", "")
+            )
             if raw_key:
                 try:
                     # Split by comma to support multiple keys (for rotation)
@@ -116,12 +121,12 @@ class LocalFernetProvider(EncryptionProvider):
             logger.error(f"Encryption failed: {exc}")
             return plaintext, None
 
-    def decrypt(self, ciphertext: str, key_ref: str | None) -> str:
+    def decrypt(self, ciphertext: str, key_ref: str | None, ttl: int | None = None) -> str:
         if not self.enabled or not self.rotating_fernet or key_ref:
             return ciphertext
         try:
             token = base64.urlsafe_b64decode(ciphertext.encode())
-            plaintext = self.rotating_fernet.decrypt(token, ttl=86400)
+            plaintext = self.rotating_fernet.decrypt(token, ttl=ttl)
             return plaintext.decode()
         except InvalidToken:
             logger.warning("Token expired or invalid — decryption failed")
@@ -190,7 +195,9 @@ class SecureCredentialStore:
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
         return self.provider.encrypt(plaintext)
 
-    def decrypt(self, ciphertext: str, key_ref: str | None = None) -> str:
+    def decrypt(self, ciphertext: str, key_ref: str | None = None, ttl: int | None = None) -> str:
+        if isinstance(self.provider, LocalFernetProvider):
+            return self.provider.decrypt(ciphertext, key_ref, ttl=ttl)
         return self.provider.decrypt(ciphertext, key_ref)
 
     @staticmethod

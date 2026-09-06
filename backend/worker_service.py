@@ -18,6 +18,7 @@ import contextlib
 import importlib.util
 import logging
 import os
+import secrets
 import signal
 import subprocess
 import sys
@@ -25,7 +26,7 @@ from collections.abc import Callable
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -37,6 +38,64 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(title="SupremeAI Worker", docs_url=None, redoc_url=None, openapi_url=None)
 _state: dict[str, Any] = {"celery_proc": None, "degraded": False, "detail": ""}
+
+
+def _verify_worker_auth(request: Request) -> None:
+    """Validate internal worker authentication token or JWT secret (Audit Critical-4 Fix)."""
+    # Allow testing bypass only if explicitly enabled in non-prod
+    if (
+        os.getenv("ALLOW_TEST_AUTH_BYPASS", "").lower() in ("true", "1")
+        and os.getenv("ENV") != "production"
+    ):
+        return
+
+    expected_tokens: list[str] = [
+        t
+        for t in [
+            os.getenv("WORKER_AUTH_TOKEN"),
+            os.getenv("INTERNAL_API_KEY"),
+            os.getenv("SUPREMEAI_API_KEY"),
+            os.getenv("SUPREMEAI_JWT_SECRET"),
+            os.getenv("JWT_SECRET"),
+        ]
+        if t
+    ]
+
+    if not expected_tokens:
+        # Fallback to loading from core.config if available
+        try:
+            from core.config import settings
+
+            sec = getattr(settings, "supremeai_api_key", None)
+            if sec and hasattr(sec, "get_secret_value"):
+                expected_tokens.append(sec.get_secret_value())
+            jwt_sec = getattr(settings, "jwt_secret", "")
+            if jwt_sec:
+                expected_tokens.append(jwt_sec)
+        except Exception:
+            pass
+
+    if not expected_tokens:
+        raise HTTPException(status_code=500, detail="Worker service security tokens not configured")
+
+    auth_header = request.headers.get("Authorization", "")
+    token = ""
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif request.headers.get("X-Worker-Token"):
+        token = request.headers["X-Worker-Token"].strip()
+    elif request.headers.get("X-API-Key"):
+        token = request.headers["X-API-Key"].strip()
+
+    if not token:
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized: Worker token required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if not any(secrets.compare_digest(token, expected) for expected in expected_tokens):
+        raise HTTPException(status_code=403, detail="Forbidden: Invalid worker token")
 
 
 def _celery_importable() -> bool:
@@ -207,7 +266,7 @@ async def cancel_task(task_id: str) -> JSONResponse:
         raise HTTPException(status_code=404, detail="Task not found") from exc
 
 
-@app.get("/tasks/stats")
+@app.get("/tasks/stats", dependencies=[Depends(_verify_worker_auth)])
 async def tasks_stats() -> JSONResponse:
     try:
         stats = await asyncio.wait_for(
@@ -219,7 +278,7 @@ async def tasks_stats() -> JSONResponse:
         return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
 
 
-@app.post("/tasks/drain")
+@app.post("/tasks/drain", dependencies=[Depends(_verify_worker_auth)])
 async def tasks_drain() -> JSONResponse:
     try:
         proof = await asyncio.wait_for(asyncio.to_thread(_drain_once), timeout=45.0)
@@ -229,7 +288,7 @@ async def tasks_drain() -> JSONResponse:
         return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
 
 
-@app.get("/worker/status")
+@app.get("/worker/status", dependencies=[Depends(_verify_worker_auth)])
 async def worker_status() -> dict[str, Any]:
     proc: subprocess.Popen[bytes] | None = _state.get("celery_proc")
     return {

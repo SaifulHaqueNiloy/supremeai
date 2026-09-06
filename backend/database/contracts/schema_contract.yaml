@@ -147,6 +147,38 @@ tables:
       parent_message_id: {required: false, note: "present in original schema, absent in prod"}
       sequence_number: {required: false, note: "present in original schema, absent in prod"}
 
+  render_account_states:
+    required: false
+    note: "added 2026-09-06 via 2026_09_06_120000_add_render_account_state"
+    columns:
+      id: {required: true}
+      account_key: {required: true}
+      role: {required: true}
+      plan: {required: true}
+      status: {required: true}
+      reason: {required: false}
+      usage_minutes: {required: false}
+      usage_period_start: {required: false}
+      recheck_at: {required: false}
+      last_checked_at: {required: false}
+      last_error: {required: false}
+      retry_count: {required: true}
+      metadata: {required: false}
+      created_at: {required: true}
+      updated_at: {required: true}
+
+  render_preflight_events:
+    required: false
+    note: "added 2026-09-06 via 2026_09_06_120000_add_render_account_state"
+    columns:
+      id: {required: true}
+      account_key: {required: true}
+      status: {required: true}
+      reason: {required: false}
+      usage_minutes: {required: false}
+      observed_at: {required: true}
+      metadata: {required: false}
+
   # Tables referenced by the *original* 001_initial_schema.sql but not
   # present in the live, evolved production architecture. Tracked as
   # informational only (required: false at the table level) so CI doesn't

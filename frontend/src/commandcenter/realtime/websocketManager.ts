@@ -38,12 +38,10 @@ export class WebSocketManager extends BaseWebSocketManager {
   }
 
   protected getUrl(): string {
-    const rawToken = localStorage.getItem('supreme_admin_jwt');
-    if (!rawToken) {
-      throw new Error('No admin token available for WS connection');
-    }
+    // SECURITY FIX (audit S-2): token must never appear in the URL.
+    // It is sent as a first-message auth frame in onOpen() instead.
     const baseUrl = getWebSocketBaseUrl();
-    return `${baseUrl}/ws/dashboard?token=${encodeURIComponent(rawToken)}`;
+    return `${baseUrl}/ws/dashboard`;
   }
 
   protected setStatus(status: WsStatus) {
@@ -55,6 +53,12 @@ export class WebSocketManager extends BaseWebSocketManager {
 
   protected onOpen(event: Event): void {
     super.onOpen(event);
+    // Send auth frame as the very first message — never in the URL.
+    const rawToken = localStorage.getItem('supreme_admin_jwt') ||
+      localStorage.getItem('supremeai_auth_token');
+    if (rawToken) {
+      this.send(JSON.stringify({ type: 'auth', token: rawToken }));
+    }
   }
 
   protected onMessage(event: MessageEvent): void {

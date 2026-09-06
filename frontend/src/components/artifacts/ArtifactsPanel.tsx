@@ -64,14 +64,28 @@ const CODE_KEYWORDS = new Set([
   'protected', 'readonly', 'abstract', 'final', 'super', 'yield', 'of', 'in',
 ]);
 
+// SECURITY FIX (audit V-3): HTML-escape the raw code FIRST so that any
+// <script>, <img onerror=...> or similar tags embedded in code strings are
+// rendered as literal text rather than executed HTML.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
 function highlightSyntax(code: string): string {
-  const lines = code.split('\n');
+  // Escape first — the regex replacements below insert trusted HTML span tags,
+  // but all user-controlled content must already be neutralised.
+  const lines = escapeHtml(code).split('\n');
   return lines
     .map((line) => {
       const highlighted = line
-        // String literals (double and single quotes)
+        // String literals (double and single quotes) — content is already escaped.
         .replace(
-          /("[^"]*"|'[^']*'|`[^`]*`)/g,
+          /(&quot;[^&]*&quot;|&#x27;[^&]*&#x27;|`[^`]*`)/g,
           '<span class="text-emerald-600 dark:text-emerald-400">$1</span>'
         )
         // Comments
@@ -97,6 +111,19 @@ function highlightSyntax(code: string): string {
       return highlighted;
     })
     .join('\n');
+}
+
+// SECURITY FIX (audit S-3): Lightweight SVG sanitizer — strips script elements
+// and dangerous event-handler attributes (on*) before rendering inline SVG.
+function sanitizeSvg(svgContent: string): string {
+  // Remove <script> blocks entirely.
+  let safe = svgContent.replace(/<script[\s\S]*?<\/script>/gi, '');
+  // Strip event-handler attributes (onclick, onerror, onload, …).
+  safe = safe.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|\S+)/gi, '');
+  // Strip javascript: href/xlink:href values.
+  safe = safe.replace(/(href|xlink:href)\s*=\s*"javascript:[^"]*"/gi, '');
+  safe = safe.replace(/(href|xlink:href)\s*=\s*'javascript:[^']*'/gi, '');
+  return safe;
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────
@@ -205,7 +232,8 @@ function ArtifactPreview({ artifact }: { artifact: Artifact }) {
         return (
           <div
             className="w-full h-full flex items-center justify-center p-4 bg-white dark:bg-slate-800 rounded-lg overflow-auto"
-            dangerouslySetInnerHTML={{ __html: artifact.content }}
+            // SECURITY FIX (audit S-3): SVG content is sanitized before render.
+            dangerouslySetInnerHTML={{ __html: sanitizeSvg(artifact.content) }}
           />
         );
 

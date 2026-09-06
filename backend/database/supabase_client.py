@@ -3,6 +3,7 @@ import functools
 import inspect
 import os
 import time
+import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -757,6 +758,23 @@ class SupabaseDB:
             "notes TEXT"
             ");",
             "CREATE INDEX IF NOT EXISTS idx_improvement_runs_proposal_created ON improvement_runs (proposal_id, created_at DESC);",
+            # Encrypted browser credentials store (owner-scoped with RLS & audit fields)
+            "CREATE TABLE IF NOT EXISTS browser_credentials ("
+            "id UUID PRIMARY KEY DEFAULT gen_random_uuid(),"
+            "owner_id TEXT NOT NULL,"
+            "provider TEXT NOT NULL,"
+            "label TEXT NOT NULL,"
+            "encrypted_secret TEXT NOT NULL,"
+            "key_ref TEXT,"
+            "secret_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,"
+            "is_revoked BOOLEAN NOT NULL DEFAULT FALSE,"
+            "revoked_at TIMESTAMP WITH TIME ZONE,"
+            "created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),"
+            "updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()"
+            ");",
+            "CREATE INDEX IF NOT EXISTS idx_browser_credentials_owner_id ON browser_credentials (owner_id);",
+            "CREATE INDEX IF NOT EXISTS idx_browser_credentials_provider ON browser_credentials (provider);",
+            "CREATE INDEX IF NOT EXISTS idx_browser_credentials_is_revoked ON browser_credentials (is_revoked);",
         ]
 
     def bootstrap_schema(self):
@@ -1495,6 +1513,162 @@ class SupabaseDB:
             return res.data or []  # type: ignore
         except Exception as e:
             logger.warning(f"get_improvement_proposals failed: {e}")
+            return []
+
+    # ── Encrypted Browser Credentials (Owner-Scoped) ─────────────────────────
+    def save_browser_credential(self, row: dict[str, Any]) -> dict[str, Any] | None:
+        client = self.service_client
+        if not client:
+            return None
+        data = dict(row or {})
+        now = datetime.now(UTC).isoformat()
+        data.setdefault("created_at", now)
+        data.setdefault("updated_at", now)
+        data.setdefault("is_revoked", False)
+        try:
+            res = client.table("browser_credentials").insert(data).execute()
+            if res.data:
+                return res.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"save_browser_credential failed: {e}")
+            return None
+
+    def list_browser_credentials(
+        self, owner_id: str, include_revoked: bool = False
+    ) -> list[dict[str, Any]]:
+        client = self.service_client
+        if not client:
+            return []
+        try:
+            query = client.table("browser_credentials").select("*").eq("owner_id", owner_id)
+            if not include_revoked:
+                query = query.eq("is_revoked", False)
+            res = query.order("created_at", desc=True).execute()
+            return res.data or []
+        except Exception as e:
+            logger.error(f"list_browser_credentials failed: {e}")
+            return []
+
+    def get_browser_credential(
+        self, credential_id: str, owner_id: str | None = None
+    ) -> dict[str, Any] | None:
+        client = self.service_client
+        if not client:
+            return None
+        try:
+            query = client.table("browser_credentials").select("*").eq("id", credential_id)
+            if owner_id:
+                query = query.eq("owner_id", owner_id)
+            res = query.execute()
+            if res.data:
+                return res.data[0]
+            return None
+        except Exception as e:
+            logger.error(f"get_browser_credential failed: {e}")
+            return None
+
+    def revoke_browser_credential(self, credential_id: str, owner_id: str) -> bool:
+        client = self.service_client
+        if not client:
+            return False
+        now = datetime.now(UTC).isoformat()
+        try:
+            query = (
+                client.table("browser_credentials")
+                .update({"is_revoked": True, "revoked_at": now, "updated_at": now})
+                .eq("id", credential_id)
+                .eq("owner_id", owner_id)
+            )
+            res = query.execute()
+            return bool(res.data)
+        except Exception as e:
+            logger.error(f"revoke_browser_credential failed: {e}")
+            return False
+
+    def delete_browser_credential(self, credential_id: str, owner_id: str) -> bool:
+        client = self.service_client
+        if not client:
+            return False
+        try:
+            query = (
+                client.table("browser_credentials")
+                .delete()
+                .eq("id", credential_id)
+                .eq("owner_id", owner_id)
+            )
+            res = query.execute()
+            return bool(res.data)
+        except Exception as e:
+            logger.error(f"delete_browser_credential failed: {e}")
+            return False
+
+    def get_render_account_states(self, role: str | None = None) -> list[dict[str, Any]]:
+        """Fetch Render account states from Supabase."""
+        client = self.service_client or self.client
+        if not client:
+            return []
+        try:
+            query = client.table("render_account_states").select("*")
+            if role:
+                query = query.eq("role", role)
+            res = query.execute()
+            return res.data or []
+        except Exception as e:
+            logger.warning(f"get_render_account_states failed: {e}")
+            return []
+
+    def upsert_render_account_state(self, state_dict: dict[str, Any]) -> dict[str, Any] | None:
+        """Upsert a Render account state row."""
+        client = self.service_client or self.client
+        if not client:
+            return None
+        try:
+            state_dict["updated_at"] = datetime.now(UTC).isoformat()
+            res = (
+                client.table("render_account_states")
+                .upsert(state_dict, on_conflict="account_key")
+                .execute()
+            )
+            return res.data[0] if res.data else None
+        except Exception as e:
+            logger.warning(f"upsert_render_account_state failed: {e}")
+            return None
+
+    def record_render_preflight_event(self, event_dict: dict[str, Any]) -> dict[str, Any] | None:
+        """Record an audit event for Render preflight / cooldown / override."""
+        client = self.service_client or self.client
+        if not client:
+            return None
+        try:
+            event_dict.setdefault("id", str(uuid.uuid4()))
+            event_dict.setdefault("observed_at", datetime.now(UTC).isoformat())
+            res = client.table("render_preflight_events").insert(event_dict).execute()
+            return res.data[0] if res.data else None
+        except Exception as e:
+            logger.warning(f"record_render_preflight_event failed: {e}")
+            return None
+
+    def get_render_preflight_events(
+        self, account_key: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        """Fetch recent preflight audit events."""
+        client = self.service_client or self.client
+        if not client:
+            return []
+        try:
+            query = (
+                client.table("render_preflight_events")
+                .select("*")
+                .order("observed_at", desc=True)
+                .limit(limit)
+            )
+            if account_key:
+                query = query.eq("account_key", account_key)
+            res = query.execute()
+            return res.data or []
+        except Exception as e:
+            logger.warning(f"get_render_preflight_events failed: {e}")
             return []
 
     # বাংলা মন্তব্য: 'a' দিয়ে শুরু হওয়া মেথডগুলোকে থ্রেডপুলে রান করানোর জন্য ডায়নামিক এসিঙ্ক প্রক্সি মেথড।

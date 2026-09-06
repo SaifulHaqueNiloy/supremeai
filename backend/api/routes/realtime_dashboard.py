@@ -20,7 +20,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
 from core.error_bus import with_error_bus
 from core.logging_config import logger
-from core.security import verify_token_async
+from core.security import verify_token_async  # noqa: F401 — kept for other callers in module
+from core.security.ws_auth import authenticate_websocket
 from core.swarm_pubsub import get_swarm_streamer
 
 router = APIRouter(prefix="/ws", tags=["Real-time Dashboard"])
@@ -296,32 +297,18 @@ async def websocket_cost_updates_endpoint(websocket: WebSocket):
     """
     বাংলা: CostDashboard-এর রিয়েল-টাইম খরচ আপডেট স্ট্রিম (WS /ws/cost-updates)।
 
-    FIX (API-contract audit): ফ্রন্টএন্ড CostDashboard.tsx দীর্ঘদিন ধরে এই
-    পাথে সংযোগ করছিল কিন্তু ব্যাকএন্ডে কোনো রাউটই ছিল না — কম্পোনেন্ট সবসময়
-    'Polling' মোডে আটকে ছিল। প্রতি COST_UPDATES_INTERVAL_SECONDS (ডিফল্ট ৩০ সে)
-    অন্তর cost_guard Redis কাউন্টার থেকে সত্যিকারের snapshot পুশ করা হয়।
-
-    Message shape (CostDashboard CostMetrics-compatible):
-        {"total_spent_usd": float, "total": float, "monthlyLimit": float,
-         "provider_breakdown": {tier: usd}}
+    SECURITY FIX (audit S-2): This endpoint now accepts auth via the centralized
+    authenticate_websocket() helper, which supports BOTH:
+      - First-message auth: { "type": "auth", "token": "<jwt>" }  ← preferred
+      - HttpOnly cookie: supreme_access_token                     ← future
+    The old ?token= query-param path is intentionally no longer accepted here;
+    callers must upgrade to first-message auth.
     """
-    token = websocket.query_params.get("token")
-    if not token:
-        logger.warning("Cost-updates WebSocket rejected - no token provided")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
-    try:
-        auth_payload = await verify_token_async(token)
-        if not auth_payload:
-            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-            return
-    except Exception as e:
-        logger.warning(f"Cost-updates WebSocket authentication failed: {e}")
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        return
-
     await websocket.accept()
+    # SECURITY FIX: use centralized WS auth (first-message or cookie, not URL param).
+    user = await authenticate_websocket(websocket)
+    if user is None:
+        return  # authenticate_websocket already closed the socket
     interval = int(os.getenv("COST_UPDATES_INTERVAL_SECONDS", "30"))
     monthly_limit = float(os.getenv("MONTHLY_SPEND_LIMIT_USD", "100"))
     try:

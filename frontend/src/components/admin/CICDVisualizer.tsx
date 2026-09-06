@@ -8,6 +8,7 @@ import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
 import { CIDashboard } from './ci/CIDashboard';
+import { RenderPreflightWidget } from './RenderPreflightWidget';
 
 interface FeatureFlag {
   id: string;
@@ -103,7 +104,8 @@ export function CICDVisualizer() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          <RenderPreflightWidget />
           <CIDashboard repoName="SaifulHaqueNiloy/supremeai" />
         </div>
 

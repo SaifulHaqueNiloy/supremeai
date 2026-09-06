@@ -56,20 +56,37 @@ export const CostDashboard: React.FC = () => {
   });
 
   // WebSocket connection for real-time updates
+  // SECURITY FIX (audit S-2): token is sent as first-message auth frame, not URL param.
+  // SECURITY FIX (audit P-11): exponential backoff replaces fixed 5s reconnect.
   useEffect(() => {
+    let reconnectAttempt = 0;
+    const MAX_RECONNECT_ATTEMPTS = 8;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let destroyed = false;
+
     const connectWebSocket = () => {
+      if (destroyed) return;
       try {
-        const token = localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('adminToken') || '';
-        const wsUrl = `${getWebSocketBaseUrl()}/ws/cost-updates?token=${token}`;
+        // URL must NOT contain token — use first-message auth instead.
+        const wsUrl = `${getWebSocketBaseUrl()}/ws/cost-updates`;
         wsRef.current = new WebSocket(wsUrl);
-        
-        wsRef.current.onopen = () => setIsRealtime(true);
-        
+
+        wsRef.current.onopen = () => {
+          // Send auth frame as the very first message.
+          const token =
+            localStorage.getItem('supremeai_auth_token') ||
+            localStorage.getItem('supreme_admin_jwt') ||
+            localStorage.getItem('adminToken');
+          if (token) wsRef.current?.send(JSON.stringify({ type: 'auth', token }));
+          reconnectAttempt = 0; // Reset on successful connect
+          setIsRealtime(true);
+        };
+
         wsRef.current.onmessage = (event) => {
           try {
             const update = JSON.parse(event.data);
             setMetrics(prev => prev ? { ...prev, ...update } : update);
-            
+
             // Check thresholds
             if (update.total >= (update.monthlyLimit || 100) * 0.8) {
               eventBus.emit(Events.COST_THRESHOLD_REACHED, {
@@ -84,19 +101,26 @@ export const CostDashboard: React.FC = () => {
             console.warn('[CostDashboard] Failed to parse WebSocket message:', err);
           }
         };
-        
+
         wsRef.current.onclose = () => {
           setIsRealtime(false);
-          setTimeout(connectWebSocket, 5000);  // Auto-reconnect
+          if (destroyed || reconnectAttempt >= MAX_RECONNECT_ATTEMPTS) return;
+          // Exponential backoff with jitter: 1s, 2s, 4s, … up to 30s + random jitter
+          const base = 1_000;
+          const delay = Math.min(base * Math.pow(2, reconnectAttempt) + Math.random() * base, 30_000);
+          reconnectAttempt++;
+          reconnectTimer = setTimeout(connectWebSocket, delay);
         };
-        
+
       } catch (e) {
         console.warn('[CostDashboard] WebSocket unavailable, using polling fallback');
       }
     };
-    
+
     connectWebSocket();
     return () => {
+      destroyed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
       if (wsRef.current) wsRef.current.close();
     };
   }, []);

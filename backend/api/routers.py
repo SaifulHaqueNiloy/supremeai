@@ -216,6 +216,12 @@ ALL_ROUTERS = [
     {"path": "api.routes.tools_ops", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.execution_policies", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.living_brain", "prefix": "", "is_admin": True, "is_critical": False},
+    {
+        "path": "api.routes.render_preflight_admin",
+        "prefix": "",
+        "is_admin": True,
+        "is_critical": False,
+    },
     # ── Tier-S (all 12 routers via centralized registry) ──
     # CI FIX: Also register individual Tier-S modules directly so the API
     # contract diff analyzer can discover their @router decorators.

@@ -25,13 +25,18 @@ export function ScreencastViewer({
   // Connect to screencast WebSocket
   useEffect(() => {
     lastFrameTime.current = Date.now();
-    const wsUrl = `${getWsBaseUrl()}/ws/session/${sessionId}/takeover?token=${takeoverToken}`;
-    
+    // SECURITY FIX (audit S-2): takeoverToken must never appear in the URL.
+    // It is sent as a first-message auth frame immediately after the socket opens.
+    const wsUrl = `${getWsBaseUrl()}/ws/session/${sessionId}/takeover`;
+
     wsRef.current = new WebSocket(wsUrl);
-    
+
     wsRef.current.onopen = () => {
+      // Send auth frame — this keeps the token out of browser history and server logs.
+      wsRef.current?.send(JSON.stringify({ type: 'auth', token: takeoverToken }));
       setIsConnected(true);
     };
+
     
     wsRef.current.onmessage = async (event) => {
       try {
