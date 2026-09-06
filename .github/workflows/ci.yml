@@ -40,6 +40,7 @@ on:
 # ওভাররাইড করে -- এই top-level ব্লক তাদের ভাঙে না।
 permissions:
   contents: read
+  actions: read
 
 env:
   NODE_VERSION: '24'
@@ -57,12 +58,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      backend: ${{ steps.filter.outputs.backend == 'true' || github.event.inputs.force_backend == 'true' }}
-      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.event.inputs.force_frontend == 'true' }}
-      infra: ${{ steps.filter.outputs.infra == 'true' || github.event.inputs.force_infra == 'true' }}
-      scraper: ${{ steps.filter.outputs.scraper == 'true' || github.event.inputs.force_backend == 'true' }}
+      backend: ${{ steps.filter.outputs.backend == 'true' || github.event.inputs.force_backend == 'true' || steps.previous.outputs.backend == 'true' }}
+      frontend: ${{ steps.filter.outputs.frontend == 'true' || github.event.inputs.force_frontend == 'true' || steps.previous.outputs.frontend == 'true' }}
+      infra: ${{ steps.filter.outputs.infra == 'true' || github.event.inputs.force_infra == 'true' || steps.previous.outputs.infra == 'true' }}
+      scraper: ${{ steps.filter.outputs.scraper == 'true' || github.event.inputs.force_backend == 'true' || steps.previous.outputs.scraper == 'true' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Detect failed or cancelled jobs from the previous CI run
+        id: previous
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: python .github/scripts/detect-previous-failures.py
       - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         if: github.event_name != 'workflow_dispatch'
