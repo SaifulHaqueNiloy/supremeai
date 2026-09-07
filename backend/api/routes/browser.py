@@ -20,6 +20,7 @@ from core.browser_session_catalog import SavedBrowserSession, browser_session_ca
 from core.browser_session_manager import session_manager
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
+from core.effective_policy import get_effective_policy, policy_store
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
@@ -704,10 +705,41 @@ class TaskPreviewRequest(BaseModel):
     approved: bool = False
 
 
+class PolicyUpdateRequest(BaseModel):
+    rules: dict[str, Any] = Field(default_factory=dict)
+    features: dict[str, bool] = Field(default_factory=dict)
+
+
+class UserPolicyUpdateRequest(BaseModel):
+    rules: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.get("/policy")
+def get_policy(user: dict = Depends(get_current_user_token)):
+    user_id = str(user.get("sub") or "")
+    policy = get_effective_policy(user_id)
+    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+
+
+@router.put("/policy")
+def update_user_policy(payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)):
+    user_id = str(user.get("sub") or "")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authenticated user required")
+    policy = policy_store.update_user(user_id, payload.rules)
+    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+
+
+@router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
+def update_admin_policy(payload: PolicyUpdateRequest):
+    policy = policy_store.update_admin(payload.rules, payload.features)
+    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+
+
 @router.post("/tasks/preview")
 def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_token)):
-    decision = evaluate_goal(req.goal)
     actor_id = str(user.get("sub") or "")
+    decision = evaluate_goal(req.goal, actor_id)
     if not actor_id:
         raise HTTPException(status_code=401, detail="Authenticated user required")
     if not decision.allowed:
