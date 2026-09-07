@@ -60,8 +60,10 @@ async def execute_capability(
             name=capability,
             owner_circle=CircleName.GATEWAY,
             risk_level=RiskLevel.LOW,
+            tenant_activation_required=False,
         ),
         context=ExecutionContext(actor_id=actor_id, tenant_id=tenant_id),
-        payload={"source": source, **(payload or {})},
+        source=source,
+        payload=payload or {},
     )
     return await circle_registry.dispatch(request)

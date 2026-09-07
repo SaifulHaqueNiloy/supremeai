@@ -27,6 +27,10 @@ async def test_health_capability_uses_canonical_gateway(monkeypatch):
     assert result.status.value == "succeeded"
     assert result.data["verified"] is True
     assert result.data["services"]["database"] == "healthy"
+    assert result.verification is not None
+    assert result.verification.verified is True
+    assert result.audit is not None
+    assert result.audit.event_type == "capability.succeeded"
 
 
 @pytest.mark.asyncio

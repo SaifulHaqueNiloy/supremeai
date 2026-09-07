@@ -62,6 +62,7 @@ class CapabilityRef(BaseModel):
     owner_circle: CircleName
     risk_level: RiskLevel = RiskLevel.LOW
     approval_required: bool = False
+    tenant_activation_required: bool = True
     timeout_ms: int = Field(default=30_000, ge=1, le=300_000)
     version: str = "1"
 
@@ -71,6 +72,7 @@ class CapabilityRequest(BaseModel):
 
     capability: CapabilityRef
     context: ExecutionContext
+    source: str = Field(default="api", min_length=1, max_length=40)
     payload: Mapping[str, Any] = Field(default_factory=dict)
 
 
@@ -83,6 +85,22 @@ class PolicyDecision(BaseModel):
     policy_version: str = "1"
 
 
+class VerificationResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    verified: bool
+    method: str
+    details: Mapping[str, Any] = Field(default_factory=dict)
+
+
+class AuditContext(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    event_type: str
+    policy_version: str = "1"
+    approval_id: str | None = None
+
+
 class ExecutionResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -93,6 +111,8 @@ class ExecutionResult(BaseModel):
     error_message: str | None = None
     circle: CircleName
     capability: str
+    verification: VerificationResult | None = None
+    audit: AuditContext | None = None
     started_at: datetime | None = None
     finished_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
