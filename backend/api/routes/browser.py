@@ -708,6 +708,8 @@ class TaskPreviewRequest(BaseModel):
 class PolicyUpdateRequest(BaseModel):
     rules: dict[str, Any] = Field(default_factory=dict)
     features: dict[str, bool] = Field(default_factory=dict)
+    actions: dict[str, str] = Field(default_factory=dict)
+    limits: dict[str, int] = Field(default_factory=dict)
 
 
 class UserPolicyUpdateRequest(BaseModel):
@@ -732,8 +734,8 @@ def update_user_policy(payload: UserPolicyUpdateRequest, user: dict = Depends(ge
 
 @router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
 def update_admin_policy(payload: PolicyUpdateRequest):
-    policy = policy_store.update_admin(payload.rules, payload.features)
-    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    policy = policy_store.update_admin(payload.rules, payload.features, payload.actions, payload.limits)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
 
 
 @router.post("/tasks/preview")
