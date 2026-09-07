@@ -203,7 +203,12 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     {"path": "api.routes.evolution", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
-    {"path": "api.routes.meta_ai", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
+    {
+        "path": "api.routes.agent_breeding",
+        "prefix": "/api/v1",
+        "is_admin": True,
+        "is_critical": False,
+    },
     {"path": "api.routes.admin_dashboard", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.internal", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.admin", "prefix": "", "is_admin": True, "is_critical": False},

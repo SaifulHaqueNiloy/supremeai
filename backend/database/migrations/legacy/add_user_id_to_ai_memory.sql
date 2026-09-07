@@ -1,4 +1,5 @@
--- File: migrations/add_user_id_to_ai_memory.sql
+-- File: backend/database/migrations/legacy/add_user_id_to_ai_memory.sql
+-- Relocated from root migrations/ to central backend/database/migrations/legacy/
 -- Run against PostgreSQL to add user scoping to ai_memory
 
 ALTER TABLE ai_memory ADD COLUMN IF NOT EXISTS user_id TEXT;

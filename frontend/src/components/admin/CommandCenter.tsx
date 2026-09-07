@@ -123,7 +123,7 @@ export function CommandCenter() {
   };
 
   // Custom node types for ReactFlow
-  const nodeTypes = useMemo(() => ({ aethel: AethelNode }), []);
+  const nodeTypes = useMemo(() => ({ aethel: SciFiFlowNode }), []);
 
   // বাংলা মন্তব্য: টার্মিনাল কমান্ড সাবমিট হ্যান্ডলার
   const handleTerminalSubmit = () => {
