@@ -1,5 +1,5 @@
 {
-  "module_count": 2375,
+  "module_count": 2377,
   "modules": [
     {
       "capability_signals": [],
@@ -17028,6 +17028,13 @@
       "path": "infrastructure/mcp-control-plane/src/lib/http.ts"
     },
     {
+      "capability_signals": [],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/lib/timestamps.ts"
+    },
+    {
       "capability_signals": [
         "mcp"
       ],
@@ -17420,6 +17427,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/test_summary.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/test_timestamps.ts"
     },
     {
       "capability_signals": [],
