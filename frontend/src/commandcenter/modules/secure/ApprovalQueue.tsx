@@ -40,6 +40,7 @@ export function ApprovalQueue() {
                 <div className="text-[10px] font-mono text-[var(--sa-text-0)]">{item.action}</div>
                 <div className="truncate text-[9px] font-mono text-[var(--sa-text-2)]">Target: {item.target ?? '—'} · By: {item.requested_by ?? 'system'}</div>
                 <div className="text-[9px] font-mono text-[var(--sa-text-3)]">{item.reason || 'No reason provided'}</div>
+                {item.execution_status && item.execution_status !== 'pending' && <div className="text-[9px] font-mono text-[var(--sa-text-2)]">Execution: {item.execution_status}{item.execution_error ? ` — ${item.execution_error}` : ''}</div>}
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <StatusPill status={item.status === 'pending' ? 'busy' : item.status === 'approved' || item.status === 'executed' ? 'healthy' : 'down'} label={item.status.toUpperCase()} size="sm" />

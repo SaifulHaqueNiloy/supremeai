@@ -76,6 +76,12 @@ class PendingTask(BaseModel):
     expires_at: str | None = None
     # AUD-4.4/4.9: tamper-evident integrity hash of the canonical payload.
     payload_hash: str | None = None
+    execution_id: str | None = None
+    execution_status: str = "pending"
+    execution_started_at: str | None = None
+    execution_finished_at: str | None = None
+    execution_error: str | None = None
+    idempotency_key: str | None = None
 
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "pending_tasks.db"
@@ -122,7 +128,13 @@ def _get_conn():
             tenant_id TEXT,
             risk_level TEXT DEFAULT 'medium',
             expires_at TEXT,
-            payload_hash TEXT
+            payload_hash TEXT,
+            execution_id TEXT,
+            execution_status TEXT DEFAULT 'pending',
+            execution_started_at TEXT,
+            execution_finished_at TEXT,
+            execution_error TEXT,
+            idempotency_key TEXT UNIQUE
         )
         """)
     conn.execute("""
@@ -136,6 +148,12 @@ def _get_conn():
         "risk_level": "ALTER TABLE pending_tasks ADD COLUMN risk_level TEXT DEFAULT 'medium'",
         "expires_at": "ALTER TABLE pending_tasks ADD COLUMN expires_at TEXT",
         "payload_hash": "ALTER TABLE pending_tasks ADD COLUMN payload_hash TEXT",
+        "execution_id": "ALTER TABLE pending_tasks ADD COLUMN execution_id TEXT",
+        "execution_status": "ALTER TABLE pending_tasks ADD COLUMN execution_status TEXT DEFAULT 'pending'",
+        "execution_started_at": "ALTER TABLE pending_tasks ADD COLUMN execution_started_at TEXT",
+        "execution_finished_at": "ALTER TABLE pending_tasks ADD COLUMN execution_finished_at TEXT",
+        "execution_error": "ALTER TABLE pending_tasks ADD COLUMN execution_error TEXT",
+        "idempotency_key": "ALTER TABLE pending_tasks ADD COLUMN idempotency_key TEXT",
     }
     for col, ddl in migrations.items():
         if col not in existing_cols:
@@ -151,6 +169,7 @@ def create_pending_task(
     tenant_id: str | None = None,
     risk_level: str = "medium",
     ttl_seconds: int | None = None,
+    idempotency_key: str | None = None,
 ) -> PendingTask:
     """Create a PENDING approval bound to its owner/tenant with a TTL (AUD-4.1/4.2)."""
     now = datetime.now(UTC)
@@ -166,6 +185,8 @@ def create_pending_task(
         risk_level=risk_level,
         expires_at=(now + timedelta(seconds=ttl)).isoformat(),
         payload_hash=compute_payload_hash(payload),
+        execution_id=f"exec_{uuid.uuid4().hex}",
+        idempotency_key=idempotency_key,
     )
     conn = _get_conn()
     cursor = conn.cursor()
@@ -174,9 +195,10 @@ def create_pending_task(
         INSERT INTO pending_tasks (
             task_id, task_type, payload, status, created_at,
             resolved_by, resolved_at, reason,
-            created_by, tenant_id, risk_level, expires_at, payload_hash
+            created_by, tenant_id, risk_level, expires_at, payload_hash,
+            execution_id, execution_status, idempotency_key
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             task.task_id,
@@ -192,6 +214,9 @@ def create_pending_task(
             task.risk_level,
             task.expires_at,
             task.payload_hash,
+            task.execution_id,
+            task.execution_status,
+            task.idempotency_key,
         ),
     )
     conn.commit()
@@ -307,6 +332,44 @@ def update_task_status(
     return row_to_task(task_row) if task_row else None
 
 
+def mark_execution_started(task_id: str) -> PendingTask | None:
+    """Atomically claim an approved task for execution exactly once."""
+    conn = _get_conn()
+    cursor = conn.cursor()
+    now = datetime.now(UTC).isoformat()
+    cursor.execute(
+        "UPDATE pending_tasks SET execution_status = 'running', execution_started_at = ? WHERE task_id = ? AND status = ? AND execution_status = 'pending'",
+        (now, task_id, TaskStatus.APPROVED),
+    )
+    if cursor.rowcount == 0:
+        conn.close()
+        raise TaskAlreadyResolvedError(f"Task {task_id} is not claimable for execution")
+    conn.commit()
+    cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row_to_task(row) if row else None
+
+
+def mark_execution_result(task_id: str, *, success: bool, error: str | None = None) -> PendingTask | None:
+    """Persist the terminal execution result; repeated terminal writes are rejected."""
+    conn = _get_conn()
+    cursor = conn.cursor()
+    now = datetime.now(UTC).isoformat()
+    cursor.execute(
+        "UPDATE pending_tasks SET status = ?, execution_status = ?, execution_finished_at = ?, execution_error = ? WHERE task_id = ? AND status = ? AND execution_status = 'running'",
+        (TaskStatus.EXECUTED if success else TaskStatus.APPROVED, "succeeded" if success else "failed", now, error, task_id, TaskStatus.APPROVED),
+    )
+    if cursor.rowcount == 0:
+        conn.close()
+        raise TaskAlreadyResolvedError(f"Task {task_id} has no running execution")
+    conn.commit()
+    cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row_to_task(row) if row else None
+
+
 def mark_executed(task_id: str, executed_by: str) -> PendingTask | None:
     """Record post-approval execution (AUD-4.5: duplicate executions are rejected)."""
     conn = _get_conn()
@@ -357,4 +420,10 @@ def row_to_task(row: sqlite3.Row) -> PendingTask:
         risk_level=row["risk_level"] if "risk_level" in row and row["risk_level"] else "medium",
         expires_at=row["expires_at"] if "expires_at" in row else None,
         payload_hash=row["payload_hash"] if "payload_hash" in row else None,
+        execution_id=row["execution_id"] if "execution_id" in row else None,
+        execution_status=row["execution_status"] if "execution_status" in row and row["execution_status"] else "pending",
+        execution_started_at=row["execution_started_at"] if "execution_started_at" in row else None,
+        execution_finished_at=row["execution_finished_at"] if "execution_finished_at" in row else None,
+        execution_error=row["execution_error"] if "execution_error" in row else None,
+        idempotency_key=row["idempotency_key"] if "idempotency_key" in row else None,
     )
