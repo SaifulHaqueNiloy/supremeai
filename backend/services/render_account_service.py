@@ -116,8 +116,8 @@ class RenderAccountService:
                         recheck_at = datetime.fromisoformat(recheck_at_str.replace("Z", "+00:00"))
                         if now_utc >= recheck_at:
                             status = "recheck_required"
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Failed to parse recheck_at timestamp: {e}")
 
                 summary_item = {
                     "role": role,
@@ -197,8 +197,8 @@ class RenderAccountService:
                             f"Render account {account_role} is in cooldown until {recheck_str}. Skipping refresh."
                         )
                         return existing
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to parse cooldown recheck timestamp: {e}")
 
         if not service_id or not api_key:
             state_dict = {

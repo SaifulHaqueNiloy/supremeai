@@ -55,8 +55,9 @@ export function clearCanonicalSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
-  } catch {
+  } catch (e) {
     // localStorage unavailable (SSR / incognito) — নীরবে এগিয়ে যাওয়া।
+    console.debug('clearCanonicalSession: localStorage unavailable', e);
   }
   updateTokenCache(null);
   persistUser(null);
@@ -76,7 +77,8 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
         .join('')
     );
     return JSON.parse(jsonPayload) as Record<string, unknown>;
-  } catch {
+  } catch (e) {
+    console.debug('decodeJwtPayload: failed to decode token', e);
     return null;
   }
 }
@@ -96,7 +98,8 @@ function restoreUser(): UserProfile | null {
     const parsed = JSON.parse(raw) as UserProfile;
     if (!parsed || typeof parsed !== 'object' || typeof parsed.email !== 'string') return null;
     return parsed;
-  } catch {
+  } catch (e) {
+    console.debug('restoreUser: failed to restore user from storage', e);
     return null;
   }
 }
