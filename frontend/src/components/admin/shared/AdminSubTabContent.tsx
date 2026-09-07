@@ -6,6 +6,11 @@ import { CommandCenter, LiveLogs, CostAuditor, HealthMap, UserManager, ConfigEdi
 import { RateLimitManager } from '../security/RateLimitManager';
 import { InteractiveChatTab } from '../InteractiveChatTab';
 import { AdminAlertsTab } from '../AdminAlertsTab';
+import { ApprovalQueue } from '../../../commandcenter/modules/secure/ApprovalQueue';
+import { GuardrailsPage } from '../../dashboard/GuardrailsPage';
+import { HealingLogPanel } from '../../dashboard/HealingLogPanel';
+import { SiteActionsPage } from '../../dashboard/SiteActionsPage';
+import { LibrarianQueue } from '../LibrarianQueue';
 import { X } from 'lucide-react';
 
 interface SubTabContentProps {
@@ -50,6 +55,11 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'security': SecurityDashboard,
   'audit': LiveLogs,
   'incidents': AdminAlertsTab,
+  'approvals': ApprovalQueue,
+  'guardrails': GuardrailsPage,
+  'healing': HealingLogPanel,
+  'site-actions': SiteActionsPage,
+  'librarian': LibrarianQueue,
   'deployments': CICDVisualizer,
   'reliability': ObservabilityDashboard,
   'recovery': BackupRestore,

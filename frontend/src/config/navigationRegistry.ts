@@ -149,6 +149,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'admin-nav-service-explorer', label: 'Service Explorer', icon: ServerCog, kind: 'action', actionId: 'service-explorer', contexts: ['admin'], status: 'implemented', priority: 30 },
       { id: 'admin-nav-agents-swarm', label: 'Agents / Swarm', icon: BrainCircuit, kind: 'action', actionId: 'agents-swarm', contexts: ['admin'], status: 'implemented', priority: 40 },
       { id: 'admin-nav-deployments', label: 'Deployments', icon: GitMerge, kind: 'action', actionId: 'deployments', contexts: ['admin'], status: 'implemented', priority: 50 },
+      { id: 'admin-nav-site-actions', label: 'Site Actions', icon: Terminal, kind: 'action', actionId: 'site-actions', contexts: ['admin'], status: 'implemented', priority: 60 },
     ],
   },
   {
@@ -157,8 +158,11 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     contexts: ['admin'],
     items: [
       { id: 'admin-nav-security', label: 'Security', icon: Shield, kind: 'action', actionId: 'security', contexts: ['admin'], status: 'implemented', priority: 10 },
+      { id: 'admin-nav-guardrails', label: 'Guardrails', icon: Shield, kind: 'action', actionId: 'guardrails', contexts: ['admin'], status: 'implemented', priority: 15 },
       { id: 'admin-nav-audit', label: 'Audit', icon: FileCheck2, kind: 'action', actionId: 'audit', contexts: ['admin'], status: 'implemented', priority: 20 },
       { id: 'admin-nav-incidents', label: 'Incidents', icon: AlertTriangle, kind: 'action', actionId: 'incidents', contexts: ['admin'], status: 'implemented', priority: 30 },
+      { id: 'admin-nav-approvals', label: 'Approvals', icon: FileCheck2, kind: 'action', actionId: 'approvals', contexts: ['admin'], status: 'implemented', priority: 35 },
+      { id: 'admin-nav-healing', label: 'Healing Review', icon: RefreshCcw, kind: 'action', actionId: 'healing', contexts: ['admin'], status: 'implemented', priority: 36 },
       { id: 'admin-nav-reliability', label: 'Reliability', icon: Zap, kind: 'action', actionId: 'reliability', contexts: ['admin'], status: 'implemented', priority: 40 },
       { id: 'admin-nav-recovery', label: 'Recovery', icon: RefreshCcw, kind: 'action', actionId: 'recovery', contexts: ['admin'], status: 'implemented', priority: 50 },
     ],
@@ -171,6 +175,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'admin-nav-tenants-rbac', label: 'Tenants / RBAC', icon: Users, kind: 'action', actionId: 'tenants-rbac', contexts: ['admin'], status: 'implemented', priority: 10 },
       { id: 'admin-nav-finops', label: 'FinOps', icon: DollarSign, kind: 'action', actionId: 'finops', contexts: ['admin'], status: 'implemented', priority: 20 },
       { id: 'admin-nav-rca-intelligence', label: 'RCA / Intelligence', icon: Search, kind: 'action', actionId: 'rca-intelligence', contexts: ['admin'], status: 'implemented', priority: 30 },
+      { id: 'admin-nav-librarian', label: 'Librarian Queue', icon: FileCheck2, kind: 'action', actionId: 'librarian', contexts: ['admin'], status: 'implemented', priority: 35 },
       { id: 'admin-nav-configuration', label: 'Configuration', icon: Wrench, kind: 'action', actionId: 'configuration', contexts: ['admin'], status: 'implemented', priority: 40 },
     ],
   },
