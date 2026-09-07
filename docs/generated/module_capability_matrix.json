@@ -1,5 +1,5 @@
 {
-  "module_count": 2377,
+  "module_count": 2379,
   "modules": [
     {
       "capability_signals": [],
@@ -17060,6 +17060,18 @@
       "path": "infrastructure/mcp-control-plane/src/policy/auth.context.ts"
     },
     {
+      "capability_signals": [
+        "execute",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/policy/client-registry.ts"
+    },
+    {
       "capability_signals": [],
       "classification": "adapter",
       "entrypoints": [],
@@ -17344,6 +17356,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/test_adapters.ts"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/test_client_registry.ts"
     },
     {
       "capability_signals": [
