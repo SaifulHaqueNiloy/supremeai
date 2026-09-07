@@ -23,6 +23,7 @@ from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
+from core.task_policy import evaluate_goal
 
 router = APIRouter(
     prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
@@ -695,6 +696,28 @@ def toggle_learning(body: dict[str, bool]):
 @router.get("/tasks")
 def get_tasks():
     return {"tasks": list(TASKS.values())}
+
+
+class TaskPreviewRequest(BaseModel):
+    url: str | None = Field(default=None, max_length=2048)
+    goal: str = Field(min_length=1, max_length=10_000)
+    approved: bool = False
+
+
+@router.post("/tasks/preview")
+def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_token)):
+    decision = evaluate_goal(req.goal)
+    actor_id = str(user.get("sub") or "")
+    if not actor_id:
+        raise HTTPException(status_code=401, detail="Authenticated user required")
+    if not decision.allowed:
+        return {"status": "manual", "risk": decision.risk, "message": decision.message}
+    if decision.risk == "approval" and not req.approved:
+        return {"status": "approval_required", "risk": decision.risk, "message": decision.message}
+    task_id = f"task_{uuid.uuid4().hex[:12]}"
+    task = {"id": task_id, "goal": req.goal, "url": req.url, "status": "ACTIVE", "risk": decision.risk, "owner_id": actor_id, "createdAt": datetime.now(UTC).isoformat(), "evidence": []}
+    TASKS[task_id] = task
+    return {"status": "started", "message": "Your safe task has started. SupremeAI will pause if it needs your approval.", "task": task}
 
 
 @router.post("/tasks")

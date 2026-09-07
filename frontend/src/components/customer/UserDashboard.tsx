@@ -3,6 +3,7 @@ import { ArrowRight, Bot, FileText, FolderKanban, Plus, Settings2, Sparkles, Ter
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceSettings, WORKSPACE_MODULES, type WorkspaceModuleId } from '../../hooks/useWorkspaceSettings';
+import TaskAutomationCard from './TaskAutomationCard';
 
 const quickStarts = [
   { label: 'Research a topic', detail: 'Get a clear answer with useful context.', icon: Sparkles, href: '/workspace/live' },
@@ -27,6 +28,8 @@ export const UserDashboard: React.FC = () => {
           <div><p className="sa-eyebrow mb-3">Your workspace</p><h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Good morning, {name}.</h1><p className="mt-2 max-w-xl text-[var(--sa-ink-muted)]">A simple place to think, make progress, and keep your work moving.</p></div>
           <Link to="/settings" className="inline-flex items-center gap-2 self-start rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-4 py-2.5 text-sm font-medium transition hover:border-[var(--sa-primary)] hover:text-[var(--sa-primary)]"><Settings2 size={16} /> Personalize</Link>
         </header>
+
+        <TaskAutomationCard />
 
         <section className="sa-surface-raised p-5 sm:p-7" aria-labelledby="intent-heading">
           <p className="sa-eyebrow mb-2">Start anywhere</p><h2 id="intent-heading" className="text-xl font-semibold">What would you like to do?</h2>
