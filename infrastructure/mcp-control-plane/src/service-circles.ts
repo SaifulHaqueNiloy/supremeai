@@ -42,3 +42,7 @@ export function getServiceDescriptors(): ServiceDescriptor[] {
 export function redactDiagnostic(value: unknown): string {
   return String(value ?? "unknown").replace(/(token|key|secret|password|authorization)[^,;\s]*/gi, "$1=[redacted]");
 }
+
+export function getServiceDescriptor(provider: string): ServiceDescriptor | undefined {
+  return getServiceDescriptors().find((descriptor) => descriptor.provider === provider);
+}
