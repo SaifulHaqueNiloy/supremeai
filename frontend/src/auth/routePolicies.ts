@@ -29,12 +29,19 @@ export const ROUTE_POLICIES: Record<string, RoutePolicy> = {
   // ── User context (authenticated user routes) ──
   '/workspace': { requiredRole: 'user' },
   '/integrations': { requiredRole: 'user' },
-  '/architect-tower': { requiredRole: 'user' },
-  '/swarm': { requiredRole: 'user' },
-  '/evolution-forge': { requiredRole: 'user' },
   '/skills-catalog': { requiredRole: 'user', requiredPermission: 'skills.read' },
   '/billing': { requiredRole: 'user', requiredPermission: 'billing.read' },
   '/profile': { requiredRole: 'user', requiredPermission: 'profile.read' },
+  '/projects': { requiredRole: 'user' },
+  '/activity': { requiredRole: 'user' },
+  '/marketplace': { requiredRole: 'user' },
+  '/runs': { requiredRole: 'user' },
+  '/usage': { requiredRole: 'user' },
+  '/settings': { requiredRole: 'user', requiredPermission: 'settings.read' },
+  // Compatibility routes: intentionally not shown in the core user navigation.
+  '/architect-tower': { requiredRole: 'user' },
+  '/swarm': { requiredRole: 'user' },
+  '/evolution-forge': { requiredRole: 'user' },
   '/prompt-library': { requiredRole: 'user' },
 
   // ── Public / intentionally shared ──
@@ -49,4 +56,23 @@ export function getRoutePolicy(pathname: string): RoutePolicy | undefined {
     .filter((prefix) => pathname === prefix || pathname.startsWith(prefix + '/'))
     .sort((a, b) => b.length - a.length);
   return matches.length > 0 ? ROUTE_POLICIES[matches[0]] : undefined;
+}
+
+/**
+ * Frontend UX decision only. Backend authorization remains authoritative.
+ * Unknown routes are allowed here so legacy/deep links can reach their own
+ * compatibility route and report server-side authorization failures.
+ */
+export function canAccessRoute(
+  pathname: string,
+  role: Role | null | undefined,
+  permissions?: string[],
+): boolean {
+  const policy = getRoutePolicy(pathname);
+  if (!policy) return true;
+  if (policy.requiredRole && policy.requiredRole !== role) return false;
+  if (policy.requiredPermission && permissions && permissions.length > 0) {
+    return permissions.includes(policy.requiredPermission);
+  }
+  return true;
 }
