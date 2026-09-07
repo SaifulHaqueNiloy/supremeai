@@ -667,44 +667,44 @@ class TelegramBotHandler:
             await self._handle_telemetry(chat_id)
             return
 
-            if command == "/quick":
-                await self._handle_quick_actions(chat_id)
-                return
+        if command == "/quick":
+            await self._handle_quick_actions(chat_id)
+            return
 
-            if command in ("/kb", "/docs"):
-                query = text[len(command) :].strip()
-                await self._handle_kb_search(chat_id, query)
-                return
+        if command in ("/kb", "/docs"):
+            query = text[len(command) :].strip()
+            await self._handle_kb_search(chat_id, query)
+            return
 
-            if command == "/session":
-                await self._handle_session_menu(chat_id)
-                return
+        if command == "/session":
+            await self._handle_session_menu(chat_id)
+            return
 
-            if command in ("/status", "/sys_status"):
-                if not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self._handle_status(chat_id)
-                return
+        if command in ("/status", "/sys_status"):
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_status(chat_id)
+            return
 
-            if command == "/backup_now":
-                if not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self._handle_backup_now(chat_id)
-                return
+        if command == "/backup_now":
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_backup_now(chat_id)
+            return
 
-            if command == "/latest_build":
-                await self._handle_latest_build(chat_id)
-                return
+        if command == "/latest_build":
+            await self._handle_latest_build(chat_id)
+            return
 
-            reply = self.COMMANDS.get(command)
-            if reply:
-                if command in ("/admin", "/rules") and not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self.send_message(chat_id, reply)
-                return
+        reply = self.COMMANDS.get(command)
+        if reply:
+            if command in ("/admin", "/rules") and not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self.send_message(chat_id, reply)
+            return
 
         # ── Step E: AI Conversational Engine ──────────────────────────
         await self.send_typing(chat_id)
