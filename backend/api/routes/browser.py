@@ -19,8 +19,8 @@ from core.browser_compat_store import browser_compat_store
 from core.browser_session_catalog import SavedBrowserSession, browser_session_catalog
 from core.browser_session_manager import session_manager
 from core.cache.redis_manager import MultiLevelCache
-from core.error_bus import with_error_bus
 from core.effective_policy import get_effective_policy, policy_store
+from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
@@ -67,7 +67,9 @@ def get_audit() -> AuditLogger:
 async def list_saved_sessions(user: dict = Depends(get_current_user_token)):
     owner_id = str(user.get("sub") or "")
     tenant_id = str(user.get("tenant_id") or owner_id)
-    return {"sessions": [item.__dict__ for item in browser_session_catalog.list(tenant_id, owner_id)]}
+    return {
+        "sessions": [item.__dict__ for item in browser_session_catalog.list(tenant_id, owner_id)]
+    }
 
 
 @router.post("/automation/saved-sessions")
@@ -77,14 +79,18 @@ async def save_session(payload: SavedSessionRequest, user: dict = Depends(get_cu
     owner_id = str(user.get("sub") or "")
     tenant_id = str(user.get("tenant_id") or owner_id)
     if not owner_id or not tenant_id or not is_safe_url(payload.url):
-        raise HTTPException(status_code=400, detail="Valid authenticated owner and safe URL are required")
-    item = browser_session_catalog.save(SavedBrowserSession(
-        tenant_id=tenant_id,
-        owner_id=owner_id,
-        label=payload.label,
-        url=payload.url,
-        session_id=payload.session_id,
-    ))
+        raise HTTPException(
+            status_code=400, detail="Valid authenticated owner and safe URL are required"
+        )
+    item = browser_session_catalog.save(
+        SavedBrowserSession(
+            tenant_id=tenant_id,
+            owner_id=owner_id,
+            label=payload.label,
+            url=payload.url,
+            session_id=payload.session_id,
+        )
+    )
     return {"session": item.__dict__}
 
 
@@ -724,7 +730,9 @@ def get_policy(user: dict = Depends(get_current_user_token)):
 
 
 @router.put("/policy")
-def update_user_policy(payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)):
+def update_user_policy(
+    payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)
+):
     user_id = str(user.get("sub") or "")
     if not user_id:
         raise HTTPException(status_code=401, detail="Authenticated user required")
@@ -734,8 +742,16 @@ def update_user_policy(payload: UserPolicyUpdateRequest, user: dict = Depends(ge
 
 @router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
 def update_admin_policy(payload: PolicyUpdateRequest):
-    policy = policy_store.update_admin(payload.rules, payload.features, payload.actions, payload.limits)
-    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
+    policy = policy_store.update_admin(
+        payload.rules, payload.features, payload.actions, payload.limits
+    )
+    return {
+        "rules": policy.rules,
+        "features": policy.features,
+        "actions": policy.actions,
+        "limits": policy.limits,
+        "sources": policy.sources,
+    }
 
 
 @router.post("/tasks/preview")
@@ -749,9 +765,22 @@ def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_
     if decision.risk == "approval" and not req.approved:
         return {"status": "approval_required", "risk": decision.risk, "message": decision.message}
     task_id = f"task_{uuid.uuid4().hex[:12]}"
-    task = {"id": task_id, "goal": req.goal, "url": req.url, "status": "ACTIVE", "risk": decision.risk, "owner_id": actor_id, "createdAt": datetime.now(UTC).isoformat(), "evidence": []}
+    task = {
+        "id": task_id,
+        "goal": req.goal,
+        "url": req.url,
+        "status": "ACTIVE",
+        "risk": decision.risk,
+        "owner_id": actor_id,
+        "createdAt": datetime.now(UTC).isoformat(),
+        "evidence": [],
+    }
     TASKS[task_id] = task
-    return {"status": "started", "message": "Your safe task has started. SupremeAI will pause if it needs your approval.", "task": task}
+    return {
+        "status": "started",
+        "message": "Your safe task has started. SupremeAI will pause if it needs your approval.",
+        "task": task,
+    }
 
 
 @router.post("/tasks")

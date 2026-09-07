@@ -1,4 +1,4 @@
-from core.capability_discovery import discover_capability, discover_capabilities
+from core.capability_discovery import discover_capabilities, discover_capability
 from core.capability_gateway import HEALTH_CAPABILITY
 
 

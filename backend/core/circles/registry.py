@@ -7,8 +7,8 @@ from .contracts import (
     AuditContext,
     CapabilityRef,
     CapabilityRequest,
-    CircleName,
     CircleManifest,
+    CircleName,
     EventEnvelope,
     ExecutionResult,
     ExecutionStatus,
@@ -18,7 +18,9 @@ from .contracts import (
 from .event_journal import circle_event_journal
 
 CapabilityHandler = Callable[[CapabilityRequest], Awaitable[Any] | Any]
-PolicyEvaluator = Callable[[CapabilityRequest], Awaitable[PolicyDecision] | PolicyDecision | Awaitable[bool] | bool]
+PolicyEvaluator = Callable[
+    [CapabilityRequest], Awaitable[PolicyDecision] | PolicyDecision | Awaitable[bool] | bool
+]
 
 
 class CircleRegistry:
@@ -108,7 +110,11 @@ class CircleRegistry:
             decision = self._policy_evaluator(request)
             if hasattr(decision, "__await__"):
                 decision = await decision
-            policy = decision if isinstance(decision, PolicyDecision) else PolicyDecision(allowed=bool(decision))
+            policy = (
+                decision
+                if isinstance(decision, PolicyDecision)
+                else PolicyDecision(allowed=bool(decision))
+            )
             if not policy.allowed:
                 return ExecutionResult(
                     execution_id=request.context.execution_id,
@@ -117,7 +123,9 @@ class CircleRegistry:
                     error_message=policy.reason or "Central policy denied this capability",
                     circle=request.capability.owner_circle,
                     capability=request.capability.name,
-                    audit=AuditContext(event_type="capability.rejected", policy_version=policy.policy_version),
+                    audit=AuditContext(
+                        event_type="capability.rejected", policy_version=policy.policy_version
+                    ),
                 )
 
         try:
@@ -131,7 +139,9 @@ class CircleRegistry:
                 circle=request.capability.owner_circle,
                 capability=request.capability.name,
                 verification=VerificationResult(verified=True, method="handler_completed"),
-                audit=AuditContext(event_type="capability.succeeded", policy_version=policy.policy_version),
+                audit=AuditContext(
+                    event_type="capability.succeeded", policy_version=policy.policy_version
+                ),
             )
         except Exception as exc:
             result = ExecutionResult(

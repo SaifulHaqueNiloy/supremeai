@@ -12,9 +12,9 @@ import uuid
 from dataclasses import dataclass
 from typing import Any
 
+from core.effective_policy import get_effective_policy
 from core.logging_config import logger
 from core.playwright_manager import get_global_browser
-from core.effective_policy import get_effective_policy
 
 
 @dataclass
@@ -31,7 +31,9 @@ class BrowserSession:
 
 
 class BrowserSessionManager:
-    def __init__(self, max_sessions: int | None = None, idle_timeout_seconds: int | None = None) -> None:
+    def __init__(
+        self, max_sessions: int | None = None, idle_timeout_seconds: int | None = None
+    ) -> None:
         policy = get_effective_policy()
         self.max_sessions = max_sessions or policy.limits["max_sessions"]
         self.idle_timeout_seconds = idle_timeout_seconds or policy.limits["idle_timeout_seconds"]
@@ -40,7 +42,9 @@ class BrowserSessionManager:
         self._slots = asyncio.Semaphore(max_sessions)
         self._paused_owners: set[str] = set()
 
-    async def create(self, owner_id: str, label: str = "Browser session", saved_url: str | None = None) -> BrowserSession:
+    async def create(
+        self, owner_id: str, label: str = "Browser session", saved_url: str | None = None
+    ) -> BrowserSession:
         if not owner_id:
             raise ValueError("owner_id is required")
         if owner_id in self._paused_owners:
