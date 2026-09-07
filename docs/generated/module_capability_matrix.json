@@ -12544,6 +12544,16 @@
     },
     {
       "capability_signals": [
+        "health",
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/mcp/mcp_telegram.py"
+    },
+    {
+      "capability_signals": [
         "mcp"
       ],
       "classification": "adapter",
@@ -13299,39 +13309,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/commandcenter/kit/index.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/build/MemoryKnowledge.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/build/ModelRouter.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/build/Providers.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/build/Skills.tsx"
     },
     {
       "capability_signals": [
@@ -16791,6 +16768,13 @@
       "path": "infrastructure/cloudflare_worker.js"
     },
     {
+      "capability_signals": [],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/scripts/smoke-report.ts"
+    },
+    {
       "capability_signals": [
         "execute",
         "health"
@@ -17053,7 +17037,9 @@
       "path": "infrastructure/mcp-control-plane/src/policy/approvals/hitl.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "adapter",
       "entrypoints": [],
       "kind": "ts",
@@ -17148,6 +17134,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/src/remediation/rules.ts"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/service-circles.ts"
     },
     {
       "capability_signals": [
@@ -17408,6 +17404,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/test_resource_list.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/test_service_circles.ts"
     },
     {
       "capability_signals": [
