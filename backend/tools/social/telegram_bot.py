@@ -661,50 +661,48 @@ class TelegramBotHandler:
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
                 await self._handle_mcp_clients(chat_id)
-            return
-
         if command == "/telemetry":
             await self._handle_telemetry(chat_id)
             return
 
-            if command == "/quick":
-                await self._handle_quick_actions(chat_id)
-                return
+        if command == "/quick":
+            await self._handle_quick_actions(chat_id)
+            return
 
-            if command in ("/kb", "/docs"):
-                query = text[len(command) :].strip()
-                await self._handle_kb_search(chat_id, query)
-                return
+        if command in ("/kb", "/docs"):
+            query = text[len(command) :].strip()
+            await self._handle_kb_search(chat_id, query)
+            return
 
-            if command == "/session":
-                await self._handle_session_menu(chat_id)
-                return
+        if command == "/session":
+            await self._handle_session_menu(chat_id)
+            return
 
-            if command in ("/status", "/sys_status"):
-                if not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self._handle_status(chat_id)
-                return
+        if command in ("/status", "/sys_status"):
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_status(chat_id)
+            return
 
-            if command == "/backup_now":
-                if not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self._handle_backup_now(chat_id)
-                return
+        if command == "/backup_now":
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_backup_now(chat_id)
+            return
 
-            if command == "/latest_build":
-                await self._handle_latest_build(chat_id)
-                return
+        if command == "/latest_build":
+            await self._handle_latest_build(chat_id)
+            return
 
-            reply = self.COMMANDS.get(command)
-            if reply:
-                if command in ("/admin", "/rules") and not self.is_admin(chat_id):
-                    await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
-                else:
-                    await self.send_message(chat_id, reply)
-                return
+        reply = self.COMMANDS.get(command)
+        if reply:
+            if command in ("/admin", "/rules") and not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self.send_message(chat_id, reply)
+            return
 
         # ── Step E: AI Conversational Engine ──────────────────────────
         await self.send_typing(chat_id)
@@ -719,25 +717,39 @@ class TelegramBotHandler:
         base_url = os.environ.get("MCP_CONTROL_PLANE_URL", "").rstrip("/")
         admin_key = os.environ.get("MCP_ADMIN_KEY") or os.environ.get("MCP_API_KEY")
         if not base_url or not admin_key:
-            await self.send_message(chat_id, "⚠️ MCP control plane URL বা admin key configure করা হয়নি।")
+            await self.send_message(
+                chat_id, "⚠️ MCP control plane URL বা admin key configure করা হয়নি।"
+            )
             return
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                response = await client.get(f"{base_url}/clients", headers={"Authorization": f"Bearer {admin_key}"})
+                response = await client.get(
+                    f"{base_url}/clients", headers={"Authorization": f"Bearer {admin_key}"}
+                )
                 response.raise_for_status()
                 clients = response.json().get("clients", [])
             pending = [item for item in clients if item.get("status") == "pending"]
             if not pending:
-                await self.send_message(chat_id, "🔌 <b>MCP Clients</b>\n\nকোনো pending client নেই।")
+                await self.send_message(
+                    chat_id, "🔌 <b>MCP Clients</b>\n\nকোনো pending client নেই।"
+                )
                 return
             for item in pending:
                 client_id = item.get("id", "")
-                keyboard = {"inline_keyboard": [[
-                    {"text": "✅ Approve", "callback_data": f"mcp_approve_{client_id}"},
-                    {"text": "Set Agent", "callback_data": f"mcp_role_{client_id}_agent"},
-                    {"text": "Set Admin", "callback_data": f"mcp_role_{client_id}_admin"},
-                ]]}
-                await self.send_message(chat_id, f"🔌 <b>{item.get('name', 'Unnamed')}</b>\nProvider: <code>{item.get('provider', 'generic')}</code>\nCurrent role: <code>{item.get('role', 'viewer')}</code>\nStatus: <code>pending</code>", reply_markup=keyboard)
+                keyboard = {
+                    "inline_keyboard": [
+                        [
+                            {"text": "✅ Approve", "callback_data": f"mcp_approve_{client_id}"},
+                            {"text": "Set Agent", "callback_data": f"mcp_role_{client_id}_agent"},
+                            {"text": "Set Admin", "callback_data": f"mcp_role_{client_id}_admin"},
+                        ]
+                    ]
+                }
+                await self.send_message(
+                    chat_id,
+                    f"🔌 <b>{item.get('name', 'Unnamed')}</b>\nProvider: <code>{item.get('provider', 'generic')}</code>\nCurrent role: <code>{item.get('role', 'viewer')}</code>\nStatus: <code>pending</code>",
+                    reply_markup=keyboard,
+                )
         except Exception as exc:
             logger.error(f"MCP client listing failed: {exc}")
             await self.send_message(chat_id, "⚠️ MCP client list পাওয়া যায়নি।")
@@ -753,11 +765,18 @@ class TelegramBotHandler:
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 if action == "approve":
-                    response = await client.post(f"{base_url}/clients/{client_id}/approve", headers={"Authorization": f"Bearer {admin_key}"})
+                    response = await client.post(
+                        f"{base_url}/clients/{client_id}/approve",
+                        headers={"Authorization": f"Bearer {admin_key}"},
+                    )
                     message = "✅ MCP client approved."
                 else:
                     role = parts[-1]
-                    response = await client.patch(f"{base_url}/clients/{client_id}", headers={"Authorization": f"Bearer {admin_key}"}, json={"role": role})
+                    response = await client.patch(
+                        f"{base_url}/clients/{client_id}",
+                        headers={"Authorization": f"Bearer {admin_key}"},
+                        json={"role": role},
+                    )
                     message = f"✅ MCP client role changed to <code>{role}</code>."
                 response.raise_for_status()
             await self.send_message(chat_id, message)

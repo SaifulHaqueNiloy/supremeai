@@ -34,7 +34,11 @@ def test_code_generator_agent_generate_code(workspace):
 
 @pytest.mark.asyncio
 async def test_qa_agent_verify_blocks_dangerous_code(workspace, monkeypatch):
-    from core.orchestration import crew_departments as mod
+    # বাংলা মন্তব্য: crew_departments.py এখন শুধু swarm_agent_roles.py থেকে
+    # re-export করা compatibility bridge (দেখুন সেই ফাইলের ডকস্ট্রিং) -- আসল
+    # QAAgent.verify ও তার llm_gateway ইম্পোর্ট swarm_agent_roles মডিউলে থাকে,
+    # তাই সেখানেই monkeypatch করতে হবে।
+    from core.orchestration import swarm_agent_roles as mod
 
     class FakeGateway:
         async def acompletion(self, *args, **kwargs):
@@ -52,7 +56,7 @@ async def test_qa_agent_verify_blocks_dangerous_code(workspace, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_qa_agent_verify_passes_clean_code(workspace, monkeypatch):
-    from core.orchestration import crew_departments as mod
+    from core.orchestration import swarm_agent_roles as mod
 
     class FakeGateway:
         async def acompletion(self, *args, **kwargs):
@@ -76,7 +80,7 @@ def test_shared_workspace_log():
 
 @pytest.mark.asyncio
 async def test_swarm_agent_base_call_gateway(monkeypatch):
-    from core.orchestration import crew_departments as mod
+    from core.orchestration import swarm_agent_roles as mod
 
     class FakeGateway:
         async def acompletion(self, *args, **kwargs):

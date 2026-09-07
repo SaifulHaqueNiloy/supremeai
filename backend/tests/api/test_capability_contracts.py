@@ -28,7 +28,22 @@ def test_scraper_boundaries_apply_ssrf_validation():
 
 
 def test_frontend_mcp_connector_uses_authenticated_client():
-    source = (_REPO_ROOT / "frontend/src/components/plugins/MCPConnector.tsx").read_text()
-    assert "apiClient.post" in source
-    assert "fetch('/api/v1/mcp/discover'" not in source
-    assert "any[]" not in source
+    # বাংলা মন্তব্য: #228 (smooth controlled MCP connector flow) MCPConnector.tsx-এর
+    # ইনলাইন fetch কল সরিয়ে services/controlPlane.ts-এর getJson/postJson/deleteJson
+    # হেল্পারে সরিয়ে নিয়েছে -- সবগুলোই getAuthHeaders() দিয়ে authenticated। তাই এই
+    # কন্ট্রাক্ট টেস্ট এখন component-এর বদলে সার্ভিস লেয়ার যাচাই করে।
+    component_source = (_REPO_ROOT / "frontend/src/components/plugins/MCPConnector.tsx").read_text()
+    service_source = (_REPO_ROOT / "frontend/src/services/controlPlane.ts").read_text()
+    assert "controlPlane." in component_source
+    assert "fetch('/api/v1/mcp/discover'" not in component_source
+    assert "fetch('/api/v1/mcp/discover'" not in service_source
+    assert "any[]" not in component_source
+    assert "any[]" not in service_source
+    assert "getAuthHeaders" in service_source
+    for helper in (
+        "async function getJson",
+        "async function postJson",
+        "async function deleteJson",
+    ):
+        assert helper in service_source
+    assert "revokeExternalClient: (id: string) => deleteJson" in service_source
