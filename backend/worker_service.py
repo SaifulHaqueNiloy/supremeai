@@ -72,8 +72,8 @@ def _verify_worker_auth(request: Request) -> None:
             jwt_sec = getattr(settings, "jwt_secret", "")
             if jwt_sec:
                 expected_tokens.append(jwt_sec)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to load expected auth tokens from settings: {e}")
 
     if not expected_tokens:
         raise HTTPException(status_code=500, detail="Worker service security tokens not configured")

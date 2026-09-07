@@ -181,8 +181,8 @@ async def optional_current_user(
                 ):
                     logger.warning(f"User {user_id_check} is revoked due to suspected token theft")
                     return None
-            except Exception:
-                pass  # Redis না থাকলে skip, fail-open
+            except Exception as e:
+                logger.debug(f"Redis revocation check skipped (fail-open): {e}")
 
         # বাংলা মন্তব্য: JWT ডিকোড সফল হলে UserContext তৈরি করে return করা হচ্ছে।
         user_id = payload.get("sub", "unknown")
