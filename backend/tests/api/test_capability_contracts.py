@@ -40,6 +40,10 @@ def test_frontend_mcp_connector_uses_authenticated_client():
     assert "any[]" not in component_source
     assert "any[]" not in service_source
     assert "getAuthHeaders" in service_source
-    for helper in ("async function getJson", "async function postJson", "async function deleteJson"):
+    for helper in (
+        "async function getJson",
+        "async function postJson",
+        "async function deleteJson",
+    ):
         assert helper in service_source
     assert "revokeExternalClient: (id: string) => deleteJson" in service_source
