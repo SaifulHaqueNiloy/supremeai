@@ -1,6 +1,7 @@
 // বাংলা মন্তব্য: Devin-স্টাইল সেটিংস পেজ — ব্যাকএন্ড /preferences/ এপিআই দিয়ে ইউজার প্রেফারেন্স লোড/সেভ করা হয়
 import { useState, useEffect } from 'react';
 import { Save, Loader2, Shield, Trash2 } from 'lucide-react';
+import { useWorkspaceSettings, WORKSPACE_MODULES, type WorkspaceModuleId } from '../../hooks/useWorkspaceSettings';
 import { apiClient } from '../../services/apiClient';
 // বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম + ক্যানোনিক্যাল মডেল লিস্ট
 import { getSupremeModelLabel, SUPREME_AVAILABLE_MODELS } from '../../lib/modelBranding';
@@ -35,6 +36,9 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
   const [status, setStatus] = useState('');
   const [trustedBrowsers, setTrustedBrowsers] = useState<Array<{ id: string; created_at: number }>>([]);
   const [trustedBrowserStatus, setTrustedBrowserStatus] = useState('');
+  const enabledModules = useWorkspaceSettings((state) => state.enabledModules);
+  const toggleModule = useWorkspaceSettings((state) => state.toggleModule);
+  const resetModules = useWorkspaceSettings((state) => state.resetModules);
 
   useEffect(() => {
     apiClient
@@ -173,6 +177,38 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
               <option value="normal">Normal</option>
               <option value="detailed">Detailed</option>
             </select>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-sm font-medium text-white">Workspace tools</h2>
+              <p className="text-[11px] text-slate-400">Choose which capabilities appear in your workspace. Advanced tools stay off until you opt in.</p>
+            </div>
+            <button type="button" onClick={resetModules} className="text-[11px] text-blue-300 hover:text-blue-200">Reset</button>
+          </div>
+          <div className="flex flex-col gap-3">
+            {WORKSPACE_MODULES.map((module) => {
+              const checked = enabledModules.includes(module.id);
+              const isCore = ['ask', 'projects', 'files', 'activity', 'agents'].includes(module.id);
+              return (
+                <label key={module.id} className="flex items-center justify-between gap-4 cursor-pointer">
+                  <span>
+                    <span className="block text-xs text-slate-300">{module.label}{module.advanced ? ' (advanced)' : ''}</span>
+                    <span className="block text-[11px] text-slate-500">{module.description}</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    aria-label={`Enable ${module.label}`}
+                    checked={checked}
+                    disabled={isCore}
+                    onChange={() => toggleModule(module.id as WorkspaceModuleId)}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                </label>
+              );
+            })}
           </div>
         </div>
 

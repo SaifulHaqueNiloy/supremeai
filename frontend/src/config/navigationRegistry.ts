@@ -114,10 +114,12 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     label: 'Observe',
     contexts: ['user'],
     items: [
-      { id: 'nav-swarm', label: 'Swarm Map', icon: Network, kind: 'route', path: '/swarm', contexts: ['user'], status: 'implemented', priority: 10 },
-      { id: 'nav-evolution-forge', label: 'Evolution Forge', icon: Zap, kind: 'route', path: '/evolution-forge', contexts: ['user'], status: 'implemented', priority: 20 },
-      { id: 'nav-architect-tower', label: 'Architect Tower', icon: BrainCircuit, kind: 'route', path: '/architect-tower', contexts: ['user'], status: 'implemented', priority: 30 },
-      { id: 'nav-runs', label: 'Runs', icon: Zap, kind: 'route', path: '/runs', contexts: ['user'], status: 'implemented', priority: 40 },
+      // Advanced operational surfaces remain routable for compatibility, but are
+      // intentionally kept out of the regular user navigation during simplification.
+      { id: 'nav-swarm', label: 'Swarm Map', icon: Network, kind: 'route', path: '/swarm', contexts: ['user'], status: 'deprecated', priority: 10 },
+      { id: 'nav-evolution-forge', label: 'Evolution Forge', icon: Zap, kind: 'route', path: '/evolution-forge', contexts: ['user'], status: 'deprecated', priority: 20 },
+      { id: 'nav-architect-tower', label: 'Architect Tower', icon: BrainCircuit, kind: 'route', path: '/architect-tower', contexts: ['user'], status: 'deprecated', priority: 30 },
+      { id: 'nav-runs', label: 'Runs', icon: Zap, kind: 'route', path: '/runs', contexts: ['user'], status: 'deprecated', priority: 40 },
     ],
   },
   {
@@ -194,6 +196,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
 // ─────────────────────────────────────────────────────────────────────────
 
 export interface NavFilterOptions {
+  /** Trusted role resolved by the backend; used for UX filtering only. */
+  role?: Role | null;
   /** Extra permission strings the viewer holds (backend-resolved). */
   permissions?: string[];
   /** Include non-implemented items (defaults to false — never render dead nav). */
@@ -209,7 +213,7 @@ export function getNavigationForContext(
   context: NavContext,
   options: NavFilterOptions = {}
 ): NavGroup[] {
-  const { permissions, includePlanned = false } = options;
+  const { role, permissions, includePlanned = false } = options;
   return NAVIGATION_REGISTRY
     .filter((group) => group.contexts.includes(context))
     .map((group) => ({
@@ -218,6 +222,8 @@ export function getNavigationForContext(
         .filter((item) => {
           if (!item.contexts.includes(context)) return false;
           if (!includePlanned && item.status !== 'implemented') return false;
+          if (item.requiredRole && role && item.requiredRole !== role) return false;
+          if (item.requiredRole && !role) return false;
           if (item.requiredPermission && permissions && permissions.length > 0) {
             if (!permissions.includes(item.requiredPermission)) return false;
           }

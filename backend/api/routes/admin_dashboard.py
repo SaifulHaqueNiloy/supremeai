@@ -419,7 +419,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
     return "empty-env"
 
 
-# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা���্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
+# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা����্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
 @with_error_bus("_acquire_env_lock")
 def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     import core.services as app_mod
@@ -1525,7 +1525,13 @@ def decide_commandcenter_approval(
 
 @router.get("/rules")
 def get_commandcenter_rules():
-    """Bridge for CommandCenter RulesPolicy."""
+    """Canonical admin rules and feature switches for CommandCenter."""
+    try:
+        from core.effective_policy import get_effective_policy
+        policy = get_effective_policy()
+        return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    except Exception as e:
+        logger.debug(f"Canonical rules read failed: {e}")
     try:
         import core.services as services
 
@@ -1539,7 +1545,13 @@ def get_commandcenter_rules():
 
 @router.post("/rules")
 def update_commandcenter_rules(payload: dict):
-    """Bridge to update rules from CommandCenter."""
+    """Update canonical admin rules and feature switches."""
+    try:
+        from core.effective_policy import policy_store
+        policy_store.update_admin(payload.get("rules") or payload, payload.get("features"))
+        return {"status": "success", "message": "Rules updated"}
+    except Exception as e:
+        logger.debug(f"Canonical rules save failed: {e}")
     try:
         import core.services as services
 

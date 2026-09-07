@@ -22,6 +22,8 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     {"path": "api.routes.task", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.capabilities", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.social_growth", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.markdown", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.simulator", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.stream", "prefix": "", "is_admin": False, "is_critical": False},
@@ -267,7 +269,7 @@ ALL_ROUTERS = [
     # Policy-Driven Web Crawler Admin API
     {"path": "api.routes.crawler_admin", "prefix": "", "is_admin": True, "is_critical": False},
     # ── AUDIT-WIRE FIX (isolated-routes audit): এই ১২টি রাউটার মডিউল বিদ্যমান,
-    # import-যাচাইকৃত এবং সঠিক 'router' attribute সহ — কিন্তু রেজিস্ট্রিতে ছিল না
+    # import-যাচাইকৃত এবং সঠিক 'router' attribute সহ — কিন্তু রে���িস্ট্রিতে ছিল না
     # বলে তাদের ২৪+ এন্ডপয়েন্ট প্রোডাকশনে 404 দিত। এখন মাউন্ট করা হলো।
     # মাউন্ট-নিরাপত্তা নোট: chat.py-এর chat-router ফ্রন্টএন্ড ExportMenu/
     # ImageUploadButton/ChatSearchDialog এভendpoints কল করে।

@@ -4,16 +4,21 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from .contracts import (
+    AuditContext,
+    CapabilityRef,
     CapabilityRequest,
+    CircleName,
     CircleManifest,
     EventEnvelope,
     ExecutionResult,
     ExecutionStatus,
+    PolicyDecision,
+    VerificationResult,
 )
 from .event_journal import circle_event_journal
 
 CapabilityHandler = Callable[[CapabilityRequest], Awaitable[Any] | Any]
-PolicyEvaluator = Callable[[CapabilityRequest], Awaitable[bool] | bool]
+PolicyEvaluator = Callable[[CapabilityRequest], Awaitable[PolicyDecision] | PolicyDecision | Awaitable[bool] | bool]
 
 
 class CircleRegistry:
@@ -48,6 +53,20 @@ class CircleRegistry:
 
     def capabilities(self) -> tuple[str, ...]:
         return tuple(sorted(self._handlers))
+
+    def describe(self, capability: str) -> CapabilityRef | None:
+        """Return the canonical metadata for a registered capability."""
+        for manifest in self._manifests.values():
+            for reference in manifest.capabilities:
+                if reference.name == capability:
+                    return reference
+        if capability in self._handlers:
+            return CapabilityRef(
+                name=capability,
+                owner_circle=CircleName.GATEWAY,
+                tenant_activation_required=False,
+            )
+        return None
 
     def events(self) -> tuple[EventEnvelope, ...]:
         return tuple(self._events)
@@ -84,18 +103,21 @@ class CircleRegistry:
                 capability=request.capability.name,
             )
 
+        policy = PolicyDecision(allowed=True)
         if self._policy_evaluator is not None:
-            allowed = self._policy_evaluator(request)
-            if hasattr(allowed, "__await__"):
-                allowed = await allowed
-            if not allowed:
+            decision = self._policy_evaluator(request)
+            if hasattr(decision, "__await__"):
+                decision = await decision
+            policy = decision if isinstance(decision, PolicyDecision) else PolicyDecision(allowed=bool(decision))
+            if not policy.allowed:
                 return ExecutionResult(
                     execution_id=request.context.execution_id,
                     status=ExecutionStatus.REJECTED,
                     error_code="central_policy_denied",
-                    error_message="Central policy denied this capability",
+                    error_message=policy.reason or "Central policy denied this capability",
                     circle=request.capability.owner_circle,
                     capability=request.capability.name,
+                    audit=AuditContext(event_type="capability.rejected", policy_version=policy.policy_version),
                 )
 
         try:
@@ -108,6 +130,8 @@ class CircleRegistry:
                 data=value,
                 circle=request.capability.owner_circle,
                 capability=request.capability.name,
+                verification=VerificationResult(verified=True, method="handler_completed"),
+                audit=AuditContext(event_type="capability.succeeded", policy_version=policy.policy_version),
             )
         except Exception as exc:
             result = ExecutionResult(

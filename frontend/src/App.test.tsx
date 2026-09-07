@@ -218,13 +218,13 @@ describe('App component', () => {
     );
 
     // Customer dashboard greeting
-    expect(screen.getByText('What should SupremeAI accomplish?')).toBeInTheDocument();
+    expect(screen.getByText('What would you like to do?')).toBeInTheDocument();
     // Sidebar navigation (NAVIGATION_REGISTRY — implemented items only;
     // Projects is now implemented as a foundation workspace module route)
     expect(screen.getByText('Home')).toBeInTheDocument();
     expect(screen.getByText('AI Studio')).toBeInTheDocument();
-    expect(screen.getByText('Agents')).toBeInTheDocument();
-    expect(screen.getByText('Projects')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Agents' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Projects' })).toBeInTheDocument();
     // Dashboard sections
     expect(screen.getByText('Recent work')).toBeInTheDocument();
   });
@@ -239,7 +239,7 @@ describe('App component', () => {
     );
 
     expect(
-      screen.getByPlaceholderText('Research, automate, analyze, or build...')
+      screen.getByPlaceholderText('Ask a question, describe a task, or share an idea...')
     ).toBeInTheDocument();
   });
 
@@ -252,7 +252,7 @@ describe('App component', () => {
       </ToastProvider>
     );
 
-    expect(screen.getByText('Active agents')).toBeInTheDocument();
-    expect(screen.getByText('Workspace usage')).toBeInTheDocument();
+    expect(screen.getByText('Your tools')).toBeInTheDocument();
+    expect(screen.getByText('Need a starting point?')).toBeInTheDocument();
   });
 });
