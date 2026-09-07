@@ -26,7 +26,9 @@ from utils.json_helpers import json_error
 mcp = FastMCP("github_cicd_mcp")
 
 CHARACTER_LIMIT = 25000
-GITHUB_REPO = getattr(settings, "github_repository", "supremeai/supremeai_2.0")
+GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY") or getattr(
+    settings, "github_repository", "paykaribazaronline/supremeai"
+)
 GITHUB_API_URL = "https://api.github.com"
 
 
