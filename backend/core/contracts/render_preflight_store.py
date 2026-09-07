@@ -13,6 +13,8 @@ from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import logging
+
 from backend.core.contracts.redaction import redact as redact_secrets
 
 DEFAULT_DB_PATH = Path("data/render_preflight.db")
@@ -113,8 +115,8 @@ class RenderPreflightStore:
         if data.get("last_render_payload"):
             try:
                 data["last_render_payload"] = json.loads(data["last_render_payload"])
-            except Exception:
-                pass
+            except Exception as e:
+                logging.getLogger(__name__).debug(f"Failed to parse last_render_payload JSON: {e}")
         return data
 
     def get_all_accounts(self) -> list[dict[str, Any]]:
@@ -128,8 +130,8 @@ class RenderPreflightStore:
             if data.get("last_render_payload"):
                 try:
                     data["last_render_payload"] = json.loads(data["last_render_payload"])
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.getLogger(__name__).debug(f"Failed to parse last_render_payload JSON: {e}")
             accounts.append(data)
         return accounts
 
@@ -318,7 +320,7 @@ class RenderPreflightStore:
             if data.get("details"):
                 try:
                     data["details"] = json.loads(data["details"])
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.getLogger(__name__).debug(f"Failed to parse details JSON: {e}")
             events.append(data)
         return events
