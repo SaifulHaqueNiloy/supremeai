@@ -20,12 +20,24 @@ class ActionDefinition:
 
 
 IMMUTABLE_SAFETY_ACTIONS = {
-    "payment": ActionDefinition("payment", ActionMode.MANUAL, "Payments must be completed manually.", True),
-    "password_change": ActionDefinition("password_change", ActionMode.MANUAL, "Password changes must be completed manually.", True),
-    "security_change": ActionDefinition("security_change", ActionMode.MANUAL, "Security settings must be changed manually.", True),
-    "credential_access": ActionDefinition("credential_access", ActionMode.MANUAL, "Credentials are never collected or exposed.", True),
-    "account_deletion": ActionDefinition("account_deletion", ActionMode.MANUAL, "Account deletion must be completed manually.", True),
-    "audit_bypass": ActionDefinition("audit_bypass", ActionMode.MANUAL, "Audit records cannot be bypassed.", True),
+    "payment": ActionDefinition(
+        "payment", ActionMode.MANUAL, "Payments must be completed manually.", True
+    ),
+    "password_change": ActionDefinition(
+        "password_change", ActionMode.MANUAL, "Password changes must be completed manually.", True
+    ),
+    "security_change": ActionDefinition(
+        "security_change", ActionMode.MANUAL, "Security settings must be changed manually.", True
+    ),
+    "credential_access": ActionDefinition(
+        "credential_access", ActionMode.MANUAL, "Credentials are never collected or exposed.", True
+    ),
+    "account_deletion": ActionDefinition(
+        "account_deletion", ActionMode.MANUAL, "Account deletion must be completed manually.", True
+    ),
+    "audit_bypass": ActionDefinition(
+        "audit_bypass", ActionMode.MANUAL, "Audit records cannot be bypassed.", True
+    ),
 }
 
 DEFAULT_ACTIONS = {
@@ -44,10 +56,20 @@ def get_action_definition(name: str, configured_mode: str | None = None) -> Acti
     key = name.casefold().strip()
     if key in IMMUTABLE_SAFETY_ACTIONS:
         return IMMUTABLE_SAFETY_ACTIONS[key]
-    base = DEFAULT_ACTIONS.get(key, ActionDefinition(key, ActionMode.APPROVAL, "This action needs your approval."))
+    base = DEFAULT_ACTIONS.get(
+        key, ActionDefinition(key, ActionMode.APPROVAL, "This action needs your approval.")
+    )
     if configured_mode and configured_mode in {mode.value for mode in ActionMode}:
-        return ActionDefinition(base.name, ActionMode(configured_mode), base.description, base.immutable)
+        return ActionDefinition(
+            base.name, ActionMode(configured_mode), base.description, base.immutable
+        )
     return base
 
 
-__all__ = ["ActionDefinition", "ActionMode", "DEFAULT_ACTIONS", "IMMUTABLE_SAFETY_ACTIONS", "get_action_definition"]
+__all__ = [
+    "ActionDefinition",
+    "ActionMode",
+    "DEFAULT_ACTIONS",
+    "IMMUTABLE_SAFETY_ACTIONS",
+    "get_action_definition",
+]

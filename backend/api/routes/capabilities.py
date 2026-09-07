@@ -45,7 +45,9 @@ async def execute(
         payload=request.payload,
     )
     if result.status.value == "unavailable":
-        raise HTTPException(status_code=404, detail=result.error_message or "Capability unavailable")
+        raise HTTPException(
+            status_code=404, detail=result.error_message or "Capability unavailable"
+        )
     if result.status.value == "rejected":
         raise HTTPException(status_code=403, detail=result.error_message or "Capability rejected")
     return result.model_dump(mode="json")

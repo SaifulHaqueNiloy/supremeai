@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from threading import RLock
 from typing import Any
 
@@ -25,7 +25,7 @@ class ConfigurablePolicyStore:
     def __init__(self) -> None:
         self._lock = RLock()
         self._version = 1
-        self._updated_at = datetime.now(timezone.utc).isoformat()
+        self._updated_at = datetime.now(UTC).isoformat()
         self._admin_rules: dict[str, Any] = {
             "task_mode": "approval_first",
             "allow_read_only": True,
@@ -39,7 +39,9 @@ class ConfigurablePolicyStore:
             "social_tasks": True,
             "dashboard_mutations": True,
         }
-        self._actions: dict[str, str] = {name: definition.mode.value for name, definition in DEFAULT_ACTIONS.items()}
+        self._actions: dict[str, str] = {
+            name: definition.mode.value for name, definition in DEFAULT_ACTIONS.items()
+        }
         self._limits: dict[str, int] = {
             "max_sessions": 3,
             "idle_timeout_seconds": 900,
@@ -51,7 +53,7 @@ class ConfigurablePolicyStore:
 
     def _touch(self) -> None:
         self._version += 1
-        self._updated_at = datetime.now(timezone.utc).isoformat()
+        self._updated_at = datetime.now(UTC).isoformat()
 
     def snapshot(self, user_id: str | None = None) -> EffectivePolicy:
         with self._lock:
@@ -71,9 +73,17 @@ class ConfigurablePolicyStore:
             for name, definition in IMMUTABLE_SAFETY_ACTIONS.items():
                 actions[name] = definition.mode.value
                 sources[f"action:{name}"] = "platform"
-            return EffectivePolicy(rules, features, actions, limits, sources, self._version, self._updated_at)
+            return EffectivePolicy(
+                rules, features, actions, limits, sources, self._version, self._updated_at
+            )
 
-    def update_admin(self, rules: dict[str, Any] | None = None, features: dict[str, bool] | None = None, actions: dict[str, str] | None = None, limits: dict[str, int] | None = None) -> EffectivePolicy:
+    def update_admin(
+        self,
+        rules: dict[str, Any] | None = None,
+        features: dict[str, bool] | None = None,
+        actions: dict[str, str] | None = None,
+        limits: dict[str, int] | None = None,
+    ) -> EffectivePolicy:
         with self._lock:
             if rules:
                 self._admin_rules.update(rules)
@@ -86,13 +96,19 @@ class ConfigurablePolicyStore:
             if limits:
                 for key, value in limits.items():
                     if key in self._limits and int(value) > 0:
-                        self._limits[key] = min(int(value), self._limits[key] if key == "max_retries" else 3600)
+                        self._limits[key] = min(
+                            int(value), self._limits[key] if key == "max_retries" else 3600
+                        )
             self._touch()
             return self.snapshot()
 
     def update_user(self, user_id: str, rules: dict[str, Any]) -> EffectivePolicy:
         with self._lock:
-            self._user_rules[user_id] = {key: value for key, value in rules.items() if key in {"task_mode", "allow_submissions", "allow_uploads", "allow_read_only"}}
+            self._user_rules[user_id] = {
+                key: value
+                for key, value in rules.items()
+                if key in {"task_mode", "allow_submissions", "allow_uploads", "allow_read_only"}
+            }
             self._touch()
             return self.snapshot(user_id)
 

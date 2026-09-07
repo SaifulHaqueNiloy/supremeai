@@ -25,13 +25,19 @@ def _policy(request: CapabilityRequest) -> PolicyDecision:
     """Small central policy boundary for the first migrated capability."""
     if not request.context.actor_id.strip() or not request.context.tenant_id.strip():
         return PolicyDecision(allowed=False, reason="actor_context_invalid")
-    if request.capability.name == HEALTH_CAPABILITY and request.capability.risk_level is not RiskLevel.LOW:
+    if (
+        request.capability.name == HEALTH_CAPABILITY
+        and request.capability.risk_level is not RiskLevel.LOW
+    ):
         return PolicyDecision(allowed=False, reason="health_read_must_be_low_risk")
     return PolicyDecision(allowed=True)
 
 
 async def _chat_orchestrate(request: CapabilityRequest) -> Mapping[str, Any]:
-    from core.orchestration.conversation_orchestrator import ConversationCommand, get_conversation_orchestrator
+    from core.orchestration.conversation_orchestrator import (
+        ConversationCommand,
+        get_conversation_orchestrator,
+    )
 
     result = await get_conversation_orchestrator().dispatch(
         ConversationCommand(
@@ -64,7 +70,8 @@ async def _health_read(request: CapabilityRequest) -> Mapping[str, Any]:
         "capability": request.capability.name,
         "tenant_id": request.context.tenant_id,
         "services": {"database": database, "cache": cache},
-        "verified": database in {"healthy", "unhealthy"} and cache in {"healthy", "unhealthy", "not_configured"},
+        "verified": database in {"healthy", "unhealthy"}
+        and cache in {"healthy", "unhealthy", "not_configured"},
     }
 
 
@@ -88,13 +95,19 @@ async def execute_capability(
     register_core_capabilities()
     metadata = circle_registry.describe(capability)
     if metadata is None:
-        return await circle_registry.dispatch(CapabilityRequest(
-            capability=CapabilityRef(name=capability, owner_circle=CircleName.GATEWAY, risk_level=RiskLevel.LOW),
-            context=ExecutionContext(actor_id=actor_id, tenant_id=tenant_id),
-            source=source,
-            payload=payload or {},
-        ))
-    if metadata.tenant_activation_required and not capability_activation_store.is_enabled(tenant_id, capability):
+        return await circle_registry.dispatch(
+            CapabilityRequest(
+                capability=CapabilityRef(
+                    name=capability, owner_circle=CircleName.GATEWAY, risk_level=RiskLevel.LOW
+                ),
+                context=ExecutionContext(actor_id=actor_id, tenant_id=tenant_id),
+                source=source,
+                payload=payload or {},
+            )
+        )
+    if metadata.tenant_activation_required and not capability_activation_store.is_enabled(
+        tenant_id, capability
+    ):
         return ExecutionResult(
             execution_id=f"exec_{uuid4().hex}",
             status=ExecutionStatus.REJECTED,

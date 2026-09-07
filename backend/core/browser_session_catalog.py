@@ -29,7 +29,11 @@ class BrowserSessionCatalog:
         return item
 
     def list(self, tenant_id: str, owner_id: str) -> list[SavedBrowserSession]:
-        return [item for item in self._items.values() if item.tenant_id == tenant_id and item.owner_id == owner_id and not item.revoked]
+        return [
+            item
+            for item in self._items.values()
+            if item.tenant_id == tenant_id and item.owner_id == owner_id and not item.revoked
+        ]
 
     def revoke(self, item_id: str, tenant_id: str, owner_id: str) -> bool:
         item = self._items.get(item_id)

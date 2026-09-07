@@ -1528,6 +1528,7 @@ def get_commandcenter_rules():
     """Canonical admin rules and feature switches for CommandCenter."""
     try:
         from core.effective_policy import get_effective_policy
+
         policy = get_effective_policy()
         return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
     except Exception as e:
@@ -1548,6 +1549,7 @@ def update_commandcenter_rules(payload: dict):
     """Update canonical admin rules and feature switches."""
     try:
         from core.effective_policy import policy_store
+
         policy_store.update_admin(payload.get("rules") or payload, payload.get("features"))
         return {"status": "success", "message": "Rules updated"}
     except Exception as e:
