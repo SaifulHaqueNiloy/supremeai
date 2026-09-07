@@ -25,9 +25,9 @@ describe('UserDashboard', () => {
   it('renders the calm intent-first workspace', () => {
     render(<MemoryRouter><UserDashboard /></MemoryRouter>);
     expect(screen.getByText('Good morning, TestUser.')).toBeInTheDocument();
-    expect(screen.getByText('What should SupremeAI accomplish?')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Research, automate, analyze, or build...')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /New conversation/i })).toBeInTheDocument();
+    expect(screen.getByText('What would you like to do?')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Ask a question, describe a task, or share an idea...')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Personalize/i })).toBeInTheDocument();
   });
 
   it('uses a neutral greeting when no user name is available', () => {
@@ -38,14 +38,14 @@ describe('UserDashboard', () => {
 
   it('opens Studio from the intent input', () => {
     render(<MemoryRouter><UserDashboard /></MemoryRouter>);
-    const input = screen.getByPlaceholderText('Research, automate, analyze, or build...');
+    const input = screen.getByPlaceholderText('Ask a question, describe a task, or share an idea...');
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(mockedUseNavigate).toHaveBeenCalledWith('/workspace/live');
   });
 
   it('does not open Studio for composing or unrelated keys', () => {
     render(<MemoryRouter><UserDashboard /></MemoryRouter>);
-    const input = screen.getByPlaceholderText('Research, automate, analyze, or build...');
+    const input = screen.getByPlaceholderText('Ask a question, describe a task, or share an idea...');
     fireEvent.keyDown(input, { key: 'Escape' });
     expect(mockedUseNavigate).not.toHaveBeenCalled();
   });
@@ -53,9 +53,9 @@ describe('UserDashboard', () => {
   it('renders the main workspace sections and actions', () => {
     render(<MemoryRouter><UserDashboard /></MemoryRouter>);
     expect(screen.getByText('Recent work')).toBeInTheDocument();
-    expect(screen.getByText('Active agents')).toBeInTheDocument();
-    expect(screen.getByText('Workspace usage')).toBeInTheDocument();
-    expect(screen.getByText('No recent work yet.')).toBeInTheDocument();
-    expect(screen.getByText('Review usage')).toBeInTheDocument();
+    expect(screen.getByText('Your tools')).toBeInTheDocument();
+    expect(screen.getByText('Only what you need')).toBeInTheDocument();
+    expect(screen.getByText('Nothing here yet')).toBeInTheDocument();
+    expect(screen.getByText('Need a starting point?')).toBeInTheDocument();
   });
 });
