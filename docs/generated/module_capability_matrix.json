@@ -12861,6 +12861,7 @@
         "browser",
         "execute",
         "health",
+        "mcp",
         "memory",
         "register"
       ],
