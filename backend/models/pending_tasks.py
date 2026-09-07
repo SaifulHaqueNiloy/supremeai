@@ -351,14 +351,23 @@ def mark_execution_started(task_id: str) -> PendingTask | None:
     return row_to_task(row) if row else None
 
 
-def mark_execution_result(task_id: str, *, success: bool, error: str | None = None) -> PendingTask | None:
+def mark_execution_result(
+    task_id: str, *, success: bool, error: str | None = None
+) -> PendingTask | None:
     """Persist the terminal execution result; repeated terminal writes are rejected."""
     conn = _get_conn()
     cursor = conn.cursor()
     now = datetime.now(UTC).isoformat()
     cursor.execute(
         "UPDATE pending_tasks SET status = ?, execution_status = ?, execution_finished_at = ?, execution_error = ? WHERE task_id = ? AND status = ? AND execution_status = 'running'",
-        (TaskStatus.EXECUTED if success else TaskStatus.APPROVED, "succeeded" if success else "failed", now, error, task_id, TaskStatus.APPROVED),
+        (
+            TaskStatus.EXECUTED if success else TaskStatus.APPROVED,
+            "succeeded" if success else "failed",
+            now,
+            error,
+            task_id,
+            TaskStatus.APPROVED,
+        ),
     )
     if cursor.rowcount == 0:
         conn.close()
@@ -421,9 +430,13 @@ def row_to_task(row: sqlite3.Row) -> PendingTask:
         expires_at=row["expires_at"] if "expires_at" in row else None,
         payload_hash=row["payload_hash"] if "payload_hash" in row else None,
         execution_id=row["execution_id"] if "execution_id" in row else None,
-        execution_status=row["execution_status"] if "execution_status" in row and row["execution_status"] else "pending",
+        execution_status=row["execution_status"]
+        if "execution_status" in row and row["execution_status"]
+        else "pending",
         execution_started_at=row["execution_started_at"] if "execution_started_at" in row else None,
-        execution_finished_at=row["execution_finished_at"] if "execution_finished_at" in row else None,
+        execution_finished_at=row["execution_finished_at"]
+        if "execution_finished_at" in row
+        else None,
         execution_error=row["execution_error"] if "execution_error" in row else None,
         idempotency_key=row["idempotency_key"] if "idempotency_key" in row else None,
     )
