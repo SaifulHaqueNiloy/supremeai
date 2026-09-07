@@ -64,7 +64,7 @@ export interface ExternalClient {
   protocol: ExternalClientProtocol
   role: ExternalClientRole
   scopes: string[]
-  status: 'active' | 'revoked' | 'expired'
+  status: 'pending' | 'active' | 'revoked' | 'expired'
   createdAt: string
   updatedAt: string
   expiresAt?: string
@@ -122,6 +122,8 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   mcpSweep: () => postJson<Record<string, unknown>>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/sweep`, {}),
   listExternalClients: () => getJson<{ clients: ExternalClient[] }>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`),
   createExternalClient: (payload: { name: string; provider?: string; protocol?: ExternalClientProtocol; role: ExternalClientRole }) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`, payload),
+  approveExternalClient: (id: string) => postJson<ExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/approve`, {}),
+  changeExternalClientRole: (id: string, role: ExternalClientRole) => fetchWithRetry(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) }).then((response) => { if (!response.ok) throw new Error(`Could not change role: ${response.status}`); return response.json() as Promise<ExternalClient> }),
   revokeExternalClient: (id: string) => fetchWithRetry(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((response) => { if (!response.ok) throw new Error(`Could not revoke connection: ${response.status}`); return response.json() as Promise<{ revoked: boolean }> }),
   rotateExternalClient: (id: string) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/rotate`, {}),
   submitTask: (payload: TaskSubmission) => postJson<TaskHandle>(workerUrl('/tasks'), payload),
