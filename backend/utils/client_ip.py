@@ -43,8 +43,13 @@ def _trusted_proxy_count() -> int:
             f"Unable to read trusted_proxy_count from settings: {exc}"
         )
 
-    if os.getenv("RENDER"):
-        return 1
+    try:
+        from core.config import settings
+
+        if settings.is_cloud:
+            return 1
+    except Exception as exc:  # noqa: BLE001 — preserve safe local fallback during bootstrap
+        logger.debug("Unable to determine platform from canonical settings: %s", exc)
 
     # 3) Direct local exposure — trust no header
     return 0
