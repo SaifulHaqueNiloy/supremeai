@@ -102,6 +102,31 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   return response.json() as Promise<T>
 }
 
+async function deleteJson<T>(path: string): Promise<T> {
+  const correlationId = globalThis.crypto?.randomUUID?.() ?? `cp-${Date.now()}`
+  const authHeaders = await getAuthHeaders().catch(() => ({}))
+  const response = await fetchWithRetry(path.startsWith('http') ? path : `${getApiBaseUrl(path)}${path}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json', 'X-Correlation-ID': correlationId, ...authHeaders },
+    signal: AbortSignal.timeout(10000),
+  })
+  if (!response.ok) throw new Error(`Could not revoke connection: ${response.status}`)
+  return response.json() as Promise<T>
+}
+
+async function patchJson<T>(path: string, body: unknown): Promise<T> {
+  const correlationId = globalThis.crypto?.randomUUID?.() ?? `cp-${Date.now()}`
+  const authHeaders = await getAuthHeaders().catch(() => ({}))
+  const response = await fetchWithRetry(path.startsWith('http') ? path : `${getApiBaseUrl(path)}${path}`, {
+    method: 'PATCH',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-Correlation-ID': correlationId, ...authHeaders },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(10000),
+  })
+  if (!response.ok) throw new Error(`Could not change role: ${response.status}`)
+  return response.json() as Promise<T>
+}
+
   export interface TaskSubmission {
   goal: string
   metadata?: Record<string, unknown>
@@ -123,8 +148,8 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   listExternalClients: () => getJson<{ clients: ExternalClient[] }>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`),
   createExternalClient: (payload: { name: string; provider?: string; protocol?: ExternalClientProtocol; role: ExternalClientRole }) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`, payload),
   approveExternalClient: (id: string) => postJson<ExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/approve`, {}),
-  changeExternalClientRole: (id: string, role: ExternalClientRole) => fetchWithRetry(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) }).then((response) => { if (!response.ok) throw new Error(`Could not change role: ${response.status}`); return response.json() as Promise<ExternalClient> }),
-  revokeExternalClient: (id: string) => fetchWithRetry(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((response) => { if (!response.ok) throw new Error(`Could not revoke connection: ${response.status}`); return response.json() as Promise<{ revoked: boolean }> }),
+  changeExternalClientRole: (id: string, role: ExternalClientRole) => patchJson<ExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { role }),
+  revokeExternalClient: (id: string) => deleteJson<{ revoked: boolean }>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`),
   rotateExternalClient: (id: string) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/rotate`, {}),
   submitTask: (payload: TaskSubmission) => postJson<TaskHandle>(workerUrl('/tasks'), payload),
   taskStatus: (taskId: string) => getJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}`)),
