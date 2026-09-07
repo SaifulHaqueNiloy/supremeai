@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
-import { componentEventBus } from '../../../lib/componentEventBus';
-import { eventBus, Events } from '../../../lib/componentEventBus';
-import { useUnifiedStore } from '../../../store/unifiedStore';
+import { componentEventBus } from '../../lib/componentEventBus';
+import { eventBus, Events } from '../../lib/componentEventBus';
+import { useUnifiedStore } from '../../store/unifiedStore';
 import {
   Globe, ArrowLeft, ArrowRight, RotateCw, Plus, X, Star, Camera,
   Monitor, Smartphone, Tablet, ZoomIn, ZoomOut,
