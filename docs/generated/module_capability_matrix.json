@@ -14869,6 +14869,7 @@
     },
     {
       "capability_signals": [
+        "health",
         "mcp"
       ],
       "classification": "human_review",
