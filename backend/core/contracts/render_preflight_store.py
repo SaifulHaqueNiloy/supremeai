@@ -7,13 +7,12 @@ and integrates with Supabase / PostgreSQL when available.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import uuid
 from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
-
-import logging
 
 from backend.core.contracts.redaction import redact as redact_secrets
 
@@ -131,7 +130,9 @@ class RenderPreflightStore:
                 try:
                     data["last_render_payload"] = json.loads(data["last_render_payload"])
                 except Exception as e:
-                    logging.getLogger(__name__).debug(f"Failed to parse last_render_payload JSON: {e}")
+                    logging.getLogger(__name__).debug(
+                        f"Failed to parse last_render_payload JSON: {e}"
+                    )
             accounts.append(data)
         return accounts
 
