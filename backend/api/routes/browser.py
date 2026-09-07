@@ -29,9 +29,10 @@ router = APIRouter(
 
 
 class AutomationSessionRequest(BaseModel):
-    """Create an isolated browser context for the authenticated caller."""
+    """Create an isolated session; credentials are entered by the user in-browser."""
 
-    pass
+    label: str = Field(default="Browser session", min_length=1, max_length=120)
+    saved_url: str | None = Field(default=None, max_length=2048)
 
 
 class BrowserActionRequest(BaseModel):
@@ -58,7 +59,11 @@ async def create_automation_session(
     req: AutomationSessionRequest,
     user_token: str = Depends(get_current_user_token),
 ):
-    session = await session_manager.create(user_token)
+    from core.security import is_safe_url
+
+    if req.saved_url and not is_safe_url(req.saved_url):
+        raise HTTPException(status_code=400, detail="Unsafe or invalid saved URL")
+    session = await session_manager.create(user_token, label=req.label, saved_url=req.saved_url)
     return BrowserSessionResponse(session_id=session.id, status="ready", url=session.page.url)
 
 
@@ -85,6 +90,8 @@ async def execute_automation_action(
     session = await session_manager.get(req.session_id, user_token)
     page = session.page
     action = req.action.lower()
+    if action not in session.allowed_actions:
+        raise HTTPException(status_code=403, detail="Action is not allowed for this session")
     if action == "navigate":
         if not req.url or not is_safe_url(req.url):
             raise HTTPException(status_code=400, detail="Unsafe or invalid URL")
@@ -907,7 +914,7 @@ class ScrapeRequest(BaseModel):
 
 
 # বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
-# এখন ব্রাউজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
+# এখন ব্র���উজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
 # decoupled)। AGENTS.md §2: "Never treat tasks in isolation" — এই পরিবর্তনের পাশাপাশি
 # Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
 

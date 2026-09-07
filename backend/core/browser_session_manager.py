@@ -24,6 +24,9 @@ class BrowserSession:
     page: Any
     created_at: float
     last_used_at: float
+    label: str = "Browser session"
+    saved_url: str | None = None
+    allowed_actions: tuple[str, ...] = ("navigate", "screenshot", "content", "extract")
 
 
 class BrowserSessionManager:
@@ -34,7 +37,7 @@ class BrowserSessionManager:
         self._lock = asyncio.Lock()
         self._slots = asyncio.Semaphore(max_sessions)
 
-    async def create(self, owner_id: str) -> BrowserSession:
+    async def create(self, owner_id: str, label: str = "Browser session", saved_url: str | None = None) -> BrowserSession:
         if not owner_id:
             raise ValueError("owner_id is required")
         await self._cleanup_expired()
@@ -50,6 +53,8 @@ class BrowserSessionManager:
                 page=page,
                 created_at=time.time(),
                 last_used_at=time.time(),
+                label=label[:120] or "Browser session",
+                saved_url=saved_url,
             )
             async with self._lock:
                 self._sessions[session.id] = session
@@ -112,6 +117,9 @@ class BrowserSessionManager:
                 "id": session.id,
                 "owner_id": session.owner_id,
                 "url": session.page.url,
+                "label": session.label,
+                "saved_url": session.saved_url,
+                "allowed_actions": list(session.allowed_actions),
                 "created_at": session.created_at,
                 "last_used_at": session.last_used_at,
             }
