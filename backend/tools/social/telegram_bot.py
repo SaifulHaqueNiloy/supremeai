@@ -85,7 +85,7 @@ class TelegramBotHandler:
             "🔐 /admin — Admin operations & vault controls\n\n"
             "<i>Or just ask any question to chat with SupremeAI!</i>"
         ),
-        "/admin": "🔐 <b>Admin Operations:</b>\n/backup_now — Run immediate encrypted backup\n/sys_status — Cluster telemetry\n/rules — AI Directives\n/telemetry — Swarm metrics",
+        "/admin": "🔐 <b>Admin Operations:</b>\n/backup_now — Run immediate encrypted backup\n/sys_status — Cluster telemetry\n/rules — AI Directives\n/telemetry — Swarm metrics\n/mcp_clients — Approve MCP clients and change roles",
         "/rules": "📜 <b>Constitutional Rules:</b> 5 directions (North, South, East, West, Center) enforce Zero Infrastructure Cost & Brand Exclusivity.",
     }
 
@@ -378,6 +378,9 @@ class TelegramBotHandler:
                     {"text": "📜 AI Directives", "callback_data": "admin_rules"},
                 ],
                 [
+                    {"text": "🔌 MCP Clients", "callback_data": "admin_mcp_clients"},
+                ],
+                [
                     {
                         "text": "📚 API Documentation",
                         "url": settings.backend_url + "/docs",
@@ -520,8 +523,14 @@ class TelegramBotHandler:
                             await self._handle_admin_devops(chat_id)
                         elif data == "admin_security":
                             await self._handle_admin_security(chat_id)
+                        elif data == "admin_mcp_clients":
+                            await self._handle_mcp_clients(chat_id)
                         elif data in ("admin_rules", "cmd_rules"):
                             await self._handle_admin_rules(chat_id)
+                        elif data.startswith("mcp_approve_"):
+                            await self._handle_mcp_action(chat_id, data, "approve")
+                        elif data.startswith("mcp_role_"):
+                            await self._handle_mcp_action(chat_id, data, "role")
                         elif data == "admin_main_menu":
                             await self.send_message(
                                 chat_id,
@@ -647,9 +656,16 @@ class TelegramBotHandler:
                 )
                 return
 
-            if command == "/telemetry":
-                await self._handle_telemetry(chat_id)
-                return
+        if command == "/mcp_clients":
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_mcp_clients(chat_id)
+            return
+
+        if command == "/telemetry":
+            await self._handle_telemetry(chat_id)
+            return
 
             if command == "/quick":
                 await self._handle_quick_actions(chat_id)
@@ -694,6 +710,60 @@ class TelegramBotHandler:
         await self.send_typing(chat_id)
         ai_response = await self._ai_response(text, user_id)
         await self.send_message(chat_id, ai_response)
+
+    async def _handle_mcp_clients(self, chat_id: int | str) -> None:
+        """Show pending MCP clients and provide approve/role controls to the admin."""
+        if not self.is_admin(chat_id):
+            await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            return
+        base_url = os.environ.get("MCP_CONTROL_PLANE_URL", "").rstrip("/")
+        admin_key = os.environ.get("MCP_ADMIN_KEY") or os.environ.get("MCP_API_KEY")
+        if not base_url or not admin_key:
+            await self.send_message(chat_id, "⚠️ MCP control plane URL বা admin key configure করা হয়নি।")
+            return
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{base_url}/clients", headers={"Authorization": f"Bearer {admin_key}"})
+                response.raise_for_status()
+                clients = response.json().get("clients", [])
+            pending = [item for item in clients if item.get("status") == "pending"]
+            if not pending:
+                await self.send_message(chat_id, "🔌 <b>MCP Clients</b>\n\nকোনো pending client নেই।")
+                return
+            for item in pending:
+                client_id = item.get("id", "")
+                keyboard = {"inline_keyboard": [[
+                    {"text": "✅ Approve", "callback_data": f"mcp_approve_{client_id}"},
+                    {"text": "Set Agent", "callback_data": f"mcp_role_{client_id}_agent"},
+                    {"text": "Set Admin", "callback_data": f"mcp_role_{client_id}_admin"},
+                ]]}
+                await self.send_message(chat_id, f"🔌 <b>{item.get('name', 'Unnamed')}</b>\nProvider: <code>{item.get('provider', 'generic')}</code>\nCurrent role: <code>{item.get('role', 'viewer')}</code>\nStatus: <code>pending</code>", reply_markup=keyboard)
+        except Exception as exc:
+            logger.error(f"MCP client listing failed: {exc}")
+            await self.send_message(chat_id, "⚠️ MCP client list পাওয়া যায়নি।")
+
+    async def _handle_mcp_action(self, chat_id: int | str, data: str, action: str) -> None:
+        if not self.is_admin(chat_id):
+            await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            return
+        base_url = os.environ.get("MCP_CONTROL_PLANE_URL", "").rstrip("/")
+        admin_key = os.environ.get("MCP_ADMIN_KEY") or os.environ.get("MCP_API_KEY")
+        parts = data.split("_")
+        client_id = "_".join(parts[2:-1]) if action == "role" else "_".join(parts[2:])
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                if action == "approve":
+                    response = await client.post(f"{base_url}/clients/{client_id}/approve", headers={"Authorization": f"Bearer {admin_key}"})
+                    message = "✅ MCP client approved."
+                else:
+                    role = parts[-1]
+                    response = await client.patch(f"{base_url}/clients/{client_id}", headers={"Authorization": f"Bearer {admin_key}"}, json={"role": role})
+                    message = f"✅ MCP client role changed to <code>{role}</code>."
+                response.raise_for_status()
+            await self.send_message(chat_id, message)
+        except Exception as exc:
+            logger.error(f"MCP client action failed: {exc}")
+            await self.send_message(chat_id, "⚠️ MCP client action failed.")
 
     async def _handle_telemetry(self, chat_id: int | str) -> None:
         """Render Live Swarm Telemetry & KPIs."""
