@@ -22,7 +22,7 @@ from core.config import settings
 
 The first low-risk review batch found that most backend modules already import `core.config.settings`. Remaining direct environment reads are intentionally mixed: some are bootstrap-only (`worker_service.py`), some are external SDK compatibility values, and some duplicate fields that should be migrated later. No settings module is currently safe to delete.
 
-The next migration candidates are non-bootstrap modules with an existing equivalent field in `Settings`; bootstrap paths, security fallbacks, and provider-specific multi-key parsing must remain unchanged until dedicated tests cover them.
+The next migration candidates are non-bootstrap modules with an existing equivalent field in `Settings`; bootstrap paths, security fallbacks, and provider-specific multi-key parsing must remain unchanged until dedicated tests cover them. The first authorization batch now routes `ADMIN_AUTHORIZED` and `AUTOFIX_AUTHORIZED` through validated `settings` fields while retaining `utils.environment` as the stable compatibility API.
 
 ## How Configuration Loads
 
