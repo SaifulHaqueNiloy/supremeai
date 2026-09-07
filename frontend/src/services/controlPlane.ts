@@ -54,6 +54,28 @@ export interface McpHealthSummary {
   timestamp: string
 }
 
+export type ExternalClientRole = 'viewer' | 'agent' | 'admin'
+export type ExternalClientProtocol = 'streamable-http' | 'sse' | 'stdio' | 'custom'
+
+export interface ExternalClient {
+  id: string
+  name: string
+  provider: string
+  protocol: ExternalClientProtocol
+  role: ExternalClientRole
+  scopes: string[]
+  status: 'active' | 'revoked' | 'expired'
+  createdAt: string
+  updatedAt: string
+  expiresAt?: string
+  lastSeenAt?: string
+}
+
+export interface CreatedExternalClient {
+  client: ExternalClient
+  token: string
+}
+
 import { getAuthHeaders } from './apiClient'
 
 async function getJson<T>(path: string): Promise<T> {
@@ -98,6 +120,10 @@ async function postJson<T>(path: string, body: unknown): Promise<T> {
   mcpSummary: () => getJson<McpHealthSummary>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/summary`),
   mcpDashboard: () => getJson<McpHealthDashboard>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/dashboard`),
   mcpSweep: () => postJson<Record<string, unknown>>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/sweep`, {}),
+  listExternalClients: () => getJson<{ clients: ExternalClient[] }>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`),
+  createExternalClient: (payload: { name: string; provider?: string; protocol?: ExternalClientProtocol; role: ExternalClientRole }) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients`, payload),
+  revokeExternalClient: (id: string) => fetchWithRetry(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { method: 'DELETE' }).then((response) => { if (!response.ok) throw new Error(`Could not revoke connection: ${response.status}`); return response.json() as Promise<{ revoked: boolean }> }),
+  rotateExternalClient: (id: string) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/rotate`, {}),
   submitTask: (payload: TaskSubmission) => postJson<TaskHandle>(workerUrl('/tasks'), payload),
   taskStatus: (taskId: string) => getJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}`)),
   cancelTask: (taskId: string) => postJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}/cancel`), {}),
