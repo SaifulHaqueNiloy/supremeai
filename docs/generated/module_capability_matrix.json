@@ -1,5 +1,5 @@
 {
-  "module_count": 2384,
+  "module_count": 2392,
   "modules": [
     {
       "capability_signals": [],
@@ -1040,6 +1040,15 @@
     },
     {
       "capability_signals": [
+        "execute"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/agent_breeding.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "register"
       ],
@@ -1682,9 +1691,7 @@
       "path": "backend/api/routes/memory.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -2188,13 +2195,10 @@
     {
       "capability_signals": [
         "capability",
-        "dispatch",
-        "register"
+        "dispatch"
       ],
       "classification": "canonical",
-      "entrypoints": [
-        "register"
-      ],
+      "entrypoints": [],
       "kind": "py",
       "path": "backend/brain/api_router.py"
     },
@@ -2543,6 +2547,18 @@
     },
     {
       "capability_signals": [
+        "browser",
+        "execute",
+        "memory",
+        "realtime"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "dormant_or_dynamic",
@@ -2551,12 +2567,7 @@
       "path": "backend/core/agents/framework/crewai_agents.py"
     },
     {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory",
-        "realtime"
-      ],
+      "capability_signals": [],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
       "kind": "py",
@@ -2666,6 +2677,13 @@
       ],
       "kind": "py",
       "path": "backend/core/app_builder.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/ast_security_scanner.py"
     },
     {
       "capability_signals": [],
@@ -3429,6 +3447,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/firebase_auth.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/gcp_firestore.py"
     },
     {
@@ -3549,6 +3574,19 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "dispatch",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "register"
+      ],
+      "kind": "py",
+      "path": "backend/core/in_process_dispatcher.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "health",
         "memory"
@@ -3626,6 +3664,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/intent_router_v2.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/ip_blocklist_manager.py"
     },
     {
       "capability_signals": [
@@ -12816,6 +12861,7 @@
         "browser",
         "execute",
         "health",
+        "mcp",
         "memory",
         "register"
       ],
@@ -15008,9 +15054,7 @@
       "path": "frontend/src/components/sujon/index.tsx"
     },
     {
-      "capability_signals": [
-        "dispatch"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -15251,6 +15295,16 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/widgets/SkillForgeWidget.tsx"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "realtime"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/widgets/TelemetryDashboardWidget.tsx"
     },
     {
       "capability_signals": [
@@ -15582,6 +15636,15 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/i18n/useI18n.ts"
+    },
+    {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/lib/agent-state-shaders.ts"
     },
     {
       "capability_signals": [
