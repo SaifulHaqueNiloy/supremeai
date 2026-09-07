@@ -10,6 +10,8 @@
 import os
 import sys
 
+from core.config import settings
+
 
 def is_test_environment() -> bool:
     """বর্তমান প্রসেসটি টেস্ট এনভায়রনমেন্টে চলছে কিনা তা যাচাই করে।
@@ -31,7 +33,7 @@ def is_admin_authorized() -> bool:
 
     ADMIN_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
-    return os.getenv("ADMIN_AUTHORIZED", "false").lower() == "true"
+    return settings.admin_authorized
 
 
 def is_autofix_authorized() -> bool:
@@ -39,4 +41,4 @@ def is_autofix_authorized() -> bool:
 
     AUTOFIX_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
-    return os.getenv("AUTOFIX_AUTHORIZED", "false").lower() == "true"
+    return settings.autofix_authorized

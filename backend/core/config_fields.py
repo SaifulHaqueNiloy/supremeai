@@ -138,6 +138,8 @@ class SettingsFieldsMixin:
         default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL"
     )
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
+    admin_authorized: bool = Field(default=False, validation_alias="ADMIN_AUTHORIZED")
+    autofix_authorized: bool = Field(default=False, validation_alias="AUTOFIX_AUTHORIZED")
 
     supremeai_public_paths: str | list[str] = Field(
         default=[
@@ -176,7 +178,7 @@ class SettingsFieldsMixin:
             # অথচ দুটো রুটই router/route-level dependencies=[Depends(get_current_user_token)]
             # দিয়ে auth বাধ্যতামূলক করে। AuthMiddleware public path হলে JWT decode করে
             # request.state.user সেট করে না — ফলে get_current_user_token সবসময় "Missing or
-            # invalid authentication token" ধরে 401 দিত, ভ্যালিড Bearer token পাঠানো সত্ত্বেও।
+            # invalid authentication token" ধরে 401 দিত, ভ্যালিড Bearer token পাঠানো সত্ত���বেও।
             # এটাই ছিল TOTP verify সফল হওয়ার পরপরই dashboard-এ SSE স্ট্রিম ও থিম sync
             # 401 দিয়ে fail হওয়ার আসল কারণ। এখন middleware এই দুটো পাথেও টোকেন decode করে
             # request.state.user সেট করবে, তাই ডাউনস্ট্রিম dependency ঠিকভাবে token পাবে।
