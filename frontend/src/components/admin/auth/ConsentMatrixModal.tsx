@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, CheckCircle2, XCircle, MessageSquare, Terminal } from 'lucide-react';
-import '../AethelCoreStyles.css';
+import '../admin-hud.css';
 
 interface ConsentRequest {
   id: string;

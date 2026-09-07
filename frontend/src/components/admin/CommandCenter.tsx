@@ -9,7 +9,7 @@ import {
   useEdgesState,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import './AethelCoreStyles.css';
+import './admin-hud.css';
 import {
   Cpu,
   Send,
@@ -30,8 +30,8 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import AethelNode from './AethelNode';
-import { CrownJewelBrowser } from './data/CrownJewelBrowser';
+import SciFiFlowNode from './SciFiFlowNode';
+import { AdminBrowserPanel as CrownJewelBrowser } from './AdminBrowserPanel';
 import { useAdminStore } from '../../store/adminStore';
 import { useTheme } from '../../contexts/useTheme';
 import { AudioRecorderService } from '../../services/audio/AudioRecorderService';

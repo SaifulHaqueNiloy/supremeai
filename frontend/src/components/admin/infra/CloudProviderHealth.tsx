@@ -124,3 +124,6 @@ export function CloudOrchestrator() {
   );
 }
 
+export const CloudProviderHealth = CloudOrchestrator;
+
+

@@ -112,7 +112,12 @@ ALL_ROUTERS = [
     {"path": "api.routes.living_engine", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.scraper", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.kaggle", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.dock_actions", "prefix": "/api", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.dock_integrations",
+        "prefix": "/api",
+        "is_admin": False,
+        "is_critical": False,
+    },
     # {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
     # R10 FIX: SSE stream for the /voice route
     {"path": "api.routes.stream_voice_sse", "prefix": "", "is_admin": False, "is_critical": False},

@@ -58,6 +58,6 @@ from api.routes.stream_chat_sse import legacy_router as chat_stream_legacy_route
 
 app.include_router(chat_stream_legacy_router)
 
-from api.routes.tier_s_routes import register_tier_s_routes
+from api.routes.workspace_feature_routes import register_workspace_feature_routes
 
-register_tier_s_routes(app)
+register_workspace_feature_routes(app)
