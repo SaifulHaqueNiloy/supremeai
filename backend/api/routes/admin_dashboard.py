@@ -419,7 +419,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
     return "empty-env"
 
 
-# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা��্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
+# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা���্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
 @with_error_bus("_acquire_env_lock")
 def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     import core.services as app_mod
@@ -1481,7 +1481,11 @@ def get_commandcenter_approvals():
                 "risk_level": task.risk_level,
                 "expires_at": task.expires_at,
                 "status": task.status.value if hasattr(task.status, "value") else str(task.status),
-                "execution_status": "pending",
+                "execution_id": task.execution_id,
+                "execution_status": task.execution_status,
+                "execution_started_at": task.execution_started_at,
+                "execution_finished_at": task.execution_finished_at,
+                "execution_error": task.execution_error,
             }
         )
     return {"items": items, "total": len(items)}

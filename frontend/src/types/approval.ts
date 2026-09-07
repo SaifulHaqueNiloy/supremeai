@@ -10,7 +10,10 @@ export interface ApprovalItem {
   status: ApprovalStatus;
   risk_level?: string;
   expires_at?: string;
+  execution_id?: string;
   execution_status?: string;
+  execution_started_at?: string;
+  execution_finished_at?: string;
   execution_error?: string;
 }
 
