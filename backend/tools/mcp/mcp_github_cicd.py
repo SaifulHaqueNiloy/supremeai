@@ -27,7 +27,7 @@ mcp = FastMCP("github_cicd_mcp")
 
 CHARACTER_LIMIT = 25000
 GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY") or getattr(
-    settings, "github_repository", "paykaribazaronline/supremeai"
+    settings, "github_repository", "SaifulHaqueNiloy/supremeai"
 )
 GITHUB_API_URL = "https://api.github.com"
 
