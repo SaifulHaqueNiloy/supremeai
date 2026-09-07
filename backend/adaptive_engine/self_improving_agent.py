@@ -25,7 +25,7 @@
     keys পড়ে behavior adjust করবে)।
   - অথবা tier8 version-এর সাথে একত্রিত করুন।
 
-Wired alternative (ব্যবহার করুন): core/tier8/self_improvement_agent.py::SelfImprovementAgent
+Wired alternative (ব্যবহার করুন): core/tier8/codebase_refactor_proposer.py::CodebaseRefactorProposer
 """
 
 """

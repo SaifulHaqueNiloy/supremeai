@@ -18,7 +18,7 @@ import ExportMenu from '../export/ExportMenu';
 import BranchButton from '../branch/BranchButton';
 import { SlashCommandMenu } from '../commands/SlashCommandMenu';
 import { ChatSearchDialog } from '../search/ChatSearchDialog';
-import { useTierSStore } from '../../store/tierSStore';
+import { useTierSStore } from '../../store/workspaceUiStateStore';
 
 export const ChatInterface: React.FC = () => {
   const { chatHistory, addMessage, isOrchestrating, triggerOrchestration } = useStore();

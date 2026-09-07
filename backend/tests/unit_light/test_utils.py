@@ -65,9 +65,7 @@ async def test_safe_create_task_and_error_logging(caplog):
 
     with caplog.at_level(logging.ERROR):
         task = safe_create_task(faulty_coro(), name="test_faulty")
-        try:
+        with pytest.raises(ValueError):
             await task
-        except ValueError:
-            pass
 
     assert any("simulated background error" in record.message for record in caplog.records)

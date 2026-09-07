@@ -26,7 +26,7 @@ targets = [
     "tools/security_tools/multi_account_rotator.py",
     "core/queue/task_queue_enhanced.py",
     "api/routes/browser.py",
-    "core/tier8/self_improvement_agent.py",
+    "core/tier8/codebase_refactor_proposer.py",
     "tools/learning/style_learner.py",
     "api/routes/meta_ai.py",
     "core/security/input_sanitizer.py",

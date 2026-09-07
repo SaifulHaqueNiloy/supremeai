@@ -20,7 +20,7 @@ const AgentWorkspace = React.lazy(() => import("./pages/user/AgentWorkspace").th
 const AIStudio = React.lazy(() => import("./pages/user/AIStudio").then(m => ({ default: m.AIStudio })));
 const IdeWorkspace = React.lazy(() => import("./pages/user/IdeWorkspace").then(m => ({ default: m.IdeWorkspace })));
 const IntegrationsManager = React.lazy(() => import("./pages/user/IntegrationsManager").then(m => ({ default: m.IntegrationsManager })));
-const ArchitectTower = React.lazy(() => import("./pages/user/ArchitectTower").then(m => ({ default: m.ArchitectTower })));
+const ArchitectTower = React.lazy(() => import("./pages/user/SystemHealthDashboard").then(m => ({ default: m.SystemHealthDashboard })));
 const SkillCatalog = React.lazy(() => import("./pages/user/SkillCatalog").then(m => ({ default: m.SkillCatalog })));
 const SwarmMap = React.lazy(() => import("./components/SwarmMap"));
 const EvolutionForge = React.lazy(() => import("./pages/user/EvolutionForge/EvolutionForge"));
@@ -28,7 +28,7 @@ const BillingPage = React.lazy(() => import("./pages/BillingPage"));
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 
-import { tierSUserRoutes } from './routes/tierSRoutes';
+import { tierSUserRoutes } from './routes/workspaceFeatureRoutes';
 
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
 import { useServerStream } from './hooks/useServerStream';

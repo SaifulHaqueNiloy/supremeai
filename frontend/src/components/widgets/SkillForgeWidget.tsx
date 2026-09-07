@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useStore } from "../../store/useStore";
 import { useBudgetCheck } from "../../hooks/useBudgetCheck";
 
-export const EvolutionForgeWidget: React.FC = () => {
+export const SkillForgeWidget: React.FC = () => {
   const { isForging, forgeFeedback, forgeSuccessCode, forgeNewSkill } = useStore();
   const { checkBudget, budgetError } = useBudgetCheck();
   const [skillName, setSkillName] = useState("");
@@ -97,3 +97,4 @@ export const EvolutionForgeWidget: React.FC = () => {
     </section>
   );
 };
+export const EvolutionForgeWidget = SkillForgeWidget;

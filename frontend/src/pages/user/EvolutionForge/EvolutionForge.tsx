@@ -441,6 +441,14 @@ const EvolutionForgeCanvas = () => {
   );
 };
 
+export function SwarmArchitect() {
+  return (
+    <ReactFlowProvider>
+      <EvolutionForgeCanvas />
+    </ReactFlowProvider>
+  );
+}
+
 export default function EvolutionForge() {
   return (
     <ReactFlowProvider>
@@ -448,3 +456,4 @@ export default function EvolutionForge() {
     </ReactFlowProvider>
   );
 }
+

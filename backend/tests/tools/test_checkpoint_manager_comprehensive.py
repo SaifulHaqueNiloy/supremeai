@@ -1,3 +1,4 @@
+import logging
 import os
 import tempfile
 from unittest.mock import MagicMock, patch
@@ -17,8 +18,10 @@ class TestCheckpointManagerComprehensive:
         if os.path.exists(temp_path):
             try:
                 os.remove(temp_path)
-            except OSError:
-                pass
+            except OSError as exc:
+                logging.getLogger(__name__).warning(
+                    "Could not remove temp SQLite file %s: %s", temp_path, exc
+                )
 
     def test_sqlite_save_and_load(self, temp_sqlite_file):
         mgr = CheckpointManager(db_path=temp_sqlite_file)

@@ -388,3 +388,8 @@ class SelfImprovementAgent(BaseSkill):
 def get_self_improvement_agent() -> SelfImprovementAgent:
     """Factory: return singleton instance."""
     return SelfImprovementAgent()
+
+
+# Aliases for clean naming matching NAVIGATION_MISMATCH_MAP
+CodebaseRefactorProposer = SelfImprovementAgent
+get_codebase_refactor_proposer = get_self_improvement_agent
