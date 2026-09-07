@@ -1665,11 +1665,10 @@ class ApprovalActionPayload(BaseModel):
 @router.get("/approvals")
 async def get_commandcenter_approvals():
     """Fetches real-time pending & historical approvals from MCP Control Tower."""
-    mcp_url = (
-        os.getenv("RENDER_MCP_URL")
-        or os.getenv("MCP_URL")
-        or "https://supremeai-mcp-tower.onrender.com"
-    )
+    mcp_url = os.getenv("RENDER_MCP_URL") or os.getenv("MCP_URL")
+    if not mcp_url:
+        logger.warning("RENDER_MCP_URL/MCP_URL not configured; skipping MCP approvals fetch.")
+        return []
     admin_key = os.getenv("MCP_ADMIN_KEY") or os.getenv("MCP_API_KEY")
     try:
         import httpx
@@ -1691,11 +1690,12 @@ async def get_commandcenter_approvals():
 @router.post("/approvals")
 async def resolve_commandcenter_approval(payload: ApprovalActionPayload):
     """Approves or rejects a Human-In-The-Loop request directly from the Admin Dashboard."""
-    mcp_url = (
-        os.getenv("RENDER_MCP_URL")
-        or os.getenv("MCP_URL")
-        or "https://supremeai-mcp-tower.onrender.com"
-    )
+    mcp_url = os.getenv("RENDER_MCP_URL") or os.getenv("MCP_URL")
+    if not mcp_url:
+        raise HTTPException(
+            status_code=503,
+            detail="MCP Control Tower is not configured (RENDER_MCP_URL/MCP_URL missing).",
+        )
     admin_key = os.getenv("MCP_ADMIN_KEY") or os.getenv("MCP_API_KEY")
     decision = "APPROVED" if payload.approve else "REJECTED"
     try:
