@@ -1165,3 +1165,6 @@ function formatIssuesFromData(issues: Record<string, unknown>[]): string {
     warnings.map((i: Record<string, unknown>) => `- ⚡ ${i.message}`).join('\n') || 'None'
   }\n\n**Suggestions:** Run security scan for detailed remediation steps.`;
 }
+
+export const AdminBrowserPanel = CrownJewelBrowser;
+

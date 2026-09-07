@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './AethelCoreStyles.css';
+import './admin-hud.css';
 
 interface AethelNodeProps {
   data: {
@@ -93,4 +93,6 @@ const AethelNode = ({ data, isConnectable }: AethelNodeProps) => {
   );
 };
 
-export default memo(AethelNode);
+export const SciFiFlowNode = memo(AethelNode);
+export { SciFiFlowNode as AethelNode };
+export default SciFiFlowNode;

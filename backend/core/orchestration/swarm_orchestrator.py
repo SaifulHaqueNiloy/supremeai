@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from core.agent_factory import DynamicAgentFactory
 from core.mcp_client import MCPRegistryClient
-from core.orchestration.crew_departments import (
+from core.orchestration.swarm_agent_roles import (
     ArchitectureAgent,
     CodeGeneratorAgent,
     GuardianAgent,

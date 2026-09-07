@@ -7,7 +7,7 @@ import { ConfigEditor } from './ConfigEditor';
 import { ModelRouter } from './ModelRouter';
 import { EnhancedSkillMarketplace } from './EnhancedSkillMarketplace';
 import { MemoryBrowser } from './MemoryBrowser';
-import { CloudOrchestrator } from './infra/CloudOrchestrator';
+import { CloudProviderHealth, CloudOrchestrator } from './infra/CloudProviderHealth';
 import { ObservabilityDashboard } from './infra/ObservabilityDashboard';
 import { ThreatDetection } from './security/ThreatDetection';
 import { VisualRulesBuilder } from './VisualRulesBuilder';
@@ -29,6 +29,7 @@ export {
   ModelRouter,
   EnhancedSkillMarketplace,
   MemoryBrowser,
+  CloudProviderHealth,
   CloudOrchestrator,
   ObservabilityDashboard,
   ThreatDetection,
