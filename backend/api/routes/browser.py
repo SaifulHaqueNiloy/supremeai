@@ -16,12 +16,15 @@ from pydantic import BaseModel, Field
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from core.browser_compat_store import browser_compat_store
+from core.browser_session_catalog import SavedBrowserSession, browser_session_catalog
 from core.browser_session_manager import session_manager
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
+from core.effective_policy import get_effective_policy, policy_store
 from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
+from core.task_policy import evaluate_goal
 
 router = APIRouter(
     prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
@@ -29,9 +32,16 @@ router = APIRouter(
 
 
 class AutomationSessionRequest(BaseModel):
-    """Create an isolated browser context for the authenticated caller."""
+    """Create an isolated session; credentials are entered by the user in-browser."""
 
-    pass
+    label: str = Field(default="Browser session", min_length=1, max_length=120)
+    saved_url: str | None = Field(default=None, max_length=2048)
+
+
+class SavedSessionRequest(BaseModel):
+    label: str = Field(min_length=1, max_length=120)
+    url: str = Field(min_length=1, max_length=2048)
+    session_id: str | None = Field(default=None, max_length=128)
 
 
 class BrowserActionRequest(BaseModel):
@@ -53,12 +63,50 @@ def get_audit() -> AuditLogger:
     return AuditLogger()
 
 
+@router.get("/automation/saved-sessions")
+async def list_saved_sessions(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    return {"sessions": [item.__dict__ for item in browser_session_catalog.list(tenant_id, owner_id)]}
+
+
+@router.post("/automation/saved-sessions")
+async def save_session(payload: SavedSessionRequest, user: dict = Depends(get_current_user_token)):
+    from core.security import is_safe_url
+
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    if not owner_id or not tenant_id or not is_safe_url(payload.url):
+        raise HTTPException(status_code=400, detail="Valid authenticated owner and safe URL are required")
+    item = browser_session_catalog.save(SavedBrowserSession(
+        tenant_id=tenant_id,
+        owner_id=owner_id,
+        label=payload.label,
+        url=payload.url,
+        session_id=payload.session_id,
+    ))
+    return {"session": item.__dict__}
+
+
+@router.delete("/automation/saved-sessions/{saved_session_id}")
+async def revoke_saved_session(saved_session_id: str, user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    if not browser_session_catalog.revoke(saved_session_id, tenant_id, owner_id):
+        raise HTTPException(status_code=404, detail="Saved browser session not found")
+    return {"success": True}
+
+
 @router.post("/automation/sessions", response_model=BrowserSessionResponse)
 async def create_automation_session(
     req: AutomationSessionRequest,
     user_token: str = Depends(get_current_user_token),
 ):
-    session = await session_manager.create(user_token)
+    from core.security import is_safe_url
+
+    if req.saved_url and not is_safe_url(req.saved_url):
+        raise HTTPException(status_code=400, detail="Unsafe or invalid saved URL")
+    session = await session_manager.create(user_token, label=req.label, saved_url=req.saved_url)
     return BrowserSessionResponse(session_id=session.id, status="ready", url=session.page.url)
 
 
@@ -82,9 +130,14 @@ async def execute_automation_action(
 ):
     from core.security import is_safe_url
 
-    session = await session_manager.get(req.session_id, user_token)
+    try:
+        session = await session_manager.get(req.session_id, user_token)
+    except PermissionError as exc:
+        raise HTTPException(status_code=423, detail=str(exc)) from exc
     page = session.page
     action = req.action.lower()
+    if action not in session.allowed_actions:
+        raise HTTPException(status_code=403, detail="Action is not allowed for this session")
     if action == "navigate":
         if not req.url or not is_safe_url(req.url):
             raise HTTPException(status_code=400, detail="Unsafe or invalid URL")
@@ -190,6 +243,24 @@ class UrlPermissionRequest(BaseModel):
 
 class DecisionRequest(BaseModel):
     approved: bool
+
+
+@router.post("/automation/pause")
+async def pause_automation(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authenticated owner required")
+    session_manager.pause_owner(owner_id)
+    return {"status": "paused"}
+
+
+@router.post("/automation/resume")
+async def resume_automation(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authenticated owner required")
+    session_manager.resume_owner(owner_id)
+    return {"status": "active"}
 
 
 @router.get("/surf/status")
@@ -628,6 +699,61 @@ def get_tasks():
     return {"tasks": list(TASKS.values())}
 
 
+class TaskPreviewRequest(BaseModel):
+    url: str | None = Field(default=None, max_length=2048)
+    goal: str = Field(min_length=1, max_length=10_000)
+    approved: bool = False
+
+
+class PolicyUpdateRequest(BaseModel):
+    rules: dict[str, Any] = Field(default_factory=dict)
+    features: dict[str, bool] = Field(default_factory=dict)
+    actions: dict[str, str] = Field(default_factory=dict)
+    limits: dict[str, int] = Field(default_factory=dict)
+
+
+class UserPolicyUpdateRequest(BaseModel):
+    rules: dict[str, Any] = Field(default_factory=dict)
+
+
+@router.get("/policy")
+def get_policy(user: dict = Depends(get_current_user_token)):
+    user_id = str(user.get("sub") or "")
+    policy = get_effective_policy(user_id)
+    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+
+
+@router.put("/policy")
+def update_user_policy(payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)):
+    user_id = str(user.get("sub") or "")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Authenticated user required")
+    policy = policy_store.update_user(user_id, payload.rules)
+    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+
+
+@router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
+def update_admin_policy(payload: PolicyUpdateRequest):
+    policy = policy_store.update_admin(payload.rules, payload.features, payload.actions, payload.limits)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
+
+
+@router.post("/tasks/preview")
+def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_token)):
+    actor_id = str(user.get("sub") or "")
+    decision = evaluate_goal(req.goal, actor_id)
+    if not actor_id:
+        raise HTTPException(status_code=401, detail="Authenticated user required")
+    if not decision.allowed:
+        return {"status": "manual", "risk": decision.risk, "message": decision.message}
+    if decision.risk == "approval" and not req.approved:
+        return {"status": "approval_required", "risk": decision.risk, "message": decision.message}
+    task_id = f"task_{uuid.uuid4().hex[:12]}"
+    task = {"id": task_id, "goal": req.goal, "url": req.url, "status": "ACTIVE", "risk": decision.risk, "owner_id": actor_id, "createdAt": datetime.now(UTC).isoformat(), "evidence": []}
+    TASKS[task_id] = task
+    return {"status": "started", "message": "Your safe task has started. SupremeAI will pause if it needs your approval.", "task": task}
+
+
 @router.post("/tasks")
 def create_task(req: GoalRequest):
     task_id = f"task_{uuid.uuid4().hex[:12]}"
@@ -907,7 +1033,7 @@ class ScrapeRequest(BaseModel):
 
 
 # বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
-# এখন ব্রাউজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
+# এখন ব্র���উজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
 # decoupled)। AGENTS.md §2: "Never treat tasks in isolation" — এই পরিবর্তনের পাশাপাশি
 # Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
 

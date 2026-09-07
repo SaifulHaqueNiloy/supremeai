@@ -6,6 +6,8 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { PanelLeft, PanelLeftClose } from 'lucide-react';
 import { getNavigationForContext, type NavEntry } from '../../config/navigationRegistry';
+import { useAuthStore } from '../../store/authStore';
+import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
 
 export interface RoleAwareNavRailProps {
   context: 'user' | 'admin';
@@ -20,7 +22,13 @@ export interface RoleAwareNavRailProps {
 export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction, onToggleCollapsed }: RoleAwareNavRailProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const groups = getNavigationForContext(context);
+  const role = useAuthStore((state) => state.role);
+  const permissions = useAuthStore((state) => state.permissions);
+  const enabledModules = useWorkspaceSettings((state) => state.enabledModules);
+  const groups = getNavigationForContext(context, { role, permissions }).map((group) => ({
+    ...group,
+    items: group.items.filter((item) => item.id !== 'nav-ide' || enabledModules.includes('code')),
+  })).filter((group) => group.items.length > 0);
 
   // বাংলা: আগের UserSidebar-এর active semantics হুবহু — exact match, অথবা non-root
   // path-এর জন্য prefix match।

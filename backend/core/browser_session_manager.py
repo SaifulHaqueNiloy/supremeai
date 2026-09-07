@@ -14,6 +14,7 @@ from typing import Any
 
 from core.logging_config import logger
 from core.playwright_manager import get_global_browser
+from core.effective_policy import get_effective_policy
 
 
 @dataclass
@@ -24,19 +25,26 @@ class BrowserSession:
     page: Any
     created_at: float
     last_used_at: float
+    label: str = "Browser session"
+    saved_url: str | None = None
+    allowed_actions: tuple[str, ...] = ("navigate", "screenshot", "content", "extract")
 
 
 class BrowserSessionManager:
-    def __init__(self, max_sessions: int = 3, idle_timeout_seconds: int = 900) -> None:
-        self.max_sessions = max_sessions
-        self.idle_timeout_seconds = idle_timeout_seconds
+    def __init__(self, max_sessions: int | None = None, idle_timeout_seconds: int | None = None) -> None:
+        policy = get_effective_policy()
+        self.max_sessions = max_sessions or policy.limits["max_sessions"]
+        self.idle_timeout_seconds = idle_timeout_seconds or policy.limits["idle_timeout_seconds"]
         self._sessions: dict[str, BrowserSession] = {}
         self._lock = asyncio.Lock()
         self._slots = asyncio.Semaphore(max_sessions)
+        self._paused_owners: set[str] = set()
 
-    async def create(self, owner_id: str) -> BrowserSession:
+    async def create(self, owner_id: str, label: str = "Browser session", saved_url: str | None = None) -> BrowserSession:
         if not owner_id:
             raise ValueError("owner_id is required")
+        if owner_id in self._paused_owners:
+            raise PermissionError("Browser automation is paused for this owner")
         await self._cleanup_expired()
         await self._slots.acquire()
         try:
@@ -50,6 +58,8 @@ class BrowserSessionManager:
                 page=page,
                 created_at=time.time(),
                 last_used_at=time.time(),
+                label=label[:120] or "Browser session",
+                saved_url=saved_url,
             )
             async with self._lock:
                 self._sessions[session.id] = session
@@ -58,7 +68,18 @@ class BrowserSessionManager:
             self._slots.release()
             raise
 
+    def pause_owner(self, owner_id: str) -> None:
+        self._paused_owners.add(owner_id)
+
+    def resume_owner(self, owner_id: str) -> None:
+        self._paused_owners.discard(owner_id)
+
+    def is_paused(self, owner_id: str) -> bool:
+        return owner_id in self._paused_owners
+
     async def get(self, session_id: str, owner_id: str) -> BrowserSession:
+        if self.is_paused(owner_id):
+            raise PermissionError("Browser automation is paused for this owner")
         async with self._lock:
             session = self._sessions.get(session_id)
         if session is None or session.owner_id != owner_id:
@@ -112,6 +133,9 @@ class BrowserSessionManager:
                 "id": session.id,
                 "owner_id": session.owner_id,
                 "url": session.page.url,
+                "label": session.label,
+                "saved_url": session.saved_url,
+                "allowed_actions": list(session.allowed_actions),
                 "created_at": session.created_at,
                 "last_used_at": session.last_used_at,
             }

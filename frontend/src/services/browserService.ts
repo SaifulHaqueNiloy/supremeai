@@ -6,6 +6,16 @@ export interface BrowserSession {
   url: string;
 }
 
+export interface SavedBrowserSession {
+  id: string;
+  tenant_id: string;
+  owner_id: string;
+  label: string;
+  url: string;
+  session_id: string | null;
+  revoked: boolean;
+}
+
 export interface BrowserActionResult {
   success: boolean;
   action: string;
@@ -22,8 +32,11 @@ export type BrowserAction =
   | { action: 'content' | 'extract' };
 
 export const browserService = {
-  createSession: () => apiClient.post<BrowserSession>('/api/browser/automation/sessions', {}),
+  createSession: (payload?: { label?: string; saved_url?: string }) => apiClient.post<BrowserSession>('/api/browser/automation/sessions', payload ?? {}),
   listSessions: () => apiClient.get<{ sessions: BrowserSession[] }>('/api/browser/automation/sessions'),
+  listSavedSessions: () => apiClient.get<{ sessions: SavedBrowserSession[] }>('/api/browser/automation/saved-sessions'),
+  saveSession: (payload: { label: string; url: string; session_id?: string }) => apiClient.post<{ session: SavedBrowserSession }>('/api/browser/automation/saved-sessions', payload),
+  revokeSavedSession: (sessionId: string) => apiClient.delete<{ success: boolean }>(`/api/browser/automation/saved-sessions/${encodeURIComponent(sessionId)}`),
   closeSession: (sessionId: string) =>
     apiClient.delete<{ success: boolean }>(`/api/browser/automation/sessions/${encodeURIComponent(sessionId)}`),
   execute: (sessionId: string, action: BrowserAction) =>

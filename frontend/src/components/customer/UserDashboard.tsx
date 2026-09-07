@@ -1,49 +1,47 @@
-import React from 'react';
-import { ArrowRight, Bot, FileText, FolderKanban, Plus, Sparkles, Zap } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Bot, FileText, FolderKanban, Plus, Settings2, Sparkles, Terminal, X, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useWorkspaceSettings, WORKSPACE_MODULES, type WorkspaceModuleId } from '../../hooks/useWorkspaceSettings';
+import TaskAutomationCard from './TaskAutomationCard';
 
 const quickStarts = [
-  { label: 'Research a topic', detail: 'Synthesize sources and surface a clear answer.', icon: Sparkles, href: '/workspace/live' },
-  { label: 'Build a workflow', detail: 'Turn a repeatable task into an agent run.', icon: Zap, href: '/agents' },
-  { label: 'Analyze a file', detail: 'Bring context into a focused workspace.', icon: FileText, href: '/files' },
+  { label: 'Research a topic', detail: 'Get a clear answer with useful context.', icon: Sparkles, href: '/workspace/live' },
+  { label: 'Analyze a file', detail: 'Bring a document into a focused workspace.', icon: FileText, href: '/files' },
+  { label: 'Build a workflow', detail: 'Turn a repeatable task into a helper.', icon: Zap, href: '/agents' },
 ];
+
+const icons = { ask: Sparkles, projects: FolderKanban, files: FileText, activity: Zap, agents: Bot, integrations: Settings2, usage: FileText, code: Terminal };
 
 export const UserDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [showTools, setShowTools] = useState(false);
+  const { enabledModules, toggleModule } = useWorkspaceSettings();
   const name = user?.name?.split(' ')[0] || 'there';
+  const tools = WORKSPACE_MODULES.filter((module) => enabledModules.includes(module.id));
 
   return (
     <main className="min-h-full bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-8 sm:px-8 lg:gap-10 lg:py-10">
-        <header className="flex flex-col gap-5 border-b border-[var(--sa-border)] pb-7 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="mb-4 flex items-center gap-2 text-xs font-medium text-[var(--sa-primary)]"><span className="size-2 rounded-full bg-[var(--sa-primary)] shadow-[0_0_14px_var(--sa-primary)]" />Workspace ready</div>
-            <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Good morning, {name}.</h1>
-            <p className="mt-2 max-w-xl text-[var(--sa-ink-muted)]">Bring an intention. SupremeAI will help you choose the right model, context, and next step.</p>
-          </div>
-          <button type="button" onClick={() => navigate('/workspace/live')} className="inline-flex items-center justify-center gap-2 rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"><Plus size={16} /> New conversation</button>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-5 py-8 sm:px-8 lg:py-10">
+        <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="sa-eyebrow mb-3">Your workspace</p><h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">Good morning, {name}.</h1><p className="mt-2 max-w-xl text-[var(--sa-ink-muted)]">A simple place to think, make progress, and keep your work moving.</p></div>
+          <Link to="/settings" className="inline-flex items-center gap-2 self-start rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-4 py-2.5 text-sm font-medium transition hover:border-[var(--sa-primary)] hover:text-[var(--sa-primary)]"><Settings2 size={16} /> Personalize</Link>
         </header>
 
-        <section className="relative overflow-hidden rounded-[var(--sa-radius)] border border-[var(--sa-border)] bg-[var(--sa-surface)] p-5 shadow-[0_18px_80px_rgba(16,185,241,0.08)] sm:p-7" aria-labelledby="intent-heading">
-          <div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-cyan-400/10 blur-3xl" aria-hidden="true" />
-          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div><p className="sa-eyebrow mb-2">Start with an intention</p><h2 id="intent-heading" className="text-xl font-semibold">What should SupremeAI accomplish?</h2><p className="mt-2 text-sm text-[var(--sa-ink-muted)]">Chat, research, build, or automate from one calm workspace.</p></div>
-            <span className="text-xs text-[var(--sa-ink-muted)]">Enter to open Studio</span>
-          </div>
-          <div className="relative mt-5 flex rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-canvas)] p-1.5 focus-within:border-[var(--sa-primary)] focus-within:ring-4 focus-within:ring-[var(--sa-primary-soft)]">
-            <input type="text" aria-label="Ask SupremeAI what to accomplish" placeholder="Research, automate, analyze, or build..." className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-[var(--sa-ink)] outline-none placeholder:text-[var(--sa-ink-muted)]" onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && e.keyCode !== 229) navigate('/workspace/live'); }} />
-            <button type="button" aria-label="Open SupremeAI Studio" onClick={() => navigate('/workspace/live')} className="flex size-11 shrink-0 items-center justify-center rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] text-white transition hover:opacity-90"><ArrowRight size={17} /></button>
-          </div>
-          <div className="relative mt-4 flex flex-wrap gap-2" aria-label="Suggested tasks">{quickStarts.map(({ label, icon: Icon, href }) => <Link key={label} to={href} className="inline-flex items-center gap-2 rounded-full border border-[var(--sa-border)] px-3 py-2 text-xs text-[var(--sa-ink-muted)] transition hover:border-[var(--sa-primary)] hover:bg-[var(--sa-primary-soft)] hover:text-[var(--sa-primary)]"><Icon size={13} />{label}</Link>)}</div>
+        <TaskAutomationCard />
+
+        <section className="sa-surface-raised p-5 sm:p-7" aria-labelledby="intent-heading">
+          <p className="sa-eyebrow mb-2">Start anywhere</p><h2 id="intent-heading" className="text-xl font-semibold">What would you like to do?</h2>
+          <div className="mt-5 flex rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] bg-[var(--sa-canvas)] p-1.5 focus-within:border-[var(--sa-primary)] focus-within:ring-4 focus-within:ring-[var(--sa-primary-soft)]"><input type="text" aria-label="Ask SupremeAI what to accomplish" placeholder="Ask a question, describe a task, or share an idea..." className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none placeholder:text-[var(--sa-ink-muted)]" onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) navigate('/workspace/live'); }} /><button type="button" aria-label="Open SupremeAI Studio" onClick={() => navigate('/workspace/live')} className="flex size-11 shrink-0 items-center justify-center rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] text-white transition hover:opacity-90"><ArrowRight size={17} /></button></div>
+          <div className="mt-4 flex flex-wrap gap-2">{quickStarts.map(({ label, icon: Icon, href }) => <Link key={label} to={href} className="inline-flex items-center gap-2 rounded-full border border-[var(--sa-border)] px-3 py-2 text-xs text-[var(--sa-ink-muted)] transition hover:border-[var(--sa-primary)] hover:bg-[var(--sa-primary-soft)] hover:text-[var(--sa-primary)]"><Icon size={13} />{label}</Link>)}</div>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
-          <div className="sa-surface-raised p-5 sm:p-6"><div className="mb-5 flex items-center justify-between"><div><p className="sa-eyebrow">Continue working</p><h2 className="mt-2 text-lg font-semibold">Recent work</h2></div><Link to="/activity" className="text-xs font-medium text-[var(--sa-primary)]">View activity</Link></div><div className="rounded-[var(--sa-radius-sm)] border border-dashed border-[var(--sa-border)] p-5 text-sm text-[var(--sa-ink-muted)]"><p>No recent work yet.</p><Link to="/workspace/live" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--sa-primary)]">Start your first conversation <ArrowRight size={13} /></Link></div></div>
-          <div className="flex flex-col gap-5"><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]"><Bot size={17} /></div><div><p className="sa-eyebrow">Active agents</p><h2 className="mt-1 text-lg font-semibold">No agents yet</h2></div></div><Link to="/agents" className="mt-5 inline-flex text-xs font-medium text-[var(--sa-primary)]">Create an agent <ArrowRight size={13} className="ml-1" /></Link></div><div className="sa-surface-raised p-5"><div className="flex items-center gap-3"><FolderKanban size={17} className="text-[var(--sa-primary)]" /><div><p className="sa-eyebrow">Workspace usage</p><h2 className="mt-1 text-lg font-semibold">No usage yet</h2></div></div><p className="mt-4 text-xs text-[var(--sa-ink-muted)]">Usage will appear after your first run.</p><Link to="/usage" className="mt-4 inline-flex text-xs font-medium text-[var(--sa-primary)]">Review usage <ArrowRight size={13} className="ml-1" /></Link></div></div>
-        </section>
+        <section aria-labelledby="tools-heading"><div className="mb-4 flex items-center justify-between"><div><p className="sa-eyebrow">Your tools</p><h2 id="tools-heading" className="mt-1 text-xl font-semibold">Only what you need</h2></div><button type="button" onClick={() => setShowTools(true)} className="inline-flex items-center gap-2 rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-3 py-2 text-xs font-medium hover:border-[var(--sa-primary)] hover:text-[var(--sa-primary)]"><Plus size={14} /> Add tools</button></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{tools.map((module) => { const Icon = icons[module.id]; return <Link key={module.id} to={module.href} className="group sa-surface-raised flex min-h-32 flex-col justify-between p-5 transition hover:-translate-y-0.5 hover:border-[var(--sa-primary)]"><div className="flex items-start justify-between"><span className="flex size-9 items-center justify-center rounded-lg bg-[var(--sa-primary-soft)] text-[var(--sa-primary)]"><Icon size={17} /></span><ArrowRight size={15} className="text-[var(--sa-ink-muted)] transition group-hover:text-[var(--sa-primary)]" /></div><div><h3 className="mt-4 text-sm font-semibold">{module.label}</h3><p className="mt-1 text-xs leading-5 text-[var(--sa-ink-muted)]">{module.description}</p></div></Link> })}</div></section>
+
+        <section className="grid gap-4 lg:grid-cols-2"><div className="sa-surface-raised p-5"><p className="sa-eyebrow">Recent work</p><h2 className="mt-2 text-lg font-semibold">Nothing here yet</h2><p className="mt-2 text-sm text-[var(--sa-ink-muted)]">Your conversations, projects, and completed tasks will appear here.</p></div><div className="sa-surface-raised p-5"><p className="sa-eyebrow">Need a starting point?</p><h2 className="mt-2 text-lg font-semibold">Begin with a small task</h2><p className="mt-2 text-sm text-[var(--sa-ink-muted)]">You can always add more tools later from Settings.</p></div></section>
       </div>
+      {showTools && <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/30 p-4 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="tools-dialog-title"><div className="w-full max-w-lg rounded-2xl border border-[var(--sa-border)] bg-[var(--sa-surface)] p-5 shadow-2xl"><div className="flex items-start justify-between"><div><p className="sa-eyebrow">Personalize</p><h2 id="tools-dialog-title" className="mt-1 text-xl font-semibold">Choose your tools</h2><p className="mt-1 text-sm text-[var(--sa-ink-muted)]">Keep the workspace focused. You can change this any time.</p></div><button type="button" aria-label="Close tool picker" onClick={() => setShowTools(false)} className="rounded-lg p-2 text-[var(--sa-ink-muted)] hover:bg-[var(--sa-canvas)]"><X size={17} /></button></div><div className="mt-5 flex flex-col gap-2">{WORKSPACE_MODULES.map((module) => <label key={module.id} className="flex cursor-pointer items-center gap-3 rounded-xl border border-[var(--sa-border)] p-3 transition hover:border-[var(--sa-primary)]"><input type="checkbox" checked={enabledModules.includes(module.id)} onChange={() => toggleModule(module.id)} className="size-4 accent-[var(--sa-primary)]" /><span className="flex-1"><span className="block text-sm font-medium">{module.label}{module.advanced && <span className="ml-2 rounded-full bg-[var(--sa-primary-soft)] px-2 py-0.5 text-[10px] text-[var(--sa-primary)]">Optional developer tool</span>}</span><span className="mt-0.5 block text-xs text-[var(--sa-ink-muted)]">{module.description}</span></span></label>)}</div><button type="button" onClick={() => setShowTools(false)} className="mt-5 w-full rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] px-4 py-2.5 text-sm font-semibold text-white">Done</button></div></div>}
     </main>
   );
 };
