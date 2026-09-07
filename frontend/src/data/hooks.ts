@@ -5,7 +5,7 @@ import type { ApprovalDecision, ApprovalItem, ApprovalListResponse, ApprovalMuta
 const approvalKey = ['admin', 'approvals'] as const;
 
 async function listApprovals(): Promise<ApprovalItem[]> {
-  const response = await apiClient.get<ApprovalListResponse | ApprovalItem[]>('/admin-api/approvals');
+  const response = await apiClient.get<ApprovalListResponse | ApprovalItem[]>('/api/v1/hitl/pending');
   return Array.isArray(response) ? response : response.items ?? [];
 }
 
