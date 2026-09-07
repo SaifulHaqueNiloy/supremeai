@@ -260,7 +260,7 @@ class TestLoggingRedaction:
 
 class TestSelfEvolutionSafety:
     def test_tier8_dry_run_uses_temp_copy(self):
-        src = _source_of("core/tier8/self_improvement_agent.py")
+        src = _source_of("core/tier8/codebase_refactor_proposer.py")
         dry_run_block = src.split("async def _run_dry_run")[1][:3000]
         assert "target.write_text" not in dry_run_block, "must not write the live file"
         assert "NamedTemporaryFile" in dry_run_block

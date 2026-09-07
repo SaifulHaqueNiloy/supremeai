@@ -62,7 +62,7 @@ export interface TierSState {
 
 // ─── Store ───────────────────────────────────────────────────────────────
 
-export const useTierSStore = create<TierSState>((set) => ({
+export const useWorkspaceUiStateStore = create<TierSState>((set) => ({
   // ── S1: Share ──────────────────────────────────────────────
   shareDialogOpen: false,
   shareConversationId: null,
@@ -146,3 +146,7 @@ export const useTierSStore = create<TierSState>((set) => ({
   setResearchPanelOpen: (open: boolean) =>
     set({ researchPanelOpen: open }),
 }));
+
+// Backward-compatibility alias during phased refactoring
+export const useTierSStore = useWorkspaceUiStateStore;
+

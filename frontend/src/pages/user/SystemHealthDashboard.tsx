@@ -4,7 +4,7 @@ import { OneClickPatch } from '../../components/admin/OneClickPatch';
 import { getApiBaseUrl } from '../../utils/api';
 import { getRawToken } from '../../services/apiClient';
 
-export const ArchitectTower: React.FC = () => {
+export const SystemHealthDashboard: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fixes, setFixes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,3 +121,4 @@ export const ArchitectTower: React.FC = () => {
     </div>
   );
 };
+export const ArchitectTower = SystemHealthDashboard;

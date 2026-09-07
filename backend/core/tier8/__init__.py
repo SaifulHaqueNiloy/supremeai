@@ -32,8 +32,10 @@ from core.tier8.agent_evolution_engine import (
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` ইম্পোর্ট path fix করা হলো।
 # Docker container-এ WORKDIR=/app/backend হওয়ায় `backend.` prefix runtime-এ ভুল ছিল।
 # এই ফিক্স না থাকায় Tier-8 agents production-এ কখনো load হয়নি।
-from core.tier8.self_improvement_agent import (
+from core.tier8.codebase_refactor_proposer import (
+    CodebaseRefactorProposer,
     SelfImprovementAgent,
+    get_codebase_refactor_proposer,
     get_self_improvement_agent,
 )
 from core.tier8.skill_marketplace_curator import (

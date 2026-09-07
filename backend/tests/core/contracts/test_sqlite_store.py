@@ -1,6 +1,7 @@
 import tempfile
 from pathlib import Path
 
+import pytest
 from backend.core.contracts.canonical import (
     EventEnvelope,
     ExecutionContext,
@@ -42,10 +43,7 @@ def test_sqlite_store_survives_reopen_and_replays_idempotency():
 def test_sqlite_store_rejects_unknown_finish():
     store = SQLiteExecutionStore()
     try:
-        try:
+        with pytest.raises(KeyError):
             store.finish("missing", ExecutionResult(ExecutionStatus.FAILED))
-            raise AssertionError("expected KeyError")
-        except KeyError:
-            pass
     finally:
         store.close()

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useTierSStore } from './tierSStore';
-import type { Artifact, ReasoningStep } from './tierSStore';
+import { useWorkspaceUiStateStore as useTierSStore } from './workspaceUiStateStore';
+import type { Artifact, ReasoningStep } from './workspaceUiStateStore';
 
 const reset = () =>
   useTierSStore.setState({

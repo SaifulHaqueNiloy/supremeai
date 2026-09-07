@@ -7,11 +7,14 @@ Render API usage calculations, and manual override tracking.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import urllib.error
 import urllib.request
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from backend.core.contracts.redaction import redact as redact_secrets
 from backend.core.contracts.render_preflight_store import RenderPreflightStore
@@ -128,8 +131,14 @@ class RenderPreflightService:
                     if now < recheck_dt:
                         # Retain existing cooldown without moving recheck_at forward
                         return existing
-                except (ValueError, TypeError):
-                    pass
+                except (ValueError, TypeError) as exc:
+                    logger.warning(
+                        "Unparsable recheck_at (%r) for account_role=%s: %s — "
+                        "proceeding with a live recheck instead of silently ignoring it",
+                        recheck_str,
+                        account_role,
+                        exc,
+                    )
 
         # Query Render API
         url = f"https://api.render.com/v1/services/{svc_id}/deploys?limit=100"

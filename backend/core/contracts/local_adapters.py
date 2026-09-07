@@ -64,7 +64,18 @@ class LocalBrowserAdapter:
     def open(
         self, context: ExecutionContext, url: str, mode: SandboxMode = SandboxMode.READ_ONLY
     ) -> str:
-        if not (url.startswith("https://") or url.startswith("http://localhost")):
+        from core.config import settings
+
+        # Localhost URLs are only allowed when running in a local environment. In any
+        # other environment this adapter must fail loudly instead of silently connecting
+        # to a wrong host (established repo idiom: settings.env == "local" guard).
+        if url.startswith("http://localhost") or url.startswith("http://127.0.0.1"):
+            is_local = settings.env == "local"
+            if not is_local:
+                raise ValueError(
+                    "browser adapter only permits localhost URLs in a local environment"
+                )
+        elif not url.startswith("https://"):
             raise ValueError("browser adapter only permits HTTPS or localhost URLs")
         session_id = f"browser_{uuid.uuid4().hex}"
         self.sessions[session_id] = {"tenant_id": context.tenant_id, "url": url, "mode": mode.value}
