@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 from api.deps import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from core.browser_compat_store import browser_compat_store
+from core.browser_session_catalog import SavedBrowserSession, browser_session_catalog
 from core.browser_session_manager import session_manager
 from core.cache.redis_manager import MultiLevelCache
 from core.error_bus import with_error_bus
@@ -35,6 +36,12 @@ class AutomationSessionRequest(BaseModel):
     saved_url: str | None = Field(default=None, max_length=2048)
 
 
+class SavedSessionRequest(BaseModel):
+    label: str = Field(min_length=1, max_length=120)
+    url: str = Field(min_length=1, max_length=2048)
+    session_id: str | None = Field(default=None, max_length=128)
+
+
 class BrowserActionRequest(BaseModel):
     session_id: str = Field(min_length=1, max_length=128)
     action: Literal["navigate", "click", "fill", "type", "screenshot", "content", "extract"]
@@ -52,6 +59,40 @@ class BrowserSessionResponse(BaseModel):
 
 def get_audit() -> AuditLogger:
     return AuditLogger()
+
+
+@router.get("/automation/saved-sessions")
+async def list_saved_sessions(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    return {"sessions": [item.__dict__ for item in browser_session_catalog.list(tenant_id, owner_id)]}
+
+
+@router.post("/automation/saved-sessions")
+async def save_session(payload: SavedSessionRequest, user: dict = Depends(get_current_user_token)):
+    from core.security import is_safe_url
+
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    if not owner_id or not tenant_id or not is_safe_url(payload.url):
+        raise HTTPException(status_code=400, detail="Valid authenticated owner and safe URL are required")
+    item = browser_session_catalog.save(SavedBrowserSession(
+        tenant_id=tenant_id,
+        owner_id=owner_id,
+        label=payload.label,
+        url=payload.url,
+        session_id=payload.session_id,
+    ))
+    return {"session": item.__dict__}
+
+
+@router.delete("/automation/saved-sessions/{saved_session_id}")
+async def revoke_saved_session(saved_session_id: str, user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or owner_id)
+    if not browser_session_catalog.revoke(saved_session_id, tenant_id, owner_id):
+        raise HTTPException(status_code=404, detail="Saved browser session not found")
+    return {"success": True}
 
 
 @router.post("/automation/sessions", response_model=BrowserSessionResponse)
@@ -87,7 +128,10 @@ async def execute_automation_action(
 ):
     from core.security import is_safe_url
 
-    session = await session_manager.get(req.session_id, user_token)
+    try:
+        session = await session_manager.get(req.session_id, user_token)
+    except PermissionError as exc:
+        raise HTTPException(status_code=423, detail=str(exc)) from exc
     page = session.page
     action = req.action.lower()
     if action not in session.allowed_actions:
@@ -197,6 +241,24 @@ class UrlPermissionRequest(BaseModel):
 
 class DecisionRequest(BaseModel):
     approved: bool
+
+
+@router.post("/automation/pause")
+async def pause_automation(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authenticated owner required")
+    session_manager.pause_owner(owner_id)
+    return {"status": "paused"}
+
+
+@router.post("/automation/resume")
+async def resume_automation(user: dict = Depends(get_current_user_token)):
+    owner_id = str(user.get("sub") or "")
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authenticated owner required")
+    session_manager.resume_owner(owner_id)
+    return {"status": "active"}
 
 
 @router.get("/surf/status")

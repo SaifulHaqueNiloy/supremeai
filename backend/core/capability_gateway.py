@@ -18,6 +18,7 @@ from core.circles.contracts import (
 from core.circles.registry import circle_registry
 
 HEALTH_CAPABILITY = "system.health.read"
+CHAT_CAPABILITY = "conversation.orchestrate"
 
 
 def _policy(request: CapabilityRequest) -> PolicyDecision:
@@ -27,6 +28,32 @@ def _policy(request: CapabilityRequest) -> PolicyDecision:
     if request.capability.name == HEALTH_CAPABILITY and request.capability.risk_level is not RiskLevel.LOW:
         return PolicyDecision(allowed=False, reason="health_read_must_be_low_risk")
     return PolicyDecision(allowed=True)
+
+
+async def _chat_orchestrate(request: CapabilityRequest) -> Mapping[str, Any]:
+    from core.orchestration.conversation_orchestrator import ConversationCommand, get_conversation_orchestrator
+
+    result = await get_conversation_orchestrator().dispatch(
+        ConversationCommand(
+            prompt=str(request.payload.get("prompt", "")),
+            user_id=request.context.actor_id,
+            tenant_id=request.context.tenant_id,
+            role=str(request.payload.get("role", "user")),
+            project_id=request.payload.get("project_id"),
+            conversation_id=request.payload.get("conversation_id"),
+            confirmation=bool(request.payload.get("confirmation", False)),
+            metadata=dict(request.payload.get("metadata", {})),
+        )
+    )
+    return {
+        "status": result.status,
+        "correlation_id": result.correlation_id,
+        "capability": result.capability,
+        "response": result.response,
+        "requires_confirmation": result.requires_confirmation,
+        "error": result.error,
+        "events": result.events,
+    }
 
 
 async def _health_read(request: CapabilityRequest) -> Mapping[str, Any]:
@@ -43,9 +70,10 @@ async def _health_read(request: CapabilityRequest) -> Mapping[str, Any]:
 
 def register_core_capabilities() -> None:
     """Register only capabilities that have a canonical gateway contract."""
-    if HEALTH_CAPABILITY in circle_registry.capabilities():
-        return
-    circle_registry.register_handler(HEALTH_CAPABILITY, _health_read)
+    if HEALTH_CAPABILITY not in circle_registry.capabilities():
+        circle_registry.register_handler(HEALTH_CAPABILITY, _health_read)
+    if CHAT_CAPABILITY not in circle_registry.capabilities():
+        circle_registry.register_handler(CHAT_CAPABILITY, _chat_orchestrate)
     circle_registry.set_policy_evaluator(_policy)
 
 

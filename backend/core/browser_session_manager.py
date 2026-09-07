@@ -36,10 +36,13 @@ class BrowserSessionManager:
         self._sessions: dict[str, BrowserSession] = {}
         self._lock = asyncio.Lock()
         self._slots = asyncio.Semaphore(max_sessions)
+        self._paused_owners: set[str] = set()
 
     async def create(self, owner_id: str, label: str = "Browser session", saved_url: str | None = None) -> BrowserSession:
         if not owner_id:
             raise ValueError("owner_id is required")
+        if owner_id in self._paused_owners:
+            raise PermissionError("Browser automation is paused for this owner")
         await self._cleanup_expired()
         await self._slots.acquire()
         try:
@@ -63,7 +66,18 @@ class BrowserSessionManager:
             self._slots.release()
             raise
 
+    def pause_owner(self, owner_id: str) -> None:
+        self._paused_owners.add(owner_id)
+
+    def resume_owner(self, owner_id: str) -> None:
+        self._paused_owners.discard(owner_id)
+
+    def is_paused(self, owner_id: str) -> bool:
+        return owner_id in self._paused_owners
+
     async def get(self, session_id: str, owner_id: str) -> BrowserSession:
+        if self.is_paused(owner_id):
+            raise PermissionError("Browser automation is paused for this owner")
         async with self._lock:
             session = self._sessions.get(session_id)
         if session is None or session.owner_id != owner_id:

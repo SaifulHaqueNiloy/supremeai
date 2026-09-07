@@ -89,6 +89,8 @@ export interface CapabilityExecutionResult {
   execution_id: string
   status: string
   data?: unknown
+  response?: string
+  error?: string
   error_code?: string
   error_message?: string
   capability: string

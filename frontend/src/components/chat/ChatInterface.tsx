@@ -5,7 +5,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { UnifiedChatBubble } from './UnifiedChatBubble';
-import { apiClient } from '../../services/apiClient';
+import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
 import { Volume2, VolumeX, Share2 } from 'lucide-react';
@@ -115,12 +115,16 @@ export const ChatInterface: React.FC = () => {
     triggerOrchestration(true);
 
     try {
-      const response = await apiClient.post<{ response?: string }>('/api/orchestrate', {
-        message: userMessage,
-        idempotency_key: crypto.randomUUID(),
+      const response = await controlPlane.executeCapability({
+        capability: 'conversation.orchestrate',
+        source: 'chat',
+        payload: {
+          prompt: userMessage,
+          metadata: { idempotency_key: crypto.randomUUID() },
+        },
       });
 
-      const assistantResponse = response.response || JSON.stringify(response);
+      const assistantResponse = response.response || response.error || JSON.stringify(response);
       // Add assistant response
       addMessage({
         role: 'assistant',
@@ -145,7 +149,7 @@ export const ChatInterface: React.FC = () => {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
       e.preventDefault();
       handleSend();
     }
