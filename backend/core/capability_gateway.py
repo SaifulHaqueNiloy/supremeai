@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any
+from uuid import uuid4
 
+from core.capability_activation import capability_activation_store
 from core.circles.contracts import (
     CapabilityRef,
     CapabilityRequest,
     CircleName,
     ExecutionContext,
     ExecutionResult,
+    ExecutionStatus,
     PolicyDecision,
     RiskLevel,
 )
@@ -55,6 +58,23 @@ async def execute_capability(
     payload: Mapping[str, Any] | None = None,
 ) -> ExecutionResult:
     register_core_capabilities()
+    metadata = circle_registry.describe(capability)
+    if metadata is None:
+        return await circle_registry.dispatch(CapabilityRequest(
+            capability=CapabilityRef(name=capability, owner_circle=CircleName.GATEWAY, risk_level=RiskLevel.LOW),
+            context=ExecutionContext(actor_id=actor_id, tenant_id=tenant_id),
+            source=source,
+            payload=payload or {},
+        ))
+    if metadata.tenant_activation_required and not capability_activation_store.is_enabled(tenant_id, capability):
+        return ExecutionResult(
+            execution_id=f"exec_{uuid4().hex}",
+            status=ExecutionStatus.REJECTED,
+            error_code="capability_not_enabled",
+            error_message="Capability is not enabled for this tenant",
+            circle=metadata.owner_circle,
+            capability=capability,
+        )
     request = CapabilityRequest(
         capability=CapabilityRef(
             name=capability,

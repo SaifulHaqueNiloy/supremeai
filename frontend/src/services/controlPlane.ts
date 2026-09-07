@@ -76,6 +76,26 @@ export interface CreatedExternalClient {
   token: string
 }
 
+export interface TenantCapability {
+  name: string
+  circle: string
+  risk: string
+  approval_required: boolean
+  enabled: boolean
+  version: string
+}
+
+export interface CapabilityExecutionResult {
+  execution_id: string
+  status: string
+  data?: unknown
+  error_code?: string
+  error_message?: string
+  capability: string
+  verification?: { verified: boolean; method: string; details?: Record<string, unknown> }
+  audit?: { event_type: string; policy_version: string; approval_id?: string }
+}
+
 import { getAuthHeaders } from './apiClient'
 
 async function getJson<T>(path: string): Promise<T> {
@@ -141,6 +161,8 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
 
   export const controlPlane = {
   registry: () => getJson<ControlPlaneRegistry>('/api/v1/control-plane/registry'),
+  capabilities: () => getJson<{ capabilities: TenantCapability[] }>('/api/v1/capabilities'),
+  executeCapability: (payload: { capability: string; source: 'dashboard' | 'chat' | 'api'; payload?: Record<string, unknown> }) => postJson<CapabilityExecutionResult>('/api/v1/capabilities/execute', payload),
   health: () => getJson<ControlPlaneHealth>('/api/v1/control-plane/health'),
   mcpSummary: () => getJson<McpHealthSummary>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/summary`),
   mcpDashboard: () => getJson<McpHealthDashboard>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/health/dashboard`),

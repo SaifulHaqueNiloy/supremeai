@@ -40,6 +40,14 @@ Platform operators manage the SupremeAI platform:
 - Runtime, workers, queues, and infrastructure
 - Evolution and platform diagnostics
 
+## Route ownership
+
+- `/workspace/*` is the outcome-oriented user surface.
+- `/tenant-admin/*` is tenant-scoped administration and requires tenant-admin permissions.
+- `/platform/*` is platform/developer operation and requires platform permissions.
+- `/api/v1/capabilities/*` is the governed execution boundary; it is not a substitute for portal authorization.
+- Compatibility routes may remain during migration, but new mutations must declare their owning portal and use the capability gateway.
+
 ## Runtime ownership
 
 ```text

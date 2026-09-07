@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
 from api.dependencies import get_current_user_token
+from core.capability_discovery import discover_capabilities
 from core.capability_gateway import HEALTH_CAPABILITY, execute_capability
 
 router = APIRouter(prefix="/api/v1/capabilities", tags=["capabilities"])
@@ -15,6 +16,15 @@ class CapabilityExecuteRequest(BaseModel):
     capability: str = Field(default=HEALTH_CAPABILITY, min_length=1, max_length=160)
     source: str = Field(default="api", min_length=1, max_length=40)
     payload: dict = Field(default_factory=dict)
+
+
+@router.get("")
+async def list_capabilities(user: dict = Depends(get_current_user_token)) -> dict:
+    actor_id = str(user.get("sub") or "")
+    tenant_id = str(user.get("tenant_id") or actor_id)
+    if not actor_id or not tenant_id:
+        raise HTTPException(status_code=401, detail="Execution identity is incomplete")
+    return {"capabilities": discover_capabilities(tenant_id)}
 
 
 @router.post("/execute")
