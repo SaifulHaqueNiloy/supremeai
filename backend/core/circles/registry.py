@@ -13,6 +13,7 @@ from .contracts import (
 from .event_journal import circle_event_journal
 
 CapabilityHandler = Callable[[CapabilityRequest], Awaitable[Any] | Any]
+PolicyEvaluator = Callable[[CapabilityRequest], Awaitable[bool] | bool]
 
 
 class CircleRegistry:
@@ -22,6 +23,11 @@ class CircleRegistry:
         self._manifests: dict[str, CircleManifest] = {}
         self._handlers: dict[str, CapabilityHandler] = {}
         self._events: list[EventEnvelope] = []
+        self._policy_evaluator: PolicyEvaluator | None = None
+
+    def set_policy_evaluator(self, evaluator: PolicyEvaluator | None) -> None:
+        """Attach the central policy boundary used by every Circle dispatch."""
+        self._policy_evaluator = evaluator
 
     def register(self, manifest: CircleManifest) -> None:
         key = manifest.name.value
@@ -57,6 +63,40 @@ class CircleRegistry:
                 circle=request.capability.owner_circle,
                 capability=request.capability.name,
             )
+
+        if not request.context.tenant_id or not request.context.actor_id:
+            return ExecutionResult(
+                execution_id=request.context.execution_id,
+                status=ExecutionStatus.REJECTED,
+                error_code="execution_context_incomplete",
+                error_message="actor_id and tenant_id are required",
+                circle=request.capability.owner_circle,
+                capability=request.capability.name,
+            )
+
+        if request.capability.approval_required:
+            return ExecutionResult(
+                execution_id=request.context.execution_id,
+                status=ExecutionStatus.APPROVAL_REQUIRED,
+                error_code="human_approval_required",
+                error_message="This capability must be approved before execution",
+                circle=request.capability.owner_circle,
+                capability=request.capability.name,
+            )
+
+        if self._policy_evaluator is not None:
+            allowed = self._policy_evaluator(request)
+            if hasattr(allowed, "__await__"):
+                allowed = await allowed
+            if not allowed:
+                return ExecutionResult(
+                    execution_id=request.context.execution_id,
+                    status=ExecutionStatus.REJECTED,
+                    error_code="central_policy_denied",
+                    error_message="Central policy denied this capability",
+                    circle=request.capability.owner_circle,
+                    capability=request.capability.name,
+                )
 
         try:
             value = handler(request)

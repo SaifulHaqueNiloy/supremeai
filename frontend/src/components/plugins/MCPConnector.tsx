@@ -80,6 +80,20 @@ export const MCPConnector: React.FC = () => {
     finally { setLoading(false); }
   };
 
+  const approve = async (id: string) => {
+    setLoading(true);
+    try { await controlPlane.approveExternalClient(id); await loadClients(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not approve connection'); }
+    finally { setLoading(false); }
+  };
+
+  const changeRole = async (id: string, nextRole: ExternalClientRole) => {
+    setLoading(true);
+    try { await controlPlane.changeExternalClientRole(id, nextRole); await loadClients(); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Could not change role'); }
+    finally { setLoading(false); }
+  };
+
   const revoke = async (id: string) => {
     if (!window.confirm('Remove this AI connection? It will lose access immediately.')) return;
     setLoading(true);
@@ -115,14 +129,14 @@ export const MCPConnector: React.FC = () => {
             <div className="flex justify-between"><Button variant="ghost" onClick={() => setStep(1)}>Back</Button><Button state={loading ? 'loading' : 'default'} onClick={() => void createConnection()}>Create secure connection</Button></div>
           </div>}
 
-          {step === 3 && newClient && <div className="flex flex-col gap-4"><div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4"><div className="mb-1 flex items-center gap-2 font-medium"><Check size={17} /> Connection ready</div><p className="text-sm text-muted-foreground">Copy the setup details into your AI client. This token is shown once.</p></div><pre className="overflow-auto rounded-lg border bg-muted/40 p-4 text-xs leading-relaxed">{JSON.stringify({ mcp_url: connectionUrl, authorization: `Bearer ${newClient.token}` }, null, 2)}</pre><div className="flex justify-between"><Button variant="ghost" onClick={() => { setStep(1); setNewClient(null); setName(''); }}>Done</Button><Button onClick={() => void copySetup()}>{copied ? <Check size={16} /> : <Clipboard size={16} />}{copied ? 'Copied' : 'Copy setup details'}</Button></div></div>}
+          {step === 3 && newClient && <div className="flex flex-col gap-4"><div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4"><div className="mb-1 flex items-center gap-2 font-medium"><Check size={17} /> Awaiting admin approval</div><p className="text-sm text-muted-foreground">The token is shown once. The AI client can connect only after an admin approves this request from the dashboard or Telegram bot.</p></div><pre className="overflow-auto rounded-lg border bg-muted/40 p-4 text-xs leading-relaxed">{JSON.stringify({ mcp_url: connectionUrl, authorization: `Bearer ${newClient.token}` }, null, 2)}</pre><div className="flex justify-between"><Button variant="ghost" onClick={() => { setStep(1); setNewClient(null); setName(''); }}>Done</Button><Button onClick={() => void copySetup()}>{copied ? <Check size={16} /> : <Clipboard size={16} />}{copied ? 'Copied' : 'Copy setup details'}</Button></div></div>}
         </div>
       </Card>
 
       {error && <div role="alert" className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><span>{error}</span><button type="button" onClick={() => setError(null)} aria-label="Dismiss error"><X size={16} /></button></div>}
 
       <Card title="Connected AI clients" icon={<KeyRound size={20} />}>
-        <div className="overflow-x-auto px-6 pb-6">{clients.length === 0 ? <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No AI clients connected yet. New connections start with viewer access.</div> : <div className="flex flex-col gap-2">{clients.map((client) => <div key={client.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1.4fr_0.8fr_0.8fr_1.4fr_auto] md:items-center"><div><div className="font-medium">{client.name}</div><div className="text-xs text-muted-foreground">{client.provider} · {protocolLabels[client.protocol]}</div></div><div className="text-sm"><span className="rounded-full border px-2 py-1 text-xs">{roleCopy[client.role].label}</span></div><div className="text-xs text-muted-foreground">{client.status === 'active' ? 'Active' : client.status}</div><div className="text-xs text-muted-foreground">Connected {formatDate(client.createdAt)}<br />Last seen {formatDate(client.lastSeenAt)}</div><div className="flex justify-end gap-2"><Button variant="secondary" size="sm" disabled={loading || client.status !== 'active'} onClick={() => void rotate(client.id)}><RefreshCw size={14} /> Rotate</Button><Button variant="danger" size="sm" disabled={loading || client.status !== 'active'} onClick={() => void revoke(client.id)}><Trash2 size={14} /> Remove</Button></div></div>)}</div>}</div>
+        <div className="overflow-x-auto px-6 pb-6">{clients.length === 0 ? <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">No AI clients connected yet. New connections start with viewer access.</div> : <div className="flex flex-col gap-2">{clients.map((client) => <div key={client.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1.4fr_0.8fr_0.8fr_1.4fr_auto] md:items-center"><div><div className="font-medium">{client.name}</div><div className="text-xs text-muted-foreground">{client.provider} · {protocolLabels[client.protocol]}</div></div><div className="text-sm"><select aria-label={`Role for ${client.name}`} value={client.role} disabled={loading || client.status === 'revoked' || client.status === 'expired'} onChange={(event) => void changeRole(client.id, event.target.value as ExternalClientRole)} className="rounded-full border bg-background px-2 py-1 text-xs"><option value="viewer">Viewer</option><option value="agent">Agent</option><option value="admin">Admin</option></select></div><div className="text-xs text-muted-foreground">{client.status === 'pending' ? 'Pending approval' : client.status === 'active' ? 'Active' : client.status}</div><div className="text-xs text-muted-foreground">Connected {formatDate(client.createdAt)}<br />Last seen {formatDate(client.lastSeenAt)}</div><div className="flex justify-end gap-2">{client.status === 'pending' && <Button size="sm" disabled={loading} onClick={() => void approve(client.id)}><Check size={14} /> Approve</Button>}<Button variant="secondary" size="sm" disabled={loading || client.status !== 'active'} onClick={() => void rotate(client.id)}><RefreshCw size={14} /> Rotate</Button><Button variant="danger" size="sm" disabled={loading || client.status === 'revoked' || client.status === 'expired'} onClick={() => void revoke(client.id)}><Trash2 size={14} /> Remove</Button></div></div>)}</div>}</div>
       </Card>
     </section>
   );
