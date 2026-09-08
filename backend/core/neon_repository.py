@@ -121,6 +121,36 @@ async def create_task(
     return dict(row)
 
 
+async def update_task_status(
+    *, task_id: UUID, tenant_id: str, user_id: str, status: str
+) -> dict[str, Any] | None:
+    pool = await get_neon_pool()
+    row = await pool.fetchrow(
+        """
+        UPDATE supremeai_browser_tasks
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2 AND tenant_id = $3 AND user_id = $4
+        RETURNING id, status, updated_at
+        """,
+        status,
+        task_id,
+        tenant_id,
+        user_id,
+    )
+    return dict(row) if row else None
+
+
+async def delete_task(*, task_id: UUID, tenant_id: str, user_id: str) -> bool:
+    pool = await get_neon_pool()
+    result = await pool.execute(
+        "DELETE FROM supremeai_browser_tasks WHERE id = $1 AND tenant_id = $2 AND user_id = $3",
+        task_id,
+        tenant_id,
+        user_id,
+    )
+    return result.endswith("1")
+
+
 async def list_tasks(tenant_id: str, user_id: str) -> list[dict[str, Any]]:
     pool = await get_neon_pool()
     rows = await pool.fetch(
@@ -168,6 +198,8 @@ __all__ = [
     "load_policy",
     "save_policy",
     "create_task",
+    "update_task_status",
+    "delete_task",
     "list_tasks",
     "append_audit_event",
 ]

@@ -25,6 +25,8 @@ from core.logging_config import logger
 from core.neon_repository import (
     create_task as create_neon_task,
     list_tasks as list_neon_tasks,
+    update_task_status as update_neon_task_status,
+    delete_task as delete_neon_task,
     load_policy as load_neon_policy,
     save_policy as save_neon_policy,
 )
@@ -200,7 +202,7 @@ SYSTEM_LEARNING: dict[str, Any] = {"enabled": True}
 TASKS: dict[str, dict[str, Any]] = {}
 FINDINGS: list[dict[str, Any]] = []
 
-# বাংলা মন্তব্য: সার্কিট ব্রেকার থ্রেশোল্ড — টাস্ক এক্সিকিউশন ক্যাপ (৪৫ সেকেন্ড)
+# বাংলা মন্তব���য: সার্কিট ব্রেকার থ্রেশোল্ড — টাস্ক এক্সিকিউশন ক্যাপ (৪৫ সেকেন্ড)
 EXECUTION_CAP_MS = 45000
 
 
@@ -841,11 +843,50 @@ async def create_task(
     )
 
 
-@router.post("/tasks/{id}/circuit-open")
-def set_task_circuit_open(task_id: str):
-    """বাংলা মন্তব্য: টাস্কটি সার্কিট ব্রেকার স্টেটে সেট করে — UI তে লাল সতর্ক-আভা দেখানোর জন্য"""
-    if task_id not in TASKS:
+async def _set_task_status(
+    task_id: str,
+    status: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    owner_id = str(user.get("sub") or "")
+    try:
+        task_uuid = uuid.UUID(task_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    updated = await update_neon_task_status(
+        task_id=task_uuid, tenant_id=tenant_id, user_id=owner_id, status=status
+    )
+    if not updated:
         raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True, "status": status}
+
+
+@router.post("/tasks/{id}/circuit-open")
+async def set_task_circuit_open(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "CIRCUIT_OPEN", user, tenant_id)
+
+
+@router.post("/tasks/{id}/complete")
+async def set_task_complete(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "SUCCESS", user, tenant_id)
+
+
+@router.post("/tasks/{id}/fail")
+async def set_task_failed(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "FAILED", user, tenant_id)
+
+
+@router.delete("/tasks/{id}")
+async def delete_task(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    owner_id = str(user.get("sub") or "")
+    try:
+        deleted = await delete_neon_task(task_id=uuid.UUID(task_id), tenant_id=tenant_id, user_id=owner_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True}
     TASKS[task_id]["status"] = "CIRCUIT_OPEN"
     TASKS[task_id]["durationMs"] = EXECUTION_CAP_MS
     return {"success": True, "status": "CIRCUIT_OPEN"}
@@ -853,7 +894,7 @@ def set_task_circuit_open(task_id: str):
 
 @router.post("/tasks/{id}/complete")
 def set_task_complete(task_id: str):
-    """বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করুন"""
+    """বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করু���"""
     if task_id not in TASKS:
         raise HTTPException(status_code=404, detail="Task not found")
     TASKS[task_id]["status"] = "SUCCESS"
@@ -1106,7 +1147,7 @@ class ScrapeRequest(BaseModel):
 
 
 # বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
-# এখন ব্র���উজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
+# এখন ব্র���উজার অটোমেশন স্ক্র্যা���ার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
 # decoupled)। AGENTS.md §2: "Never treat tasks in isolation" — এই পরিবর্তনের পাশাপাশি
 # Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
 
