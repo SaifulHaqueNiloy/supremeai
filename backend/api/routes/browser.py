@@ -22,7 +22,12 @@ from core.cache.redis_manager import MultiLevelCache
 from core.effective_policy import get_effective_policy, policy_store
 from core.error_bus import with_error_bus
 from core.logging_config import logger
-from core.neon_repository import create_task as create_neon_task, list_tasks as list_neon_tasks
+from core.neon_repository import (
+    create_task as create_neon_task,
+    list_tasks as list_neon_tasks,
+    load_policy as load_neon_policy,
+    save_policy as save_neon_policy,
+)
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
 from core.task_policy import evaluate_goal
@@ -728,27 +733,54 @@ class UserPolicyUpdateRequest(BaseModel):
 
 
 @router.get("/policy")
-def get_policy(user: dict = Depends(get_current_user_token)):
+async def get_policy(
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     user_id = str(user.get("sub") or "")
     policy = get_effective_policy(user_id)
-    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    admin_row = await load_neon_policy(tenant_id)
+    user_row = await load_neon_policy(tenant_id, user_id)
+    if admin_row:
+        policy_store.update_admin(admin_row["rules"], admin_row["features"], admin_row["actions"], admin_row["limits"])
+        policy = get_effective_policy(user_id)
+    if user_row:
+        policy_store.update_user(user_id, user_row["rules"])
+        policy = get_effective_policy(user_id)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources, "version": policy.version}
 
 
 @router.put("/policy")
-def update_user_policy(
-    payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)
+async def update_user_policy(
+    payload: UserPolicyUpdateRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
 ):
     user_id = str(user.get("sub") or "")
     if not user_id:
         raise HTTPException(status_code=401, detail="Authenticated user required")
     policy = policy_store.update_user(user_id, payload.rules)
-    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    await save_neon_policy(tenant_id, user_id, user_id=user_id, rules=payload.rules)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
 
 
 @router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
-def update_admin_policy(payload: PolicyUpdateRequest):
+async def update_admin_policy(
+    payload: PolicyUpdateRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    updated_by = str(user.get("sub") or "admin")
     policy = policy_store.update_admin(
         payload.rules, payload.features, payload.actions, payload.limits
+    )
+    await save_neon_policy(
+        tenant_id,
+        updated_by,
+        rules=payload.rules,
+        features=payload.features,
+        actions=payload.actions,
+        limits=payload.limits,
     )
     return {
         "rules": policy.rules,
