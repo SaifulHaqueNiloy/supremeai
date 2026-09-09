@@ -24,11 +24,21 @@ from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.neon_repository import (
     create_task as create_neon_task,
-    list_tasks as list_neon_tasks,
-    update_task_status as update_neon_task_status,
+)
+from core.neon_repository import (
     delete_task as delete_neon_task,
+)
+from core.neon_repository import (
+    list_tasks as list_neon_tasks,
+)
+from core.neon_repository import (
     load_policy as load_neon_policy,
+)
+from core.neon_repository import (
     save_policy as save_neon_policy,
+)
+from core.neon_repository import (
+    update_task_status as update_neon_task_status,
 )
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
@@ -744,12 +754,21 @@ async def get_policy(
     admin_row = await load_neon_policy(tenant_id)
     user_row = await load_neon_policy(tenant_id, user_id)
     if admin_row:
-        policy_store.update_admin(admin_row["rules"], admin_row["features"], admin_row["actions"], admin_row["limits"])
+        policy_store.update_admin(
+            admin_row["rules"], admin_row["features"], admin_row["actions"], admin_row["limits"]
+        )
         policy = get_effective_policy(user_id)
     if user_row:
         policy_store.update_user(user_id, user_row["rules"])
         policy = get_effective_policy(user_id)
-    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources, "version": policy.version}
+    return {
+        "rules": policy.rules,
+        "features": policy.features,
+        "actions": policy.actions,
+        "limits": policy.limits,
+        "sources": policy.sources,
+        "version": policy.version,
+    }
 
 
 @router.put("/policy")
@@ -763,7 +782,13 @@ async def update_user_policy(
         raise HTTPException(status_code=401, detail="Authenticated user required")
     policy = policy_store.update_user(user_id, payload.rules)
     await save_neon_policy(tenant_id, user_id, user_id=user_id, rules=payload.rules)
-    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
+    return {
+        "rules": policy.rules,
+        "features": policy.features,
+        "actions": policy.actions,
+        "limits": policy.limits,
+        "sources": policy.sources,
+    }
 
 
 @router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
@@ -863,25 +888,43 @@ async def _set_task_status(
 
 
 @router.post("/tasks/{id}/circuit-open")
-async def set_task_circuit_open(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+async def set_task_circuit_open(
+    task_id: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     return await _set_task_status(task_id, "CIRCUIT_OPEN", user, tenant_id)
 
 
 @router.post("/tasks/{id}/complete")
-async def set_task_complete(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+async def set_task_complete(
+    task_id: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     return await _set_task_status(task_id, "SUCCESS", user, tenant_id)
 
 
 @router.post("/tasks/{id}/fail")
-async def set_task_failed(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+async def set_task_failed(
+    task_id: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     return await _set_task_status(task_id, "FAILED", user, tenant_id)
 
 
 @router.delete("/tasks/{id}")
-async def delete_task(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+async def delete_task(
+    task_id: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     owner_id = str(user.get("sub") or "")
     try:
-        deleted = await delete_neon_task(task_id=uuid.UUID(task_id), tenant_id=tenant_id, user_id=owner_id)
+        deleted = await delete_neon_task(
+            task_id=uuid.UUID(task_id), tenant_id=tenant_id, user_id=owner_id
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail="Task not found") from exc
     if not deleted:
