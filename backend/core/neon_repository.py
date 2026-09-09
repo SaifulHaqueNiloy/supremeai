@@ -29,9 +29,7 @@ async def get_neon_pool() -> asyncpg.Pool:
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise RuntimeError("DATABASE_URL is required for Neon persistence")
-        _pool = await asyncpg.create_pool(
-            dsn=_asyncpg_dsn(database_url), min_size=1, max_size=10
-        )
+        _pool = await asyncpg.create_pool(dsn=_asyncpg_dsn(database_url), min_size=1, max_size=10)
     return _pool
 
 
