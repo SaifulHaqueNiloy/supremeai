@@ -148,6 +148,21 @@ export async function fetchWithRetry(
 
   throw lastError || new Error('All retries exhausted');
 }// বাংলা (single-frontend migration, roadmap Phase 1/7): VITE_PORTAL_TYPE সরানো হয়েছে।
+// Environment managers occasionally inject values as `KEY=value`; normalize that shape
+// before constructing requests so malformed configuration cannot produce invalid hosts.
+export function normalizeBackendUrl(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const normalized = value.trim().replace(/^VITE_[A-Z0-9_]+=\s*/i, '').replace(/\/$/, '');
+  if (!normalized) return '';
+  try {
+    const parsed = new URL(normalized);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return '';
+    return parsed.toString().replace(/\/$/, '');
+  } catch {
+    return '';
+  }
+}
+
 // এক বিল্ডে User + Admin দুই context-ই থাকে, তাই backend নির্বাচন এখন RUNTIME সিদ্ধান্ত:
 //  - '/admin-api' path অথবা /admin/* route context → admin backend (থাকলে)
 //  - বাকি সব → user backend
@@ -155,15 +170,16 @@ export async function fetchWithRetry(
 // Vercel-এ relative path ('') রাখা হয় কারণ Vercel external rewrite proxy সাপোর্ট করে।
 
 /** User-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
-export const USER_BACKEND_URL: string =
+export const USER_BACKEND_URL: string = normalizeBackendUrl(
   import.meta.env.VITE_USER_BACKEND ||
-  import.meta.env.VITE_API_BASE ||
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_BACKEND_URL || '';
+    import.meta.env.VITE_API_BASE ||
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_BACKEND_URL,
+);
 
 /** Admin-context API calls-এর canonical backend URL (build-time resolved, runtime-picked) */
 export const ADMIN_BACKEND_URL: string =
-  import.meta.env.VITE_ADMIN_BACKEND || USER_BACKEND_URL;
+  normalizeBackendUrl(import.meta.env.VITE_ADMIN_BACKEND) || USER_BACKEND_URL;
 
 // 🔬 Export circuits for monitoring
 export const circuits = { api: apiCircuit, websocket: wsCircuit };
