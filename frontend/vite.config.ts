@@ -10,9 +10,20 @@ import tailwindcss from '@tailwindcss/vite'
 // বাংলা (unified backend URL architecture):
 // এখন User ও Admin উভয় ইন্টারফেস একই ইউনিফাইড ব্যাকএন্ড এপিআই ক্লাস্টারে কানেক্ট হয়।
 // অগ্রাধিকার ক্রম: VITE_API_URL -> VITE_BACKEND_URL -> VITE_USER_BACKEND -> RENDER_SERVICE_URL
-const UNIFIED_BACKEND = process.env.VITE_API_URL || process.env.VITE_BACKEND_URL || process.env.VITE_USER_BACKEND || process.env.RENDER_SERVICE_URL || ''
+const normalizeBackendUrl = (value: unknown) => {
+  if (typeof value !== 'string') return ''
+  const normalized = value.trim().replace(/^VITE_[A-Z0-9_]+=\s*/i, '').replace(/\/$/, '')
+  try {
+    const parsed = new URL(normalized)
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.toString().replace(/\/$/, '') : ''
+  } catch {
+    return ''
+  }
+}
+
+const UNIFIED_BACKEND = normalizeBackendUrl(process.env.VITE_API_URL) || normalizeBackendUrl(process.env.VITE_BACKEND_URL) || normalizeBackendUrl(process.env.VITE_USER_BACKEND) || normalizeBackendUrl(process.env.RENDER_SERVICE_URL)
 const USER_BACKEND = UNIFIED_BACKEND
-const ADMIN_BACKEND = process.env.VITE_ADMIN_BACKEND || UNIFIED_BACKEND
+const ADMIN_BACKEND = normalizeBackendUrl(process.env.VITE_ADMIN_BACKEND) || UNIFIED_BACKEND
 
 // 🔒 PRODUCTION GUARD: Missing backend URL = Build failure (not silent wrong URL)
 if (process.env.NODE_ENV === 'production' && !UNIFIED_BACKEND) {
