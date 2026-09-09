@@ -147,7 +147,7 @@ class RequestDeduplicator {
     const cached = this.recentRequests.get(requestHash);
     
     if (cached && Date.now() - cached.timestamp < this.windowMs) {
-      return cached.response;
+      return cached.response as Promise<T>;
     }
     
     return fetchFn().then(response => {
