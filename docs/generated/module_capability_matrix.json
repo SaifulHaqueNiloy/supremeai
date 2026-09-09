@@ -1,5 +1,5 @@
 {
-  "module_count": 2392,
+  "module_count": 2414,
   "modules": [
     {
       "capability_signals": [],
@@ -1186,6 +1186,17 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "execute",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/capabilities.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -1945,6 +1956,15 @@
     },
     {
       "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/social_growth.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
@@ -2458,6 +2478,13 @@
       "path": "backend/core/accessibility/wcag_compliance.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/action_policy.py"
+    },
+    {
       "capability_signals": [
         "memory"
       ],
@@ -2804,6 +2831,15 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/browser_session_catalog.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/browser_session_manager.py"
     },
     {
@@ -2874,6 +2910,38 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/cache_manager.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/capability_activation.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/capability_discovery.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "dispatch",
+        "execute",
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/capability_gateway.py"
     },
     {
       "capability_signals": [
@@ -3257,6 +3325,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/deployment_fallback_defaults.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/effective_policy.py"
     },
     {
       "capability_signals": [],
@@ -4153,6 +4230,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/monitoring.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/neon_repository.py"
     },
     {
       "capability_signals": [],
@@ -5472,6 +5559,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/social_growth.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/startup/__init__.py"
     },
     {
@@ -5569,6 +5663,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/task_contract.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/task_policy.py"
     },
     {
       "capability_signals": [],
@@ -9388,6 +9491,39 @@
       "path": "backend/tests/core/test_cache_optimization.py"
     },
     {
+      "capability_signals": [
+        "capability",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_capability_activation.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_capability_discovery.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "execute",
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_capability_gateway.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -9757,6 +9893,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_e2e_media.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_effective_policy.py"
     },
     {
       "capability_signals": [],
@@ -10366,6 +10511,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_sliding_window_memory.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_social_growth.py"
     },
     {
       "capability_signals": [
@@ -13178,6 +13330,13 @@
       "path": "frontend/src/auth/identity.ts"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/auth/routePolicies.test.ts"
+    },
+    {
       "capability_signals": [
         "register"
       ],
@@ -14302,7 +14461,9 @@
     },
     {
       "capability_signals": [
-        "browser"
+        "browser",
+        "capability",
+        "execute"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -14473,6 +14634,15 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/customer/QuickPresets.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/customer/TaskAutomationCard.tsx"
     },
     {
       "capability_signals": [
@@ -14957,6 +15127,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "mcp"
       ],
@@ -15333,6 +15504,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/config/constants.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/config/navigationRegistry.test.ts"
     },
     {
       "capability_signals": [
@@ -16238,6 +16416,7 @@
     {
       "capability_signals": [
         "capability",
+        "execute",
         "health",
         "mcp"
       ],
@@ -16279,6 +16458,15 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/services/heartbeat.ts"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/services/policyService.ts"
     },
     {
       "capability_signals": [],
@@ -16323,6 +16511,15 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/services/skillsService.ts"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/services/socialGrowthService.ts"
     },
     {
       "capability_signals": [],
@@ -16531,6 +16728,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/store/slices/workspaceSlice.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/store/stateOwnership.ts"
     },
     {
       "capability_signals": [],
