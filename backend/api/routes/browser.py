@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
-from api.deps import get_current_user_token
+from api.deps import get_current_tenant, get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from core.browser_compat_store import browser_compat_store
 from core.browser_session_catalog import SavedBrowserSession, browser_session_catalog
@@ -22,6 +22,14 @@ from core.cache.redis_manager import MultiLevelCache
 from core.effective_policy import get_effective_policy, policy_store
 from core.error_bus import with_error_bus
 from core.logging_config import logger
+from core.neon_repository import (
+    create_task as create_neon_task,
+    list_tasks as list_neon_tasks,
+    update_task_status as update_neon_task_status,
+    delete_task as delete_neon_task,
+    load_policy as load_neon_policy,
+    save_policy as save_neon_policy,
+)
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
 from core.task_policy import evaluate_goal
@@ -194,7 +202,7 @@ SYSTEM_LEARNING: dict[str, Any] = {"enabled": True}
 TASKS: dict[str, dict[str, Any]] = {}
 FINDINGS: list[dict[str, Any]] = []
 
-# বাংলা মন্তব্য: সার্কিট ব্রেকার থ্রেশোল্ড — টাস্ক এক্সিকিউশন ক্যাপ (৪৫ সেকেন্ড)
+# বাংলা মন্তব���য: সার্কিট ব্রেকার থ্রেশোল্ড — টাস্ক এক্সিকিউশন ক্যাপ (৪৫ সেকেন্ড)
 EXECUTION_CAP_MS = 45000
 
 
@@ -701,8 +709,12 @@ def toggle_learning(body: dict[str, bool]):
 
 
 @router.get("/tasks")
-def get_tasks():
-    return {"tasks": list(TASKS.values())}
+async def get_tasks(
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    owner_id = str(user.get("sub") or "")
+    return {"tasks": await list_neon_tasks(tenant_id, owner_id)}
 
 
 class TaskPreviewRequest(BaseModel):
@@ -723,27 +735,54 @@ class UserPolicyUpdateRequest(BaseModel):
 
 
 @router.get("/policy")
-def get_policy(user: dict = Depends(get_current_user_token)):
+async def get_policy(
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     user_id = str(user.get("sub") or "")
     policy = get_effective_policy(user_id)
-    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    admin_row = await load_neon_policy(tenant_id)
+    user_row = await load_neon_policy(tenant_id, user_id)
+    if admin_row:
+        policy_store.update_admin(admin_row["rules"], admin_row["features"], admin_row["actions"], admin_row["limits"])
+        policy = get_effective_policy(user_id)
+    if user_row:
+        policy_store.update_user(user_id, user_row["rules"])
+        policy = get_effective_policy(user_id)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources, "version": policy.version}
 
 
 @router.put("/policy")
-def update_user_policy(
-    payload: UserPolicyUpdateRequest, user: dict = Depends(get_current_user_token)
+async def update_user_policy(
+    payload: UserPolicyUpdateRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
 ):
     user_id = str(user.get("sub") or "")
     if not user_id:
         raise HTTPException(status_code=401, detail="Authenticated user required")
     policy = policy_store.update_user(user_id, payload.rules)
-    return {"rules": policy.rules, "features": policy.features, "sources": policy.sources}
+    await save_neon_policy(tenant_id, user_id, user_id=user_id, rules=payload.rules)
+    return {"rules": policy.rules, "features": policy.features, "actions": policy.actions, "limits": policy.limits, "sources": policy.sources}
 
 
 @router.put("/admin/policy", dependencies=[Depends(require_admin_token)])
-def update_admin_policy(payload: PolicyUpdateRequest):
+async def update_admin_policy(
+    payload: PolicyUpdateRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    updated_by = str(user.get("sub") or "admin")
     policy = policy_store.update_admin(
         payload.rules, payload.features, payload.actions, payload.limits
+    )
+    await save_neon_policy(
+        tenant_id,
+        updated_by,
+        rules=payload.rules,
+        features=payload.features,
+        actions=payload.actions,
+        limits=payload.limits,
     )
     return {
         "rules": policy.rules,
@@ -755,7 +794,11 @@ def update_admin_policy(payload: PolicyUpdateRequest):
 
 
 @router.post("/tasks/preview")
-def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_token)):
+async def preview_task(
+    req: TaskPreviewRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
     actor_id = str(user.get("sub") or "")
     decision = evaluate_goal(req.goal, actor_id)
     if not actor_id:
@@ -764,18 +807,16 @@ def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_
         return {"status": "manual", "risk": decision.risk, "message": decision.message}
     if decision.risk == "approval" and not req.approved:
         return {"status": "approval_required", "risk": decision.risk, "message": decision.message}
-    task_id = f"task_{uuid.uuid4().hex[:12]}"
-    task = {
-        "id": task_id,
-        "goal": req.goal,
-        "url": req.url,
-        "status": "ACTIVE",
-        "risk": decision.risk,
-        "owner_id": actor_id,
-        "createdAt": datetime.now(UTC).isoformat(),
-        "evidence": [],
-    }
-    TASKS[task_id] = task
+    task_id = uuid.uuid4()
+    task = await create_neon_task(
+        task_id=task_id,
+        tenant_id=tenant_id,
+        user_id=actor_id,
+        url=req.url,
+        goal=req.goal,
+        status="ACTIVE",
+        plan=[{"risk": decision.risk, "message": decision.message}],
+    )
     return {
         "status": "started",
         "message": "Your safe task has started. SupremeAI will pause if it needs your approval.",
@@ -784,24 +825,68 @@ def preview_task(req: TaskPreviewRequest, user: dict = Depends(get_current_user_
 
 
 @router.post("/tasks")
-def create_task(req: GoalRequest):
-    task_id = f"task_{uuid.uuid4().hex[:12]}"
-    task = {
-        "id": task_id,
-        "goal": req.goal,
-        "status": "ACTIVE",
-        "createdAt": datetime.now(UTC).isoformat(),
-        "durationMs": 0,
-    }
-    TASKS[task_id] = task
-    return task
+async def create_task(
+    req: GoalRequest,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    owner_id = str(user.get("sub") or "")
+    if not owner_id:
+        raise HTTPException(status_code=401, detail="Authenticated user required")
+    return await create_neon_task(
+        task_id=uuid.uuid4(),
+        tenant_id=tenant_id,
+        user_id=owner_id,
+        url=None,
+        goal=req.goal,
+        status="ACTIVE",
+    )
+
+
+async def _set_task_status(
+    task_id: str,
+    status: str,
+    user: dict = Depends(get_current_user_token),
+    tenant_id: str = Depends(get_current_tenant),
+):
+    owner_id = str(user.get("sub") or "")
+    try:
+        task_uuid = uuid.UUID(task_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    updated = await update_neon_task_status(
+        task_id=task_uuid, tenant_id=tenant_id, user_id=owner_id, status=status
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True, "status": status}
 
 
 @router.post("/tasks/{id}/circuit-open")
-def set_task_circuit_open(task_id: str):
-    """বাংলা মন্তব্য: টাস্কটি সার্কিট ব্রেকার স্টেটে সেট করে — UI তে লাল সতর্ক-আভা দেখানোর জন্য"""
-    if task_id not in TASKS:
+async def set_task_circuit_open(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "CIRCUIT_OPEN", user, tenant_id)
+
+
+@router.post("/tasks/{id}/complete")
+async def set_task_complete(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "SUCCESS", user, tenant_id)
+
+
+@router.post("/tasks/{id}/fail")
+async def set_task_failed(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    return await _set_task_status(task_id, "FAILED", user, tenant_id)
+
+
+@router.delete("/tasks/{id}")
+async def delete_task(task_id: str, user: dict = Depends(get_current_user_token), tenant_id: str = Depends(get_current_tenant)):
+    owner_id = str(user.get("sub") or "")
+    try:
+        deleted = await delete_neon_task(task_id=uuid.UUID(task_id), tenant_id=tenant_id, user_id=owner_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail="Task not found") from exc
+    if not deleted:
         raise HTTPException(status_code=404, detail="Task not found")
+    return {"success": True}
     TASKS[task_id]["status"] = "CIRCUIT_OPEN"
     TASKS[task_id]["durationMs"] = EXECUTION_CAP_MS
     return {"success": True, "status": "CIRCUIT_OPEN"}
@@ -809,7 +894,7 @@ def set_task_circuit_open(task_id: str):
 
 @router.post("/tasks/{id}/complete")
 def set_task_complete(task_id: str):
-    """বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করুন"""
+    """বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করু���"""
     if task_id not in TASKS:
         raise HTTPException(status_code=404, detail="Task not found")
     TASKS[task_id]["status"] = "SUCCESS"
@@ -1062,7 +1147,7 @@ class ScrapeRequest(BaseModel):
 
 
 # বাংলা মন্তব্য: আগের BrowserAgent গ্লোবাল সিঙ্গলটন সরিয়ে দিয়েছি।
-# এখন ব্র���উজার অটোমেশন স্ক্র্যাপার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
+# এখন ব্র���উজার অটোমেশন স্ক্র্যা���ার মাইক্রোসার্ভিসে HTTP প্রক্সি করে (zero-cost,
 # decoupled)। AGENTS.md §2: "Never treat tasks in isolation" — এই পরিবর্তনের পাশাপাশি
 # Cloudflare Worker (worker.js) এবং render.yaml-এ scraper route যোগ করতে হবে।
 
