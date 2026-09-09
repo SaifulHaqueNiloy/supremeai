@@ -8,7 +8,6 @@ from uuid import UUID
 
 import asyncpg
 
-
 _pool: asyncpg.Pool | None = None
 
 
