@@ -6,7 +6,7 @@ import type { WebContainer } from '@webcontainer/api';
 import 'xterm/css/xterm.css';
 import { apiClient } from '../../services/apiClient';
 import { BrowserPreview } from '../../components/customer/BrowserPreview';
-import { Activity, Bot, ChevronRight, Eye, EyeOff, FileCode2, History, Maximize2, MessageSquare, PanelLeft, Play, Plus, Settings2, TerminalSquare } from 'lucide-react';
+import { Activity, Bot, ChevronRight, Eye, EyeOff, FileCode2, History, Maximize2, MessageSquare, PanelLeft, Play, Plus, Send, Settings2, TerminalSquare } from 'lucide-react';
 
 interface Message { role: 'user' | 'agent'; content: string; source?: 'ai_api' | 'memory'; }
 type Panel = 'chat' | 'terminal' | 'browser';

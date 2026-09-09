@@ -90,7 +90,7 @@ export function RenderPreflightWidget() {
       case 'blocked':
         return <Badge variant="danger">BLOCKED</Badge>;
       default:
-        return <Badge variant="neutral">{status.toUpperCase()}</Badge>;
+        return <Badge variant="default">{status.toUpperCase()}</Badge>;
     }
   };
 

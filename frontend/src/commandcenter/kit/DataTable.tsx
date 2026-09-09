@@ -84,10 +84,10 @@ export function DataTable<T extends Record<string, unknown>>({
         );
     }
 
-    const useVirtual = sorted.length > 50 && containerRef.current != null;
+    const useVirtual = sorted.length > 50;
 
     return (
-        <div className="overflow-x-auto rounded-xl border border-[var(--sa-line)]" style={{ maxHeight }}>
+        <div ref={containerRef} className="overflow-x-auto rounded-xl border border-[var(--sa-line)]" style={{ maxHeight }}>
             <table className="w-full text-[10px] font-mono">
                 <thead>
                     <tr className="bg-[var(--sa-bg-2)] border-b border-[var(--sa-line)]">
@@ -107,7 +107,7 @@ export function DataTable<T extends Record<string, unknown>>({
                         ))}
                     </tr>
                 </thead>
-                <tbody ref={containerRef}>
+                <tbody>
                     {useVirtual ? (
                         virtualizer.getVirtualItems().map(vRow => {
                             const row = sorted[vRow.index];
