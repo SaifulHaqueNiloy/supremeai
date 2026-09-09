@@ -46,6 +46,22 @@ describe('api.ts — runtime context-based backend resolution', () => {
     });
   });
 
+  describe('backend URL normalization', () => {
+    it('removes an accidentally duplicated environment-key prefix', async () => {
+      delete env.VITE_USER_BACKEND;
+      env.VITE_API_URL = 'VITE_API_URL=https://api.example.com/';
+      const { BACKEND_URL } = await loadApi();
+      expect(BACKEND_URL).toBe('https://api.example.com');
+    });
+
+    it('rejects malformed backend values instead of emitting invalid request URLs', async () => {
+      delete env.VITE_USER_BACKEND;
+      env.VITE_API_URL = 'base.invalid';
+      const { normalizeBackendUrl } = await loadApi();
+      expect(normalizeBackendUrl(env.VITE_API_URL)).toBe('');
+    });
+  });
+
   describe('BACKEND_URL (deprecated alias)', () => {
     it('user backend-ই alias হিসেবে রিটার্ন করে', async () => {
       const { BACKEND_URL } = await loadApi();
