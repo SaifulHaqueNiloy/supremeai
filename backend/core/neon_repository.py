@@ -11,13 +11,27 @@ import asyncpg
 _pool: asyncpg.Pool | None = None
 
 
+def _asyncpg_dsn(database_url: str) -> str:
+    """asyncpg শুধু plain postgresql:// scheme বোঝে; SQLAlchemy-style
+    'postgresql+asyncpg://' (test_settings/DATABASE_URL-এ ব্যবহৃত) দিলে
+    asyncpg.create_pool() DSN parse করতে ব্যর্থ হয় — তাই ড্রাইভার সাফিক্স
+    বাদ দেওয়া হচ্ছে।"""
+    if "+" in database_url.split("://", 1)[0]:
+        scheme, rest = database_url.split("://", 1)
+        scheme = scheme.split("+", 1)[0]
+        return f"{scheme}://{rest}"
+    return database_url
+
+
 async def get_neon_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
         database_url = os.getenv("DATABASE_URL")
         if not database_url:
             raise RuntimeError("DATABASE_URL is required for Neon persistence")
-        _pool = await asyncpg.create_pool(dsn=database_url, min_size=1, max_size=10)
+        _pool = await asyncpg.create_pool(
+            dsn=_asyncpg_dsn(database_url), min_size=1, max_size=10
+        )
     return _pool
 
 
