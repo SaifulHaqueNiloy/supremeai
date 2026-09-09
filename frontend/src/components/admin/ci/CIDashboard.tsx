@@ -246,7 +246,7 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg
 
 // ══════════════════════════════════════════════════════════════════════════════
 // UTILITY FUNCTIONS
-// ══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════��══════════════════════════════════════════════════════════
 
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${seconds.toFixed(0)}s`;
@@ -573,6 +573,8 @@ export function CIDashboard({
     let reconnectAttempt = 0;
     const MAX_RECONNECT = 8;
     let destroyed = false;
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | undefined;
 
     const connect = () => {
       if (destroyed) return;
@@ -582,17 +584,18 @@ export function CIDashboard({
         // SECURITY FIX (audit S-2): token must NOT be in the URL.
         // Strip any ?token= that the caller might have embedded in wsEndpoint.
         const cleanWsEndpoint = wsEndpoint.replace(/([?&])token=[^&]*/g, '$1').replace(/[?&]$/, '');
-        ws = new WebSocket(cleanWsEndpoint);
+        const socket = new WebSocket(cleanWsEndpoint);
+        ws = socket;
 
-        ws.onopen = () => {
+        socket.onopen = () => {
           // First-message auth frame — token never appears in URL or logs.
           const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
-          if (token) ws.send(JSON.stringify({ type: 'auth', token }));
+          if (token) socket.send(JSON.stringify({ type: 'auth', token }));
           reconnectAttempt = 0;
           setConnectionStatus('connected');
         };
 
-        ws.onmessage = (event) => {
+        socket.onmessage = (event) => {
           try {
             const message = JSON.parse(event.data);
 
@@ -605,7 +608,7 @@ export function CIDashboard({
           }
         };
 
-        ws.onclose = () => {
+        socket.onclose = () => {
           setConnectionStatus('disconnected');
           if (destroyed || reconnectAttempt >= MAX_RECONNECT) return;
           // Exponential backoff with jitter
@@ -614,9 +617,9 @@ export function CIDashboard({
           reconnectTimeout = setTimeout(connect, delay);
         };
 
-        ws.onerror = () => {
+        socket.onerror = () => {
           setConnectionStatus('error');
-          ws.close();
+          socket.close();
         };
 
       } catch (err) {
