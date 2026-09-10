@@ -3,6 +3,7 @@ import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
 import { useAuthStore } from '../../store/authStore';
 import { useI18n } from '../../i18n/useI18n';
+import { locales, type Locale } from '../../i18n/config';
 
 export const Header = ({
   theme,
@@ -29,7 +30,10 @@ export const Header = ({
       <div className="flex items-center space-x-4">
         <select
           value={locale}
-          onChange={(e) => setLocale(e.target.value)}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (locales.includes(next as Locale)) setLocale(next as Locale);
+          }}
           className="bg-transparent border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] text-xs rounded px-2 py-1 cursor-pointer outline-none focus:ring-1 focus:ring-[var(--supremeai-color-brand-500)] text-[var(--supremeai-color-neutral-500)] hover:text-foreground"
         >
           <option value="en" className="dark:bg-slate-950 text-foreground bg-slate-100">English (EN)</option>

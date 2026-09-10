@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { apiClient } from '../services/apiClient';
 import { eventBus, Events } from '../lib/componentEventBus';
+import { getLocalDataScope } from './localFirstDb';
+
+type ThemeStorage = {
+  getItem: (name: string) => string | null;
+  setItem: (name: string, value: string) => void;
+  removeItem: (name: string) => void;
+};
+
+const scopedThemeStorage = (): ThemeStorage => ({
+  getItem: (name) => localStorage.getItem(`${name}:${getLocalDataScope() ?? 'anonymous'}`),
+  setItem: (name, value) => localStorage.setItem(`${name}:${getLocalDataScope() ?? 'anonymous'}`, value),
+  removeItem: (name) => localStorage.removeItem(`${name}:${getLocalDataScope() ?? 'anonymous'}`),
+});
 
 interface ThemeState {
   theme: 'dark' | 'light' | 'system';
@@ -77,7 +90,7 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'supremeai-theme-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(scopedThemeStorage),
     }
   )
 );

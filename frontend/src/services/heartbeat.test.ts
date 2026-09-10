@@ -9,7 +9,7 @@ describe('heartbeat', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    (global as { fetch: ReturnType<typeof vi.fn> }).fetch = vi.fn();
+    (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch = vi.fn();
   });
 
   afterEach(() => {
@@ -23,7 +23,7 @@ describe('heartbeat', () => {
   });
 
   it('pings the health endpoint on schedule', async () => {
-    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
     mockFetch.mockResolvedValue({ ok: true } as Response);
 
     startAntiSleepHeartbeat();
@@ -38,7 +38,7 @@ describe('heartbeat', () => {
 
   it('logs a warning when the health endpoint returns non-ok', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
     mockFetch.mockResolvedValue({ ok: false, status: 500 } as Response);
 
     startAntiSleepHeartbeat();
@@ -52,7 +52,7 @@ describe('heartbeat', () => {
 
   it('logs a warning when the fetch throws', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
     mockFetch.mockRejectedValue(new Error('network down'));
 
     startAntiSleepHeartbeat();
