@@ -126,14 +126,28 @@ def get_current_user_token(request: Request) -> dict:
 
 
 def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
-    """Enforce the admin role for any admin-facing route.
-
-    বাংলা মন্তব্য: আগে এই গার্ডটি তিনটি মডিউলে আলাদা আলাদাভাবে ডিফাইন করা ছিল, ফলে
-    নতুন admin রাউটার লেখার সময় সহজেই বাদ পড়ে যেত। এখন এটিই একমাত্র উৎস।
-    """
+    """Enforce the authenticated admin role for admin-facing routes."""
     if payload.get("role") != "admin":
         logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return payload
+
+
+def get_current_platform_admin(payload: dict = Depends(get_current_admin)) -> dict:
+    """Require a platform administrator for cross-tenant control-plane operations.
+
+    Project admins may manage their own workspace, but tenant provisioning and
+    global usage controls must remain restricted to the explicitly configured
+    platform administrator identities.
+    """
+    subject = str(payload.get("sub") or payload.get("email") or "").strip().lower()
+    configured = {str(email).strip().lower() for email in settings.admin_emails if email}
+    if not subject or subject not in configured:
+        logger.warning("Platform-admin access denied for subject=%s", subject or "unknown")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Platform administrator access required",
+        )
     return payload
 
 
