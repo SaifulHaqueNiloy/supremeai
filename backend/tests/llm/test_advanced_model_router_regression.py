@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
+from core.config import settings
 from core.llm.advanced_model_router import (
     _DETERMINISTIC_PATTERNS,
     _TIER0_CONFIDENCE_THRESHOLD,
@@ -240,9 +241,12 @@ def test_get_available_models_unknown_domain_falls_back():
 
 def test_get_available_models_provider_split_and_fallback():
     router = AdvancedModelRouter()
-    # gpt-4o-mini has no slash -> openai
     coding = router.get_available_models("coding")
-    assert ("openai", "gpt-4o-mini") in coding
+    if "/" in settings.model_chat:
+        expected_provider, expected_model = settings.model_chat.split("/", 1)
+    else:
+        expected_provider, expected_model = "openai", settings.model_chat
+    assert (expected_provider, expected_model) in coding
     assert ("groq", "llama-3.3-70b-versatile") in coding
 
 
