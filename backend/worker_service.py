@@ -37,7 +37,6 @@ from sqlalchemy.exc import IntegrityError
 
 from database.session import get_db_session_context
 
-
 SUPPORTED_CAPABILITIES = frozenset({"acknowledge", "scrape"})
 MAX_METADATA_BYTES = 32_768
 
@@ -68,7 +67,7 @@ class TaskContract(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def validate_contract(self) -> "TaskContract":
+    def validate_contract(self) -> TaskContract:
         if len(str(self.metadata).encode("utf-8")) > MAX_METADATA_BYTES:
             raise ValueError(f"metadata exceeds {MAX_METADATA_BYTES} bytes")
         if self.capability == "scrape" and not isinstance(self.metadata.get("url"), str):
@@ -99,6 +98,7 @@ async def _queue_available() -> tuple[bool, str | None]:
     except Exception as exc:
         _state.update(degraded=True, detail=f"queue unavailable: {exc}")
         return False, "Queue is unavailable"
+
 
 def _verify_worker_auth(request: Request) -> None:
     """Validate internal worker authentication token or JWT secret (Audit Critical-4 Fix)."""
@@ -335,9 +335,15 @@ async def _claim_durable_idempotency(request: TaskContract, fingerprint: str) ->
             )
             row = result.mappings().first()
             if not row or row["trace_id"] != fingerprint:
-                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
+                raise HTTPException(
+                    status_code=409,
+                    detail="Idempotency key was already used with a different task payload",
+                )
             if row["external_execution_id"] == "__pending__":
-                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
+                raise HTTPException(
+                    status_code=409,
+                    detail="A task with this idempotency key is currently being submitted",
+                )
             return row["external_execution_id"]
 
 
@@ -374,9 +380,15 @@ async def _claim_idempotency(request: TaskContract) -> tuple[str, str | None]:
         existing = _idempotency_records.get(record_key)
         if existing:
             if existing[0] != fingerprint:
-                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
+                raise HTTPException(
+                    status_code=409,
+                    detail="Idempotency key was already used with a different task payload",
+                )
             if not existing[1]:
-                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
+                raise HTTPException(
+                    status_code=409,
+                    detail="A task with this idempotency key is currently being submitted",
+                )
             return fingerprint, existing[1]
         if len(_idempotency_records) >= MAX_IDEMPOTENCY_RECORDS:
             _idempotency_records.pop(next(iter(_idempotency_records)))
