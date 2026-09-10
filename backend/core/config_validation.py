@@ -98,6 +98,15 @@ class SettingsValidationMixin:
             raise ValueError(f"ENV must be one of {allowed}, got '{value}'")
         return value.lower()
 
+    @field_validator("admin_authorized", "autofix_authorized", mode="before")
+    @classmethod
+    def validate_boolean_flags(cls, v: Any) -> bool:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.strip().lower() in ("true", "1", "yes")
+        return bool(v)
+
     @field_validator("debug", mode="before")
     @classmethod
     def validate_debug_mode(cls, v: Any, info: ValidationInfo) -> bool:

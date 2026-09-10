@@ -81,10 +81,15 @@ function renderRoute(path: string) {
 
 describe('application route smoke tests', () => {
   it.each([
+    ['/', 'Guest chat'],
     ['/features', '/features page'],
     ['/models', 'Models page'],
     ['/pricing', 'Pricing page'],
     ['/docs', '/docs page'],
+    ['/about', '/about page'],
+    ['/contact', '/contact page'],
+    ['/login', 'Login page'],
+    ['/register', 'Register page'],
   ])('renders the public route %s', async (path, expectedText) => {
     renderRoute(path);
     await waitFor(() => expect(screen.getByText(expectedText)).toBeInTheDocument());
