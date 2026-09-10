@@ -5,7 +5,7 @@
  */
 
 import "dotenv/config";
-import { timingSafeEqual, createHmac } from "node:crypto";
+import { timingSafeEqual, createHmac, randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -16,9 +16,26 @@ import { RequestContextStore } from "./policy/auth.context.js";
 import { getServiceDescriptors } from "./service-circles.js";
 import { nowTimestamp, timestampDetails, withTimestamp } from "./lib/timestamps.js";
 import { approveClient, changeClientRole, defaultClientScopes, listClients, registerClient, resolveClient, revokeClient, rotateClient, roleAllows, scopeAllows } from "./policy/client-registry.js";
+import { createBuiltinManifest } from "./registry/mcp.contracts.js";
 
 const SERVER_NAME = "supremeai-control-tower";
 const SERVER_VERSION = "1.0.0";
+const MAX_REQUEST_BYTES = 1_048_576;
+const MCP_MANIFEST_URI = "control-tower://server/manifest";
+
+function requestPath(req: IncomingMessage): string {
+  return new URL(req.url ?? "/", `http://${req.headers.host || "localhost"}`).pathname;
+}
+
+function writeJson(res: ServerResponse, status: number, payload: unknown, extraHeaders: Record<string, string> = {}): void {
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff",
+    ...extraHeaders,
+  });
+  res.end(JSON.stringify(payload));
+}
 
 async function createMcpServer(): Promise<McpServer> {
   const server = new McpServer({
@@ -27,6 +44,19 @@ async function createMcpServer(): Promise<McpServer> {
   });
 
   await registerAllTools(server);
+
+  server.resource(
+    MCP_MANIFEST_URI,
+    "server-manifest",
+    { description: "Verified SupremeAI MCP server identity and trust metadata", mimeType: "application/json" },
+    async () => ({
+      contents: [{
+        uri: MCP_MANIFEST_URI,
+        mimeType: "application/json",
+        text: JSON.stringify(createBuiltinManifest(SERVER_VERSION)),
+      }],
+    }),
+  );
 
   // ── Resources (MCP Protocol — Data/State Exposure) ──
   server.resource(
@@ -207,12 +237,15 @@ async function startHttpServer(server: McpServer): Promise<void> {
   );
 
   const transport = new StreamableHTTPServerTransport({
-    sessionIdGenerator: () => crypto.randomUUID(),
+    sessionIdGenerator: () => randomUUID(),
   });
 
   const httpServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = req.url ?? "/";
+    const pathname = requestPath(req);
     const role = resolveRole(req);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "no-referrer");
     const bearer = (req.headers.authorization ?? "").replace(/^Bearer\s+/i, "");
     const client = bearer ? resolveClient(bearer) : undefined;
 
@@ -224,7 +257,7 @@ async function startHttpServer(server: McpServer): Promise<void> {
     // ২. অ্যাডমিন রুটসমূহ (/approve, /approvals, /clients, /autonomy/kill): এগুলো জীবনঘাতী বা সংবেদনশীল 
     //    অপারেশন। এগুলো কঠোরভাবে শুধুমাত্র ভ্যালিড MCP_API_KEY বা MCP_ADMIN_KEY দ্বারা সুরক্ষিত।
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    const adminOnlyRoute = url.startsWith("/approve") || url.startsWith("/approvals") || url.startsWith("/clients") || url.startsWith("/autonomy/kill");
+    const adminOnlyRoute = pathname === "/approve" || pathname === "/approvals" || pathname === "/clients" || pathname.startsWith("/clients/") || pathname === "/autonomy/kill";
 
     if (env.nodeEnv === "production" && adminOnlyRoute && !env.mcpApiKey && !env.mcpAdminKey) {
       res.writeHead(503, { "Content-Type": "application/json" });
@@ -424,7 +457,16 @@ async function startHttpServer(server: McpServer): Promise<void> {
     // বাংলা মন্তব্য: /mcp হ্যান্ডলার — বাহ্যিক এআই ক্লায়েন্ট টোকেন ছাড়া আসলে ডিফল্ট 'viewer' রোল পাবে।
     // ফলে Claude Web বা v0 অনায়াসে কানেক্ট করে নলেজ ও রিড-অনলি টুলস ব্যবহার করতে পারবে।
     // আর কোনো এআই যদি ভ্যালিড Bearer টোকেন দেয়, সে 'admin' বা 'agent' হিসেবে সম্পূর্ণ ক্ষমতা পাবে।
-    if (url === "/mcp" || url.startsWith("/mcp")) {
+    if (pathname === "/mcp") {
+      if (!["GET", "POST", "DELETE"].includes(req.method ?? "")) {
+        writeJson(res, 405, { error: "Method not allowed" }, { Allow: "GET, POST, DELETE" });
+        return;
+      }
+      const contentLength = Number(req.headers["content-length"] ?? 0);
+      if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+        writeJson(res, 413, { error: "MCP request exceeds the maximum size" });
+        return;
+      }
       const activeRole = role ?? "viewer";
       const requiredRole = activeRole === "admin" ? "admin" : activeRole === "agent" ? "agent" : "viewer";
       if (!roleAllows(activeRole, requiredRole)) {
