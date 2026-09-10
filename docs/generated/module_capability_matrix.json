@@ -1,5 +1,5 @@
 {
-  "module_count": 2415,
+  "module_count": 2417,
   "modules": [
     {
       "capability_signals": [],
@@ -8864,6 +8864,15 @@
       "path": "backend/tests/api/test_api_v1_routes.py"
     },
     {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_app_contract.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -13311,6 +13320,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "frontend/scripts/analyze_stores.py"
+    },
+    {
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/App.routes.test.tsx"
     },
     {
       "capability_signals": [
