@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from core.capability_activation import capability_activation_store
+from core.capability_gateway import register_core_capabilities
 from core.circles.contracts import CapabilityRef
 from core.circles.registry import circle_registry
 
 
 def discover_capability(capability: str, tenant_id: str) -> dict[str, object] | None:
     """Return one canonical, tenant-aware capability description."""
+    register_core_capabilities()
     reference: CapabilityRef | None = circle_registry.describe(capability)
     if reference is None:
         return None

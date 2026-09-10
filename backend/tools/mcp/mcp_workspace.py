@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from core.config import settings
 from core.logging_config import logger
+from utils.environment import is_admin_authorized
 
 mcp = FastMCP("workspace_mcp")
 
@@ -186,8 +187,7 @@ async def workspace_set_context(params: WorkspaceContextInput) -> str:
     Returns:
         str: JSON-formatted সেশন তথ্য সহ সফলতা বার্তা
     """
-    admin_authorized = getattr(settings, "admin_authorized", "false").lower() == "true"
-    if not admin_authorized and params.project_type == WorkspaceType.ADMIN_PANEL:
+    if not is_admin_authorized() and params.project_type == WorkspaceType.ADMIN_PANEL:
         return json.dumps(
             {
                 "error": "Admin authorization required for admin panel workspace",
