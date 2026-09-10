@@ -207,6 +207,8 @@ const AppContent: React.FC = () => {
                 </ProtectedRoute>
   } />
   <Route path="/projects" element={<ProtectedRoute><WorkspaceModulePage module="projects" /></ProtectedRoute>} />
+  <Route path="/files" element={<ProtectedRoute><WorkspaceModulePage module="files" /></ProtectedRoute>} />
+  <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><AgentWorkspace /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/activity" element={<ProtectedRoute><WorkspaceModulePage module="activity" /></ProtectedRoute>} />
   <Route path="/marketplace" element={<ProtectedRoute><WorkspaceModulePage module="marketplace" /></ProtectedRoute>} />
   <Route path="/runs" element={<ProtectedRoute><WorkspaceModulePage module="runs" /></ProtectedRoute>} />
