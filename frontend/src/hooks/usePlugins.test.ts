@@ -83,4 +83,28 @@ describe('usePlugins hook', () => {
       expect.objectContaining({ method: 'POST' })
     );
   });
+
+  it('uninstalls a plugin and refreshes the list', async () => {
+    global.fetch = vi.fn((url: string, opts?: RequestInit) => {
+      if (opts?.method === 'DELETE') {
+        return Promise.resolve({ ok: true, json: async () => ({ success: true }) } as Response);
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ plugins: [], installations: [] }) } as Response);
+    }) as any;
+
+    const { result } = renderHook(() => usePlugins());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    await act(async () => {
+      await result.current.uninstallPlugin('p1');
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/v1/plugins/uninstall/p1'),
+      expect.objectContaining({ method: 'DELETE' })
+    );
+  });
 });
