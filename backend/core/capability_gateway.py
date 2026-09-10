@@ -19,6 +19,7 @@ from core.circles.registry import circle_registry
 
 HEALTH_CAPABILITY = "system.health.read"
 CHAT_CAPABILITY = "conversation.orchestrate"
+CUSTOMER_SUPPORT_CAPABILITY = "customer_support.resolve"
 
 
 def _policy(request: CapabilityRequest) -> PolicyDecision:
@@ -62,6 +63,25 @@ async def _chat_orchestrate(request: CapabilityRequest) -> Mapping[str, Any]:
     }
 
 
+async def _customer_support_resolve(request: CapabilityRequest) -> Mapping[str, Any]:
+    from core.orchestration.cognitive_pipeline_dispatcher import (
+        CognitiveIntent,
+        get_cognitive_pipeline_dispatcher,
+    )
+
+    result = await get_cognitive_pipeline_dispatcher().dispatch(
+        CognitiveIntent.CUSTOMER_SUPPORT,
+        {
+            **dict(request.payload),
+            "actor_id": request.context.actor_id,
+            "tenant_id": request.context.tenant_id,
+            "conversation_id": request.context.conversation_id,
+            "correlation_id": request.context.correlation_id,
+        },
+    )
+    return result.to_dict()
+
+
 async def _health_read(request: CapabilityRequest) -> Mapping[str, Any]:
     from api.routes.health import _check_database, _check_redis
 
@@ -81,6 +101,8 @@ def register_core_capabilities() -> None:
         circle_registry.register_handler(HEALTH_CAPABILITY, _health_read)
     if CHAT_CAPABILITY not in circle_registry.capabilities():
         circle_registry.register_handler(CHAT_CAPABILITY, _chat_orchestrate)
+    if CUSTOMER_SUPPORT_CAPABILITY not in circle_registry.capabilities():
+        circle_registry.register_handler(CUSTOMER_SUPPORT_CAPABILITY, _customer_support_resolve)
     circle_registry.set_policy_evaluator(_policy)
 
 
