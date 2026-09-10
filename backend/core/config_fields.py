@@ -139,6 +139,7 @@ class SettingsFieldsMixin:
     model_chat: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_CHAT")
     model_general: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_GENERAL")
     embedding_model: str = Field(default="text-embedding-3-small", validation_alias="EMBEDDING_MODEL")
+    model_multilingual: str = Field(default="openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="MODEL_MULTILINGUAL")
     route_ladder_simple: str | list[str] = Field(default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="ROUTE_LADDER_SIMPLE")
     route_ladder_medium: str | list[str] = Field(default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="ROUTE_LADDER_MEDIUM")
     route_ladder_complex: str | list[str] = Field(default="groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct,gemini/gemini-2.0-flash", validation_alias="ROUTE_LADDER_COMPLEX")

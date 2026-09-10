@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from core.config import settings
 from utils.branding import MODEL_DISPLAY, PROVIDER_DISPLAY
 
 router = APIRouter(
@@ -13,6 +14,7 @@ class PublicConfigResponse(BaseModel):
     maxConcurrency: int  # -- camelCase required to match frontend JSON API contract
     features: dict[str, bool]
     version: str
+    models: dict[str, str]
     adminEmail: str = ""  # -- empty to prevent administrative email disclosure
 
 
@@ -24,6 +26,7 @@ async def get_public_config():
         maxConcurrency=3,
         features={"selfHealing": True, "costGuard": True},
         version="2.0.0",
+        models={"chat": settings.model_chat, "general": settings.model_general, "multilingual": settings.model_multilingual},
     )
 
 
