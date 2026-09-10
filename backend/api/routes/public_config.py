@@ -26,7 +26,11 @@ async def get_public_config():
         maxConcurrency=3,
         features={"selfHealing": True, "costGuard": True},
         version="2.0.0",
-        models={"chat": settings.model_chat, "general": settings.model_general, "multilingual": settings.model_multilingual},
+        models={
+            "chat": settings.model_chat,
+            "general": settings.model_general,
+            "multilingual": settings.model_multilingual,
+        },
     )
 
 
