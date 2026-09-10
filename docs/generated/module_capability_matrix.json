@@ -1,5 +1,5 @@
 {
-  "module_count": 2414,
+  "module_count": 2415,
   "modules": [
     {
       "capability_signals": [],
@@ -12758,6 +12758,18 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tools/mcp/mcp_observability.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/tools/mcp/mcp_neon.py"
     },
     {
       "capability_signals": [
