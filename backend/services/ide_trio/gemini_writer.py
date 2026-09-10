@@ -8,6 +8,8 @@ import time
 
 import httpx
 
+from core.config import settings
+
 
 class GeminiWriter:
     """
@@ -19,7 +21,7 @@ class GeminiWriter:
     - FREE for development use
     """
 
-    GEMINI_FLASH_MODEL = "models/gemini-2.0-flash"
+    GEMINI_FLASH_MODEL = getattr(settings, "model_vision", "models/gemini-2.0-flash")
     GEMINI_1_5_FLASH = "models/gemini-1.5-flash"  # Backup
 
     def __init__(self, api_key: str):
