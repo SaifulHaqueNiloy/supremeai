@@ -353,7 +353,7 @@ class GeminiProvider:
         stream: bool = False,
         **kwargs: Any,
     ) -> str | AsyncGenerator[StreamChunk, None]:
-        model = kwargs.get("model", "models/gemini-2.0-flash")
+        model = kwargs.get("model", getattr(settings, "model_vision", "models/gemini-2.0-flash"))
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
@@ -593,7 +593,7 @@ class GroqProvider(BaseOpenAICompatibleProvider):
             else (raw_key or "")
         )
         self.base_url = "https://api.groq.com/openai/v1"
-        self.model = "llama-3.3-70b-versatile"
+        self.model = getattr(settings, "model_general", "llama-3.3-70b-versatile")
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
