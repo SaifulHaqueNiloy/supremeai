@@ -8,6 +8,8 @@ from uuid import UUID
 
 import asyncpg
 
+from core.config import settings
+
 _pool: asyncpg.Pool | None = None
 
 
@@ -26,7 +28,9 @@ def _asyncpg_dsn(database_url: str) -> str:
 async def get_neon_pool() -> asyncpg.Pool:
     global _pool
     if _pool is None:
-        database_url = os.getenv("DATABASE_URL")
+        database_url = getattr(settings, "database_url", "") or getattr(
+            settings, "supabase_database_url", ""
+        )
         if not database_url:
             raise RuntimeError("DATABASE_URL is required for Neon persistence")
         _pool = await asyncpg.create_pool(dsn=_asyncpg_dsn(database_url), min_size=1, max_size=10)
