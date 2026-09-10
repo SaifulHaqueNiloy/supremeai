@@ -17,7 +17,7 @@ export const startAntiSleepHeartbeat = () => {
   return { timeoutId, intervalId };
 };
 
-const pingServers = () => {
+export const pingServers = () => {
   // বাংলা মন্তব্য: getApiBaseUrl() ব্যবহার করা হচ্ছে যাতে Firebase Hosting-এ relative path ('') পাওয়া যায়
   // এবং firebase.json proxy rewrites দিয়ে সার্ভার-সাইড প্রক্সি হয় — কোনো CORS/preflight ঝামেলা থাকে না।
   const targets = [getApiBaseUrl()];
