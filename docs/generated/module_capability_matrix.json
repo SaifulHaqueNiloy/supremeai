@@ -18276,7 +18276,9 @@
       "path": "scripts/ai/bias_detector.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"
@@ -19864,7 +19866,8 @@
     },
     {
       "capability_signals": [
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
