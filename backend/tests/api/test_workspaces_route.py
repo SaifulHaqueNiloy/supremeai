@@ -9,6 +9,9 @@ from api.routes.workspaces_route import (
 )
 from core.target_registry import PermissionScope, TargetPlatformType
 
+_VALID_OTP = "123456"
+_TOTP_PATCH = "api.routes.workspaces_route.check_totp_code"
+
 
 @pytest.mark.asyncio
 async def test_bind_target_repository_returns_registered_target():
@@ -19,7 +22,6 @@ async def test_bind_target_repository_returns_registered_target():
         url="https://github.com/example/workspace-1",
         branch="main",
         scope=PermissionScope.FULL_CONTROL,
-        credentials_token="secret-token",
         metadata={"env": "test"},
     )
     registered = MagicMock()
@@ -37,8 +39,9 @@ async def test_bind_target_repository_returns_registered_target():
             "api.routes.workspaces_route.target_registry.register_target", return_value=registered
         ) as register,
         patch("api.routes.workspaces_route.repo_manager.prepare_workspace") as prepare,
+        patch(_TOTP_PATCH, return_value=True),
     ):
-        response = await bind_target_repository(req)
+        response = await bind_target_repository(req, x_jit_otp=_VALID_OTP)
 
     register.assert_called_once()
     target = register.call_args.args[0]
@@ -76,8 +79,9 @@ async def test_bind_target_repository_degrades_when_workspace_preparation_fails(
             "api.routes.workspaces_route.repo_manager.prepare_workspace",
             side_effect=RuntimeError("disk unavailable"),
         ),
+        patch(_TOTP_PATCH, return_value=True),
     ):
-        response = await bind_target_repository(req)
+        response = await bind_target_repository(req, x_jit_otp=_VALID_OTP)
 
     assert response.scope == PermissionScope.READ_ONLY.value
     assert response.is_read_only is True

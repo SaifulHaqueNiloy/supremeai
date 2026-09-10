@@ -70,7 +70,9 @@ async def bind_target_repository(
     req: BindTargetRequest, x_jit_otp: str | None = Header(None, alias="X-JIT-OTP")
 ) -> TargetResponse:
     """ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।"""
-    if not x_jit_otp or not check_totp_code(x_jit_otp):
+    # Guard: FastAPI DI ছাড়া (যেমন unit test) x_jit_otp non-str হতে পারে
+    otp_value = x_jit_otp if isinstance(x_jit_otp, str) else None
+    if not otp_value or not check_totp_code(otp_value):
         logger.warning("Rejected workspace bind without valid JIT OTP")
         from fastapi import HTTPException
 
