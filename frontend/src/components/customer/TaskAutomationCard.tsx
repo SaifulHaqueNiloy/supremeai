@@ -36,7 +36,7 @@ export const TaskAutomationCard: React.FC = () => {
   const [message, setMessage] = useState('');
   const policyQuery = useQuery({ queryKey: ['browser-policy'], queryFn: policyService.get });
   const policyMutation = useMutation({ mutationFn: policyService.updatePersonal, onSuccess: () => policyQuery.refetch() });
-  const approvalEnabled = policyQuery.data?.rules.allow_submissions !== false;
+  const approvalEnabled = policyQuery.data?.rules?.allow_submissions !== false;
 
   const createPlan = () => {
     if (!goal.trim()) return;
