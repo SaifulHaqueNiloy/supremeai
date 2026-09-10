@@ -39,7 +39,7 @@ class BrowserSessionManager:
         self.idle_timeout_seconds = idle_timeout_seconds or policy.limits["idle_timeout_seconds"]
         self._sessions: dict[str, BrowserSession] = {}
         self._lock = asyncio.Lock()
-        self._slots = asyncio.Semaphore(max_sessions)
+        self._slots = asyncio.Semaphore(self.max_sessions)
         self._paused_owners: set[str] = set()
 
     async def create(
