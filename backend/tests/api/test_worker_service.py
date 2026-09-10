@@ -56,8 +56,9 @@ async def test_task_routes_accept_valid_worker_auth(worker_app, monkeypatch):
 @pytest.mark.asyncio
 async def test_readiness_returns_503_when_queue_is_unavailable(worker_app):
     transport = ASGITransport(app=worker_app)
-    with patch("worker_service._redis_url", return_value="redis://unavailable"), patch(
-        "worker_service._queue_call", side_effect=ConnectionError("offline")
+    with (
+        patch("worker_service._redis_url", return_value="redis://unavailable"),
+        patch("worker_service._queue_call", side_effect=ConnectionError("offline")),
     ):
         async with AsyncClient(transport=transport, base_url="http://worker") as client:
             response = await client.get("/health/ready")
@@ -71,8 +72,9 @@ async def test_readiness_returns_503_when_queue_is_unavailable(worker_app):
 @pytest.mark.asyncio
 async def test_degraded_health_reports_queue_failure(worker_app):
     transport = ASGITransport(app=worker_app)
-    with patch("worker_service._redis_url", return_value="redis://unavailable"), patch(
-        "worker_service._queue_call", side_effect=ConnectionError("offline")
+    with (
+        patch("worker_service._redis_url", return_value="redis://unavailable"),
+        patch("worker_service._queue_call", side_effect=ConnectionError("offline")),
     ):
         async with AsyncClient(transport=transport, base_url="http://worker") as client:
             response = await client.get("/health/degraded")
@@ -114,7 +116,12 @@ def test_task_contract_validates_scrape_url_and_metadata_size():
 
 @pytest.mark.asyncio
 async def test_idempotency_reuses_existing_task_id():
-    from worker_service import TaskContract, _claim_idempotency, _idempotency_records, _store_idempotency_task
+    from worker_service import (
+        TaskContract,
+        _claim_idempotency,
+        _idempotency_records,
+        _store_idempotency_task,
+    )
 
     request = TaskContract(
         tenant_id="tenant-idempotent",
@@ -134,7 +141,12 @@ async def test_idempotency_reuses_existing_task_id():
 
 @pytest.mark.asyncio
 async def test_idempotency_rejects_payload_reuse_with_different_content():
-    from worker_service import TaskContract, _claim_idempotency, _idempotency_records, _store_idempotency_task
+    from worker_service import (
+        TaskContract,
+        _claim_idempotency,
+        _idempotency_records,
+        _store_idempotency_task,
+    )
 
     _idempotency_records.clear()
     first = TaskContract(tenant_id="tenant-conflict", goal="first", idempotency_key="request")
