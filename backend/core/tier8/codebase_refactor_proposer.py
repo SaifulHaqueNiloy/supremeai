@@ -20,6 +20,7 @@ from typing import Any, ClassVar
 
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
 from core.base import BaseSkill
+from core.config import settings
 from core.error_pattern_db import ErrorPatternDB
 from core.feedback_loop import FeedbackLoop
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
@@ -248,7 +249,7 @@ class CodebaseRefactorProposer(BaseSkill):
             None, "self_improve_max_tokens", {"max_tokens": 2048, "temperature": 0.2}
         )
         response = await llm.acompletion(
-            model=os.getenv("SELF_IMPROVE_MODEL", "gpt-4o-mini"),
+            model=os.getenv("SELF_IMPROVE_MODEL", getattr(settings, "model_coding", "gpt-4o-mini")),
             messages=[{"role": "user", "content": prompt}],
             temperature=llm_config.get("temperature", 0.2),
             max_tokens=llm_config.get("max_tokens", 2048),
