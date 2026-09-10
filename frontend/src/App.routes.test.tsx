@@ -68,7 +68,7 @@ vi.mock('./pages/auth/LoginPage', () => ({ LoginPage: () => <div>Login page</div
 vi.mock('./pages/auth/RegisterPage', () => ({ RegisterPage: () => <div>Register page</div> }));
 vi.mock('./pages/user/UserDashboard', () => ({ UserDashboard: () => <div>Dashboard</div> }));
 vi.mock('./components/customer/UserDashboard', () => ({ UserDashboard: () => <div>Dashboard</div> }));
-vi.mock('./routes/workspaceFeatureRoutes', () => ({ tierSUserRoutes: [] }));
+vi.mock('./routes/workspaceFeatureRoutes', () => ({ workspaceFeatureRoutes: [] }));
 vi.mock('./auth/identity', () => ({ resolveLandingPath: () => '/login' }));
 
 function renderRoute(path: string) {

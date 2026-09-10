@@ -71,13 +71,13 @@ class ImprovementProposal:
         )
 
 
-class SelfImprovementAgent(BaseSkill):
-    """Tier-8 agent that continuously improves the codebase."""
+class CodebaseRefactorProposer(BaseSkill):
+    """Propose and validate codebase refactors for human review."""
 
-    _instance: ClassVar[SelfImprovementAgent | None] = None
+    _instance: ClassVar[CodebaseRefactorProposer | None] = None
     _lock: ClassVar[asyncio.Lock] = asyncio.Lock()
 
-    def __new__(cls) -> SelfImprovementAgent:
+    def __new__(cls) -> CodebaseRefactorProposer:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -385,11 +385,11 @@ class SelfImprovementAgent(BaseSkill):
         return {"status": "unknown_action", "action": action}
 
 
-def get_self_improvement_agent() -> SelfImprovementAgent:
-    """Factory: return singleton instance."""
-    return SelfImprovementAgent()
+def get_codebase_refactor_proposer() -> CodebaseRefactorProposer:
+    """Factory: return the singleton refactor proposer."""
+    return CodebaseRefactorProposer()
 
 
-# Aliases for clean naming matching NAVIGATION_MISMATCH_MAP
-CodebaseRefactorProposer = SelfImprovementAgent
-get_codebase_refactor_proposer = get_self_improvement_agent
+# Backward-compatible names for existing Tier-8 integrations.
+SelfImprovementAgent = CodebaseRefactorProposer
+get_self_improvement_agent = get_codebase_refactor_proposer

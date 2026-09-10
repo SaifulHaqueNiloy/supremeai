@@ -16,7 +16,7 @@ export interface Artifact {
   version: number;
 }
 
-export interface TierSState {
+export interface WorkspaceUiState {
   // S1: Share
   shareDialogOpen: boolean;
   shareConversationId: string | null;
@@ -62,7 +62,7 @@ export interface TierSState {
 
 // ─── Store ───────────────────────────────────────────────────────────────
 
-export const useWorkspaceUiStateStore = create<TierSState>((set) => ({
+export const useWorkspaceUiStateStore = create<WorkspaceUiState>((set) => ({
   // ── S1: Share ──────────────────────────────────────────────
   shareDialogOpen: false,
   shareConversationId: null,
