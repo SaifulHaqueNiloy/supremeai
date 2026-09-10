@@ -6,7 +6,7 @@ import hashlib
 import mimetypes
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import Any, Protocol
 
 from .canonical import ExecutionContext
 from .security_policy import SandboxMode
@@ -36,9 +36,37 @@ class ArtifactStore(Protocol):
     def get(self, context: ExecutionContext, artifact_id: str) -> bytes: ...
 
 
+class ProviderTaskState(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True)
+class ProviderTaskStatus:
+    provider: str
+    task_id: str
+    state: ProviderTaskState
+    result_artifact_ids: tuple[str, ...] = ()
+    error_code: str | None = None
+    retryable: bool = False
+
+
 class TaskAdapter(Protocol):
-    def enqueue(self, context: ExecutionContext, task_type: str, payload: dict) -> str: ...
+    """Provider-neutral lifecycle contract owned by SupremeAI control plane."""
+
+    def submit(self, context: ExecutionContext, task_type: str, payload: dict[str, Any]) -> str: ...
+    def get_status(self, context: ExecutionContext, task_id: str) -> ProviderTaskStatus: ...
     def cancel(self, context: ExecutionContext, task_id: str) -> None: ...
+    def fetch_result(self, context: ExecutionContext, task_id: str) -> tuple[str, ...]: ...
+    def recover(self, context: ExecutionContext, task_id: str) -> ProviderTaskStatus: ...
+
+    def enqueue(self, context: ExecutionContext, task_type: str, payload: dict) -> str:
+        """Compatibility alias for adapters migrating from the old contract."""
+        ...
 
 
 class BrowserAdapter(Protocol):
