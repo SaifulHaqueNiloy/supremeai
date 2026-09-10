@@ -24,6 +24,7 @@ import secrets
 import signal
 import subprocess
 import sys
+import uuid
 from collections.abc import Callable, Coroutine
 from typing import Any, Literal
 
@@ -31,6 +32,10 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+
+from database.session import get_db_session_context
 
 
 SUPPORTED_CAPABILITIES = frozenset({"acknowledge", "scrape"})
@@ -281,9 +286,87 @@ def _request_fingerprint(request: TaskContract) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _use_durable_idempotency() -> bool:
+    return bool(os.getenv("SUPABASE_DATABASE_URL_POOLER") or os.getenv("DATABASE_URL"))
+
+
+async def _claim_durable_idempotency(request: TaskContract, fingerprint: str) -> str | None:
+    if not request.idempotency_key:
+        return None
+    workflow_key = f"worker:{request.tenant_id}"
+    try:
+        async with get_db_session_context() as session:
+            await session.execute(
+                text(
+                    """
+                    INSERT INTO automation_executions
+                        (id, event_id, workflow_key, provider, status, external_execution_id,
+                         idempotency_key, trace_id)
+                    VALUES (:id, :event_id, :workflow_key, 'supremeai-worker', 'PENDING',
+                            '__pending__', :idempotency_key, :trace_id)
+                    """
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "event_id": str(uuid.uuid4()),
+                    "workflow_key": workflow_key,
+                    "idempotency_key": request.idempotency_key,
+                    "trace_id": fingerprint,
+                },
+            )
+            await session.commit()
+            return None
+    except IntegrityError:
+        async with get_db_session_context() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT external_execution_id, trace_id
+                    FROM automation_executions
+                    WHERE workflow_key = :workflow_key AND idempotency_key = :idempotency_key
+                    ORDER BY created_at DESC NULLS LAST
+                    LIMIT 1
+                    """
+                ),
+                {
+                    "workflow_key": workflow_key,
+                    "idempotency_key": request.idempotency_key,
+                },
+            )
+            row = result.mappings().first()
+            if not row or row["trace_id"] != fingerprint:
+                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
+            if row["external_execution_id"] == "__pending__":
+                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
+            return row["external_execution_id"]
+
+
+async def _finalize_durable_idempotency(request: TaskContract, task_id: str) -> None:
+    if not request.idempotency_key:
+        return
+    async with get_db_session_context() as session:
+        await session.execute(
+            text(
+                """
+                UPDATE automation_executions
+                SET external_execution_id = :task_id, status = 'QUEUED'
+                WHERE workflow_key = :workflow_key AND idempotency_key = :idempotency_key
+                """
+            ),
+            {
+                "task_id": task_id,
+                "workflow_key": f"worker:{request.tenant_id}",
+                "idempotency_key": request.idempotency_key,
+            },
+        )
+        await session.commit()
+
+
 async def _claim_idempotency(request: TaskContract) -> tuple[str, str | None]:
-    """Return (fingerprint, existing_task_id) for an atomic retry-safe claim."""
+    """Claim idempotency durably when SQL storage is configured; use memory only in tests/dev."""
     fingerprint = _request_fingerprint(request)
+    if _use_durable_idempotency():
+        return fingerprint, await _claim_durable_idempotency(request, fingerprint)
     if not request.idempotency_key:
         return fingerprint, None
     record_key = f"{request.tenant_id}:{request.idempotency_key}"
@@ -291,24 +374,20 @@ async def _claim_idempotency(request: TaskContract) -> tuple[str, str | None]:
         existing = _idempotency_records.get(record_key)
         if existing:
             if existing[0] != fingerprint:
-                raise HTTPException(
-                    status_code=409,
-                    detail="Idempotency key was already used with a different task payload",
-                )
+                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
             if not existing[1]:
-                raise HTTPException(
-                    status_code=409,
-                    detail="A task with this idempotency key is currently being submitted",
-                )
+                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
             return fingerprint, existing[1]
         if len(_idempotency_records) >= MAX_IDEMPOTENCY_RECORDS:
-            oldest_key = next(iter(_idempotency_records))
-            _idempotency_records.pop(oldest_key)
+            _idempotency_records.pop(next(iter(_idempotency_records)))
         _idempotency_records[record_key] = (fingerprint, "")
     return fingerprint, None
 
 
 async def _store_idempotency_task(request: TaskContract, task_id: str) -> None:
+    if _use_durable_idempotency():
+        await _finalize_durable_idempotency(request, task_id)
+        return
     if not request.idempotency_key:
         return
     record_key = f"{request.tenant_id}:{request.idempotency_key}"

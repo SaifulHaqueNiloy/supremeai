@@ -26,6 +26,34 @@ async def test_liveness_is_process_only(worker_app):
 
 
 @pytest.mark.asyncio
+async def test_task_routes_require_worker_auth(worker_app, monkeypatch):
+    monkeypatch.delenv("ALLOW_TEST_AUTH_BYPASS", raising=False)
+    monkeypatch.setenv("WORKER_AUTH_TOKEN", "test-worker-token")
+    transport = ASGITransport(app=worker_app)
+    async with AsyncClient(transport=transport, base_url="http://worker") as client:
+        response = await client.post(
+            "/tasks",
+            json={"tenant_id": "tenant-a", "goal": "run"},
+        )
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_task_routes_accept_valid_worker_auth(worker_app, monkeypatch):
+    monkeypatch.delenv("ALLOW_TEST_AUTH_BYPASS", raising=False)
+    monkeypatch.setenv("WORKER_AUTH_TOKEN", "test-worker-token")
+    transport = ASGITransport(app=worker_app)
+    async with AsyncClient(transport=transport, base_url="http://worker") as client:
+        response = await client.get(
+            "/tasks/missing",
+            headers={"Authorization": "Bearer test-worker-token"},
+        )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
 async def test_readiness_returns_503_when_queue_is_unavailable(worker_app):
     transport = ASGITransport(app=worker_app)
     with patch("worker_service._redis_url", return_value="redis://unavailable"), patch(
