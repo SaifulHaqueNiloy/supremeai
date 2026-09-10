@@ -1,5 +1,6 @@
 import asyncio
 
+from core.config import settings
 from core.embeddings import embed_for_pgvector
 
 
@@ -12,8 +13,8 @@ class EmbeddingService:
     text-embedding-3-small (১৫৩৬-ডাইম) ফলব্যাক করে। $0 খরচ ভিশনের সাথে সামঞ্জস্যপূর্ণ।
     """
 
-    def __init__(self, model_name: str = "local:all-MiniLM-L6-v2"):
-        self.model_name = model_name
+    def __init__(self, model_name: str | None = None):
+        self.model_name = model_name or settings.embedding_model
 
     async def generate_embedding(self, text: str, pg_dim: int = 384) -> list[float]:
         """Generates a vector embedding for a single text string (local-first)."""
