@@ -44,7 +44,7 @@ class MockResizeObserver {
 }
 global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
 
-// Mock the EvolutionForgeWidget subcomponent to simplify App tests
+// Mock the skill forge widget subcomponent to simplify App tests
 vi.mock('./App', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./App')>();
   return {

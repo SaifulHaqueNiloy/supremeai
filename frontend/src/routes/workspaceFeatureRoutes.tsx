@@ -24,7 +24,7 @@ const PromptTemplatePage = lazy(
  * ProtectedRoute দিয়ে wrap করা হলো (roadmap security matrix: সব authenticated
  * user context route protected হবে)।
  */
-export const tierSUserRoutes: RouteObject[] = [
+export const workspaceFeatureRoutes: RouteObject[] = [
   {
     path: '/share/:shareId',
     element: (
@@ -58,6 +58,9 @@ export const tierSUserRoutes: RouteObject[] = [
     ),
   },
 ];
+
+/** @deprecated Use workspaceFeatureRoutes instead. */
+export const tierSUserRoutes = workspaceFeatureRoutes;
 
 // ─── Integration Guide ───────────────────────────────────────────────────
 

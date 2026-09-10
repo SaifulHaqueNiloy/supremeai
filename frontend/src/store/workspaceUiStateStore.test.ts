@@ -19,7 +19,7 @@ const reset = () =>
     researchPanelOpen: false,
   });
 
-describe('tierSStore', () => {
+describe('workspaceUiStateStore', () => {
   beforeEach(reset);
 
   it('opens and closes the share dialog', () => {
