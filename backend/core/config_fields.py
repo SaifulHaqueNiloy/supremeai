@@ -132,6 +132,30 @@ class SettingsFieldsMixin:
     max_cost_per_task: float = Field(default=0.01, validation_alias="MAX_COST_PER_TASK")
     enable_token_compression: bool = True
 
+    # Central model registry: deployment operators can change routing without code edits.
+    model_coding: str = Field(default="groq/llama-3.3-70b-versatile", validation_alias="MODEL_CODING")
+    model_reasoning: str = Field(default="openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="MODEL_REASONING")
+    model_vision: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_VISION")
+    model_chat: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_CHAT")
+    model_general: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_GENERAL")
+    embedding_model: str = Field(default="text-embedding-3-small", validation_alias="EMBEDDING_MODEL")
+    model_multilingual: str = Field(default="openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="MODEL_MULTILINGUAL")
+    route_ladder_simple: str | list[str] = Field(default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="ROUTE_LADDER_SIMPLE")
+    route_ladder_medium: str | list[str] = Field(default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="ROUTE_LADDER_MEDIUM")
+    route_ladder_complex: str | list[str] = Field(default="groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct,gemini/gemini-2.0-flash", validation_alias="ROUTE_LADDER_COMPLEX")
+
+    @property
+    def task_models(self) -> dict[str, str]:
+        return {"coding": self.model_coding, "reasoning": self.model_reasoning, "vision": self.model_vision, "chat": self.model_chat, "general": self.model_general}
+
+    @staticmethod
+    def _csv(value: str | list[str]) -> list[str]:
+        return [item.strip() for item in (value if isinstance(value, list) else value.split(",")) if item.strip()]
+
+    @property
+    def route_ladders(self) -> dict[str, list[str]]:
+        return {"simple": self._csv(self.route_ladder_simple), "medium": self._csv(self.route_ladder_medium), "complex": self._csv(self.route_ladder_complex)}
+
     # ── Security & Auth Config ──────────────────────────────────────────────
     security_context_ttl: int = Field(default=86400, validation_alias="SECURITY_CONTEXT_TTL")
     security_caution_log_ttl: int = Field(
@@ -227,7 +251,7 @@ class SettingsFieldsMixin:
         validation_alias="CLAUDE_OPENROUTER_MODEL",
     )
 
-    # বাংলা মন্তব্য: জেমিনি মডেল নাম সেন্ট্রালাইজড করা হলো যাতে কোনো ইউটিলিটি স্ক্রিপ্টে হার্ডকোড না থাকে।
+    # বাংলা মন��তব্য: জেমিনি মডেল নাম সেন্ট্রালাইজড করা হলো যাতে কোনো ইউটিলিটি স্ক্রিপ্টে হার্ডকোড না থাকে।
     gemini_model_name: str = Field(
         default="gemini/gemini-2.0-flash",
         validation_alias="GEMINI_MODEL_NAME",

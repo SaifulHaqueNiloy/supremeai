@@ -14,18 +14,18 @@ class SmartModelRouter:
     Analyzes prompt intent, domain, and historical model success rates to dynamically select the best specialized model.
     """
 
-    # Use the real model mappings from LLMGateway instead of fictional ones
-    from core.llm.llm_gateway import TASK_MODEL_MAP
+    @property
+    def model_map(self) -> dict[str, str]:
+        from core.config import settings
 
-    MODEL_MAP = {
-        "code": TASK_MODEL_MAP.get("coding", "groq/llama-3.3-70b-versatile"),
-        "reasoning": TASK_MODEL_MAP.get(
-            "reasoning", "openrouter/meta-llama/llama-3.3-70b-instruct"
-        ),
-        "bengali": TASK_MODEL_MAP.get("chat", "gemini/gemini-2.0-flash"),
-        "math": TASK_MODEL_MAP.get("reasoning", "openrouter/meta-llama/llama-3.3-70b-instruct"),
-        "general": TASK_MODEL_MAP.get("general", "gemini/gemini-2.0-flash"),
-    }
+        models = settings.task_models
+        return {
+            "code": models["coding"],
+            "reasoning": models["reasoning"],
+            "bengali": models["chat"],
+            "math": models["reasoning"],
+            "general": models["general"],
+        }
 
     def classify_intent(self, prompt: str) -> str:
         """Classify prompt into target domain intent."""
@@ -75,7 +75,8 @@ class SmartModelRouter:
         Route prompt to the most optimal specialized model.
         """
         intent = self.classify_intent(prompt)
-        target_model = self.MODEL_MAP.get(intent, self.MODEL_MAP["general"])
+        models = self.model_map
+        target_model = models.get(intent, models["general"])
 
         routing_decision = {
             "prompt": prompt,

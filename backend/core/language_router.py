@@ -1,6 +1,8 @@
 import re
 from typing import Any
 
+from core.config import settings
+
 
 class LanguageRouter:
     BENGALI_RE = re.compile(r"[\u0980-\u09FF]")
@@ -67,8 +69,10 @@ class LanguageRouter:
         model = (
             self.LANGUAGE_MODEL_MAP.get(language)
             or self.LANGUAGE_MODEL_FALLBACK.get(language)
-            or "openrouter"
+            or settings.model_multilingual
         )
+        if language in {"chinese", "japanese", "korean", "arabic", "bengali", "hindi"}:
+            model = settings.model_multilingual
         return {
             "language": language,
             "model": model,

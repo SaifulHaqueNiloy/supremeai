@@ -228,7 +228,9 @@ class SupabaseStore(SQLiteMemoryStore):
                 # Fallback 2: LiteLLM with OpenAI
                 import litellm
 
-                response = litellm.embedding(model="text-embedding-3-small", input=text)
+                from core.config import settings
+
+                response = litellm.embedding(model=settings.embedding_model, input=text)
                 return response.data[0]["embedding"]
             except Exception:
                 from core.logging_config import logger

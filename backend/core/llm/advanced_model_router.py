@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from core.config import settings
 from core.logging_config import logger
 
 # ── Tier 0 Deterministic Patterns ──────────────────────────────────────────
@@ -386,7 +387,7 @@ class AdvancedModelRouter:
                     "groq/llama-3.3-70b-versatile",
                     "openrouter/deepseek/deepseek-coder",
                     "deepseek/deepseek-coder",
-                    "gpt-4o-mini",
+                    settings.model_chat,
                 ],
                 "tier_preference": ModelTier.BALANCED,
             },
@@ -410,7 +411,7 @@ class AdvancedModelRouter:
                 "preferred_models": [
                     "groq/llama-3.3-70b-versatile",
                     "gemini/gemini-2.5-flash",
-                    "gpt-4o-mini",
+                    settings.model_chat,
                 ],
                 "tier_preference": ModelTier.BUDGET,
             },
