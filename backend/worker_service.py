@@ -57,6 +57,7 @@ class TaskContract(BaseModel):
     goal: str = Field(min_length=1, max_length=10_000)
     capability: Literal["acknowledge", "scrape"] = "acknowledge"
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256)
+    correlation_id: str | None = Field(default=None, min_length=1, max_length=128)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -313,6 +314,20 @@ async def _store_idempotency_task(request: TaskContract, task_id: str) -> None:
         _idempotency_records[record_key] = (_request_fingerprint(request), task_id)
 
 
+def _log_task_event(event: str, request: TaskContract, **fields: Any) -> None:
+    logger.info(
+        "worker_task_event",
+        extra={
+            "event": event,
+            "tenant_id": request.tenant_id,
+            "user_id": request.user_id,
+            "correlation_id": request.correlation_id,
+            "idempotency_key_present": bool(request.idempotency_key),
+            **fields,
+        },
+    )
+
+
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
     """Execute a validated, tenant-scoped task contract."""
     contract = TaskContract.model_validate(payload)
@@ -355,8 +370,14 @@ async def submit_task(request: TaskContract) -> JSONResponse:
     try:
         _fingerprint, existing_task_id = await _claim_idempotency(request)
         if existing_task_id:
+            _log_task_event("deduplicated", request, task_id=existing_task_id)
             return JSONResponse(
-                {"task_id": existing_task_id, "status": "pending", "deduplicated": True},
+                {
+                    "task_id": existing_task_id,
+                    "status": "pending",
+                    "deduplicated": True,
+                    "correlation_id": request.correlation_id,
+                },
                 status_code=200,
             )
 
@@ -367,8 +388,15 @@ async def submit_task(request: TaskContract) -> JSONResponse:
             _process_task, request.model_dump(), task_name=f"supremeai_task:{request.capability}"
         )
         await _store_idempotency_task(request, task_id)
-        return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
+        _log_task_event("submitted", request, task_id=task_id, capability=request.capability)
+        return JSONResponse(
+            {"task_id": task_id, "status": "pending", "correlation_id": request.correlation_id},
+            status_code=202,
+        )
+    except HTTPException:
+        raise
     except Exception as exc:
+        _log_task_event("submission_failed", request, error_type=type(exc).__name__)
         _state.update(degraded=True, detail=f"task submit failed: {exc}")
         return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
 

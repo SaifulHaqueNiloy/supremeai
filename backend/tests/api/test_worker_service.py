@@ -124,3 +124,23 @@ def test_task_contract_accepts_supported_capabilities():
 
     assert contract.tenant_id == "tenant-a"
     assert contract.idempotency_key == "request-1"
+    assert contract.correlation_id is None
+
+
+def test_task_event_logging_includes_tenant_and_correlation_context(caplog):
+    from worker_service import TaskContract, _log_task_event
+
+    request = TaskContract(
+        tenant_id="tenant-observed",
+        user_id="user-observed",
+        correlation_id="corr-123",
+        goal="observe",
+    )
+    with caplog.at_level("INFO"):
+        _log_task_event("submitted", request, task_id="task-789")
+
+    record = next(record for record in caplog.records if record.message == "worker_task_event")
+    assert record.event == "submitted"
+    assert record.tenant_id == "tenant-observed"
+    assert record.correlation_id == "corr-123"
+    assert record.task_id == "task-789"
