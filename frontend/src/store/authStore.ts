@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { apiClient, updateTokenCache } from '../services/apiClient';
 import { isRole, normalizeRole, type Role } from '../config/permissions';
 import { useCustomerStore } from './customerStore';
+import { clearLocalDataScope, setLocalDataScope } from './localFirstDb';
 
 // বাংলা মন্তব্য: erasableSyntaxOnly সক্রিয় থাকায় enum-এর বদলে const object + union type ব্যবহার করা হচ্ছে
 export const AuthStatus = {
@@ -132,6 +133,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         avatarUrl: avatarUrl(email),
       };
       persistUser(user);
+      setLocalDataScope(user.id);
 
       set({
         status: AuthStatus.LOGGED_IN,
@@ -166,6 +168,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         avatarUrl: avatarUrl(name),
       };
       persistUser(user);
+      setLocalDataScope(user.id);
 
       set({
         status: AuthStatus.LOGGED_IN,
@@ -190,6 +193,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     // SECURITY FIX (audit P-7): clear customerStore to prevent PII leakage
     // between users on shared devices (profile, projects, chat history).
     useCustomerStore.getState().clearSession();
+    void clearLocalDataScope();
     set({ status: AuthStatus.LOGGED_OUT, user: null, role: null, permissions: [] });
   },
 
@@ -260,6 +264,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         localStorage.removeItem(TOKEN_KEY);
         updateTokenCache(null);
         persistUser(null);
+        void clearLocalDataScope();
         set({ status: AuthStatus.LOGGED_OUT, user: null });
       } else {
         // বাংলা মন্তব্য: ক্ষণস্থায়ী ব্যর্থতা (নেটওয়ার্ক ডাউন / Render cold start / 5xx) — logout নয়।
