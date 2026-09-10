@@ -1,16 +1,40 @@
 # backend/tools/mcp_server.py
 import asyncio
 import json
+import time
+from typing import Any
 
 from mcp import types
 from mcp.server import Server
 
 from core.logging_config import logger
+from core.mcp_audit import audit_tool_call
+from core.mcp_policy import evaluate_tool
 from tools.graph_service import GraphService
 
 # বাংলা মন্তব্য: নলেজ গ্রাফের জন্য একটি অফিসিয়াল MCP সার্ভার ইনিশিয়ালাইজ করা হচ্ছে
 app = Server("supremeai-knowledge-graph")
 graph_service = GraphService()
+
+
+def _check_policy(name: str) -> dict[str, Any] | None:
+    """Evaluate policy for a tool call. Returns None if allowed, or a dict with denial info."""
+    decision, risk_level = evaluate_tool(name)
+    if decision == "ALLOW":
+        return None
+    if decision == "REQUIRE_APPROVAL":
+        return {
+            "approval_required": True,
+            "risk_level": risk_level,
+            "tool": name,
+            "reason": f"Tool '{name}' is classified as {risk_level}. Requires explicit human approval.",
+        }
+    return {
+        "approval_required": True,
+        "risk_level": risk_level,
+        "tool": name,
+        "reason": f"Tool '{name}' blocked by policy (decision={decision}).",
+    }
 
 
 @app.list_tools()
@@ -91,6 +115,17 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     if not arguments:
         arguments = {}
 
+    # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
+    decision, risk_level = evaluate_tool(name)
+    start_time = time.monotonic()
+
+    policy_block = _check_policy(name)
+    if policy_block is not None:
+        latency = (time.monotonic() - start_time) * 1000
+        audit_tool_call(name, decision, risk_level, latency_ms=latency, error="policy_blocked")
+        logger.warning(f"MCP tool '{name}' blocked by policy: {risk_level}")
+        return [types.TextContent(type="text", text=json.dumps(policy_block, indent=2))]
+
     try:
         if name == "get_render_deploy_preflight":
             from services.render_account_service import RenderAccountService
@@ -155,6 +190,10 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     except Exception as e:
         logger.error(f"MCP Server execution error: {e}")
         return [types.TextContent(type="text", text=f"Error gathering graph context: {e!s}")]
+    finally:
+        # ── Audit logging (Constitution Law #19: Observable) ──
+        latency = (time.monotonic() - start_time) * 1000
+        audit_tool_call(name, decision, risk_level, latency_ms=latency)
 
 
 async def main():
