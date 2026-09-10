@@ -290,7 +290,15 @@ def _use_durable_idempotency() -> bool:
     # Use memory in test runs where automation_executions table is not migrated
     if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("TESTING") == "true":
         return False
-    return bool(os.getenv("SUPABASE_DATABASE_URL_POOLER") or os.getenv("DATABASE_URL"))
+    try:
+        from core.config import settings
+
+        return bool(
+            getattr(settings, "supabase_database_url", None)
+            or getattr(settings, "database_url", None)
+        )
+    except Exception:
+        return False
 
 
 async def _claim_durable_idempotency(request: TaskContract, fingerprint: str) -> str | None:
