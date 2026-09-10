@@ -53,6 +53,16 @@ async def test_degraded_health_reports_queue_failure(worker_app):
     assert response.json()["status"] == "degraded"
 
 
+def test_task_contract_bounds_recovery_controls():
+    from worker_service import TaskContract
+
+    assert TaskContract(tenant_id="tenant-a", goal="bounded").max_retries == 3
+    with pytest.raises(ValidationError):
+        TaskContract(tenant_id="tenant-a", goal="too many retries", max_retries=4)
+    with pytest.raises(ValidationError):
+        TaskContract(tenant_id="tenant-a", goal="too long", timeout_seconds=901)
+
+
 def test_task_contract_requires_tenant_scope():
     from worker_service import TaskContract
 

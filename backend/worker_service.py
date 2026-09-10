@@ -58,6 +58,8 @@ class TaskContract(BaseModel):
     capability: Literal["acknowledge", "scrape"] = "acknowledge"
     idempotency_key: str | None = Field(default=None, min_length=1, max_length=256)
     correlation_id: str | None = Field(default=None, min_length=1, max_length=128)
+    max_retries: int = Field(default=3, ge=0, le=3)
+    timeout_seconds: int = Field(default=300, ge=1, le=900)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -365,7 +367,7 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-@app.post("/tasks")
+@app.post("/tasks", dependencies=[Depends(_verify_worker_auth)])
 async def submit_task(request: TaskContract) -> JSONResponse:
     try:
         _fingerprint, existing_task_id = await _claim_idempotency(request)
@@ -385,7 +387,11 @@ async def submit_task(request: TaskContract) -> JSONResponse:
 
         queue = get_task_queue()
         task_id = await queue.submit_task(
-            _process_task, request.model_dump(), task_name=f"supremeai_task:{request.capability}"
+            _process_task,
+            request.model_dump(),
+            task_name=f"supremeai_task:{request.capability}",
+            max_retries=request.max_retries,
+            timeout=request.timeout_seconds,
         )
         await _store_idempotency_task(request, task_id)
         _log_task_event("submitted", request, task_id=task_id, capability=request.capability)
@@ -401,7 +407,7 @@ async def submit_task(request: TaskContract) -> JSONResponse:
         return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
 
 
-@app.get("/tasks/{task_id}")
+@app.get("/tasks/{task_id}", dependencies=[Depends(_verify_worker_auth)])
 async def task_status(task_id: str) -> JSONResponse:
     try:
         from core.queue.task_queue_enhanced import get_task_queue
@@ -414,7 +420,7 @@ async def task_status(task_id: str) -> JSONResponse:
         raise HTTPException(status_code=404, detail="Task not found") from exc
 
 
-@app.post("/tasks/{task_id}/cancel")
+@app.post("/tasks/{task_id}/cancel", dependencies=[Depends(_verify_worker_auth)])
 async def cancel_task(task_id: str) -> JSONResponse:
     try:
         from core.queue.task_queue_enhanced import get_task_queue
