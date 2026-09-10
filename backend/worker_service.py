@@ -287,6 +287,9 @@ def _request_fingerprint(request: TaskContract) -> str:
 
 
 def _use_durable_idempotency() -> bool:
+    # Use memory in test runs where automation_executions table is not migrated
+    if os.getenv("PYTEST_CURRENT_TEST") or os.getenv("TESTING") == "true":
+        return False
     return bool(os.getenv("SUPABASE_DATABASE_URL_POOLER") or os.getenv("DATABASE_URL"))
 
 
