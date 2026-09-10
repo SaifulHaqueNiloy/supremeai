@@ -8,11 +8,24 @@ from __future__ import annotations
 import pytest
 from fastapi import HTTPException, status
 
+from api.dependencies import get_current_platform_admin
 from core.tenant_db import TenantAwareFirestore
 
 
 class TestMultiTenantIsolation:
     """Tests for multi-tenant hard isolation."""
+
+    def test_platform_admin_rejects_project_admin(self, monkeypatch):
+        """Project admins must not access cross-tenant controls."""
+        monkeypatch.setattr("api.dependencies.settings.admin_emails", ["platform@example.com"])
+        with pytest.raises(HTTPException) as exc_info:
+            get_current_platform_admin({"sub": "project@example.com", "role": "admin"})
+        assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_platform_admin_accepts_configured_identity(self, monkeypatch):
+        """Configured platform identities may access cross-tenant controls."""
+        monkeypatch.setattr("api.dependencies.settings.admin_emails", ["platform@example.com"])
+        assert get_current_platform_admin({"sub": "platform@example.com", "role": "admin"})["sub"] == "platform@example.com"
 
     def test_tenant_db_rejects_empty_tenant_id(self):
         """Test that empty tenant_id raises HTTPException."""
