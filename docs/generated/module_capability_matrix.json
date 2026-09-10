@@ -2923,7 +2923,8 @@
     },
     {
       "capability_signals": [
-        "capability"
+        "capability",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],

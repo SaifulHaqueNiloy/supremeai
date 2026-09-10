@@ -2,7 +2,7 @@
 name = "supremeai-backend"
 version = "2.0.0"
 description = "SupremeAI 2.0 Backend - Autonomous AI Agent Platform"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["SupremeAI Team <dev@supremeai.dev>"]
 package-mode = false
 
 [tool.poetry.dependencies]
