@@ -15,20 +15,31 @@ from __future__ import annotations
 import asyncio
 import atexit
 import contextlib
+import hashlib
 import importlib.util
+import json
 import logging
 import os
 import secrets
 import signal
 import subprocess
 import sys
+import uuid
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, Literal
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+
+from database.session import get_db_session_context
+
+
+SUPPORTED_CAPABILITIES = frozenset({"acknowledge", "scrape"})
+MAX_METADATA_BYTES = 32_768
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +49,56 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(title="SupremeAI Worker", docs_url=None, redoc_url=None, openapi_url=None)
 _state: dict[str, Any] = {"celery_proc": None, "degraded": False, "detail": ""}
+_idempotency_lock = asyncio.Lock()
+_idempotency_records: dict[str, tuple[str, str]] = {}
+MAX_IDEMPOTENCY_RECORDS = 10_000
 
+
+class TaskContract(BaseModel):
+    """The single tenant-scoped contract accepted by the worker boundary."""
+
+    tenant_id: str = Field(min_length=1, max_length=128)
+    user_id: str | None = Field(default=None, min_length=1, max_length=128)
+    goal: str = Field(min_length=1, max_length=10_000)
+    capability: Literal["acknowledge", "scrape"] = "acknowledge"
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=256)
+    correlation_id: str | None = Field(default=None, min_length=1, max_length=128)
+    max_retries: int = Field(default=3, ge=0, le=3)
+    timeout_seconds: int = Field(default=300, ge=1, le=900)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_contract(self) -> "TaskContract":
+        if len(str(self.metadata).encode("utf-8")) > MAX_METADATA_BYTES:
+            raise ValueError(f"metadata exceeds {MAX_METADATA_BYTES} bytes")
+        if self.capability == "scrape" and not isinstance(self.metadata.get("url"), str):
+            raise ValueError("metadata.url is required for scrape tasks")
+        return self
+
+
+class HealthStatus(BaseModel):
+    status: Literal["ready", "degraded", "not_ready"]
+    role: str
+    queue_configured: bool
+    queue_available: bool
+    celery_alive: bool
+    detail: str | None = None
+
+
+def _celery_alive() -> bool:
+    proc: subprocess.Popen[bytes] | None = _state.get("celery_proc")
+    return bool(proc and proc.poll() is None)
+
+
+async def _queue_available() -> tuple[bool, str | None]:
+    if not _redis_url():
+        return False, "Redis URL is not configured"
+    try:
+        await asyncio.wait_for(asyncio.to_thread(_queue_call, "get_queue_stats"), timeout=5.0)
+        return True, None
+    except Exception as exc:
+        _state.update(degraded=True, detail=f"queue unavailable: {exc}")
+        return False, "Queue is unavailable"
 
 def _verify_worker_auth(request: Request) -> None:
     """Validate internal worker authentication token or JWT secret (Audit Critical-4 Fix)."""
@@ -186,20 +246,174 @@ async def root() -> dict[str, Any]:
 
 
 @app.get("/health")
+@app.get("/health/live")
 @app.get("/api/v1/health/live")
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "service": "supremeai-worker"}
 
 
-class TaskSubmission(BaseModel):
-    goal: str = Field(min_length=1, max_length=10000)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+@app.get("/health/ready", response_model=HealthStatus)
+async def readiness() -> JSONResponse:
+    queue_ok, detail = await _queue_available()
+    status = "ready" if queue_ok else "not_ready"
+    payload = HealthStatus(
+        status=status,
+        role=ROLE,
+        queue_configured=bool(_redis_url()),
+        queue_available=queue_ok,
+        celery_alive=_celery_alive(),
+        detail=detail,
+    )
+    return JSONResponse(payload.model_dump(), status_code=200 if queue_ok else 503)
+
+
+@app.get("/health/degraded", response_model=HealthStatus)
+async def degraded_health() -> HealthStatus:
+    queue_ok, detail = await _queue_available()
+    return HealthStatus(
+        status="degraded" if _state["degraded"] or not queue_ok else "ready",
+        role=ROLE,
+        queue_configured=bool(_redis_url()),
+        queue_available=queue_ok,
+        celery_alive=_celery_alive(),
+        detail=detail or _state["detail"] or None,
+    )
+
+
+def _request_fingerprint(request: TaskContract) -> str:
+    payload = request.model_dump(mode="json", exclude={"idempotency_key"})
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _use_durable_idempotency() -> bool:
+    return bool(os.getenv("SUPABASE_DATABASE_URL_POOLER") or os.getenv("DATABASE_URL"))
+
+
+async def _claim_durable_idempotency(request: TaskContract, fingerprint: str) -> str | None:
+    if not request.idempotency_key:
+        return None
+    workflow_key = f"worker:{request.tenant_id}"
+    try:
+        async with get_db_session_context() as session:
+            await session.execute(
+                text(
+                    """
+                    INSERT INTO automation_executions
+                        (id, event_id, workflow_key, provider, status, external_execution_id,
+                         idempotency_key, trace_id)
+                    VALUES (:id, :event_id, :workflow_key, 'supremeai-worker', 'PENDING',
+                            '__pending__', :idempotency_key, :trace_id)
+                    """
+                ),
+                {
+                    "id": str(uuid.uuid4()),
+                    "event_id": str(uuid.uuid4()),
+                    "workflow_key": workflow_key,
+                    "idempotency_key": request.idempotency_key,
+                    "trace_id": fingerprint,
+                },
+            )
+            await session.commit()
+            return None
+    except IntegrityError:
+        async with get_db_session_context() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT external_execution_id, trace_id
+                    FROM automation_executions
+                    WHERE workflow_key = :workflow_key AND idempotency_key = :idempotency_key
+                    ORDER BY created_at DESC NULLS LAST
+                    LIMIT 1
+                    """
+                ),
+                {
+                    "workflow_key": workflow_key,
+                    "idempotency_key": request.idempotency_key,
+                },
+            )
+            row = result.mappings().first()
+            if not row or row["trace_id"] != fingerprint:
+                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
+            if row["external_execution_id"] == "__pending__":
+                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
+            return row["external_execution_id"]
+
+
+async def _finalize_durable_idempotency(request: TaskContract, task_id: str) -> None:
+    if not request.idempotency_key:
+        return
+    async with get_db_session_context() as session:
+        await session.execute(
+            text(
+                """
+                UPDATE automation_executions
+                SET external_execution_id = :task_id, status = 'QUEUED'
+                WHERE workflow_key = :workflow_key AND idempotency_key = :idempotency_key
+                """
+            ),
+            {
+                "task_id": task_id,
+                "workflow_key": f"worker:{request.tenant_id}",
+                "idempotency_key": request.idempotency_key,
+            },
+        )
+        await session.commit()
+
+
+async def _claim_idempotency(request: TaskContract) -> tuple[str, str | None]:
+    """Claim idempotency durably when SQL storage is configured; use memory only in tests/dev."""
+    fingerprint = _request_fingerprint(request)
+    if _use_durable_idempotency():
+        return fingerprint, await _claim_durable_idempotency(request, fingerprint)
+    if not request.idempotency_key:
+        return fingerprint, None
+    record_key = f"{request.tenant_id}:{request.idempotency_key}"
+    async with _idempotency_lock:
+        existing = _idempotency_records.get(record_key)
+        if existing:
+            if existing[0] != fingerprint:
+                raise HTTPException(status_code=409, detail="Idempotency key was already used with a different task payload")
+            if not existing[1]:
+                raise HTTPException(status_code=409, detail="A task with this idempotency key is currently being submitted")
+            return fingerprint, existing[1]
+        if len(_idempotency_records) >= MAX_IDEMPOTENCY_RECORDS:
+            _idempotency_records.pop(next(iter(_idempotency_records)))
+        _idempotency_records[record_key] = (fingerprint, "")
+    return fingerprint, None
+
+
+async def _store_idempotency_task(request: TaskContract, task_id: str) -> None:
+    if _use_durable_idempotency():
+        await _finalize_durable_idempotency(request, task_id)
+        return
+    if not request.idempotency_key:
+        return
+    record_key = f"{request.tenant_id}:{request.idempotency_key}"
+    async with _idempotency_lock:
+        _idempotency_records[record_key] = (_request_fingerprint(request), task_id)
+
+
+def _log_task_event(event: str, request: TaskContract, **fields: Any) -> None:
+    logger.info(
+        "worker_task_event",
+        extra={
+            "event": event,
+            "tenant_id": request.tenant_id,
+            "user_id": request.user_id,
+            "correlation_id": request.correlation_id,
+            "idempotency_key_present": bool(request.idempotency_key),
+            **fields,
+        },
+    )
 
 
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
-    """Execute the first real capability while preserving a stable task contract."""
-    metadata = payload.get("metadata", {})
-    capability = metadata.get("capability", "acknowledge")
+    """Execute a validated, tenant-scoped task contract."""
+    contract = TaskContract.model_validate(payload)
+    metadata = contract.metadata
+    capability = contract.capability
     if capability == "scrape":
         from utils.http_client import create_async_client
 
@@ -211,34 +425,68 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
         if not scraper_url:
             raise RuntimeError("A scraper service URL is required for scrape tasks")
         scraper_url = scraper_url.rstrip("/")
-        url = metadata.get("url")
-        if not isinstance(url, str) or not url:
-            raise ValueError("metadata.url is required for scrape tasks")
+        url = metadata["url"]
         async with create_async_client(timeout=45.0) as client:
             response = await client.post(f"{scraper_url}/scrape", json={"url": url})
             response.raise_for_status()
-            return {"capability": capability, "data": response.json()}
+            return {
+                "capability": capability,
+                "tenant_id": contract.tenant_id,
+                "user_id": contract.user_id,
+                "data": response.json(),
+            }
     if capability != "acknowledge":
         raise ValueError(f"Unsupported worker capability: {capability}")
-    return {"capability": capability, "goal": payload["goal"], "metadata": metadata}
+    return {
+        "capability": capability,
+        "tenant_id": contract.tenant_id,
+        "user_id": contract.user_id,
+        "goal": contract.goal,
+        "metadata": metadata,
+    }
 
 
-@app.post("/tasks")
-async def submit_task(request: TaskSubmission) -> JSONResponse:
+@app.post("/tasks", dependencies=[Depends(_verify_worker_auth)])
+async def submit_task(request: TaskContract) -> JSONResponse:
     try:
+        _fingerprint, existing_task_id = await _claim_idempotency(request)
+        if existing_task_id:
+            _log_task_event("deduplicated", request, task_id=existing_task_id)
+            return JSONResponse(
+                {
+                    "task_id": existing_task_id,
+                    "status": "pending",
+                    "deduplicated": True,
+                    "correlation_id": request.correlation_id,
+                },
+                status_code=200,
+            )
+
         from core.queue.task_queue_enhanced import get_task_queue
 
         queue = get_task_queue()
         task_id = await queue.submit_task(
-            _process_task, request.model_dump(), task_name="supremeai_task"
+            _process_task,
+            request.model_dump(),
+            task_name=f"supremeai_task:{request.capability}",
+            max_retries=request.max_retries,
+            timeout=request.timeout_seconds,
         )
-        return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
+        await _store_idempotency_task(request, task_id)
+        _log_task_event("submitted", request, task_id=task_id, capability=request.capability)
+        return JSONResponse(
+            {"task_id": task_id, "status": "pending", "correlation_id": request.correlation_id},
+            status_code=202,
+        )
+    except HTTPException:
+        raise
     except Exception as exc:
+        _log_task_event("submission_failed", request, error_type=type(exc).__name__)
         _state.update(degraded=True, detail=f"task submit failed: {exc}")
         return JSONResponse({"status": "degraded", "detail": str(exc)[:200]}, status_code=503)
 
 
-@app.get("/tasks/{task_id}")
+@app.get("/tasks/{task_id}", dependencies=[Depends(_verify_worker_auth)])
 async def task_status(task_id: str) -> JSONResponse:
     try:
         from core.queue.task_queue_enhanced import get_task_queue
@@ -251,7 +499,7 @@ async def task_status(task_id: str) -> JSONResponse:
         raise HTTPException(status_code=404, detail="Task not found") from exc
 
 
-@app.post("/tasks/{task_id}/cancel")
+@app.post("/tasks/{task_id}/cancel", dependencies=[Depends(_verify_worker_auth)])
 async def cancel_task(task_id: str) -> JSONResponse:
     try:
         from core.queue.task_queue_enhanced import get_task_queue
