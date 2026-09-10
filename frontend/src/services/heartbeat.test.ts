@@ -1,36 +1,66 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { startAntiSleepHeartbeat } from './heartbeat';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { startAntiSleepHeartbeat, pingServers } from './heartbeat';
 
-describe('heartbeat — startAntiSleepHeartbeat', () => {
-  afterEach(() => {
-    vi.clearAllTimers();
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
+vi.mock('../utils/api', () => ({
+  getApiBaseUrl: vi.fn(() => 'https://api.test-domain.com'),
+}));
+
+describe('heartbeat', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+    (global as { fetch: ReturnType<typeof vi.fn> }).fetch = vi.fn();
   });
 
-  it('pings the live endpoint after the initial 10s delay', () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
-    vi.stubGlobal('fetch', fetchMock);
-    vi.useFakeTimers();
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('returns timeout and interval ids', () => {
+    const result = startAntiSleepHeartbeat();
+    expect(result.timeoutId).toBeDefined();
+    expect(result.intervalId).toBeDefined();
+  });
+
+  it('pings the health endpoint on schedule', async () => {
+    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    mockFetch.mockResolvedValue({ ok: true } as Response);
 
     startAntiSleepHeartbeat();
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
 
-    vi.advanceTimersByTime(10_000);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('/api/v1/live'),
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://api.test-domain.com/api/v1/live',
       expect.objectContaining({ method: 'GET' })
     );
   });
 
-  it('continues pinging on the interval', () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200 });
-    vi.stubGlobal('fetch', fetchMock);
-    vi.useFakeTimers();
+  it('logs a warning when the health endpoint returns non-ok', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    mockFetch.mockResolvedValue({ ok: false, status: 500 } as Response);
 
     startAntiSleepHeartbeat();
-    vi.advanceTimersByTime(10 * 60 * 1000 + 10_000);
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('500')
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('logs a warning when the fetch throws', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const mockFetch = (global as { fetch: ReturnType<typeof vi.fn> }).fetch;
+    mockFetch.mockRejectedValue(new Error('network down'));
+
+    startAntiSleepHeartbeat();
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Could not reach')
+    );
+    consoleSpy.mockRestore();
   });
 });

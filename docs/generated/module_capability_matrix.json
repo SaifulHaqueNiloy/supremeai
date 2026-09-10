@@ -1,5 +1,5 @@
 {
-  "module_count": 2417,
+  "module_count": 2420,
   "modules": [
     {
       "capability_signals": [],
@@ -924,13 +924,6 @@
       "path": "backend/api/errors.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/middleware/query_timing.py"
-    },
-    {
       "capability_signals": [
         "browser",
         "dispatch",
@@ -941,6 +934,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/middleware.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/middleware/query_timing.py"
     },
     {
       "capability_signals": [
@@ -13357,6 +13357,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
+      "path": "frontend/src/auth/identity.test.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
       "path": "frontend/src/auth/identity.ts"
     },
     {
@@ -14552,6 +14559,15 @@
       "path": "frontend/src/components/common/Skeleton.tsx"
     },
     {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/core/AuthGuards.test.tsx"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -15245,6 +15261,13 @@
       "path": "frontend/src/components/simulator/LiveSimulator.tsx"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/sujon-utils.ts"
+    },
+    {
       "capability_signals": [
         "health",
         "realtime"
@@ -15253,13 +15276,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/sujon/index.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/sujon-utils.ts"
     },
     {
       "capability_signals": [],
@@ -15550,6 +15566,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/config/navigationRegistry.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/config/permissions.test.ts"
     },
     {
       "capability_signals": [
@@ -16890,6 +16913,16 @@
     },
     {
       "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types.ts"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -16928,16 +16961,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/types/swarm.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/types.ts"
     },
     {
       "capability_signals": [
