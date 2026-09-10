@@ -33,7 +33,9 @@ def is_admin_authorized() -> bool:
 
     ADMIN_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
-    return settings.admin_authorized
+    if "ADMIN_AUTHORIZED" in os.environ:
+        return os.environ.get("ADMIN_AUTHORIZED", "").strip().lower() in ("true", "1", "yes")
+    return bool(getattr(settings, "admin_authorized", False))
 
 
 def is_autofix_authorized() -> bool:
@@ -41,4 +43,6 @@ def is_autofix_authorized() -> bool:
 
     AUTOFIX_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
-    return settings.autofix_authorized
+    if "AUTOFIX_AUTHORIZED" in os.environ:
+        return os.environ.get("AUTOFIX_AUTHORIZED", "").strip().lower() in ("true", "1", "yes")
+    return bool(getattr(settings, "autofix_authorized", False))
