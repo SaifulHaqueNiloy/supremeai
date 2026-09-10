@@ -25,7 +25,10 @@ class TestMultiTenantIsolation:
     def test_platform_admin_accepts_configured_identity(self, monkeypatch):
         """Configured platform identities may access cross-tenant controls."""
         monkeypatch.setattr("api.dependencies.settings.admin_emails", ["platform@example.com"])
-        assert get_current_platform_admin({"sub": "platform@example.com", "role": "admin"})["sub"] == "platform@example.com"
+        assert (
+            get_current_platform_admin({"sub": "platform@example.com", "role": "admin"})["sub"]
+            == "platform@example.com"
+        )
 
     def test_tenant_db_rejects_empty_tenant_id(self):
         """Test that empty tenant_id raises HTTPException."""

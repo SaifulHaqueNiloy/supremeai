@@ -1863,6 +1863,77 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend"}),
         description="Auto-classified by CI drift remediation.",
     ),
+    # ── Dynamic AI Model Routing Registry (added by v0/file-criteria-audit) ──
+    ConfigSpec(
+        "MODEL_CODING",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for code generation tasks (e.g. groq/llama-3.3-70b-versatile).",
+    ),
+    ConfigSpec(
+        "MODEL_REASONING",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for reasoning/complex tasks.",
+    ),
+    ConfigSpec(
+        "MODEL_VISION",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for vision/multimodal tasks.",
+    ),
+    ConfigSpec(
+        "MODEL_CHAT",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for general chat tasks.",
+    ),
+    ConfigSpec(
+        "MODEL_GENERAL",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for general-purpose tasks.",
+    ),
+    ConfigSpec(
+        "MODEL_MULTILINGUAL",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="LLM model override for multilingual/Bengali tasks.",
+    ),
+    ConfigSpec(
+        "EMBEDDING_MODEL",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="Embedding model for pgvector/memory store (e.g. text-embedding-3-small).",
+    ),
+    ConfigSpec(
+        "ROUTE_LADDER_SIMPLE",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="CSV of models for simple-complexity routing ladder.",
+    ),
+    ConfigSpec(
+        "ROUTE_LADDER_MEDIUM",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="CSV of models for medium-complexity routing ladder.",
+    ),
+    ConfigSpec(
+        "ROUTE_LADDER_COMPLEX",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="CSV of models for complex-complexity routing ladder.",
+    ),
 )
 
 BY_NAME: dict[str, ConfigSpec] = {spec.name: spec for spec in CONFIG_SPECS}
