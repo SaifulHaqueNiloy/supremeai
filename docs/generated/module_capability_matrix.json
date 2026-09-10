@@ -1,5 +1,5 @@
 {
-  "module_count": 2415,
+  "module_count": 2416,
   "modules": [
     {
       "capability_signals": [],
@@ -19007,6 +19007,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/coverage_quality_gate.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/detect_changed_tests.py"
     },
     {
       "capability_signals": [],
