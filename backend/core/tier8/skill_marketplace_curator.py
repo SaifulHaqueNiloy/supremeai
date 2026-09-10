@@ -247,7 +247,10 @@ class SkillMarketplaceCurator(BaseSkill):
             )
             try:
                 response = await llm.acompletion(
-                    model=os.getenv("MARKETPLACE_REVIEW_MODEL", getattr(settings, "model_general", "gpt-4o-mini")),
+                    model=os.getenv(
+                        "MARKETPLACE_REVIEW_MODEL",
+                        getattr(settings, "model_general", "gpt-4o-mini"),
+                    ),
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1,
                     max_tokens=10,

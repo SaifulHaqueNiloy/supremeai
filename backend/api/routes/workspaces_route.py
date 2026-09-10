@@ -18,13 +18,13 @@ from pydantic import BaseModel, Field
 from api.dependencies import get_current_admin
 from core.logging_config import logger
 from core.repo_manager import repo_manager
-from tools.social.telegram_security import check_totp_code
 from core.target_registry import (
     PermissionScope,
     TargetEntity,
     TargetPlatformType,
     target_registry,
 )
+from tools.social.telegram_security import check_totp_code
 
 router = APIRouter(
     prefix="/admin-api/workspaces",
@@ -73,10 +73,12 @@ async def bind_target_repository(
     if not x_jit_otp or not check_totp_code(x_jit_otp):
         logger.warning("Rejected workspace bind without valid JIT OTP")
         from fastapi import HTTPException
+
         raise HTTPException(status_code=403, detail="Valid JIT OTP required")
     if req.credentials_token:
         logger.warning("Rejected direct credentials_token for target %s", req.target_id)
         from fastapi import HTTPException
+
         raise HTTPException(
             status_code=400,
             detail="Direct credentials are not accepted; use a managed secret reference",

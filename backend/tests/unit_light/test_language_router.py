@@ -38,17 +38,20 @@ def test_route_uses_provider_map():
     assert "bengali" in result["reason"]
 
 
+from core.config import settings
+
+
 def test_route_by_language_explicit():
     result = LanguageRouter().route_by_language("text", detected_lang="japanese")
     assert result["language"] == "japanese"
-    assert result["model"] == "01-ai/yi-34b-chat"
+    assert result["model"] == settings.model_multilingual
 
 
 def test_route_by_language_fallback():
     result = LanguageRouter().route_by_language("text", detected_lang="korean")
-    assert result["model"] == "01-ai/yi-34b-chat"
+    assert result["model"] == settings.model_multilingual
 
 
 def test_route_by_language_unknown_fallback():
     result = LanguageRouter().route_by_language("text", detected_lang="klingon")
-    assert result["model"] == "openrouter"
+    assert result["model"] == settings.model_multilingual
