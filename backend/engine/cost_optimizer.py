@@ -21,23 +21,11 @@ class ComplexityAnalyzer:
 
 
 class CostOptimizer:
-    ROUTE_LADDER = {
-        "simple": [
-            "gemini/gemini-2.0-flash",
-            "groq/llama-3.3-70b-versatile",
-            "openrouter/meta-llama/llama-3.3-70b-instruct",
-        ],
-        "medium": [
-            "gemini/gemini-2.0-flash",
-            "groq/llama-3.3-70b-versatile",
-            "openrouter/meta-llama/llama-3.3-70b-instruct",
-        ],
-        "complex": [
-            "groq/llama-3.3-70b-versatile",
-            "openrouter/meta-llama/llama-3.3-70b-instruct",
-            "gemini/gemini-2.0-flash",
-        ],
-    }
+    @property
+    def route_ladder(self) -> dict[str, list[str]]:
+        from core.config import settings
+
+        return settings.route_ladders
 
     def __init__(self) -> None:
         self.free_tier_tracker = None
@@ -62,7 +50,8 @@ class CostOptimizer:
     async def get_optimal_route(self, task: dict[str, Any], user_mode: str) -> str:
         prompt = task.get("prompt") or task.get("request") or ""
         complexity = ComplexityAnalyzer.classify(prompt)
-        candidates = self.ROUTE_LADDER.get(complexity, self.ROUTE_LADDER["simple"])
+        ladders = self.route_ladder
+        candidates = ladders.get(complexity, ladders["simple"])
         free = self._get_best_free_provider()
         if free and user_mode != "paid":
             for candidate in candidates:
