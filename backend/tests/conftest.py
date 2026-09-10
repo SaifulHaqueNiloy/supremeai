@@ -70,6 +70,7 @@ _CRITICAL_TEST_PARTS = (
     ("core", "queue"),
     ("core", "microvm_sandbox"),
     ("core", "plugins"),
+    ("core", "mcp_policy"),
     ("services", "usage"),
     ("services", "memory"),
     ("tools", "checkpoint_manager"),

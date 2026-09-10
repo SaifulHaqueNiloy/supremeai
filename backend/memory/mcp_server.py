@@ -53,9 +53,12 @@ import asyncio
 import json
 import os
 import sys
+import time
 from typing import Any
 
 from core.logging_config import logger
+from core.mcp_audit import audit_tool_call
+from core.mcp_policy import evaluate_tool
 
 # বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে যাতে backend/ modules import করা যায়
 _BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,6 +66,7 @@ if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
 
 try:
+    import mcp.types as types
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
     from mcp.types import (
@@ -297,6 +301,39 @@ class KnowledgeGraph:
         entities = [self._entities[n] for n in names if n in self._entities]
         relations = [r for r in self._relations if r["from"] in names or r["to"] in names]
         return {"entities": entities, "relations": relations}
+
+
+# =============================================================================
+# Policy & Audit Shim (Constitution Law #11 + #19)
+# =============================================================================
+
+
+def _check_policy(name: str) -> dict[str, Any] | None:
+    """Evaluate policy for a tool call. Returns None if allowed, or a dict with denial info."""
+    decision, risk_level = evaluate_tool(name)
+    if decision == "ALLOW":
+        return None
+    if decision == "REQUIRE_APPROVAL":
+        return {
+            "approval_required": True,
+            "risk_level": risk_level,
+            "tool": name,
+            "reason": f"Tool '{name}' is classified as {risk_level}. Requires explicit human approval.",
+        }
+    return {
+        "approval_required": True,
+        "risk_level": risk_level,
+        "tool": name,
+        "reason": f"Tool '{name}' blocked by policy (decision={decision}).",
+    }
+
+
+def _audit(
+    name: str, decision: str, risk_level: str, start_time: float, error: str | None = None
+) -> None:
+    """Log tool call to audit trail."""
+    latency = (time.monotonic() - start_time) * 1000
+    audit_tool_call(name, decision, risk_level, latency_ms=latency, error=error)
 
 
 # =============================================================================
@@ -693,18 +730,263 @@ def build_server() -> Server:
         ]
 
     # =========================================================================
+    # Resources (MCP Protocol — Data/State Exposure)
+    # বাংলা মন্তব্য: AI clients এই resources পড়তে পারে সরাসরি — কোনো tool call ছাড়াই
+    # =========================================================================
+
+    @server.list_resources()
+    async def list_resources() -> list[types.Resource]:
+        """সকল available resources এর তালিকা।"""
+        return [
+            types.Resource(
+                uri="mcp://memory/knowledge-graph",
+                name="Knowledge Graph",
+                description="Complete knowledge graph state — entities, relations, observations",
+                mimeType="application/json",
+            ),
+            types.Resource(
+                uri="mcp://memory/session-stats",
+                name="Session Statistics",
+                description="Sliding window memory statistics — token counts, window summaries",
+                mimeType="application/json",
+            ),
+            types.Resource(
+                uri="mcp://memory/health",
+                name="Memory System Health",
+                description="Health status of all memory layers (ChromaDB, Supabase, Episodic, RAG)",
+                mimeType="application/json",
+            ),
+        ]
+
+    @server.read_resource()
+    async def read_resource(uri: str) -> str:
+        """নির্দিষ্ট URI থেকে resource data পড়ে।"""
+        if uri == "mcp://memory/knowledge-graph":
+            data = {
+                "entities": kg._entities,
+                "relations": kg._relations,
+                "entity_count": len(kg._entities),
+                "relation_count": len(kg._relations),
+            }
+            return json.dumps(data, ensure_ascii=False, indent=2)
+
+        elif uri == "mcp://memory/session-stats":
+            if sliding is None:
+                return json.dumps({"error": "SlidingWindowMemory not available"})
+            stats = sliding.get_stats() if hasattr(sliding, "get_stats") else {"status": "active"}
+            return json.dumps(stats, ensure_ascii=False, indent=2)
+
+        elif uri == "mcp://memory/health":
+            health = {
+                "chroma": {"available": _CHROMA_OK, "connected": chroma is not None},
+                "episodic": {"available": _EPISODIC_OK, "connected": episodic is not None},
+                "sliding_window": {"available": _SLIDING_OK, "connected": sliding is not None},
+                "supabase": {"available": _SUPABASE_OK, "connected": supabase is not None},
+                "rag": {"available": _RAG_OK, "connected": rag is not None},
+                "overall": "healthy"
+                if any([chroma, episodic, sliding, supabase, rag])
+                else "degraded",
+            }
+            return json.dumps(health, ensure_ascii=False, indent=2)
+
+        return json.dumps({"error": f"Unknown resource: {uri}"})
+
+    # =========================================================================
+    # Prompts (MCP Protocol — Reusable Workflow Templates)
+    # বাংলা মন্তব্য: AI clients এই prompt templates ব্যবহার করে জটিল workflow automate করতে পারে
+    # =========================================================================
+
+    @server.list_prompts()
+    async def list_prompts() -> list[types.Prompt]:
+        """সকল available prompt templates এর তালিকা।"""
+        return [
+            types.Prompt(
+                name="heal_error",
+                description="Analyze an error, search memory for similar past fixes, and generate a healing plan",
+                arguments=[
+                    types.PromptArgument(
+                        name="error_message",
+                        description="The error message or stack trace to analyze",
+                        required=True,
+                    ),
+                    types.PromptArgument(
+                        name="context",
+                        description="Additional context about where the error occurred",
+                        required=False,
+                    ),
+                ],
+            ),
+            types.Prompt(
+                name="deploy_preflight",
+                description="Run a complete deployment preflight check — memory state, service health, and readiness",
+                arguments=[
+                    types.PromptArgument(
+                        name="target_environment",
+                        description="Target environment (staging, production)",
+                        required=True,
+                    ),
+                ],
+            ),
+            types.Prompt(
+                name="recall_context",
+                description="Recall relevant context from all memory layers for a given topic or query",
+                arguments=[
+                    types.PromptArgument(
+                        name="query",
+                        description="The topic or query to recall context for",
+                        required=True,
+                    ),
+                    types.PromptArgument(
+                        name="max_results",
+                        description="Maximum number of results to return (default: 5)",
+                        required=False,
+                    ),
+                ],
+            ),
+        ]
+
+    @server.get_prompt()
+    async def get_prompt(name: str, arguments: dict[str, Any] | None) -> types.GetPromptResult:
+        """নির্দিষ্ট prompt template return করে।"""
+        if arguments is None:
+            arguments = {}
+
+        if name == "heal_error":
+            error_msg = arguments.get("error_message", "Unknown error")
+            ctx = arguments.get("context", "No additional context provided")
+            prompt_text = f"""## Error Healing Workflow
+
+### Error to Analyze
+{error_msg}
+
+### Context
+{ctx}
+
+### Instructions
+1. Search memory for similar past errors using `search_semantic` tool
+2. Check episodic memory for past fixes using `get_similar_tasks`
+3. Analyze the root cause
+4. Generate a step-by-step healing plan
+5. If successful, record the fix using `record_task` for future reference
+
+### Policy Note
+This workflow operates under R2 risk level — read-only memory access unless explicitly approved for mutations.
+"""
+            return types.GetPromptResult(
+                description="Error healing workflow prompt",
+                messages=[
+                    types.PromptMessage(
+                        role="user", content=types.TextContent(type="text", text=prompt_text)
+                    )
+                ],
+            )
+
+        elif name == "deploy_preflight":
+            env = arguments.get("target_environment", "staging")
+            prompt_text = f"""## Deployment Preflight Check — {env}
+
+### Checklist
+1. **Memory Health**: Read `mcp://memory/health` to verify all memory layers are operational
+2. **Knowledge Graph**: Read `mcp://memory/knowledge-graph` to check entity/relation integrity
+3. **Session Stats**: Read `mcp://memory/session-stats` to verify sliding window state
+4. **Recent Episodes**: Use `get_recent_episodes` to check for recent deployment-related events
+5. **Similar Tasks**: Use `get_similar_tasks` to find past deployment experiences
+
+### Authorization
+- Target environment: {env}
+- Risk level: R3 (REQUIRE_APPROVAL for production deployments)
+- Human approval required before any deployment action
+
+### Output Format
+Return a structured preflight report with:
+- overall_status: "ready" | "blocked" | "degraded"
+- checks: array of individual check results
+- blockers: array of issues preventing deployment
+- recommendations: array of suggested actions
+"""
+            return types.GetPromptResult(
+                description=f"Deployment preflight checklist for {env}",
+                messages=[
+                    types.PromptMessage(
+                        role="user", content=types.TextContent(type="text", text=prompt_text)
+                    )
+                ],
+            )
+
+        elif name == "recall_context":
+            query = arguments.get("query", "")
+            max_results = arguments.get("max_results", 5)
+            prompt_text = f"""## Context Recall — {query}
+
+### Instructions
+Search all memory layers for relevant context about: **{query}**
+
+### Steps
+1. Use `search_semantic` to find vector-similar documents (n={max_results})
+2. Use `search_nodes` to find knowledge graph entities related to the query
+3. Use `get_similar_tasks` to find past similar task executions
+4. Use `recall_facts` to find stored long-term facts
+5. Synthesize all results into a coherent context summary
+
+### Output Format
+Return a structured context report with:
+- summary: synthesized context summary
+- sources: array of sources (knowledge graph, episodic, semantic, facts)
+- confidence: overall confidence score (0-1)
+- gaps: array of missing information
+
+### Query Details
+- Original query: {query}
+- Max results per layer: {max_results}
+"""
+            return types.GetPromptResult(
+                description=f"Context recall workflow for: {query}",
+                messages=[
+                    types.PromptMessage(
+                        role="user", content=types.TextContent(type="text", text=prompt_text)
+                    )
+                ],
+            )
+
+        return types.GetPromptResult(
+            description="Unknown prompt",
+            messages=[
+                types.PromptMessage(
+                    role="user",
+                    content=types.TextContent(type="text", text=f"Unknown prompt: {name}"),
+                )
+            ],
+        )
+
+    # =========================================================================
     # Tool Handlers
     # =========================================================================
 
     @server.call_tool()
     async def call_tool(name: str, arguments: dict[str, Any]) -> list[TextContent]:
         """সকল tool call এখানে route হয়।"""
+        # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
+        decision, risk_level = evaluate_tool(name)
+        start_time = time.monotonic()
+
+        policy_block = _check_policy(name)
+        if policy_block is not None:
+            _audit(name, decision, risk_level, start_time, error="policy_blocked")
+            logger.warning(f"MCP tool '{name}' blocked by policy: {risk_level}")
+            return [
+                TextContent(
+                    type="text", text=json.dumps(policy_block, ensure_ascii=False, indent=2)
+                )
+            ]
+
         # বাংলা মন্তব্য: tool নাম অনুযায়ী সঠিক handler-এ dispatch করা হচ্ছে
         try:
             result = await _dispatch(name, arguments, kg, episodic, sliding, supabase, chroma, rag)
+            _audit(name, decision, risk_level, start_time)
             return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
         except Exception as exc:
             logger.exception(f"Tool '{name}' failed: {exc}")
+            _audit(name, decision, risk_level, start_time, error=str(exc))
             return [
                 TextContent(
                     type="text",
