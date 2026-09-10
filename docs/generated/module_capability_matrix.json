@@ -16913,16 +16913,6 @@
     },
     {
       "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/types.ts"
-    },
-    {
-      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -16961,6 +16951,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/types/swarm.ts"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types.ts"
     },
     {
       "capability_signals": [
