@@ -3,6 +3,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+from fastapi import HTTPException
 from httpx import ASGITransport, AsyncClient
 from pydantic import ValidationError
 
@@ -71,6 +72,42 @@ def test_task_contract_validates_scrape_url_and_metadata_size():
             goal="large",
             metadata={"payload": "x" * 40_000},
         )
+
+
+@pytest.mark.asyncio
+async def test_idempotency_reuses_existing_task_id():
+    from worker_service import TaskContract, _claim_idempotency, _idempotency_records, _store_idempotency_task
+
+    request = TaskContract(
+        tenant_id="tenant-idempotent",
+        goal="same task",
+        idempotency_key="same-request",
+    )
+    _idempotency_records.clear()
+    try:
+        _, existing = await _claim_idempotency(request)
+        assert existing is None
+        await _store_idempotency_task(request, "task-123")
+        _, duplicate = await _claim_idempotency(request)
+        assert duplicate == "task-123"
+    finally:
+        _idempotency_records.clear()
+
+
+@pytest.mark.asyncio
+async def test_idempotency_rejects_payload_reuse_with_different_content():
+    from worker_service import TaskContract, _claim_idempotency, _idempotency_records, _store_idempotency_task
+
+    _idempotency_records.clear()
+    first = TaskContract(tenant_id="tenant-conflict", goal="first", idempotency_key="request")
+    second = TaskContract(tenant_id="tenant-conflict", goal="second", idempotency_key="request")
+    try:
+        await _claim_idempotency(first)
+        await _store_idempotency_task(first, "task-456")
+        with pytest.raises(HTTPException, match="different task payload"):
+            await _claim_idempotency(second)
+    finally:
+        _idempotency_records.clear()
 
 
 def test_task_contract_accepts_supported_capabilities():

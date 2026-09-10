@@ -15,7 +15,9 @@ from __future__ import annotations
 import asyncio
 import atexit
 import contextlib
+import hashlib
 import importlib.util
+import json
 import logging
 import os
 import secrets
@@ -42,6 +44,9 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
 app = FastAPI(title="SupremeAI Worker", docs_url=None, redoc_url=None, openapi_url=None)
 _state: dict[str, Any] = {"celery_proc": None, "degraded": False, "detail": ""}
+_idempotency_lock = asyncio.Lock()
+_idempotency_records: dict[str, tuple[str, str]] = {}
+MAX_IDEMPOTENCY_RECORDS = 10_000
 
 
 class TaskContract(BaseModel):
@@ -267,6 +272,47 @@ async def degraded_health() -> HealthStatus:
     )
 
 
+def _request_fingerprint(request: TaskContract) -> str:
+    payload = request.model_dump(mode="json", exclude={"idempotency_key"})
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+async def _claim_idempotency(request: TaskContract) -> tuple[str, str | None]:
+    """Return (fingerprint, existing_task_id) for an atomic retry-safe claim."""
+    fingerprint = _request_fingerprint(request)
+    if not request.idempotency_key:
+        return fingerprint, None
+    record_key = f"{request.tenant_id}:{request.idempotency_key}"
+    async with _idempotency_lock:
+        existing = _idempotency_records.get(record_key)
+        if existing:
+            if existing[0] != fingerprint:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Idempotency key was already used with a different task payload",
+                )
+            if not existing[1]:
+                raise HTTPException(
+                    status_code=409,
+                    detail="A task with this idempotency key is currently being submitted",
+                )
+            return fingerprint, existing[1]
+        if len(_idempotency_records) >= MAX_IDEMPOTENCY_RECORDS:
+            oldest_key = next(iter(_idempotency_records))
+            _idempotency_records.pop(oldest_key)
+        _idempotency_records[record_key] = (fingerprint, "")
+    return fingerprint, None
+
+
+async def _store_idempotency_task(request: TaskContract, task_id: str) -> None:
+    if not request.idempotency_key:
+        return
+    record_key = f"{request.tenant_id}:{request.idempotency_key}"
+    async with _idempotency_lock:
+        _idempotency_records[record_key] = (_request_fingerprint(request), task_id)
+
+
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
     """Execute a validated, tenant-scoped task contract."""
     contract = TaskContract.model_validate(payload)
@@ -307,12 +353,20 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
 @app.post("/tasks")
 async def submit_task(request: TaskContract) -> JSONResponse:
     try:
+        _fingerprint, existing_task_id = await _claim_idempotency(request)
+        if existing_task_id:
+            return JSONResponse(
+                {"task_id": existing_task_id, "status": "pending", "deduplicated": True},
+                status_code=200,
+            )
+
         from core.queue.task_queue_enhanced import get_task_queue
 
         queue = get_task_queue()
         task_id = await queue.submit_task(
             _process_task, request.model_dump(), task_name=f"supremeai_task:{request.capability}"
         )
+        await _store_idempotency_task(request, task_id)
         return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
     except Exception as exc:
         _state.update(degraded=True, detail=f"task submit failed: {exc}")
