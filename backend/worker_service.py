@@ -23,12 +23,16 @@ import signal
 import subprocess
 import sys
 from collections.abc import Callable, Coroutine
-from typing import Any
+from typing import Any, Literal
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+
+SUPPORTED_CAPABILITIES = frozenset({"acknowledge", "scrape"})
+MAX_METADATA_BYTES = 32_768
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +43,49 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 app = FastAPI(title="SupremeAI Worker", docs_url=None, redoc_url=None, openapi_url=None)
 _state: dict[str, Any] = {"celery_proc": None, "degraded": False, "detail": ""}
 
+
+class TaskContract(BaseModel):
+    """The single tenant-scoped contract accepted by the worker boundary."""
+
+    tenant_id: str = Field(min_length=1, max_length=128)
+    user_id: str | None = Field(default=None, min_length=1, max_length=128)
+    goal: str = Field(min_length=1, max_length=10_000)
+    capability: Literal["acknowledge", "scrape"] = "acknowledge"
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=256)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def validate_contract(self) -> "TaskContract":
+        if len(str(self.metadata).encode("utf-8")) > MAX_METADATA_BYTES:
+            raise ValueError(f"metadata exceeds {MAX_METADATA_BYTES} bytes")
+        if self.capability == "scrape" and not isinstance(self.metadata.get("url"), str):
+            raise ValueError("metadata.url is required for scrape tasks")
+        return self
+
+
+class HealthStatus(BaseModel):
+    status: Literal["ready", "degraded", "not_ready"]
+    role: str
+    queue_configured: bool
+    queue_available: bool
+    celery_alive: bool
+    detail: str | None = None
+
+
+def _celery_alive() -> bool:
+    proc: subprocess.Popen[bytes] | None = _state.get("celery_proc")
+    return bool(proc and proc.poll() is None)
+
+
+async def _queue_available() -> tuple[bool, str | None]:
+    if not _redis_url():
+        return False, "Redis URL is not configured"
+    try:
+        await asyncio.wait_for(asyncio.to_thread(_queue_call, "get_queue_stats"), timeout=5.0)
+        return True, None
+    except Exception as exc:
+        _state.update(degraded=True, detail=f"queue unavailable: {exc}")
+        return False, "Queue is unavailable"
 
 def _verify_worker_auth(request: Request) -> None:
     """Validate internal worker authentication token or JWT secret (Audit Critical-4 Fix)."""
@@ -186,20 +233,45 @@ async def root() -> dict[str, Any]:
 
 
 @app.get("/health")
+@app.get("/health/live")
 @app.get("/api/v1/health/live")
 async def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "ok", "service": "supremeai-worker"}
 
 
-class TaskSubmission(BaseModel):
-    goal: str = Field(min_length=1, max_length=10000)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+@app.get("/health/ready", response_model=HealthStatus)
+async def readiness() -> JSONResponse:
+    queue_ok, detail = await _queue_available()
+    status = "ready" if queue_ok else "not_ready"
+    payload = HealthStatus(
+        status=status,
+        role=ROLE,
+        queue_configured=bool(_redis_url()),
+        queue_available=queue_ok,
+        celery_alive=_celery_alive(),
+        detail=detail,
+    )
+    return JSONResponse(payload.model_dump(), status_code=200 if queue_ok else 503)
+
+
+@app.get("/health/degraded", response_model=HealthStatus)
+async def degraded_health() -> HealthStatus:
+    queue_ok, detail = await _queue_available()
+    return HealthStatus(
+        status="degraded" if _state["degraded"] or not queue_ok else "ready",
+        role=ROLE,
+        queue_configured=bool(_redis_url()),
+        queue_available=queue_ok,
+        celery_alive=_celery_alive(),
+        detail=detail or _state["detail"] or None,
+    )
 
 
 async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
-    """Execute the first real capability while preserving a stable task contract."""
-    metadata = payload.get("metadata", {})
-    capability = metadata.get("capability", "acknowledge")
+    """Execute a validated, tenant-scoped task contract."""
+    contract = TaskContract.model_validate(payload)
+    metadata = contract.metadata
+    capability = contract.capability
     if capability == "scrape":
         from utils.http_client import create_async_client
 
@@ -211,26 +283,35 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
         if not scraper_url:
             raise RuntimeError("A scraper service URL is required for scrape tasks")
         scraper_url = scraper_url.rstrip("/")
-        url = metadata.get("url")
-        if not isinstance(url, str) or not url:
-            raise ValueError("metadata.url is required for scrape tasks")
+        url = metadata["url"]
         async with create_async_client(timeout=45.0) as client:
             response = await client.post(f"{scraper_url}/scrape", json={"url": url})
             response.raise_for_status()
-            return {"capability": capability, "data": response.json()}
+            return {
+                "capability": capability,
+                "tenant_id": contract.tenant_id,
+                "user_id": contract.user_id,
+                "data": response.json(),
+            }
     if capability != "acknowledge":
         raise ValueError(f"Unsupported worker capability: {capability}")
-    return {"capability": capability, "goal": payload["goal"], "metadata": metadata}
+    return {
+        "capability": capability,
+        "tenant_id": contract.tenant_id,
+        "user_id": contract.user_id,
+        "goal": contract.goal,
+        "metadata": metadata,
+    }
 
 
 @app.post("/tasks")
-async def submit_task(request: TaskSubmission) -> JSONResponse:
+async def submit_task(request: TaskContract) -> JSONResponse:
     try:
         from core.queue.task_queue_enhanced import get_task_queue
 
         queue = get_task_queue()
         task_id = await queue.submit_task(
-            _process_task, request.model_dump(), task_name="supremeai_task"
+            _process_task, request.model_dump(), task_name=f"supremeai_task:{request.capability}"
         )
         return JSONResponse({"task_id": task_id, "status": "pending"}, status_code=202)
     except Exception as exc:
