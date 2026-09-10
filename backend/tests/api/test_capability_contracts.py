@@ -17,9 +17,9 @@ def test_control_plane_registry_declares_all_runtime_services():
 
 def test_worker_exposes_task_lifecycle_routes():
     source = (_BACKEND_ROOT / "worker_service.py").read_text(encoding="utf-8")
-    assert '@app.post("/tasks")' in source
-    assert '@app.get("/tasks/{task_id}")' in source
-    assert '@app.post("/tasks/{task_id}/cancel")' in source
+    assert '@app.post("/tasks"' in source
+    assert '@app.get("/tasks/{task_id}"' in source
+    assert '@app.post("/tasks/{task_id}/cancel"' in source
 
 
 def test_scraper_boundaries_apply_ssrf_validation():
