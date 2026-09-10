@@ -234,10 +234,12 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
       fetch('/api/browser/browse-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalizedUrl, userId, timestamp: Date.now(), tabId: targetTabId })
-      }).catch(() => {});
-    }
-  }, [activeTabId, historyIndex, onUrlChange, serviceHealthStatus, addAlert, updateTabUrl, enableMemorySave, userId, addBrowseSession]);
+        body: JSON.stringify({ url: normalizedUrl, timestamp: Date.now(), tabId: targetTabId })
+  }).catch((error) => {
+    console.warn('[browser] browse-session persistence failed', error);
+  });
+  }
+}, [activeTabId, historyIndex, onUrlChange, serviceHealthStatus, addAlert, updateTabUrl, enableMemorySave, userId, addBrowseSession]);
 
   const goBack = useCallback(() => {
     if (canGoBack && history[historyIndex - 1]) {
@@ -502,8 +504,10 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         fetch('/api/browser/screenshots', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, url: activeTab?.url, timestamp: Date.now() })
-        }).catch(() => {});
+body: JSON.stringify({ url: activeTab?.url, timestamp: Date.now() })
+  }).catch((error) => {
+    console.warn('[browser] screenshot persistence failed', error);
+  });
       }
     } catch (err) {
       addConsoleMessage('error', `Screenshot failed: ${err}`);

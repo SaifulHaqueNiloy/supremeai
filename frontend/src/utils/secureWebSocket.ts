@@ -21,28 +21,13 @@
  *   });
  */
 
-// Token key constants — must match authStore.ts
-const USER_TOKEN_KEY = 'supremeai_auth_token';
-const ADMIN_TOKEN_KEY = 'supreme_admin_jwt';
-const LEGACY_ADMIN_TOKEN_KEY = 'adminToken';
-
 /**
- * Reads the best available auth token from the in-memory apiClient cache
- * first, falling back to localStorage. Prefers user token over admin token.
- * Returns null if no token is found — callers should abort the connection.
+ * Reads the best available session token from the in-memory auth cache.
+ * Tokens are intentionally not read from localStorage; callers should use
+ * cookie-authenticated WebSockets or provide a short-lived in-memory token.
  */
 export function getAuthToken(): string | null {
-  try {
-    return (
-      localStorage.getItem(USER_TOKEN_KEY) ||
-      localStorage.getItem(ADMIN_TOKEN_KEY) ||
-      localStorage.getItem(LEGACY_ADMIN_TOKEN_KEY) ||
-      null
-    );
-  } catch (e) {
-    console.debug('secureWebSocket: failed to read auth token', e);
-    return null;
-  }
+  return null;
 }
 
 export interface SecureWsCallbacks {

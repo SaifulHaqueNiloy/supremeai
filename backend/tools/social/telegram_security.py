@@ -24,10 +24,6 @@ from core.logging_config import logger
 def _get_base32_totp_secret() -> str:
     """Retrieve or derive the Base32 TOTP secret for the administrator."""
     secret = os.environ.get("SUPREMEAI_ADMIN_TOTP_SECRET", "").strip()
-    if not secret:
-        # Fallback: Deterministic Base32 derivation from admin credential key
-        seed = os.environ.get("SUPREMEAI_JWT_SECRET", "NjelComBd_2026_Prod_Admin_TOTP").encode()
-        secret = base64.b32encode(seed[:20]).decode().replace("=", "")
     return secret
 
 
@@ -37,6 +33,9 @@ def check_totp_code(user_otp: str, base32_secret: str | None = None) -> bool:
         return False
 
     secret = (base32_secret or _get_base32_totp_secret()).upper()
+    if not secret:
+        logger.error("TOTP validation unavailable: SUPREMEAI_ADMIN_TOTP_SECRET is not configured")
+        return False
     try:
         missing_padding = len(secret) % 8
         if missing_padding:
