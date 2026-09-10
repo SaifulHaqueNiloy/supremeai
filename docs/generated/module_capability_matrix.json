@@ -1,5 +1,5 @@
 {
-  "module_count": 2665,
+  "module_count": 2432,
   "modules": [
     {
       "capability_signals": [],
@@ -6425,16 +6425,6 @@
     {
       "capability_signals": [
         "browser",
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "backend/htmlcov/coverage_html_cb_188fc9a4.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
         "memory"
       ],
       "classification": "adapter",
@@ -7686,15 +7676,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/__init__.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/audit_render_env.py"
     },
     {
       "capability_signals": [],
@@ -13330,535 +13311,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/addon-fit-DX4qG4td.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "execute",
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/AdminShell-B_mFqCrF.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/adminStore-B05YqUlD.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/AgentWorkspace-a6Zc6yFl.js"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/AIStudio-CwVzytOt.js"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/ArchitectTower-I2aw4dCa.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/BillingPage-CWksqbsn.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/Card-Cahw3xYr.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/ErrorPage-7BLL9F1D.js"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/EvolutionForge-CwNb1ACm.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "health",
-        "realtime",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/IdeWorkspace-M1dvC4F0.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/index-ByRZWcTZ.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "execute",
-        "health",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/index-DXg1sf-J.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/IntegrationsManager-BKvCk_DT.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "health",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/InteractiveChatTab-HzMRuM_g.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/logParser.worker-DaGfYX69.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/NavRail-7t3CnWfz.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/ProfilePage-CCf9x2kZ.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/PromptTemplatePage-CVS3Xt6x.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/SharedConversationPage-pa__kRR4.js"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/SkillCatalog-toI-udTt.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/style-BxLKoEZi.js"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/SwarmMap-BnbFA5ei.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/useToast-JT8g9x-c.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/vendor-flow-VlknY6ew.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/vendor-query-DsuBvElg.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/vendor-ui-_Fsr9Img.js"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/xterm-BPaszRKO.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/assets/xterm-BpNnfxmb.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-admin/sw.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/addon-fit-DX4qG4td.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "execute",
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/AdminShell-BkZTeNx8.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/adminStore-CUfEWFZI.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/AgentWorkspace-DN8XOfb3.js"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/AIStudio-CaF9BNFk.js"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/ArchitectTower-DR8F5Cle.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/BillingPage-zaiiWt8B.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/Card-DpKyw5Ux.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/ErrorPage-YF-WRycf.js"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/EvolutionForge-DtI-bcmV.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "health",
-        "realtime",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/IdeWorkspace-CfxHWOJo.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/index-ByRZWcTZ.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "execute",
-        "health",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/index-D5suVcst.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/IntegrationsManager-BRls3dGJ.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "health",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/InteractiveChatTab-vFqaoZhq.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/logParser.worker-DaGfYX69.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/NavRail-x8_aDHmB.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/ProfilePage-7R6zh4aZ.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/PromptTemplatePage--OcuI42V.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/SharedConversationPage-Cq-bDbBE.js"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/SkillCatalog-BzMTiNe2.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/style-BxLKoEZi.js"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/SwarmMap-Dn_rPfM_.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/vendor-flow-VlknY6ew.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/vendor-query-DsuBvElg.js"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/vendor-ui-YkSZYYzn.js"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/xterm-BPaszRKO.js"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/assets/xterm-BpNnfxmb.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/dist-user/sw.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "ts",
       "path": "frontend/e2e/commandcenter.spec.ts"
     },
@@ -14075,15 +13527,6 @@
       "path": "frontend/src/commandcenter/kit/HealthStrip.tsx"
     },
     {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/kit/index.ts"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -14191,6 +13634,15 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/commandcenter/kit/ToastStack.tsx"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/commandcenter/kit/index.ts"
     },
     {
       "capability_signals": [
@@ -14411,21 +13863,21 @@
     },
     {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/channelRegistry.ts"
-    },
-    {
-      "capability_signals": [
         "realtime"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/commandcenter/realtime/CommandCenterRealtimeProvider.tsx"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/commandcenter/realtime/channelRegistry.ts"
     },
     {
       "capability_signals": [],
@@ -14440,13 +13892,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/commandcenter/realtime/websocketManager.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/__tests__/WorkspaceViewport.test.tsx"
     },
     {
       "capability_signals": [],
@@ -14474,13 +13919,6 @@
       "path": "frontend/src/commandcenter/shell/CommandCenterApp.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/shell/index.ts"
-    },
-    {
       "capability_signals": [
         "health",
         "memory"
@@ -14504,6 +13942,20 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/commandcenter/shell/__tests__/WorkspaceViewport.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/commandcenter/shell/index.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/commandcenter/state/__tests__/useCommandCenterStore.test.ts"
     },
@@ -14515,6 +13967,111 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/commandcenter/state/useCommandCenterStore.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/BanglaHint.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/BanglaHint.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/DashboardErrorBoundary.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/ErrorBoundary.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/FixPreviewModal.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/GlobalErrorBoundary.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/Header.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/LiveSujonBackground.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/Onboarding/OnboardingWizard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/Onboarding/StepApiKey.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/Onboarding/StepFirstChat.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/Onboarding/StepModelSelect.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/OperatorStudio.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/SupremeComponents.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/SwarmMap.tsx"
     },
     {
       "capability_signals": [
@@ -14566,63 +14123,11 @@
       "path": "frontend/src/components/admin/AuditLogsPanel.tsx"
     },
     {
-      "capability_signals": [
-        "dispatch",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/AdminAuthenticated.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/AdminLogin.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/ConsentMatrixModal.tsx"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/UserManager.tsx"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/BackupRestore.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/ci/CIDashboard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/admin/ci/csv.ts"
     },
     {
       "capability_signals": [],
@@ -14726,61 +14231,6 @@
     {
       "capability_signals": [
         "browser",
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/admin/index.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/CloudProviderHealth.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/DeploymentModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ObservabilityDashboard.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ServiceHealthMetrics.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ServiceHealthMonitor.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
         "register"
       ],
       "classification": "human_review",
@@ -14865,6 +14315,129 @@
       "path": "frontend/src/components/admin/ScreencastViewer.tsx"
     },
     {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/SystemUptimeWidget.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/VisualRulesBuilder.tsx"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/auth/AdminAuthenticated.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/auth/AdminLogin.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/auth/ConsentMatrixModal.tsx"
+    },
+    {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/auth/UserManager.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/CIDashboard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/csv.ts"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/index.ts"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/CloudProviderHealth.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/DeploymentModal.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/ObservabilityDashboard.tsx"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/ServiceHealthMetrics.tsx"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/ServiceHealthMonitor.tsx"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -14933,22 +14506,6 @@
     },
     {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/SystemUptimeWidget.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/VisualRulesBuilder.tsx"
-    },
-    {
-      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -14987,20 +14544,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/BanglaHint.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/BanglaHint.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/branch/BranchButton.tsx"
     },
     {
@@ -15025,13 +14568,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/chat/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/chat/TypingIndicator.tsx"
     },
@@ -15043,6 +14579,13 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/chat/UnifiedChatBubble.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/chat/index.ts"
     },
     {
       "capability_signals": [],
@@ -15089,13 +14632,6 @@
       "path": "frontend/src/components/core/GlobalConfigInitializer.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/core/guards/RoleGuard.tsx"
-    },
-    {
       "capability_signals": [
         "dispatch",
         "memory"
@@ -15121,6 +14657,13 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/core/Sidebar.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/core/guards/RoleGuard.tsx"
     },
     {
       "capability_signals": [
@@ -15171,15 +14714,6 @@
       ],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/customer/index.ts"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/customer/MobileSimulator.tsx"
     },
@@ -15221,6 +14755,15 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/customer/UserDashboard.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/customer/index.ts"
     },
     {
       "capability_signals": [],
@@ -15281,6 +14824,15 @@
       "path": "frontend/src/components/dashboard/GuardrailsPage.tsx"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/dashboard/HITLModal.tsx"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -15293,15 +14845,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/dashboard/HealingLogPanel.tsx"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/HITLModal.tsx"
     },
     {
       "capability_signals": [
@@ -15430,16 +14973,6 @@
     },
     {
       "capability_signals": [
-        "browser",
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/dashboard/sessionStore.ts"
-    },
-    {
-      "capability_signals": [
         "browser"
       ],
       "classification": "human_review",
@@ -15492,15 +15025,6 @@
     },
     {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/dashboard/useHashRoute.ts"
-    },
-    {
-      "capability_signals": [
         "browser"
       ],
       "classification": "human_review",
@@ -15509,11 +15033,23 @@
       "path": "frontend/src/components/dashboard/VaultPage.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/DashboardErrorBoundary.tsx"
+      "kind": "ts",
+      "path": "frontend/src/components/dashboard/sessionStore.ts"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/dashboard/useHashRoute.ts"
     },
     {
       "capability_signals": [],
@@ -15540,13 +15076,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/editor/desktopPrompt.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/editor/EditorTabs.tsx"
     },
@@ -15565,6 +15094,13 @@
       "path": "frontend/src/components/editor/JitOtpDialogHost.tsx"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/editor/desktopPrompt.ts"
+    },
+    {
       "capability_signals": [
         "register"
       ],
@@ -15578,13 +15114,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/ErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/export/ExportMenu.tsx"
     },
     {
@@ -15592,28 +15121,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/FixPreviewModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/GlobalErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/graph/SkillGraph.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Header.tsx"
     },
     {
       "capability_signals": [
@@ -15671,13 +15179,6 @@
       "path": "frontend/src/components/layout/WorkspaceLayout.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/LiveSujonBackground.tsx"
-    },
-    {
       "capability_signals": [
         "memory"
       ],
@@ -15719,41 +15220,6 @@
       "entrypoints": [],
       "kind": "jsx",
       "path": "frontend/src/components/nodes/SkillNode.jsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/OnboardingWizard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepApiKey.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepFirstChat.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepModelSelect.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/OperatorStudio.tsx"
     },
     {
       "capability_signals": [
@@ -15827,15 +15293,15 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/shell/shellEvents.ts"
+      "kind": "tsx",
+      "path": "frontend/src/components/shell/UnifiedAppShell.tsx"
     },
     {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/shell/UnifiedAppShell.tsx"
+      "kind": "ts",
+      "path": "frontend/src/components/shell/shellEvents.ts"
     },
     {
       "capability_signals": [],
@@ -15866,13 +15332,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/SupremeComponents.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/swarm/HoldToKillButton.tsx"
     },
     {
@@ -15884,13 +15343,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/swarm/SwarmHealthDashboard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/SwarmMap.tsx"
     },
     {
       "capability_signals": [
@@ -16004,20 +15456,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/ui/index.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/ui/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/ui/Input.stories.tsx"
     },
     {
@@ -16103,6 +15541,20 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/ui/StatCard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/ui/index.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/ui/index.ts"
     },
     {
       "capability_signals": [],
@@ -16250,56 +15702,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/data/hooks.ts"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/src/dataconnect-generated/esm/index.esm.js"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/src/dataconnect-generated/index.cjs.js"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/dataconnect-generated/index.d.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/src/dataconnect-generated/react/esm/index.esm.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "frontend/src/dataconnect-generated/react/index.cjs.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/dataconnect-generated/react/index.d.ts"
     },
     {
       "capability_signals": [],
@@ -16483,13 +15885,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/i18n/config.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/i18n/I18nContext.ts"
     },
     {
@@ -16498,6 +15893,13 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/i18n/I18nProvider.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/i18n/config.ts"
     },
     {
       "capability_signals": [
@@ -16620,6 +16022,60 @@
       "path": "frontend/src/main.tsx"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/BillingPage.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/ErrorPage.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/ProfilePage.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/PromptTemplatePage.tsx"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/PublicPages.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/SharedConversationPage.tsx"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/WorkspaceModulePage.tsx"
+    },
+    {
       "capability_signals": [
         "browser",
         "health"
@@ -16667,49 +16123,13 @@
       "path": "frontend/src/pages/auth/RegisterScreen.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/BillingPage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/ErrorPage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/ProfilePage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/PromptTemplatePage.tsx"
-    },
-    {
       "capability_signals": [
-        "capability",
-        "register"
+        "browser"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/pages/PublicPages.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/SharedConversationPage.tsx"
+      "path": "frontend/src/pages/user/AIStudio.tsx"
     },
     {
       "capability_signals": [
@@ -16721,15 +16141,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/pages/user/AgentWorkspace.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/AIStudio.tsx"
     },
     {
       "capability_signals": [
@@ -16811,27 +16222,6 @@
       "path": "frontend/src/pages/user/IntegrationsManager.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/InstallModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/PluginCard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/PluginMarketplace.tsx"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -16857,13 +16247,25 @@
       "path": "frontend/src/pages/user/SystemHealthDashboard.tsx"
     },
     {
-      "capability_signals": [
-        "capability"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/pages/WorkspaceModulePage.tsx"
+      "path": "frontend/src/pages/user/plugins/InstallModal.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/user/plugins/PluginCard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/user/plugins/PluginMarketplace.tsx"
     },
     {
       "capability_signals": [
@@ -19033,1248 +18435,6 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/__init__.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health",
-        "mcp",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/add_bangla_comments.py"
-    },
-    {
-      "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/add_routes_v2.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/check_render_env.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/check_render_env_vars.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/check_render_status.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/clean_and_format.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/clean_legacy_secrets.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/create_python_service.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/create_render_service.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/find_client_calls.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/find_client_files.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/find_generic_exceptions.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/fix_mypy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/fix_routers.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_analyze_project.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_complete_remaining.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_final_fix.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_fix_issues.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_gen_a11y.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_gen_fb.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_remaining_fixes.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_scan_errors.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/_writer.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health",
-        "mcp",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/add_bangla_comments.py"
-    },
-    {
-      "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/add_routes_v2.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/aggregate_context.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/analyze_github_failures.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/analyze_imports.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/audit_master_runner.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/auto_generate_architecture_docs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/bootstrap_sentinel_tables.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/cache_cleanup.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/cancel_hanging_deploys.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "scripts/archive/legacy_one_offs/check_admin_console.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "scripts/archive/legacy_one_offs/check_admin_console.spec.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_deploys.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_env_health.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_github_actions.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_health_path.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_key.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_render_env_vars.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/check_render_status.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/clean_and_format.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/clean_github_branches.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/clean_legacy_secrets.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/codebase_to_md.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/colab_merge_pipeline.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/config_audit.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/config_validation.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/context_snapshot.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/create_project_zip.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/create_python_service.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/create_render_service.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/create_test_admin.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/deploy_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/disaster_recovery_drill.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/docker_ai_guard.py"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/enhanced_ingest_future_knowledge.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/export_codebase.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/extract_routes.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fetch_deploy_logs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fetch_github_failure_logs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fetch_logs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fetch_render_failure_logs.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_client_calls.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_client_files.py"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_dead_code.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_drift.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_duplicate_files.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_duplicate_tests.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_duplicates.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_generic_exceptions.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/find_secrets.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_bare_yields.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_client_routes.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_github_action_failures_targeted.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_github_actions_failures.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_mypy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/fix_routers.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_ai_codebase_docs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_codebase_markdown.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_codebase_single_markdown.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_full_codebase_md.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_md.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_push_summary.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_registry.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/generate_smart_docs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/gh_workflow_check.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/ingest_future_knowledge.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/install_hooks.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/internet_monitor_demo.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/knowledge_indexer.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/locustfile.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/migrate.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/migrate_default_user.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/parse_env_policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/parse_lock.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/patch_render.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/profile_memory.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/push_all_render_envs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/push_all_vercel_envs.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/quick_deploy_status.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_broad_exceptions.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_cache.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_health.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_llm.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_messaging.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/refactor_security.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/render_status.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/run_all_collectors.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "register"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/run_guardian_agent.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/run_roundtrip_tests.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/seed_repos.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/setup_ci_runner.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/setup_firebase_admin.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/skill_loader.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/supreme-config-audit.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/supreme-docker-analyzer.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/supreme-risk-scorer.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/supreme_context_builder.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_all_platforms_env.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_all_render_secrets.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_checkout_url.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_firebase_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_github_secrets.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_infisical_to_github_vercel.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/sync_secrets_to_frontend.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/tech_debt_to_issues.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/test_bangla.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/test_chaos.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/test_neo4j_connection.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/test_read.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/test_render_api.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/todo_management_system.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/trigger_deploys.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/type_gen_pipeline.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/update_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/update_render_backup.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/upload_to_infisical.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/verify_phase3_completion.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/legacy_one_offs/verify_vector_database.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/parse_lock.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/quick_deploy_status.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/archive/refactor_broad_exceptions.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/refactor_cache.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/refactor_health.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/refactor_llm.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/refactor_messaging.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/refactor_security.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/run_roundtrip_tests.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/test_chaos.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/test_neo4j_connection.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/archive/update_render_backup.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
       "entrypoints": [
         "main"
       ],
@@ -21205,15 +19365,6 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/deploy/sync_render_env.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/deploy/trigger_render_deploy.py"
@@ -21224,20 +19375,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/deploy/update_infisical_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/deploy/update_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/deploy/update_render_env.py"
     },
     {
       "capability_signals": [],
@@ -21279,13 +19416,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/dev/refactor_scanner_fixes.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/dev/sync_missing_to_env.py"
     },
     {
       "capability_signals": [],
@@ -21488,13 +19618,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "scripts/devops/get_totp_secret.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "scripts/devops/patch_test_brain.py"
     },
     {
@@ -21503,22 +19626,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/devops/poll_render.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/devops/previous_config.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/devops/push_all_env.py"
     },
     {
       "capability_signals": [
@@ -21539,15 +19646,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/devops/run_local_audit.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/devops/scratch.py"
     },
     {
       "capability_signals": [],
@@ -21610,22 +19708,6 @@
       ],
       "kind": "py",
       "path": "scripts/devops/todo_manager.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/devops/update_ci.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/devops/update_render_env.py"
     },
     {
       "capability_signals": [],
@@ -22574,13 +20656,6 @@
       ],
       "kind": "py",
       "path": "scripts/testing/log_anomaly_detector.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/testing/mock_env.py"
     },
     {
       "capability_signals": [
