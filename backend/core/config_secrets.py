@@ -249,6 +249,10 @@ class SettingsSecretsMixin:
         return self._get_cached_secret("SUPABASE_DATABASE_URL_POOLER")
 
     @property
+    def database_url(self) -> str:
+        return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
+
+    @property
     def supabase_db_ca_cert(self) -> str:
         return self._get_cached_secret("SUPABASE_DB_CA_CERT")
 
