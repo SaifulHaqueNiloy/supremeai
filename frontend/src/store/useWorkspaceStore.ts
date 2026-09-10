@@ -55,7 +55,9 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       setSimulatorState: (isActive) => set({ isSimulatorActive: isActive }),
 
       logout: () => {
-        localStorage.removeItem('supreme_auth_token');
+        for (const key of ['supreme_auth_token', 'supreme_admin_jwt', 'adminToken']) {
+          localStorage.removeItem(key);
+        }
         set({ activeIntegrations: [], notifications: [], isSimulatorActive: false });
       },
     }),
