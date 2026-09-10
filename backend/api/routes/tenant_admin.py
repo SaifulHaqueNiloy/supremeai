@@ -16,20 +16,20 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.dependencies import get_current_admin
+from api.dependencies import get_current_platform_admin
 from core.logging_config import logger
 
 router = APIRouter(
     prefix="/admin-api/tenant-limits",
     tags=["tenant-admin"],
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(get_current_platform_admin)],
 )
 
 # Secondary router for /admin-api/tenants endpoints
 tenants_router = APIRouter(
     prefix="/admin-api/tenants",
     tags=["tenants"],
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(get_current_platform_admin)],
 )
 
 

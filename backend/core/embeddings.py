@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 import os
 
+from core.config import settings
 from core.logging_config import logger
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
@@ -17,7 +18,7 @@ _HAS_SENTENCE_TRANSFORMERS = False
 _LOCAL_MODEL_NAME = "all-MiniLM-L6-v2"
 _LOCAL_DIM = 384
 _PG_DIM = 384
-_REMOTE_MODEL = "text-embedding-3-small"
+_REMOTE_MODEL = settings.embedding_model
 _REMOTE_DIM = 384
 
 _encoder = None

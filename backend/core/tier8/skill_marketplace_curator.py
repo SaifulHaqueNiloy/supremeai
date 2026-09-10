@@ -20,6 +20,7 @@ from typing import Any, ClassVar
 
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
 from core.base import BaseSkill
+from core.config import settings
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.logging_config import logger
 from core.observability.telemetry import get_tracer, trace_span
@@ -246,7 +247,7 @@ class SkillMarketplaceCurator(BaseSkill):
             )
             try:
                 response = await llm.acompletion(
-                    model=os.getenv("MARKETPLACE_REVIEW_MODEL", "gpt-4o-mini"),
+                    model=os.getenv("MARKETPLACE_REVIEW_MODEL", getattr(settings, "model_general", "gpt-4o-mini")),
                     messages=[{"role": "user", "content": prompt}],
                     temperature=0.1,
                     max_tokens=10,

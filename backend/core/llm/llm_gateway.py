@@ -71,18 +71,16 @@ _MODEL_KEY_MAP: dict[str, str] = {
 }
 
 # বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
-_DEFAULT_FALLBACK_MODELS: list[str] = [
-    "gemini/gemini-2.0-flash",
-    "openrouter/auto",
-]
+_DEFAULT_FALLBACK_MODELS: list[str] = list(
+    getattr(
+        settings,
+        "fallback_models",
+        ["gemini/gemini-2.0-flash", "openrouter/auto"],
+    )
+)
 # OpenAI-style Task-to-Model mapping
-TASK_MODEL_MAP: dict[str, str] = {
-    "coding": "groq/llama-3.3-70b-versatile",
-    "reasoning": "openrouter/meta-llama/llama-3.3-70b-instruct",
-    "vision": "gemini/gemini-2.0-flash",
-    "chat": "gemini/gemini-2.0-flash",
-    "general": "gemini/gemini-2.0-flash",
-}
+# Runtime overrides come from the central settings registry; defaults remain backwards compatible.
+TASK_MODEL_MAP: dict[str, str] = settings.task_models
 
 
 class LLMGateway:

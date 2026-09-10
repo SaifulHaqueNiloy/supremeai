@@ -23,6 +23,7 @@ from typing import Any, ClassVar
 
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
 from core.base import BaseSkill
+from core.config import settings
 from core.error_bus import with_error_bus
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.observability.telemetry import get_tracer, trace_span
@@ -245,7 +246,7 @@ class AgentEvolutionEngine(BaseSkill):
         expected = os.getenv("EVO_BENCHMARK_EXPECTED", "4")
         try:
             response = await llm.acompletion(
-                model=os.getenv("EVO_MODEL", "gpt-4o-mini"),
+                model=os.getenv("EVO_MODEL", getattr(settings, "model_general", "gpt-4o-mini")),
                 messages=[{"role": "user", "content": benchmark_prompt}],
                 temperature=genome.temperature,
                 max_tokens=genome.max_tokens,

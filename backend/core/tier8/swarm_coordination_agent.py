@@ -20,6 +20,7 @@ from typing import Any, ClassVar
 
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
 from core.base import BaseSkill
+from core.config import settings
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.logging_config import logger
 from core.observability.telemetry import get_tracer, trace_span
@@ -282,7 +283,7 @@ class SwarmCoordinationAgent(BaseSkill):
                 None, "swarm_max_tokens", {"max_tokens": 1024, "temperature": 0.3}
             )
             response = await llm.acompletion(
-                model=os.getenv("SWARM_MODEL", "gpt-4o-mini"),
+                model=os.getenv("SWARM_MODEL", getattr(settings, "model_general", "gpt-4o-mini")),
                 messages=[{"role": "user", "content": str(task.payload)}],
                 temperature=llm_config.get("temperature", 0.3),
                 max_tokens=llm_config.get("max_tokens", 1024),
