@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from core.config import settings
 from core.logging_config import logger
+from utils.environment import is_admin_authorized
 
 mcp = FastMCP("supabase_mcp")
 
@@ -128,14 +129,9 @@ async def supabase_execute_sql(params: ExecuteQueryInput) -> str:
     Returns:
         str: কুয়েরি রেজাল্ট বা এরর মেসেজ
     """
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
-    admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true"
-        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
-    )
     # বাংলা মন্তব্য: কেবলমাত্র সত্যিকারের ডেস্ট্রাকটিভ অপারেশনগুলো চেক করা হচ্ছে
     destructive_keywords = ["drop", "delete", "truncate", "alter"]
-    if not admin_authorized and any(kw in params.query.lower() for kw in destructive_keywords):
+    if not is_admin_authorized() and any(kw in params.query.lower() for kw in destructive_keywords):
         return json.dumps(
             {
                 "error": "Admin authorization required for destructive operations",
@@ -237,12 +233,7 @@ async def supabase_create_table(params: CreateTableInput) -> str:
     Returns:
         str: টেবিল তৈরির স্ট্যাটাস
     """
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
-    admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true"
-        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
-    )
-    if not admin_authorized:
+    if not is_admin_authorized():
         return json.dumps(
             {"error": "Admin authorization required for table creation"},
             ensure_ascii=False,
@@ -316,12 +307,7 @@ async def supabase_run_migration(params: MigrationInput) -> str:
     Returns:
         str: মাইগ্রেশন স্ট্যাটাস
     """
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ADMIN_AUTHORIZED চেক করা হবে যা টেস্টে ব্যবহৃত হয়
-    admin_authorized = (
-        getattr(settings, "admin_authorized", "false").lower() == "true"
-        or os.environ.get("ADMIN_AUTHORIZED", "false").lower() == "true"
-    )
-    if not admin_authorized:
+    if not is_admin_authorized():
         return json.dumps(
             {"error": "Admin authorization required for migrations"}, ensure_ascii=False
         )
