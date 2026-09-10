@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-_billing_dir = Path(__file__).resolve().parent.parent.parent / "scripts" / "billing"
+_billing_dir = Path(__file__).resolve().parent.parent.parent.parent / "scripts" / "billing"
 sys.path.insert(0, str(_billing_dir))
 
 if not (_billing_dir / "usage_reporter.py").is_file():

@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import jwt
 import pytest
-import respx
 
 from tools.sso_integrator import SSOIntegrator
 

@@ -2034,3 +2034,67 @@ class TestInputValidation:
         finally:
             if WORKSPACE_CONFIG_FILE.exists():
                 WORKSPACE_CONFIG_FILE.unlink()
+
+
+class TestNeonMCPExtended:
+    """mcp_neon.py এর টেস্ট স্যুট।"""
+
+    def test_execute_query_input_validation(self):
+        from tools.mcp.mcp_neon import ExecuteQueryInput, ResponseFormat
+
+        valid = ExecuteQueryInput(query="SELECT 1;", response_format=ResponseFormat.JSON)
+        assert valid.query == "SELECT 1;"
+        assert valid.response_format == ResponseFormat.JSON
+
+    def test_branch_input_validation(self):
+        from tools.mcp.mcp_neon import CreateBranchInput, DeleteBranchInput, ListBranchesInput
+
+        create_in = CreateBranchInput(project_id="test-proj", branch_name="feat-db")
+        assert create_in.branch_name == "feat-db"
+
+        delete_in = DeleteBranchInput(project_id="test-proj", branch_id="br-123")
+        assert delete_in.branch_id == "br-123"
+
+        list_in = ListBranchesInput(project_id="test-proj")
+        assert list_in.project_id == "test-proj"
+
+    @pytest.mark.asyncio
+    async def test_execute_sql_destructive_without_admin(self, monkeypatch):
+        from tools.mcp.mcp_neon import ExecuteQueryInput, neon_execute_sql
+
+        monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
+        result = await neon_execute_sql(ExecuteQueryInput(query="DROP TABLE test;"))
+        data = json.loads(result)
+        assert "error" in data
+        assert "Admin authorization required" in data["error"]
+
+    @pytest.mark.asyncio
+    async def test_execute_sql_success_select(self, monkeypatch):
+        from tools.mcp.mcp_neon import ExecuteQueryInput, ResponseFormat, neon_execute_sql
+
+        monkeypatch.setenv("NEON_DATABASE_URL", "postgresql://user:pass@localhost:5432/neondb")
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_cur.description = [("id",), ("name",)]
+        mock_cur.fetchall.return_value = [(1, "Test Item")]
+        mock_conn.cursor.return_value = mock_cur
+
+        with patch("tools.mcp.mcp_neon._get_connection", return_value=mock_conn):
+            result = await neon_execute_sql(
+                ExecuteQueryInput(query="SELECT * FROM items;", response_format=ResponseFormat.JSON)
+            )
+            data = json.loads(result)
+            assert len(data) == 1
+            assert data[0]["name"] == "Test Item"
+
+    @pytest.mark.asyncio
+    async def test_create_branch_missing_admin(self, monkeypatch):
+        from tools.mcp.mcp_neon import CreateBranchInput, neon_create_branch
+
+        monkeypatch.setenv("ADMIN_AUTHORIZED", "false")
+        result = await neon_create_branch(
+            CreateBranchInput(project_id="test-proj", branch_name="feat-1")
+        )
+        data = json.loads(result)
+        assert "error" in data
+        assert "Admin authorization required" in data["error"]
