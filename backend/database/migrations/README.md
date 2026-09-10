@@ -1,44 +1,65 @@
-# Legacy SQL Migration Scripts
+# Database Migration Directory
 
-> **⚠️ This directory contains legacy hand-written SQL scripts.**
-> 
-> The **primary migration system** for SupremeAI is **Alembic**, located at
-> `backend/alembic_migrations/`. All new schema changes should be made as Alembic
-> migrations (`alembic revision --autogenerate`), not as raw SQL files here.
+> **⚠️ This directory is now a migration archive.**
+>
+> All legacy hand-written SQL scripts have been moved to the `archive/` subdirectory.
 
-## Ownership boundary
+## Canonical Migration System
 
-Alembic is the only migration system allowed to change deployed schemas. The SQL files in this directory, including `legacy/` and `manual/`, are immutable historical references and must not receive new migrations. Queue/task state, tenant scope, idempotency, audit records, and provider adapter state must all be introduced through Alembic revisions under `backend/alembic_migrations/versions/`.
+The **only active migration system** for SupremeAI is **Alembic**, located at `backend/alembic_migrations/`. All new schema changes must be made as Alembic migrations.
 
-The application queue boundary is `core.queue.task_queue_enhanced`. Celery may supervise/consume work where configured, but it does not own task contracts, tenant policy, retries, or audit semantics; those remain centralized in the application control plane.
+## Ownership Boundary
 
-## History
+Alembic is the only migration system allowed to change deployed schemas. The SQL files in the `archive/` subdirectory (and `legacy/` before them) are **immutable historical references** and must not receive new migrations.
 
-The SQL files in this directory (`01_initial_setup.sql` through `10_*.sql`) were the
-original schema scripts used during early development before Alembic was adopted.
-They are preserved for historical reference but are **not executed by any automated
-deployment pipeline**.
+## Directory Structure
 
-## Which system to use?
+```
+backend/database/
+├── migrations/
+│   ├── README.md          ← This file
+│   ├── archive/           ← Legacy SQL scripts (17 files, historical reference only)
+│   │   ├── 01_initial_setup.sql
+│   │   ├── 02_phase2_setup.sql
+│   │   ├── ... (15 more)
+│   │   └── 21_render_account_preflight.sql
+│   ├── legacy/            ← Earlier legacy scripts (pre-archive)
+│   └── manual/            ├── Manual migration scripts (for DBA use)
+├── alembic_migrations/    ← ✅ CANONICAL — All new migrations go here
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions/          ← 18 Alembic migration files
+└── contracts/
+    └── schema_contract.yaml
+```
+
+## Which System to Use?
 
 | System | Path | Status | Use for |
 |--------|------|--------|---------|
 | **Alembic** | `backend/alembic_migrations/` | ✅ **Active** | All new schema migrations |
-| Raw SQL | `backend/database/migrations/` | ⚠️ Legacy only | Historical reference |
+| Legacy SQL | `backend/database/migrations/archive/` | 📦 Archived | Historical reference only |
+| Legacy SQL | `backend/database/migrations/legacy/` | 📦 Archived | Historical reference only |
+| Manual | `backend/database/migrations/manual/` | 🔧 DBA only | Manual DBA operations |
 
-## Running Alembic migrations
+## Running Alembic Migrations
 
 ```bash
 cd backend
 alembic upgrade head          # apply all pending migrations
 alembic revision --autogenerate -m "description"  # create new migration
 alembic history               # view migration history
+alembic downgrade -1          # rollback one migration
 ```
 
-The Alembic environment (`alembic_migrations/env.py`) is configured to use
-`SUPABASE_DATABASE_URL_WRITER` (or fall back to `settings.database_url`) and
-autogenerate against `models.base.Base.metadata`.
+## Migration History
+
+The `archive/` directory contains 17 SQL scripts from early development (2026-08-19 to 2026-09-10). These scripts were the original schema definitions before Alembic was adopted. They are preserved for:
+
+1. **Historical reference** — understanding schema evolution
+2. **Disaster recovery** — if Alembic history is ever lost
+3. **Audit trail** — documenting what changes were made and when
 
 ---
 
-**Do not add new SQL files to this directory.** Use Alembic instead.
+**Do not add new SQL files to this directory or its subdirectories. Use Alembic instead.**

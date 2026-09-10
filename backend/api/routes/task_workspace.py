@@ -78,7 +78,15 @@ async def execute_task(
         # ৫. Save to Supabase (Database - Long Term) - Background Task
         # রেসপন্স যেন ফাস্ট হয়, তাই ডাটাবেসে সেভ করার কাজটি ব্যাকগ্রাউন্ডে দেওয়া হলো
         def save_to_supabase(task, result):
-            pass  # supabase.table("task_history").insert({"task": task, "result": result}).execute()
+            try:
+                from database.supabase_client import db
+
+                if db.client:
+                    db.client.table("task_history").insert(
+                        {"task": task, "result": result}
+                    ).execute()
+            except Exception as e:
+                logger.warning(f"Failed to save task history to Supabase: {e}")
 
         background_tasks.add_task(save_to_supabase, payload.task, result_text)
 
