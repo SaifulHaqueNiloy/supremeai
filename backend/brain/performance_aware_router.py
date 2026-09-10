@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, TypedDict
 
 from brain.economic_optimizer import BudgetContext, get_economic_optimizer
+from core.config import settings
 from core.llm.advanced_model_router import (
     get_advanced_router,
 )
@@ -109,9 +110,11 @@ class PerformanceAwareRouter:
 
         return {
             "provider": best_provider["name"],
-            "model": "llama-3.3-70b-versatile"
-            if best_provider["name"] == "groq"
-            else "default-model",
+            "model": (
+                settings.model_coding.split("/", 1)[-1]
+                if best_provider["name"] == "groq"
+                else settings.model_general.split("/", 1)[-1]
+            ),
             "score": best_score,
             "latency_ms": lat,
             "estimated_cost": best_provider["cost_per_1k"],

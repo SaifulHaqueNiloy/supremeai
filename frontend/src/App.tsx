@@ -25,6 +25,7 @@ const SkillCatalog = React.lazy(() => import("./pages/user/SkillCatalog").then(m
 const SwarmMap = React.lazy(() => import("./components/SwarmMap"));
 const SwarmArchitect = React.lazy(() => import("./pages/user/SwarmArchitect/SwarmArchitect").then(m => ({ default: m.default })));
 const BillingPage = React.lazy(() => import("./pages/BillingPage"));
+const CostDashboard = React.lazy(() => import("./pages/user/CostDashboard").then(m => ({ default: m.CostDashboard })));
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 
@@ -209,7 +210,7 @@ const AppContent: React.FC = () => {
   <Route path="/activity" element={<ProtectedRoute><WorkspaceModulePage module="activity" /></ProtectedRoute>} />
   <Route path="/marketplace" element={<ProtectedRoute><WorkspaceModulePage module="marketplace" /></ProtectedRoute>} />
   <Route path="/runs" element={<ProtectedRoute><WorkspaceModulePage module="runs" /></ProtectedRoute>} />
-  <Route path="/usage" element={<ProtectedRoute><WorkspaceModulePage module="usage" /></ProtectedRoute>} />
+  <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><CostDashboard /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/settings" element={<ProtectedRoute><WorkspaceModulePage module="settings" /></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
   <Route path="/workspace" element={
