@@ -27,13 +27,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const loadTheme = async () => {
       if (!token) return;
       try {
-        const response = await apiClient.get<any>('/api/v1/preferences', { signal: controller.signal });
+        const response = await apiClient.get<{ theme?: string }>('/api/v1/preferences', { signal: controller.signal });
         const remoteTheme = response.data?.theme;
         if (remoteTheme && THEME_ORDER.includes(remoteTheme as Theme)) {
           setTheme(remoteTheme as Theme);
         }
-      } catch (err: any) {
-        if (err.name !== 'AbortError' && err.name !== 'CanceledError') console.error('Theme sync failed:', err);
+      } catch (err: unknown) {
+        const error = err as { name?: string };
+        if (error?.name !== 'AbortError' && error?.name !== 'CanceledError') console.error('Theme sync failed:', err);
       }
     };
 

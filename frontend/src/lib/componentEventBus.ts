@@ -65,12 +65,12 @@ export type EventType =
   // Legacy Events Support
   | LegacyEventType;
 
-export type EventCallback<T = any> = (data: T) => void;
+export type EventCallback<T = unknown> = (data: T) => void;
 export type EventDataMap = {
   'service:status-change': { service: string; status: 'healthy' | 'degraded' | 'down'; latency?: number; timestamp: number };
   'browser:url-changed': { url: string; title?: string; timestamp: number };
   'security:scan-complete': { url: string; score: number; issues: string[]; timestamp: number };
-  'ai:action-complete': { action: string; result: any; duration: number };
+  'ai:action-complete': { action: string; result: unknown; duration: number };
   'memory:item-created': { type: string; id: string; timestamp: number };
   'alert:new-alert': { id: string; severity: string; source: string; message: string };
   'deployment:status-update': { id: string; environment: string; status: string; progress?: number };
@@ -81,8 +81,8 @@ export type EventDataMap = {
 // ════════════════════════════════════════════════════════════════════
 
 class ComponentEventBus {
-  private listeners = new Map<string, Set<EventCallback>>();
-  private eventHistory: Array<{ type: string; data: any; timestamp: number }> = [];
+  private listeners = new Map<string, Set<EventCallback<unknown>>>();
+  private eventHistory: Array<{ type: string; data: unknown; timestamp: number }> = [];
   private maxHistorySize = 100;
   
   /**
@@ -91,15 +91,16 @@ class ComponentEventBus {
    * @param callback - Function to call when event fires
    * @returns Unsubscribe function (call to stop listening)
    */
-  on<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
+  on<T = unknown>(event: EventType | string, callback: EventCallback<T>): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
-    this.listeners.get(event)!.add(callback);
+    const genericCallback = callback as EventCallback<unknown>;
+    this.listeners.get(event)!.add(genericCallback);
     
     // Return unsubscribe function for cleanup
     return () => {
-      this.listeners.get(event)?.delete(callback);
+      this.listeners.get(event)?.delete(genericCallback);
     };
   }
   
@@ -109,11 +110,11 @@ class ComponentEventBus {
    * @param callback - Function to call when event fires (will be removed after first call)
    * @returns Unsubscribe function
    */
-  subscribe<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
+  subscribe<T = unknown>(event: EventType | string, callback: EventCallback<T>): () => void {
     return this.on(event, callback);
   }
 
-  once<T = any>(event: EventType | string, callback: EventCallback<T>): () => void {
+  once<T = unknown>(event: EventType | string, callback: EventCallback<T>): () => void {
     const wrapper: EventCallback<T> = (data) => {
       callback(data);
       this.off(event, wrapper);
@@ -126,8 +127,8 @@ class ComponentEventBus {
    * @param event - The event type
    * @param callback - The specific callback to remove
    */
-  off<T = any>(event: EventType | string, callback: EventCallback<T>): void {
-    this.listeners.get(event)?.delete(callback);
+  off<T = unknown>(event: EventType | string, callback: EventCallback<T>): void {
+    this.listeners.get(event)?.delete(callback as EventCallback<unknown>);
   }
   
   /**
@@ -135,7 +136,7 @@ class ComponentEventBus {
    * @param event - The event type to emit
    * @param data - Optional data to pass to subscribers
    */
-  emit<T = any>(event: EventType | string, data?: T): void {
+  emit<T = unknown>(event: EventType | string, data?: T): void {
     // Store in history for debugging
     this.eventHistory.push({ type: event, data, timestamp: Date.now() });
     if (this.eventHistory.length > this.maxHistorySize) {
@@ -244,7 +245,7 @@ class ComponentEventBus {
   /**
    * AI action completed
    */
-  emitAIActionComplete(action: string, result: any, startTime: number) {
+  emitAIActionComplete(action: string, result: unknown, startTime: number) {
     this.emit('ai:action-complete', {
       action,
       result,
@@ -332,7 +333,7 @@ import { useEffect, useRef, useCallback } from 'react';
  * }, []);
  * ```
  */
-export function useComponentEvent<T = any>(
+export function useComponentEvent<T = unknown>(
   event: EventType | string, 
   callback: EventCallback<T>,
   deps: React.DependencyList = []

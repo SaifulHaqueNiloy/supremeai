@@ -38,17 +38,19 @@ export const ChatInterface: React.FC = () => {
     scrollToBottom();
   }, [chatHistory]);
 
-  useEventBus(Events.SYSTEM_ALERT, (payload: any) => {
+  useEventBus(Events.SYSTEM_ALERT, (payload: unknown) => {
+    const alertData = payload as { message?: string } | undefined;
     addMessage({
       role: 'system',
-      content: `[SYSTEM ALERT] ${payload.message || JSON.stringify(payload)}`
+      content: `[SYSTEM ALERT] ${alertData?.message || JSON.stringify(payload)}`
     });
   });
 
   // Listen for browser context sharing
-  useEventBus(Events.CHAT_MESSAGE_SENT, (data: any) => {
-    if (data.source === 'browser_context' && data.content) {
-      setInput(data.content);  // Pre-fill with browser URL/context
+  useEventBus(Events.CHAT_MESSAGE_SENT, (data: unknown) => {
+    const chatData = data as { source?: string; content?: string } | undefined;
+    if (chatData?.source === 'browser_context' && chatData.content) {
+      setInput(chatData.content);  // Pre-fill with browser URL/context
     }
   });
 
@@ -193,10 +195,10 @@ export const ChatInterface: React.FC = () => {
               />
             </div>
 
-            {voiceEnabled && msg.role === 'assistant' && (msg as any).audioUrl && (
+            {voiceEnabled && msg.role === 'assistant' && 'audioUrl' in msg && typeof (msg as { audioUrl?: unknown }).audioUrl === 'string' && (
               <audio 
                 controls 
-                src={(msg as any).audioUrl} 
+                src={(msg as { audioUrl: string }).audioUrl} 
                 className="mt-2"
                 preload="none"
               />

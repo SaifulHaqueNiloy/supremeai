@@ -18,7 +18,7 @@ interface UseEventBusReturn {
  * @param callback Handler function
  * @param deps Optional dependency array for re-subscription
  */
-export function useEventBus<T = any>(
+export function useEventBus<T = unknown>(
   event: keyof typeof Events | string,
   callback: EventCallback<T>,
   deps: React.DependencyList = []
@@ -34,6 +34,7 @@ export function useEventBus<T = any>(
     });
 
     return unsubscribe;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event, ...deps]);
 
   return {
@@ -47,7 +48,7 @@ export function useEventBus<T = any>(
  * Hook for emitting events (convenience wrapper)
  */
 export function useEventEmitter() {
-  const emit = useCallback(<T = any>(event: keyof typeof Events | string, data?: T) => {
+  const emit = useCallback(<T = unknown>(event: keyof typeof Events | string, data?: T) => {
     eventBus.emit(event, data);
   }, []);
 

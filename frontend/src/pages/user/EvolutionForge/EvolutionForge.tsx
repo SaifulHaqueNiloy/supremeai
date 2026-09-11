@@ -147,8 +147,9 @@ const EvolutionForgeCanvas = () => {
 
   // Listen for newly installed skills
   useEffect(() => {
-    const handleSkillCreated = (payload: any) => {
-      showToast('success', `New skill integrated: ${payload.skillId}`);
+    const handleSkillCreated = (payload: unknown) => {
+      const data = payload as { skillId?: string } | undefined;
+      showToast('success', `New skill integrated: ${data?.skillId || 'unknown'}`);
     };
     eventBus.on(Events.SKILL_AUTO_CREATED, handleSkillCreated);
     return () => {
@@ -240,7 +241,7 @@ const EvolutionForgeCanvas = () => {
       if (payload.nodes && payload.nodes.length > 0) {
         eventBus.emit(Events.SKILL_AUTO_CREATED, {
           name: payload.name,
-          agents: payload.nodes.filter((n: any) => n.type === 'agentNode').map((n: any) => n.data.role || 'Agent'),
+          agents: payload.nodes.filter((n) => n.type === 'agentNode').map((n) => (n.data as { role?: string })?.role || 'Agent'),
           nodeCount: payload.nodes.length,
           source: 'evolution_forge',
           canDeploy: true,
@@ -274,9 +275,10 @@ const EvolutionForgeCanvas = () => {
       });
 
       showToast('success', 'Swarm execution started successfully! 🚀 Check Swarm Health Dashboard for live telemetry.');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Execution failed', error);
-      showToast('error', `Failed to execute swarm: ${error?.response?.data?.detail || error.message || 'Unknown error'}`);
+      const err = error as { response?: { data?: { detail?: string } }; message?: string };
+      showToast('error', `Failed to execute swarm: ${err?.response?.data?.detail || err?.message || 'Unknown error'}`);
     } finally {
       setIsExecuting(false);
     }
@@ -291,7 +293,7 @@ const EvolutionForgeCanvas = () => {
       const result = await apiClient.post('/api/skills/deploy-blueprint', {
         name: payload.name,
         description: payload.description || `Auto-generated skill from Evolution Forge`,
-        agents: payload.nodes.filter((n: any) => n.type === 'agentNode').map((n: any) => n.data.role || 'Agent'),
+        agents: payload.nodes.filter((n) => n.type === 'agentNode').map((n) => (n.data as { role?: string })?.role || 'Agent'),
         nodes: payload.nodes,
         edges: payload.edges,
         category: 'automation',
@@ -299,9 +301,12 @@ const EvolutionForgeCanvas = () => {
       
       setDeployStatus('success');
       
+      const deployResult = result as { data?: { skillId?: string } } | undefined;
+      const generatedSkillId = deployResult?.data?.skillId || `skill_${Date.now()}`;
+      
       // Notify listeners
       eventBus.emit(Events.SKILL_APPROVAL_NEEDED, {
-        skillId: (result as any).data?.skillId || `skill_${Date.now()}`,
+        skillId: generatedSkillId,
         name: payload.name,
         status: 'pending_review',
         timestamp: Date.now(),
@@ -309,7 +314,7 @@ const EvolutionForgeCanvas = () => {
       
       eventBus.emit('deployment_status', {
         type: 'skill_published',
-        skillId: (result as any).data?.skillId || `skill_${Date.now()}`,
+        skillId: generatedSkillId,
         status: 'pending',
         timestamp: Date.now(),
       });
@@ -319,9 +324,10 @@ const EvolutionForgeCanvas = () => {
         setDeployStatus('idle');
       }, 2500);
       
-    } catch (e: any) {
+    } catch (e: unknown) {
       setDeployStatus('error');
-      setDeployError(e.message || 'Deployment failed');
+      const err = e as { message?: string };
+      setDeployError(err.message || 'Deployment failed');
       console.error('[EvolutionForge] Deploy failed:', e);
     }
   };

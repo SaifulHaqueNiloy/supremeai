@@ -76,7 +76,7 @@ export async function checkSupabaseHealth(): Promise<{
       latency_ms: Math.round(latency),
       pool_status: latency < 100 ? 'healthy' : latency < 500 ? 'degraded' : 'slow'
     };
-  } catch (e) {
+  } catch {
     return {
       connected: false,
       latency_ms: performance.now() - start,

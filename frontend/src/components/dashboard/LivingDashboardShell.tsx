@@ -9,10 +9,6 @@ interface LivingDashboardShellProps {
   chatPanel: ReactNode;
 }
 
-// বাংলা মন্তব্য: Antigravity backend DAG-তে GitHub wire করেছে, তাই এখন আর এটি unsupported নয়!
-const UNSUPPORTED_PLATFORMS: string[] = [];
-
-const SIDEBAR_SPRING = { type: 'spring', stiffness: 320, damping: 32 } as const;
 
 export function LivingDashboardShell({ chatPanel }: LivingDashboardShellProps) {
   const isAuthenticated = useAuthStore((s) => s.status === AuthStatus.LOGGED_IN);

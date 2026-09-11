@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isRole, normalizeRole, hasPermission, ROLES, PERMISSIONS } from './permissions';
+import { isRole, normalizeRole, hasPermission, PERMISSIONS } from './permissions';
 
 describe('permissions', () => {
   describe('isRole', () => {
