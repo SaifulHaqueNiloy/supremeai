@@ -172,6 +172,29 @@ class ConnectionRegistry:
         ))
         return self._from_row(row)
 
+    def revoke(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
+        tenant_id, _, role = self._identity(user)
+        if role not in {"admin", "owner", "system"}:
+            raise PermissionError("Only tenant administrators can revoke connections")
+        with get_conn() as conn:
+            conn.execute(
+                f"UPDATE {self.TABLE} SET status = 'revoked', updated_at = ? WHERE id = ? AND tenant_id = ?",
+                (datetime.now(UTC).isoformat(), connection_id, tenant_id),
+            )
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            conn.commit()
+        if row is None:
+            raise LookupError("Connection not found")
+        get_audit_logger().log(MCPAuditEntry(
+            tool_name="mcp.connection.revoke",
+            decision="allow",
+            risk_level="high",
+            tenant_id=tenant_id,
+        ))
+        return self._from_row(row)
 
     def list_for_tenant(self, user: dict[str, Any]) -> list[ConnectionRecord]:
         tenant_id, _, _ = self._identity(user)
