@@ -105,7 +105,7 @@ async def safe_api_call(
     headers: dict[str, str] | None = None,
     json_data: dict[str, Any] | None = None,
     params: dict[str, Any] | None = None,
-    timeout: float = DEFAULT_TIMEOUT,
+    timeout: float | httpx.Timeout = DEFAULT_TIMEOUT,
 ) -> tuple[bool, dict[str, Any] | str]:
     """নিরাপদ API কল — এরর হ্যান্ডলিং সহ HTTP রিকোয়েস্ট পাঠায়।
 
@@ -119,7 +119,7 @@ async def safe_api_call(
 
     Returns:
         (success, data) টাপল। সফল হলে (True, response_dict),
-        ব্যর্থ হলে (False, error_message_str)।
+        ���্যর্থ হলে (False, error_message_str)।
     """
     try:
         managed = get_shared_client()
