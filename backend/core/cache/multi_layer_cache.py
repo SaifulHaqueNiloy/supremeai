@@ -79,10 +79,15 @@ class _InMemoryRedisStub:
             )
             return
 
+        self._set_bounded(key, ttl, value)
+
+    def _set_bounded(self, key: str, ttl: int, value: str) -> None:
+        if len(value.encode("utf-8")) > self._MAX_VALUE_BYTES:
+            return
         self._store[key] = (time.monotonic() + max(0, ttl), value)
         self._store.move_to_end(key)
         # MEMLEAK-003 FIX: Evict oldest when store exceeds max size
-        if len(self._store) > self._MAX_STORE_SIZE:
+        while len(self._store) > self._MAX_STORE_SIZE:
             self._store.popitem(last=False)
 
     async def mget(self, keys: list[str]) -> list[str | None]:
@@ -91,18 +96,18 @@ class _InMemoryRedisStub:
 
     async def pipeline(self, transaction=False):
         """Mock pipeline for stub implementation."""
-        return _PipelineStub(self._store)
+        return _PipelineStub(self)
 
 
 class _PipelineStub:
-    """Mock pipeline for stub implementation."""
+    """Mock pipeline that preserves the fallback store's safety limits."""
 
-    def __init__(self, store):
-        self.store = store
+    def __init__(self, owner: _InMemoryRedisStub):
+        self.owner = owner
         self.commands = []
 
     async def setex(self, key: str, ttl: int, value: str):
-        self.commands.append(lambda: self.store.__setitem__(key, (time.monotonic() + max(0, ttl), value)))
+        self.commands.append(lambda: self.owner._set_bounded(key, ttl, value))
         return self
 
     async def execute(self):
@@ -328,7 +333,7 @@ class MultiLayerCache:
                 return {
                     "response": session_response,
                     "source": "L4_SESSION_CACHE",
-                    "latency_ms": int(session_duration * 100),
+                    "latency_ms": int(session_duration * 1000),
                 }
             else:
                 self.local_cache_misses += 1
