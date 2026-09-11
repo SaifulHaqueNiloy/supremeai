@@ -36,7 +36,7 @@ from collections.abc import AsyncIterator
 from enum import Enum, auto
 from typing import Any
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, model_validator
 
@@ -327,13 +327,16 @@ async def stream_chat_post(
     if auth_header.startswith("Bearer "):
         token = auth_header[7:].strip()
 
-    user_id = "anonymous"
-    if token:
-        try:
-            payload = await verify_token_async(token)
-            user_id = payload.get("sub") or payload.get("user_id") or "anonymous"
-        except Exception as e:
-            logger.warning(f"[SSE Chat POST] Token verification fallback: {e}")
+    if not token:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    try:
+        payload = await verify_token_async(token)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid authorization") from exc
+    user_id = payload.get("sub") or payload.get("user_id")
+    tenant_id = payload.get("tenant_id") or payload.get("org_id")
+    if not user_id or not tenant_id:
+        raise HTTPException(status_code=403, detail="Tenant context required")
 
     effective_prompt = body.prompt or body.message or ""
     return StreamingResponse(
@@ -350,16 +353,24 @@ async def stream_chat_post(
 
 @router.get("/chat")
 async def stream_chat_sse(
+    request: Request,
     prompt: str = Query(..., description="User prompt to stream"),
-    token: str = Query(..., description="JWT token (EventSource fallback)"),
     task_type: str = Query("chat"),
 ):
     """
     SSE stream (GET fallback for simple EventSource clients).
     """
-    # Verify authentication (R2-01: async path — no event-loop deadlock)
-    payload = await verify_token_async(token)
-    user_id = payload.get("sub") or payload.get("user_id") or "anonymous"
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization required")
+    try:
+        payload = await verify_token_async(auth_header[7:].strip())
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid authorization") from exc
+    user_id = payload.get("sub") or payload.get("user_id")
+    tenant_id = payload.get("tenant_id") or payload.get("org_id")
+    if not user_id or not tenant_id:
+        raise HTTPException(status_code=403, detail="Tenant context required")
 
     return StreamingResponse(
         _event_stream(prompt, user_id, task_type),
