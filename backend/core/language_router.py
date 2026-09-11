@@ -20,23 +20,14 @@ class LanguageRouter:
         "english": "openrouter",
     }
 
-    LANGUAGE_MODEL_MAP = {
-        "zh": "01-ai/yi-34b-chat",
-        "ja": "01-ai/yi-34b-chat",
-        "ko": "01-ai/yi-34b-chat",
-        "ar": "openai/gpt-4o",
-        "bn": "supremeai/bangla-native",
-        "en": "openrouter",
-    }
-
-    LANGUAGE_MODEL_FALLBACK = {
-        "chinese": "01-ai/yi-34b-chat",
-        "japanese": "01-ai/yi-34b-chat",
-        "korean": "01-ai/yi-34b-chat",
-        "arabic": "openai/gpt-4o",
-        "bengali": "supremeai/bangla-native",
-        "hindi": "deepseek",
-        "english": "openrouter",
+    LANGUAGE_CODES = {
+        "chinese": "zh",
+        "japanese": "ja",
+        "korean": "ko",
+        "arabic": "ar",
+        "bengali": "bn",
+        "hindi": "hi",
+        "english": "en",
     }
 
     def detect(self, text: str) -> str:
@@ -66,13 +57,10 @@ class LanguageRouter:
 
     def route_by_language(self, text: str, detected_lang: str | None = None) -> dict[str, Any]:
         language = detected_lang or self.detect(text)
-        model = (
-            self.LANGUAGE_MODEL_MAP.get(language)
-            or self.LANGUAGE_MODEL_FALLBACK.get(language)
-            or settings.model_multilingual
-        )
-        if language in {"chinese", "japanese", "korean", "arabic", "bengali", "hindi"}:
-            model = settings.model_multilingual
+        language_code = self.LANGUAGE_CODES.get(language, "en")
+        model = settings.model_multilingual
+        if language_code == "en":
+            model = settings.model_general
         return {
             "language": language,
             "model": model,

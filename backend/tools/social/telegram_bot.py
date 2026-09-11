@@ -1080,7 +1080,7 @@ class TelegramBotHandler:
                 ],
                 [
                     {"text": "⚡ Cluster Health", "callback_data": "admin_cluster"},
-                    {"text": "🔙 Admin Dashboard", "callback_data": "admin_main_menu"},
+                    {"text": "���� Admin Dashboard", "callback_data": "admin_main_menu"},
                 ],
             ]
         }
@@ -1328,7 +1328,9 @@ class TelegramBotHandler:
         for gem_key in gem_keys:
             try:
                 async with httpx.AsyncClient(timeout=25) as client:
-                    gem_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gem_key}"
+                    configured_model = getattr(settings, "model_vision", "gemini/gemini-2.0-flash")
+                    model_name = configured_model.split("/", 1)[-1]
+                    gem_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={gem_key}"
                     payload = {
                         "contents": [{"parts": [{"text": text}]}],
                         "systemInstruction": {"parts": [{"text": system_instruction}]},
