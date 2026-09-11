@@ -52,7 +52,7 @@
   - [x] Provider Load Donut (request distribution)
   - [x] Traffic Sparkline (last 30 min RPS)
   - [x] Quick Action Grid (Deploy, Backup, Security Scan, Gate Lock/Unlock, New Tenant)
-  - [ ] Mini Infra Topology (visual node graph)
+  - [x] Mini Infra Topology (visual node graph)
 
 ## P4: Observe Suite ✅
 - [x] `modules/observe/LiveMetrics.tsx` — Mini-Grafana metrics dashboard
@@ -138,9 +138,9 @@
 - [x] `modules/system/DeployGate.tsx` — deploy gate control
   - [x] Lock/unlock with OTP + reason
   - [x] Status card
-- [ ] Performance optimization
-  - [ ] Code splitting (React.lazy per module)
-  - [ ] Virtualized tables (>50 rows)
+- [x] Performance optimization
+  - [x] Code splitting (React.lazy per module)
+  - [x] Virtualized tables (>50 rows via @tanstack/react-virtual)
   - [ ] WS payload diffing (2s delta, 30s full snapshot)
   - [ ] Bundle check (initial <250KB gz, total <900KB gz)
 - [ ] Quality gates
