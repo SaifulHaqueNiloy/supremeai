@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
 from backend.tools.tenant_rate_limiter import TenantRateLimiter
 
 
