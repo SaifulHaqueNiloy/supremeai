@@ -216,6 +216,61 @@ class ConnectionRegistry:
         ))
         return self._from_row(updated)
 
+    def reactivate(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
+        tenant_id, _, role = self._identity(user)
+        if role not in {"admin", "owner", "system"}:
+            raise PermissionError("Only tenant administrators can reactivate connections")
+        with get_conn() as conn:
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            if row is None:
+                raise LookupError("Connection not found")
+            if not MCPSecurityGuard.is_safe_url(row["url"], enforce_https=False):
+                raise ValueError("Connection URL no longer satisfies security policy")
+            conn.execute(
+                f"UPDATE {self.TABLE} SET status = 'active', updated_at = ? WHERE id = ? AND tenant_id = ?",
+                (datetime.now(UTC).isoformat(), connection_id, tenant_id),
+            )
+            updated = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            conn.commit()
+        get_audit_logger().log(MCPAuditEntry(
+            tool_name="mcp.connection.reactivate",
+            decision="allow",
+            risk_level="medium",
+            tenant_id=tenant_id,
+        ))
+        return self._from_row(updated)
+
+    def health(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
+        tenant_id, _, _ = self._identity(user)
+        with get_conn() as conn:
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+        if row is None:
+            raise LookupError("Connection not found")
+        if row["status"] != "active":
+            return self._from_row(row)
+        if not MCPSecurityGuard.is_safe_url(row["url"], enforce_https=False):
+            with get_conn() as conn:
+                conn.execute(
+                    f"UPDATE {self.TABLE} SET status = 'degraded', updated_at = ? WHERE id = ? AND tenant_id = ?",
+                    (datetime.now(UTC).isoformat(), connection_id, tenant_id),
+                )
+                conn.commit()
+            with get_conn() as conn:
+                row = conn.execute(
+                    f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                    (connection_id, tenant_id),
+                ).fetchone()
+        return self._from_row(row)
+
     def revoke(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
         tenant_id, _, role = self._identity(user)
         if role not in {"admin", "owner", "system"}:

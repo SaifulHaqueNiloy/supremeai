@@ -96,6 +96,36 @@ async def update_mcp_tool_permissions(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.post("/connections/{connection_id}/reactivate")
+async def reactivate_mcp_connection(
+    connection_id: str,
+    user: dict = Depends(get_current_user_token),
+):
+    """Reactivate a revoked connection after rechecking its URL policy."""
+    try:
+        connection = connection_registry.reactivate(user=user, connection_id=connection_id)
+        return {"status": "success", "connection": connection.model_dump(mode="json")}
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/connections/{connection_id}/health")
+async def check_mcp_connection_health(
+    connection_id: str,
+    user: dict = Depends(get_current_user_token),
+):
+    """Return the tenant-scoped connection status after a policy check."""
+    try:
+        connection = connection_registry.health(user=user, connection_id=connection_id)
+        return {"status": "success", "connection": connection.model_dump(mode="json")}
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @router.delete("/connections/{connection_id}")
 async def revoke_mcp_connection(
     connection_id: str,
