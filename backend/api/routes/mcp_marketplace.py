@@ -4,6 +4,7 @@ from pydantic import BaseModel, HttpUrl
 from api.dependencies import get_current_user_token
 from core.connection_registry import connection_registry
 from core.mcp_client import MCPRegistryClient
+from tools.tenant_rate_limiter import TenantRateLimiter
 
 router = APIRouter(prefix="/api/v1/mcp", tags=["mcp"])
 
@@ -31,6 +32,13 @@ async def discover_mcp_server(
     Connects to a user-provided MCP server URL, validates it for SSRF,
     and returns the tools it provides.
     """
+    tenant_id = user.get("tenant_id") or user.get("organization_id")
+    if not tenant_id:
+        raise HTTPException(status_code=403, detail="Authenticated tenant context is required")
+    quota = await TenantRateLimiter().check_quota(str(tenant_id), cost=0.0)
+    if not quota.get("allowed"):
+        raise HTTPException(status_code=429, detail="MCP connection quota exceeded")
+
     client = MCPRegistryClient()
     try:
         # Convert HttpUrl to string
