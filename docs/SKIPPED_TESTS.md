@@ -46,6 +46,16 @@ The full v2.0 decomposition API remains deferred because the current implementat
 
 Until the remaining actions are completed, skipped tests remain an explicit verification gap rather than a passing quality signal.
 
+## Manual implementation handoff
+
+The following items could not be safely implemented in this environment and are tracked with owners, blockers, manual steps, and acceptance conditions in `docs/MANUAL_IMPLEMENTATION_TASKS.md`:
+
+- generated gRPC artifact restoration and worker-contract verification;
+- task-budget/rate-limit contract discovery and implementation;
+- complete current-tree skipped-test inventory.
+
+This handoff is not a completion claim. Each item requires runtime evidence or a reviewed implementation diff before it is removed from the deferred register.
+
 ## Related records
 
 - `CHECKPOINT.md`
