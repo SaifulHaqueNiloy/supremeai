@@ -103,9 +103,12 @@ def get_role_permissions(role: str | Role) -> frozenset[Permission] | frozenset[
     role_str = role.value if isinstance(role, Role) else role.lower()
 
     # Check config-driven roles first
-    custom_roles = settings.rbac_role_definitions
-    if role_str in custom_roles:
-        return frozenset(custom_roles[role_str])
+    custom_roles = getattr(settings, "rbac_role_definitions", {}) or {}
+    if isinstance(custom_roles, dict) and role_str in custom_roles:
+        configured_permissions = custom_roles[role_str]
+        if isinstance(configured_permissions, dict):
+            configured_permissions = configured_permissions.get("permissions", ())
+        return frozenset(configured_permissions)
 
     # Fallback to hardcoded roles
     try:

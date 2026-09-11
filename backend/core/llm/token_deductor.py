@@ -223,7 +223,8 @@ class TokenDeductor:
         is_configured = getattr(self.redis_client, "configured", True) and getattr(
             redis_queue, "configured", True
         )
-        if settings.env in ["production", "staging"] and not is_configured:
+        current_env = str(getattr(settings, "env", "")).lower()
+        if current_env in {"production", "prod", "staging"} and not is_configured:
             raise RuntimeError(
                 "Redis lock unavailable in production - fail-closed protection triggered"
             )
