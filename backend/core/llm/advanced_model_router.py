@@ -373,34 +373,60 @@ class AdvancedModelRouter:
         self.quality_weight = 0.2
 
     def _load_model_preferences(self) -> dict[str, dict]:
+        # Dynamically inject models from settings while preserving resilient fallbacks
+        bengali_models = [settings.model_multilingual]
+        for m in [
+            "groq/llama-3.3-70b-versatile",
+            "gemini/gemini-2.5-flash",
+            "openrouter/meta-llama/llama-3.3-70b-instruct",
+        ]:
+            if m not in bengali_models:
+                bengali_models.append(m)
+
+        coding_models = [
+            settings.model_coding,
+            "groq/llama-3.3-70b-versatile",
+            "openrouter/deepseek/deepseek-coder",
+            "deepseek/deepseek-coder",
+            settings.model_chat,
+        ]
+        # Deduplicate while preserving order
+        coding_models = list(dict.fromkeys(coding_models))
+
+        reasoning_models = [settings.model_reasoning]
+        for m in [
+            "groq/deepseek-r1-distill-llama-70b",
+            "openrouter/meta-llama/llama-3.3-70b-instruct",
+            "gemini/gemini-2.5-flash",
+        ]:
+            if m not in reasoning_models:
+                reasoning_models.append(m)
+
+        general_models = [settings.model_general, settings.model_chat]
+        for m in [
+            "groq/llama-3.3-70b-versatile",
+            "gemini/gemini-2.5-flash",
+        ]:
+            if m not in general_models:
+                general_models.append(m)
+        general_models = list(dict.fromkeys(general_models))
+
         return {
             "bengali": {
-                "preferred_models": [
-                    "groq/llama-3.3-70b-versatile",
-                    "gemini/gemini-2.5-flash",
-                    "openrouter/meta-llama/llama-3.3-70b-instruct",
-                ],
+                "preferred_models": bengali_models,
                 "tier_preference": ModelTier.BALANCED,
             },
             "coding": {
-                "preferred_models": [
-                    "groq/llama-3.3-70b-versatile",
-                    "openrouter/deepseek/deepseek-coder",
-                    "deepseek/deepseek-coder",
-                    settings.model_chat,
-                ],
+                "preferred_models": coding_models,
                 "tier_preference": ModelTier.BALANCED,
             },
             "reasoning": {
-                "preferred_models": [
-                    "groq/deepseek-r1-distill-llama-70b",
-                    "openrouter/meta-llama/llama-3.3-70b-instruct",
-                    "gemini/gemini-2.5-flash",
-                ],
+                "preferred_models": reasoning_models,
                 "tier_preference": ModelTier.BUDGET,
             },
             "creative": {
                 "preferred_models": [
+                    settings.model_general,
                     "gemini/gemini-2.5-flash",
                     "openrouter/openai/gpt-4o",
                     "groq/llama-3.3-70b-versatile",
@@ -408,11 +434,7 @@ class AdvancedModelRouter:
                 "tier_preference": ModelTier.BALANCED,
             },
             "general": {
-                "preferred_models": [
-                    "groq/llama-3.3-70b-versatile",
-                    "gemini/gemini-2.5-flash",
-                    settings.model_chat,
-                ],
+                "preferred_models": general_models,
                 "tier_preference": ModelTier.BUDGET,
             },
         }

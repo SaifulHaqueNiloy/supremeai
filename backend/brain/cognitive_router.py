@@ -1,6 +1,7 @@
 from typing import Any
 
 from brain.economic_optimizer import BudgetContext, EconomicOptimizer
+from core.config import settings
 
 
 class CognitiveRouter:
@@ -39,7 +40,12 @@ class CognitiveRouter:
                 "model": decision.model,
             }
 
-        return {"routing_mode": "direct", "provider": "groq", "model": "llama-3.3-70b-versatile"}
+        default_model = getattr(settings, "model_general", "groq/llama-3.3-70b-versatile")
+        if "/" in default_model:
+            prov, mod = default_model.split("/", 1)
+        else:
+            prov, mod = "groq", default_model
+        return {"routing_mode": "direct", "provider": prov, "model": mod}
 
 
 _cognitive_router_instance = None

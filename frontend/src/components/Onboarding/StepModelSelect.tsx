@@ -1,16 +1,24 @@
 
-import { getSupremeModelLabel } from '../../lib/modelBranding';
+import { useEffect } from 'react';
+import { getSupremeModelLabel, loadSupremeBranding, SUPREME_AVAILABLE_MODELS } from '../../lib/modelBranding';
 
 const MODEL_META: Record<string, { cost: string; speed: string }> = {
-  'gpt-4o': { cost: 'High', speed: 'Fast' },
-  'llama-3-70b-versatile': { cost: 'Free', speed: 'Blazing' },
+  'gpt-4o': { cost: 'Standard', speed: 'Fast' },
+  'gpt-4o-mini': { cost: 'Free', speed: 'Blazing' },
   'claude-3-5-sonnet': { cost: 'High', speed: 'Fast' },
+  'gemini-1.5-pro': { cost: 'Free', speed: 'Fast' },
+  'deepseek-chat': { cost: 'Free', speed: 'Blazing' },
+  'llama-3-70b-versatile': { cost: 'Free', speed: 'Blazing' },
 };
 
-const models = ['gpt-4o', 'llama-3-70b-versatile', 'claude-3-5-sonnet'].map((id) => ({
+const getModelMeta = (id: string) => {
+  return MODEL_META[id] || { cost: 'Free/Standard', speed: 'Fast' };
+};
+
+const models = SUPREME_AVAILABLE_MODELS.map((id) => ({
   id,
   name: getSupremeModelLabel(id),
-  ...MODEL_META[id],
+  ...getModelMeta(id),
 }));
 
 interface StepProps {
@@ -21,6 +29,10 @@ interface StepProps {
 }
 
 const StepModelSelect = ({ data, updateData, nextStep, prevStep }: StepProps) => {
+  useEffect(() => {
+    loadSupremeBranding();
+  }, []);
+
   return (
     <div className="flex flex-col space-y-4 animate-fadeIn">
       <h3 className="text-xl font-semibold">Step 2: Choose your default brain</h3>
