@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, HttpUrl
 
 from api.dependencies import get_current_user_token
+from core.connection_registry import connection_registry
 from core.mcp_client import MCPRegistryClient
 
 router = APIRouter(prefix="/api/v1/mcp", tags=["mcp"])
@@ -9,6 +10,8 @@ router = APIRouter(prefix="/api/v1/mcp", tags=["mcp"])
 
 class MCPConnectRequest(BaseModel):
     mcp_url: HttpUrl
+    name: str | None = None
+    permission_level: str = "user"
 
 
 @router.post("/discover")
@@ -24,8 +27,31 @@ async def discover_mcp_server(
     try:
         # Convert HttpUrl to string
         tools = await client.connect_and_discover(str(req.mcp_url))
-        return {"status": "success", "tools": tools}
+        record = connection_registry.register(
+            user=user,
+            url=str(req.mcp_url),
+            capabilities=tools,
+            name=req.name,
+            permission_level=req.permission_level,
+        )
+        return {"status": "success", "connection": record.model_dump(mode="json")}
+    except PermissionError as pe:
+        raise HTTPException(status_code=403, detail=str(pe)) from pe
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))
+        raise HTTPException(status_code=400, detail=str(ve)) from ve
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to MCP server: {str(e)}")
+
+
+@router.get("/connections")
+async def list_mcp_connections(
+    user: dict = Depends(get_current_user_token),
+):
+    """List only the authenticated actor's tenant-owned connections."""
+    try:
+        return {"connections": [
+            connection.model_dump(mode="json")
+            for connection in connection_registry.list_for_tenant(user)
+        ]}
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
