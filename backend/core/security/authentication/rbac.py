@@ -128,12 +128,19 @@ def has_permission(role: str | Role, required_permission: str | Permission) -> b
         )
         role_perms = get_role_permissions(role)
 
+        # Normalize configured permissions so wildcard and string-based roles
+        # behave the same as the built-in enum-backed roles.
+        normalized_perms = {
+            permission.value if isinstance(permission, Permission) else str(permission).lower()
+            for permission in role_perms
+        }
+
         # wildcard support
-        if "*" in role_perms:
+        if "*" in normalized_perms:
             return True
 
         # check both enum-based and string-based perms
-        if req_perm_str in role_perms:
+        if req_perm_str in normalized_perms:
             return True
 
         if isinstance(required_permission, str):
