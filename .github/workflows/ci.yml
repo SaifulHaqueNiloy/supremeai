@@ -45,10 +45,10 @@ permissions:
 env:
   NODE_VERSION: '24'
   PYTHON_VERSION: '3.11'
-  # Coverage thresholds — fail build if below these values
-  # Staged quality gates; changed-line coverage is enforced by the test jobs.
-  MIN_BACKEND_COVERAGE: 30
-  MIN_FRONTEND_COVERAGE: 16
+  # Coverage thresholds — fail build if below these values.
+  # These are the repository quality baseline; changed-line coverage is enforced by the test jobs.
+  MIN_BACKEND_COVERAGE: 50
+  MIN_FRONTEND_COVERAGE: 20
 
 jobs:
   # -----------------------------------------------------------------
@@ -640,9 +640,9 @@ jobs:
         run: pnpm exec tsc --noEmit --strict
 
       - name: Lint check
-        # Temporary baseline: CI must fail if warning count regresses above 130.
+        # Temporary baseline: CI must fail if warning count regresses above the audited 126-warning budget.
         # Reduce this budget to 0 after the existing warning backlog is cleared.
-        run: pnpm exec eslint src/ --ext .ts,.tsx --max-warnings=130
+        run: pnpm exec eslint src/ --ext .ts,.tsx --max-warnings=126
 
       - name: Run unit tests with coverage
         run: |
