@@ -59,9 +59,9 @@ export const AgentWorkspace: React.FC = () => {
     if (!prompt.trim() || isLoading || agentPaused) return;
     const next = [...messages, { role: 'user' as const, content: prompt }]; setMessages(next); setPrompt(''); setIsLoading(true);
     try {
-      const data = await apiClient.post<any>('/api/v1/agents/execute', { prompt, project_id: 'default' });
-      setMessages([...next, { role: 'agent', content: data.result || data.message || 'Agent completed the request.', source: 'ai_api' }]);
-      if (data.code) setGeneratedCode(data.code);
+      const data = (await apiClient.post<Record<string, unknown>>('/api/v1/agents/execute', { prompt, project_id: 'default' }) || {}) as Record<string, unknown>;
+      setMessages([...next, { role: 'agent', content: (data.result as string) || (data.message as string) || 'Agent completed the request.', source: 'ai_api' }]);
+      if (typeof data.code === 'string') setGeneratedCode(data.code);
     } catch { setMessages([...next, { role: 'agent', content: 'Connection error to SupremeAI Backend.' }]); }
     finally { setIsLoading(false); }
   };

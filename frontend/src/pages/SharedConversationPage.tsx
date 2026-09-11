@@ -4,16 +4,13 @@ import { motion } from 'framer-motion';
 import {
   Eye,
   Calendar,
-  MessageSquare,
   ArrowRight,
   Sparkles,
   AlertTriangle,
-  Loader2,
   User,
   Bot,
 } from 'lucide-react';
 import { apiClient } from '../services/apiClient';
-import type { UnifiedChatMessage } from '../types/chat';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 

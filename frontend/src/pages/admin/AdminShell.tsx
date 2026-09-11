@@ -3,7 +3,7 @@ import { useAdminStore } from "../../store/adminStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
 import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
-import type { AdminSubTab, Skill, Checkpoint, ChatMessage, HealthMap } from "../../types";
+import type { AdminSubTab, ChatMessage } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
 import { useTheme } from "../../contexts/useTheme";
 

@@ -57,7 +57,7 @@ describe('mcpViewer service', () => {
         ok: false,
         status: 404,
       });
-    }) as any;
+    }) as unknown as typeof fetch;
 
     const data = await loadMcpViewerData('http://localhost:8000', 'test-token');
     expect(data.health).toEqual(mockHealth);
@@ -71,7 +71,7 @@ describe('mcpViewer service', () => {
     global.fetch = vi.fn().mockImplementation(() => {
       const err = new Error('Not found: 404');
       return Promise.reject(err);
-    }) as any;
+    }) as unknown as typeof fetch;
 
     await expect(loadMcpViewerData('http://localhost:9999')).rejects.toThrow();
   });
