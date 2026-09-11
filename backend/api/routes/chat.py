@@ -47,9 +47,9 @@ async def orchestrate_chat(
     user: dict = Depends(get_current_user_token),
 ):
     """Canonical governed hub for conversational capability dispatch."""
-    principal = user.get("tenant_id") or user.get("sub")
+    principal = user.get("tenant_id")
     if not principal:
-        raise HTTPException(status_code=401, detail="Authenticated tenant required")
+        raise HTTPException(status_code=401, detail="Authenticated tenant claim required")
     result = await get_conversation_orchestrator().dispatch(
         ConversationCommand(
             prompt=payload.prompt,
