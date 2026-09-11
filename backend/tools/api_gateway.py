@@ -3,7 +3,7 @@ import os
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -124,7 +124,6 @@ async def gateway_forward(
     headers = dict(request.headers or {})
     headers.setdefault("X-Source", source)
     headers["X-Execution-ID"] = envelope.execution_id
-    headers["X-Tenant-ID"] = envelope.tenant_id
     headers["X-Actor-ID"] = envelope.actor_id
     headers["X-Trace-ID"] = envelope.trace_id or envelope.execution_id
 
