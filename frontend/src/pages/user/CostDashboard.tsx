@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupremeProviderLabel } from '../../lib/modelBranding';
-import { getWebSocketBaseUrl } from '../../utils/api';
 import { apiClient } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
@@ -18,21 +17,21 @@ export const CostDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<CostMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const [isRealtime, setIsRealtime] = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
-        const response = await apiClient.get<any>('/api/billing/analytics');
-        const data = response.data;
+        const response = await apiClient.get<Record<string, unknown>>('/api/billing/analytics');
+        const data = (response.data || {}) as Record<string, unknown>;
         setMetrics({
-          total_spent_usd: data.total_spent || 0.0,
-          total_saved_usd: data.total_saved || 42.5,
-          cached_queries: data.cached_queries || 1280,
-          free_tier_utilization_pct: data.free_tier_pct || 94.2,
-          provider_breakdown: data.provider_breakdown || {
+          total_spent_usd: (data.total_spent as number) || 0.0,
+          total_saved_usd: (data.total_saved as number) || 42.5,
+          cached_queries: (data.cached_queries as number) || 1280,
+          free_tier_utilization_pct: (data.free_tier_pct as number) || 94.2,
+          provider_breakdown: (data.provider_breakdown as Record<string, number>) || {
             Gemini: 0.0,
             Groq: 0.0,
             TogetherAI: 0.0,
@@ -40,18 +39,20 @@ export const CostDashboard: React.FC = () => {
           },
         });
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || 'Error fetching cost metrics');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Error fetching cost metrics');
         setLoading(false);
       }
     })();
   }, []);
 
   // Listen to real-time events to dynamically adjust UI
-  useEventBus(Events.TOKEN_USAGE_UPDATED, (payload: any) => {
+  useEventBus(Events.TOKEN_USAGE_UPDATED, (payload: unknown) => {
+    const data = (payload || {}) as { tokens?: number };
+    const tokens = typeof data.tokens === 'number' ? data.tokens : 0;
     setMetrics(prev => prev ? { 
       ...prev, 
-      total_spent_usd: prev.total_spent_usd + (payload.tokens * 0.0001) 
+      total_spent_usd: prev.total_spent_usd + (tokens * 0.0001) 
     } : prev);
   });
 
@@ -59,24 +60,20 @@ export const CostDashboard: React.FC = () => {
   // SECURITY FIX (audit S-2): token is sent as first-message auth frame, not URL param.
   // SECURITY FIX (audit P-11): exponential backoff replaces fixed 5s reconnect.
   useEffect(() => {
+    const MAX_RECONNECT_ATTEMPTS = 10;
+    let reconnectTimer: NodeJS.Timeout | null = null;
     let reconnectAttempt = 0;
-    const MAX_RECONNECT_ATTEMPTS = 8;
-    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let destroyed = false;
 
     const connectWebSocket = () => {
       if (destroyed) return;
       try {
-        // URL must NOT contain token — use first-message auth instead.
-        const wsUrl = `${getWebSocketBaseUrl()}/ws/cost-updates`;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/api/v1/metrics/stream`;
         wsRef.current = new WebSocket(wsUrl);
 
         wsRef.current.onopen = () => {
-          // Send auth frame as the very first message.
-          const token =
-            localStorage.getItem('supremeai_auth_token') ||
-            localStorage.getItem('supreme_admin_jwt') ||
-            localStorage.getItem('adminToken');
+          const token = localStorage.getItem('supremeai_token') || '';
           if (token) wsRef.current?.send(JSON.stringify({ type: 'auth', token }));
           reconnectAttempt = 0; // Reset on successful connect
           setIsRealtime(true);
@@ -106,13 +103,13 @@ export const CostDashboard: React.FC = () => {
           setIsRealtime(false);
           if (destroyed || reconnectAttempt >= MAX_RECONNECT_ATTEMPTS) return;
           // Exponential backoff with jitter: 1s, 2s, 4s, … up to 30s + random jitter
-          const base = 1_000;
+          const base = 1000;
           const delay = Math.min(base * Math.pow(2, reconnectAttempt) + Math.random() * base, 30_000);
           reconnectAttempt++;
           reconnectTimer = setTimeout(connectWebSocket, delay);
         };
 
-      } catch (e) {
+      } catch {
         console.warn('[CostDashboard] WebSocket unavailable, using polling fallback');
       }
     };
@@ -125,8 +122,9 @@ export const CostDashboard: React.FC = () => {
     };
   }, []);
 
-  useEventBus(Events.COST_THRESHOLD_REACHED, (payload: any) => {
-    setAlerts(prev => [...prev, { id: `a_${Date.now()}`, ...payload, acknowledged: false }]);
+  useEventBus(Events.COST_THRESHOLD_REACHED, (payload: unknown) => {
+    const data = (payload || {}) as Record<string, unknown>;
+    setAlerts(prev => [...prev, { id: `a_${Date.now()}`, ...data, acknowledged: false }]);
   });
 
   if (loading) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { startAntiSleepHeartbeat, pingServers } from './heartbeat';
+import { startAntiSleepHeartbeat } from './heartbeat';
 
 vi.mock('../utils/api', () => ({
   getApiBaseUrl: vi.fn(() => 'https://api.test-domain.com'),
