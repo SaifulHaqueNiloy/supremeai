@@ -10,13 +10,12 @@ import asyncio
 import sys
 from pathlib import Path
 
-from core.logging_config import logger
-
-# Add backend to path for imports
+# Add backend to path for imports before importing core
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from core.llm.llm_gateway import get_llm_gateway
 from core.llm.llm_gateway_with_learning import get_learning_engine
+from core.logging_config import logger
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 from services.llm.llm_router import get_llm_router
 
