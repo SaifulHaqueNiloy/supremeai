@@ -17,7 +17,10 @@ from core.plugins.mcp_security import MCPSecurityGuard
     ],
 )
 def test_mcp_url_blocks_private_or_credentialed_targets(url: str) -> None:
-    with patch("core.plugins.mcp_security.socket.getaddrinfo", return_value=[(None, None, None, None, ("127.0.0.1", 443))]):
+    with patch(
+        "core.plugins.mcp_security.socket.getaddrinfo",
+        return_value=[(None, None, None, None, ("127.0.0.1", 443))],
+    ):
         assert MCPSecurityGuard.is_safe_url(url, enforce_https=False) is False
 
 

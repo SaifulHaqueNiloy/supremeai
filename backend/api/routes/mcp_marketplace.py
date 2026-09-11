@@ -155,9 +155,11 @@ async def list_mcp_connections(
 ):
     """List only the authenticated actor's tenant-owned connections."""
     try:
-        return {"connections": [
-            connection.model_dump(mode="json")
-            for connection in connection_registry.list_for_tenant(user)
-        ]}
+        return {
+            "connections": [
+                connection.model_dump(mode="json")
+                for connection in connection_registry.list_for_tenant(user)
+            ]
+        }
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
