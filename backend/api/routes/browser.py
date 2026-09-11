@@ -294,24 +294,32 @@ async def resume_automation(user: dict = Depends(get_current_user_token)):
 
 
 @router.get("/surf/status")
-def get_status():
+def get_status(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     return BROWSER_STATUS
 
 
 @router.post("/surf/start")
-def start_surf():
+def start_surf(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     BROWSER_STATUS["browsing"] = True
     return {"status": "started"}
 
 
 @router.post("/surf/stop")
-def stop_surf():
+def stop_surf(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     BROWSER_STATUS["browsing"] = False
     return {"status": "stopped"}
 
 
 @router.get("/activity/recent")
-def get_recent_activity():
+def get_recent_activity(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     return {"activities": RECENT_ACTIVITIES}
 
 
