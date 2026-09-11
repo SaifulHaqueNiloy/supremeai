@@ -210,9 +210,10 @@ class TokenDeductor:
         self, lock_key: str, lock_value: str, timeout: int = 10, **kwargs
     ) -> bool:
         """Helper method for distributed lock check with production fail-closed enforcement."""
-        if settings.env in ["production", "staging"] and not getattr(
-            self.redis_client, "configured", True
-        ):
+        is_configured = getattr(self.redis_client, "configured", True) and getattr(
+            redis_queue, "configured", True
+        )
+        if settings.env in ["production", "staging"] and not is_configured:
             raise RuntimeError(
                 "Redis lock unavailable in production - fail-closed protection triggered"
             )
