@@ -79,7 +79,7 @@ class ConnectionRegistry:
         name: str | None = None,
         permission_level: str = "user",
     ) -> ConnectionRecord:
-        tenant_id, actor_id, role = self._identity(user)
+        tenant_id, actor_id, _ = self._identity(user)
         if not MCPSecurityGuard.is_safe_url(url, enforce_https=False):
             raise ValueError("URL blocked by SSRF / security policy")
         if permission_level not in {"user", "admin", "system"}:
