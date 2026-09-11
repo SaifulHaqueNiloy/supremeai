@@ -51,7 +51,7 @@ const initialChat = [
 
 export function CommandCenter() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [edges, setEdges] = useEdgesState<Edge>([]);
   const [chatMessages, setChatMessages] = useState(initialChat);
   const [chatInput, setChatInput] = useState('');
   const [isCentralPanelOpen, setIsCentralPanelOpen] = useState(false);

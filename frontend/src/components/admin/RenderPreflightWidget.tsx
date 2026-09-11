@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { Card, Badge } from '../ui';
-import { RefreshCw, ShieldAlert, ShieldCheck, Clock, CheckCircle2, AlertTriangle, Play } from 'lucide-react';
+import { RefreshCw, ShieldAlert, ShieldCheck, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 
 interface RenderAccountStatus {
