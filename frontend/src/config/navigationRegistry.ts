@@ -217,6 +217,16 @@ export interface NavFilterOptions {
  * permission-valid আইটেম রিটার্ন করে। Role/permission এখানে শুধু visibility —
  * আসল authorization backend-এ হয়।
  */
+// Viewer-first contract: keep the normal user navigation understandable. Advanced
+// routes may remain reachable by direct URL for compatibility, but they must not
+// become part of the viewer mental model without an explicit product requirement.
+const SIMPLE_VIEWER_ENTRY_IDS = new Set([
+  'nav-home',
+  'nav-integrations',
+  'nav-profile',
+  'nav-settings',
+]);
+
 export function getNavigationForContext(
   context: NavContext,
   options: NavFilterOptions = {}
@@ -229,6 +239,7 @@ export function getNavigationForContext(
       items: group.items
         .filter((item) => {
           if (!item.contexts.includes(context)) return false;
+          if (context === 'user' && !SIMPLE_VIEWER_ENTRY_IDS.has(item.id)) return false;
           if (!includePlanned && item.status !== 'implemented') return false;
           if (item.requiredRole && role && item.requiredRole !== role) return false;
           if (item.requiredRole && !role) return false;

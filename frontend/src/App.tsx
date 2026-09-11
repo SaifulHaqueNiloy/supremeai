@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
-import { ProtectedRoute, GuestRoute, useAuthStatus, AuthLoadingSpinner } from "./components/core/AuthGuards";
+import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { RoleGuard, PermissionGuard } from "./components/core/guards/RoleGuard";
 import { resolveLandingPath } from './auth/identity';
 
@@ -36,15 +36,12 @@ const SecretsPage = React.lazy(() => import("./components/dashboard/SecretsPage"
 import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
-import { useServerStream } from './hooks/useServerStream';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
-import { primeDeviceFingerprint } from "./utils/deviceFingerprint";
-import { CommandBar } from './components/layout/CommandBar';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 
-primeDeviceFingerprint(); // বাংলা মন্তব্য: অ্যাপ বুট হওয়ার সাথে সাথে ব্যাকগ্রাউন্ডে ফিঙ্গারপ্রিন্ট হ্যাশ প্রিলোড হচ্ছে
-
+// Viewer bootstrap stays intentionally small. Backend policy, memory, audit, and
+// hardening remain behind the API boundary; do not mount those systems globally here.
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -101,9 +98,8 @@ export const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  // বাংলা মন্তব্য: SSE স্ট্রিম কানেক্ট করে সার্ভার অনলাইন স্ট্যাটাস ট্র্যাক করা হচ্ছে
-  useServerStream();
-
+  // Basic viewer pages render without a global realtime connection. Live updates
+  // should be opted into by the one page that actually displays live data.
   const legacyWorkspace = (
     <UserDashboard />
   );
@@ -260,8 +256,6 @@ const AppContent: React.FC = () => {
               <Route path="*" element={<ErrorPage code={404} />} />
             </Routes>
           </React.Suspense>
-          {/* বাংলা মন্তব্য: Global Command Palette — সব route-এ Header search / ⌘K triggered; বন্ধ থাকলে UI রেন্ডার হয় না */}
-          <CommandBar />
         </GlobalConfigInitializer>
       </QueryClientProvider>
     </ErrorBoundary>

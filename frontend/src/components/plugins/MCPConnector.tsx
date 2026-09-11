@@ -34,6 +34,9 @@ function ViewerResults({ data }: { data: McpViewerData }) {
   );
 }
 
+// This is intentionally a read-only, URL-driven viewer. Do not add server
+// management, tool execution, memory controls, or policy editing here without
+// an explicit product requirement.
 export const MCPConnector: React.FC = () => {
   const [url, setUrl] = useState('');
   const [token, setToken] = useState('');
