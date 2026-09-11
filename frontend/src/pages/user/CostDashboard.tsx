@@ -13,11 +13,19 @@ interface CostMetrics {
   provider_breakdown: Record<string, number>;
 }
 
+interface CostAlert {
+  id: string;
+  current?: number;
+  limit?: number;
+  acknowledged: boolean;
+  [key: string]: unknown;
+}
+
 export const CostDashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<CostMetrics | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
+  const [alerts, setAlerts] = useState<CostAlert[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
   const [isRealtime, setIsRealtime] = useState(false);
 
