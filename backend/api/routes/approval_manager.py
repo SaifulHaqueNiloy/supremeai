@@ -108,13 +108,18 @@ def get_pending(
 def approve_task(
     task_id: str,
     req: ApproveRequest,
-    user: dict = Depends(get_project_admin),
+    _: dict = Depends(get_project_admin),
 ) -> dict[str, Any]:
     """Approve a pending task - REQUIRES admin authentication."""
+    user = _
     _audit("request", task_id, req.resolved_by, "received")
     try:
         task = update_task_status(
-            task_id, TaskStatus.APPROVED, user["subject"], req.reason, tenant_id=user["tenant_id"]
+            task_id,
+            TaskStatus.APPROVED,
+            user.get("subject") or req.resolved_by,
+            req.reason,
+            tenant_id=user.get("tenant_id"),
         )
     except Exception as exc:
         # AUD-4.3/4.4/4.5/4.6: replay, expiry, tampering and races are rejected here.
