@@ -21,7 +21,11 @@ async function getJson(url: string, token: string): Promise<Record<string, unkno
     },
     signal: AbortSignal.timeout(10000),
   })
-  if (!response.ok) throw new Error(`MCP server returned ${response.status}`)
+  if (!response.ok) {
+    const error = new Error(`MCP server returned ${response.status}`) as Error & { status?: number }
+    error.status = response.status
+    throw error
+  }
   const payload: unknown = await response.json()
   return payload && typeof payload === 'object' ? payload as Record<string, unknown> : { value: payload }
 }

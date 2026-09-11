@@ -15,6 +15,16 @@ function DataBlock({ title, value }: { title: string; value: unknown }) {
   );
 }
 
+function friendlyViewerError(error: unknown): string {
+  const status = error && typeof error === 'object' && 'status' in error ? (error as { status?: number }).status : undefined;
+  if (status === 401 || status === 403) return 'এই serverটি private। Viewer access পেতে server owner-এর দেওয়া access দিন।';
+  if (status === 404) return 'এই URL-এ viewer data পাওয়া যায়নি। URL ঠিক আছে কি না দেখুন।';
+  if (status === 429) return 'Server এখন ব্যস্ত। একটু পরে আবার চেষ্টা করুন।';
+  if (error instanceof DOMException && error.name === 'TimeoutError') return 'Server উত্তর দিতে দেরি করছে। আবার চেষ্টা করুন।';
+  if (error instanceof TypeError) return 'Server-এ যোগাযোগ করা যাচ্ছে না। URL ও server status দেখুন।';
+  return error instanceof Error ? error.message : 'এই server থেকে data পড়া যাচ্ছে না। আবার চেষ্টা করুন।';
+}
+
 function ViewerResults({ data }: { data: McpViewerData }) {
   const sections = [
     ['Server', data.server],
@@ -56,12 +66,12 @@ export const MCPConnector: React.FC = () => {
       setState('connected');
     } catch (error) {
       setState('error');
-      setMessage(error instanceof Error ? error.message : 'Could not read this MCP server.');
+      setMessage(friendlyViewerError(error));
     }
   };
 
   return (
-    <section className="mx-auto mt-8 flex max-w-4xl flex-col gap-5">
+    <section className="font-bengali mx-auto mt-8 flex max-w-4xl flex-col gap-5">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 text-[var(--supremeai-color-brand-primary)]"><Link2 size={16} /><span className="text-xs font-semibold uppercase tracking-[0.18em]">MCP Viewer</span></div>
         <h2 className="text-2xl font-semibold tracking-tight text-balance">সার্ভারের data দেখুন</h2>
@@ -75,7 +85,7 @@ export const MCPConnector: React.FC = () => {
             <span className="font-normal leading-5 text-muted-foreground">যেমন: https://your-server.example.com/mcp</span>
             <input value={url} onChange={(event) => { setUrl(event.target.value); setState('idle'); setMessage(''); }} placeholder="https://..." inputMode="url" autoComplete="url" aria-describedby="viewer-help" className="h-11 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
           </label>
-          <p id="viewer-help" className="text-xs leading-5 text-muted-foreground">Public server হলে token লাগবে না। Private server হলে নিচের ঘরে token দিতে পারেন।</p>
+          <p id="viewer-help" className="text-xs leading-5 text-muted-foreground">Public server হলে আর কিছু লাগবে না। Private server হলে তবেই নিচের optional access field ব্যবহার করুন।</p>
           <details className="rounded-md border border-border/60 px-3 py-2 text-sm">
             <summary className="cursor-pointer font-medium">Token দরকার হলে এখানে দিন</summary>
             <label className="mt-3 flex flex-col gap-2 text-sm">
@@ -88,7 +98,7 @@ export const MCPConnector: React.FC = () => {
       </Card>
 
       {state === 'connecting' && <p role="status" className="rounded-lg border border-border/60 bg-background/50 p-4 text-sm leading-6 text-muted-foreground">সার্ভারের সঙ্গে যোগাযোগ হচ্ছে… একটু অপেক্ষা করুন।</p>}
-      {message && <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm leading-6 text-destructive"><span>{message}</span><button type="button" onClick={() => setMessage('')} aria-label="বার্তাটি বন্ধ করুন"><X size={16} /></button></div>}
+      {message && <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm leading-6 text-destructive"><span>{message}</span><div className="flex shrink-0 items-center gap-2"><button type="button" className="font-semibold underline underline-offset-2" onClick={() => void connect()}>আবার চেষ্টা করুন</button><button type="button" onClick={() => setMessage('')} aria-label="বার্তাটি বন্ধ করুন"><X size={16} /></button></div></div>}
       {data && <ViewerResults data={data} />}
     </section>
   );

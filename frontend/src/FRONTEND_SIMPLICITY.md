@@ -31,6 +31,8 @@ Do not introduce a new MCP server, memory server, client-side policy engine, dup
 
 - Anonymous read-only viewing is the default. Never force login for a normal viewer journey unless the backend explicitly says the shared server is private.
 - Never make users log in again during ordinary navigation, refresh, reconnect, or data viewing. Preserve the existing session when authentication is genuinely required.
+- The viewer must not show a login form, account setup, security prompt, OTP, or permission dialog during the normal URL → Open → Read journey. If the shared server is private, explain that plainly and provide only the minimum access step required by the backend.
+- Treat zero-friction viewing as a product requirement: no forced account, no repeated authentication, no token field on the first screen, and no technical setup before the first data request.
 - Do not add security prompts, OTP, permission dialogs, device checks, token fields, or confirmations to ordinary read-only actions. Sensitive write/admin actions may use their own isolated flow.
 - Keep optional credentials hidden until they are needed. The first screen should ask for one thing: the shared URL.
 - Backend security is not a reason to expose policy, memory, MCP management, audit, or infrastructure controls in the viewer UI.
