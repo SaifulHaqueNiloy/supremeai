@@ -194,6 +194,7 @@ class SettingsFieldsMixin:
         default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL"
     )
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
+    admin_enforce_totp: bool = Field(default=False, validation_alias="ADMIN_ENFORCE_TOTP")
     admin_authorized: bool = Field(default=False, validation_alias="ADMIN_AUTHORIZED")
     autofix_authorized: bool = Field(default=False, validation_alias="AUTOFIX_AUTHORIZED")
 
