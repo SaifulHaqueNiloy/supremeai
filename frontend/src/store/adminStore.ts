@@ -79,9 +79,30 @@ interface AdminState {
   resetTotpSetup: () => Promise<void>;
 }
 
+const getInitialAdminToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    return sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+  } catch {
+    return null;
+  }
+};
+
+const initialToken = getInitialAdminToken();
+const initialDecoded = initialToken ? decodeJwt(initialToken) : null;
+const isInitialTokenValid = Boolean(
+  initialDecoded &&
+  typeof initialDecoded.exp === 'number' &&
+  initialDecoded.exp * 1000 > Date.now()
+);
+
+if (isInitialTokenValid && initialToken) {
+  updateTokenCache(initialToken);
+}
+
 export const useAdminStore = create<AdminState>((set, get) => ({
-  adminAuthenticated: false,
-  adminRole: null,
+  adminAuthenticated: isInitialTokenValid,
+  adminRole: isInitialTokenValid && initialDecoded?.role === 'admin' ? 'admin' : null,
   setAdminRole: (val) => set({ adminRole: val }),
   adminError: '',
   setAdminError: (val) => set({ adminError: val }),
