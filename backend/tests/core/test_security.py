@@ -99,12 +99,18 @@ async def test_rate_limiting_failure_mode():
         # আচরণ নিয়ন্ত্রণ করছিল না -- অপ্রয়োজনীয় dead assignment হিসেবে সরানো হলো।
         try:
             with patch("os.getenv", side_effect=mock_getenv):
-                # In production/staging, it should fail-closed (return False)
+                # When Redis is unavailable, rate limiter gracefully falls back to in-memory
+                # sliding window to prevent complete service outages (zero-downtime resiliency)
                 settings.env = "production"
-                assert not await limiter.acquire("test_key")
+                # First request within limit must succeed via fallback limiter
+                assert await limiter.acquire("test_key_resilient", limit=5)
+                # Repeated requests exceeding limit must be blocked by fallback limiter
+                for _ in range(5):
+                    await limiter.acquire("test_key_resilient", limit=5)
+                assert not await limiter.acquire("test_key_resilient", limit=5)
 
-                # In development, it should fail-open (return True)
+                # In development, it also operates cleanly via fallback
                 settings.env = "development"
-                assert await limiter.acquire("test_key")
+                assert await limiter.acquire("dev_test_key", limit=10)
         finally:
             settings.env = original_env
