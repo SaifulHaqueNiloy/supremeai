@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from core.automation.execution_recorder import execution_recorder
+from core.automation.models import ExecutionEnvelope
 from core.security.tool_gateway import ToolPolicyGateway, tool_policy_gateway
 
 
@@ -37,6 +38,7 @@ class ExecutionRecord:
     capability: str
     status: str = "started"
     evidence: list[dict[str, Any]] = field(default_factory=list)
+    envelope: ExecutionEnvelope | None = None
 
 
 @dataclass
@@ -143,14 +145,22 @@ class ConversationOrchestrator:
         command = replace(
             command, metadata={**command.metadata, "capability_chain": [*chain, capability_name]}
         )
+        execution_id = f"exec_{uuid.uuid4().hex}"
         execution = ExecutionRecord(
-            execution_id=f"exec_{uuid.uuid4().hex}",
+            execution_id=execution_id,
             correlation_id=correlation_id,
             user_id=command.user_id,
             tenant_id=command.tenant_id,
             project_id=command.project_id,
             conversation_id=command.conversation_id,
             capability=capability_name,
+            envelope=ExecutionEnvelope(
+                execution_id=f"exec_{uuid.uuid4().hex}",
+                actor_id=command.user_id,
+                tenant_id=command.tenant_id,
+                intent=command.prompt[:500],
+                trace_id=correlation_id,
+            ),
         )
         capability = self._capabilities.get(capability_name)
         event = {
@@ -214,6 +224,9 @@ class ConversationOrchestrator:
             risk=capability.risk,
             action="conversation.dispatch",
         )
+        if execution.envelope is not None:
+            execution.envelope.policy_decision = "allow" if decision.allowed else "deny"
+            execution.envelope.status = "running" if decision.allowed else "blocked"
         if not decision.allowed:
             event.update(type="orchestration.denied", status="denied", reason=decision.reason)
             execution.status = "denied"
@@ -245,6 +258,8 @@ class ConversationOrchestrator:
                     "capability": capability_name,
                 }
             execution.status = "completed"
+            if execution.envelope is not None:
+                execution.envelope.status = "succeeded"
             execution.evidence.append(event)
             return OrchestrationResult(
                 correlation_id,

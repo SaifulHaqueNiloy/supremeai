@@ -25,7 +25,7 @@ interface AdminJwtClaims {
 export function readAdminJwtClaims(): AdminJwtClaims | null {
   if (typeof window === 'undefined') return null;
   try {
-    const token = localStorage.getItem(ADMIN_JWT_KEY);
+    const token = sessionStorage.getItem(ADMIN_JWT_KEY);
     if (!token) return null;
     const part = token.split('.')[1];
     if (!part) return null;

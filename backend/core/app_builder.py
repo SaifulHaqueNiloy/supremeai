@@ -425,7 +425,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             "X-CSRF-Token",
             "X-JIT-OTP",
             "X-Request-ID",
-            "X-Tenant-ID",
             "X-Correlation-ID",
             "Cache-Control",
         ],
@@ -457,7 +456,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # তাই রাউটার এখন /api/v1/health প্রিফিক্সে মাউন্ট করা হচ্ছে (আগে /health ছিল,
     # যেটা কনফিগার করা পাথের সাথে মিলছিল না ফলে লাইভনেস প্রোব বরাবর 404 পেত)।
     app.include_router(health_router, prefix="/api/v1/health")
-    # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও একই রাউটার এক্সপোজ করা থাকল।
+    # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও এক��� রাউটার এক্সপোজ করা থাকল।
     app.include_router(health_router, prefix="/health")
 
     @app.api_route("/", methods=["GET", "HEAD"])

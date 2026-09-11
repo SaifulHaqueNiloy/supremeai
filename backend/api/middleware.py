@@ -4,7 +4,7 @@
 Provides:
 - SupremeContextMiddleware: Correlation ID injection with ErrorEventBus integration.
 - RequestIdMiddleware: Inject X-Request-ID into every response for distributed tracing.
-- TenantExtractionMiddleware: extracts tenant context from headers/JWT and attaches to request.state.
+- TenantExtractionMiddleware: attaches verified JWT tenant context to request.state.
 - ResponseStandardizationMiddleware: ensures all non-JSON responses follow the standard envelope.
 - ChaosInjectorMiddleware: Enterprise Fault Injection & Chaos Engine for local testing.
 - IdempotencyMiddleware: Redis-based distributed idempotency for POST paths.
@@ -132,7 +132,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
 
 
 class TenantExtractionMiddleware(BaseHTTPMiddleware):
-    """Attach tenant_id to request.state from X-Tenant-ID header or JWT."""
+    """Attach tenant_id to request.state from verified JWT claims only."""
 
     async def dispatch(self, request: Request, call_next):
         user = getattr(request.state, "user", None)
