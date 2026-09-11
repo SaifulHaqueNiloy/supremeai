@@ -165,7 +165,7 @@ class ConnectionRegistry:
             raise LookupError("Connection not found")
         get_audit_logger().log(MCPAuditEntry(
             tool_name="mcp.connection.permission",
-            decision="allowed",
+            decision="allow",
             risk_level="high" if permission_level == "system" else "medium",
             tenant_id=tenant_id,
             error=None if previous is None else f"changed_from={previous['permission_level']}",
