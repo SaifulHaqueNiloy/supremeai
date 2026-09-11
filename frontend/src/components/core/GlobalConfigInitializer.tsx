@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useStore } from '../../store/useStore';
 import { AppDefaults } from '../../config/constants';
 import { apiClient, setApiConcurrency } from '../../services/apiClient';
@@ -20,7 +20,6 @@ const CONFIG_DEADLINE_MS = 8000;
 
 export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = ({ children }) => {
   const { setConfig } = useStore();
-  const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -49,13 +48,11 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
 
     const fetchConfig = async () => {
       if (cancelled) return;
-      setError(null);
       try {
         const data = await apiClient.get<unknown>('/api/config/public');
         if (cancelled) return;
         // বাংলা মন্তব্য: রিয়েল কনফিগ এসেছে — AppDefaults fallback-এর ওপর আপডেট করবে
         applyConfig(data);
-        setError(null); // Clear the error banner if the delayed fetch succeeded
       } catch (err) {
         if (cancelled) return;
         console.warn("[Config] Public config unavailable; continuing with safe defaults:", err);
@@ -75,7 +72,6 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
         // বাংলা মন্তব্য: শুধু তখনই fallback করব যদি এখনও কোনো কনফিগ লোড না হয়ে থাকে
         if (!useStore.getState().isConfigLoaded) {
           applyConfig(AppDefaults);
-            setError(null);
         }
       }
     };
@@ -102,7 +98,6 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
           if (!useStore.getState().isConfigLoaded) {
             console.warn(`[Config] Deadline ${CONFIG_DEADLINE_MS}ms exceeded. Falling back to safe defaults.`);
             applyConfig(AppDefaults);
-            setError(null);
           }
         }, CONFIG_DEADLINE_MS);
 
@@ -121,32 +116,7 @@ export const GlobalConfigInitializer: React.FC<GlobalConfigInitializerProps> = (
   }, [setConfig]);
 
   // বাংলা মন্তব্য: আর কোনো ব্লকিং স্পিনার নেই — কনফিগ লোড হোক বা না হোক children সবসময় রেন্ডার হবে
-  return (
-    <>
-      {error && (
-        <div className="fixed top-0 z-50 flex w-full items-center justify-between bg-yellow-600/90 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md">
-          <span>{error}</span>
-          <div className="flex items-center gap-2">
-            {/* UX-002 FIX: Better error recovery options */}
-            <button
-              onClick={() => window.location.reload()}
-              className="rounded bg-yellow-700 px-3 py-1 hover:bg-yellow-800 focus:outline-none"
-            >
-              Retry Connection
-            </button>
-            <button
-              onClick={() => {
-                setError('');
-                window.location.href = '/login';
-              }}
-              className="rounded bg-yellow-700/50 px-3 py-1 hover:bg-yellow-800/50 focus:outline-none"
-            >
-              Back to Login
-            </button>
-          </div>
-        </div>
-      )}
-      {children}
-    </>
-  );
+  // Public configuration is optional for the viewer. A failed background request
+  // must never turn a normal page visit into a login or setup flow.
+  return <>{children}</>;
 };

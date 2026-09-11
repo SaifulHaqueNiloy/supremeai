@@ -25,10 +25,11 @@ const UNIFIED_BACKEND = normalizeBackendUrl(process.env.VITE_API_URL) || normali
 const USER_BACKEND = UNIFIED_BACKEND
 const ADMIN_BACKEND = normalizeBackendUrl(process.env.VITE_ADMIN_BACKEND) || UNIFIED_BACKEND
 
-// 🔒 PRODUCTION GUARD: Missing backend URL = Build failure (not silent wrong URL)
+// A frontend viewer build must still be publishable without a backend env var.
+// Public MCP URLs are supplied by the user at runtime; admin/API features can
+// report their missing connection when used instead of blocking the whole build.
 if (process.env.NODE_ENV === 'production' && !UNIFIED_BACKEND) {
-  console.error('❌ FATAL: VITE_API_URL or VITE_BACKEND_URL environment variable is required in production!')
-  process.exit(1)
+  console.warn('No backend URL configured; building public viewer mode.')
 }
 
 // 🔬 Evolution v3.0: Dump build config for debugging
