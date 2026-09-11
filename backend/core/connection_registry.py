@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 from adaptive_engine._store import get_conn, jdump, jload
 from core.plugins.mcp_security import MCPSecurityGuard
+from core.mcp_audit import MCPAuditEntry, get_audit_logger
 
 
 class ConnectionRecord(BaseModel):
@@ -59,7 +60,10 @@ class ConnectionRegistry:
 
     @staticmethod
     def _identity(user: dict[str, Any]) -> tuple[str, str, str]:
-        tenant_id = str(user.get("tenant_id") or user.get("organization_id") or user.get("id"))
+        tenant_value = user.get("tenant_id") or user.get("organization_id")
+        if not tenant_value:
+            raise PermissionError("Authenticated tenant context is required")
+        tenant_id = str(tenant_value)
         actor_id = str(user.get("user_id") or user.get("id") or "unknown")
         role = str(user.get("role") or user.get("user_role") or "user").lower()
         if tenant_id in {"None", "unknown"}:
@@ -80,8 +84,9 @@ class ConnectionRegistry:
             raise ValueError("URL blocked by SSRF / security policy")
         if permission_level not in {"user", "admin", "system"}:
             raise ValueError("permission_level must be user, admin, or system")
-        if permission_level != "user" and role not in {"admin", "owner", "system"}:
-            raise PermissionError("Only tenant administrators can escalate authority")
+        if permission_level != "user":
+            raise PermissionError("Connections start with user authority; use the permission endpoint for escalation")
+
 
         now = datetime.now(UTC).isoformat()
         record = ConnectionRecord(
@@ -109,7 +114,20 @@ class ConnectionRegistry:
                  jdump(record.capabilities), jdump(record.metadata), record.created_at, record.updated_at),
             )
             conn.commit()
-        return record
+            stored_row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE tenant_id = ? AND url = ?",
+                (record.tenant_id, str(record.url)),
+            ).fetchone()
+        if stored_row is None:
+            raise RuntimeError("Connection registration could not be verified")
+        stored_record = self._from_row(stored_row)
+        get_audit_logger().log(MCPAuditEntry(
+            tool_name="mcp.connection.register",
+            decision="allow",
+            risk_level="medium",
+            tenant_id=tenant_id,
+        ))
+        return stored_record
 
     def set_permission(
         self,
@@ -123,11 +141,18 @@ class ConnectionRegistry:
             raise PermissionError("Only tenant administrators can change connection authority")
         if permission_level not in {"user", "admin", "system"}:
             raise ValueError("permission_level must be user, admin, or system")
+        if permission_level == "system":
+            raise PermissionError("System authority requires a separate governance approval")
         with get_conn() as conn:
+            previous = conn.execute(
+                f"SELECT permission_level FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
             conn.execute(
                 f"UPDATE {self.TABLE} SET permission_level = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
                 (permission_level, datetime.now(UTC).isoformat(), connection_id, tenant_id),
             )
+
             row = conn.execute(
                 f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
                 (connection_id, tenant_id),
@@ -135,7 +160,15 @@ class ConnectionRegistry:
             conn.commit()
         if row is None:
             raise LookupError("Connection not found")
+        get_audit_logger().log(MCPAuditEntry(
+            tool_name="mcp.connection.permission",
+            decision="allowed",
+            risk_level="high" if permission_level == "system" else "medium",
+            tenant_id=tenant_id,
+            error=None if previous is None else f"changed_from={previous['permission_level']}",
+        ))
         return self._from_row(row)
+
 
     def list_for_tenant(self, user: dict[str, Any]) -> list[ConnectionRecord]:
         tenant_id, _, _ = self._identity(user)

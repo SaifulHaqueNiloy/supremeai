@@ -43,8 +43,9 @@ async def discover_mcp_server(
         raise HTTPException(status_code=403, detail=str(pe)) from pe
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve)) from ve
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to connect to MCP server: {str(e)}")
+    except Exception:
+        # Keep provider URLs, credentials, and internal network details out of responses.
+        raise HTTPException(status_code=502, detail="MCP server connection failed")
 
 
 @router.patch("/connections/{connection_id}/permission")
