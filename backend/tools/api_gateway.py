@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from api.dependencies import get_current_user_token
 from core.automation.dispatcher import automation_dispatcher
 from core.automation.models import AutomationEvent, ExecutionEnvelope
 from core.config import settings
-from api.dependencies import get_current_user_token
 from core.logging_config import logger
 from core.rate_limiter import AsyncRateLimiter
 from core.security.authentication.auth_middleware import AuthMiddleware
