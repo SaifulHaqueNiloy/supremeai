@@ -119,7 +119,11 @@ def get_current_user_token(request: Request) -> dict:
         import os
 
         admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
-        return {"sub": admin_email, "role": "admin"}
+        return {
+            "sub": admin_email,
+            "role": "admin",
+            "tenant_id": os.getenv("ADMIN_TENANT_ID", "test-tenant"),
+        }
 
     # 3. Fallback check
     raise HTTPException(status_code=401, detail="Unauthorized")
