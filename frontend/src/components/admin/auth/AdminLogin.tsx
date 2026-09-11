@@ -175,6 +175,15 @@ export function LoginView({
                   aria-invalid={localError ? 'true' : 'false'}
                 />
               </div>
+              <label className="flex items-center gap-2 text-[11px] text-slate-400 font-mono cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberBrowser}
+                  onChange={(e) => setRememberBrowser(e.target.checked)}
+                  className="accent-cyan-400"
+                />
+                Remember me (Trust this browser for 7 days)
+              </label>
             </>
           )}
 
