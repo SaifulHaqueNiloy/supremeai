@@ -158,7 +158,7 @@ class TestAdminRoutes:
         assert response.status_code == 422
 
     def test_admin_firebase_login_mock_token_non_production(self, client):
-        """মক ফায়ারবেস টোকেন লগইন non-production."""
+        """মক ফায়ারবেস টোকেন লগইন non-production (TOTP required by default unless trusted browser)."""
         with patch("core.config.settings.env", "local"):
             response = client.post(
                 "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
@@ -166,15 +166,19 @@ class TestAdminRoutes:
             assert response.status_code in [200, 403]
             if response.status_code == 200:
                 data = response.json()
-                # Default is direct login (status: authenticated or trusted_browser)
-                assert data.get("status") in ["authenticated", "trusted_browser"]
-                assert "token" in data
+                # With TOTP enforced by default, initial login prompts for TOTP setup/verification
+                assert data.get("status") in [
+                    "totp_setup_required",
+                    "otp_required",
+                    "trusted_browser",
+                    "authenticated",
+                ]
 
-    def test_admin_firebase_login_totp_enforced_option(self, client):
-        """TOTP অপশন অন থাকলে otp_required বা totp_setup_required রিটার্ন করে।"""
+    def test_admin_firebase_login_trusted_browser_bypasses_totp(self, client):
+        """Trusted browser (Remember me for 7 days) TOTP বাইপাস করে সরাসরি টোকেন দেয়।"""
         with (
             patch("core.config.settings.env", "local"),
-            patch("core.config.settings.admin_enforce_totp", True),
+            patch("core.admin_routes._trusted_browser_uid", return_value="mock-admin-uid"),
         ):
             response = client.post(
                 "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
@@ -182,11 +186,8 @@ class TestAdminRoutes:
             assert response.status_code in [200, 403]
             if response.status_code == 200:
                 data = response.json()
-                assert data.get("status") in [
-                    "totp_setup_required",
-                    "otp_required",
-                    "trusted_browser",
-                ]
+                assert data.get("status") == "trusted_browser"
+                assert "token" in data
 
     def test_admin_firebase_login_mock_token_production(self, client):
         """মক টোকেন প্রোডাকশন নিষিদ্ধ."""
