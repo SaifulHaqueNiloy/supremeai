@@ -8,7 +8,7 @@ interface Props {
     onConfirm: (capabilities: string[]) => void;
 }
 
-export const InstallModal: React.FC<Props> = ({ isOpen, onClose, plugin, onConfirm: _onConfirm }) => {
+export const InstallModal: React.FC<Props> = ({ isOpen, onClose, plugin, onConfirm }) => {
     const [selectedCaps, _setSelectedCaps] = useState<string[]>(['*']); // Default all for V1 simplicity
 
     if (!isOpen) return null;
