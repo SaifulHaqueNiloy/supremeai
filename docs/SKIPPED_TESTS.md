@@ -38,9 +38,13 @@ These actions are intentionally deferred because this session does not apply int
 - Run the complete skip inventory with the repository's canonical test command.
 - Verify whether Supabase-backed auth and `ai_memory` prerequisites are available.
 - Decide whether removed agent/conversation APIs should be restored, replaced, or retired.
-- Implement or formally retire the historical cognitive-router, generated-proto, and task-budget contracts after current-tree verification.
+- Implement or formally retire the generated-proto and task-budget contracts after current-tree verification.
 
-Until those actions are completed, skipped tests remain an explicit verification gap rather than a passing quality signal.
+### Cognitive-router decision record (2026-09-11)
+
+The full v2.0 decomposition API remains deferred because the current implementation intentionally exposes only `CognitiveRouter.route()`. Rather than allowing the legacy v2.0 suite to stand as a false quality signal, deterministic tests now cover the supported direct, decomposed, budget-aware, and factory contracts in `backend/tests/test_strategic_patches/test_cognitive_router_contract.py`. The legacy v2.0 suite remains skipped until its missing public types and execution engine are implemented or formally retired.
+
+Until the remaining actions are completed, skipped tests remain an explicit verification gap rather than a passing quality signal.
 
 ## Related records
 
