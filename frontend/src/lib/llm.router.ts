@@ -46,7 +46,7 @@ interface ProviderConfig {
   endpoint?: string;
 }
 
-const PROVIDERS: Record<LLMProvider, ProviderConfig> = {
+let PROVIDERS: Record<LLMProvider, ProviderConfig> = {
   gemini: {
     name: 'gemini',
     model: 'gemini-2.0-flash',  // ✅ FIXED: Correct model name
@@ -102,6 +102,27 @@ const dailyUsage: Record<LLMProvider, number> = {
 // Prompt deduplication cache
 const promptCache = new Map<string, { response: string; timestamp: number }>();
 const PROMPT_CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
+let runtimeConfigPromise: Promise<void> | null = null;
+
+export function loadRuntimeModelConfig(): Promise<void> {
+  if (!runtimeConfigPromise) {
+    runtimeConfigPromise = fetch('/api/config/public')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((config) => {
+        const models = config?.models as Record<string, string> | undefined;
+        if (!models) return;
+        PROVIDERS = {
+          ...PROVIDERS,
+          gemini: { ...PROVIDERS.gemini, model: models.chat?.split('/').pop() || PROVIDERS.gemini.model },
+          groq: { ...PROVIDERS.groq, model: models.general?.split('/').pop() || PROVIDERS.groq.model },
+          openai: { ...PROVIDERS.openai, model: models.chat?.split('/').pop() || PROVIDERS.openai.model },
+          anthropic: { ...PROVIDERS.anthropic, model: models.reasoning?.split('/').pop() || PROVIDERS.anthropic.model },
+        };
+      })
+      .catch(() => undefined);
+  }
+  return runtimeConfigPromise;
+}
 
 interface RouteRequest {
   prompt: string;
@@ -134,6 +155,7 @@ export class LLMSmartRouter {
   }
 
   async route(request: RouteRequest): Promise<RouteResponse> {
+    await loadRuntimeModelConfig();
     const { 
       prompt, 
       complexity = 'simple', 
