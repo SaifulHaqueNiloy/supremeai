@@ -35,10 +35,12 @@ def test_frontend_mcp_connector_uses_authenticated_client():
     component_source = (_REPO_ROOT / "frontend/src/components/plugins/MCPConnector.tsx").read_text(
         encoding="utf-8"
     )
+    viewer_source = (_REPO_ROOT / "frontend/src/services/mcpViewer.ts").read_text(encoding="utf-8")
     service_source = (_REPO_ROOT / "frontend/src/services/controlPlane.ts").read_text(
         encoding="utf-8"
     )
-    assert "Authorization: `Bearer ${token.trim()}`" in component_source
+    assert "Authorization: `Bearer ${token.trim()}`" in viewer_source
+    assert "loadMcpViewerData" in component_source
     assert "fetch('/api/v1/mcp/discover'" not in component_source
     assert "fetch('/api/v1/mcp/discover'" not in service_source
     assert "any[]" not in component_source
