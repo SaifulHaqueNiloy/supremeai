@@ -22,6 +22,12 @@ os.environ["TESTING"] = "true"
 os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
 os.environ["ALLOW_TEST_ORIGIN_BYPASS"] = "true"
 os.environ["ENV"] = "test"
+# ROOT-CAUSE FIX: get_current_platform_admin() (api/dependencies.py) checks the
+# bypass-issued admin subject against settings.admin_emails. Without this, the
+# test-bypass admin identity is never in the configured allowlist and every
+# platform-admin-gated route (e.g. /tools/*) 403s even with bypass enabled.
+os.environ.setdefault("ADMIN_EMAIL", "test_admin@supremeai.com")
+os.environ.setdefault("ADMIN_EMAILS", "test_admin@supremeai.com")
 
 # ROOT-CAUSE FIX: Ensure core.config is completely reloaded so Pydantic Settings
 # picks up the bypass env vars we just set.

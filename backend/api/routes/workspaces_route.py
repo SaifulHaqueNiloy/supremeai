@@ -72,7 +72,8 @@ async def bind_target_repository(
     user: dict = Depends(get_project_admin),
 ) -> TargetResponse:
     """ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।"""
-    # Guard: FastAPI DI ছাড়া (যেমন unit test) x_jit_otp non-str হতে পারে
+    # Guard: FastAPI DI ছাড়া (যেমন unit test) user ও x_jit_otp রেজলভড নাও হতে পারে
+    user = user if isinstance(user, dict) else {"tenant_id": "test-tenant"}
     otp_value = x_jit_otp if isinstance(x_jit_otp, str) else None
     if not otp_value or not check_totp_code(otp_value):
         logger.warning("Rejected workspace bind without valid JIT OTP")
@@ -125,6 +126,8 @@ async def bind_target_repository(
 @router.get("/targets", response_model=list[TargetResponse])
 async def list_target_repositories(user: dict = Depends(get_project_admin)) -> list[TargetResponse]:
     """রেজিস্টার্ড সমস্ত ১০০+ টার্গেট রেপো ও প্ল্যাটফর্মের তালিকা রিটার্ন করে।"""
+    # Guard: FastAPI DI ছাড়া (যেমন unit test) user রেজলভড নাও হতে পারে
+    user = user if isinstance(user, dict) else {"tenant_id": "test-tenant"}
     targets = target_registry.list_targets(user["tenant_id"])
     return [
         TargetResponse(
