@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
-import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
+import { ProtectedRoute, GuestRoute, useAuthStatus, AuthLoadingSpinner } from "./components/core/AuthGuards";
 import { RoleGuard, PermissionGuard } from "./components/core/guards/RoleGuard";
 import { resolveLandingPath } from './auth/identity';
 
@@ -64,10 +64,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// বাংলা (single-frontend migration, roadmap Phase 1): VITE_PORTAL_TYPE সম্পূর্ণ সরানো হয়েছে।
-// এখন একটাই build, একটাই route graph — User (/workspace/*) ও Admin (/admin/*) দুই-ই এই
-// অ্যাপের ভেতরে runtime auth + role দিয়ে serve হয়। Landing logic roadmap §6.3 অনুযায়ী:
-// Guest → /login · Authenticated User → /workspace · Authenticated Admin → /admin।
+// The public viewer is intentionally available before authentication: a shared URL is
+// enough to read data. Authentication and role checks remain for private workspaces;
+// admin step-up security stays isolated to /admin and must not leak into viewer routes.
 
 import { TranslationProvider } from './i18n/I18nProvider';
 

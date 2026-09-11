@@ -30,6 +30,8 @@ Do not introduce a new MCP server, memory server, client-side policy engine, dup
 ## User-first rules for future agents
 
 - Anonymous read-only viewing is the default. Never force login for a normal viewer journey unless the backend explicitly says the shared server is private.
+- The owner controls sharing and role choices. Do not silently downgrade an owner-selected role in the frontend; render the backend's allowed role and keep admin-only protection isolated to admin actions.
+- A shared MCP URL must be easy to copy and paste. Do not make users configure an account before copying or opening a URL.
 - Never make users log in again during ordinary navigation, refresh, reconnect, or data viewing. Preserve the existing session when authentication is genuinely required.
 - The viewer must not show a login form, account setup, security prompt, OTP, or permission dialog during the normal URL → Open → Read journey. If the shared server is private, explain that plainly and provide only the minimum access step required by the backend.
 - Treat zero-friction viewing as a product requirement: no forced account, no repeated authentication, no token field on the first screen, and no technical setup before the first data request.

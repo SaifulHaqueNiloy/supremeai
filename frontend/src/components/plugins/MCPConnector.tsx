@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Link2, ShieldCheck, X } from 'lucide-react';
+import { Check, Copy, Link2, X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { formatViewerValue, loadMcpViewerData, normalizeMcpUrl, type McpViewerData } from '../../services/mcpViewer';
@@ -53,6 +53,15 @@ export const MCPConnector: React.FC = () => {
   const [state, setState] = useState<ConnectionState>('idle');
   const [message, setMessage] = useState('');
   const [data, setData] = useState<McpViewerData | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copyServerUrl = async () => {
+    const normalizedUrl = normalizeMcpUrl(url);
+    if (!normalizedUrl) return;
+    await navigator.clipboard.writeText(normalizedUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   const connect = async () => {
     setState('connecting');
@@ -83,7 +92,13 @@ export const MCPConnector: React.FC = () => {
           <label className="flex flex-col gap-2 text-sm font-medium">
             MCP server URL
             <span className="font-normal leading-5 text-muted-foreground">যেমন: https://your-server.example.com/mcp</span>
-            <input value={url} onChange={(event) => { setUrl(event.target.value); setState('idle'); setMessage(''); }} placeholder="https://..." inputMode="url" autoComplete="url" aria-describedby="viewer-help" className="h-11 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input value={url} onChange={(event) => { setUrl(event.target.value); setState('idle'); setMessage(''); setCopied(false); }} placeholder="https://..." inputMode="url" autoComplete="url" aria-describedby="viewer-help" className="h-11 min-w-0 flex-1 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
+              <Button type="button" variant="secondary" onClick={() => void copyServerUrl()} disabled={!url.trim()} aria-label="Copy MCP server URL">
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'কপি হয়েছে' : 'URL কপি করুন'}
+              </Button>
+            </div>
           </label>
           <p id="viewer-help" className="text-xs leading-5 text-muted-foreground">Public server হলে আর কিছু লাগবে না। Private server হলে তবেই নিচের optional access field ব্যবহার করুন।</p>
           <details className="rounded-md border border-border/60 px-3 py-2 text-sm">
