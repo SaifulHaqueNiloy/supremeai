@@ -5,6 +5,7 @@ SupremeAI Mixture of Experts (MoE) Router — Facade Bridge to AdvancedModelRout
 
 from __future__ import annotations
 
+from core.config import settings
 from core.llm.advanced_model_router import (
     DomainExpertAnalyzer,
     ExpertType,
@@ -58,6 +59,7 @@ class SupremeMoERouter:
 
     def route(self, prompt: str) -> tuple[str, list[str]]:
         models = self.get_model_chain(prompt)
-        primary = models[0] if models else "groq/llama-3.3-70b-versatile"
+        default_fallback = getattr(settings, "model_general", "groq/llama-3.3-70b-versatile")
+        primary = models[0] if models else default_fallback
         fallbacks = models[1:] if len(models) > 1 else []
         return primary, fallbacks
