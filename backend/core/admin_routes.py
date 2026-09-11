@@ -205,6 +205,7 @@ async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Requ
     db = get_firestore_client()
     role = "user"
     totp_secret = None
+    totp_enabled = False
 
     if db:
         try:
@@ -214,9 +215,17 @@ async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Requ
                 data = doc.to_dict()
                 role = data.get("role", "user")
                 totp_secret = data.get("totp_secret")
+                totp_enabled = data.get("totp_enabled", False)
             elif email.lower() in [e.lower() for e in settings.admin_emails]:
                 role = "admin"
-                doc_ref.set({"email": email, "role": "admin", "created_at": str(time.time())})
+                doc_ref.set(
+                    {
+                        "email": email,
+                        "role": "admin",
+                        "created_at": str(time.time()),
+                        "totp_enabled": False,
+                    }
+                )
         except Exception as e:
             logger.critical(
                 f"Firestore admin lookup failed (Possible DB connection issue/attack): {e}"
@@ -239,12 +248,20 @@ async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Requ
             raise HTTPException(status_code=401, detail="Authentication token missing")
         return {"status": "trusted_browser", "uid": uid, "token": trusted_token}
 
+    # বাংলা মন্তব্য: Default password login gives direct dashboard access.
+    # TOTP is optional: only enforced if globally enabled via ADMIN_ENFORCE_TOTP or user opted in (totp_enabled: True).
+    enforce_totp = getattr(settings, "admin_enforce_totp", False) or totp_enabled
+    if not enforce_totp:
+        admin_jwt = await _issue_admin_jwt(uid)
+        if not admin_jwt:
+            raise HTTPException(status_code=500, detail="Failed to issue admin authorization token")
+        return {"status": "authenticated", "uid": uid, "token": admin_jwt, "role": "admin"}
+
     if not totp_secret:
         return {"status": "totp_setup_required", "uid": uid, "email": email}
 
     # বাংলা মন্তব্য: Frontend (frontend/src/store/adminStore.ts) `otp_required` অনুযায়ী
-    # status check করে OTP স্ক্রিনে যায়। Backend আগে `totp_required` পাঠাত যা frontend দিয়ে
-    # মেল করত না — ফলে valid token-এর পরেও UI login gate-এ আটকে থাকত। Contract match করানো হলো।
+    # status check করে OTP স্ক্রিনে যায়।
     return {"status": "otp_required", "uid": uid}
 
 
