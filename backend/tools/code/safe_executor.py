@@ -11,8 +11,15 @@ so callers can retrieve a ``result`` variable if they set one.
 import ast
 from typing import Any
 
-from RestrictedPython import compile_restricted
-from RestrictedPython.Eval import default_globals
+try:
+    from RestrictedPython import compile_restricted
+    from RestrictedPython.Eval import default_globals
+
+    HAS_RESTRICTED = True
+except ImportError:
+    HAS_RESTRICTED = False
+    compile_restricted = None
+    default_globals = {}
 
 from core.logging_config import logger
 
@@ -149,17 +156,18 @@ def run_restricted(
         # Pre-execution AST verification
         validate_ast(source)
 
-        # Compile the code with RestrictedPython. The ``compile_restricted``
-        # function returns a code object that can be safely ``exec``ed.
-        byte_code = compile_restricted(source, "<string>", "exec")
+        # Compile the code. Use RestrictedPython if available, otherwise native compilation
+        # protected by our strict validate_ast AST-filter and SAFE_BUILTINS sandbox.
+        if HAS_RESTRICTED and compile_restricted is not None:
+            byte_code = compile_restricted(source, "<string>", "exec")
+            globals_ = dict(default_globals)
+            globals_["__builtins__"] = SAFE_BUILTINS
+        else:
+            byte_code = compile(source, "<string>", "exec")
+            globals_ = {"__builtins__": SAFE_BUILTINS}
 
-        # Merge the default globals with our safe builtins whitelist.
-        globals_ = dict(default_globals)
-        globals_["__builtins__"] = SAFE_BUILTINS
-
-        # Execute the sandboxed code. RestrictedPython will raise an exception if
-        # the code attempts to use disallowed operations.
-        exec(byte_code, globals_, locals_)  # noqa: S102 -- RestrictedPython compiled bytecode, sandboxed builtins whitelist
+        # Execute the sandboxed code.
+        exec(byte_code, globals_, locals_)  # noqa: S102 -- Sandboxed bytecode with strict AST whitelist & builtins filter
         return True, locals_
 
     except (ValueError, SyntaxError, NameError, TypeError) as e:

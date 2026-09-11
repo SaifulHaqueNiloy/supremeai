@@ -4,43 +4,73 @@ try:
     import pandas as pd
 except ImportError:
     pd = None
-from google.cloud import vision
-from google.oauth2 import service_account
+
+try:
+    from google.cloud import vision
+    from google.oauth2 import service_account
+
+    HAS_GOOGLE_VISION = True
+except ImportError:
+    HAS_GOOGLE_VISION = False
+    vision = None
+    service_account = None
 
 from core.logging_config import logger
 
 
 def setup_google_vision(credentials_path=None):
-    """Setup Google Cloud Vision client"""
-    if credentials_path:
-        credentials = service_account.Credentials.from_service_account_file(credentials_path)
-        client = vision.ImageAnnotatorClient(credentials=credentials)
-    else:
-        # Try to use default credentials
-        client = vision.ImageAnnotatorClient()
-    return client
+    """Setup Google Cloud Vision client or return None if unavailable"""
+    if not HAS_GOOGLE_VISION or vision is None:
+        logger.info("Google Cloud Vision not installed; using local OCR fallback.")
+        return None
+    try:
+        if credentials_path:
+            credentials = service_account.Credentials.from_service_account_file(credentials_path)
+            return vision.ImageAnnotatorClient(credentials=credentials)
+        return vision.ImageAnnotatorClient()
+    except Exception as exc:
+        logger.warning(f"Could not initialize Google Vision client: {exc}")
+        return None
 
 
 def extract_text_from_image(client, image_path):
-    """Extract text from image using Google Cloud Vision API"""
-    with open(image_path, "rb") as image_file:
-        content = image_file.read()
+    """Extract text from image using Google Cloud Vision API, with fallback to LocalOCRExtractor"""
+    if not os.path.exists(image_path):
+        logger.error(f"Image path not found: {image_path}")
+        return ""
 
-    image = vision.Image(content=content)
+    if client is not None and HAS_GOOGLE_VISION and vision is not None:
+        try:
+            with open(image_path, "rb") as image_file:
+                content = image_file.read()
 
-    # Configure for Bengali text recognition
-    image_context = vision.ImageContext(language_hints=["bn"])  # Bengali language hint
+            image = vision.Image(content=content)
+            image_context = vision.ImageContext(language_hints=["bn"])
 
-    response = client.text_detection(image=image, image_context=image_context)
-    texts = response.text_annotations
+            response = client.text_detection(image=image, image_context=image_context)
+            texts = response.text_annotations
 
-    if response.error.message:
-        raise RuntimeError(f"API Error: {response.error.message}")
+            if response.error.message:
+                raise RuntimeError(f"API Error: {response.error.message}")
 
-    # Return the full text
-    if texts:
-        return texts[0].description
-    return ""
+            if texts:
+                return texts[0].description
+            return ""
+        except Exception as exc:
+            logger.warning(
+                f"Google Vision extraction failed: {exc}. Falling back to LocalOCRExtractor."
+            )
+
+    # Resilient local fallback via LocalOCRExtractor
+    try:
+        from tools.localization.local_ocr_extractor import LocalOCRExtractor
+
+        extractor = LocalOCRExtractor(languages=["bn", "en"])
+        result = extractor.extract_text(image_path)
+        return result.get("text", "")
+    except Exception as exc:
+        logger.error(f"Local OCR fallback failed: {exc}")
+        return ""
 
 
 def parse_table_text(text):
