@@ -125,12 +125,30 @@ def get_current_user_token(request: Request) -> dict:
     raise HTTPException(status_code=401, detail="Unauthorized")
 
 
+def _verified_subject(payload: dict) -> str:
+    subject = str(payload.get("sub") or payload.get("user_id") or payload.get("email") or "").strip()
+    if not subject:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token subject required")
+    return subject
+
+
 def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
     """Enforce the authenticated admin role for admin-facing routes."""
     if payload.get("role") != "admin":
-        logger.warning(f"Unauthorized admin access attempt by {payload.get('sub')}")
+        logger.warning("Unauthorized admin access attempt by %s", payload.get("sub"))
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
     return payload
+
+
+def get_project_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+    """Require a tenant-bound project administrator; never accept tenant headers."""
+    tenant_id = str(payload.get("tenant_id") or payload.get("org_id") or "").strip()
+    role = str(payload.get("role") or "").lower()
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
+    if role not in {"admin", "owner", "project_admin", "tenant_admin"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project administrator access required")
+    return {**payload, "tenant_id": tenant_id, "subject": _verified_subject(payload)}
 
 
 def get_current_platform_admin(payload: dict = Depends(get_current_admin)) -> dict:
@@ -177,8 +195,9 @@ def get_current_tenant(
     শুধুমাত্র যে রাউটে tenant context দরকার সেখানে ব্যবহার করুন।
     উদাহরণ: tenant_id: str = Depends(get_current_tenant)
     """
-    # JWT sub থেকে tenant_id বের করা (AuthMiddleware ইতিমধ্যে user সেট করেছে)
-    tenant_id = user.get("tenant_id") or user.get("sub", "anonymous")
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
     return tenant_id
 
 
@@ -247,7 +266,7 @@ async def verify_idempotency(request: Request) -> None:
     # পদ্ধতি: Request state-এ cleanup function store করা, যা response পাঠানোর পর call হবে
     async def cleanup_idempotency_lock():
         """Idempotency lock release করার জন্য callback।
-        বাংলা মন্তব্য: এটি response middleware দ্বারা call হবে।
+        বাংলা মন্তব্য: এটি response middleware ��্বারা call হবে।
         """
         try:
             from core.cache.redis_manager import release_idempotency_lock

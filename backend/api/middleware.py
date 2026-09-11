@@ -135,14 +135,8 @@ class TenantExtractionMiddleware(BaseHTTPMiddleware):
     """Attach tenant_id to request.state from X-Tenant-ID header or JWT."""
 
     async def dispatch(self, request: Request, call_next):
-        tenant_id = request.headers.get("X-Tenant-ID")
-        if not tenant_id:
-            user = getattr(request.state, "user", None)
-            if user:
-                tenant_id = user.get("sub", "anonymous")
-            else:
-                tenant_id = "anonymous"
-        request.state.tenant_id = tenant_id
+        user = getattr(request.state, "user", None)
+        request.state.tenant_id = (user or {}).get("tenant_id") or (user or {}).get("org_id")
         return await call_next(request)
 
 

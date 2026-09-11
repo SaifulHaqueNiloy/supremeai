@@ -262,6 +262,7 @@ def update_task_status(
     resolved_by: str,
     reason: str | None = None,
     expected_payload_hash: str | None = None,
+    tenant_id: str | None = None,
 ) -> PendingTask | None:
     """Atomically resolve a PENDING task (AUD-4.3/4.5/4.6).
 
@@ -284,7 +285,7 @@ def update_task_status(
 
     # AUD-4.4: verify payload integrity before deciding.
     cursor.execute(
-        "SELECT payload, payload_hash, status, expires_at FROM pending_tasks WHERE task_id = ?",
+        "SELECT payload, payload_hash, status, expires_at, tenant_id FROM pending_tasks WHERE task_id = ?",
         (task_id,),
     )
     row = cursor.fetchone()
@@ -312,9 +313,9 @@ def update_task_status(
         """
         UPDATE pending_tasks
         SET status = ?, resolved_by = ?, resolved_at = ?, reason = ?
-        WHERE task_id = ? AND status = ?
+        WHERE task_id = ? AND status = ? AND (? IS NULL OR tenant_id = ?)
         """,
-        (status, resolved_by, resolved_at, reason, task_id, TaskStatus.PENDING),
+        (status, resolved_by, resolved_at, reason, task_id, TaskStatus.PENDING, tenant_id, tenant_id),
     )
     if cursor.rowcount == 0:
         cursor.execute("SELECT status FROM pending_tasks WHERE task_id = ?", (task_id,))
@@ -409,9 +410,9 @@ def mark_executed(task_id: str, executed_by: str) -> PendingTask | None:
     return row_to_task(row) if row else None
 
 
-def cancel_task(task_id: str, cancelled_by: str, reason: str | None = None) -> PendingTask | None:
-    """Authoritative cancellation — only PENDING tasks can be cancelled (AUD-4.7)."""
-    return update_task_status(task_id, TaskStatus.CANCELLED, cancelled_by, reason)
+def cancel_task(task_id: str, cancelled_by: str, reason: str | None = None, tenant_id: str | None = None) -> PendingTask | None:
+    """Authoritative cancellation scoped to the owning tenant."""
+    return update_task_status(task_id, TaskStatus.CANCELLED, cancelled_by, reason, tenant_id=tenant_id)
 
 
 def row_to_task(row: sqlite3.Row) -> PendingTask:

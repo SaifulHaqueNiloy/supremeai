@@ -33,8 +33,13 @@ GITHUB_API_URL = "https://api.github.com"
 
 
 def _get_github_token() -> str:
-    """Get the current GitHub token from environment variables."""
-    # বাংলা মন্তব্য: settings-এ টোকেন না থাকলে os.environ থেকে রিড করা হবে
+    """Return only the centrally managed platform credential.
+
+    Tenant actions must use a governed connection reference; this legacy MCP
+    surface has no request-scoped tenant context, so it is platform-admin only.
+    """
+    if not is_admin_authorized():
+        return ""
     return getattr(settings, "github_token", "") or os.environ.get("GITHUB_TOKEN", "")
 
 

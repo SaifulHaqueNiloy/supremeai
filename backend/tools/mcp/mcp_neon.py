@@ -26,6 +26,8 @@ NEON_API_BASE = "https://console.neon.tech/api/v2"
 
 def _get_neon_db_url() -> str:
     """Neon Database URL রিটার্ন করে।"""
+    if not is_admin_authorized():
+        return ""
     return (
         os.environ.get("NEON_DATABASE_URL", "")
         or getattr(settings, "neon_database_url", "")
@@ -35,6 +37,8 @@ def _get_neon_db_url() -> str:
 
 def _get_neon_api_key() -> str:
     """Neon API Key রিটার্ন করে।"""
+    if not is_admin_authorized():
+        return ""
     return os.environ.get("NEON_API_KEY", "") or getattr(settings, "neon_api_key", "")
 
 

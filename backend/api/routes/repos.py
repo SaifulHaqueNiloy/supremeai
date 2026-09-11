@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
-from api.dependencies import get_current_user_token
+from api.dependencies import get_project_admin
 from database.supabase_client import db
 
 router = APIRouter(
     prefix="/repos",
     tags=["repos"],
-    dependencies=[Depends(get_current_user_token)],
+    dependencies=[Depends(get_project_admin)],
 )
 
 
@@ -45,10 +45,11 @@ async def list_repos(
     status: str = "active",
     limit: int = Query(default=50, le=200),
     offset: int = 0,
+    user: dict = Depends(get_project_admin),
 ):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
-    query = await db.client.table("github_repos").select("*").eq("status", status)
+    query = await db.client.table("github_repos").select("*").eq("status", status).eq("tenant_id", user["tenant_id"])
     if category:
         query = query.eq("category", category)
     if priority:
@@ -58,28 +59,29 @@ async def list_repos(
 
 
 @router.post("/")
-async def create_repo(payload: RepoCreate):
+async def create_repo(payload: RepoCreate, user: dict = Depends(get_project_admin)):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
     data = payload.dict(exclude_none=True)
+    data["tenant_id"] = user["tenant_id"]
     res = await db.client.table("github_repos").insert(data).execute()
     return {"status": "success", "repo": res.data[0] if res.data else data}
 
 
 @router.patch("/{repo_id}")
-async def update_repo(repo_id: str, payload: RepoUpdate):
+async def update_repo(repo_id: str, payload: RepoUpdate, user: dict = Depends(get_project_admin)):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
     data = payload.dict(exclude_none=True)
     if not data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    res = await db.client.table("github_repos").update(data).eq("id", repo_id).execute()
+    res = await db.client.table("github_repos").update(data).eq("id", repo_id).eq("tenant_id", user["tenant_id"]).execute()
     return {"status": "success", "repo": res.data[0] if res.data else None}
 
 
 @router.delete("/{repo_id}")
-async def delete_repo(repo_id: str):
+async def delete_repo(repo_id: str, user: dict = Depends(get_project_admin)):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")
-    await db.client.table("github_repos").update({"status": "archived"}).eq("id", repo_id).execute()
+    await db.client.table("github_repos").update({"status": "archived"}).eq("id", repo_id).eq("tenant_id", user["tenant_id"]).execute()
     return {"status": "success", "message": "Repo archived"}
