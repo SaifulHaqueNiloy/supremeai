@@ -31,18 +31,18 @@ def is_test_environment() -> bool:
 def is_admin_authorized() -> bool:
     """অ্যাডমিন অপারেশনের অনুমোদন আছে কিনা তা যাচাই করে।
 
-    ডিফল্টভাবে লোকাল ও ইন্টারনাল MCP প্রসেসের জন্য True রিটার্ন করে যাতে টুলগুলো আনব্লকড থাকে।
+    ADMIN_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
     if "ADMIN_AUTHORIZED" in os.environ:
-        return os.environ.get("ADMIN_AUTHORIZED", "").strip().lower() not in ("false", "0", "no")
-    return True
+        return os.environ.get("ADMIN_AUTHORIZED", "").strip().lower() in ("true", "1", "yes")
+    return bool(getattr(settings, "admin_authorized", False))
 
 
 def is_autofix_authorized() -> bool:
     """স্বয়ংক্রিয় ফিক্স অপারেশনের অনুমোদন আছে কিনা তা যাচাই করে।
 
-    ডিফল্টভাবে লোকাল ও ইন্টারনাল MCP প্রসেসের জন্য True রিটার্ন করে।
+    AUTOFIX_AUTHORIZED এনভায়রনমেন্ট ভ্যারিয়েবলের ভিত্তিতে সিদ্ধান্ত নেয়।
     """
     if "AUTOFIX_AUTHORIZED" in os.environ:
-        return os.environ.get("AUTOFIX_AUTHORIZED", "").strip().lower() not in ("false", "0", "no")
-    return True
+        return os.environ.get("AUTOFIX_AUTHORIZED", "").strip().lower() in ("true", "1", "yes")
+    return bool(getattr(settings, "autofix_authorized", False))
