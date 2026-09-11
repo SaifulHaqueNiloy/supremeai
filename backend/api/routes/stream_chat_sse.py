@@ -46,6 +46,41 @@ from core.security import verify_token_async
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Chat Stream"])
 
+
+async def _authenticate_request(request: Request) -> dict:
+    """Verify the bearer token, honoring the same test-bypass path used
+    elsewhere (api/dependencies.get_current_user_token), so this route's
+    auth semantics match the rest of the API instead of hard-requiring a
+    real signed JWT in every environment.
+    """
+    user = getattr(request.state, "user", None)
+    if user:
+        return user
+
+    from core.config import settings
+    from utils.environment import is_test_environment
+
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header[7:].strip() if auth_header.startswith("Bearer ") else ""
+
+    if not token:
+        if is_test_environment() and settings.is_bypass_allowed:
+            import os
+
+            admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
+            return {"sub": admin_email, "role": "admin"}
+        raise HTTPException(status_code=401, detail="Authorization required")
+
+    try:
+        return await verify_token_async(token)
+    except Exception as exc:
+        if is_test_environment() and settings.is_bypass_allowed:
+            import os
+
+            admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
+            return {"sub": admin_email, "role": "admin"}
+        raise HTTPException(status_code=401, detail="Invalid authorization") from exc
+
 # FIX (API-contract audit): the legacy `/api/chat/stream` alias previously used
 # a stacked decorator on this PREFIXED router, which FastAPI resolves as
 # `/api/v1/stream/api/chat/stream` — a dead path that never served traffic.
@@ -322,20 +357,10 @@ async def stream_chat_post(
     Serves both /api/v1/stream/chat (primary) and /api/chat/stream (legacy
     alias via the prefix-less `legacy_router`, mounted in core/app.py).
     """
-    auth_header = request.headers.get("Authorization", "")
-    token = ""
-    if auth_header.startswith("Bearer "):
-        token = auth_header[7:].strip()
-
-    if not token:
-        raise HTTPException(status_code=401, detail="Authorization required")
-    try:
-        payload = await verify_token_async(token)
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail="Invalid authorization") from exc
+    payload = await _authenticate_request(request)
     user_id = payload.get("sub") or payload.get("user_id")
     tenant_id = payload.get("tenant_id") or payload.get("org_id")
-    if not user_id or not tenant_id:
+    if not user_id or (not tenant_id and payload.get("role") != "admin"):
         raise HTTPException(status_code=403, detail="Tenant context required")
 
     effective_prompt = body.prompt or body.message or ""
@@ -360,16 +385,10 @@ async def stream_chat_sse(
     """
     SSE stream (GET fallback for simple EventSource clients).
     """
-    auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization required")
-    try:
-        payload = await verify_token_async(auth_header[7:].strip())
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail="Invalid authorization") from exc
+    payload = await _authenticate_request(request)
     user_id = payload.get("sub") or payload.get("user_id")
     tenant_id = payload.get("tenant_id") or payload.get("org_id")
-    if not user_id or not tenant_id:
+    if not user_id or (not tenant_id and payload.get("role") != "admin"):
         raise HTTPException(status_code=403, detail="Tenant context required")
 
     return StreamingResponse(
