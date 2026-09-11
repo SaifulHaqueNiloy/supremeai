@@ -1,4 +1,6 @@
 // Centralized API Client for SupremeAI 2.0
+// Viewer rule: keep ordinary page reads behind this boundary. The backend owns
+// authorization and policy; do not duplicate backend orchestration in components.
 // বাংলা মন্তব্য: এটি অ্যাপ্লিকেশনের সেন্ট্রাল এপিআই ক্লায়েন্ট যা হেডার, টোকেন এবং সিকিউর রেট লিমিট (429) / ভ্যালিডেশন এরর ইন্টারসেপ্ট করে।
 
 import { getApiBaseUrl } from '../utils/api';
