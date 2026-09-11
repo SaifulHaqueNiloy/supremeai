@@ -121,7 +121,13 @@ def test_audit_report_has_governance_metadata():
     assert report["generated_at"].endswith("Z")
     assert report["verification_command"]
     assert report["total"] == len(report["modules"])
-    valid_statuses = {"🟢 Operational", "🟡 Environment-Dependent", "🟠 Partially Wired", "🔴 Broken", "⚪ Planned"}
+    valid_statuses = {
+        "🟢 Operational",
+        "🟡 Environment-Dependent",
+        "🟠 Partially Wired",
+        "🔴 Broken",
+        "⚪ Planned",
+    }
     valid_decisions = {"retain", "review", "owner-review"}
     for module in report["modules"]:
         assert module["status"] in valid_statuses
