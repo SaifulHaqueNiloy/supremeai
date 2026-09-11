@@ -1,8 +1,8 @@
 # Database Migration Directory
 
-> **⚠️ This directory is now a migration archive.**
+> **⚠️ This directory contains legacy migration SQL pending archival.**
 >
-> All legacy hand-written SQL scripts have been moved to the `archive/` subdirectory.
+> The repository still contains legacy and manual SQL files here. They are retained for historical and recovery purposes, but they are not an approved production migration path. Archival is intentionally tracked as a separate governance change so no deployment references are broken silently.
 
 ## Canonical Migration System
 
