@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import importlib
 
+import pytest
+
 
 class TestDeploymentFallbackDefaults:
     def test_admin_url_default_exported(self):
@@ -75,3 +77,45 @@ class TestRouterWiring:
         from api.routers import ALL_ROUTERS
 
         assert any(r["path"] == "api.routes.health_aggregation" for r in ALL_ROUTERS)
+
+
+# ── Parity audit (2026-09-11): these functional routers existed but were never
+# registered in ALL_ROUTERS, so every endpoint 404'd at boot. These tests lock
+# the mounts in (same regression-guard pattern as the classes above).
+PARITY_AUDIT_ROUTERS = (
+    "tools.code.diagram_to_architecture",
+    "tools.code.voice_coder",
+    "tools.code.ai_pair_programmer",
+    "tools.self_planner",
+    "services.video_to_code_pipeline",
+    "agents.vulnerability_prophet",
+    "ws.command_center",
+)
+
+
+class TestParityAuditRouterWiring:
+    def test_parity_audit_routers_registered_in_all_routers(self):
+        from api.routers import ALL_ROUTERS
+
+        registered_paths = {r["path"] for r in ALL_ROUTERS}
+        missing = [p for p in PARITY_AUDIT_ROUTERS if p not in registered_paths]
+        assert not missing, f"Parity-audit routers missing from ALL_ROUTERS: {missing}"
+
+    @pytest.mark.parametrize("module_path", PARITY_AUDIT_ROUTERS)
+    def test_parity_router_modules_import_cleanly(self, module_path: str):
+        module = importlib.import_module(module_path)
+        assert hasattr(module, "router"), f"{module_path} must expose a 'router' attribute"
+
+    def test_agent_heartbeat_route_exists(self):
+        """Frontend useSwarmGraph/MockSwarmProvider poll /api/v1/health/agents."""
+        from api.routes.health import router as health_router
+
+        paths = {getattr(route, "path", None) for route in health_router.routes}
+        assert "/health/agents" in paths
+
+    def test_budget_check_route_exists(self):
+        """Frontend useBudgetCheck calls /api/billing/budget-check?estimated=..."""
+        from api.routes.billing_api import router as billing_router
+
+        paths = {getattr(route, "path", None) for route in billing_router.routes}
+        assert "/api/billing/budget-check" in paths

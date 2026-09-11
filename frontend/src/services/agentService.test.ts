@@ -34,7 +34,7 @@ describe('agentService', () => {
       agents: [{ id: 'a' }],
     });
     const res = await agentService.listAgents();
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/agents/');
+    expect(apiClient.get).toHaveBeenCalledWith('/api/agents/');
     expect(res).toHaveLength(1);
   });
 
@@ -43,7 +43,7 @@ describe('agentService', () => {
       status: 'running',
     });
     const res = await agentService.getAgentStatus('a1');
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/agents/a1/status');
+    expect(apiClient.get).toHaveBeenCalledWith('/api/agents/a1/status');
     expect(res.status).toBe('running');
   });
 });

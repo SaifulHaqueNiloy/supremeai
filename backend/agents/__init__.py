@@ -64,6 +64,12 @@ try:
     from .vulnerability_prophet import VulnerabilityProphet
 except ImportError:
     VulnerabilityProphet = None
+try:
+    from .code_vulnerability_scanner_agent import CodeVulnerabilityScannerAgent
+except ImportError:
+    CodeVulnerabilityScannerAgent = None
+from .code_vulnerability_scanner_agent import CodeVulnerabilityScannerAgent
+from .data_trend_anomaly_agent import DataTrendAnomalyAgent
 from .headless_terminal_agent import HeadlessTerminalAgent
 from .insight_mage import InsightMage
 from .internet_monitor_agent import InternetMonitorAgent
@@ -73,10 +79,13 @@ from .sentinel_agent import SentinelAgent
 from .skill_gc import SkillGarbageCollector
 from .skill_ingestor import SkillIngestor
 from .skill_librarian import SkillLibrarian
+from .user_retention_risk_agent import UserRetentionRiskAgent
 from .vulnerability_prophet import VulnerabilityProphet
 
 __all__ = [
     "ChurnProphet",
+    "CodeVulnerabilityScannerAgent",
+    "DataTrendAnomalyAgent",
     "EphemeralExecutor",
     "ExecutionResult",
     "ExecutionStatus",
@@ -91,5 +100,6 @@ __all__ = [
     "SkillGarbageCollector",
     "SkillIngestor",
     "SkillLibrarian",
+    "UserRetentionRiskAgent",
     "VulnerabilityProphet",
 ]

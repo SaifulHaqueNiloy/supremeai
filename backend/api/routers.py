@@ -292,6 +292,38 @@ ALL_ROUTERS = [
     {"path": "api.routes.plugins", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.selector_healing", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.webhooks_ai", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── AUDIT-WIRE FIX 2 (backend/frontend parity audit, 2026-09-11): এই ৭টি মডিউলের
+    # কার্যকর APIRouter ছিল কিন্তু রেজিস্ট্রিতে ছিল না — তাদের সব এন্ডপয়েন্ট বুটে 404 দিত।
+    # মাউন্ট-নোট: প্রতিটির নিজস্ব APIRouter prefix আছে (/diagram, /voice, /pair, /agent,
+    # /video-to-code, /security/vulnerabilities, /ws/command-center) — তাই রেজিস্ট্রি
+    # prefix অবশ্যই "" (নইলে URL দ্বিগুণ হয়ে যায়)।
+    # নিরাপত্তা নোট:
+    #   - vulnerability_prophet প্রতিটি রুটে নিজস্ব admin গার্ড (_require_admin) এনফোর্স করে।
+    #   - voice_coder-এ WebSocket রুট আছে; HTTP-only রেজিস্ট্রি-লেভেল টোকেন ডিপেন্ডেন্সি
+    #     (is_admin=True) WS handshake ভেঙে দিত, তাই sibling tool-router প্যাটার্ন
+    #     (image_to_code/style_learner-এর মতো is_admin=False) অনুসরণ করা হয়েছে।
+    {
+        "path": "tools.code.diagram_to_architecture",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "tools.code.voice_coder", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "tools.code.ai_pair_programmer",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "tools.self_planner", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "services.video_to_code_pipeline",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {"path": "agents.vulnerability_prophet", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "ws.command_center", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 

@@ -3,9 +3,10 @@ import { getApiBaseUrl } from '../../utils/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { PluginMarketplace } from './plugins/PluginMarketplace';
+import { MCPConnector } from '../../components/plugins/MCPConnector';
 
 export const IntegrationsManager: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'plugins' | 'system'>('plugins');
+  const [activeTab, setActiveTab] = useState<'plugins' | 'mcp' | 'system'>('plugins');
   const [githubStatus] = useState<'Disconnected' | 'Connected'>('Disconnected');
 
   const handleGithubConnect = () => {
@@ -23,6 +24,12 @@ export const IntegrationsManager: React.FC = () => {
           Plugin Marketplace (V2.1)
         </button>
         <button
+          className={`py-3 px-6 font-medium text-sm focus:outline-none ${activeTab === 'mcp' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('mcp')}
+        >
+          MCP Servers
+        </button>
+        <button
           className={`py-3 px-6 font-medium text-sm focus:outline-none ${activeTab === 'system' ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}
           onClick={() => setActiveTab('system')}
         >
@@ -32,6 +39,10 @@ export const IntegrationsManager: React.FC = () => {
 
       {activeTab === 'plugins' ? (
         <PluginMarketplace />
+      ) : activeTab === 'mcp' ? (
+        <div className="px-8 pb-12">
+          <MCPConnector />
+        </div>
       ) : (
         <div className="p-8 max-w-7xl mx-auto space-y-8">
           <div>

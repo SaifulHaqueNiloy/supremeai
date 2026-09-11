@@ -23,10 +23,10 @@ export const agentService = {
   },
 
   listAgents: async (): Promise<unknown[]> => {
-    return apiClient.get<{ agents: unknown[] }>('/api/v1/agents/').then((response) => response.agents);
+    return apiClient.get<{ agents: unknown[] }>('/api/agents/').then((response) => response.agents);
   },
 
   getAgentStatus: async (agentId: string): Promise<{ status: string }> => {
-    return apiClient.get<{ status: string }>(`/api/v1/agents/${agentId}/status`);
+    return apiClient.get<{ status: string }>(`/api/agents/${agentId}/status`);
   },
 };
