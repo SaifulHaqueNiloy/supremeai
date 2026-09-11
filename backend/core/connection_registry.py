@@ -24,6 +24,7 @@ class ConnectionRecord(BaseModel):
     permission_level: str = "user"
     status: str = "active"
     capabilities: list[dict[str, Any]] = Field(default_factory=list)
+    tool_permissions: dict[str, str] = Field(default_factory=dict)
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: str
     updated_at: str
@@ -47,6 +48,7 @@ class ConnectionRegistry:
                     permission_level TEXT NOT NULL DEFAULT 'user',
                     status TEXT NOT NULL,
                     capabilities TEXT NOT NULL DEFAULT '{{}}',
+                    tool_permissions TEXT NOT NULL DEFAULT '{{}}',
                     metadata TEXT NOT NULL DEFAULT '{{}}',
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
@@ -56,6 +58,9 @@ class ConnectionRegistry:
             conn.execute(
                 f"CREATE INDEX IF NOT EXISTS idx_{self.TABLE}_tenant ON {self.TABLE}(tenant_id)"
             )
+            columns = {row[1] for row in conn.execute(f"PRAGMA table_info({self.TABLE})")}
+            if "tool_permissions" not in columns:
+                conn.execute(f"ALTER TABLE {self.TABLE} ADD COLUMN tool_permissions TEXT NOT NULL DEFAULT '{{}}'")
             conn.commit()
 
     @staticmethod
@@ -81,6 +86,7 @@ class ConnectionRegistry:
         capabilities: list[dict[str, Any]],
         name: str | None = None,
         permission_level: str = "user",
+        tool_permissions: dict[str, str] | None = None,
     ) -> ConnectionRecord:
         tenant_id, actor_id, _ = self._identity(user)
         if not MCPSecurityGuard.is_safe_url(url, enforce_https=False):
@@ -100,6 +106,7 @@ class ConnectionRegistry:
             name=name or urlparse(url).hostname or "mcp-server",
             permission_level=permission_level,
             capabilities=capabilities,
+            tool_permissions=tool_permissions or {},
             created_at=now,
             updated_at=now,
         )
@@ -107,14 +114,15 @@ class ConnectionRegistry:
             conn.execute(
                 f"""INSERT INTO {self.TABLE}
                 (id, tenant_id, actor_id, url, name, connection_type,
-                 permission_level, status, capabilities, metadata, created_at, updated_at)
+                 permission_level, status, capabilities, tool_permissions, metadata, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(tenant_id, url) DO UPDATE SET
                  capabilities=excluded.capabilities, name=excluded.name,
                  updated_at=excluded.updated_at, status='active'""",
                 (record.id, record.tenant_id, record.actor_id, str(record.url), record.name,
                  record.connection_type, record.permission_level, record.status,
-                 jdump(record.capabilities), jdump(record.metadata), record.created_at, record.updated_at),
+                 jdump(record.capabilities), jdump(record.tool_permissions), jdump(record.metadata),
+                 record.created_at, record.updated_at),
             )
             conn.commit()
             stored_row = conn.execute(
@@ -172,6 +180,42 @@ class ConnectionRegistry:
         ))
         return self._from_row(row)
 
+    def set_tool_permissions(
+        self,
+        *,
+        user: dict[str, Any],
+        connection_id: str,
+        tool_permissions: dict[str, str],
+    ) -> ConnectionRecord:
+        tenant_id, _, role = self._identity(user)
+        if role not in {"admin", "owner", "system"}:
+            raise PermissionError("Only tenant administrators can change tool permissions")
+        if any(level not in {"deny", "read", "execute", "write"} for level in tool_permissions.values()):
+            raise ValueError("Tool permission must be deny, read, execute, or write")
+        with get_conn() as conn:
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            if row is None:
+                raise LookupError("Connection not found")
+            conn.execute(
+                f"UPDATE {self.TABLE} SET tool_permissions = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
+                (jdump(tool_permissions), datetime.now(UTC).isoformat(), connection_id, tenant_id),
+            )
+            updated = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            conn.commit()
+        get_audit_logger().log(MCPAuditEntry(
+            tool_name="mcp.connection.tool_permissions",
+            decision="allow",
+            risk_level="high",
+            tenant_id=tenant_id,
+        ))
+        return self._from_row(updated)
+
     def revoke(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
         tenant_id, _, role = self._identity(user)
         if role not in {"admin", "owner", "system"}:
@@ -210,7 +254,9 @@ class ConnectionRegistry:
             id=row["id"], tenant_id=row["tenant_id"], actor_id=row["actor_id"], url=row["url"],
             name=row["name"], connection_type=row["connection_type"],
             permission_level=row["permission_level"], status=row["status"],
-            capabilities=jload(row["capabilities"], []), metadata=jload(row["metadata"], {}),
+            capabilities=jload(row["capabilities"], []),
+            tool_permissions=jload(row["tool_permissions"], {}),
+            metadata=jload(row["metadata"], {}),
             created_at=row["created_at"], updated_at=row["updated_at"],
         )
 

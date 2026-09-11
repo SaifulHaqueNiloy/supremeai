@@ -18,6 +18,10 @@ class MCPPermissionRequest(BaseModel):
     permission_level: str
 
 
+class MCPToolPermissionRequest(BaseModel):
+    tool_permissions: dict[str, str]
+
+
 @router.post("/discover")
 async def discover_mcp_server(
     req: MCPConnectRequest,
@@ -60,6 +64,28 @@ async def update_mcp_permission(
             user=user,
             connection_id=connection_id,
             permission_level=req.permission_level,
+        )
+        return {"status": "success", "connection": connection.model_dump(mode="json")}
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.patch("/connections/{connection_id}/tools")
+async def update_mcp_tool_permissions(
+    connection_id: str,
+    req: MCPToolPermissionRequest,
+    user: dict = Depends(get_current_user_token),
+):
+    """Allow a tenant administrator to set capability-level tool permissions."""
+    try:
+        connection = connection_registry.set_tool_permissions(
+            user=user,
+            connection_id=connection_id,
+            tool_permissions=req.tool_permissions,
         )
         return {"status": "success", "connection": connection.model_dump(mode="json")}
     except PermissionError as exc:
