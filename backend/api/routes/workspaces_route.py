@@ -15,7 +15,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, status
 from pydantic import BaseModel, Field
 
-from api.dependencies import get_current_admin
+from api.dependencies import get_project_admin
 from core.logging_config import logger
 from core.repo_manager import repo_manager
 from core.target_registry import (
@@ -29,7 +29,7 @@ from tools.social.telegram_security import check_totp_code
 router = APIRouter(
     prefix="/admin-api/workspaces",
     tags=["Admin Workspaces"],
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(get_project_admin)],
 )
 
 

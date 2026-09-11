@@ -21,7 +21,7 @@ from pydantic import BaseModel
 
 from core.code_validator import AICodeValidator
 from core.logging_config import logger
-from core.security.authentication.auth_middleware import verify_admin_session_fail_closed
+from api.dependencies import get_project_admin
 from core.security.ws_auth import authenticate_websocket
 from models.pending_tasks import (
     ApprovalStateError,
@@ -98,7 +98,7 @@ def _audit(event: str, task_id: str, actor: str, outcome: str, detail: str | Non
 
 @router.get("/pending")
 def get_pending(
-    _: dict = Depends(verify_admin_session_fail_closed),
+    user: dict = Depends(get_project_admin),
 ) -> list[dict[str, Any]]:
     """Get all pending tasks - REQUIRES admin authentication."""
     return [t.model_dump() for t in list_pending()]
@@ -108,7 +108,7 @@ def get_pending(
 def approve_task(
     task_id: str,
     req: ApproveRequest,
-    _: dict = Depends(verify_admin_session_fail_closed),
+    user: dict = Depends(get_project_admin),
 ) -> dict[str, Any]:
     """Approve a pending task - REQUIRES admin authentication."""
     _audit("request", task_id, req.resolved_by, "received")
@@ -179,7 +179,7 @@ def approve_task(
 def reject_task(
     task_id: str,
     req: ApproveRequest,
-    _: dict = Depends(verify_admin_session_fail_closed),
+    user: dict = Depends(get_project_admin),
 ) -> dict[str, Any]:
     """Reject a pending task - REQUIRES admin authentication."""
     try:
@@ -205,7 +205,7 @@ def reject_task(
 def cancel_task_route(
     task_id: str,
     req: ApproveRequest,
-    _: dict = Depends(verify_admin_session_fail_closed),
+    user: dict = Depends(get_project_admin),
 ) -> dict[str, Any]:
     """Authoritative cancellation (AUD-4.7) - REQUIRES admin authentication."""
     try:

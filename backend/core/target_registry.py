@@ -39,6 +39,7 @@ class TargetEntity:
     """একটি রেজিস্টার্ড টার্গেট রেপো বা প্ল্যাটফর্ম অবজেক্ট।"""
 
     id: str
+    tenant_id: str | None
     name: str
     target_type: TargetPlatformType
     url: str
@@ -68,6 +69,7 @@ class TargetPlatformRegistry:
         """বাংলা মন্তব্য: ডিফল্ট মেইন রেপোকে READ_ONLY স্কোপে রেজিস্টার করে আইসোলেশন নিশ্চিত করা।"""
         main_target = TargetEntity(
             id="main-repository",
+            tenant_id=None,
             name="SupremeAI Main Codebase",
             target_type=TargetPlatformType.GIT_REPOSITORY,
             url="origin/main",
