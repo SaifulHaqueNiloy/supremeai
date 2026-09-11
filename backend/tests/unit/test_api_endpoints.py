@@ -50,14 +50,17 @@ class TestHealthEndpoints:
         assert "status" in data
 
     @pytest.mark.unit
-    @pytest.mark.skip(reason="Metrics moved to admin router /api/admin/metrics")
-    async def test_metrics_endpoint(self, client: AsyncClient):
-        """Test Prometheus metrics endpoint."""
-        response = await client.get("/metrics")
+    async def test_metrics_endpoint(self, client: AsyncClient, admin_auth_headers: dict):
+        """Test Prometheus metrics endpoint at canonical /api/admin/metrics."""
+        response = await client.get("/api/admin/metrics", headers=admin_auth_headers)
 
         assert response.status_code == 200
         # Should contain Prometheus-format metrics
-        assert "http_requests_total" in response.text or "process_" in response.text
+        assert (
+            "http_requests_total" in response.text
+            or "process_" in response.text
+            or "supremeai_" in response.text
+        )
 
 
 class TestAuthenticationEndpoints:
