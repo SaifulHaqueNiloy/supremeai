@@ -11,8 +11,6 @@ import { eventBus, Events } from '../../lib/componentEventBus';
 import { Volume2, VolumeX, Share2 } from 'lucide-react';
 
 import { ShareDialog } from '../share/ShareDialog';
-import { ThinkingPanel } from '../reasoning/ThinkingPanel';
-import { ArtifactsPanel } from '../artifacts/ArtifactsPanel';
 import { ImageUploadButton } from './ImageUploadButton';
 import ExportMenu from '../export/ExportMenu';
 import BranchButton from '../branch/BranchButton';
@@ -24,8 +22,6 @@ export const ChatInterface: React.FC = () => {
   const { chatHistory, addMessage, isOrchestrating, triggerOrchestration } = useStore();
   const {
     shareDialogOpen, shareConversationId, closeShareDialog, openShareDialog,
-    showReasoning, reasoningSteps, isThinking,
-    artifactsPanelOpen, activeArtifactId, artifacts, selectArtifact, setArtifactsPanelOpen,
     slashMenuOpen, closeSlashMenu, slashFilter, slashPosition, openSlashMenu,
     searchDialogOpen, closeSearchDialog, openSearchDialog,
   } = useTierSStore();
@@ -33,7 +29,6 @@ export const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [audioQueue, setAudioQueue] = useState<string[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,13 +45,6 @@ export const ChatInterface: React.FC = () => {
     });
   });
 
-  // Listen for voice messages ready
-  useEventBus(Events.VOICE_MESSAGE_READY, (data: any) => {
-    if (voiceEnabled && data.audioUrl) {
-      setAudioQueue(prev => [...prev, data.audioUrl]);
-    }
-  });
-  
   // Listen for browser context sharing
   useEventBus(Events.CHAT_MESSAGE_SENT, (data: any) => {
     if (data.source === 'browser_context' && data.content) {

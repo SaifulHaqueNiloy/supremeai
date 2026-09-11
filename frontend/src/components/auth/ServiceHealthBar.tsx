@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -169,7 +169,7 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
       }
     } catch (fallbackError) {
       // Fall through to the user-facing connection state below.
-      console.debug?.('Fallback health check skipped:', fallbackError);
+      console.warn('Fallback health check skipped:', fallbackError);
     }
 
     if (error instanceof DOMException && error.name === 'AbortError') {
@@ -199,8 +199,6 @@ export const ServiceHealthBar: React.FC = () => {
   const overallStatus = data?.status || (isError ? 'unhealthy' : 'loading');
   const isHealthy = overallStatus === 'healthy';
   const isDegraded = overallStatus === 'degraded';
-  const isUnhealthy = overallStatus === 'unhealthy';
-
   // Subtle label for public users
   const publicStatusLabel = isLoading
     ? 'Connecting to Node...'
