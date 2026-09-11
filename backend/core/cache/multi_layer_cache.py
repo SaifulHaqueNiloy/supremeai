@@ -15,6 +15,7 @@ import json
 import os
 import threading
 import time  # - Added for performance metrics
+from collections import OrderedDict
 from typing import Any
 
 from core.messaging.event_bus import ErrorContext
@@ -57,12 +58,18 @@ class _InMemoryRedisStub:
     _MAX_VALUE_BYTES = 50 * 1024  # 50 KB max value size
 
     def __init__(self):
-        from collections import OrderedDict
-
-        self._store: OrderedDict = OrderedDict()
+        self._store: OrderedDict[str, tuple[float, str]] = OrderedDict()
 
     async def get(self, key: str) -> str | None:
-        return self._store.get(key)
+        item = self._store.get(key)
+        if item is None:
+            return None
+        expires_at, value = item
+        if expires_at <= time.monotonic():
+            self._store.pop(key, None)
+            return None
+        self._store.move_to_end(key)
+        return value
 
     async def setex(self, key: str, ttl: int, value: str):
         # REVISION 2: Enforce MAX_VALUE_BYTES
@@ -72,14 +79,15 @@ class _InMemoryRedisStub:
             )
             return
 
-        self._store[key] = value
+        self._store[key] = (time.monotonic() + max(0, ttl), value)
+        self._store.move_to_end(key)
         # MEMLEAK-003 FIX: Evict oldest when store exceeds max size
         if len(self._store) > self._MAX_STORE_SIZE:
             self._store.popitem(last=False)
 
     async def mget(self, keys: list[str]) -> list[str | None]:
         # বাংলা মন্তব্ব্য: ব্যাচ রিড সাপোর্ট করার জন্য স্টাব ক্লাসে mget মেথড যোগ করা হলো।
-        return [self._store.get(k) for k in keys]
+        return [await self.get(key) for key in keys]
 
     async def pipeline(self, transaction=False):
         """Mock pipeline for stub implementation."""
@@ -94,7 +102,7 @@ class _PipelineStub:
         self.commands = []
 
     async def setex(self, key: str, ttl: int, value: str):
-        self.store[key] = value
+        self.commands.append(lambda: self.store.__setitem__(key, (time.monotonic() + max(0, ttl), value)))
         return self
 
     async def execute(self):
@@ -121,6 +129,7 @@ class MultiLayerCache:
     def __init__(self):
         self.local_cache_hits = 0
         self.local_cache_misses = 0
+        self._redis_cache = None
         self._exact_cache = None
         self._prefix_cache = None
         self._semantic_cache = None
@@ -133,22 +142,23 @@ class MultiLayerCache:
             "misses": 0,
         }
 
+    def _get_redis_cache(self):
+        if self._redis_cache is None:
+            try:
+                self._redis_cache = _get_redis_client()
+            except RuntimeError as e:
+                logger.warning(f"Cache Redis unavailable: {e}. Using in-memory stub.")
+                self._redis_cache = _InMemoryRedisStub()
+        return self._redis_cache
+
     def _get_exact_cache(self):
         if self._exact_cache is None:
-            try:
-                self._exact_cache = _get_redis_client()
-            except RuntimeError as e:
-                logger.warning(f"Exact cache Redis unavailable: {e}. Using in-memory stub.")
-                self._exact_cache = _InMemoryRedisStub()
+            self._exact_cache = self._get_redis_cache()
         return self._exact_cache
 
     def _get_prefix_cache(self):
         if self._prefix_cache is None:
-            try:
-                self._prefix_cache = _get_redis_client()
-            except RuntimeError as e:
-                logger.warning(f"Prefix cache Redis unavailable: {e}. Using in-memory stub.")
-                self._prefix_cache = _InMemoryRedisStub()
+            self._prefix_cache = self._get_redis_cache()
         return self._prefix_cache
 
     def _get_semantic_cache(self):
