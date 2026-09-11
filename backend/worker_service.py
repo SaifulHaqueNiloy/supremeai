@@ -467,13 +467,14 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
             response = await client.post(f"{scraper_url}/scrape", json={"url": url})
             response.raise_for_status()
             return {
-        "capability": capability,
-        "tenant_id": contract.tenant_id,
-        "user_id": contract.user_id,
-        "execution_id": contract.execution.execution_id if contract.execution else None,
-        "trace_id": contract.execution.trace_id if contract.execution else contract.correlation_id,
-        "data": response.json(),
-
+                "capability": capability,
+                "tenant_id": contract.tenant_id,
+                "user_id": contract.user_id,
+                "execution_id": contract.execution.execution_id if contract.execution else None,
+                "trace_id": contract.execution.trace_id
+                if contract.execution
+                else contract.correlation_id,
+                "data": response.json(),
             }
     if capability != "acknowledge":
         raise ValueError(f"Unsupported worker capability: {capability}")

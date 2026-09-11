@@ -50,9 +50,7 @@ async def enforce_tenant_rate_limit(request: Request):
         current_hits = results[0]
 
         if current_hits > 100:
-            logger.critical(
-                f"🚨 Rate Limit Exceeded for Tenant: {tenant_id} ({current_hits} hits)!"
-            )
+            logger.critical(f"🚨 Rate Limit Exceeded for {identity} ({current_hits} hits)!")
             raise HTTPException(status_code=429, detail="Too Many Requests. Rate limit exceeded.")
     except HTTPException:
         raise

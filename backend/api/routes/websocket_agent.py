@@ -481,7 +481,9 @@ async def websocket_chat_endpoint(
     user_id = auth_payload.get("sub")
     tenant_id = auth_payload.get("tenant_id") or auth_payload.get("org_id")
     if not user_id or not tenant_id:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Tenant context required")
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION, reason="Tenant context required"
+        )
         return
     connected = await manager.connect(websocket, user_id, client_ip)
     if not connected:

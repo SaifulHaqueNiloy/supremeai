@@ -1,6 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
+import sys
+
+# বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে — core.* import করার আগেই sys.path এ backend/ যোগ করা আবশ্যক
+_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _BACKEND_DIR not in sys.path:
+    sys.path.insert(0, _BACKEND_DIR)
 
 #!/usr/bin/env python3
 """
@@ -51,19 +58,12 @@ Tools (MCP protocol):
 
 import asyncio
 import json
-import os
-import sys
 import time
 from typing import Any
 
 from core.logging_config import logger
 from core.mcp_audit import audit_tool_call
 from core.mcp_policy import evaluate_tool
-
-# বাংলা মন্তব্য: Python path ঠিক করা হচ্ছে যাতে backend/ modules import করা যায়
-_BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _BACKEND_DIR not in sys.path:
-    sys.path.insert(0, _BACKEND_DIR)
 
 try:
     import mcp.types as types
@@ -1174,13 +1174,35 @@ async def main() -> None:
     বাংলা মন্তব্য: MEMORY_MCP_TRANSPORT env var দেখে transport নির্ধারণ করা হয়।
     - stdio: Claude Desktop, Cursor, VS Code এর জন্য (default)
     - sse:   HTTP-based remote deployment এর জন্য
-    """
-    logging.basicConfig(
-        level=logging.WARNING,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
 
+    CRITICAL (Unified Gateway): stdio mode-এ stdout শুধুমাত্র MCP JSON-RPC
+    frames-এর জন্য সংরক্ষিত। সমস্ত logging অবশ্যই stderr-এ যাবে — নইলে
+    Control Tower-এর StdioClientTransport handshake ভেঙে যায়।
+    """
     transport = os.getenv("MEMORY_MCP_TRANSPORT", "stdio").lower()
+
+    if transport == "stdio":
+        # stdout MUST stay pure for MCP frames → log only to stderr.
+        logging.basicConfig(
+            level=logging.WARNING,
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            stream=sys.stderr,
+            force=True,
+        )
+        # loguru (imported via core.*) defaults to stdout — redirect to stderr.
+        try:
+            from loguru import logger as _loguru
+
+            _loguru.remove()
+            _loguru.add(sys.stderr, level="WARNING")
+        except Exception:
+            pass
+    else:
+        logging.basicConfig(
+            level=logging.WARNING,
+            format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        )
+
     logger.info(f"Starting SupremeAI Memory MCP Server (transport={transport})")
 
     server = build_server()
