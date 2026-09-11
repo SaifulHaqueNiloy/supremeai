@@ -12,16 +12,17 @@ const { useAuthStore } = await import('../store/authStore');
 
 function setAdminJwt(payload: Record<string, unknown> | null) {
   if (!payload) {
-    localStorage.removeItem('supreme_admin_jwt');
+    sessionStorage.removeItem('supreme_admin_jwt');
     return;
   }
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  localStorage.setItem('supreme_admin_jwt', `${header}.${body}.sig`);
+  sessionStorage.setItem('supreme_admin_jwt', `${header}.${body}.sig`);
 }
 
 describe('identity', () => {
   beforeEach(() => {
+    sessionStorage.clear();
     localStorage.clear();
     vi.clearAllMocks();
   });
@@ -55,7 +56,7 @@ describe('identity', () => {
     });
 
     it('returns null for malformed tokens', () => {
-      localStorage.setItem('supreme_admin_jwt', 'not-a-jwt');
+      sessionStorage.setItem('supreme_admin_jwt', 'not-a-jwt');
       expect(readAdminJwtClaims()).toBeNull();
     });
   });
