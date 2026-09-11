@@ -10,7 +10,7 @@ The **only active migration system** for SupremeAI is **Alembic**, located at `b
 
 ## Ownership Boundary
 
-Alembic is the only migration system allowed to change deployed schemas. The SQL files in the `archive/` subdirectory (and `legacy/` before them) are **immutable historical references** and must not receive new migrations.
+Alembic is the only migration system allowed to change deployed schemas. The SQL files currently under `backend/database/migrations/` are retained as historical or DBA-reviewed material and must not receive new production migrations until the archival move described below is completed. The `legacy/` and `manual/` trees are not active application migration paths.
 
 ## Directory Structure
 
@@ -18,14 +18,10 @@ Alembic is the only migration system allowed to change deployed schemas. The SQL
 backend/database/
 ├── migrations/
 │   ├── README.md          ← This file
-│   ├── archive/           ← Legacy SQL scripts (17 files, historical reference only)
-│   │   ├── 01_initial_setup.sql
-│   │   ├── 02_phase2_setup.sql
-│   │   ├── ... (15 more)
-│   │   └── 21_render_account_preflight.sql
-│   ├── legacy/            ← Earlier legacy scripts (pre-archive)
-│   └── manual/            ├── Manual migration scripts (for DBA use)
-├── alembic_migrations/    ← ✅ CANONICAL — All new migrations go here
+│   ├── *.sql              ← Historical SQL scripts pending archival
+│   ├── legacy/            ← Earlier legacy scripts (historical only)
+│   └── manual/            ← Manual migration scripts (DBA review only)
+├── ../alembic_migrations/ ← ✅ CANONICAL — All new migrations go here
 │   ├── env.py
 │   ├── script.py.mako
 │   └── versions/          ← 18 Alembic migration files
