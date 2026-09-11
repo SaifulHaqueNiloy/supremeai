@@ -1,7 +1,7 @@
 # SupremeAI - Comprehensive List of Modules
 
 Total Modules: **194**
-**Truthful Operational Wiring Audit Summary (2026-09-11T12:25:03Z):**
+**Truthful Operational Wiring Audit Summary (2026-09-11T15:50:56Z):**
 - 🟢 **Operational:** 126 modules (Importable + active inbound production callers)
 - 🟡 **Environment-Dependent:** 4 modules (Requires external host service/token)
 - 🟠 **Partially Wired (Dormant):** 62 modules (Importable; no active inbound production callers)
@@ -171,7 +171,7 @@ Total Modules: **194**
 | 157 | Frontend Service Module | frontend/src/services/agentService.ts | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
 | 158 | Frontend Service Module | frontend/src/services/aiActions.ts | 🟢 Operational | frontend/src/components/editor/AiAssistantBar.tsx | frontend/src/components/editor/AiAssistantBar.tsx | unassigned | retain |
 | 159 | Frontend Service Module | frontend/src/services/api | 🟢 Operational | 405 callers (backend/api/__init__.py, ...) | 133 tests (backend/tests/api/routes/commandcenter/__init__.py, ...) | unassigned | retain |
-| 160 | Frontend Service Module | frontend/src/services/apiClient.ts | 🟢 Operational | 93 callers (backend/core/app_builder.py, ...) | 93 tests (frontend/src/commandcenter/data/hooks.ts, ...) | unassigned | retain |
+| 160 | Frontend Service Module | frontend/src/services/apiClient.ts | 🟢 Operational | 92 callers (backend/core/app_builder.py, ...) | 92 tests (frontend/src/commandcenter/data/hooks.ts, ...) | unassigned | retain |
 | 161 | Frontend Service Module | frontend/src/services/audio | 🟢 Operational | 11 callers (backend/api/routes/stream_voice_sse.py, ...) | 5 tests (frontend/src/components/admin/CommandCenter.tsx, ...) | unassigned | retain |
 | 162 | Frontend Service Module | frontend/src/services/authService.ts | 🟢 Operational | frontend/src/store/adminStore.ts | frontend/src/store/adminStore.ts | unassigned | retain |
 | 163 | Frontend Service Module | frontend/src/services/browserService.ts | 🟢 Operational | frontend/src/components/customer/BrowserPreview.tsx | frontend/src/components/customer/BrowserPreview.tsx | unassigned | retain |
