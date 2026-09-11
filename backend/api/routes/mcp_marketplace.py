@@ -85,21 +85,6 @@ async def revoke_mcp_connection(
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
-@router.delete("/connections/{connection_id}")
-async def revoke_mcp_connection(
-    connection_id: str,
-    user: dict = Depends(get_current_user_token),
-):
-    """Revoke a tenant connection without deleting its audit history."""
-    try:
-        connection = connection_registry.revoke(user=user, connection_id=connection_id)
-        return {"status": "success", "connection": connection.model_dump(mode="json")}
-    except PermissionError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
-    except LookupError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
-
-
 @router.get("/connections")
 async def list_mcp_connections(
     user: dict = Depends(get_current_user_token),
