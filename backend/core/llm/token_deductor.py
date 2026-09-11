@@ -207,9 +207,20 @@ class TokenDeductor:
             await self._release_lock(lock_key, lock_value)
 
     def _acquire_distributed_lock(
-        self, lock_key: str, lock_value: str, timeout: int = 10, **kwargs
+        self,
+        lock_key: str,
+        lock_value: str,
+        timeout: int = 10,
+        ttl: int | None = None,
+        **kwargs: Any,
     ) -> bool:
-        """Helper method for distributed lock check with production fail-closed enforcement."""
+        """Check distributed-lock availability with production fail-closed enforcement.
+
+        ``ttl`` is accepted as a backwards-compatible alias used by older callers
+        and tests; the synchronous compatibility helper does not contact Redis.
+        """
+        if ttl is not None:
+            timeout = ttl
         is_configured = getattr(self.redis_client, "configured", True) and getattr(
             redis_queue, "configured", True
         )
