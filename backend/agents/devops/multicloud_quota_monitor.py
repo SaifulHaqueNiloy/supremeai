@@ -511,5 +511,6 @@ if __name__ == "__main__":
     main()
 
 
-# Canonical alias for backward compatibility
+# Canonical aliases for backward compatibility
 CloudWatchman = MultiCloudQuotaMonitor
+MulticloudQuotaMonitor = MultiCloudQuotaMonitor  # noqa: E741 (PascalCase alias)

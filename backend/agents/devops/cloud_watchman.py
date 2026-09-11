@@ -12,6 +12,7 @@ from agents.devops.multicloud_quota_monitor import (  # noqa: F401
     GCPMonitor,
     MetricSnapshot,
     MultiCloudQuotaMonitor,
+    MulticloudQuotaMonitor,
     VercelMonitor,
     main,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "GCPMonitor",
     "MetricSnapshot",
     "MultiCloudQuotaMonitor",
+    "MulticloudQuotaMonitor",
     "VercelMonitor",
     "main",
 ]

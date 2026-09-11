@@ -449,8 +449,9 @@ class LlmCostOptimizer:
         return self.reporter.format_report_bilingual(report)
 
 
-# Canonical alias for backward compatibility
+# Canonical aliases for backward compatibility
 CostSage = LlmCostOptimizer
+LLMCostOptimizer = LlmCostOptimizer  # noqa: E741 (uppercase alias)
 
 
 if __name__ == "__main__":
