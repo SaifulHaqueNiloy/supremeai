@@ -39,6 +39,7 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
+import { MCPConnector } from './components/plugins/MCPConnector';
 
 // Viewer bootstrap stays intentionally small. Backend policy, memory, audit, and
 // hardening remain behind the API boundary; do not mount those systems globally here.
@@ -134,6 +135,8 @@ const AppContent: React.FC = () => {
               } />
               {/* Public funnel: guest chat first, then progressive auth when value is clear. */}
               <Route path="/" element={<GuestChatPage />} />
+              {/* Public viewer path: shared URLs should work without forcing a normal viewer through login. */}
+              <Route path="/viewer" element={<MCPConnector />} />
               <Route path="/features" element={<PublicInfoPage kind="/features" />} />
               <Route path="/models" element={<ModelsPage />} />
               <Route path="/pricing" element={<PricingPage />} />

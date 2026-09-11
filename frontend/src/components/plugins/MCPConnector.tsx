@@ -62,30 +62,33 @@ export const MCPConnector: React.FC = () => {
 
   return (
     <section className="mx-auto mt-8 flex max-w-4xl flex-col gap-5">
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 text-[var(--supremeai-color-brand-primary)]"><Link2 size={16} /><span className="text-xs font-semibold uppercase tracking-[0.18em]">MCP Viewer</span></div>
-        <h2 className="text-2xl font-semibold tracking-tight">View an MCP server</h2>
-        <p className="max-w-2xl text-sm text-muted-foreground">Share the server URL. The viewer reads only the data exposed by its read-only endpoints.</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-balance">সার্ভারের data দেখুন</h2>
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">শুধু URL দিন। Login বা account ছাড়াই read-only data দেখা যাবে, যদি serverটি public viewer access দেয়।</p>
       </div>
 
-      <Card className="overflow-hidden" title="Connect server" icon={<ShieldCheck size={20} />}>
-        <div className="flex flex-col gap-4 px-6 pb-6">
+      <Card className="overflow-hidden" title="URL দিন এবং খুলুন" icon={<Link2 size={20} />}>
+        <form className="flex flex-col gap-4 px-4 pb-5 sm:px-6" onSubmit={(event) => { event.preventDefault(); void connect(); }}>
           <label className="flex flex-col gap-2 text-sm font-medium">
-            Server URL
-            <input value={url} onChange={(event) => { setUrl(event.target.value); setState('idle'); setMessage(''); }} placeholder="https://your-server.example.com/mcp" inputMode="url" className="h-10 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
+            MCP server URL
+            <span className="font-normal leading-5 text-muted-foreground">যেমন: https://your-server.example.com/mcp</span>
+            <input value={url} onChange={(event) => { setUrl(event.target.value); setState('idle'); setMessage(''); }} placeholder="https://..." inputMode="url" autoComplete="url" aria-describedby="viewer-help" className="h-11 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-medium">
-            Viewer token <span className="font-normal text-muted-foreground">(optional)</span>
-            <input type="password" value={token} onChange={(event) => { setToken(event.target.value); setState('idle'); setMessage(''); }} placeholder="Only if the server requires it" autoComplete="off" className="h-10 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
-          </label>
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-xs text-muted-foreground">The token stays in this browser session and is not saved.</p>
-            <Button state={state === 'connecting' ? 'loading' : 'default'} disabled={!url.trim() || state === 'connecting'} onClick={() => void connect()}>{state === 'connected' ? <Check size={16} /> : <Link2 size={16} />}{state === 'connected' ? 'Refresh' : 'Connect'}</Button>
-          </div>
-        </div>
+          <p id="viewer-help" className="text-xs leading-5 text-muted-foreground">Public server হলে token লাগবে না। Private server হলে নিচের ঘরে token দিতে পারেন।</p>
+          <details className="rounded-md border border-border/60 px-3 py-2 text-sm">
+            <summary className="cursor-pointer font-medium">Token দরকার হলে এখানে দিন</summary>
+            <label className="mt-3 flex flex-col gap-2 text-sm">
+              Viewer token <span className="font-normal text-muted-foreground">(optional)</span>
+              <input type="password" value={token} onChange={(event) => { setToken(event.target.value); setState('idle'); setMessage(''); }} placeholder="শুধু private server-এর জন্য" autoComplete="off" className="h-11 rounded-md border bg-background px-3 text-sm outline-none ring-offset-background focus:ring-2 focus:ring-ring" />
+            </label>
+          </details>
+          <Button type="submit" state={state === 'connecting' ? 'loading' : 'default'} disabled={!url.trim() || state === 'connecting'}>{state === 'connected' ? <Check size={16} /> : <Link2 size={16} />}{state === 'connected' ? 'আবার data দেখুন' : 'খুলুন'}</Button>
+        </form>
       </Card>
 
-      {message && <div role="alert" className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><span>{message}</span><button type="button" onClick={() => setMessage('')} aria-label="Dismiss error"><X size={16} /></button></div>}
+      {state === 'connecting' && <p role="status" className="rounded-lg border border-border/60 bg-background/50 p-4 text-sm leading-6 text-muted-foreground">সার্ভারের সঙ্গে যোগাযোগ হচ্ছে… একটু অপেক্ষা করুন।</p>}
+      {message && <div role="alert" className="flex items-start justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm leading-6 text-destructive"><span>{message}</span><button type="button" onClick={() => setMessage('')} aria-label="বার্তাটি বন্ধ করুন"><X size={16} /></button></div>}
       {data && <ViewerResults data={data} />}
     </section>
   );

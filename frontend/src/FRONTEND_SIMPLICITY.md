@@ -27,5 +27,18 @@ If a proposed frontend change makes this journey harder to understand, stop and 
 
 Do not introduce a new MCP server, memory server, client-side policy engine, duplicate API client, or global websocket/SSE connection for the simple viewer experience.
 
+## User-first rules for future agents
+
+- Anonymous read-only viewing is the default. Never force login for a normal viewer journey unless the backend explicitly says the shared server is private.
+- Never make users log in again during ordinary navigation, refresh, reconnect, or data viewing. Preserve the existing session when authentication is genuinely required.
+- Do not add security prompts, OTP, permission dialogs, device checks, token fields, or confirmations to ordinary read-only actions. Sensitive write/admin actions may use their own isolated flow.
+- Keep optional credentials hidden until they are needed. The first screen should ask for one thing: the shared URL.
+- Backend security is not a reason to expose policy, memory, MCP management, audit, or infrastructure controls in the viewer UI.
+- Every public viewer screen must have plain loading, success, empty, and error states with a retry path. Do not show stack traces or internal implementation terms.
+- Prefer the smallest number of clicks: paste URL, press Open, read data. If a change adds a step, explain why it is unavoidable before adding it.
+- Use simple English or Bengali labels that describe the user goal. Avoid terms such as cockpit, governance, tower, swarm, neural memory, or policy unless the user explicitly needs them.
+- Mobile users are first-class users: controls must fit narrow screens, use full-width primary actions when useful, and avoid dense tables that require awkward horizontal scrolling.
+- Comments at architectural boundaries must protect this contract. Do not add long migration commentary inside JSX or create new frontend infrastructure to solve a backend concern.
+
 // Future agents: keep this file short and consult it before adding frontend infrastructure.
 // Backend complexity may remain behind the API boundary; it does not belong in the viewer UI.
