@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from api.dependencies import get_current_user_token
+from api.dependencies import get_current_platform_admin
 from core.logging_config import logger
 from tools.code.code_smell_detector import CodeSmellDetector
 from tools.devops.on_premise_deployer import OnPremiseDeployer
@@ -15,7 +15,7 @@ from tools.learning.skill_recommender import SkillRecommender
 from tools.security_tools.vulnerability_predictor import VulnerabilityPredictor
 
 
-def _require_admin(payload: dict = Depends(get_current_user_token)) -> dict:
+def _require_admin(payload: dict = Depends(get_current_platform_admin)) -> dict:
     """Gate DevOps/deploy tooling behind an authenticated admin role.
 
     বাংলা মন্তব্য: এই রাউটারে ফাইল-সিস্টেম রিড (smell/vuln scan) এবং ডিপ্লয়মেন্ট

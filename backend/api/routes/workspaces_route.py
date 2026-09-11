@@ -67,7 +67,7 @@ class TargetResponse(BaseModel):
 
 @router.post("/bind-target", response_model=TargetResponse, status_code=status.HTTP_201_CREATED)
 async def bind_target_repository(
-    req: BindTargetRequest, x_jit_otp: str | None = Header(None, alias="X-JIT-OTP")
+    req: BindTargetRequest, x_jit_otp: str | None = Header(None, alias="X-JIT-OTP"), user: dict = Depends(get_project_admin)
 ) -> TargetResponse:
     """ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।"""
     # Guard: FastAPI DI ছাড়া (যেমন unit test) x_jit_otp non-str হতে পারে
@@ -97,6 +97,7 @@ async def bind_target_repository(
         scope=req.scope,
         credentials_token=req.credentials_token,
         metadata=req.metadata,
+        tenant_id=user["tenant_id"],
     )
 
     registered = target_registry.register_target(target)
@@ -120,9 +121,9 @@ async def bind_target_repository(
 
 
 @router.get("/targets", response_model=list[TargetResponse])
-async def list_target_repositories() -> list[TargetResponse]:
+async def list_target_repositories(user: dict = Depends(get_project_admin)) -> list[TargetResponse]:
     """রেজিস্টার্ড সমস্ত ১০০+ টার্গেট রেপো ও প্ল্যাটফর্মের তালিকা রিটার্ন করে।"""
-    targets = target_registry.list_targets()
+    targets = target_registry.list_targets(user["tenant_id"])
     return [
         TargetResponse(
             id=t.id,

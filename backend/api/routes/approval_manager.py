@@ -101,7 +101,7 @@ def get_pending(
     user: dict = Depends(get_project_admin),
 ) -> list[dict[str, Any]]:
     """Get all pending tasks - REQUIRES admin authentication."""
-    return [t.model_dump() for t in list_pending()]
+    return [t.model_dump() for t in list_pending(user["tenant_id"])]
 
 
 @router.post("/approve/{task_id}")
@@ -113,7 +113,7 @@ def approve_task(
     """Approve a pending task - REQUIRES admin authentication."""
     _audit("request", task_id, req.resolved_by, "received")
     try:
-        task = update_task_status(task_id, TaskStatus.APPROVED, req.resolved_by, req.reason)
+        task = update_task_status(task_id, TaskStatus.APPROVED, user["subject"], req.reason, tenant_id=user["tenant_id"])
     except Exception as exc:
         # AUD-4.3/4.4/4.5/4.6: replay, expiry, tampering and races are rejected here.
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
@@ -183,7 +183,7 @@ def reject_task(
 ) -> dict[str, Any]:
     """Reject a pending task - REQUIRES admin authentication."""
     try:
-        task = update_task_status(task_id, TaskStatus.REJECTED, req.resolved_by, req.reason)
+        task = update_task_status(task_id, TaskStatus.REJECTED, user["subject"], req.reason, tenant_id=user["tenant_id"])
     except Exception as exc:
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "rejected", str(exc))
@@ -209,7 +209,7 @@ def cancel_task_route(
 ) -> dict[str, Any]:
     """Authoritative cancellation (AUD-4.7) - REQUIRES admin authentication."""
     try:
-        task = cancel_task(task_id, req.resolved_by, req.reason)
+        task = cancel_task(task_id, user["subject"], req.reason, tenant_id=user["tenant_id"])
     except Exception as exc:
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "cancel_rejected", str(exc))

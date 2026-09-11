@@ -195,8 +195,9 @@ def get_current_tenant(
     শুধুমাত্র যে রাউটে tenant context দরকার সেখানে ব্যবহার করুন।
     উদাহরণ: tenant_id: str = Depends(get_current_tenant)
     """
-    # JWT sub থেকে tenant_id বের করা (AuthMiddleware ইতিমধ্যে user সেট করেছে)
-    tenant_id = user.get("tenant_id") or user.get("sub", "anonymous")
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    if not tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
     return tenant_id
 
 

@@ -39,7 +39,6 @@ class TargetEntity:
     """একটি রেজিস্টার্ড টার্গেট রেপো বা প্ল্যাটফর্ম অবজেক্ট।"""
 
     id: str
-    tenant_id: str | None
     name: str
     target_type: TargetPlatformType
     url: str
@@ -47,6 +46,7 @@ class TargetEntity:
     scope: PermissionScope = PermissionScope.FULL_CONTROL
     credentials_token: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    tenant_id: str | None = None
 
     def is_read_only(self) -> bool:
         """টার্গেটটি রিড-অনলি কি না পরীক্ষা করে।"""
@@ -99,19 +99,25 @@ class TargetPlatformRegistry:
                 return True
             return False
 
-    def get_target(self, target_id: str) -> TargetEntity | None:
-        """টার্গেট আইডি দিয়ে অবজেক্ট রিটার্ন করে।"""
+    def get_target(self, target_id: str, tenant_id: str | None = None) -> TargetEntity | None:
+        """Return a target only when it belongs to the tenant or platform scope."""
         with self._lock:
-            return self._targets.get(target_id)
+            target = self._targets.get(target_id)
+            if target and (target.tenant_id is None or target.tenant_id == tenant_id):
+                return target
+            return None
 
-    def list_targets(self) -> list[TargetEntity]:
-        """সমস্ত রেজিস্টার্ড টার্গেটের তালিকা রিটার্ন করে।"""
+    def list_targets(self, tenant_id: str | None = None) -> list[TargetEntity]:
+        """Return platform targets plus only the caller tenant's targets."""
         with self._lock:
-            return list(self._targets.values())
+            return [
+                target for target in self._targets.values()
+                if target.tenant_id is None or target.tenant_id == tenant_id
+            ]
 
-    def validate_write_permission(self, target_id: str) -> bool:
-        """রাইট অ্যাকশনের আগে পারমিশন স্কোপ ভ্যালিডেট করে।"""
-        target = self.get_target(target_id)
+    def validate_write_permission(self, target_id: str, tenant_id: str | None = None) -> bool:
+        """Validate write scope after tenant ownership validation."""
+        target = self.get_target(target_id, tenant_id)
         if not target:
             raise KeyError(f"Target '{target_id}' not found in registry")
         if target.is_read_only():
