@@ -26,12 +26,14 @@ async def get_usage_metrics(
     start: str | None = None,
     end: str | None = None,
     limit: int = Query(default=30, le=365),
-    user: dict = Depends(get_current_user_token),
+    user: dict = Depends(get_project_admin),
 ):
     if not db.client:
         return {"items": [], "total": 0}
     try:
-        query = await db.client.table("usage_metrics").select("*").eq("tenant_id", user["tenant_id"])
+        query = (
+            await db.client.table("usage_metrics").select("*").eq("tenant_id", user["tenant_id"])
+        )
         if start:
             query = query.gte("date", start)
         if end:
@@ -45,7 +47,7 @@ async def get_usage_metrics(
 @router.post("/")
 async def upsert_usage_metric(
     payload: UsageMetricUpsert,
-    user: dict = Depends(get_current_user_token),
+    user: dict = Depends(get_project_admin),
 ):
     if not db.client:
         raise HTTPException(status_code=503, detail="Database not configured")

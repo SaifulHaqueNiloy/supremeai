@@ -126,9 +126,13 @@ def get_current_user_token(request: Request) -> dict:
 
 
 def _verified_subject(payload: dict) -> str:
-    subject = str(payload.get("sub") or payload.get("user_id") or payload.get("email") or "").strip()
+    subject = str(
+        payload.get("sub") or payload.get("user_id") or payload.get("email") or ""
+    ).strip()
     if not subject:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token subject required")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token subject required"
+        )
     return subject
 
 
@@ -147,7 +151,9 @@ def get_project_admin(payload: dict = Depends(get_current_user_token)) -> dict:
     if not tenant_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tenant context required")
     if role not in {"admin", "owner", "project_admin", "tenant_admin"}:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project administrator access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Project administrator access required"
+        )
     return {**payload, "tenant_id": tenant_id, "subject": _verified_subject(payload)}
 
 

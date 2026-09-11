@@ -67,7 +67,9 @@ class TargetResponse(BaseModel):
 
 @router.post("/bind-target", response_model=TargetResponse, status_code=status.HTTP_201_CREATED)
 async def bind_target_repository(
-    req: BindTargetRequest, x_jit_otp: str | None = Header(None, alias="X-JIT-OTP"), user: dict = Depends(get_project_admin)
+    req: BindTargetRequest,
+    x_jit_otp: str | None = Header(None, alias="X-JIT-OTP"),
+    user: dict = Depends(get_project_admin),
 ) -> TargetResponse:
     """ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।"""
     # Guard: FastAPI DI ছাড়া (যেমন unit test) x_jit_otp non-str হতে পারে
