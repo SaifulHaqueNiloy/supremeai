@@ -200,7 +200,7 @@ class TestHITLApprovalSurface:
 
     def test_approval_routes_are_admin_guarded(self):
         src = _source_of("api/routes/approval_manager.py")
-        guarded = src.count("Depends(verify_admin_session_fail_closed)")
+        guarded = src.count("Depends(get_project_admin)")
         # pending, approve, reject, cancel routes all carry the admin guard
         assert guarded >= 4
 
