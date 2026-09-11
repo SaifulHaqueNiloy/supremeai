@@ -64,7 +64,10 @@ class ConnectionRegistry:
         if not tenant_value:
             raise PermissionError("Authenticated tenant context is required")
         tenant_id = str(tenant_value)
-        actor_id = str(user.get("user_id") or user.get("id") or "unknown")
+        actor_value = user.get("user_id") or user.get("id")
+        if not actor_value:
+            raise PermissionError("Authenticated actor context is required")
+        actor_id = str(actor_value)
         role = str(user.get("role") or user.get("user_role") or "user").lower()
         if tenant_id in {"None", "unknown"}:
             raise PermissionError("Authenticated tenant context is required")
