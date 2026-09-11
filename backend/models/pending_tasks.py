@@ -315,7 +315,16 @@ def update_task_status(
         SET status = ?, resolved_by = ?, resolved_at = ?, reason = ?
         WHERE task_id = ? AND status = ? AND (? IS NULL OR tenant_id = ?)
         """,
-        (status, resolved_by, resolved_at, reason, task_id, TaskStatus.PENDING, tenant_id, tenant_id),
+        (
+            status,
+            resolved_by,
+            resolved_at,
+            reason,
+            task_id,
+            TaskStatus.PENDING,
+            tenant_id,
+            tenant_id,
+        ),
     )
     if cursor.rowcount == 0:
         cursor.execute("SELECT status FROM pending_tasks WHERE task_id = ?", (task_id,))
@@ -410,9 +419,13 @@ def mark_executed(task_id: str, executed_by: str) -> PendingTask | None:
     return row_to_task(row) if row else None
 
 
-def cancel_task(task_id: str, cancelled_by: str, reason: str | None = None, tenant_id: str | None = None) -> PendingTask | None:
+def cancel_task(
+    task_id: str, cancelled_by: str, reason: str | None = None, tenant_id: str | None = None
+) -> PendingTask | None:
     """Authoritative cancellation scoped to the owning tenant."""
-    return update_task_status(task_id, TaskStatus.CANCELLED, cancelled_by, reason, tenant_id=tenant_id)
+    return update_task_status(
+        task_id, TaskStatus.CANCELLED, cancelled_by, reason, tenant_id=tenant_id
+    )
 
 
 def row_to_task(row: sqlite3.Row) -> PendingTask:

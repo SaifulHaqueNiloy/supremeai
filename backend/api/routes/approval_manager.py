@@ -19,9 +19,9 @@ from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from fastapi.websockets import WebSocketDisconnect
 from pydantic import BaseModel
 
+from api.dependencies import get_project_admin
 from core.code_validator import AICodeValidator
 from core.logging_config import logger
-from api.dependencies import get_project_admin
 from core.security.ws_auth import authenticate_websocket
 from models.pending_tasks import (
     ApprovalStateError,
@@ -113,7 +113,9 @@ def approve_task(
     """Approve a pending task - REQUIRES admin authentication."""
     _audit("request", task_id, req.resolved_by, "received")
     try:
-        task = update_task_status(task_id, TaskStatus.APPROVED, user["subject"], req.reason, tenant_id=user["tenant_id"])
+        task = update_task_status(
+            task_id, TaskStatus.APPROVED, user["subject"], req.reason, tenant_id=user["tenant_id"]
+        )
     except Exception as exc:
         # AUD-4.3/4.4/4.5/4.6: replay, expiry, tampering and races are rejected here.
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
@@ -183,7 +185,9 @@ def reject_task(
 ) -> dict[str, Any]:
     """Reject a pending task - REQUIRES admin authentication."""
     try:
-        task = update_task_status(task_id, TaskStatus.REJECTED, user["subject"], req.reason, tenant_id=user["tenant_id"])
+        task = update_task_status(
+            task_id, TaskStatus.REJECTED, user["subject"], req.reason, tenant_id=user["tenant_id"]
+        )
     except Exception as exc:
         status_code = 410 if type(exc).__name__ == "TaskExpiredError" else 409
         _audit("decision", task_id, req.resolved_by, "rejected", str(exc))

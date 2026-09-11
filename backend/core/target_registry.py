@@ -111,7 +111,8 @@ class TargetPlatformRegistry:
         """Return platform targets plus only the caller tenant's targets."""
         with self._lock:
             return [
-                target for target in self._targets.values()
+                target
+                for target in self._targets.values()
                 if target.tenant_id is None or target.tenant_id == tenant_id
             ]
 
