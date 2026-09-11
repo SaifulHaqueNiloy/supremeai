@@ -1,12 +1,18 @@
 // apps/studio-client/src/services/adminTokenStore.ts
 // 🚨 CRITICAL CHECK: No external imports allowed here to bypass Vite Rollup blocks
 
+const readAdminToken = (): string | null => {
+  // Keep the viewer simple: accept the existing session token first, then
+  // support the legacy local token used by older sessions and integrations.
+  return sessionStorage.getItem('supreme_admin_jwt') ?? localStorage.getItem('supreme_admin_jwt');
+};
+
 export const adminTokenStore = {
   getRawToken: (): string | null => {
-    return sessionStorage.getItem('supreme_admin_jwt');
+    return readAdminToken();
   },
   getDecodedToken: (): Record<string, unknown> | null => {
-    const token = sessionStorage.getItem('supreme_admin_jwt');
+    const token = readAdminToken();
     if (!token) return null;
 
     try {
