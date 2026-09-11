@@ -1,12 +1,11 @@
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
-import { ProtectedRoute, GuestRoute, useAuthStatus, AuthLoadingSpinner } from "./components/core/AuthGuards";
+import { ProtectedRoute, GuestRoute } from "./components/core/AuthGuards";
 import { RoleGuard, PermissionGuard } from "./components/core/guards/RoleGuard";
-import { resolveLandingPath } from './auth/identity';
 
 // Pages (Core Layouts & Auth)
 import { LoginPage } from './pages/auth/LoginPage';
@@ -69,17 +68,6 @@ const queryClient = new QueryClient({
 // admin step-up security stays isolated to /admin and must not leak into viewer routes.
 
 import { TranslationProvider } from './i18n/I18nProvider';
-
-/**
- * বাংলা: `/` route-এর runtime landing redirect — কোনো env var নয়, শুধুই trusted
- * auth state থেকে resolve হয় (roadmap §6.3)। Deep link (/admin/overview ইত্যাদি)
- * এই component-এর কাজ নয় — সেগুলো সরাসরি তাদের route-এ যায়।
- */
-const LandingRedirect: React.FC = () => {
-  const { isChecking, isAuthenticated } = useAuthStatus();
-  if (isChecking) return <AuthLoadingSpinner />;
-  return <Navigate to={resolveLandingPath(isAuthenticated)} replace />;
-};
 
 export const App: React.FC = () => {
   return (

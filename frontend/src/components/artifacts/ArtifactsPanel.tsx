@@ -7,7 +7,6 @@ import {
   GitBranch,
   Code,
   Copy,
-  Check,
   Download,
   Pin,
   Plus,

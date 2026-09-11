@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ArrowRight, Bot, FileText, FolderKanban, Plus, Settings2, Sparkles, Terminal, X, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
-import { useWorkspaceSettings, WORKSPACE_MODULES, type WorkspaceModuleId } from '../../hooks/useWorkspaceSettings';
+import { useWorkspaceSettings, WORKSPACE_MODULES } from '../../hooks/useWorkspaceSettings';
 import TaskAutomationCard from './TaskAutomationCard';
 
 const quickStarts = [

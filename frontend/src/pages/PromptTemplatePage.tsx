@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Sparkles, ChevronRight, Home } from 'lucide-react';
+import { Sparkles, Home } from 'lucide-react';
 import PromptTemplateLibrary from '../components/templates/PromptTemplateLibrary';
 
 // ─── Component ───────────────────────────────────────────────────────────
