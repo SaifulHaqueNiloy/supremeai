@@ -40,6 +40,7 @@ const buildProvisioningUri = (email: string, secret: string): string =>
 
 const persistAdminToken = (token: unknown): token is string => {
   if (typeof token !== 'string' || token.trim().length < 20) return false;
+  localStorage.setItem('supreme_admin_jwt', token);
   sessionStorage.setItem('supreme_admin_jwt', token);
   updateTokenCache(token);
   return true;
@@ -239,6 +240,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       // admin logout আর user session ধ্বংস করবে না (আগের ক্রস-সেশন ডিস্ট্রাকশন বাগ)।
       // User session পরিষ্কার করতে UI logout আলাদাভাবে clearCanonicalSession() ডাকবে।
       localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
+      localStorage.removeItem('supreme_admin_jwt');
       sessionStorage.removeItem('supreme_admin_jwt');
       updateTokenCache(null);
 
