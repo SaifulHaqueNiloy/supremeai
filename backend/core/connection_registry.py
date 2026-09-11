@@ -111,6 +111,32 @@ class ConnectionRegistry:
             conn.commit()
         return record
 
+    def set_permission(
+        self,
+        *,
+        user: dict[str, Any],
+        connection_id: str,
+        permission_level: str,
+    ) -> ConnectionRecord:
+        tenant_id, _, role = self._identity(user)
+        if role not in {"admin", "owner", "system"}:
+            raise PermissionError("Only tenant administrators can change connection authority")
+        if permission_level not in {"user", "admin", "system"}:
+            raise ValueError("permission_level must be user, admin, or system")
+        with get_conn() as conn:
+            conn.execute(
+                f"UPDATE {self.TABLE} SET permission_level = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
+                (permission_level, datetime.now(UTC).isoformat(), connection_id, tenant_id),
+            )
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
+            conn.commit()
+        if row is None:
+            raise LookupError("Connection not found")
+        return self._from_row(row)
+
     def list_for_tenant(self, user: dict[str, Any]) -> list[ConnectionRecord]:
         tenant_id, _, _ = self._identity(user)
         with get_conn() as conn:

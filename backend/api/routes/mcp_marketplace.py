@@ -14,6 +14,10 @@ class MCPConnectRequest(BaseModel):
     permission_level: str = "user"
 
 
+class MCPPermissionRequest(BaseModel):
+    permission_level: str
+
+
 @router.post("/discover")
 async def discover_mcp_server(
     req: MCPConnectRequest,
@@ -41,6 +45,28 @@ async def discover_mcp_server(
         raise HTTPException(status_code=400, detail=str(ve)) from ve
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to connect to MCP server: {str(e)}")
+
+
+@router.patch("/connections/{connection_id}/permission")
+async def update_mcp_permission(
+    connection_id: str,
+    req: MCPPermissionRequest,
+    user: dict = Depends(get_current_user_token),
+):
+    """Allow an authorized tenant administrator to change one connection's role."""
+    try:
+        connection = connection_registry.set_permission(
+            user=user,
+            connection_id=connection_id,
+            permission_level=req.permission_level,
+        )
+        return {"status": "success", "connection": connection.model_dump(mode="json")}
+    except PermissionError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
 @router.get("/connections")
