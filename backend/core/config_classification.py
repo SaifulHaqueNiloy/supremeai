@@ -1934,6 +1934,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend"}),
         description="CSV of models for complex-complexity routing ladder.",
     ),
+    ConfigSpec(
+        "ADMIN_ENFORCE_TOTP",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend", "security"}),
+        description="Controls whether TOTP MFA is enforced for admin authentication or optional.",
+    ),
 )
 
 BY_NAME: dict[str, ConfigSpec] = {spec.name: spec for spec in CONFIG_SPECS}
