@@ -81,6 +81,7 @@ async def _authenticate_request(request: Request) -> dict:
             return {"sub": admin_email, "role": "admin"}
         raise HTTPException(status_code=401, detail="Invalid authorization") from exc
 
+
 # FIX (API-contract audit): the legacy `/api/chat/stream` alias previously used
 # a stacked decorator on this PREFIXED router, which FastAPI resolves as
 # `/api/v1/stream/api/chat/stream` — a dead path that never served traffic.
