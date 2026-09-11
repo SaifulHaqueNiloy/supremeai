@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { adminTokenStore } from '../services/adminTokenStore';
-import { getApiBaseUrl } from '../utils/api';
 import { THEME_ORDER } from './ThemeConstants';
 import { ThemeContext } from './ThemeContext';
 import type { Theme } from './ThemeConstants';
