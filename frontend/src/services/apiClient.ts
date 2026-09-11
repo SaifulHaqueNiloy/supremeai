@@ -265,9 +265,18 @@ export const apiClient = {
   },
 
   post: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders['Idempotency-Key'] && !(options?.headers as Record<string, string>)?.[
+      'Idempotency-Key'
+    ]) {
+      authHeaders['Idempotency-Key'] =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'POST',
-      headers: await getAuthHeaders(),
+      headers: { ...authHeaders, ...(options?.headers as Record<string, string>) },
       body: body ? JSON.stringify(body) : undefined,
       ...options,
     });
@@ -275,9 +284,18 @@ export const apiClient = {
   },
 
   put: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    if (!authHeaders['Idempotency-Key'] && !(options?.headers as Record<string, string>)?.[
+      'Idempotency-Key'
+    ]) {
+      authHeaders['Idempotency-Key'] =
+        typeof crypto !== 'undefined' && crypto.randomUUID
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       method: 'PUT',
-      headers: await getAuthHeaders(),
+      headers: { ...authHeaders, ...(options?.headers as Record<string, string>) },
       body: body ? JSON.stringify(body) : undefined,
       ...options,
     });
