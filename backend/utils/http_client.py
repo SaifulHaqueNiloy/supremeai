@@ -49,6 +49,7 @@ async def safe_fetch(
 ) -> httpx.Response:
     """Fetch with the lifespan-managed pool when one is available."""
     managed = client or get_shared_client()
+    kwargs.setdefault("timeout", DEFAULT_TIMEOUT)
     if managed is not None:
         return await managed.get(url, **kwargs)
 
@@ -129,6 +130,7 @@ async def safe_api_call(
                 headers=headers,
                 json=json_data,
                 params=params,
+                timeout=timeout,
             )
         else:
             async with create_async_client(timeout=timeout) as fallback:
