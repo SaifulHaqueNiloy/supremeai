@@ -1,13 +1,16 @@
-from fastapi import APIRouter
+"""
+Backward compatibility bridge: re-export all from healing_stats.
+Preserves legacy imports for 'api.routes.healing' and 'backend.api.routes.healing'.
+"""
 
-router = APIRouter(tags=["healing"])
+from api.routes.healing_stats import (  # noqa: F401
+    get_predictions,
+    get_stats,
+    router,
+)
 
-
-@router.get("/health/predictions")
-async def get_predictions():
-    return {"predictions": [], "status": "active"}
-
-
-@router.get("/healing/stats")
-async def get_stats():
-    return {"remedies_applied": 0, "success_rate": 0.95}
+__all__ = [
+    "get_predictions",
+    "get_stats",
+    "router",
+]

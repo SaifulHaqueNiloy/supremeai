@@ -91,6 +91,49 @@ async def get_wallet_balance(
 
 
 # ==========================================
+# 💰 ROUTE: Pre-flight Budget Check (parity audit fix)
+# ==========================================
+# বাংলা মন্তব্য: useBudgetCheck হুক দীর্ঘদিন /api/admin/metrics/cost কল করত
+# (এন্ডপয়েন্ট কখনোই ছিল না → প্রতিটি প্রি-ফ্লাইট চেক নীরবে 404 খেত)। এখন সঠিক
+# ওয়ালেট-ভিত্তিক বাজেট যাচাই: estimated খরচ ব্যালেন্স ছাড়ালে 402 Payment Required।
+@router.get("/budget-check")
+async def check_budget(
+    estimated: float = 0.0,
+    session: AsyncSession = Depends(get_db_session),
+    token_payload: dict = Depends(get_current_user_token),
+):
+    """Pre-flight budget verification for consequential operations.
+
+    Returns 402 Payment Required when the estimated cost exceeds the caller's
+    wallet balance, so clients can block the operation before any spend occurs.
+    """
+    user_id = token_payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    if estimated < 0:
+        raise HTTPException(status_code=422, detail="Estimated cost must be non-negative")
+
+    wallet = await _ensure_wallet(session, user_id)
+    balance = float(wallet.balance_usd)
+    if balance < estimated:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=(
+                f"Insufficient budget: estimated ${estimated:.4f} exceeds "
+                f"wallet balance ${balance:.4f}."
+            ),
+        )
+
+    return {
+        "ok": True,
+        "sufficient": True,
+        "estimated_cost_usd": round(estimated, 6),
+        "balance_usd": balance,
+        "remaining_usd": round(balance - estimated, 6),
+    }
+
+
+# ==========================================
 # 📊 ROUTE: Fetch Transaction History Log
 # ==========================================
 @router.get("/history")

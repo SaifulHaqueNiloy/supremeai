@@ -56,7 +56,7 @@ export const RateLimitManager: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_BASE}/admin/tenant-limits`, {
+      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits`, {
         headers: { 'Authorization': `Bearer ${adminTokenStore.getRawToken()}` }
       });
 
@@ -99,7 +99,7 @@ export const RateLimitManager: React.FC = () => {
   const handleSave = async (tenant_id: string) => {
     setSaving(tenant_id);
     try {
-      const resp = await fetch(`${API_BASE}/admin/tenant-limits/${tenant_id}`, {
+      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits/${tenant_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export const RateLimitManager: React.FC = () => {
       ...TIER_LIMITS[newTenant.billing_tier],
     } as TenantLimit;
     try {
-      const resp = await fetch(`${API_BASE}/admin/tenant-limits`, {
+      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits`, {
         method: 'POST',
         // বাংলা মন্তব্য: getAdminToken এর পরিবর্তে প্রপার adminTokenStore.getRawToken() মেথড কল যোগ করা হলো
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminTokenStore.getRawToken()}` },

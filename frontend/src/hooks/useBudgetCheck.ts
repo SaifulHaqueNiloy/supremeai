@@ -9,8 +9,10 @@ export const useBudgetCheck = () => {
     setIsChecking(true);
     setBudgetError(null);
     try {
-      // In a real implementation, you might pass the estimated cost or operation type
-      await apiClient.get(`/api/admin/metrics/cost?estimated=${estimatedCost}`);
+      // FIX (API-contract audit): ব্যাকএন্ডে /api/admin/metrics/cost কখনোই ছিল না —
+      // প্রতিটি প্রি-ফ্লাইট চেক নীরবে 404 খেত। এখন সঠিক ওয়ালেট-ভিত্তিক budget-check
+      // এন্ডপয়েন্ট (billing_api.py): অপর্যাপ্ত ব্যালেন্সে 402 Payment Required রিটার্ন করে।
+      await apiClient.get(`/api/billing/budget-check?estimated=${estimatedCost}`);
       setIsChecking(false);
       return true;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

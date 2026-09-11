@@ -121,6 +121,34 @@ async def liveness_check():
     return {"status": "alive", "alive": True, "timestamp": datetime.now(UTC).isoformat()}
 
 
+class AgentHealthFilter(BaseModel):
+    """Optional request body for POST /health/agents — filter by agent ids."""
+
+    agent_ids: list[str] | None = None
+
+
+@router.get("/health/agents")
+@router.post("/health/agents")
+async def agents_health_check(agent_filter: AgentHealthFilter | None = None):
+    """
+    Per-agent health heartbeat (backend/frontend parity audit fix).
+
+    Frontend consumers that previously received 404:
+      - GET  /api/v1/health/agents             (useSwarmGraph — 2s heartbeat poll)
+      - POST /api/v1/health/agents {agent_ids} (MockSwarmProvider — swarm metrics)
+    Returns the agent_supervisor health map keyed by agent name. Requested ids
+    that have no supervisor entry are reported as ``status="unknown"`` so clients
+    always receive a complete, predictable key set.
+    """
+    from core.agent_supervisor import agent_supervisor
+
+    health = agent_supervisor.get_health()
+    requested_ids = agent_filter.agent_ids if agent_filter else None
+    if requested_ids:
+        health = {aid: health.get(aid, {"status": "unknown"}) for aid in requested_ids}
+    return health
+
+
 async def _check_database() -> str:
     """Check database connectivity."""
     try:

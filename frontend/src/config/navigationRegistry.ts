@@ -18,6 +18,8 @@ import {
   Plug,
   Zap,
   CreditCard,
+  Clock,
+  KeyRound,
   Activity,
   Network,
   ServerCog,
@@ -97,6 +99,10 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       // Planned features — routes not yet implemented; rendered হয় না (dead-link prevention)।
       { id: 'nav-projects', label: 'Projects', icon: Box, kind: 'route', path: '/projects', contexts: ['user'], status: 'implemented', priority: 40 },
       { id: 'nav-activity', label: 'Activity', icon: Activity, kind: 'route', path: '/activity', contexts: ['user'], status: 'implemented', priority: 50 },
+      // Parity-audit fixes: Tier-S প্যানেলগুলো রাউটেড ছিল কিন্তু nav rail-এ ছিল না —
+      // ইউজার শুধু সরাসরি URL দিয়ে পৌঁছাতে পারত। এখন implemented status-এ exposed।
+      { id: 'nav-research', label: 'Deep Research', icon: Search, kind: 'route', path: '/research', contexts: ['user'], status: 'implemented', priority: 60 },
+      { id: 'nav-scheduled-tasks', label: 'Scheduled Tasks', icon: Clock, kind: 'route', path: '/scheduled-tasks', contexts: ['user'], status: 'implemented', priority: 70 },
     ],
   },
   {
@@ -139,6 +145,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'nav-profile', label: 'Profile', icon: Users, kind: 'route', path: '/profile', contexts: ['user'], status: 'implemented', priority: 10 },
       { id: 'nav-ide', label: 'Code Editor', icon: Wrench, kind: 'route', path: '/workspace/ide', contexts: ['user'], status: 'implemented', priority: 20 },
       { id: 'nav-settings', label: 'Settings', icon: Wrench, kind: 'route', path: '/settings', contexts: ['user'], status: 'implemented', priority: 30 },
+      { id: 'nav-memory', label: 'Neural Memory', icon: BrainCircuit, kind: 'route', path: '/memory', contexts: ['user'], status: 'implemented', priority: 40 },
+      { id: 'nav-api-keys', label: 'API Keys', icon: KeyRound, kind: 'route', path: '/settings/api-keys', contexts: ['user'], status: 'implemented', priority: 50 },
     ],
   },
   {
