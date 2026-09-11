@@ -38,7 +38,12 @@ These actions are intentionally deferred because this session does not apply int
 - Run the complete skip inventory with the repository's canonical test command.
 - Verify whether Supabase-backed auth and `ai_memory` prerequisites are available.
 - Decide whether removed agent/conversation APIs should be restored, replaced, or retired.
-- Implement or formally retire the generated-proto and task-budget contracts after current-tree verification.
+- Implement or formally retire the generated-proto contract after current-tree verification.
+- Verify production wiring for the existing tenant quota contract; deterministic repository-only coverage now exists in `backend/tests/tools/test_tenant_rate_limiter_contract.py`.
+
+### Tenant quota decision record (2026-09-11)
+
+The repository already contains a centralized `TenantRateLimiter` with tiered RPM/RPD enforcement and fail-closed Redis error handling. New deterministic tests cover under-limit allowance, RPM exhaustion, admin override, Redis failure, and invalid tiers. This does not claim that the limiter is wired into the central task execution boundary or that runtime Redis behavior has been verified; those remain manual acceptance steps.
 
 ### Cognitive-router decision record (2026-09-11)
 

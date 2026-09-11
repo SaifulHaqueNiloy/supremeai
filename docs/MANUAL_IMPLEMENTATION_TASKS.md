@@ -21,8 +21,9 @@ These tasks are intentionally explicit because the current session does not have
 ## 2. Resolve task-budget/rate-limit contract
 
 - **Owner:** Backend/platform maintainers
-- **Source:** Historical strategic test references and current task-routing implementation.
-- **Blocked by:** The supported public budget/rate-limit API has not been identified from the current tree.
+- **Source:** `backend/tools/tenant_rate_limiter.py` and current task-routing implementation.
+- **Status:** Repository-only contract coverage added in `backend/tests/tools/test_tenant_rate_limiter_contract.py`. Production wiring at the central task execution boundary remains unverified.
+- **Blocked by:** The supported public task-execution integration point and runtime Redis behavior require maintainer verification.
 - **Manual steps:**
   1. Identify the canonical budget and rate-limit owner; do not create a parallel limiter.
   2. Define tenant/user scoping, limits, rejection behavior, and audit evidence.
