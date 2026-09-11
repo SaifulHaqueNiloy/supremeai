@@ -105,3 +105,27 @@ def test_operational_modules_have_active_callers():
             assert "0 active callers" not in m["callers"], (
                 f"Module {m['path']} marked Operational but has 0 active callers"
             )
+
+
+def test_catalog_ids_are_unique_and_contiguous():
+    _, modules = parse_modules_list()
+    ids = [module["id"] for module in modules]
+    assert ids == list(range(1, len(modules) + 1))
+
+
+def test_audit_report_has_governance_metadata():
+    report_path = ROOT_DIR / "docs/audit_reports/module_wiring_audit.json"
+    assert report_path.exists(), "Generated audit report must exist"
+    report = __import__("json").loads(report_path.read_text(encoding="utf-8"))
+    assert report["schema_version"]
+    assert report["generated_at"].endswith("Z")
+    assert report["verification_command"]
+    assert report["total"] == len(report["modules"])
+    valid_statuses = {"🟢 Operational", "🟡 Environment-Dependent", "🟠 Partially Wired", "🔴 Broken", "⚪ Planned"}
+    valid_decisions = {"retain", "review", "owner-review"}
+    for module in report["modules"]:
+        assert module["status"] in valid_statuses
+        assert module["decision"] in valid_decisions
+        assert module["verified_at"].endswith("Z")
+        assert module["verification_command"] == report["verification_command"]
+        assert module["owner_circle"]
