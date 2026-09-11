@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie';
+import { apiClient } from '../services/apiClient';
 
 export interface ChatMessage {
   id?: number;
@@ -97,14 +98,6 @@ export const localDb = new SupremeAILocalDB();
 const MAX_ATTEMPTS = 8;
 const BASE_RETRY_MS = 5_000;
 
-const getAuthToken = (): string | null => {
-  try {
-    return localStorage.getItem('supremeai_auth_token');
-  } catch {
-    return null;
-  }
-};
-
 const syncPending = async (): Promise<void> => {
   if (syncInFlight || !navigator.onLine || !activeScope) return;
   syncInFlight = true;
@@ -119,18 +112,15 @@ const syncPending = async (): Promise<void> => {
     for (const item of pending) {
       try {
         const method = item.operation === 'create' ? 'POST' : item.operation === 'update' ? 'PUT' : 'DELETE';
-        const token = getAuthToken();
-        const response = await fetch(`/api/v1/sync/${item.table}`, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            'X-SupremeAI-Scope': item.scope,
-          },
-          body: JSON.stringify({ scope: item.scope, ...(item.payload as Record<string, unknown>) }),
-          credentials: 'include',
-        });
-        if (!response.ok) throw new Error(`Sync failed with status ${response.status}`);
+        const path = `/api/v1/sync/${item.table}`;
+        const payload = { scope: item.scope, ...(item.payload as Record<string, unknown>) };
+        if (method === 'POST') {
+          await apiClient.post(path, payload);
+        } else if (method === 'PUT') {
+          await apiClient.put(path, payload);
+        } else {
+          await apiClient.delete(path, { body: JSON.stringify(payload) });
+        }
         await localDb.syncQueue.delete(item.id!);
       } catch (error) {
         const attempts = item.attempts + 1;

@@ -9,9 +9,28 @@ from fastapi import HTTPException, Request
 from core.logging_config import logger
 
 
+def _rate_limit_identity(request: Request) -> str:
+    """Return an identity that is never controlled by a tenant header.
+
+    Authentication middleware may run after this dependency, so unauthenticated
+    requests are isolated by source IP until a verified tenant is available.
+    """
+    tenant_id = getattr(request.state, "tenant_id", None)
+    if tenant_id:
+        return f"tenant:{tenant_id}"
+
+    user = getattr(request.state, "user", None) or {}
+    subject = user.get("sub") or user.get("subject")
+    if subject:
+        return f"subject:{subject}"
+
+    client_ip = request.client.host if request.client else "unknown"
+    return f"ip:{client_ip}"
+
+
 async def enforce_tenant_rate_limit(request: Request):
-    """Upstash / Redis atomic sliding window tenant rate limiting guard."""
-    tenant_id = request.headers.get("x-tenant-id", "anonymous_pool")
+    """Upstash / Redis atomic sliding window rate limiting guard."""
+    identity = _rate_limit_identity(request)
 
     from core.cache.redis_manager import redis_manager
 
@@ -21,7 +40,7 @@ async def enforce_tenant_rate_limit(request: Request):
         )
         return
 
-    cache_key = f"rate_limit:{tenant_id}"
+    cache_key = f"rate_limit:{identity}"
 
     try:
         pipe = redis_manager.client.pipeline()

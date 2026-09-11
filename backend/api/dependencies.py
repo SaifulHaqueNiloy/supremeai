@@ -196,7 +196,7 @@ def get_current_tenant(
 ) -> str:
     """
     বাংলা মন্তব্য: TenantExtractionMiddleware-এর লজিক এখন Depends() হিসেবে।
-    X-Tenant-ID হেডার বা JWT sub থেকে tenant_id বের করে।
+    শুধুমাত্র যাচাইকৃত JWT claims থেকে tenant_id বের করে।
 
     শুধুমাত্র যে রাউটে tenant context দরকার সেখানে ব্যবহার করুন।
     উদাহরণ: tenant_id: str = Depends(get_current_tenant)
@@ -286,23 +286,7 @@ async def verify_idempotency(request: Request) -> None:
     if not hasattr(request.state, "_cleanup_callbacks"):
         request.state._cleanup_callbacks = []
     request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
-    request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
-    request.state._cleanup_callbacks.append(cleanup_idempotency_lock)
-    # বাংলা মন্তব্য: ডুপ্লিকেট রিকোয়েস্ট প্রসেসিং ব্লক করা হচ্ছে
-    acquired = await acquire_idempotency_lock(idempotency_key, 120)
-    if not acquired:
-        raise HTTPException(
-            status_code=409,
-            detail="Conflict: Request is already being processed. Duplicate execution blocked.",
-        )
 
-    # বাংলা মন্তব্য: Lock অ্যাকোয়ার হলে request state-এ key রাখা হচ্ছে
-    # যাতে response পাঠানোর পরে lock release করা যায়
-    request.state.idempotency_key = idempotency_key
-
-    # বাংলা মন্তব্য: Response পাঠানোর পরে lock release করা
-    # এটি নিশ্চিত করে যে ডুপ্লিকেট রিকোয়েস্ট ব্লক হলেও
-    # প্রথম রিকোয়েস্ট সম্পন্ন হলে lock মুক্ত হয়
     original_send = request.scope.get("send")
 
     async def release_lock_on_response(message):

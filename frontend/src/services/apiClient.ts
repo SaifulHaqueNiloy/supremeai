@@ -49,7 +49,7 @@ export const clearAuthToken = (): void => {
   if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem('supremeai_auth_token');
-      localStorage.removeItem('supreme_admin_jwt');
+      sessionStorage.removeItem('supreme_admin_jwt');
       localStorage.removeItem('adminToken'); // বাংলা: legacy duplicate key — migration sweep
     } catch (e) {
       // বাংলা: localStorage অনুপস্থিত (incognito / SSR) — নীরবে বাদ দেওয়া।
@@ -73,7 +73,7 @@ export const clearAuthToken = (): void => {
 // admin token (supreme_admin_jwt) থাকলে তা প্রিফার করি, নচেৎ ইউজার token (supremeai_auth_token)।
 export const getRawToken = (): string | null => {
   if (typeof window === 'undefined') return cachedToken;
-  const admin = localStorage.getItem('supreme_admin_jwt');
+  const admin = sessionStorage.getItem('supreme_admin_jwt');
   if (admin) return admin;
   const user = localStorage.getItem('supremeai_auth_token');
   if (user) return user;
@@ -99,12 +99,12 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
 
   // 🟢 Sprint 5: Backend API Integration
   if (cachedToken === null) {
-    cachedToken = localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
+    cachedToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
   }
 
   // 🔥 ফিক্স: admin-api endpoint গুলো admin-role JWT (`supreme_admin_jwt`) চায়।
   // admin dashboard ব্যবহার করলে admin token-ই Bearer হিসেবে পাঠানো হবে (প্রিফারেন্স), নচেৎ ইউজার token।
-  const adminToken = localStorage.getItem('supreme_admin_jwt');
+  const adminToken = sessionStorage.getItem('supreme_admin_jwt');
   const effectiveToken = adminToken || cachedToken;
 
   if (effectiveToken) {

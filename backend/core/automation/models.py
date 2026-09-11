@@ -95,6 +95,24 @@ class AutomationEvent(BaseModel):
     )
 
 
+class ExecutionEnvelope(BaseModel):
+    """Canonical governance envelope shared by chat, tools, browser, and agents."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    execution_id: str = Field(default_factory=lambda: str(uuid4()))
+    actor_id: str
+    tenant_id: str
+    intent: str
+    policy_decision: str = "pending"
+    model_route: str | None = None
+    tool_calls: list[dict[str, Any]] = Field(default_factory=list)
+    budget: dict[str, Any] = Field(default_factory=dict)
+    status: str = "queued"
+    trace_id: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 class AutomationResult(BaseModel):
     """
     Standardized response from the automation dispatcher.

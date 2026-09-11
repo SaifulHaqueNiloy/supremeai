@@ -1,9 +1,11 @@
 import asyncio
 import json
 import os
+from uuid import uuid4
 
 from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, status
 
+from core.automation.models import ExecutionEnvelope
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
 from core.queue.task_queue import task_queue
@@ -476,10 +478,22 @@ async def websocket_chat_endpoint(
     if not auth_payload:
         return
 
-    user_id = auth_payload.get("sub", "unknown")
+    user_id = auth_payload.get("sub")
+    tenant_id = auth_payload.get("tenant_id") or auth_payload.get("org_id")
+    if not user_id or not tenant_id:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Tenant context required")
+        return
     connected = await manager.connect(websocket, user_id, client_ip)
     if not connected:
         return
+    execution = ExecutionEnvelope(
+        execution_id=str(uuid4()),
+        actor_id=user_id,
+        tenant_id=str(tenant_id),
+        intent="websocket_chat",
+        policy_decision="authenticated",
+        status="running",
+    )
 
     # সেশন হিস্ট্রি মেইনটেইন করার জন্য চ্যাট অবজেক্ট তৈরি করা
     # MEMLEAK-004 FIX: Use bounded deque instead of unbounded list.
@@ -551,7 +565,10 @@ async def websocket_chat_endpoint(
 
                 await task_queue.enqueue(
                     task_type="analyze_preferences",
-                    payload={"content": content_to_send},
+                    payload={
+                        "content": content_to_send,
+                        "execution": execution.model_dump(mode="json"),
+                    },
                     user_id=user_id,
                 )
 

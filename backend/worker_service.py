@@ -35,6 +35,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
+from core.automation.models import ExecutionEnvelope
 from database.session import get_db_session_context
 
 SUPPORTED_CAPABILITIES = frozenset({"acknowledge", "scrape"})
@@ -65,11 +66,24 @@ class TaskContract(BaseModel):
     max_retries: int = Field(default=3, ge=0, le=3)
     timeout_seconds: int = Field(default=300, ge=1, le=900)
     metadata: dict[str, Any] = Field(default_factory=dict)
+    execution: ExecutionEnvelope | None = None
 
     @model_validator(mode="after")
     def validate_contract(self) -> TaskContract:
         if len(str(self.metadata).encode("utf-8")) > MAX_METADATA_BYTES:
             raise ValueError(f"metadata exceeds {MAX_METADATA_BYTES} bytes")
+        if self.execution is not None:
+            if self.execution.tenant_id != self.tenant_id:
+                raise ValueError("execution tenant does not match task tenant")
+            if self.user_id and self.execution.actor_id != self.user_id:
+                raise ValueError("execution actor does not match task user")
+        else:
+            self.execution = ExecutionEnvelope(
+                actor_id=self.user_id or "worker",
+                tenant_id=self.tenant_id,
+                intent=self.goal,
+                trace_id=self.correlation_id,
+            )
         if self.capability == "scrape" and not isinstance(self.metadata.get("url"), str):
             raise ValueError("metadata.url is required for scrape tasks")
         return self
@@ -453,10 +467,13 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
             response = await client.post(f"{scraper_url}/scrape", json={"url": url})
             response.raise_for_status()
             return {
-                "capability": capability,
-                "tenant_id": contract.tenant_id,
-                "user_id": contract.user_id,
-                "data": response.json(),
+        "capability": capability,
+        "tenant_id": contract.tenant_id,
+        "user_id": contract.user_id,
+        "execution_id": contract.execution.execution_id if contract.execution else None,
+        "trace_id": contract.execution.trace_id if contract.execution else contract.correlation_id,
+        "data": response.json(),
+
             }
     if capability != "acknowledge":
         raise ValueError(f"Unsupported worker capability: {capability}")
@@ -464,6 +481,8 @@ async def _process_task(payload: dict[str, Any]) -> dict[str, Any]:
         "capability": capability,
         "tenant_id": contract.tenant_id,
         "user_id": contract.user_id,
+        "execution_id": contract.execution.execution_id if contract.execution else None,
+        "trace_id": contract.execution.trace_id if contract.execution else contract.correlation_id,
         "goal": contract.goal,
         "metadata": metadata,
     }

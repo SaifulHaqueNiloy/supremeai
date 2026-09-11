@@ -3,13 +3,14 @@ import os
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from core.automation.dispatcher import automation_dispatcher
-from core.automation.models import AutomationEvent
+from core.automation.models import AutomationEvent, ExecutionEnvelope
 from core.config import settings
+from api.dependencies import get_current_user_token
 from core.logging_config import logger
 from core.rate_limiter import AsyncRateLimiter
 from core.security.authentication.auth_middleware import AuthMiddleware
@@ -61,7 +62,11 @@ ALLOWED_BACKEND_PATHS = {
 
 
 @router.post("/forward")
-async def gateway_forward(request: GatewayRequest, http_request: Request) -> Response:
+async def gateway_forward(
+    request: GatewayRequest,
+    http_request: Request,
+    user: dict[str, Any] = Depends(get_current_user_token),
+) -> Response:
     source = (request.source or "web").lower()
     if source not in ALLOWED_BACKEND_PATHS:
         raise HTTPException(status_code=400, detail="unknown source")
@@ -103,8 +108,24 @@ async def gateway_forward(request: GatewayRequest, http_request: Request) -> Res
 
     target = backend_url.rstrip("/") + "/" + request.path.lstrip("/")
 
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    actor_id = str(user.get("sub") or user.get("user_id") or user.get("email") or "").strip()
+    if not tenant_id or not actor_id:
+        raise HTTPException(status_code=403, detail="Verified tenant and actor context required")
+
+    envelope = ExecutionEnvelope(
+        actor_id=actor_id,
+        tenant_id=tenant_id,
+        intent=f"gateway:{source}:{request.method.upper()}:{normalized}",
+        policy_decision="approved",
+        status="forwarding",
+        trace_id=getattr(http_request.state, "correlation_id", None),
+    )
     headers = dict(request.headers or {})
     headers.setdefault("X-Source", source)
+    headers["X-Execution-ID"] = envelope.execution_id
+    headers["X-Actor-ID"] = envelope.actor_id
+    headers["X-Trace-ID"] = envelope.trace_id or envelope.execution_id
 
     # API Key Rotation & Free Tier Tracking Integration
     if any(

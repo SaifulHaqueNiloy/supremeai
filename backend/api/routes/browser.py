@@ -84,7 +84,9 @@ def get_audit() -> AuditLogger:
 @router.get("/automation/saved-sessions")
 async def list_saved_sessions(user: dict = Depends(get_current_user_token)):
     owner_id = str(user.get("sub") or "")
-    tenant_id = str(user.get("tenant_id") or owner_id)
+    tenant_id = str(user.get("tenant_id") or "")
+    if not owner_id or not tenant_id:
+        raise HTTPException(status_code=401, detail="Authenticated tenant claim required")
     return {
         "sessions": [item.__dict__ for item in browser_session_catalog.list(tenant_id, owner_id)]
     }
@@ -95,7 +97,9 @@ async def save_session(payload: SavedSessionRequest, user: dict = Depends(get_cu
     from core.security import is_safe_url
 
     owner_id = str(user.get("sub") or "")
-    tenant_id = str(user.get("tenant_id") or owner_id)
+    tenant_id = str(user.get("tenant_id") or "")
+    if not owner_id or not tenant_id:
+        raise HTTPException(status_code=401, detail="Authenticated tenant claim required")
     if not owner_id or not tenant_id or not is_safe_url(payload.url):
         raise HTTPException(
             status_code=400, detail="Valid authenticated owner and safe URL are required"
@@ -115,7 +119,9 @@ async def save_session(payload: SavedSessionRequest, user: dict = Depends(get_cu
 @router.delete("/automation/saved-sessions/{saved_session_id}")
 async def revoke_saved_session(saved_session_id: str, user: dict = Depends(get_current_user_token)):
     owner_id = str(user.get("sub") or "")
-    tenant_id = str(user.get("tenant_id") or owner_id)
+    tenant_id = str(user.get("tenant_id") or "")
+    if not owner_id or not tenant_id:
+        raise HTTPException(status_code=401, detail="Authenticated tenant claim required")
     if not browser_session_catalog.revoke(saved_session_id, tenant_id, owner_id):
         raise HTTPException(status_code=404, detail="Saved browser session not found")
     return {"success": True}
@@ -288,24 +294,32 @@ async def resume_automation(user: dict = Depends(get_current_user_token)):
 
 
 @router.get("/surf/status")
-def get_status():
+def get_status(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     return BROWSER_STATUS
 
 
 @router.post("/surf/start")
-def start_surf():
+def start_surf(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     BROWSER_STATUS["browsing"] = True
     return {"status": "started"}
 
 
 @router.post("/surf/stop")
-def stop_surf():
+def stop_surf(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     BROWSER_STATUS["browsing"] = False
     return {"status": "stopped"}
 
 
 @router.get("/activity/recent")
-def get_recent_activity():
+def get_recent_activity(user: dict = Depends(get_current_user_token)):
+    if not user.get("sub") or not user.get("tenant_id"):
+        raise HTTPException(status_code=401, detail="Authenticated tenant required")
     return {"activities": RECENT_ACTIVITIES}
 
 
@@ -1137,7 +1151,7 @@ class SessionIn(BaseModel):
 
 @router.get("/sessions")
 def list_sessions():
-    """বাংলা মন্তব্য: সব সেশন তালিকা রিটার্ন করে"""
+    """বাংলা মন্তব্য: সব সেশন ত���লিকা রিটার্ন করে"""
     return {"sessions": list(SESSIONS.values())}
 
 
