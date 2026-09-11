@@ -57,9 +57,9 @@ class LanguageRouter:
 
     def route_by_language(self, text: str, detected_lang: str | None = None) -> dict[str, Any]:
         language = detected_lang or self.detect(text)
-        language_code = self.LANGUAGE_CODES.get(language, "en")
+        language_code = self.LANGUAGE_CODES.get(language)
         model = settings.model_multilingual
-        if language_code == "en":
+        if language_code == "en" or (language_code is None and language.lower() == "english"):
             model = settings.model_general
         return {
             "language": language,
