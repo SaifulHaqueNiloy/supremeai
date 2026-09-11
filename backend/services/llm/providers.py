@@ -62,14 +62,21 @@ class LLMProvider(Protocol):
 
 
 # Module-level client cache to prevent memory leaks (Bug #8)
-_http_clients = {}
+_http_clients: dict[str, httpx.AsyncClient] = {}
+_PROVIDER_TIMEOUT = httpx.Timeout(60.0, connect=10.0)
+_PROVIDER_LIMITS = httpx.Limits(max_connections=50, max_keepalive_connections=10)
 
 
 def get_client(base_url: str, headers: dict) -> httpx.AsyncClient:
     # Need to convert dictionary to a string for hashable key
     key = f"{base_url}:{str(headers)}"
     if key not in _http_clients:
-        _http_clients[key] = httpx.AsyncClient(base_url=base_url, headers=headers)
+        _http_clients[key] = httpx.AsyncClient(
+            base_url=base_url,
+            headers=headers,
+            timeout=_PROVIDER_TIMEOUT,
+            limits=_PROVIDER_LIMITS,
+        )
     return _http_clients[key]
 
 
