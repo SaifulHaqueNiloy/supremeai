@@ -3,10 +3,10 @@
 
 export const adminTokenStore = {
   getRawToken: (): string | null => {
-    return localStorage.getItem('supreme_admin_jwt');
+    return sessionStorage.getItem('supreme_admin_jwt');
   },
   getDecodedToken: (): Record<string, unknown> | null => {
-    const token = localStorage.getItem('supreme_admin_jwt');
+    const token = sessionStorage.getItem('supreme_admin_jwt');
     if (!token) return null;
 
     try {
