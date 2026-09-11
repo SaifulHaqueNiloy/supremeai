@@ -15,7 +15,6 @@
  */
 
 import { Redis } from '@upstash/redis';
-import { cache } from 'react';
 
 // ✅ ENHANCED: Proper compression using Compression Streams API
 async function compress(data: string): Promise<string> {
@@ -23,7 +22,6 @@ async function compress(data: string): Promise<string> {
   
   try {
     if (typeof CompressionStream !== 'undefined') {
-      const encoder = new TextEncoder();
       const compressed = new Blob([data]).stream()
         .pipeThrough(new CompressionStream('gzip'));
       const reader = compressed.getReader();
@@ -239,7 +237,7 @@ export async function warmCacheFromPatterns(): Promise<void> {
     { pattern: 'config:*', ttl: CACHE_TTL.LONG },
   ];
   
-  for (const { pattern, ttl } of patternsToWarm) {
+  for (const { pattern: _pattern, ttl: _ttl } of patternsToWarm) {
     // Implementation would analyze access logs and pre-warm
   }
 }

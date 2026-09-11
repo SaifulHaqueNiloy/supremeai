@@ -21,7 +21,7 @@ describe('WorkspaceViewport', () => {
   });
 
   it('renders fallback EmptyState when activeModule is unknown', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     useCommandCenterStore.setState({ activeModule: 'non_existent_module' as any });
     render(<WorkspaceViewport />);
     expect(screen.getByText('মডিউল পাওয়া যায়নি')).toBeInTheDocument();

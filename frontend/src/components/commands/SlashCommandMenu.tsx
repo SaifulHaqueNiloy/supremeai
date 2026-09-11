@@ -185,9 +185,12 @@ export function SlashCommandMenu({
     }
   }, [activeIndex]);
 
-  // Keyboard navigation
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-      if (!isOpen) return;
+  // Attach keyboard listener to parent
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handler = (e: KeyboardEvent) => {
+      if (!['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) return;
 
       switch (e.key) {
         case 'ArrowDown':
@@ -217,20 +220,9 @@ export function SlashCommandMenu({
       }
     };
 
-  // Attach keyboard listener to parent
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handler = (e: KeyboardEvent) => {
-      if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
-        e.preventDefault();
-        handleKeyDown(e as unknown as React.KeyboardEvent);
-      }
-    };
-
     document.addEventListener('keydown', handler, true);
     return () => document.removeEventListener('keydown', handler, true);
-  }, [isOpen, handleKeyDown]);
+  }, [isOpen, flatCommands, activeIndex, onSelect, onClose]);
 
   // Close on click outside
   useEffect(() => {

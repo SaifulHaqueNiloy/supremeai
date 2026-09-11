@@ -8,7 +8,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 
-export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 'src/dataconnect-generated'] }, {
+export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 'src/dataconnect-generated', 'coverage', 'node_modules'] }, {
   extends: [
     js.configs.recommended,
     ...tseslint.configs.recommended,
@@ -26,12 +26,24 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
     ...reactHooks.configs.recommended.rules,
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true, allowExportNames: ['useTheme', 'useToast', 'useI18n', 'useThemeSync', 'useSwarmStream', 'setSujonState', 'useSujonState', 'SUJON_STATE_EVENT', 'SujonState', 'Theme', 'THEME_ORDER', 'ToastType', 'Toast', 'globalShowToastRef'] },
+      { allowConstantExport: true, allowExportNames: ['useTheme', 'useToast', 'useI18n', 'useThemeSync', 'useSwarmStream', 'setSujonState', 'useSujonState', 'SUJON_STATE_EVENT', 'SujonState', 'Theme', 'THEME_ORDER', 'ToastType', 'Toast', 'globalShowToastRef', 'useSujonMetrics', 'SujonHealthIndicator', 'SujonDashboardGrid', 'useSwarmArchitect', 'useAuthStatus', 'useSystemHealth', 'workspaceFeatureRoutes', 'SwarmArchitect'] },
     ],
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     'react-hooks/set-state-in-effect': 'off',
-    'no-console': ['warn', { allow: ['warn', 'error'] }],
+    'no-console': ['warn', { allow: ['warn', 'error', 'debug'] }],
+  },
+}, {
+  // Test files: Allow any in tests (mocks, stubs, test fixtures)
+  files: ['**/*.{test,spec}.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
+  rules: {
+    '@typescript-eslint/no-explicit-any': 'off',
+  },
+}, {
+  // Routes and config files export route objects, not React components
+  files: ['**/routes/**/*.{ts,tsx}', '**/routes.{ts,tsx}'],
+  rules: {
+    'react-refresh/only-export-components': 'off',
   },
 }, storybook.configs["flat/recommended"], {
   // বাংলা মন্তব্য: eslint-plugin-storybook v10 framework প্যাকেজ থেকে ইম্পোর্ট চায়, কিন্তু

@@ -44,8 +44,8 @@ export const usePlugins = () => {
                 const data = await installedRes.json();
                 setInstalledPlugins(data.installations || []);
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
         } finally {
             setLoading(false);
         }
@@ -67,8 +67,8 @@ export const usePlugins = () => {
             });
             if (!res.ok) throw new Error('Failed to install plugin');
             await fetchPlugins();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
             throw err;
         }
     };
@@ -81,8 +81,8 @@ export const usePlugins = () => {
             });
             if (!res.ok) throw new Error('Failed to uninstall plugin');
             await fetchPlugins();
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : String(err));
             throw err;
         }
     };

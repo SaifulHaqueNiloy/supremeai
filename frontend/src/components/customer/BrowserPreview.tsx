@@ -275,9 +275,3 @@ export function BrowserPreview({
     </div>
   );
 }
-
-// Icon imports (assuming Lucide React)
-function Globe(props: any) { return null; }
-function ArrowRight(props: any) { return null; }
-function Loader2(props: any) { return null; }
-function Wifi(props: any) { return null; }

@@ -8,7 +8,6 @@ import {
   ChevronDown,
   File,
 } from 'lucide-react';
-import { apiClient } from '../../services/apiClient';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -83,22 +82,7 @@ export default function ExportMenu({ conversationId, conversationTitle }: Export
     setIsOpen(false);
 
     try {
-      const response = await apiClient.post<Blob>(
-        '/api/chat/export',
-        {
-          conversation_id: conversationId,
-          format: option.format,
-        },
-        {
-          headers: {
-            Accept: 'application/octet-stream',
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      // The API client returns parsed JSON by default, so we need to handle blob differently
-      // Fall back: make a direct fetch call for the blob
+      // Fetch export blob directly
       const baseUrl = window.location.origin;
       const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
 

@@ -295,7 +295,7 @@ export const ServiceHealthMonitor: React.FC<ServiceHealthMonitorProps> = ({
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
   // Global health query
-  const { data: globalHealth, isLoading, isError, refetch, isFetching } = useQuery({
+  const { data: globalHealth, isLoading, isError: _isError, refetch, isFetching } = useQuery({
     queryKey: ['global-health'],
     queryFn: fetchGlobalHealth,
     refetchInterval: autoRefresh * 1000,

@@ -18,8 +18,8 @@ const ZAI = {
   create: async () => ({
     chat: {
       completions: {
-        create: async (params: any, options?: any) => {
-          console.log("Mocking ZAI completion call", params, options);
+        create: async (params: Record<string, unknown>, options?: Record<string, unknown>) => {
+          console.debug("Mocking ZAI completion call", params, options);
           return {
             choices: [
               { message: { content: "Mocked response from LLM router" } }
@@ -140,14 +140,14 @@ interface RouteResponse {
 }
 
 export class LLMSmartRouter {
-  private zai: any;
+  private zai: Awaited<ReturnType<typeof ZAI.create>> | null;
 
   constructor() {
     this.zai = null; // Initialize lazily
   }
 
   // ✅ NEW: Initialize SDK once
-  private async ensureZAI(): Promise<any> {
+  private async ensureZAI(): Promise<Awaited<ReturnType<typeof ZAI.create>>> {
     if (!this.zai) {
       this.zai = await ZAI.create();
     }

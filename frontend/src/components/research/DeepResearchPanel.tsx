@@ -75,7 +75,7 @@ function getStepIcon(status: StepStatus) {
   }
 }
 
-function getStepLineClass(status: StepStatus): string {
+function _getStepLineClass(status: StepStatus): string {
   switch (status) {
     case 'done':
       return 'bg-emerald-500';

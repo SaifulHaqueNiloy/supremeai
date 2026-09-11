@@ -3,7 +3,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 export interface SecureSseOptions {
   onMessage?: (event: { data: string, type: string }) => void;
   onOpen?: () => void;
-  onError?: (err: any) => void;
+  onError?: (err: unknown) => void;
   onClose?: () => void;
 }
 
