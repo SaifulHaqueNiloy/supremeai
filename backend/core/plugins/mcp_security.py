@@ -39,20 +39,27 @@ class MCPSecurityGuard:
 
             # Resolve every address so DNS rebinding cannot hide a private target.
             try:
-                addresses = socket.getaddrinfo(hostname, parsed.port or 443, type=socket.SOCK_STREAM)
+                addresses = socket.getaddrinfo(
+                    hostname, parsed.port or 443, type=socket.SOCK_STREAM
+                )
             except socket.gaierror:
                 logger.warning("MCP Security: Could not resolve hostname %s", hostname)
                 return False
 
             for address in {item[4][0] for item in addresses}:
                 ip = ipaddress.ip_address(address)
-                if ip.is_private or ip.is_loopback or ip.is_reserved or ip.is_multicast or ip.is_link_local:
+                if (
+                    ip.is_private
+                    or ip.is_loopback
+                    or ip.is_reserved
+                    or ip.is_multicast
+                    or ip.is_link_local
+                ):
                     if not (settings.env == "local" and ip.is_loopback):
                         logger.warning("MCP Security: Denied private/reserved IP for %s", hostname)
                         return False
 
             return True
-
 
         except Exception as e:
             logger.error(f"MCP Security: Error validating URL {url}: {e}")

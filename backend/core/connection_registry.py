@@ -10,8 +10,8 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, Field, HttpUrl
 
 from adaptive_engine._store import get_conn, jdump, jload
-from core.plugins.mcp_security import MCPSecurityGuard
 from core.mcp_audit import MCPAuditEntry, get_audit_logger
+from core.plugins.mcp_security import MCPSecurityGuard
 
 
 class ConnectionRecord(BaseModel):
@@ -60,7 +60,9 @@ class ConnectionRegistry:
             )
             columns = {row[1] for row in conn.execute(f"PRAGMA table_info({self.TABLE})")}
             if "tool_permissions" not in columns:
-                conn.execute(f"ALTER TABLE {self.TABLE} ADD COLUMN tool_permissions TEXT NOT NULL DEFAULT '{{}}'")
+                conn.execute(
+                    f"ALTER TABLE {self.TABLE} ADD COLUMN tool_permissions TEXT NOT NULL DEFAULT '{{}}'"
+                )
             conn.commit()
 
     @staticmethod
@@ -94,8 +96,9 @@ class ConnectionRegistry:
         if permission_level not in {"user", "admin", "system"}:
             raise ValueError("permission_level must be user, admin, or system")
         if permission_level != "user":
-            raise PermissionError("Connections start with user authority; use the permission endpoint for escalation")
-
+            raise PermissionError(
+                "Connections start with user authority; use the permission endpoint for escalation"
+            )
 
         now = datetime.now(UTC).isoformat()
         record = ConnectionRecord(
@@ -119,10 +122,21 @@ class ConnectionRegistry:
                 ON CONFLICT(tenant_id, url) DO UPDATE SET
                  capabilities=excluded.capabilities, name=excluded.name,
                  updated_at=excluded.updated_at, status='active'""",
-                (record.id, record.tenant_id, record.actor_id, str(record.url), record.name,
-                 record.connection_type, record.permission_level, record.status,
-                 jdump(record.capabilities), jdump(record.tool_permissions), jdump(record.metadata),
-                 record.created_at, record.updated_at),
+                (
+                    record.id,
+                    record.tenant_id,
+                    record.actor_id,
+                    str(record.url),
+                    record.name,
+                    record.connection_type,
+                    record.permission_level,
+                    record.status,
+                    jdump(record.capabilities),
+                    jdump(record.tool_permissions),
+                    jdump(record.metadata),
+                    record.created_at,
+                    record.updated_at,
+                ),
             )
             conn.commit()
             stored_row = conn.execute(
@@ -132,12 +146,14 @@ class ConnectionRegistry:
         if stored_row is None:
             raise RuntimeError("Connection registration could not be verified")
         stored_record = self._from_row(stored_row)
-        get_audit_logger().log(MCPAuditEntry(
-            tool_name="mcp.connection.register",
-            decision="allow",
-            risk_level="medium",
-            tenant_id=tenant_id,
-        ))
+        get_audit_logger().log(
+            MCPAuditEntry(
+                tool_name="mcp.connection.register",
+                decision="allow",
+                risk_level="medium",
+                tenant_id=tenant_id,
+            )
+        )
         return stored_record
 
     def set_permission(
@@ -171,13 +187,15 @@ class ConnectionRegistry:
             conn.commit()
         if row is None:
             raise LookupError("Connection not found")
-        get_audit_logger().log(MCPAuditEntry(
-            tool_name="mcp.connection.permission",
-            decision="allow",
-            risk_level="high" if permission_level == "system" else "medium",
-            tenant_id=tenant_id,
-            error=None if previous is None else f"changed_from={previous['permission_level']}",
-        ))
+        get_audit_logger().log(
+            MCPAuditEntry(
+                tool_name="mcp.connection.permission",
+                decision="allow",
+                risk_level="high" if permission_level == "system" else "medium",
+                tenant_id=tenant_id,
+                error=None if previous is None else f"changed_from={previous['permission_level']}",
+            )
+        )
         return self._from_row(row)
 
     def set_tool_permissions(
@@ -190,7 +208,9 @@ class ConnectionRegistry:
         tenant_id, _, role = self._identity(user)
         if role not in {"admin", "owner", "system"}:
             raise PermissionError("Only tenant administrators can change tool permissions")
-        if any(level not in {"deny", "read", "execute", "write"} for level in tool_permissions.values()):
+        if any(
+            level not in {"deny", "read", "execute", "write"} for level in tool_permissions.values()
+        ):
             raise ValueError("Tool permission must be deny, read, execute, or write")
         with get_conn() as conn:
             row = conn.execute(
@@ -208,12 +228,14 @@ class ConnectionRegistry:
                 (connection_id, tenant_id),
             ).fetchone()
             conn.commit()
-        get_audit_logger().log(MCPAuditEntry(
-            tool_name="mcp.connection.tool_permissions",
-            decision="allow",
-            risk_level="high",
-            tenant_id=tenant_id,
-        ))
+        get_audit_logger().log(
+            MCPAuditEntry(
+                tool_name="mcp.connection.tool_permissions",
+                decision="allow",
+                risk_level="high",
+                tenant_id=tenant_id,
+            )
+        )
         return self._from_row(updated)
 
     def reactivate(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
@@ -238,12 +260,14 @@ class ConnectionRegistry:
                 (connection_id, tenant_id),
             ).fetchone()
             conn.commit()
-        get_audit_logger().log(MCPAuditEntry(
-            tool_name="mcp.connection.reactivate",
-            decision="allow",
-            risk_level="medium",
-            tenant_id=tenant_id,
-        ))
+        get_audit_logger().log(
+            MCPAuditEntry(
+                tool_name="mcp.connection.reactivate",
+                decision="allow",
+                risk_level="medium",
+                tenant_id=tenant_id,
+            )
+        )
         return self._from_row(updated)
 
     def health(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
@@ -287,32 +311,41 @@ class ConnectionRegistry:
             conn.commit()
         if row is None:
             raise LookupError("Connection not found")
-        get_audit_logger().log(MCPAuditEntry(
-            tool_name="mcp.connection.revoke",
-            decision="allow",
-            risk_level="high",
-            tenant_id=tenant_id,
-        ))
+        get_audit_logger().log(
+            MCPAuditEntry(
+                tool_name="mcp.connection.revoke",
+                decision="allow",
+                risk_level="high",
+                tenant_id=tenant_id,
+            )
+        )
         return self._from_row(row)
 
     def list_for_tenant(self, user: dict[str, Any]) -> list[ConnectionRecord]:
         tenant_id, _, _ = self._identity(user)
         with get_conn() as conn:
             rows = conn.execute(
-                f"SELECT * FROM {self.TABLE} WHERE tenant_id = ? ORDER BY created_at DESC", (tenant_id,)
+                f"SELECT * FROM {self.TABLE} WHERE tenant_id = ? ORDER BY created_at DESC",
+                (tenant_id,),
             ).fetchall()
         return [self._from_row(row) for row in rows]
 
     @staticmethod
     def _from_row(row: Any) -> ConnectionRecord:
         return ConnectionRecord(
-            id=row["id"], tenant_id=row["tenant_id"], actor_id=row["actor_id"], url=row["url"],
-            name=row["name"], connection_type=row["connection_type"],
-            permission_level=row["permission_level"], status=row["status"],
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            actor_id=row["actor_id"],
+            url=row["url"],
+            name=row["name"],
+            connection_type=row["connection_type"],
+            permission_level=row["permission_level"],
+            status=row["status"],
             capabilities=jload(row["capabilities"], []),
             tool_permissions=jload(row["tool_permissions"], {}),
             metadata=jload(row["metadata"], {}),
-            created_at=row["created_at"], updated_at=row["updated_at"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
         )
 
 

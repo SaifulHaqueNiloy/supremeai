@@ -23,8 +23,12 @@ def upgrade() -> None:
         sa.Column("capabilities", sa.JSON(), nullable=False, server_default="{}"),
         sa.Column("tool_permissions", sa.JSON(), nullable=False, server_default="{}"),
         sa.Column("metadata", sa.JSON(), nullable=False, server_default="{}"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
         sa.UniqueConstraint("tenant_id", "url", name="uq_supremeai_connections_tenant_url"),
     )
     op.create_index("ix_supremeai_connections_tenant", "supremeai_connections", ["tenant_id"])
@@ -38,9 +42,13 @@ def upgrade() -> None:
         sa.Column("connection_id", sa.String(36), nullable=True),
         sa.Column("action", sa.String(64), nullable=False),
         sa.Column("details", sa.JSON(), nullable=False, server_default="{}"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
-    op.create_index("ix_supremeai_connection_audit_tenant", "supremeai_connection_audit", ["tenant_id"])
+    op.create_index(
+        "ix_supremeai_connection_audit_tenant", "supremeai_connection_audit", ["tenant_id"]
+    )
 
 
 def downgrade() -> None:
