@@ -14,13 +14,13 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from api.dependencies import get_current_admin
+from api.dependencies import get_project_admin
 from scout.models import CrawlHistoryRecord, CrawlPolicy, DomainRule, TrustLevel
 
 router = APIRouter(
     prefix="/api/v1/admin/crawler",
     tags=["crawler-admin"],
-    dependencies=[Depends(get_current_admin)],
+    dependencies=[Depends(get_project_admin)],
 )
 
 # In-memory policy and history store with fallback to persistence
@@ -45,10 +45,9 @@ class PolicyCreatePayload(BaseModel):
 
 
 @router.get("/policies", response_model=list[CrawlPolicy])
-async def list_policies(tenant_id: str = "default") -> list[CrawlPolicy]:
+async def list_policies(user: dict = Depends(get_project_admin)) -> list[CrawlPolicy]:
     """Lists all crawl policies for the tenant."""
-    if len(tenant_id) > 128:
-        raise HTTPException(status_code=400, detail="tenant_id too long")
+    tenant_id = user["tenant_id"]
     policies = _TENANT_POLICIES.get(tenant_id)
     if not policies:
         # Default policy returned if none customized
@@ -61,9 +60,10 @@ async def list_policies(tenant_id: str = "default") -> list[CrawlPolicy]:
 
 @router.post("/policies", response_model=CrawlPolicy, status_code=status.HTTP_201_CREATED)
 async def create_or_update_policy(
-    payload: PolicyCreatePayload, tenant_id: str = "default"
+    payload: PolicyCreatePayload, user: dict = Depends(get_project_admin)
 ) -> CrawlPolicy:
     """Creates or updates a crawl policy."""
+    tenant_id = user["tenant_id"]
     new_policy = CrawlPolicy(
         tenant_id=tenant_id,
         name=payload.name,
@@ -91,10 +91,11 @@ async def create_or_update_policy(
 @router.get("/history", response_model=list[CrawlHistoryRecord])
 async def get_crawl_history(
     task_id: str | None = Query(default=None),
-    tenant_id: str = "default",
     limit: int = Query(default=20, ge=1, le=100),
+    user: dict = Depends(get_project_admin),
 ) -> list[CrawlHistoryRecord]:
     """Retrieves crawl execution records and deduplication statistics."""
+    tenant_id = user["tenant_id"]
     records = [
         rec
         for rec in _CRAWL_HISTORY

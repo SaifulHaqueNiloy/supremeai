@@ -26,7 +26,9 @@ CHARACTER_LIMIT = 25000
 
 
 def _get_supabase_db_url() -> str:
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে SUPABASE_DATABASE_URL চেক করা হবে যা টেস্ট কেসগুলোর জন্য জরুরী।
+    # This MCP has no request-scoped tenant connection, so global credentials are platform-only.
+    if not is_admin_authorized():
+        return ""
     return (
         getattr(settings, "supabase_database_url", "")
         or os.environ.get("SUPABASE_DATABASE_URL", "")
