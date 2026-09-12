@@ -199,9 +199,7 @@ async def my_workspace(current_user: dict = Depends(get_current_user_token)) -> 
                     purpose=cap.purpose,
                     status=cap_status,
                     category=cap.category,
-                    unavailable_reason=None
-                    if is_ready
-                    else f"capability lifecycle: {state_value}",
+                    unavailable_reason=None if is_ready else f"capability lifecycle: {state_value}",
                     required_permission=(cap.permissions[0] if cap.permissions else None),
                 )
             )
