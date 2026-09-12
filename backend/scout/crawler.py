@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
@@ -21,11 +21,19 @@ from scout.models import (
     CrawlResponse,
 )
 from scout.policy import PolicyEngine
+from scout.robots import RobotsCache
 from scout.telemetry import CrawlerTelemetry
+
+_MAX_REDIRECT_HOPS = 5
 
 
 class CrawlerService:
-    """Orchestrates policy-guided crawling, deduplication, caching, and extractive summarization."""
+    """Orchestrates policy-guided crawling, deduplication, caching, and extractive summarization.
+
+    বাংলা: Spec 002-এর hardening স্তর — per-domain rate pacing (FR-005),
+    প্রতিটি redirect hop-এ SSRF/policy re-validation (FR-012), robots.txt সম্মান
+    (FR-018), এবং পূর্ণ lifecycle event coverage (FR-010)।
+    """
 
     def __init__(
         self,
@@ -38,6 +46,25 @@ class CrawlerService:
         self.deduplicator = deduplicator or ContentDeduplicator()
         self.summarizer = summarizer or ExtractiveSummarizer()
         self.cache = cache or CrawlerCache()
+        self.robots = RobotsCache()
+        self._rate_limiter = None
+
+    async def _acquire_rate_slot(self, domain: str) -> bool:
+        """বাংলা: ডোমেইন-ভিত্তিক pacing — policy-র rate_limit_per_min সম্মান করে।
+
+        Redis না থাকলে AsyncRateLimiter নিজেই in-memory fallback ব্যবহার করে।
+        যেকোনো limiter ত্রুটিতে আমরা degrade করে allow করি কিন্তু log রাখি।
+        """
+        limit = self.policy_engine.get_rate_limit_for_domain(domain)
+        try:
+            if self._rate_limiter is None:
+                from middleware.rate_limiter import AsyncRateLimiter
+
+                self._rate_limiter = AsyncRateLimiter()
+            return await self._rate_limiter.acquire(f"scout:{domain}", limit=limit, window=60)
+        except Exception as exc:
+            logger.debug(f"rate limiter unavailable for {domain}: {exc}")
+            return True
 
     @staticmethod
     def _clean_html(html: str) -> tuple[str, str, list[str]]:
@@ -53,6 +80,45 @@ class CrawlerService:
         links = [a.get("href", "") for a in soup.find_all("a", href=True) if a.get("href")]
         return title, text, links
 
+    async def _fetch_with_redirect_validation(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        telemetry: CrawlerTelemetry,
+    ) -> httpx.Response | None:
+        """Fetches `url` following redirects manually, re-validating every hop.
+
+        বাংলা: follow_redirects=True দিলে httpx ভেতরের hop-গুলো policy/SSRF
+        check ছাড়াই follow করত — এটা একটা redirect-based SSRF/rebinding দরজা ছিল
+        (Spec 002 FR-012)। এখন প্রতিটি hop আবার PolicyEngine দিয়ে যায়।
+        """
+        current = url
+        for _hop in range(_MAX_REDIRECT_HOPS + 1):
+            allowed, reason = self.policy_engine.is_url_allowed(current)
+            if not allowed:
+                telemetry.emit_event(
+                    CrawlEventType.DOMAIN_SKIPPED,
+                    f"redirect hop rejected: {current} ({reason})",
+                    severity="WARNING",
+                    metadata={"url": current, "reason": reason},
+                )
+                return None
+            resp = await client.get(current)
+            if resp.is_redirect:
+                location = resp.headers.get("location", "")
+                if not location:
+                    return resp
+                current = urljoin(current, location)
+                continue
+            return resp
+        telemetry.emit_event(
+            CrawlEventType.ERROR,
+            f"redirect hop limit exceeded for {url}",
+            severity="WARNING",
+            metadata={"url": url},
+        )
+        return None
+
     async def execute_crawl(self, request: CrawlRequest) -> CrawlResponse:
         """Executes a bounded, policy-controlled crawl starting from the target URL."""
         start_url = request.query_or_url
@@ -60,6 +126,25 @@ class CrawlerService:
         max_results = request.max_results or self.policy_engine.policy.max_results
         timeout_sec = self.policy_engine.policy.request_timeout_seconds
         telemetry = CrawlerTelemetry(request.tenant_id, request.task_id)
+
+        # 0. Policy Before Power — inactive policy authorizes nothing
+        if not self.policy_engine.is_active():
+            telemetry.emit_event(
+                CrawlEventType.ERROR,
+                "crawl refused: policy is inactive",
+                severity="WARNING",
+                metadata={"policy_id": self.policy_engine.policy.id},
+            )
+            return CrawlResponse(
+                task_id=request.task_id,
+                tenant_id=request.tenant_id,
+                query=request.query_or_url,
+                pages=[],
+                total_fetched=0,
+                total_duplicates_skipped=0,
+                token_reduction_pct=0.0,
+                extractive_summary="",
+            )
 
         # 1. Check cache first
         cached = await self.cache.get_cached_response(
@@ -94,7 +179,7 @@ class CrawlerService:
         }
 
         async with httpx.AsyncClient(
-            headers=headers, timeout=float(timeout_sec), follow_redirects=True
+            headers=headers, timeout=float(timeout_sec), follow_redirects=False
         ) as client:
             while queue and len(pages) < max_results:
                 url, depth = queue.popleft()
@@ -105,17 +190,60 @@ class CrawlerService:
                 # Policy gate: SSRF, allowed domain, depth check
                 allowed, reason = self.policy_engine.is_url_allowed(url, current_depth=depth)
                 if not allowed:
-                    logger.debug(f"Crawler skipped URL {url} (reason: {reason})")
+                    # বাংলা: আগে শুধু debug log ছিল — এখন observable event (FR-002/010)
+                    event_type = (
+                        CrawlEventType.DEPTH_REACHED
+                        if reason == "depth_exceeded"
+                        else CrawlEventType.DOMAIN_SKIPPED
+                    )
+                    telemetry.emit_event(
+                        event_type,
+                        f"skipped {url} ({reason})",
+                        metadata={"url": url, "reason": reason, "depth": depth},
+                    )
                     continue
 
                 domain = self.policy_engine.extract_domain(url)
 
+                # robots.txt compliance (FR-018) — governed fetch শুধু অনুমোদিত পথে
+                if not await self.robots.is_allowed(url):
+                    telemetry.emit_event(
+                        CrawlEventType.DOMAIN_SKIPPED,
+                        f"robots.txt disallows {url}",
+                        severity="WARNING",
+                        metadata={"url": url, "reason": "robots_disallowed"},
+                    )
+                    continue
+
+                # Per-domain rate pacing (FR-005) — shared limiter across tasks
+                if not await self._acquire_rate_slot(domain):
+                    telemetry.emit_event(
+                        CrawlEventType.RATE_LIMITED,
+                        f"rate limit reached for {domain}; deferring {url}",
+                        severity="WARNING",
+                        metadata={"url": url, "domain": domain},
+                    )
+                    queue.append((url, depth))  # re-schedule instead of dropping
+                    await asyncio.sleep(1.0)
+                    continue
+
                 try:
-                    resp = await client.get(url)
+                    resp = await self._fetch_with_redirect_validation(client, url, telemetry)
+                    if resp is None:
+                        continue
                     total_fetched += 1
                     if resp.status_code >= 400:
+                        telemetry.emit_event(
+                            CrawlEventType.ERROR,
+                            f"fetch returned HTTP {resp.status_code} for {url}",
+                            severity="WARNING",
+                            metadata={"url": url, "status_code": resp.status_code},
+                        )
                         continue
 
+                    telemetry.emit_event(
+                        CrawlEventType.EXTRACT_START, f"extracting {url}", metadata={"url": url}
+                    )
                     title, text, links = self._clean_html(resp.text)
                     raw_char_count += len(text)
 
@@ -138,6 +266,11 @@ class CrawlerService:
                         extracted_links=links[:25],
                     )
                     pages.append(page_result)
+                    telemetry.emit_event(
+                        CrawlEventType.EXTRACT_COMPLETE,
+                        f"extracted {url} ({len(text)} chars)",
+                        metadata={"url": url, "chars": len(text)},
+                    )
 
                     # Expand links if within depth limit
                     if depth < max_depth:
@@ -147,7 +280,14 @@ class CrawlerService:
                                 queue.append((resolved, depth + 1))
 
                 except Exception as exc:
-                    logger.warning(f"Failed to fetch {url}: {exc}")
+                    # বাংলা: একক ডোমেইনের ব্যর্থতা পুরো task ভাঙবে না (FR-014),
+                    # কিন্তু এখন সেটা event-এ দৃশ্যমান হবে (No Silent Failure)
+                    telemetry.emit_event(
+                        CrawlEventType.ERROR,
+                        f"failed to fetch {url}: {exc}",
+                        severity="WARNING",
+                        metadata={"url": url, "error": str(exc)[:300]},
+                    )
                     continue
 
         # Zero-token extractive summarization across unique content
