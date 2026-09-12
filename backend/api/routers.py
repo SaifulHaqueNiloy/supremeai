@@ -16,12 +16,29 @@ ALL_ROUTERS = [
     # ---- Core & User Routes ----
     # Phase 1: formerly orphaned feature routes are now centrally registered.
     {"path": "api.routes.artifacts", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.branch_conversations", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.browser_action_registry", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.kernel_dispatch", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.browser", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.branch_conversations",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
+    {
+        "path": "api.routes.browser_action_registry",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
     {"path": "api.routes.chat_export", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.chat_search", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.chat_upload", "prefix": "", "is_admin": False, "is_critical": False},
-    {"path": "api.routes.code_dependency_graph", "prefix": "", "is_admin": False, "is_critical": False},
+    {
+        "path": "api.routes.code_dependency_graph",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
     {"path": "api.routes.deep_research", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.prompt_templates", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.reasoning", "prefix": "", "is_admin": False, "is_critical": False},
