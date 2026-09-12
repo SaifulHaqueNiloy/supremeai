@@ -236,7 +236,12 @@ class AgentBreeder:
         """
         Tournament selection: pick the fittest from random tournaments.
         """
-        pool_query = select(BreedingPool).where(BreedingPool.is_active is True)
+        # FIX (P0, review 2026-09-12): `is_active is True` compared the SQLAlchemy
+        # InstrumentedAttribute object against True (always False) → the query had a
+        # constant WHERE-false clause, so select_parents() could NEVER find an active
+        # pool and the whole breeding loop was dead. Use .is_(True) for SQL NULL-safe
+        # comparison. (বাংলা মন্তব্য: এই বাগের কারণে self-evolution breeding কখনোই চলত না।)
+        pool_query = select(BreedingPool).where(BreedingPool.is_active.is_(True))
         if pool_name:
             pool_query = pool_query.where(BreedingPool.pool_name == pool_name)
 

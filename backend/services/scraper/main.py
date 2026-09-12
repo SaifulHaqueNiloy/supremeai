@@ -66,7 +66,13 @@ async def scrape(request: ScrapeRequest):
         raise HTTPException(
             status_code=400, detail="SSRF check failed: Unauthorized internal access"
         )
-    result = _scraper.fetch_page(request.url)
+    # FIX (P1, review 2026-09-12): fetch_page is a SYNC httpx call (up to 15s
+    # timeout). Calling it directly froze the single event loop — one slow target
+    # stalled /browse, /recipe and /health for the whole service. Offload to a
+    # worker thread so concurrent scrapes stay responsive.
+    import asyncio as _asyncio
+
+    result = await _asyncio.to_thread(_scraper.fetch_page, request.url)
     return result
 
 

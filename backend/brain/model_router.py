@@ -296,15 +296,21 @@ class ModelRouter:
 
             if not best_provider:
                 logger.warning(
-                    "[ModelRouter] All free tiers exhausted! Degrading to Eco-Mode (Local/Mock)."
+                    "[ModelRouter] All free tiers exhausted! Reporting honest quota exhaustion."
                 )
+                # FIX (P1, review 2026-09-12): Eco-Mode previously returned
+                # success=True with a fabricated "System is running in Eco-Mode"
+                # response — ~34 production callers treated it as a REAL model
+                # answer (wrong data stored/shown to users). The repo's own
+                # constitution requires "Deliver honestly": report failure with a
+                # typed marker so callers can queue/retry or inform the user.
                 return {
-                    "success": True,
+                    "success": False,
                     "model": "eco_mode_offline",
-                    "eco_mode": True,  # Flag to be converted to X-SupremeAI-Status: Eco-Mode header
-                    "text": json.dumps(
-                        {"response": "System is running in Eco-Mode. Minimal response generated."}
-                    ),
+                    "eco_mode": True,
+                    "error": "quota_exhausted",
+                    "error_type": "QuotaExceededError",
+                    "text": "",
                     "cost": 0.0,
                 }
 

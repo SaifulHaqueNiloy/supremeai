@@ -256,10 +256,16 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
 
 export const apiClient = {
   get: async <T>(path: string, options?: RequestInit): Promise<T> => {
+    // FIX (P1, review 2026-09-12): `options` was spread LAST, so a caller passing
+    // `options.headers` silently REPLACED the merged auth headers. Spread options
+    // first, then re-assert the computed method/headers/body.
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
-      method: 'GET',
-      headers: await getAuthHeaders(),
       ...options,
+      method: 'GET',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...(await getAuthHeaders()),
+      },
     });
     return handleResponse(res);
   },
@@ -275,10 +281,14 @@ export const apiClient = {
           : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     }
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
-      method: 'POST',
-      headers: { ...authHeaders, ...(options?.headers as Record<string, string>) },
-      body: body ? JSON.stringify(body) : undefined,
+      // FIX (P1, review 2026-09-12): options first — see get() above.
       ...options,
+      method: 'POST',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse(res);
   },
@@ -294,19 +304,27 @@ export const apiClient = {
           : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     }
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
-      method: 'PUT',
-      headers: { ...authHeaders, ...(options?.headers as Record<string, string>) },
-      body: body ? JSON.stringify(body) : undefined,
+      // FIX (P1, review 2026-09-12): options first — see get() above.
       ...options,
+      method: 'PUT',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse(res);
   },
 
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
+    // FIX (P1, review 2026-09-12): options first — see get() above.
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
-      method: 'DELETE',
-      headers: await getAuthHeaders(),
       ...options,
+      method: 'DELETE',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...(await getAuthHeaders()),
+      },
     });
     return handleResponse(res);
   },

@@ -115,7 +115,14 @@ async def _queue_available() -> tuple[bool, str | None]:
 
 
 def _verify_worker_auth(request: Request) -> None:
-    """Validate internal worker authentication token or JWT secret (Audit Critical-4 Fix)."""
+    """Validate internal worker authentication token (Audit Critical-4 Fix).
+
+    SECURITY FIX (P1, review 2026-09-12): the JWT *signing secrets*
+    (SUPREMEAI_JWT_SECRET / JWT_SECRET) were accepted as bearer passwords here.
+    Any leak of those env values granted full worker-service access, and signing
+    secrets must never double as credentials. Only dedicated worker tokens
+    (WORKER_AUTH_TOKEN / INTERNAL_API_KEY / SUPREMEAI_API_KEY) are accepted now.
+    """
     # Allow testing bypass only if explicitly enabled in non-prod
     if (
         os.getenv("ALLOW_TEST_AUTH_BYPASS", "").lower() in ("true", "1")
@@ -129,8 +136,6 @@ def _verify_worker_auth(request: Request) -> None:
             os.getenv("WORKER_AUTH_TOKEN"),
             os.getenv("INTERNAL_API_KEY"),
             os.getenv("SUPREMEAI_API_KEY"),
-            os.getenv("SUPREMEAI_JWT_SECRET"),
-            os.getenv("JWT_SECRET"),
         ]
         if t
     ]
@@ -143,9 +148,6 @@ def _verify_worker_auth(request: Request) -> None:
             sec = getattr(settings, "supremeai_api_key", None)
             if sec and hasattr(sec, "get_secret_value"):
                 expected_tokens.append(sec.get_secret_value())
-            jwt_sec = getattr(settings, "jwt_secret", "")
-            if jwt_sec:
-                expected_tokens.append(jwt_sec)
         except Exception as e:
             logger.debug(f"Failed to load expected auth tokens from settings: {e}")
 

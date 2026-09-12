@@ -185,9 +185,18 @@ export const ADMIN_BACKEND_URL: string =
 export const circuits = { api: apiCircuit, websocket: wsCircuit };
 export type { CircuitState };
 
-// 🔒 RUNTIME VALIDATION - Missing backend = Error in production.
-if ((import.meta.env.PROD) && !USER_BACKEND_URL) {
-  throw new Error('❌ VITE_API_URL or VITE_BACKEND_URL is required in production. Set it in .env');
+// 🔒 RUNTIME VALIDATION - Missing backend = degraded viewer mode, NOT a white screen.
+// FIX (P0, review 2026-09-12): আগে এখানে module-scope `throw` ছিল — import টাইমেই
+// পুরো React অ্যাপ white-screen হয়ে যেত (Error Boundary-ও মাউন্ট হওয়ার আগেই)।
+// vite.config.ts নিজেই "public viewer mode" সাপোর্ট করে; তাই এখন শুধু একটি
+// `backendMissing` ফ্ল্যাগ export করা হয় — অ্যাপ চাইলে কনফিগ-এরর ব্যানার দেখাতে পারে।
+export const backendMissing: boolean = import.meta.env.PROD && !USER_BACKEND_URL;
+if (backendMissing) {
+  // eslint-disable-next-line no-console
+  console.error(
+    '❌ VITE_API_URL or VITE_BACKEND_URL is required in production. ' +
+      'App will run in degraded viewer mode until the backend URL is configured.',
+  );
 }
 
 /**

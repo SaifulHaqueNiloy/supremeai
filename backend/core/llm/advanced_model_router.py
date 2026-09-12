@@ -23,18 +23,24 @@ from core.logging_config import logger
 
 # ── Tier 0 Deterministic Patterns ──────────────────────────────────────────
 _DETERMINISTIC_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("pypi_search", re.compile(r"search\s+(?:pypi|pypi\s+for|package\s+index)\s+", re.I)),
+    # FIX (P0/P1, review 2026-09-12): patterns are anchored to the START of the
+    # prompt (^) so ordinary sentences like "how do I format as json in python"
+    # no longer trigger the deterministic fast-path and fabricate answers.
+    ("pypi_search", re.compile(r"^\s*search\s+(?:pypi|pypi\s+for|package\s+index)\s+", re.I)),
     (
         "list_files",
         re.compile(
-            r"list\s+(?:all\s+)?(?:files?|py|js|ts|java|go|rs)\s+(?:in|under|at|from)?", re.I
+            r"^\s*list\s+(?:all\s+)?(?:files?|py|js|ts|java|go|rs)\s+(?:in|under|at|from)?", re.I
         ),
     ),
-    ("regex_format", re.compile(r"format\s+as\s+(?:json|xml|csv|table|yaml|yml|html)", re.I)),
+    (
+        "regex_format",
+        re.compile(r"^\s*format\s+as\s+(?:json|xml|csv|table|yaml|yml|html)\s*[:\-]?", re.I),
+    ),
     (
         "schema_lookup",
         re.compile(
-            r"(?:show|list|describe|what\s+are)\s+(?:schema|tables?|columns?|fields?)", re.I
+            r"^\s*(?:show|list|describe|what\s+are)\s+(?:schema|tables?|columns?|fields?)", re.I
         ),
     ),
 ]
@@ -218,6 +224,10 @@ class Tier0Dispatcher:
     def _search_pypi(prompt: str) -> dict[str, Any]:
         match = re.search(r"(?:pypi\s+for\s+|pypi\s+|package\s+index\s+for\s+)(\S+)", prompt, re.I)
         pkg_name = match.group(1).strip() if match else prompt.strip()
+        # FIX (P0, review 2026-09-12): validate the package name — a crafted
+        # prompt could previously inject URL path fragments into the request.
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", pkg_name):
+            return {"error": "invalid package name", "query": pkg_name}
         url = f"https://pypi.org/pypi/{pkg_name}/json"
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "SupremeAI/2.0"})
@@ -239,6 +249,23 @@ class Tier0Dispatcher:
 
         match = re.search(r"(?:in|under|at|from)\s+(.+)", prompt, re.I)
         target_dir = match.group(1).strip() if match else "."
+
+        # FIX (P0, review 2026-09-12): SANDBOX the filesystem scan. Previously
+        # any prompt like "list files in /etc" returned REAL server paths
+        # (information disclosure). Only paths inside the sandbox root resolve.
+        sandbox_root = os.path.realpath(
+            os.environ.get(
+                "SUPREMEAI_TIER0_SANDBOX_ROOT",
+                os.path.join(os.getcwd(), "workspace"),
+            )
+        )
+        if os.path.isabs(target_dir) or ".." in target_dir:
+            return {"error": "path outside sandbox", "directory": target_dir}
+        resolved = os.path.realpath(os.path.join(sandbox_root, target_dir))
+        if not (resolved == sandbox_root or resolved.startswith(sandbox_root + os.sep)):
+            return {"error": "path outside sandbox", "directory": target_dir}
+        target_dir = resolved
+
         files: list[dict[str, Any]] = []
         try:
             with os.scandir(target_dir) as entries:
@@ -604,6 +631,15 @@ class AdvancedModelRouter:
         result = None
         if is_deterministic:
             result = Tier0Dispatcher.execute(matched, prompt)
+            # FIX (P1, review 2026-09-12): if the executor returned an error dict,
+            # FALL THROUGH to the LLM instead of serving the error as the answer.
+            if isinstance(result, dict) and result.get("error"):
+                logger.info(
+                    f"[AdvancedModelRouter] Tier 0 executor error for {matched}, "
+                    "falling through to LLM chain"
+                )
+                is_deterministic = False
+                result = None
             logger.info(
                 f"[AdvancedModelRouter] Tier 0 fast-path: "
                 f"pattern={matched} confidence={confidence:.2f} task_type={task_type}"

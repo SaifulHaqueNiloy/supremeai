@@ -368,7 +368,21 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 7. ObservabilityMiddleware - Track metrics before security checks
     app.add_middleware(ObservabilityMiddleware)
 
-    # 8. Authentication - MUST come before other security middleware
+    # 7.5 Rate Limiting — FIX (P1, review 2026-09-12): Starlette runs the
+    # LAST-added middleware FIRST (outermost). RateLimit was added after Auth,
+    # so it executed BEFORE AuthMiddleware had set request.state.user — every
+    # authenticated user (and admin) was throttled at the anonymous tier.
+    # Adding it BEFORE Auth makes it INNER, i.e. it runs AFTER authentication.
+    from core.rate_limit import RateLimiter
+
+    app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
+
+    # 7.6 Idempotency — FIX (P1, review 2026-09-12): moved INSIDE the auth
+    # boundary so the idempotency key can be scoped per authenticated user
+    # (previously cross-user response replay was possible via a shared key).
+    app.add_middleware(IdempotencyMiddleware)
+
+    # 8. Authentication — runs BEFORE rate limiting / idempotency (see above)
     app.add_middleware(AuthMiddleware)
 
     # 9. API Key validation - After authentication
@@ -382,16 +396,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 12. Security: Chaos injection - After authentication for controlled testing
     app.add_middleware(ChaosInjectorMiddleware)  # type: ignore
-
-    # 13. Idempotency middleware - After authentication to ensure idempotency per user
-    app.add_middleware(IdempotencyMiddleware)
-
-    # 14. Rate Limiting — CORS is added last (below), so it wraps this, and
-    # a 429 short-circuit response returned here still gets CORS headers on
-    # the way back out through the stack.
-    from core.rate_limit import RateLimiter
-
-    app.add_middleware(RateLimitMiddleware, limiter=RateLimiter())
 
     # 15. Response standardization - runs before CORS wraps everything
     app.add_middleware(ResponseStandardizationMiddleware)

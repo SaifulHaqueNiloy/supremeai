@@ -348,6 +348,17 @@ class GeminiProvider:
             headers=headers,
             timeout=httpx.Timeout(60.0, connect=10.0),
         )
+        # FIX (P1, review 2026-09-12): self.model was referenced by health_check()
+        # but NEVER defined — every health check raised AttributeError (swallowed by
+        # `except Exception`) and returned False forever, permanently removing Gemini
+        # from provider chains (e.g. the EMBEDDING chain [GEMINI, OLLAMA] degraded).
+        raw_model = getattr(settings, "model_vision", "models/gemini-2.0-flash")
+        model_id = (
+            str(raw_model) if isinstance(raw_model, str | bytes) else "models/gemini-2.0-flash"
+        )
+        # Gemini REST API needs a bare model id ("models/gemini-2.0-flash"); strip a
+        # "gemini/" provider prefix if the settings value carries one.
+        self.model = model_id.split("/", 1)[1] if model_id.startswith("gemini/") else model_id
 
     @timed("llm.gemini.latency")
     @circuit_breaker(name="gemini", failure_threshold=5, recovery_timeout=60)
