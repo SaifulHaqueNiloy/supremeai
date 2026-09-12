@@ -77,7 +77,20 @@ app = FastAPI(
 # Dev localhost entries are kept as convenience defaults.
 # Set ALLOWED_ORIGINS env var in production, e.g.:
 #   ALLOWED_ORIGINS=https://supremeai.app,https://admin.supremeai.app
+#
+# Phase 1 (specs/001 close-out) — CORS unification: raw env parsing এখন
+# middleware/cors_policy.py-র resolver দিয়ে যায় — single source of truth:
+#   * wildcard '*' সবসময় বাদ (credentialed CORS-এ অবৈধ ও অনিরাপদ);
+#   * ADMIN_CORS_ORIGINS-এ ঘোষিত admin console origin সবসময় উপস্থিত;
+#   * একই resolver app_builder.py ও /config/validation-report-ও ব্যবহার করে।
 import os as _os
+
+from middleware.cors_policy import (
+    resolve_admin_cors_origins as _resolve_admin_cors_origins,
+)
+from middleware.cors_policy import (
+    resolve_user_cors_origins as _resolve_user_cors_origins,
+)
 
 _dev_origins = [
     "http://localhost:3000",  # is_local()
@@ -88,7 +101,12 @@ _dev_origins = [
 ]
 _prod_origins_env = _os.getenv("ALLOWED_ORIGINS", "")
 _prod_origins = [o.strip() for o in _prod_origins_env.split(",") if o.strip()]
-_allowed_origins = _dev_origins + _prod_origins
+_configured_origins = _dev_origins + _prod_origins
+_admin_raw = [o.strip() for o in _os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
+_allowed_origins = sorted(
+    set(_resolve_user_cors_origins(_configured_origins))
+    | set(_resolve_admin_cors_origins(_admin_raw))
+)
 
 app.add_middleware(
     CORSMiddleware,

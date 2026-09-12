@@ -6,7 +6,14 @@ import secrets
 import sys
 from typing import Any
 
-from pydantic import SecretStr, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SecretStr,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from core.logging_config import logger
 
@@ -462,3 +469,160 @@ class SettingsValidationMixin:
 
         load_dotenv(override=True)
         logger.info("⚙️ [Config] Environment variables hot-reloaded successfully.")
+
+
+# ---------------------------------------------------------------------------
+# ConfigValidationReport (MASTER_PLAN Phase 1 — specs/001 close-out)
+# ---------------------------------------------------------------------------
+
+
+class ConfigCheck(BaseModel):
+    """One config validation result row (honest, machine-readable)."""
+
+    name: str
+    status: str  # "ok" | "warning" | "error"
+    detail: str = ""
+    fix_suggestion: str = ""
+
+
+class ConfigValidationReport(BaseModel):
+    """Aggregated configuration truth for the current environment.
+
+    বাংলা: specs/001 (Dynamic Production Configuration) প্রতিশ্রুত ক্লাস — আগে
+    শুধু ডকুমেন্টে ছিল, কোডে নয়। এটি বুট-টাইম বা admin API থেকে ডাকলে
+    বর্তমান env-এর সত্যিকারের কনফিগ অবস্থা জানায়: কোন required var অনুপস্থিত,
+    কোন ফরম্যাট ভাঙা, CORS wildcard আছে কি না — চুপচাপ নয় (No Silent Failure)।
+    """
+
+    environment: str = "unknown"
+    ok: bool = True
+    errors: list[ConfigCheck] = Field(default_factory=list)
+    warnings: list[ConfigCheck] = Field(default_factory=list)
+    checks: list[ConfigCheck] = Field(default_factory=list)
+    generated_at: str = ""
+
+    def add(self, check: ConfigCheck) -> None:
+        self.checks.append(check)
+        if check.status == "error":
+            self.errors.append(check)
+            self.ok = False
+        elif check.status == "warning":
+            self.warnings.append(check)
+
+
+# Required environment variables for a deployable core service.
+_REQUIRED_VARS = (
+    "JWT_SECRET",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+)
+
+# Format checks: env var -> regex name from SettingsValidationMixin.FORMAT_PATTERNS.
+_FORMAT_CHECKS = {
+    "SUPABASE_URL": "supabase_url",
+    "REDIS_URL": "redis_url",
+}
+
+
+def build_config_validation_report(env: str | None = None) -> ConfigValidationReport:
+    """Builds an honest ConfigValidationReport for the current process env.
+
+    বাংলা: কোনো global state mutate করে না — শুধু পড়ে ও রিপোর্ট করে। এটি
+    /config/validation-report এন্ডপয়েন্ট ও boot check দুই জায়গাতেই reuse হয়।
+    """
+    import os
+    import re
+    from datetime import UTC, datetime
+
+    environment = env or os.getenv("ENV") or os.getenv("ENVIRONMENT") or "local"
+    report = ConfigValidationReport(
+        environment=str(environment),
+        generated_at=datetime.now(UTC).isoformat(),
+    )
+    patterns = SettingsValidationMixin.FORMAT_PATTERNS
+
+    for var in _REQUIRED_VARS:
+        value = os.getenv(var, "")
+        if not value.strip():
+            report.add(
+                ConfigCheck(
+                    name=var,
+                    status="error",
+                    detail="Required environment variable is missing or empty.",
+                    fix_suggestion=SettingsValidationMixin.FIX_SUGGESTIONS.get(
+                        var.lower(), f"Set {var} in the deployment environment."
+                    ),
+                )
+            )
+        else:
+            report.add(ConfigCheck(name=var, status="ok", detail="present (value not logged)"))
+
+    for var, pattern_name in _FORMAT_CHECKS.items():
+        value = os.getenv(var, "")
+        if not value.strip():
+            continue  # optional var; presence handled above for required ones
+        if not re.match(patterns.get(pattern_name, r".+"), value):
+            report.add(
+                ConfigCheck(
+                    name=var,
+                    status="error",
+                    detail=f"Value does not match the {pattern_name} format pattern.",
+                    fix_suggestion=f"Check {var} format (see core/config_validation.py patterns).",
+                )
+            )
+        else:
+            report.add(ConfigCheck(name=var, status="ok", detail="format valid"))
+
+    # CORS unification check (specs/001): wildcard must never survive.
+    try:
+        from middleware.cors_policy import resolve_admin_cors_origins, resolve_user_cors_origins
+
+        raw_user = [
+            o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+        ] or ["http://localhost:3000"]
+        raw_admin = [o.strip() for o in os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
+        resolved = set(resolve_user_cors_origins(raw_user)) | set(
+            resolve_admin_cors_origins(raw_admin)
+        )
+        if "*" in resolved:
+            report.add(
+                ConfigCheck(
+                    name="cors_origins",
+                    status="error",
+                    detail="Wildcard '*' origin survived resolution — credentialed CORS is unsafe.",
+                    fix_suggestion="Remove '*' from CORS env vars; list explicit origins.",
+                )
+            )
+        else:
+            report.add(
+                ConfigCheck(
+                    name="cors_origins",
+                    status="ok",
+                    detail=f"{len(resolved)} explicit origin(s) after policy resolution",
+                )
+            )
+    except Exception as exc:
+        report.add(
+            ConfigCheck(
+                name="cors_origins",
+                status="warning",
+                detail=f"CORS policy resolver unavailable: {exc}",
+            )
+        )
+
+    # Production completeness (mirror of SettingsValidationMixin rule, env-level)
+    if str(environment).lower() in {"production", "prod", "staging"}:
+        for var in ("SUPABASE_DATABASE_URL",):
+            if not os.getenv(var, "").strip():
+                report.add(
+                    ConfigCheck(
+                        name=var,
+                        status="error",
+                        detail=f"{var} is required in {environment} (No Silent Failure).",
+                        fix_suggestion=SettingsValidationMixin.FIX_SUGGESTIONS.get(
+                            "supabase_database_url", ""
+                        ),
+                    )
+                )
+
+    return report
