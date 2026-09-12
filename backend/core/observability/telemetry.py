@@ -10,10 +10,15 @@ from opentelemetry.trace import Span, Status, StatusCode, Tracer
 from core.logging_config import logger
 
 _tracer: Tracer | None = None
+_provider: TracerProvider | None = None
+_httpx_instrumented = False
 
 
 def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = None) -> None:
-    global _tracer
+    global _tracer, _provider, _httpx_instrumented
+    if _tracer is not None:
+        return
+
     endpoint = otlp_endpoint or os.getenv("OTLP_ENDPOINT", "")
     provider = TracerProvider()
     if endpoint:
@@ -35,16 +40,19 @@ def setup_tracing(service_name: str = "supremeai", otlp_endpoint: str | None = N
     else:
         logger.info("ℹ️ No OTLP endpoint configured — tracing runs in no-op mode.")
     otel_trace.set_tracer_provider(provider)
+    _provider = provider
     _tracer = otel_trace.get_tracer(service_name)
 
     # Enable automatic tracing for outgoing HTTPX calls (end-to-end W3C propagation)
-    try:
-        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    if not _httpx_instrumented:
+        try:
+            from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 
-        HTTPXClientInstrumentor().instrument()
-        logger.info("✅ HTTPX OpenTelemetry instrumentor enabled.")
-    except ImportError:
-        logger.warning("⚠️ opentelemetry-instrumentation-httpx not installed.")
+            HTTPXClientInstrumentor().instrument()
+            _httpx_instrumented = True
+            logger.info("HTTPX OpenTelemetry instrumentor enabled.")
+        except ImportError:
+            logger.warning("opentelemetry-instrumentation-httpx not installed.")
 
 
 def get_tracer() -> Tracer | None:
