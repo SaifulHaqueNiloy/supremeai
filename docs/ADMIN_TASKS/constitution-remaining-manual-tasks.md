@@ -54,3 +54,28 @@ Still requiring staged implementation, live infrastructure, or security approval
 - Run staging OpenAPI, frontend contract, restore, failure-fallback, and browser smoke tests; attach evidence to the release record.
 
 These items are intentionally not marked complete from repository-local edits alone.
+
+## Human behavior alignment and continuous learning handoff (2026-09-13)
+
+Completed locally:
+
+- Added `backend/core/behavioral_intelligence/` as a separate subsystem; browser automation behavior remains in `core/human_behavior.py`.
+- Added bounded, ephemeral behavioral signal contracts with uncertainty fields and no durable psychological identity fields.
+- Added deterministic strategy selection for clarification, concise responses, frustration-aware directness, and safety boundaries.
+- Added policy gates that keep behavioral signals advisory and preserve existing action approval/manual-only controls.
+- Added privacy-safe learning metadata sanitization that rejects raw prompt/response/content fields.
+- No production request path, model weights, training artifact, or user profile was mutated by this local implementation.
+
+Still manual or staged:
+
+- Review and approve the behavioral signal taxonomy, thresholds, language coverage, and risk vocabulary with the architecture/privacy owner.
+- Add tenant-scoped durable preference storage only after selecting the production database, consent model, retention period, deletion/export workflow, and RLS/authorization tests.
+- Integrate the strategy router into the canonical request path only after end-to-end policy, latency, fallback, and tenant-isolation tests pass.
+- Build curated consented seed data; complete de-identification, contamination checks, deduplication, and sampled human review before any training use.
+- Extend the existing synthetic and RLHF pipelines with dataset versioning, provenance, evaluator dimensions, and a hard prohibition on mock data for production training.
+- Implement the behavioral evaluation benchmark and baseline comparison across coding, multilingual, safety, tool-use, adversarial, and long-context cases.
+- Run cloud SFT/DPO experiments and artifact signing/registry promotion; local repository changes cannot validate GPU training or model quality.
+- Execute shadow/canary deployment, cost/latency regression checks, rollback drill, and explicit human promotion approval.
+- Approve privacy/ethics boundaries for emotional inference, sensitive attributes, training consent, retention, and user-facing transparency.
+
+These tasks must not be marked complete from repository-local evidence alone.
