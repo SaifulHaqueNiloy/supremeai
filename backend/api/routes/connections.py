@@ -18,7 +18,8 @@ from typing import Any, Literal
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
 
 from adaptive_engine.capability_registry import (
     Capability,
@@ -37,11 +38,23 @@ router = APIRouter(prefix="/api/v1/connections", tags=["connections"])
 # ---------------------------------------------------------------------------
 
 
+class _CamelResponse(BaseModel):
+    """বাংলা: response contract হলো frontend/types/contracts-এর camelCase vocabulary।
+
+    Phase 2 contract-গুলো (capability-contract.ts, connection-contract.ts) camelCase
+    পড়ে — কিন্তু backend আগে snake_case পাঠাত, ফলে `providerLabel`/`capabilityId`
+    UI-তে `undefined` হয়ে যেত। alias generator দিয়ে wire format এখন contract-মুখী,
+    আর `populate_by_name` রাখায় backend-internal snake_case construction অক্ষত থাকে।
+    """
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
+
+
 class DetectionRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
 
 
-class DetectionResponse(BaseModel):
+class DetectionResponse(_CamelResponse):
     detected: bool
     protocol: Literal["mcp", "oauth", "rest", "custom"]
     provider_label: str
@@ -54,20 +67,20 @@ class RegisterRequest(BaseModel):
     label: str | None = Field(default=None, max_length=120)
 
 
-class RegisterResponse(BaseModel):
+class RegisterResponse(_CamelResponse):
     connection_id: str
     capability_id: str
     health: Literal["pending"] = "pending"
     message: str
 
 
-class WorkspaceContext(BaseModel):
+class WorkspaceContext(_CamelResponse):
     id: str
     label: str
     active: bool
 
 
-class WorkspaceCapability(BaseModel):
+class WorkspaceCapability(_CamelResponse):
     capability_id: str
     name: str
     purpose: str
@@ -77,7 +90,7 @@ class WorkspaceCapability(BaseModel):
     required_permission: str | None
 
 
-class MyWorkspaceResponse(BaseModel):
+class MyWorkspaceResponse(_CamelResponse):
     user_id: str
     authorized_contexts: list[WorkspaceContext]
     execution_mode: str = "ask_before_acting"
@@ -90,7 +103,7 @@ class SetModeRequest(BaseModel):
     mode: Literal["read_only", "ask_before_acting", "autonomous"]
 
 
-class SetModeResponse(BaseModel):
+class SetModeResponse(_CamelResponse):
     user_id: str
     mode: str
     persisted: bool
@@ -164,24 +177,55 @@ async def my_workspace(current_user: dict = Depends(get_current_user_token)) -> 
     try:
         registry: CapabilityRegistry = get_capability_registry()
         rows = registry.list(tenant_id=tenant_id if isinstance(tenant_id, str) else None, limit=100)
-        ready_states = {"measured", "active", "production", "ready"}
+        # বাংলা: শুধু বাস্তব lifecycle মান — capability_registry.LifecycleState-এ
+        # "production"/"ready" নামে কোনো state নেই, তাই ওরা আগে dead entry ছিল।
+        ready_states = {"measured", "active"}
         for cap in rows:
             state_value = str(getattr(cap.lifecycle_state, "value", cap.lifecycle_state)).lower()
             is_ready = state_value in ready_states
+            has_permission = bool(cap.permissions)
+            if is_ready:
+                cap_status: Literal["ready", "idle", "unavailable", "requestable"] = "ready"
+            elif has_permission:
+                # বাংলা: permission আছে কিন্তু lifecycle এখনো পরিণত হয়নি —
+                # user দরকার হলে access চাইতে পারবে (Explain-Why UX)
+                cap_status = "requestable"
+            else:
+                cap_status = "unavailable"
             capabilities.append(
                 WorkspaceCapability(
                     capability_id=cap.capability_id,
                     name=cap.name,
                     purpose=cap.purpose,
-                    status="ready" if is_ready else "unavailable",
+                    status=cap_status,
                     category=cap.category,
-                    unavailable_reason=None if is_ready else f"capability lifecycle: {state_value}",
+                    unavailable_reason=None
+                    if is_ready
+                    else f"capability lifecycle: {state_value}",
                     required_permission=(cap.permissions[0] if cap.permissions else None),
                 )
             )
     except Exception as exc:  # pragma: no cover - registry storage failure
         # বাংলা: silent failure নয় — degrade করব কিন্তু log-এ evidence থাকবে
         logger.warning("capability registry unavailable for %s: %s", user_id, exc)
+
+    # বাংলা: Zero-Friction stack (core.connection_registry) এখন একই response-এ
+    # প্রবাহিত হয় — দুটি parallel engine-এর state আর আলাদা থাকবে না।
+    connections: list[dict[str, Any]] = []
+    try:
+        from core.connection_registry import ConnectionRegistry
+
+        connection_registry = ConnectionRegistry()
+        for record in connection_registry.list_for_tenant(current_user):
+            connections.append(
+                {
+                    "connectionId": record.id,
+                    "name": record.name,
+                    "health": "healthy" if record.status == "active" else "unreachable",
+                }
+            )
+    except Exception as exc:  # pragma: no cover - registry storage failure
+        logger.warning("connection registry unavailable for %s: %s", user_id, exc)
 
     # বাংলা: authorized contexts — বর্তমানে personal workspace; admin context শুধু
     # backend RBAC অনুমোদন করলেই যোগ হবে (Correction 2 — no client-side escalation)।
@@ -191,7 +235,7 @@ async def my_workspace(current_user: dict = Depends(get_current_user_token)) -> 
         user_id=user_id,
         authorized_contexts=contexts,
         capabilities=capabilities,
-        connections=[],
+        connections=connections,
         recent_activity=[],
     )
 
@@ -290,36 +334,6 @@ async def set_execution_mode(payload: SetModeRequest, current_user: dict) -> Set
     )
 
 
-def detect_protocol(raw_url: str) -> DetectionResponse:
-    """বাংলা: URL থেকে provider/protocol অনুমান — network call ছাড়াই, deterministic।"""
-    text = (raw_url or "").strip()
-    reasons: list[str] = []
-    if not text:
-        return DetectionResponse(
-            detected=False, protocol="custom", provider_label="Custom tool", reasons=["empty input"]
-        )
-
-    lowered = text.lower()
-    if lowered.startswith("mcp://") or "/mcp" in lowered or lowered.endswith("/sse"):
-        reasons.append("MCP transport marker found in URL")
-        return DetectionResponse(
-            detected=True, protocol="mcp", provider_label="Custom MCP tool", reasons=reasons
-        )
-
-    if lowered.startswith("http://") or lowered.startswith("https://"):
-        host = urlparse(text).netloc.lower()
-        for marker, label in _PROVIDER_HINTS:
-            if marker in host:
-                reasons.append(f"host matches known provider: {marker}")
-                return DetectionResponse(
-                    detected=True, protocol="oauth", provider_label=label, reasons=reasons
-                )
-        reasons.append("generic https endpoint")
-        return DetectionResponse(
-            detected=True, protocol="rest", provider_label="Web service", reasons=reasons
-        )
-
-    reasons.append("no recognizable transport; treating as custom tool")
-    return DetectionResponse(
-        detected=False, protocol="custom", provider_label="Custom tool", reasons=reasons
-    )
+# বাংলা: NOTE — এই ফাইলের শেষে detect_protocol-এর একটি duplicate definition ছিল
+# যা উপরের canonical version-কে shadow করত (dead code + confusion source)।
+# Reuse-Before-Creation constitution অনুযায়ী সরানো হয়েছে।
