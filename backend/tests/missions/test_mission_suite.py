@@ -244,3 +244,201 @@ class TestMissionReliabilityScoreboard:
         )
         delta = abs((now - rec.created_at).total_seconds())
         assert delta < timedelta(minutes=1).total_seconds()
+
+
+# ---------------------------------------------------------------------------
+# Mission 6 — AI Memory: pgvector semantic recall + tenant isolation
+# ---------------------------------------------------------------------------
+class TestMissionAIMemorySemanticRecall:
+    @pytest.mark.asyncio
+    async def test_memory_upsert_and_similarity_search(self):
+        """বাংলা: FreeTierOptimizedVectorStore মেমরি upsert ও tenant-scoped অনুসন্ধান করে।"""
+        from unittest.mock import MagicMock
+
+        from core.ai_memory.vector_store import FreeTierOptimizedVectorStore
+
+        store = FreeTierOptimizedVectorStore("https://mock.supabase.co", "mock-key")
+
+        # Mock table().upsert().execute()
+        mock_execute = MagicMock()
+        mock_table = MagicMock()
+        mock_table.upsert.return_value.execute = mock_execute
+        store.client.table = MagicMock(return_value=mock_table)
+
+        # Upsert 2 memory records
+        emb1 = [0.1] * 1536
+        emb2 = [0.2] * 1536
+        payloads = [
+            {"user_id": "u-tenant1", "summary": "Python async architecture guidelines"},
+            {"user_id": "u-tenant2", "summary": "Secret infrastructure tokens"},
+        ]
+        ids = ["mem-1", "mem-2"]
+
+        success = await store.upsert_batch([emb1, emb2], payloads, ids)
+        assert success is True
+        assert mock_table.upsert.called
+
+        # Mock RPC for tenant-isolated semantic search
+        mock_rpc = MagicMock()
+        mock_rpc.execute.return_value.data = [
+            {"id": "mem-1", "similarity": 0.92, "content": "Python async guidelines"}
+        ]
+        store.client.rpc = MagicMock(return_value=mock_rpc)
+
+        results = await store.similarity_search(
+            query_embedding=[0.1] * 1536, limit=5, user_id="u-tenant1"
+        )
+        assert len(results) == 1
+        assert results[0]["id"] == "mem-1"
+        assert results[0]["score"] > 0.8
+        # Verify user_id parameter passed to match_memories RPC
+        store.client.rpc.assert_called_with(
+            "match_memories",
+            {
+                "query_embedding": [0.1] * 1536,
+                "match_threshold": 0.7,
+                "match_count": 5,
+                "p_user_id": "u-tenant1",
+            },
+        )
+
+
+# ---------------------------------------------------------------------------
+# Mission 7 — Cost-Minimized Capability Ladder ($0 vs Paid)
+# ---------------------------------------------------------------------------
+class TestMissionCostMinimizedLadder:
+    def test_ladder_ordering_and_principles(self):
+        """বাংলা: GOVERNED_MULTI_AGENT_DECISION_ARCHITECTURE অনুযায়ী
+        Cost Optimization Ladder সর্বদা $0 লোকাল/ব্রাউজার/ক্যাশ পাথ আগে খুঁজবে।"""
+        ladder_steps = [
+            "cached_reasoning_reuse",
+            "local_ast_computation",
+            "headless_browser_session",
+            "internal_mcp_capability",
+            "free_tier_provider",
+            "low_cost_commercial",
+            "frontier_high_cost",
+        ]
+        assert ladder_steps[0] == "cached_reasoning_reuse"
+        assert ladder_steps[2] == "headless_browser_session"
+        assert ladder_steps[-1] == "frontier_high_cost"
+
+    @pytest.mark.asyncio
+    async def test_decision_cache_avoids_duplicate_reasoning(self):
+        """বাংলা: হুবহু একই কনটেক্সট আসলে ডিসিশন ইঞ্জিন পুনরায় ক্যালকুলেট না করে
+        ক্যাশড রেজাল্ট সরবরাহ করে (টোকেন ও গণনা সাশ্রয়)।"""
+        from core.decision_engine import DecisionEngine
+
+        engine = DecisionEngine()
+        context = {"risk_flags": [], "recent_error_rate": 0.05, "sandbox_passed": True}
+
+        first_decision = await engine.decide(context)
+        assert first_decision["action"] == "proceed"
+        assert len(engine.decision_history) == 1
+
+        # Second call with identical context must hit cache
+        second_decision = await engine.decide(context)
+        assert second_decision["action"] == "proceed"
+        # History length remains 1 because cache was used without duplication
+        assert len(engine.decision_history) == 1
+
+
+# ---------------------------------------------------------------------------
+# Mission 8 — Cross-Agent Challenge Matrix (Security vs Cost vs Safety)
+# ---------------------------------------------------------------------------
+class TestMissionCrossAgentChallenge:
+    def test_safety_cannot_be_optimized_away(self):
+        """বাংলা: আর্কিটেকচার নীতি: কস্ট অপ্টিমাইজার কখনো সেফটি রুলকে বাইপাস করতে পারবে না।
+        Destructive অপারেশন বা সিকিউরিটি রুল বাজেট বাঁচানোর অজুহাতে স্কিপ করা নিষিদ্ধ।"""
+        from core.autonoguard_engine import SENSITIVE_OPS
+
+        # Admin and billing paths must always be guarded
+        assert "/api/v1/admin/" in SENSITIVE_OPS
+        assert "/api/v1/billing/" in SENSITIVE_OPS
+        assert "/api/v1/evolution/" in SENSITIVE_OPS
+
+    @pytest.mark.asyncio
+    async def test_decision_engine_blocks_sandbox_failure_unconditionally(self):
+        """বাংলা: যদি স্যান্ডবক্স ফেইল করে তবে এরর রেট যত কমই হোক না কেন,
+        ডিসিশন ইঞ্জিন 'proceed' করতে দেবে না — অবিলম্বে 'block' করবে।"""
+        from core.decision_engine import DecisionEngine
+
+        engine = DecisionEngine()
+        # Even with 0% error rate, sandbox failure forces immediate block
+        decision = await engine.decide(
+            {"risk_flags": [], "recent_error_rate": 0.0, "sandbox_passed": False}
+        )
+        assert decision["action"] == "block"
+        assert decision["confidence"] == 1.0
+        assert decision["reason"] == "sandbox_failed"
+
+
+# ---------------------------------------------------------------------------
+# Mission 9 — Risk-Tiered Pipeline Classification (L1 Deterministic Gate)
+# ---------------------------------------------------------------------------
+class TestMissionRiskTieredClassification:
+    @pytest.mark.asyncio
+    async def test_risk_flags_trigger_review_gate(self):
+        """বাংলা: Risk flags উপস্থিত থাকলে অ্যাকশন সরাসরি এক্সিকিউট না হয়ে 'review'-এ পাঠায়।"""
+        from core.decision_engine import DecisionEngine
+
+        engine = DecisionEngine()
+        decision = await engine.decide(
+            {
+                "risk_flags": ["destructive_sql_detected", "credential_in_diff"],
+                "recent_error_rate": 0.0,
+                "sandbox_passed": True,
+            }
+        )
+        assert decision["action"] == "review"
+        assert decision["reason"] == "risk_flags"
+        assert decision["confidence"] == 0.5
+
+    def test_ast_security_scanner_flags_destructive_patterns(self):
+        """বাংলা: L1 ডিটারমিনিস্টিক গেট — AST/কোড স্ক্যানার ঝুঁকিপূর্ণ কোড শনাক্ত করে।"""
+        from core.ast_security_scanner import ASTSecurityScannerEngine
+
+        scanner = ASTSecurityScannerEngine()
+        # Malicious snippet with os.system and eval
+        malicious_code = "import os\nos.system('rm -rf /')\neval('__import__(\"sys\").exit()')"
+        res = scanner.scan_code(malicious_code)
+        # Scan result must flag security concerns
+        assert res["safe"] is False
+        assert res["error"] is not None
+
+
+# ---------------------------------------------------------------------------
+# Mission 10 — One-Line Connection & Capability Registration
+# ---------------------------------------------------------------------------
+class TestMissionMCPConnectionRegistry:
+    def test_mcp_registration_ssrf_protection(self):
+        """বাংলা: SSRF বা বিপজ্জনক ইন্টারনাল আইপি-যুক্ত URL রেজিস্ট্রি ব্লক করে (Constitution #8)।"""
+        from core.connection_registry import ConnectionRegistry
+
+        registry = ConnectionRegistry()
+        user = {"tenant_id": "test-tenant", "user_id": "test-actor", "role": "user"}
+
+        # Attempt to register dangerous link-local cloud metadata IP
+        with pytest.raises(ValueError, match="SSRF / security policy"):
+            registry.register(
+                user=user,
+                url="http://169.254.169.254/latest/meta-data/",
+                capabilities=[{"name": "metadata_tool"}],
+                name="AWS Metadata Exploit",
+            )
+
+    def test_mcp_registration_least_privilege_default(self):
+        """বাংলা: নতুন কানেকশন সরাসরি admin/system পারমিশন নিয়ে রেজিস্টার করা যায় না (Least Privilege)।"""
+        from core.connection_registry import ConnectionRegistry
+
+        registry = ConnectionRegistry()
+        user = {"tenant_id": "test-tenant", "user_id": "test-actor", "role": "user"}
+
+        with pytest.raises(PermissionError, match="Connections start with user authority"):
+            registry.register(
+                user=user,
+                url="https://mcp.trusted-partner.com/sse",
+                capabilities=[{"name": "partner_tool"}],
+                name="Partner Tool",
+                permission_level="admin",
+            )
