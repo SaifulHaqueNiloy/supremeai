@@ -46,16 +46,39 @@ class IntelligenceRouter:
             tier, reason = IntelligenceTier.FAST, "Low-risk general task uses the bounded fast path."
             budget = ExecutionBudget()
 
-        applied = requested_tier is not None and requested_tier != tier.value
-        if requested_tier in {IntelligenceTier.FAST.value, IntelligenceTier.VERIFIED.value, IntelligenceTier.SWARM.value} and classification not in {TaskClassification.IRREVERSIBLE, TaskClassification.SENSITIVE}:
+        allowed_tiers = {
+            IntelligenceTier.FAST.value,
+            IntelligenceTier.VERIFIED.value,
+            IntelligenceTier.SWARM.value,
+        }
+        override_applied = False
+        if (
+            requested_tier in allowed_tiers
+            and classification
+            not in {TaskClassification.IRREVERSIBLE, TaskClassification.SENSITIVE}
+            and requested_tier != tier.value
+        ):
             tier = IntelligenceTier(requested_tier)
             budget = self._budget_for(tier)
             reason = "User tier override applied within immutable safety limits."
-        return RoutingDecision(tier=tier, classification=classification, budget=budget, reason=reason, override_requested=requested_tier, override_applied=applied, audit_id=self._audit_id(prompt))
+            override_applied = True
+        return RoutingDecision(
+            tier=tier,
+            classification=classification,
+            budget=budget,
+            reason=reason,
+            override_requested=requested_tier,
+            override_applied=override_applied,
+            audit_id=self._audit_id(prompt),
+        )
 
     @staticmethod
     def _budget_for(tier: IntelligenceTier) -> ExecutionBudget:
-        return {IntelligenceTier.FAST: ExecutionBudget(), IntelligenceTier.VERIFIED: ExecutionBudget(max_agents=3, max_refinements=1), IntelligenceTier.SWARM: ExecutionBudget(max_agents=6, max_refinements=3)}.get(tier, ExecutionBudget())
+        return {
+            IntelligenceTier.FAST: ExecutionBudget(),
+            IntelligenceTier.VERIFIED: ExecutionBudget(max_agents=3, max_refinements=1),
+            IntelligenceTier.SWARM: ExecutionBudget(max_agents=6, max_refinements=3),
+        }.get(tier, ExecutionBudget())
 
     @staticmethod
     def _audit_id(prompt: str) -> str:

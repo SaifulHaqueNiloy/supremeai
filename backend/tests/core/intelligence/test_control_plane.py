@@ -16,6 +16,14 @@ def test_router_blocks_irreversible_override():
     assert decision.classification == TaskClassification.IRREVERSIBLE
     assert decision.tier == IntelligenceTier.VERIFIED
     assert decision.budget.requires_approval
+    assert not decision.override_applied
+
+
+def test_router_applies_safe_override_and_budget():
+    decision = IntelligenceRouter().route("research this topic", requested_tier="swarm")
+    assert decision.tier == IntelligenceTier.SWARM
+    assert decision.override_applied
+    assert decision.budget.max_agents == 6
 
 
 def test_verifier_reports_contradictions():
