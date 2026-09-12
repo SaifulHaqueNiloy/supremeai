@@ -44,7 +44,9 @@ class TestConnectionsAPI(unittest.TestCase):
         data = res.json()
         self.assertTrue(data["detected"])
         self.assertEqual(data["protocol"], "oauth")
-        self.assertEqual(data["provider_label"], "GitHub")
+        # বাংলা: wire format frontend/types/contracts (camelCase) মেনে চলে —
+        # snake_case গেলে AddNewWizard-এ providerLabel undefined হতো
+        self.assertEqual(data["providerLabel"], "GitHub")
 
     def test_detect_mcp_transport(self):
         res = self.client.post(
@@ -67,11 +69,13 @@ class TestConnectionsAPI(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         data = res.json()
         # বাংলা: test env-এ conftest auth bypass test-admin user inject করে —
-        # user_id backend থেকেই আসছে (client-supplied নয়), শুধু non-empty যাচাই করা হলো
-        self.assertTrue(data["user_id"])
-        # বাংলা: backend-authoritative — শুধু personal context; কোনো admin leak নেই
-        self.assertEqual([c["id"] for c in data["authorized_contexts"]], ["personal"])
-        self.assertIn(data["execution_mode"], {"read_only", "ask_before_acting", "autonomous"})
+        # userId backend থেকেই আসছে (client-supplied নয়), শুধু non-empty যাচাই করা হলো
+        self.assertTrue(data["userId"])
+        # বাংলা: camelCase contract — authorizedContexts (authorized_contexts নয়)
+        self.assertEqual([c["id"] for c in data["authorizedContexts"]], ["personal"])
+        self.assertIn(data["executionMode"], {"read_only", "ask_before_acting", "autonomous"})
+        # বাংলা: Zero-Friction unification — connections এখন ConnectionRegistry থেকেও আসে
+        self.assertIsInstance(data["connections"], list)
 
     def test_register_creates_capability(self):
         with patch("api.routes.connections.get_capability_registry") as getter:
@@ -83,7 +87,8 @@ class TestConnectionsAPI(unittest.TestCase):
             )
         self.assertEqual(res.status_code, 200)
         data = res.json()
-        self.assertEqual(data["capability_id"], "cap-abc")
+        # বাংলা: camelCase contract — UserDashboard capabilityId পড়ে
+        self.assertEqual(data["capabilityId"], "cap-abc")
         self.assertEqual(data["health"], "pending")
 
     def test_register_rejects_blank_url(self):

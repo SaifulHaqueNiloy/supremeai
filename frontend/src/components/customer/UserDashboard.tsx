@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Bot, FileText, FolderKanban, Plus, RefreshCw, Settings2, Sparkles, Terminal, X, Zap } from 'lucide-react';
 import AddNewWizard from './AddNewWizard';
-import { ManageItem } from './CapabilityCards';
+import { CapabilityUnavailableExplainer, ManageItem } from './CapabilityCards';
 import { capabilityFromModule, type UserCapability } from '../../types/contracts';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -28,6 +28,8 @@ export const UserDashboard: React.FC = () => {
   // State-based capabilities from live backend (Phase 2 Progressive Disclosure)
   const [serverCapabilities, setServerCapabilities] = useState<UserCapability[]>([]);
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
+  // বাংলা: backend-এর Explain-Why payload (unavailableReason) — Explainer UX-এর জন্য
+  const [capabilityReasons, setCapabilityReasons] = useState<Record<string, string>>({});
 
   const fetchWorkspaceState = async () => {
     setLoadingWorkspace(true);
@@ -42,6 +44,11 @@ export const UserDashboard: React.FC = () => {
           href: c.category === 'agent' ? '/agents' : undefined,
         }));
         setServerCapabilities(mapped);
+        const reasons: Record<string, string> = {};
+        for (const c of data.capabilities) {
+          if (c.unavailableReason) reasons[c.capabilityId] = c.unavailableReason;
+        }
+        setCapabilityReasons(reasons);
       }
     } catch (err) {
       // Graceful degradation: fallback to client-enabled modules
@@ -174,6 +181,34 @@ export const UserDashboard: React.FC = () => {
               />
             ))}
           </div>
+
+          {/* বাংলা: Phase 4 Universal Manage Model — unavailable/requestable capability-র
+              জন্য Explain-Why + Request Access। আগে কম্পোনেন্টটি ছিল কিন্তু কখনো render
+              হতো না (dead UI)। */}
+          {(() => {
+            const unavailable = mergedCapabilities
+              .filter((c) => c.status === 'unavailable' || c.status === 'requestable')
+              .map((c) => ({
+                id: c.id,
+                label: c.label,
+                reason:
+                  capabilityReasons[c.id] ||
+                  'This capability is not ready in your workspace yet.',
+                requestable: c.status === 'requestable',
+              }));
+            if (unavailable.length === 0) return null;
+            return (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {unavailable.map((item) => (
+                  <CapabilityUnavailableExplainer
+                    key={item.id}
+                    item={item}
+                    onRequest={() => navigate('/settings')}
+                  />
+                ))}
+              </div>
+            );
+          })()}
         </section>
 
         <section className="grid gap-4 lg:grid-cols-2">
