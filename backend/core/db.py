@@ -199,9 +199,12 @@ async def db_session() -> AsyncSession:  # type: ignore[override]
 
 async def check_db_health() -> dict[str, bool | str]:
     """Check database connectivity and performance."""
+    eng = engine or get_engine()
+    if eng is None:
+        return {"healthy": False, "error": "Database engine not initialized", "latency_ms": 0}
     try:
         start = time.monotonic()
-        async with engine.connect() as conn:
+        async with eng.connect() as conn:
             await conn.execute(text("SELECT 1"))
         latency_ms = (time.monotonic() - start) * 1000
 

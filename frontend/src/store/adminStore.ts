@@ -23,12 +23,10 @@ const decodeJwt = (token: string): Record<string, unknown> | null => {
     return decoded;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    // 🛡️ অডিটর ফিক্স: সাইলেন্ট ফেইলর ব্লাস্ট করে ইন্টারনাল ডায়াগনস্টিক ট্রেস এনফোর্স
-    console.warn("⚠️ [JWT_DECODE_LEAK]: Failed to safely parse admin JWT token.", {
+    // 🛡️ অডিটর ফিক্স: সাইলেন্ট ফেইলর ব্লাস্ট করে ইন্টারনাল ডায়াগনস্টিক ট্রেস এনফোর্স (টোকেন লিক প্রতিরোধ)
+    console.warn("⚠️ [JWT_DECODE_ERROR]: Failed to safely parse admin JWT token.", {
       error_message: e?.message || 'Malformed JWT structure',
-      token_length: token.length,
       timestamp: new Date().toISOString(),
-      token_preview: token.substring(0, 20) + '...'
     });
     return null;
   }

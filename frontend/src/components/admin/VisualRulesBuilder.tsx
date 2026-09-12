@@ -67,7 +67,16 @@ export function VisualRulesBuilder() {
       switch (r.operator) {
         case 'contains': return input.includes(value);
         case 'starts_with': return input.startsWith(value);
-        case 'regex': return new RegExp(r.value).test(testingInput);
+        case 'regex': {
+          try {
+            // ReDoS guard: bound pattern & test input lengths
+            const safeInput = testingInput.slice(0, 10000);
+            const safePattern = r.value.slice(0, 500);
+            return new RegExp(safePattern).test(safeInput);
+          } catch {
+            return false;
+          }
+        }
         default: return false;
       }
     });

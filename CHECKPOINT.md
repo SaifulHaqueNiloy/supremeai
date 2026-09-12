@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-12 13:36 UTC
+- **Date:** 2026-09-12 14:37 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,27 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/core/intelligence/precognitive_risk.py`
-  - `backend/core/intelligence/manual_tasks.py`
-  - `backend/core/orchestration/swarm_orchestrator.py`
-  - `docs/ADMIN_TASKS/supremeai-blueprint-manual-tasks.md`
-  - `.github/workflows/ci.yml`
-  - `backend/core/intelligence/synaptic_memory.py`
-  - `backend/api/routes/intelligence_insights.py`
   - `backend/api/routers.py`
-  - `backend/core/intelligence/models.py`
-  - `backend/core/intelligence/router.py`
-  - `backend/engine/worker_registry.py`
-  - `backend/tests/core/intelligence/test_control_plane.py`
-  - `backend/core/intelligence/verification.py`
+  - `backend/api/routes/intelligence_insights.py`
+  - `frontend/src/utils/secureWebSocket.ts`
+  - `frontend/src/components/admin/VisualRulesBuilder.tsx`
+  - `CHECKPOINT.md`
   - `backend/core/intelligence/__init__.py`
+  - `frontend/src/store/adminStore.ts`
+  - `frontend/src/components/artifacts/ArtifactsPanel.tsx`
   - `backend/api/routes/chat.py`
-  - `backend/tests/core/intelligence/test_synaptic_risk.py`
+  - `backend/core/intelligence/precognitive_risk.py`
+  - `backend/api/routes/chat_upload.py`
+  - `backend/core/db.py`
+  - `backend/api/routes/admin.py`
+  - `frontend/src/hooks/useChat.ts`
+  - `backend/core/intelligence/verification.py`
+  - `backend/api/middleware.py`
+  - `backend/tests/core/intelligence/test_control_plane.py`
+  - `backend/core/intelligence/synaptic_memory.py`
+  - `backend/core/orchestration/swarm_orchestrator.py`
+  - `backend/core/intelligence/router.py`
+  - `backend/core/intelligence/manual_tasks.py`
 
 ## Pending (Carry Forward)
 - Supabase `ai_memory` table setup (Phase C)

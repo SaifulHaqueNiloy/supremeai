@@ -13,6 +13,7 @@ Provides:
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import os
 import random
@@ -45,6 +46,10 @@ class SupremeContextMiddleware(BaseHTTPMiddleware):
                 response.headers["X-Correlation-ID"] = correlation_id
                 response.headers["X-Content-Type-Options"] = "nosniff"
                 response.headers["X-Frame-Options"] = "DENY"
+                response.headers["Strict-Transport-Security"] = (
+                    "max-age=31536000; includeSubDomains"
+                )
+                response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
                 process_time = time.time() - start_time
                 response.headers["X-Process-Time"] = f"{process_time:.4f}"
@@ -106,7 +111,11 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if access_cookie:
             cookie_token = request.cookies.get("supreme_csrf_token")
             header_token = request.headers.get("X-CSRF-Token")
-            if not cookie_token or not header_token or cookie_token != header_token:
+            if (
+                not cookie_token
+                or not header_token
+                or not hmac.compare_digest(cookie_token, header_token)
+            ):
                 correlation_id = getattr(request.state, "correlation_id", str(uuid.uuid4()))
                 return JSONResponse(
                     status_code=403,
@@ -326,7 +335,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
 
-            if response.status_code == 200 and redis_manager.client is not None:
+            if 200 <= response.status_code < 300 and redis_manager.client is not None:
                 body_bytes = b""
                 if hasattr(response, "body_iterator"):
                     try:

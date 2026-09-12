@@ -121,11 +121,12 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             import re
 
             from sqlalchemy import text
+            from sqlalchemy.sql import quoted_name
 
             from database.session import get_db_session
 
             # বাংলা মন্তব্য: টেবিল নামের বৈধতা যাচাই করতে রেগুলার এক্সপ্রেশন প্যাটার্ন ডিফাইন করা হলো।
-            _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]+$")
+            _VALID_TABLE_PATTERN = re.compile(r"^[A-Za-z0-9_]{1,64}$")
 
             backup_data = {}
             async for session in get_db_session():
@@ -139,7 +140,8 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                     if not _VALID_TABLE_PATTERN.match(table):
                         logger.warning(f"Skipping table '{table}' due to invalid naming pattern.")
                         continue
-                    rows_res = await session.execute(text(f"SELECT * FROM {table}"))
+                    safe_table = quoted_name(table, quote=True)
+                    rows_res = await session.execute(text(f'SELECT * FROM "{safe_table}"'))
                     columns = rows_res.keys()
                     rows = [dict(zip(columns, row, strict=False)) for row in rows_res.fetchall()]
                     for row in rows:
