@@ -121,3 +121,22 @@ Manual tasks from the mega-audit:
 - Validate all claims in a controlled staging environment, attach CI/security/restore/rollback evidence, and obtain the required architecture, privacy, and security approvals.
 
 These mega-audit tasks remain manual or staged and must not be marked complete from static repository inspection alone.
+
+## System wiring audit verification handoff (2026-09-13)
+
+Repository-local fixes completed from the wiring audit:
+
+- Added bounded Firestore read timeouts to the admin health path so unavailable Firestore cannot block the control-plane response indefinitely.
+- Changed official integration plugins to return explicit unavailable results when credentials are absent, instead of raising configuration errors from normal capability discovery.
+- Consolidated frontend capability exports to avoid duplicate contract names and added the missing requestable capability state.
+- Fixed the theme preference client to use the actual `apiClient` response shape and typed theme-change event payloads.
+- Added an explicit forge payload node contract so Evolution Forge callbacks are type-safe; frontend typecheck now passes.
+
+Remaining manual or staged verification:
+
+- Run the complete backend test suite in the CI Poetry environment, including Firestore timeout/fallback and plugin-unavailable tests.
+- Run frontend lint, unit tests, production build, and authenticated browser smoke tests against staging.
+- Validate every official provider with approved credentials, least-privilege scopes, timeout/retry policy, and secret rotation ownership; no credentials are stored in the repository.
+- Confirm the admin health endpoint's fallback semantics and latency SLO with a real Firestore outage/failure-injection drill.
+- Review the frontend capability contract migration with the UI owner and verify all consumers use the canonical barrel exports.
+- Perform staging OpenAPI/frontend contract checks and attach CI, security, restore, and rollback evidence before production promotion.
