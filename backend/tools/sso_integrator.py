@@ -471,21 +471,73 @@ class SSOIntegrator:
                 resp.raise_for_status()
                 tokens = resp.json()
             id_token = tokens.get("id_token", "")
-            if id_token:
-                # Verify basic structure; real apps should verify signature via jwks_uri
-                header = jwt.get_unverified_header(id_token)
-                payload = jwt.decode(id_token, options={"verify_signature": False})
-                return {
-                    "status": "success",
-                    "id_token": id_token,
-                    "access_token": tokens.get("access_token", ""),
-                    "claims": payload,
-                    "header": header,
-                }
-            return {"status": "success", "tokens": tokens}
+            if not id_token:
+                return {"status": "success", "tokens": tokens}
+            # SEC-HARDEN P5: an id_token's claims MUST NOT be trusted before the
+            # signature is verified against the provider's published JWKS.
+            # (Previously decoded with verify_signature=False — forged tokens were
+            # accepted. Now we fail closed: no signature → no claims.)
+            header = jwt.get_unverified_header(id_token)
+            payload, verify_err = await self._verify_oidc_id_token(provider, id_token, client_id)
+            if payload is None:
+                return {"status": "error", "message": f"id_token verification failed: {verify_err}"}
+            return {
+                "status": "success",
+                "id_token": id_token,
+                "access_token": tokens.get("access_token", ""),
+                "claims": payload,
+                "header": header,
+            }
         except Exception as exc:
             logger.error(f"OIDC code exchange failed: {exc}")
             return {"status": "error", "message": str(exc)}
+
+    async def _verify_oidc_id_token(
+        self, provider: str, id_token: str, client_id: str
+    ) -> tuple[dict[str, Any] | None, str | None]:
+        """Verify an OIDC id_token signature against the provider's JWKS (fail-closed).
+
+        SEC-HARDEN P5: the previous flow decoded the id_token with
+        ``verify_signature=False`` — a completely forged token (e.g. signed by an
+        attacker with a ``kid`` they control) yielded trusted claims.
+
+        This method:
+          - resolves the provider's published ``jwks_uri`` (from the static provider
+            registry — never user input, so no SSRF surface),
+          - resolves the token's ``kid`` to a key from that JWKS (PyJWKClient caches),
+          - verifies the signature (RS/ES/PS families) plus ``exp`` and — when a
+            ``client_id`` is supplied — ``aud``.
+
+        Returns ``(claims, None)`` on success, ``(None, reason)`` on ANY failure.
+        Callers MUST fail closed: a ``None`` payload means no trusted claims.
+        """
+        cfg = self.OIDC_PROVIDERS.get(provider.lower())
+        if not cfg:
+            return None, f"Unsupported OIDC provider: {provider}"
+        jwks_uri = cfg.get("jwks_uri", "").format(
+            domain=self.saml_settings.get("oidc_domain", ""),
+            tenant=self.saml_settings.get("oidc_tenant", ""),
+        )
+        if not jwks_uri.startswith("https://"):
+            return None, "Provider jwks_uri must be https (refusing network fetch over plain http)"
+
+        try:
+            from jwt import PyJWKClient
+
+            options: dict[str, Any] = {"require": ["exp", "iat"]}
+            kwargs: dict[str, Any] = {"algorithms": ["RS256", "RS384", "ES256", "ES384", "PS256"]}
+            if client_id:
+                options["verify_aud"] = True
+                kwargs["audience"] = client_id
+
+            jwks_client = PyJWKClient(jwks_uri, cache_keys=True)
+            signing_key = jwks_client.get_signing_key_from_jwt(id_token)
+            payload = jwt.decode(id_token, signing_key.key, options=options, **kwargs)
+            return payload, None
+        except Exception as exc:  # noqa: BLE001 — any verification failure denies
+            # Never leak cryptographic detail into client-facing responses.
+            logger.error("OIDC id_token signature verification failed: %s", exc)
+            return None, "signature/claims verification failed (contact support)"
 
     async def process_oidc_response(self, provider: str, code: str, state: str) -> dict[str, Any]:
         """Convenience wrapper: exchange code, fetch userinfo, map roles."""
