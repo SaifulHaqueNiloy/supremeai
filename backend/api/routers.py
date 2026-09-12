@@ -268,6 +268,10 @@ ALL_ROUTERS = [
     {"path": "api.routes.commandcenter", "prefix": "", "is_admin": True, "is_critical": False},
     # Policy-Driven Web Crawler Admin API
     {"path": "api.routes.crawler_admin", "prefix": "", "is_admin": True, "is_critical": False},
+    # Universal Zero-Complexity Interface (Phase 1): modular connection engine +
+    # execution-mode self-service. All routes auth-guarded; no secrets handled.
+    {"path": "api.routes.connections", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.access", "prefix": "", "is_admin": False, "is_critical": False},
     # ── AUDIT-WIRE FIX (isolated-routes audit): এই ১২টি রাউটার মডিউল বিদ্যমান,
     # import-যাচাইকৃত এবং সঠিক 'router' attribute সহ — কিন্তু রে���িস্ট্রিতে ছিল না
     # বলে তাদের ২৪+ এন্ডপয়েন্ট প্রোডাকশনে 404 দিত। এখন মাউন্ট করা হলো।
