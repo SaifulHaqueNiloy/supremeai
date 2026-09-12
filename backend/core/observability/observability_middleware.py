@@ -36,12 +36,15 @@ class ObservabilityMiddleware:
         headers = scope.get("headers", [])
         trace_id = ""
         user_id = "anonymous_api_user"
+        tenant_id = "unknown"
 
         for k, v in headers:
             if k.lower() in (b"x-trace-id", b"traceparent"):
-                trace_id = v.decode("utf-8")
+                trace_id = v.decode("utf-8", errors="replace")
             elif k.lower() == b"x-user-id":
-                user_id = v.decode("utf-8")
+                user_id = v.decode("utf-8", errors="replace")
+            elif k.lower() in (b"x-tenant-id", b"x-workspace-id"):
+                tenant_id = v.decode("utf-8", errors="replace")
 
         from starlette.requests import Request
 
@@ -93,6 +96,8 @@ class ObservabilityMiddleware:
                     "http.route": path,
                     "http.url": f"{scope.get('scheme', 'http')}://{scope.get('server', ('localhost', 80))[0]}{path}",
                     "trace_id": trace_id,
+                    "enduser.id": user_id,
+                    "tenant.id": tenant_id,
                 },
                 kind="server",
             ):
@@ -187,8 +192,11 @@ class ObservabilityMiddleware:
                             "event_type": "api_request",
                             "description": f"{method} {path} - {status_code}",
                             "metadata": {
-                                "tenant_id": user_id,
-                                "path": path,
+                        "tenant_id": tenant_id,
+                        "user_id": user_id,
+                        "trace_id": trace_id,
+                        "path": path,
+
                                 "method": method,
                                 "status_code": status_code,
                                 "duration": duration,

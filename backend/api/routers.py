@@ -14,6 +14,20 @@ from core.logging_config import logger
 # Deduplicated and cleaned up according to Phase 2 API Cleanup.
 ALL_ROUTERS = [
     # ---- Core & User Routes ----
+    # Phase 1: formerly orphaned feature routes are now centrally registered.
+    {"path": "api.routes.artifacts", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.branch_conversations", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.browser_action_registry", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.chat_export", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.chat_search", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.chat_upload", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.code_dependency_graph", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.deep_research", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.prompt_templates", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.reasoning", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.scheduled_tasks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.share", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.slash_commands", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.memory", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.unified_memory_api",
@@ -401,7 +415,7 @@ def register_all_routers(app: FastAPI) -> None:
     else:
         logger.warning("Universal BYOC router not loaded: ENCRYPTION_KEY missing")
 
-    # AUDIT-FF: স্টার্টআপে মাউন্ট-রিপোর্ট — সাইলেন্ট আনমাউন্ট এখন দৃশ্যমান।
+    # AUDIT-FF: স্ট���র্টআপে মাউন্ট-রিপোর্ট — সাইলেন্ট আনমাউন্ট এখন দৃশ্যমান।
     failed = list(_registration_report)
     logger.info(f"Router registration complete: mounted={mounted}/{registered} registry entries")
     if failed:
