@@ -66,6 +66,16 @@ class WorkerRegistry:
         """Returns active workers matching the requested type."""
         return [w for w in self.active_workers.values() if w.get("agent_type") == agent_type]
 
+    async def schedule_maintenance(self, task_name: str = "intelligence-consolidation") -> dict:
+        """Return a proposal for a worker; dispatch remains approval-controlled."""
+        worker_id = self.get_smart_route("maintenance")
+        return {
+            "task": task_name,
+            "worker_id": worker_id,
+            "status": "proposal" if worker_id else "unavailable",
+            "requires_approval": True,
+        }
+
     def get_smart_route(self, agent_type: str, requires_gpu: bool = False) -> str | None:
         """
         Implements Smart Routing:
