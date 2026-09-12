@@ -18,12 +18,67 @@ credential পাঠানো হয় না।
 
 from __future__ import annotations
 
+import ipaddress
 import re
+import socket
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
 from core.logging_config import logger
+
+# বাংলা: SSRF প্রোটেকশন — এই রেঞ্জগুলোতে কখনোই আউটবাউন্ড রিকোয়েস্ট যেতে দেওয়া
+# যাবে না (loopback, RFC1918 প্রাইভেট রেঞ্জ, link-local, এবং ক্লাউড মেটাডেটা
+# এন্ডপয়েন্ট 169.254.169.254 বিশেষভাবে link-local-এর অন্তর্ভুক্ত)।
+_BLOCKED_NETWORKS: list[ipaddress.IPv4Network | ipaddress.IPv6Network] = [
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("169.254.0.0/16"),  # includes 169.254.169.254 (cloud metadata)
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),
+    ipaddress.ip_network("0.0.0.0/8"),
+]
+
+
+class SSRFBlockedError(ValueError):
+    """URL হোস্টনেম কোনো ব্লক করা প্রাইভেট/লোকাল/মেটাডেটা IP-তে রিজলভ হয়েছে।"""
+
+
+def _is_blocked_ip(ip_str: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(ip_str)
+    except ValueError:
+        return True  # পার্স করতে না পারলে fail-closed
+    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+        return True
+    return any(ip in net for net in _BLOCKED_NETWORKS)
+
+
+def _assert_public_host(url: str) -> None:
+    """হোস্টনেম resolve করে প্রতিটি IP যাচাই করে — যেকোনো একটি ব্লক করা হলে reject।
+
+    DNS rebinding ঠেকাতে resolve-করা প্রতিটি IP (A ও AAAA সব রেকর্ড) চেক করা হয়,
+    শুধু প্রথমটি নয়।
+    """
+    host = urlparse(url).hostname
+    if not host:
+        raise SSRFBlockedError("URL-এ কোনো হোস্টনেম পাওয়া যায়নি")
+    try:
+        addr_infos = socket.getaddrinfo(host, None)
+    except socket.gaierror as exc:
+        raise SSRFBlockedError(f"হোস্টনেম resolve করা যায়নি: {host}") from exc
+    if not addr_infos:
+        raise SSRFBlockedError(f"হোস্টনেমের জন্য কোনো IP পাওয়া যায়নি: {host}")
+    for info in addr_infos:
+        ip_str = info[4][0]
+        if _is_blocked_ip(ip_str):
+            raise SSRFBlockedError(
+                f"'{host}' একটি প্রাইভেট/লোকাল/মেটাডেটা IP-তে ({ip_str}) resolve হয়েছে — ব্লক করা হলো"
+            )
 
 # বাংলা: পরিচিত AI-provider URL প্যাটার্ন (hostname substring) — নতুন provider
 # যোগ করতে শুধু এই লিস্ট বাড়ালেই হবে।
@@ -162,9 +217,26 @@ class IntegrationDiscoveryService:
             }
 
         try:
+            _assert_public_host(base_url)
+        except SSRFBlockedError as exc:
+            logger.warning(f"[IntegrationDiscovery] SSRF blocked for {base_url}: {exc}")
+            return {
+                "id": "",
+                "name": "",
+                "type": "unknown",
+                "status": "failed",
+                "capabilities": [],
+                "error": "এই URL অনুমোদিত না (private/local/metadata address)",
+            }
+
+        try:
+            # বাংলা: follow_redirects=False রাখা হয়েছে ইচ্ছাকৃতভাবে — একটি পাবলিক
+            # URL রিডাইরেক্ট দিয়ে প্রাইভেট/মেটাডেটা IP-তে নিয়ে যাওয়ার (SSRF
+            # bypass) সুযোগ বন্ধ করতে। প্রতিটি redirect hop-কে আলাদাভাবে
+            # _assert_public_host দিয়ে যাচাই করতে হবে বলে এখানে auto-follow বন্ধ।
             async with httpx.AsyncClient(
                 timeout=_REQUEST_TIMEOUT_SECONDS,
-                follow_redirects=True,
+                follow_redirects=False,
                 headers={"User-Agent": _UA},
             ) as client:
                 detected = (
