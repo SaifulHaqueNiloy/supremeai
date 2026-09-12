@@ -342,8 +342,10 @@ jobs:
           python -m unittest discover -s tests -p 'test_route_graph_query.py' -v
           python -m unittest discover -s tests -p 'test_route_impact_report.py' -v
           python scripts/ci/generate_route_inventory.py
-          python scripts/ci/generate_route_graph.py
-          git diff --exit-code -- docs/generated/route_inventory.json docs/generated/route_knowledge_graph.json
+  python scripts/ci/generate_route_graph.py
+  python scripts/ci/generate_topology_mermaid.py
+  git diff --exit-code -- docs/generated/route_inventory.json docs/generated/route_knowledge_graph.json docs/generated/route_topology.mmd
+
           python -m unittest discover -s tests -p 'test_module_capability_matrix.py' -v
           python scripts/ci/generate_module_capability_matrix.py
           # বাংলা: module_capability_matrix.json সবসময় git ls-files থেকে regenerate
@@ -1462,7 +1464,7 @@ jobs:
   # বাংলা: main-এ deploy হ��য়ার পর সরাসরি real production DB (read-only)
   # চেক করে backend/database/contracts/schema_contract.yaml-এর স���থে মিলায়।
   # কোনো required table/column/index মিসিং পেলে এই job ❌ FAIL করবে,
-  # ফলে pipeline থেকেই সাথে সাথে বোঝা যাবে DB-তে কোনো সমস্যা আছে কিনা —
+  # ফলে pipeline থেকেই সাথে সাথে বোঝ��� যাবে DB-তে কোনো সমস্যা আছে কিনা —
   # deploy-এর পরে আলাদা ক��ে manual audit চালানো লাগবে না।
   # -----------------------------------------------------------------
   db-schema-check:

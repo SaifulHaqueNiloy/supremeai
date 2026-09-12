@@ -45,7 +45,8 @@ Still requiring staged implementation, live infrastructure, or security approval
 
 - Build and test the `SupremeKernel` request/response contract and `/api/v1/kernel/dispatch` endpoint; define authentication, tenant scope, policy, rate limits, idempotency, and audit semantics before enabling it.
 - Complete circle boundary facades and enforce AST import rules in CI; obtain architecture-owner approval for allowed dependency directions.
-- Generate and publish the living topology graph/CLI only after validating that generated output contains no secrets or tenant data.
+- Review and publish the generated living topology graph (`docs/generated/route_topology.mmd`) in an approved internal dashboard; validate that generated output contains no secrets or tenant data.
+- Validate the bounded architecture query CLI (`scripts/ci/architecture_query.py`) against approved flow labels and decide whether a developer-facing wrapper/entry point should be published.
 - Implement L1-L4 configuration control plane, Redis invalidation, PostgreSQL schema/migrations, admin authorization, rollback semantics, and failure-injection tests.
 - Implement dynamic model registry and schema-driven admin UI with provider catalog validation, cost controls, and approval workflow.
 - Design and threat-model swarm consensus before production use; define token/cost budgets, prompt-injection defenses, deterministic audit trails, and human escalation.
