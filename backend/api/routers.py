@@ -300,6 +300,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.hybrid_search", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.ide_trio", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.mcp_marketplace", "prefix": "", "is_admin": False, "is_critical": False},
+  {"path": "api.routes.section11_capabilities", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.plugin_submissions",
         "prefix": "",
@@ -401,7 +402,7 @@ def register_all_routers(app: FastAPI) -> None:
     else:
         logger.warning("Universal BYOC router not loaded: ENCRYPTION_KEY missing")
 
-    # AUDIT-FF: স্টার্টআপে মাউন্ট-রিপোর্ট — সাইলেন্ট আনমাউন্ট এখন দৃশ্যমান।
+    # AUDIT-FF: স্ট���র্টআপে মাউন্ট-রিপোর্ট — সাইলেন্ট আনমাউন্ট এখন দৃশ্যমান।
     failed = list(_registration_report)
     logger.info(f"Router registration complete: mounted={mounted}/{registered} registry entries")
     if failed:
