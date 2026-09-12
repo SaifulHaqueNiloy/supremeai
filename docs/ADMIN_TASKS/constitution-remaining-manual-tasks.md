@@ -56,6 +56,17 @@ Still requiring staged implementation, live infrastructure, or security approval
 
 These items are intentionally not marked complete from repository-local edits alone.
 
+## Phase 2-4 verification handoff (2026-09-13)
+
+Repository verification confirms these gaps remain architectural work, not merely missing documentation:
+
+- **Phase 2A — SupremeKernel:** no production-ready `backend/core/kernel/dispatcher.py` contract and no registered `/api/v1/kernel/dispatch` endpoint were found. Do not expose a placeholder dispatch route until authentication, tenant scope, policy, idempotency, rate limits, timeout, and audit behavior are approved.
+- **Phase 2C — Circles:** `backend/core/circles/` already contains registry/contracts/bootstrap primitives, but the four requested boundary facades (`governance`, `execution`, `evolution`, `infrastructure`) and an enforced AST import-direction linter are not complete.
+- **Phase 3 — Dynamic control plane:** configuration classification and health metadata exist locally, but durable L1-L4 storage, invalidation, migrations, rollback, admin authorization, and schema-driven UI are not implemented.
+- **Phase 4 — Swarm and ephemeral tooling:** swarm/debate and sandbox-related code exists in isolated areas, but a governed architect-critic consensus loop and approved ephemeral tool synthesis path are not verified as one secure end-to-end capability.
+
+Repository-local work may add contracts, static validators, tests, and documentation. Production activation, durable persistence, provider credentials, sandbox isolation, threat modeling, and owner/security approval remain manual gates and must not be marked complete from static checks alone.
+
 ## Human behavior alignment and continuous learning handoff (2026-09-13)
 
 Completed locally:
