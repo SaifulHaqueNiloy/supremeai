@@ -89,5 +89,35 @@ Still manual or staged:
 - Run cloud SFT/DPO experiments and artifact signing/registry promotion; local repository changes cannot validate GPU training or model quality.
 - Execute shadow/canary deployment, cost/latency regression checks, rollback drill, and explicit human promotion approval.
 - Approve privacy/ethics boundaries for emotional inference, sensitive attributes, training consent, retention, and user-facing transparency.
-
 These tasks must not be marked complete from repository-local evidence alone.
+
+## Mega-audit verification handoff (2026-09-13)
+
+The supplied 172-file blueprint was checked against the current `v0/audit-stabilization` checkout before making changes. Several claims are stale or broader than the repository evidence:
+
+- The central router registry already contains browser-related route modules and the repository-local route validation has passed; the claim that all browser routes are wholly unmounted is not confirmed. A staging OpenAPI/browser smoke test is still required to prove endpoint reachability.
+- The 13-route convergence work, SSRF hardening, topology generation, architecture query tooling, behavioral-intelligence contracts, and observability hardening are already represented in the current branch history or generated artifacts. Do not re-implement them from the blueprint.
+- No production-ready SupremeKernel dispatch contract, four approved circle boundary facades, durable L1-L4 control plane, schema-driven admin configuration UI, governed swarm consensus activation, or approved arbitrary-code sandbox was found as a complete end-to-end capability.
+- The blueprint's claims about six Kaggle accounts, 180 GPU hours, Colab daemons, Infisical limits, database tables, frontend paths, and live provider integrations cannot be verified from this checkout and must not be treated as facts.
+
+Repository-local work completed for this review:
+
+- Reconciled the blueprint against the current registry, route graph, control-plane files, circle primitives, and existing task register.
+- Preserved the existing safety boundary: no provider credentials, remote tunnels, autonomous deployment mutation, arbitrary generated-code execution, or production data changes were attempted.
+- Recorded the unverified and approval-gated work below instead of creating insecure placeholders.
+
+Manual tasks from the mega-audit:
+
+- Run a staging OpenAPI diff and authenticated browser smoke test to verify every browser route, tenant scope, rate limit, and SSRF control.
+- Design and approve the SupremeKernel interface and `/api/v1/kernel/dispatch` contract, including auth, tenant isolation, policy checks, idempotency, rate limits, timeouts, audit events, and failure semantics; implement only after approval.
+- Complete the four circle boundary facades and an AST import-direction gate after architecture-owner approval of dependency rules.
+- Implement the L1-L4 dynamic configuration service with durable schema/migrations, Redis invalidation, authorization, rollback, cache failure tests, and secret-management review.
+- Replace any frontend worker bypass only after locating the actual frontend workspace and validating the canonical task gateway contract; do not assume `VITE_WORKER_URL` exists.
+- Wire real cost/security metrics only after confirming the production data model, tenant scoping, authorization, retention, and staging contract tests; no fake metrics may be promoted.
+- Threat-model and approve architect/critic/synthesizer swarm execution with bounded token/cost budgets, prompt-injection defenses, deterministic audit trails, and human escalation.
+- Do not build Kaggle/Colab credential rotation, reverse tunnels, or free-tier compute automation without explicit provider authorization, secret-broker design, quota compliance, egress controls, and an operational owner.
+- Do not enable arbitrary LLM-generated code execution without an approved isolated microVM, network egress policy, resource limits, artifact cleanup, abuse monitoring, and security sign-off.
+- Design the memory dream cycle and proactive watcher with consent, tenant isolation, retention/deletion controls, durable idempotent queues, and false-positive review.
+- Validate all claims in a controlled staging environment, attach CI/security/restore/rollback evidence, and obtain the required architecture, privacy, and security approvals.
+
+These mega-audit tasks remain manual or staged and must not be marked complete from static repository inspection alone.
