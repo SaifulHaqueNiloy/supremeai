@@ -198,7 +198,32 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initialize: async () => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    // Cookie-authenticated sessions do not expose a token to JavaScript. Try the
+    // backend session endpoint before falling back to the legacy localStorage token.
+    let token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response = await apiClient.get<any>('/api/v1/auth/me', { credentials: 'include' });
+        const email = response.email || response.username || 'user@supremeai.dev';
+        const cookieUser: UserProfile = {
+          id: response.user_id || '',
+          email,
+          name: response.name || email.split('@')[0],
+          avatarUrl: avatarUrl(email),
+        };
+        persistUser(cookieUser);
+        set({
+          status: AuthStatus.LOGGED_IN,
+          user: cookieUser,
+          role: isRole(response.role) ? response.role : normalizeRole(response.role) ?? 'user',
+          permissions: Array.isArray(response.permissions) ? response.permissions : [],
+        });
+        return;
+      } catch {
+        // Legacy bearer-token restore below keeps existing sessions working during migration.
+      }
+    }
     if (!token) {
       updateTokenCache(null);
       persistUser(null);

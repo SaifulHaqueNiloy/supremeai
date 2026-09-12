@@ -6,9 +6,12 @@ Exposes browser automation + web scraping as integrated endpoints.
 
 from __future__ import annotations
 
+import asyncio
 import os
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
+from api.dependencies import get_current_admin
 from pydantic import BaseModel, Field
 
 from services.scraper.browser_agent import BrowserAgent, BrowseRequest
@@ -22,6 +25,7 @@ router = APIRouter(tags=["scraper"])
 
 _scraper = WebScraper()
 _agent = BrowserAgent(headless=True)
+_semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 
 
 class ScrapeRequest(BaseModel):
@@ -48,19 +52,22 @@ async def health_check():
 
 
 @router.post("/scrape")
-async def scrape(request: ScrapeRequest):
+async def scrape(request: ScrapeRequest, _: dict = Depends(get_current_admin)):
+    if not _semaphore.locked() and _semaphore._value <= 0:
+        raise HTTPException(status_code=429, detail="Scraper concurrency limit reached")
     if not request.url:
         raise HTTPException(status_code=400, detail="URL is required")
     if not is_safe_url(request.url):
         raise HTTPException(
             status_code=400, detail="SSRF check failed: Unauthorized internal access"
         )
-    result = _scraper.fetch_page(request.url)
+    async with _semaphore:
+        result = await asyncio.to_thread(_scraper.fetch_page, request.url)
     return result
 
 
 @router.post("/browse")
-async def browse(request: BrowseRequest):
+async def browse(request: BrowseRequest, _: dict = Depends(get_current_admin)):
     if not request.url:
         raise HTTPException(status_code=400, detail="URL is required")
     if not is_safe_url(request.url):
@@ -83,10 +90,13 @@ class RecipeRequest(BaseModel):
 
 
 @router.post("/recipe")
-async def recipe(request: RecipeRequest):
+async def recipe(request: RecipeRequest, _: dict = Depends(get_current_admin)):
+    if not _semaphore.locked() and _semaphore._value <= 0:
+        raise HTTPException(status_code=429, detail="Scraper concurrency limit reached")
     if request.initial_url and not is_safe_url(request.initial_url):
         raise HTTPException(
             status_code=400, detail="SSRF check failed: Unauthorized internal access"
         )
-    result = await _agent.execute_recipe(steps=request.steps, initial_url=request.initial_url)
+    async with _semaphore:
+        result = await _agent.execute_recipe(steps=request.steps, initial_url=request.initial_url)
     return result

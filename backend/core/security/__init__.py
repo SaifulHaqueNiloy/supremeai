@@ -235,6 +235,8 @@ BLACKLIST_PREFIX = "jwt:blacklist:"
 BLACKLIST_TTL = 86400  # 24 hours
 
 _IN_MEMORY_BLACKLIST: set[str] = set()
+_ADMIN_REVOCATION_CACHE: dict[str, float] = {}
+_ADMIN_REVOCATION_CACHE_MAX = 1000
 
 
 async def revoke_token(jti: str, exp: int | None = None) -> bool:
