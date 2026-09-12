@@ -34,6 +34,8 @@ def test_verifier_reports_contradictions():
 
 def test_manual_registry_is_secret_free():
     registry = ManualTaskRegistry()
-    task = registry.create("deployment", "Review staging deployment", ["Inspect CI", "Approve canary"], ["CI run URL"])
+    task = registry.create(
+        "deployment", "Review staging deployment", ["Inspect CI", "Approve canary"], ["CI run URL"]
+    )
     assert task.secret_free
     assert registry.report()[0]["title"] == task.title

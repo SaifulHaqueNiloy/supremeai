@@ -170,6 +170,40 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         except Exception as rag_err:
             logger.debug(f"RAG Retrieval bypassed: {rag_err}")
 
+        # Governed Intelligence Routing check
+        from core.intelligence import IntelligenceRouter, VerificationEngine, synaptic_memory
+
+        router = IntelligenceRouter()
+        routing_decision = router.route(payload.prompt)
+        logger.info(
+            f"🧠 Governed Chat Route: tier={routing_decision.tier.value} "
+            f"classification={routing_decision.classification.value} "
+            f"audit_id={routing_decision.audit_id}"
+        )
+
+        if routing_decision.budget.requires_approval:
+            from core.intelligence import manual_tasks
+
+            task = manual_tasks.create(
+                category="chat_governance",
+                title=f"Review sensitive chat operation: {payload.prompt[:40]}...",
+                steps=[
+                    "Review prompt intent",
+                    "Confirm authorization",
+                    "Approve execution via release workflow",
+                ],
+                evidence_required=["operator identity", "approval timestamp"],
+            )
+            return {
+                "success": False,
+                "status": "approval_required",
+                "requires_approval": True,
+                "manual_task": task.model_dump(),
+                "response": "এই কাজটি সংবেদনশীল বা অপরিবর্তনীয় হওয়ায় হিউম্যান রিভিউয়ের জন্য ম্যানুয়াল টাস্ক রেজিস্ট্রিভুক্ত করা হয়েছে।",
+                "cached": False,
+                "governance": routing_decision.model_dump(mode="json"),
+            }
+
         enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
 
         if await main_llm_circuit.should_attempt_external():
@@ -181,6 +215,13 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                 await main_llm_circuit.record_success()
                 response_text = (
                     response.get("text", "") if isinstance(response, dict) else str(response)
+                )
+
+                # Synaptic memory safe ingestion in memory layer
+                synaptic_memory.remember(
+                    block_id=f"chat_{db.tenant_id}_{routing_decision.audit_id}",
+                    payload={"prompt": payload.prompt, "response": response_text[:200]},
+                    importance=0.4 if routing_decision.tier.value == "fast" else 0.8,
                 )
 
                 # Store response in multi-layer cache for future requests

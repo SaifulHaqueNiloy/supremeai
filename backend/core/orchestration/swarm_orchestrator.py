@@ -7,6 +7,8 @@ import uuid
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.agent_factory import DynamicAgentFactory
+from core.intelligence import IntelligenceRouter, VerificationEngine
+from core.intelligence.manual_tasks import ManualTaskRegistry
 from core.mcp_client import MCPRegistryClient
 from core.orchestration.swarm_agent_roles import (
     ArchitectureAgent,
@@ -36,8 +38,6 @@ from core.skills.integrations import (
     SlackIntegrationSkill,
 )
 from models.shared_workspace import SharedWorkspace
-from core.intelligence import IntelligenceRouter, VerificationEngine
-from core.intelligence.manual_tasks import ManualTaskRegistry
 
 
 class ExecutionResult(BaseModel):
@@ -158,7 +158,9 @@ class SwarmOrchestrator:
             f"SwarmOrchestrator: Governed route tier={governed.tier.value} classification={governed.classification.value} audit_id={governed.audit_id}"
         )
         if governed.budget.requires_approval:
-            workspace.log("SwarmOrchestrator: Action requires human approval; execution remains proposal-only.")
+            workspace.log(
+                "SwarmOrchestrator: Action requires human approval; execution remains proposal-only."
+            )
             manual_task = self.manual_tasks.create(
                 category="governed_execution",
                 title="Approve governed task before execution",
@@ -170,8 +172,15 @@ class SwarmOrchestrator:
                 evidence_required=["reviewer identity", "approval timestamp", "approved scope"],
             )
             workspace.work_product["manual_task"] = manual_task.model_dump(mode="json")
-            workspace.add_error("Human approval required before sensitive or irreversible execution")
-            return ExecutionResult(task_id=workspace.task_id, status="error", workspace=workspace, errors=workspace.errors)
+            workspace.add_error(
+                "Human approval required before sensitive or irreversible execution"
+            )
+            return ExecutionResult(
+                task_id=workspace.task_id,
+                status="error",
+                workspace=workspace,
+                errors=workspace.errors,
+            )
 
         intent_map = {
             "coding": "code_generation",
@@ -210,7 +219,9 @@ class SwarmOrchestrator:
         workspace = await self.run_dag_for_workspace(workspace, user_id)
         verification = self.verification_engine.verify_text(
             "\n".join(workspace.execution_logs),
-            claims=["Multi-Agent DAG execution completed successfully"] if not workspace.errors else None,
+            claims=["Multi-Agent DAG execution completed successfully"]
+            if not workspace.errors
+            else None,
         )
         workspace.work_product["verification"] = verification.model_dump(mode="json")
         workspace.log(

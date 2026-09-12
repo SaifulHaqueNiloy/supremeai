@@ -264,7 +264,12 @@ ALL_ROUTERS = [
     {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
     # Canonical browser-facing broker for service discovery and health.
     {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
-    {"path": "api.routes.intelligence_insights", "prefix": "", "is_admin": True, "is_critical": False},
+    {
+        "path": "api.routes.intelligence_insights",
+        "prefix": "",
+        "is_admin": True,
+        "is_critical": False,
+    },
     # Tenant-scoped capability discovery and provider-consent registration.
     {
         "path": "api.routes.workspace_capabilities",

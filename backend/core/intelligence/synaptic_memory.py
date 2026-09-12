@@ -43,7 +43,9 @@ class SynapticMemory:
                 "updated_at": datetime.now(UTC),
             }
 
-    def consolidate(self, *, now: datetime | None = None, importance_floor: float = 0.2) -> ConsolidationReport:
+    def consolidate(
+        self, *, now: datetime | None = None, importance_floor: float = 0.2
+    ) -> ConsolidationReport:
         now = now or datetime.now(UTC)
         cutoff = now - timedelta(days=self.retention_days)
         archived_ids: list[str] = []
@@ -65,14 +67,20 @@ class SynapticMemory:
                 )
                 archived_ids.append(archive_id)
                 del self._memories[block_id]
-        return ConsolidationReport(len(archived_ids), len(archived_ids), skipped, tuple(archived_ids))
+        return ConsolidationReport(
+            len(archived_ids), len(archived_ids), skipped, tuple(archived_ids)
+        )
 
     def restore(self, archive_id: str) -> bool:
         with self._lock:
             archive = self._archives.get(archive_id)
             if not archive:
                 return False
-            self._memories[archive.block_id] = {"payload": archive.payload, "importance": 0.5, "updated_at": datetime.now(UTC)}
+            self._memories[archive.block_id] = {
+                "payload": archive.payload,
+                "importance": 0.5,
+                "updated_at": datetime.now(UTC),
+            }
             return True
 
     def insights(self) -> dict[str, int]:

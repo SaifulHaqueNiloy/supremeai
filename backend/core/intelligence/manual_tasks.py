@@ -12,8 +12,23 @@ class ManualTaskRegistry:
     def __init__(self) -> None:
         self._tasks: dict[str, ManualTask] = {}
 
-    def create(self, category: str, title: str, steps: list[str], evidence_required: list[str], owner: str = "authorized operator") -> ManualTask:
-        task = ManualTask(id=str(uuid.uuid4()), category=category, title=title, owner=owner, steps=steps, evidence_required=evidence_required, created_at=datetime.now(UTC).isoformat())
+    def create(
+        self,
+        category: str,
+        title: str,
+        steps: list[str],
+        evidence_required: list[str],
+        owner: str = "authorized operator",
+    ) -> ManualTask:
+        task = ManualTask(
+            id=str(uuid.uuid4()),
+            category=category,
+            title=title,
+            owner=owner,
+            steps=steps,
+            evidence_required=evidence_required,
+            created_at=datetime.now(UTC).isoformat(),
+        )
         self._tasks[task.id] = task
         return task
 
@@ -27,3 +42,8 @@ class ManualTaskRegistry:
 
     def report(self) -> list[dict[str, object]]:
         return [task.model_dump(exclude={"secret_free"}) for task in self._tasks.values()]
+
+
+manual_tasks = ManualTaskRegistry()
+
+__all__ = ["ManualTaskRegistry", "manual_tasks"]

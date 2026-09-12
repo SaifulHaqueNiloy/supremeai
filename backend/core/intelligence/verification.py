@@ -20,18 +20,41 @@ class VerificationEngine:
                 if not passed:
                     contradictions.append(f"Claim not supported by output: {claim}")
         confidence = 0.0 if contradictions else 0.75
-        return VerificationResult(status="contradicted" if contradictions else "verified", confidence=confidence, evidence=evidence, contradictions=contradictions)
+        return VerificationResult(
+            status="contradicted" if contradictions else "verified",
+            confidence=confidence,
+            evidence=evidence,
+            contradictions=contradictions,
+        )
 
     def verify_python(self, source: str) -> VerificationResult:
         try:
             ast.parse(source)
         except SyntaxError as exc:
-            return VerificationResult(status="contradicted", confidence=0, evidence=[{"kind": "ast_parse", "passed": False}], contradictions=[str(exc)])
-        return VerificationResult(status="verified", confidence=0.8, evidence=[{"kind": "ast_parse", "passed": True}])
+            return VerificationResult(
+                status="contradicted",
+                confidence=0,
+                evidence=[{"kind": "ast_parse", "passed": False}],
+                contradictions=[str(exc)],
+            )
+        return VerificationResult(
+            status="verified", confidence=0.8, evidence=[{"kind": "ast_parse", "passed": True}]
+        )
 
     def run_registered_check(self, check: Callable[[], bool], name: str) -> VerificationResult:
         try:
             passed = bool(check())
         except Exception as exc:
-            return VerificationResult(status="degraded", confidence=0, degraded=True, evidence=[{"kind": "registered_check", "name": name, "passed": False}], contradictions=[f"Check unavailable: {exc}"])
-        return VerificationResult(status="verified" if passed else "contradicted", confidence=0.9 if passed else 0, evidence=[{"kind": "registered_check", "name": name, "passed": passed}], contradictions=[] if passed else [f"Registered check failed: {name}"])
+            return VerificationResult(
+                status="degraded",
+                confidence=0,
+                degraded=True,
+                evidence=[{"kind": "registered_check", "name": name, "passed": False}],
+                contradictions=[f"Check unavailable: {exc}"],
+            )
+        return VerificationResult(
+            status="verified" if passed else "contradicted",
+            confidence=0.9 if passed else 0,
+            evidence=[{"kind": "registered_check", "name": name, "passed": passed}],
+            contradictions=[] if passed else [f"Registered check failed: {name}"],
+        )
