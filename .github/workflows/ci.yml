@@ -445,7 +445,6 @@ jobs:
           python scripts/advanced_analysis/hardcode_config_scanner.py
           python scripts/audit_env_usage.py --env .env.example
       - name: Validate production secret inventory
-        continue-on-error: true
         env:
           INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
           INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}

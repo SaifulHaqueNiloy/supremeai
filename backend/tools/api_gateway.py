@@ -107,8 +107,13 @@ async def gateway_forward(
         logger.warning(f"Blocked path for source={source}: {request.path}")
         raise HTTPException(status_code=403, detail="path not allowed for source")
 
-    client_ip = http_request.client.host if http_request.client else "127.0.0.1"  # is_local()
-    if not rate_limiter.check(client_ip):
+    client_ip = http_request.client.host if http_request.client else "unknown"
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    actor_id = str(user.get("sub") or user.get("user_id") or user.get("email") or "").strip()
+    if not tenant_id or not actor_id:
+        raise HTTPException(status_code=403, detail="Verified tenant and actor context required")
+    rate_limit_key = f"{tenant_id}:{actor_id}:{client_ip}"
+    if not rate_limiter.check(rate_limit_key):
         raise HTTPException(status_code=429, detail="rate limit exceeded")
 
     # ✅ SAFE: Environment-aware backend URL resolution
@@ -239,8 +244,14 @@ async def api_dispatch(
 
 @router.post("/automation")
 async def trigger_automation(
-    workflow_key: str, payload: dict[str, Any] | None = None
+    workflow_key: str,
+    payload: dict[str, Any] | None = None,
+    user: dict[str, Any] = Depends(get_current_user_token),
 ) -> JSONResponse:
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    actor_id = str(user.get("sub") or user.get("user_id") or user.get("email") or "").strip()
+    if not tenant_id or not actor_id:
+        raise HTTPException(status_code=403, detail="verified tenant and actor context required")
     if payload is None:
         payload = {}
 

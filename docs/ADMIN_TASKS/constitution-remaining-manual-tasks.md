@@ -147,7 +147,7 @@ The following issues were identified during the root-level review of the main br
 
 ### Current remediation pass (repository-local)
 
-Completed in this pass: repaired the malformed advanced-check CI step, removed the invalid cross-job `steps.previous` reference, blocked provider API-key forwarding, added authenticated tenant checks to gateway dispatch/webhook routes, added an HTTPS host allowlist and private-address resolution checks for webhooks, redacted gateway error details, enforced GET/POST method handling, filtered forwarded headers, and made webhook I/O asynchronous.
+Completed in this pass: repaired the malformed advanced-check CI step, removed the invalid cross-job `steps.previous` reference, blocked provider API-key forwarding, added authenticated tenant checks to gateway dispatch/automation/webhook routes, made gateway rate limiting tenant/actor/IP aware, added an HTTPS host allowlist and private-address resolution checks for webhooks, redacted gateway error details, enforced GET/POST method handling, filtered forwarded headers, made webhook I/O asynchronous, and made the production secret-inventory gate fail closed.
 
 Still open: items 8–40 and the architectural deliverables below require additional code, approved policy thresholds, provider/staging evidence, or security/architecture approval. They are intentionally not marked complete by these local edits.
 
