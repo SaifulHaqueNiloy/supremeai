@@ -263,20 +263,36 @@ async def revoke_token(jti: str, exp: int | None = None) -> bool:
     return True
 
 
-async def is_token_revoked(jti: str) -> bool:
-    """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।"""
+async def is_token_revoked(jti: str, *, fail_closed: bool = False) -> bool:
+    """Check revocation state, failing closed for privileged tokens."""
+    import time
+
     if jti in _IN_MEMORY_BLACKLIST:
         return True
+
+    cached_until = _ADMIN_REVOCATION_CACHE.get(jti)
+    if cached_until is not None:
+        if cached_until > time.time():
+            return True
+        _ADMIN_REVOCATION_CACHE.pop(jti, None)
 
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):
-        return False  # Fail-open: Redis down means we cannot verify revocation, allow valid JWTs
+        if fail_closed:
+            logger.error("Admin token revocation store unavailable; denying token")
+        return fail_closed
     try:
-        return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
+        revoked = await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
+        if revoked:
+            _ADMIN_REVOCATION_CACHE[jti] = time.time() + BLACKLIST_TTL
+            if len(_ADMIN_REVOCATION_CACHE) > _ADMIN_REVOCATION_CACHE_MAX:
+                oldest = min(_ADMIN_REVOCATION_CACHE, key=_ADMIN_REVOCATION_CACHE.get)
+                _ADMIN_REVOCATION_CACHE.pop(oldest, None)
+        return revoked
     except Exception as e:
         logger.warning(f"Failed to check token revocation status: {e}")
-        return False
+        return fail_closed
 
 
 # বাংলা মন্তব্য: ব্যবহারকারীর সব সেশন ট্র্যাক করার জন্য Redis key pattern
@@ -349,7 +365,7 @@ async def verify_token_async(token: str) -> dict:
     try:
         payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
         jti = payload.get("jti")
-        if jti and await is_token_revoked(jti):
+        if jti and await is_token_revoked(jti, fail_closed=payload.get("role") == "admin"):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked",

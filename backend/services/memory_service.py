@@ -744,7 +744,29 @@ async def recall_memories(
                 )
                 return memories
             except Exception as sb_err:
-                logger.debug(f"Supabase RPC failed ({sb_err}), falling back to cascade service.")
+                logger.debug(f"Supabase RPC failed ({sb_err}), trying bounded table fallback.")
+                try:
+                    query = supabase.table("ai_memory").select(
+                        "id,user_id,session_id,agent_type,task_type,summary,embedding,metadata,created_at"
+                    ).order("created_at", desc=True).limit(_MEMORY_ROW_CAP)
+                    if user_id:
+                        query = query.eq("user_id", user_id)
+                    rows = await asyncio.to_thread(lambda: query.execute())
+                    scored: list[dict[str, Any]] = []
+                    for row in rows.data or []:
+                        raw = row.get("embedding")
+                        if isinstance(raw, str):
+                            raw = json.loads(raw)
+                        if not isinstance(raw, list):
+                            continue
+                        score = sum(a * b for a, b in zip(embedding, raw, strict=False))
+                        if score >= threshold:
+                            scored.append({**row, "similarity": score})
+                    scored.sort(key=lambda item: item["similarity"], reverse=True)
+                    if scored:
+                        return scored[:limit]
+                except Exception as table_err:
+                    logger.debug(f"Supabase table fallback failed ({table_err}).")
 
         # Local / Cascade Fallback
         matches = memory_service.query_context(task_description, top_k=limit, user_id=user_id)
