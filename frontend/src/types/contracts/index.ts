@@ -2,3 +2,4 @@
 export * from './connection-contract';
 export * from './capability-contract';
 export * from './execution-mode';
+export * from './capability';
