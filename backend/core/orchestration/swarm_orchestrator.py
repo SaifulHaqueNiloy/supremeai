@@ -36,6 +36,7 @@ from core.skills.integrations import (
     SlackIntegrationSkill,
 )
 from models.shared_workspace import SharedWorkspace
+from core.intelligence import IntelligenceRouter, VerificationEngine
 
 
 class ExecutionResult(BaseModel):
@@ -73,6 +74,8 @@ class SwarmOrchestrator:
         # বাংলা মন্তব্য: হাইব্রিড মডেলের জন্য ডাইনামিক ফ্যাক্টরি ইনিশিয়ালাইজ করা হলো।
         # এখানে কোনো DB সেশন পাস করা হচ্ছে না, কারণ ফ্যাক্টরি আপাতত stateless।
         self.agent_factory = DynamicAgentFactory()
+        self.intelligence_router = IntelligenceRouter()
+        self.verification_engine = VerificationEngine()
 
         # বাংলা মন্তব্য: কোর স্কিলগুলো রেজিস্টার করা হচ্ছে।
         skill_manager.register_skill(SystemDesignSkill())
@@ -147,6 +150,16 @@ class SwarmOrchestrator:
         from core.orchestration.agent_orchestrator import budget_aware_route
 
         route = budget_aware_route(prompt=prompt, task_type="general")
+        governed = self.intelligence_router.route(prompt, requested_tier=route.get("tier"))
+        workspace.work_product["governance"] = governed.model_dump(mode="json")
+        workspace.log(
+            f"SwarmOrchestrator: Governed route tier={governed.tier.value} classification={governed.classification.value} audit_id={governed.audit_id}"
+        )
+        if governed.budget.requires_approval:
+            workspace.log("SwarmOrchestrator: Action requires human approval; execution remains proposal-only.")
+            workspace.add_error("Human approval required before sensitive or irreversible execution")
+            return ExecutionResult(task_id=workspace.task_id, status="error", workspace=workspace, errors=workspace.errors)
+
         intent_map = {
             "coding": "code_generation",
             "reasoning": "code_generation",
@@ -319,7 +332,7 @@ class SwarmOrchestrator:
             )
             workspace.add_error(str(e))
 
-            # বাংলা মন্তব্য: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে, তবে রিফ্লেকশনে এরর হলে তা মেইন ফ্লো কে ব্লক করবে না।
+            # বাংলা মন্তব্���: এরর হলেও রিফ্লেকশন চালানোর চেষ্টা করা হবে, যাতে সিস্টেম শিখতে পারে, তবে রিফ্লেকশনে এরর হলে তা মেইন ফ্লো কে ব্লক করবে না।
             if "reflection" not in completed_tasks and "reflection" in self.agents:
                 try:
                     await self.agents["reflection"].reflect_and_persist(workspace, user_id)
