@@ -122,6 +122,25 @@ Manual tasks from the mega-audit:
 
 These mega-audit tasks remain manual or staged and must not be marked complete from static repository inspection alone.
 
+## Production readiness report verification handoff (2026-09-13)
+
+Verified against the current branch before making changes:
+
+- The reported frontend TypeScript and production build failures are stale: `pnpm run typecheck` and `pnpm run build` both pass in the current frontend workspace.
+- Official Gmail, Google Drive, and Notion plugins already return explicit unavailable results instead of raising `NotImplementedError` when provider authorization is not configured.
+- Gateway and simulator URL resolution already fail closed in production when no backend/public URL is configured.
+- Many localhost references are intentional local/test defaults or SSRF test fixtures; they are not by themselves production defects.
+- Backend production parity, provider credentials, staging contract tests, and skipped-test coverage remain unverified from this sandbox.
+
+Remaining manual/staged tasks:
+
+- Run the complete backend Poetry test suite and current dependency/security scans in CI.
+- Run authenticated staging browser/OpenAPI smoke tests with real provider credentials and least-privilege scopes.
+- Complete provider-specific plugin implementations or keep their unavailable capability state surfaced consistently in the UI.
+- Replace/approve all production service URLs and verify health-check latency/failure semantics with an outage drill.
+- Review and reduce skipped tests with service mocks or safe test fixtures; do not mark external-provider tests complete without equivalent integration evidence.
+- Attach build, restore, rollback, tenant-isolation, and security evidence before production promotion.
+
 ## System wiring audit verification handoff (2026-09-13)
 
 Repository-local fixes completed from the wiring audit:
