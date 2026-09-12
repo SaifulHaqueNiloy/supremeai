@@ -81,7 +81,9 @@ class ConfigService:
             if redis and config is not None:
                 try:
                     await redis.execute_with_retry(
-                        "setex", cache_key, cls.DEFAULT_TTL,
+                        "setex",
+                        cache_key,
+                        cls.DEFAULT_TTL,
                         json.dumps(val) if not isinstance(val, str) else val,
                     )
                 except Exception as e:

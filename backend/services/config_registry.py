@@ -49,7 +49,12 @@ REGISTRY: dict[str, ConfigDefinition] = {
         "feature.cost_guard", bool, True, "feature", "Enable cost guardrails", public=True
     ),
     "system.maintenance_mode": ConfigDefinition(
-        "system.maintenance_mode", bool, False, "system", "Put public services into maintenance mode", public=True
+        "system.maintenance_mode",
+        bool,
+        False,
+        "system",
+        "Put public services into maintenance mode",
+        public=True,
     ),
 }
 
@@ -77,7 +82,9 @@ def schema(*, public_only: bool = False) -> list[dict[str, Any]]:
     return [
         {
             "key": definition.key,
-            "type": definition.value_type.__name__ if isinstance(definition.value_type, type) else "value",
+            "type": definition.value_type.__name__
+            if isinstance(definition.value_type, type)
+            else "value",
             "category": definition.category,
             "description": definition.description,
             "minimum": definition.minimum,
@@ -91,4 +98,11 @@ def schema(*, public_only: bool = False) -> list[dict[str, Any]]:
     ]
 
 
-__all__ = ["ConfigDefinition", "REGISTRY", "get_definition", "safe_defaults", "schema", "validate_value"]
+__all__ = [
+    "ConfigDefinition",
+    "REGISTRY",
+    "get_definition",
+    "safe_defaults",
+    "schema",
+    "validate_value",
+]
