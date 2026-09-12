@@ -7,6 +7,7 @@ from .plugin_manifest import PluginManifest
 from .render_account_state import RenderAccountState, RenderPreflightEvent
 from .sentinel import ApiEndpoint, SystemDependency, SystemIncident
 from .system_alert import SystemAlert
+from .system_config import SystemConfig
 from .user_plugin_installation import UserPluginInstallation
 
 __all__ = [
