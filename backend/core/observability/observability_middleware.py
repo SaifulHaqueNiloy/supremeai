@@ -192,11 +192,10 @@ class ObservabilityMiddleware:
                             "event_type": "api_request",
                             "description": f"{method} {path} - {status_code}",
                             "metadata": {
-                        "tenant_id": tenant_id,
-                        "user_id": user_id,
-                        "trace_id": trace_id,
-                        "path": path,
-
+                                "tenant_id": tenant_id,
+                                "user_id": user_id,
+                                "trace_id": trace_id,
+                                "path": path,
                                 "method": method,
                                 "status_code": status_code,
                                 "duration": duration,
