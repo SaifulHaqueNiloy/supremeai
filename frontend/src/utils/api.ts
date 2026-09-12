@@ -223,7 +223,7 @@ export const getApiBaseUrl = (path?: string): string => {
     return backend;
   }
 
-  // 🔧 DYNAMIC: Configure via explicit VITE_USE_RELATIVE_PATH boolean flag
+  // ���� DYNAMIC: Configure via explicit VITE_USE_RELATIVE_PATH boolean flag
   if (import.meta.env.VITE_USE_RELATIVE_PATH === 'true') {
     return '';
   }
@@ -260,6 +260,39 @@ export async function checkBackendHealth(): Promise<{
     };
   }
 }
+
+export interface WorkspaceCapabilityConnection {
+  id: string;
+  tenant_id: string;
+  actor_id: string;
+  url: string;
+  name: string;
+  connection_type: string;
+  permission_level: string;
+  status: string;
+  capabilities: Array<Record<string, unknown>>;
+  tool_permissions: Record<string, string>;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+async function capabilityRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await fetchWithRetry(`${getApiBaseUrl('/api/v1/workspace')}${path}`, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...(init.headers || {}) },
+  });
+  if (!response.ok) throw new Error(`Capability request failed (${response.status})`);
+  return response.json() as Promise<T>;
+}
+
+export const workspaceCapabilitiesApi = {
+  list: () => capabilityRequest<{ capabilities: WorkspaceCapabilityConnection[] }>('/api/v1/workspace/capabilities'),
+  register: (payload: { url: string; name: string; connection_type?: string }) => capabilityRequest<{ connection: WorkspaceCapabilityConnection }>('/api/v1/workspace/capabilities', { method: 'POST', body: JSON.stringify(payload) }),
+  health: (id: string) => capabilityRequest<{ connection: WorkspaceCapabilityConnection }>(`/api/v1/workspace/capabilities/${id}/health`, { method: 'POST' }),
+  reactivate: (id: string) => capabilityRequest<{ connection: WorkspaceCapabilityConnection }>(`/api/v1/workspace/capabilities/${id}/reactivate`, { method: 'POST' }),
+  revoke: (id: string) => capabilityRequest<{ connection: WorkspaceCapabilityConnection }>(`/api/v1/workspace/capabilities/${id}/revoke`, { method: 'POST' }),
+};
 
 export const getWsBaseUrl = (): string => getWebSocketBaseUrl();
 
