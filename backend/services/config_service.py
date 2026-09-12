@@ -8,13 +8,19 @@ from sqlalchemy.orm import Session
 
 from core.logging_config import logger
 from models.system_config import SystemConfig
+from services.config_registry import get_definition, safe_defaults, validate_value
 
 
 class ConfigService:
-    """Service to fetch dynamic configurations from the database with Redis caching."""
+    """Resilient L1-L4 configuration service.
+
+    L1 is Redis, L2 is PostgreSQL, L3 is the process-local last-known-good
+    snapshot, and L4 is the immutable registry default.
+    """
 
     CACHE_PREFIX = "sys_config:"
-    DEFAULT_TTL = 300  # 5 minutes TTL for config cache
+    DEFAULT_TTL = 300
+    _last_known_good: dict[str, object] = {}
 
     # A SQLAlchemy AsyncSession cannot execute overlapping operations. Several
     # startup/config-sync paths can legitimately ask for different keys using
@@ -32,13 +38,9 @@ class ConfigService:
 
     @classmethod
     async def get_config(cls, db: AsyncSession, key: str, default: any = None) -> any:
-        """
-        Fetch configuration by key.
-        1. Checks Redis cache.
-        2. If not in cache, queries DB.
-        3. Caches result in Redis.
-        4. Returns default if not found.
-        """
+        """Read a config value through the L1-L4 fallback chain."""
+        definition = get_definition(key)
+        fallback = default if default is not None else (definition.default if definition else None)
         cache_key = f"{cls.CACHE_PREFIX}{key}"
         redis = None
 
@@ -50,45 +52,47 @@ class ConfigService:
                 cached_val = await redis.execute_with_retry("get", cache_key)
                 if cached_val is not None:
                     try:
-                        return json.loads(cached_val)
+                        value = json.loads(cached_val)
                     except json.JSONDecodeError:
-                        return cached_val
+                        value = cached_val
+                    try:
+                        value = validate_value(key, value) if definition else value
+                    except (KeyError, ValueError):
+                        value = None
+                    if value is not None:
+                        cls._last_known_good[key] = value
+                        return value
         except Exception as e:
             logger.warning(f"Redis cache error when getting config {key}: {e}")
 
-        # Fallback to DB
         if db is None:
-            return default
+            return cls._last_known_good.get(key, fallback)
 
         try:
-            # SQLAlchemy AsyncSession does not support overlapping execute()
-            # calls. Serialize only DB access for this specific session.
             async with cls._get_db_lock(db):
                 result = await db.execute(
                     select(SystemConfig).where(SystemConfig.key == key, SystemConfig.is_active)
                 )
                 config = result.scalars().first()
-
-                if config is None:
-                    return default
-
-                val = config.value
-
-            # Redis write is intentionally outside the DB-session lock.
-            if redis:
+                val = config.value if config is not None else fallback
+                if definition and config is not None:
+                    val = validate_value(key, val)
+            cls._last_known_good[key] = val
+            if redis and config is not None:
                 try:
                     await redis.execute_with_retry(
-                        "setex",
-                        cache_key,
-                        cls.DEFAULT_TTL,
+                        "setex", cache_key, cls.DEFAULT_TTL,
                         json.dumps(val) if not isinstance(val, str) else val,
                     )
                 except Exception as e:
                     logger.warning(f"Failed to cache config {key} in Redis: {e}")
             return val
+        except (KeyError, ValueError) as e:
+            logger.error(f"Invalid config value for {key}: {e}")
+            return cls._last_known_good.get(key, fallback)
         except Exception as e:
             logger.error(f"DB error fetching config {key}: {e}")
-            return default
+            return cls._last_known_good.get(key, fallback)
 
     @classmethod
     def get_config_sync(cls, db: Session, key: str, default: any = None) -> any:
