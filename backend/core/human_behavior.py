@@ -18,6 +18,93 @@ class HumanBehaviorSimulators:
     এটি বট-ডিটেকশন বাইপাস করতে সাহায্য করে।
     """
 
+    # বাংলা: বাস্তব ডেস্কটপ ভিউপোর্টের সেট — প্রতিবার একই fixed-size
+    # ভিউপোর্ট বট-ফিঙ্গারপ্রিন্ট হিসেবে ধরা পড়ে (Feature 3, old plan)।
+    _REAL_VIEWPORT_WIDTHS = [1280, 1366, 1440, 1536, 1600, 1920]
+    _REAL_VIEWPORT_HEIGHTS = [720, 768, 800, 864, 900, 1080]
+
+    # ═══════════════════════════════════════════════════════════════════
+    # Feature 3 (old plan): Biometric Stealth Fingerprint Layer
+    # Canvas/WebGL ফিঙ্গারপ্রিন্ট noise + navigator.webdriver trace removal +
+    # বাস্তবসম্মত plugins — Cloudflare/Akamai-শ্রেণির bot-detection এড়াতে।
+    # tools/browser/browser_stealth.py-এর সাথে সামঞ্জস্যপূর্ণ, কিন্তু এটি
+    # context/page-agnostic — যেকোনো Playwright page/context-এ প্রয়োগযোগ্য।
+    # ═══════════════════════════════════════════════════════════════════
+    STEALTH_INIT_SCRIPT = """
+    // 1. Canvas fingerprint noise — প্রতি রেন্ডারে অদৃশ্য পার্থক্য যোগ হয়
+    const origToDataURL = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.toDataURL = function(type, ...args) {
+        const dataURL = origToDataURL.apply(this, [type, ...args]);
+        return dataURL.replace(/.$/, String.fromCharCode(
+            dataURL.charCodeAt(dataURL.length - 1) ^ (Math.random() * 4 | 0)
+        ));
+    };
+    const origToBlob = HTMLCanvasElement.prototype.toBlob;
+    if (origToBlob) {
+        HTMLCanvasElement.prototype.toBlob = function(cb, type, quality) {
+            return origToBlob.call(this, cb, type, quality);
+        };
+    }
+
+    // 2. WebGL renderer/vendor string spoofing (37445=UNMASKED_VENDOR, 37446=UNMASKED_RENDERER)
+    const getParam = WebGLRenderingContext.prototype.getParameter;
+    WebGLRenderingContext.prototype.getParameter = function(param) {
+        if (param === 37445) return 'Intel Open Source Technology Center';
+        if (param === 37446) return 'Mesa DRI Intel(R) Iris(R) Plus Graphics (ICL GT2)';
+        return getParam.apply(this, [param]);
+    };
+    if (window.WebGL2RenderingContext) {
+        const getParam2 = WebGL2RenderingContext.prototype.getParameter;
+        WebGL2RenderingContext.prototype.getParameter = function(param) {
+            if (param === 37445) return 'Intel Open Source Technology Center';
+            if (param === 37446) return 'Mesa DRI Intel(R) Iris(R) Plus Graphics (ICL GT2)';
+            return getParam2.apply(this, [param]);
+        };
+    }
+
+    // 3. Remove navigator.webdriver trace (headless Chrome-এর সবচেয়ে সহজ টেল)
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+
+    // 4. Realistic plugins array (headless-এ plugins খালি থাকে — বড় টেল)
+    Object.defineProperty(navigator, 'plugins', {
+        get: () => [
+            { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer' },
+            { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai' },
+            { name: 'Native Client', filename: 'internal-nacl-plugin' },
+        ],
+    });
+
+    // 5. Consistent languages / hardwareConcurrency
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+    Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+    """
+
+    @classmethod
+    async def apply_stealth_fingerprint(cls, page: Page) -> None:
+        """Cloudflare/Akamai bot-detection এড়াতে page-এ stealth fingerprint প্রয়োগ।
+
+        - Canvas/WebGL fingerprint noise (init script — page-এর সব ফ্রেমে চলে)
+        - navigator.webdriver ট্রেস মুছে ফেলা
+        - Random realistic viewport (fixed-size bot detection এড়াতে)
+
+        Never raises — stealth ব্যর্থ হলে scraping স্বাভাবিকভাবে চলবে।
+        """
+        try:
+            await page.add_init_script(cls.STEALTH_INIT_SCRIPT)
+        except Exception as exc:
+            logger.debug(f"Stealth init script failed (non-fatal): {exc}")
+
+        try:
+            # বাংলা: init script পেজ নেভিগেশনের পরেও থাকে; viewport এখনই সেট করা হয়।
+            viewport = {
+                "width": random.choice(cls._REAL_VIEWPORT_WIDTHS),
+                "height": random.choice(cls._REAL_VIEWPORT_HEIGHTS),
+            }
+            await page.set_viewport_size(viewport)
+            logger.debug(f"Stealth fingerprint applied with viewport {viewport}")
+        except Exception as exc:
+            logger.debug(f"Stealth viewport randomization failed (non-fatal): {exc}")
+
     @staticmethod
     def _generate_bezier_points(start: tuple, end: tuple, steps: int = 20) -> list:
         """মানুষের হাতের সামান্য কাঁপুনি সিমুলেট করার জন্য Bezier পাথ পয়েন্ট জেনারেট করে।"""

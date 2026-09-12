@@ -119,6 +119,85 @@ class CascadeMemoryService:
         self.encoder = None
         # Relying on core.embeddings to fetch 1536-dim embeddings natively
 
+        # Production-readiness plan, item 4b: pgvector RPC availability probe
+        # (lazy, cached). None = not probed yet; True/False after first probe.
+        self._pgvector_rpc: bool | None = None
+
+    # ═══════════════════════════════════════════════════════════════════
+    # pgvector RPC support (production-readiness plan, item 4b)
+    #
+    # `match_ai_memories` RPC (database/migrations/001_pgvector_match_fn.sql)
+    # থাকলে similarity ranking সম্পূর্ণ ডাটাবেসেই হয় — ২০০০ রো × ১৫৩৬-ডিম
+    # ভেক্টর Python-এ লোড + কসাইন লুপের ইভেন্ট-লুপ স্তাল ঝুঁকি দূর হয়।
+    # Extension/কলাম না পাওয়া গেলে পুরনো ইন-পাইথন কসাইন fallback চলে।
+    # ═══════════════════════════════════════════════════════════════════
+    def _pgvector_rpc_available(self) -> bool:
+        """Probe (once, cached) whether ai_memory.embedding is a pgvector column."""
+        if self._pgvector_rpc is not None:
+            return self._pgvector_rpc
+        try:
+            rows = pooled_pg.query_dicts(
+                """
+                SELECT (EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector'))
+                   AND COALESCE(
+                       (SELECT udt_name = 'vector'
+                          FROM information_schema.columns
+                         WHERE table_name = 'ai_memory'
+                           AND column_name = 'embedding'
+                         LIMIT 1), False
+                   ) AS pgvector_ready
+                """
+            )
+            self._pgvector_rpc = bool(rows and rows[0].get("pgvector_ready"))
+        except Exception as exc:
+            logger.debug(f"pgvector RPC probe failed (fallback stays active): {exc}")
+            self._pgvector_rpc = False
+        if self._pgvector_rpc:
+            logger.info("CascadeMemoryService: pgvector RPC match_ai_memories enabled.")
+        return self._pgvector_rpc
+
+    def _query_via_pgvector_rpc(
+        self,
+        query_vector: list[float],
+        top_k: int,
+        session_id: str | None,
+        user_id: str | None,
+    ) -> list[dict[str, Any]]:
+        """Run similarity ranking inside Postgres via match_ai_memories RPC.
+
+        বাংলা: threshold 0.0 রাখা হয়েছে যাতে পুরনো brute-force পথের সাথে
+        সেমান্টিক প্যারিটি থাকে (ওই পথেও score-এর উপর কোনো থ্রেশহোল্ড ছিল না),
+        তারপর top_k কেটে ফেরত দেওয়া হয়।
+        """
+        vector_literal = "[" + ",".join(f"{float(x):.7f}" for x in query_vector) + "]"
+        rows = pooled_pg.query_dicts(
+            """
+            SELECT id, user_id, session_id, agent_type, task_type,
+                   summary, metadata, created_at, similarity AS score
+              FROM match_ai_memories(%s::vector, %s::float, %s::int, %s::text, %s::text)
+            """,
+            (vector_literal, 0.0, max(1, int(top_k)), user_id, session_id),
+        )
+        results: list[dict[str, Any]] = []
+        for row in rows:
+            results.append(
+                {
+                    "id": row.get("id"),
+                    "user_id": row.get("user_id"),
+                    "session_id": row.get("session_id"),
+                    "agent_type": row.get("agent_type"),
+                    "task_type": row.get("task_type"),
+                    "summary": row.get("summary"),
+                    # embedding vector আর Python-এ লাগে না — shape parity-র জন্য key রাখা হলো।
+                    "embedding": None,
+                    "metadata": row.get("metadata") or {},
+                    "created_at": row.get("created_at"),
+                    "score": float(row.get("score") or 0.0),
+                }
+            )
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return results[:top_k]
+
     def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -138,18 +217,23 @@ class CascadeMemoryService:
 
     def _embed(self, text: str) -> list[float]:
 
-        from core.embeddings import embed_for_pgvector
+        from core.embeddings import _PG_DIM, embed_for_pgvector
 
         try:
-            # try to get embedding, since we're in synchronous context we need to handle it carefully.
-            # wait, embed_for_pgvector is synchronous!
-            embedding = embed_for_pgvector(text, pg_dim=1536)
+            # বাংলা: embed_for_pgvector সিঙ্ক্রোনাস — তবে এটি লোকাল-ফার্স্ট (384-dim)
+            # এবং সবসময় _PG_DIM-এ নরমালাইজ করে। আগে pg_dim=1536 দেওয়া হতো —
+            # ফলে প্রতি কলে dimension-mismatch WARNING ছাড়ত এবং fallback hash
+            # 1536-dim বানাত, যেখানে বাকি সিস্টেমের ডিম কন্ট্রাক্ট 384 — এই অসঙ্গতি
+            # এখন ঠিক করা হলো (production-readiness plan, item 4b সহায়ক ফিক্স)।
+            embedding = embed_for_pgvector(text, pg_dim=_PG_DIM)
             if embedding:
                 return embedding
         except Exception as e:
-            logger.warning(f"Embedding failed: {e}. Falling back to hash vectorizer (1536 dim).")
+            logger.warning(
+                f"Embedding failed: {e}. Falling back to hash vectorizer ({_PG_DIM} dim)."
+            )
 
-        return hash_vectorize(text, size=1536)
+        return hash_vectorize(text, size=_PG_DIM)
 
     def _parse_code_structure(self, file_path: str, content: str) -> dict[str, Any]:
         """
@@ -423,6 +507,16 @@ class CascadeMemoryService:
         results = []
 
         if self._use_pg:
+            # Production-readiness plan, item 4b: database-side ranking first —
+            # pgvector RPC উপলব্ধ থাকলে ২০০০-রো Python কসাইন লুপ এড়িয়ে যাওয়া হয়।
+            if self._pgvector_rpc_available():
+                try:
+                    return self._query_via_pgvector_rpc(query_vector, top_k, session_id, user_id)
+                except Exception as exc:
+                    logger.warning(
+                        "CascadeMemoryService.query_context: pgvector RPC failed, "
+                        f"falling back to in-Python cosine: {exc}"
+                    )
             try:
                 _base_cols = "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
                 _row_cap = f" ORDER BY created_at DESC LIMIT {_MEMORY_ROW_CAP}"
