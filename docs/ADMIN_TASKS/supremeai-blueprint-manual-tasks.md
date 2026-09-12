@@ -5,12 +5,14 @@ The repository now provides a governed intelligence router, bounded execution bu
 ## Manual tasks
 
 - Rotate any previously exposed Render API key and GitHub PAT; verify revocation.
-- Verify production secrets in the managed cloud secret store; do not commit them.
-- Provision and verify the durable `ai_memory` schema using canonical cloud migrations.
-- Connect and authorize GitHub, Supabase, Render, and notification providers with least privilege.
+- Verify `ENCRYPTION_KEY`, `INFISICAL_CLIENT_SECRET`, `INFISICAL_TOKEN`, `SUPREMEAI_ADMIN_PASSWORD_HASH`, and `SUPREMEAI_JWT_SECRET` in the managed cloud secret store; do not commit them.
+- Provision and verify the durable `ai_memory` schema, pgvector extension, HNSW/index strategy, tenant ownership, and RLS using canonical Alembic migrations.
+- Confirm the live database revision matches `backend/alembic_migrations/`; archive legacy SQL only after a schema-drift backup and DBA/release-owner approval.
+- Connect and authorize GitHub, Supabase, Render, notification, and AI providers with least privilege; rotate or revoke any credential exposed outside the managed secret store.
+- Review the six deferred/skipped tests, assign an owner and due date, and either implement or formally accept each deferral.
 - Review and approve generated PRs, migrations, configuration changes, deployments, rotations, and production mutations.
-- Configure cloud schedules for memory consolidation and risk watchers with alerts and resource limits.
-- Run staging smoke tests, restore drills, and canary checks after CI passes.
-- Approve retention/privacy policy for audit artifacts and autonomous remediation boundaries.
+- Configure cloud schedules for memory consolidation and risk watchers with alerts, retention limits, and an explicit failure escalation path.
+- Run DAST/ZAP review, staging login/OTP/Deck/module smoke tests, payment smoke tests, restore drills, canary checks, and production deployment verification.
+- Approve retention/privacy policy for audit artifacts and autonomous remediation boundaries; attach evidence to the release or audit record.
 
-Evidence should be attached to the release or audit record. No secret, token, provider authorization, production deployment, destructive migration, or direct default-branch mutation is performed by this implementation.
+No secret, token, provider authorization, production deployment, destructive migration, DAST run, or direct default-branch mutation is performed by this implementation.
