@@ -2,6 +2,7 @@ import asyncio
 import hashlib
 import ipaddress
 import json
+import os
 import socket
 import urllib.error
 import urllib.request
@@ -1350,6 +1351,23 @@ def _host_is_blocked(hostname: str) -> bool:
     return False
 
 
+def _frame_ancestors_sources() -> str:
+    """Build the CSP ``frame-ancestors`` source list for the render proxy.
+
+    SEC-HARDEN P6: the proxy previously sent ``frame-ancestors *`` (plus a
+    non-standard ``X-Frame-Options: ALLOWALL``). That let ANY third-party site
+    embed the proxy — a clickjacking / UI-redressing surface. Now only the
+    app's own surface (``'self'``) plus every operator-configured frontend
+    origin (``ALLOWED_ORIGINS``) may frame it. Never ``*``.
+    """
+    sources = ["'self'"]
+    for raw in os.getenv("ALLOWED_ORIGINS", "").split(","):
+        origin = raw.strip()
+        if origin:
+            sources.append(origin)
+    return " ".join(sources)
+
+
 @router.get("/render")
 def render_proxy(url: str):
     """Server-side web proxy so the in-app browser can render sites that block iframes.
@@ -1371,8 +1389,10 @@ def render_proxy(url: str):
             raise HTTPException(status_code=502, detail="Response too large to proxy.")
         proxy_headers = {
             "Cache-Control": "no-store",
-            "X-Frame-Options": "ALLOWALL",
-            "Content-Security-Policy": "frame-ancestors *",
+            # SEC-HARDEN P6: never ALLOWALL / frame-ancestors * — only the app's
+            # own surfaces may embed the proxy response (prevents clickjacking).
+            "X-Frame-Options": "SAMEORIGIN",
+            "Content-Security-Policy": f"frame-ancestors {_frame_ancestors_sources()}",
         }
         if "text/html" in ctype:
             text = data.decode("utf-8", errors="replace")

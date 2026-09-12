@@ -31,10 +31,19 @@ SECURITY_HEADERS = {
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Content-Security-Policy": (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
+        # SEC-HARDEN P9: 'unsafe-inline' removed from script-src. Inline execution
+        # stays enabled ONLY where a per-route CSP explicitly needs it (mermaid /
+        # react artifact previews set their own headers); every other HTML surface
+        # (including raw user-uploaded artifact HTML) now inherits a strict policy,
+        # which directly mitigates stored/reflected XSS.
+        "script-src 'self'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https:; "
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co;"
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'; "
+        "frame-src 'self' https: http:;"
     ),
 }
 
@@ -60,7 +69,18 @@ XSS_PATTERNS = [
 # Additional Dangerous Patterns
 DANGEROUS_PATTERNS = [
     r"\.\./",  # Path traversal
+    r"\.\.\\",  # Path traversal, Windows backslash
     r"\$\{",  # Template injection
+    # URL/Double-encoded traversal variants (SEC-HARDEN-2026-09): `\.\./` alone
+    # cannot match hex-encoded ("%2e%2e%2f") or double-encoded ("%252e%252e%252f")
+    # payloads, which is a standard WAF bypass. These patterns close that gap.
+    r"%2e%2e%2f",  # URL-encoded "../"
+    r"%2e%2e\\",  # URL-encoded "..\"
+    r"%252e%252e%252f",  # Double-encoded "../"
+    r"%252e%252e%255c",  # Double-encoded "..\"
+    r"\.\.%2f",  # Mixed "./..%2f"
+    r"\.\.%5c",  # Mixed "./..\ (encoded)"
+    r"%2e%2e/",  # Mixed "../"
 ]
 
 
