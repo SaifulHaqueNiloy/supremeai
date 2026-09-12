@@ -639,3 +639,139 @@ class TestMissionDynamicSkillRegistration:
         retrieved = await manager.get_skill("mission_test_skill")
         assert retrieved is not None
         assert retrieved.name == "mission_test_skill"
+
+
+# ---------------------------------------------------------------------------
+# Mission 16 — Rate Limiter: In-Memory Sliding Window & Fail-Gentle Fallback
+# ---------------------------------------------------------------------------
+class TestMissionRateLimiterSlidingWindow:
+    def test_in_memory_fallback_sliding_window(self):
+        """বাংলা: Redis অনুপস্থিতিতে InMemoryFallbackLimiter নির্ভুলভাবে রিকোয়েস্ট বাউন্ডিং
+        করে যাতে সার্ভার ওভারলোড বা DoS থেকে রক্ষা পায়।"""
+        from middleware.rate_limiter import InMemoryFallbackLimiter
+
+        limiter = InMemoryFallbackLimiter(burst=5, window=60.0)
+        key = "tenant-mission-16"
+
+        # First 5 requests must pass
+        for _ in range(5):
+            assert limiter.is_allowed(key, limit=5) is True
+
+        # 6th request within window must be blocked
+        assert limiter.is_allowed(key, limit=5) is False
+
+
+# ---------------------------------------------------------------------------
+# Mission 17 — Resilience: Standard Circuit Breaker Failover Lifecycle
+# ---------------------------------------------------------------------------
+class TestMissionResilienceCircuitBreaker:
+    def test_circuit_breaker_trips_to_open_on_threshold(self):
+        """বাংলা: core.resilience.circuit_breaker থ্রেশহোল্ড অতিক্রম করলে OPEN স্টেটে যায়
+        এবং নতুন রিকোয়েস্ট রিজেক্ট করে।"""
+        from core.resilience.circuit_breaker import (
+            CircuitBreaker,
+            CircuitBreakerOpenError,
+            CircuitBreakerState,
+        )
+
+        cb = CircuitBreaker(name="mission-breaker", failure_threshold=2, recovery_timeout=60.0)
+        assert cb.state == CircuitBreakerState.CLOSED
+
+        def failing_action():
+            raise ValueError("Simulated outage")
+
+        # First failure
+        with pytest.raises(ValueError):
+            cb.call(failing_action)
+        assert cb.state == CircuitBreakerState.CLOSED
+
+        # Second failure trips breaker
+        with pytest.raises(ValueError):
+            cb.call(failing_action)
+        assert cb.state == CircuitBreakerState.OPEN
+
+        # Third call rejected with CircuitBreakerOpenError without calling action
+        with pytest.raises(CircuitBreakerOpenError):
+            cb.call(failing_action)
+
+
+# ---------------------------------------------------------------------------
+# Mission 18 — Workspace Scope Guard: READ_ONLY vs FULL_CONTROL Isolation
+# ---------------------------------------------------------------------------
+class TestMissionWorkspaceScopeGuard:
+    def test_read_only_target_rejects_commit(self):
+        """বাংলা: READ_ONLY স্কোপে থাকা মেইন কোডবেজে স্বায়ত্তশাসিত এজেন্ট commit করতে পারে না (Constitution #1)।"""
+        from core.repo_manager import DynamicRepoManager, PermissionDeniedError
+        from core.target_registry import (
+            PermissionScope,
+            TargetEntity,
+            TargetPlatformType,
+            target_registry,
+        )
+
+        target = TargetEntity(
+            id="mission-repo-ro",
+            name="Mission Protected Repo",
+            target_type=TargetPlatformType.GIT_REPOSITORY,
+            url="origin/main",
+            scope=PermissionScope.READ_ONLY,
+        )
+        target_registry.register_target(target)
+
+        manager = DynamicRepoManager()
+        with pytest.raises(PermissionDeniedError, match="READ_ONLY permission scope"):
+            manager.execute_git_commit("mission-repo-ro", "Unauthorized change")
+
+
+# ---------------------------------------------------------------------------
+# Mission 19 — Pre-Cognitive Pattern Persistence & Failure Fingerprints
+# ---------------------------------------------------------------------------
+class TestMissionPreCognitivePatternPersistence:
+    def test_failure_fingerprint_deterministic_hash(self):
+        """বাংলা: একই ধরনের ব্যর্থতা একই ফিঙ্গারপ্রিন্ট তৈরি করে যাতে মেমোরি কম্পাউন্ড হতে পারে।"""
+        from core.failure_fingerprint import make_fingerprint
+
+        err1 = ConnectionRefusedError("Connection refused to port 443 at 192.168.1.1:8080")
+        err2 = ConnectionRefusedError("Connection refused to port 443 at 10.0.0.5:8080")
+        fp1 = make_fingerprint(err1)
+        fp2 = make_fingerprint(err2)
+        # Normalized IPs produce matching failure fingerprints
+        assert fp1 == fp2
+        assert len(fp1) == 64  # SHA-256 hex string
+
+
+# ---------------------------------------------------------------------------
+# Mission 20 — Observability & Event Bus Telemetry Audit Loop
+# ---------------------------------------------------------------------------
+class TestMissionEventBusTelemetryToAuditLog:
+    @pytest.mark.asyncio
+    async def test_error_event_bus_emission_and_listener(self):
+        """বাংলা: সিস্টেমের ত্রুটি ও অডিট ট্রেইল event bus-এ এমিট হয় এবং সেন্ট্রালাইজড রেকর্ড হয়।"""
+        from core.messaging.event_bus import (
+            ErrorContext,
+            ErrorEvent,
+            ErrorSeverity,
+            error_event_bus,
+        )
+
+        captured_events = []
+
+        def sample_listener(event: ErrorEvent):
+            captured_events.append(event)
+
+        error_event_bus.register_listener("*", sample_listener)
+
+        evt = ErrorEvent(
+            module="mission_test_suite",
+            error_type="MISSION_AUDIT_CHECK",
+            message="Test event bus audit verification",
+            severity=ErrorSeverity.HIGH,
+            structured_context=ErrorContext(module="mission_test_suite", task_id="t-mission-20"),
+        )
+        await error_event_bus.async_emit(evt)
+
+        assert len(captured_events) > 0
+        last_evt = captured_events[-1]
+        assert last_evt.module == "mission_test_suite"
+        assert last_evt.error_type == "MISSION_AUDIT_CHECK"
+        assert last_evt.structured_context.task_id == "t-mission-20"
