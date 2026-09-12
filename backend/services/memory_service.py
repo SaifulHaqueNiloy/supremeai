@@ -1,4 +1,5 @@
 import ast
+import asyncio
 import json
 import math
 import os
@@ -53,6 +54,12 @@ _PG_SCHEMA = """
         created_at TIMESTAMPTZ DEFAULT NOW()
     )
 """
+
+# FIX (P0, review 2026-09-12): cap candidate rows for in-Python cosine ranking.
+# Previously the no-filter branch did a FULL-TABLE scan (all rows x 1536-dim
+# JSON embeddings) inside the event loop — seconds of stall under load.
+# pgvector RPC (match_ai_memory) is the scalable path; this caps the worst case.
+_MEMORY_ROW_CAP = 2000
 
 
 class CascadeMemoryService:
@@ -417,25 +424,25 @@ class CascadeMemoryService:
 
         if self._use_pg:
             try:
+                _base_cols = "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
+                _row_cap = f" ORDER BY created_at DESC LIMIT {_MEMORY_ROW_CAP}"
                 if user_id and session_id:
                     rows = pooled_pg.query_dicts(
-                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s AND user_id = %s",
+                        _base_cols + " WHERE session_id = %s AND user_id = %s" + _row_cap,
                         (session_id, user_id),
                     )
                 elif session_id:
                     rows = pooled_pg.query_dicts(
-                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE session_id = %s",
+                        _base_cols + " WHERE session_id = %s" + _row_cap,
                         (session_id,),
                     )
                 elif user_id:
                     rows = pooled_pg.query_dicts(
-                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory WHERE user_id = %s",
+                        _base_cols + " WHERE user_id = %s" + _row_cap,
                         (user_id,),
                     )
                 else:
-                    rows = pooled_pg.query_dicts(
-                        "SELECT id, user_id, session_id, agent_type, task_type, summary, embedding, metadata, created_at FROM ai_memory"
-                    )
+                    rows = pooled_pg.query_dicts(_base_cols + _row_cap)
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.query_context: Postgres read failed: {exc}")
                 rows = []
@@ -668,7 +675,14 @@ async def save_memory(
 
         if supabase:
             try:
-                result = await supabase.table("ai_memory").insert(record).execute()
+                # FIX (P0, review 2026-09-12): supabase-py is a SYNC client —
+                # `await ...execute()` raised TypeError every time (caught &
+                # swallowed), so the Supabase memory path NEVER worked and every
+                # save silently fell back to the cascade. Run the sync call on a
+                # worker thread instead.
+                result = await asyncio.to_thread(
+                    lambda: supabase.table("ai_memory").insert(record).execute()
+                )
                 if result.data:
                     mem_id = result.data[0].get("id", "unknown")
                     logger.info(
@@ -711,15 +725,19 @@ async def recall_memories(
         supabase = _get_supabase()
         if supabase:
             try:
-                result = supabase.rpc(
-                    "match_ai_memory",
-                    {
-                        "query_embedding": embedding,
-                        "match_threshold": threshold,
-                        "match_count": limit,
-                        "p_user_id": user_id,  # Assume RPC handles it, or fails safely to fallback
-                    },
-                ).execute()
+                # FIX (P1, review 2026-09-12): sync RPC call was blocking the event
+                # loop (~100-300ms per recall). Offload to a worker thread.
+                result = await asyncio.to_thread(
+                    lambda: supabase.rpc(
+                        "match_ai_memory",
+                        {
+                            "query_embedding": embedding,
+                            "match_threshold": threshold,
+                            "match_count": limit,
+                            "p_user_id": user_id,  # Assume RPC handles it, or fails safely to fallback
+                        },
+                    ).execute()
+                )
                 memories = result.data or []
                 logger.info(
                     f"Memory recall (Supabase) | query='{task_description[:60]}...' | found={len(memories)}"

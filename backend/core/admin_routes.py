@@ -265,6 +265,36 @@ async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Requ
     return {"status": "otp_required", "uid": uid}
 
 
+def _ensure_admin_authorized(uid: str, email: str = "") -> None:
+    """SECURITY FIX (P0, review 2026-09-12): enforce admin role on TOTP flows.
+
+    বাংলা মন্তব্য: totp-setup / totp-verify / totp-recover এন্ডপয়েন্টগুলো public path-এ
+    ছিল এবং Firebase ID token যাচাই করলেও role চেক করত না — ফলে যেকোনো self-registered
+    ইউজার নিজের uid-তে TOTP secret সেটআপ করে সরাসরি role:"admin" JWT মিন্ট করতে পারত
+    (full admin escalation)। এখন শুধুমাত্র admin_users/{uid} (role=admin) অথবা
+    ADMIN_EMAILS allowlist-এ থাকা ইমেইল এগোতে পারবে। Firestore lookup ব্যর্থ হলে
+    fail-closed (অনুমোদন দেওয়া হবে না) — login flow-এর সাথে সামঞ্জস্যপূর্ণ।
+    """
+    if uid == "mock-admin-uid" and getattr(settings, "env", "local").lower() != "production":
+        return  # বাংলা মন্তব্য: dev-only mock পথ; production-এ mock token উপরেই ব্লক হয়
+
+    admin_emails = {e.lower() for e in (getattr(settings, "admin_emails", None) or [])}
+    if email and email.lower() in admin_emails:
+        return
+
+    db = get_firestore_client()
+    if db:
+        try:
+            doc = db.collection("admin_users").document(uid).get()
+            if doc.exists and (doc.to_dict() or {}).get("role") == "admin":
+                return
+        except Exception as lookup_err:
+            logger.error(f"Admin role lookup failed for uid={uid}: {lookup_err}")
+
+    logger.warning(f"Unauthorized TOTP admin-flow attempt blocked: uid={uid}, email={email!r}")
+    raise HTTPException(status_code=403, detail="Forbidden: Not authorized as an admin role user")
+
+
 @router.post("/api/admin/firebase-totp-setup")
 def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     id_token = payload.id_token
@@ -293,6 +323,9 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Token decoding failed: {e!s}") from e
+
+    # SECURITY FIX (P0): admin role verification before issuing TOTP material
+    _ensure_admin_authorized(uid, email)
 
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
     recovery_codes = [secrets.token_urlsafe(10) for _ in range(8)]
@@ -347,6 +380,9 @@ def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
     except Exception as exc:
         raise HTTPException(status_code=401, detail="Authentication failed") from exc
 
+    # SECURITY FIX (P0): admin role verification before recovery re-enrollment
+    _ensure_admin_authorized(uid, email)
+
     db = get_firestore_client()
     if not db:
         raise HTTPException(status_code=503, detail="Security database unavailable")
@@ -381,9 +417,11 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
                     detail="Mock tokens are strictly forbidden in production.",
                 )
             uid = "mock-admin-uid"
+            email = ""
         elif auth:
             decoded_token = auth.verify_id_token(id_token)
             uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+            email = decoded_token.get("email", "")
         else:
             raise HTTPException(
                 status_code=401,
@@ -393,6 +431,9 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
         raise
     except Exception as e:
         raise HTTPException(status_code=401, detail=f"Token decoding failed: {e!s}") from e
+
+    # SECURITY FIX (P0): admin role verification before minting an admin JWT
+    _ensure_admin_authorized(uid, email)
 
     db = get_firestore_client()
     totp_secret = None

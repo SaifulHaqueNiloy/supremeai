@@ -36,7 +36,16 @@ export function setupGlobalFetchInterceptor() {
     let options: RequestInit | undefined = args[1] as RequestInit;
     const apiBase = (await import('./api')).getApiBaseUrl();
 
-    if (typeof url === 'string' && url.startsWith(apiBase)) {
+    // FIX (P2, review 2026-09-12): with VITE_USE_RELATIVE_PATH=true the apiBase is
+    // '' and `''.startsWith(...)` matches EVERY url — cookies were attached to
+    // cross-origin calls (Supabase, R2 uploads, telemetry), breaking CORS.
+    // Guard against an empty base and only target same-origin/app API URLs.
+    if (
+      apiBase &&
+      (typeof url === 'string'
+        ? url.startsWith(apiBase)
+        : url instanceof URL && url.origin === window.location.origin)
+    ) {
       options = options || {};
       options.credentials = 'include';
       args[1] = options;

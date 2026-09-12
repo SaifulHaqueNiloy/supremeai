@@ -29,11 +29,34 @@ class HoneypotMiddleware:
         # comment context-এ ম্যাচ করানো হয়: whitespace/EOL দ্বারা অনুসরণ করা, অথবা quote/semicolon
         # দ্বারা পূর্ববর্তী। এতে base64 টোকেনের false-positive দূর হয়, কিন্তু ক্লাসিক SQLi
         # (যেমন `' OR 1=1--`, `admin'--`, `; --`) ঠিকই ধরা পড়ে।
-        self.attack_signatures = [
-            re.compile(r"(?i)(ignore previous instructions|system prompt)"),
+        #
+        # FIX (P1, review 2026-09-12): signature-গুলো এখন দুই স্তরে বিভক্ত।
+        # আগে "what is a system prompt?" বা কোড পেস্ট করা মাত্র (<script> ট্যাগ থাকলে)
+        # সাধারণ চ্যাট ইউজারও ১ ঘণ্টার জন্য IP-ব্লক হয়ে যেত — AI চ্যাট প্ল্যাটফর্মের জন্য
+        # এটি মারাত্মক false-positive। এখন:
+        #   - strict (SQLi): যেকোনো পাথে ব্লক করে — এটি context নির্বিশেষে আক্রমণ সংকেত,
+        #   - prompt-injection / XSS সিগনেচার: শুধু auth/admin সারফেসে ব্লক করে।
+        self.strict_signatures = [
             re.compile(r"(?i)(union\s+select|\b1\s*=\s*1\b|--\s|--$|'\s*--|;\s*--|drop\s+table)"),
+        ]
+        self.auth_surface_signatures = [
+            re.compile(r"(?i)(ignore previous instructions|system prompt)"),
             re.compile(r"(?i)(<script>|javascript:)"),
         ]
+        self.attack_signatures = self.strict_signatures + self.auth_surface_signatures
+        # FIX (P1, review 2026-09-12): pre-auth RAM exhaustion guard — আগে যেকোনো
+        # সাইজের body পুরোপুরি মেমোরিতে buffer হত (multi-GB upload = OOM)।
+        self._max_inspect_bytes = int(os.getenv("HONEYPOT_MAX_INSPECT_BYTES", "1000000"))
+        self._security_surface_markers = (
+            "/admin",
+            "/auth",
+            "/login",
+            "/token",
+            "/otp",
+            "/password",
+            "/register",
+            "/signup",
+        )
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -62,19 +85,35 @@ class HoneypotMiddleware:
         # রিকোয়েস্ট বডি রিড করা (Safely inside ASGI)
         body_bytes = b""
         messages = []
+        body_oversized = False
 
         if scope.get("method") in ("POST", "PUT", "PATCH"):
-            more_body = True
-            try:
-                while more_body:
-                    message = await receive()
-                    messages.append(message)
-                    body_bytes += message.get("body", b"")
-                    more_body = message.get("more_body", False)
-            except Exception as exc:
-                # বল মনতবয: রকয়সট বড রড বযরথ হল ডউনসটরম হযনডলর খল বড দখব;
-                # নরব সযলপর বদল ডবগ লগ কর হল যত করপট/আংশক বড শনকত কর যয়
-                logger.debug(f"Honeypot middleware failed to read request body: {exc}")
+            # FIX (P1, review 2026-09-12): honor Content-Length — large bodies are
+            # never buffered/scanned (OOM prevention); they pass straight through.
+            content_length = 0
+            for hname, hval in scope.get("headers") or []:
+                if hname == b"content-length":
+                    try:
+                        content_length = int(hval)
+                    except ValueError:
+                        content_length = 0
+                    break
+            if content_length > self._max_inspect_bytes:
+                body_oversized = True
+
+            if not body_oversized:
+                more_body = True
+                try:
+                    while more_body:
+                        message = await receive()
+                        messages.append(message)
+                        body_bytes += message.get("body", b"")
+                        if len(body_bytes) > self._max_inspect_bytes:
+                            body_oversized = True
+                            break
+                        more_body = message.get("more_body", False)
+                except Exception as exc:
+                    logger.debug(f"Honeypot middleware failed to read request body: {exc}")
 
         # Reconstruct receive channel for downstream handlers
         @with_error_bus("new_receive")
@@ -83,12 +122,34 @@ class HoneypotMiddleware:
                 return messages.pop(0)
             return {"type": "http.disconnect"}
 
+        if body_oversized:
+            # FIX (P1, review 2026-09-12, round 2): oversized bodies must reach the
+            # app INTACT. If we stopped buffering mid-stream, the already-buffered
+            # messages are replayed first and the remaining body is forwarded
+            # straight from the real channel (no truncation, no disconnect).
+            async def passthrough_receive():
+                if messages:
+                    return messages.pop(0)
+                return await receive()
+
+            logger.debug(f"Honeypot: oversized body from {hacker_ip} — skipping inspection")
+            await self.app(scope, passthrough_receive, send)
+            return
+
         body_str = body_bytes.decode("utf-8", errors="ignore")
         query_str = scope.get("query_string", b"").decode("utf-8", errors="ignore")
 
+        # FIX (P1, review 2026-09-12): full signature set only on security
+        # surfaces; content paths (e.g. chat) only block on high-confidence SQLi.
+        path_lower = scope.get("path", "").lower()
+        is_security_surface = any(m in path_lower for m in self._security_surface_markers)
+        active_signatures = (
+            self.attack_signatures if is_security_surface else self.strict_signatures
+        )
+
         # Check query string and body for malicious signatures
         is_malicious = any(
-            sig.search(body_str) or sig.search(query_str) for sig in self.attack_signatures
+            sig.search(body_str) or sig.search(query_str) for sig in active_signatures
         )
 
         if is_malicious:

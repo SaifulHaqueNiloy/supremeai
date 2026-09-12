@@ -298,9 +298,26 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             )
             return await call_next(request)
 
+        # FIX (P1, review 2026-09-12): compute the scoped key before any Redis
+        # usage so the lock path below is user-scoped too.
+        principal = "anon"
+        user = getattr(request.state, "user", None)
+        if user:
+            if isinstance(user, dict):
+                principal = str(user.get("sub") or user.get("uid") or user.get("id") or "anon")
+            else:
+                principal = str(getattr(user, "id", None) or "anon")
+        scoped_key = f"{principal}:{idempotency_key}"
+
         if redis_manager.client is not None:
             try:
-                cached_key = f"idempotency:response:{idempotency_key}"
+                # FIX (P1, review 2026-09-12): scope the idempotency key per
+                # authenticated principal. The cache was previously keyed ONLY by
+                # the client-supplied Idempotency-Key header, so ANY user holding
+                # the same key could replay another user's cached response
+                # (cross-tenant data leak). Auth now runs before this middleware
+                # (see app_builder reorder), so request.state.user is available.
+                cached_key = f"idempotency:response:{scoped_key}"
                 cached = await redis_manager.client.get(cached_key)
                 if cached:
                     logger.info(
@@ -315,7 +332,7 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 logger.warning(f"[Idempotency] Cache read failed — continuing: {e}")
 
-        acquired = await acquire_idempotency_lock(idempotency_key, IDEMPOTENCY_TTL_SECONDS)
+        acquired = await acquire_idempotency_lock(scoped_key, IDEMPOTENCY_TTL_SECONDS)
         if not acquired:
             logger.warning(f"Idempotency Block: {idempotency_key} is already being processed.")
             raise HTTPException(
@@ -356,25 +373,25 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                     body_str = body_bytes.decode("utf-8")
                     cache_data = json.dumps({"status_code": 200, "body": json.loads(body_str)})
                     await cache_response_and_release_lock(
-                        idempotency_key, cache_data, IDEMPOTENCY_TTL_SECONDS * 5
+                        scoped_key, cache_data, IDEMPOTENCY_TTL_SECONDS * 5
                     )
                 except (json.JSONDecodeError, UnicodeDecodeError) as parse_err:
                     logger.warning(
                         f"[Idempotency] Response body not JSON-serializable (non-blocking): {parse_err}"
                     )
-                    await release_idempotency_lock(idempotency_key)
+                    await release_idempotency_lock(scoped_key)
                 except Exception as cache_err:
                     logger.warning(
                         f"[Idempotency] Response caching failed (non-blocking): {cache_err}"
                     )
-                    await release_idempotency_lock(idempotency_key)
+                    await release_idempotency_lock(scoped_key)
             else:
-                await release_idempotency_lock(idempotency_key)
+                await release_idempotency_lock(scoped_key)
 
             return response
 
         except Exception as e:
-            await release_idempotency_lock(idempotency_key)
+            await release_idempotency_lock(scoped_key)
             logger.error(f"Execution failed inside Idempotency block: {e!s}")
             raise
 

@@ -98,21 +98,29 @@ class RateLimiter:
         return self._redis
 
     def _get_tier(self, request: Request) -> str:
-        """Determine rate limit tier from request context."""
-        # Check for admin role
+        """Determine rate limit tier from request context.
+
+        FIX (P1, review 2026-09-12): AuthMiddleware stores the decoded JWT as a
+        DICT on request.state.user, but this method used attribute access
+        (getattr(user, "role")) — which always fails on a dict, so EVERY
+        authenticated user (and admin) was throttled at the anonymous tier.
+        Now both dict and object shapes are handled.
+        """
         user = getattr(request.state, "user", None)
-        if user and getattr(user, "role", None) == "admin":
+        if not user:
+            return "anonymous"
+        if isinstance(user, dict):
+            role = user.get("role")
+            is_premium = user.get("is_premium", False)
+        else:
+            role = getattr(user, "role", None)
+            is_premium = getattr(user, "is_premium", False)
+
+        if role == "admin":
             return "admin"
-
-        # Check for premium subscription
-        if user and getattr(user, "is_premium", False):
+        if is_premium:
             return "premium"
-
-        # Authenticated user
-        if user:
-            return "authenticated"
-
-        return "anonymous"
+        return "authenticated"
 
     async def _get_limits(self, request: Request, endpoint: str, tier: str) -> tuple:
         """Get rate limits for endpoint/tier combination."""
@@ -173,6 +181,23 @@ class RateLimiter:
             logger.error(f"Fallback rate limit failed: {e}")
             return True, {"remaining": limit, "reset": now + window, "current": 0, "limit": limit}
 
+    def _static_limits(self, endpoint: str, tier: str) -> tuple[int, int]:
+        """Static (non-DB) limits — used when Redis is unavailable so we can
+        skip remote ConfigService reads that would retry with backoff and stall
+        every request (FIX P2, review 2026-09-12)."""
+        if endpoint in self.ENDPOINT_OVERRIDES:
+            val = self.ENDPOINT_OVERRIDES[endpoint]
+            if isinstance(val, (list, tuple)) and len(val) >= 2:
+                return (int(val[0]), int(val[1]))
+            if isinstance(val, dict):
+                return (int(val.get("limit", 10)), int(val.get("window", 60)))
+        val = self.TIERS.get(tier, self.TIERS["anonymous"])
+        if isinstance(val, (list, tuple)) and len(val) >= 2:
+            return (int(val[0]), int(val[1]))
+        if isinstance(val, dict):
+            return (int(val.get("limit", 10)), int(val.get("window", 60)))
+        return self.TIERS["anonymous"]
+
     async def is_allowed(self, key: str, limit: int, window: int) -> tuple[bool, dict]:
         """
         Check if request is allowed under rate limit.
@@ -193,22 +218,17 @@ class RateLimiter:
 
         try:
             now = time.time()
-            pipe = redis.pipeline(transaction=True)
 
-            # Remove old entries outside window
-            pipe.zremrangebyscore(key, 0, now - window)
-
-            # Count current window requests
-            pipe.zcard(key)
-
-            # Add this request
-            pipe.zadd(key, {str(now): now})
-
-            # Set expiry on key
-            pipe.expire(key, window)
-
-            results = await pipe.execute()
-            current_count = results[1]
+            # FIX (P2, review 2026-09-12): two-phase sliding window. The old
+            # single pipeline added the request to the window EVEN WHEN
+            # REJECTING it — every retry refilled the zset and reset the key
+            # expiry, so a client that hit the limit stayed blocked for as
+            # long as it kept retrying (self-amplifying 429 loop).
+            check_pipe = redis.pipeline(transaction=True)
+            check_pipe.zremrangebyscore(key, 0, now - window)
+            check_pipe.zcard(key)
+            check_results = await check_pipe.execute()
+            current_count = check_results[1]
 
             remaining = max(0, limit - current_count)
             reset_time = now + window
@@ -220,6 +240,12 @@ class RateLimiter:
                     "current": current_count,
                     "limit": limit,
                 }
+
+            # Allowed — NOW record the request and set expiry.
+            add_pipe = redis.pipeline(transaction=True)
+            add_pipe.zadd(key, {str(now): now})
+            add_pipe.expire(key, window)
+            await add_pipe.execute()
 
             return True, {
                 "remaining": remaining,
@@ -244,28 +270,49 @@ class RateLimiter:
         client_id = self._get_client_id(request)
         endpoint = request.url.path
         tier = self._get_tier(request)
-        limit, window = await self._get_limits(request, endpoint, tier)
+
+        # FIX (P2, review 2026-09-12): when Redis is down, skip the remote
+        # ConfigService reads entirely — each one retries with 0.5-1.0s backoff,
+        # so every request was paying up to ~3s of sleeps before failing.
+        redis = await self._get_redis()
+        if redis is None:
+            limit, window = self._static_limits(endpoint, tier)
+        else:
+            limit, window = await self._get_limits(request, endpoint, tier)
 
         # Build Redis key
         key = f"ratelimit:{client_id}:{endpoint}"
 
         allowed, meta = await self.is_allowed(key, limit, window)
 
+        # FIX (P2, review 2026-09-12): retry_after must be SECONDS-until-reset,
+        # not the absolute epoch timestamp that X-RateLimit-Reset carries.
+        try:
+            retry_after = max(1, int(float(meta.get("reset", time.time() + 60)) - time.time()))
+        except Exception:
+            retry_after = 60
+
         headers = {
             "X-RateLimit-Limit": str(limit),
             "X-RateLimit-Remaining": str(meta["remaining"]),
             "X-RateLimit-Reset": str(int(meta["reset"])),
             "X-RateLimit-Tier": tier,
+            "Retry-After": str(retry_after),
         }
 
         return allowed, headers
 
     def _get_client_id(self, request: Request) -> str:
         """Extract client identifier from request."""
-        # Try user ID first
+        # Try user ID first (FIX P1: AuthMiddleware stores a dict — handle it)
         user = getattr(request.state, "user", None)
-        if user and hasattr(user, "id"):
-            return f"user:{user.id}"
+        if user:
+            if isinstance(user, dict):
+                uid = user.get("sub") or user.get("uid") or user.get("id")
+            else:
+                uid = getattr(user, "id", None)
+            if uid:
+                return f"user:{uid}"
 
         # Fall back to IP address (R2-08: proxy-aware, spoof-resistant)
         from utils.client_ip import get_client_ip
@@ -311,7 +358,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": "Rate limit exceeded",
                     "message": "Too many requests. Please try again later.",
-                    "retry_after": int(headers.get("X-RateLimit-Reset", 60)),
+                    "retry_after": int(headers.get("Retry-After", 60)),
                 },
                 headers=headers,
             )

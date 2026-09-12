@@ -524,8 +524,18 @@ class DynamicAIOrchestrator:
                 return GenerationResult(success=True, text=text, model_used=model)
 
             elif response.status_code == 503:
-                # Model loading - wait and retry once
+                # FIX (P1, review 2026-09-12): the "retry once" was actually UNBOUNDED
+                # recursion — every 503 from a cold HF Space spawned another recursion
+                # level with a new httpx client (request hung forever; max_retries was
+                # never applied). Bound it to a single retry, then fail honestly.
+                if kwargs.get("_hf_retry_done"):
+                    return GenerationResult(
+                        success=False,
+                        error=f"HF model {model} still loading after retry (503)",
+                    )
                 await asyncio.sleep(10)
+                kwargs = dict(kwargs)
+                kwargs["_hf_retry_done"] = True
                 return await self._call_huggingface(provider, model, prompt, **kwargs)
             else:
                 error_msg = f"HF API error {response.status_code}: {response.text[:200]}"

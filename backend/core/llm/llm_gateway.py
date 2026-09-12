@@ -10,6 +10,7 @@ import contextlib
 import json
 import os
 import random
+import time
 from collections.abc import AsyncGenerator
 from typing import Any
 
@@ -78,6 +79,91 @@ _DEFAULT_FALLBACK_MODELS: list[str] = list(
         ["gemini/gemini-2.0-flash", "openrouter/auto"],
     )
 )
+
+
+class _ProviderKeyPool:
+    """SECURITY/RELIABILITY FIX (P0, review 2026-09-12): multi-key rotation.
+
+    Deployment .env keeps GEMINI_API_KEY/GROQ_API_KEY/OPENROUTER_API_KEY as
+    comma-joined multi-key strings ("k1,k2,k3"). The old code sent the entire
+    raw string as one API key, so every provider call failed with 401/403 and
+    the whole zero-cost fallback chain was dead. This pool:
+      1. splits on commas into individual keys,
+      2. rotates round-robin (spreads quota evenly),
+      3. puts a key on cooldown after 401/403/429 so the next call picks a
+         healthy key instead of hammering the broken one.
+    """
+
+    _COOLDOWNS = {401: 300.0, 403: 300.0, 429: 60.0}
+
+    def __init__(self) -> None:
+        self._idx: dict[str, int] = {}
+        self._cooldown_until: dict[tuple[str, str], float] = {}
+        self._lock = asyncio.Lock()
+
+    @staticmethod
+    def _keys_for(raw: str | None) -> list[str]:
+        if not raw:
+            return []
+        return [k.strip() for k in str(raw).split(",") if k.strip()]
+
+    async def next_key(self, provider: str, raw: str | None) -> str | None:
+        keys = self._keys_for(raw)
+        if not keys:
+            return None
+        if len(keys) == 1:
+            key = keys[0]
+        else:
+            async with self._lock:
+                idx = self._idx.get(provider, 0) % len(keys)
+                self._idx[provider] = idx + 1
+                key = keys[idx]
+        # best-effort: skip a cooling key if a healthy sibling exists
+        if await self.is_cooling(provider, key):
+            for alt in keys:
+                if alt != key and not await self.is_cooling(provider, alt):
+                    return alt
+        return key
+
+    async def is_cooling(self, provider: str, key: str) -> bool:
+        until = self._cooldown_until.get((provider, key), 0.0)
+        if until and time.monotonic() < until:
+            return True
+        if until:
+            self._cooldown_until.pop((provider, key), None)
+        return False
+
+    async def mark_error(self, provider: str, key: str | None, status: int) -> None:
+        if not key:
+            return
+        ttl = self._COOLDOWNS.get(status)
+        if ttl:
+            self._cooldown_until[(provider, key)] = time.monotonic() + ttl
+
+
+_provider_key_pool = _ProviderKeyPool()
+
+
+def _resolve_key_attr(model: str) -> str | None:
+    """FIX (P1, review 2026-09-12): longest-prefix provider matching.
+
+    The old substring loop matched "openrouter/deepseek/..." against the
+    "deepseek" prefix (and "openrouter/openai/gpt-*" against "gpt"), sending
+    the WRONG provider's key. Longest matching prefix wins now, so
+    "openrouter/..." always resolves to the openrouter key.
+    """
+    if not model:
+        return None
+    model_lower = model.lower()
+    best_prefix = ""
+    best_attr: str | None = None
+    for prefix, attr_name in _MODEL_KEY_MAP.items():
+        if prefix in model_lower and len(prefix) > len(best_prefix):
+            best_prefix = prefix
+            best_attr = attr_name
+    return best_attr
+
+
 # OpenAI-style Task-to-Model mapping
 # Runtime overrides come from the central settings registry; defaults remain backwards compatible.
 TASK_MODEL_MAP: dict[str, str] = settings.task_models
@@ -242,19 +328,34 @@ class LLMGateway:
             "fallback_chain": list(_DEFAULT_FALLBACK_MODELS),
         }
 
-    def _get_api_key_for_model(self, model: str) -> str | None:
+    async def _get_api_key_for_model(self, model: str) -> str | None:
         """
-        বাংলা মন্তব্ব: Model string থেকে provider identify করে settings থেকে key নেওয়া।
-        os.environ নয় — settings._get_cached_secret() থেকে।
+        FIX (P0, review 2026-09-12): comma-separated multi-key env strings are
+        now split and rotated via _provider_key_pool. Previously the raw
+        "k1,k2,k3" string was sent as a single API key, so every provider call
+        failed with 401/403 and the zero-cost fallback chain was dead.
+        Longest-prefix provider matching also fixes misrouting
+        (openrouter/deepseek/* used to grab the deepseek key).
         """
         if not model:
             return None
-        model_lower = model.lower()
-        for prefix, attr_name in _MODEL_KEY_MAP.items():
-            if prefix in model_lower:
-                key = getattr(settings, attr_name, None)
-                return key or None
-        return None
+        attr_name = _resolve_key_attr(model)
+        if attr_name is None:
+            return None
+        raw_key = getattr(settings, attr_name, None)
+        provider = (
+            model.split("/")[0].lower()
+            if "/" in model
+            else attr_name.replace("_api_key", "").lower()
+        )
+        try:
+            return await _provider_key_pool.next_key(provider, raw_key)
+        except Exception:
+            # pool failure fallback: first individual key (never the raw joined string)
+            raw = (str(raw_key) if raw_key else "").strip()
+            if not raw:
+                return None
+            return raw.split(",")[0].strip() or None
 
     def _setup_callbacks(self) -> None:
         """বাংলা মন্তব্ব: litellm callback — cost এবং error tracking।"""
@@ -538,7 +639,9 @@ class LLMGateway:
         # if >= threshold and pattern-matched, returns immediately with zero token cost.
         from core.llm.advanced_model_router import get_advanced_router
 
-        decision = get_advanced_router().route_with_confidence(prompt_text, task_type)
+        decision = await asyncio.to_thread(
+            get_advanced_router().route_with_confidence, prompt_text, task_type
+        )
         if decision.is_deterministic and decision.deterministic_result:
             logger.info(
                 f"[LLMGateway] Tier 0 bypass: pattern={decision.matched_pattern} "
@@ -712,6 +815,10 @@ class LLMGateway:
         except Exception:
             _estimated_tokens = None
 
+        # FIX (P2, review 2026-09-12): pop BYOK key once, BEFORE the chain loop,
+        # so every fallback attempt can reuse the caller's custom key.
+        _byok_api_key = kwargs.pop("api_key", None)
+
         for _chain_index, current_model in enumerate(call_chain):
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
@@ -725,7 +832,7 @@ class LLMGateway:
                 logger.info(f"[LLMGateway] Attempting: {current_model}")
                 # বাংলা মন্তব্ব: api_key per-call pass — os.environ injection সম্পূর্ণ নিষিদ্ধ।
                 # কাস্টম api_key পাস করা হলে সেটি ব্যবহার করা হবে, অন্যথায় মডেলের ডিফল্ট কী ব্যবহার হবে।
-                api_key = kwargs.pop("api_key", None) or self._get_api_key_for_model(current_model)
+                api_key = _byok_api_key or await self._get_api_key_for_model(current_model)
                 session_id = kwargs.pop("session_id", "") or str(tenant_id or "")
                 provider_name = current_model.split("/")[0] if "/" in current_model else "unknown"
                 async with track_llm_call(
@@ -825,6 +932,12 @@ class LLMGateway:
             except httpx.HTTPStatusError as exc:
                 # Handle specific HTTP status codes like 429 (rate limit)
                 if exc.response.status_code == 429:
+                    # FIX (P0): put this provider key on short cooldown so key
+                    # rotation picks a healthy sibling on the next attempt.
+                    try:
+                        await _provider_key_pool.mark_error(provider_name, api_key, 429)
+                    except Exception:
+                        pass
                     # Try to handle rate limit with backoff and Retry-After header
                     handled = await self._handle_rate_limit_error(current_model, exc)
                     if handled:
@@ -837,7 +950,7 @@ class LLMGateway:
                                 model=current_model,
                                 messages=messages_payload,
                                 timeout=timeout,
-                                api_key=api_key or self._get_api_key_for_model(current_model),
+                                api_key=api_key or await self._get_api_key_for_model(current_model),
                                 **kwargs,
                             )
                             cb.mark_success()
@@ -892,6 +1005,13 @@ class LLMGateway:
                     logger.warning(
                         f"[LLMGateway] Auth error {exc.response.status_code} for {current_model}, skipping to next model..."
                     )
+                    # FIX (P0): long cooldown for auth errors (key likely invalid)
+                    try:
+                        await _provider_key_pool.mark_error(
+                            provider_name, api_key, exc.response.status_code
+                        )
+                    except Exception:
+                        pass
                     cb.mark_failure()
                     continue
 
@@ -963,8 +1083,8 @@ class LLMGateway:
 
             try:
                 logger.info(f"[LLMGateway] Streaming attempt: {current_model}")
-                # বাংলা মন্তব্ব: api_key per-call — os.environ injection নিষিদ্ধ
-                api_key = self._get_api_key_for_model(current_model)
+                # api_key per-call — os.environ injection নিষিদ্ধ
+                api_key = await self._get_api_key_for_model(current_model)
                 response_stream = await litellm.acompletion(
                     model=current_model,
                     messages=messages,
@@ -991,7 +1111,7 @@ class LLMGateway:
                             f"[LLMGateway] Retrying streaming {current_model} after rate limit backoff..."
                         )
                         try:
-                            api_key = self._get_api_key_for_model(current_model)
+                            api_key = await self._get_api_key_for_model(current_model)
                             response_stream = await litellm.acompletion(
                                 model=current_model,
                                 messages=messages,

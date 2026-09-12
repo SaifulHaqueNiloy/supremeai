@@ -32,12 +32,19 @@ export const AgentWorkspace: React.FC = () => {
 
   useEffect(() => {
     let disposed = false;
+    // FIX (P1, review 2026-09-12): the window 'resize' listener was registered
+    // inside async init() and its cleanup function was DISCARDED by the caller —
+    // the listener (closing over xterm/fit) leaked after unmount and re-fit on
+    // disposed terminals. Track it in a ref-accessible variable and remove it in
+    // the effect's real cleanup, with disposed-guards on every assignment.
+    let resizeHandler: (() => void) | null = null;
     const init = async () => {
       if (!terminalRef.current || xtermRef.current) return;
       const { Terminal } = await import('xterm');
       const { FitAddon } = await import('@xterm/addon-fit');
       const term = new Terminal({ theme: { background: '#111318', foreground: '#cbd5e1', cursor: '#a7f3d0' }, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12, cursorBlink: true });
       const fit = new FitAddon(); term.loadAddon(fit); term.open(terminalRef.current); fit.fit();
+      if (disposed) { term.dispose(); return; }
       xtermRef.current = term; fitAddonRef.current = fit;
       term.writeln('SupremeAI agent runtime initializing...');
       term.writeln('Workspace ready. Waiting for commands.');
@@ -48,11 +55,15 @@ export const AgentWorkspace: React.FC = () => {
           if (!disposed) { webcontainerRef.current = instance; term.writeln('\r\n[system] WebContainer booted successfully.'); }
         } catch { term.writeln('\r\n[system] Browser sandbox could not start.'); }
       } else term.writeln('\r\n[system] Sandbox unavailable in this preview.');
-      const resize = () => fit.fit(); window.addEventListener('resize', resize);
-      return () => window.removeEventListener('resize', resize);
+      resizeHandler = () => { if (!disposed && xtermRef.current) fit.fit(); };
+      window.addEventListener('resize', resizeHandler);
     };
     void init();
-    return () => { disposed = true; xtermRef.current?.dispose(); xtermRef.current = null; void webcontainerRef.current?.teardown(); webcontainerRef.current = null; };
+    return () => {
+      disposed = true;
+      if (resizeHandler) window.removeEventListener('resize', resizeHandler);
+      xtermRef.current?.dispose(); xtermRef.current = null; void webcontainerRef.current?.teardown(); webcontainerRef.current = null;
+    };
   }, []);
 
   const handleExecute = async () => {
