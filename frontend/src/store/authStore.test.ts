@@ -63,6 +63,23 @@ describe('authStore', () => {
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_OUT);
   });
 
+  it('restores a cookie-only session via /me when no localStorage token exists', async () => {
+    // Production-readiness plan, item 3b: httpOnly-cookie session restore
+    getMock.mockResolvedValue({ email: 'cookie@x.com', user_id: 'u-cookie', role: 'user' });
+    await useAuthStore.getState().initialize();
+    expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
+    expect(useAuthStore.getState().user?.email).toBe('cookie@x.com');
+    expect(getMock).toHaveBeenCalledWith('/api/v1/auth/me');
+    expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
+  });
+
+  it('stays logged out when neither token nor cookie session exists', async () => {
+    getMock.mockRejectedValue({ status: 401 });
+    await useAuthStore.getState().initialize();
+    expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_OUT);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
   it('initializes optimistically from a valid token and refreshes via /me', async () => {
     const tok = token({ email: 'me@x.com', name: 'Me', sub: 'u9' });
     localStorage.setItem('supremeai_auth_token', tok);

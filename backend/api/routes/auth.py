@@ -167,7 +167,12 @@ async def optional_current_user(
         # (blacklist-এ থাকা) টোকেন যেন আর valid না ধরা হয়, নাহলে logout-এর
         # পরেও পুরনো access_token দিয়ে /me কাজ করতে থাকবে।
         jti = payload.get("jti")
-        if jti and await is_token_revoked(jti):
+        # বাংলা (production-readiness plan, item 2): revocation check এখন
+        # role-aware fail-closed — অ্যাডমিন টোকেনে Redis ডাউন থাকলে রিজেক্ট,
+        # সাধারণ ইউজার আগের মতোই fail-open।
+        if jti and await is_token_revoked(
+            jti, is_admin=payload.get("role") in ("admin", "master_admin")
+        ):
             return None
         # বাংলা মন্তব্য: User-level revocation চেক — token family reuse detected হলে
         # পুরো user-এর সব session revoke করা হয়
@@ -589,7 +594,12 @@ async def logout(
     jti = payload.get("jti")
     exp = payload.get("exp")
     if jti:
-        await revoke_token(jti, exp=int(exp) if isinstance(exp, (int, float)) else None)
+        # বাংলা: অ্যাডমিন টোকেন হলে TTL-aware LRU ক্যাশেও লেখা হয় (fail-closed সাপোর্ট)।
+        await revoke_token(
+            jti,
+            exp=int(exp) if isinstance(exp, (int, float)) else None,
+            is_admin=payload.get("role") in ("admin", "master_admin"),
+        )
 
     # SECURITY FIX (AUDIT-SEC-3, CRITICAL): শুধু access token ব্ল্যাকলিস্ট করলে হয় না —
     # refresh token-এর jti-ও ব্ল্যাকলিস্ট করতে হবে, নাহলে logout-এর পরেও stolen
@@ -604,6 +614,7 @@ async def logout(
                 await revoke_token(
                     r_jti,
                     exp=int(r_exp) if isinstance(r_exp, (int, float)) else None,
+                    is_admin=r_payload.get("role") in ("admin", "master_admin"),
                 )
         except Exception:
             # বাংলা: refresh cookie invalid/expired হলে access revocation-ই যথেষ্ট।

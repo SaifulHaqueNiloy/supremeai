@@ -42,6 +42,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
+from core.memory.auto_rag_injector import auto_rag_injector
 from core.security import verify_token_async
 
 router = APIRouter(prefix="/api/v1/stream", tags=["SSE Chat Stream"])
@@ -114,12 +115,25 @@ class SafeSSEGenerator:
     - Proper cleanup on disconnect
     """
 
-    def __init__(self, prompt: str, user_id: str, task_type: str = "chat"):
+    def __init__(
+        self,
+        prompt: str,
+        user_id: str,
+        task_type: str = "chat",
+        session_id: str | None = None,
+        tenant_id: str | None = None,
+    ):
         self.prompt = prompt
+        # বাংলা: Auto-RAG injection-এর জন্য মূল প্রম্পট আলাদা রাখা হয় —
+        # self.prompt পরে enriched হতে পারে।
+        self._original_prompt = prompt
         self.user_id = user_id
         self.task_type = task_type
+        self.session_id = session_id
+        self.tenant_id = tenant_id
         self.state = StreamState.CONNECTED
         self._buffer: list[str] = []
+        self._assistant_text: list[str] = []  # Auto-RAG: response capture for memory store
         self._emitted_tokens = False
         self._last_heartbeat = asyncio.get_event_loop().time()
 
@@ -151,6 +165,10 @@ class SafeSSEGenerator:
         # Ensure string type
         text = str(chunk)
 
+        # Auto-RAG memory capture (bounded — বাংলা: ৪০০০ অক্ষরের বেশি জমা হয় না)
+        if len(self._assistant_text) < 4000:
+            self._assistant_text.append(text)
+
         # Escape SSE special characters (newlines, double-newlines break events)
         # According to SSE spec: each field must end with \n, and end with \n\n
         text = text.replace("\n", "\\n").replace("\r", "\\r")
@@ -177,6 +195,23 @@ class SafeSSEGenerator:
         # Emit connected event first
         yield self._make_event("connected", {"user_id": self.user_id})
 
+        # ── Auto-RAG Memory Injection (audit G-3, production-readiness) ──
+        # বাংলা: স্ট্রিমিং শুরুর আগে ব্যবহারকারীর অতীত প্রাসঙ্গিক স্মৃতি
+        # pgvector থেকে recall করে prompt-এর শুরুতে যুক্ত করা হয়।
+        # কোনো ব্যর্থতায় মূল প্রম্পট অপরিবর্তিত থাকে (graceful degradation)।
+        try:
+            enriched = await auto_rag_injector.enrich_system_prompt(
+                system_prompt=self.prompt,
+                user_query=self._original_prompt,
+                user_id=self.user_id,
+                tenant_id=self.tenant_id,
+                session_id=self.session_id,
+            )
+            if enriched != self.prompt:
+                self.prompt = enriched
+        except Exception as rag_exc:  # pragma: no cover - defensive
+            logger.debug(f"[SSE] Auto-RAG injection skipped: {rag_exc}")
+
         try:
             # Try streaming path first. The streaming path is an async generator,
             # so consume it directly instead of awaiting the generator object.
@@ -191,6 +226,27 @@ class SafeSSEGenerator:
 
             # Success - emit done and legacy [DONE]
             self.state = StreamState.DONE
+
+            # ── Auto-RAG memory persistence (fire-then-finish, never raises) ──
+            # বাংলা: সফল এক্সচেঞ্জ pgvector-এ সেভ হয় যেন পরের সেশনে স্বয়ংক্রিয়ভাবে
+            # মনে থাকে (importance 0.65 — MIN_IMPORTANCE_TO_STORE=0.5 এর উপরে)।
+            try:
+                assistant_reply = "".join(self._assistant_text)[:2000].strip()
+                if self._original_prompt.strip():
+                    exchange = (
+                        f"Q: {self._original_prompt[:1200]}\nA: {assistant_reply}"
+                        if assistant_reply
+                        else f"Q: {self._original_prompt[:1200]}"
+                    )
+                    await auto_rag_injector.store_session_memory(
+                        content=exchange,
+                        user_id=self.user_id,
+                        session_id=self.session_id,
+                        importance=0.65,
+                    )
+            except Exception as store_exc:  # pragma: no cover - non-fatal
+                logger.debug(f"[SSE] Memory store skipped: {store_exc}")
+
             yield self._make_event("done", {"user_id": self.user_id})
             yield "data: [DONE]\n\n"
 
@@ -302,14 +358,22 @@ class SafeSSEGenerator:
             )
 
 
-async def _event_stream(prompt: str, user_id: str, task_type: str = "chat") -> AsyncIterator[str]:
+async def _event_stream(
+    prompt: str,
+    user_id: str,
+    task_type: str = "chat",
+    session_id: str | None = None,
+    tenant_id: str | None = None,
+) -> AsyncIterator[str]:
     """
     Backward-compatible wrapper that delegates to SafeSSEGenerator.
 
     This preserves the original function signature while using the new
     safe implementation internally.
     """
-    generator = SafeSSEGenerator(prompt, user_id, task_type)
+    generator = SafeSSEGenerator(
+        prompt, user_id, task_type, session_id=session_id, tenant_id=tenant_id
+    )
     async for event in generator():
         yield event
 
@@ -366,7 +430,13 @@ async def stream_chat_post(
 
     effective_prompt = body.prompt or body.message or ""
     return StreamingResponse(
-        _event_stream(effective_prompt, user_id, body.task_type),
+        _event_stream(
+            effective_prompt,
+            user_id,
+            body.task_type,
+            session_id=getattr(body, "session_id", None),
+            tenant_id=tenant_id,
+        ),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache, no-transform",
@@ -393,7 +463,7 @@ async def stream_chat_sse(
         raise HTTPException(status_code=403, detail="Tenant context required")
 
     return StreamingResponse(
-        _event_stream(prompt, user_id, task_type),
+        _event_stream(prompt, user_id, task_type, tenant_id=tenant_id),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache, no-transform",

@@ -296,12 +296,17 @@ class AuthMiddleware:
         # revocation support but the check was only applied in selected route
         # dependencies. Verify revocation here so a logged-out access token is
         # rejected on EVERY protected surface, not just some of them.
+        #
+        # Production-readiness plan, item 2 — availability policy is role-aware:
+        #   * admin/master_admin tokens → FAIL-CLOSED (Redis ডাউন হলে রিজেক্ট)
+        #   * regular user tokens      → fail-open  (Redis blip-এ লক-আউট নয়)
         jti = payload.get("jti")
         if jti and not is_test_environment():
+            token_is_admin = payload.get("role") in ("admin", "master_admin")
             try:
                 from core.security import is_token_revoked
 
-                if await is_token_revoked(jti):
+                if await is_token_revoked(jti, is_admin=token_is_admin):
                     logger.warning(f"Revoked token used for path: {path}")
                     await _send_json_response(
                         send,
@@ -315,6 +320,16 @@ class AuthMiddleware:
                 # loudly. Revocation remains enforced on the sensitive admin
                 # paths (require_admin_token) which already fail closed.
                 logger.error(f"Token revocation check failed: {revocation_err}")
+                if token_is_admin:
+                    # বাংলা: অ্যাডমিন টোকেন — ভেরিফাই করতে না পারলে নিরাপদ দিকে
+                    # ব্যর্থ করা হয় (fail-closed)।
+                    await _send_json_response(
+                        send,
+                        status_code=401,
+                        body={"detail": "Token revocation could not be verified"},
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                    return
 
         # Attach user info to scope for downstream handlers
         user_data = {

@@ -167,3 +167,41 @@ async def github_callback(
     # ৪. ফ্রন্টএন্ডে রিডাইরেক্ট — ডায়নামিক URL
     frontend_base = settings.frontend_base_url
     return RedirectResponse(url=f"{frontend_base}/integrations?status=success")
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 1-Line Connect (old plan, Feature 1): URL → auto-detected integration
+# বাংলা: MCP/AI Provider/Webhook — একটি URL দিলেই auto-detect হয়ে যায়।
+# ═══════════════════════════════════════════════════════════════════════════
+from typing import Any  # noqa: E402  (endpoint-local import block bottom)
+
+from pydantic import BaseModel, Field  # noqa: E402
+
+from services.integration_discovery import IntegrationDiscoveryService  # noqa: E402
+
+
+class DiscoverRequest(BaseModel):
+    url: str = Field(..., min_length=4, max_length=2048, description="MCP/AI provider/webhook URL")
+    register: bool = Field(False, description="Save to registry if detection succeeds")
+
+
+@router.post("/integrations/discover")
+async def discover_integration(
+    payload: DiscoverRequest,
+    user: dict = Depends(get_current_user_token),
+) -> dict[str, Any]:
+    """**1-Line Connect** — URL ইনপুট দিলে MCP/AI Provider/Webhook auto-detect।
+
+    Detection order: MCP handshake (``/.well-known/mcp.json``) → AI provider
+    pattern → webhook reachability fallback।
+    """
+    tenant_id = user.get("tenant_id") or user.get("sub")
+    actor_id = user.get("sub")
+    logger.info(f"[Integrations] 1-Line discover requested by {actor_id}")
+
+    return await IntegrationDiscoveryService.discover(
+        url=payload.url,
+        tenant_id=str(tenant_id) if tenant_id else None,
+        actor_id=str(actor_id) if actor_id else None,
+        register=payload.register,
+    )

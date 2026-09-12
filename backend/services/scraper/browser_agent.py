@@ -17,6 +17,7 @@ except ImportError:
 
 from pydantic import BaseModel
 
+from core.human_behavior import HumanBehaviorSimulators
 from core.logging_config import logger
 
 # বাংলা মন্তব্য: Dual-path import — standalone scraper-এ top-level `security`/
@@ -112,6 +113,9 @@ class BrowserAgent:
                 user_agent=_BROWSER_USER_AGENT,
             )
             page = await context.new_page()
+            # Feature 3 (old plan): stealth fingerprint — canvas/WebGL noise,
+            # webdriver trace removal, realistic viewport (never raises)
+            await HumanBehaviorSimulators.apply_stealth_fingerprint(page)
             try:
                 await page.goto(url, wait_until="domcontentloaded", timeout=_BROWSER_PAGE_TIMEOUT)
 
@@ -197,6 +201,8 @@ class BrowserAgent:
                 user_agent=_BROWSER_USER_AGENT,  # 🔧 DYNAMIC
             )
             page = await context.new_page()
+            # Feature 3 (old plan): stealth fingerprint for recipe execution too
+            await HumanBehaviorSimulators.apply_stealth_fingerprint(page)
             index = -1  # Guard: prevents NameError in except if loop never runs
 
             try:

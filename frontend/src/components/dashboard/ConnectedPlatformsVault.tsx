@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../services/apiClient';
+import OneLinerMCPConnect from './OneLinerMCPConnect';
 
 interface PlatformCredential {
   id: string;
@@ -99,7 +100,10 @@ const ConnectedPlatformsVault: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 h-full">
+    <div className="bg-gray-800 rounded-lg p-6 h-full space-y-6">
+      {/* ⚡ 1-Line Connect (old plan, Feature 1): URL paste করেই MCP/AI/Webhook connect */}
+      <OneLinerMCPConnect />
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-cyan-400">Connected Platforms Vault</h2>
         <button

@@ -325,6 +325,87 @@ body.matrix {
   font-weight: 800;
 }
 
+/* ═══════════════════════════════════════════════════════
+   GLASSMORPHISM LAYER (old plan, Feature 1)
+   1-Line Connect UX + dashboard polish-এর জন্য utilities —
+   Theme-1 token family (--neon-blue / --card-bg) ব্যবহার করে,
+   তাই .matrix ও body.light ওভাররাইডেও স্বয়ংক্রিয়ভাবে খাপ খায়।
+   ═══════════════════════════════════════════════════════ */
+.glass-panel {
+  background: rgba(11, 15, 23, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 243, 255, 0.12);
+  border-radius: 16px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body.light .glass-panel {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(0, 120, 255, 0.15);
+  box-shadow:
+    0 8px 32px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.glass-input {
+  background: rgba(6, 7, 11, 0.7);
+  border: 1px solid rgba(0, 243, 255, 0.2);
+  border-radius: 10px;
+  color: var(--foreground, #f8fafc);
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.glass-input::placeholder {
+  color: var(--cyber-gray, #64748b);
+}
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(0, 243, 255, 0.6);
+  box-shadow:
+    0 0 0 3px rgba(0, 243, 255, 0.1),
+    0 0 20px rgba(0, 243, 255, 0.15);
+}
+
+.pulse-ring {
+  animation: pulse-neon 2s infinite;
+}
+@keyframes pulse-neon {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(0, 243, 255, 0.7);
+  }
+}
+
+.node-active {
+  animation: node-beat 1.5s ease-in-out infinite;
+}
+@keyframes node-beat {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.97);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring,
+  .node-active {
+    animation: none;
+  }
+}
+
+
 /* Cyber Buttons & Inputs */
 .cyber-button {
   background: linear-gradient(135deg, color-mix(in srgb, var(--neon-blue) 15%, transparent), color-mix(in srgb, var(--neon-purple) 15%, transparent));
