@@ -13,6 +13,7 @@ This module provides centralized access to security components:
 
 
 import asyncio
+import collections
 import hashlib
 import hmac
 import ipaddress
@@ -237,13 +238,63 @@ BLACKLIST_TTL = 86400  # 24 hours
 _IN_MEMORY_BLACKLIST: set[str] = set()
 
 
-async def revoke_token(jti: str, exp: int | None = None) -> bool:
-    """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।"""
+# ═══════════════════════════════════════════════════════════════════════
+# Admin revocation cache — TTL-aware LRU (production-readiness plan, item 2)
+#
+# Redis ডাউন হলে অ্যাডমিন টোকেন fail-closed ভ্যালিডেশনের জন্য সর্বশেষ
+# ১০০০টি revoked admin JTI মেমরিতে রাখা হয় (TTL সহ)। এটি শুধু জরুরি
+# fail-closed উইন্ডোতে ব্যবহৃত হয় — Redis সুস্থ থাকলে সরাসরি Redis থেকেই
+# উত্তর আসে।
+# ═══════════════════════════════════════════════════════════════════════
+_ADMIN_REVOCATION_CACHE_MAX = 1000
+_ADMIN_REVOCATION_CACHE: collections.OrderedDict[str, float] = collections.OrderedDict()
+_ADMIN_REVOCATION_LOCK = threading.Lock()
+
+
+def _admin_cache_put(jti: str, ttl_seconds: float = BLACKLIST_TTL) -> None:
+    """Store a revoked admin JTI with an absolute expiry (LRU-bounded)."""
+    import time
+
+    with _ADMIN_REVOCATION_LOCK:
+        _ADMIN_REVOCATION_CACHE[jti] = time.monotonic() + max(1.0, float(ttl_seconds))
+        _ADMIN_REVOCATION_CACHE.move_to_end(jti)
+        while len(_ADMIN_REVOCATION_CACHE) > _ADMIN_REVOCATION_CACHE_MAX:
+            _ADMIN_REVOCATION_CACHE.popitem(last=False)
+
+
+def _admin_cache_get(jti: str) -> bool:
+    """Return True if jti is in the admin cache AND not yet expired."""
+    import time
+
+    with _ADMIN_REVOCATION_LOCK:
+        expiry = _ADMIN_REVOCATION_CACHE.get(jti)
+        if expiry is None:
+            return False
+        if expiry <= time.monotonic():
+            _ADMIN_REVOCATION_CACHE.pop(jti, None)
+            return False
+        _ADMIN_REVOCATION_CACHE.move_to_end(jti)
+        return True
+
+
+def _is_admin_claim(payload_role: object) -> bool:
+    """Role-claim → is_admin mapping (kept in one place)."""
+    return payload_role in ("admin", "master_admin")
+
+
+async def revoke_token(jti: str, exp: int | None = None, *, is_admin: bool = False) -> bool:
+    """বাংলা মন্তব্য: JWT ID (jti) দিয়ে টোকেন রিভোক করে। Redis TTL দিয়ে অটো-ক্লিন হয়।
+
+    অ্যাডমিন টোকেন হলে TTL-aware LRU ক্যাশেও লেখা হয়, যাতে Redis ডাউনের
+    সময়ও fail-closed ভ্যালিডেশন সম্ভব হয়।
+    """
     import time
 
     from core.cache.redis_manager import redis_manager
 
     _IN_MEMORY_BLACKLIST.add(jti)
+    if is_admin:
+        _admin_cache_put(jti)
 
     if redis_manager and getattr(redis_manager, "client", None):
         ttl = max(1, (exp - int(time.time())) if exp else BLACKLIST_TTL)
@@ -261,20 +312,42 @@ async def revoke_token(jti: str, exp: int | None = None) -> bool:
     return True
 
 
-async def is_token_revoked(jti: str) -> bool:
-    """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।"""
+async def is_token_revoked(jti: str, *, is_admin: bool = False) -> bool:
+    """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।
+
+    Revocation-availability policy (production-readiness plan, item 2):
+    - ``is_admin=False`` (সাধারণ ইউজার): **fail-open** — Redis ডাউন থাকলে
+      ব্যবহারকারী লক-আউট হন না (Render free-tier cold start সহ্য করা যায়)।
+    - ``is_admin=True``  (অ্যাডমিন):      **fail-closed** — Redis ছাড়া
+      revocation ভেরিফাই করা সম্ভব নয়; অ্যাডমিন প্যানেল সাময়িকভাবে রিজেক্ট
+      হওয়াই নিরাপদ আচরণ। সর্বশেষ revoked admin JTI-গুলো TTL-aware LRU
+      ক্যাশে থাকে, তাই ইচ্ছাকৃত রিভোক অ্যাডমিন-ও ধরা পড়ে।
+    """
     if jti in _IN_MEMORY_BLACKLIST:
+        return True
+    if is_admin and _admin_cache_get(jti):
         return True
 
     from core.cache.redis_manager import redis_manager
 
-    if not redis_manager or not getattr(redis_manager, "client", None):
-        return False  # Fail-open: Redis down means we cannot verify revocation, allow valid JWTs
+    redis_ok = bool(redis_manager and getattr(redis_manager, "client", None))
+    if not redis_ok:
+        # অ্যাডমিন: নিরাপদ দিকে ব্যর্থ হও — verify করা সম্ভব নয়, রিজেক্ট করো।
+        # সাধারণ ইউজার: আগের মতোই fail-open — Redis blip-এ লক-আউট নয়।
+        if is_admin:
+            logger.warning(
+                "[FailClosed] Redis unavailable - admin token %s…%s rejected",
+                str(jti)[:8],
+                str(jti)[-4:] if len(str(jti)) > 12 else "",
+            )
+            return True
+        return False
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
     except Exception as e:
         logger.warning(f"Failed to check token revocation status: {e}")
-        return False
+        # Redis কল নিজেই ব্যর্থ — একই policy প্রযোজ্য।
+        return bool(is_admin)
 
 
 # বাংলা মন্তব্য: ব্যবহারকারীর সব সেশন ট্র্যাক করার জন্য Redis key pattern
@@ -347,7 +420,7 @@ async def verify_token_async(token: str) -> dict:
     try:
         payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
         jti = payload.get("jti")
-        if jti and await is_token_revoked(jti):
+        if jti and await is_token_revoked(jti, is_admin=_is_admin_claim(payload.get("role"))):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked",
@@ -397,6 +470,7 @@ def verify_token(token: str) -> dict:
         payload = jwt.decode(token, _get_jwt_secret(), algorithms=[ALGORITHM])
         jti = payload.get("jti")
         if jti:
+            token_is_admin = _is_admin_claim(payload.get("role"))
 
             def check_revoked():
                 try:
@@ -411,14 +485,18 @@ def verify_token(token: str) -> dict:
                     import concurrent.futures
 
                     target_loop = _get_revocation_loop()
-                    future = asyncio.run_coroutine_threadsafe(is_token_revoked(jti), target_loop)
+                    future = asyncio.run_coroutine_threadsafe(
+                        is_token_revoked(jti, is_admin=token_is_admin), target_loop
+                    )
                     try:
                         return future.result(timeout=3)
                     except (concurrent.futures.TimeoutError, Exception) as e:
                         logger.warning(f"Token revocation check timed out or failed: {e}")
-                        return False
+                        # Fail-closed for admin tokens (timeout = cannot verify),
+                        # fail-open for regular users so Redis blips don't lock them out.
+                        return bool(token_is_admin)
                 else:
-                    return asyncio.run(is_token_revoked(jti))
+                    return asyncio.run(is_token_revoked(jti, is_admin=token_is_admin))
 
             if check_revoked():
                 raise HTTPException(
