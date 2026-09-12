@@ -15,13 +15,19 @@ from .models import (
 class IntelligenceRouter:
     """Deterministic, provider-independent routing with immutable safety ceilings."""
 
-    _sensitive = re.compile(r"\b(password|secret|token|payment|delete|deploy|migration|rotate)\b", re.I)
+    _sensitive = re.compile(
+        r"\b(password|secret|token|payment|delete|deploy|migration|rotate)\b", re.I
+    )
     _coding = re.compile(r"\b(code|script|bug|refactor|implement|python|api)\b", re.I)
     _research = re.compile(r"\b(research|search|compare|analy[sz]e|investigate)\b", re.I)
 
     def classify(self, prompt: str) -> TaskClassification:
         if self._sensitive.search(prompt):
-            return TaskClassification.IRREVERSIBLE if re.search(r"\b(delete|deploy|payment|rotate)\b", prompt, re.I) else TaskClassification.SENSITIVE
+            return (
+                TaskClassification.IRREVERSIBLE
+                if re.search(r"\b(delete|deploy|payment|rotate)\b", prompt, re.I)
+                else TaskClassification.SENSITIVE
+            )
         if self._coding.search(prompt):
             return TaskClassification.CODING
         if self._research.search(prompt):
@@ -31,19 +37,31 @@ class IntelligenceRouter:
     def route(self, prompt: str, requested_tier: str | None = None) -> RoutingDecision:
         classification = self.classify(prompt)
         if classification == TaskClassification.IRREVERSIBLE:
-            tier, reason = IntelligenceTier.VERIFIED, "Irreversible intent requires verification and human approval."
+            tier, reason = (
+                IntelligenceTier.VERIFIED,
+                "Irreversible intent requires verification and human approval.",
+            )
             budget = ExecutionBudget(max_agents=1, max_refinements=0, requires_approval=True)
         elif classification == TaskClassification.SENSITIVE:
-            tier, reason = IntelligenceTier.VERIFIED, "Sensitive intent is bounded to verified execution."
+            tier, reason = (
+                IntelligenceTier.VERIFIED,
+                "Sensitive intent is bounded to verified execution.",
+            )
             budget = ExecutionBudget(max_agents=2, max_refinements=1, requires_approval=True)
         elif classification == TaskClassification.CODING:
-            tier, reason = IntelligenceTier.SWARM, "Coding work benefits from bounded architecture, implementation, and review."
+            tier, reason = (
+                IntelligenceTier.SWARM,
+                "Coding work benefits from bounded architecture, implementation, and review.",
+            )
             budget = ExecutionBudget(max_agents=6, max_refinements=3)
         elif classification == TaskClassification.RESEARCH:
             tier, reason = IntelligenceTier.VERIFIED, "Research requires evidence before synthesis."
             budget = ExecutionBudget(max_agents=3, max_refinements=1)
         else:
-            tier, reason = IntelligenceTier.FAST, "Low-risk general task uses the bounded fast path."
+            tier, reason = (
+                IntelligenceTier.FAST,
+                "Low-risk general task uses the bounded fast path.",
+            )
             budget = ExecutionBudget()
 
         allowed_tiers = {
