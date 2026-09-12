@@ -141,6 +141,69 @@ Remaining manual/staged tasks:
 - Review and reduce skipped tests with service mocks or safe test fixtures; do not mark external-provider tests complete without equivalent integration evidence.
 - Attach build, restore, rollback, tenant-isolation, and security evidence before production promotion.
 
+## Main branch 40-issue remediation backlog (2026-09-13)
+
+The following issues were identified during the root-level review of the main branch. They are tracked as remediation tasks; completion requires code changes and the appropriate CI, staging, security, architecture, or production evidence.
+
+### P0 — Security and release blockers
+
+1. Repair malformed CI `run` blocks and indentation in `.github/workflows/ci.yml`.
+2. Fix invalid `steps.previous.outputs.backend` usage across CI job scopes.
+3. Remove provider API-key forwarding through `X-Dynamic-API-Key` headers.
+4. Add authentication, tenant resolution, authorization, and policy checks to gateway dispatch.
+5. Add webhook URL allowlisting, SSRF protection, DNS-rebinding defense, and egress controls.
+6. Redact raw exception details from production gateway responses.
+7. Enforce an explicit HTTP method allowlist and return 405 for unsupported methods.
+8. Make the vulnerability scan policy genuinely blocking with reviewed severity thresholds.
+9. Make Infisical/secret-inventory validation fail closed when required for release.
+10. Replace the inadequate backend/frontend coverage thresholds with approved quality gates.
+
+### P1 — Reliability, contracts, and execution boundaries
+
+11. Ensure test-auth bypass settings cannot be enabled in staging or production.
+12. Add real-provider authentication and dependency checks to startup/readiness validation.
+13. Normalize CI working directories and script paths; add path validation.
+14. Define a supported root/backend package-manager and reproducibility policy.
+15. Narrow the Python version constraint to the supported runtime range.
+16. Define canonical persistence boundaries and cross-store consistency/tenant-scoping rules.
+17. Replace or explicitly disable incomplete model-router implementations.
+18. Implement Gmail OAuth or expose the capability as unavailable everywhere.
+19. Complete browser vision/semantic components or prevent false-success behavior.
+20. Audit broad exception handling and eliminate silent failure paths.
+21. Define and initialize `InternalGateway` ownership, configuration, and dependency injection.
+22. Replace blocking synchronous HTTP calls in async request paths.
+23. Change IP-only gateway rate limiting to tenant/actor/IP-aware limits behind trusted proxy handling.
+24. Filter arbitrary client headers before downstream forwarding.
+25. Prevent spoofing of actor and trace headers with a signed internal envelope or service authentication.
+26. Remove or isolate import-time side effects in `backend/core/app.py`.
+27. Consolidate health endpoints into one documented liveness/readiness contract.
+28. Make all generated artifacts deterministic and enforce drift checks from one source snapshot.
+29. Inventory root-level tooling ownership and classify production versus experimental code.
+30. Add a build/package cleanup policy that excludes caches and generated local artifacts.
+
+### P2 — Maintainability and production operations
+
+31. Identify and deprecate dead, duplicate, and compatibility-only code paths.
+32. Convert manual-task reporting into machine-readable owners, due dates, evidence, severity, and status.
+33. Split the fragile monolithic CI workflow into clear, independently observable gates.
+34. Verify path-filtered CI cannot skip critical security, contract, or release checks.
+35. Add authenticated multi-tenant staging smoke tests, failure tests, and rollback evidence.
+36. Enforce trace propagation across routers, workers, external calls, and persistence operations.
+37. Consolidate secret discovery/rotation behind one audited secret-broker contract.
+38. Disable autonomous execution utilities unless an approved isolated microVM and egress policy are active.
+39. Standardize provider capability states: available, configured, disabled, and degraded.
+40. Add automated OpenAPI/frontend TypeScript/route-registry compatibility checks.
+
+### Architectural deliverables referenced by the review
+
+- Implement and approve the SupremeKernel dispatcher and `/api/v1/kernel/dispatch` contract.
+- Add the four Circle boundary facades and AST import-direction enforcement.
+- Implement the durable L1-L4 dynamic control plane and schema-driven admin UI.
+- Threat-model and govern the architect-critic swarm consensus loop.
+- Build approved ephemeral microVM sandbox/tool synthesis only after security approval.
+
+These issues must be worked through the repository, CI, staging, and production evidence gates. Manual items must not be marked complete from static inspection alone.
+
 ## System wiring audit verification handoff (2026-09-13)
 
 Repository-local fixes completed from the wiring audit:
