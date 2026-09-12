@@ -442,3 +442,200 @@ class TestMissionMCPConnectionRegistry:
                 name="Partner Tool",
                 permission_level="admin",
             )
+
+
+# ---------------------------------------------------------------------------
+# Mission 11 — Browser Staging & Headless Simulation
+# ---------------------------------------------------------------------------
+class TestMissionBrowserStagingSimulation:
+    @pytest.mark.asyncio
+    async def test_browser_page_capacity_bounded_concurrency(self):
+        """বাংলা: browser_page_capacity সেমাফোর ব্রাউজার পেজ কনকারেন্সি বাউন্ডেড রাখে
+        যাতে মেমোরি ক্র্যাশ না করে (512MB RAM constraint)।"""
+        from core.playwright_manager import browser_page_capacity, browser_page_slot
+
+        slot = await browser_page_slot()
+        initial_value = slot._value
+        assert initial_value > 0
+
+        async with browser_page_capacity():
+            # One slot consumed inside the context
+            assert slot._value == initial_value - 1
+
+        # Released after exiting context
+        assert slot._value == initial_value
+
+
+# ---------------------------------------------------------------------------
+# Mission 12 — Continuous Security & Threat Detection Guard
+# ---------------------------------------------------------------------------
+class TestMissionContinuousSecurityGuard:
+    def test_ssrf_security_guard_blocks_private_and_loopback_ips(self):
+        """বাংলা: SSRF প্রোটেকশন 127.0.0.1, 10.x, 192.168.x এবং ক্লাউড মেটাডাটা ব্লক করে।"""
+        from core.plugins.mcp_security import MCPSecurityGuard
+
+        assert MCPSecurityGuard.is_safe_url("http://127.0.0.1:8000/api") is False
+        assert MCPSecurityGuard.is_safe_url("http://localhost:3000") is False
+        assert MCPSecurityGuard.is_safe_url("http://10.0.0.1/admin") is False
+        assert MCPSecurityGuard.is_safe_url("http://192.168.1.1/router") is False
+        assert MCPSecurityGuard.is_safe_url("http://169.254.169.254/latest") is False
+        # Valid public HTTPS domain must pass
+        assert MCPSecurityGuard.is_safe_url("https://api.github.com", enforce_https=True) is True
+
+    def test_eval_exec_reflection_blocked_by_immune_scanner(self):
+        """বাংলা: ডাইনামিক কোড এক্সিকিউশনে eval/exec/__import__ সম্পূর্ণ ব্লকড।"""
+        from core.ast_security_scanner import ASTSecurityScannerEngine
+
+        scanner = ASTSecurityScannerEngine()
+        payload = "__builtins__['eval']('1 + 1')"
+        res = scanner.scan_code(payload)
+        assert res["safe"] is False
+
+
+# ---------------------------------------------------------------------------
+# Mission 13 — Governed Self-Evolution & Evolutionary Gene Optimization
+# ---------------------------------------------------------------------------
+class TestMissionGovernedSelfEvolution:
+    def test_evolution_module_selection_and_fitness(self):
+        """বাংলা: Self-Evolution মডিউল জেনেটিক এলগরিদমের মাধ্যমে ফিটনেস
+        অনুযায়ী সবচেয়ে সফল স্ট্র্যাটেজিকে বাছাই করে।"""
+        from core.evolution_module import Chromosome, EvolutionModule, Gene
+
+        module = EvolutionModule()
+        gene_a = Gene(
+            gene_id="g1",
+            gene_type="prompt",
+            value="Concise prompt",
+            fitness=0.95,
+            age=1,
+            mutation_rate=0.05,
+        )
+        gene_b = Gene(
+            gene_id="g2",
+            gene_type="prompt",
+            value="Verbose prompt",
+            fitness=0.40,
+            age=1,
+            mutation_rate=0.05,
+        )
+
+        chrom_high = Chromosome(
+            chromosome_id="c1",
+            genes=[gene_a],
+            overall_fitness=0.95,
+            generation=1,
+            parents=[],
+            created_at=datetime.now(UTC),
+            last_modified=datetime.now(UTC),
+        )
+        chrom_low = Chromosome(
+            chromosome_id="c2",
+            genes=[gene_b],
+            overall_fitness=0.40,
+            generation=1,
+            parents=[],
+            created_at=datetime.now(UTC),
+            last_modified=datetime.now(UTC),
+        )
+
+        module.population = {"c1": chrom_high, "c2": chrom_low}
+        selected = module._select_elite()
+        assert len(selected) > 0
+        assert selected[0].chromosome_id == "c1"
+        assert selected[0].overall_fitness == 0.95
+
+
+# ---------------------------------------------------------------------------
+# Mission 14 — In-Process Async Queue & Self-Healing Circuit Breaker
+# ---------------------------------------------------------------------------
+class TestMissionInProcessAsyncQueueAndBreaker:
+    @pytest.mark.asyncio
+    async def test_in_process_queue_task_enqueue_and_completion(self):
+        """বাংলা: zero_cost_architecture-এর InProcessAsyncQueue বিনা Celery/RQ-তে
+        $0 খরচে টাস্ক অগ্রাধিকার মেনে এক্সিকিউট করে।"""
+        from core.zero_cost_architecture import (
+            InProcessAsyncQueue,
+            TaskPriority,
+            TaskStatus,
+            ZeroCostConfig,
+        )
+
+        config = ZeroCostConfig(
+            QUEUE_MAX_CONCURRENT_TASKS=2,
+            QUEUE_MAX_QUEUE_SIZE=10,
+        )
+        queue = InProcessAsyncQueue(config=config)
+        await queue.start()
+
+        async def sample_coro(val: int) -> int:
+            return val * 2
+
+        task_id = await queue.enqueue(
+            sample_coro,
+            21,
+            priority=TaskPriority.HIGH,
+        )
+        assert task_id is not None
+
+        # Await completion
+        res = await queue.get_result(task_id, timeout=5.0)
+        assert res == 42
+        status = queue.get_status(task_id)
+        assert status is not None
+        assert status["status"] == TaskStatus.COMPLETED.value
+
+        await queue.stop()
+
+    @pytest.mark.asyncio
+    async def test_circuit_breaker_threshold_and_state(self):
+        """বাংলা: সেলফ-হিলিং অ্যাডাপ্টিভ সার্কিট ব্রেকার ফেইলিউরে ট্রিপ করে।"""
+        from core.zero_cost_architecture import (
+            AdaptiveCircuitBreaker,
+            AdaptiveCircuitBreakerState,
+            ZeroCostConfig,
+        )
+
+        config = ZeroCostConfig(
+            CIRCUIT_BREAKER_FAILURE_THRESHOLD=3,
+            CIRCUIT_BREAKER_COOLDOWN_SECONDS=1.0,
+        )
+        breaker = AdaptiveCircuitBreaker(name="test_breaker", config=config)
+        assert breaker.state == AdaptiveCircuitBreakerState.CLOSED
+
+        # Record failures asynchronously
+        for _ in range(3):
+            await breaker.record_failure()
+
+        assert breaker.state == AdaptiveCircuitBreakerState.OPEN
+        assert breaker.is_available is False
+
+
+# ---------------------------------------------------------------------------
+# Mission 15 — Dynamic Skill Registration & Least-Privilege AST Sandbox
+# ---------------------------------------------------------------------------
+class TestMissionDynamicSkillRegistration:
+    @pytest.mark.asyncio
+    async def test_skill_manager_local_registration_and_lookup(self):
+        """বাংলা: SkillManager লোকাল BaseSkill রেজিস্টার ও রিট্রিভ করে।"""
+        from core.skill_manager import SkillManager
+        from core.skills.base import BaseSkill
+
+        class MissionTestSkill(BaseSkill):
+            @property
+            def name(self) -> str:
+                return "mission_test_skill"
+
+            @property
+            def description(self) -> str:
+                return "A skill for testing Mission 15"
+
+            async def execute(self, **kwargs) -> dict:
+                return {"result": "success", "echo": kwargs}
+
+        manager = SkillManager()
+        skill = MissionTestSkill()
+        manager.register_skill(skill)
+
+        retrieved = await manager.get_skill("mission_test_skill")
+        assert retrieved is not None
+        assert retrieved.name == "mission_test_skill"
