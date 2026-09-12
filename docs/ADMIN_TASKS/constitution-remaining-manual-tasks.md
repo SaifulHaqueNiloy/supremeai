@@ -145,6 +145,12 @@ Remaining manual/staged tasks:
 
 The following issues were identified during the root-level review of the main branch. They are tracked as remediation tasks; completion requires code changes and the appropriate CI, staging, security, architecture, or production evidence.
 
+### Current remediation pass (repository-local)
+
+Completed in this pass: repaired the malformed advanced-check CI step, removed the invalid cross-job `steps.previous` reference, blocked provider API-key forwarding, added authenticated tenant checks to gateway dispatch/webhook routes, added an HTTPS host allowlist and private-address resolution checks for webhooks, redacted gateway error details, enforced GET/POST method handling, filtered forwarded headers, and made webhook I/O asynchronous.
+
+Still open: items 8–40 and the architectural deliverables below require additional code, approved policy thresholds, provider/staging evidence, or security/architecture approval. They are intentionally not marked complete by these local edits.
+
 ### P0 — Security and release blockers
 
 1. Repair malformed CI `run` blocks and indentation in `.github/workflows/ci.yml`.

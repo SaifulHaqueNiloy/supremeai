@@ -1,6 +1,9 @@
 import asyncio
+import ipaddress
 import os
+import socket
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
@@ -34,16 +37,40 @@ class GatewayRequest(BaseModel):
 
 
 class InternalGateway:
-    def __init__(self):
-        pass
+    def __init__(self) -> None:
+        self.webhook_allowlist = {
+            host.strip().lower()
+            for host in (os.getenv("MAKE_WEBHOOK_ALLOWLIST") or "").split(",")
+            if host.strip()
+        }
 
-    def trigger_make_webhook(self, webhook_url: str, payload: dict[str, Any]) -> dict[str, Any]:
+    @staticmethod
+    def _validate_webhook_url(webhook_url: str, allowlist: set[str]) -> None:
+        parsed = urlparse(webhook_url)
+        if parsed.scheme != "https" or not parsed.hostname or parsed.port not in (None, 443):
+            raise ValueError("webhook URL must use HTTPS on the default port")
+        hostname = parsed.hostname.lower().rstrip(".")
+        if allowlist and hostname not in allowlist:
+            raise ValueError("webhook host is not allowlisted")
+        if not allowlist:
+            raise ValueError("webhook allowlist is not configured")
+        try:
+            addresses = {ipaddress.ip_address(info[4][0]) for info in socket.getaddrinfo(hostname, 443)}
+        except socket.gaierror as exc:
+            raise ValueError("webhook host could not be resolved") from exc
+        if any(address.is_private or address.is_loopback or address.is_link_local or address.is_reserved for address in addresses):
+            raise ValueError("webhook host resolves to a private or reserved address")
+
+    async def trigger_make_webhook(self, webhook_url: str, payload: dict[str, Any]) -> dict[str, Any]:
         logger.info("Triggering Make.com webhook")
         try:
-            response = httpx.post(webhook_url, json=payload, timeout=10.0)
-            return {"success": response.is_success, "response": response.text}
-        except Exception as exc:
-            return {"success": False, "error": str(exc)}
+            self._validate_webhook_url(webhook_url, self.webhook_allowlist)
+            async with httpx.AsyncClient(timeout=10.0, follow_redirects=False) as client:
+                response = await client.post(webhook_url, json=payload)
+            return {"success": response.is_success, "status_code": response.status_code}
+        except (httpx.HTTPError, ValueError, OSError):
+            logger.exception("Make.com webhook request failed")
+            return {"success": False, "error": "webhook request failed"}
 
 
 APIGateway = InternalGateway
@@ -121,13 +148,15 @@ async def gateway_forward(
         status="forwarding",
         trace_id=getattr(http_request.state, "correlation_id", None),
     )
-    headers = dict(request.headers or {})
-    headers.setdefault("X-Source", source)
+    allowed_headers = {"accept", "content-type", "user-agent"}
+    headers = {key: value for key, value in (request.headers or {}).items() if key.lower() in allowed_headers}
+    headers["X-Source"] = source
     headers["X-Execution-ID"] = envelope.execution_id
     headers["X-Actor-ID"] = envelope.actor_id
     headers["X-Trace-ID"] = envelope.trace_id or envelope.execution_id
 
-    # API Key Rotation & Free Tier Tracking Integration
+    # Provider selection is kept server-side; provider credentials must never
+    # cross this boundary as client-controlled or forwarded HTTP headers.
     if any(
         endpoint in normalized for endpoint in ["chat/completion", "chat/stream", "chat/message"]
     ):
@@ -146,7 +175,8 @@ async def gateway_forward(
                     provider, account = provider_account
                     if account and account.api_key:
                         headers["X-Dynamic-Provider"] = provider.name
-                        headers["X-Dynamic-API-Key"] = account.api_key
+                        # Never forward account.api_key to another HTTP service.
+                        # The downstream provider boundary owns credential injection.
                         # Record a basic hit (backend should ideally report exact tokens later)
                         tracker.record(provider.name, token_count=100)
                         logger.info(f"Injected {provider.name} key from rotator for {normalized}")
@@ -158,8 +188,10 @@ async def gateway_forward(
             req_method = (request.method or "GET").upper()
             if req_method == "POST":
                 response = await client.post(target, json=request.payload or {}, headers=headers)
-            else:
+            elif req_method == "GET":
                 response = await client.get(target, headers=headers)
+            else:
+                raise HTTPException(status_code=405, detail="method not allowed")
 
             # If rate limited (429), pause the provider
             if response.status_code == 429 and "X-Dynamic-Provider" in headers:
@@ -179,15 +211,26 @@ async def gateway_forward(
         return JSONResponse(content=response.json(), status_code=response.status_code)
     except httpx.HTTPStatusError as exc:
         raise HTTPException(status_code=exc.response.status_code) from exc
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.exception("gateway forward failed")
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=502, detail="gateway request failed") from exc
 
 
 @router.post("/dispatch/{capability}")
-async def api_dispatch(capability: str, payload: dict[str, Any]) -> JSONResponse:
+async def api_dispatch(
+    capability: str,
+    payload: dict[str, Any],
+    user: dict[str, Any] = Depends(get_current_user_token),
+) -> JSONResponse:
+    tenant_id = str(user.get("tenant_id") or user.get("org_id") or "").strip()
+    actor_id = str(user.get("sub") or user.get("user_id") or "").strip()
+    if not tenant_id or not actor_id:
+        raise HTTPException(status_code=403, detail="verified tenant and actor context required")
+    dispatch_payload = {**(payload or {}), "_tenant_id": tenant_id, "_actor_id": actor_id}
     try:
-        result = api_router.dispatch(capability, payload or {})
+        result = api_router.dispatch(capability, dispatch_payload)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     status = 200 if result.get("success", True) else 502
@@ -220,11 +263,15 @@ async def trigger_automation(
 
 @router.post("/make")
 async def trigger_make(
-    webhook_url: str = "", payload: dict[str, Any] | None = None
+    webhook_url: str = "",
+    payload: dict[str, Any] | None = None,
+    user: dict[str, Any] = Depends(get_current_user_token),
 ) -> JSONResponse:
+    if not user.get("tenant_id") and not user.get("org_id"):
+        raise HTTPException(status_code=403, detail="verified tenant context required")
     if payload is None:
         payload = {}
     internal = InternalGateway()
-    result = internal.trigger_make_webhook(webhook_url, payload)
+    result = await internal.trigger_make_webhook(webhook_url, payload)
     status = 200 if result.get("success") else 502
     return JSONResponse(content=result, status_code=status)
