@@ -72,7 +72,9 @@ class RobotsCache:
                 # বাংলা: bounded cache — পুরনো এন্ট্রি বাদ (unbounded dict leak এড়াতে)
                 oldest = min(self._cache.items(), key=lambda kv: kv[1][0])
                 self._cache.pop(oldest[0], None)
-            parser = await self._fetch_parser(urljoin(f"{parsed.scheme}://{parsed.netloc}", "/robots.txt"))
+            parser = await self._fetch_parser(
+                urljoin(f"{parsed.scheme}://{parsed.netloc}", "/robots.txt")
+            )
             self._cache[domain] = (now, parser)
 
         if parser is None:
