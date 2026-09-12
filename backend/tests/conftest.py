@@ -92,6 +92,7 @@ _IMPORTANT_TEST_PARTS = (
     ("api", "test_stream_chat_contract"),
     ("core", "test_model_registry_readiness"),
     ("scout_tests",),
+    ("missions",),
 )
 
 

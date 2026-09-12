@@ -253,7 +253,14 @@ async def register_connection(
     payload: RegisterRequest,
     current_user: dict = Depends(get_current_user_token),
 ) -> RegisterResponse:
-    """বাংলা: custom tool নিবন্ধন — governed path, audit log, tenant-scoped capability।"""
+    """বাংলা: custom tool নিবন্ধন — governed path, audit log, tenant-scoped capability।
+
+    Phase 1 (One connection registry): আগে registration শুধু capability registry-তে
+    যেত, ConnectionRegistry (supremeai_connections টেবিল) ফাঁকা থাকত এবং
+    connection_id ছিল ভুয়া (fabricated)। এখন দুটো রেজিস্ট্রিতেই write-through হয় —
+    DB persist হলে সত্যিকারের connection record id ফেরত যায়; persist না হলেও
+    capability path কাজ চালিয়ে যায় (Graceful Degradation, সঙ্গে সৎ warning log)।
+    """
     user_id = str(current_user.get("sub") or current_user.get("uid") or "anonymous")
     if not payload.url.strip():
         raise HTTPException(
@@ -282,15 +289,44 @@ async def register_connection(
             detail="Registration service unavailable",
         ) from exc
 
+    # --- Phase 1: durable write-through to the ConnectionRegistry ---
+    connection_id = f"conn-{uuid.uuid4().hex[:12]}"
+    persisted = False
+    try:
+        from core.connection_registry import connection_registry
+
+        record = connection_registry.register(
+            user={
+                "tenant_id": current_user.get("tenant_id") or "default",
+                "user_id": user_id,
+                "role": current_user.get("role") or "user",
+            },
+            url=payload.url,
+            capabilities=[{"protocol": detection.protocol, "capability_id": created.capability_id}],
+            name=name,
+            permission_level="user",
+        )
+        if record is not None and getattr(record, "id", None):
+            connection_id = str(record.id)
+        persisted = True
+    except Exception as exc:
+        logger.warning(
+            "connection durable persistence degraded for %s (%s): %s",
+            user_id,
+            payload.url,
+            exc,
+        )
+
     logger.info(
-        "AUDIT connection.registered user=%s capability=%s protocol=%s url=%s",
+        "AUDIT connection.registered user=%s capability=%s protocol=%s url=%s persisted=%s",
         user_id,
         created.capability_id,
         detection.protocol,
         payload.url,
+        persisted,
     )
     return RegisterResponse(
-        connection_id=f"conn-{uuid.uuid4().hex[:12]}",
+        connection_id=connection_id,
         capability_id=created.capability_id,
         message=f"{detection.provider_label} is being connected. It will appear in your tools once healthy.",
     )

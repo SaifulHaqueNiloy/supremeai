@@ -358,11 +358,20 @@ def get_conversation_orchestrator() -> ConversationOrchestrator:
             evolution_handler,
             external_handler,
             realtime_handler,
+            research_handler,
             task_handler,
         )
 
         _orchestrator.register(
             Capability("task", "medium", task_handler, description="Durable task submission")
+        )
+        _orchestrator.register(
+            Capability(
+                "research",
+                "medium",
+                research_handler,
+                description="Governed scout crawl (policy-gated, tenant-scoped)",
+            )
         )
         _orchestrator.register(
             Capability("realtime", "low", realtime_handler, description="Shared event publication")

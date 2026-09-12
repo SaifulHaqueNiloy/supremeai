@@ -41,6 +41,10 @@ async def stream_session(
                     channel = "logs"
                     if item.get("log_type") == "state_change":
                         channel = "state"
+                    elif item.get("log_type") == "reasoning_step":
+                        # বাংলা: Phase 1 — এজেন্টের চিন্তা-প্রক্রিয়া এখন session SSE-তে
+                        # দৃশ্যমান (ReasoningLog.tsx সত্যিকারের ডেটা পায়)
+                        channel = "reasoning"
                     elif item.get("log_type") in ("file_write", "file_delete"):
                         channel = "filetree"
 

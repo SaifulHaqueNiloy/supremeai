@@ -53,6 +53,20 @@ async def get_public_config(response: Response):
     return config_data
 
 
+@router.get("/validation-report")
+async def get_config_validation_report(admin: str = Depends(require_admin_token)):
+    """specs/001 close-out: বর্তমান env-এর সৎ configuration truth (admin-only).
+
+    বাংলা: MASTER_PLAN Phase 1 — required env vars, ফরম্যাট, ও CORS unification
+    status এক কলে জানায়। কোনো ভুয়া 'ok' নেই — সমস্যা থাকলে status=error + fix
+    suggestion যায় (No Silent Failure)। রুটের আগে ডিক্লেয়ার করা বাধ্যতামূলক,
+    নইলে /{key} পাথ এটাকে গিলে ফেলে।
+    """
+    from core.config_validation import build_config_validation_report
+
+    return build_config_validation_report().model_dump()
+
+
 # বাংলা মন্তব্য: অ্যাডমিন ট্রাস্টেড এক্সেস কন্ট্রোলের মাধ্যমে নির্দিষ্ট কনফিগ কি রিড করার এন্ডপয়েন্ট।
 @router.get("/{key}")
 async def get_config_by_key(key: str, admin: str = Depends(require_admin_token)):
