@@ -17,6 +17,7 @@ ALL_ROUTERS = [
     # Phase 1: formerly orphaned feature routes are now centrally registered.
     {"path": "api.routes.artifacts", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.kernel_dispatch", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.task_gateway", "prefix": "", "is_admin": False, "is_critical": True},
     {"path": "api.routes.browser", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.branch_conversations",

@@ -159,8 +159,6 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
   status: string
   }
 
-  const workerUrl = (path: string) => `${import.meta.env.VITE_WORKER_URL ?? getApiBaseUrl(path)}${path}`
-
   export const controlPlane = {
   registry: () => getJson<ControlPlaneRegistry>('/api/v1/control-plane/registry'),
   capabilities: () => getJson<{ capabilities: TenantCapability[] }>('/api/v1/capabilities'),
@@ -175,9 +173,9 @@ async function patchJson<T>(path: string, body: unknown): Promise<T> {
   changeExternalClientRole: (id: string, role: ExternalClientRole) => patchJson<ExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`, { role }),
   revokeExternalClient: (id: string) => deleteJson<{ revoked: boolean }>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}`),
   rotateExternalClient: (id: string) => postJson<CreatedExternalClient>(`${import.meta.env.VITE_MCP_CONTROL_PLANE_URL ?? ''}/clients/${encodeURIComponent(id)}/rotate`, {}),
-  submitTask: (payload: TaskSubmission) => postJson<TaskHandle>(workerUrl('/tasks'), payload),
-  taskStatus: (taskId: string) => getJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}`)),
-  cancelTask: (taskId: string) => postJson<TaskHandle>(workerUrl(`/tasks/${encodeURIComponent(taskId)}/cancel`), {}),
+  submitTask: (payload: TaskSubmission) => postJson<TaskHandle>('/api/v1/tasks', payload),
+  taskStatus: (taskId: string) => getJson<TaskHandle>(`/api/v1/tasks/${encodeURIComponent(taskId)}`),
+  cancelTask: (taskId: string) => postJson<TaskHandle>(`/api/v1/tasks/${encodeURIComponent(taskId)}/cancel`, {}),
   }
 
 export function capabilityAvailable(registry: ControlPlaneRegistry | undefined, capability: string): boolean {

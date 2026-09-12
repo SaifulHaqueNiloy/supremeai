@@ -34,7 +34,9 @@ export function CostAuditor({ costReport }: CostAuditorProps) {
     <div className="flex-grow bg-[#030611] p-6 overflow-y-auto font-sans">
       <div className="flex items-center justify-between mb-6 pb-2 border-b border-slate-800">
         <h3 className="text-sm font-bold text-slate-200 tracking-wider font-mono">📊 COST & BUDGET REPORT</h3>
-        <span className="text-[10px] text-slate-400 font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">Billing Cycle: June 2026</span>
+        <span className="text-[10px] text-slate-400 font-mono bg-slate-900 border border-slate-800 px-2 py-0.5 rounded">
+          Billing Cycle: {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())}
+        </span>
       </div>
 
       {/* Main Budget Card */}
