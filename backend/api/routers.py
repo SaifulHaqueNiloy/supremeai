@@ -264,6 +264,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
     # Canonical browser-facing broker for service discovery and health.
     {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
+    {"path": "api.routes.intelligence_insights", "prefix": "", "is_admin": True, "is_critical": False},
     # Tenant-scoped capability discovery and provider-consent registration.
     {
         "path": "api.routes.workspace_capabilities",
@@ -304,7 +305,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.selector_healing", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.webhooks_ai", "prefix": "", "is_admin": False, "is_critical": False},
     # ── AUDIT-WIRE FIX 2 (backend/frontend parity audit, 2026-09-11): এই ৭টি মডিউলের
-    # কার্যকর APIRouter ছিল কিন্তু রেজিস্ট্রিতে ছিল না — তাদের সব এন্ডপয়েন্ট বুটে 404 দিত।
+    # কার্যকর APIRouter ছিল কিন্তু র���জিস্ট্রিতে ছিল না — তাদের সব এন্ডপয়েন্ট বুটে 404 দিত।
     # মাউন্ট-নোট: প্রতিটির নিজস্ব APIRouter prefix আছে (/diagram, /voice, /pair, /agent,
     # /video-to-code, /security/vulnerabilities, /ws/command-center) — তাই রেজিস্ট্রি
     # prefix অবশ্যই "" (নইলে URL দ্বিগুণ হয়ে যায়)।
