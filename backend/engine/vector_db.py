@@ -80,7 +80,11 @@ class VectorDatabaseClient:
         try:
             from services.memory_service import memory_service
 
-            hits = memory_service.query_context(query=query_text, limit=top_k, threshold=0.65)
+            # BUGFIX: query_context-এর সঠিক সিগনেচার (prompt, top_k, session_id,
+            # user_id) — আগে query=/limit=/threshold= kwargs দেওয়া হচ্ছিল, যা
+            # প্রতিবার TypeError করত এবং except ব্লক তা চুপচাপ গিলে ফেলত
+            # (ফলাফল সবসময় খালি)।
+            hits = memory_service.query_context(prompt=query_text, top_k=top_k)
 
             # Transform Cascade format back to Pinecone-shaped format
             return [

@@ -39,6 +39,11 @@ class FreeTierOptimizedVectorStore:
     ) -> bool:
         """
         Upsert embeddings in small batches to manage memory.
+
+        BUGFIX: supabase-py একটি **sync** ক্লায়েন্ট — আগে `await ...execute()`
+        লেখা হচ্ছিল যা প্রতিবার TypeError করত (exc ব্লক তা চুপচাপ গিলে
+        `False` ফেরত দিত — অর্থাৎ কোনো মেমরি কখনোই persist হতো না)।
+        এখন sync কলগুলো `asyncio.to_thread`-এ পাঠানো হয়।
         """
         try:
             # Process in small batches
@@ -57,12 +62,11 @@ class FreeTierOptimizedVectorStore:
                     )
                 ]
 
-                # Insert batch
-                (
-                    await self.client.table(self.table_name)
-                    .upsert(records, on_conflict="id")
-                    .execute()
-                )
+                # Insert batch (sync supabase client → offload to worker thread)
+                def _upsert(records=records) -> None:
+                    self.client.table(self.table_name).upsert(records, on_conflict="id").execute()
+
+                await asyncio.to_thread(_upsert)
 
                 # Small delay to prevent overwhelming free tier DB
                 await asyncio.sleep(0.05)
@@ -101,8 +105,9 @@ class FreeTierOptimizedVectorStore:
                 for key, value in filter_metadata.items():
                     query = query.eq(f"metadata->>{key}", value)
 
-            # Execute and get results
-            result = query.execute()
+            # Execute and get results (sync supabase client → offload to thread
+            # যাতে ইভেন্ট লুপ ব্লক না হয়)
+            result = await asyncio.to_thread(query.execute)
 
             # Return only what we need (don't cache large results)
             return [
@@ -128,13 +133,16 @@ class FreeTierOptimizedVectorStore:
 
             cutoff = (datetime.now(UTC) - timedelta(days=days_old)).isoformat()
 
-            (
-                self.client.table(self.table_name)
-                .filter(f"created_at.lt.{cutoff}")
-                .limit(limit)
-                .delete()
-                .execute()
-            )
+            def _delete_old() -> None:
+                (
+                    self.client.table(self.table_name)
+                    .filter(f"created_at.lt.{cutoff}")
+                    .limit(limit)
+                    .delete()
+                    .execute()
+                )
+
+            await asyncio.to_thread(_delete_old)
 
             return True
 

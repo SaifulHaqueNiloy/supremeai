@@ -200,9 +200,37 @@ export const useAuthStore = create<AuthState>((set) => ({
   initialize: async () => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
+      // ── Cookie-based session restore (production-readiness plan, item 3b) ──
+      // বাংলা: localStorage টোকেন না থাকলেও httpOnly cookie-ভিত্তিক সেশন থাকতে
+      // পারে (login এখন দুই মোডেই cookie সেট করে)। credentials: 'include' সহ
+      // /auth/me কল করে cookie-session detect করা হয় — থাকলে সেশন রিস্টোর,
+      // না থাকলে আগের মতোই LOGGED_OUT। Dual-mode transition (breaking change নয়)।
       updateTokenCache(null);
-      persistUser(null);
-      set({ status: AuthStatus.LOGGED_OUT, user: null });
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const response = await apiClient.get<any>('/api/v1/auth/me');
+        const cookieEmail = response.email || response.username || 'user@supremeai.dev';
+        const cookieUser: UserProfile = {
+          id: response.user_id || '',
+          email: cookieEmail,
+          name: response.name || cookieEmail.split('@')[0],
+          avatarUrl: avatarUrl(cookieEmail),
+        };
+        persistUser(cookieUser);
+        set({
+          status: AuthStatus.LOGGED_IN,
+          user: cookieUser,
+          role: isRole(response.role) ? response.role : normalizeRole(response.role) ?? 'user',
+          permissions: Array.isArray(response.permissions) ? response.permissions : [],
+        });
+        if (import.meta.env.DEV) {
+          console.debug('Session restored from httpOnly cookie (no localStorage token)');
+        }
+      } catch {
+        // বাংলা: cookie-session নেই বা মেয়াদ শেষ — স্বাভাবিক logged-out অবস্থা।
+        persistUser(null);
+        set({ status: AuthStatus.LOGGED_OUT, user: null });
+      }
       return;
     }
 

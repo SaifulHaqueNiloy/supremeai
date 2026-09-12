@@ -327,8 +327,13 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             try:
                 from services.memory_service import recall_memories
 
+                # BUGFIX: আগে user_id পাঠানো হতো না — ফলে অন্য tenant-এর মেমরিও
+                # recall হতো (tenant isolation miss)। এখন db.tenant_id স্কোপড।
                 rag_results = await recall_memories(
-                    task_description=payload.prompt, limit=3, threshold=0.55
+                    task_description=payload.prompt,
+                    limit=3,
+                    threshold=0.55,
+                    user_id=db.tenant_id,
                 )
                 if rag_results:
                     rag_facts = []
