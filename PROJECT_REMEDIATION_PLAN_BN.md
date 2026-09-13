@@ -303,9 +303,9 @@ Collection error শূন্য এবং unexplained skip শূন্য হ�
 2. প্রথম release-এ gate করুন:
    - backend: 65%
    - frontend: 40%
-3. প্রতি মাসে threshold বাড়�����নোর issue তৈরি করুন।
+3. প্রতি মাসে threshold বাড়�������নোর issue তৈরি করুন।
 4. Security, tenant isolation, tool gateway এবং task execution module-এর জন্য আলাদা higher threshold রাখুন।
-5. Coverage দিয়ে untested critical path আড়াল করবেন না; mission tests আলাদা বাধ্যতামূল��� রাখুন।
+5. Coverage দিয়ে untested critical path আড়াল করবেন না; mission tests আলাদা বাধ্যত���মূল��� রাখুন।
 
 ### সম্পূর্ণ ধরা হবে যখন
 
@@ -1128,6 +1128,87 @@ request
 ```
 
 Account rotation কেবল official organization/project boundary, tenant ownership এবং provider terms অনুযায়ী হবে। `round_robin` দিয়ে blind quota evasion করবেন না।
+
+### Team member-এর নিজস্ব account এক system-এ যুক্ত করার সঠিক মডেল
+
+ছোট team-এর প্রত্যেক সদস্য নিজের email ও নিজের third-party account ব্যবহার করতে পারেন। এখানে account merge করা হবে না; বরং account আলাদা রেখে SupremeAI-এর একটি centralized provider gateway-তে official OAuth/API connection হিসেবে যুক্ত করা হবে। ফলে interface, policy, audit এবং usage reporting এক থাকবে, কিন্তু credential ownership আলাদা থাকবে।
+
+```text
+Team member
+  → SupremeAI login
+  → Connect Provider (official OAuth/API consent)
+  → encrypted provider connection
+  → policy-aware provider gateway
+  → member-এর authorized third-party account
+```
+
+### কোথায় বাস্তবায়ন হবে
+
+- `backend/models/provider_connection.py` — owner, tenant, provider, scopes, status, expiry metadata
+- `backend/api/routes/provider_connections.py` — connect, callback, refresh, disconnect ও revoke endpoint
+- `backend/core/security/credential_vault.py` — encrypted token storage; raw token response/log-এ নয়
+- `backend/core/providers/provider_gateway.py` — unified provider call interface
+- `backend/core/providers/account_router.py` — eligible account নির্বাচন
+- `backend/core/quotas/quota_manager.py` — account-level reservation ও usage হিসাব
+- `backend/core/security/tool_gateway.py` — task, data classification ও consent scope যাচাই
+- `backend/database/migrations/` — `provider_connections`, `provider_scopes`, `provider_usage_events`, `provider_disconnect_events`
+- `backend/api/routes/admin_telemetry.py` — aggregate usage ও health
+- `frontend/src/pages/settings/ConnectedAccounts/` — member connection management
+- `frontend/src/routes/admin/ProviderUsageDashboard.tsx` — account owner, quota, errors ও routing history
+- `backend/tests/security/test_provider_account_isolation.py` — owner/tenant isolation
+- `backend/tests/quotas/test_account_routing.py` — policy-aware routing
+
+### বাধ্যতামূলক data model ও policy
+
+প্রতিটি connection record-এ রাখুন:
+
+```text
+connection_id
+provider_id
+tenant_id
+credential_owner_id
+connected_by_user_id
+allowed_scopes
+approved_use_cases
+data_region
+terms_accepted_at
+expires_at
+revoked_at
+status
+```
+
+Routing-এর আগে এই checks চালাতে হবে:
+
+```text
+request actor
+→ tenant match
+→ credential owner/consent scope match
+→ provider terms/use-case policy
+→ data classification and region check
+→ quota and budget check
+→ reserve quota atomically
+→ execute with idempotency key
+→ record usage and audit event
+```
+
+### Team account ব্যবহারের নিয়ম
+
+1. Member-এর personal connection defaultভাবে শুধু সেই member-এর task-এ ব্যবহার করুন।
+2. অন্য member-এর task-এ ব্যবহার করতে হলে account owner-এর explicit consent scope এবং team policy দুটিই থাকতে হবে।
+3. Shared workload-এর জন্য ব্যক্তিগত account-এর বদলে provider-এর official team/workspace/service account ব্যবহার করুন।
+4. Password share করবেন না; OAuth authorization বা provider-approved API key flow ব্যবহার করুন।
+5. Member team ছাড়লে connection revoke, pending job stop, token deletion এবং cached private data purge করুন।
+6. Admin raw token দেখবে না; শুধু owner, scopes, status, quota, usage, errors ও revoke action দেখবে।
+7. এই architecture quota bypass-এর জন্য নয়; প্রতিটি account-এর provider terms, owner consent ও legitimate workload আলাদা করে সংরক্ষণ করতে হবে।
+
+### Required tests
+
+- User A-এর connection দিয়ে User B-এর private task চালানো `403` হবে।
+- Tenant A-এর connection Tenant B-তে ব্যবহার করা যাবে না।
+- Missing/expired/revoked connection হলে নতুন request শুরু হবে না।
+- Restricted PII বা অনুমোদনহীন data scope থাকলে provider call block হবে।
+- একই request retry হলেও idempotency key-এর কারণে duplicate execution হবে না।
+- Member offboarding-এর পরে token ব্যবহার এবং pending job দুটিই বন্ধ হবে।
 
 ## Free-tier optimization-এর বাস্তব automation
 
