@@ -7,6 +7,7 @@ Author: SuperAI Transformation Patch
 Version: 1.0.0
 """
 
+import os
 import time
 from datetime import UTC, datetime, timezone
 
@@ -53,17 +54,32 @@ async def deep_health_check(response: Response):
     redis_status = await _check_redis()
     redis_latency = round((time.time() - redis_start) * 1000, 2)
 
-    cache_status = "connected" if redis_manager.is_connected else "disabled"
+    cache_status = (
+        "connected"
+        if redis_manager.is_connected
+        else ("not_configured" if redis_status == "not_configured" else "disabled")
+    )
     persistence_mode = (
         "healthy" if db_status == "healthy" else ("degraded" if db_degraded() else "unavailable")
     )
 
+    scraper_url = (
+        os.getenv("SCRAPER_URL")
+        or os.getenv("SCRAPER_SERVICE_URL")
+        or os.getenv("RENDER_SCRAPER_URL")
+    )
+    scraper_status = "configured" if scraper_url else "not_configured"
+
+    ollama_url = os.getenv("OLLAMA_URL")
+    ollama_status = "configured" if ollama_url else "not_configured"
+
     overall_status = "healthy"
     if persistence_mode != "healthy":
         overall_status = "degraded" if persistence_mode == "degraded" else "unavailable"
-    if redis_status != "healthy" or cache_status != "connected":
-        # Redis is an optional cache/broadcast dependency. Its outage should be
+    if redis_status == "unhealthy":
+        # Redis is an optional cache/broadcast dependency. Its active outage should be
         # observable in deep health, but must not prevent the API from receiving traffic.
+        # An unconfigured optional service is NOT an outage.
         if overall_status == "healthy":
             overall_status = "degraded"
 
@@ -87,6 +103,8 @@ async def deep_health_check(response: Response):
             "database": {"status": db_status, "latency_ms": db_latency},
             "persistence": {"mode": persistence_mode},
             "redis": {"status": redis_status, "latency_ms": redis_latency},
+            "scraper": {"status": scraper_status},
+            "ollama": {"status": ollama_status},
             "cache": {"status": cache_status},
             "agents": agents_status,
         },

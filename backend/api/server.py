@@ -101,7 +101,11 @@ _dev_origins = [
 ]
 # Accept the canonical portal-specific variables and retain ALLOWED_ORIGINS as
 # a compatibility fallback for deployments that have not migrated yet.
-_prod_origins_env = _os.getenv("USER_CORS_ORIGINS") or _os.getenv("CORS_ORIGINS") or _os.getenv("ALLOWED_ORIGINS", "")
+_prod_origins_env = (
+    _os.getenv("USER_CORS_ORIGINS")
+    or _os.getenv("CORS_ORIGINS")
+    or _os.getenv("ALLOWED_ORIGINS", "")
+)
 _prod_origins = [o.strip() for o in _prod_origins_env.split(",") if o.strip()]
 _configured_origins = _dev_origins + _prod_origins
 _admin_raw = [o.strip() for o in _os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]

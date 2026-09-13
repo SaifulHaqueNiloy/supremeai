@@ -1,8 +1,14 @@
-// বাংলা মন্তব্য: Devin-স্টাইল সেটিংস পেজ — ব্যাকএন্ড /preferences/ এপিআই দিয়ে ইউজার প্রেফারেন্স লোড/সেভ করা হয়
 import { useState, useEffect } from 'react';
-import { Save, Loader2, Shield, Trash2 } from 'lucide-react';
+import { Save, Loader2, Shield, Trash2, Cpu } from 'lucide-react';
 import { useWorkspaceSettings, WORKSPACE_MODULES, type WorkspaceModuleId } from '../../hooks/useWorkspaceSettings';
 import { apiClient } from '../../services/apiClient';
+import { connectionsApi } from '../../services/connectionsApi';
+import {
+  EXECUTION_MODES,
+  EXECUTION_MODE_LABELS,
+  DEFAULT_EXECUTION_MODE,
+  type ExecutionMode,
+} from '../../types/contracts/execution-mode';
 // বাংলা মন্তব্য: বাহিরের মডেল নামের বদলে SupremeAI ব্র্যান্ডেড নাম + ক্যানোনিক্যাল মডেল লিস্ট
 import { getSupremeModelLabel, SUPREME_AVAILABLE_MODELS } from '../../lib/modelBranding';
 
@@ -36,9 +42,25 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
   const [status, setStatus] = useState('');
   const [trustedBrowsers, setTrustedBrowsers] = useState<Array<{ id: string; created_at: number }>>([]);
   const [trustedBrowserStatus, setTrustedBrowserStatus] = useState('');
+  const [executionMode, setExecutionMode] = useState<ExecutionMode>(DEFAULT_EXECUTION_MODE);
+  const [executionModeStatus, setExecutionModeStatus] = useState('');
+  const [savingMode, setSavingMode] = useState(false);
   const enabledModules = useWorkspaceSettings((state) => state.enabledModules);
   const toggleModule = useWorkspaceSettings((state) => state.toggleModule);
   const resetModules = useWorkspaceSettings((state) => state.resetModules);
+
+  useEffect(() => {
+    connectionsApi
+      .getMyWorkspace()
+      .then((data) => {
+        if (data?.executionMode) {
+          setExecutionMode(data.executionMode);
+        }
+      })
+      .catch(() => {
+        // Non-blocking fallback to default execution mode
+      });
+  }, []);
 
   useEffect(() => {
     apiClient
@@ -73,6 +95,21 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
       setTrustedBrowserStatus('All trusted browsers revoked.');
     } catch (error) {
       setTrustedBrowserStatus(error instanceof Error ? error.message : 'Unable to revoke browsers.');
+    }
+  };
+
+  const handleExecutionModeChange = async (mode: ExecutionMode) => {
+    setExecutionMode(mode);
+    setSavingMode(true);
+    setExecutionModeStatus('Updating execution mode...');
+    try {
+      const res = await connectionsApi.setExecutionMode(mode);
+      setExecutionModeStatus(res.message || `Execution mode set to ${mode}.`);
+    } catch (error) {
+      setExecutionModeStatus(`Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSavingMode(false);
+      setTimeout(() => setExecutionModeStatus(''), 4000);
     }
   };
 
@@ -226,6 +263,68 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
               className="w-4 h-4 accent-blue-600"
             />
           </label>
+        </div>
+
+        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
+          <div className="flex items-start justify-between gap-4 mb-3">
+            <div className="flex items-start gap-2">
+              <Cpu size={16} className="text-blue-400 mt-0.5" />
+              <div>
+                <h2 className="text-sm font-medium text-white">Execution Mode</h2>
+                <p className="text-[11px] text-slate-400">
+                  Control the autonomy level of AI agent actions in your workspace.
+                </p>
+              </div>
+            </div>
+            {savingMode && <Loader2 size={14} className="animate-spin text-blue-400 mt-1" />}
+          </div>
+
+          <div className="space-y-2 mt-3" data-testid="execution-mode-options">
+            {EXECUTION_MODES.map((mode) => {
+              const isSelected = executionMode === mode;
+              return (
+                <label
+                  key={mode}
+                  data-testid={`execution-mode-${mode}`}
+                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                    isSelected
+                      ? 'border-blue-500/50 bg-blue-500/10'
+                      : 'border-white/10 hover:bg-white/[0.02]'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="execution_mode"
+                    value={mode}
+                    checked={isSelected}
+                    disabled={savingMode}
+                    onChange={() => handleExecutionModeChange(mode)}
+                    className="w-4 h-4 accent-blue-600 mt-0.5"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-slate-200 capitalize">
+                        {mode.replace(/_/g, ' ')}
+                      </span>
+                      {mode === DEFAULT_EXECUTION_MODE && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-400">
+                          Default
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {EXECUTION_MODE_LABELS[mode]}
+                    </p>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+          {executionModeStatus && (
+            <p className="text-[11px] text-slate-400 mt-3" data-testid="execution-mode-status">
+              {executionModeStatus}
+            </p>
+          )}
         </div>
 
         <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-5">

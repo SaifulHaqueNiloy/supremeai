@@ -28,7 +28,7 @@ interface HealthData {
 
 interface ServiceStatusProps {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown' | 'loading';
+  status: 'healthy' | 'degraded' | 'unhealthy' | 'unknown' | 'loading' | 'not_configured' | 'disabled';
   responseTime?: number;
 }
 
@@ -36,6 +36,8 @@ const SERVICE_LABEL_MAP: Record<string, string> = {
   application: 'Backend Core',
   database: 'Data Store (Postgres)',
   redis: 'Cache Cluster (Redis)',
+  scraper: 'Scraper Service',
+  ollama: 'Local Ollama Node',
   memory: 'Compute Memory',
   disk: 'Storage Node',
   external_services: 'External AI Gateways',
@@ -50,12 +52,14 @@ const getServiceLabel = (key: string): string => {
 };
 
 const StatusDot: React.FC<{ status: ServiceStatusProps['status'] }> = ({ status }) => {
-  const colors = {
+  const colors: Record<ServiceStatusProps['status'], string> = {
     healthy: 'bg-emerald-500 shadow-emerald-500/50',
     degraded: 'bg-amber-500 shadow-amber-500/50',
     unhealthy: 'bg-red-500 shadow-red-500/50',
     unknown: 'bg-gray-500 shadow-gray-500/50',
     loading: 'bg-blue-500 animate-pulse shadow-blue-500/50',
+    not_configured: 'bg-slate-500 shadow-slate-500/30',
+    disabled: 'bg-slate-600 shadow-slate-600/30',
   };
 
   return (
@@ -64,20 +68,24 @@ const StatusDot: React.FC<{ status: ServiceStatusProps['status'] }> = ({ status 
 };
 
 const ServiceStatusItem: React.FC<ServiceStatusProps> = ({ name, status, responseTime }) => {
-  const statusLabels = {
+  const statusLabels: Record<ServiceStatusProps['status'], string> = {
     healthy: 'Online',
     degraded: 'Slow',
     unhealthy: 'Down',
     unknown: 'Unknown',
     loading: 'Checking...',
+    not_configured: 'Not Configured',
+    disabled: 'Disabled',
   };
 
-  const statusColors = {
+  const statusColors: Record<ServiceStatusProps['status'], string> = {
     healthy: 'text-emerald-400',
     degraded: 'text-amber-400',
     unhealthy: 'text-red-400',
     unknown: 'text-gray-400',
     loading: 'text-blue-400',
+    not_configured: 'text-slate-400',
+    disabled: 'text-slate-500',
   };
 
   return (

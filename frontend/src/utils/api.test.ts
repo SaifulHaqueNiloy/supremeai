@@ -29,6 +29,9 @@ describe('api.ts — runtime context-based backend resolution', () => {
     delete env.VITE_API_BASE;
     delete env.VITE_API_URL;
     delete env.VITE_WS_BASE_URL;
+    delete env.VITE_SCRAPER_BACKEND;
+    delete env.VITE_SCRAPER_URL;
+    delete env.VITE_SCRAPER_SERVICE_URL;
     delete env.PROD;
 
     // বাংলা মন্তব্য: api.ts থেকে ডিফল্ট URL fallback মুছে ফেলায়, টেস্টের জন্য ডিফল্ট ভ্যালু সেট করতে হবে
@@ -173,6 +176,47 @@ describe('api.ts — runtime context-based backend resolution', () => {
       setLocation('supremeai-lac.vercel.app');
       const { getWebSocketBaseUrl } = await loadApi();
       expect(getWebSocketBaseUrl()).toBe('wss://api.test-domain.com');
+    });
+  });
+
+  describe('SCRAPER_BACKEND_URL & isScraperConfigured', () => {
+    it('returns empty string and false when unset (optional dependency)', async () => {
+      const { SCRAPER_BACKEND_URL, isScraperConfigured } = await loadApi();
+      expect(SCRAPER_BACKEND_URL).toBe('');
+      expect(isScraperConfigured()).toBe(false);
+    });
+
+    it('resolves VITE_SCRAPER_BACKEND when configured', async () => {
+      env.VITE_SCRAPER_BACKEND = 'https://scraper.example.com';
+      const { SCRAPER_BACKEND_URL, isScraperConfigured } = await loadApi();
+      expect(SCRAPER_BACKEND_URL).toBe('https://scraper.example.com');
+      expect(isScraperConfigured()).toBe(true);
+    });
+
+    it('prefers VITE_SCRAPER_BACKEND over aliases VITE_SCRAPER_URL and VITE_SCRAPER_SERVICE_URL', async () => {
+      env.VITE_SCRAPER_BACKEND = 'https://canonical-scraper.example.com';
+      env.VITE_SCRAPER_URL = 'https://alias-scraper.example.com';
+      env.VITE_SCRAPER_SERVICE_URL = 'https://service-scraper.example.com';
+      const { SCRAPER_BACKEND_URL } = await loadApi();
+      expect(SCRAPER_BACKEND_URL).toBe('https://canonical-scraper.example.com');
+    });
+
+    it('falls back to VITE_SCRAPER_URL if VITE_SCRAPER_BACKEND is not set', async () => {
+      env.VITE_SCRAPER_URL = 'https://alias-scraper.example.com';
+      const { SCRAPER_BACKEND_URL, isScraperConfigured } = await loadApi();
+      expect(SCRAPER_BACKEND_URL).toBe('https://alias-scraper.example.com');
+      expect(isScraperConfigured()).toBe(true);
+    });
+
+    it('normalizes trailing slash and malformed inputs', async () => {
+      env.VITE_SCRAPER_BACKEND = 'https://scraper.example.com/ ';
+      const { SCRAPER_BACKEND_URL } = await loadApi();
+      expect(SCRAPER_BACKEND_URL).toBe('https://scraper.example.com');
+
+      env.VITE_SCRAPER_BACKEND = 'invalid-not-a-url';
+      const { SCRAPER_BACKEND_URL: invalidUrl, isScraperConfigured } = await loadApi();
+      expect(invalidUrl).toBe('');
+      expect(isScraperConfigured()).toBe(false);
     });
   });
 });
