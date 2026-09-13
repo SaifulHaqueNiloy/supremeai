@@ -1,0 +1,4649 @@
+{
+  "boundary_violations": [],
+  "cycles": [],
+  "domain_count": 9,
+  "domains": [
+    {
+      "id": "identity",
+      "lifecycle": "operational",
+      "name": "Identity/Auth",
+      "owner": "Identity"
+    },
+    {
+      "id": "ai",
+      "lifecycle": "operational",
+      "name": "AI/LLM",
+      "owner": "Ai"
+    },
+    {
+      "id": "execution",
+      "lifecycle": "operational",
+      "name": "Execution/Worker",
+      "owner": "Execution"
+    },
+    {
+      "id": "knowledge",
+      "lifecycle": "operational",
+      "name": "Memory/Knowledge",
+      "owner": "Knowledge"
+    },
+    {
+      "id": "research",
+      "lifecycle": "operational",
+      "name": "Browser/Research",
+      "owner": "Research"
+    },
+    {
+      "id": "data",
+      "lifecycle": "operational",
+      "name": "Data/Storage",
+      "owner": "Data"
+    },
+    {
+      "id": "security",
+      "lifecycle": "operational",
+      "name": "Governance/Security",
+      "owner": "Security"
+    },
+    {
+      "id": "billing",
+      "lifecycle": "owner-review",
+      "name": "Billing",
+      "owner": "Billing"
+    },
+    {
+      "id": "observability",
+      "lifecycle": "operational",
+      "name": "Observability",
+      "owner": "Observability"
+    }
+  ],
+  "edges": [
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/api/routes/prompt_templates.py"
+        }
+      ],
+      "source": "ai",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 283,
+          "path": "backend/core/llm/free_tier_tracker.py"
+        }
+      ],
+      "source": "ai",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 26,
+          "path": "backend/models/meta_ai.py"
+        }
+      ],
+      "source": "ai",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tools/learning/domain_adapter.py"
+        }
+      ],
+      "source": "ai",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/brain/autonomous_agent.py"
+        }
+      ],
+      "source": "ai",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/brain/parallel_cloud_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 152,
+          "path": "backend/brain/reasoning_orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 53,
+          "path": "backend/api/routes/living_brain.py"
+        }
+      ],
+      "source": "ai",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/brain/reasoning_orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/brain/reasoning_orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/agents/devops/llm_cost_optimizer.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/agents/domain/bangla_nlp_agent.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 37,
+          "path": "backend/api/routes/living_brain.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 401,
+          "path": "backend/api/routes/living_brain.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/api/routes/prompt_templates.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/api/routes/webhooks_ai.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/brain/causal/discovery.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/brain/causal/root_cause.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/brain/gcp_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/brain/mcp_client.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 30,
+          "path": "backend/brain/model_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/brain/parallel_cloud_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/brain/reasoning_orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/byoc/container_orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/core/agents/framework/crewai_agents.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/core/llm/advanced_model_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/core/llm/distributed_budget.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/core/llm/free_tier_tracker.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 34,
+          "path": "backend/core/llm/llm_gateway/__init__.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/core/llm/llm_gateway/__init__.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/core/llm/llm_gateway/completion.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 26,
+          "path": "backend/core/llm/llm_gateway/completion.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/core/llm/llm_gateway/gateway.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/core/llm/llm_gateway/http_client.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/core/llm/llm_gateway/litellm_runtime.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/llm/llm_gateway/resilience.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/llm/llm_gateway/routing.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/core/llm/llm_gateway/streaming.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/core/llm/providers/cloud_adapter.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/core/llm/providers/ollama_adapter.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/core/llm/token_budget.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/core/llm/token_deductor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/core/maintenance_pipeline.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 136,
+          "path": "backend/core/maintenance_pipeline.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/core/self_evolution/daily_learner.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/main.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 67,
+          "path": "backend/main.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/scripts/devops/ai_log_analyzer.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/scripts/migrate_llm_routers.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 36,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 291,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 306,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 322,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 422,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 434,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 450,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 621,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 633,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 721,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 1229,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 1252,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 1276,
+          "path": "backend/scripts/superai_free_tier_monitor.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/services/dynamic_ai/circuit_breaker.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/services/dynamic_ai/local_fallback.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/services/dynamic_ai/orchestrator.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/services/dynamic_ai/provider_registry.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/services/email/email_service.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/services/llm/llm_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 36,
+          "path": "backend/services/llm/llm_router.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/services/llm/providers.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/services/llm/providers.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/tools/ai_federation_protocol.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tools/code/ai_pair_programmer.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tools/code/pre_commit_ai.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/tools/comment_thread_ai.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/tools/learning/domain_adapter.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/tools/learning/model_trainer.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/tools/localization/bangla_ai_connector.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/tools/social/email_agent.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/tools/social/telegram_bot/ai_engine.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/api/routes/email.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 38,
+          "path": "backend/api/routes/living_brain.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/tools/social/email_agent.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "scripts/supremeai_performance_benchmark.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "scripts/supremeai_performance_benchmark.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "scripts/supremeai_performance_benchmark.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "scripts/supremeai_performance_benchmark.py"
+        }
+      ],
+      "source": "ai",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/tests/core/test_billing_system.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 128,
+          "path": "backend/tests/scripts/test_billing_fraud_detector.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 167,
+          "path": "backend/tests/scripts/test_billing_fraud_detector.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 195,
+          "path": "backend/tests/scripts/test_billing_quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 233,
+          "path": "backend/tests/scripts/test_billing_quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 298,
+          "path": "backend/tests/scripts/test_billing_quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 322,
+          "path": "backend/tests/scripts/test_billing_quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 356,
+          "path": "backend/tests/scripts/test_billing_quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 240,
+          "path": "backend/tests/scripts/test_billing_usage_reporter.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 284,
+          "path": "backend/tests/scripts/test_billing_usage_reporter.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 51,
+          "path": "scripts/billing/fraud_detector.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 54,
+          "path": "scripts/billing/fraud_detector.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 52,
+          "path": "scripts/billing/quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 55,
+          "path": "scripts/billing/quota_enforcer.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 58,
+          "path": "scripts/billing/usage_reporter.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 61,
+          "path": "scripts/billing/usage_reporter.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/tests/core/test_billing_system.py"
+        }
+      ],
+      "source": "billing",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/agents/devops/multicloud_quota_monitor.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 415,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/api/routes/payments.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 95,
+          "path": "backend/api/routes/payments.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/core/rate_limit_quota.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/tools/billing/monthly_cost_reporter.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 1,
+          "path": "backend/tests/core/test_model_registry_readiness.py"
+        }
+      ],
+      "source": "data",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 72,
+          "path": "backend/tests/services/test_model_router_unit.py"
+        }
+      ],
+      "source": "data",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 107,
+          "path": "backend/tests/services/test_model_router_unit.py"
+        }
+      ],
+      "source": "data",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/tools/media/threed_model_generator.py"
+        }
+      ],
+      "source": "data",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 95,
+          "path": "backend/core/database/connection_manager.py"
+        }
+      ],
+      "source": "data",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 173,
+          "path": "backend/core/database/connection_manager.py"
+        }
+      ],
+      "source": "data",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 149,
+          "path": "backend/tools/social/teldrive_storage.py"
+        }
+      ],
+      "source": "data",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/tools/seed_database.py"
+        }
+      ],
+      "source": "data",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 38,
+          "path": "backend/core/database/connection_manager.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/core/storage/service.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/database/db_repository.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/database/multi_db_router.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/database/pgbouncer_pool.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/database/storage_client.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/database/supabase_client.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/database/tenant_db.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/models/error_remediation.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/models/local_model_handler.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/services/storage/cloud_storage.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/services/storage/gcp_firestore.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/storage/asset_manager.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/storage/r2_storage_client.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/media/threed_model_generator.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/tools/social/teldrive_storage.py"
+        }
+      ],
+      "source": "data",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/api/routes/task.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 96,
+          "path": "backend/tests/services/test_task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 106,
+          "path": "backend/tests/services/test_task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/api/routes/scheduled_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 82,
+          "path": "backend/api/routes/task_workspace.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/models/automation_execution.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/models/execution_log.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 38,
+          "path": "backend/worker_service.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/api/routes/execution_policies.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 65,
+          "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 113,
+          "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 189,
+          "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 39,
+          "path": "backend/worker_service.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 29,
+          "path": "backend/api/routes/task.py"
+        }
+      ],
+      "source": "execution",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/api/routes/execution_policies.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/api/routes/scheduled_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/api/routes/task.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/api/routes/task_gateway.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/api/routes/task_workspace.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/brain/task_execution_engine.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/core/agents/framework/task_runner_agent.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/core/messaging/gcp_pubsub_queue.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/messaging/upstash_redis_queue.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/core/orchestration/periodic_task_scheduler.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/core/orchestration/periodic_task_scheduler.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/queue/task_queue.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/core/queue/task_queue_enhanced.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 3,
+          "path": "backend/core/queue/task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/engine/worker_node.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/engine/worker_registry.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/runtime/task_executor.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/runtime/task_runtime.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/workers/chaos_worker.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/workers/precognitive_watcher.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/workers/synaptic_dream.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/api/routes/execution_policies.py"
+        }
+      ],
+      "source": "execution",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/core/agents/framework/autonomous_task_orchestrator.py"
+        }
+      ],
+      "source": "execution",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/execution_adapters.py"
+        }
+      ],
+      "source": "execution",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tests/core/test_execution_adapters.py"
+        }
+      ],
+      "source": "execution",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 29,
+          "path": "backend/agents/user_retention_risk_agent.py"
+        }
+      ],
+      "source": "identity",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/api/routes/admin_dashboard/endpoints_users.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/api/routes/auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/models/agent_session.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/models/user_plugin_installation.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 64,
+          "path": "backend/api/routes/session_stream.py"
+        }
+      ],
+      "source": "identity",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 101,
+          "path": "backend/api/routes/session_stream.py"
+        }
+      ],
+      "source": "identity",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/agents/user_retention_risk_agent.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/api/routes/admin_auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/api/routes/admin_dashboard/endpoints_users.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/api/routes/auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/api/routes/session_stream.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/api/routes/session_stream.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 33,
+          "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 108,
+          "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 112,
+          "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 3,
+          "path": "backend/core/firebase_auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/core/security/authentication/auth_middleware.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/core/user_profiler.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/database/session.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 401,
+          "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/api/routes/auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 75,
+          "path": "backend/tests/core/test_auth_middleware.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 98,
+          "path": "backend/tests/core/test_auth_middleware.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 128,
+          "path": "backend/tests/core/test_auth_middleware.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/memory/long_term_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 909,
+          "path": "backend/services/memory_service.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 81,
+          "path": "backend/tools/knowledge/pdf_to_sdk.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/api/routes/global_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/memory/long_term_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 51,
+          "path": "backend/skills/core_knowledge_qa.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/api/routes/global_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/api/routes/knowledge.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 257,
+          "path": "backend/api/routes/memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 321,
+          "path": "backend/api/routes/memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/core/ai_memory/vector_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/embeddings.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/core/knowledge_base.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 26,
+          "path": "backend/core/memory/auto_rag_injector.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/core/memory_manager.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/unified_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/engine/memory_middleware.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/memory/chromadb_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/memory/cloud_postgres_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/memory/episodic_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/memory/long_term_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 64,
+          "path": "backend/memory/mcp_server.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/memory/rag_pipeline.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/memory/sliding_window.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 55,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 60,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 66,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 94,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 143,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 148,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 156,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 228,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 241,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 247,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 296,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 347,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 375,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 428,
+          "path": "backend/memory/supabase_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/memory/unified_db_manager.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/scripts/migrate_embeddings.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/scripts/store_ci_roadmap_to_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/scripts/sync_knowledge.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/services/memory_service.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/skills/core_knowledge_qa.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 161,
+          "path": "backend/tests/core/test_memory_service.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 180,
+          "path": "backend/tests/core/test_memory_service.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/knowledge/codebase_exporter.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/tools/knowledge/git_knowledge_extractor.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/tools/knowledge/knowledge_base_indexer.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/tools/knowledge/local_search_rag.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/tools/knowledge/pdf_to_sdk.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/knowledge/repo_deep_indexer.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/tools/learning/agent_knowledge_store.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/tools/preference_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "scripts/db/seed_knowledge_fts.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/tools/knowledge/local_search_rag.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 65,
+          "path": "backend/memory/mcp_server.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 66,
+          "path": "backend/memory/mcp_server.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/services/knowledge_qa.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 88,
+          "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
+        }
+      ],
+      "source": "observability",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 89,
+          "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
+        }
+      ],
+      "source": "observability",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 79,
+          "path": "backend/core/llm/telemetry.py"
+        }
+      ],
+      "source": "observability",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/api/routes/usage_metrics.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 187,
+          "path": "backend/core/observability/observability_middleware.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/models/patch_telemetry.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/scout/telemetry.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/api/routes/metrics.py"
+        }
+      ],
+      "source": "observability",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/observability/log_batcher.py"
+        }
+      ],
+      "source": "observability",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/core/observability/log_batcher.py"
+        }
+      ],
+      "source": "observability",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/browser/autonomous_browser.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/browser/swarm_browser.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 41,
+          "path": "backend/browser/vision_grounding.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 114,
+          "path": "backend/integrations/browser_use_adapter.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 30,
+          "path": "backend/services/scraper/tests/test_scraper_service.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/tools/browser/ai_web_extractor.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/tools/browser/playwright_browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 66,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 69,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 72,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 75,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 78,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 81,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 57,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 131,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 201,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 274,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 316,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/api/routes/browser/_tasks.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/api/routes/browser/_tasks.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/api/routes/browser/_tasks.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 29,
+          "path": "backend/api/routes/crawler_admin.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 198,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/models/crawler.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/scout/crawler.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/scout/web_crawler_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/tests/scout_tests/test_crawler_observability.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 26,
+          "path": "backend/tools/browser/playwright_browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 637,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 692,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 837,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 296,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 528,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/browser/semantic_dom.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/tools/browser/playwright_browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 65,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/api/routes/browser/_render_proxy.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/api/routes/browser/_scraping.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 27,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 341,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/browser/autonomous_browser.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/browser/browsing_memory.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/browser/semantic_dom.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/browser/swarm_browser.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/browser/vision_grounding.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/core/agents/live/browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/core/browser_session_manager.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 34,
+          "path": "backend/integrations/browser_use_adapter.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/scout/crawler.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/scout/crawler.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/services/scraper/browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/services/scraper/web_scraper.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/tests/scout_tests/test_crawler_observability.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/tools/browser/browser_stealth.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/tools/browser/playwright_browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tools/browser/stealth_http_client.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 1,
+          "path": "backend/tools/browser/web_fallback_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tools/browser/web_scraper.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 63,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 84,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 85,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 88,
+          "path": "backend/api/routes/browser/__init__.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/api/routes/browser/_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 121,
+          "path": "backend/api/routes/browser/_scraping.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/api/routes/browser/_tasks.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 49,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 338,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 814,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 815,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/api/routes/scraper.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/core/browser_session_manager.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/scout/crawler.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 29,
+          "path": "backend/services/scraper/browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/services/scraper/main.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/services/scraper/web_scraper.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/tests/core/test_browser_credentials.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 41,
+          "path": "backend/tools/browser/browser_stealth.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
+          "path": "backend/tools/browser/playwright_browser_agent.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/browser/stealth_http_client.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/agents/governance/bias_detection_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/agents/governance/ethics_monitor_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/agents/governance/explainability_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/agents/governance/governance_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 118,
+          "path": "backend/tests/security/test_dead_route_wiring.py"
+        }
+      ],
+      "source": "security",
+      "target": "billing"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/api/routes/browser/_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/api/routes/browser/_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/api/routes/browser/_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 75,
+          "path": "backend/core/mcp_audit.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 96,
+          "path": "backend/core/mcp_audit.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/core/security/api_key_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/models/execution_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/scout/policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tests/scout_tests/test_crawler_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 197,
+          "path": "backend/tests/security/test_patch_v4_render_log_fixes.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 211,
+          "path": "backend/tests/security/test_patch_v4_render_log_fixes.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/agents/governance/governance_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/tests/security/test_cross_tenant_isolation.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/tests/security/test_hitl_state_machine.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 164,
+          "path": "backend/tests/security/test_hitl_state_machine.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/tests/services/test_task_and_evolution_governance.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/tests/core/test_auth_security_extension.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/tests/core/test_security_regression.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 33,
+          "path": "backend/tests/security/test_refresh_path_regression.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 50,
+          "path": "backend/tests/security/test_refresh_path_regression.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/tools/billing/cost_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "knowledge"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/agents/governance/bias_detection_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/agents/governance/explainability_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/agents/governance/governance_agent.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/api/routes/admin_dashboard/endpoints_security.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/core/ast_security_scanner.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/core/container_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/core/mcp_audit.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 19,
+          "path": "backend/core/middleware/security.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/observability/audit_logger.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/core/security/__init__.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/core/security/api_key_limiter.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/core/security/api_key_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 31,
+          "path": "backend/core/security/audit/compliance_bot.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 26,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 434,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 475,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 677,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 680,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 683,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 687,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 690,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 695,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 698,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 701,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 704,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 707,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 710,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 713,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 716,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 721,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 724,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 737,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 740,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 743,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 746,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 751,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 755,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 759,
+          "path": "backend/core/security/audit/security_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 12,
+          "path": "backend/core/security/audit_logger.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/core/security/authentication/rbac.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 24,
+          "path": "backend/core/security/autonoguard_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/security/cryptographic_ledger.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/core/security/enhanced_ast_scanner.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/core/security/governance_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/core/security/injections/sql_prevention.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/core/security/intelligence/behavioral_analyzer.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 30,
+          "path": "backend/core/security/intelligence/guardian_ai.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 11,
+          "path": "backend/core/security/origin_validator.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/core/security/protection/honeypot.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/core/security/protection/prompt_firewall.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 38,
+          "path": "backend/core/security/protection/ssrf_protection.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/core/security/rate_limiter.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 4,
+          "path": "backend/core/security/resource_guard.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 31,
+          "path": "backend/core/security/scanning/secret_scanner.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/core/security/secret_vault.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/core/security/secret_vault.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/security/secure_credential_store.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
+          "path": "backend/core/security/security_pipeline.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/core/security/security_vault.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 42,
+          "path": "backend/core/security/tool_gateway.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/core/security/ws_auth.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 3,
+          "path": "backend/tools/billing/cost_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/devops/coverage_auditor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/tools/security_tools/multi_account_rotator.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 5,
+          "path": "backend/tools/security_tools/proxy_manager.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/security_tools/vpn_switcher.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 7,
+          "path": "backend/tools/security_tools/vulnerability_predictor.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
+          "path": "backend/tools/social/telegram_security.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 9,
+          "path": "backend/tests/scout_tests/test_crawler_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "research"
+    }
+  ],
+  "notes": [
+    "Heuristic domain classification is evidence for review, not a replacement for ownership metadata.",
+    "MODULES_LIST.md remains governed by module_wiring_audit.json."
+  ],
+  "schema_version": "1.0",
+  "source": "scripts/ci/generate_domain_dependency_graph.py"
+}

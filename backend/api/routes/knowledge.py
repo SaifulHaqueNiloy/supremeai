@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
+from core.knowledge_facade import ask_legacy
 from core.logging_config import logger
 from services.knowledge_qa import KnowledgeQAService
 
@@ -35,7 +36,7 @@ async def ask_company_knowledge(
     user: dict = Depends(get_current_user_token),
 ):
     """Return a tenant-filtered, source-cited answer from approved knowledge only."""
-    return await get_knowledge_qa_service().answer(request.question, user, limit)
+    return await ask_legacy(request.question, user, limit)
 
 
 @router.post("/knowledge/ask-scribe", tags=["Knowledge Base"])
