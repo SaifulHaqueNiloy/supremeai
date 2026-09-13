@@ -1,4 +1,5 @@
 """Stable public contract for the Knowledge bounded context."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

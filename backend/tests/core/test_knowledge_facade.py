@@ -12,7 +12,9 @@ def test_request_requires_security_context():
 
 
 def test_request_normalizes_limit_and_context():
-    request = request_from_user("hello", {"sub": "actor", "tenant_id": "tenant", "role": "Admin"}, 99)
+    request = request_from_user(
+        "hello", {"sub": "actor", "tenant_id": "tenant", "role": "Admin"}, 99
+    )
     assert request.tenant_id == "tenant"
     assert request.actor_id == "actor"
     assert request.role == "admin"
@@ -23,7 +25,9 @@ def test_request_normalizes_limit_and_context():
 async def test_facade_adapts_public_request_to_legacy_service():
     service = Mock()
     service.answer = AsyncMock(return_value={"answer": "grounded", "citations": []})
-    result = await KnowledgeFacade(service).ask(request_from_user("hello", {"sub": "a", "tenant_id": "t", "role": "Admin"}))
+    result = await KnowledgeFacade(service).ask(
+        request_from_user("hello", {"sub": "a", "tenant_id": "t", "role": "Admin"})
+    )
     assert result["answer"] == "grounded"
     service.answer.assert_awaited_once()
     assert service.answer.await_args.args[1] == {"tenant_id": "t", "sub": "a", "role": "admin"}
