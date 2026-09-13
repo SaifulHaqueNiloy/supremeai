@@ -10,6 +10,7 @@ Remaining work that requires operator review, external credentials, or a deliber
 - [ ] Configure and verify Supabase `ai_memory` schema, RLS, retention, and privacy sign-off.
 - [x] Triage the six skipped tests reported by the latest checkpoint; reconciled: the "6 skipped" count was an import-time `--collect-only` artifact, while the active codebase has 103 markers across 53 files documented in `docs/SKIPPED_TESTS.md`.
 - [ ] Run root-level lint across `tools/`, `scripts/`, `packages/`, and `.github/scripts/`, then fix or explicitly baseline findings.
+- [ ] Install the backend test/runtime dependencies in CI or the deployment validation environment, then rerun router-import and startup checks; the local run is currently blocked by missing `fastapi`, so it is not evidence of a route defect.
 - [ ] Review stale remote branches and repository stashes before cleanup; preserve any needed work before deletion.
 - [ ] Perform production deployment verification, health checks, rollback readiness, and observability review.
 - [ ] Complete CI hard-blocking, branch protection/CODEOWNERS, backup-restore drill, and data-retention/privacy approval before customer launch.
@@ -25,6 +26,8 @@ Remaining work that requires operator review, external credentials, or a deliber
 
 - [ ] Deploy the canonical `USER_CORS_ORIGINS`, `ADMIN_CORS_ORIGINS`, and `CORS_ORIGINS` values consistently across every backend node; verify authenticated browser preflight from each production frontend.
 - [ ] Run the production compose stack with and without the `observability` profile; confirm OTLP is disabled in the base profile and healthy when the collector profile is enabled.
+- [x] Correct the OTEL collector bind mount to the canonical `infrastructure/monitoring/opentelemetry/` path; the deployment checkout still needs a clean observability-profile startup check.
+- [ ] Add or intentionally remove the production Alertmanager service: `docker-compose.production.yml` references `./monitoring/alertmanager/config.yml`, but no corresponding config file exists in this checkout. Evidence: successful profile config/startup or an explicit approved removal decision.
 - [ ] Verify the corrected Grafana and Prometheus bind mounts exist in the deployment checkout and that dashboards load after a clean volume/bootstrap.
 - [ ] Verify the deployed image exposes `/health/live`, `/api/v1/health/live`, and `/api/v1/health/ready` on the same application entrypoint used by the container healthcheck.
 - [ ] Validate that the deployed frontend build uses the intended `VITE_USER_BACKEND`/`VITE_ADMIN_BACKEND` values; build-time Vite variables cannot be changed after deployment.
