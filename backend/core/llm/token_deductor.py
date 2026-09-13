@@ -23,7 +23,6 @@ from core.logging_config import logger
 
 # রিলেটিভ ইম্পোর্ট পাথ ঠিক করা হলো
 from ..cache.redis_manager import redis_manager
-from ..config import settings
 
 # Dummy handle for test monkeypatching compatibility
 redis_queue = redis_manager
@@ -60,6 +59,14 @@ class TokenDeductor:
         input_tokens = kwargs.get("input_tokens", tokens_to_deduct)
         output_tokens = kwargs.get("output_tokens", 0)
         total_tokens = input_tokens + output_tokens
+
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): module-level `from ..config import settings`
+        # একবারই bind করত — টেস্ট suite-এ core.config মডিউল sys.modules থেকে মুছে
+        # re-import হলে *নতুন* Settings() তৈরি হতো, token_deductor পুরনো instance-এই
+        # আটকে থাকত, আর monkeypatch (settings.env="production") কার্যকর হতো না —
+        # ফলে fail-closed প্রোটেকশন skip হয়ে "DID NOT RAISE RuntimeError" flake হতো।
+        # এখন প্রতি কল-এ current settings পড়া হয়।
+        from ..config import settings
 
         # Check if caller expects a boolean return or TokenDeductionResult enum
         has_legacy_tokens = "input_tokens" in kwargs or "output_tokens" in kwargs
@@ -138,6 +145,9 @@ class TokenDeductor:
         cost_multiplier: float,
     ) -> TokenDeductionResult:
         """Secure token deduction with proper locking and double-spending prevention."""
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): lazy settings lookup — re-import-proof
+        from ..config import settings
+
         if tokens_to_deduct <= 0:
             return TokenDeductionResult.SYSTEM_ERROR
 
@@ -219,6 +229,9 @@ class TokenDeductor:
         ``ttl`` is accepted as a backwards-compatible alias used by older callers
         and tests; the synchronous compatibility helper does not contact Redis.
         """
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): lazy settings lookup — re-import-proof
+        from ..config import settings
+
         _ = timeout or ttl
         is_configured = getattr(self.redis_client, "configured", True) and getattr(
             redis_queue, "configured", True
@@ -236,6 +249,9 @@ class TokenDeductor:
 
     async def _acquire_lock(self, lock_key: str, lock_value: str, timeout: int) -> bool:
         """Acquire a distributed lock using Redis."""
+        # বাংলা মন্তব্য (ROOT-CAUSE FIX): lazy settings lookup — re-import-proof
+        from ..config import settings
+
         try:
             # Using SET with NX and EX options for atomic lock acquisition
             result = await self.redis_client.client.set(lock_key, lock_value, nx=True, ex=timeout)
