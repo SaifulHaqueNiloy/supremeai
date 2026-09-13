@@ -30,9 +30,11 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
     return default
 
 
+# USER_CORS_ORIGINS is the explicit portal-specific setting. Keep CORS_ORIGINS
+# as the backwards-compatible fallback for older deployments.
 USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
-    "CORS_ORIGINS",
-    (),
+    "USER_CORS_ORIGINS",
+    _load_origins("CORS_ORIGINS", ()),
 )
 
 ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins("ADMIN_CORS_ORIGINS", ())
