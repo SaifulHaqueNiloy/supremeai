@@ -212,7 +212,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.pr_review_api", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.v1.telemetry", "prefix": "/api", "is_admin": False, "is_critical": False},
     {
-        "path": "tools.social.telegram_bot",
+        "path": "tools.social.telegram_bot.router",
         "prefix": "/api/v1",
         "is_admin": False,
         "is_critical": False,
