@@ -1,4 +1,5 @@
 """Public facade and compatibility adapter for Knowledge capabilities."""
+
 from __future__ import annotations
 
 from typing import Any
