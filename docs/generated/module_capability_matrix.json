@@ -779,6 +779,42 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_12_090000_add_supremeai_connections.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_12_190000_add_user_execution_mode.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_13_090000_add_crawler_persistence.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_13_100000_add_ai_memory_table.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -925,6 +961,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/alembic_migrations/versions/k5l6m7n8o9p0_drop_dead_performance_metrics.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/alembic_migrations/versions/tier_s_features.py"
     },
     {
@@ -970,13 +1013,6 @@
       "path": "backend/api/errors.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/middleware/query_timing.py"
-    },
-    {
       "capability_signals": [
         "browser",
         "dispatch",
@@ -991,6 +1027,8 @@
     {
       "capability_signals": [
         "browser",
+        "capability",
+        "dispatch",
         "health",
         "mcp",
         "memory",
@@ -1011,6 +1049,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/access.py"
     },
     {
       "capability_signals": [
@@ -1038,12 +1083,155 @@
         "execute",
         "health",
         "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/_models.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_approvals_mcp.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_backups.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_ci.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/api/routes/admin_dashboard.py"
+      "path": "backend/api/routes/admin_dashboard/endpoints_command.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_config.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_crud.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_deploy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_events.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_flags.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_gate.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_health.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_impersonate.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_router_cfg.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_security.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_users.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_ws.py"
     },
     {
       "capability_signals": [],
@@ -1195,12 +1383,159 @@
       "capability_signals": [
         "browser",
         "execute",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_automation.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/api/routes/browser.py"
+      "path": "backend/api/routes/browser/_cognitive.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_credentials.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_crown_jewel.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_learning.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_legacy_status.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_policy.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_render_proxy.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_scraping.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_session_store.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_state.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_surf_actions.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_surf_controls.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_tasks.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_url_permissions.py"
     },
     {
       "capability_signals": [
@@ -1419,6 +1754,18 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/connections.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -1634,12 +1981,23 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "mcp",
+        "register"
       ],
       "classification": "adapter",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/integrations.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/intelligence_insights.py"
     },
     {
       "capability_signals": [],
@@ -1663,6 +2021,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/kaggle.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/kernel_dispatch.py"
     },
     {
       "capability_signals": [
@@ -1749,7 +2117,10 @@
     },
     {
       "capability_signals": [
-        "mcp"
+        "capability",
+        "health",
+        "mcp",
+        "register"
       ],
       "classification": "adapter",
       "entrypoints": [],
@@ -1924,7 +2295,8 @@
       "capability_signals": [
         "browser",
         "execute",
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -2094,6 +2466,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/task_gateway.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -2208,6 +2589,18 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/workspace_capabilities.py"
+    },
+    {
+      "capability_signals": [
         "memory",
         "register"
       ],
@@ -2242,16 +2635,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/zero_cost.py"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/server.py"
     },
     {
       "capability_signals": [],
@@ -2583,7 +2966,8 @@
     {
       "capability_signals": [
         "browser",
-        "health"
+        "health",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -2760,6 +3144,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/ai_memory/__init__.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "memory"
       ],
@@ -2891,6 +3284,41 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/base.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/behavioral_intelligence/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/behavioral_intelligence/policy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/behavioral_intelligence/schema.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/behavioral_intelligence/state_estimator.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/behavioral_intelligence/strategy_router.py"
     },
     {
       "capability_signals": [],
@@ -3075,6 +3503,36 @@
       "path": "backend/core/circles/event_journal.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/circles/evolution/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/circles/execution/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/circles/governance/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/circles/infrastructure/__init__.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "capability",
@@ -3166,15 +3624,6 @@
     },
     {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/config_control_plane.py"
-    },
-    {
-      "capability_signals": [
         "browser",
         "health",
         "memory",
@@ -3214,6 +3663,22 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/config_validator.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "execute",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "canonical",
+      "entrypoints": [
+        "health",
+        "register"
+      ],
+      "kind": "py",
+      "path": "backend/core/connection_registry.py"
     },
     {
       "capability_signals": [],
@@ -3721,7 +4186,9 @@
       "path": "backend/core/health_routes.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -3789,6 +4256,71 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/manual_tasks.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/models.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/precognitive_risk.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/router.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/swarm_consensus.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/synaptic_memory.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/intelligence/verification.py"
+    },
+    {
+      "capability_signals": [
         "health",
         "memory"
       ],
@@ -3853,12 +4385,56 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/dispatcher.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/interface.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/knowledge_base.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/knowledge_contract.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/knowledge_facade.py"
     },
     {
       "capability_signals": [],
@@ -3983,14 +4559,75 @@
     },
     {
       "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/__init__.py"
+    },
+    {
+      "capability_signals": [
         "dispatch",
-        "health",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/completion.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/gateway.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/llm/llm_gateway.py"
+      "path": "backend/core/llm/llm_gateway/http_client.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/litellm_runtime.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/registry.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/resilience.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/routing.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/streaming.py"
     },
     {
       "capability_signals": [],
@@ -4169,6 +4806,24 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/mcp_policy.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/memory/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/memory/auto_rag_injector.py"
     },
     {
       "capability_signals": [
@@ -4426,6 +5081,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/observability/reasoning_stream.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/observability/telemetry.py"
     },
     {
@@ -4496,6 +5158,7 @@
     },
     {
       "capability_signals": [
+        "execute",
         "health"
       ],
       "classification": "human_review",
@@ -4696,6 +5359,62 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/gmail_plugin.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/google_drive_plugin.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/notion_plugin.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/slack_plugin.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/telegram_plugin.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -4747,45 +5466,35 @@
       "path": "backend/core/plugins/official/github_plugin.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/plugins/official/gmail_plugin.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/plugins/official/google_drive_plugin.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/plugins/official/notion_plugin.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/plugins/official/slack_plugin.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -4812,7 +5521,9 @@
       "path": "backend/core/plugins/security_scanner.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -5279,7 +5990,8 @@
     {
       "capability_signals": [
         "execute",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -6385,7 +7097,9 @@
       "path": "backend/engine/worker_node.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "dispatch"
+      ],
       "classification": "canonical",
       "entrypoints": [],
       "kind": "py",
@@ -6763,15 +7477,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/memory/supabase_store.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/memory/test_hierarchical_tree.py"
     },
     {
       "capability_signals": [
@@ -7697,7 +8402,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -7737,11 +8443,30 @@
       "path": "backend/scout/models.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/scout/persistence.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scout/policy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/scout/robots.py"
     },
     {
       "capability_signals": [
@@ -8067,6 +8792,13 @@
       "path": "backend/services/browser/main.py"
     },
     {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/services/config_registry.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -8264,6 +8996,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/services/ingestion/test_context_collector.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/services/integration_discovery.py"
     },
     {
       "capability_signals": [],
@@ -8612,31 +9354,6 @@
       "path": "backend/storage/r2_storage_client.py"
     },
     {
-      "capability_signals": [
-        "capability"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/test_capabilities.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/test_db.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/test_imports.py"
-    },
-    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -8891,6 +9608,25 @@
       "path": "backend/tests/api/routes/commandcenter/test_system.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_config_contract.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_connections.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -9123,16 +9859,6 @@
       "path": "backend/tests/api/test_new_endpoints_sprint5.py"
     },
     {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_phase4_api_server.py"
-    },
-    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -9148,6 +9874,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_route_rbac_matrix.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_scraper_guard.py"
     },
     {
       "capability_signals": [
@@ -9364,6 +10099,22 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/health/test_uptime_tracker_observability.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/intelligence/test_control_plane.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/intelligence/test_synaptic_risk.py"
     },
     {
       "capability_signals": [
@@ -10285,6 +11036,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/core/test_knowledge_facade.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/core/test_learning_loop_sprint34.py"
     },
     {
@@ -10467,6 +11225,15 @@
       "path": "backend/tests/core/test_nats_messaging.py"
     },
     {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_optional_services.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10608,6 +11375,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/core/test_scraper_resolution.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/core/test_secret_vault.py"
     },
     {
@@ -10641,6 +11415,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_security_vault.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_self_benchmark_reliability.py"
     },
     {
       "capability_signals": [
@@ -11015,6 +11796,13 @@
       "path": "backend/tests/middleware/test_anti_hacking.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/middleware/test_cors_policy.py"
+    },
+    {
       "capability_signals": [
         "dispatch"
       ],
@@ -11022,6 +11810,20 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/middleware/test_middleware_anti_hacking.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "capability",
+        "execute",
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/missions/test_mission_suite.py"
     },
     {
       "capability_signals": [],
@@ -11177,6 +11979,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/security/test_admin_fail_closed.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/security/test_adversarial_webhook_signatures.py"
     },
     {
@@ -11224,12 +12033,32 @@
     },
     {
       "capability_signals": [
+        "browser",
+        "capability",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/security/test_hardening_controls.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/security/test_hitl_state_machine.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/security/test_mcp_zero_friction_security.py"
     },
     {
       "capability_signals": [
@@ -11286,6 +12115,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/services/dynamic_ai/test_learning_engine_shim.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_config_registry.py"
     },
     {
       "capability_signals": [],
@@ -11601,6 +12439,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_auto_rag_injector.py"
+    },
+    {
+      "capability_signals": [
         "capability",
         "dispatch",
         "register"
@@ -11685,6 +12532,13 @@
       "path": "backend/tests/test_ide_trio_smoke.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_integration_discovery_ssrf.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -11718,6 +12572,15 @@
     },
     {
       "capability_signals": [
+        "browser"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_stealth_browser.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "test",
@@ -11733,11 +12596,48 @@
       "path": "backend/tests/test_strategic_patches/test_cognitive_router_contract.py"
     },
     {
+      "capability_signals": [
+        "capability",
+        "dispatch",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_supreme_kernel.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_swarm_and_ephemeral.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_task_gateway.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/test_tenant_di.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_workers_phase5.py"
     },
     {
       "capability_signals": [
@@ -11917,6 +12817,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/tools/test_resource_catalog.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_rlhf_governance.py"
     },
     {
       "capability_signals": [
@@ -12304,17 +13211,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tools/analytics/insight_mage.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "dispatch",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tools/api_gateway.py"
     },
     {
       "capability_signals": [],
@@ -12712,6 +13608,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tools/ensemble_router.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/ephemeral_synthesizer.py"
     },
     {
       "capability_signals": [],
@@ -13223,8 +14129,57 @@
     },
     {
       "capability_signals": [
+        "dispatch",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/__main__.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/admin_handlers.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/ai_engine.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "execute",
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/conversations.py"
+    },
+    {
+      "capability_signals": [
         "health",
         "mcp",
         "memory",
@@ -13233,7 +14188,53 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tools/social/telegram_bot.py"
+      "path": "backend/tools/social/telegram_bot/handler.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/keyboards.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/router.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/runtime.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/updates.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tools/social/telegram_bot/user_handlers.py"
     },
     {
       "capability_signals": [
@@ -13423,6 +14424,25 @@
       "capability_signals": [
         "health"
       ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/workers/precognitive_watcher.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/workers/synaptic_dream.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -13476,31 +14496,11 @@
       "path": "frontend/eslint.config.js"
     },
     {
-      "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "frontend/fix_tsc.py"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "frontend/fix_tsc_v2.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "py",
-      "path": "frontend/get_errors.py"
+      "kind": "ts",
+      "path": "frontend/playwright.config.ts"
     },
     {
       "capability_signals": [],
@@ -13588,16 +14588,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/commandcenter/data/hooks.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/commandcenter/data/types.ts"
     },
     {
@@ -13673,6 +14663,15 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/commandcenter/kit/HealthStrip.tsx"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/commandcenter/kit/index.ts"
     },
     {
       "capability_signals": [],
@@ -13785,183 +14784,6 @@
     },
     {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/kit/index.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/deck/CommandDeck.test.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/deck/CommandDeck.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/deck/InfraTopology.test.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/deck/InfraTopology.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/money/CostAuditor.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/money/MoneyModules.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/money/ROISavings.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/money/UsageBilling.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/CICDPipelines.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/EventsExplorer.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/EvolutionPanel.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/HealthMap.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/LiveLogs.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/LiveMetrics.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/ObserveModules.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/observe/TrafficMonitor.tsx"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/operate/Agents.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/operate/Sessions.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/operate/Swarm.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/operate/TasksQueues.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/operate/TenantsUsers.tsx"
-    },
-    {
-      "capability_signals": [
         "execute",
         "health"
       ],
@@ -13971,297 +14793,132 @@
       "path": "frontend/src/commandcenter/modules/secure/ApprovalQueue.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/secure/AuditExplorer.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/secure/RateLimits.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/secure/RulesPolicy.tsx"
-    },
-    {
       "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/secure/SecretsHealth.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/secure/Threats.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/system/Backups.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/system/ConfigEditor.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/system/DeployGate.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/system/FeatureFlags.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/modules/system/Workspaces.tsx"
-    },
-    {
-      "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/realtime/CommandCenterRealtimeProvider.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
+        "browser"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/channelRegistry.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/sseBridges.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/websocketManager.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/BottomDeck.tsx"
+      "path": "frontend/src/components/admin/admin-browser/__tests__/formatHelpers.test.ts"
     },
     {
       "capability_signals": [
-        "health"
+        "browser",
+        "dispatch"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/CommandBar.tsx"
+      "path": "frontend/src/components/admin/admin-browser/AIAssistantPanel.tsx"
     },
     {
       "capability_signals": [
-        "health"
+        "browser",
+        "dispatch"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/CommandCenterApp.tsx"
+      "path": "frontend/src/components/admin/admin-browser/BookmarksPanel.tsx"
     },
     {
       "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/BrowserToolbar.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/BrowserViewport.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "health",
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/LeftRail.tsx"
+      "path": "frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/defaultBookmarks.tsx"
     },
     {
       "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/DevToolsPanel.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/admin-browser/formatHelpers.ts"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/HistoryPanel.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/admin-browser/StatusBar.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "health",
         "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/WorkspaceViewport.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/shell/__tests__/WorkspaceViewport.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/commandcenter/shell/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/state/__tests__/useCommandCenterStore.test.ts"
+      "path": "frontend/src/components/admin/admin-browser/types.ts"
     },
     {
       "capability_signals": [
-        "realtime"
+        "browser",
+        "dispatch",
+        "health"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/commandcenter/state/useCommandCenterStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/AgentStateShaderBackground.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/BanglaHint.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/BanglaHint.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/DashboardErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/FixPreviewModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/GlobalErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Header.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/LiveSujonBackground.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/OnboardingWizard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepApiKey.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepFirstChat.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepModelSelect.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/OperatorStudio.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/SupremeComponents.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/SwarmMap.tsx"
+      "path": "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
     },
     {
       "capability_signals": [
@@ -14275,9 +14932,7 @@
     },
     {
       "capability_signals": [
-        "browser",
-        "health",
-        "memory"
+        "browser"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -14296,21 +14951,31 @@
     },
     {
       "capability_signals": [
-        "health",
-        "memory",
-        "realtime"
+        "dispatch",
+        "health"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/admin/AdminDashboardHome.tsx"
+      "path": "frontend/src/components/admin/auth/AdminAuthenticated.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/admin/AuditLogsPanel.tsx"
+      "path": "frontend/src/components/admin/auth/AdminLogin.tsx"
+    },
+    {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/auth/UserManager.tsx"
     },
     {
       "capability_signals": [],
@@ -14318,6 +14983,115 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/BackupRestore.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/__tests__/JobsTab.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/cards.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/constants.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/DashboardHeader.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/primitives.tsx"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/ScoreBadgesPanel.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/tabs/ErrorsTab.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/tabs/JobsTab.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/tabs/OverviewTab.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/tabs/TrendsTab.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/types.ts"
+    },
+    {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/useDashboardWebSocket.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/ci-dashboard/utils.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/ci/CIDashboard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/ci/csv.ts"
     },
     {
       "capability_signals": [],
@@ -14382,23 +15156,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/admin/GitHubCIWidget.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/admin/GithubIntegration.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/HealthBanner.tsx"
     },
     {
       "capability_signals": [
@@ -14411,12 +15169,41 @@
     },
     {
       "capability_signals": [
-        "health"
+        "browser",
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/index.ts"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/admin/HealthReportWidget.tsx"
+      "path": "frontend/src/components/admin/infra/CloudProviderHealth.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/ObservabilityDashboard.tsx"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/infra/ServiceHealthMetrics.tsx"
     },
     {
       "capability_signals": [
@@ -14471,15 +15258,6 @@
       "path": "frontend/src/components/admin/OneClickPatch.tsx"
     },
     {
-      "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/RealTimeMetricsPanel.tsx"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -14494,138 +15272,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/SciFiFlowNode.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/ScreencastViewer.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/SystemUptimeWidget.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/VisualRulesBuilder.tsx"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/AdminAuthenticated.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/AdminLogin.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/ConsentMatrixModal.tsx"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/auth/UserManager.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/ci/CIDashboard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/admin/ci/csv.ts"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/admin/index.ts"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/CloudProviderHealth.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/DeploymentModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ObservabilityDashboard.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ServiceHealthMetrics.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/infra/ServiceHealthMonitor.tsx"
     },
     {
       "capability_signals": [],
@@ -14659,15 +15305,6 @@
     },
     {
       "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/ActionCard.tsx"
-    },
-    {
-      "capability_signals": [
         "browser",
         "dispatch",
         "health",
@@ -14683,16 +15320,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/AdminTopNav.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/DynamicPanel.tsx"
+      "path": "frontend/src/components/admin/VisualRulesBuilder.tsx"
     },
     {
       "capability_signals": [
@@ -14734,6 +15362,20 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
+      "path": "frontend/src/components/BanglaHint.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/BanglaHint.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
       "path": "frontend/src/components/branch/BranchButton.tsx"
     },
     {
@@ -14758,6 +15400,13 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/chat/index.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/chat/TypingIndicator.tsx"
     },
@@ -14774,29 +15423,8 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/chat/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/commands/SlashCommandMenu.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/common/Skeleton.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/common/Skeleton.tsx"
     },
     {
       "capability_signals": [
@@ -14822,38 +15450,22 @@
       "path": "frontend/src/components/core/GlobalConfigInitializer.tsx"
     },
     {
-      "capability_signals": [
-        "dispatch",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/core/Header.test.tsx"
-    },
-    {
-      "capability_signals": [
-        "dispatch",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/core/Header.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/core/Sidebar.tsx"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/core/guards/RoleGuard.tsx"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/customer/AddNewWizard.tsx"
     },
     {
       "capability_signals": [
@@ -14866,44 +15478,13 @@
       "path": "frontend/src/components/customer/BrowserPreview.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/ChatPanel.test.tsx"
-    },
-    {
       "capability_signals": [
-        "execute"
+        "capability"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/customer/ChatPanel.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/CodeEditor.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/CustomerSupportEditorStudio.tsx"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/HomeFeed.tsx"
+      "path": "frontend/src/components/customer/CapabilityCards.tsx"
     },
     {
       "capability_signals": [
@@ -14913,20 +15494,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/customer/MobileSimulator.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/QuickPresets.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/customer/QuickPresets.tsx"
     },
     {
       "capability_signals": [
@@ -14947,82 +15514,14 @@
       "path": "frontend/src/components/customer/UserDashboard.test.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability",
+        "register"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/customer/UserDashboard.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/customer/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/ActionDock.tsx"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/AgentExecutionTelemetryCockpit.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/AgentStatePill.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/AutomationQueuePage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/DashboardLayout.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/ExecutionShell.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/FileTreePanel.tsx"
     },
     {
       "capability_signals": [],
@@ -15030,6 +15529,13 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/dashboard/GuardrailsPage.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/dashboard/HealingLogPanel.tsx"
     },
     {
       "capability_signals": [
@@ -15041,20 +15547,6 @@
       "path": "frontend/src/components/dashboard/HITLModal.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/Header.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/HealingLogPanel.tsx"
-    },
-    {
       "capability_signals": [
         "register"
       ],
@@ -15064,95 +15556,14 @@
       "path": "frontend/src/components/dashboard/HumanInTheLoopProtocol.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/KnowledgePage.tsx"
-    },
-    {
       "capability_signals": [
-        "health"
+        "mcp",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LiveSimulator.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LiveTelemetryChart.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LiveTelemetryChart.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LivingActionDock.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LivingDashboardShell.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/LlmGatewayPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/QuickActionsPanel.test.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/QuickActionsPanel.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/ReasoningLog.tsx"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SandboxViewport.tsx"
+      "path": "frontend/src/components/dashboard/OneLinerMCPConnect.tsx"
     },
     {
       "capability_signals": [],
@@ -15160,47 +15571,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/dashboard/SecretsPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SessionDetailPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SessionsPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SettingsPage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/Sidebar.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SidebarSettings.tsx"
     },
     {
       "capability_signals": [
@@ -15218,55 +15588,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/dashboard/SujonCoreCockpit.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/UsagePage.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/VaultPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "dispatch"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/dashboard/sessionStore.ts"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/dashboard/useHashRoute.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dock/DynamicActionDock.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/editor/AiAssistantBar.tsx"
     },
     {
@@ -15275,6 +15596,13 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/editor/AiOutputPanel.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/editor/desktopPrompt.ts"
     },
     {
       "capability_signals": [],
@@ -15298,13 +15626,6 @@
       "path": "frontend/src/components/editor/JitOtpDialogHost.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/editor/desktopPrompt.ts"
-    },
-    {
       "capability_signals": [
         "register"
       ],
@@ -15325,16 +15646,14 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/graph/SkillGraph.tsx"
+      "path": "frontend/src/components/GlobalErrorBoundary.tsx"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/layout/CommandBar.tsx"
+      "path": "frontend/src/components/graph/SkillGraph.tsx"
     },
     {
       "capability_signals": [],
@@ -15342,38 +15661,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/layout/DashboardLayout.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/layout/MainLayout.tsx"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/layout/NavRail.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/layout/NavRail.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/layout/Shell.tsx"
     },
     {
       "capability_signals": [],
@@ -15497,13 +15784,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/shell/UnifiedAppShell.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/components/shell/shellEvents.ts"
     },
@@ -15512,24 +15792,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/simulator/LiveSimulator.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/sujon/index.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/sujon-utils.ts"
+      "path": "frontend/src/components/shell/UnifiedAppShell.tsx"
     },
     {
       "capability_signals": [],
@@ -15539,14 +15802,11 @@
       "path": "frontend/src/components/swarm/HoldToKillButton.tsx"
     },
     {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/swarm/SwarmHealthDashboard.tsx"
+      "path": "frontend/src/components/SwarmMap.tsx"
     },
     {
       "capability_signals": [
@@ -15625,13 +15885,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/ui/Card.stories.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/ui/Card.test.tsx"
     },
     {
@@ -15660,28 +15913,14 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/ui/GlassUiPrimitives.tsx"
+      "path": "frontend/src/components/ui/index.test.tsx"
     },
     {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/Input.stories.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/Input.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/Input.tsx"
+      "kind": "ts",
+      "path": "frontend/src/components/ui/index.ts"
     },
     {
       "capability_signals": [],
@@ -15716,20 +15955,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/ui/SkeletonLoader.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/SkeletonLoader.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/ui/SpotlightCard.test.tsx"
     },
     {
@@ -15752,37 +15977,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/ui/StatCard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/index.test.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/components/ui/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/widgets/SkillForgeWidget.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/widgets/TelemetryDashboardWidget.tsx"
     },
     {
       "capability_signals": [
@@ -15898,13 +16092,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/core/ErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/core/stateManagement.ts"
     },
@@ -15960,21 +16147,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/hooks/useBudgetCheck.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/hooks/useChat.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/hooks/useDashboardActions.ts"
     },
     {
       "capability_signals": [
@@ -15985,15 +16158,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/hooks/useDashboardData.ts"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/hooks/useDynamicDock.ts"
     },
     {
       "capability_signals": [],
@@ -16015,13 +16179,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/hooks/useEventBus.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/hooks/useIframeConsole.ts"
     },
     {
       "capability_signals": [],
@@ -16051,25 +16208,7 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/hooks/useServerStream.ts"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/hooks/useSwarmGraph.ts"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/hooks/useSwarmStream.ts"
     },
     {
       "capability_signals": [],
@@ -16097,6 +16236,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
+      "path": "frontend/src/i18n/config.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
       "path": "frontend/src/i18n/I18nContext.ts"
     },
     {
@@ -16105,13 +16251,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/i18n/I18nProvider.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/i18n/config.ts"
     },
     {
       "capability_signals": [
@@ -16124,31 +16263,6 @@
       "path": "frontend/src/i18n/translations.ts"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/i18n/useI18n.ts"
-    },
-    {
-      "capability_signals": [
-        "dispatch"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/agent-state-shaders.ts"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/cache.manager.ts"
-    },
-    {
       "capability_signals": [
         "browser",
         "health",
@@ -16158,46 +16272,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/lib/componentEventBus.ts"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "health",
-        "mcp",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/ecosystem/api.ts"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "health",
-        "mcp",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/ecosystem/types.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/etag.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/llm.router.ts"
     },
     {
       "capability_signals": [],
@@ -16215,16 +16289,6 @@
     },
     {
       "capability_signals": [
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/supabase.client.ts"
-    },
-    {
-      "capability_signals": [
         "browser",
         "register"
       ],
@@ -16232,6 +16296,35 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/main.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/admin/AdminShell.tsx"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/auth/LoginPage.tsx"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/auth/RegisterPage.tsx"
     },
     {
       "capability_signals": [],
@@ -16280,59 +16373,15 @@
     },
     {
       "capability_signals": [
-        "capability"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/WorkspaceModulePage.tsx"
-    },
-    {
-      "capability_signals": [
         "browser",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/admin/AdminShell.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
+        "execute",
+        "memory",
         "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/pages/auth/LoginPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/auth/LoginScreen.tsx"
-    },
-    {
-      "capability_signals": [
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/auth/RegisterPage.tsx"
-    },
-    {
-      "capability_signals": [
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/auth/RegisterScreen.tsx"
+      "path": "frontend/src/pages/user/AgentWorkspace.tsx"
     },
     {
       "capability_signals": [
@@ -16342,17 +16391,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/pages/user/AIStudio.tsx"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/AgentWorkspace.tsx"
     },
     {
       "capability_signals": [
@@ -16436,6 +16474,27 @@
       "path": "frontend/src/pages/user/IntegrationsManager.tsx"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/user/plugins/InstallModal.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/user/plugins/PluginCard.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/pages/user/plugins/PluginMarketplace.tsx"
+    },
+    {
       "capability_signals": [
         "browser"
       ],
@@ -16461,44 +16520,13 @@
       "path": "frontend/src/pages/user/SystemHealthDashboard.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/InstallModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/PluginCard.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/pages/user/plugins/PluginMarketplace.tsx"
-    },
-    {
       "capability_signals": [
-        "health",
-        "memory"
+        "capability"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/providers/MockSwarmProvider.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/providers/SwarmHealthContext.ts"
+      "path": "frontend/src/pages/WorkspaceModulePage.tsx"
     },
     {
       "capability_signals": [],
@@ -16515,13 +16543,6 @@
       "path": "frontend/src/providers/ThemeSyncProvider.tsx"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/providers/useThemeSync.ts"
-    },
-    {
       "capability_signals": [
         "memory",
         "register"
@@ -16530,24 +16551,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/routes/workspaceFeatureRoutes.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/adminService.test.ts"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/adminService.ts"
     },
     {
       "capability_signals": [],
@@ -16562,25 +16565,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/services/adminTokenStore.ts"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/agentService.test.ts"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/agentService.ts"
     },
     {
       "capability_signals": [],
@@ -16617,7 +16601,10 @@
       "path": "frontend/src/services/api/microserviceMonitor.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "execute",
+        "register"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -16707,18 +16694,15 @@
       "path": "frontend/src/services/chatService.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability",
+        "health",
+        "register"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/services/ciReportService.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/ciReportService.ts"
+      "path": "frontend/src/services/connectionsApi.ts"
     },
     {
       "capability_signals": [
@@ -16741,22 +16725,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/services/controlPlane.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/costOptimizer.service.test.ts"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/costOptimizer.service.ts"
     },
     {
       "capability_signals": [
@@ -16811,36 +16779,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/services/queryClient.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/queryClient.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/realtime/WebSocketManager.ts"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/sandbox.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/services/skillsService.test.ts"
     },
     {
@@ -16849,29 +16787,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/services/skillsService.ts"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/socialGrowthService.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/storageApi.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/services/storageApi.ts"
     },
     {
       "capability_signals": [],
@@ -16901,13 +16816,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/shared/supremeShared.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/store/adminStore.test.ts"
     },
     {
@@ -16931,28 +16839,13 @@
     },
     {
       "capability_signals": [
+        "browser",
         "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/store/authStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/chatStore.test.ts"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/chatStore.ts"
     },
     {
       "capability_signals": [],
@@ -16993,98 +16886,16 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/store/index.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/index.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/store/localFirstDb.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/store/sessionCockpitStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/apiSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/migration_map.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/migration_map.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/slices.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/uiSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/userSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/workspaceSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/stateOwnership.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/themeStore.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/themeStore.ts"
+      "path": "frontend/src/store/unifiedStore.test.ts"
     },
     {
       "capability_signals": [
@@ -17136,48 +16947,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/store/useSupremeStore.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/useSupremeStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/useWorkspaceSettingsStore.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/useWorkspaceSettingsStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/useWorkspaceStore.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/useWorkspaceStore.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/store/workspaceUiStateStore.test.ts"
     },
     {
@@ -17213,27 +16982,59 @@
       "path": "frontend/src/types/chat.ts"
     },
     {
+      "capability_signals": [
+        "capability",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types/contracts/capability-contract.ts"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types/contracts/capability.ts"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types/contracts/connection-contract.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types/contracts/execution-mode.ts"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/types/contracts/index.ts"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/types/customer.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/types/schema.ts"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/types/swarm.ts"
     },
     {
       "capability_signals": [
@@ -17256,8 +17057,10 @@
     },
     {
       "capability_signals": [
+        "capability",
         "execute",
-        "health"
+        "health",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -17302,16 +17105,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/utils/deviceFingerprint.ts"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/utils/secureWebSocket.ts"
     },
     {
       "capability_signals": [],
@@ -17700,6 +17493,33 @@
       "classification": "adapter",
       "entrypoints": [],
       "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/federation/aggregator.ts"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/federation/outbound-client.ts"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/federation/server-discovery.ts"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
       "path": "infrastructure/mcp-control-plane/src/health/dependency.ts"
     },
     {
@@ -17912,6 +17732,16 @@
     },
     {
       "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/registry/remote-mcp-servers.ts"
+    },
+    {
+      "capability_signals": [
         "capability",
         "health"
       ],
@@ -18036,6 +17866,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/src/tools/cloudflare.tools.ts"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/tools/federation.tools.ts"
     },
     {
       "capability_signals": [
@@ -18210,6 +18050,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/src/types/supabase.d.ts"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/test/federation.test.ts"
     },
     {
       "capability_signals": [
@@ -19093,6 +18943,19 @@
       "path": "scripts/ci/__init__.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "capability",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/architecture_query.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -19346,6 +19209,13 @@
     {
       "capability_signals": [],
       "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/ci/enforce_circle_boundaries.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
       "entrypoints": [
         "main"
       ],
@@ -19358,6 +19228,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/ci/generate_audit_summary.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/ci/generate_domain_dependency_graph.py"
     },
     {
       "capability_signals": [
@@ -19407,6 +19287,15 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/ci/generate_topology_mermaid.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/ci/infisical_loader.py"
     },
     {
@@ -19422,6 +19311,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/ci/migration_safety_diff.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/mission_passk.py"
     },
     {
       "capability_signals": [],
@@ -19547,6 +19445,15 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/ci/security_gate.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/ci/security_headers_checker.py"
     },
     {
@@ -19595,7 +19502,45 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/ci/validate_constitution_governance.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/validate_dependency_policy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/validate_domain_boundaries.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/ci/validate_frontend_build.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "canonical",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/validate_route_registry.py"
     },
     {
       "capability_signals": [
@@ -19622,6 +19567,17 @@
       ],
       "kind": "py",
       "path": "scripts/ci/verify_api_contract.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/verify_canonical_startup.py"
     },
     {
       "capability_signals": [
@@ -20161,6 +20117,13 @@
       "path": "scripts/generate_api_health_report.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/generate_doc_inventory.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "capability",
@@ -20354,6 +20317,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/maintenance/notify.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/merge_and_consolidate_docs.py"
     },
     {
       "capability_signals": [],
@@ -20770,6 +20743,15 @@
       "path": "scripts/security/generate_secrets.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/security/idor_runtime_matrix.py"
+    },
+    {
       "capability_signals": [
         "execute",
         "health"
@@ -21030,5 +21012,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2457
+  "source_file_count": 2434
 }
