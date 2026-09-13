@@ -39,11 +39,19 @@ class PolicyEngine:
             return domain == suffix or domain.endswith("." + suffix)
         return False
 
+    def is_active(self) -> bool:
+        """বাংলা: নিষ্ক্রিয় policy মানেই কোনো crawl নয় (Policy Before Power)।"""
+        return bool(self.policy.is_active)
+
     def is_url_allowed(self, url: str, current_depth: int = 0) -> tuple[bool, str]:
         """Validates URL against SSRF, domain permissions, depth limits, and trust levels.
 
         Returns (is_allowed, reason).
         """
+        # 0. Policy must be active — an inactive policy authorizes nothing (fail-closed)
+        if not self.policy.is_active:
+            return False, "policy_inactive"
+
         # 1. Scheme and Hostname extraction
         if not url or not (url.startswith("http://") or url.startswith("https://")):
             return False, "invalid_scheme"
@@ -89,6 +97,12 @@ class PolicyEngine:
         elif self.policy.domain_rules:
             # If domain_rules list is non-empty and domain wasn't in it, fail closed
             return False, "domain_not_allowlisted"
+        else:
+            # বাংলা: কোনো allowlist/domain_rules নেই এমন খালি policy কিছুই অনুমোদন
+            # করবে না — এটাই Spec 002 (US1 scenario 4) ও Constitution-এর
+            # "Capability ≠ Permission" নীতির fail-closed প্রয়োগ। আগে এটি fail-open
+            # ছিল — অর্থাৎ default policy-তে সব ডোমেইন crawl করা যেত।
+            return False, "policy_fail_closed_no_allowlist"
 
         # 5. SSRF validation (only for domains passing domain policy)
         if not is_safe_url(url):

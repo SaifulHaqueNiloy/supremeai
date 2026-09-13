@@ -58,9 +58,11 @@ interface SessionCockpitState {
 
   // Buffers
   addLog: (log: LogEntry) => void;
+  addReasoningEntry: (entry: ReasoningEntry) => void;
 }
 
 const MAX_LOGS = 10000;
+const MAX_REASONING = 200;
 
 export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => ({
   sessionId: null,
@@ -103,6 +105,16 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
             get().addLog(parsed.data);
           } else if (parsed.channel === 'state') {
             set({ agentState: parsed.data.current_state });
+          } else if (parsed.channel === 'reasoning') {
+            // বাংলা: Phase 1 — এজেন্টের চিন্তা-প্রক্রিয়া এখন ReasoningLog-এ দৃশ্যমান।
+            // এজেন্ট সাইড (core/observability/reasoning_stream.py) থেকে
+            // log_type: "reasoning_step" ইভেন্ট এই চ্যানেলে আসে।
+            const d = parsed.data || {};
+            get().addReasoningEntry({
+              id: `${d.step ?? get().reasoningChain.length}-${Date.now()}`,
+              ts: d.ts ?? new Date().toISOString(),
+              token: d.token ?? d.content ?? '',
+            });
           }
         } catch (err) {
           console.error("SSE parse error", err);
@@ -152,6 +164,15 @@ export const useSessionCockpitStore = create<SessionCockpitState>((set, get) => 
         return { logBuffer: newBuffer.slice(newBuffer.length - MAX_LOGS) };
       }
       return { logBuffer: newBuffer };
+    });
+  },
+
+  addReasoningEntry: (entry: ReasoningEntry) => {
+    // বাংলা: reasoning chain ক্যাপ করা হয়েছে (200) — দীর্ঘ সেশনে unbounded
+    // growth রোধ করে সর্বশেষ ২০০টি চিন্তা-স্টেপ দৃশ্যমান থাকে।
+    set((state) => {
+      const next = [...state.reasoningChain, entry];
+      return { reasoningChain: next.length > MAX_REASONING ? next.slice(next.length - MAX_REASONING) : next };
     });
   }
 }));

@@ -46,6 +46,16 @@ class LogBatcherService:
 
         # Publish to SSE subscribers
         session_id = str(log_entry.get("session_id"))
+        self.publish(session_id, log_entry)
+
+    def publish(self, session_id: str, log_entry: dict) -> None:
+        """SSE-only fanout — DB persistence ছাড়াই subscriber-দের কাছে পাঠায়।
+
+        বাংলা: reasoning_step-এর মতো transient stream event-এর জন্য — এদের
+        execution_logs টেবিলের schema নেই, তাই queue দিয়ে পাঠালে _flush()
+        insert fail করে poison re-queue তৈরি হত। (Phase 1 reasoning stream)
+        """
+        session_id = str(session_id or log_entry.get("session_id") or "")
         if session_id in self._subscribers:
             for sub_queue in self._subscribers[session_id]:
                 sub_queue.put_nowait(log_entry)

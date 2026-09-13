@@ -19,12 +19,12 @@ backend/database/
 ├── migrations/
 │   ├── README.md          ← This file
 │   ├── *.sql              ← Historical SQL scripts pending archival
-│   ├── legacy/            ← Earlier legacy scripts (historical only)
+│   ├── archive/           ← Archived legacy scripts (historical reference only)
 │   └── manual/            ← Manual migration scripts (DBA review only)
 ├── ../alembic_migrations/ ← ✅ CANONICAL — All new migrations go here
 │   ├── env.py
 │   ├── script.py.mako
-│   └── versions/          ← 18 Alembic migration files
+│   └── versions/          ← Canonical Alembic migration files
 └── contracts/
     └── schema_contract.yaml
 ```
@@ -34,8 +34,7 @@ backend/database/
 | System | Path | Status | Use for |
 |--------|------|--------|---------|
 | **Alembic** | `backend/alembic_migrations/` | ✅ **Active** | All new schema migrations |
-| Legacy SQL | `backend/database/migrations/archive/` | 📦 Archived | Historical reference only |
-| Legacy SQL | `backend/database/migrations/legacy/` | 📦 Archived | Historical reference only |
+| Archived SQL | `backend/database/migrations/archive/` | 📦 Archived | Historical reference only (superseded by Alembic) |
 | Manual | `backend/database/migrations/manual/` | 🔧 DBA only | Manual DBA operations |
 
 ## Running Alembic Migrations

@@ -3,8 +3,18 @@
 SECURITY FIX (AUDIT-SEC-6, HIGH): আগে এই admin router-এ কোনো auth guard ছিল না —
 রেজিস্ট্রির is_admin=True শুধু get_current_user_token যোগ করত, অর্থাৎ যেকোনো
 সাধারণ ইউজার সব টেন্যান্টের crawl policy তৈরি/বদলাতে পারত। এখন router-level
-get_current_admin guard বাধ্যতামূলক, এবং in-memory store-এ সাইজ-ক্যাপ বসানো হয়েছে
-(আনবাউন্ডেড মেমোরি গ্রোথ / DoS প্রতিরোধ)।
+get_current_admin guard বাধ্যতামূলক।
+
+MASTER_PLAN Phase 1 ("Scout goes live"): আগে policy/history ছিল in-memory —
+restart মানেই সব governance state হারানো এবং GET /events ছিল hardcoded placeholder
+(stub)। এখন সব state scout/persistence.py দিয়ে durable থাকে (DB-first,
+memory-fallback = Graceful Degradation), এবং সম্পূর্ণ CRUD surface যোগ হয়েছে
+(specs/002 contracts/crawler-admin-api.yaml অনুযায়ী):
+  PATCH /policies/{id}            — partial update
+  POST  /policies/{id}/enable     — is_active=true (governed crawl-এর পূর্বশর্ত)
+  POST  /policies/{id}/disable    — fail-closed toggle
+  DELETE /policies/{id}           — policy মুছে ফেলা
+  GET   /events                   — সত্যিকারের telemetry (আর placeholder নয়)
 """
 
 from __future__ import annotations
@@ -15,6 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_project_admin
+from scout import persistence
 from scout.models import CrawlHistoryRecord, CrawlPolicy, DomainRule, TrustLevel
 
 router = APIRouter(
@@ -22,15 +33,6 @@ router = APIRouter(
     tags=["crawler-admin"],
     dependencies=[Depends(get_project_admin)],
 )
-
-# In-memory policy and history store with fallback to persistence
-_TENANT_POLICIES: dict[str, list[CrawlPolicy]] = {}
-_CRAWL_HISTORY: list[CrawlHistoryRecord] = []
-
-# SECURITY FIX: unbounded in-memory growth (memory DoS) রোধে হার্ড ক্যাপ।
-_MAX_TENANTS = 500
-_MAX_POLICIES_PER_TENANT = 50
-_MAX_HISTORY = 1000
 
 
 class PolicyCreatePayload(BaseModel):
@@ -44,17 +46,40 @@ class PolicyCreatePayload(BaseModel):
     domain_rules: list[DomainRule] = Field(default_factory=list)
 
 
+class PolicyUpdatePayload(BaseModel):
+    """Partial update — শুধু পাঠানো ফিল্ড বদলায় (None = unchanged)।"""
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    is_active: bool | None = None
+    max_depth: int | None = Field(default=None, ge=1, le=5)
+    max_results: int | None = Field(default=None, ge=1, le=50)
+    default_rate_limit_per_min: int | None = Field(default=None, ge=1, le=600)
+    allowed_domains: list[str] | None = None
+    blocked_domains: list[str] | None = None
+    domain_rules: list[DomainRule] | None = None
+
+
+def _apply_update(policy: CrawlPolicy, payload: PolicyUpdatePayload) -> CrawlPolicy:
+    data = payload.model_dump(exclude_unset=True, exclude_none=True)
+    for key, value in data.items():
+        setattr(policy, key, value)
+    return policy
+
+
 @router.get("/policies", response_model=list[CrawlPolicy])
 async def list_policies(user: dict = Depends(get_project_admin)) -> list[CrawlPolicy]:
-    """Lists all crawl policies for the tenant."""
+    """Lists all crawl policies for the tenant (durable; DB-first)."""
     tenant_id = user["tenant_id"]
-    policies = _TENANT_POLICIES.get(tenant_id)
+    policies = await persistence.list_policies(tenant_id)
     if not policies:
-        # Default policy returned if none customized
+        # বাংলা: প্রথমবার এলে ডিফল্ট policy seed করে রাখা হয় — পরের বার থেকে
+        # টেন্যান্ট নিজের policy সম্পূর্ণভাবে CRUD করতে পারে।
         default_pol = CrawlPolicy(tenant_id=tenant_id, name="Default Policy")
-        if len(_TENANT_POLICIES) < _MAX_TENANTS:
-            _TENANT_POLICIES[tenant_id] = [default_pol]
-        return [default_pol]
+        try:
+            await persistence.upsert_policy(default_pol)
+        except Exception:
+            pass  # seed failure non-fatal; পরের create-এ আবার চেষ্টা হবে
+        policies = [default_pol]
     return policies
 
 
@@ -62,8 +87,14 @@ async def list_policies(user: dict = Depends(get_project_admin)) -> list[CrawlPo
 async def create_or_update_policy(
     payload: PolicyCreatePayload, user: dict = Depends(get_project_admin)
 ) -> CrawlPolicy:
-    """Creates or updates a crawl policy."""
+    """Creates a new crawl policy (durable, tenant-scoped)."""
     tenant_id = user["tenant_id"]
+    existing = await persistence.list_policies(tenant_id)
+    if len(existing) >= 50:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Policy limit reached for tenant; delete old policies first",
+        )
     new_policy = CrawlPolicy(
         tenant_id=tenant_id,
         name=payload.name,
@@ -75,17 +106,62 @@ async def create_or_update_policy(
         blocked_domains=payload.blocked_domains,
         domain_rules=payload.domain_rules,
     )
-
-    tenant_list = _TENANT_POLICIES.setdefault(tenant_id, [])
-    # SECURITY FIX: প্রতি টেন্যান্টে policy সংখ্যার ক্যাপ — unbounded append রোধ।
-    if len(tenant_list) >= _MAX_POLICIES_PER_TENANT:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Policy limit reached for tenant; delete old policies first",
-        )
-    # Replace active policy or append
-    tenant_list.append(new_policy)
+    try:
+        await persistence.upsert_policy(new_policy)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
     return new_policy
+
+
+@router.patch("/policies/{policy_id}", response_model=CrawlPolicy)
+async def update_policy(
+    policy_id: str,
+    payload: PolicyUpdatePayload,
+    user: dict = Depends(get_project_admin),
+) -> CrawlPolicy:
+    """Partial update of a crawl policy (name, limits, domain rules, active flag)."""
+    tenant_id = user["tenant_id"]
+    policy = await persistence.get_policy(policy_id, tenant_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Policy not found")
+    updated = _apply_update(policy, payload)
+    try:
+        await persistence.upsert_policy(updated)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
+    return updated
+
+
+@router.post("/policies/{policy_id}/enable", response_model=CrawlPolicy)
+async def enable_policy(policy_id: str, user: dict = Depends(get_project_admin)) -> CrawlPolicy:
+    """Activates a policy — governed scout crawl এই policy-ই follow করবে।"""
+    return await _set_policy_active(policy_id, user, True)
+
+
+@router.post("/policies/{policy_id}/disable", response_model=CrawlPolicy)
+async def disable_policy(policy_id: str, user: dict = Depends(get_project_admin)) -> CrawlPolicy:
+    """Deactivates a policy — fail-closed: inactive policy কিছুই authorize করে না।"""
+    return await _set_policy_active(policy_id, user, False)
+
+
+async def _set_policy_active(policy_id: str, user: dict, active: bool) -> CrawlPolicy:
+    tenant_id = user["tenant_id"]
+    policy = await persistence.get_policy(policy_id, tenant_id)
+    if policy is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Policy not found")
+    policy.is_active = active
+    await persistence.upsert_policy(policy)
+    return policy
+
+
+@router.delete("/policies/{policy_id}", status_code=status.HTTP_200_OK)
+async def delete_policy(policy_id: str, user: dict = Depends(get_project_admin)) -> dict[str, Any]:
+    """Deletes a crawl policy (tenant-scoped, hard delete)."""
+    tenant_id = user["tenant_id"]
+    deleted = await persistence.delete_policy(policy_id, tenant_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Policy not found")
+    return {"status": "deleted", "policy_id": policy_id, "tenant_id": tenant_id}
 
 
 @router.get("/history", response_model=list[CrawlHistoryRecord])
@@ -94,26 +170,20 @@ async def get_crawl_history(
     limit: int = Query(default=20, ge=1, le=100),
     user: dict = Depends(get_project_admin),
 ) -> list[CrawlHistoryRecord]:
-    """Retrieves crawl execution records and deduplication statistics."""
+    """Retrieves durable crawl execution records (real data recorded by scout runs)."""
     tenant_id = user["tenant_id"]
-    records = [
-        rec
-        for rec in _CRAWL_HISTORY
-        if rec.tenant_id == tenant_id and (task_id is None or rec.task_id == task_id)
-    ]
-    return records[-limit:]
+    return await persistence.list_history(tenant_id, task_id=task_id, limit=limit)
 
 
 @router.get("/events")
 async def get_crawl_events(
     task_id: str | None = Query(default=None),
     event_type: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    user: dict = Depends(get_project_admin),
 ) -> list[dict[str, Any]]:
-    """Retrieves emitted telemetry events matching filter."""
-    return [
-        {
-            "task_id": task_id,
-            "event_type": event_type or "all",
-            "status": "active",
-        }
-    ]
+    """Retrieves real crawl telemetry events (previously a hardcoded stub)."""
+    tenant_id = user["tenant_id"]
+    return await persistence.list_events(
+        tenant_id, task_id=task_id, event_type=event_type, limit=limit
+    )

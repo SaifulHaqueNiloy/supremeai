@@ -14,6 +14,7 @@ Comprehensive testing framework for self-evaluation and limit detection:
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 import random
 import statistics
@@ -40,6 +41,7 @@ class BenchmarkCategory(StrEnum):
     MEMORY = "memory"
     CONCURRENCY = "concurrency"
     DOMAIN_SPECIFIC = "domain_specific"
+    RELIABILITY = "reliability"
 
 
 class DifficultyLevel(int, Enum):
@@ -122,6 +124,12 @@ class SelfBenchmarkEngine:
         self.concurrent_test_count = self.config.get("concurrent_tests", 10)
         self.stress_test_multiplier = self.config.get("stress_multiplier", 10)
         self.memory_test_max_mb = self.config.get("memory_test_max_mb", 1024)
+        # বাংলা: pass^k reliability gate — ROADMAP Sprint 4 ও promotion-gate
+        # প্রয়োজনে (HUMAN_BEHAVIOR §16)। pass@k বলে “k চেষ্টার অন্তত একটা সফল”;
+        # pass^k বলে “k চেষ্টার *সবগুলোই* সফল” — এটাই আসল reliability মানদণ্ড।
+        self.reliability_k = int(self.config.get("reliability_k", 3))
+        self.reliability_samples = int(self.config.get("reliability_samples", 5))
+        self.reliability_threshold = float(self.config.get("reliability_threshold", 0.7))
 
         # Scoring thresholds
         self.thresholds: dict[str, dict[str, float]] = {
@@ -171,6 +179,8 @@ class SelfBenchmarkEngine:
                 results = await self._benchmark_concurrency()
             elif category == BenchmarkCategory.DOMAIN_SPECIFIC:
                 results = await self._benchmark_domain_specific()
+            elif category == BenchmarkCategory.RELIABILITY:
+                results = await self._benchmark_reliability()
             else:
                 results = []
 
@@ -359,6 +369,79 @@ class SelfBenchmarkEngine:
                 duration_ms=120,
             )
         ]
+
+    @staticmethod
+    def _pass_hat_k_estimator(successes: int, n: int, k: int) -> float:
+        """Unbiased pass^k estimate: C(successes, k) / C(n, k).
+
+        বাংলা: n-টা independent রানের মধ্যে s-টা সফল হলে, k-টা রাণের একটি
+        random সেটে *সব* সফল হওয়ার সম্ভাবনার unbiased estimator হলো
+        C(s, k) / C(n, k) (Brown et al., 2024-এ pass@k-এর মতোই)। n < k হলে 0.0।
+        """
+        if n < k:
+            return 0.0
+        if successes < k:
+            return 0.0
+        if successes > n:
+            successes = n
+        return math.comb(successes, k) / math.comb(n, k)
+
+    async def _benchmark_reliability(self) -> list[BenchmarkResult]:
+        """pass^k reliability gate across repeated independent attempts.
+
+        বাংলা: একই task k বার চালিয়ে *সব* চেষ্টা সফল কি না মাপা হয় —
+        এটাই SupremeAI-র "Deliver honestly" প্রতিশ্রুতির সংখ্যাগত রূপ।
+        Success convention হিসেবে _benchmark_accuracy-র মতোই response.success ব্যবহৃত হয়।
+        """
+        results: list[BenchmarkResult] = []
+        if not self.ai_system:
+            return []
+
+        k = max(1, self.reliability_k)
+        n = max(k, self.reliability_samples)
+        task_set = self.test_queries["general"] + self.test_queries["development"]
+
+        per_task_estimates: list[float] = []
+        started = time.perf_counter()
+        for task in task_set:
+            successes = 0
+            for _attempt in range(n):
+                try:
+                    res = await asyncio.wait_for(
+                        self.ai_system.process(task),
+                        timeout=self.test_duration_per_query_ms / 1000.0,
+                    )
+                    if getattr(res, "success", False):
+                        successes += 1
+                except Exception as e:
+                    logger.debug(f"reliability attempt failed for '{task[:40]}...': {e}")
+            estimate = self._pass_hat_k_estimator(successes, n, k)
+            per_task_estimates.append(estimate)
+
+        duration_ms = int((time.perf_counter() - started) * 1000)
+        if not per_task_estimates:
+            return results
+
+        aggregate = statistics.mean(per_task_estimates)
+        results.append(
+            BenchmarkResult(
+                test_name=f"pass_hat_k_reliability_k{k}",
+                category=BenchmarkCategory.RELIABILITY,
+                score=round(aggregate, 4),
+                value=round(aggregate, 4),
+                unit="ratio",
+                passed=aggregate >= self.reliability_threshold,
+                threshold=self.reliability_threshold,
+                duration_ms=duration_ms,
+                details={
+                    "k": k,
+                    "samples_per_task": n,
+                    "tasks": len(task_set),
+                    "estimator": "C(s,k)/C(n,k)",
+                },
+            )
+        )
+        return results
 
     async def _detect_limits(self, results: list[BenchmarkResult]) -> list[LimitDetection]:
         limits: list[LimitDetection] = []

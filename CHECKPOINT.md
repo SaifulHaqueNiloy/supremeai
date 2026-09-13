@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-12 17:10 UTC
+- **Date:** 2026-09-12 23:37 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,59 +10,25 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/core/memory/auto_rag_injector.py`
-  - `backend/api/routes/chat.py`
-  - `backend/core/security/authentication/auth_middleware.py`
-  - `backend/core/admin_routes.py`
-  - `backend/database/migrations/001_pgvector_match_fn.sql`
-  - `backend/brain/model_router.py`
-  - `backend/core/llm/llm_gateway.py`
-  - `frontend/src/store/authStore.ts`
-  - `backend/services/integration_discovery.py`
-  - `frontend/src/index.css`
-  - `backend/api/routes/integrations.py`
-  - `ROADMAP_BANGLA.md`
-  - `backend/core/app_builder.py`
-  - `infrastructure/cloudflare/enhanced-worker.js`
+  - `scripts/update_cors_hosts.py`
+  - `backend/tests/conftest.py`
+  - `scripts/deploy/disaster_recovery_test.py`
   - `CHECKPOINT.md`
-  - `backend/core/security/__init__.py`
-  - `backend/tests/test_stealth_browser.py`
-  - `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx`
-  - `frontend/src/utils/api.ts`
-  - `backend/api/routes/stream_chat_sse.py`
-  - `backend/tests/api/test_scraper_guard.py`
-  - `backend/services/scraper/main.py`
-  - `backend/core/memory/__init__.py`
-  - `backend/api/routes/auth.py`
-  - `backend/services/memory_service.py`
-  - `backend/engine/vector_db.py`
-  - `infrastructure/cloudflare/wrangler.toml`
-  - `frontend/src/store/authStore.test.ts`
-  - `backend/core/ai_memory/vector_store.py`
-  - `backend/worker_service.py`
-  - `frontend/src/utils/apiInterceptor.ts`
-  - `backend/services/scraper/browser_agent.py`
-  - `backend/tests/security/test_admin_fail_closed.py`
-  - `backend/core/rate_limit.py`
-  - `frontend/src/pages/user/AgentWorkspace.tsx`
-  - `backend/tests/test_auto_rag_injector.py`
-  - `backend/core/self_evolution/agent_breeder.py`
-  - `backend/services/dynamic_ai/orchestrator.py`
-  - `backend/services/llm/providers.py`
-  - `backend/api/middleware.py`
-  - `frontend/src/services/apiClient.ts`
-  - `frontend/src/components/dashboard/OneLinerMCPConnect.tsx`
-  - `backend/core/llm/advanced_model_router.py`
-  - `backend/core/human_behavior.py`
-  - `backend/core/ai_memory/__init__.py`
-  - `frontend/src/components/dashboard/OneLinerMCPConnect.test.tsx`
-  - `backend/api/routes/scraper.py`
-  - `backend/core/security/protection/honeypot.py`
+  - `_parity_check.py`
+  - `tools/solution_synthesizer/tools/solution_synthesizer.py`
+  - `backend/core/retry_handler.py`
+  - `backend/tests/unit/test_api_endpoints.py`
+  - `tmp_smoke.ps1`
+  - `frontend/fix_tsc_v2.py`
+  - `docs/SKIPPED_TESTS.md`
+  - `.github/scripts/check-render-quota.py`
+  - `frontend/get_errors.py`
+  - `frontend/fix_tsc.py`
 
 ## Pending (Carry Forward)
-- Supabase `ai_memory` table setup (Phase C)
-- 6 skipped tests need implementation (see docs/SKIPPED_TESTS.md)
-- Root-level lint issues to be fixed (next PR will reveal)
+- Phase 2: Expand mission suite from 5 to 20 missions (see MASTER_PLAN.md Phase 2)
+- 6 skipped tests triage (reduce skip markers towards <30)
+- Root-level lint issues to be continuously monitored
 
 ## Recent Lessons Learned
   - 2026-09-12 — 🏛️ Core Philosophy Reinforcement: Zero-Hardcoding Mandate & System-Wide Universal Rule Scoping

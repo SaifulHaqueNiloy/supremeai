@@ -54,6 +54,10 @@ class RLHFPipeline:
             "chosen": chosen_response,
             "rejected": rejected_response,
             "timestamp": datetime.datetime.now(datetime.UTC).isoformat() + "Z",
+            # বাংলা: provenance ছাড়া training record পরে audit/trace করা যায় না
+            # (HUMAN_BEHAVIOR §15 Phase 3; Constitution: Reversible Evolution)
+            "dataset_version": datetime.datetime.now(datetime.UTC).strftime("%Y%m%d"),
+            "source": "runtime_feedback",
         }
         self.preference_logs.append(record)
         path = os.path.join(self.storage_dir, "preferences.jsonl")
@@ -96,11 +100,23 @@ class RLHFPipeline:
         """
         Triggers HuggingFace TRL DPOTrainer either locally if trl is installed,
         or delegates to ModelTrainer (RunPod/Modal).
+
+        বাংলা: Constitution লঙ্ঘন ছিল — (1) ডেটা না থাকলে ভুয়া preference record
+        ("Hello"/"Chosen response") ইনজেক্ট করা হতো, (2) TRL পাওয়া গেলে কোনো
+        training না করেই "simulation success" রিটার্ন করা হতো (Verification
+        Before Trust ভঙ্গ)। এখন দুটোই বন্ধ — ডেটা না থাকলে স্পষ্ট error,
+        লোকাল wiring না থাকলে সৎ not_implemented, নয়তো আসল ModelTrainer path।
         """
         dataset_path = os.path.join(self.storage_dir, "preferences.jsonl")
         if not os.path.exists(dataset_path) or len(self.preference_logs) == 0:
-            # Create a mock preference entry if none exists for safety
-            self.record_preference("Hello", "Chosen response", "Rejected response")
+            logger.error(
+                "DPO training refused: no preference data available. "
+                "Refusing to train on fabricated records (Constitution: Verification Before Trust)."
+            )
+            return {
+                "status": "error",
+                "error": "No preference data available; collect real feedback before training.",
+            }
 
         logger.info(f"Triggering DPO training on {base_model} using {dataset_path}")
 
@@ -113,12 +129,20 @@ class RLHFPipeline:
                 and importlib.util.find_spec("torch") is not None
                 and importlib.util.find_spec("transformers") is not None
             ):
-                logger.info("trl library is available. Simulating local DPOTrainer compilation.")
-                # Local training simulation with TRL
+                # বাংলা: লোকাল DPOTrainer wiring এখনো implemented নয় — আগে এখানে
+                # training না করেই success ফেরত দেওয়া হতো। এখন সৎভাবে স্বীকার করি
+                # এবং caller সত্যিকারের remote path বেছে নিতে পারে।
+                logger.warning(
+                    "trl is installed but local DPOTrainer wiring is not implemented; "
+                    "not fabricating a simulated success."
+                )
                 return {
-                    "status": "success",
+                    "status": "not_implemented",
                     "method": "local_trl",
-                    "message": "Local DPO training simulation success using TRL library.",
+                    "message": (
+                        "Local TRL DPOTrainer wiring is not implemented yet; "
+                        "use ModelTrainer delegation for real training."
+                    ),
                 }
             else:
                 raise ImportError("trl or dependencies missing")

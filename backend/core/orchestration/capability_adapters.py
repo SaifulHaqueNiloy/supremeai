@@ -117,11 +117,62 @@ async def external_handler(command: ConversationCommand) -> dict[str, Any]:
     )
 
 
+async def research_handler(command: ConversationCommand) -> dict[str, Any]:
+    """Governed scout research — Phase 1 "Scout goes live" (orchestrator spoke).
+
+    বাংলা: conversation orchestrator-এর মাধ্যমে agent-রা এখন governed scout crawl
+    চালাতে পারে। Policy-gateway-রuled risk="medium"; crawl সবসময় টেন্যান্টের
+    সক্রিয় CrawlPolicy মেনে হয় (robots.txt, rate pacing, SSRF gate) — policy
+    না থাকলে fail-closed উত্তর।
+    """
+    from scout.persistence import get_active_policy
+
+    tenant_id = command.tenant_id or "default"
+    policy = await get_active_policy(str(tenant_id))
+    if policy is None:
+        return {
+            "spoke": "research",
+            "status": "unavailable",
+            "message": "No active crawl policy for tenant; scout is fail-closed.",
+            "tenant_id": tenant_id,
+            "project_id": command.project_id,
+        }
+    url = str(command.metadata.get("url") or "").strip()
+    if not url:
+        return {
+            "spoke": "research",
+            "status": "invalid",
+            "message": "metadata['url'] is required for governed scout crawl.",
+            "tenant_id": tenant_id,
+            "project_id": command.project_id,
+        }
+    from scout.crawler import CrawlerService
+    from scout.models import CrawlRequest
+    from scout.persistence import record_crawl_response
+
+    service = CrawlerService(policy=policy)
+    response = await service.execute_crawl(
+        CrawlRequest(query_or_url=url, tenant_id=str(tenant_id), max_depth=1)
+    )
+    await record_crawl_response(response)
+    return {
+        "spoke": "research",
+        "status": "crawled",
+        "task_id": response.task_id,
+        "pages": response.total_fetched,
+        "duplicates_skipped": response.total_duplicates_skipped,
+        "summary": (response.extractive_summary or "")[:500],
+        "tenant_id": tenant_id,
+        "project_id": command.project_id,
+    }
+
+
 __all__ = [
     "admin_handler",
     "artifact_handler",
     "evolution_handler",
     "external_handler",
     "realtime_handler",
+    "research_handler",
     "task_handler",
 ]

@@ -180,10 +180,76 @@ async def _llm_call(prompt: str, user_id: str, task_type: str = "deep_research")
         return ""
 
 
-async def _web_search(query: str) -> list[dict[str, str]]:
-    """Use the autonomous browser agent to perform a web search and
-    return structured results: [{title, url, snippet}]."""
+async def _scout_search(query: str, tenant_id: str) -> list[dict[str, str]]:
+    """Governed scout crawl search (MASTER_PLAN Phase 1: "Scout goes live").
+
+    বাংলা: আগে scout crawler ছিল API-র চোখে dead code — এখন deep research-এর
+    web search প্রথমে টেন্যান্টের *সক্রিয়* CrawlPolicy মেনে governed crawl চালায়
+    (robots.txt, rate pacing, SSRF gate, dedup, zero-token summary)। Policy না
+    থাকলে বা crawl খালি হলে কলার browser fallback-এ ফিরে যায় (Graceful
+    Degradation)। প্রতিটি crawl-এর ফলাফল durable history-তে রেকর্ড হয় —
+    research উত্তর এখন governed সোর্স cite করে (B2 battlefield fuel)।
+    """
     results: list[dict[str, str]] = []
+    try:
+        from urllib.parse import quote_plus
+
+        from scout.crawler import CrawlerService
+        from scout.models import CrawlRequest
+        from scout.persistence import get_active_policy, record_crawl_response
+
+        policy = await get_active_policy(str(tenant_id or "default"))
+        if policy is None:
+            # বাংলা: Policy Before Power — সক্রিয় policy না থাকলে scout কিছুই crawl করে না।
+            return []
+
+        service = CrawlerService(policy=policy)
+        search_url = f"https://duckduckgo.com/html/?q={quote_plus(query)}"
+        resp = await service.execute_crawl(
+            CrawlRequest(
+                query_or_url=search_url,
+                tenant_id=str(tenant_id or "default"),
+                max_depth=1,
+                max_results=min(policy.max_results, 8),
+            )
+        )
+        await record_crawl_response(resp)
+
+        for page in resp.pages:
+            if page.is_duplicate or not page.url:
+                continue
+            snippet = " ".join((page.content or "").split())[:280]
+            results.append(
+                {
+                    "title": page.title or page.url,
+                    "url": page.url,
+                    "snippet": snippet,
+                    "source": "scout",
+                }
+            )
+    except Exception as exc:
+        logger.warning(f"Scout search failed for '{query[:60]}': {exc}")
+    return results
+
+
+async def _web_search(query: str, user_id: str = "default") -> list[dict[str, str]]:
+    """Scout-first web search with browser-agent fallback.
+
+    বাংলা: Phase 1 — governed scout crawl (tenant policy মেনে) প্রথম প্রচেষ্টা;
+    সেটি ফাঁকা হলে পুরোনো autonomous-browser path (LLM-চালিত) fallback হিসেবে
+    চলে। ফলাফল: [{title, url, snippet}]।
+    """
+    results: list[dict[str, str]] = []
+    try:
+        from scout.persistence import get_active_policy
+
+        if await get_active_policy(str(user_id or "default")) is not None:
+            results = await _scout_search(query, str(user_id or "default"))
+    except Exception as exc:
+        logger.warning(f"Scout search gate check failed for '{query[:60]}': {exc}")
+    if results:
+        return results
+
     try:
         from browser.autonomous_browser import AutonomousBrowserAgent
 
@@ -210,6 +276,7 @@ async def _web_search(query: str) -> list[dict[str, str]]:
                             "title": item.get("title", ""),
                             "url": item.get("url", ""),
                             "snippet": item.get("snippet", ""),
+                            "source": "browser",
                         }
                     )
     except Exception as exc:
@@ -248,11 +315,14 @@ async def _run_research_pipeline(
     user_id: str,
     max_steps: int,
     on_step: Any | None = None,
+    session_id: str | None = None,
 ) -> tuple[dict[str, Any], int, int]:
     """Execute the full research pipeline.
 
     Returns (report_dict, steps_completed, total_sources).
     If *on_step* is a callable it receives (step_number, step_name, content).
+    When *session_id* is provided every step is also streamed to the session
+    SSE channel as a reasoning step (Phase 1: visible intelligence).
     """
     steps_completed = 0
     all_sources: list[dict[str, str]] = []
@@ -260,6 +330,13 @@ async def _run_research_pipeline(
     async def emit(step: int, name: str, content: str) -> None:
         nonlocal steps_completed
         steps_completed = step
+        if session_id:
+            try:
+                from core.observability.reasoning_stream import emit_reasoning_step
+
+                emit_reasoning_step(session_id, step=step, content=f"{name}: {content}")
+            except Exception:  # reasoning never breaks research
+                pass
         if on_step:
             if callable(on_step):
                 on_step(step, name, content)
@@ -308,7 +385,7 @@ async def _run_research_pipeline(
     # --- Step 3: Execute web searches ---
     search_results: list[dict[str, str]] = []
     for sq in sub_queries:
-        results = await _web_search(sq)
+        results = await _web_search(sq, user_id)
         search_results.extend(results)
     all_sources = search_results
     await emit(
@@ -367,7 +444,7 @@ async def _run_research_pipeline(
     # --- Step 7: Execute follow-up searches ---
     follow_results: list[dict[str, str]] = []
     for fq in follow_up_queries:
-        results = await _web_search(fq)
+        results = await _web_search(fq, user_id)
         follow_results.extend(results)
     all_sources.extend(follow_results)
     await emit(
@@ -558,6 +635,7 @@ async def deep_research_stream(
                     user_id=user_id,
                     max_steps=payload.max_steps,
                     on_step=on_step,
+                    session_id=session_id,
                 )
                 done_event = True
                 return report, steps, sources

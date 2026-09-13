@@ -80,6 +80,7 @@ def _assert_public_host(url: str) -> None:
                 f"'{host}' একটি প্রাইভেট/লোকাল/মেটাডেটা IP-তে ({ip_str}) resolve হয়েছে — ব্লক করা হলো"
             )
 
+
 # বাংলা: পরিচিত AI-provider URL প্যাটার্ন (hostname substring) — নতুন provider
 # যোগ করতে শুধু এই লিস্ট বাড়ালেই হবে।
 _AI_PROVIDER_PATTERNS: list[str] = [

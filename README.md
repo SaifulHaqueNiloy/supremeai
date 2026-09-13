@@ -63,28 +63,48 @@ This is why SupremeAI's capability coverage can be much larger than the number o
 
 ---
 
+# The Road to Production — One-Man-Army Master Plan
+
+The full strategy lives in [`MASTER_PLAN.md`](MASTER_PLAN.md). Its shape in one table:
+
+> **A frontier model shipped as a bare API loses to a governed system on any field where the SYSTEM is the product.** SupremeAI competes where machinery — not parameter count — decides the winner.
+
+| Field | How we win | Measured by |
+|---|---|---|
+| **Verified reliability** | Governed verify-loop + `pass^k` gate (`core/self_benchmark.py`) — consistency beats demo-grade pass@1 | pass^3 on the mission suite |
+| **Agentic task completion** | Capability composition + governed execution + repair/failover beats the same model served raw | GAIA-style mission success rate |
+| **Cost frontier** | Zero-cost provider chain + Tier0 + cache + zero-token scout summarizer | $ per verified task (published) |
+| **Memory that compounds** | Auto-RAG + hierarchical memory + learning loop: every solved task makes the next one cheaper | repeat-task cost delta |
+| **Bengali & regional depth** | Native Bangla tooling today; dedicated own-model adapter in Phase 3 | Bangla eval head-to-head |
+| **Integration surface** | Governed MCP federation + one-URL connect capability registry | time-to-first-verified-task |
+
+The ladder from current stage to production — **Phase 0 Stop the Bleed → Phase 1 Capability Completion → Phase 2 Reliability Moat → Phase 3 Own Model v1 (small, narrow, ours) → Phase 4 Public Benchmark Attacks → Phase 5 Production Hardening → Phase 6 Compounding** — with phase gates, budget math (under ~$75/month) and kill criteria, is specified in the master plan. Every phase reuses machinery that already exists in this repository; that is *Reuse Before Creation* applied to strategy itself.
+
+---
+
 ## Table of Contents
 
-1. [SupremeAI Constitution](#supremeai-constitution)
-2. [What SupremeAI Is](#what-supremeai-is)
-3. [The Capability-Composition Model](#the-capability-composition-model)
-4. [How a User Problem Is Solved](#how-a-user-problem-is-solved)
-5. [Self-Evolution Loop](#self-evolution-loop)
-6. [External Capability Delegation](#external-capability-delegation)
-7. [North-Star Architecture](#north-star-architecture)
-8. [Existing Capability Surface](#existing-capability-surface)
-9. [Planning Is Part of the Capability Surface](#planning-is-part-of-the-capability-surface)
-10. [Technology & Service Map](#technology--service-map)
-11. [MCP & Central Control Plane](#mcp--central-control-plane)
-12. [Memory & Learning](#memory--learning)
-13. [Security & Governance](#security--governance)
-14. [Reliability, Failover & Degradation](#reliability-failover--degradation)
-15. [Low-Cost / Zero-Waste Philosophy](#low-cost--zero-waste-philosophy)
-16. [CI/CD & Deployment](#cicd--deployment)
-17. [Repository & Planning Map](#repository--planning-map)
-18. [Testing & Quality](#testing--quality)
-19. [Current-State Caveats](#current-state-caveats)
-20. [License](#license)
+1. [The Road to Production — One-Man-Army Master Plan](#the-road-to-production--one-man-army-master-plan)
+2. [SupremeAI Constitution](#supremeai-constitution)
+3. [What SupremeAI Is](#what-supremeai-is)
+4. [The Capability-Composition Model](#the-capability-composition-model)
+5. [How a User Problem Is Solved](#how-a-user-problem-is-solved)
+6. [Self-Evolution Loop](#self-evolution-loop)
+7. [External Capability Delegation](#external-capability-delegation)
+8. [North-Star Architecture](#north-star-architecture)
+9. [Existing Capability Surface](#existing-capability-surface)
+10. [Planning Is Part of the Capability Surface](#planning-is-part-of-the-capability-surface)
+11. [Technology & Service Map](#technology--service-map)
+12. [MCP & Central Control Plane](#mcp--central-control-plane)
+13. [Memory & Learning](#memory--learning)
+14. [Security & Governance](#security--governance)
+15. [Reliability, Failover & Degradation](#reliability-failover--degradation)
+16. [Low-Cost / Zero-Waste Philosophy](#low-cost--zero-waste-philosophy)
+17. [CI/CD & Deployment](#cicd--deployment)
+18. [Repository & Planning Map](#repository--planning-map)
+19. [Testing & Quality](#testing--quality)
+20. [Current-State Caveats](#current-state-caveats)
+21. [License](#license)
 
 ---
 
@@ -435,48 +455,49 @@ Credentials and sessions must remain protected. SupremeAI must not bypass authen
 
 ```mermaid
 flowchart TB
-    USER["User / Staff / Admin / Operations"]
+    USER["User / Client / Admin / External Agents"]
     UI["Unified React + TypeScript Frontend"]
-    AUTH["Authentication + RBAC"]
-    API["Lean SupremeAI Core API"]
-    BRAIN["Task / Agent / Planning Runtime"]
-    CAP["Capability Registry / Discovery"]
-    POL["Policy + HITL + Audit"]
-    WORKER["Worker / Async Execution"]
-    BROWSER["Browser / Scraper / Playwright"]
-    MCP["SupremeAI MCP / Control Plane"]
-    PA["Provider / Account Adapter Layer"]
-    MEM["Memory / Experience"]
-    DB[("PostgreSQL + pgvector")]
-    REDIS[("Redis / Upstash")]
-    EXT["Authorized External Capabilities"]
-    CI["GitHub / CI / GHCR"]
-    RUNTIME["Render / Cloudflare / Firebase / Burst Compute"]
+    GATEWAY["Core API Task Gateway (/api/v1/tasks)"]
+    KERNEL["SupremeKernel Single-Door Facade (/api/v1/kernel/dispatch)"]
 
-    USER --> UI --> AUTH --> API --> BRAIN
-    BRAIN --> CAP
-    BRAIN --> POL
-    BRAIN --> MEM
-    BRAIN --> DB
-    BRAIN --> REDIS
-    BRAIN --> WORKER
-    BRAIN --> BROWSER
-    BRAIN --> MCP
-    MCP --> CAP
-    MCP --> POL
-    MCP --> PA
-    PA --> EXT
-    PA --> RUNTIME
-    CI --> RUNTIME
-    WORKER --> MEM
-    BROWSER --> MEM
+    subgraph CIRCLES["The 4 SupremeAI Bounded Circles"]
+        GOV["Governance Circle (Auth, RBAC, Policy, HITL, Audit)"]
+        EXEC["Execution Circle (Tasks, Browser, Agents, Tools, Scrapers)"]
+        EVO["Evolution Circle (Self-Healing, Experience, Auto-Skills)"]
+        INFRA["Infrastructure Circle (DB, Redis, Queues, Cloudflare, Network)"]
+    end
+
+    MCP["SupremeAI MCP / Control Plane"]
+    EXT["Authorized External Capabilities / Multi-Account Pool"]
+    MEM[("PostgreSQL + pgvector (Durable Memory)")]
+    CACHE[("Redis Cache / PubSub Invalidation")]
+
+    USER --> UI
+    UI --> GATEWAY
+    UI --> KERNEL
+    GATEWAY --> KERNEL
+    KERNEL --> GOV
+    KERNEL --> EXEC
+    KERNEL --> EVO
+    KERNEL --> INFRA
+    EXEC --> MCP --> EXT
+    EXEC --> MEM
+    INFRA --> CACHE
+    INFRA --> MEM
+    EVO --> MEM
 ```
 
-### Core principle
+### Core Architecture Pillars
 
-> **Distributed execution, centralized intelligence and governance.**
+> **Distributed execution, centralized intelligence and bounded Circle governance.**
 
-The user should see one SupremeAI even when a task crosses multiple agents, providers, accounts, browser sessions, workers or external capabilities.
+1. **SupremeKernel Single-Door Facade:** Every capability execution is governed through `backend/core/kernel/dispatcher.py` and `POST /api/v1/kernel/dispatch`, ensuring unified actor resolution, tenant scoping, policy evaluation, and audit logging.
+2. **The 4 Bounded Circles:** Strict architectural boundaries enforced by AST linting:
+   - **Governance:** Auth, RBAC, Policy enforcement, and Audit Journal.
+   - **Execution:** Tasks, Agents, Headless Playwright Browser automation, and Tools.
+   - **Evolution:** Synaptic memory, dynamic learning, and self-healing.
+   - **Infrastructure:** Database connection pooling, Redis caching/invalidation, Cloudflare circuit breakers, and network egress controls.
+3. **Core API Task Gateway:** Direct client calls to worker backends are eliminated; all asynchronous and background workflows route through `/api/v1/tasks`.
 
 ---
 
@@ -536,15 +557,16 @@ They are **architectural intent** and, where implementation already exists, evid
 
 Important examples include:
 
-- `docs/architecture/SUPREMEAI_CONSOLIDATION_AND_CLEANUP_PLAN.md` — consolidation and structural cleanup direction.
-- `docs/browser/SUPREME_BROWSER_MASTER_PLAN.md` — the unified browser automation direction.
-- `docs/PRODUCTION_READINESS_PLAN_V3.md` — production hardening/readiness roadmap.
-- `docs/plans/PRODUCTION_UPGRADE_PLAN.md` — production upgrade and orchestration planning.
-- `docs/plans/MISSING_SERVICES_INTEGRATION_PLAN_V4.1.md` — planned integration of missing/optional services.
-- `docs/FREE_TIER_STORAGE_PLAN.md` — low-cost/free-tier storage strategy.
-- `docs/ADMIN_TASKS.md` — operational/admin tasks and known limitations.
+- `MASTER_PLAN.md` — the one-man-army master plan from current stage to production (vision, battlefields, phase gates).
+- `specs/001-dynamic-production-configuration/` — deployment-agnostic configuration specification (spec-kit workflow).
+- `specs/002-policy-driven-web-crawler/` — governed, policy-driven web crawler specification.
+- `docs/plans/UNIVERSAL_ZERO_COMPLEXITY_INTERFACE_PLAN.md` — the one-URL connect / universal manage model.
+- `docs/master_docs/ARCH-05-MASTER_ROADMAP_AND_DECISIONS.md` — merged technical roadmap and ADR corpus.
+- `docs/architecture/HUMAN_BEHAVIOR_ALIGNMENT_AND_CONTINUOUS_LEARNING.md` — behavioral intelligence and own-model training strategy.
+- `docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md` — governance constitution.
 - `backend/COVERAGE_90_PLAN.md` — explicit quality/coverage completion work.
-- `specs/*/plan.md` — feature-specific implementation plans following the repository's specification workflow.
+
+> বাংলা নোট: রোডম্যাপ ও সাম্প্রতিক ফাইন্ডিংসের বাংলা সংস্করণ `ROADMAP_BANGLA.md`-এ আছে।
 
 The repository also contains tooling that treats an admin-plan corpus as an input to plan organization. That means the planning system itself is part of the project's execution model, not merely a collection of old notes.
 
@@ -569,10 +591,12 @@ This rule is one of the most important ways SupremeAI avoids architectural dupli
 
 | Layer | Technology / Service | Role |
 |---|---|---|
+| Kernel | SupremeKernel + Circle Facades | Single-door unified dispatch & 4 Circle boundaries |
+| Gateway | Core API Task Gateway (`/api/v1/tasks`) | Governed task submission & worker decoupling |
 | Frontend | React + TypeScript + Vite | Unified user/admin interface |
 | Core | Python 3.11 + FastAPI | API, orchestration, policy boundary |
 | Database | PostgreSQL + pgvector | Durable state and semantic memory |
-| Cache/coordination | Redis / Upstash | Transient cache, locks, coordination and configured queue support |
+| Cache/coordination | Redis / Upstash | Tiered L1 cache, Pub/Sub live invalidation & distributed locks |
 | AI | Configured/provider-compatible models | Replaceable reasoning/processing |
 | Browser | Playwright + Chromium | Browser automation and scraping |
 | MCP | SupremeAI MCP / control plane | Capability/resource/provider discovery and governed control |
@@ -784,24 +808,27 @@ Useful entry points include:
 
 ```text
 README.md                         ← this architecture contract
-AGENTS.md                         ← AI-agent engineering guidance
+AGENTS.md                         ← AI-agent engineering guidance & Pure Cloud Production Parity
 CHECKPOINT.md                     ← session continuity
 STATUS.md                         ← current project state
 LESSONS_LEARNED.md                ← accumulated engineering lessons
 
-backend/                          ← Core Python implementation
+backend/core/kernel/              ← SupremeKernel single-door facade & dispatcher
+backend/core/circles/             ← 4 bounded Circle contracts (governance, execution, evolution, infra)
+backend/api/routes/task_gateway.py← canonical task submission gateway (/api/v1/tasks)
+backend/api/routers.py            ← 143 centralized and validated routers
 backend/services/                 ← orchestration/runtime services
 backend/tools/                    ← reusable tools and planning helpers
-backend/COVERAGE_90_PLAN.md       ← coverage completion plan
 
-frontend/                         ← unified React application
+frontend/                         ← unified React + TypeScript application
+frontend/src/services/controlPlane.ts ← governed API gateway client
 
-mcp/                              ← MCP/control-plane implementation where present
+infrastructure/mcp-control-plane/ ← governed MCP federation gateway
+scripts/ci/                       ← AST circle boundary linter & architecture topology tools
 
-docs/architecture/               ← architecture plans
+docs/architecture/               ← architecture plans & Core Constitution
 docs/browser/                    ← browser master plan
-docs/plans/                      ← major implementation plans
-docs/                            ← operational/readiness/storage plans
+docs/generated/route_topology.mmd← living mermaid architecture graph
 specs/                            ← feature specifications and plans
 ```
 

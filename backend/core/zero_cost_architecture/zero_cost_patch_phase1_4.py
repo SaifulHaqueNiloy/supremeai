@@ -388,7 +388,7 @@ class InProcessAsyncQueue:
             coro_func=coro_func,
             args=args,
             kwargs=kwargs,
-            timeout=timeout or self.config.QUEUE_TASK_TIMEOUT_SECONDS,
+            timeout_seconds=timeout or self.config.QUEUE_TASK_TIMEOUT_SECONDS,
             max_retries=max_retries,
             metadata=metadata or {},
             callback=callback,
