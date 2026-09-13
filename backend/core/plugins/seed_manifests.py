@@ -23,16 +23,23 @@ OFFICIAL_PLUGINS = [
             {"name": "repo.write", "description": "Write to repositories"},
         ],
     },
+]
+
+# Plugins moved to experimental — capability graph must be honest.
+# These were previously in official/ but raised NotImplementedError on first tool call.
+# See: backend/core/plugins/experimental/*.py
+EXPERIMENTAL_PLUGINS = [
     {
         "id": "notion",
         "name": "Notion",
-        "description": "Connect Notion to manage workspace pages and databases.",
+        "description": "Connect Notion to manage workspace pages and databases. (Experimental — limited tool coverage)",
         "icon_url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
         "category": "productivity",
-        "source": "official",
+        "source": "experimental",
         "auth_type": "oauth",
         "execution_type": "native_adapter",
-        "trust_level": "official",
+        "trust_level": "experimental",
+        "lifecycle": "IDEA",
         "tools_provided": [],
         "auth_schema": {"type": "oauth2"},
         "permission_schema": [],

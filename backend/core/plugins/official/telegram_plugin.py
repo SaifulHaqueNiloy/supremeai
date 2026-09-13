@@ -1,14 +1,11 @@
+# Deprecated: moved to backend/core/plugins/experimental/telegram_plugin.py
 from typing import Any
 
+from ..experimental.telegram_plugin import TelegramPlugin as _TelegramPlugin
 from .base import BasePlugin
 
 
-class TelegramPlugin(BasePlugin):
-    @property
-    def plugin_id(self) -> str:
-        return "telegram"
+class TelegramPlugin(_TelegramPlugin):
+    """Shim — delegates to experimental implementation."""
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
-    ) -> Any:
-        raise NotImplementedError("Telegram plugin tools not implemented yet")
+    pass

@@ -1,14 +1,12 @@
+# Deprecated: moved to backend/core/plugins/experimental/gmail_plugin.py
+# Keep this file as a shim that re-exports from experimental for backward compatibility.
 from typing import Any
 
+from ..experimental.gmail_plugin import GmailPlugin as _GmailPlugin
 from .base import BasePlugin
 
 
-class GmailPlugin(BasePlugin):
-    @property
-    def plugin_id(self) -> str:
-        return "gmail"
+class GmailPlugin(_GmailPlugin):
+    """Shim — delegates to experimental implementation."""
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
-    ) -> Any:
-        raise NotImplementedError("Gmail plugin tools not implemented yet")
+    pass

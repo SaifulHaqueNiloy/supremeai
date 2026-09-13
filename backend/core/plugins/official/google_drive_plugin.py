@@ -1,14 +1,11 @@
+# Deprecated: moved to backend/core/plugins/experimental/google_drive_plugin.py
 from typing import Any
 
+from ..experimental.google_drive_plugin import GoogleDrivePlugin as _GoogleDrivePlugin
 from .base import BasePlugin
 
 
-class GoogleDrivePlugin(BasePlugin):
-    @property
-    def plugin_id(self) -> str:
-        return "google_drive"
+class GoogleDrivePlugin(_GoogleDrivePlugin):
+    """Shim — delegates to experimental implementation."""
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
-    ) -> Any:
-        raise NotImplementedError("Google Drive plugin tools not implemented yet")
+    pass
