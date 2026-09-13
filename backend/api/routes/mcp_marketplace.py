@@ -128,7 +128,7 @@ async def check_mcp_connection_health(
 ):
     """Return the tenant-scoped connection status after a policy check."""
     try:
-        connection = connection_registry.health(user=user, connection_id=connection_id)
+        connection = await connection_registry.health(user=user, connection_id=connection_id)
         return {"status": "success", "connection": connection.model_dump(mode="json")}
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
