@@ -97,7 +97,7 @@ _dev_origins = [
     "http://localhost:5173",  # is_local()
     "http://127.0.0.1:3000",  # is_local()
     "http://127.0.0.1:5173",  # is_local()
-    "tauri://localhost",
+    "tauri://localhost",  # is_local()
 ]
 # Accept the canonical portal-specific variables and retain ALLOWED_ORIGINS as
 # a compatibility fallback for deployments that have not migrated yet.
@@ -117,7 +117,7 @@ _allowed_origins = sorted(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_allowed_origins,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",  # is_local()
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
