@@ -7,6 +7,7 @@
   route: /
   severity: P1
   automated: true
+  automation_key: frontend-build
   check: pnpm --filter supremeai-studio-client build
 - id: QA-002
   area: frontend
@@ -15,6 +16,7 @@
   route: /
   severity: P1
   automated: true
+  automation_key: frontend-typecheck
   check: pnpm --filter supremeai-studio-client typecheck
 - id: QA-003
   area: frontend
@@ -23,6 +25,7 @@
   route: /
   severity: P1
   automated: true
+  automation_key: frontend-unit-tests
   check: pnpm --filter supremeai-studio-client test
 - id: QA-004
   area: backend
