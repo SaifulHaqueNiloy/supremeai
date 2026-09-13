@@ -1,12 +1,5 @@
 {
-  "boundary_violations": [
-    {
-      "line": 8,
-      "reason": "private cross-domain import",
-      "source": "backend/api/routes/admin_dashboard/endpoints_users.py",
-      "target": "backend/api/routes/admin_dashboard/_models.py"
-    }
-  ],
+  "boundary_violations": [],
   "cycles": [],
   "domain_count": 9,
   "domains": [
@@ -2259,7 +2252,7 @@
     {
       "evidence": [
         {
-          "line": 9,
+          "line": 10,
           "path": "backend/api/routes/knowledge.py"
         }
       ],
