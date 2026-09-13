@@ -1,12 +1,19 @@
-export type UserCapabilityStatus = 'ready' | 'idle' | 'unavailable' | 'pending' | 'requestable';
+export type CapabilityStatus = 'ready' | 'idle' | 'unavailable' | 'pending';
 
 export interface UserCapability {
   id: string;
   label: string;
   description: string;
-  status: UserCapabilityStatus;
+  status: CapabilityStatus;
   connectionId?: string;
   href?: string;
+}
+
+export interface AccessContext {
+  id: string;
+  label: string;
+  role: 'user' | 'workspace_admin' | 'tenant_admin' | 'admin';
+  authorized: boolean;
 }
 
 export interface ConnectionContract {
@@ -39,3 +46,5 @@ export function capabilityFromModule(module: { id: string; label: string; descri
 export function explainUnavailable(label: string): UnavailableCapability {
   return { label, reason: 'Your workspace does not currently grant access to this capability.', requestable: true };
 }
+
+export default UserCapability;

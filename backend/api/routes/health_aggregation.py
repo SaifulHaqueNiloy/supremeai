@@ -13,7 +13,6 @@ from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
 from brain.model_registry import ModelRegistry
-from core.config import settings
 from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
 from core.health.uptime_tracker import (
     get_history,
@@ -63,22 +62,16 @@ class DependencyHealth(BaseModel):
 # SERVICE REGISTRY
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _configured_backend_url() -> str:
-    """Return the configured backend URL without inventing a production loopback target."""
-    return (
-        os.environ.get("BACKEND_URL")
-        or os.environ.get("SUPREMEAI_BACKEND_URL")
-        or getattr(settings, "backend_url", "")
-    ).rstrip("/")
-
-
 SERVICE_REGISTRY = [
     {
         "name": "main_backend",
         "display_name": "Main Backend",
-        "url": (_configured_backend_url() + "/api/v1/health")
-        if _configured_backend_url()
-        else "",
+        "url": (
+            os.environ.get("BACKEND_URL")
+            or os.environ.get("SUPREMEAI_BACKEND_URL")
+            or "http://localhost:8080"  # is_local()
+        )
+        + "/api/v1/health",
         "critical": True,
         "timeout": 5.0,
     },
@@ -181,9 +174,8 @@ async def check_single_service(config: dict) -> ServiceHealth:
 
 
 async def check_all_services() -> list[ServiceHealth]:
-    """Check configured services without probing invented production endpoints."""
-    configured_services = [service for service in SERVICE_REGISTRY if service.get("url")]
-    tasks = [check_single_service(svc) for svc in configured_services]
+    """Check all registered services concurrently."""
+    tasks = [check_single_service(svc) for svc in SERVICE_REGISTRY]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     # Convert exceptions to unhealthy status
@@ -192,8 +184,8 @@ async def check_all_services() -> list[ServiceHealth]:
         if isinstance(result, Exception):
             services.append(
                 ServiceHealth(
-                    name=configured_services[i]["name"],
-                    display_name=configured_services[i]["display_name"],
+                    name=SERVICE_REGISTRY[i]["name"],
+                    display_name=SERVICE_REGISTRY[i]["display_name"],
                     status="unknown",
                     error=str(result),
                     last_check=datetime.utcnow(),
