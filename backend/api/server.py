@@ -37,6 +37,7 @@ factory: SupremeAIFactory | None = None
 async def lifespan(app: FastAPI):
     """Lifespan management - initialize factory on startup, cleanup on shutdown."""
     global ai_integrator, factory
+    app.state.started_at = time.monotonic()
     app.state.subsystem_status = {"db": "up", "redis": "up", "config": "up"}
     try:
         await initialize_independent_services(app)
@@ -269,9 +270,7 @@ async def health_check() -> HealthResponse:
     status_data = ai_integrator.get_system_status()
     return HealthResponse(
         status="healthy" if status_data.get("initialized") else "degraded",
-        uptime_seconds=float(
-            status_data.get("performance_metrics", {}).get("system.cpu.usage_percent", 0.0)
-        ),
+        uptime_seconds=max(0.0, time.monotonic() - getattr(app.state, "started_at", time.monotonic())),
         version="4.0.0",
         components={"integrator": "healthy", "auto_evolution": "healthy"},
         metrics=status_data.get("session_stats", {}),

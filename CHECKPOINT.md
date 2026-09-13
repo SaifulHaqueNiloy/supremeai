@@ -31,8 +31,8 @@
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.
-- `SupremeAIService.ts` lines 350-424: OpenRouter fetch logic → MUST be removed.
-- Only local Ollama permitted as offline fallback.
+- `packages/shared-services/src/services/SupremeAIService.ts` uses the central backend Axios client; the historical OpenRouter-direct-fetch finding is stale and must not be reintroduced.
+- Only local Ollama is permitted as an offline fallback.
 - Supabase `ai_memory` table setup pending (Phase C).
 
 ## Next Agent Start Point
