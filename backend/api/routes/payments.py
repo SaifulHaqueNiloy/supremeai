@@ -49,12 +49,22 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
         raise HTTPException(status_code=403, detail="User mismatch")
 
     try:
-        stripe_key = settings.stripe_api_key
-        if not stripe_key:
-            is_production = os.environ.get("SUPREMEAI_ENV", "local").lower() == "production"
+        # FINAL-TEST FIX (2026-09-13): SecretStr is always truthy, so the
+        # "not configured" branch never ran. Validate the raw key shape instead.
+        stripe_key = (
+            settings.stripe_api_key.get_secret_value()
+            if getattr(settings, "stripe_api_key", None)
+            else ""
+        )
+        if not stripe_key or not stripe_key.startswith(
+            ("sk_live_", "sk_test_", "rk_live_", "rk_test_")
+        ):
+            is_production = os.environ.get("SUPREMEAI_ENV", "local").lower() == "production" or (
+                getattr(settings, "env", "local") == "production"
+            )
             if is_production:
                 logger.critical(
-                    "🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: API key missing in production"
+                    "🚨 STRIPE PAYMENT GATEWAY MISCONFIGURED: usable secret key missing in production"
                 )
                 raise HTTPException(
                     status_code=503,

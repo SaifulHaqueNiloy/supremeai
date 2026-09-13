@@ -26,7 +26,20 @@ router = APIRouter(prefix="/api/billing", tags=["Billing & Credit Wallet"])
 token_deductor = TokenDeductor()
 
 _raw_stripe_key = settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
+# FINAL-TEST FIX (2026-09-13): the deployment's STRIPE_SECRET_KEY was an
+# "mk_..." restricted-key ID (not a usable sk_live_/sk_test_ key), so every
+# checkout failed with an opaque provider error mid-request. Detect obviously
+# invalid key shapes at import and treat Stripe as unconfigured instead.
+if _raw_stripe_key and not _raw_stripe_key.startswith(("sk_live_", "sk_test_", "rk_live_", "rk_test_")):
+    logger.warning(
+        "STRIPE_SECRET_KEY is present but does not look like a Stripe secret key "
+        f"(starts with '{_raw_stripe_key[:3]}…'). Stripe checkout will be disabled "
+        "until a valid sk_live_/sk_test_ key is configured. Wallet/budget endpoints "
+        "keep working without it."
+    )
+    _raw_stripe_key = None
 stripe.api_key = _raw_stripe_key
+STRIPE_ENABLED = bool(_raw_stripe_key)
 STRIPE_WEBHOOK_SECRET = getattr(settings, "stripe_webhook_secret", None)
 
 SSLCOMMERZ_VALIDATION_URL = "https://securepay.sslcommerz.com/validator/api/validationserverAPI.php"
@@ -243,11 +256,15 @@ async def create_checkout_session(
         raise HTTPException(status_code=401, detail="Invalid token")
 
     try:
-        stripe_key = settings.stripe_api_key
-        if not stripe_key:
-            if os.environ.get("SUPREMEAI_ENV") == "production":
-                raise RuntimeError(
-                    "Stripe API key not configured in production. Payment processing is unavailable."
+        # FINAL-TEST FIX (2026-09-13): previously checked `if not stripe_key` on a
+        # SecretStr object, which is always truthy, so unconfigured/invalid keys
+        # sailed through and failed inside the Stripe SDK with a 500. Use the
+        # validated STRIPE_ENABLED flag instead and return a clean 503.
+        if not STRIPE_ENABLED:
+            if settings.env == "production":
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Stripe is not configured. Payment processing is temporarily unavailable.",
                 )
             logger.warning("Stripe API key not set in settings. Using mock checkout session.")
             return {
@@ -256,7 +273,7 @@ async def create_checkout_session(
                 "url": payload.success_url + "?session_id=mock_session_123",
             }
 
-        stripe.api_key = stripe_key
+        stripe.api_key = _raw_stripe_key
         stripe_session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{"price": payload.price_id, "quantity": 1}],
