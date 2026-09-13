@@ -270,7 +270,9 @@ async def health_check() -> HealthResponse:
     status_data = ai_integrator.get_system_status()
     return HealthResponse(
         status="healthy" if status_data.get("initialized") else "degraded",
-        uptime_seconds=max(0.0, time.monotonic() - getattr(app.state, "started_at", time.monotonic())),
+        uptime_seconds=max(
+            0.0, time.monotonic() - getattr(app.state, "started_at", time.monotonic())
+        ),
         version="4.0.0",
         components={"integrator": "healthy", "auto_evolution": "healthy"},
         metrics=status_data.get("session_stats", {}),

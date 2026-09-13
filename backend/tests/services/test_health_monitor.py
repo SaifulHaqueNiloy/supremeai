@@ -165,7 +165,10 @@ def test_health_monitor_reports_elapsed_process_time_not_cpu_time():
     ):
         monitor = HealthMonitor(metrics_port=9092)
 
-        with patch("psutil.cpu_percent", return_value=73.0), patch("psutil.virtual_memory") as mock_vm:
+        with (
+            patch("psutil.cpu_percent", return_value=73.0),
+            patch("psutil.virtual_memory") as mock_vm,
+        ):
             mock_vm.return_value.percent = 20.0
             mock_vm.return_value.available = 1024 * 1024 * 1024
             loop = asyncio.new_event_loop()

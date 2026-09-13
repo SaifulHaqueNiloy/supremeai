@@ -14,17 +14,13 @@ def test_user_origins_drop_wildcard_and_duplicates(monkeypatch):
 
 
 def test_user_origins_fall_back_to_configured_defaults(monkeypatch):
-    monkeypatch.setattr(
-        cors_policy, "USER_ALLOWED_ORIGINS", ("https://app.example.com",)
-    )
+    monkeypatch.setattr(cors_policy, "USER_ALLOWED_ORIGINS", ("https://app.example.com",))
 
     assert cors_policy.resolve_user_cors_origins([]) == ["https://app.example.com"]
 
 
 def test_admin_origins_always_include_configured_admin_origins(monkeypatch):
-    monkeypatch.setattr(
-        cors_policy, "ADMIN_ALLOWED_ORIGINS", ("https://admin.example.com",)
-    )
+    monkeypatch.setattr(cors_policy, "ADMIN_ALLOWED_ORIGINS", ("https://admin.example.com",))
 
     assert cors_policy.resolve_admin_cors_origins(["https://custom.example.com"]) == [
         "https://custom.example.com",

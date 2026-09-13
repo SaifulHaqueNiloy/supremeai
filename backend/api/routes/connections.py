@@ -290,9 +290,7 @@ async def register_connection(
         ) from exc
 
     # --- Phase 1: durable write-through to the ConnectionRegistry ---
-    tenant_id = str(
-        current_user.get("tenant_id") or current_user.get("org_id") or ""
-    ).strip()
+    tenant_id = str(current_user.get("tenant_id") or current_user.get("org_id") or "").strip()
     if not tenant_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
