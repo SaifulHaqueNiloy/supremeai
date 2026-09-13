@@ -2,4 +2,5 @@
 export * from './connection-contract';
 export * from './capability-contract';
 export * from './execution-mode';
-export * from './capability';
+export { capabilityFromModule, explainUnavailable, ADD_INTENTS } from './capability';
+export type { UserCapability, UserCapabilityStatus, UnavailableCapability, AddIntent } from './capability';
