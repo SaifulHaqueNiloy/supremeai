@@ -51,6 +51,10 @@ class CloudSandboxOrchestrator:
             return settings.runpod_api_url or "https://api.runpod.io/v2"
         elif self.provider == "modal":
             return getattr(settings, "modal_api_url", "https://api.modal.com")
+        elif self.provider == "local":
+            # Local mode is an explicit dry-run provider used by the API when no
+            # remote sandbox credentials are configured.
+            return "http://127.0.0.1"
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")
 
