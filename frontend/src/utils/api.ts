@@ -339,10 +339,15 @@ export const getWebSocketBaseUrl = (): string => {
     return apiBase.replace(/^http:\/\//, 'ws://');
   }
 
-  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const host = typeof window !== 'undefined' ? window.location.host : (backendUrl ? backendUrl.replace(/^https?:\/\//, '') : 'localhost:8000');
-  if (typeof window === 'undefined' && import.meta.env.PROD && !backendUrl) {
-    throw new Error('❌ Backend URL is required in production SSR.');
+  if (typeof window === 'undefined') {
+    if (!backendUrl) {
+      if (import.meta.env.PROD) {
+        throw new Error('❌ Backend URL is required in production SSR.');
+      }
+      return '';
+    }
+    return `${protocol}//${backendUrl.replace(/^https?:\/\//, '')}`;
   }
-  return `${protocol}//${host}`;
+
+  return `${protocol}//${window.location.host}`;
 };
