@@ -61,29 +61,30 @@ async def trio_status() -> dict[str, Any]:
     try:
         from agents.ide.trio_adapters import ClineChecker, GeminiWriter, KiloReviewer
 
+        import os
+
+        # Availability describes importable workflow stages. Provider/model selection
+        # remains delegated to the runtime gateway and is never encoded here.
+        gateway_configured = any(
+            os.getenv(name)
+            for name in (
+                "GEMINI_API_KEY",
+                "OPENROUTER_API_KEY",
+                "GROQ_API_KEY",
+                "MISTRAL_API_KEY",
+                "GITHUB_MODELS_API_KEY",
+            )
+        )
         return {
-            "pipeline": "ide-trio",
+            "workflow": "agent_review_workflow",
             "agents": [
-                {
-                    "role": "writer",
-                    "agent": "gemini",
-                    "available": True,
-                    "class": GeminiWriter.__name__,
-                },
-                {
-                    "role": "reviewer",
-                    "agent": "kilo",
-                    "available": True,
-                    "class": KiloReviewer.__name__,
-                },
-                {
-                    "role": "checker",
-                    "agent": "cline",
-                    "available": True,
-                    "class": ClineChecker.__name__,
-                },
+                {"role": "writer", "available": True, "class": GeminiWriter.__name__},
+                {"role": "reviewer", "available": True, "class": KiloReviewer.__name__},
+                {"role": "checker", "available": True, "class": ClineChecker.__name__},
             ],
-            "status": "ready",
+            "runtime_model_selection": True,
+            "provider_configured": gateway_configured,
+            "status": "ready" if gateway_configured else "degraded",
         }
     except ImportError as exc:
         raise HTTPException(

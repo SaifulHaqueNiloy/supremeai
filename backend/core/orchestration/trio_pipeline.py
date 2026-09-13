@@ -61,7 +61,7 @@ class AgentReviewWorkflow:
             f"{prompt}:{language}:{datetime.now(UTC).isoformat()}".encode()
         ).hexdigest()[:16]
 
-        logger.info(f"[TrioPipeline] Starting pipeline {pipeline_id}: {prompt[:100]}")
+        logger.info(f"[AgentReviewWorkflow] Starting workflow {pipeline_id}: {prompt[:100]}")
 
         # ── Stage 1: Gemini writes code ──────────────────────────────────
         ctx = context or {}
@@ -89,7 +89,7 @@ class AgentReviewWorkflow:
                 "reviewer": {},
                 "checker": {},
                 "ready_for_production": False,
-                "summary": f"Stage 1 (Gemini) failed: {writer_result.output[:200]}",
+                "summary": f"Writer stage failed: {writer_result.output[:200]}",
             }
 
         generated_code = writer_result.output
