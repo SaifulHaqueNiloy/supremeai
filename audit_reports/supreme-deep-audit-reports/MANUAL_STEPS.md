@@ -30,6 +30,15 @@ Remaining work that requires operator review, external credentials, or a deliber
 - [ ] Validate that the deployed frontend build uses the intended `VITE_USER_BACKEND`/`VITE_ADMIN_BACKEND` values; build-time Vite variables cannot be changed after deployment.
 - [ ] Execute browser preflight and authenticated request tests for `X-Device-Fingerprint`, `X-CSRF-Token`, `Authorization`, and `X-JIT-OTP` against each portal origin.
 
+## Lightweight QA rollout follow-ups
+
+- [x] Add a small machine-readable QA contract covering build, type, unit, integration, security, release, MCP, privacy, accessibility, and human-review boundaries (`qa/checklist/core.yaml`).
+- [x] Add deterministic checklist validation and a focused CI workflow (`scripts/ci/validate_qa_checklist.mjs`, `.github/workflows/qa-contract.yml`).
+- [ ] Add browser E2E suites only after stable staging URLs, seeded QA accounts, and cleanup/rollback fixtures exist; do not add credential-dependent tests to PR CI prematurely.
+- [ ] Add release-gate aggregation only when the deployment workflow has a single authoritative artifact/report path; avoid duplicating the existing CI gates.
+- [ ] Pin the third-party setup actions in `qa-contract.yml` to approved full SHAs before enabling repository-wide supply-chain enforcement.
+- [ ] Reconcile the checklist IDs and severities with the authoritative manual QA catalog during the next audit pass.
+
 ## Findings reconciled during this review
 
 - [x] `chatSlice` is present in the checkout; the older audit statement that it is missing is stale. Its rollout is still unverified.
