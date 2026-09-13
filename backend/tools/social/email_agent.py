@@ -33,14 +33,13 @@ class EmailAgent:
 
     def connect_gmail_oauth(self, provider: str, scopes: list) -> bool:
         """Gmail OAuth এখনো real consent/token-exchange ফ্লো-র সাথে ওয়্যার করা হয়নি।
-        আগে এখানে চুপচাপ True রিটার্ন হতো — এখন fail-closed: False রিটার্ন করে
-        যাতে caller ভুল করে ধরে না নেয় যে ইমেইল অ্যাকাউন্ট আসলে কানেক্টেড।
-        ক্র্যাশ নয় — caller ইউজারকে বোঝাতে পারে।
+        আগে এখানে চুপচাপ True রিটার্ন হতো — এখন fail-closed: NotImplementedError রেইজ করে
+        যাতে caller ভুল করে ধরে না নেয় যে ইমেইল অ্যাকাউন্ট আসলে কানেক্টেড এবং API রুট 501 পাঠাতে পারে।
         """
         logger.warning(
             f"Gmail OAuth connect requested (provider={provider}, scopes={scopes}) — OAuth flow not implemented yet."
         )
-        return False
+        raise NotImplementedError("Gmail OAuth flow is not implemented yet.")
 
     def connect_imap(self, host: str, port: int, username: str, app_password: str) -> bool:
         """একটি রিয়েল IMAP লগইন করে ক্রেডেনশিয়াল যাচাই করে, তারপর এনক্রিপ্ট করে সংরক্ষণ করে।"""
