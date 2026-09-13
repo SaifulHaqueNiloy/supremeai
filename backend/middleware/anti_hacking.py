@@ -64,6 +64,12 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                         last.get("ip") != signal["ip"] or last.get("country") != signal["country"]
                     )
 
+                    fingerprint_match = (
+                        last.get("fingerprint") not in (None, "unknown")
+                        and signal["fingerprint"] not in (None, "unknown")
+                        and last.get("fingerprint") == signal["fingerprint"]
+                    )
+
                     if mismatch:
                         same_ua = (
                             last.get("ua") not in (None, "unknown")
@@ -73,7 +79,7 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                             signal["ip"]
                         )
                         # বাংলা মন্তব্য: একই ইউজার-এজেন্ট অথবা সাবনেট পাওয়া গেলে সেটিকে আংশিক ম্যাচ (Caution) হিসেবে ধরা হবে এবং OTP ট্রিগার হবে না।
-                        if same_ua or same_subnet:
+                        if same_ua or same_subnet or fingerprint_match:
                             caution = True
                             mismatch = False
 

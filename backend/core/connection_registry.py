@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
+from urllib.request import Request as UrlRequest
+from urllib.request import urlopen
 
 from pydantic import BaseModel, Field, HttpUrl
 
@@ -270,7 +274,7 @@ class ConnectionRegistry:
         )
         return self._from_row(updated)
 
-    def health(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
+    async def health(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
         tenant_id, _, _ = self._identity(user)
         with get_conn() as conn:
             row = conn.execute(
@@ -281,18 +285,40 @@ class ConnectionRegistry:
             raise LookupError("Connection not found")
         if row["status"] != "active":
             return self._from_row(row)
+
+        started = time.perf_counter()
+        status = "healthy"
+        error: str | None = None
         if not MCPSecurityGuard.is_safe_url(row["url"], enforce_https=False):
-            with get_conn() as conn:
-                conn.execute(
-                    f"UPDATE {self.TABLE} SET status = 'degraded', updated_at = ? WHERE id = ? AND tenant_id = ?",
-                    (datetime.now(UTC).isoformat(), connection_id, tenant_id),
-                )
-                conn.commit()
-            with get_conn() as conn:
-                row = conn.execute(
-                    f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
-                    (connection_id, tenant_id),
-                ).fetchone()
+            status = "degraded"
+            error = "URL blocked by SSRF / security policy"
+        else:
+            try:
+                request = UrlRequest(row["url"], method="HEAD")
+                await asyncio.to_thread(urlopen, request, timeout=3)
+            except Exception as exc:  # noqa: BLE001 - health probes must degrade safely
+                status = "degraded"
+                error = type(exc).__name__
+
+        latency_ms = round((time.perf_counter() - started) * 1000, 2)
+        now = datetime.now(UTC).isoformat()
+        metadata = jload(row["metadata"], {})
+        metadata.update({
+            "health_status": status,
+            "health_latency_ms": latency_ms,
+            "health_checked_at": now,
+            "health_error": error,
+        })
+        with get_conn() as conn:
+            conn.execute(
+                f"UPDATE {self.TABLE} SET status = ?, metadata = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",
+                (status, jdump(metadata), now, connection_id, tenant_id),
+            )
+            conn.commit()
+            row = conn.execute(
+                f"SELECT * FROM {self.TABLE} WHERE id = ? AND tenant_id = ?",
+                (connection_id, tenant_id),
+            ).fetchone()
         return self._from_row(row)
 
     def revoke(self, *, user: dict[str, Any], connection_id: str) -> ConnectionRecord:
