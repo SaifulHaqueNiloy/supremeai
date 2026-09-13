@@ -536,58 +536,89 @@ def get_metrics():
 
 
 @router.get("/providers")
-def get_providers():
-    providers = []
-    all_known = [
-        (
-            "openrouter",
-            "OpenRouter",
-            settings.openrouter_api_key,
-            ["gpt-4o", "claude-3.5-sonnet", "llama-3.1-70b"],
-        ),
-        (
-            "gemini",
-            "Google Gemini",
-            settings.gemini_api_key,
-            ["gemini-2.0-flash", "gemini-2.5-pro"],
-        ),
-        ("groq", "Groq", settings.groq_api_key, ["llama-3.1-8b", "mixtral-8x7b"]),
-        (
-            "deepseek",
-            "DeepSeek",
-            settings.deepseek_api_key,
-            ["deepseek-chat", "deepseek-reasoner"],
-        ),
-    ]
-    for p_id, p_name, has_key, models in all_known:
-        if has_key:
+async def get_providers():
+    """FIX (final-test 2026-09-13): এই endpoint আগে ১০০% ভুয়া hardcoded ডেটা দিত —
+    সব provider-এ একই কাল্পনিক latency_history [115,118,120,122,119,121,120],
+    rate_limit 90/100, আর api_key_valid: True। অপারেটর ড্যাশবোর্ড ভুল তথ্য দেখাচ্ছিল।
+
+    এখন ProviderRegistry (services/dynamic_ai) থেকে আসল পরিসংখ্যান রিপোর্ট করে:
+    - আসল success/failure কাউন্টার, গড় latency, বর্তমান status
+    - কোনো probe ডেটা না থাকলে সৎ "unknown" — ভুয়া "healthy" নয়
+    - API key না থাকলে "not_configured"
+    """
+    try:
+        from services.dynamic_ai.orchestrator import get_ai_orchestrator
+        from services.dynamic_ai.provider_registry import ProviderStatus
+
+        orchestrator = await get_ai_orchestrator()
+        registry_providers = orchestrator.registry.get_all_providers()
+    except Exception as exc:
+        logger.warning(f"Provider registry unavailable, reporting honest unknowns: {exc}")
+        registry_providers = {}
+        ProviderStatus = None  # type: ignore[assignment]
+
+    if registry_providers:
+        # ProviderStatus import ব্যর্থ হলেও কোড চলবে — শুধু permanent-disable চেক স্কিপ হবে
+        _perm_status = ProviderStatus.DISABLED_PERMANENT if ProviderStatus is not None else None
+        providers = []
+        for p_id, cfg in registry_providers.items():
+            has_key = cfg.api_key is not None
+            total_calls = cfg.success_count + cfg.failure_count
+            # সৎ status: আসল ট্রাফিক না দেখা হলে কখনোই "healthy" বলা হবে না
+            if not has_key:
+                status = "not_configured"
+            elif cfg.status.value == "active" and total_calls == 0:
+                status = "unknown"  # key আছে কিন্তু এখনো ব্যবহার হয়নি
+            else:
+                status = cfg.status.value
             providers.append(
                 {
                     "id": p_id,
-                    "name": p_name,
-                    "status": "healthy",
-                    "latency_ms": 120,
-                    "latency_history": [115, 118, 120, 122, 119, 121, 120],
-                    "api_key_valid": True,
-                    "rate_limit_remaining": 90,
-                    "rate_limit_max": 100,
-                    "models": models,
-                    "mode": "active",
+                    "name": cfg.display_name,
+                    "status": status,
+                    "latency_ms": round(cfg.avg_latency_ms) if cfg.avg_latency_ms else None,
+                    # আসল পরিমাপ না থাকলে null — আর কাল্পনিক ধারাবাহিকতা নয়
+                    "latency_history": (
+                        [round(cfg.avg_latency_ms)] * 7
+                        if cfg.avg_latency_ms and total_calls > 0
+                        else None
+                    ),
+                    "api_key_valid": has_key and (_perm_status is None or cfg.status != _perm_status),
+                    "rate_limit_remaining": None,  # রিয়েল-টাইম হেডার না পড়া পর্যন্ত unknown
+                    "rate_limit_max": cfg.rpm_limit or None,
+                    "models": [m.get("id", m) if isinstance(m, dict) else m for m in cfg.models[:5]],
+                    "mode": "active" if cfg.is_available else "inactive",
+                    "requests_today": cfg.requests_today,
+                    "success_rate": round(cfg.success_rate, 1) if total_calls else None,
+                    "last_error": cfg.last_error[:200] if cfg.last_error else None,
+                    "is_free_tier": cfg.is_free_tier,
+                    "priority": cfg.priority,
                 }
             )
-    if not providers:
+        return providers
+
+    # রেজিস্ট্রি খালি — অন্তত সৎ key-presence রিপোর্ট দাও
+    providers = []
+    for p_id, p_name, has_key in [
+        ("openrouter", "OpenRouter", bool(settings.openrouter_api_key)),
+        ("gemini", "Google Gemini", bool(settings.gemini_api_key)),
+        ("groq", "Groq", bool(settings.groq_api_key)),
+        ("deepseek", "DeepSeek", bool(settings.deepseek_api_key)),
+        ("openai", "OpenAI", bool(settings.openai_api_key)),
+        ("mistral", "Mistral", bool(getattr(settings, "mistral_api_key", None))),
+    ]:
         providers.append(
             {
-                "id": "ollama",
-                "name": "Ollama (Local)",
-                "status": "healthy",
-                "latency_ms": 45,
-                "latency_history": [40, 42, 45, 48, 44, 46, 45],
-                "api_key_valid": True,
-                "rate_limit_remaining": 100,
-                "rate_limit_max": 100,
-                "models": ["llama3", "mistral"],
-                "mode": "active",
+                "id": p_id,
+                "name": p_name,
+                "status": "unknown" if has_key else "not_configured",
+                "latency_ms": None,
+                "latency_history": None,
+                "api_key_valid": has_key,  # key presence — কার্যকারিতা এখনো যাচাই হয়নি
+                "rate_limit_remaining": None,
+                "rate_limit_max": None,
+                "models": [],
+                "mode": "unknown",
             }
         )
     return providers

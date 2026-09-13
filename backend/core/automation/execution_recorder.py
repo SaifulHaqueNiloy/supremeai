@@ -29,6 +29,24 @@ if TYPE_CHECKING:
     from core.orchestration.conversation_orchestrator import ExecutionRecord
 
 
+def _fit36(value: str | None) -> str | None:
+    """FIX (final-test 2026-09-13): event-id/idempotency values যেমন 'exec_<32hex>' বা
+    'corr_<32hex>' ৩৭ অক্ষরের — কিন্তু automation_executions.event_id কলাম
+    VARCHAR(36) (migration 7c4d9e1f2a3b অনুযায়ী, কিছু লাইভ DB-তে idempotency_key-ও
+    36-ই আছে)। ফলে প্রতিটি orchestration persistence insert নীরবে
+    StringDataRightTruncationError-এ ব্যর্থ হচ্ছিল। Prefix-শেড normalize —
+    ৩২-অক্ষরের unique অংশ অক্ষত থাকে, তাই idempotency uniqueness প্রভাবিত হয় না।"""
+    if value is None:
+        return None
+    value = str(value)
+    if len(value) <= 36:
+        return value
+    # 'exec_xxx' / 'corr_xxx' / 'evt_xxx' স্টাইল prefix থাকলে শেড করো
+    if "_" in value and len(value.split("_", 1)[1]) <= 36:
+        return value.split("_", 1)[1]
+    return value[:36]
+
+
 class ExecutionRecorder:
     """
     Plan Section 7: AutomationExecution lifecycle DB persistence।
@@ -50,9 +68,9 @@ class ExecutionRecorder:
             async with get_db_session_context() as session:
                 record = AutomationExecution(
                     id=execution_id,
-                    event_id=event.event_id,
+                    event_id=_fit36(event.event_id),
                     workflow_key=event.workflow_key,
-                    idempotency_key=event.idempotency_key,
+                    idempotency_key=_fit36(event.idempotency_key),
                     provider="pending",  # provider পরে record_completion-এ update হবে
                     status="PENDING",
                     attempt=1,
@@ -175,9 +193,9 @@ class ExecutionRecorder:
             async with get_db_session_context() as session:
                 db_record = AutomationExecution(
                     id=execution_id,
-                    event_id=record.execution_id,
+                    event_id=_fit36(record.execution_id),
                     workflow_key=f"orchestrator:{record.capability}",
-                    idempotency_key=record.correlation_id,
+                    idempotency_key=_fit36(record.correlation_id),
                     provider="orchestrator",
                     status=record.status.upper(),
                     attempt=1,
