@@ -115,6 +115,10 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     if not arguments:
         arguments = {}
 
+    tenant_id = str(arguments.get("tenant_id") or "").strip()
+    if not tenant_id or tenant_id == "default":
+        return [types.TextContent(type="text", text=json.dumps({"error": "tenant_id is required"}))]
+
     # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
     decision, risk_level = evaluate_tool(name)
     start_time = time.monotonic()
@@ -122,7 +126,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     policy_block = _check_policy(name)
     if policy_block is not None:
         latency = (time.monotonic() - start_time) * 1000
-        audit_tool_call(name, decision, risk_level, latency_ms=latency, error="policy_blocked")
+        audit_tool_call(name, decision, risk_level, latency_ms=latency, error="policy_blocked", tenant_id=tenant_id)
         logger.warning(f"MCP tool '{name}' blocked by policy: {risk_level}")
         return [types.TextContent(type="text", text=json.dumps(policy_block, indent=2))]
 
@@ -193,7 +197,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     finally:
         # ── Audit logging (Constitution Law #19: Observable) ──
         latency = (time.monotonic() - start_time) * 1000
-        audit_tool_call(name, decision, risk_level, latency_ms=latency)
+        audit_tool_call(name, decision, risk_level, latency_ms=latency, tenant_id=tenant_id)
 
 
 async def main():
