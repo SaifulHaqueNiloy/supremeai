@@ -202,6 +202,16 @@ def _resolve_litellm_target(model: str) -> tuple[str, str | None]:
         return model, None
     if model.lower() in _RETIRED_MODELS:
         raise ValueError(f"Model {model} is retired at its provider (verified 2026-09-13)")
+    # Normalize bare model names from env settings (e.g. GEMINI_MODEL="gemini-2.5-flash")
+    # into litellm's provider-prefixed format.
+    if "/" not in model:
+        lowered = model.lower()
+        if lowered.startswith("models/gemini-"):
+            model = f"gemini/{model.removeprefix('models/')}"
+        elif lowered.startswith("gemini-"):
+            model = f"gemini/{model}"
+        elif lowered.startswith(("gpt-", "o1", "o3")):
+            model = f"openai/{model}"
     provider = model.split("/", 1)[0].lower() if "/" in model else ""
     base = _PROVIDER_API_BASES.get(provider)
     if base:
