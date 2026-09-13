@@ -4,6 +4,9 @@ The performance_metrics table (created by j9k0l1m2n3o4) has zero writers
 and zero readers in production. Live code writes to learning_events instead.
 This migration removes the dead schema.
 
+IGNORE_SAFETY_WARNING: Table is completely unused in production (0 writers, 0 readers).
+Dropping is an intentional dead-code cleanup per R9 architecture reconciliation.
+
 See: docs/architecture/PROJECT_STATUS_RECONCILIATION_2026-09-13.md R9
 
 Revision ID: k5l6m7n8o9p0
