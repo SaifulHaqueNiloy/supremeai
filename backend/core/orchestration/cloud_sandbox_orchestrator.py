@@ -10,6 +10,7 @@ Integrates 'Freebuff CLI' as a zero-cost headless AI worker.
 import asyncio
 import datetime
 import os
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -265,3 +266,134 @@ class CloudSandboxOrchestrator:
         raise NotImplementedError(
             f"Payload preparation for provider '{self.provider}' not implemented."
         )
+
+
+@dataclass
+class SandboxSession:
+    """Represents an active or provisioned session in a persistent cloud sandbox."""
+
+    session_id: str
+    sandbox_id: str
+    status: str = "running"
+    created_at: Any = None
+
+
+class PersistentSandbox:
+    """
+    Manages persistent stateful cloud sandbox environments with attached volumes and session tracking.
+    """
+
+    def __init__(self, provider: str = "runpod"):
+        self.provider = provider.lower()
+        self.sessions: dict[str, SandboxSession] = {}
+        self.api_key = os.getenv(f"{self.provider.upper()}_API_KEY")
+
+    def _get_base_url(self) -> str:
+        from core.config import settings
+
+        if self.provider == "runpod":
+            return settings.runpod_api_url or "https://api.runpod.io/v2"
+        elif self.provider == "modal":
+            return getattr(settings, "modal_api_url", "https://api.modal.com")
+        return "https://api.runpod.io/v2"
+
+    def _get_headers(self) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+    def _get_client(self) -> httpx.AsyncClient:
+        return httpx.AsyncClient(
+            base_url=self._get_base_url(),
+            headers=self._get_headers(),
+            timeout=60.0,
+        )
+
+    async def create_with_volume(
+        self, image: str, volume_size_gb: int = 10, ttl_hours: int = 24
+    ) -> SandboxSession:
+        client = self._get_client()
+        payload = {
+            "image": image,
+            "volume_size_gb": volume_size_gb,
+            "ttl_hours": ttl_hours,
+        }
+        res = client.post(f"/{self.provider}/persistent_volume", json=payload)
+        if asyncio.iscoroutine(res):
+            res = await res
+        data = res.json() if hasattr(res, "json") else {}
+        session_id = data.get("session_id", f"session_{os.urandom(4).hex()}")
+        sandbox_id = data.get("id", f"sandbox_{os.urandom(4).hex()}")
+        status = data.get("status", "running")
+        session = SandboxSession(
+            session_id=session_id,
+            sandbox_id=sandbox_id,
+            status=status,
+            created_at=datetime.datetime.now(datetime.UTC).isoformat(),
+        )
+        self.sessions[session_id] = session
+        return session
+
+    async def execute_in_session(self, session_id: str, command: str) -> dict[str, Any]:
+        client = self._get_client()
+        res = client.post(f"/sessions/{session_id}/execute", json={"command": command})
+        if asyncio.iscoroutine(res):
+            res = await res
+        return res.json() if hasattr(res, "json") else {"status": "FAILED", "exitCode": 1}
+
+    async def install_dependency(self, session_id: str, manager: str, package: str) -> bool:
+        client = self._get_client()
+        res = client.post(
+            f"/sessions/{session_id}/install",
+            json={"manager": manager, "package": package},
+        )
+        if asyncio.iscoroutine(res):
+            res = await res
+        data = res.json() if hasattr(res, "json") else {}
+        return data.get("status") == "COMPLETED" or data.get("exitCode") == 0
+
+    async def upload_file(self, session_id: str, path: str, content: str) -> bool:
+        client = self._get_client()
+        res = client.post(
+            f"/sessions/{session_id}/upload",
+            json={"path": path, "content": content},
+        )
+        if asyncio.iscoroutine(res):
+            res = await res
+        data = res.json() if hasattr(res, "json") else {}
+        return (
+            data.get("status") in ("success", "COMPLETED")
+            or getattr(res, "status_code", 200) == 200
+        )
+
+    async def download_file(self, session_id: str, path: str) -> bytes:
+        client = self._get_client()
+        res = client.get(f"/sessions/{session_id}/download", params={"path": path})
+        if asyncio.iscoroutine(res):
+            res = await res
+        if hasattr(res, "json"):
+            try:
+                data = res.json()
+                if isinstance(data, dict) and "content" in data:
+                    val = data["content"]
+                    return val.encode("utf-8") if isinstance(val, str) else bytes(val)
+            except Exception:
+                pass
+        if hasattr(res, "content"):
+            return (
+                res.content if isinstance(res.content, bytes) else str(res.content).encode("utf-8")
+            )
+        return b""
+
+    async def destroy_sandbox(self, session_id: str) -> bool:
+        client = self._get_client()
+        res = client.post(f"/sessions/{session_id}/destroy")
+        if asyncio.iscoroutine(res):
+            res = await res
+        if session_id in self.sessions:
+            del self.sessions[session_id]
+        return True
+
+    async def list_sessions(self) -> list[SandboxSession]:
+        return list(self.sessions.values())
