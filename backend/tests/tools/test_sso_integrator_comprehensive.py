@@ -180,7 +180,18 @@ class TestSSOIntegratorComprehensive:
             request=httpx.Request("POST", "https://oauth2.googleapis.com/token"),
         )
 
-        with patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=mock_resp):
+        # বাংলা মন্তব্য: SEC-HARDEN P5 এর পর id_token এর signature JWKS দিয়ে verify করা
+        # হয় (fail-closed)। এই টেস্টে বাস্তব JWKS নেই, তাই verification স্তরটি মক করে
+        # শুধু decoded claims রিটার্ন করানো হচ্ছে — সিকিউরিটি লজিক অপরিবর্তিত থাকছে।
+        decoded_claims = jwt.decode(fake_id_token, options={"verify_signature": False})
+        with (
+            patch("httpx.AsyncClient.post", new_callable=AsyncMock, return_value=mock_resp),
+            patch.object(
+                integrator,
+                "_verify_oidc_id_token",
+                new=AsyncMock(return_value=(decoded_claims, None)),
+            ),
+        ):
             res = await integrator.process_oidc_response(
                 provider="google", code="auth_code_123", state="state_123"
             )
