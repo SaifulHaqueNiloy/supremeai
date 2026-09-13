@@ -1,9 +1,7 @@
 """Deployment trigger endpoint (POST /admin-api/deploy)."""
 
-
-from core.logging_config import logger
-
 from api.routes.admin_dashboard import router
+from core.logging_config import logger
 
 
 @router.post("/deploy")

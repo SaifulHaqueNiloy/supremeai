@@ -59,23 +59,23 @@ from ...resilience.circuit_breaker_manager import (
 )
 from ..interfaces import ExecutionMode
 from ..providers import CloudProviderAdapter, OllamaLocalAdapter
-
 from .completion import CompletionMixin
 from .gateway import LLMGateway
 from .http_client import get_http_client, shutdown_http_client, stream_llm_response
 from .litellm_runtime import LitellmSetupMixin
 from .registry import (
     _MODEL_KEY_MAP,
-    _ProviderKeyPool,
     _provider_key_pool,
+    _ProviderKeyPool,
     _resolve_key_attr,
+    _resolve_litellm_target,
 )
 from .resilience import ResilienceMixin
 from .routing import (
     _DEFAULT_FALLBACK_MODELS,
     _POLICY_PATH,
-    RoutingMixin,
     TASK_MODEL_MAP,
+    RoutingMixin,
 )
 from .streaming import StreamingMixin
 

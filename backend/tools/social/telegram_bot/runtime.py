@@ -72,4 +72,3 @@ class RuntimeMixin:
                     logger.error(f"Failed to register webhook: {resp.text}")
         except Exception as e:
             logger.error(f"Webhook setup exception: {e}")
-

@@ -207,4 +207,3 @@ class AdminHandlersMixin:
         except Exception as exc:
             logger.exception("On-demand backup error")
             await self.send_message(chat_id, f"❌ Backup failed: <code>{exc}</code>")
-

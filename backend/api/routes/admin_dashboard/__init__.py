@@ -32,7 +32,6 @@ Import cycle note: the ``endpoints_*`` submodules import ``router`` (and
 initialised. That is safe because this module defines those names BEFORE
 the submodule imports run."""
 
-
 import asyncio
 import json
 import os
@@ -41,7 +40,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
-from api.dependencies import get_current_admin  # noqa: F401  (module-attr parity with pre-split module)
+from api.dependencies import (
+    get_current_admin,  # noqa: F401  (module-attr parity with pre-split module)
+)
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.config import settings  # noqa: F401  (module-attr parity with pre-split module)
 from core.error_bus import with_error_bus
@@ -52,7 +53,6 @@ from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
 
 from ._models import ConfigUpdate, UserUpdate  # noqa: F401  (re-export)
-
 
 router = APIRouter(
     prefix="/admin-api",
@@ -314,27 +314,22 @@ def get_costs_breakdown():
         }
 
 
+from .endpoints_deploy import trigger_deploy  # noqa: E402  (registers route + re-export)
 from .endpoints_health import get_health_map  # noqa: E402  (registers route + re-export)
-
-
+from .endpoints_metrics import (  # noqa: E402  (registers routes + re-export)
+    get_metrics,
+    get_providers,
+)
+from .endpoints_router_cfg import (  # noqa: E402  (registers routes + re-export)
+    RouterOverrideRequest,
+    get_model_router,
+    set_router_override,
+)
 from .endpoints_users import (  # noqa: E402  (registers routes + re-export)
     create_user,
     delete_user,
     get_users,
     reset_tenant_usage_bridge,
-)
-
-
-from .endpoints_deploy import trigger_deploy  # noqa: E402  (registers route + re-export)
-
-
-from .endpoints_metrics import get_metrics, get_providers  # noqa: E402  (registers routes + re-export)
-
-
-from .endpoints_router_cfg import (  # noqa: E402  (registers routes + re-export)
-    RouterOverrideRequest,
-    get_model_router,
-    set_router_override,
 )
 
 
@@ -382,13 +377,6 @@ def update_cost_caps(payload: dict[str, Any]):
     return {"status": "success", "caps": caps}
 
 
-from .endpoints_impersonate import (  # noqa: E402  (registers routes + re-export)
-    ImpersonateRequest,
-    impersonate_by_payload,
-    impersonate_user,
-)
-
-
 from .endpoints_backups import (  # noqa: E402  (registers routes + re-export)
     create_backup,
     emergency_deploy,
@@ -396,13 +384,16 @@ from .endpoints_backups import (  # noqa: E402  (registers routes + re-export)
     restore_backup,
     trigger_backup,
 )
-
-
 from .endpoints_flags import (  # noqa: E402  (registers routes + re-export)
     _FEATURE_FLAGS,
     create_feature_flag,
     get_feature_flags,
     update_feature_flag,
+)
+from .endpoints_impersonate import (  # noqa: E402  (registers routes + re-export)
+    ImpersonateRequest,
+    impersonate_by_payload,
+    impersonate_user,
 )
 
 
@@ -423,21 +414,42 @@ def get_full_data_export():
         raise HTTPException(status_code=500, detail=f"Export failed: {e!s}") from e
 
 
-from .endpoints_security import get_security_findings, run_security_scan  # noqa: E402  (registers routes + re-export)
-
-
-from .endpoints_ws import admin_websocket  # noqa: E402  (registers route + re-export)
-
-
-from .endpoints_gate import GateOverridePayload, execute_manual_gate_override  # noqa: E402  (registers route + re-export)
-
-
-from .endpoints_ci import get_ci_logs, receive_ci_report  # noqa: E402  (registers routes + re-export)
-
-
-from .endpoints_events import get_events, list_reports  # noqa: E402  (registers routes + re-export)
-
-
+from .endpoints_approvals_mcp import (  # noqa: E402,F811  (registers routes + re-export)
+    ApprovalActionPayload,
+    get_commandcenter_approvals,
+    resolve_commandcenter_approval,
+)
+from .endpoints_ci import (  # noqa: E402  (registers routes + re-export)
+    get_ci_logs,
+    receive_ci_report,
+)
+from .endpoints_command import (  # noqa: E402  (registers routes + re-export)
+    AlertAcknowledgePayload,
+    ApprovalDecisionPayload,
+    DeployGateToggle,
+    acknowledge_alert,
+    decide_commandcenter_approval,
+    get_admin_audit_logs,
+    get_command_swarm,
+    get_commandcenter_approvals,  # first (pending-task) definition; shadowed below
+    get_commandcenter_knowledge_stats,
+    get_commandcenter_memory_stats,
+    get_commandcenter_rate_limits,
+    get_commandcenter_roi_dashboard,
+    get_commandcenter_rules,
+    get_commandcenter_skills,
+    get_deploy_gate,
+    list_command_agents,
+    toggle_deploy_gate,
+    update_commandcenter_rules,
+)
+from .endpoints_config import (  # noqa: E402  (registers routes + re-export)
+    _acquire_env_lock,
+    _release_env_lock,
+    get_config,
+    get_env_etag,
+    update_config,
+)
 from .endpoints_crud import (  # noqa: E402  (registers routes + re-export)
     CUSTOMERS_FILE,
     SESSIONS_FILE,
@@ -456,41 +468,13 @@ from .endpoints_crud import (  # noqa: E402  (registers routes + re-export)
     update_settings,
     update_workspace,
 )
-
-
-from .endpoints_config import (  # noqa: E402  (registers routes + re-export)
-    _acquire_env_lock,
-    _release_env_lock,
-    get_config,
-    get_env_etag,
-    update_config,
+from .endpoints_events import get_events, list_reports  # noqa: E402  (registers routes + re-export)
+from .endpoints_gate import (  # noqa: E402  (registers route + re-export)
+    GateOverridePayload,
+    execute_manual_gate_override,
 )
-
-
-from .endpoints_command import (  # noqa: E402  (registers routes + re-export)
-    AlertAcknowledgePayload,
-    ApprovalDecisionPayload,
-    DeployGateToggle,
-    acknowledge_alert,
-    decide_commandcenter_approval,
-    get_admin_audit_logs,
-    get_commandcenter_approvals,  # first (pending-task) definition; shadowed below
-    get_commandcenter_knowledge_stats,
-    get_commandcenter_memory_stats,
-    get_commandcenter_rate_limits,
-    get_commandcenter_roi_dashboard,
-    get_commandcenter_rules,
-    get_commandcenter_skills,
-    get_command_swarm,
-    get_deploy_gate,
-    list_command_agents,
-    toggle_deploy_gate,
-    update_commandcenter_rules,
+from .endpoints_security import (  # noqa: E402  (registers routes + re-export)
+    get_security_findings,
+    run_security_scan,
 )
-
-
-from .endpoints_approvals_mcp import (  # noqa: E402,F811  (registers routes + re-export)
-    ApprovalActionPayload,
-    get_commandcenter_approvals,
-    resolve_commandcenter_approval,
-)
+from .endpoints_ws import admin_websocket  # noqa: E402  (registers route + re-export)

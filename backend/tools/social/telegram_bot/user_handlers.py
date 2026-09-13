@@ -122,4 +122,3 @@ class UserHandlersMixin:
             "⚡ <i>Built with Zero Infrastructure Cost & 100% Thin Client Architecture.</i>"
         )
         await self.send_message(chat_id, text)
-

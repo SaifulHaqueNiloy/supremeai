@@ -1,11 +1,9 @@
 """Model-router status + override endpoints
 (GET /admin-api/model-router, POST /admin-api/model-router/override)."""
 
-
-from core.logging_config import logger
-
 from api.routes.admin_dashboard import router
 from api.routes.admin_dashboard._models import RouterOverrideRequest
+from core.logging_config import logger
 
 
 @router.get("/model-router")

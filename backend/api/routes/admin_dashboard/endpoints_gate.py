@@ -1,6 +1,5 @@
 """God-mode deployment gate override endpoint (POST /admin-api/gate/override)."""
 
-
 import contextlib
 
 from fastapi import HTTPException

@@ -42,4 +42,3 @@ def create_telegram_router(handler: TelegramBotHandler):
 
 # Module-level router exported for FastAPI auto-discovery
 router = create_telegram_router(TelegramBotHandler())
-

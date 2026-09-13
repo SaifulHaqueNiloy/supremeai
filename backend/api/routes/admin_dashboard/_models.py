@@ -4,7 +4,6 @@ All request bodies keep their original class names (and Field descriptions)
 so the OpenAPI ``components.schemas`` section is identical to the pre-split
 single-file module."""
 
-
 from pydantic import BaseModel, Field
 
 

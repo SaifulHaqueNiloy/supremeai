@@ -95,7 +95,23 @@ router = APIRouter(
 # ── Submodule imports below register routes on ``router`` in EXACTLY the
 #    original single-file order. Do not reorder. ────────────────────────────
 
-from . import _automation  # noqa: F401,E402  (route registration + re-exports)
+from . import (
+    _automation,  # noqa: F401,E402  (route registration + re-exports)
+    _cognitive,  # noqa: F401,E402  (route registration + re-exports)
+    _credentials,  # noqa: F401,E402  (route registration + re-exports)
+    _crown_jewel,  # noqa: F401,E402  (route registration + re-exports)
+    _learning,  # noqa: F401,E402  (route registration + re-exports)
+    _legacy_status,  # noqa: F401,E402  (route registration + re-exports)
+    _policy,  # noqa: F401,E402  (route registration + re-exports)
+    _render_proxy,  # noqa: F401,E402  (route registration + re-exports)
+    _scraping,  # noqa: F401,E402  (route registration + re-exports)
+    _session_store,  # noqa: F401,E402  (route registration + re-exports)
+    _state,  # noqa: F401,E402  (shared in-place-mutation state)
+    _surf_actions,  # noqa: F401,E402  (route registration + re-exports)
+    _surf_controls,  # noqa: F401,E402  (route registration + re-exports)
+    _tasks,  # noqa: F401,E402  (route registration + re-exports)
+    _url_permissions,  # noqa: F401,E402  (route registration + re-exports)
+)
 from ._automation import (  # noqa: F401,E402  (re-exports)
     AutomationSessionRequest,
     BrowserActionRequest,
@@ -111,19 +127,14 @@ from ._automation import (  # noqa: F401,E402  (re-exports)
     revoke_saved_session,
     save_session,
 )
-
-from . import _state  # noqa: F401,E402  (shared in-place-mutation state)
-from ._state import BROWSER_STATUS, RECENT_ACTIVITIES  # noqa: F401,E402  (re-exports)
-
-from . import _legacy_status  # noqa: F401,E402  (route registration + re-exports)
-from ._legacy_status import (  # noqa: F401,E402  (re-exports)
-    get_recent_activity,
-    get_status,
-    start_surf,
-    stop_surf,
+from ._cognitive import (  # noqa: F401,E402  (re-exports)
+    SemanticClickRequest,
+    SwarmExploreRequest,
+    explore_swarm,
+    run_autonomous_goal,
+    semantic_click,
+    smart_click,
 )
-
-from . import _credentials  # noqa: F401,E402  (route registration + re-exports)
 from ._credentials import (  # noqa: F401,E402  (re-exports)
     CREDENTIALS,
     CredentialRequest,
@@ -136,40 +147,24 @@ from ._credentials import (  # noqa: F401,E402  (re-exports)
     save_credential,
     use_credential,
 )
-
-from . import _surf_controls  # noqa: F401,E402  (route registration + re-exports)
-from ._surf_controls import (  # noqa: F401,E402  (re-exports)
-    PAUSED_STATE,
-    get_paused_state,
-    pause_manual,
-    resume_surf,
-    skip_auth,
+from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
+    ai_action,
+    browse_session,
+    capture_screenshot,
+    execute_step,
+    security_scan,
 )
-
-from . import _url_permissions  # noqa: F401,E402  (route registration + re-exports)
-from ._url_permissions import (  # noqa: F401,E402  (re-exports)
-    PERMISSION_REQUESTS,
-    URL_PERMISSIONS,
-    DecisionRequest,
-    UrlPermissionRequest,
-    add_allowed_url,
-    add_denied_url,
-    allow_all_urls,
-    decision,
-    delete_url,
-    get_allowed_urls,
-    get_denied_urls,
-    get_requests,
-)
-
-from . import _learning  # noqa: F401,E402  (route registration + re-exports)
 from ._learning import (  # noqa: F401,E402  (re-exports)
     SYSTEM_LEARNING,
     get_system_learning,
     toggle_learning,
 )
-
-from . import _policy  # noqa: F401,E402  (route registration + re-exports)
+from ._legacy_status import (  # noqa: F401,E402  (re-exports)
+    get_recent_activity,
+    get_status,
+    start_surf,
+    stop_surf,
+)
 from ._policy import (  # noqa: F401,E402  (re-exports)
     PolicyUpdateRequest,
     UserPolicyUpdateRequest,
@@ -178,8 +173,57 @@ from ._policy import (  # noqa: F401,E402  (re-exports)
     update_admin_policy,
     update_user_policy,
 )
-
-from . import _tasks  # noqa: F401,E402  (route registration + re-exports)
+from ._render_proxy import (  # noqa: F401,E402  (re-exports)
+    _BLOCKED_NETS,
+    _frame_ancestors_sources,
+    _host_is_blocked,
+    render_proxy,
+)
+from ._scraping import (  # noqa: F401,E402  (re-exports)
+    _SCRAPE_CACHE_TTL,
+    _SCRAPER_URL,
+    ScrapeRequest,
+    _cached_scrape,
+    _proxy_to_scraper,
+    _scrape_cache,
+    _scrape_cache_key,
+    browse,
+    extract,
+    scrape,
+)
+from ._session_store import (  # noqa: F401,E402  (re-exports)
+    SESSIONS,
+    SessionIn,
+    SessionMessageIn,
+    create_session,
+    delete_session,
+    get_session,
+    list_sessions,
+    update_session,
+)
+from ._state import BROWSER_STATUS, RECENT_ACTIVITIES  # noqa: F401,E402  (re-exports)
+from ._surf_actions import (  # noqa: F401,E402  (re-exports)
+    ClickAtRequest,
+    ClickRequest,
+    FillRequest,
+    KeyRequest,
+    NavigateRequest,
+    click,
+    click_at,
+    fill,
+    get_accessibility_tree,
+    get_screenshot,
+    navigate,
+    simulate_activity,
+    type_key,
+)
+from ._surf_controls import (  # noqa: F401,E402  (re-exports)
+    PAUSED_STATE,
+    get_paused_state,
+    pause_manual,
+    resume_surf,
+    skip_auth,
+)
 from ._tasks import (  # noqa: F401,E402  (re-exports)
     EXECUTION_CAP_MS,
     FINDINGS,
@@ -196,73 +240,17 @@ from ._tasks import (  # noqa: F401,E402  (re-exports)
     set_task_complete,
     set_task_failed,
 )
-
-from . import _surf_actions  # noqa: F401,E402  (route registration + re-exports)
-from ._surf_actions import (  # noqa: F401,E402  (re-exports)
-    ClickAtRequest,
-    ClickRequest,
-    FillRequest,
-    KeyRequest,
-    NavigateRequest,
-    click,
-    click_at,
-    fill,
-    get_accessibility_tree,
-    get_screenshot,
-    navigate,
-    simulate_activity,
-    type_key,
-)
-
-from . import _crown_jewel  # noqa: F401,E402  (route registration + re-exports)
-from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
-    ai_action,
-    browse_session,
-    capture_screenshot,
-    execute_step,
-    security_scan,
-)
-
-from . import _session_store  # noqa: F401,E402  (route registration + re-exports)
-from ._session_store import (  # noqa: F401,E402  (re-exports)
-    SESSIONS,
-    SessionIn,
-    SessionMessageIn,
-    create_session,
-    delete_session,
-    get_session,
-    list_sessions,
-    update_session,
-)
-
-from . import _scraping  # noqa: F401,E402  (route registration + re-exports)
-from ._scraping import (  # noqa: F401,E402  (re-exports)
-    ScrapeRequest,
-    _SCRAPER_URL,
-    _SCRAPE_CACHE_TTL,
-    _cached_scrape,
-    _proxy_to_scraper,
-    _scrape_cache,
-    _scrape_cache_key,
-    browse,
-    extract,
-    scrape,
-)
-
-from . import _render_proxy  # noqa: F401,E402  (route registration + re-exports)
-from ._render_proxy import (  # noqa: F401,E402  (re-exports)
-    _BLOCKED_NETS,
-    _frame_ancestors_sources,
-    _host_is_blocked,
-    render_proxy,
-)
-
-from . import _cognitive  # noqa: F401,E402  (route registration + re-exports)
-from ._cognitive import (  # noqa: F401,E402  (re-exports)
-    SemanticClickRequest,
-    SwarmExploreRequest,
-    explore_swarm,
-    run_autonomous_goal,
-    smart_click,
-    semantic_click,
+from ._url_permissions import (  # noqa: F401,E402  (re-exports)
+    PERMISSION_REQUESTS,
+    URL_PERMISSIONS,
+    DecisionRequest,
+    UrlPermissionRequest,
+    add_allowed_url,
+    add_denied_url,
+    allow_all_urls,
+    decision,
+    delete_url,
+    get_allowed_urls,
+    get_denied_urls,
+    get_requests,
 )

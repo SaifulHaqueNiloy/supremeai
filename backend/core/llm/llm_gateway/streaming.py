@@ -13,6 +13,8 @@ import httpx
 
 from core.logging_config import logger
 
+from .registry import _resolve_litellm_target
+
 
 class StreamingMixin:
     """Streaming fallback method for LLMGateway (verbatim move)."""
@@ -31,6 +33,13 @@ class StreamingMixin:
 
         last_exception: Exception | None = None
         for current_model in call_chain:
+            # FINAL-TEST FIX (2026-09-13): skip retired models + route
+            # OpenAI-compatible routers (BYNARA/BAI) via their base URL.
+            try:
+                _litellm_model, _api_base = _resolve_litellm_target(current_model)
+            except ValueError as retired_err:
+                logger.warning(f"[LLMGateway] Streaming skip {current_model}: {retired_err}")
+                continue
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
@@ -44,11 +53,12 @@ class StreamingMixin:
                 # api_key per-call — os.environ injection নিষিদ্ধ
                 api_key = await self._get_api_key_for_model(current_model)
                 response_stream = await litellm.acompletion(
-                    model=current_model,
+                    model=_litellm_model,
                     messages=messages,
                     timeout=timeout,
                     stream=True,
                     api_key=api_key,
+                    api_base=_api_base,
                 )
                 async for chunk in response_stream:
                     content = chunk.choices[0].delta.content
@@ -71,11 +81,12 @@ class StreamingMixin:
                         try:
                             api_key = await self._get_api_key_for_model(current_model)
                             response_stream = await litellm.acompletion(
-                                model=current_model,
+                                model=_litellm_model,
                                 messages=messages,
                                 timeout=timeout,
                                 stream=True,
                                 api_key=api_key,
+                                api_base=_api_base,
                             )
                             async for chunk in response_stream:
                                 content = chunk.choices[0].delta.content

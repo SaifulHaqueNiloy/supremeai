@@ -304,4 +304,3 @@ class UpdatesMixin:
         await self.send_typing(chat_id)
         ai_response = await self._ai_response(text, user_id)
         await self.send_message(chat_id, ai_response)
-

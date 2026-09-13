@@ -41,7 +41,7 @@ from ...prompt_handler import (
     normalize_prompt,  # Fixed import path - using relative import
 )
 from ..interfaces import ExecutionMode
-from .registry import _provider_key_pool
+from .registry import _provider_key_pool, _resolve_litellm_target
 
 
 def get_firestore_db(*args: Any, **kwargs: Any):
@@ -307,6 +307,14 @@ class CompletionMixin:
         _byok_api_key = kwargs.pop("api_key", None)
 
         for _chain_index, current_model in enumerate(call_chain):
+            # FINAL-TEST FIX (2026-09-13): skip models verified retired at
+            # their provider, and resolve OpenAI-compatible routers (BYNARA,
+            # BAI) to their litellm target + base URL up front.
+            try:
+                _litellm_model, _api_base = _resolve_litellm_target(current_model)
+            except ValueError as retired_err:
+                logger.warning(f"[LLMGateway] Skipping {current_model}: {retired_err}")
+                continue
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
@@ -334,10 +342,11 @@ class CompletionMixin:
                 ) as rec:
                     rec.estimated_tokens = _estimated_tokens
                     response = await self.cloud_adapter.generate(
-                        model=current_model,
+                        model=_litellm_model,
                         messages=messages_payload,
                         timeout=timeout,
                         api_key=api_key,
+                        api_base=_api_base,
                         **kwargs,
                     )
                     cost = response.get("cost", 0.0)
@@ -434,10 +443,11 @@ class CompletionMixin:
                         )
                         try:
                             response = await self.cloud_adapter.generate(
-                                model=current_model,
+                                model=_litellm_model,
                                 messages=messages_payload,
                                 timeout=timeout,
                                 api_key=api_key or await self._get_api_key_for_model(current_model),
+                                api_base=_api_base,
                                 **kwargs,
                             )
                             cb.mark_success()

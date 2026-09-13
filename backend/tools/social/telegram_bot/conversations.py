@@ -314,4 +314,3 @@ class ConversationsMixin:
                 await self.send_message(
                     chat_id, "✅ <b>Action Authorized:</b> Task logged in System Audit Trail."
                 )
-

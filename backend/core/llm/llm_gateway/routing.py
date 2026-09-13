@@ -29,12 +29,14 @@ _POLICY_PATH = os.path.join(
     "routing_policy.json",
 )
 
-# বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
+# বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে।
+# Updated 2026-09-13: gemini-2.0-flash was retired by Google (404 on every
+# call) and openrouter had no key configured, so the default chain was dead.
 _DEFAULT_FALLBACK_MODELS: list[str] = list(
     getattr(
         settings,
         "fallback_models",
-        ["gemini/gemini-2.0-flash", "openrouter/auto"],
+        ["gemini/gemini-2.5-flash", "bynara/agnes-2.5-flash", "bai/qwen3.8-flash"],
     )
 )
 

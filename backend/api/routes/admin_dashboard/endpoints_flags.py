@@ -1,11 +1,9 @@
 """Feature-flag endpoints
 (GET/POST /admin-api/feature-flags, PUT /admin-api/feature-flags/{flag_id})."""
 
-
 from fastapi import HTTPException
 
 from api.routes.admin_dashboard import router
-
 
 _FEATURE_FLAGS = [
     {

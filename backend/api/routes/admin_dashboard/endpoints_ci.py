@@ -1,6 +1,5 @@
 """CI/CD report ingestion + log endpoints (GET /admin-api/ci-logs, POST /admin-api/ci-report)."""
 
-
 from fastapi import HTTPException, Request
 
 from api.routes.admin_dashboard import router

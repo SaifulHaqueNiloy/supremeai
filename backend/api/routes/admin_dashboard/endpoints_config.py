@@ -5,16 +5,13 @@
 routes; they are kept (and re-exported from the package) because the
 test-suite imports them from ``api.routes.admin_dashboard``."""
 
-
+import hashlib
 import os
 
 from api.routes.admin_dashboard import router
 from api.routes.admin_dashboard.endpoints_crud import _load_json_data, _save_json_data
 from core.error_bus import with_error_bus
 from core.logging_config import logger
-
-
-import hashlib
 
 
 def get_env_etag(redis_key: str = "config:env_etag") -> str:

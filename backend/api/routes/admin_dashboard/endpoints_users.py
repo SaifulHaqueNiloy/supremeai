@@ -2,7 +2,6 @@
 (GET/POST /admin-api/users, DELETE /admin-api/users/{username},
 POST /admin-api/tenants/{tenant_id}/reset)."""
 
-
 from fastapi import HTTPException
 
 from api.routes.admin_dashboard import load_users, router, save_users

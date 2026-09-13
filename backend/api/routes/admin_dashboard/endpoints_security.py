@@ -1,14 +1,12 @@
 """Security-scan endpoints
 (GET/POST /admin-api/security-scan, GET /admin-api/security-scan/findings)."""
 
-
 import os
 
+from api.routes.admin_dashboard import router
 from core.config import settings
 from core.logging_config import logger
 from core.utils.time_utils import utc_now
-
-from api.routes.admin_dashboard import router
 
 
 # CI FIX: frontend hooks.ts:376 calls POST /admin-api/security-scan.

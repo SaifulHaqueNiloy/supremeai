@@ -2,7 +2,6 @@
 (roles, permissions, workspaces, settings, sessions, customers) + shared
 JSON-file load/save helpers."""
 
-
 import json
 import os
 import secrets
@@ -13,7 +12,6 @@ from fastapi import HTTPException
 from api.routes.admin_dashboard import router
 from core.error_bus import with_error_bus
 from core.logging_config import logger
-
 
 # ── Additional Admin CRUD Endpoints (Phase 1) ────────────────────────────────
 

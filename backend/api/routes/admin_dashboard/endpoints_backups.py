@@ -2,7 +2,6 @@
 (POST /admin-api/emergency-deploy, POST /admin-api/backup,
 GET/POST /admin-api/backups, POST /admin-api/backups/{backup_id}/restore)."""
 
-
 import json
 import os
 import shutil

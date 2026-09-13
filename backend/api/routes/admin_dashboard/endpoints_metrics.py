@@ -1,10 +1,8 @@
 """Operational metrics + AI provider status endpoints (GET /admin-api/metrics, GET /admin-api/providers)."""
 
-
+from api.routes.admin_dashboard import router
 from core.config import settings
 from core.logging_config import logger
-
-from api.routes.admin_dashboard import router
 
 
 @router.get("/metrics")

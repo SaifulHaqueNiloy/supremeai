@@ -20,7 +20,6 @@ from ...resilience.circuit_breaker_manager import (
 )
 from ..interfaces import ExecutionMode
 from ..providers import CloudProviderAdapter, OllamaLocalAdapter
-
 from .completion import CompletionMixin
 from .litellm_runtime import LitellmSetupMixin
 from .registry import _provider_key_pool, _resolve_key_attr

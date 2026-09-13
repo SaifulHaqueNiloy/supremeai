@@ -1,6 +1,5 @@
 """Dashboard events + standup report endpoints (GET /admin-api/events, GET /admin-api/reports)."""
 
-
 import json
 import os
 

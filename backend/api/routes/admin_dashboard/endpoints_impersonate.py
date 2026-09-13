@@ -1,7 +1,6 @@
 """Impersonation endpoints
 (POST /admin-api/users/impersonate/{username}, POST /admin-api/impersonate)."""
 
-
 import jwt
 from fastapi import Depends, HTTPException
 

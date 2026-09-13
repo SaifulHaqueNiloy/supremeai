@@ -3,7 +3,6 @@
 the legacy module; it shadowed the pending-task pair as a module attribute and
 registers after it, exactly as before the split)."""
 
-
 import os
 
 from fastapi import HTTPException

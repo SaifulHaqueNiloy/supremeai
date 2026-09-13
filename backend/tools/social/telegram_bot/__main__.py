@@ -12,4 +12,3 @@ from .handler import TelegramBotHandler
 if __name__ == "__main__":
     handler = TelegramBotHandler()
     asyncio.run(handler.run_polling())
-

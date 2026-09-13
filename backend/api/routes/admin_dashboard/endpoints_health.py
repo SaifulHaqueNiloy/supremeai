@@ -1,9 +1,7 @@
 """Service health map endpoint (GET /admin-api/health-map)."""
 
-
-from core.config import settings
-
 from api.routes.admin_dashboard import router
+from core.config import settings
 
 
 @router.get("/health-map")

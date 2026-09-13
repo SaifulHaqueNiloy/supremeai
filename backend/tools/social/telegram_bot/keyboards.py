@@ -116,4 +116,3 @@ class KeyboardsMixin:
         if chat_id and self.is_admin(chat_id):
             return self._admin_keyboard()
         return self._user_keyboard()
-

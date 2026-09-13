@@ -26,6 +26,27 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "together": "TOGETHER_API_KEY",
     "ollama": "OLLAMA_API_KEY",
     "hf_space": "HF_API_KEY",
+    # Zero-cost OpenAI-compatible routers (final-test audit 2026-09-13):
+    # BYNARA_API_KEY / BAI_API_KEY were configured in the deployment env but
+    # never consumed by any code path — the keys were orphaned while the
+    # routing chain wasted 40-60s per call on dead providers.
+    "bynara": "bynara_api_key",
+    "bai": "bai_api_key",
+}
+
+# Provider → OpenAI-compatible base URL. When a model's provider appears here,
+# the gateway routes it through litellm's `openai/<model>` adapter using the
+# provider key (per-call) instead of a provider-native SDK.
+_PROVIDER_API_BASES: dict[str, str] = {
+    "bynara": "https://router.bynara.id/v1",
+    "bai": "https://api.b.ai/v1",
+}
+
+# Models that are no longer served by their provider (verified 2026-09-13).
+_RETIRED_MODELS = {
+    "gemini/gemini-2.0-flash",
+    "gemini/gemini-1.5-pro",
+    "gemini/gemini-1.5-flash",
 }
 
 
@@ -110,3 +131,36 @@ def _resolve_key_attr(model: str) -> str | None:
             best_prefix = prefix
             best_attr = attr_name
     return best_attr
+
+
+def _resolve_litellm_target(model: str) -> tuple[str, str | None]:
+    """Translate a routing-policy model id into a litellm-callable target.
+
+    Returns (litellm_model, api_base).
+    - Providers with an OpenAI-compatible router (BYNARA, BAI) are served via
+      litellm's `openai/<model>` adapter pointing at their base URL, using the
+      per-call key resolved through _resolve_key_attr.
+    - Everything else passes through unchanged (litellm provider-native).
+    Raises ValueError for models verified retired at their provider so the
+    chain skips them instantly instead of burning a network round-trip.
+    """
+    if not model:
+        return model, None
+    if model.lower() in _RETIRED_MODELS:
+        raise ValueError(f"Model {model} is retired at its provider (verified 2026-09-13)")
+    # Normalize bare model names from env settings (e.g. GEMINI_MODEL="gemini-2.5-flash")
+    # into litellm's provider-prefixed format.
+    if "/" not in model:
+        lowered = model.lower()
+        if lowered.startswith("models/gemini-"):
+            model = f"gemini/{model.removeprefix('models/')}"
+        elif lowered.startswith("gemini-"):
+            model = f"gemini/{model}"
+        elif lowered.startswith(("gpt-", "o1", "o3")):
+            model = f"openai/{model}"
+    provider = model.split("/", 1)[0].lower() if "/" in model else ""
+    base = _PROVIDER_API_BASES.get(provider)
+    if base:
+        bare_model = model.split("/", 1)[1] if "/" in model else model
+        return f"openai/{bare_model}", base
+    return model, None

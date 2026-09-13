@@ -7,6 +7,7 @@ exactly as before.
 """
 
 import asyncio
+
 from pydantic import BaseModel
 
 from api.routes.browser import router

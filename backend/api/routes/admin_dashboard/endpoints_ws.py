@@ -1,6 +1,5 @@
 """Admin dashboard live WebSocket (WS /admin-api/ws) — streams metrics, provider status and health map."""
 
-
 import asyncio
 
 from fastapi import WebSocket
