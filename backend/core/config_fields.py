@@ -202,10 +202,16 @@ class SettingsFieldsMixin:
         default=[
             "/",
             "/health",
+            "/health/live",
+            "/health/ready",
             "/metrics",
             "/docs",
             "/redoc",
-            "/openapi.json",
+            # AUDIT FIX (final-test): the OpenAPI schema is mounted at
+            # {API_V1_STR}/openapi.json (core/app_builder.py), NOT at
+            # /openapi.json — the old entry pointed at a route that does not
+            # exist, which made monitors report an empty/missing schema.
+            "/api/v1/openapi.json",
             "/api/v1/auth/token",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -222,8 +228,13 @@ class SettingsFieldsMixin:
             "/api/admin/firebase-totp-verify",
             "/api/v1/health",
             "/api/v1/health/",
-            "/api/v1/live",
-            "/api/v1/ready",
+            # AUDIT FIX (final-test): the liveness/readiness probes are exposed
+            # by core/health_routes.py as /live and /ready under BOTH the
+            # /api/v1/health and /health prefixes. The previous entries
+            # (/api/v1/live, /api/v1/ready) never existed, so k8s-style probes
+            # against those paths fell through to the auth middleware (401).
+            "/api/v1/health/live",
+            "/api/v1/health/ready",
             "/api/voice/stream_audio",
             "/api/billing/webhook/stripe",
             "/api/billing/webhook/sslcommerz",

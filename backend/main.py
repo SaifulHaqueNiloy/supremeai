@@ -97,7 +97,9 @@ def run_server() -> None:
 
     বাংলা: কনফিগ-ড্রিভেন সেটিংস দিয়ে Uvicorn সার্ভার বুট।
     """
-    is_local = settings.env == "local"
+    # বাংলা: আগে শুধু settings.env == "local" চেক করা হতো — "dev"/"development"
+    # এনভ ব্যবহার করলে reload চালু হতো না। Settings.is_local() তিনটাই ধরে।
+    is_local = settings.is_local()
     port = int(os.getenv("PORT", str(settings.port)))
     host = os.getenv("HOST") or (
         "0.0.0.0" if os.getenv("RENDER") or os.getenv("PORT") or not is_local else settings.host

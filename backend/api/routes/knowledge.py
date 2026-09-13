@@ -46,13 +46,18 @@ async def ask_the_scribe(
     """
     Asks a question to the AI Scribe about the codebase.
     The Scribe uses a RAG approach on the indexed documentation.
+
+    Note: this endpoint previously did `from ask_scribe import answer_question`,
+    but the `ask_scribe` module never existed inside the backend package (only a
+    scripts/ CLI variant did), so every call raised ModuleNotFoundError -> 500.
+    It now delegates to the governed tenant-scoped KnowledgeQAService, the same
+    pipeline that powers POST /knowledge/ask, and preserves the {"answer": ...}
+    response contract.
     """
-
-    # বাংলা মন্তব্য: সার্ভার স্টার্টআপ ফেইলর এড়াতে রানটাইমে ডাইনামিকালি ইম্পোর্ট করা হচ্ছে
-    from ask_scribe import answer_question
-
-    answer = await answer_question(request.question)
-    return {"answer": answer}
+    result = await get_knowledge_qa_service().answer(request.question, user)
+    answer = result.get("answer") if isinstance(result, dict) else result
+    citations = result.get("citations", []) if isinstance(result, dict) else []
+    return {"answer": answer, "citations": citations}
 
 
 # বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর KnowledgePage.tsx এবং

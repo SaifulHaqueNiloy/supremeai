@@ -226,11 +226,14 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
   return requestQueue.add(async () => {
     const currentUrl = url;
     let attempts = 0;
-    options.credentials = 'include';
+    // FINAL-TEST FIX: mutate a shallow copy, not the caller's options object —
+    // callers that reuse their options object across requests were being
+    // silently modified (and could not opt out of cookie sending).
+    const fetchOptions: RequestInit = { ...options, credentials: 'include' };
 
     while (attempts < 2) {
       try {
-        const res = await fetchWithTimeout(currentUrl, options);
+        const res = await fetchWithTimeout(currentUrl, fetchOptions);
         // 502/503/504 মানে রেন্ডার সার্ভার স্লিপিং বা ডাউন — একই backend-এ রিট্রাই করব
         if (res.status >= 502 && res.status <= 504) {
           throw new Error("Server sleeping or down (50x)");
