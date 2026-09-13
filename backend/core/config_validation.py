@@ -577,9 +577,16 @@ def build_config_validation_report(env: str | None = None) -> ConfigValidationRe
     try:
         from middleware.cors_policy import resolve_admin_cors_origins, resolve_user_cors_origins
 
-        raw_user = [
-            o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
-        ] or ["http://localhost:3000"]
+        raw_user = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+        if not raw_user:
+            # বাংলা মন্তব্য: localhost fallback শুধুমাত্র local env-এ — production/staging-এ
+            # ALLOWED_ORIGINS অনুপস্থিত থাকলে silently localhost-এ ফলব্যাক করা উচিত নয়
+            # (established repo idiom: settings.env == "local" guard, দেখুন
+            # config_fields.py frontend_base_url)।
+            from core.config import settings
+
+            if settings.is_local():
+                raw_user = ["http://localhost:3000"]
         raw_admin = [o.strip() for o in os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
         resolved = set(resolve_user_cors_origins(raw_user)) | set(
             resolve_admin_cors_origins(raw_admin)
