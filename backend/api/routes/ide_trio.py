@@ -16,7 +16,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-router = APIRouter(prefix="/api/v1/ide-trio", tags=["ide-trio"])
+router = APIRouter(prefix="/api/v1/agent_review_workflow", tags=["agent_review_workflow"])
 
 
 class TrioExecuteRequest(BaseModel):
@@ -33,9 +33,9 @@ class TrioExecuteRequest(BaseModel):
 async def execute_trio(request: TrioExecuteRequest) -> dict[str, Any]:
     """Run the Gemini → Kilo → Cline pipeline and return the full result."""
     try:
-        from core.orchestration.trio_pipeline import TrioPipeline
+        from core.agent_review_workflow import AgentReviewWorkflow
 
-        pipeline = TrioPipeline()
+        pipeline = AgentReviewWorkflow()
         context: dict[str, str] = {}
         if request.filePath:
             context["filePath"] = request.filePath

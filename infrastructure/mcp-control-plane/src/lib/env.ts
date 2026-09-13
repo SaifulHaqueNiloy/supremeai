@@ -40,6 +40,8 @@ export const env = {
   get githubWebhookSecret(): string { return optional("GITHUB_WEBHOOK_SECRET"); },
   get cloudflareWebhookSecret(): string { return optional("CLOUDFLARE_WEBHOOK_SECRET"); },
   get nodeEnv(): string { return optional("NODE_ENV", "development"); },
+  get backendUrl(): string { return optional("SUPREMEAI_BACKEND_URL"); },
+  get backendServiceToken(): string { return optional("SUPREMEAI_BACKEND_SERVICE_TOKEN"); },
 
   // ── Render (4 accounts)
   render: {
