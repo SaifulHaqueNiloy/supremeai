@@ -36,7 +36,7 @@ if (process.env.NODE_ENV === 'production' && !UNIFIED_BACKEND) {
 const buildInfoPlugin = () => {
   return {
     name: 'build-info-plugin',
-    writeBundle(options: any) {
+    writeBundle(options: { dir?: string }) {
       if (process.env.NODE_ENV === 'production') {
         const buildInfo = {
           timestamp: new Date().toISOString(),
@@ -48,7 +48,7 @@ const buildInfoPlugin = () => {
         }
         const outDir = options.dir || 'dist'
         fs.writeFileSync(path.join(outDir, 'build-info.json'), JSON.stringify(buildInfo, null, 2))
-        console.log(`📋 Build info written to ${outDir}/build-info.json`)
+        console.warn(`📋 Build info written to ${outDir}/build-info.json`)
       }
     }
   }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Bot, FileText, FolderKanban, Plus, RefreshCw, Settings2, Sparkles, Terminal, X, Zap } from 'lucide-react';
+import { ArrowRight, FileText, Plus, RefreshCw, Settings2, Sparkles, X, Zap } from 'lucide-react';
 import AddNewWizard from './AddNewWizard';
 import { CapabilityUnavailableExplainer, ManageItem } from './CapabilityCards';
 import { capabilityFromModule, type UserCapability } from '../../types/contracts';
@@ -14,8 +14,6 @@ const quickStarts = [
   { label: 'Analyze a file', detail: 'Bring a document into a focused workspace.', icon: FileText, href: '/files' },
   { label: 'Build a workflow', detail: 'Turn a repeatable task into a helper.', icon: Zap, href: '/agents' },
 ];
-
-const icons = { ask: Sparkles, projects: FolderKanban, files: FileText, activity: Zap, agents: Bot, integrations: Settings2, usage: FileText, code: Terminal };
 
 export const UserDashboard: React.FC = () => {
   const { user } = useAuthStore();

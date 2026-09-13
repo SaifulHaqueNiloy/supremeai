@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useUnifiedStore, useChatSlice, useServiceHealth, useUnresolvedAlerts } from './unifiedStore';
+import { useUnifiedStore } from './unifiedStore';
 import { isUnifiedStoreEnabled, disableUnifiedStore } from './index';
 
 describe('unifiedStore — chatSlice & cross-slice state management', () => {

@@ -1,4 +1,4 @@
-export type CapabilityStatus = 'ready' | 'idle' | 'unavailable' | 'pending';
+export type CapabilityStatus = 'ready' | 'idle' | 'unavailable' | 'pending' | 'requestable';
 
 export interface UserCapability {
   id: string;
@@ -47,4 +47,4 @@ export function explainUnavailable(label: string): UnavailableCapability {
   return { label, reason: 'Your workspace does not currently grant access to this capability.', requestable: true };
 }
 
-export default UserCapability;
+export type { UserCapability as default };

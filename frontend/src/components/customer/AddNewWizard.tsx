@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, Check, Globe, Link2, Loader2, Plus, Search, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, Link2, Loader2, Plus, Search, Sparkles, X } from 'lucide-react';
 import { ADD_INTENTS, type AddIntent, type UserCapability } from '../../types/contracts';
 import { connectionsApi } from '../../services/connectionsApi';
 import type { ConnectionDetection } from '../../types/contracts';
@@ -32,11 +32,6 @@ export function AddNewWizard({ capabilities, onClose, onAdd, onRegistered }: Add
       ),
     [capabilities, query]
   );
-
-  const isUrl = useMemo(() => {
-    const trimmed = urlInput.trim().toLowerCase();
-    return trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('mcp://');
-  }, [urlInput]);
 
   const handleUrlBlurOrChange = async (val: string) => {
     setUrlInput(val);
