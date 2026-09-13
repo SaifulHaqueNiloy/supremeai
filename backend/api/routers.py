@@ -254,7 +254,7 @@ ALL_ROUTERS = [
         "is_admin": True,
         "is_critical": False,
     },
-    {"path": "api.routes.admin_dashboard", "prefix": "", "is_admin": True, "is_critical": False},
+    {"path": "api.routes.admin_dashboard.__init__", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.internal", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.admin", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.traffic_monitor", "prefix": "", "is_admin": True, "is_critical": False},
@@ -396,7 +396,7 @@ def register_all_routers(app: FastAPI) -> None:
     সবুজ হেলথ-চেক সহ চলত (প্রমাণিত: billing_api stripe-import ব্যর্থ হলে পুরো
     payments/webhook সারফেস 404 দেয় অথচ স্টার্টআপ সফল হয়)। এখন:
       1. is_critical=True রাউটার optional=False — import ব্যর্থ হলে স্টার্টআপ fail-fast।
-      2. রেজিস্ট্রেশন শেষে mounted-vs-registered হিসাব লগ হয়; অনুপাত সন্দেহজনক
+      2. রেজিস্ট্র��শন শেষে mounted-vs-registered হিসাব লগ হয়; অনুপাত সন্দেহজনক
          হলে (০ বা অর্ধেকের কম) warning সহ কাউন্ট রিপ���র্ট হয়।
     """
     current_role = getattr(settings, "supremeai_service_role", "monolith").lower()
