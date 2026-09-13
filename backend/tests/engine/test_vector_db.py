@@ -43,9 +43,12 @@ async def test_vector_db_find_similar_experiences():
         # The adapter logic does `query_text = vector if isinstance(vector, str) else ""`
         results = await client.find_similar_experiences(vector="Fix something", top_k=1)
 
-        mock_memory_service.query_context.assert_called_once_with(
-            query="Fix something", limit=1, threshold=0.65
-        )
+        # বাংলা মন্তব্য: ইঞ্জিন কোডে ইতিমধ্যে BUGFIX করা হয়েছে যাতে সঠিক
+        # query_context(prompt=, top_k=) সিগনেচার ব্যবহার হয় (আগে ভুল
+        # query=/limit=/threshold= kwargs পাঠানো হতো, যা TypeError তৈরি করত এবং
+        # except ব্লকে চুপচাপ গিলে ফেলা হতো — ফলাফল সবসময় খালি থাকত)। টেস্টটিও
+        # এখন সেই সঠিক সিগনেচার অনুযায়ী আপডেট করা হলো।
+        mock_memory_service.query_context.assert_called_once_with(prompt="Fix something", top_k=1)
 
         assert len(results) == 1
         assert results[0]["id"] == "123"
