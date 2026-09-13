@@ -7,6 +7,14 @@ import { MemoryRouter } from 'react-router-dom';
 // ToastProvider" থ্রো হয়ে ErrorBoundary পুরো অ্যাপ ক্র্যাশ হিসেবে দেখাত এবং
 // এই ফাইলের সব টেস্ট ব্যর্থ হতো।
 import { ToastProvider } from './contexts/ToastProvider';
+// FINAL-TEST FIX: main.tsx wraps <App /> in ThemeProvider > (SharedProviders) >
+// BrowserRouter. This test previously omitted ThemeProvider, so /workspace's
+// GlobalHeader threw "useTheme must be used within a ThemeProvider", the
+// DashboardErrorBoundary swallowed the whole route and all three /workspace
+// assertions failed. The wrapper below mirrors the real provider stack.
+import { ThemeProvider } from './contexts/ThemeProvider';
+// SharedProviders = QueryClientProvider (react-query) from @supremeai/ui-components.
+import { SharedProviders } from '@supremeai/ui-components';
 
 vi.mock('./services/chatService', () => ({
   getAethelResponse: vi.fn().mockImplementation(() => new Promise(() => {})),
@@ -211,9 +219,13 @@ describe('App component', () => {
   it('renders the workspace shell with the customer dashboard at /workspace', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <App />
-        </MemoryRouter>
+        <ThemeProvider>
+          <SharedProviders>
+            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <App />
+            </MemoryRouter>
+          </SharedProviders>
+        </ThemeProvider>
       </ToastProvider>
     );
 
@@ -233,9 +245,13 @@ describe('App component', () => {
   it('renders the customer dashboard prompt input', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <App />
-        </MemoryRouter>
+        <ThemeProvider>
+          <SharedProviders>
+            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <App />
+            </MemoryRouter>
+          </SharedProviders>
+        </ThemeProvider>
       </ToastProvider>
     );
 
@@ -247,9 +263,13 @@ describe('App component', () => {
   it('renders the active agents and usage summary in the dashboard', () => {
     render(
       <ToastProvider>
-        <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <App />
-        </MemoryRouter>
+        <ThemeProvider>
+          <SharedProviders>
+            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <App />
+            </MemoryRouter>
+          </SharedProviders>
+        </ThemeProvider>
       </ToastProvider>
     );
 
