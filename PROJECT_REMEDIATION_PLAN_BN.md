@@ -303,7 +303,7 @@ Collection error শূন্য এবং unexplained skip শূন্য হ�
 2. প্রথম release-এ gate করুন:
    - backend: 65%
    - frontend: 40%
-3. প্রতি মাসে threshold বাড়���নোর issue তৈরি করুন।
+3. প্রতি মাসে threshold বাড়�����নোর issue তৈরি করুন।
 4. Security, tenant isolation, tool gateway এবং task execution module-এর জন্য আলাদা higher threshold রাখুন।
 5. Coverage দিয়ে untested critical path আড়াল করবেন না; mission tests আলাদা বাধ্যতামূল��� রাখুন।
 
@@ -1020,3 +1020,209 @@ International এবং automated-learning phase সফল ধরা হবে �
 - rollback version এবং evidence প্রতিটি promotion-এর সাথে আছে।
 
 > **চূড়ান্ত লক্ষ্য:** SupremeAI যেন “একটি বাংলা AI” না থেকে একটি language-neutral, policy-governed, verifiable এবং tenant-configurable AI execution platform হয়—যেখানে নতুন ভাষা, নতুন skill, নতুন model এবং নতুন provider যুক্ত করা যায় নিরাপত্তা, benchmark ও rollback evidence বজায় রেখে।
+
+---
+
+# ২২. Third-party free-tier থেকে বৈধভাবে সর্বোচ্চ উপকার নেওয়া
+
+## মূল নীতি
+
+Free tier ব্যবহার করে cost কমানো যাবে, কিন্তু provider-এর terms ভেঙে quota bypass, fake identity, disposable account, credential sharing, CAPTCHA bypass বা concurrent multi-account rotation করা যাবে না। বর্তমান multi-account setup থাকলে প্রতিটি account-এর ownership, billing responsibility, quota এবং provider policy লিখিতভাবে inventory করতে হবে। **Account সংখ্যা বাড়িয়ে quota লুকিয়ে বাড়ানো নয়; official team plan, grant, academic/open-source program, self-hosted fallback এবং workload optimization হবে নিরাপদ পথ।**
+
+## কোথায় পরিবর্তন হবে
+
+- `backend/core/providers/` — provider adapter ও fallback policy
+- `backend/core/providers/provider_registry.py` — না থাকলে canonical registry
+- `backend/core/quotas/` — নতুন quota/budget layer
+- `backend/core/security/tool_gateway.py` — provider/tool permission
+- `backend/runtime/task_context.py` — tenant, plan, provider এবং quota context
+- `backend/database/` — provider account, quota bucket, usage ledger schema
+- `backend/api/routes/admin_telemetry.py`
+- `backend/api/routes/admin_evals.py`
+- `frontend/src/routes/admin/ProviderUsageDashboard.tsx` — নতুন admin view
+- `frontend/src/components/admin/QuotaCard.tsx`
+- `docs/integrations/THIRD_PARTY_FREE_TIER_POLICY.md` — নতুন policy
+- `docs/integrations/PROVIDER_CATALOG.md` — নতুন provider catalog
+- `docs/security/DEPENDENCY_AND_PROVIDER_RISK.md` — নতুন risk register
+- `.github/workflows/ci.yml`
+
+## এখন যে সুবিধাগুলো অনেক provider-এ নেওয়া যায়
+
+প্রতিটি provider-এর official free feature এবং বর্তমান terms যাচাই করে নিচের সুবিধাগুলো inventory করুন:
+
+| সুবিধা | কীভাবে ব্যবহার করবেন | SupremeAI-তে ফলাফল |
+|---|---|---|
+| API quota ও usage dashboard | usage API/webhook সংগ্রহ করে daily budget monitor | quota শেষ হওয়ার আগে graceful fallback |
+| Batch/asynchronous API | non-urgent embedding/evaluation/training job batch করুন | request cost ও rate-limit pressure কমে |
+| Webhook ও event notification | job complete, failure, quota warning event গ্রহণ | polling কমে, admin alert বাড়ে |
+| Caching | একই public retrieval/query-এর normalized cache | duplicate provider call কমে |
+| Conditional requests | ETag/If-Modified-Since support থাকলে ব্যবহার | crawl/API bandwidth কমে |
+| Model routing | cheap/free model দিয়ে classification, paid model দিয়ে কঠিন কাজ | cost-quality balance |
+| Provider-native retries | documented retry-after ও idempotency ব্যবহার | duplicate charge/request কমে |
+| Export/log API | provider usage, error, latency, model version import | central admin dashboard |
+| Grants/credits | startup, education, open-source বা research program-এ apply | বৈধভাবে capacity বাড়ে |
+| Self-host/open-source mode | suitable model/tool self-host বা local runner | vendor quota dependency কমে |
+
+এই সুবিধাগুলো অনুমান করে enable করবেন না। `docs/integrations/PROVIDER_CATALOG.md`-এ provider, feature, plan, limit, reset time, terms URL, data retention, region এবং last verified date রাখুন।
+
+## Recommended provider capability matrix
+
+প্রথমে existing provider list থেকে এই capability map তৈরি করুন:
+
+```text
+provider_id
+official_account_owner
+allowed_use_case
+free_tier_limits
+rate_limit
+batch_available
+webhook_available
+usage_api_available
+cache_allowed
+commercial_use_allowed
+data_retention
+region
+fallback_provider
+terms_url
+last_verified_at
+owner
+```
+
+`backend/core/quotas/quota_manager.py`-এ token, request, browser-minute, crawl-page, storage এবং media-generation—প্রতিটি resource আলাদা হিসাব করুন। শুধু HTTP request count দিয়ে quota মাপবেন না।
+
+## Multi-account-এর compliant design
+
+### যা করা যাবে
+
+1. একই organization-এর official team/workspace account হলে account mapping করুন।
+2. Provider-এর অনুমোদিত sub-account, project, environment বা workspace ব্যবহার করুন।
+3. আলাদা tenant-এর নিজস্ব provider credential হলে tenant isolation বজায় রেখে tenant-এর account-এ request পাঠান।
+4. Open-source project, education, startup বা research credits-এর জন্য official application করুন।
+5. Provider-এর official billing limit, budget alert এবং quota increase request ব্যবহার করুন।
+6. একই provider-এর একাধিক account থাকলে প্রতিটি account-এর owner, purpose, terms acceptance, region এবং credential expiry registry-তে রাখুন।
+
+### যা করা যাবে না
+
+- এক user-এর free quota বাড়ানোর জন্য ভুয়া account তৈরি
+- disposable email/identity বা credential sharing
+- rate limit এড়াতে account rotation
+- একই task একাধিক account-এ duplicate পাঠানো
+- provider-এর terms নিষেধ করলে proxy/relay দিয়ে quota conceal করা
+- free tier-কে production SLA হিসেবে advertise করা
+
+### Account-aware routing
+
+`backend/core/providers/provider_registry.py` এবং `quota_manager.py`-এ routing rule রাখুন:
+
+```text
+request
+→ tenant/account ownership check
+→ provider policy check
+→ remaining quota check
+→ risk/data-region check
+→ choose one eligible account
+→ reserve quota atomically
+→ execute with idempotency key
+→ record actual usage
+→ release unused reservation
+```
+
+Account rotation কেবল official organization/project boundary, tenant ownership এবং provider terms অনুযায়ী হবে। `round_robin` দিয়ে blind quota evasion করবেন না।
+
+## Free-tier optimization-এর বাস্তব automation
+
+নিচের কাজগুলো automated করা যাবে:
+
+- quota threshold 50%, 80%, 95%-এ admin alert
+- quota reset calendar এবং projected exhaustion time
+- duplicate prompt/result cache detection
+- low-risk task-এর জন্য cheapest eligible provider নির্বাচন
+- batch window-তে embedding/evaluation queue করা
+- provider outage হলে circuit breaker ও approved fallback
+- retry-after সম্মান করে backoff
+- per-tenant daily/monthly budget enforcement
+- unused reserved quota reconciliation
+- provider invoice/usage বনাম internal ledger reconciliation
+- sudden account rotation, unusual volume এবং quota spike anomaly detection
+- PII বা restricted data free-tier provider-এ পাঠানোর আগে block/redact
+- provider terms বা model availability change হলে catalog review task তৈরি
+
+নতুন automation files:
+
+- `scripts/provider_usage/sync_usage.py`
+- `scripts/provider_usage/reconcile_ledger.py`
+- `scripts/provider_usage/check_quota_expiry.py`
+- `backend/workers/provider_quota_worker.py`
+- `backend/core/quotas/anomaly_detector.py`
+- `backend/tests/quotas/test_account_routing.py`
+- `backend/tests/quotas/test_quota_reservation.py`
+- `backend/tests/security/test_provider_data_policy.py`
+
+## কোন third-party category যুক্ত করা যেতে পারে
+
+নতুন vendor যোগ করার আগে existing capability duplicate নয় তা প্রমাণ করুন। সম্ভাব্য category:
+
+| Category | সম্ভাব্য উপকার | নিরাপদ প্রথম ধাপ |
+|---|---|---|
+| Observability | trace, error, cost ও provider comparison | OpenTelemetry-compatible export |
+| Evaluation | regression, RAG score, model comparison | offline eval; production prompt নয় |
+| Browser | DOM, screenshot, accessibility ও performance test | isolated Playwright worker |
+| Search/retrieval | hybrid search ও citation | read-only index |
+| Storage | artifact, report ও model version | private bucket + retention |
+| Notification | quota/failure/admin alert | non-sensitive summary only |
+| Translation | common-language coverage | user-selected language + fallback |
+| Model serving | open model/embedding fallback | offline benchmark first |
+| Security | PII redaction, SBOM, secret scan | CI blocking scan |
+
+Candidate-এর জন্য `docs/integrations/<provider-name>.md` লিখুন এবং এই gate pass না করা পর্যন্ত production credential দেবেন না:
+
+1. license ও commercial use review
+2. terms/free-tier limit review
+3. data retention/residency review
+4. security/authentication review
+5. cost ceiling ও quota behavior test
+6. sandbox contract test
+7. fallback/rollback plan
+8. admin visibility
+9. owner ও renewal date
+10. mission suite success/failure evidence
+
+## Admin কীভাবে দেখবে
+
+`ProviderUsageDashboard.tsx`-এ দেখান:
+
+- provider ও account/project status
+- official quota বনাম internal usage
+- আজ/সপ্তাহ/মাসের request, token, page, minute ও cost
+- quota reset time এবং projected exhaustion
+- account ownership ও policy status; secret নয়
+- provider health, error rate, latency এবং fallback count
+- cache-hit rate ও saved cost
+- unusual account switching বা quota spike
+- terms review এবং credential expiry
+- pending grant/credit request
+
+প্রতিটি usage record-এ রাখুন:
+
+```text
+usage_id, task_id, tenant_id, provider_id, account_ref,
+resource_type, reserved_amount, actual_amount, unit,
+request_hash, status, error_class, created_at
+```
+
+Admin dashboard-এ API key, access token, raw prompt বা private provider response দেখাবেন না। High-risk provider/account policy change-এর জন্য approval এবং immutable audit event রাখুন।
+
+## Done Definition
+
+এই অংশ সম্পূর্ণ ধরা হবে যখন:
+
+- সব third-party provider ও account-এর catalog এবং owner আছে;
+- প্রতিটি provider-এর free-tier terms ও last-verified date আছে;
+- quota reservation ও actual usage ledger atomic এবং tenant-scoped;
+- account routing official ownership/terms ছাড়া হয় না;
+- quota alert, reset forecast, circuit breaker ও fallback কাজ করে;
+- PII/data-region policy free-tier provider call-এর আগে enforce হয়;
+- usage বনাম provider dashboard reconciliation report তৈরি হয়;
+- admin কোনো secret না দেখে quota, cost, health, fallback ও anomaly দেখতে পারে;
+- multi-account setup documented, auditable এবং compliant;
+- terms পরিবর্তন বা quota exhaustion production failure না হয়ে controlled degradation তৈরি করে।
