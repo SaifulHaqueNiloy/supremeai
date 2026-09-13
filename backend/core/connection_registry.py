@@ -303,12 +303,14 @@ class ConnectionRegistry:
         latency_ms = round((time.perf_counter() - started) * 1000, 2)
         now = datetime.now(UTC).isoformat()
         metadata = jload(row["metadata"], {})
-        metadata.update({
-            "health_status": status,
-            "health_latency_ms": latency_ms,
-            "health_checked_at": now,
-            "health_error": error,
-        })
+        metadata.update(
+            {
+                "health_status": status,
+                "health_latency_ms": latency_ms,
+                "health_checked_at": now,
+                "health_error": error,
+            }
+        )
         with get_conn() as conn:
             conn.execute(
                 f"UPDATE {self.TABLE} SET status = ?, metadata = ?, updated_at = ? WHERE id = ? AND tenant_id = ?",

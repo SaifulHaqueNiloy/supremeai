@@ -119,5 +119,37 @@ class TestConfigValidationReportContract(unittest.TestCase):
         self.assertIn("REDIS_URL", names)
 
 
+class TestDeployArtifactContract(unittest.TestCase):
+    def test_unsubstituted_placeholder_detected(self):
+        """Build validator detects unsubstituted {{USER_BACKEND_URL}} (FR-005, SC-006, T014)."""
+        import importlib.util
+        import tempfile
+        from pathlib import Path
+
+        repo_root = Path(__file__).resolve().parents[4]
+        validator_script = repo_root / "scripts" / "ci" / "validate_frontend_build.py"
+        self.assertTrue(validator_script.exists())
+
+        spec = importlib.util.spec_from_file_location("validate_frontend_build", validator_script)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+
+        with tempfile.NamedTemporaryFile(
+            "w+", suffix=".json", delete=False, encoding="utf-8"
+        ) as tf:
+            tf.write('{"destination": "{{USER_BACKEND_URL}}/api"}')
+            temp_path = Path(tf.name)
+
+        try:
+            violations = mod.scan_file(temp_path)
+            self.assertTrue(
+                any("unresolved deploy placeholder" in v for v in violations),
+                "Unresolved {{USER_BACKEND_URL}} placeholder was not caught by scanner",
+            )
+        finally:
+            if temp_path.exists():
+                temp_path.unlink()
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

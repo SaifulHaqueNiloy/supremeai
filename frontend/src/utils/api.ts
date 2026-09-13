@@ -181,6 +181,17 @@ export const USER_BACKEND_URL: string = normalizeBackendUrl(
 export const ADMIN_BACKEND_URL: string =
   normalizeBackendUrl(import.meta.env.VITE_ADMIN_BACKEND) || USER_BACKEND_URL;
 
+/** Optional Scraper backend URL (returns empty string if unset) */
+export const SCRAPER_BACKEND_URL: string = normalizeBackendUrl(
+  import.meta.env.VITE_SCRAPER_BACKEND ||
+    import.meta.env.VITE_SCRAPER_URL ||
+    import.meta.env.VITE_SCRAPER_SERVICE_URL,
+);
+
+export function isScraperConfigured(): boolean {
+  return Boolean(SCRAPER_BACKEND_URL);
+}
+
 // 🔬 Export circuits for monitoring
 export const circuits = { api: apiCircuit, websocket: wsCircuit };
 export type { CircuitState };
