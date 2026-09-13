@@ -121,10 +121,14 @@ def test_tier0_pypi_search_failure_isolated():
     assert "error" in result
 
 
-def test_tier0_list_files(tmp_path):
+def test_tier0_list_files(tmp_path, monkeypatch):
     (tmp_path / "a.txt").write_text("hello")
     (tmp_path / "sub").mkdir()
-    result = Tier0Dispatcher.execute("list_files", f"list files in {tmp_path}")
+    # বাংলা মন্তব্য: Tier0 ফাইল লিস্টিং এখন স্যান্ডবক্সড (P0 সিকিউরিটি ফিক্স) —
+    # শুধুমাত্র SUPREMEAI_TIER0_SANDBOX_ROOT এর ভিতরের পাথ অ্যাক্সেসযোগ্য, তাই
+    # tmp_path কেই স্যান্ডবক্স রুট হিসেবে সেট করে রিলেটিভ পাথে কল করা হচ্ছে।
+    monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(tmp_path))
+    result = Tier0Dispatcher.execute("list_files", "list files in .")
     assert result["count"] >= 2
     assert any(f["name"] == "a.txt" for f in result["files"])
     assert any(f["is_dir"] for f in result["files"])
