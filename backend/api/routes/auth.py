@@ -291,11 +291,16 @@ async def login(body: LoginRequest, request: Request, response: Response):
             )
         )
         primary_role = "admin" if is_admin else (user_meta_role or "user")
+        # FIX (final-test 2026-09-13): `tenant_id` claim যোগ — এটা ছাড়া
+        # get_current_tenant()/orchestrate-এর মতো tenant-scoped endpoint সবসময়
+        # 401 "Authenticated tenant claim required" দিত। tenant_id == user_id,
+        # TenantAwareFirestore (get_tenant_db) এর sub-based isolation-এর সাথে সামঞ্জস্যপূর্ণ।
         token_data = {
             "sub": user_id,
             "role": primary_role,
             "email": body.username,
             "method": "supabase_auth",
+            "tenant_id": user_id,
         }
         access_token = create_access_token(token_data)
         refresh_token = create_refresh_token(token_data)
@@ -400,11 +405,13 @@ async def register(body: RegisterRequest, response: Response):
             body.username.lower() == admin_email.lower() for admin_email in settings.admin_emails
         )
         primary_role = "admin" if is_admin else "user"
+        # FIX (final-test 2026-09-13): register-এও tenant_id claim — login-এর সাথে সামঞ্জস্য।
         token_data = {
             "sub": user_id,
             "role": primary_role,
             "email": body.username,
             "method": "supabase_auth",
+            "tenant_id": user_id,
         }
         access_token = create_access_token(token_data)
         refresh_token = create_refresh_token(token_data)
@@ -476,11 +483,14 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
 
     # বাংলা মন্তব্য: Token family বজায় রাখা - stolen token detection-এর জন্য
     token_family = payload.get("tfid")
+    # FIX (final-test 2026-09-13): refresh-এ tenant_id ক্যারি-ওভার — না হলে
+    # refresh-পরবর্তী access token দিয়ে tenant endpoints আবার 401 করত।
     token_data = {
         "sub": payload.get("sub", "unknown"),
         "role": payload.get("role", "viewer"),
         "email": payload.get("email"),
         "method": payload.get("method", "supabase_auth"),
+        "tenant_id": payload.get("tenant_id") or payload.get("sub", "unknown"),
     }
     if token_family:
         token_data["tfid"] = token_family
@@ -536,6 +546,8 @@ async def refresh_token_endpoint(body: RefreshRequest, request: Request, respons
         "role": payload.get("role", "viewer"),
         "email": payload.get("email"),
         "method": payload.get("method", "supabase_auth"),
+        # FIX (final-test 2026-09-13): rotation-এ tenant_id অবশ্যই অব্যাহত থাকবে।
+        "tenant_id": payload.get("tenant_id") or payload.get("sub", "unknown"),
         # বাংলা মন্তব্য: Token family ID একই রাখা — rotation-এ family অব্যাহত থাকে
         "tfid": payload.get("tfid", ""),
     }

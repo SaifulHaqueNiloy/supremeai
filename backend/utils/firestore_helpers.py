@@ -56,23 +56,6 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
         or "supremeai-a"
     )
 
-    # বাংলা মন্তব্য: GCP Cloud Run বা রিয়েল ক্রেডেনশিয়ালস না থাকলে (যেমন Render/Railway/local)
-    # google.auth.default() মেটাডাটা সার্ভার (169.254.169.254) ২৩+ সেকেন্ডের জন্য হ্যাং হয়।
-    # ক্রেডেনশিয়ালস না থাকলে সরাসরি None ফেরত দিয়ে ফাস্ট বুট নিশ্চিত করা হলো।
-    has_gcp_creds = any(
-        os.getenv(k)
-        for k in (
-            "GOOGLE_APPLICATION_CREDENTIALS",
-            "GCP_SERVICE_ACCOUNT_JSON",
-            "FIREBASE_SERVICE_ACCOUNT_JSON",
-            "FIREBASE_SERVICE_ACCOUNT",
-            "FIREBASE_ADMIN_CREDENTIALS",
-            "K_SERVICE",
-        )
-    )
-    if not has_gcp_creds and not os.getenv("FORCE_FIRESTORE_ADC"):
-        return None
-
     # ক্যাশ চেক — আগেই তৈরি থাকলে সেটাই রিটার্ন
     if resolved_project in _client_cache:
         return _client_cache[resolved_project]
@@ -80,17 +63,44 @@ def get_firestore_db(project_id: str | None = None) -> Any | None:
     try:
         from core.config import settings
 
+        # FIX (final-test 2026-09-13): SA JSON আগে resolve করো — env var অথবা
+        # Infisical-backed settings দুই উৎস থেকেই। আগের কোডে env-var গেট
+        # (`has_gcp_creds`) সবসময়ের আগে চলত, কিন্তু Render-এ secrets env var
+        # হিসেবে নেই (Infisical vault-এ থাকে) — ফলে গেট সবসময় None ফেরত দিত এবং
+        # tenant_db.py-এর ADC fallback (`firestore.Client()`) Render-এ ব্যর্থ হত
+        # → সব tenant endpoint (get_completion/stream_chat) প্রোডাকশনে 500 দিত।
+        # এখন vault-backed SA JSON গেটের আগেই ধরা হয়।
         credentials = None
-        sa_json_str = os.getenv("GCP_SERVICE_ACCOUNT_JSON") or getattr(
-            settings, "firebase_service_account_json", ""
+        sa_json_str = (
+            os.getenv("GCP_SERVICE_ACCOUNT_JSON")
+            or os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+            or getattr(settings, "firebase_service_account_json", "")
         )
         if sa_json_str:
             import json
 
             from google.oauth2 import service_account
 
-            sa_info = json.loads(sa_json_str)
-            credentials = service_account.Credentials.from_service_account_info(sa_info)
+            try:
+                sa_info = json.loads(sa_json_str)
+                credentials = service_account.Credentials.from_service_account_info(sa_info)
+            except (ValueError, TypeError) as sa_err:
+                logger.warning(f"Failed to parse service account JSON: {sa_err}")
+                credentials = None
+
+        has_gcp_creds = credentials is not None or any(
+            os.getenv(k)
+            for k in (
+                "GOOGLE_APPLICATION_CREDENTIALS",
+                "GCP_SERVICE_ACCOUNT_JSON",
+                "FIREBASE_SERVICE_ACCOUNT_JSON",
+                "FIREBASE_SERVICE_ACCOUNT",
+                "FIREBASE_ADMIN_CREDENTIALS",
+                "K_SERVICE",
+            )
+        )
+        if not has_gcp_creds and not os.getenv("FORCE_FIRESTORE_ADC"):
+            return None
 
         client = firestore.Client(project=resolved_project, credentials=credentials)
         _client_cache[resolved_project] = client
