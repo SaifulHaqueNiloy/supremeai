@@ -155,3 +155,24 @@ def test_health_monitor_uptime_increases():
         finally:
             loop.close()
     assert metrics["uptime_seconds"] >= 0
+
+
+def test_health_monitor_reports_elapsed_process_time_not_cpu_time():
+    with (
+        patch.object(HealthMonitor, "_setup_metrics"),
+        patch("core.health.health_monitor.start_http_server", create=True),
+        patch("core.health.health_monitor.time.time", side_effect=[100.0, 112.9]),
+    ):
+        monitor = HealthMonitor(metrics_port=9092)
+
+        with patch("psutil.cpu_percent", return_value=73.0), patch("psutil.virtual_memory") as mock_vm:
+            mock_vm.return_value.percent = 20.0
+            mock_vm.return_value.available = 1024 * 1024 * 1024
+            loop = asyncio.new_event_loop()
+            try:
+                metrics = loop.run_until_complete(monitor.get_system_metrics())
+            finally:
+                loop.close()
+
+    assert metrics["uptime_seconds"] == 12
+    assert metrics["cpu_usage_percent"] == 73.0

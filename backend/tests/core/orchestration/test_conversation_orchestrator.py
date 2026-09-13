@@ -2,11 +2,19 @@ import asyncio
 
 import pytest
 
+from core.orchestration.capability_adapters import research_handler
 from core.orchestration.conversation_orchestrator import (
     Capability,
     ConversationCommand,
     ConversationOrchestrator,
 )
+
+
+@pytest.mark.asyncio
+async def test_research_handler_rejects_missing_tenant():
+    result = await research_handler(ConversationCommand("research", "u1", ""))
+    assert result["status"] == "unavailable"
+    assert result["tenant_id"] is None
 
 
 @pytest.mark.asyncio

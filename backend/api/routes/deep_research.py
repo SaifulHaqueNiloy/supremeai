@@ -198,7 +198,10 @@ async def _scout_search(query: str, tenant_id: str) -> list[dict[str, str]]:
         from scout.models import CrawlRequest
         from scout.persistence import get_active_policy, record_crawl_response
 
-        policy = await get_active_policy(str(tenant_id or "default"))
+        tenant_id = str(tenant_id).strip()
+        if not tenant_id:
+            return []
+        policy = await get_active_policy(tenant_id)
         if policy is None:
             # বাংলা: Policy Before Power — সক্রিয় policy না থাকলে scout কিছুই crawl করে না।
             return []
@@ -208,7 +211,7 @@ async def _scout_search(query: str, tenant_id: str) -> list[dict[str, str]]:
         resp = await service.execute_crawl(
             CrawlRequest(
                 query_or_url=search_url,
-                tenant_id=str(tenant_id or "default"),
+                tenant_id=tenant_id,
                 max_depth=1,
                 max_results=min(policy.max_results, 8),
             )
@@ -232,7 +235,7 @@ async def _scout_search(query: str, tenant_id: str) -> list[dict[str, str]]:
     return results
 
 
-async def _web_search(query: str, user_id: str = "default") -> list[dict[str, str]]:
+async def _web_search(query: str, user_id: str = "") -> list[dict[str, str]]:
     """Scout-first web search with browser-agent fallback.
 
     বাংলা: Phase 1 — governed scout crawl (tenant policy মেনে) প্রথম প্রচেষ্টা;
@@ -243,8 +246,11 @@ async def _web_search(query: str, user_id: str = "default") -> list[dict[str, st
     try:
         from scout.persistence import get_active_policy
 
-        if await get_active_policy(str(user_id or "default")) is not None:
-            results = await _scout_search(query, str(user_id or "default"))
+        tenant_id = str(user_id).strip()
+        if not tenant_id:
+            return []
+        if await get_active_policy(tenant_id) is not None:
+            results = await _scout_search(query, tenant_id)
     except Exception as exc:
         logger.warning(f"Scout search gate check failed for '{query[:60]}': {exc}")
     if results:

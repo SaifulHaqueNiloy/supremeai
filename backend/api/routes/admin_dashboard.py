@@ -419,7 +419,7 @@ def get_env_etag(redis_key: str = "config:env_etag") -> str:
     return "empty-env"
 
 
-# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা����্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
+# বাংলা মন্তব্য: মাল্টি-ইনস্ট্যা�����্স রেস কন্ডিশন এড়ানোর জন্য রেডিস-ব্যাকড লক ও ফাইল-লকের ফিজিবল কম্বিনেশন
 @with_error_bus("_acquire_env_lock")
 def _acquire_env_lock(lock_path: str = ".env.lock") -> bool:
     import core.services as app_mod
@@ -583,10 +583,13 @@ async def get_providers():
                         if cfg.avg_latency_ms and total_calls > 0
                         else None
                     ),
-                    "api_key_valid": has_key and (_perm_status is None or cfg.status != _perm_status),
+                    "api_key_valid": has_key
+                    and (_perm_status is None or cfg.status != _perm_status),
                     "rate_limit_remaining": None,  # রিয়েল-টাইম হেডার না পড়া পর্যন্ত unknown
                     "rate_limit_max": cfg.rpm_limit or None,
-                    "models": [m.get("id", m) if isinstance(m, dict) else m for m in cfg.models[:5]],
+                    "models": [
+                        m.get("id", m) if isinstance(m, dict) else m for m in cfg.models[:5]
+                    ],
                     "mode": "active" if cfg.is_available else "inactive",
                     "requests_today": cfg.requests_today,
                     "success_rate": round(cfg.success_rate, 1) if total_calls else None,

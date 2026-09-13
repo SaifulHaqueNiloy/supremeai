@@ -10,7 +10,7 @@ from scout.web_crawler_agent import APPROVED_DOMAINS, crawl
 
 
 def test_policy_engine_ssrf_blocking() -> None:
-    policy = CrawlPolicy(allowed_domains=["*"])
+    policy = CrawlPolicy(tenant_id="test-tenant", allowed_domains=["*"])
     engine = PolicyEngine(policy)
 
     # Private IPs / loopback should be rejected
@@ -27,6 +27,7 @@ def test_policy_engine_ssrf_blocking() -> None:
 
 def test_policy_engine_domain_filtering() -> None:
     policy = CrawlPolicy(
+        tenant_id="test-tenant",
         allowed_domains=["github.com", "*.python.org"],
         blocked_domains=["malicious.com"],
         domain_rules=[
@@ -55,7 +56,7 @@ def test_policy_engine_domain_filtering() -> None:
 
 
 def test_policy_engine_depth_limit() -> None:
-    policy = CrawlPolicy(allowed_domains=["*"], max_depth=2)
+    policy = CrawlPolicy(tenant_id="test-tenant", allowed_domains=["*"], max_depth=2)
     engine = PolicyEngine(policy)
 
     allowed, _ = engine.is_url_allowed("https://example.com/page", current_depth=1)
@@ -69,5 +70,5 @@ def test_policy_engine_depth_limit() -> None:
 @pytest.mark.asyncio
 async def test_legacy_crawler_adapter_disallowed_domain() -> None:
     with pytest.raises(PermissionError) as exc_info:
-        await crawl("https://unapproved-domain.xyz")
+        await crawl("https://unapproved-domain.xyz", tenant_id="test-tenant")
     assert "Domain not approved" in str(exc_info.value)

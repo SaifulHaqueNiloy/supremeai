@@ -125,10 +125,19 @@ async def research_handler(command: ConversationCommand) -> dict[str, Any]:
     সক্রিয় CrawlPolicy মেনে হয় (robots.txt, rate pacing, SSRF gate) — policy
     না থাকলে fail-closed উত্তর।
     """
+    tenant_id = str(command.tenant_id or "").strip()
+    if not tenant_id:
+        return {
+            "spoke": "research",
+            "status": "unavailable",
+            "message": "An authenticated tenant_id is required for governed scout crawl.",
+            "tenant_id": None,
+            "project_id": command.project_id,
+        }
+
     from scout.persistence import get_active_policy
 
-    tenant_id = command.tenant_id or "default"
-    policy = await get_active_policy(str(tenant_id))
+    policy = await get_active_policy(tenant_id)
     if policy is None:
         return {
             "spoke": "research",

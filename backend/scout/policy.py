@@ -13,7 +13,9 @@ class PolicyEngine:
     """Evaluates whether target URLs and domains comply with active tenant policy and security standards."""
 
     def __init__(self, policy: CrawlPolicy | None = None) -> None:
-        self.policy = policy or CrawlPolicy(tenant_id="default")
+        if policy is None:
+            raise ValueError("A tenant-scoped crawl policy is required")
+        self.policy = policy
         self._rules_by_domain: dict[str, DomainRule] = {
             r.domain.lower(): r for r in self.policy.domain_rules
         }

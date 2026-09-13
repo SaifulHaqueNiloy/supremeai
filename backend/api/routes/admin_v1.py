@@ -93,7 +93,10 @@ async def admin_stats_v1(admin: dict = Depends(get_current_admin)) -> dict[str, 
     try:
         from scout.persistence import list_history, list_policies
 
-        tenant_id = str(admin.get("tenant_id") or "default")
+        tenant_id = str(admin.get("tenant_id") or admin.get("org_id") or "").strip()
+        if not tenant_id:
+            stats["crawler_degraded"] = "Tenant context required for crawler metrics"
+            return stats
         policies = await list_policies(tenant_id)
         stats["crawler_policies"] = len(policies)
         history = await list_history(tenant_id, limit=100)

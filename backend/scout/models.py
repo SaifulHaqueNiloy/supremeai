@@ -46,7 +46,7 @@ class CrawlPolicy(BaseModel):
     """Tenant-scoped crawl governance policy."""
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    tenant_id: str = Field(default="default")
+    tenant_id: str = Field(..., min_length=1)
     name: str = Field(default="Default Policy", min_length=1, max_length=100)
     is_active: bool = True
     max_depth: int = Field(default=2, ge=1, le=5)
@@ -65,7 +65,7 @@ class CrawlRequest(BaseModel):
     """Payload for submitting a crawl research task."""
 
     query_or_url: str
-    tenant_id: str = Field(default="default")
+    tenant_id: str = Field(..., min_length=1)
     task_id: str = Field(default_factory=lambda: f"crawl-{uuid.uuid4().hex[:12]}")
     max_depth: int | None = None
     max_results: int | None = None

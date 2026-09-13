@@ -290,6 +290,14 @@ async def register_connection(
         ) from exc
 
     # --- Phase 1: durable write-through to the ConnectionRegistry ---
+    tenant_id = str(
+        current_user.get("tenant_id") or current_user.get("org_id") or ""
+    ).strip()
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context required for connection registration",
+        )
     connection_id = f"conn-{uuid.uuid4().hex[:12]}"
     persisted = False
     try:
@@ -297,7 +305,7 @@ async def register_connection(
 
         record = connection_registry.register(
             user={
-                "tenant_id": current_user.get("tenant_id") or "default",
+                "tenant_id": tenant_id,
                 "user_id": user_id,
                 "role": current_user.get("role") or "user",
             },

@@ -65,7 +65,9 @@ class TaskContext:
     """Execution context, resource consumption monitor, and immutable trace logger."""
 
     trace_id: str = field(default_factory=lambda: f"trace_{uuid.uuid4().hex[:12]}")
-    tenant_id: str = "default_tenant"
+    # Tenant identity must come from the authenticated execution boundary.
+    # A synthetic default would allow accidental cross-tenant data access.
+    tenant_id: str | None = None
     session_id: str | None = None
     client_ip: str | None = None
     user_agent: str | None = None
