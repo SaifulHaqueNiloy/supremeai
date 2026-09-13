@@ -203,7 +203,6 @@ export type { CircuitState };
 // `backendMissing` ফ্ল্যাগ export করা হয় — অ্যাপ চাইলে কনফিগ-এরর ব্যানার দেখাতে পারে।
 export const backendMissing: boolean = import.meta.env.PROD && !USER_BACKEND_URL;
 if (backendMissing) {
-  // eslint-disable-next-line no-console
   console.error(
     '❌ VITE_API_URL or VITE_BACKEND_URL is required in production. ' +
       'App will run in degraded viewer mode until the backend URL is configured.',
@@ -339,6 +338,8 @@ export const getWebSocketBaseUrl = (): string => {
     return apiBase.replace(/^http:\/\//, 'ws://');
   }
 
+  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
   if (typeof window === 'undefined') {
     if (!backendUrl) {
       if (import.meta.env.PROD) {
@@ -346,7 +347,8 @@ export const getWebSocketBaseUrl = (): string => {
       }
       return '';
     }
-    return `${protocol}//${backendUrl.replace(/^https?:\/\//, '')}`;
+    const backendProtocol = backendUrl.startsWith('https:') ? 'wss:' : 'ws:';
+    return `${backendProtocol}//${backendUrl.replace(/^https?:\/\//, '')}`;
   }
 
   return `${protocol}//${window.location.host}`;

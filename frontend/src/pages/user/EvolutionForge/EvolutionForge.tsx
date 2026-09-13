@@ -241,7 +241,7 @@ const EvolutionForgeCanvas = () => {
       if (payload.nodes && payload.nodes.length > 0) {
         eventBus.emit(Events.SKILL_AUTO_CREATED, {
           name: payload.name,
-          agents: payload.nodes.filter((n) => n.type === 'agentNode').map((n) => (n.data as { role?: string })?.role || 'Agent'),
+          agents: payload.nodes.filter((n: { type?: string }) => n.type === 'agentNode').map((n: { data?: unknown }) => (n.data as { role?: string })?.role || 'Agent'),
           nodeCount: payload.nodes.length,
           source: 'evolution_forge',
           canDeploy: true,
@@ -293,7 +293,7 @@ const EvolutionForgeCanvas = () => {
       const result = await apiClient.post('/api/skills/deploy-blueprint', {
         name: payload.name,
         description: payload.description || `Auto-generated skill from Evolution Forge`,
-        agents: payload.nodes.filter((n) => n.type === 'agentNode').map((n) => (n.data as { role?: string })?.role || 'Agent'),
+        agents: payload.nodes.filter((n: { type?: string }) => n.type === 'agentNode').map((n: { data?: unknown }) => (n.data as { role?: string })?.role || 'Agent'),
         nodes: payload.nodes,
         edges: payload.edges,
         category: 'automation',
