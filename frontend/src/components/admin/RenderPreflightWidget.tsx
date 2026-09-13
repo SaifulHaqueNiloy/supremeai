@@ -16,6 +16,12 @@ interface RenderAccountStatus {
   last_checked_at?: string;
   retry_count: number;
   source: string;
+  confidence?: 'verified' | 'estimated' | 'unknown';
+  state?: 'verified' | 'estimated' | 'unknown';
+  billing_period_start?: string;
+  billing_period_end?: string;
+  remaining?: number;
+  limit?: number;
 }
 
 interface PreflightOverview {
@@ -130,9 +136,13 @@ export function RenderPreflightWidget() {
                 {getStatusBadge(acc.status)}
               </div>
               <div className="text-[11px] text-slate-300 font-mono mb-1">
-                Usage: <span className="text-white font-bold">{acc.usage_minutes ?? '—'}</span> / {acc.safe_build_minutes ?? 450}m
+                Usage: <span className="text-white font-bold">{acc.usage_minutes ?? '—'}</span> / {acc.safe_build_minutes ?? acc.limit ?? 'unknown'}m
                 <span className="text-slate-500 text-[10px] ml-1.5">({acc.plan} plan)</span>
               </div>
+              <div className="text-[10px] text-slate-500 font-mono mb-1">
+                Source: <span className={acc.confidence === 'verified' ? 'text-emerald-400' : 'text-amber-400'}>{acc.confidence ?? acc.state ?? 'unknown'}</span> · {acc.source || 'unknown'}
+              </div>
+              {acc.remaining != null && <div className="text-[10px] text-slate-400 font-mono mb-1">Remaining: {acc.remaining}m</div>}
               {acc.reason && <div className="text-[10px] text-slate-400 truncate mb-1">Reason: {acc.reason}</div>}
               {acc.recheck_at && (
                 <div className="text-[10px] text-amber-400 flex items-center gap-1 font-mono mb-1">
