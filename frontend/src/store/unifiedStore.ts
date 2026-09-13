@@ -13,6 +13,7 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
+import type { UnifiedChatMessage } from '../types/chat';
 
 // ════════════════════════════════════════════════════════════════════
 // TYPES
@@ -90,6 +91,18 @@ export interface MemoryItem {
 // ════════════════════════════════════════════════════════════════════
 
 export interface UnifiedState {
+  // ── CHAT STATE (shared by ChatInterface + CommandCenter + AI) ──
+  chat: {
+    unreadCount: number;
+    activeConversationId: string | null;
+    cachedMessages: UnifiedChatMessage[];
+    chatPanelExpanded: boolean;
+  };
+  setChatUnreadCount: (count: number) => void;
+  setActiveConversation: (conversationId: string | null) => void;
+  appendChatMessage: (message: UnifiedChatMessage) => void;
+  toggleChatPanel: () => void;
+  
   // ── SERVICE HEALTH (shared by HealthMonitor + Browser + Dashboard) ──
   serviceHealth: Record<string, ServiceHealthEntry>;
   setServiceHealth: (service: string, health: Partial<ServiceHealthEntry>) => void;
@@ -151,6 +164,13 @@ export interface UnifiedState {
 // ════════════════════════════════════════════════════════════════════
 
 const initialState = {
+  // ── CHAT STATE ──
+  chat: {
+    unreadCount: 0,
+    activeConversationId: null as string | null,
+    cachedMessages: [] as UnifiedChatMessage[],
+    chatPanelExpanded: true,
+  },
   serviceHealth: {} as Record<string, ServiceHealthEntry>,
   activeBrowseSessions: [] as BrowseSession[],
   currentBrowserUrl: null as string | null,
@@ -316,6 +336,41 @@ export const useUnifiedStore = create<UnifiedState>()(
     },
 
     // ════════════════════════════════════════════════════════════════════
+    // CHAT METHODS
+    // ════════════════════════════════════════════════════════════════════
+
+    setChatUnreadCount: (count: number) =>
+      set((state) => ({
+        ...state,
+        chat: { ...state.chat, unreadCount: count },
+      })),
+
+    setActiveConversation: (conversationId: string | null) =>
+      set((state) => ({
+        ...state,
+        chat: {
+          ...state.chat,
+          activeConversationId: conversationId,
+          cachedMessages: conversationId === null ? [] : state.chat.cachedMessages,
+        },
+      })),
+
+    appendChatMessage: (message: UnifiedChatMessage) =>
+      set((state) => ({
+        ...state,
+        chat: {
+          ...state.chat,
+          cachedMessages: [...state.chat.cachedMessages, message].slice(-200),
+        },
+      })),
+
+    toggleChatPanel: () =>
+      set((state) => ({
+        ...state,
+        chat: { ...state.chat, chatPanelExpanded: !state.chat.chatPanelExpanded },
+      })),
+
+    // ════════════════════════════════════════════════════════════════════
     // UI STATE METHODS
     // ════════════════════════════════════════════════════════════════════
     
@@ -353,6 +408,8 @@ export const useUnifiedStore = create<UnifiedState>()(
         recentMemoryItems: state.memoryItems.length,
         browserSessions: state.activeBrowseSessions.length,
         lastSecurityScore: state.lastSecurityScan?.score || null,
+        chatUnread: state.chat.unreadCount,
+        activeChatConversation: state.chat.activeConversationId,
       };
     }
   }))
