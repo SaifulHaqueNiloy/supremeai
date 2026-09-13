@@ -1,6 +1,10 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// FINAL-TEST FIX: the QueryClientProvider that used to live here was removed —
+// main.tsx already wraps the whole tree in <SharedProviders> (packages/
+// ui-components), so this second provider created a *nested duplicate cache* and
+// silently won over the outer one. The smart retry policy now lives in
+// SharedProviders so the entire app shares exactly one QueryClient.
 
 import { ThemeSyncProvider } from './providers/ThemeSyncProvider';
 import { GlobalConfigInitializer } from "./components/core/GlobalConfigInitializer";
@@ -40,29 +44,6 @@ import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 import { MCPConnector } from './components/plugins/MCPConnector';
 
-// Viewer bootstrap stays intentionally small. Backend policy, memory, audit, and
-// hardening remain behind the API boundary; do not mount those systems globally here.
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error: unknown) => {
-        const err = error as Record<string, unknown>;
-        const msg = (err.message as string) || '';
-        const status = err.status as number | undefined;
-        if (
-          status === 401 || status === 403 || status === 429 ||
-          msg.includes('401') || msg.includes('403') || msg.includes('429') ||
-          msg.includes('Rate limit') || msg.includes('Unauthorized')
-        ) return false;
-        return failureCount < 2;
-      },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex + Math.random() * 500, 15000),
-      refetchOnWindowFocus: false,
-      staleTime: 30_000,
-    },
-  },
-});
-
 // The public viewer is intentionally available before authentication: a shared URL is
 // enough to read data. Authentication and role checks remain for private workspaces;
 // admin step-up security stays isolated to /admin and must not leak into viewer routes.
@@ -94,8 +75,7 @@ const AppContent: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <GlobalConfigInitializer>
+      <GlobalConfigInitializer>
           <React.Suspense fallback={
             <div className="flex min-h-screen items-center justify-center bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
               <div className="flex items-center gap-3 text-sm font-medium">
@@ -246,8 +226,7 @@ const AppContent: React.FC = () => {
               <Route path="*" element={<ErrorPage code={404} />} />
             </Routes>
           </React.Suspense>
-        </GlobalConfigInitializer>
-      </QueryClientProvider>
+      </GlobalConfigInitializer>
     </ErrorBoundary>
   );
 };

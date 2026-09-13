@@ -334,7 +334,7 @@ class TogetherProvider(BaseOpenAICompatibleProvider):
 
 
 class GeminiProvider:
-    """Google Gemini Provider — Free tier (gemini-2.0-flash / 1.5-flash)."""
+    """Google Gemini Provider — Free tier (gemini-2.5-flash)."""
 
     name = Provider.GEMINI
 
@@ -352,11 +352,11 @@ class GeminiProvider:
         # but NEVER defined — every health check raised AttributeError (swallowed by
         # `except Exception`) and returned False forever, permanently removing Gemini
         # from provider chains (e.g. the EMBEDDING chain [GEMINI, OLLAMA] degraded).
-        raw_model = getattr(settings, "model_vision", "models/gemini-2.0-flash")
+        raw_model = getattr(settings, "model_vision", "models/gemini-2.5-flash")
         model_id = (
-            str(raw_model) if isinstance(raw_model, str | bytes) else "models/gemini-2.0-flash"
+            str(raw_model) if isinstance(raw_model, str | bytes) else "models/gemini-2.5-flash"
         )
-        # Gemini REST API needs a bare model id ("models/gemini-2.0-flash"); strip a
+        # Gemini REST API needs a bare model id ("models/gemini-2.5-flash"); strip a
         # "gemini/" provider prefix if the settings value carries one.
         self.model = model_id.split("/", 1)[1] if model_id.startswith("gemini/") else model_id
 
@@ -371,7 +371,7 @@ class GeminiProvider:
         stream: bool = False,
         **kwargs: Any,
     ) -> str | AsyncGenerator[StreamChunk, None]:
-        model = kwargs.get("model", getattr(settings, "model_vision", "models/gemini-2.0-flash"))
+        model = kwargs.get("model", getattr(settings, "model_vision", "models/gemini-2.5-flash"))
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {

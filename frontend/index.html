@@ -102,14 +102,8 @@
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch((err) => {
-            console.debug('[PWA] Service worker registration failed:', err);
-          });
-        });
-      }
-    </script>
+    <!-- FINAL-TEST FIX: the service worker used to be registered twice (here and
+         in main.tsx), causing double registration races on every load. The single
+         canonical registration lives in main.tsx (guarded to PROD builds). -->
   </body>
 </html>

@@ -41,7 +41,12 @@ export const LoginPage: React.FC = () => {
       if (err?.message?.includes('timed out') || err?.message?.includes('timeout')) {
         userMessage = '⏰ Server response timeout — Backend may be starting up (cold start). Please retry in 30s.';
       } else if (err?.message?.includes('Failed to fetch') || err?.message?.includes('NetworkError')) {
-        userMessage = '🌐 Network Error — Unable to reach server. Check your connection or try again later.';
+        // FINAL-TEST UX FIX (2026-09-14): a failed CORS preflight also surfaces
+        // as "Failed to fetch" — telling users to "check your connection" sent
+        // them chasing a network problem they cannot fix (this exact class of
+        // failure blocked production login for days). The message now covers
+        // both causes and asks for a retry before reporting a deploy issue.
+        userMessage = '🌐 Could not reach the API — this is usually a temporary server issue (or a deployment/CORS misconfiguration). Retrying often helps; if it persists, contact support.';
       } else if (err?.status === 503 || err?.status === 502 || err?.status === 504) {
         userMessage = '🔧 Server temporarily unavailable (maintenance/cold start). Please wait 1-2 minutes.';
       } else if (err?.status === 401 || err?.status === 403) {

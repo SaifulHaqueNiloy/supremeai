@@ -377,6 +377,26 @@ class SettingsSecretsMixin:
     def nvidia_api_key(self, value: str) -> None:
         self._set_cached_secret("NVIDIA_API_KEY", value)
 
+    # FINAL-TEST FIX (2026-09-13): BYNARA / BAI are OpenAI-compatible zero-cost
+    # routers whose keys ship with the deployment env but were previously
+    # orphaned (no code consumed them). Exposed here so LLMGateway's
+    # _MODEL_KEY_MAP can resolve per-call keys for bynara/* and bai/* models.
+    @property
+    def bynara_api_key(self) -> str:
+        return self._get_cached_secret("BYNARA_API_KEY")
+
+    @bynara_api_key.setter
+    def bynara_api_key(self, value: str) -> None:
+        self._set_cached_secret("BYNARA_API_KEY", value)
+
+    @property
+    def bai_api_key(self) -> str:
+        return self._get_cached_secret("BAI_API_KEY")
+
+    @bai_api_key.setter
+    def bai_api_key(self, value: str) -> None:
+        self._set_cached_secret("BAI_API_KEY", value)
+
     @property
     def firecrawl_api_key(self) -> str:
         return self._get_cached_secret("FIRECRAWL_API_KEY")
