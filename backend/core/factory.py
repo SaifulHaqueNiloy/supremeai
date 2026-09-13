@@ -154,7 +154,7 @@ class SupremeAIFactory:
         )
 
         task_ctx = TaskContext(
-            tenant_id=ctx_dict.get("tenant_id", "default_tenant"),
+            tenant_id=ctx_dict.get("tenant_id"),
             session_id=ctx_dict.get("session_id"),
         )
 
