@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from core.config import settings
 from core.logging_config import logger
 
 
@@ -101,6 +100,15 @@ def get_role_permissions(role: str | Role) -> frozenset[Permission] | frozenset[
     বাংলা: নির্দিষ্ট রোলের জন্য সব পারমিশন রিটার্ন করে। প্রথমে config চেক করে, তারপর default।
     """
     role_str = role.value if isinstance(role, Role) else role.lower()
+
+    # বাংলা মন্তব্য (ROOT-CAUSE FIX): module-level `from core.config import settings`
+    # একবারই bind করত — টেস্ট suite-এ core.config মডিউল `sys.modules` থেকে মুছে
+    # re-import হলে (tests/conftest.py delete pattern) *নতুন* Settings() তৈরি হতো,
+    # rbac পুরনো instance-এই আটকে থাকত, আর monkeypatch কার্যকর হতো না (stale
+    # `rbac_role_definitions={'admin': ['*'], ...}` → admin সবসময় authorize)।
+    # এখন প্রতি কল-এ current settings পড়া হয়, ফলে re-import/rebind যাই ঘটুক,
+    # rbac সবসময় সর্বশেষ instance দেখে।
+    from core.config import settings
 
     # Check config-driven roles first
     custom_roles = getattr(settings, "rbac_role_definitions", {}) or {}
