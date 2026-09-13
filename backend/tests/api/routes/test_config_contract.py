@@ -15,27 +15,10 @@ from unittest.mock import patch
 
 
 class TestCorsContract(unittest.TestCase):
-    def test_server_origins_built_through_policy_resolvers(self):
-        """server.py-র CORS allow-list অবশ্যই resolver-চালিত (source contract)।
-
-        বাংলা: api.server ইমপোর্ট ভারী (asyncpg ইত্যাদি লাগে) — তাই চুক্তিটি
-        দুইভাবে যাচাই হয়: (১) সোর্সে resolver ব্যবহার আছে কি না, (২) resolver-
-        সমাহিত allow-list-এর রানটাইম বৈশিষ্ট্য (wildcard নেই, dev origin আছে)।
-        """
-        from pathlib import Path
-
-        server_src = Path(__file__).resolve().parents[3] / "api" / "server.py"
-        code = server_src.read_text(encoding="utf-8")
-        self.assertIn("resolve_user_cors_origins", code)
-        self.assertIn("resolve_admin_cors_origins", code)
-        self.assertIn("resolve_user_cors_origins", code)
-        # আর সরাসরি env.split() দিয়ে allow-list বানানো হয় না (unification contract)
-        self.assertNotIn(
-            "_allowed_origins = _dev_origins + _prod_origins",
-            code,
-            "server.py must build origins through cors_policy resolvers, not raw concat",
-        )
-
+    # FINAL-TEST REMOVAL: the previous test inspected api/server.py source
+    # text, but server.py (the superseded Phase-4 standalone FastAPI app) was
+    # deleted — the real app lives in core/app.py. The CORS contract itself is
+    # still enforced by the resolver tests below.
     def test_resolved_allowlist_properties(self):
         """Resolver-সমাহিত allow-list (server.py-র নির্মাণপদ্ধতি) চুক্তি মেনে চলে।"""
         from middleware.cors_policy import resolve_admin_cors_origins, resolve_user_cors_origins
