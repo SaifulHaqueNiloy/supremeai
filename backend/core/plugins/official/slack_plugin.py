@@ -1,14 +1,11 @@
+# Deprecated: moved to backend/core/plugins/experimental/slack_plugin.py
 from typing import Any
 
+from ..experimental.slack_plugin import SlackPlugin as _SlackPlugin
 from .base import BasePlugin
 
 
-class SlackPlugin(BasePlugin):
-    @property
-    def plugin_id(self) -> str:
-        return "slack"
+class SlackPlugin(_SlackPlugin):
+    """Shim — delegates to experimental implementation."""
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
-    ) -> Any:
-        raise NotImplementedError("Slack plugin tools not implemented yet")
+    pass
