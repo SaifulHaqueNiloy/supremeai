@@ -105,7 +105,7 @@ class TestAdminRoleEnforcement:
         assert "dependencies=[Depends(get_current_admin)]" in src
 
     def test_browser_url_decision_requires_admin(self):
-        src = _source_of("api/routes/browser.py")
+        src = _source_of("api/routes/browser/_url_permissions.py")
         decision_block = src.split("/urls/requests/{id}/decision")[1][:300]
         assert "require_admin_token" in decision_block
 
