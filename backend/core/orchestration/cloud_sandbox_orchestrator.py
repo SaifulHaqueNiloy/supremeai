@@ -54,7 +54,13 @@ class CloudSandboxOrchestrator:
         elif self.provider == "local":
             # Local mode is an explicit dry-run provider used by the API when no
             # remote sandbox credentials are configured.
-            return "http://127.0.0.1"
+            if (
+                getattr(settings, "env", "") == "local"
+                or getattr(settings, "environment", "") == "local"
+                or settings.is_local()
+            ):
+                return "http://127.0.0.1"
+            raise ValueError("Local sandbox provider is not permitted in production environments")
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")
 
