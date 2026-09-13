@@ -303,9 +303,9 @@ Collection error শূন্য এবং unexplained skip শূন্য হ�
 2. প্রথম release-এ gate করুন:
    - backend: 65%
    - frontend: 40%
-3. প্রতি মাসে threshold বাড়ানোর issue তৈরি করুন।
+3. প্রতি মাসে threshold বাড়���নোর issue তৈরি করুন।
 4. Security, tenant isolation, tool gateway এবং task execution module-এর জন্য আলাদা higher threshold রাখুন।
-5. Coverage দিয়ে untested critical path আড়াল করবেন না; mission tests আলাদা বাধ্যতামূলক রাখুন।
+5. Coverage দিয়ে untested critical path আড়াল করবেন না; mission tests আলাদা বাধ্যতামূল��� রাখুন।
 
 ### সম্পূর্ণ ধরা হবে যখন
 
@@ -558,7 +558,7 @@ Knip-এ unused dependency/export/type এবং duplicate export পাওয�
 
 - কোনো known compromised credential active নেই;
 - frontend-এ provider secret বা direct provider call নেই;
-- critical route-এ cross-tenant access test pass করে;
+- critical route-এ cross-tenant access test pass কর���;
 - MCP/tool action policy gateway ছাড়া execute হয় না;
 - Alembic একমাত্র migration source;
 - root scripts/tools lint CI-তে blocking;
@@ -580,3 +580,443 @@ Knip-এ unused dependency/export/type এবং duplicate export পাওয�
 - [ ] `main`-এ সরাসরি push নয়; branch ও review সম্পন্ন
 
 > **মূল কথা:** নতুন capability যোগ করার আগে existing capability-কে secure, wired, tested এবং measurable করুন। SupremeAI-এর production advantage হবে “অনেক কিছু করতে পারে” নয়; “নিরাপদে, যাচাইসহ, বারবার একই মানে কাজ শেষ করতে পারে।”
+
+---
+
+# ১৪. International, multilingual এবং configurable product model
+
+## লক্ষ্য
+
+SupremeAI যেন শুধু বাংলা-কেন্দ্রিক assistant না হয়ে user-এর locale, ভাষা, terminology, tone এবং formatting preference অনুযায়ী কাজ করতে পারে। বাংলা হবে প্রথম-class capability, কিন্তু architecture হবে language-neutral। User যেন English, বাংলা, Hindi, Arabic, Spanish, French, Portuguese, German, Japanese, Korean, Chinese অথবা নিজের tenant-এর নির্দিষ্ট ভাষা বেছে নিতে পারে।
+
+## কোথায় পরিবর্তন হবে
+
+- `backend/runtime/task_context.py`
+- `backend/core/orchestration/`
+- `backend/core/unified_router.py`
+- `backend/core/task_policy.py`
+- `backend/agents/domain/bangla_nlp_agent.py`
+- `backend/adapters/`
+- `backend/api/routes/`
+- `frontend/src/services/SupremeAIService.ts`
+- `frontend/src/providers/ThemeProvider.tsx` অথবা locale provider
+- `frontend/src/i18n/` — না থাকলে নতুন canonical directory
+- `frontend/src/components/LanguageSelector.tsx` — না থাকলে তৈরি করতে হবে
+- `docs/i18n/INTERNATIONALIZATION.md`
+- নতুন: `backend/core/i18n/locale_policy.py`
+- নতুন: `backend/core/i18n/language_profiles.py`
+- নতুন: `evals/multilingual/`
+
+## কীভাবে fix/implement করবেন
+
+1. `task_context.py`-এ request-level `locale`, `language`, `fallback_languages`, `timezone`, `date_format`, `number_format` এবং `response_style` রাখুন।
+2. Tenant profile-এ `default_language` রাখুন; user preference থাকলে সেটি tenant default-এর উপর প্রাধান্য পাবে।
+3. Language detection কখনো একমাত্র authority হবে না। User-selected language, tenant policy এবং detected language—এই তিনটির precedence document করুন।
+4. Prompt, tool input, tool output এবং final answer আলাদা করুন। Tool/API input সাধারণত canonical schema-তে থাকবে; শুধু user-facing text translate হবে।
+5. Error code, audit event, permission name এবং database enum translate করবেন না। এগুলো stable machine-readable identifier থাকবে।
+6. Translation fallback রাখুন: requested language → tenant fallback → English. Silent language switch নয়; UI-তে fallback status দেখান।
+7. Locale-specific system prompt ও terminology `language_profiles.py`-তে version করুন; user prompt-কে system policy override করতে দেবেন না।
+8. Frontend-এ সব visible string translation key-তে নিন। `en`, `bn`, `hi`, `ar`, `es`, `fr`, `pt`, `de`, `ja`, `ko`, `zh` দিয়ে শুরু করা যেতে পারে; বাস্তব demand অনুযায়ী ভাষা যুক্ত হবে।
+9. RTL ভাষার জন্য `dir="rtl"`, date/number formatting এবং layout test যোগ করুন।
+10. User বা tenant glossary যুক্ত করুন—যেমন legal terms, product names, internal abbreviations—কিন্তু glossary-কে permission policy হিসেবে ব্যবহার করবেন না।
+11. Prompt injection ও translation attack test করুন: অনুবাদিত text-এ instruction লুকিয়ে tool permission বদলানো যাবে না।
+
+## ভাষাভিত্তিক data model
+
+```text
+TenantSettings:
+  default_language
+  fallback_languages[]
+  timezone
+  glossary_version
+  response_style
+
+TaskContext:
+  requested_language
+  detected_language
+  effective_language
+  locale_source
+  translation_fallback_used
+```
+
+## আন্তর্জাতিক quality gate
+
+- `evals/multilingual/test_instruction_following.py`
+- `evals/multilingual/test_factuality.py`
+- `evals/multilingual/test_code_switching.py`
+- `evals/multilingual/test_rtl_rendering.py`
+- `backend/tests/core/test_locale_policy.py`
+- `frontend/src/i18n/__tests__/localeFallback.test.ts`
+
+প্রতিটি supported language-এর জন্য অন্তত একই task-এর translated এবং native-authored version রাখুন। শুধু machine translation দিয়ে benchmark তৈরি করবেন না; native reviewer বা trusted corpus দিয়ে sample validation করুন।
+
+---
+
+# ১৫. Skill এবং tool ecosystem: কী যুক্ত করা যাবে
+
+## মূল নিয়ম
+
+কোনো MCP/skill শুধু “নাম আছে” বলে যুক্ত করবেন না। প্রতিটি integration-এর জন্য registry entry, permission scope, risk tier, timeout, cost limit, data classification, owner, health check এবং verification rule বাধ্যতামূলক।
+
+## প্রস্তাবিত tool categories
+
+| Category | Candidate | ব্যবহার | প্রথমে কোথায় যুক্ত হবে |
+|---|---|---|---|
+| Web research | Perplexity MCP বা সমতুল্য research MCP | citation-সহ current web answer | `backend/tools/mcp/`, `backend/core/security/tool_gateway.py` |
+| Web crawling | Firecrawl | page crawl, sitemap, structured extraction | `backend/tools/mcp/mcp_web_research.py` |
+| Browser automation | Playwright | reliable browser task, screenshot, form flow | `backend/tools/browser/`, `backend/core/security/tool_gateway.py` |
+| Browser debugging | Chrome DevTools Protocol | console, network, performance diagnostics | `backend/tools/browser/cdp/` |
+| Developer inspection | VS Code extension tools | repository context, test/run feedback | `tools/vscode-extension/`, `backend/tools/mcp/` |
+| Creative media | Higgsfield বা approved video/image provider | media generation workflow | `backend/core/providers/media/` |
+| Search/retrieval | OpenSearch, Qdrant বা pgvector | hybrid/vector retrieval | `backend/retrieval/`, `backend/database/` |
+| Productivity | GitHub, Linear, Notion connectors | issue/PR/docs execution | `backend/tools/connectors/` |
+
+`oerokexity MCP` নামটি যদি নির্দিষ্ট কোনো vendor/product বোঝায়, আগে official package, license, maintenance status, authentication model এবং data residency যাচাই করুন। অস্পষ্ট বা unverified MCP production registry-তে যোগ করবেন না।
+
+## প্রতিটি tool-এর registry contract
+
+নতুন file: `backend/core/tools/tool_manifest.py` অথবা বিদ্যমান registry-তে একই contract ব্যবহার করুন:
+
+```yaml
+name: playwright.browser
+version: 1
+risk_level: medium
+required_scopes: [browser:read, browser:interact]
+allowed_domains: []
+network_policy: allowlist
+filesystem_access: none
+timeout_seconds: 30
+max_retries: 1
+requires_approval: false
+handles_pii: true
+verification: screenshot_or_dom_assertion
+owner: platform-team
+```
+
+## নিরাপত্তা fix
+
+- `tool_gateway.py`-তে domain allowlist, SSRF protection এবং private IP block করুন।
+- `backend/tools/browser/`-এ browser profile প্রতি task-এ isolate করুন; cookies cross-task reuse করবেন না।
+- Playwright/CDP-তে arbitrary download, shell execution, extension install এবং credential export default-deny করুন।
+- Firecrawl result-কে untrusted content ধরুন; page-এর instruction execute করবেন না।
+- Higgsfield/media provider-এ user upload, copyright status, retention এবং public/private output policy রাখুন।
+- MCP server health এবং schema drift `backend/health/` বা বিদ্যমান health registry-তে monitor করুন।
+- প্রত্যেক tool result-এ `source_url`, `retrieved_at`, `content_hash`, `tool_version` রাখুন।
+
+## Tool onboarding process
+
+1. Vendor/license/security review লিখুন: `docs/integrations/<tool-name>.md`।
+2. Integration status এবং environment variables যাচাই করুন; secret code বা frontend-এ রাখবেন না।
+3. Read-only scope দিয়ে শুরু করুন।
+4. Sandbox tenant-এ contract test চালান।
+5. Approval এবং rollback rule নির্ধারণ করুন।
+6. Mission suite-এ অন্তত ৫টি success এবং ৫টি failure case যোগ করুন।
+7. Canary traffic ছাড়া production-wide enable করবেন না।
+
+---
+
+# ১৬. Open-source stack থেকে কী নেওয়া যায়
+
+## সম্ভাব্য উপকারী foundation
+
+- **Playwright:** browser automation ও deterministic E2E verification
+- **Firecrawl/self-hosted crawler alternative:** controlled crawling; robots, rate limit ও legal policyসহ
+- **OpenTelemetry:** request/tool/provider trace
+- **Prometheus + Grafana:** latency, error, queue এবং cost metrics
+- **Langfuse বা OpenLIT:** LLM trace, prompt/version এবং evaluation observability
+- **Ragas/DeepEval:** RAG এবং answer quality evaluation
+- **Inspect AI অথবা lm-eval-harness:** reproducible model benchmark
+- **vLLM অথবা Ollama:** approved local/open model serving
+- **LiteLLM:** provider abstraction; তবে existing provider router-এর duplicate যেন না হয়
+- **Presidio:** PII detection/redaction
+- **OPA অথবা Cedar:** policy decision layer; existing policy engine-এর সাথে comparison করে নিন
+- **Qdrant বা OpenSearch:** scale বাড়লে vector/hybrid retrieval
+- **OpenFeature:** model/tool routing experiment ও feature flag
+- **SLSA/Sigstore:** build provenance ও artifact signing
+
+## কোথায় সতর্ক হতে হবে
+
+একই কাজের জন্য দুইটি framework যুক্ত করবেন না। উদাহরণ: existing provider router থাকলে LiteLLM সরাসরি core path-এ ঢোকাবেন না; adapter হিসেবে benchmark করে লাভ প্রমাণ করতে হবে। প্রতিটি open-source dependency-এর জন্য license, CVE, maintainer activity, SBOM এবং upgrade owner রাখুন:
+
+- `.github/workflows/ci.yml`
+- `backend/pyproject.toml`
+- `frontend/package.json`
+- `docs/security/SBOM_AND_DEPENDENCY_POLICY.md`
+
+---
+
+# ১৭. Fine-tuning, human behavior এবং সত্যিকারের শেখা যাচাই
+
+## প্রথম নীতি
+
+Kaggle বা Hugging Face dataset সরাসরি production training data নয়। Dataset-এর license, provenance, PII, bias, toxicity, contamination এবং task relevance যাচাই না করে train করবেন না। Human behavior শেখানো মানে মানুষের private conversation কপি করা নয়; বরং consent-সহ anonymized behavior pattern, preference এবং evaluation signal শেখানো।
+
+## কোথায় পরিবর্তন হবে
+
+- `evals/behavior/`
+- `evals/multilingual/`
+- `backend/learning/`
+- `backend/agents/`
+- `backend/core/memory/`
+- `backend/core/orchestration/`
+- `docs/ml/DATASET_CARD_TEMPLATE.md`
+- `docs/ml/MODEL_CARD_TEMPLATE.md`
+- `docs/ml/TRAINING_GOVERNANCE.md`
+- `scripts/evals/`
+- `scripts/training/`
+
+## নিরাপদ training pipeline
+
+```text
+dataset registry
+→ license/provenance check
+→ PII/toxicity filtering
+→ deduplication
+→ train/validation/test split
+→ contamination check
+→ baseline evaluation
+→ fine-tune/adapter training
+→ held-out evaluation
+→ adversarial evaluation
+→ shadow deployment
+→ canary
+→ rollback or promote
+```
+
+## Kaggle/Hugging Face ব্যবহারের বাস্তব পদ্ধতি
+
+1. `docs/ml/dataset_registry.yaml`-এ dataset name, source URL, license, version, language, intended use, prohibited use এবং hash রাখুন।
+2. Dataset download script `scripts/training/fetch_dataset.py`-তে রাখুন; manual unknown file commit করবেন না।
+3. PII scan, duplicate removal এবং toxic content filter চালান।
+4. User data থাকলে consent scope, deletion request এবং retention policy enforce করুন।
+5. Full fine-tuning-এর আগে prompt routing, retrieval, few-shot এবং LoRA/adapter baseline compare করুন।
+6. Model artifact object storage/model registry-তে version করুন; production code-এ mutable `latest` ব্যবহার করবেন না।
+7. Training run-এর config, seed, dataset hash, base model, adapter version এবং evaluation result সংরক্ষণ করুন।
+
+## Human behavior কীভাবে model করবেন
+
+“মানুষের মতো” vague target না রেখে observable behavior label করুন:
+
+- clarification চায় কি না
+- uncertainty প্রকাশ করে কি না
+- ভুল হলে correction গ্রহণ করে কি না
+- unsafe request reject করে কি না
+- user preference মনে রাখে কি না
+- ভাষা/টোন ঠিক রাখে কি না
+- tool ব্যবহারের আগে permission মানে কি না
+- output verify করে কি না
+
+Behavior policy model-এর system/security policy override করতে পারবে না। Human preference optimization-এ safety, privacy এবং truthfulness score বাধ্যতামূলক constraint হবে।
+
+---
+
+# ১৮. Human testing কমিয়ে automated evaluation চালু করুন
+
+মানুষের test পুরোপুরি বাদ দেওয়া যাবে না; কিন্তু repetitive comparison, regression এবং monitoring automate করা উচিত। Human review থাকবে gold-set creation, ambiguous case, safety boundary এবং release approval-এ।
+
+## Automated evaluation architecture
+
+নতুন directory:
+
+- `evals/cases/` — versioned test cases
+- `evals/golden/` — approved expected properties
+- `evals/runners/` — provider/model/tool runner
+- `evals/metrics/` — scoring functions
+- `evals/reports/` — generated artifacts; large output repository-তে নয়
+- `scripts/evals/run_eval.py`
+- `scripts/evals/compare_runs.py`
+- `backend/api/routes/admin_evals.py`
+- `frontend/src/routes/admin/EvaluationDashboard.tsx`
+
+প্রতিটি case-এ রাখুন:
+
+```yaml
+id: multilingual.tool_safety.001
+language: bn
+input: ...
+expected_properties:
+  - answers_in_requested_language
+  - does_not_call_unapproved_tool
+  - cites_source
+  - states_uncertainty
+risk_level: high
+max_cost_usd: 0.05
+```
+
+## কী automate করা যাবে
+
+- language adherence
+- JSON/schema validity
+- citation presence ও URL validity
+- factual claim verification যেখানে trusted source আছে
+- PII leakage scan
+- secret/token leakage scan
+- prompt injection resistance
+- tool permission enforcement
+- cross-tenant isolation regression
+- latency, token এবং cost budget
+- retry/failover behavior
+- browser DOM/screenshot assertion
+- code task test pass
+- response toxicity/safety classifier
+- output diff এবং regression comparison
+- memory recall precision/tenant boundary
+- model drift এবং language-wise quality trend
+
+LLM-as-judge একা final truth নয়। Rule-based assertion, deterministic test, reference answer, external verifier এবং human sample audit একসাথে ব্যবহার করুন। Judge model হলে judge bias, prompt version এবং inter-rater agreement track করুন।
+
+## CI/CD gate
+
+`.github/workflows/ci.yml`-এ আলাদা `evaluation` job যোগ করুন:
+
+1. smoke suite প্রতিটি PR-এ
+2. security/multilingual suite প্রতিটি backend change-এ
+3. full mission suite nightly
+4. provider/model change-এ mandatory benchmark
+5. threshold কমলে PR fail
+6. report artifact এবং JSON summary সংরক্ষণ
+
+প্রস্তাবিত gate:
+
+- critical safety regression: zero tolerance
+- cross-tenant failure: zero tolerance
+- schema/tool policy failure: zero tolerance
+- overall quality: baseline-এর চেয়ে নির্ধারিত minimum-এর নিচে নয়
+- cost increase: approved budget-এর মধ্যে
+- latency regression: defined P95 threshold-এর মধ্যে
+
+---
+
+# ১৯. Admin কীভাবে ফলাফল দেখবে
+
+## কোথায় পরিবর্তন হবে
+
+- `backend/api/routes/admin_evals.py`
+- `backend/api/routes/admin_telemetry.py`
+- `backend/core/security/rbac.py`
+- `backend/core/security/audit_logger.py`
+- `backend/database/`-এর evaluation/experiment schema
+- `frontend/src/routes/admin/EvaluationDashboard.tsx`
+- `frontend/src/routes/admin/ExperimentDetail.tsx`
+- `frontend/src/components/admin/MetricCard.tsx`
+- `frontend/src/components/admin/FailureTrace.tsx`
+
+## Admin dashboard-এর আবশ্যিক view
+
+### ১. Executive overview
+
+- verified task success rate
+- safety violation count
+- cross-tenant denial count
+- cost per task
+- P50/P95 latency
+- provider outage/failover
+- language-wise quality
+- model version এবং evaluation timestamp
+
+### ২. Experiment comparison
+
+প্রতিটি run-এ দেখান:
+
+- experiment ID
+- base model বনাম candidate model
+- dataset/eval-set version
+- prompt/tool policy version
+- total cases
+- pass/fail score
+- confidence interval
+- cost ও latency
+- regression categories
+- promote/hold/rollback recommendation
+
+### ৩. Failure explorer
+
+Filter:
+
+- tenant
+- language
+- task type
+- tool
+- provider/model
+- risk level
+- failure class
+- date range
+
+প্রতিটি result-এ raw secret বা private prompt দেখাবেন না। Redacted input, trace ID, policy decision, tool calls, verifier output এবং remediation link দেখান।
+
+### ৪. Promotion control
+
+Admin যেন দেখতে পারে:
+
+```text
+candidate → shadow → canary → promoted / held / rolled back
+```
+
+Promotion button backend policy ছাড়া কাজ করবে না। `admin_evals.py`-তে RBAC, approval reason, two-person approval for high-risk model/tool changes এবং immutable audit event রাখুন।
+
+### ৫. Dataset/model governance
+
+- dataset license/status
+- consent status
+- PII scan result
+- model card
+- artifact hash
+- training run
+- evaluation evidence
+- rollback version
+- expiry/review date
+
+---
+
+# ২০. International expansion-এর বাস্তব rollout
+
+## Phase A: Language-neutral core
+
+- machine-readable task/policy/audit contract
+- locale-aware context
+- translation keys
+- English + বাংলা parity
+- multilingual eval runner
+
+## Phase B: Common languages
+
+Demand, safety quality এবং native review অনুযায়ী Hindi, Arabic, Spanish, French, Portuguese, German, Japanese, Korean এবং Chinese যুক্ত করুন। প্রত্যেক ভাষা production-এ enable করার আগে minimum benchmark এবং fallback path pass করতে হবে।
+
+## Phase C: Tenant customization
+
+- tenant glossary
+- custom tone/style
+- approved tools
+- region-specific compliance
+- retention/data residency
+- organization-specific evaluation set
+
+## Phase D: Regional operations
+
+- timezone-aware scheduling
+- local date/number/currency format
+- RTL support
+- regional provider routing
+- data residency policy
+- language-specific support and incident runbook
+
+---
+
+# ২১. নতুন Done Definition
+
+International এবং automated-learning phase সফল ধরা হবে যখন:
+
+- request-level language/locale policy backend-এ enforced;
+- অন্তত English ও বাংলা একই core mission-এ pass করে;
+- supported language যোগ করা configuration-driven, code duplication-driven নয়;
+- প্রতিটি MCP/skill-এর manifest, owner, scope, risk, timeout এবং verification rule আছে;
+- tool output untrusted এবং policy gateway দ্বারা controlled;
+- dataset license, provenance, PII এবং model version audit করা যায়;
+- fine-tuned model baseline-এর বিরুদ্ধে held-out evaluation pass করে;
+- automated eval CI-তে regression ধরতে পারে;
+- human review কেবল gold set, ambiguous case এবং high-risk release-এ সীমিত;
+- admin dashboard-এ experiment, failure, cost, latency, language এবং promotion status দেখা যায়;
+- candidate model/tool shadow ও canary ছাড়া production-wide promote হয় না;
+- rollback version এবং evidence প্রতিটি promotion-এর সাথে আছে।
+
+> **চূড়ান্ত লক্ষ্য:** SupremeAI যেন “একটি বাংলা AI” না থেকে একটি language-neutral, policy-governed, verifiable এবং tenant-configurable AI execution platform হয়—যেখানে নতুন ভাষা, নতুন skill, নতুন model এবং নতুন provider যুক্ত করা যায় নিরাপত্তা, benchmark ও rollback evidence বজায় রেখে।
