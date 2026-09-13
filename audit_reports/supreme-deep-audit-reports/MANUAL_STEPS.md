@@ -17,6 +17,7 @@ Remaining work that requires operator review, external credentials, or a deliber
 
 ## Code follow-ups requiring an intentional implementation slice
 
+- [x] Require an explicit authenticated `tenant_id` for canonical task execution; synthetic default tenant contexts now fail closed (`runtime/task_context.py`, `runtime/task_runtime.py`, with regression coverage).
 - [x] Validate the execution-mode Settings UI end to end against the backend contract, including authorization and persistence (`SettingsPage.tsx` wired to `connectionsApi`, contracts, and `SettingsPage.test.tsx`).
 - [x] Finish unified-store staging rollout: exercised `chatSlice` behind the feature flag, verified legacy-store compatibility, and confirmed instant rollback via localStorage/disableUnifiedStore (`unifiedStore.ts`, `unifiedStore.test.ts`, `chatStore.test.ts`).
 - [x] Decide whether medium-priority provider stubs (`cloud_sandbox_orchestrator`, resource lifecycle, swarm base classes, skill provisioning) should be implemented, converted to explicit capability responses, or formally deferred; resolved: `PersistentSandbox` & `SandboxSession` implemented in `cloud_sandbox_orchestrator.py`, 7/7 previously skipped tests in `test_cloud_sandbox_full.py` now unskipped and passing, `collaborative_editor.py` import path corrected, and abstract base contracts verified.

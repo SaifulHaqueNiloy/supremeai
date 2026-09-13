@@ -31,6 +31,23 @@ async def test_task_runtime_execution_success():
 
 
 @pytest.mark.asyncio
+async def test_task_runtime_rejects_missing_tenant_context():
+    runtime = get_task_runtime()
+    task = TaskContract(
+        goal="Run without tenant context",
+        risk_level=RiskLevel.LOW,
+        budget=TaskBudget(max_execution_seconds=5.0),
+        verification_policy=VerificationPolicy.STANDARD,
+    )
+
+    result = await runtime.execute_task(task)
+
+    assert result.success is False
+    assert task.status == TaskStatus.FAILED
+    assert result.error == "Task execution requires an authenticated tenant_id"
+
+
+@pytest.mark.asyncio
 async def test_task_runtime_strict_verification_failure():
     runtime = get_task_runtime()
 
