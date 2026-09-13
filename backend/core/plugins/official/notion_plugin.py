@@ -11,9 +11,4 @@ class NotionPlugin(BasePlugin):
     async def execute_tool(
         self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
     ) -> Any:
-        return {
-            "status": "unavailable",
-            "plugin": self.plugin_id,
-            "tool": tool_name,
-            "reason": "Notion authorization/tool execution is not configured for this deployment.",
-        }
+        raise NotImplementedError("Notion plugin tools not implemented yet")

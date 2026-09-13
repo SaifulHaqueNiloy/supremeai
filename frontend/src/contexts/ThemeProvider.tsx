@@ -28,7 +28,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (!token) return;
       try {
         const response = await apiClient.get<{ theme?: string }>('/api/v1/preferences', { signal: controller.signal });
-        const remoteTheme = response?.theme;
+        const remoteTheme = response.data?.theme;
         if (remoteTheme && THEME_ORDER.includes(remoteTheme as Theme)) {
           setTheme(remoteTheme as Theme);
         }
@@ -40,7 +40,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     loadTheme();
 
-    const unsub = eventBus.subscribe(Events.THEME_CHANGED, (data: { theme?: string }) => {
+    const unsub = eventBus.subscribe(Events.THEME_CHANGED, (data) => {
       if (data.theme && THEME_ORDER.includes(data.theme as Theme)) setTheme(data.theme as Theme);
     });
 

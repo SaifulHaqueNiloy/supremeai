@@ -203,20 +203,8 @@ const EvolutionForgeCanvas = () => {
     [setNodes]
   );
 
-  type ForgePayloadNode = {
-    id: string;
-    type?: string;
-    position: { x: number; y: number };
-    data: { role?: string; [key: string]: unknown };
-  };
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buildForgePayload = (name: string, flow: any): {
-    name: string;
-    description: string;
-    nodes: ForgePayloadNode[];
-    edges: Array<{ id: string; source: string; target: string; animated: boolean }>;
-  } => ({
+  const buildForgePayload = (name: string, flow: any) => ({
     name,
     description: "Visual Swarm Architecture",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
