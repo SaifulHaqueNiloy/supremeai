@@ -73,12 +73,6 @@ class GeminiWriter:
     gemini/gemini-2.5-pro, gemini/gemini-2.5-flash via GEMINI_API_KEY.
     """
 
-    GEMINI_MODELS = [
-        "gemini/gemini-2.5-pro",
-        "gemini/gemini-2.5-flash",
-        "gemini/gemini-2.0-flash",
-    ]
-
     def __init__(self, model: str | None = None) -> None:
         self.role = "writer"
         self.agent_name = "gemini"
@@ -116,36 +110,18 @@ class GeminiWriter:
             if ctx_parts:
                 user_prompt = f"{prompt}\n\nContext:\n" + "\n".join(ctx_parts)
 
-        model = self.model or self.GEMINI_MODELS[0]
-
         try:
-            response = await llm.acompletion(
-                prompt=user_prompt,
-                system_prompt=system_prompt,
-                model=model,
-                task_type="coding",
-                timeout=30.0,
-            )
+            request: dict[str, Any] = {
+                "prompt": user_prompt,
+                "system_prompt": system_prompt,
+                "task_type": "coding",
+                "timeout": 30.0,
+            }
+            if self.model:
+                request["model"] = self.model
+            response = await llm.acompletion(**request)
             code = response.get("text") or response.get("content", "")
-
-            if not code:
-                for fallback_model in self.GEMINI_MODELS[1:]:
-                    try:
-                        response = await llm.acompletion(
-                            prompt=user_prompt,
-                            system_prompt=system_prompt,
-                            model=fallback_model,
-                            task_type="coding",
-                            timeout=30.0,
-                        )
-                        code = response.get("text") or response.get("content", "")
-                        if code:
-                            model = fallback_model
-                            break
-                    except Exception:
-                        logger.warning("Fallback model {} failed, trying next", fallback_model)
-                        continue
-
+            model = self.model or response.get("model", "runtime-selected")
             confidence = response.get("confidence", 0.9) if isinstance(response, dict) else 0.9
 
             return TrioAgentResult(

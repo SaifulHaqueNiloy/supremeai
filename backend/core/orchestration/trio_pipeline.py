@@ -21,8 +21,12 @@ from datetime import UTC, datetime
 from core.logging_config import logger
 
 
-class TrioPipeline:
-    """Run the Gemini → Kilo → Cline assembly-line pipeline."""
+class AgentReviewWorkflow:
+    """Run the reusable writer, reviewer, and checker workflow.
+
+    Agent/provider selection is delegated to the configured adapters and runtime
+    gateway; this module owns orchestration, not model identity.
+    """
 
     def __init__(self) -> None:
         # Lazy imports avoid circular imports at module load
@@ -57,7 +61,7 @@ class TrioPipeline:
             f"{prompt}:{language}:{datetime.now(UTC).isoformat()}".encode()
         ).hexdigest()[:16]
 
-        logger.info(f"[TrioPipeline] Starting pipeline {pipeline_id}: {prompt[:100]}")
+        logger.info(f"[AgentReviewWorkflow] Starting workflow {pipeline_id}: {prompt[:100]}")
 
         # ── Stage 1: Gemini writes code ──────────────────────────────────
         ctx = context or {}
@@ -85,7 +89,7 @@ class TrioPipeline:
                 "reviewer": {},
                 "checker": {},
                 "ready_for_production": False,
-                "summary": f"Stage 1 (Gemini) failed: {writer_result.output[:200]}",
+                "summary": f"Writer stage failed: {writer_result.output[:200]}",
             }
 
         generated_code = writer_result.output
@@ -134,5 +138,9 @@ class TrioPipeline:
             "summary": summary,
         }
 
-        logger.info(f"[TrioPipeline] {pipeline_id} complete - status={status}")
+        logger.info(f"[AgentReviewWorkflow] {pipeline_id} complete - status={status}")
         return result
+
+
+# Compatibility alias for existing callers during the migration window.
+TrioPipeline = AgentReviewWorkflow
