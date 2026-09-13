@@ -60,7 +60,7 @@ async def test_task_runtime_strict_verification_failure():
         success_criteria=["CRITICAL_TOKEN_THAT_DOES_NOT_EXIST"],
     )
 
-    result = await runtime.execute_task(task)
+    result = await runtime.execute_task(task, TaskContext(tenant_id="test-tenant"))
 
     assert result.success is False
     assert task.status == TaskStatus.FAILED
