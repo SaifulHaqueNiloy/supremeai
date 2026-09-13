@@ -202,7 +202,7 @@ Do not include any other text. If unsure, return {"action": "chat", "confidence"
 
 GATEKEEPER_TIMEOUT_SECONDS = 2.0  # strict SLA — fall back to regex if exceeded
 GATEKEEPER_MIN_CONFIDENCE = 0.6  # below this, regex fallback is consulted
-GATEKEEPER_MODEL = "gemini/gemini-2.0-flash"  # free-tier fast model
+GATEKEEPER_MODEL = "gemini/gemini-2.5-flash"  # free-tier fast model (2.0 retired by Google 2026-09)
 
 
 def _is_llm_mode_enabled() -> bool:

@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from pydantic import Field, SecretStr
+from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import NoDecode
 
 
@@ -133,32 +133,36 @@ class SettingsFieldsMixin:
     enable_token_compression: bool = True
 
     # Central model registry: deployment operators can change routing without code edits.
+    # FINAL-TEST FIX (2026-09-13): gemini-2.0-flash was retired by Google (404 on
+    # every call) and groq/openrouter have no keys configured in this deployment,
+    # so all defaults now point at the verified-working provider chain:
+    # Gemini 2.5 Flash (key valid) -> BYNARA -> BAI (OpenAI-compatible routers).
     model_coding: str = Field(
-        default="groq/llama-3.3-70b-versatile", validation_alias="MODEL_CODING"
+        default="gemini/gemini-2.5-flash", validation_alias="MODEL_CODING"
     )
     model_reasoning: str = Field(
-        default="openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="MODEL_REASONING"
+        default="bynara/laguna-s-2.1", validation_alias="MODEL_REASONING"
     )
-    model_vision: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_VISION")
-    model_chat: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_CHAT")
-    model_general: str = Field(default="gemini/gemini-2.0-flash", validation_alias="MODEL_GENERAL")
+    model_vision: str = Field(default="gemini/gemini-2.5-flash", validation_alias="MODEL_VISION")
+    model_chat: str = Field(default="gemini/gemini-2.5-flash", validation_alias="MODEL_CHAT")
+    model_general: str = Field(default="gemini/gemini-2.5-flash", validation_alias="MODEL_GENERAL")
     embedding_model: str = Field(
         default="text-embedding-3-small", validation_alias="EMBEDDING_MODEL"
     )
     model_multilingual: str = Field(
-        default="openrouter/meta-llama/llama-3.3-70b-instruct",
+        default="gemini/gemini-2.5-flash",
         validation_alias="MODEL_MULTILINGUAL",
     )
     route_ladder_simple: str | list[str] = Field(
-        default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct",
+        default="gemini/gemini-2.5-flash,bynara/agnes-2.5-flash,bai/qwen3.8-flash",
         validation_alias="ROUTE_LADDER_SIMPLE",
     )
     route_ladder_medium: str | list[str] = Field(
-        default="gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct",
+        default="gemini/gemini-2.5-flash,bynara/laguna-s-2.1,bai/mimo-v2.5",
         validation_alias="ROUTE_LADDER_MEDIUM",
     )
     route_ladder_complex: str | list[str] = Field(
-        default="groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct,gemini/gemini-2.0-flash",
+        default="gemini/gemini-2.5-pro,bynara/laguna-s-2.1,gemini/gemini-2.5-flash",
         validation_alias="ROUTE_LADDER_COMPLEX",
     )
 
@@ -285,9 +289,13 @@ class SettingsFieldsMixin:
     )
 
     # বাংলা মন��তব্য: জেমিনি মডেল নাম সেন্ট্রালাইজড করা হলো যাতে কোনো ইউটিলিটি স্ক্রিপ্টে হার্ডকোড না থাকে।
+    # FINAL-TEST FIX (2026-09-13): deployment env sends GEMINI_MODEL="gemini-2.5-flash"
+    # but only GEMINI_MODEL_NAME was read, so the env override never applied and the
+    # retired gemini-2.0-flash default was used everywhere. ValidationAlias accepts
+    # both names now.
     gemini_model_name: str = Field(
-        default="gemini/gemini-2.0-flash",
-        validation_alias="GEMINI_MODEL_NAME",
+        default="gemini/gemini-2.5-flash",
+        validation_alias=AliasChoices("GEMINI_MODEL_NAME", "GEMINI_MODEL"),
     )
 
     sentry_dsn: str = Field(default="", validation_alias="SENTRY_DSN")

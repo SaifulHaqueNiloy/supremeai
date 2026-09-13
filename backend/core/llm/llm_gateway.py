@@ -69,14 +69,37 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "together": "TOGETHER_API_KEY",
     "ollama": "OLLAMA_API_KEY",
     "hf_space": "HF_API_KEY",
+    # Zero-cost OpenAI-compatible routers (final-test audit 2026-09-13):
+    # BYNARA_API_KEY / BAI_API_KEY were configured in the deployment env but
+    # never consumed by any code path — the keys were orphaned while the
+    # routing chain wasted 40-60s per call on dead providers.
+    "bynara": "bynara_api_key",
+    "bai": "bai_api_key",
 }
 
-# বাংলা মন্তব্ব: Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে
+# Provider → OpenAI-compatible base URL. When a model's provider appears here,
+# the gateway routes it through litellm's `openai/<model>` adapter using the
+# provider key (per-call) instead of a provider-native SDK.
+_PROVIDER_API_BASES: dict[str, str] = {
+    "bynara": "https://router.bynara.id/v1",
+    "bai": "https://api.b.ai/v1",
+}
+
+# Models that are no longer served by their provider (verified 2026-09-13).
+_RETIRED_MODELS = {
+    "gemini/gemini-2.0-flash",
+    "gemini/gemini-1.5-pro",
+    "gemini/gemini-1.5-flash",
+}
+
+# Default fallback models — routing_policy.json না থাকলে এগুলো ব্যবহার হবে।
+# Updated 2026-09-13: gemini-2.0-flash was retired by Google (404 on every
+# call) and openrouter had no key configured, so the default chain was dead.
 _DEFAULT_FALLBACK_MODELS: list[str] = list(
     getattr(
         settings,
         "fallback_models",
-        ["gemini/gemini-2.0-flash", "openrouter/auto"],
+        ["gemini/gemini-2.5-flash", "bynara/agnes-2.5-flash", "bai/qwen3.8-flash"],
     )
 )
 
@@ -162,6 +185,29 @@ def _resolve_key_attr(model: str) -> str | None:
             best_prefix = prefix
             best_attr = attr_name
     return best_attr
+
+
+def _resolve_litellm_target(model: str) -> tuple[str, str | None]:
+    """Translate a routing-policy model id into a litellm-callable target.
+
+    Returns (litellm_model, api_base).
+    - Providers with an OpenAI-compatible router (BYNARA, BAI) are served via
+      litellm's `openai/<model>` adapter pointing at their base URL, using the
+      per-call key resolved through _resolve_key_attr.
+    - Everything else passes through unchanged (litellm provider-native).
+    Raises ValueError for models verified retired at their provider so the
+    chain skips them instantly instead of burning a network round-trip.
+    """
+    if not model:
+        return model, None
+    if model.lower() in _RETIRED_MODELS:
+        raise ValueError(f"Model {model} is retired at its provider (verified 2026-09-13)")
+    provider = model.split("/", 1)[0].lower() if "/" in model else ""
+    base = _PROVIDER_API_BASES.get(provider)
+    if base:
+        bare_model = model.split("/", 1)[1] if "/" in model else model
+        return f"openai/{bare_model}", base
+    return model, None
 
 
 # OpenAI-style Task-to-Model mapping
@@ -820,6 +866,14 @@ class LLMGateway:
         _byok_api_key = kwargs.pop("api_key", None)
 
         for _chain_index, current_model in enumerate(call_chain):
+            # FINAL-TEST FIX (2026-09-13): skip models verified retired at
+            # their provider, and resolve OpenAI-compatible routers (BYNARA,
+            # BAI) to their litellm target + base URL up front.
+            try:
+                _litellm_model, _api_base = _resolve_litellm_target(current_model)
+            except ValueError as retired_err:
+                logger.warning(f"[LLMGateway] Skipping {current_model}: {retired_err}")
+                continue
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
@@ -847,10 +901,11 @@ class LLMGateway:
                 ) as rec:
                     rec.estimated_tokens = _estimated_tokens
                     response = await self.cloud_adapter.generate(
-                        model=current_model,
+                        model=_litellm_model,
                         messages=messages_payload,
                         timeout=timeout,
                         api_key=api_key,
+                        api_base=_api_base,
                         **kwargs,
                     )
                     cost = response.get("cost", 0.0)
@@ -947,10 +1002,11 @@ class LLMGateway:
                         )
                         try:
                             response = await self.cloud_adapter.generate(
-                                model=current_model,
+                                model=_litellm_model,
                                 messages=messages_payload,
                                 timeout=timeout,
                                 api_key=api_key or await self._get_api_key_for_model(current_model),
+                                api_base=_api_base,
                                 **kwargs,
                             )
                             cb.mark_success()
@@ -1073,6 +1129,13 @@ class LLMGateway:
 
         last_exception: Exception | None = None
         for current_model in call_chain:
+            # FINAL-TEST FIX (2026-09-13): skip retired models + route
+            # OpenAI-compatible routers (BYNARA/BAI) via their base URL.
+            try:
+                _litellm_model, _api_base = _resolve_litellm_target(current_model)
+            except ValueError as retired_err:
+                logger.warning(f"[LLMGateway] Streaming skip {current_model}: {retired_err}")
+                continue
             # Circuit Breaker check
             cb = self._get_or_create_circuit_breaker(current_model)
             if not cb.allow_request():
@@ -1086,11 +1149,12 @@ class LLMGateway:
                 # api_key per-call — os.environ injection নিষিদ্ধ
                 api_key = await self._get_api_key_for_model(current_model)
                 response_stream = await litellm.acompletion(
-                    model=current_model,
+                    model=_litellm_model,
                     messages=messages,
                     timeout=timeout,
                     stream=True,
                     api_key=api_key,
+                    api_base=_api_base,
                 )
                 async for chunk in response_stream:
                     content = chunk.choices[0].delta.content
@@ -1113,11 +1177,12 @@ class LLMGateway:
                         try:
                             api_key = await self._get_api_key_for_model(current_model)
                             response_stream = await litellm.acompletion(
-                                model=current_model,
+                                model=_litellm_model,
                                 messages=messages,
                                 timeout=timeout,
                                 stream=True,
                                 api_key=api_key,
+                                api_base=_api_base,
                             )
                             async for chunk in response_stream:
                                 content = chunk.choices[0].delta.content
