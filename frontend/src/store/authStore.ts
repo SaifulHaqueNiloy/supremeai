@@ -105,8 +105,19 @@ function restoreUser(): UserProfile | null {
   }
 }
 
-const avatarUrl = (label: string) =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(label)}&background=random`;
+// FINAL-TEST PRIVACY FIX: the user's email used to be sent to
+// ui-avatars.com on every login/register/session-restore. The avatar is now a
+// locally generated SVG data URL — no PII ever leaves the browser.
+const AVATAR_PALETTE = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+const avatarUrl = (label: string) => {
+  const name = (label || '?').trim();
+  const initials = name.slice(0, 2).toUpperCase() || '?';
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  const color = AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><rect width="128" height="128" rx="64" fill="${color}"/><text x="64" y="64" dy="0.36em" text-anchor="middle" font-family="system-ui, sans-serif" font-size="52" font-weight="600" fill="#ffffff">${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
 
 export const useAuthStore = create<AuthState>((set) => ({
   status: AuthStatus.UNINITIALIZED,

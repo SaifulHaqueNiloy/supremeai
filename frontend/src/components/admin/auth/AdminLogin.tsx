@@ -1,4 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+// FINAL-TEST SECURITY FIX: the TOTP provisioning URI embeds the 2FA secret.
+// It used to be rendered by sending that secret to third-party QR services
+// (chart.googleapis.com — a deprecated Google Charts endpoint — with a fallback
+// to api.qrserver.com), leaking the admin's TOTP secret to external hosts.
+// The QR code is now generated fully client-side with the `qrcode` package.
+import QRCode from 'qrcode';
 
 interface LoginViewProps {
   adminEmail: string;
@@ -47,10 +53,42 @@ export function LoginView({
   const [localPassword, setLocalPassword] = useState('');
   const [localError, setLocalError] = useState('');
   const [qrFailed, setQrFailed] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [attempts, setAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const lockoutTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Generate the QR code locally (never transmit the provisioning URI). Re-run
+  // whenever the URI changes (initial TOTP setup + "Generate New QR Code").
+  useEffect(() => {
+    let cancelled = false;
+    if (!provisioningUri) {
+      setQrDataUrl(null);
+      setQrFailed(false);
+      return;
+    }
+    QRCode.toDataURL(provisioningUri, {
+      width: 320,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+    })
+      .then((url: string) => {
+        if (!cancelled) {
+          setQrDataUrl(url);
+          setQrFailed(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setQrDataUrl(null);
+          setQrFailed(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [provisioningUri]);
 
   const [currentTime, setCurrentTime] = useState(() => Date.now());
 
@@ -193,25 +231,19 @@ export function LoginView({
 
               {provisioningUri ? (
                 <>
-                  <img
-                    src={`https://chart.googleapis.com/chart?chs=200x200&chld=M|0&cht=qr&chl=${encodeURIComponent(provisioningUri)}`}
-                    alt="TOTP QR Code"
-                    onError={(e) => {
-                      // Fallback to api.qrserver.com if Google Charts fails
-                      const fallbackSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(provisioningUri)}`;
-                      if (e.currentTarget.src !== fallbackSrc) {
-                        e.currentTarget.src = fallbackSrc;
-                      } else {
-                        e.currentTarget.style.display = 'none';
-                        setQrFailed(true);
-                      }
-                    }}
-                    className="rounded-lg w-40 h-40"
-                    loading="lazy"
-                  />
+                  {/* SECURITY: rendered from a locally generated data URL — the
+                      provisioning URI (and the TOTP secret inside it) never
+                      leaves the browser. */}
+                  {qrDataUrl && (
+                    <img
+                      src={qrDataUrl}
+                      alt="TOTP QR Code"
+                      className="rounded-lg w-40 h-40"
+                    />
+                  )}
                   {qrFailed && (
-                    <p className="text-[10px] text-slate-500 font-mono break-all text-center max-w-[260px]">
-                      {provisioningUri}
+                    <p className="text-[10px] text-amber-400 font-mono text-center">
+                      QR rendering failed — use the manual secret below.
                     </p>
                   )}
                 </>

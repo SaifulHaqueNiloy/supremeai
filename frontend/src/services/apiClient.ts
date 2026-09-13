@@ -226,11 +226,14 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
   return requestQueue.add(async () => {
     const currentUrl = url;
     let attempts = 0;
-    options.credentials = 'include';
+    // FINAL-TEST FIX: mutate a shallow copy, not the caller's options object —
+    // callers that reuse their options object across requests were being
+    // silently modified (and could not opt out of cookie sending).
+    const fetchOptions: RequestInit = { ...options, credentials: 'include' };
 
     while (attempts < 2) {
       try {
-        const res = await fetchWithTimeout(currentUrl, options);
+        const res = await fetchWithTimeout(currentUrl, fetchOptions);
         // 502/503/504 মানে রেন্ডার সার্ভার স্লিপিং বা ডাউন — একই backend-এ রিট্রাই করব
         if (res.status >= 502 && res.status <= 504) {
           throw new Error("Server sleeping or down (50x)");
@@ -254,6 +257,45 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
   }) as Promise<Response>;
 };
 
+// FINAL-TEST FIX (2026-09-14): the backend (backend/api/middleware.py →
+// IDEMPOTENCY_PATHS) only REQUIRES the 'Idempotency-Key' header on a small
+// set of mutating paths: /api/task, /api/github, /api/auth/callback, /api/pr,
+// /api/agent. Every other POST/PUT never needs it — and while the deployed
+// backend's CORS allow-list still omits 'idempotency-key', sending that header
+// on ANY request fails the CORS preflight outright (Starlette returns 400
+// "Disallowed CORS headers" for OPTIONS), which made login (and every
+// key-less route) impossible on the deployed app — users saw a misleading
+// "Network Error" toast on /login.
+// So: inject the key ONLY when the final request path matches the backend's
+// required prefixes. This shrinks the CORS preflight surface for every other
+// call AND unblocks production login without waiting for the backend
+// redeploy (the CORS allow-list fix remains as defense-in-depth).
+const IDEMPOTENCY_REQUIRED_PREFIXES = [
+  '/api/task',
+  '/api/github',
+  '/api/auth/callback',
+  '/api/pr',
+  '/api/agent',
+] as const;
+
+export const pathRequiresIdempotencyKey = (url: string): boolean => {
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const { pathname } = new URL(url, base);
+    return IDEMPOTENCY_REQUIRED_PREFIXES.some((p) => pathname.startsWith(p));
+  } catch {
+    // Malformed URL — err on the side of NOT sending the header (it can only
+    // cause a CORS preflight failure; the middleware only enforces the 5
+    // prefixes above, and a malformed URL can never reach them).
+    return false;
+  }
+};
+
+const buildIdempotencyKey = (): string =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 export const apiClient = {
   get: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): `options` was spread LAST, so a caller passing
@@ -272,15 +314,15 @@ export const apiClient = {
 
   post: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
-    if (!authHeaders['Idempotency-Key'] && !(options?.headers as Record<string, string>)?.[
-      'Idempotency-Key'
-    ]) {
-      authHeaders['Idempotency-Key'] =
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    if (
+      !authHeaders['Idempotency-Key'] &&
+      !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
+      pathRequiresIdempotencyKey(finalUrl)
+    ) {
+      authHeaders['Idempotency-Key'] = buildIdempotencyKey();
     }
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(finalUrl, {
       // FIX (P1, review 2026-09-12): options first — see get() above.
       ...options,
       method: 'POST',
@@ -295,15 +337,15 @@ export const apiClient = {
 
   put: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
-    if (!authHeaders['Idempotency-Key'] && !(options?.headers as Record<string, string>)?.[
-      'Idempotency-Key'
-    ]) {
-      authHeaders['Idempotency-Key'] =
-        typeof crypto !== 'undefined' && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    if (
+      !authHeaders['Idempotency-Key'] &&
+      !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
+      pathRequiresIdempotencyKey(finalUrl)
+    ) {
+      authHeaders['Idempotency-Key'] = buildIdempotencyKey();
     }
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(finalUrl, {
       // FIX (P1, review 2026-09-12): options first — see get() above.
       ...options,
       method: 'PUT',

@@ -239,12 +239,48 @@ class PerformanceOptimizer:
                 best_model = model_id
 
         if best_model:
-            logger.info(f"Selected optimal model '{best_model}' for task '{task_type}'")
-            return best_model
+            # FINAL-TEST FIX (2026-09-13): brain registry aliases ("gemini-3.1-pro",
+            # "gpt-5.4-pro", ...) are NOT litellm-resolvable model strings, so the
+            # optimizer's pick used to fail at the head of every fallback chain and
+            # burn a network round-trip. Translate to the real, key-backed model
+            # for the provider instead.
+            resolved = self._resolve_registry_model(best_model, task_type)
+            logger.info(
+                f"Selected optimal model '{best_model}' -> '{resolved}' for task '{task_type}'"
+            )
+            return resolved
         else:
             # Fallback to default model
             logger.warning("No optimal model found, falling back to default")
             return "gemini/gemini-2.5-flash"
+
+    def _resolve_registry_model(self, model_id: str, task_type: str) -> str:
+        """Translate a brain-registry model alias into a litellm-resolvable id.
+
+        FINAL-TEST FIX (2026-09-13): only providers with a configured key are
+        translated to a callable model; everything else falls back to the
+        settings-driven default for the task type so the gateway chain starts
+        with something that can actually answer.
+        """
+        info = self.model_registry.get_model(model_id) or {}
+        provider = str(info.get("provider", "")).lower()
+        try:
+            has_key = bool(self._get_api_key_for_provider(provider))
+        except Exception:
+            has_key = False
+
+        if provider == "google" and has_key:
+            gem = str(getattr(settings, "gemini_model_name", "gemini/gemini-2.5-flash"))
+            return gem if "/" in gem else f"gemini/{gem}"
+        if provider == "openai" and has_key:
+            return "openai/gpt-4o-mini"
+        if provider == "huggingface" and has_key:
+            swarm = getattr(settings, "MODEL_SWARM", {})
+            return str(swarm.get(task_type) or swarm.get("general") or model_id)
+        # No usable key for the chosen provider -> task-model default from settings.
+        defaults = getattr(settings, "task_models", {})
+        resolved = defaults.get(task_type) or defaults.get("general")
+        return str(resolved) if resolved else "gemini/gemini-2.5-flash"
 
     def _get_api_key_for_provider(self, provider: str) -> str:
         """Get API key for a specific provider from settings.

@@ -59,7 +59,7 @@ class BreederConfig:
             llm_model_name=getattr(
                 settings,
                 "breeder_llm_model",
-                getattr(settings, "model_general", "gemini/gemini-2.0-flash"),
+                getattr(settings, "model_general", "gemini/gemini-2.5-flash"),
             ),
         )
 

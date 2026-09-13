@@ -431,6 +431,15 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             "X-Request-ID",
             "X-Correlation-ID",
             "Cache-Control",
+            # FINAL-TEST PROD FIX: the frontend (services/apiClient.ts) sends an
+            # `Idempotency-Key` header on mutating requests, and the backend's
+            # own IdempotencyMiddleware REQUIRES it on POSTs. But this allow
+            # list omitted it, so Starlette CORSMiddleware answered every
+            # preflight with "400 Disallowed CORS headers" -> the deployed
+            # web.app frontend could NEVER call POST /auth/login (Network
+            # Error). Header list is now kept in sync with what apiClient
+            # actually emits.
+            "Idempotency-Key",
         ],
         expose_headers=["Content-Length", "X-Pagination-Total"],
     )

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import useSupremeStore from '../../store/useSupremeStore';
+import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../services/apiClient';
 
 interface HumanInTheLoopProtocolProps {
@@ -35,7 +35,7 @@ const HumanInTheLoopProtocol: React.FC<HumanInTheLoopProtocolProps> = ({ onAppro
   const [showOtpInput, setShowOtpInput] = useState<boolean>(false);
   const [otpVerifying, setOtpVerifying] = useState<boolean>(false);
   const [otpError, setOtpError] = useState<string>('');
-  const { user } = useSupremeStore();
+  const { user } = useAuthStore();
 
   const protocolSteps = [
     "Action Identified",

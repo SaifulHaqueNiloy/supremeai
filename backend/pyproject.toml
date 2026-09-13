@@ -79,6 +79,11 @@ opentelemetry-sdk = "^1.44.0"
 opentelemetry-api = "^1.44.0"
 opentelemetry-instrumentation-fastapi = "^0.65b0"
 opentelemetry-exporter-otlp-proto-grpc = "^1.44.0"
+# বাংলা মন্তব্য (FINAL-TEST FIX): main.py ও core/app_builder.py এ `import sentry_sdk`
+# করে (settings.sentry_dsn সেট থাকলে), কিন্তু sentry-sdk কখনো ডিরেক্ট ডিপেন্ডেন্সি
+# হিসেবে ঘোষণা করা হয়নি — ফলে production-এ error tracking নিঃশব্দে অফ ছিল
+# (ImportError গুটিয়ে ফেলা হচ্ছিল)। এখন explicit ডিপেন্ডেন্সি।
+sentry-sdk = {extras = ["fastapi"], version = "^2.21.0"}
 
 # বাংলা মন্তব্য: torch/sentence-transformers আগে মূল [tool.poetry.dependencies]-এ ছিল,
 # ফলে CI-এর backend-core জব `poetry install --with dev` চালালেই torch-এর সাথে

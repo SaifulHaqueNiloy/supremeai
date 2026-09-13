@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiClient, setApiConcurrency } from './apiClient';
+import { apiClient, setApiConcurrency, pathRequiresIdempotencyKey } from './apiClient';
 
 // Mock getApiBaseUrl
 vi.mock('../utils/api', () => ({
@@ -89,5 +89,90 @@ describe('apiClient', () => {
     });
 
     await expect(apiClient.get('/rate-limit')).rejects.toThrow(/Rate limit exceeded/);
+  });
+
+  // FINAL-TEST FIX (2026-09-14): the Idempotency-Key header must ONLY be sent
+  // on paths the backend actually requires it for (see IDEMPOTENCY_PATHS in
+  // backend/api/middleware.py). Sending it anywhere else fails the CORS
+  // preflight on the deployed backend (its allow-list omits the header),
+  // which blocked production login with "Network Error".
+  describe('pathRequiresIdempotencyKey', () => {
+    it('returns true for the backend-required prefixes', () => {
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/task/run')).toBe(true);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/github/webhook')).toBe(true);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/auth/callback')).toBe(true);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/pr/merge')).toBe(true);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/agent/execute')).toBe(true);
+    });
+
+    it('returns false for auth, chat and other key-less routes', () => {
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/v1/auth/login')).toBe(false);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/v1/auth/register')).toBe(false);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/v1/chat/completions')).toBe(false);
+      expect(pathRequiresIdempotencyKey('https://api.test-domain.com/api/v1/models')).toBe(false);
+    });
+
+    it('returns false for a malformed URL', () => {
+      expect(pathRequiresIdempotencyKey('not a url at all')).toBe(false);
+    });
+  });
+
+  describe('Idempotency-Key header injection', () => {
+    const getFetchHeaders = (callIdx = 0): Record<string, string> => {
+      const call = (global.fetch as any).mock.calls[callIdx];
+      return call[1].headers as Record<string, string>;
+    };
+
+    it('does NOT send Idempotency-Key on POST /auth/login (production CORS blocker)', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ access_token: 'jwt' }),
+      });
+
+      await apiClient.post('/api/v1/auth/login', { email: 'a@b.c', password: 'x' });
+
+      const headers = getFetchHeaders();
+      expect(headers).not.toHaveProperty('Idempotency-Key');
+    });
+
+    it('DOES send Idempotency-Key on POST /api/task (backend-required route)', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      });
+
+      await apiClient.post('/api/task/run', { prompt: 'hi' });
+
+      const headers = getFetchHeaders();
+      expect(headers['Idempotency-Key']).toBeTruthy();
+    });
+
+    it('respects a caller-provided Idempotency-Key on a required route', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      });
+
+      await apiClient.post(
+        '/api/agent/execute',
+        {},
+        { headers: { 'Idempotency-Key': 'caller-key-123' } },
+      );
+
+      const headers = getFetchHeaders();
+      expect(headers['Idempotency-Key']).toBe('caller-key-123');
+    });
+
+    it('does NOT send Idempotency-Key on PUT of a key-less route', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      });
+
+      await apiClient.put('/api/v1/settings/profile', { theme: 'dark' });
+
+      const headers = getFetchHeaders();
+      expect(headers).not.toHaveProperty('Idempotency-Key');
+    });
   });
 });

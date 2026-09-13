@@ -459,3 +459,23 @@ export function useChatSlice() {
 }
 
 export default useUnifiedStore;
+
+
+// ── R13 unified-store feature-flag helpers ──────────────────────────────────
+// These used to live in store/index.ts (deleted as part of the dead-code
+// cleanup — the barrel was unreachable from main.tsx). The tests and the
+// migration helpers need them, so they now live beside the store itself.
+
+export const isUnifiedStoreEnabled = (): boolean => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return window.localStorage.getItem('UNIFIED_STORE') === 'true';
+  }
+  // Vite env fallback
+  return import.meta?.env?.VITE_UNIFIED_STORE === 'true';
+};
+
+export const disableUnifiedStore = (): void => {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem('UNIFIED_STORE');
+  }
+};

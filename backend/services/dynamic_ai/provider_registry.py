@@ -126,9 +126,9 @@ class ProviderRegistry:
                 "api_key_env_var": "GEMINI_API_KEY",
                 "base_url": "https://generativelanguage.googleapis.com/v1beta",
                 "models": [
-                    {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "tier": "economy"},
+                    {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "tier": "economy"},
                     {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash", "tier": "economy"},
-                    {"id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro", "tier": "standard"},
+                    {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "tier": "standard"},
                 ],
                 "rpm_limit": 15,
                 "rpd_limit": 1500,
@@ -293,7 +293,7 @@ class ProviderRegistry:
                 "models": [
                     # OpenRouter provides access to many models
                     {
-                        "id": "google/gemini-2.0-flash-exp:free",
+                        "id": "google/gemini-2.5-flash",
                         "name": "Gemini Flash (via OR)",
                         "tier": "economy",
                         "is_free": True,
