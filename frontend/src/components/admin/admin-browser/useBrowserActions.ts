@@ -59,7 +59,11 @@ export function useBrowserActions({
           action: action.type,
           url: activeTab?.url,
           payload: action.payload,
-          context: await getPageContent() // Try to get page content
+          // FINAL-TEST FIX: pass the preview iframe so getPageContent() can
+          // extract the visible page text (same-origin) or at least URL/title
+          // (cross-origin). Previously this was a stub returning '' and every
+          // AI action ran with zero page context.
+          context: await getPageContent(iframeRef)
         })
       });
 

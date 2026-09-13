@@ -2,66 +2,39 @@ import { convertToCSV } from './csv';
 
 /**
  * ====================================================================================
- * SuperAI CI Dashboard Component - Admin Integration
+ * SupremeAI CI Dashboard Component - Admin Integration
  * ====================================================================================
  *
- * 🎯 Beautiful Real-time CI/CD Status Dashboard for Next.js Admin
- * 🔌 WebSocket + REST API Integration
- * 📊 Rich Visualizations with Trend Analysis
- * 🎨 Modern UI with Animations & Micro-interactions
+ * 🎯 Real-time CI/CD Status Dashboard for the Admin Console
+ * 🔌 REST API + optional WebSocket live updates (/ws/dashboard)
+ * 📊 Trend charts built from the REAL /api/ci/history endpoint
+ * 🎨 Animated UI with micro-interactions
  *
  * FEATURES:
  * ─────────────────────────────────────────────
- * ✅ Real-time CI status via WebSocket (/ws/dashboard)
- * ✅ Historical data with trend charts
- * ✅ Job-level details with error drill-down
+ * ✅ Live CI summary via /api/ci/latest-summary
+ * ✅ Real historical trend charts from /api/ci/history (no fabricated data —
+ *    when no history exists the charts show an honest empty state)
+ * ✅ Job-level details with working status filter + error drill-down
  * ✅ Badge & score system (gamification!)
  * ✅ Predictive insights ("will next build pass?")
- * ✅ Responsive design (mobile-friendly)
- * ✅ Dark/Light mode support
- * ✅ Export to PDF/CSV functionality
- *
- * INTEGRATION STEPS:
- * ─────────────────────────────────────────────
- * 1. Copy this file to: components/admin/CIDashboard.tsx
- * 2. Install dependencies: npm install recharts lucide-react
- * 3. Add to admin page: import CIDashboard from '@/components/admin/CIDashboard'
- * 4. Configure env vars: NEXT_PUBLIC_DASHBOARD_WS_URL, NEXT_PUBLIC_API_URL
- * 5. Done! 🎉
+ * ✅ Compact sidebar widget mode with expandable job list
+ * ✅ JSON/CSV export
  *
  * PROPS API:
  * ─────────────────────────────────────────────
  * interface CIDashboardProps {
- *   repoName?: string;           // e.g., "SaifulHaqueNiloy/supremeai"
+ *   repoName?: string;           // e.g., "SaifulHaqueNiloy/supremeai" (header subtitle)
  *   refreshInterval?: number;    // Auto-refresh in ms (default: 30000)
  *   showTrends?: boolean;        // Show historical trends (default: true)
- *   maxHistoryItems?: number;     // Max items in history (default: 20)
+ *   maxHistoryItems?: number;     // Max items in compact list (default: 20)
  *   onJobClick?: (job) => void;  // Callback when job clicked
  *   className?: string;          // Additional CSS classes
  *   compact?: boolean;            // Compact mode for sidebars
  * }
  *
- * USAGE EXAMPLES:
- * ─────────────────────────────────────────────
- * // Full dashboard page
- * <CIDashboard repoName="owner/repo" showTrends={true} />
- *
- * // Compact sidebar widget
- * <CIDashboard compact={true} maxHistoryItems={5} />
- *
- * // With custom callbacks
- * <CIDashboard
- *   onJobClick={(job) => router.push(`/ci/jobs/${job.id}`)}
- * />
- *
- * CPU IMPACT:
- * - Client-side only (runs in browser)
- * - WebSocket: <1% CPU when idle, ~2-5% during updates
- * - Charts: ~3-5% during render (debounced)
- * - Overall: Negligible impact on user experience
- *
  * @author SuperAI Toolkit v2.0
- * @version 2.0.0
+ * @version 2.1.0
  * ====================================================================================
  */
 
@@ -80,6 +53,12 @@ import {
   Loader2,
   XCircle,
   Download,
+  Activity,
+  ListChecks,
+  Bug,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 import { ConnectionBadge, EmptyState } from './ci-dashboard/primitives';
@@ -100,6 +79,7 @@ import type {
 } from './ci-dashboard/types';
 
 export function CIDashboard({
+  repoName,
   refreshInterval = 30000,
   showTrends = true,
   maxHistoryItems = 20,
@@ -117,22 +97,49 @@ export function CIDashboard({
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'jobs' | 'errors' | 'trends'>('overview');
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [showAllJobs, setShowAllJobs] = useState(false); // compact-mode expansion
 
-  // Chart data preparation
-  const trendChartData = useMemo<TrendChartPoint[]>(() => {
-    if (!data?.trends?.available) return [];
+  // Chart data preparation — REAL run history from /api/ci/history.
+  // FINAL-TEST FIX: this used to render a hardcoded 7-point sample series
+  // whenever trends.available was true, i.e. the charts displayed fabricated
+  // numbers. Now the points come from the backend's real run history and the
+  // tabs render an honest empty state until at least one point exists.
+  const [historyPoints, setHistoryPoints] = useState<TrendChartPoint[]>([]);
 
-    // Generate sample trend data based on available info
-    return [
-      { name: 'Run 1', success: 85, duration: 245 },
-      { name: 'Run 2', success: 92, duration: 230 },
-      { name: 'Run 3', success: 78, duration: 260 },
-      { name: 'Run 4', success: 95, duration: 225 },
-      { name: 'Run 5', success: 88, duration: 240 },
-      { name: 'Run 6', success: 96, duration: 220 },
-      { name: 'Run 7', success: 91, duration: 235 },
-    ];
-  }, [data?.trends]);
+  const trendChartData = useMemo<TrendChartPoint[]>(() => historyPoints, [historyPoints]);
+
+  // Fetch run history for the trend charts (oldest → newest for charting)
+  const fetchHistory = useCallback(async () => {
+    try {
+      const base = apiUrl
+        ? apiUrl.replace(/\/api\/ci\/latest-summary$/, '')
+        : import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
+      const response = await fetch(`${base}/api/ci/history?limit=12`);
+      if (!response.ok) return; // history is optional — never block the dashboard
+      const payload = await response.json();
+      const runs: Array<Record<string, unknown>> = Array.isArray(payload)
+        ? payload
+        : payload.history || payload.items || payload.runs || [];
+      const points = runs
+        .map((run) => {
+          const successRate = typeof run.success_rate === 'number' ? run.success_rate : Number(run.success_rate) || 0;
+          const score = typeof run.score === 'number' ? run.score : Number(run.score) || 0;
+          const duration = typeof run.duration === 'number' ? run.duration : Number(run.duration) || 0;
+          const runNumber = run.run_number ?? run.run_id ?? '';
+          return {
+            name: runNumber !== '' ? `Run #${runNumber}` : 'Run',
+            success: Math.round(successRate || score),
+            duration: Math.round(duration),
+          };
+        })
+        .filter((p) => p.success > 0 || p.duration > 0)
+        .reverse(); // backend returns newest-first; charts read oldest→newest
+      setHistoryPoints(points);
+    } catch {
+      // History endpoint unavailable — charts will show the honest empty state.
+      setHistoryPoints([]);
+    }
+  }, [apiUrl]);
 
   // Fetch data
   const fetchData = useCallback(async () => {
@@ -176,13 +183,17 @@ export function CIDashboard({
 
   // Initial fetch
   useEffect(() => {
-    if (!wsUrl) fetchData();
-  }, [fetchData, wsUrl]);
+    if (!wsUrl) {
+      fetchData();
+      fetchHistory();
+    }
+  }, [fetchData, fetchHistory, wsUrl]);
 
   // Handlers
   const handleRefresh = () => {
     setLoading(true);
     fetchData();
+    fetchHistory();
   };
 
   const handleJobClick = (job: JobResult) => {
@@ -239,6 +250,7 @@ export function CIDashboard({
 
   // Compact Mode (for sidebars/widgets)
   if (compact && data) {
+    const visibleJobs = showAllJobs ? data.jobs : data.jobs.slice(0, maxHistoryItems);
     return (
       <div className={`bg-white rounded-xl border border-gray-200 p-4 ${className}`}>
         <div className="flex items-center justify-between mb-3">
@@ -250,14 +262,25 @@ export function CIDashboard({
         </div>
 
         <div className="space-y-2">
-          {data.jobs.slice(0, maxHistoryItems).map((job, idx) => (
+          {visibleJobs.map((job, idx) => (
             <JobRow key={idx} job={job} onClick={() => handleJobClick(job)} compact />
           ))}
         </div>
 
         {data.jobs.length > maxHistoryItems && (
-          <button className="w-full mt-2 text-xs text-blue-600 hover:text-blue-800">
-            View all {data.jobs.length} jobs →
+          <button
+            onClick={() => setShowAllJobs((v) => !v)}
+            className="w-full mt-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg py-1.5 transition-colors flex items-center justify-center gap-1"
+          >
+            {showAllJobs ? (
+              <>
+                Show fewer <ChevronUp className="w-3 h-3" />
+              </>
+            ) : (
+              <>
+                View all {data.jobs.length} jobs <ChevronDown className="w-3 h-3" />
+              </>
+            )}
           </button>
         )}
       </div>
@@ -270,6 +293,7 @@ export function CIDashboard({
       {/* Header */}
       <DashboardHeader
         data={data}
+        repoName={repoName}
         connectionStatus={connectionStatus}
         autoRefresh={autoRefresh}
         onToggleAutoRefresh={() => setAutoRefresh(!autoRefresh)}
@@ -283,21 +307,34 @@ export function CIDashboard({
           <ScoreBadgesPanel data={data} lastUpdated={lastUpdated} />
 
           {/* Tabs */}
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-6 overflow-x-auto">
-            {(['overview', 'jobs', 'errors', 'trends'] as const).map((tab) => (
+          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-6 overflow-x-auto">
+            {([
+              { key: 'overview' as const, label: 'Overview', icon: Activity },
+              { key: 'jobs' as const, label: 'Jobs', icon: ListChecks },
+              { key: 'errors' as const, label: 'Errors', icon: Bug },
+              { key: 'trends' as const, label: 'Trends', icon: TrendingUp },
+            ]).map(({ key, label, icon: TabIcon }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors capitalize ${
-                  activeTab === tab
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                key={key}
+                onClick={() => setActiveTab(key)}
+                aria-selected={activeTab === key}
+                role="tab"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap ${
+                  activeTab === key
+                    ? 'bg-white text-gray-900 shadow-sm ring-1 ring-gray-200'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                 }`}
               >
-                {tab}
-                {tab === 'errors' && data.errors.total > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs">
+                <TabIcon className={`w-4 h-4 ${activeTab === key ? 'text-blue-600' : 'text-gray-400'}`} />
+                {label}
+                {key === 'errors' && data.errors.total > 0 && (
+                  <span className="ml-0.5 px-1.5 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-semibold">
                     {data.errors.total}
+                  </span>
+                )}
+                {key === 'jobs' && (
+                  <span className="ml-0.5 px-1.5 py-0.5 bg-gray-200 text-gray-600 rounded-full text-xs">
+                    {data.metrics.total_jobs}
                   </span>
                 )}
               </button>
