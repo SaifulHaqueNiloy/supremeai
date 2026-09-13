@@ -445,13 +445,17 @@ export function useAlertCounts() {
   }));
 }
 
-/**
- * Check if any services are down
- */
 export function useAnyServicesDown() {
   return useUnifiedStore(s => 
     Object.values(s.serviceHealth).some(h => h.status === 'down')
   );
+}
+
+/**
+ * Access the chat slice
+ */
+export function useChatSlice() {
+  return useUnifiedStore(s => s.chat);
 }
 
 export default useUnifiedStore;
