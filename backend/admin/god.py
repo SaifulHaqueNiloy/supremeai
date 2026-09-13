@@ -122,7 +122,7 @@ class AdminGodLayer:
         try:
             # বাংলা মন্তব্য: Firestore-এ autofix_authorized এবং admin_authorized নিয়মগুলো না থাকলে সেগুলো 'false' দিয়ে ইনিশিয়ালাইজ করা হচ্ছে।
             doc_ref = self._db.collection(self.collection_name).document("admin_authorized")
-            if not doc_ref.get().exists:
+            if not doc_ref.get(timeout=1.5).exists:
                 self.set_rule("admin_authorized", "false")
                 logger.warning("Firestore: Defaulting 'admin_authorized' to 'false' for security.")
 
@@ -139,7 +139,7 @@ class AdminGodLayer:
         if self._db:
             try:
                 doc_ref = self._db.collection(self.collection_name).document(key)
-                doc = doc_ref.get()
+                doc = doc_ref.get(timeout=1.5)
                 if doc.exists:
                     return doc.to_dict().get("value", default)
                 return default

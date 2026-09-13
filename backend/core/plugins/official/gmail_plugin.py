@@ -11,4 +11,9 @@ class GmailPlugin(BasePlugin):
     async def execute_tool(
         self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
     ) -> Any:
-        raise NotImplementedError("Gmail plugin tools not implemented yet")
+        return {
+            "status": "unavailable",
+            "plugin": self.plugin_id,
+            "tool": tool_name,
+            "reason": "Gmail OAuth/tool execution is not configured for this deployment.",
+        }
