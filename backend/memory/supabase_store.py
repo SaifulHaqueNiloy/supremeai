@@ -167,13 +167,18 @@ class SupabaseStore(SQLiteMemoryStore):
             "pgvector_enabled": self._pgvector_available,
         }
 
-    def save_conversation(self, session_id: str, messages: list) -> None:
+    def save_conversation(
+        self, session_id: str, messages: list, tenant_id: str | None = None
+    ) -> None:
         if self._provider == "supabase":
+            tenant_id = str(tenant_id or "").strip()
+            if not tenant_id or tenant_id == "default":
+                raise ValueError("Tenant context required for conversation persistence")
             client = self._get_supabase_client()
             client.table("conversations").upsert(
                 {
                     "session_id": session_id,
-                    "tenant_id": os.getenv("TENANT_ID", "default"),
+                    "tenant_id": tenant_id,
                     "messages": json.dumps(messages),
                     "updated_at": datetime.now(UTC).isoformat(),
                 }

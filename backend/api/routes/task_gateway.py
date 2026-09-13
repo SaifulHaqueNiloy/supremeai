@@ -64,7 +64,7 @@ async def submit_task(
         "goal": submission.goal,
         "status": "pending",
         "actor_id": str(actor_id),
-        "tenant_id": str(tenant_id or "default"),
+        "tenant_id": str(tenant_id),
         "metadata": submission.metadata,
         "created_at": now_iso,
         "updated_at": now_iso,
@@ -97,7 +97,7 @@ async def get_task_status(
         )
 
     # Verify tenant boundary
-    current_tenant = str(tenant_id or "default")
+    current_tenant = str(tenant_id)
     if record["tenant_id"] != current_tenant and current_tenant != "master":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -128,7 +128,7 @@ async def cancel_task(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found"
         )
 
-    current_tenant = str(tenant_id or "default")
+    current_tenant = str(tenant_id)
     if record["tenant_id"] != current_tenant and current_tenant != "master":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
 

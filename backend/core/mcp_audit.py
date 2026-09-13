@@ -42,7 +42,10 @@ class MCPAuditEntry:
         self.risk_level = risk_level
         self.latency_ms = round(latency_ms, 2)
         self.error = error
-        self.tenant_id = tenant_id or os.getenv("TENANT_ID", "default")
+        normalized_tenant_id = str(tenant_id or "").strip()
+        if not normalized_tenant_id or normalized_tenant_id == "default":
+            raise ValueError("MCP audit requires an explicit tenant_id")
+        self.tenant_id = normalized_tenant_id
         self.server = os.getenv("MCP_SERVER_NAME", "supremeai-mcp")
 
     def to_dict(self) -> dict[str, Any]:
@@ -119,6 +122,7 @@ def audit_tool_call(
     risk_level: str,
     latency_ms: float = 0.0,
     error: str | None = None,
+    tenant_id: str | None = None,
 ) -> None:
     """Convenience: create entry + log in one call."""
     logger_instance = get_audit_logger()

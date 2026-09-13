@@ -31,6 +31,14 @@ def get_healer_service() -> SelfHealerService:
     return SelfHealerService(db)
 
 
+def require_tenant_id(tenant_id: str | None) -> str:
+    """Reject unscoped admin operations instead of using a shared tenant."""
+    normalized = str(tenant_id or "").strip()
+    if not normalized or normalized == "default":
+        raise HTTPException(status_code=400, detail="Tenant context required")
+    return normalized
+
+
 class RuleUpdate(BaseModel):
     key: str
     value: str
@@ -197,12 +205,13 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
 
 @router.get("/fixes")
 async def get_fixes(
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     status: str = "pending_review",
     admin_user: dict = Depends(get_current_admin),
     healer: SelfHealerService = Depends(get_healer_service),
 ):
     """Fetch all fixes for a tenant with a specific status."""
+    tenant_id = require_tenant_id(tenant_id)
     db = get_firestore_db()
     fixes_ref = db.collection("tenants").document(tenant_id).collection("fixes")
     query = fixes_ref.where("status", "==", status)
@@ -228,11 +237,12 @@ async def get_fixes(
 @router.post("/fixes")
 @router.post("/fixes/apply")
 async def apply_fixes(
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     admin_user: dict = Depends(get_current_admin),
     healer: SelfHealerService = Depends(get_healer_service),
 ):
     """Apply all pending fixes for a tenant (one-click patch)."""
+    tenant_id = require_tenant_id(tenant_id)
     admin_id = admin_user.get("sub", "unknown_admin")
     logger.info(f"Admin {admin_id} applying all pending fixes for tenant {tenant_id}")
 
@@ -261,11 +271,12 @@ async def apply_fixes(
 @router.post("/fixes/{fix_id}/approve")
 async def approve_fix(
     fix_id: str,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     admin_user: dict = Depends(get_current_admin),
     healer: SelfHealerService = Depends(get_healer_service),
 ):
     """Approve a pending fix."""
+    tenant_id = require_tenant_id(tenant_id)
     admin_id = admin_user.get("sub", "unknown_admin")
     logger.info(f"Admin {admin_id} approving fix {fix_id} for tenant {tenant_id}")
 
@@ -282,10 +293,11 @@ async def approve_fix(
 @router.post("/fixes/{fix_id}/reject")
 async def reject_fix(
     fix_id: str,
-    tenant_id: str = "default",
+    tenant_id: str | None = None,
     admin_user: dict = Depends(get_current_admin),
 ):
     """Reject a pending fix."""
+    tenant_id = require_tenant_id(tenant_id)
     admin_id = admin_user.get("sub", "unknown_admin")
     logger.info(f"Admin {admin_id} rejecting fix {fix_id} for tenant {tenant_id}")
 

@@ -29,13 +29,22 @@ class CrawlResult:
         self.extractive_summary = extractive_summary
 
 
-async def crawl(url: str, max_depth: int = 1, max_results: int = 5) -> CrawlResult:
-    """Backwards-compatible crawl function delegating to policy-driven CrawlerService."""
+async def crawl(
+    url: str,
+    max_depth: int = 1,
+    max_results: int = 5,
+    *,
+    tenant_id: str,
+) -> CrawlResult:
+    """Run a crawl under an explicitly supplied tenant policy."""
+    if not tenant_id.strip():
+        raise ValueError("tenant_id is required")
+
     domain_rules = [
         DomainRule(domain=domain, trust_level=TrustLevel.TRUSTED) for domain in APPROVED_DOMAINS
     ]
     policy = CrawlPolicy(
-        tenant_id="default",
+        tenant_id=tenant_id,
         allowed_domains=list(APPROVED_DOMAINS),
         domain_rules=domain_rules,
         max_depth=max_depth,
@@ -45,7 +54,7 @@ async def crawl(url: str, max_depth: int = 1, max_results: int = 5) -> CrawlResu
     service = CrawlerService(policy=policy)
     request = CrawlRequest(
         query_or_url=url,
-        tenant_id="default",
+        tenant_id=tenant_id,
         max_depth=max_depth,
         max_results=max_results,
     )

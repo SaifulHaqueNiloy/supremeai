@@ -329,11 +329,23 @@ def _check_policy(name: str) -> dict[str, Any] | None:
 
 
 def _audit(
-    name: str, decision: str, risk_level: str, start_time: float, error: str | None = None
+    name: str,
+    decision: str,
+    risk_level: str,
+    start_time: float,
+    tenant_id: str,
+    error: str | None = None,
 ) -> None:
-    """Log tool call to audit trail."""
+    """Log a tenant-scoped tool call to the audit trail."""
     latency = (time.monotonic() - start_time) * 1000
-    audit_tool_call(name, decision, risk_level, latency_ms=latency, error=error)
+    audit_tool_call(
+        name,
+        decision,
+        risk_level,
+        latency_ms=latency,
+        error=error,
+        tenant_id=tenant_id,
+    )
 
 
 # =============================================================================
@@ -968,10 +980,18 @@ Return a structured context report with:
         # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
         decision, risk_level = evaluate_tool(name)
         start_time = time.monotonic()
+        tenant_id = str((arguments or {}).get("tenant_id") or "").strip()
+        if not tenant_id or tenant_id == "default":
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps({"error": "tenant_id is required"}),
+                )
+            ]
 
         policy_block = _check_policy(name)
         if policy_block is not None:
-            _audit(name, decision, risk_level, start_time, error="policy_blocked")
+            _audit(name, decision, risk_level, start_time, tenant_id, error="policy_blocked")
             logger.warning(f"MCP tool '{name}' blocked by policy: {risk_level}")
             return [
                 TextContent(
@@ -982,11 +1002,11 @@ Return a structured context report with:
         # বাংলা মন্তব্য: tool নাম অনুযায়ী সঠিক handler-এ dispatch করা হচ্ছে
         try:
             result = await _dispatch(name, arguments, kg, episodic, sliding, supabase, chroma, rag)
-            _audit(name, decision, risk_level, start_time)
+            _audit(name, decision, risk_level, start_time, tenant_id)
             return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
         except Exception as exc:
             logger.exception(f"Tool '{name}' failed: {exc}")
-            _audit(name, decision, risk_level, start_time, error=str(exc))
+            _audit(name, decision, risk_level, start_time, tenant_id, error=str(exc))
             return [
                 TextContent(
                     type="text",

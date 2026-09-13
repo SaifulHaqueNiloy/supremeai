@@ -42,8 +42,12 @@ class AutoRemediation:
         line_number: int,
         issue: str,
         severity: str,
-        tenant_id: str = "default_tenant",
+        tenant_id: str | None = None,
     ) -> dict:
+        tenant_id = str(tenant_id or "").strip()
+        if not tenant_id or tenant_id == "default":
+            return {"success": False, "error": "Tenant context required for remediation"}
+
         logger.info(
             f"Auto-Remediation triggered for {file_path}:{line_number} - Severity: {severity}. Issue: {issue}"
         )

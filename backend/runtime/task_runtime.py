@@ -49,6 +49,9 @@ class TaskRuntime:
         logger.info(f"🚀 [Runtime] Initiating task execution: {task.task_id}")
 
         try:
+            if not ctx.tenant_id:
+                raise ValueError("Task execution requires an authenticated tenant_id")
+
             # Stage 0: Pre-execution Budget Gate
             BudgetGuard.check_pre_execution(task)
 

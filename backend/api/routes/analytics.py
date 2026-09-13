@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
@@ -44,13 +44,20 @@ def get_churn_prophet() -> ChurnProphet:
 @router.post("/report")
 async def generate_report(
     payload: ReportRequest,
+    admin: dict[str, Any] = Depends(get_current_admin),
     mage: InsightMage = Depends(get_insight_mage),
 ):
-    """Generate analytics report."""
+    """Generate an analytics report for the authenticated tenant."""
+    tenant_id = str(admin.get("tenant_id") or admin.get("org_id") or "").strip()
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context required for analytics",
+        )
     # বাংলা মন্তব্য: ট্রেন্ড ও অসঙ্গতি বিশ্লেষণ করে অটো-রিপোর্ট তৈরির এন্ডপয়েন্ট
     days = 7 if payload.time_range == "last_7_days" else 30
     result = await mage.generate_report(
-        tenant_id="default",
+        tenant_id=tenant_id,
         collection=payload.data_source,
         value_field=payload.report_type,
         days=days,

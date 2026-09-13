@@ -86,10 +86,11 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
-    {"path": "api.routes.healing", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.healing_stats", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.repos", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.agents", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.agent", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "agents.code_vulnerability_scanner_agent", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.tools_registry", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.skills", "prefix": "/api", "is_admin": False, "is_critical": False},
     {"path": "api.routes.files", "prefix": "/api", "is_admin": False, "is_critical": False},
@@ -386,7 +387,7 @@ def register_all_routers(app: FastAPI) -> None:
     payments/webhook সারফেস 404 দেয় অথচ স্টার্টআপ সফল হয়)। এখন:
       1. is_critical=True রাউটার optional=False — import ব্যর্থ হলে স্টার্টআপ fail-fast।
       2. রেজিস্ট্রেশন শেষে mounted-vs-registered হিসাব লগ হয়; অনুপাত সন্দেহজনক
-         হলে (০ বা অর্ধেকের কম) warning সহ কাউন্ট রিপোর্ট হয়।
+         হলে (০ বা অর্ধেকের কম) warning সহ কাউন্ট রিপ���র্ট হয়।
     """
     current_role = getattr(settings, "supremeai_service_role", "monolith").lower()
     logger.info(f"Registering routers for SERVICE_ROLE: {current_role}")

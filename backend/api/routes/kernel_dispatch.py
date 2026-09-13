@@ -43,7 +43,7 @@ async def dispatch_kernel_request(
     actor_id = (
         user_token.get("sub") or user_token.get("uid") or user_token.get("user_id") or "anonymous"
     )
-    resolved_tenant = tenant_id or user_token.get("tenant_id") or "default"
+    resolved_tenant = str(tenant_id)
 
     kernel_req = KernelRequest(
         target_circle=request.target_circle,
