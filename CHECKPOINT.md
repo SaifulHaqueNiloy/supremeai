@@ -7,7 +7,9 @@
 - **Summary:** Auto-updated via pre-commit hook
 
 ## Completed This Session
-  - (see git log for details)
+  - Hardened tenant isolation across canonical task execution, research/scout crawling, task/kernel APIs, analytics, connections, admin fixes, remediation, memory persistence, and MCP audit logging.
+  - Removed synthetic `default`/`default_tenant` fallbacks from production paths and added fail-closed validation where tenant context is required.
+  - Added focused regression coverage and route-parity hardening; validation evidence is recorded in Git history.
 
 ## Files Changed
   - `backend/tools/social/email_agent.py`
