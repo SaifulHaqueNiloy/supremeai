@@ -228,14 +228,27 @@ coverage:
 
 ---
 
-## 📅 10. Execution Roadmap
+## 📖 11. Living Documentation + Automation Boundary (The Golden Rule)
 
-1. **Phase 1: Foundation & Data Architecture (Now)**
-   - `qa/checklist/` ডিরেক্টরিতে `guest.yaml`, `customer.yaml`, `admin.yaml`, `security.yaml` ভাগ করা।
-   - `scripts/ci/validate_qa_checklist.mjs` আপডেট করে পূর্ণাঙ্গ স্কিমা ভ্যালিডেশন চালু করা।
-2. **Phase 2: Playwright Multi-Project Setup**
-   - রুট `playwright.config.ts` এবং `frontend/playwright.config.ts` এর মিসম্যাচ দূর করা।
-   - Guest, Customer, Admin প্রজেক্ট এবং অটোমেটেড অথ ফিক্সচার তৈরি করা।
+> 💡 **মাস্টার প্রিন্সিপল:**  
+> **"ডকুমেন্টেশন ১০০% থাকবে (Zero Magic Boxes), কিন্তু এক্সিকিউশন হবে যেখানে অটোমেশন সম্ভব সেখানে স্বয়ংক্রিয় (Automate where possible, document everything)."**
+
+1. **ডকুমেন্টেশন সবার জন্য বাধ্যতামূলক (Living Source of Truth):**
+   - প্রতিটি ফিচার, রুট, সিকিউরিটি বাউন্ডারি এবং ইউজারের জার্নির স্পষ্ট ডকুমেন্টেশন ও চেকলিস্ট স্পেক থাকবে। ডকুমেন্টেশন বাদ দিয়ে সরাসরি কোড বা টেস্টে ঝাঁপিয়ে পড়া যাবে না।
+   - এর ফলে যেকোনো মানুষ বা যেকোনো নতুন এআই এজেন্ট তাৎক্ষণিকভাবে বুঝতে পারবে সিস্টেমের কোথায় কী কাজ হচ্ছে এবং প্রত্যাশিত আউটপুট কী।
+2. **অটোমেশন যেখানে যেখানে টেকনিক্যালি সম্ভব (80–90% Coverage):**
+   - যে কাজগুলো মেশিন নির্ভুলভাবে করতে পারে (রুট রিডাইরেকশন, অথেনটিকেশন স্টেট, ফর্ম ভ্যালিডেশন, এপিআই রেসপন্স কোড, ডেটাবেস আইসোলেশন, ডার্ক মোড টগল, ব্রাউজার ই২ই) সেগুলোতে মানুষ সময় নষ্ট করবে না—সেগুলো প্লে-রাইট এবং সিআই রোবট স্বয়ংক্রিয়ভাবে যাচাই করবে।
+3. **হিউম্যান রিভিউ শুধুমাত্র যেখানে মানুষের বুদ্ধিমত্তা অপরিহার্য (10–20% Judgment):**
+   - এআই উত্তরের ভাষা কতটা মানবিক ও আকর্ষণীয়, ইউআই লেআউট দেখতে চোখে কতটা প্রিমিয়াম লাগছে, প্রোডাক্টের অনুভূতি কেমন—শুধুমাত্র এই সীমিত অংশে মানুষের স্পর্শ থাকবে।
+
+---
+
+## 📅 12. Execution Roadmap
+
+1. **Phase 1: Foundation & Data Architecture**
+   - `qa/checklist/` ডিরেক্টরিতে ডকুমেন্ট স্পেসিফিকেশন সংরক্ষণ (`guest.yaml`, `customer.yaml`, `admin.yaml`, `security.yaml`)।
+   - `scripts/ci/validate_qa_checklist.mjs` দিয়ে ডেটা স্পেসিফিকেশনের শতভাগ শুদ্ধতা নিশ্চিত করা।
+2. **Phase 2: Playwright Multi-Project Setup (Automating the Feasible)**
+   - রুট `playwright.config.ts` এবং `frontend/playwright.config.ts` এর মিসম্যাচ দূর করে Guest, Customer, Admin রোল প্রজেক্ট তৈরি করা।
 3. **Phase 3: CI/CD Pipeline Alignment**
-   - GitHub Actions-এ `.github/workflows/qa-contract.yml` কে প্রিফ্লাইট ও ডিপ QA পাইপলাইনে বিভক্ত করা।
-   - অটোমেটেড রেজাল্ট সামারি এবং AI ডায়াগনস্টিক রিপোর্ট জেনারেশন যোগ করা।
+   - GitHub Actions-এ প্রিফ্লাইট ও ডিপ QA পাইপলাইন কার্যকর করা।
