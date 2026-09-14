@@ -47,7 +47,10 @@ version: 1
 
 thresholds:
   overall:
-    pr: 25
+    # measured 45.28% (31875/65437, 722 files) on the first honest expanded
+    # run (34818775855) — raised from the stale 25 that was set against the
+    # old 27.20% baseline measured while ~96% of tests were invisible.
+    pr: 40
     # release: 40   # honest release bar once ramp advances
   critical:
     pr: 55
