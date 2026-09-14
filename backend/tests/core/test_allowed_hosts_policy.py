@@ -75,14 +75,14 @@ def _prod_settings(monkeypatch, **kwargs) -> Settings:
 
 
 def test_prod_explicit_hosts_preserved(monkeypatch):
-    settings = _prod_settings(monkeypatch, allowed_hosts=["api.example.com", "www.example.com"])
+    settings = _prod_settings(monkeypatch, ALLOWED_HOSTS=["api.example.com", "www.example.com"])
     assert settings.allowed_hosts == ["api.example.com", "www.example.com"]
 
 
 def test_prod_loopback_entries_stripped(monkeypatch):
     settings = _prod_settings(
         monkeypatch,
-        allowed_hosts=["localhost", "127.0.0.1", "0.0.0.0", "api.example.com"],
+        ALLOWED_HOSTS=["localhost", "127.0.0.1", "0.0.0.0", "api.example.com"],
     )
     assert settings.allowed_hosts == ["api.example.com"]
 
@@ -94,14 +94,14 @@ def test_prod_loopback_entries_stripped(monkeypatch):
 
 def test_prod_render_external_url_derived(monkeypatch):
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://supremeai-api.onrender.com/")
-    settings = _prod_settings(monkeypatch, allowed_hosts=[])
+    settings = _prod_settings(monkeypatch, ALLOWED_HOSTS=[])
     assert settings.allowed_hosts == ["supremeai-api.onrender.com"]
 
 
 def test_prod_render_service_name_derived(monkeypatch):
     monkeypatch.setenv("RENDER", "true")
     monkeypatch.setenv("RENDER_SERVICE_NAME", "supremeai-api")
-    settings = _prod_settings(monkeypatch, allowed_hosts=[])
+    settings = _prod_settings(monkeypatch, ALLOWED_HOSTS=[])
     assert settings.allowed_hosts == ["supremeai-api.onrender.com"]
 
 
@@ -119,14 +119,14 @@ def test_bare_apex_fallback_removed(monkeypatch):
     """
     monkeypatch.setenv("RENDER", "true")
     monkeypatch.delenv("RENDER_SERVICE_NAME", raising=False)
-    settings = _prod_settings(monkeypatch, allowed_hosts=[])
+    settings = _prod_settings(monkeypatch, ALLOWED_HOSTS=[])
     assert "onrender.com" not in settings.allowed_hosts
     assert settings.allowed_hosts == ["testserver"]
 
 
 def test_pytest_placeholder_does_not_leak_apex(monkeypatch):
     monkeypatch.setenv("RENDER_SERVICE_ID", "rs-123")
-    settings = _prod_settings(monkeypatch, allowed_hosts=[])
+    settings = _prod_settings(monkeypatch, ALLOWED_HOSTS=[])
     assert settings.allowed_hosts == ["testserver"]
 
 
@@ -146,13 +146,13 @@ def test_pytest_placeholder_does_not_leak_apex(monkeypatch):
 )
 def test_explicit_bare_apex_rejected(monkeypatch, apex, other):
     with pytest.raises(ValueError, match="platform apex"):
-        _prod_settings(monkeypatch, allowed_hosts=[*other, apex])
+        _prod_settings(monkeypatch, ALLOWED_HOSTS=[*other, apex])
 
 
 def test_subdomain_entries_still_allowed(monkeypatch):
     """Only the bare apex is forbidden — real per-service subdomains stay valid."""
     settings = _prod_settings(
-        monkeypatch, allowed_hosts=["supremeai-a.web.app", "my-app.vercel.app"]
+        monkeypatch, ALLOWED_HOSTS=["supremeai-a.web.app", "my-app.vercel.app"]
     )
     assert settings.allowed_hosts == ["supremeai-a.web.app", "my-app.vercel.app"]
 
