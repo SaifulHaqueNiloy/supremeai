@@ -13,7 +13,6 @@ if _backend_dir not in sys.path:
 from fastapi import HTTPException
 
 from api.routers import register_all_routers
-from core.admin_routes import router as admin_router
 from core.app_builder import create_app
 from core.health_check import health_checker
 from monitoring import init_observability
@@ -41,7 +40,12 @@ async def aggregated_health_check():
         ) from e
 
 
-app.include_router(admin_router)
+# Mount-hygiene note (2026-09-15): the direct ``include_router(admin_router)``
+# that used to sit here duplicated the canonical ALL_ROUTERS registry entry
+# (core.admin_routes, is_critical=True — fail-fast mount with boot-proof
+# accounting), giving every /admin/* route a second registration. The registry
+# is the single mount point; service-role filtering (scraper/worker intentionally
+# skip admin surface) also now applies uniformly.
 register_all_routers(app)
 
 # FIX (API-contract audit): legacy `/api/chat/stream` alias — previously a dead
@@ -52,12 +56,10 @@ from api.routes.stream_chat_sse import legacy_router as chat_stream_legacy_route
 
 app.include_router(chat_stream_legacy_router)
 
-# Task 7-c: mission orchestration core
-from api.routes.missions import router as missions_router
-
-app.include_router(missions_router)
-
-# Task 7-d: MCP hub management API
-from api.routes.mcp_hub import router as mcp_hub_router  # noqa: E402
-
-app.include_router(mcp_hub_router)
+# Task 7-c / 7-d mount hygiene (2026-09-15): missions and mcp_hub are mounted
+# through the canonical ALL_ROUTERS registry (api/routers.py — AUDIT-WIRE FIX 3,
+# boot-proofed mounted=N/N accounting). The direct include_router() blocks that
+# PR #304/#305 shipped alongside the registry entries caused a DOUBLE mount
+# (22 mission + 14 mcp routes on the app; first-match wins at runtime, but the
+# duplicate registration corrupted OpenAPI listing and registry accounting).
+# Keep the registry as the single source of truth for these routers.

@@ -193,7 +193,10 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
-    {"path": "api.routes.codeflow", "prefix": "", "is_admin": False, "is_critical": False},
+    # Mount-hygiene (2026-09-15): the api.routes.codeflow entry used to sit
+    # here, but codeflow.py is a legacy re-export shim that re-exports the SAME
+    # router object as api.routes.code_dependency_graph (registry entry above)
+    # — mounting both double-registered every /api/codeflow route.
     {"path": "api.routes.feedback", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "tools.media.multilingual_tts",
@@ -397,7 +400,9 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
-    {"path": "agents.vulnerability_prophet", "prefix": "", "is_admin": False, "is_critical": False},
+    # Mount-hygiene (2026-09-15): vulnerability_prophet.py is a legacy re-export
+    # shim for agents.code_vulnerability_scanner_agent (registry entry above);
+    # listing both mounted the same /security/vulnerabilities routes twice.
     {"path": "ws.command_center", "prefix": "", "is_admin": False, "is_critical": False},
     # ── AUDIT-WIRE FIX 3 (Task 7-c/7-d mount repair, 2026-09-15): PR #304 (missions)
     # এবং PR #305 (mcp_hub) নিজ নিজ APIRouter সহ রাউটার মডিউল ship করেছিল, কিন্তু
