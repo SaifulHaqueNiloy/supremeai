@@ -764,7 +764,9 @@ class MultiAccountRotator:
         logger.error("No available provider/account found")
         return None
 
-    def _meets_requirements(self, provider: Provider, account: Account, requirements: dict | None = None) -> bool:
+    def _meets_requirements(
+        self, provider: Provider, account: Account, requirements: dict | None = None
+    ) -> bool:
         """Check if provider/account meets specific requirements.
 
         FIX (none-requirements crash): get_best_provider_for_task() defaults

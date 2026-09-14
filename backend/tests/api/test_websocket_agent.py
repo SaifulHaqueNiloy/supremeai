@@ -297,9 +297,7 @@ async def test_get_redis_returns_existing_client(manager):
 
 @pytest.mark.asyncio
 async def test_get_redis_returns_none_without_config(monkeypatch, manager):
-    monkeypatch.setattr(
-        core_config, "settings", SimpleNamespace(redis_url=None, REDIS_URL=None)
-    )
+    monkeypatch.setattr(core_config, "settings", SimpleNamespace(redis_url=None, REDIS_URL=None))
     assert await manager._get_redis() is None
 
 
@@ -559,7 +557,9 @@ async def test_analyze_preferences_strips_code_fence(monkeypatch):
     monkeypatch.setattr(ws_agent, "SupabaseDB", lambda: db)
     fenced = '```json\n{"answering_style": "concise"}\n```'
     monkeypatch.setattr(
-        ws_agent, "llm_gateway", SimpleNamespace(acompletion=AsyncMock(return_value={"text": fenced}))
+        ws_agent,
+        "llm_gateway",
+        SimpleNamespace(acompletion=AsyncMock(return_value={"text": fenced})),
     )
     await analyze_and_save_preferences("user-1", "hi")
     assert db.upserts[0]["preferences"] == {"answering_style": "concise"}
@@ -570,7 +570,9 @@ async def test_analyze_preferences_survives_invalid_json(monkeypatch):
     db = FakeDB()
     monkeypatch.setattr(ws_agent, "SupabaseDB", lambda: db)
     monkeypatch.setattr(
-        ws_agent, "llm_gateway", SimpleNamespace(acompletion=AsyncMock(return_value={"text": "nope"}))
+        ws_agent,
+        "llm_gateway",
+        SimpleNamespace(acompletion=AsyncMock(return_value={"text": "nope"})),
     )
     await analyze_and_save_preferences("user-1", "hi")  # must not raise
     assert db.upserts == []
@@ -604,7 +606,10 @@ async def test_handle_analyze_preferences_skips_incomplete_payload():
         assert await handle_analyze_preferences({"payload": {"content": "hi"}}) is True
         assert await handle_analyze_preferences({"user_id": "u1"}) is True
         assert called["count"] == 0
-        assert await handle_analyze_preferences({"user_id": "u1", "payload": {"content": "hi"}}) is True
+        assert (
+            await handle_analyze_preferences({"user_id": "u1", "payload": {"content": "hi"}})
+            is True
+        )
         assert called["count"] == 1
     finally:
         mod.analyze_and_save_preferences = original
@@ -629,9 +634,7 @@ def make_llm_stream(chunks):
 @pytest.mark.asyncio
 async def test_chat_endpoint_streams_text_and_json_payloads(monkeypatch):
     payload = {"sub": "user-1", "tenant_id": "tenant-1"}
-    monkeypatch.setattr(
-        ws_agent.manager, "_authenticate", AsyncMock(return_value=dict(payload))
-    )
+    monkeypatch.setattr(ws_agent.manager, "_authenticate", AsyncMock(return_value=dict(payload)))
     db = FakeDB({"preferences": {"answering_style": "concise"}})
     monkeypatch.setattr(ws_agent, "SupabaseDB", lambda: db)
     monkeypatch.setattr(
@@ -666,7 +669,11 @@ async def test_chat_endpoint_sends_error_frame_on_llm_failure(monkeypatch):
         AsyncMock(return_value={"sub": "user-2", "tenant_id": "tenant-1"}),
     )
     monkeypatch.setattr(ws_agent, "SupabaseDB", lambda: FakeDB())
-    monkeypatch.setattr(ws_agent, "llm_gateway", SimpleNamespace(acompletion=AsyncMock(side_effect=RuntimeError("llm down"))))
+    monkeypatch.setattr(
+        ws_agent,
+        "llm_gateway",
+        SimpleNamespace(acompletion=AsyncMock(side_effect=RuntimeError("llm down"))),
+    )
     monkeypatch.setattr(ws_agent.task_queue, "enqueue", AsyncMock(return_value=True), raising=False)
 
     ws = FakeWebSocket(incoming=["hi", WebSocketDisconnect(code=1000)])

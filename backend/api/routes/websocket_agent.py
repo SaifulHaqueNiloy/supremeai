@@ -307,8 +307,11 @@ class DistributedConnectionManager:
                 backoff = min(backoff * 2.0, 30.0)
 
     async def connect(
-        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
-    ):  # is_local()
+        self,
+        websocket: WebSocket,
+        user_id: str,
+        ip_address: str = "127.0.0.1",  # is_local()
+    ):
         # FIX (dup-defect): this method was defined TWICE — a locked version and a
         # stale unlocked copy. Python silently keeps the LAST definition, so the
         # owner's race-condition fix (the _connection_lock below) was dead code and
@@ -358,8 +361,11 @@ class DistributedConnectionManager:
         return True
 
     def disconnect(
-        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
-    ):  # is_local()
+        self,
+        websocket: WebSocket,
+        user_id: str,
+        ip_address: str = "127.0.0.1",  # is_local()
+    ):
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)

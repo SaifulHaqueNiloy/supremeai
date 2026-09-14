@@ -113,13 +113,17 @@ def test_health_score_fresh_account_is_perfect():
 
 
 def test_health_score_penalizes_errors_quota_and_rate_limits():
-    acc = make_account(total_requests=10, failed_requests=5, quota_used=500, quota_limit=1000, rate_limit_hits=3)
+    acc = make_account(
+        total_requests=10, failed_requests=5, quota_used=500, quota_limit=1000, rate_limit_hits=3
+    )
     expected = 100.0 - (0.5 * 50) - (0.5 * 30) - min(30, 20)
     assert acc.get_health_score() == pytest.approx(expected)
 
 
 def test_health_score_clamped_to_zero():
-    acc = make_account(total_requests=10, failed_requests=10, quota_used=1000, quota_limit=1000, rate_limit_hits=99)
+    acc = make_account(
+        total_requests=10, failed_requests=10, quota_used=1000, quota_limit=1000, rate_limit_hits=99
+    )
     assert acc.get_health_score() == 0.0
 
 
@@ -502,9 +506,7 @@ async def test_call_api_stringifies_non_success_response(rotator, monkeypatch):
 @pytest.mark.asyncio
 async def test_call_api_model_kwarg_no_collision(rotator, monkeypatch):
     """Regression: kwargs containing 'model' used to collide with the explicit model=."""
-    gateway = SimpleNamespace(
-        acompletion=AsyncMock(return_value={"success": True, "text": "ok"})
-    )
+    gateway = SimpleNamespace(acompletion=AsyncMock(return_value={"success": True, "text": "ok"}))
     import core.llm.llm_gateway as gateway_module
 
     monkeypatch.setattr(gateway_module, "get_llm_gateway", lambda: gateway)
@@ -522,7 +524,9 @@ async def test_call_api_model_kwarg_no_collision(rotator, monkeypatch):
 async def test_call_api_raises_without_any_model(rotator, monkeypatch):
     import core.llm.llm_gateway as gateway_module
 
-    monkeypatch.setattr(gateway_module, "get_llm_gateway", lambda: SimpleNamespace(acompletion=AsyncMock()))
+    monkeypatch.setattr(
+        gateway_module, "get_llm_gateway", lambda: SimpleNamespace(acompletion=AsyncMock())
+    )
     provider = make_provider("groq", models=[])
     # owner error message is Bengali: '...কোনো মডেল নির্ধারিত নেই।'
     with pytest.raises(ValueError, match="মডেল"):
