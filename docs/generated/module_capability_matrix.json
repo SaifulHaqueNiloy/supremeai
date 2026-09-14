@@ -3424,6 +3424,7 @@
     {
       "capability_signals": [
         "execute",
+        "health",
         "memory"
       ],
       "classification": "human_review",
@@ -10036,6 +10037,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_websocket_agent.py"
+    },
+    {
+      "capability_signals": [
         "capability",
         "health"
       ],
@@ -11220,6 +11230,17 @@
     },
     {
       "capability_signals": [
+        "dispatch",
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_llm_gateway_completion.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "test",
@@ -11489,6 +11510,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_redis_cache.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_redis_manager_memory_fallback.py"
     },
     {
       "capability_signals": [
@@ -12443,6 +12474,16 @@
       "path": "backend/tests/services/test_llm_router.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_memory_service.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12944,6 +12985,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/tools/test_meta_architect_coverage_full.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_multi_account_rotator.py"
     },
     {
       "capability_signals": [],
@@ -20770,6 +20822,19 @@
       "path": "scripts/ci/audit_broad_exceptions.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "dispatch",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/audit_definition_shadowing.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -22869,5 +22934,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2662
+  "source_file_count": 2668
 }

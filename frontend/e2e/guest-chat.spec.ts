@@ -47,6 +47,28 @@ test.describe('Guest chat demo smoke', () => {
     await expect(page.getByRole('button', { name: 'Send message' })).toBeEnabled();
   });
 
+  test('typed continuation after an intent chip is separated by a space (no mush)', async ({ page }) => {
+    const composer = page.getByLabel('Message SupremeAI');
+    await page.getByRole('button', { name: 'Research' }).click();
+    await composer.pressSequentially('What is SupremeAI?');
+    // The canned prompt ends with '.', typed text must start after a space
+    // (the chip appends "prompt + ' '").
+    await expect(composer).toHaveValue(/findings\. What is SupremeAI\?$/);
+    await composer.press('Enter');
+    const bubble = page.locator('.animate-guest-bubble-in').first();
+    await expect(bubble).toContainText('findings. What is SupremeAI?');
+  });
+
+  test('user bubble renders the canned prompt dimmed ahead of the typed words', async ({ page }) => {
+    const composer = page.getByLabel('Message SupremeAI');
+    await page.getByRole('button', { name: 'Analyze' }).click();
+    await composer.pressSequentially('my problem');
+    await composer.press('Enter');
+    const prefixSpan = page.locator('.animate-guest-bubble-in span').first();
+    await expect(prefixSpan).toHaveClass(/text-slate-400/);
+    await expect(prefixSpan).toHaveText(/Help me analyze this problem/);
+  });
+
   test('Enter submits but Shift+Enter only inserts a newline', async ({ page }) => {
     const composer = page.getByLabel('Message SupremeAI');
     await composer.pressSequentially('first line');
