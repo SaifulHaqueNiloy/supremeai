@@ -31,9 +31,10 @@ class TaskCenter(CircleCenter):
         )
 
     def local_permission(self, envelope: ExecutionEnvelope) -> str | None:
-        if envelope.capability == "task.submit" and not str(
-            envelope.payload.get("task_type", "")
-        ).strip():
+        if (
+            envelope.capability == "task.submit"
+            and not str(envelope.payload.get("task_type", "")).strip()
+        ):
             return "task_type is required for task.submit"
         return None
 

@@ -118,32 +118,59 @@ class TestSkillIngestorIngestMCP:
     @pytest.fixture
     def mock_manifest(self):
         """Create a mock skill manifest."""
-        return MagicMock(skill_id="test_skill_123", name="Test Skill", version="1.0.0")
+        manifest = MagicMock(skill_id="test_skill_123", name="Test Skill", version="1.0.0")
+        # schemas/skill_index.py JSON-serializes manifest.model_dump(); a bare
+        # MagicMock there returns a MagicMock which is not JSON-serializable.
+        manifest.model_dump.return_value = {
+            "skill_id": "test_skill_123",
+            "name": "Test Skill",
+            "version": "1.0.0",
+        }
+        return manifest
 
-    @pytest.mark.skip(
-        reason="Test-mock bug (not app bug): mock_manifest.model_dump() returns a MagicMock instead of a real dict, which fails JSON serialization in schemas/skill_index.py. Needs mock_manifest.model_dump.return_value set to a real dict."
-    )
-    def test_ingest_mcp_skill_success(self, mock_manifest):
-        """Test successful MCP skill ingestion."""
-        with (
-            patch("backend.agents.skill_ingestor.DockerSandbox"),
-            patch("requests.get") as mock_get,
-            patch("zipfile.ZipFile") as mock_zipfile,
-        ):
+    def test_ingest_mcp_skill_success(self, mock_manifest, tmp_path):
+        """Test successful MCP skill ingestion (fully offline + hermetic)."""
+        import hashlib
+        import io
+        import zipfile as zipfile_mod
+
+        from backend.schemas.skill_index import SkillIndexManager
+
+        with patch("backend.agents.skill_ingestor.DockerSandbox"):
             from backend.agents.skill_ingestor import SkillIngestor
 
-            # Mock the HTTP request and zip extraction
-            mock_get.return_value.content = b"fake zip content"
-            mock_zip = MagicMock()
-            mock_zipfile.return_value.__enter__.return_value = mock_zip
+            # Build a real in-memory zip so the checksum / zip-slip pipeline runs.
+            buf = io.BytesIO()
+            with zipfile_mod.ZipFile(buf, "w") as zf:
+                zf.writestr("main.py", "x = 1\n")
+            zip_bytes = buf.getvalue()
 
-            ingestor = SkillIngestor()
-            result = ingestor.ingest_mcp_skill(
-                manifest=mock_manifest,
-                zip_url="https://example.com/skill.zip",
-                entry_file="main.py",
-                test_payload="{'test': true}",
-            )
+            mock_manifest.source_url = "https://github.com/modelcontextprotocol/servers/repo"
+            mock_manifest.checksum = hashlib.sha256(zip_bytes).hexdigest()
+
+            # Hermetic storage: staging/quarantine + skill index under tmp_path,
+            # never the real backend/skills tree.
+            ingestor = SkillIngestor(base_skills_dir=str(tmp_path))
+            ingestor.index_manager = SkillIndexManager(tmp_path / ".index.json")
+            ingestor.sandbox.run_quarantine_test.return_value = {"exit_code": 0}
+
+            fake_response = MagicMock()
+            fake_response.__enter__.return_value.read.return_value = zip_bytes
+            with (
+                patch("urllib.request.urlopen", return_value=fake_response),
+                patch.object(
+                    ingestor.morphic_adapter,
+                    "adapt_code_to_contract",
+                    return_value={"success": True, "code": "y = 2\n"},
+                ),
+            ):
+                result = ingestor.ingest_mcp_skill(
+                    manifest=mock_manifest,
+                    zip_url="https://github.com/modelcontextprotocol/servers/skill.zip",
+                    entry_file="main.py",
+                    test_payload="{'test': true}",
+                )
 
             # Should return a dict with success status
             assert isinstance(result, dict)
+            assert result.get("success") is True, result

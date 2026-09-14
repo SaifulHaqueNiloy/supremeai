@@ -23,9 +23,7 @@ CENTERS_DIR = BACKEND_ROOT / "core" / "circles" / "centers"
 GOVERNANCE_CORE = BACKEND_ROOT / "core" / "circles" / "governance_core.py"
 
 _CENTER_MODULES = {
-    path.stem
-    for path in CENTERS_DIR.glob("*.py")
-    if path.name not in {"__init__.py", "base.py"}
+    path.stem for path in CENTERS_DIR.glob("*.py") if path.name not in {"__init__.py", "base.py"}
 }
 
 _FORBIDDEN_IN_CENTERS_PREFIXES = (
