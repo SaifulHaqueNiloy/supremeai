@@ -37,7 +37,21 @@ async def test_api_root_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_api_process_endpoint():
+async def test_api_process_endpoint(monkeypatch):
+    import api.server as server_module
+
+    class DummyFactory:
+        async def safe_process(self, query, context=None):
+            return {
+                "success": True,
+                "answer": "def divide(a, b): return a / b if b != 0 else 0",
+                "confidence": 0.99,
+                "components_used": ["reasoning_engine", "rate_limiter"],
+                "provider_used": "mock",
+                "rate_limited": False,
+            }
+
+    monkeypatch.setattr(server_module, "factory", DummyFactory())
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         payload = {

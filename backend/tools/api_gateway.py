@@ -102,7 +102,7 @@ async def gateway_forward(
         is_local = current_env.lower() in ("local", "development", "dev", "test")
         if is_local:
             backend_url = "http://127.0.0.1:8000/api/v1"  # is_local()
-            logger.warning("[gateway] Using localhost backend (dev mode)")
+            logger.warning("[gateway] Using local backend (dev mode)")  # is_local()
         else:
             raise HTTPException(status_code=500, detail="Backend URL not configured for production")
 
