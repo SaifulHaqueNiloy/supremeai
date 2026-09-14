@@ -1,5 +1,21 @@
 # SupremeAI — Remaining Dynamic Configuration / Zero-Hardcode Implementation Plan
 
+> ## Reconciliation Status (final-test, 2026-09-14 — verify-before-implement audit against main@83a7cfba)
+>
+> | § | Item | Verdict on main | Where |
+> |---|------|-----------------|-------|
+> | 2 | Remove production docs-password hardcoded fallback | **DONE on main** (PR #293 tri-state docs-auth policy; `dev_password_only` never valid in production/staging) | `backend/core/middleware/docs_auth.py` |
+> | 3 | Remove unsafe ALLOWED_HOSTS fallback (bare `onrender.com`) | **FIXED in this branch** — bare-apex last-resort fallback removed (fail-closed), platform-env discovery kept, explicit bare platform apex domains now rejected outright (suffix Host-matching would trust every platform subdomain). Regression-locked by 14 tests incl. 3 real-boot subprocess probes | `backend/core/config_validation.py`, `backend/tests/core/test_allowed_hosts_policy.py` |
+> | 4 | Firebase generator correctness (rewrite contract) | **FIXED in this branch** — generator now fail-closed: missing `/api/**` + `/api/v1/**` + `/admin-api/**` rewrites, foreign rewrite destinations, source-prefix-proof violations and missing SPA fallback all exit 1 (missing `/api/**` was WARNING-only before). Bonus latent bug fixed: raw `"}}"` substring false-positived on JSON tails like `{"hosting": {...}}` | `scripts/deploy/generate_firebase_config.py`, `backend/tests/scripts/test_generate_firebase_config.py` |
+> | 5 | `VITE_PORTAL_TYPE` user/admin build selection | **OBSOLETE** — unified single frontend (no portal split build; `firebase.template.json` ships `user` + `admin` hosting targets from one build) | — |
+> | 6 | Rewrite semantics unification | **DONE on main** (single `{{BACKEND_URL}}` placeholder drives all sites) | `firebase.template.json` |
+> | 7 | Silent failures (`set -e` etc.) | **DONE on main** | `scripts/render_build_frontend.sh` |
+> | 8 | Production CORS source-of-truth | **VERIFIED no hardcoded origins** (defaults are empty frozensets; denylist-enforced) | `backend/core/middleware/cors_policy.py` |
+> | 9 | Operational rollout | **OPERATIONAL** (deploy scripts fail-fast on missing backend URL) | `scripts/render_build_frontend.sh` |
+> | 10 | Hardcoded-config CI enforcement | **P1 deferred** (tracked; do not block this milestone) | — |
+>
+> Scope note: §2/§5/§6/§7 were closed by main (PR #293 + unified-frontend migration) BEFORE this branch — re-implementing them would duplicate shipped capability. This branch delivers §3 + §4 only.
+
 **Repository:** `SaifulHaqueNiloy/supremeai`  
 **Scope:** Finish the dynamic-configuration migration without breaking the live frontend/backend deployment.
 

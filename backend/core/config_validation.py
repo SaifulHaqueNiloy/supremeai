@@ -17,6 +17,24 @@ from pydantic import (
 
 from core.logging_config import logger
 
+# Public platform apex domains that must NEVER appear as bare entries in
+# production/staging ALLOWED_HOSTS (see validate_allowed_hosts for rationale:
+# suffix-based Host matching would trust every subdomain of the platform).
+PLATFORM_APEX_HOSTS: frozenset[str] = frozenset(
+    {
+        "onrender.com",
+        "render.com",
+        "vercel.app",
+        "netlify.app",
+        "workers.dev",
+        "pages.dev",
+        "firebaseapp.com",
+        "web.app",
+        "amplifyapp.com",
+        "herokuapp.com",
+    }
+)
+
 
 class SettingsValidationMixin:
     FORMAT_PATTERNS = {
@@ -313,6 +331,20 @@ class SettingsValidationMixin:
         forbidden = {f"{'local'}{'host'}", f"{'127'}.0.0.1", "testserver", f"{'0'}.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
+            # Zero-hardcode policy: bare public platform apex domains are NEVER
+            # valid ALLOWED_HOSTS entries. TrustedOriginMiddleware matches Host
+            # headers by exact value OR suffix (endswith "." + h), so an apex
+            # entry such as "onrender.com" would trust EVERY subdomain of the
+            # platform — including attacker-registered ones. Fail fast with an
+            # actionable message instead of silently widening the trust set.
+            bad_apex = sorted(h for h in v if h.lower() in PLATFORM_APEX_HOSTS)
+            if bad_apex:
+                raise ValueError(
+                    f"❌ {env.capitalize()} ALLOWED_HOSTS contains bare platform apex "
+                    f"domain(s) {bad_apex}. Host matching is suffix-based, so an apex "
+                    f"entry would trust every subdomain of that platform. List the real "
+                    f"per-service hostname(s) instead (e.g. from RENDER_EXTERNAL_HOSTNAME)."
+                )
             # If not explicitly provided, auto-discover host from cloud platform environment (e.g. Render, Vercel)
             if not v:
                 render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME") or os.getenv(
@@ -333,22 +365,32 @@ class SettingsValidationMixin:
                 # real per-service onrender.com hostname from RENDER_SERVICE_NAME
                 # (reliably injected by Render for ALL service types, including
                 # Docker-image deploys where RENDER_EXTERNAL_HOSTNAME/URL are not
-                # always available). Using the real hostname — not the bare literal
-                # "onrender.com" — matters downstream: validate_production_completeness
-                # derives CORS origins from allowed_hosts and deliberately excludes
-                # the bare "onrender.com" placeholder (it isn't a real reachable
-                # host), so falling back to the literal here left CORS derivation
-                # with nothing to work with and crashed the app on boot.
+                # always available). Using the real per-service hostname — never the
+                # bare literal — matters for two downstream consumers:
+                #   1. TrustedOriginMiddleware matches Host headers by exact value OR
+                #      suffix (endswith "." + h), so a bare apex entry would accept
+                #      EVERY *.onrender.com host, including attacker-registered ones.
+                #   2. validate_production_completeness derives CORS origins from
+                #      allowed_hosts and deliberately excludes the bare placeholder
+                #      (it isn't a real reachable host), so a bare fallback left CORS
+                #      derivation with nothing to work with and crashed on boot.
                 if not v and (os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID")):
                     render_service_name = os.getenv("RENDER_SERVICE_NAME")
-                    render_host_suffix = "." + "onrender" + ".com"
                     if render_service_name:
-                        v.append(f"{render_service_name}{render_host_suffix}")
+                        v.append(f"{render_service_name}.onrender.com")
                     else:
-                        # Last-resort generic placeholder — still excluded from CORS
-                        # derivation below, so ALLOWED_HOSTS won't crash but CORS
-                        # will require an explicit USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS.
-                        v.append("onrender" + ".com")
+                        # Zero-hardcode: fail closed. The old last-resort bare-apex
+                        # fallback ("onrender.com") was removed — it silently trusted
+                        # every platform subdomain via suffix Host matching. The
+                        # empty-check below raises (real boot) unless the operator
+                        # sets ALLOWED_HOSTS explicitly.
+                        logger.warning(
+                            "⚠️ Running on Render but RENDER_SERVICE_NAME / "
+                            "RENDER_EXTERNAL_HOSTNAME are unavailable and ALLOWED_HOSTS "
+                            "is not set. Refusing to trust the bare 'onrender.com' apex "
+                            "(Host-suffix bypass). Set ALLOWED_HOSTS explicitly or "
+                            "re-enable platform metadata injection."
+                        )
 
             # The application must fail closed in real production/staging, but
             # Settings() is also used by focused pytest cases to exercise later
