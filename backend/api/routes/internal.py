@@ -2,7 +2,7 @@ import secrets
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
 
 from core.config import settings
 from core.logging_config import logger
@@ -11,15 +11,26 @@ from core.self_evolution.evolution_engine import EvolutionEngine
 
 router = APIRouter(dependencies=[Depends(get_current_admin)])
 
+# বাংলা: পাবলিক রিপোর জানা ডেভ ফলব্যাক মান — এগুলো দিয়ে কখনো
+# internal admin API-তে প্রবেশ করা যাবে না (defense-in-depth; বুটেও
+# config_validation প্রোডাকশনে এই মানগুলো রিজেক্ট করে)。
+_ADMIN_SECRET_PUBLIC_FALLBACKS = frozenset({"", "dev_password_only"})
+
+
+def _resolve_admin_secret() -> str:
+    """Return the configured internal admin secret (no docs_password fallback)."""
+    raw = getattr(settings, "supremeai_admin_secret", None)
+    if isinstance(raw, SecretStr):
+        return raw.get_secret_value()
+    return raw or ""
+
 
 def _require_admin(request: Request):
     secret = request.headers.get("X-Admin-Secret")
-    expected = (
-        getattr(settings, "supremeai_admin_secret", "")
-        or getattr(settings, "docs_password", "")
-        or ""
-    )
-    if not expected:
+    expected = _resolve_admin_secret()
+    # Fail-closed: no docs_password fallback — a publicly-known dev fallback
+    # must never authenticate the internal admin API (P0 policy).
+    if not expected or expected.lower() in _ADMIN_SECRET_PUBLIC_FALLBACKS:
         raise HTTPException(status_code=500, detail="Admin secret not configured on server.")
     if not secrets.compare_digest(secret or "", expected):
         raise HTTPException(status_code=403, detail="Forbidden: Invalid admin secret.")
