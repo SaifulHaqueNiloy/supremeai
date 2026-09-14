@@ -81,7 +81,8 @@ export function AuthenticatedView(props: AuthenticatedViewProps) {
       onAction={(actionId) => setAdminSubTab(actionId as AdminSubTab)}
       onLogout={handleAdminLogout}
     >
-      <div className="relative flex-1 min-h-0 overflow-hidden bg-[var(--sa-canvas)]">
+      {/* Part-9 QA instrumentation: stable selector for the stepped-up admin console root. */}
+      <div data-testid="admin-shell" className="relative flex-1 min-h-0 overflow-hidden bg-[var(--sa-canvas)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_68%_0%,rgba(34,211,238,0.10),transparent_58%)]" aria-hidden="true" />
         <div className="relative flex h-12 items-center justify-between border-b border-[var(--sa-border)] px-5 text-xs sm:px-8">
           <div className="flex items-center gap-2 text-[var(--sa-ink-muted)]"><span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]" />Operations console</div>

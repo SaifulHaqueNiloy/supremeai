@@ -27,7 +27,7 @@ export default function Dashboard() {
 
         {/* Top KPI Grid (Platform Health) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
+          <div data-testid="admin-kpi" className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
                 <Activity size={14} className="text-accent-primary" /> Availability
@@ -37,7 +37,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-text font-mono">'—'</div>
           </div>
           
-          <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
+          <div data-testid="admin-kpi" className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
                 <Zap size={14} className="text-amber-400" /> Latency (p95)
@@ -47,7 +47,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-text font-mono">{metrics?.latency_p95_ms != null ? metrics.latency_p95_ms : '—'}{metrics?.latency_p95_ms != null && <span className="text-lg text-secondary">ms</span>}</div>
           </div>
 
-          <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
+          <div data-testid="admin-kpi" className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
                 <ShieldAlert size={14} className={activeIncidents.length > 0 ? "text-rose-400" : "text-emerald-400"} /> Incidents
@@ -60,7 +60,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
+          <div data-testid="admin-kpi" className="surface-1 rounded-xl p-5 border border-border flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted flex items-center gap-2">
                 <GitMerge size={14} className="text-indigo-400" /> Deployments
