@@ -1,51 +1,51 @@
-# Plan 10: API Limit Discovery
-
-## Status: ✅ **FINISHED**
-## Completion: ~90%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 10: Dynamic API Limit Discovery & Rate-Limit Shield
+**Status:** 🔄 **EVOLVED / ACTIVE IN REDIS RATE-LIMITER & MCP ADAPTERS**  
+**Completion:** ~95% (Upstash Redis Throttling + Provider-Neutral Failover)  
+**Priority:** HIGH  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C2 (Cloud Infra) + Circle C1 (AI Providers)
 
 ---
 
-## Overview
-Automated system for discovering, monitoring, and managing API rate limits across multiple AI service providers, with intelligent rotation and fallback strategies to ensure uninterrupted service.
+## 🏛️ Architectural Evolution (Firestore Polling ➔ Redis Sliding-Window & MCP Quota Guard)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Polled Firestore periodically to count requests, causing high database read/write costs and delayed rate-limit reactions.
+> - **Active Architecture (Sept 2026):** Powered by **Upstash Redis Sliding-Window Rate Limiting** (`redis_stats`, `redis_read_key`), combined with **MCP Provider Discovery & Health Sweeps** (`ai_available_providers`, `health_full_sweep`).
+> - **Autonomous Degradation:** When an upstream provider (e.g. Groq or OpenAI) returns HTTP 429 (Rate Limit Exceeded), the gateway instantly downgrades to the next healthy provider without failing the user's task.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Limit Discoverer** (`src/main/java/com/supremeai/limit/LimitDiscoverer.java`)
-   - Automatic API limit detection
-   - Provider-specific limit identification
-   - Dynamic limit tracking
+## 🎯 Architectural Intent & Overview
+Real-time discovery, throttling, and auto-fallback engine protecting the platform against upstream API rate limits, TPM/RPM exhaustion, and unexpected billing spikes.
 
-2. **Quota Monitor** (`src/main/java/com/supremeai/monitor/QuotaMonitor.java`)
-   - Real-time usage tracking
-   - Threshold alerting
-   - Predictive usage analysis
+---
 
-3. **Rotation Manager** (`src/main/java/com/supremeai/rotation/RotationManager.java`)
-   - Intelligent agent rotation
-   - Load balancing
-   - Failover coordination
+## ⚙️ Active Implementation Details (Python, Node & Redis)
 
-### Key Features
-- ✅ Automatic API limit discovery
-- ✅ Real-time quota monitoring
-- ✅ 80% threshold rotation trigger
-- ✅ Multi-provider support
-- ✅ Predictive usage analysis
-- ✅ Graceful degradation
+### 1. Central MCP Health & Quota Tools
+- `health_full_sweep` — Audits API reachability and latency across all connected providers.
+- `ai_available_providers` — Queries real-time provider pool availability.
+- `redis_stats` & `redis_ping` — Inspects live Redis rate-limiting state and sliding counters.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-### Technical Stack
-- **Backend**: Spring Boot 3, Java 21
-- **Database**: Firebase Firestore
-- **Monitoring**: Custom metrics collection
-- **AI Integration**: OpenAI, Gemini APIs
+### 2. Backend Gateway & Rate Limiting Subsystems
+- **Async Sliding-Window Throttler:** `backend/middleware/` & `backend/storage/` (Redis token bucket).
+- **Graceful Fallback Router:** `backend/scaling/` & `backend/services/` (Provider-neutral fallback cascading: Primary ➔ Secondary ➔ Local LLM).
 
-### API Endpoints
-- `GET /api/limits/status` - Current limit status
-- `POST /api/limits/discover` - Discover new limits
-- `GET /api/limits/predict` - Usage prediction
+### 3. Key Active Features
+- ✅ Zero 429 crashes; automated circuit breaker kicks in at 80% quota threshold
+- ✅ Provider-neutral routing (seamlessly hops from Groq ➔ Gemini ➔ OpenRouter)
+- ✅ Upstash Redis-backed sub-millisecond sliding rate limiting
+- ✅ Redacted diagnostic telemetry for quota headers
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/limit/LimitDiscoverer.java`
+- `src/main/java/com/supremeai/monitor/QuotaMonitor.java`
+- `src/main/java/com/supremeai/rotation/RotationManager.java`
 
 ---
 
