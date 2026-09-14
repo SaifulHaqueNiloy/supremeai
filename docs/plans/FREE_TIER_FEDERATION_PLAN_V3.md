@@ -1,26 +1,8 @@
-# Free-Tier Federation Plan v3 — Reconciled
+# Consolidated & Merged Plan Reference: FREE_TIER_FEDERATION_PLAN_V3.md
 
-> This file is retained for historical compatibility. The current consolidated implementation is in `docs/plans/implementation_plan.md` and `docs/plans/FREE_TIER_FEDERATION_MASTER_PLAN_V4.md`.
-
-## Core rule
-
-Federate **capabilities**, not provider quotas.
-
-Use multiple services when they provide legitimate, complementary execution surfaces. Do not rotate accounts or automate around limits merely to simulate a larger quota.
-
-## Flow
-
-```text
-Task
- → discover internal capability
- → discover authorized resources
- → discover reusable implementation
- → choose cheapest safe execution surface
- → execute asynchronously when heavy
- → verify
- → remember
-```
-
-## Non-negotiable
-
-SupremeAI must continue working when an optional free-tier provider becomes unavailable or changes its limits.
+> [!NOTE]
+> **Plan Unification & Zero-Duplication Notice:**
+> This document has been consolidated into the canonical living architecture plan:
+> 🔗 **[features/multi_cloud_free_tier_federation_master_plan_v3.md](file:///f:/supremeai/docs/plans/features/multi_cloud_free_tier_federation_master_plan_v3.md)**
+>
+> All unique specifications, architectures, and implementation steps from this document are fully preserved and active in the canonical document above to eliminate redundancy while protecting historical lineage.
