@@ -399,6 +399,18 @@ ALL_ROUTERS = [
     },
     {"path": "agents.vulnerability_prophet", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "ws.command_center", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── AUDIT-WIRE FIX 3 (Task 7-c/7-d mount repair, 2026-09-15): PR #304 (missions)
+    # এবং PR #305 (mcp_hub) নিজ নিজ APIRouter সহ রাউটার মডিউল ship করেছিল, কিন্তু
+    # এই রেজিস্ট্রিতে register হয়নি — ফলে তাদের সব এন্ডপয়েন্ট প্রোডাকশনে 404 দিত
+    # (Feature Parity Sentinel: unmounted-router HIGH ×২)। এখন মাউন্ট করা হলো।
+    # মাউন্ট-নোট: দুটো মডিউলেরই নিজস্ব APIRouter prefix আছে (/api/v1/missions,
+    # /api/v1/mcp), তাই রেজিস্ট্রি prefix অবশ্যই "" (নইলে URL দ্বিগুণ হয়ে যায়)।
+    # নিরাপত্তা নোট: দুটো রাউটারই identity verified JWT (api.dependencies.
+    # get_current_user_token) থেকে derive করে — কোনো public write surface নেই;
+    # missions নিজস্ব _is_admin চেক এবং mcp_hub নিজস্ব scope/role enforcement
+    # রাউট-লেভেলেই এনফোর্স করে, তাই sibling tool-router প্যাটার্ন (is_admin=False)।
+    {"path": "api.routes.missions", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.mcp_hub", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 
