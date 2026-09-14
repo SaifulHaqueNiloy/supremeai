@@ -147,6 +147,20 @@ class ErrorRemediation:
 
     def _trigger_refactor_wiz(self, event: ErrorEvent):
         """বাংলা মন্তব্য: Automatically triggers RefactorWiz to generate a patch for escalated silent patterns."""
+        # TEST-ENV BOUNDARY GUARD (hardening-2 round 3, root cause of the CI
+        # services-group teardown hang in run 34817278198): a mission test
+        # tripping SILENT_PATTERN_ESCALATED spawned a real
+        # `scripts/devops/refactor_wiz.py` SUBPROCESS from inside pytest; its
+        # task then survived asyncio's cancel-all-tasks during teardown and
+        # hung the whole CI job until pytest-timeout killed it. Auto-patching
+        # source files from a test run is never desirable — same guard idiom
+        # as core/rate_limit.py and core/middleware/security.py.
+        if os.getenv("ENV") == "test" or os.getenv("PYTEST_CURRENT_TEST"):
+            logger.info(
+                f"RefactorWiz auto-patch skipped in test environment (module={event.module})."
+            )
+            return
+
         module_name = event.module
         if not module_name or module_name == "unknown":
             return

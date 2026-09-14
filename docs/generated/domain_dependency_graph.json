@@ -952,6 +952,26 @@
     {
       "evidence": [
         {
+          "line": 40,
+          "path": "backend/tests/api/test_billing_api_routes.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 41,
+          "path": "backend/tests/api/test_billing_api_routes.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 18,
           "path": "backend/tests/core/test_billing_system.py"
         }
@@ -1122,6 +1142,16 @@
     {
       "evidence": [
         {
+          "line": 39,
+          "path": "backend/tests/api/test_billing_api_routes.py"
+        }
+      ],
+      "source": "billing",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
           "line": 17,
           "path": "backend/tests/core/test_billing_system.py"
         }
@@ -1152,7 +1182,7 @@
     {
       "evidence": [
         {
-          "line": 415,
+          "line": 422,
           "path": "backend/api/routes/billing_api.py"
         }
       ],

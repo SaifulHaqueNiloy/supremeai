@@ -82,6 +82,29 @@ _CRITICAL_TEST_PARTS = (
     ("tools", "checkpoint_manager"),
     ("tools", "parallel_agent_executor"),
     ("database",),
+    # ── PR-CI integrity fix (hardening-2 round 2) ──────────────────────────
+    # CI's PR marker filter runs only (critical or important); everything
+    # below used to fall through to `overall` and was DESELECTED on PRs —
+    # e.g. tests/agents/test_parallel_agent_executor.py passed locally yet
+    # tools/parallel_agent_executor.py showed 7.8% in the CI-combined
+    # coverage. These entries map the tier-critical production modules of
+    # coverage_policy.yaml to the test paths that exercise them.
+    ("memory",),  # services/memory_service.py (coverage policy: services/memory*)
+    ("llm",),  # core/llm/** (coverage policy: core/llm/**)
+    ("core", "test_secret_vault*"),  # core/security/secret_vault.py
+    ("core", "test_auth_middleware*"),  # core/security/authentication/auth_middleware.py
+    ("core", "test_memory_service*"),  # services/memory_service.py
+    ("core", "test_token_budget*"),  # core/llm/token_budget.py
+    ("agents", "test_parallel_agent_executor*"),  # tools/parallel_agent_executor.py
+    ("api", "test_billing*"),  # api/routes/billing_api.py
+    # ── PR-CI integrity fix (hardening-2 round 4) ──────────────────
+    # The critical entry above for api/routes/api_keys ("api", "routes",
+    # "api_keys") matches a DIRECTORY layout, but the tests that exercise
+    # api/routes/api_keys.py live at tests/api/test_api_keys.py (2 path
+    # parts) and never matched — CI measured the tier-critical API key
+    # routes at 35% while the expanded local suite held them at 91%.
+    # Mirror the test_billing* idiom for the test FILE.
+    ("api", "test_api_keys*"),  # api/routes/api_keys.py
 )
 
 _IMPORTANT_TEST_PARTS = (
@@ -93,6 +116,46 @@ _IMPORTANT_TEST_PARTS = (
     ("core", "test_model_registry_readiness"),
     ("scout_tests",),
     ("missions",),
+    # ── PR-CI integrity fix (hardening-2 round 2) ──────────────────────────
+    # Promote the remaining collected-by-a-matrix-group paths from the
+    # never-run `overall` tier into the PR regression tier. Critical is
+    # evaluated first, so these catch-alls never demote a critical match.
+    # Deliberately NOT classified (stay `overall`, excluded from PR CI):
+    # tests/hitl (human-gated), tests/integration + tests/load (--runslow /
+    # load rig), tests/e2e (playwright owns E2E in CI), tests/factories
+    # (helpers, no tests).
+    ("core",),
+    # ── PR-CI integrity fix (hardening-2 round 4) ──────────────────
+    # tests/api was the one collected-by-a-matrix-group dir still missing
+    # its catch-all: of 368 collected tests, the PR marker filter selected
+    # only 79 (CI run 34826157661) — the rest fell through to `overall`
+    # and were DESELECTED, so 289 api tests (incl. all of
+    # tests/api/test_api_keys.py, test_admin*, test_auth_routes,
+    # test_route_rbac_matrix, ...) never ran on PRs. Critical is evaluated
+    # first, so test_billing*/test_api_keys* stay critical.
+    ("api",),
+    ("agents",),
+    ("ai",),
+    ("byoc",),
+    ("scripts",),
+    ("unit_light",),
+    ("brain",),
+    ("adaptive_engine",),
+    ("engine",),
+    ("middleware",),
+    ("monitoring",),
+    ("verification",),
+    ("learning",),
+    ("rag",),
+    ("runtime",),
+    ("workers",),
+    ("unit",),
+    ("utils",),
+    ("orchestration",),
+    ("test_evolution",),
+    ("test_strategic_patches",),
+    ("p2p_tests",),
+    ("test_*",),  # root-level test files (services group pattern tests/test_*.py)
 )
 
 
