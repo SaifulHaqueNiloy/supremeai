@@ -2,7 +2,6 @@
 
 import json
 import os
-import secrets
 import sys
 from typing import Any
 
@@ -135,11 +134,10 @@ class SettingsValidationMixin:
     ) -> str | SecretStr:
         if "pytest" in sys.modules:
             return v or ""
-        if not v and info.data.get("env", "local") in {"production", "staging"}:
-            logger.warning(
-                "⚠️ SUPREMEAI_DOCS_PASSWORD not configured — using auto-generated secure password"
-            )
-            return SecretStr(secrets.token_urlsafe(32))
+        # বাংলা: আগের অটো-জেনারেট লজিক সরানো হয়েছে — ওটা প্রোডাকশনে
+        # "কেউ জানা নেই এমন" একটা র‍্যান্ডম পাসওয়ার্ড বসিয়ে validate_all-এর
+        # ফেইল-ফাস্টকে নীরবে বাইপাস করত। এখন খালি মান যেভাবে আছে তেমনই
+        # যায়, আর validate_all পলিসি অনুযায়ী fail-closed সিদ্ধান্ত নেয়।
         return v or ""
 
     @model_validator(mode="after")
@@ -154,6 +152,22 @@ class SettingsValidationMixin:
                 raise ValueError(
                     f"❌ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing. Fail-fast triggered."
                 )
+
+        # বাংলা (P0 docs exposure policy): প্রোডাকশন/স্টেজিং-এ ডকুমেন্টেশন
+        # স্পষ্টভাবে চালু (SUPREMEAI_DOCS_ENABLED=true) করলে শক্তিশালী
+        # পাসওয়ার্ড বাধ্যতামূলক — "dev_password_only" বা ছোট পাসওয়ার্ডে
+        # বুট ফেইল-ফাস্ট হবে। ডকুমেন্টেশন বন্ধ থাকলে পাসওয়ার্ড লাগে না।
+        if (
+            self.env in {"production", "staging"}
+            and self.docs_enabled
+            and not self.docs_password_ok
+        ):
+            raise ValueError(
+                "❌ Production/staging docs exposure opted-in (SUPREMEAI_DOCS_ENABLED=true) "
+                "but SUPREMEAI_DOCS_PASSWORD is missing, the dev fallback 'dev_password_only', "
+                "or shorter than 12 characters. Fail-fast triggered — set a strong password "
+                "or remove SUPREMEAI_DOCS_ENABLED to keep docs disabled."
+            )
 
         if self.env in {"production", "staging"}:
             _LLM_CRITICAL_KEYS = [
