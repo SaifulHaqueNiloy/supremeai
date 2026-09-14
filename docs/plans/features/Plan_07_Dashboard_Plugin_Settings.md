@@ -17,8 +17,13 @@
 
 ---
 
-## 🎯 Architectural Intent & Overview
-Visual command deck providing real-time system visibility, service health monitoring, and dynamic plugin/agent registration. Separates clean observability at the face layer from core execution in the Control Plane.
+## 🎯 Architectural Intent & Overview: Dual-Driven Frontend Philosophy
+
+Visual command deck providing seamless experiences for both primary user tiers:
+1. **Customer Experience (`UserDashboard.tsx` & `SkillCatalog.tsx`):** Zero-complexity, outcome-oriented interface. Customers see only the capabilities they activate (app creation, web extraction, reverse engineering, workflows) without technical infrastructure clutter.
+2. **Admin Experience (`AdminDashboardUnified.tsx` & `MissionCommand`):** Authoritative mission control providing complete real-time system visibility, service health sweeps, tenant isolation controls, and dynamic plugin/agent registration.
+
+Separates clean, intent-focused observability at the face layer from core execution in the Control Plane.
 
 ---
 
