@@ -37,7 +37,7 @@
 - [visual_component_integration_topology.md](file:///f:/supremeai/docs/plans/architecture/visual_component_integration_topology.md)
 - [wiring_feature_investigation_log.md](file:///f:/supremeai/docs/plans/architecture/wiring_feature_investigation_log.md)
 
-## Feature Specifications & Capabilities (docs/plans/features/) — (73 files)
+## Feature Specifications & Capabilities (docs/plans/features/) — (75 files)
 
 - [Plan_01_Dynamic_AI_Agent_System.md](file:///f:/supremeai/docs/plans/features/Plan_01_Dynamic_AI_Agent_System.md)
 - [Plan_02_API_Key_Rotation_System.md](file:///f:/supremeai/docs/plans/features/Plan_02_API_Key_Rotation_System.md)
@@ -89,6 +89,8 @@
 - [kilo_ai_integration_backend_refactoring_plan.md](file:///f:/supremeai/docs/plans/features/kilo_ai_integration_backend_refactoring_plan.md)
 - [kilo_coding_agent_workspace_reference.md](file:///f:/supremeai/docs/plans/features/kilo_coding_agent_workspace_reference.md)
 - [living_autonomous_intelligence_master_plan.md](file:///f:/supremeai/docs/plans/features/living_autonomous_intelligence_master_plan.md)
+- [mcp_gateway_dynamic_hub_plan.md](file:///f:/supremeai/docs/plans/features/mcp_gateway_dynamic_hub_plan.md)
+- [messaging_bots_telegram_and_whatsapp_architecture.md](file:///f:/supremeai/docs/plans/features/messaging_bots_telegram_and_whatsapp_architecture.md)
 - [multi_cloud_free_tier_federation_master_plan_v3.md](file:///f:/supremeai/docs/plans/features/multi_cloud_free_tier_federation_master_plan_v3.md)
 - [n8n_workflow_automation_master_plan.md](file:///f:/supremeai/docs/plans/features/n8n_workflow_automation_master_plan.md)
 - [open_source_components_hardening_plan.md](file:///f:/supremeai/docs/plans/features/open_source_components_hardening_plan.md)
