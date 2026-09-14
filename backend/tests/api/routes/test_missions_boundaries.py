@@ -66,8 +66,8 @@ async def missions_env(monkeypatch):
     ``missions.get_db_session_context``; point that at the same engine so the
     stream reads the same data the endpoints write.
     """
-    from models.base import Base
     from missions.models import Mission, MissionTraceEvent
+    from models.base import Base
 
     engine = create_async_engine(
         "sqlite+aiosqlite://",
