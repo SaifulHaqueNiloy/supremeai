@@ -34,7 +34,14 @@ version: 1
 #                        policy, refresh rejection, jti revocation
 #                        fail-closed/fail-open), cost-optimizer stale
 #                        expectations refreshed to the settings contract.
-#                        CI-combined projection: ≥ 49% (was 44.71%).
+#   step 2 MEASURED (run 34818775855, first honest run of the expanded
+#                        suite): critical 63.11% (5207/8251), important
+#                        40.73% — far above the 49% projection, because
+#                        ~96% of backend tests had been invisible to the
+#                        gate. Owner's ramp END TARGET (60) is already met.
+#   threshold LOCKED at 55 (measured 63.11 − ~13% headroom) so a coverage
+#                        regression fails CI while normal variance between
+#                        runs stays safe. Next round can push toward 60+.
 #   step 3:              raise with each ramp until the tier is strong.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -43,7 +50,7 @@ thresholds:
     pr: 25
     # release: 40   # honest release bar once ramp advances
   critical:
-    pr: 45
+    pr: 55
     # release: 50
   important:
     pr: 27
