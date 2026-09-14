@@ -126,11 +126,14 @@ def audit_tool_call(
 ) -> None:
     """Convenience: create entry + log in one call."""
     logger_instance = get_audit_logger()
+    # বাংলা মন্তব্য: tenant_id অবশ্যই entry-তে যাবে — MCPAuditEntry এক্সপ্লিসিট টেন্যান্ট
+    # কনটেক্সট ছাড়া ValueError ছুড়ে দেয় (Constitution Law #19: observable audit trail)।
     entry = MCPAuditEntry(
         tool_name=tool_name,
         decision=decision,
         risk_level=risk_level,
         latency_ms=latency_ms,
         error=error,
+        tenant_id=tenant_id,
     )
     logger_instance.log(entry)
