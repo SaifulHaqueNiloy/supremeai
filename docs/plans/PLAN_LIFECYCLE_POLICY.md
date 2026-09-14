@@ -38,7 +38,7 @@ test_evidence: []
 1. Tested current code and deployed contracts.
 2. API, database, security, and deployment contracts.
 3. `docs/plans/implementation_plan.md`.
-4. A canonical domain plan listed in `PLAN_RECONCILIATION_REGISTER.md`.
+4. A canonical domain plan listed in `phases/plan_reconciliation_register.md`.
 5. Specialized active plans.
 6. Historical and superseded plans.
 
@@ -64,5 +64,5 @@ Architecture Governance should review this catalog whenever a major module, prov
 
 - [Implementation plan](./implementation_plan.md)
 - [Plan-to-code traceability matrix](./PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
-- [Plan reconciliation register](./PLAN_RECONCILIATION_REGISTER.md)
+- [Plan reconciliation register](./phases/plan_reconciliation_register.md)
 - [Catalog](./README.md)

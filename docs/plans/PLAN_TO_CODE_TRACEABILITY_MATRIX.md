@@ -27,5 +27,5 @@ Each row becomes `complete` only when it links to concrete source files, active 
 
 1. Update the canonical plan and this matrix together.
 2. Add or revise code, API, test, and runtime evidence.
-3. Record conflicts in `PLAN_RECONCILIATION_REGISTER.md`.
+3. Record conflicts in `phases/plan_reconciliation_register.md`.
 4. Run link and documentation checks before commit.

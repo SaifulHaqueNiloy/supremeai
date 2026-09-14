@@ -3,15 +3,17 @@
 > Status: active
 > Owner: Architecture Governance
 > Last verified: 2026-09-15
+> Canonical role: reconciliation register
+> Supersedes: `docs/plans/PLAN_RECONCILIATION_REGISTER.md`
 
 This first pass classifies overlapping plan families without deleting or moving protected files. A later pass may add archive indexes after all cross-references are verified.
 
 ## Canonical hierarchy
 
-- Global implementation source: [`implementation_plan.md`](./implementation_plan.md)
-- Architecture source: [`UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`](./UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
-- Lifecycle rules: [`PLAN_LIFECYCLE_POLICY.md`](./PLAN_LIFECYCLE_POLICY.md)
-- Evidence map: [`PLAN_TO_CODE_TRACEABILITY_MATRIX.md`](./PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
+- Global implementation source: [`implementation_plan.md`](../implementation_plan.md)
+- Architecture source: [`UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`](../UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
+- Lifecycle rules: [`PLAN_LIFECYCLE_POLICY.md`](../PLAN_LIFECYCLE_POLICY.md)
+- Evidence map: [`PLAN_TO_CODE_TRACEABILITY_MATRIX.md`](../PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
 
 ## Reconciliation groups
 
