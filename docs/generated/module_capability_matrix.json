@@ -13133,6 +13133,13 @@
       "path": "backend/tests/tools/test_auto_test_generator.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_bengali_ocr_converter.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "execute"
@@ -23213,5 +23220,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2693
+  "source_file_count": 2694
 }
