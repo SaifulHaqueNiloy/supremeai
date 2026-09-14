@@ -106,6 +106,10 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         SecurityHeadersMiddleware,
     )
     from core.observability.observability_middleware import ObservabilityMiddleware
+    # RESTORE-AND-WIRE (2026-09-14): QueryTimingMiddleware was previously deleted as
+    # "orphan"; per the repo doctrine (wire-next before archive) it is now restored
+    # and wired — slow-request logging + rolling percentile history for /metrics.
+    from core.middleware.query_timing import QueryTimingMiddleware
     from core.rate_limit import RateLimitMiddleware
     from core.request_context import RequestContextMiddleware
     from core.security.api_key_middleware import APIKeyAuthMiddleware
@@ -367,6 +371,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 7. ObservabilityMiddleware - Track metrics before security checks
     app.add_middleware(ObservabilityMiddleware)
+
+    # 7.4 QueryTimingMiddleware - slow-request logging + percentile history
+    # (restored from api/middleware/query_timing.py; moved here because the
+    # api.middleware package namespace is shadowed by api/middleware.py file)
+    app.add_middleware(QueryTimingMiddleware)
 
     # 7.5 Rate Limiting — FIX (P1, review 2026-09-12): Starlette runs the
     # LAST-added middleware FIRST (outermost). RateLimit was added after Auth,

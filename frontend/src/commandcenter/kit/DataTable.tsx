@@ -9,7 +9,8 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 export interface Column<T> {
     key: string;
     label: string;
-    render: (row: T) => React.ReactNode;
+    /** বাংলা মন্তব্য: render ঐচ্ছিক — না দিলে row[key] সরাসরি দেখানো হয় */
+    render?: (row: T) => React.ReactNode;
     sortable?: boolean;
     width?: string;
     align?: 'left' | 'center' | 'right';
@@ -18,22 +19,30 @@ export interface Column<T> {
 interface DataTableProps<T> {
     columns: Column<T>[];
     data: T[];
-    keyField: string;
+    /** বাংলা মন্তব্য: keyField বা rowKey — যেকোনো একটি দিলেই চলে */
+    keyField?: string;
+    rowKey?: (row: T) => string;
     maxHeight?: number;
     loading?: boolean;
     emptyMessage?: string;
     onRowClick?: (row: T) => void;
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
     columns,
     data,
     keyField,
+    rowKey,
     maxHeight = 400,
     loading,
     emptyMessage = 'NO DATA',
     onRowClick,
 }: DataTableProps<T>) {
+    const getVal = (row: T, key: string): unknown =>
+        (row as Record<string, unknown>)[key];
+
+    const keyOf = (row: T, i: number): string =>
+        rowKey ? String(rowKey(row)) : String(getVal(row, keyField ?? 'id') ?? i);
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
@@ -49,8 +58,8 @@ export function DataTable<T extends Record<string, unknown>>({
     const sorted = React.useMemo(() => {
         if (!sortKey) return data;
         return [...data].sort((a, b) => {
-            const aVal = a[sortKey];
-            const bVal = b[sortKey];
+            const aVal = getVal(a, sortKey);
+            const bVal = getVal(b, sortKey);
             if (aVal == null) return 1;
             if (bVal == null) return -1;
             const cmp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
@@ -114,7 +123,7 @@ export function DataTable<T extends Record<string, unknown>>({
                             const i = vRow.index;
                             return (
                                 <tr
-                                    key={String(row[keyField] ?? i)}
+                                    key={keyOf(row, i)}
                                     onClick={() => onRowClick?.(row)}
                                     className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
                                         } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
@@ -133,7 +142,7 @@ export function DataTable<T extends Record<string, unknown>>({
                                                 }`}
                                             style={{ flex: col.width ? undefined : 1, width: col.width, minWidth: col.width ? 0 : undefined }}
                                         >
-                                            {col.render(row)}
+                                            {col.render ? col.render(row) : String(getVal(row, col.key) ?? '')}
                                         </td>
                                     ))}
                                 </tr>
@@ -142,7 +151,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     ) : (
                         sorted.map((row, i) => (
                             <tr
-                                key={String(row[keyField] ?? i)}
+                                key={keyOf(row, i)}
                                 onClick={() => onRowClick?.(row)}
                                 className={`border-b border-[var(--sa-line)] transition-colors ${onRowClick ? 'cursor-pointer hover:bg-[var(--sa-bg-hover)]' : ''
                                     } ${i % 2 === 0 ? 'bg-[var(--sa-bg-1)]' : 'bg-[var(--sa-bg-2)]'}`}
@@ -153,7 +162,7 @@ export function DataTable<T extends Record<string, unknown>>({
                                         className={`px-3 py-2 text-[var(--sa-text-0)] ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
                                             }`}
                                     >
-                                        {col.render(row)}
+                                        {col.render ? col.render(row) : String(getVal(row, col.key) ?? '')}
                                     </td>
                                 ))}
                             </tr>
