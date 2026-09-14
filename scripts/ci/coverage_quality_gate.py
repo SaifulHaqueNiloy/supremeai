@@ -124,9 +124,7 @@ def _evaluate_tier(name: str, stats: dict, threshold: float, failed: bool) -> bo
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Evaluate coverage against policy thresholds."
-    )
+    parser = argparse.ArgumentParser(description="Evaluate coverage against policy thresholds.")
     parser.add_argument("cov_file", help="Path to coverage.json")
     parser.add_argument("policy_file", help="Path to coverage_policy.yaml")
     parser.add_argument(
@@ -158,9 +156,7 @@ def main():
 
     files = coverage_data.get("files", {})
     if not files:
-        logger.error(
-            "❌ coverage.json contains no file entries — combine failed or wrong file."
-        )
+        logger.error("❌ coverage.json contains no file entries — combine failed or wrong file.")
         sys.exit(1)
 
     overall_coverage = coverage_data.get("totals", {}).get("percent_covered", 0.0)
@@ -175,9 +171,7 @@ def main():
     # 1. Overall
     if "overall" in active_tiers:
         overall_pr_thresh = thresholds.get("overall", {}).get("pr", 30)
-        logger.info(
-            f"Overall Coverage: {overall_coverage:.2f}% (Threshold: {overall_pr_thresh}%)"
-        )
+        logger.info(f"Overall Coverage: {overall_coverage:.2f}% (Threshold: {overall_pr_thresh}%)")
         if overall_coverage < overall_pr_thresh:
             logger.error(
                 f"❌ Overall coverage {overall_coverage:.2f}% is below {overall_pr_thresh}%"
@@ -196,9 +190,7 @@ def main():
     if "important" in active_tiers:
         important_pr_thresh = thresholds.get("important", {}).get("pr", 60)
         important_stats = _tier_stats(files, important_patterns)
-        failed = _evaluate_tier(
-            "Important", important_stats, important_pr_thresh, failed
-        )
+        failed = _evaluate_tier("Important", important_stats, important_pr_thresh, failed)
 
     logger.info("=========================================")
 
