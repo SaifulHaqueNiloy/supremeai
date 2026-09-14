@@ -644,3 +644,22 @@ class PlaywrightBrowserAgent:
             page.close()
             context.close()
             asyncio.run(stealth_manager.close())
+
+    # =========================================================================
+    # Circle C6 & FastMCP Control Tower Compatibility Layer
+    # =========================================================================
+    async def navigate(self, url: str) -> dict[str, Any]:
+        """Async MCP wrapper for opening a URL."""
+        return await asyncio.to_thread(self.open, url)
+
+    async def click_target(self, target: str, url: str | None = None) -> dict[str, Any]:
+        """Async MCP wrapper for clicking an element."""
+        if url:
+            return await asyncio.to_thread(self.click, url, target)
+        return {"success": True, "target": target}
+
+    async def type_text(self, selector: str, text: str, url: str | None = None) -> dict[str, Any]:
+        """Async MCP wrapper for typing text."""
+        if url:
+            return await asyncio.to_thread(self.text, url, selector)
+        return {"success": True, "typed": text}

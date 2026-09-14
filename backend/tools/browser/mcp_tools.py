@@ -1,3 +1,4 @@
+import asyncio
 from enum import StrEnum
 from typing import Any
 
@@ -141,28 +142,14 @@ async def execute_mcp_tool(tool_name: str, params: dict) -> dict:
         return await agent.navigate(params["url"])
 
     elif tool_name == MCPToolName.BROWSER_CLICK.value:
-        method = params.get("method", "selector")
-        if method == "coordinate":
-            return await agent.click_coordinate(params["x"], params["y"])
-        elif method == "semantic":
-            # Route through L4 cascade (Semantic DOM → Vision → HITL)
-            from browser.semantic_dom import SemanticDOM
-
-            sdom = SemanticDOM()
-            el = await sdom.query(params["target"])
-            return await agent.click(el.get("xpath", params["target"]))
-        else:
-            return await agent.click(params["target"])
+        return await agent.click_target(params["target"], params.get("url"))
 
     elif tool_name == MCPToolName.BROWSER_TYPE.value:
-        return await agent.text(params["selector"], params["text"])
+        return await agent.type_text(params["selector"], params["text"], params.get("url"))
 
     elif tool_name == MCPToolName.BROWSER_SCREENSHOT.value:
-        return await agent.screenshot(
-            url=None,  # Current page
-            path=None,  # Return base64
-            full_page=params.get("full_page", False),
-        )
+        target_url = params.get("url", "about:blank")
+        return await asyncio.to_thread(agent.screenshot, target_url)
 
     elif tool_name == MCPToolName.BROWSER_FILE_UPLOAD.value:
         # ✅ NEW: File upload implementation
