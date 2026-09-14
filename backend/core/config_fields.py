@@ -118,6 +118,14 @@ class SettingsFieldsMixin:
     backend_url: str = Field(default="", validation_alias="BACKEND_URL")
     app_base_url: str = Field(default="", validation_alias="APP_BASE_URL")
 
+    # ── Personal MCP Gateway Hub (Task 7-d, plan Phase C) ────────────────────
+    # বাংলা: vanity subdomain-এর base domain — gateway URL হয়
+    # https://<slug>.<MCP_GATEWAY_DOMAIN>। এটি routing base মাত্র; কোনো
+    # hardcoded credential নয়। Control-plane (Node) data-path Phase B-এ।
+    mcp_gateway_domain: str = Field(
+        default="mcp.supremeai.ai", validation_alias="MCP_GATEWAY_DOMAIN"
+    )
+
     @property
     def frontend_base_url(self) -> str:
         """Compatibility property for routes using frontend_base_url."""
