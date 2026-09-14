@@ -103,7 +103,7 @@ def legacy():
 def swallow():
     try:
         do_something()
-    except:
+    except:  # TODO(final-test-7a): intentionally kept bare — this file is the pyerrorfix E722 detector fixture; narrowing it would defeat the demo
         print("something failed")  # print in production
 
 
