@@ -20,7 +20,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 def _settings_stub(env: str) -> SimpleNamespace:
     """Stub for the fields run_server() reads (settings is frozen at import)."""
-    return SimpleNamespace(env=env, port=8080, host="127.0.0.1", sentry_dsn=None)  # is_local()
+    # FIX (final-test ci-fixes): main.run_server() এখন settings.is_local() মেথড ব্যবহার করে
+    # (local/dev/development — তিনটাতেই reload=True)। তাই stub-এও সেই কন্ট্রাক্ট রাখতে হবে।
+    return SimpleNamespace(
+        env=env,
+        port=8080,
+        host="127.0.0.1",
+        sentry_dsn=None,
+        is_local=lambda: env in ("local", "dev", "development"),
+    )
 
 
 def test_sigterm_handler_does_not_exit_process():
