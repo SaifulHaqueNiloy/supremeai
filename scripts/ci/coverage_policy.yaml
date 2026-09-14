@@ -12,11 +12,14 @@ version: 1
 #   overall: 27.20%   critical tier: 39.01%   important tier: 29.19%
 #
 # RAMP PLAN (owner verdict, critical tier): 40 → 50 → 60
-#   step 1 (now):        critical 37  — regression-proof the current 39.01%
-#   step 2 (next round): critical 40+ — add tests for the worst critical files
-#                        (task_queue_enhanced 0%, memory_service 13%,
-#                         parallel_agent_executor 11%, secret_vault 35%,
-#                         billing_api 22%, auth_middleware 23%)
+#   step 1 (NOW):        critical 40  — achieved this round by (a) writing
+#                        tests for the worst critical files (task_queue_enhanced
+#                        0%→72%, token_budget 26%→89%) and (b) wiring the
+#                        previously-orphaned tests/llm + tests/services dirs
+#                        into CI so their coverage actually counts
+#   step 2 (next round): critical 45+ — remaining worst offenders:
+#                        memory_service 13%, parallel_agent_executor 11%,
+#                        secret_vault 35%, billing_api 22%, auth_middleware 23%
 #   step 3:              raise with each ramp until the tier is strong.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -25,7 +28,7 @@ thresholds:
     pr: 25
     # release: 40   # honest release bar once ramp advances
   critical:
-    pr: 37
+    pr: 40
     # release: 50
   important:
     pr: 27

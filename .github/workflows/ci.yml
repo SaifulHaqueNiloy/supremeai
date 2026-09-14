@@ -348,14 +348,14 @@ jobs:
             paths: tests/api
           - group: core
             paths: >-
-              tests/core tests/brain tests/adaptive_engine
+              tests/core tests/brain tests/adaptive_engine tests/llm
               --ignore=tests/core/security
               --ignore=tests/core/test_core_rate_limiter.py
               --ignore=tests/core/test_multi_tenant_isolation.py
           - group: services
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
-              tests/test_*.py tests/scripts
+              tests/test_*.py tests/scripts tests/services
 
     defaults:
       run:
