@@ -76,5 +76,9 @@ class MonthlyCostReporter:
             return False
 
     def schedule_monthly(self) -> None:
-        next_run, _ = self._month_range(datetime.now(UTC).strftime("%Y-%m"))
+        # next run = start of the FOLLOWING month, i.e. the END of the current
+        # month window. _month_range returns (window_start, window_end); the
+        # previous unpack took window_start, logging the current month start
+        # as the "next run" (off-by-one-month in the scheduler log).
+        _, next_run = self._month_range(datetime.now(UTC).strftime("%Y-%m"))
         logger.info(f"Monthly cost run scheduled for {next_run.isoformat()}")
