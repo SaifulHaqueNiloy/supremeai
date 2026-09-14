@@ -101,6 +101,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
     from core.idempotency_middleware import IdempotencyMiddleware
     from core.lifespan import app_lifespan
+    # P0 (production docs exposure policy): gates /docs, /redoc and openapi.json.
+    from core.middleware.docs_auth import DocsAuthMiddleware
 
     # RESTORE-AND-WIRE (2026-09-14): QueryTimingMiddleware was previously deleted as
     # "orphan"; per the repo doctrine (wire-next before archive) it is now restored
@@ -258,17 +260,24 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             healer.stop_monitoring()
             await monitoring_task
 
-    docs_url = (
-        "/docs"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
-    redoc_url = (
-        "/redoc"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
-    openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
+    # বাংলা (P0 — production docs/OpenAPI exposure policy):
+    # আগে এখানে getattr(settings, "docs_enabled", True) ছিল — settings-এ
+    # docs_enabled ফিল্ডই নেই, তাই সব এনভায়রনমেন্টে (প্রোডাকশন সহ) docs
+    # সবসময় চালু থাকত। এখন effective_docs_enabled পলিসি:
+    #   local/dev  → ডিফল্ট চালু (ডেভ সুবিধা)
+    #   prod/stage → ডিফল্ট বন্ধ; শুধু SUPREMEAI_DOCS_ENABLED=true +
+    #                শক্তিশালী SUPREMEAI_DOCS_PASSWORD থাকলে চালু
+    # (Boot-এ দুর্বল পাসওয়ার্ড হলে config_validation ফেইল-ফাস্ট করে।)
+    _docs_exposed = settings.effective_docs_enabled
+    docs_url = "/docs" if _docs_exposed else None
+    redoc_url = "/redoc" if _docs_exposed else None
+    openapi_url = f"{settings.API_V1_STR}/openapi.json" if _docs_exposed else None
+    if settings.env.lower() in ("production", "staging"):
+        logger.info(
+            "🛡️ Docs/OpenAPI exposure policy: %s (env=%s)",
+            "ENABLED (admin-gated)" if _docs_exposed else "DISABLED",
+            settings.env,
+        )
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
     app = FastAPI(
@@ -348,6 +357,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 1. RequestContextMiddleware - Always first to establish context
     app.add_middleware(RequestContextMiddleware)
+
+    # 1.5 DocsAuthMiddleware - gates /docs, /redoc এবং openapi.json
+    # (innermost — রাউটের একদম কাছে; JWT-auth-এর পাবলিক-পাথ বাইপাসের পরেও
+    # প্রোডাকশনে বেসিক-অথ চায় অথবা ডকুমেন্টেশন বন্ধ থাকলে 404 দেয়)
+    app.add_middleware(DocsAuthMiddleware)
 
     # 2. GZipMiddleware - Early to decode compressed request bodies
     app.add_middleware(GZipMiddleware, minimum_size=1000)
