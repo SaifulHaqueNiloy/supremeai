@@ -102,7 +102,15 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class RequestValidationMiddleware(BaseHTTPMiddleware):
-    """Validate requests for common attack patterns."""
+    """Validate requests for common attack patterns.
+
+    বাংলা (P1 — Redis-authoritative rate limiting policy):
+    রেট লিমিটিং Redis-ভিত্তিক (centralized redis_manager) — সেটাই authority;
+    মাল্টি-ইনস্ট্যান্স deployment-এ aggregate লিমিট একমাত্র Redis ধরে।
+    Redis অনুপলব্ধ হলে per-instance in-memory sliding window শুধুমাত্র
+    EMERGENCY fallback — এটা aggregate-safe নয় এবং WARNING লগে চিহ্নিত।
+    আরও দেখুন docs/deployment/RATE_LIMITING.md
+    """
 
     # Maximum request sizes (bytes)
     MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
@@ -110,7 +118,6 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
     MAX_HEADER_SIZE = 8192
 
     # Default Rate limiting per IP
-    REQUEST_LOG: dict = {}
     RATE_LIMIT = 100  # Requests per minute
     RATE_WINDOW = 60  # Seconds
 
@@ -121,6 +128,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         "/api/v1/scraper/scrape": {"requests": 20, "window": 3600},  # 20 per hour
         "/api/v1/kaggle/submit": {"requests": 10, "window": 3600},  # 10 per hour
     }
+
+    def __init__(self, app):
+        super().__init__(app)
+        # বাংলা: EMERGENCY fallback state — প্রতি ইনস্ট্যান্সে আলাদা (per-process)।
+        self._request_log: dict[str, list[float]] = {}
+        self._fallback_warned = False
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         client_ip = self._get_client_ip(request)
@@ -191,10 +204,12 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         return get_client_ip(request)
 
     async def _check_rate_limit(self, client_ip: str, path: str) -> bool:
-        """Simple in-memory rate limiting with path specificity."""
+        """Rate limit check — Redis-authoritative with emergency fallback.
 
-        now = time.time()
-
+        বাংলা: দুই-ফেজ sliding window (prune+count, তারপর allow হলে add) —
+        reject-এ zset refill হয় না (self-amplifying 429 loop bug এড়াতে,
+        core/rate_limit.py-এর P2 fix-এর সাথে consistent)।
+        """
         # Determine applicable limits
         limit = self.RATE_LIMIT
         window = self.RATE_WINDOW
@@ -209,23 +224,74 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         # For general requests, just use IP to group them
         tracking_key = f"{client_ip}:{path}" if limit != self.RATE_LIMIT else client_ip
 
-        # Clean old entries across the entire log periodically (simplified)
-        self.REQUEST_LOG = {
+        # 1) Redis-authoritative path (aggregate-safe across instances)
+        client = None
+        try:
+            from core.cache.redis_manager import redis_manager
+
+            client = await redis_manager.get_client_async()
+        except Exception as exc:  # noqa: BLE001 — any redis failure falls back
+            logger.debug(f"Security rate limiter Redis error: {exc}")
+
+        if client is not None:
+            try:
+                import secrets
+
+                now = time.time()
+                member = f"{now}_{secrets.token_hex(4)}"
+                zset_key = f"security_rate_limit:{tracking_key}"
+
+                check_pipe = client.pipeline(transaction=True)
+                check_pipe.zremrangebyscore(zset_key, 0, now - window)
+                check_pipe.zcard(zset_key)
+                count = (await check_pipe.execute())[1]
+
+                if count >= limit:
+                    return False
+
+                add_pipe = client.pipeline(transaction=True)
+                add_pipe.zadd(zset_key, {member: now})
+                add_pipe.expire(zset_key, window)
+                await add_pipe.execute()
+                return True
+            except Exception as exc:  # noqa: BLE001 — degrade to memory, never 500
+                logger.warning(
+                    f"Security rate limiter Redis failed ({exc}) — EMERGENCY in-memory "
+                    "fallback active (per-instance, NOT aggregate-safe across instances)"
+                )
+                self._fallback_warned = True
+
+        # 2) EMERGENCY in-memory fallback (per-instance)
+        # বাংলা: await বাধ্যতামূলক — না করলে coroutine অবজেক্ট truthy হয়ে
+        # যাবে এবং fallback মোডে লিমিট আর enforce-ই হবে না।
+        return await self._in_memory_rate_limit(tracking_key, limit, window)
+
+    async def _in_memory_rate_limit(self, tracking_key: str, limit: int, window: int) -> bool:
+        """EMERGENCY per-instance sliding window (NOT multi-instance safe).
+
+        বাংলা: Redis না থাকলে এই ফলব্যাক চলে — শুধু এই প্রসেস/ইনস্ট্যান্সের
+        ভেতরে সঠিক; ২+ ইনস্ট্যান্সে aggregate লিমিট বাইপাস হয়। তাই এটা
+        single-instance deployment-এর emergency behavior হিসেবে documented।
+        """
+        now = time.time()
+
+        # Prune old entries (keep at most 1 hour of history)
+        self._request_log = {
             k: timestamps
-            for k, timestamps in self.REQUEST_LOG.items()
-            if any(ts > now - 3600 for ts in timestamps)  # Keep at most 1 hour history
+            for k, timestamps in self._request_log.items()
+            if any(ts > now - 3600 for ts in timestamps)
         }
 
         # Check current IP/Key
-        if tracking_key not in self.REQUEST_LOG:
-            self.REQUEST_LOG[tracking_key] = []
+        if tracking_key not in self._request_log:
+            self._request_log[tracking_key] = []
 
-        recent_requests = [ts for ts in self.REQUEST_LOG[tracking_key] if ts > now - window]
+        recent_requests = [ts for ts in self._request_log[tracking_key] if ts > now - window]
 
         if len(recent_requests) >= limit:
             return False
 
-        self.REQUEST_LOG[tracking_key] = recent_requests + [now]
+        self._request_log[tracking_key] = recent_requests + [now]
         return True
 
     @staticmethod

@@ -102,6 +102,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     from core.idempotency_middleware import IdempotencyMiddleware
     from core.lifespan import app_lifespan
 
+    # P0 (production docs exposure policy): gates /docs, /redoc and openapi.json.
+    from core.middleware.docs_auth import DocsAuthMiddleware
+
     # RESTORE-AND-WIRE (2026-09-14): QueryTimingMiddleware was previously deleted as
     # "orphan"; per the repo doctrine (wire-next before archive) it is now restored
     # and wired — slow-request logging + rolling percentile history for /metrics.
@@ -207,13 +210,25 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 except Exception as rest_exc:
                     logger.debug(f"Supabase REST health fallback check failed: {rest_exc}")
                 logger.warning(f"Database health check failed: {exc}")
-                # If Supabase allows degraded mode or running as worker/scraper/mcp, do not fail critical check
-                if os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true":
-                    return True
-                service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
-                if service_role in ("worker", "scraper", "mcp"):
-                    return True
-                return False
+                # বাংলা (P1 — role-aware DB degradation policy):
+                # একক সোর্স অব ট্রুথ core/health_policy.py::db_failure_readiness —
+                #   core (prod/stage): DB ফেল = NOT READY (degradation flag উপেক্ষিত)
+                #   core (dev/local):  flag দিলে dev convenience-এর জন্য allowed
+                #   worker/scraper/mcp: সব এনভে degradation allowed
+                from core.health_policy import db_failure_readiness
+
+                role = os.getenv("SUPREMEAI_SERVICE_ROLE", "core")
+                degradation_requested = (
+                    os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true"
+                )
+                serve_ready, reason = db_failure_readiness(
+                    role, settings.env, degradation_requested
+                )
+                if serve_ready:
+                    logger.warning(f"Database degraded mode ACTIVE: {reason}")
+                else:
+                    logger.error(f"Database readiness refused: {reason}")
+                return serve_ready
 
         def _check_memory() -> bool:
             try:
@@ -225,12 +240,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 return True
 
         # In standalone scraper/worker roles, DB is not a critical gating check
-        is_standalone_microservice = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower() in (
-            "worker",
-            "scraper",
-            "mcp",
+        # বাংলা: criticality সিদ্ধান্তও একক পলিসি মডিউল থেকে (P1 consistency)
+        from core.health_policy import is_critical_db_check
+
+        register_check(
+            "database",
+            _check_database,
+            critical=is_critical_db_check(os.getenv("SUPREMEAI_SERVICE_ROLE", "")),
         )
-        register_check("database", _check_database, critical=not is_standalone_microservice)
         register_check("memory", _check_memory, critical=False)
 
         monitoring_task = None
@@ -258,17 +275,23 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             healer.stop_monitoring()
             await monitoring_task
 
-    docs_url = (
-        "/docs"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
-    redoc_url = (
-        "/redoc"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
-    openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
+    # বাংলা (P0 — production docs/OpenAPI exposure policy):
+    # আগে এখানে getattr(settings, "docs_enabled", True) ছিল — settings-এ
+    # docs_enabled ফিল্ডই নেই, তাই সব এনভায়রনমেন্টে (প্রোডাকশন সহ) docs
+    # সবসময় চালু থাকত। এখন effective_docs_enabled পলিসি:
+    #   local/dev  → ডিফল্ট চালু (ডেভ সুবিধা)
+    #   prod/stage → ডিফল্ট বন্ধ; শুধু SUPREMEAI_DOCS_ENABLED=true +
+    #                শক্তিশালী SUPREMEAI_DOCS_PASSWORD থাকলে চালু
+    # (Boot-এ দুর্বল পাসওয়ার্ড হলে config_validation ফেইল-ফাস্ট করে।)
+    _docs_exposed = settings.effective_docs_enabled
+    docs_url = "/docs" if _docs_exposed else None
+    redoc_url = "/redoc" if _docs_exposed else None
+    openapi_url = f"{settings.API_V1_STR}/openapi.json" if _docs_exposed else None
+    if settings.env.lower() in ("production", "staging"):
+        logger.info(
+            f"🛡️ Docs/OpenAPI exposure policy: "
+            f"{'ENABLED (admin-gated)' if _docs_exposed else 'DISABLED'} (env={settings.env})"
+        )
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
     app = FastAPI(
@@ -348,6 +371,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # 1. RequestContextMiddleware - Always first to establish context
     app.add_middleware(RequestContextMiddleware)
+
+    # 1.5 DocsAuthMiddleware - gates /docs, /redoc এবং openapi.json
+    # (innermost — রাউটের একদম কাছে; JWT-auth-এর পাবলিক-পাথ বাইপাসের পরেও
+    # প্রোডাকশনে বেসিক-অথ চায় অথবা ডকুমেন্টেশন বন্ধ থাকলে 404 দেয়)
+    app.add_middleware(DocsAuthMiddleware)
 
     # 2. GZipMiddleware - Early to decode compressed request bodies
     app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -475,12 +503,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 🔬 Evolution v3.0: Register health endpoints
     from core.health_routes import router as health_router
 
-    # রেন্ডার হেলথ চেক render.yaml-এ /api/v1/health/live হিসেবে কনফিগার করা,
-    # তাই রাউটার এখন /api/v1/health প্রিফিক্সে মাউন্ট করা হচ্ছে (আগে /health ছিল,
-    # যেটা কনফিগার করা পাথের সাথে মিলছিল না ফলে লাইভনেস প্রোব বরাবর 404 পেত)।
-    app.include_router(health_router, prefix="/api/v1/health")
-    # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও এক��� রাউটার এক্সপোজ করা থাকল।
+    # বাংলা (P0 — canonical health contract):
+    # ক্যানোনিক্যাল প্রোডাকশন পাথ হলো /health, /health/live, /health/ready —
+    # Dockerfile HEALTHCHECK, docker-compose প্রোব, monitoring ও docs সবাই এগুলো
+    # ব্যবহার করে। /api/v1/health/* শুধু লিগ্যাসি অ্যালায়েস। Operational
+    # source of truth একটাই: /health/*। আরও দেখুন docs/deployment/HEALTH_CONTRACT.md
     app.include_router(health_router, prefix="/health")
+    # লিগ্যাসি অ্যালায়েস: পুরনো /api/v1/health পাথও একই রাউটার এক্সপোজ করে।
+    app.include_router(health_router, prefix="/api/v1/health")
 
     @app.api_route("/", methods=["GET", "HEAD"])
     async def root():
