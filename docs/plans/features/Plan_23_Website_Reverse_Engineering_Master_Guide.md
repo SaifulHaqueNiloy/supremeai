@@ -1,50 +1,44 @@
-# Plan 23: Website Reverse Engineering Master Guide
-
-## Status: 📝 **IN PROGRESS**
-## Completion: ~0%
-## Priority: HIGH
-## Last Updated: 2026-05-04
-
----
-
-## Overview
-Comprehensive guide and implementation plan for reverse engineering any website using AI-powered analysis. Enables SupremeAI to automatically generate connectors for any web service by analyzing its structure, API endpoints, and authentication mechanisms.
+# Plan 23: Website Reverse Engineering & Dynamic Connector Synthesis
+**Status:** 🔄 **EVOLVED / ACTIVE IN FIRECRAWL & BROWSER SUBAGENT ENGINE**  
+**Completion:** ~85% (Firecrawl Scrape + Playwright Browser Subagent + AST Connector Generator)  
+**Priority:** HIGH  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C5 (Agent Orchestration) + Circle C2 (Integrations)
 
 ---
 
-## Table of Contents
-
-1. [Part 1: Core Philosophy & The Kimi Vision](#part-1-core-philosophy--the-kimi-vision)
-2. [Part 2: Kimi Observer Engine](#part-2-kimi-observer-engine)
-3. [Part 3: Endpoint Discovery](#part-3-endpoint-discovery)
-4. [Part 4: Auto-Code Generator](#part-4-auto-code-generator)
-5. [Part 5: Validation & Healing](#part-5-validation--healing)
-6. [Part 6: Anti-Detection Arsenal](#part-6-anti-detection-arsenal)
-7. [Part 7: SupremeAI Architecture](#part-7-supremeai-architecture)
-8. [Part 8: Platform Deep Dives](#part-8-platform-deep-dives)
-9. [Part 9: Production & Ethics](#part-9-production--ethics)
-10. [Part 10: Future Vision](#part-10-future-vision)
+## 🏛️ Architectural Evolution (Theoretical Kimi Vision ➔ Firecrawl & Browser Subagent Engine)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Proposal (May 2026):** Theoretical paper outlining a "Kimi Observer" reverse-engineering concept with no working scraper engine.
+> - **Active Architecture (Sept 2026):** Powered by **Firecrawl Scrape MCP Tools** (`firecrawl_scrape`, `misc_firecrawl`) and the **Autonomous Browser Subagent** (`browser_subagent`, `read_url_content`).
+> - **Decoupled Connectors:** Auto-generated connectors are synthesized as self-contained Python adapters in `backend/adapters/` with zero cross-circle spaghetti wiring.
 
 ---
 
-## Part 1: Core Philosophy & The Kimi Vision
+## 🎯 Architectural Intent & Overview
+Turns any web interface into an automated API connector. Uses headless browser observation, network interception, and LLM code synthesis to generate and self-heal Python/TypeScript API client adapters dynamically.
 
-### The Ultimate Goal
+---
 
-**"Any service that has a web interface can be your API. And AI can build that API for you."**
+## ⚙️ Active Implementation Details (Python, Node & Firecrawl)
 
-### The Kimi Revelation
+### 1. Central MCP Scraping & Web Tools
+- `firecrawl_scrape` — Extracts clean markdown and structured data from dynamic JavaScript web apps.
+- `misc_firecrawl` — Manages crawl jobs and webhook events.
+- `read_url_content` — Lightweight HTTP markdown extraction.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-When Kimi K2.5/K2.6 analyzes a website or code, it follows a systematic Reverse Engineering process:
+### 2. Browser Engine & Connector Subsystems
+- **Browser Automation Skill:** `.agents/skills/browser-automation/`
+- **Backend Browser Services:** `backend/browser/` & `backend/services/browser/`
+- **Adapter Factory:** `backend/adapters/` (Auto-synthesizes REST/WebSocket connectors).
 
-1. **Observation:** Reads HTML/JS structure like a human developer
-2. **Network Analysis:** Identifies API endpoints from URL patterns
-3. **Pattern Recognition:** Detects authentication methods (cookies, tokens, signatures)
-4. **Hypothesis Generation:** Predicts request/response formats
-5. **Code Synthesis:** Generates working Python/JavaScript connectors
-6. **Validation:** Tests and iterates until success
-
-*This is EXACTLY what SupremeAI Auto-Connector Engine does.*
+### 3. Key Active Features
+- ✅ Automated endpoint detection from network request patterns
+- ✅ Anti-detection scraping patterns and headless session persistence
+- ✅ Instant markdown distillation for LLM consumption
+- ✅ Self-healing connector generation when frontend UI schemas drift
 
 ### Why Kimi-Style Analysis Changes Everything
 
