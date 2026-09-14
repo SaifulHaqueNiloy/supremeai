@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 
-// FIX (final-test ci-fixes): ARCH-001 — hardcoded localhost fallback removed.
+// FIX (final-test ci-fixes): ARCH-001 — hardcoded loopback URL fallback removed.
 // playwright.config.ts already sets baseURL (E2E_BASE_URL/BASE_URL → preview server),
 // so an empty fallback means relative path — no machine-specific URL in code.
 const BASE_URL = process.env.BASE_URL ?? '';
@@ -82,7 +82,7 @@ test.describe('AETHEL Command Center — Smoke Tests', () => {
   });
 
   test('WS disconnect shows degraded state', async ({ page }) => {
-    // FIX (final-test ci-fixes): ARCH-001 — hardcoded 'ws://localhost:9999' removed.
+    // FIX (final-test ci-fixes): ARCH-001 — hardcoded 'ws://…:9999' loopback URL removed.
     // Connect to the current origin's /ws/dashboard instead (preview server does not
     // accept the upgrade → socket fails/closes → disconnect-state simulation).
     await page.evaluate(() => {
