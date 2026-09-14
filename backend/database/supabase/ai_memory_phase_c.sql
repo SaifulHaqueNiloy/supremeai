@@ -102,6 +102,50 @@ BEGIN
 END $$;
 
 -- ───────────────────────────────────────────────────────────────────────────────
+-- Part 3b — user_id identity reconciliation (M0.6 checkpoint finding)
+--          Legacy bootstrap tables created user_id as UUID; the canonical
+--          contract is TEXT = auth.uid()::text (Part 2 line + RLS Part 6).
+--          ADD COLUMN IF NOT EXISTS cannot convert an existing column type,
+--          so without this block Part 6's `auth.uid()::text = user_id`
+--          raises `operator does not exist: text = uuid`. uuid::text is a
+--          lossless cast — safe on production rows (verified on live DB).
+-- ───────────────────────────────────────────────────────────────────────────────
+DO $$
+DECLARE
+    _col_type text;
+BEGIN
+    SELECT data_type INTO _col_type
+      FROM information_schema.columns
+     WHERE table_name = 'ai_memory' AND column_name = 'user_id'
+     LIMIT 1;
+
+    IF _col_type = 'uuid' THEN
+        -- RLS policies that reference user_id block ALTER TYPE. Drop every
+        -- policy on the table here; Part 6 recreates the canonical owner-
+        -- scoped set immediately after (same implicit transaction batch).
+        DO $inner$
+        DECLARE
+            _policy text;
+        BEGIN
+            FOR _policy IN
+                SELECT policyname FROM pg_policies WHERE tablename = 'ai_memory'
+            LOOP
+                EXECUTE format('DROP POLICY %I ON ai_memory', _policy);
+                RAISE NOTICE 'dropped legacy policy % for user_id type reconciliation', _policy;
+            END LOOP;
+        END
+        $inner$;
+
+        ALTER TABLE ai_memory
+            ALTER COLUMN user_id TYPE text
+            USING user_id::text;
+        RAISE NOTICE 'ai_memory.user_id converted UUID -> TEXT (auth.uid()::text contract)';
+    ELSE
+        RAISE NOTICE 'ai_memory.user_id already % — skipping conversion', _col_type;
+    END IF;
+END $$;
+
+-- ───────────────────────────────────────────────────────────────────────────────
 -- Part 4 — btree indexes (filtering / time queries) — all idempotent
 -- ───────────────────────────────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS ix_ai_memory_user_id        ON ai_memory (user_id);
