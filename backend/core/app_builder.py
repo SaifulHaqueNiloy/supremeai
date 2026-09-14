@@ -489,12 +489,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 🔬 Evolution v3.0: Register health endpoints
     from core.health_routes import router as health_router
 
-    # রেন্ডার হেলথ চেক render.yaml-এ /api/v1/health/live হিসেবে কনফিগার করা,
-    # তাই রাউটার এখন /api/v1/health প্রিফিক্সে মাউন্ট করা হচ্ছে (আগে /health ছিল,
-    # যেটা কনফিগার করা পাথের সাথে মিলছিল না ফলে লাইভনেস প্রোব বরাবর 404 পেত)।
-    app.include_router(health_router, prefix="/api/v1/health")
-    # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও এক��� রাউটার এক্সপোজ করা থাকল।
+    # বাংলা (P0 — canonical health contract):
+    # ক্যানোনিক্যাল প্রোডাকশন পাথ হলো /health, /health/live, /health/ready —
+    # Dockerfile HEALTHCHECK, docker-compose প্রোব, monitoring ও docs সবাই এগুলো
+    # ব্যবহার করে। /api/v1/health/* শুধু লিগ্যাসি অ্যালায়েস। Operational
+    # source of truth একটাই: /health/*। আরও দেখুন docs/deployment/HEALTH_CONTRACT.md
     app.include_router(health_router, prefix="/health")
+    # লিগ্যাসি অ্যালায়েস: পুরনো /api/v1/health পাথও একই রাউটার এক্সপোজ করে।
+    app.include_router(health_router, prefix="/api/v1/health")
 
     @app.api_route("/", methods=["GET", "HEAD"])
     async def root():
