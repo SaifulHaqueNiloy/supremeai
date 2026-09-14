@@ -78,6 +78,33 @@ class SettingsFieldsMixin:
             return True
         return bool(self.docs_enabled)
 
+    # ── Internal admin secret (P0 — fail-closed, no docs_password fallback) ─
+    # বাংলা: internal admin রুটের X-Admin-Secret গেট আগে docs_password-এ
+    # ফলব্যাক করত — ফলে পাবলিক রিপোর জানা "dev_password_only" মানটিই
+    # প্রোডাকশনে বৈধ অ্যাডমিন সিক্রেট হয়ে যেত। এখন আলাদা, শক্তিশালী
+    # SUPREMEAI_ADMIN_SECRET বাধ্যতামূলক (production/staging-এ validate_all
+    # ফেইল-ফাস্ট) এবং runtime গেটে কোনো ফলব্যাক নেই।
+    supremeai_admin_secret: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias="SUPREMEAI_ADMIN_SECRET",
+    )
+
+    ADMIN_SECRET_DEV_FALLBACKS: ClassVar[frozenset[str]] = frozenset({"", "dev_password_only"})
+
+    @property
+    def admin_secret_ok(self) -> bool:
+        """Return True when the internal admin secret is production-safe.
+
+        বাংলা: খালি মান, পাবলিক ডেভ ফলব্যাক, বা ১২ অক্ষরের কম সিক্রেট
+        প্রোডাকশন-গ্রেড নয়। docs_password-এর সমান হলেও নয় (reuse নিষেধ)।
+        """
+        pwd = self.supremeai_admin_secret.get_secret_value() if self.supremeai_admin_secret else ""
+        if pwd.lower() in self.ADMIN_SECRET_DEV_FALLBACKS:
+            return False
+        if pwd == self.docs_password.get_secret_value():
+            return False
+        return len(pwd) >= 12
+
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
     port: int = Field(
         default=8080, validation_alias="PORT"

@@ -170,6 +170,18 @@ class SettingsValidationMixin:
                 "or remove SUPREMEAI_DOCS_ENABLED to keep docs disabled."
             )
 
+        # বাংলা (P0 admin secret policy): internal admin API-র X-Admin-Secret
+        # গেটের জন্য আলাদা, শক্তিশালী SUPREMEAI_ADMIN_SECRET বাধ্যতামূলক।
+        # docs_password-এ ফলব্যাক সরানো হয়েছে — পাবলিক রিপোর জানা
+        # "dev_password_only" কখনোই প্রোডাকশন অ্যাডমিন সিক্রেট হতে পারবে না।
+        if self.env in {"production", "staging"} and not self.admin_secret_ok:
+            raise ValueError(
+                "❌ Production/staging requires a strong SUPREMEAI_ADMIN_SECRET "
+                "(>= 12 characters, never the dev fallback 'dev_password_only', and never "
+                "equal to SUPREMEAI_DOCS_PASSWORD). Fail-fast triggered — the internal "
+                "admin API stays locked without it."
+            )
+
         if self.env in {"production", "staging"}:
             _LLM_CRITICAL_KEYS = [
                 "GEMINI_API_KEY",
