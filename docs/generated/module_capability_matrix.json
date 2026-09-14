@@ -815,6 +815,17 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "health",
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_14_010000_create_mcp_gateway_tables.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -2129,6 +2140,18 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/mcp_hub.py"
+    },
+    {
+      "capability_signals": [
         "capability",
         "health",
         "mcp",
@@ -2172,6 +2195,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/metrics.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/missions.py"
     },
     {
       "capability_signals": [],
@@ -3195,6 +3227,7 @@
     {
       "capability_signals": [
         "health",
+        "mcp",
         "memory",
         "register"
       ],
@@ -3807,6 +3840,7 @@
       "capability_signals": [
         "browser",
         "health",
+        "mcp",
         "memory"
       ],
       "classification": "human_review",
@@ -3827,6 +3861,7 @@
       "capability_signals": [
         "browser",
         "health",
+        "mcp",
         "memory",
         "register"
       ],
@@ -7798,6 +7833,45 @@
       "path": "backend/middleware/tenant_rate_limiter.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/missions/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/missions/models.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/missions/schemas.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/missions/service.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/missions/state_machine.py"
+    },
+    {
       "capability_signals": [
         "capability"
       ],
@@ -7825,7 +7899,8 @@
     {
       "capability_signals": [
         "execute",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -7961,6 +8036,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/models/localization.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/models/mcp_gateway.py"
     },
     {
       "capability_signals": [],
@@ -9679,7 +9765,8 @@
     {
       "capability_signals": [
         "execute",
-        "mcp"
+        "mcp",
+        "memory"
       ],
       "classification": "test",
       "entrypoints": [],
@@ -9887,6 +9974,19 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_connections.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_mcp_hub.py"
     },
     {
       "capability_signals": [
@@ -12207,6 +12307,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/missions/test_mission_orchestration.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "capability",
         "execute",
@@ -12218,6 +12327,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/missions/test_mission_suite.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/models/test_ai_memory_schema_contract.py"
     },
     {
       "capability_signals": [],
@@ -23229,5 +23348,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2695
+  "source_file_count": 2707
 }
