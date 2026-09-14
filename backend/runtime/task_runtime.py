@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 import time
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.integration_layer import SupremeAIIntegrator
 from core.logging_config import logger
@@ -20,7 +20,14 @@ from runtime.planner import CanonicalPlanner, Plan, get_planner
 from runtime.task_context import TaskContext
 from runtime.task_executor import TaskExecutor
 from runtime.task_result import TaskResult, VerificationSummary
-from verification.verifier import VerifierEngine, get_verifier
+
+if TYPE_CHECKING:
+    # M0-C (AUDIT F5): verification/verifier.py imports runtime.task_result at
+    # module level, so a module-level import of verification here makes
+    # `import verification` fail with a partially-initialized circular import
+    # (order-dependent). Keep the type for static checks only and resolve the
+    # engine lazily at construction time.
+    from verification.verifier import VerifierEngine
 
 
 class TaskRuntime:
@@ -33,7 +40,14 @@ class TaskRuntime:
         planner: CanonicalPlanner | None = None,
     ) -> None:
         self.ai_system = ai_system
-        self.verifier = verifier or get_verifier()
+        if verifier:
+            self.verifier = verifier
+        else:
+            # M0-C (AUDIT F5): function-scope import breaks the
+            # verification <-> runtime import cycle at runtime.
+            from verification.verifier import get_verifier
+
+            self.verifier = get_verifier()
         self.planner = planner or get_planner()
         self.executor = TaskExecutor(ai_system=self.ai_system)
         self.experience_ledger: list[dict[str, Any]] = []
