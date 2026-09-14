@@ -1,50 +1,52 @@
-# Plan 4: Intent Analysis & Confirmation
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 4: Intent Analysis & Human-in-the-Loop (HITL) Governance
+**Status:** 🔄 **EVOLVED / ACTIVE IN MCP POLICY & WORKFLOW ARCHITECTURE**  
+**Completion:** ~95% (Policy Preview/Approve Tools + Intent Decomposition)  
+**Priority:** CRITICAL (P0 Safety & Governance)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C4 (Auth & Security) + Circle C5 (Agent Orchestration)
 
 ---
 
-## Overview
-Intelligent system for analyzing user intent from natural language requirements and implementing confirmation workflows to ensure accurate understanding before proceeding with application generation.
+## 🏛️ Architectural Evolution (Basic Java Parser ➔ Governed Policy Engine & MCP HITL)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Basic keyword parser (`IntentAnalyzer.java`) attempting to classify requirements into small/medium/big.
+> - **Active Architecture (Sept 2026):** **Governed MCP Policy Engine** (`policy_preview`, `policy_approve`, `policy_list_pending`) coupled with semantic intent decomposition (`decompose_intent()`) across cognitive agent chains.
+> - **Mandatory Governance:** High-risk actions (deployments, data wipes, token rotations) are intercepted by Central Control Tower policy gates requiring human confirmation (HITL).
 
-## Implementation Details
+---
 
-### Core Components
-1. **Intent Analyzer** (`src/main/java/com/supremeai/intent/IntentAnalyzer.java`)
-   - Natural language processing for requirement analysis
-   - Entity extraction and classification
-   - Intent classification algorithms
+## 🎯 Architectural Intent & Overview
+Transforms ambiguous natural-language user prompts into structured, verifiable task trees. Intercepts consequential actions before execution through previewable policies and explicit Human-in-the-Loop (HITL) approval gates.
 
-2. **Confirmation Engine** (`src/main/java/com/supremeai/confirmation/ConfirmationEngine.java`)
-   - Multi-step confirmation workflows
-   - Visual requirement validation
-   - User feedback integration
+---
 
-3. **Requirement Processor** (`src/main/java/com/supremeai/processor/RequirementProcessor.java`)
-   - Requirement size classification
-   - Complexity assessment
-   - Generation feasibility analysis
+## ⚙️ Active Implementation Details (Python & MCP Control Plane)
 
-### Key Features
-- ✅ Natural language requirement parsing
-- ✅ Intent classification (web, mobile, desktop, etc.)
-- ✅ Entity extraction (features, platforms, databases)
-- ✅ Multi-step confirmation workflow
-- ✅ Visual requirement preview
+### 1. Central MCP Policy & Governance Tools
+- `policy_preview` — Simulates and inspects an action's risk, blast radius, and dependencies before execution.
+- `policy_approve` — Issues authorized execution tokens for pending actions.
+- `policy_list_pending` — Lists actions awaiting human review or admin approval.
+- `autonomy_status` & `autonomy_kill_switch` — Immediate safety breaker.
+- **Location:** `infrastructure/mcp-control-plane/src/policy/` & `src/index.ts`
 
-### Technical Stack
-- **Backend**: Spring Boot 3, Java 21
-- **NLP**: Custom processing algorithms
-- **Database**: Firebase Firestore
-- **Frontend**: React with TypeScript
+### 2. Backend Intent Processing
+- **Cognitive Intent Decomposition:** `backend/core/` (`decompose_intent()` parses goals into atomic skill chains).
+- **Agent Review Workflow:** `backend/core/agent_review_workflow.py` (Validates execution safety against system rules before committing code).
 
-### API Endpoints
-- `POST /api/intent/analyze` - Analyze user intent
-- `POST /api/confirm/validate` - Validate requirements
-- `GET /api/confirm/preview` - Generate requirement preview
+### 3. Key Active Features
+- ✅ Risk-tiered autonomy (Low, Medium, High-risk classification)
+- ✅ Previewable execution diffs and impact forecasts
+- ✅ Zero unvetted destructive actions
+- ✅ Seamless IDE / Chat confirmation dialogs
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/intent/IntentAnalyzer.java`
+- `src/main/java/com/supremeai/confirmation/ConfirmationEngine.java`
+- `src/main/java/com/supremeai/processor/RequirementProcessor.java`
 
 ---
 

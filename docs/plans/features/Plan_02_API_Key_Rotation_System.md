@@ -1,50 +1,53 @@
-# Plan 2: API Key Rotation System
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 2: API Key & Secret Rotation System (Zero-Trust Vault)
+**Status:** 🔄 **EVOLVED / ACTIVE IN INFISICAL & MCP ARCHITECTURE**  
+**Completion:** ~95% (Infisical Vault + Control Plane Token Rotation)  
+**Priority:** HIGH (P0 Security)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C4 (Auth, Tenancy & Security)
 
 ---
 
-## Overview
-Automated system for rotating and managing API keys across multiple AI service providers, ensuring security, cost optimization, and uninterrupted service availability.
+## 🏛️ Architectural Evolution (Firebase Firestore ➔ Infisical Vault & MCP Secrets)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Managed plain API keys in Firestore with local Java AES-256 routines.
+> - **Active Architecture (Sept 2026):** Uses **Infisical Secret Management Vault** (`infisical_audit_secrets`, `infisical_sync_status`) paired with **Central MCP Tenant Token Rotation** (`tenant_rotate_admin_token`, `client_rotate_token`).
+> - **Enterprise Parity:** Production secrets are never stored in databases; they are securely injected via CI/CD, Infisical, and environment secrets registries (`secrets_registry.yaml`).
 
-## Implementation Details
+---
 
-### Core Components
-1. **Key Manager Service** (`src/main/java/com/supremeai/security/KeyManagerService.java`)
-   - Centralized API key management
-   - Encryption and decryption
-   - Key lifecycle management
+## 🎯 Architectural Intent & Overview
+Enterprise-grade secret management and zero-trust key rotation. Ensures that API tokens (OpenAI, Gemini, Groq, OpenRouter, GitHub, Stripe, Cloudflare, etc.) and tenant authorization tokens can be rotated, verified, and audited with zero downtime and zero plain-text leaks.
 
-2. **Rotation Scheduler** (`src/main/java/com/supremeai/scheduler/RotationScheduler.java`)
-   - Automated rotation based on thresholds
-   - Time-based and usage-based rotation
-   - Graceful transition handling
+---
 
-3. **Key Validator** (`src/main/java/com/supremeai/security/KeyValidator.java`)
-   - Real-time key validation
-   - Quota monitoring
-   - Health status checks
+## ⚙️ Active Implementation Details (Python, Node & Infisical)
 
-### Key Features
-- ✅ Automated rotation on 80% quota threshold
-- ✅ Multi-provider key management (OpenAI, Gemini)
-- ✅ Encrypted key storage in Firebase
-- ✅ Graceful failover during rotation
-- ✅ Usage tracking and analytics
+### 1. Central MCP Control Tower Security Tools
+- `infisical_audit_secrets` — Scans for unmanaged or exposed environment keys.
+- `infisical_sync_status` — Verifies end-to-end secret sync across environments.
+- `tenant_rotate_admin_token` — Rotates tenant administrative access tokens.
+- `client_rotate_token` — Issues new API credentials to connected IDE/remote agents.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-### Technical Stack
-- **Backend**: Spring Boot 3, Java 21
-- **Encryption**: AES-256 for key storage
-- **Database**: Firebase Firestore
-- **Scheduling**: Spring Scheduler
+### 2. Backend Security & Secrets Registry
+- **Central Secrets Registry:** `secrets_registry.yaml` (Defines all 40+ system secrets and scopes).
+- **Backend Vault Adapter:** `backend/security/` & `backend/config/`
+- **Zero-Hardcode Policy:** All API endpoints validate environment variable injection before invoking external services.
 
-### API Endpoints
-- `POST /api/keys/rotate` - Manual key rotation
-- `GET /api/keys/status` - Key status and quota
-- `POST /api/keys/validate` - Key validation check
+### 3. Key Active Features
+- ✅ Zero hardcoded secrets anywhere in source code
+- ✅ Multi-environment synchronization (local dev, staging, Render production)
+- ✅ Autonomous rotation triggers on rate-limit detection or security sweep
+- ✅ Redacted diagnostic logs (passwords, tokens, and keys automatically scrubbed)
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/security/KeyManagerService.java`
+- `src/main/java/com/supremeai/scheduler/RotationScheduler.java`
+- `src/main/java/com/supremeai/security/KeyValidator.java`
 
 ---
 

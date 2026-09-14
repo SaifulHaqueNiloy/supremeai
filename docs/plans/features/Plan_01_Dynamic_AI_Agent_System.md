@@ -1,50 +1,56 @@
-# Plan 1: Dynamic AI Agent System
-
-## Status: ✅ **FINISHED**
-## Completion: ~100%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 1: Dynamic AI Agent System & Multi-Agent Discovery
+**Status:** 🔄 **EVOLVED / ACTIVE IN PYTHON MCP ARCHITECTURE**  
+**Completion:** ~90% (Active in MCP Control Plane & Backend Core)  
+**Priority:** CRITICAL (P0)  
+**Last Updated:** September 2026 (Migrated from Java prototype to Python/TypeScript MCP Control Plane)  
+**Domain Circle:** Circle C1 (Code & Quality) + Circle C5 (Agent Orchestration)
 
 ---
 
-## Overview
-Implementation of a dynamic AI agent system capable of autonomous decision-making, task execution, and adaptive learning based on user interactions and system feedback.
+## 🏛️ Architectural Evolution & Paradigm Shift (Java Prototype ➔ Python MCP Hub)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Implemented in Java 21/Spring Boot (`AgentOrchestrator.java`) with rigid hardcoded agent counts and Firebase in-memory quotas.
+> - **Active Architecture (Sept 2026):** Re-engineered in **Python 3.12 (FastAPI + Pydantic v2) + Node/TS MCP Control Tower**.
+> - **Core Philosophy Alignment:** Implements the true constitutional intent: **Dynamic Discovery of $1 \dots N$ Local/Remote Agents** (Ollama, Gemini, Groq, OpenRouter, Claude Code, Cline, Kilo, etc.) instead of hardcoded 3-model or 5-model constraints.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Agent Orchestrator** (`src/main/java/com/supremeai/agent/AgentOrchestrator.java`)
-   - Manages multiple AI agents
-   - Load balancing and agent rotation
-   - Health monitoring and failover
+## 🎯 Architectural Intent & Overview
+Implementation of a generalized, dynamic AI agent pool capable of discovering, rotating, and orchestrating any number of local or remote AI agents ($1 \dots N$). The system assigns roles (Writer, Reviewer, Security Checker, etc.) dynamically based on available compute without locking the user into rigid model names.
 
-2. **AI Agent Pool** (`src/main/java/com/supremeai/agent/AIAgentPool.java`)
-   - Maintains pool of AI agents
-   - Quota tracking per agent
-   - Automatic rotation on threshold
+---
 
-3. **Agent Rotation Service** (`src/main/java/com/supremeai/service/AgentRotationService.java`)
-   - Monitors API usage (80% threshold)
-   - Automatic agent switching
-   - Fallback mechanisms
+## ⚙️ Active Implementation Details (Python & MCP Control Plane)
 
-### Key Features
-- ✅ Multi-provider support (OpenAI, Gemini)
-- ✅ Automatic failover and rotation
-- ✅ Quota management and monitoring
-- ✅ Health check endpoints
-- ✅ Real-time agent status tracking
+### 1. Central MCP Capability & Discovery
+- **Control Plane Tools:**
+  - `ai_available_providers` — Discovers all active local/remote AI providers.
+  - `ai_list_providers` — Enumerates health, latency, and capabilities.
+  - `ai_test_provider` — Runs automated sanity checks per agent.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts` & `src/service-circles.ts`
 
-### Technical Stack
-- **Backend**: Spring Boot 3, Java 21
-- **AI Integration**: OpenAI API, Gemini API
-- **Database**: Firebase Firestore
-- **Monitoring**: Custom health checks
+### 2. Backend Orchestration Engines
+- **Dynamic Assembly Pipeline:** `backend/core/orchestration/trio_pipeline.py` (Chains discovered agents into Writer ➔ Reviewer ➔ Checker pipelines).
+- **Cognitive Orchestrators:**
+  - `backend/core/agent_orchestrator.py` — Multi-agent dispatch.
+  - `backend/core/master_cognitive_orchestrator.py` — Swarm and hierarchical planning.
+  - `backend/agents/ide/trio_adapters.py` — Modular model adapters (Gemini, Kilo, Cline, Local LLMs).
 
-### API Endpoints
-- `GET /api/agents/status` - Agent pool status
-- `POST /api/agents/rotate` - Manual agent rotation
-- `GET /api/agents/health` - Health check
+### 3. Key Active Features
+- ✅ Dynamic provider discovery ($1 \dots N$ agents)
+- ✅ Autonomous failover and provider-neutral routing
+- ✅ Quota tracking and rate-limit backoff (Upstash Redis + Infisical secrets)
+- ✅ Health monitoring endpoints and MCP heartbeat
+- ✅ Zero cross-circle coupling; fully orchestrated via Central Hub
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*For historical audit, the original Java 21 classes (Spring Boot) were:*
+- `src/main/java/com/supremeai/agent/AgentOrchestrator.java`
+- `src/main/java/com/supremeai/agent/AIAgentPool.java`
+- `src/main/java/com/supremeai/service/AgentRotationService.java`
 
 ---
 

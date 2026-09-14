@@ -1,63 +1,53 @@
-# Plan 16: CI/CD Sandbox
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 16: Automated CI/CD Sandbox & Pre-Merge Gateways
+**Status:** 🔄 **EVOLVED / ACTIVE IN GITHUB ACTIONS & MCP OBSERVABILITY**  
+**Completion:** ~98% (GitHub Actions Workflows + Pre-Commit Hooks + MCP Tools)  
+**Priority:** CRITICAL (P0 Engineering Discipline)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C2 (Infra & DevOps) + Circle C1 (Quality Gates)
 
 ---
 
-## Overview
-Automated CI/CD sandbox environment providing isolated build, test, and deployment pipelines for generated applications with comprehensive quality gates and security checks.
+## 🏛️ Architectural Evolution (Local Java CI Mock ➔ Production GitHub Actions & MCP Telemetry)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Implemented a local mock pipeline in Java (`PipelineOrchestrator.java`) that did not test against real cloud infrastructure.
+> - **Active Architecture (Sept 2026):** Production-grade **GitHub Actions Workflows** (`.github/workflows/`) enforcing multi-job parallel checks (Constitution Audit, Pytest, Playwright E2E, Ruff, Actionlint, MCP build).
+> - **Direct MCP Telemetry:** The Central MCP Control Tower can inspect workflow runs and diagnose remote CI failures directly via `github_workflow_runs` and `github_get_failed_logs`.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Pipeline Orchestrator** (`src/main/java/com/supremeai/cicd/PipelineOrchestrator.java`)
-   - Multi-stage pipeline management
-   - Parallel execution coordination
-   - Pipeline status tracking
+## 🎯 Architectural Intent & Overview
+Guarantees production parity by running every code modification through isolated GitHub Actions sandboxes and local pre-commit hooks before merge or release.
 
-2. **Build Manager** (`src/main/java/com/supremeai/build/BuildManager.java`)
-   - Multi-platform build configuration
-   - Dependency management
-   - Build artifact generation
+---
 
-3. **Test Executor** (`src/main/java/com/supremeai/test/TestExecutor.java`)
-   - Automated test execution
-   - Test coverage analysis
-   - Performance testing
+## ⚙️ Active Implementation Details (GitHub Actions & MCP)
 
-4. **Deployment Manager** (`src/main/java/com/supremeai/deploy/DeploymentManager.java`)
-   - Multi-environment deployment
-   - Rollback procedures
-   - Deployment verification
+### 1. Central MCP GitHub Tools
+- `github_workflow_runs` — Live status of all remote pipeline runs.
+- `github_get_failed_logs` — Instant log extraction from failing GitHub jobs for autonomous remediation.
+- `github_list_prs` & `github_read_file` — Direct pull request audits.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-### Pipeline Stages
+### 2. Multi-Stage Pipeline Workflows
+- **Code Quality & Constitution:** `.github/workflows/quality-gate.yml`
+- **Backend Test Matrix (Core, API, Security):** `.github/workflows/backend-tests.yml`
+- **E2E Browser Testing:** Playwright headless smoke tests (`playwright.config.ts`)
+- **Local Pre-Commit Guard:** `.git/hooks/pre-commit` & `.pre-commit-config.yaml` (Enforces Ruff formatting, Checkpoint updates, and size caps).
 
-#### Stage 1: Code Analysis
-- Static code analysis (SonarQube)
-- Security scanning (OWASP)
-- Code quality checks
-- License compliance
+### 3. Key Active Features
+- ✅ Zero broken merges via strict branch protection and GitHub status checks
+- ✅ Autonomous agent failure diagnosis using GitHub API log streaming
+- ✅ Complete test coverage gating across backend, frontend, and MCP layers
 
-#### Stage 2: Build
-- Dependency resolution
-- Compilation
-- Packaging
-- Artifact generation
+---
 
-#### Stage 3: Test
-- Unit tests (JUnit 5)
-- Integration tests
-- Performance tests
-- Security tests
-
-#### Stage 4: Deploy
-- Environment preparation
-- Application deployment
-- Health checks
-- Smoke tests
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/cicd/PipelineOrchestrator.java`
+- `src/main/java/com/supremeai/build/BuildManager.java`
+- `src/main/java/com/supremeai/test/TestExecutor.java`
+- `src/main/java/com/supremeai/deploy/DeploymentManager.java`
 
 ### Key Features
 - ✅ Automated build pipeline

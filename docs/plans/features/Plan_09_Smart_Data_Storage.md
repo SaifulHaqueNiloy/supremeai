@@ -1,32 +1,55 @@
-# Plan 9: Smart Data Storage
-
-## Status: ✅ **FINISHED**
-## Completion: ~90%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 9: Hybrid Polyglot Storage & Smart Caching
+**Status:** 🔄 **EVOLVED / ACTIVE IN SUPABASE + REDIS + QDRANT ARCHITECTURE**  
+**Completion:** ~95% (Postgres + Redis KV + Qdrant Vectors)  
+**Priority:** HIGH (P0 Data Tier)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C3 (Data & Storage) + Circle C2 (Cloud Infra)
 
 ---
 
-## Overview
-Intelligent data storage and lifecycle management system using Firebase Firestore with automated data classification, retention policies, and optimization for cost and performance.
+## 🏛️ Architectural Evolution (Firestore-Only ➔ Tri-Layer Polyglot Persistence)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Dumped all relational entities, metrics, vectors, and chats into a single Firebase Firestore instance, hitting latency limits and indexing bottlenecks.
+> - **Active Architecture (Sept 2026):** Implements specialized, purpose-built storage layers:
+>   - **Relational & Auth:** **Supabase PostgreSQL** (`supabase_health`, `supabase_read_table`, `supabase_insert`, `supabase_update`).
+>   - **Semantic Vectors:** **Qdrant Vector DB** (`qdrant_upsert`, `qdrant_search`).
+>   - **Ultra-Fast Caching & Rate-Limits:** **Upstash Redis** (`redis_ping`, `redis_stats`, `redis_read_key`, `action_redis_flush`).
+> - **Zero-Cost Free-Tier Sustainability:** Runs across coordinated free tiers with automated lifecycle purging and cache eviction.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Data Classifier** (`src/main/java/com/supremeai/storage/DataClassifier.java`)
-   - Automatic data type identification
-   - Sensitivity level classification
-   - Retention period assignment
+## 🎯 Architectural Intent & Overview
+Polyglot data architecture delivering optimal performance for each data type: sub-millisecond key-value lookups, high-dimensional vector similarity search, and ACID-compliant relational data management.
 
-2. **Storage Optimizer** (`src/main/java/com/supremeai/storage/StorageOptimizer.java`)
-   - Data compression and deduplication
-   - Access pattern analysis
-   - Storage tier optimization
+---
 
-3. **Lifecycle Manager** (`src/main/java/com/supremeai/storage/LifecycleManager.java`)
-   - Automated data archival
-   - Retention policy enforcement
-   - Secure deletion
+## ⚙️ Active Implementation Details (Python & MCP Control Plane)
+
+### 1. Central MCP Data Tools
+- `supabase_read_table`, `supabase_insert`, `supabase_update` — Relational record persistence.
+- `redis_read_key`, `redis_stats`, `action_redis_flush` — Fast session and cache management.
+- `qdrant_ensure_collection`, `qdrant_upsert`, `qdrant_search` — Vector indexing.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
+
+### 2. Backend ORM & Connection Pools
+- **Async SQLAlchemy 2.0:** `backend/database/` & `alembic_migrations/` (Postgres pooling).
+- **Redis Client:** `backend/storage/` & Upstash REST API wrappers.
+- **Vector Client:** `backend/services/` & Qdrant gRPC/HTTP clients.
+
+### 3. Key Active Features
+- ✅ Zero Firestore vendor lock-in; open-source PostgreSQL + Qdrant
+- ✅ Smart TTL caching for expensive LLM inference results
+- ✅ Automated database migrations via Alembic
+- ✅ Health sweep verification (`health_full_sweep`) monitoring all data layers
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/storage/DataClassifier.java`
+- `src/main/java/com/supremeai/storage/StorageOptimizer.java`
+- `src/main/java/com/supremeai/storage/LifecycleManager.java`
 
 ### Firebase Collections Architecture
 
