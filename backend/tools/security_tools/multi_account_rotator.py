@@ -479,6 +479,15 @@ class MultiAccountRotator:
                             try:
                                 account_data[ts_field] = datetime.fromisoformat(value)
                             except ValueError:
+                                # REL-002 (error observability): log the coercion —
+                                # a silently nulled timestamp hides config corruption.
+                                logger.warning(
+                                    "[ROTATOR] Unparseable %s value %r for provider "
+                                    "'%s' in rotation_config.json — treating as None",
+                                    ts_field,
+                                    value,
+                                    provider_data.get("name", "<unnamed>"),
+                                )
                                 account_data[ts_field] = None
                     known_fields = {
                         key: val

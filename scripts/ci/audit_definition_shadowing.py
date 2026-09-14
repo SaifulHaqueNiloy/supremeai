@@ -39,8 +39,11 @@ from __future__ import annotations
 import argparse
 import ast
 import json
+import logging
 from collections import Counter
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_ROOTS = ("backend", "tools", "scripts")
 EXCLUDED_PARTS = {"tests", "examples", "__pycache__", ".venv", "venv", "node_modules"}
@@ -147,6 +150,14 @@ def audit_file(path: Path) -> list[dict[str, object]]:
                 try:
                     hash(key_node.value)
                 except TypeError:
+                    # REL-002 (error observability): never swallow silently — the
+                    # skip is deliberate, but it must leave a trace when it fires.
+                    logger.debug(
+                        "Skipping unhashable dict-literal key %r in %s "
+                        "(not statically comparable)",
+                        key_node.value,
+                        path,
+                    )
                     continue
                 if key_node.value in seen:
                     findings.append(
