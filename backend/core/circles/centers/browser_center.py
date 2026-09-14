@@ -95,7 +95,9 @@ class BrowserCenter(CircleCenter):
 
     async def _snapshot(self, request) -> dict:
         manager = self.resolve_adapter(request)
-        rows = [row for row in manager.snapshot() if row.get("owner_id") == request.context.actor_id]
+        rows = [
+            row for row in manager.snapshot() if row.get("owner_id") == request.context.actor_id
+        ]
         return {"sessions": rows, "count": len(rows)}
 
 

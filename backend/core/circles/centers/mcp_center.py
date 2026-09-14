@@ -80,9 +80,10 @@ class MCPCenter(CircleCenter):
         if envelope.capability in {"mcp.tools.list", "mcp.invoke"}:
             if not str(envelope.payload.get("server", "")).strip():
                 return f"server is required for {envelope.capability}"
-        if envelope.capability == "mcp.invoke" and not str(
-            envelope.payload.get("tool", "")
-        ).strip():
+        if (
+            envelope.capability == "mcp.invoke"
+            and not str(envelope.payload.get("tool", "")).strip()
+        ):
             return "tool is required for mcp.invoke"
         return None
 

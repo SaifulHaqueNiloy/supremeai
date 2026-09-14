@@ -32,9 +32,10 @@ class LLMCenter(CircleCenter):
         )
 
     def local_permission(self, envelope: ExecutionEnvelope) -> str | None:
-        if envelope.capability == "llm.generate" and not str(
-            envelope.payload.get("prompt", "")
-        ).strip():
+        if (
+            envelope.capability == "llm.generate"
+            and not str(envelope.payload.get("prompt", "")).strip()
+        ):
             return "prompt is required for llm.generate"
         return None
 

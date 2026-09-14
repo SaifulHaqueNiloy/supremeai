@@ -41,13 +41,15 @@ class MemoryCenter(CircleCenter):
         )
 
     def local_permission(self, envelope: ExecutionEnvelope) -> str | None:
-        if envelope.capability == "memory.recall" and not str(
-            envelope.payload.get("query", "")
-        ).strip():
+        if (
+            envelope.capability == "memory.recall"
+            and not str(envelope.payload.get("query", "")).strip()
+        ):
             return "query is required for memory.recall"
-        if envelope.capability == "memory.store" and not str(
-            envelope.payload.get("content", "")
-        ).strip():
+        if (
+            envelope.capability == "memory.store"
+            and not str(envelope.payload.get("content", "")).strip()
+        ):
             return "content is required for memory.store"
         return None
 
