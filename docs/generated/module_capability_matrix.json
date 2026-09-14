@@ -10010,7 +10010,10 @@
       "path": "backend/tests/api/routes/test_mcp_hub_contract.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "mcp",
+        "memory"
+      ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
