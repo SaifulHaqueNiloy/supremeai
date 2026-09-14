@@ -842,6 +842,15 @@
     },
     {
       "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/6250e2a31d38_m0_merge_alembic_heads_into_single_.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -8819,6 +8828,15 @@
     {
       "capability_signals": [],
       "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/scripts/audit_import_walk.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/auto_find_blindspots.py"
@@ -8847,6 +8865,17 @@
       ],
       "kind": "py",
       "path": "backend/scripts/benchmark/load_test_phase3.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/scripts/check_single_alembic_head.py"
     },
     {
       "capability_signals": [],
@@ -23348,5 +23377,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2707
+  "source_file_count": 2710
 }
