@@ -1,32 +1,53 @@
-# Plan 3: Continuous Learning
-
-## Status: ✅ **FINISHED**
-## Completion: ~98%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 3: Continuous Learning & Long-Term Memory (RAG + Episodic Graph)
+**Status:** 🔄 **EVOLVED / ACTIVE IN QDRANT & MEMORY GRAPH ARCHITECTURE**  
+**Completion:** ~98% (Qdrant Vector DB + Knowledge Graph + Task Feedback Loop)  
+**Priority:** CRITICAL (P0 Autonomous Evolution)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C3 (Knowledge & Memory) + Circle C5 (Agent Orchestration)
 
 ---
 
-## Overview
-Comprehensive continuous learning system that captures, processes, and applies knowledge from user interactions, code modifications, and system feedback to improve AI performance over time.
+## 🏛️ Architectural Evolution (Firebase Firestore ➔ Qdrant Vector & Episodic Graph)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Stored raw code edits as static JSON documents in Firebase Firestore. Could not perform semantic search or vector retrieval.
+> - **Active Architecture (Sept 2026):** Uses **Qdrant Vector Database** (`qdrant_upsert`, `qdrant_search`), **Semantic Memory Engine** (`memory_store_document`, `memory_remember_fact`), and **Episodic Learning Loops** (`memory_record_task`, `memory_get_recent_episodes`).
+> - **Zero Bloat Dynamics:** Insights learned by worker engines (e.g., Trio) are extracted and persisted in Qdrant via ticket references (`ref://`) without congesting the Central Control Tower.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Knowledge Collector** (`src/main/java/com/supremeai/learning/KnowledgeCollector.java`)
-   - Captures learning events from VS Code extension
-   - Processes code edits and patterns
-   - Validates and sanitizes input data
+## 🎯 Architectural Intent & Overview
+Autonomous self-improving memory architecture that captures execution outcomes, test failures, user corrections, and successful patterns. Enables AI agents to retrieve past solutions semantically and avoid repeating mistakes across sessions.
 
-2. **Learning Processor** (`src/main/java/com/supremeai/learning/LearningProcessor.java`)
-   - Analyzes collected knowledge
-   - Extracts patterns and best practices
-   - Generates learning insights
+---
 
-3. **Knowledge Repository** (`src/main/java/com/supremeai/repository/KnowledgeRepository.java`)
-   - Manages Firebase Firestore collections
-   - Handles data lifecycle
-   - Provides query interfaces
+## ⚙️ Active Implementation Details (Python, Node & Qdrant)
+
+### 1. Central MCP Memory & Knowledge Tools
+- `memory_remember_fact` & `memory_search_learned_facts` — Quick factual and preference recall.
+- `memory_store_document` & `memory_search_semantic` — Deep semantic RAG search over codebases and docs.
+- `memory_record_task` & `memory_get_similar_tasks` — Episodic task evaluation and lessons learned.
+- `qdrant_upsert` & `qdrant_search` — High-dimensional vector embeddings.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
+
+### 2. Backend Learning & Memory Subsystems
+- **Backend Learning Loop:** `backend/learning/` & `backend/evolution/`
+- **Episodic Skill Graph:** `backend/core/orchestration/` (Weights edges dynamically based on execution success).
+- **Hallucination & Error Patterns:** `backend/hallucination_patterns.db` & SQLite runtime trackers.
+
+### 3. Key Active Features
+- ✅ Continuous background learning from test runs and CI outcomes
+- ✅ Semantic vector retrieval with sub-50ms latency
+- ✅ Persistent cross-session knowledge graphs (Entities, Relations, Observations)
+- ✅ Automatic pattern extraction and self-evolution fitness scoring
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/learning/KnowledgeCollector.java`
+- `src/main/java/com/supremeai/learning/LearningProcessor.java`
+- `src/main/java/com/supremeai/repository/KnowledgeRepository.java`
 
 ### Firebase Collections Structure
 

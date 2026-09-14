@@ -1,63 +1,56 @@
-# Plan 6: Dual Repo System
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 6: Unified Monorepo & Multi-Target Deployment Topology
+**Status:** 🔄 **EVOLVED / ACTIVE IN TURBOREPO & CLOUD TOPOLOGY**  
+**Completion:** ~98% (Turborepo + Docker + Multi-Cloud Staging)  
+**Priority:** HIGH  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C2 (Cloud & Infrastructure)
 
 ---
 
-## Overview
-Dual repository architecture separating frontend and backend codebases while maintaining seamless integration, deployment coordination, and unified development workflows.
+## 🏛️ Architectural Evolution (Fragmented Dual-Repo ➔ Unified Monorepo with Decoupled Cloud Runtimes)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Attempted to maintain two separate Git repositories (`supremeai-backend` and `supremeai-dashboard`) synchronized with brittle shell scripts (`sync-repos.sh`), causing version drift and broken contract checks.
+> - **Active Architecture (Sept 2026):** Consolidated into a unified **Turborepo Monorepo** (`turbo.json`, `pnpm-workspace.yaml`).
+> - **Decoupled Deployment:** Codebase is unified for atomic PRs and zero-gap contract validation, while deployments remain decoupled:
+>   - **Frontend:** Vercel / Firebase Hosting (`frontend/`)
+>   - **Backend Core:** Render Docker Web Service (`backend/`)
+>   - **Control Plane:** Render MCP Service (`infrastructure/mcp-control-plane/`)
+>   - **Edge Routing:** Cloudflare Workers
 
-## Implementation Details
+---
 
-### Repository Structure
+## 🎯 Architectural Intent & Overview
+Delivers single-repository engineering velocity with independent, provider-neutral production deployments. Ensures contract parity across frontend and backend layers with zero cross-repo synchronization friction.
 
-#### Backend Repository (`supremeai-backend`)
-- **Location**: `src/main/java/com/supremeai/`
-- **Framework**: Spring Boot 3
-- **Language**: Java 21
-- **Database**: Firebase Firestore, PostgreSQL
-- **Services**: 
-  - CodeGenerationService
-  - AppGenerationController
-  - Agent orchestration
-  - Learning system
+---
 
-#### Frontend Repository (`supremeai-dashboard`)
-- **Location**: `dashboard/`
-- **Framework**: React 18, TypeScript
-- **Styling**: Tailwind CSS, 3D libraries
-- **State Management**: React hooks, Context API
-- **Features**:
-  - Admin dashboard
-  - Project management
-  - Visual workflows
-  - Real-time updates
+## ⚙️ Active Implementation Details
 
-### Core Components
-1. **Repo Synchronizer** (`scripts/sync-repos.sh`)
-   - Coordinated deployment
-   - Version alignment
-   - Dependency management
+### 1. Monorepo Orchestration
+- **Workspace Tooling:** `turbo.json`, `pnpm-workspace.yaml`, `package.json`
+- **Frontend Package:** `frontend/` (Next.js / React with Vanilla CSS & Tailwind tokens)
+- **Backend Package:** `backend/` (FastAPI + Poetry / pip)
+- **Control Plane Package:** `infrastructure/mcp-control-plane/` (Node.js / TypeScript FastMCP)
 
-2. **Integration Bridge** (`src/main/java/com/supremeai/integration/RepoBridge.java`)
-   - API contract management
-   - Cross-repo communication
-   - Shared type definitions
+### 2. Deployment & Observability Tools
+- `render_list_services`, `render_service_health`, `render_get_logs` — Live Render status.
+- `cloudflare_worker_status`, `cloudflare_analytics` — Edge CDN and routing health.
+- `firebase_hosting_status` — Frontend hosting telemetry.
 
-3. **Deployment Orchestrator** (`scripts/deploy.sh`)
-   - Coordinated releases
-   - Rollback procedures
-   - Environment management
+### 3. Key Active Features
+- ✅ Atomic commits preventing frontend/backend API contract mismatch
+- ✅ Independent CI/CD build matrix in GitHub Actions (`.github/workflows/`)
+- ✅ Zero-drift environment secrets via Infisical and Render API
+- ✅ Rollback parity across cloud services
 
-### Key Features
-- ✅ Separated frontend/backend repositories
-- ✅ Coordinated deployment pipeline
-- ✅ Shared API contracts
-- ✅ Unified versioning strategy
-- ✅ Cross-repo CI/CD integration
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original structure:*
+- `scripts/sync-repos.sh`
+- `src/main/java/com/supremeai/integration/RepoBridge.java`
+- `scripts/deploy.sh`
 
 ### Technical Stack
 - **Backend**: Spring Boot 3, Java 21, Gradle
