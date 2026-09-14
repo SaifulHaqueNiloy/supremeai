@@ -826,6 +826,17 @@
     },
     {
       "capability_signals": [
+        "browser",
+        "mcp",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_15_120000_create_canonical_run_tables.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -8584,6 +8595,45 @@
       "path": "backend/reports/optimization_engine.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/models.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/retry.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/state_machine.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -12383,6 +12433,24 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/rag/test_hybrid_retriever.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_models.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_state_machine.py"
     },
     {
       "capability_signals": [],
@@ -23356,5 +23424,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2707
+  "source_file_count": 2714
 }
