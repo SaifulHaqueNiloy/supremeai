@@ -842,6 +842,15 @@
     },
     {
       "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/6250e2a31d38_m0_merge_alembic_heads_into_single_.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -4340,13 +4349,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/grpc_client.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/health/__init__.py"
     },
     {
@@ -5630,6 +5632,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/plugins/experimental/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "execute",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/plugins/experimental/base.py"
     },
     {
       "capability_signals": [
@@ -8253,17 +8266,6 @@
       "path": "backend/p2p/credit_system.py"
     },
     {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/p2p/resource_broker.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -8856,6 +8858,17 @@
       ],
       "kind": "py",
       "path": "backend/scripts/benchmark/load_test_phase3.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/scripts/check_single_alembic_head.py"
     },
     {
       "capability_signals": [],
@@ -23343,5 +23356,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2706
+  "source_file_count": 2707
 }
