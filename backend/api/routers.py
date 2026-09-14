@@ -202,6 +202,18 @@ ALL_ROUTERS = [
     {"path": "tools.comment_thread_ai", "prefix": "/api", "is_admin": False, "is_critical": False},
     {"path": "api.routes.mobile_bff", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.payments", "prefix": "", "is_admin": False, "is_critical": False},
+    # RESTORE-AND-WIRE (2026-09-14): admin auth endpoints (firebase-login, TOTP
+    # setup/verify/recover, trusted browsers, free-tier controls) were previously
+    # unmounted — yet core/config_fields.py public-path allowlist and
+    # tests/api/test_admin_routes.py both EXPECT these routes to exist.
+    # Endpoints enforce their own admin auth internally; login itself must be
+    # reachable pre-authentication, hence is_admin=False.
+    {"path": "core.admin_routes", "prefix": "", "is_admin": False, "is_critical": True},
+    # RESTORE-AND-WIRE (2026-09-14): /api/v1/gateway proxy (rate-limited
+    # forward + capability dispatch) restored and mounted; is_admin=True adds
+    # router-level get_current_user_token to every endpoint (its /forward
+    # already has endpoint-level auth — duplicate deps are harmless).
+    {"path": "tools.api_gateway", "prefix": "", "is_admin": True, "is_critical": False},
     {
         "path": "api.routes.maintenance",
         "prefix": "/api/v1",
