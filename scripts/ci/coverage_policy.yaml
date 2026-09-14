@@ -42,7 +42,18 @@ version: 1
 #   threshold LOCKED at 55 (measured 63.11 − ~13% headroom) so a coverage
 #                        regression fails CI while normal variance between
 #                        runs stays safe. Next round can push toward 60+.
-#   step 3:              raise with each ramp until the tier is strong.
+#   step 3 (NOW, hardening-2 round 4): critical LOCKED at 60 — measured
+#                        63.11% IDENTICAL across two consecutive honest runs
+#                        (34818775855, 34822497054), re-verified on the third
+#                        (job 103908108884). Owner's ramp END TARGET met and
+#                        held; remaining headroom (3.11 pts) is protected by
+#                        new tests for the worst critical file (api_keys.py).
+#                        important 27 → 35 (measured 40.73/40.74 — 5.7 pts
+#                        headroom); overall 40 → 43 (measured 45.28 on the
+#                        honest expanded suite; overall only enforced on main
+#                        runs, PR runs evaluate critical+important).
+#   step 4:              continue ramp per-file (memory_service 47%,
+#                        compliance_bot 41%, secret_vault 49%, completion 49%).
 # ─────────────────────────────────────────────────────────────────────────────
 
 thresholds:
@@ -50,14 +61,17 @@ thresholds:
     # measured 45.28% (31875/65437, 722 files) on the first honest expanded
     # run (34818775855) — raised from the stale 25 that was set against the
     # old 27.20% baseline measured while ~96% of tests were invisible.
-    pr: 40
-    # release: 40   # honest release bar once ramp advances
+    pr: 43
+    # release: 43   # honest release bar once ramp advances
   critical:
-    pr: 55
-    # release: 50
+    # measured 63.11% on THREE honest runs (34818775855, 34822497054,
+    # job 103908108884) — owner's ramp end target (60) locked.
+    pr: 60
+    # release: 55
   important:
-    pr: 27
-    # release: 40
+    # measured 40.73%/40.74% on the honest expanded suite — 5.7 pts headroom.
+    pr: 35
+    # release: 35
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tier globs — paths are relative to the backend root (coverage.json format).
