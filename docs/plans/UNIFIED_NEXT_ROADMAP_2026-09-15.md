@@ -90,7 +90,26 @@ M0 (audit debt + baseline hygiene)
 
 **Exit criteria for M0:** import-walk = 0 unexplained failures; Alembic 1 head; both dep declarations locked; ai_memory SQL executed with evidence; all 5 QA spec groups runnable; full suite ≥ current 4,536 passing with the 8 deterministic failures gone.
 
+### M0 EXECUTION STATUS — ✅ COMPLETE (2026-09-14)
+
+Executed as seven small sequential evidence-driven PRs per the approved execution order (user verdict on #309: split M0 into M0-A…M0-G; M5 may start in parallel with M1–M4 after M0):
+
+| Item | PR (merged) | Evidence artifact |
+|---|---|---|
+| M0-A deps+lock (F1/F2) | #312 | OCR 38/38 + tests/models 40/40 in CI-identical env; zero lock drift |
+| M0-B Alembic single head (F3) | #313 | merge rev `6250e2a31d38`, offline replay 63 DDL stmts, AST guard + CI step |
+| M0-C circular import (F5) | #314 | both import orders green; 7/7 targeted tests |
+| M0-D dormant triage (F4) | #315 | `docs/audits/M0_D_DORMANT_MODULE_DECISIONS.md`; walk failures 19→0 |
+| M0-E script hygiene (F6/F9) | #316 | dead scripts out; 6 MCP test scripts exit deterministically (5×0, 1 fail-fast) |
+| M0-F ai_memory checkpoint | #317 | `docs/database/AI_MEMORY_PHASE_C_EXECUTION_EVIDENCE.md`; live Supabase execution, 588 rows preserved, round-trip proven |
+| M0-G QA spec completion | #319 | `docs/audits/M0_G_QA_SPEC_COMPLETION.md`; ground truth 13 fixme → 7 converted/6 honest; setups now collected (38 tests listed) |
+
+**Exit-criteria verification on final main (8e5e0a0):** import-walk 0 failures across all six previously-failing packages (511 modules: memory/p2p/database/pipelines/core/scripts); `alembic heads` = 1 + guard OK; 151/151 tests green across all previously-failing suites; every PR merged with CI fully green (24/25 checks incl. Backend Tests matrix).
+
+**Sequencing note:** with M0 closed, per the approved plan M5 (Architecture Intelligence) may start **in parallel** with M1 Canonical Run → M2 Context Engine → M3 Memory → M4 Browser. M1+M2+M3 must be implemented as one unified execution/context architecture, not three separate features.
+
 ---
+
 
 ### M1 — Canonical Run fabric (P0; ecosystem Ph1) — owner C5
 
