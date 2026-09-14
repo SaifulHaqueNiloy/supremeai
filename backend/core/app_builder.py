@@ -209,13 +209,23 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 except Exception as rest_exc:
                     logger.debug(f"Supabase REST health fallback check failed: {rest_exc}")
                 logger.warning(f"Database health check failed: {exc}")
-                # If Supabase allows degraded mode or running as worker/scraper/mcp, do not fail critical check
-                if os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true":
-                    return True
-                service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
-                if service_role in ("worker", "scraper", "mcp"):
-                    return True
-                return False
+                # বাংলা (P1 — role-aware DB degradation policy):
+                # একক সোর্স অব ট্রুথ core/health_policy.py::db_failure_readiness —
+                #   core (prod/stage): DB ফেল = NOT READY (degradation flag উপেক্ষিত)
+                #   core (dev/local):  flag দিলে dev convenience-এর জন্য allowed
+                #   worker/scraper/mcp: সব এনভে degradation allowed
+                from core.health_policy import db_failure_readiness
+
+                role = os.getenv("SUPREMEAI_SERVICE_ROLE", "core")
+                degradation_requested = (
+                    os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true"
+                )
+                serve_ready, reason = db_failure_readiness(role, settings.env, degradation_requested)
+                if serve_ready:
+                    logger.warning("Database degraded mode ACTIVE: %s", reason)
+                else:
+                    logger.error("Database readiness refused: %s", reason)
+                return serve_ready
 
         def _check_memory() -> bool:
             try:
@@ -227,12 +237,10 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 return True
 
         # In standalone scraper/worker roles, DB is not a critical gating check
-        is_standalone_microservice = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower() in (
-            "worker",
-            "scraper",
-            "mcp",
-        )
-        register_check("database", _check_database, critical=not is_standalone_microservice)
+        # বাংলা: criticality সিদ্ধান্তও একক পলিসি মডিউল থেকে (P1 consistency)
+        from core.health_policy import is_critical_db_check
+
+        register_check("database", _check_database, critical=is_critical_db_check(os.getenv("SUPREMEAI_SERVICE_ROLE", "")))
         register_check("memory", _check_memory, critical=False)
 
         monitoring_task = None
