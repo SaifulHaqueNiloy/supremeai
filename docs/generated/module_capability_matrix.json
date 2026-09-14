@@ -14673,6 +14673,16 @@
       "path": "frontend/e2e/commandcenter.spec.ts"
     },
     {
+      "capability_signals": [
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/e2e/guest-chat.spec.ts"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -22859,5 +22869,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2661
+  "source_file_count": 2662
 }
