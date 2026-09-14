@@ -1,16 +1,17 @@
 # Database Migration Directory
 
-> **⚠️ This directory contains legacy migration SQL pending archival.**
+> **✅ ARCHIVED (Task 7-a, 2026-09-14): all legacy raw SQL now lives in `legacy/`.**
 >
-> The repository still contains legacy and manual SQL files here. They are retained for historical and recovery purposes, but they are not an approved production migration path. Archival is intentionally tracked as a separate governance change so no deployment references are broken silently.
+> This directory no longer contains any active or executable migration SQL at
+> its top level. It is retained only as the home of the read-only archive
+> subdirectories below.
 
 ## Canonical Migration System
 
-The **only active migration system** for SupremeAI is **Alembic**, located at `backend/alembic_migrations/`. All new schema changes must be made as Alembic migrations.
-
-## Ownership Boundary
-
-Alembic is the only migration system allowed to change deployed schemas. The SQL files currently under `backend/database/migrations/` are retained as historical or DBA-reviewed material and must not receive new production migrations until the archival move described below is completed. The `legacy/` and `manual/` trees are not active application migration paths.
+**Alembic (`backend/alembic_migrations/`) is THE canonical migration path for
+SupremeAI.** Every new table or schema change MUST ship as an Alembic
+revision — raw SQL files are no longer an accepted way to change the schema.
+See `backend/alembic_migrations/README` for the workflow.
 
 ## Directory Structure
 
@@ -18,9 +19,9 @@ Alembic is the only migration system allowed to change deployed schemas. The SQL
 backend/database/
 ├── migrations/
 │   ├── README.md          ← This file
-│   ├── *.sql              ← Historical SQL scripts pending archival
-│   ├── archive/           ← Archived legacy scripts (historical reference only)
-│   └── manual/            ← Manual migration scripts (DBA review only)
+│   ├── legacy/            ← 📦 ARCHIVED legacy SQL (read-only; see legacy/README.md)
+│   ├── archive/           ← Early-development scripts relocated from root migrations/
+│   └── manual/            ← Manual DBA-operation scripts (DBA review only)
 ├── ../alembic_migrations/ ← ✅ CANONICAL — All new migrations go here
 │   ├── env.py
 │   ├── script.py.mako
@@ -29,13 +30,12 @@ backend/database/
     └── schema_contract.yaml
 ```
 
-## Which System to Use?
+## Ownership Boundary
 
-| System | Path | Status | Use for |
-|--------|------|--------|---------|
-| **Alembic** | `backend/alembic_migrations/` | ✅ **Active** | All new schema migrations |
-| Archived SQL | `backend/database/migrations/archive/` | 📦 Archived | Historical reference only (superseded by Alembic) |
-| Manual | `backend/database/migrations/manual/` | 🔧 DBA only | Manual DBA operations |
+Alembic is the only migration system allowed to change deployed schemas.
+The SQL trees under `legacy/`, `archive/`, and `manual/` are historical or
+DBA-reviewed material, are not wired into any automated runner, and must not
+receive new production migrations.
 
 ## Running Alembic Migrations
 
@@ -46,14 +46,6 @@ alembic revision --autogenerate -m "description"  # create new migration
 alembic history               # view migration history
 alembic downgrade -1          # rollback one migration
 ```
-
-## Migration History
-
-The `archive/` directory contains 17 SQL scripts from early development (2026-08-19 to 2026-09-10). These scripts were the original schema definitions before Alembic was adopted. They are preserved for:
-
-1. **Historical reference** — understanding schema evolution
-2. **Disaster recovery** — if Alembic history is ever lost
-3. **Audit trail** — documenting what changes were made and when
 
 ---
 
