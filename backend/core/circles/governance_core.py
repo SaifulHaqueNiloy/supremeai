@@ -107,7 +107,9 @@ class GovernanceCore:
         center = self._centers.get(envelope.circle)
         if center is None:
             result = self._failed(
-                envelope, ExecutionStatus.UNAVAILABLE, "unknown_circle",
+                envelope,
+                ExecutionStatus.UNAVAILABLE,
+                "unknown_circle",
                 f"No circle center registered for '{envelope.circle.value}'",
             )
             self._fan_out(result)
@@ -116,7 +118,9 @@ class GovernanceCore:
         spec = center.describe(envelope.capability)
         if spec is None:
             result = self._failed(
-                envelope, ExecutionStatus.UNAVAILABLE, "unknown_capability",
+                envelope,
+                ExecutionStatus.UNAVAILABLE,
+                "unknown_capability",
                 f"Capability '{envelope.capability}' is not registered in the "
                 f"'{envelope.circle.value}' circle",
             )
@@ -127,7 +131,9 @@ class GovernanceCore:
         if not policy.allowed:
             event = self._audit_event(envelope, "capability.rejected", policy)
             result = self._failed(
-                envelope, ExecutionStatus.REJECTED, "central_policy_denied",
+                envelope,
+                ExecutionStatus.REJECTED,
+                "central_policy_denied",
                 policy.reason or "Central policy denied this capability",
                 events=(event,),
             )
@@ -139,7 +145,9 @@ class GovernanceCore:
             result = await asyncio.wait_for(center.handle(envelope), overall_timeout)
         except TimeoutError:
             result = self._failed(
-                envelope, ExecutionStatus.FAILED, "deadline_exceeded",
+                envelope,
+                ExecutionStatus.FAILED,
+                "deadline_exceeded",
                 f"Execution exceeded {int(overall_timeout * 1000)}ms deadline",
             )
 
@@ -196,8 +204,7 @@ class GovernanceCore:
                     "owner": center.owner,
                     "status": health.status,
                     "capabilities": [
-                        spec.model_dump(mode="json")
-                        for spec in center.capability_specs()
+                        spec.model_dump(mode="json") for spec in center.capability_specs()
                     ],
                     "health": health.model_dump(mode="json"),
                 }
