@@ -1,10 +1,19 @@
 
-# SupremeAI - Final 5-Model Structure
-## With Free Multiple API Keys Support
+# SupremeAI - Model Topology: Evolution from Fixed 5-Model to Dynamic $1 \dots N$ Agent Pool
+**Status:** 🔄 **EVOLVED / SUPERSEDED BY DYNAMIC AGENT DISCOVERY**  
+**Last Updated:** September 2026  
+**Governing Rule:** *AGENTS.md Clause 1: "Intent Over Concrete Examples (Avoid the Example Trap)"*
+
+> [!IMPORTANT]
+> **Architectural Evolution & Constitutional Note:**
+> - **The Historical Context (May 2026):** This document proposed a rigid "Final 5-Model Structure" (Qwen, Llama, DeepSeek, Phi, Nomic) intended to fit within ~16GB RAM.
+> - **The Constitutional Realization (Sept 2026):** Naming and restricting the system to a fixed "5-Model Structure" was an **Example Trap**.
+> - **Active Production Architecture:** The platform now implements **Dynamic Discovery of $1 \dots N$ Agents**. The system auto-detects whatever local models (via Ollama, vLLM, LMStudio) or cloud APIs (Gemini, Groq, OpenRouter, OpenAI, Claude) are available in the user's active environment, assigning roles dynamically.
+> - *This document is preserved as an audit record of local model quantization benchmarks.*
 
 ---
 
-# 1. Model Selection (Final 5)
+# 1. Historical Model Benchmarks (The Illustrative 5)
 
 | # | Model | Role | Size | RAM | Why |
 |---|-------|------|------|-----|-----|
