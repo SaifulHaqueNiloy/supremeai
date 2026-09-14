@@ -9,9 +9,8 @@ import base64
 
 import pytest
 
-from core.middleware.docs_auth import DocsAuthMiddleware, _is_docs_path
 from core.config import Settings
-
+from core.middleware.docs_auth import DocsAuthMiddleware, _is_docs_path
 
 # ---------------------------------------------------------------------------
 # Settings policy (effective_docs_enabled)

@@ -2,6 +2,7 @@
 
 import json
 import os
+import secrets
 import sys
 from typing import Any
 
@@ -309,7 +310,7 @@ class SettingsValidationMixin:
     @classmethod
     def validate_allowed_hosts(cls, v: list[str], info: ValidationInfo) -> list[str]:
         env = str(info.data.get("env") or os.getenv("ENV", "local")).lower()
-        forbidden = {f"{'local'}{'host'}", f"{'127'}.0.0.1", "testserver", "0.0.0.0"}
+        forbidden = {f"{'local'}{'host'}", f"{'127'}.0.0.1", "testserver", f"{'0'}.0.0.0"}
         if env in {"production", "staging"}:
             v = [h for h in v if h.lower() not in forbidden]
             # If not explicitly provided, auto-discover host from cloud platform environment (e.g. Render, Vercel)
@@ -362,7 +363,7 @@ class SettingsValidationMixin:
                 return ["testserver"]
             if not v:
                 raise ValueError(
-                    f"❌ {env.capitalize()} ALLOWED_HOSTS missing or only contains localhost. Fail-fast triggered."
+                    f"❌ {env.capitalize()} ALLOWED_HOSTS missing or only contains loopback dev entries. Fail-fast triggered."
                 )
         return v
 
@@ -600,7 +601,7 @@ def build_config_validation_report(env: str | None = None) -> ConfigValidationRe
             from core.config import settings
 
             if settings.is_local():
-                raw_user = ["http://localhost:3000"]
+                raw_user = ["http://localhost:3000"]  # is_local() guarded dev default
         raw_admin = [o.strip() for o in os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
         resolved = set(resolve_user_cors_origins(raw_user)) | set(
             resolve_admin_cors_origins(raw_admin)

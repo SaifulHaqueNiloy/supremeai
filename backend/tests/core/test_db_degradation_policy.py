@@ -6,7 +6,6 @@ role-specific degradation allowed; dev/local core-এ flag দিলে convenie
 
 from core.health_policy import db_failure_readiness, is_critical_db_check
 
-
 # ---------------------------------------------------------------------------
 # core role (and unset) — the strict contract
 # ---------------------------------------------------------------------------
