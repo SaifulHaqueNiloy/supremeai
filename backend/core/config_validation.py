@@ -128,19 +128,42 @@ class SettingsValidationMixin:
             return False
         return bool(v)
 
+    # FINAL-TEST P0 FIX: publicly-known dev default that must never survive into
+    # a non-local environment (it previously leaked into internal.py's admin-secret
+    # fallback via settings.docs_password).
+    FORBIDDEN_DOCS_PASSWORDS = frozenset({"dev_password_only", "admin", "password"})
+
     @field_validator("docs_password", mode="before")
     @classmethod
     def validate_docs_password(
         cls, v: str | SecretStr | None, info: ValidationInfo
     ) -> str | SecretStr:
+        raw = ""
+        if isinstance(v, SecretStr):
+            raw = v.get_secret_value()
+        elif isinstance(v, str):
+            raw = v
         if "pytest" in sys.modules:
-            return v or ""
-        if not v and info.data.get("env", "local") in {"production", "staging"}:
-            logger.warning(
-                "⚠️ SUPREMEAI_DOCS_PASSWORD not configured — using auto-generated secure password"
-            )
-            return SecretStr(secrets.token_urlsafe(32))
-        return v or ""
+            return raw
+        # NOTE: info.data.get("env") is unreliable here — Settings mixes in the
+        # fields module first, so `env` (declared in config.py) is not yet
+        # resolved when THIS field validates. Read the ENV var directly.
+        env = (info.data.get("env") or os.getenv("ENV", "local")).lower()
+        if env in {"production", "staging"}:
+            if raw and raw.lower() in cls.FORBIDDEN_DOCS_PASSWORDS:
+                # Fail-fast: a publicly-known docs password in production is a
+                # security incident waiting to happen.
+                raise ValueError(
+                    "❌ SUPREMEAI_DOCS_PASSWORD is set to a publicly-known default "
+                    "('dev_password_only'). Refusing to boot in "
+                    f"{env}. Set a strong SUPREMEAI_DOCS_PASSWORD (>= 16 chars)."
+                )
+            if not raw:
+                logger.warning(
+                    "⚠️ SUPREMEAI_DOCS_PASSWORD not configured — using auto-generated secure password"
+                )
+                return SecretStr(secrets.token_urlsafe(32))
+        return raw
 
     @model_validator(mode="after")
     def validate_all(self):
@@ -148,11 +171,69 @@ class SettingsValidationMixin:
         if "pytest" in sys.modules or os.getenv("CI") == "true":
             return self
 
-        if self.env in {"production", "staging"} and self.docs_auth_enabled:
+        # ── API Docs exposure policy (FINAL-TEST P0 FIX) ─────────────────────
+        # Production contract: /docs, /redoc and the OpenAPI schema are DISABLED
+        # by default outside local dev. Operators may re-enable them ONLY via an
+        # explicit SUPREMEAI_DOCS_ENABLED=true opt-in, and even then they are
+        # protected by HTTP Basic auth (core.middleware.docs_auth) which requires
+        # a non-default password (enforced in validate_docs_password + below).
+        if self.env in {"production", "staging"}:
+            explicit_docs = os.getenv("SUPREMEAI_DOCS_ENABLED", "").strip().lower() in (
+                "true",
+                "1",
+                "yes",
+            ) or os.getenv("DOCS_ENABLED", "").strip().lower() in ("true", "1", "yes")
+            if self.docs_enabled and not explicit_docs:
+                logger.warning(
+                    "🔒 %s: /docs, /redoc and OpenAPI are DISABLED by default in %s. "
+                    "Set SUPREMEAI_DOCS_ENABLED=true to explicitly opt in (Basic-auth protected).",
+                    self.env.capitalize(),
+                    self.env,
+                )
+                self.docs_enabled = False
+            if self.docs_enabled:
+                # Explicit production opt-in: docs MUST be authenticated.
+                self.docs_auth_enabled = True
+                pwd = self.docs_password.get_secret_value() if self.docs_password else ""
+                if not pwd:
+                    raise ValueError(
+                        f"❌ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing while "
+                        "SUPREMEAI_DOCS_ENABLED=true. Fail-fast triggered."
+                    )
+                if len(pwd) < 12:
+                    raise ValueError(
+                        "❌ SUPREMEAI_DOCS_PASSWORD must be >= 12 characters when docs "
+                        f"are enabled in {self.env}."
+                    )
+        elif not self.is_local() and self.env != "test":
+            pass  # unknown env already rejected by validate_env
+
+        if (
+            self.env in {"production", "staging"}
+            and self.docs_enabled
+            and self.docs_auth_enabled
+        ):
+            # Only enforced when docs are actually mounted; docs_password is
+            # auto-generated at field level when missing in prod/staging.
             pwd = self.docs_password.get_secret_value() if self.docs_password else ""
             if not pwd:
                 raise ValueError(
                     f"❌ {self.env.capitalize()} SUPREMEAI_DOCS_PASSWORD missing. Fail-fast triggered."
+                )
+
+        # FINAL-TEST P0 FIX: surface missing SUPREMEAI_ADMIN_SECRET early —
+        # /internal/* automation endpoints return 500 until it is configured.
+        if self.env in {"production", "staging"}:
+            admin_secret = (
+                self.supremeai_admin_secret.get_secret_value()
+                if getattr(self, "supremeai_admin_secret", None)
+                else ""
+            )
+            if not admin_secret:
+                logger.critical(
+                    "❌ SUPREMEAI_ADMIN_SECRET missing in %s: /internal/run-daily-evolution "
+                    "and /api/v1/admin/alerts automation calls will fail until it is set.",
+                    self.env,
                 )
 
         if self.env in {"production", "staging"}:

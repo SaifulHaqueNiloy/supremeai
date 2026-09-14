@@ -19,7 +19,9 @@ services:
       - MCP_URL=http://mcp:3771
       - CHROMA_PERSIST_DIR=/app/data/chromadb_store
       - QDRANT_PERSIST_DIR=/app/data/qdrant_storage
-      - SUPABASE_ALLOW_DB_DEGRADATION=true
+      # FINAL-TEST P1 (DB degradation policy): the core API is NOT allowed to be
+      # "ready" without its database. SUPABASE_ALLOW_DB_DEGRADATION is only
+      # honored for worker/scraper/mcp roles — see core/app_builder.py.
     env_file:
       - .env
     volumes:

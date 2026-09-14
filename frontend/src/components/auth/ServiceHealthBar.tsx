@@ -157,7 +157,9 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
     // endpoint is healthy. Keep the status chip truthful instead of reporting
     // individual services as down from a stale/degraded aggregate response.
     try {
-      const fallback = await fetch(`${apiBaseUrl}/api/v1/health`, {
+      // CANONICAL HEALTH CONTRACT (FINAL-TEST P0): the root /health surface is
+      // the operational source of truth; /api/v1/health stays as a legacy alias.
+      const fallback = await fetch(`${apiBaseUrl}/health`, {
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(4000),
       });

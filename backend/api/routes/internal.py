@@ -14,13 +14,17 @@ router = APIRouter(dependencies=[Depends(get_current_admin)])
 
 def _require_admin(request: Request):
     secret = request.headers.get("X-Admin-Secret")
-    expected = (
-        getattr(settings, "supremeai_admin_secret", "")
-        or getattr(settings, "docs_password", "")
-        or ""
-    )
+    # FINAL-TEST P0 FIX (2026-09-14): the docs_password fallback is REMOVED.
+    # docs_password previously defaulted to the publicly-known "dev_password_only",
+    # which made this check a no-op in production (a public admin key). Automation
+    # must now configure SUPREMEAI_ADMIN_SECRET explicitly.
+    expected = getattr(settings, "supremeai_admin_secret", None)
+    expected = expected.get_secret_value() if expected else ""
     if not expected:
-        raise HTTPException(status_code=500, detail="Admin secret not configured on server.")
+        raise HTTPException(
+            status_code=500,
+            detail="SUPREMEAI_ADMIN_SECRET not configured on server — internal automation endpoints are locked.",
+        )
     if not secrets.compare_digest(secret or "", expected):
         raise HTTPException(status_code=403, detail="Forbidden: Invalid admin secret.")
 

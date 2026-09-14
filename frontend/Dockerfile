@@ -18,11 +18,25 @@ COPY frontend/ ./frontend/
 
 # Build frontend
 WORKDIR /app/frontend
-ARG VITE_API_URL=http://localhost:8080
+# FINAL-TEST P0 FIX (frontend/backend URL contract):
+# Vite inlines VITE_* at build time. Previously this file defaulted
+# VITE_API_URL to http://localhost:8080, so any production build that forgot
+# the real backend URL silently shipped a bundle calling localhost (degraded
+# viewer mode in production). The default is now EMPTY and
+# scripts/validate-build-env.mjs HARD-FAILS the build unless a real backend
+# URL is provided (or VITE_USE_RELATIVE_PATH=true for same-host proxy deploys,
+# or the explicit local-testing escape hatch VITE_ALLOW_LOCAL_BACKEND=true).
+ARG VITE_API_URL
+ARG VITE_USER_BACKEND
+ARG VITE_ADMIN_BACKEND
+ARG VITE_USE_RELATIVE_PATH
+ARG VITE_ALLOW_LOCAL_BACKEND
 ENV VITE_API_URL=$VITE_API_URL \
     VITE_BACKEND_URL=$VITE_API_URL \
-    VITE_USER_BACKEND=$VITE_API_URL \
-    VITE_ADMIN_BACKEND=$VITE_API_URL \
+    VITE_USER_BACKEND=$VITE_USER_BACKEND \
+    VITE_ADMIN_BACKEND=$VITE_ADMIN_BACKEND \
+    VITE_USE_RELATIVE_PATH=$VITE_USE_RELATIVE_PATH \
+    VITE_ALLOW_LOCAL_BACKEND=$VITE_ALLOW_LOCAL_BACKEND \
     NODE_ENV=production
 
 RUN pnpm run build

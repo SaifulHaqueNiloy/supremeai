@@ -42,8 +42,13 @@ env:
   NODE_VERSION: '24'
   PYTHON_VERSION: '3.11'
   # Coverage thresholds — fail build if below these values.
+  # FINAL-TEST P1 (staged baseline, 2026-09-14): ladder 30 → 40 → 50 → 60.
+  # Backend: MIN_BACKEND_COVERAGE is now ENFORCED in the backend-aggregate job
+  # (it was previously declared but never wired — the only gate was
+  # scripts/ci/coverage_policy.yaml overall.pr=25, now aligned to 30 as step 1).
+  # Frontend: 16 → 20 as step 1 (enforced via the vitest CLI thresholds).
   MIN_BACKEND_COVERAGE: 30
-  MIN_FRONTEND_COVERAGE: 16
+  MIN_FRONTEND_COVERAGE: 20
 
 jobs:
   # -----------------------------------------------------------------
@@ -646,6 +651,17 @@ jobs:
           poetry run coverage json -o coverage.json
           pip install pyyaml loguru
           python ../scripts/ci/coverage_quality_gate.py coverage.json ../scripts/ci/coverage_policy.yaml --tiers "$TIERS"
+          # FINAL-TEST P1: wire the declared MIN_BACKEND_COVERAGE floor (the env
+          # var was previously dead config). Fails when overall coverage is
+          # below the declared threshold.
+          python - <<'PY'
+          import json, os
+          floor = float(os.environ["MIN_BACKEND_COVERAGE"])
+          total = json.load(open("coverage.json"))["totals"]["percent_covered"]
+          print(f"Backend overall coverage: {total:.2f}% (floor {floor}%)")
+          if total < floor:
+              raise SystemExit(f"::error::Backend coverage {total:.2f}% is below the {floor}% gate")
+          PY
       - name: Upload merged coverage
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -809,8 +825,15 @@ jobs:
         working-directory: ./frontend
         env:
           NODE_ENV: production
-          VITE_API_URL: ${{ secrets.BACKEND_URL || vars.BACKEND_URL || env.BACKEND_URL || secrets.USER_BACKEND_URL || vars.USER_BACKEND_URL }}
-          VITE_BACKEND_URL: ${{ secrets.BACKEND_URL || vars.BACKEND_URL || env.BACKEND_URL || secrets.USER_BACKEND_URL || vars.USER_BACKEND_URL }}
+          # FINAL-TEST P0: build-time contract. The frontend's
+          # scripts/validate-build-env.mjs hard-fails the build when no real
+          # backend URL is provided (previously a missing secret silently
+          # shipped a bundle calling localhost). Chain: repo variable → secret
+          # → known Render backend default.
+          VITE_API_URL: ${{ vars.BACKEND_URL || secrets.BACKEND_URL || secrets.USER_BACKEND_URL || vars.USER_BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
+          VITE_BACKEND_URL: ${{ vars.BACKEND_URL || secrets.BACKEND_URL || secrets.USER_BACKEND_URL || vars.USER_BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
+          VITE_USER_BACKEND: ${{ vars.USER_BACKEND_URL || secrets.USER_BACKEND_URL || vars.BACKEND_URL || secrets.BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
+          VITE_ADMIN_BACKEND: ${{ vars.ADMIN_BACKEND_URL || secrets.ADMIN_BACKEND_URL || vars.BACKEND_URL || secrets.BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
         run: pnpm run build
 
       - name: Verify build output

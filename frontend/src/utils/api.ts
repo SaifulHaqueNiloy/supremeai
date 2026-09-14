@@ -263,7 +263,11 @@ export async function checkBackendHealth(): Promise<{
 }> {
   const start = performance.now();
   try {
-    const response = await fetchWithRetry(`${getApiBaseUrl()}/api/v1/health/live`, {
+    // CANONICAL HEALTH CONTRACT (FINAL-TEST P0): GET /health/live is the single
+    // operational source of truth (Docker HEALTHCHECK, k8s probes, keepalive and
+    // CI smoke all use it). The /api/v1/health/* alias remains mounted for
+    // backward compatibility but must not be used by new code.
+    const response = await fetchWithRetry(`${getApiBaseUrl()}/health/live`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000),
     });

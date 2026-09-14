@@ -207,10 +207,25 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 except Exception as rest_exc:
                     logger.debug(f"Supabase REST health fallback check failed: {rest_exc}")
                 logger.warning(f"Database health check failed: {exc}")
-                # If Supabase allows degraded mode or running as worker/scraper/mcp, do not fail critical check
+                # ── DB DEGRADATION POLICY (FINAL-TEST P1, 2026-09-14) ────────
+                # core API (role=monolith/user) → DB failure = NOT READY. Full stop.
+                # worker/scraper/mcp → role-specific degradation allowed (their DB
+                # check is registered as critical=False below anyway).
+                # SUPABASE_ALLOW_DB_DEGRADATION only ever affects the non-core
+                # roles; setting it on a core/monolith deployment no longer opens
+                # a "serve traffic without a database" hole.
+                service_role = (
+                    os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
+                    or str(getattr(settings, "supremeai_service_role", "monolith")).lower()
+                )
                 if os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true":
-                    return True
-                service_role = os.getenv("SUPREMEAI_SERVICE_ROLE", "").lower()
+                    if service_role in ("worker", "scraper", "mcp"):
+                        return True
+                    logger.warning(
+                        "⚠️ SUPABASE_ALLOW_DB_DEGRADATION=true is IGNORED for service_role="
+                        f"'{service_role}': the core API must never be ready without its database. "
+                        "Fix DATABASE_URL/Supabase connectivity."
+                    )
                 if service_role in ("worker", "scraper", "mcp"):
                     return True
                 return False
@@ -258,16 +273,17 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             healer.stop_monitoring()
             await monitoring_task
 
-    docs_url = (
-        "/docs"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
-    redoc_url = (
-        "/redoc"
-        if getattr(settings, "docs_enabled", True) or settings.env == "local" or settings.debug
-        else None
-    )
+    # FINAL-TEST P0 FIX (production docs contract): `docs_enabled` is now a real,
+    # env-driven settings field (core/config_fields.py). Production policy is
+    # enforced in config_validation.validate_all:
+    #   - local/dev  → docs enabled by default
+    #   - staging/prod → docs DISABLED unless SUPREMEAI_DOCS_ENABLED=true is
+    #     explicitly set (and then Basic-auth protected via DocsAuthMiddleware).
+    # `settings.debug` is force-disabled in production/staging, so it can never
+    # silently re-enable docs there.
+    docs_enabled = bool(getattr(settings, "docs_enabled", False)) or settings.debug
+    docs_url = "/docs" if docs_enabled else None
+    redoc_url = "/redoc" if docs_enabled else None
     openapi_url = f"{settings.API_V1_STR}/openapi.json" if docs_url else None
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
@@ -410,6 +426,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 15. Response standardization - runs before CORS wraps everything
     app.add_middleware(ResponseStandardizationMiddleware)
 
+    # 15.1 Docs Basic-auth (FINAL-TEST P0 FIX): runs OUTSIDE AuthMiddleware
+    # (last-added = outermost in Starlette) so /docs, /redoc and the OpenAPI
+    # schema receive a proper HTTP Basic challenge in staging/production
+    # instead of the auth middleware's JSON 401. No-op in local dev and tests.
+    from core.middleware.docs_auth import DocsAuthMiddleware
+
+    app.add_middleware(DocsAuthMiddleware)
+
     # 16. CORS — added LAST so it is the true outermost layer (see the
     # ROOT-CAUSE FIX note above `origins = ...`). Any short-circuit response
     # from any middleware above (401 from AuthMiddleware, 429 from
@@ -475,12 +499,16 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     # 🔬 Evolution v3.0: Register health endpoints
     from core.health_routes import router as health_router
 
-    # রেন্ডার হেলথ চেক render.yaml-এ /api/v1/health/live হিসেবে কনফিগার করা,
-    # তাই রাউটার এখন /api/v1/health প্রিফিক্সে মাউন্ট করা হচ্ছে (আগে /health ছিল,
-    # যেটা কনফিগার করা পাথের সাথে মিলছিল না ফলে লাইভনেস প্রোব বরাবর 404 পেত)।
-    app.include_router(health_router, prefix="/api/v1/health")
-    # ব্যাকওয়ার্ড কম্প্যাটিবিলিটি: পুরনো /health পাথেও এক��� রাউটার এক্সপোজ করা থাকল।
-    app.include_router(health_router, prefix="/health")
+    # ── CANONICAL HEALTH CONTRACT (FINAL-TEST P0, 2026-09-14) ────────────────
+    # The single operational source of truth is:
+    #     GET /health          → full health status
+    #     GET /health/live     → liveness probe  (Docker HEALTHCHECK, k8s probes,
+    #                            keepalive workflow, CI smoke, frontend probes)
+    #     GET /health/ready    → readiness probe (Render / orchestrators)
+    # /api/v1/health/* stays mounted ONLY as a legacy alias for older monitors —
+    # all operational configuration must point at /health/*.
+    app.include_router(health_router, prefix="/api/v1/health")  # legacy alias
+    app.include_router(health_router, prefix="/health")  # canonical
 
     @app.api_route("/", methods=["GET", "HEAD"])
     async def root():

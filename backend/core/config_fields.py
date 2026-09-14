@@ -32,11 +32,49 @@ class SettingsFieldsMixin:
         default=30.0, validation_alias="CIRCUIT_COOLDOWN_SECONDS"
     )
     MAX_ROUTING_ATTEMPTS: int = Field(default=3, validation_alias="MAX_ROUTING_ATTEMPTS")
-    docs_auth_enabled: bool = True
+    # ── API Docs (/docs, /redoc, OpenAPI) Exposure Policy ────────────────────
+    # FINAL-TEST P0 FIX (production contract closure, 2026-09-14):
+    # `docs_enabled` was previously accessed via getattr(settings, "docs_enabled", True)
+    # in app_builder.py — the attribute never existed, so the permissive default made
+    # /docs, /redoc and the OpenAPI schema PUBLIC in every environment, including
+    # production. It is now a real, env-driven field.
+    #
+    # Policy (enforced in config_validation.SettingsValidationMixin.validate_all):
+    #   local/dev      → docs enabled by default (developer convenience)
+    #   staging/prod   → docs DISABLED unless SUPREMEAI_DOCS_ENABLED is explicitly
+    #                    set to a truthy value, and even then they are protected by
+    #                    HTTP Basic auth (core.middleware.docs_auth.DocsAuthMiddleware)
+    #                    using SUPREMEAI_DOCS_USERNAME / SUPREMEAI_DOCS_PASSWORD.
+    docs_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("SUPREMEAI_DOCS_ENABLED", "DOCS_ENABLED"),
+    )
+    docs_auth_enabled: bool = Field(
+        default=True,
+        validation_alias=AliasChoices("SUPREMEAI_DOCS_AUTH_ENABLED", "DOCS_AUTH_ENABLED"),
+    )
     docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
+    # FINAL-TEST P0 FIX: the previous default SecretStr("dev_password_only") defeated
+    # the "auto-generate when missing" validator (a non-empty default is never treated
+    # as missing) AND could leak into api/routes/internal.py's admin-secret fallback —
+    # meaning a publicly-known string could unlock admin endpoints in production.
+    # The default is now EMPTY: local dev gets no docs auth prompt, staging/production
+    # auto-generates a secure random password (logged once) or fails fast when docs
+    # were explicitly enabled without a strong password.
     docs_password: SecretStr = Field(
-        default=SecretStr("dev_password_only"),
+        default=SecretStr(""),
         validation_alias="SUPREMEAI_DOCS_PASSWORD",
+    )
+
+    # FINAL-TEST P0 FIX (admin secret contract, 2026-09-14): api/routes/internal.py's
+    # _require_admin previously fell back to docs_password — which defaulted to the
+    # publicly-known "dev_password_only", effectively making it a public admin key.
+    # Automation must now use a dedicated SUPREMEAI_ADMIN_SECRET. In production,
+    # config_validation logs a critical warning when it is missing so operators
+    # notice before relying on /internal/* automation endpoints.
+    supremeai_admin_secret: SecretStr = Field(
+        default=SecretStr(""),
+        validation_alias="SUPREMEAI_ADMIN_SECRET",
     )
 
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
@@ -192,6 +230,29 @@ class SettingsFieldsMixin:
     security_context_ttl: int = Field(default=86400, validation_alias="SECURITY_CONTEXT_TTL")
     security_caution_log_ttl: int = Field(
         default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL"
+    )
+
+    # ── Request Validation / Edge Limits (FINAL-TEST P1: zero-hardcode) ──────
+    # Previously class-level constants on RequestValidationMiddleware
+    # (core/middleware/security.py). Now env-driven so operators can tune the
+    # edge (body size, query length, in-memory fallback rate limit) without a
+    # code deploy. The Redis-backed limiter (core/rate_limit.py) remains the
+    # AUTHORITATIVE multi-instance rate limiter; these values only govern the
+    # in-process emergency fallback.
+    security_max_body_bytes: int = Field(
+        default=10 * 1024 * 1024, validation_alias="SECURITY_MAX_BODY_BYTES"
+    )
+    security_max_query_length: int = Field(
+        default=2048, validation_alias="SECURITY_MAX_QUERY_LENGTH"
+    )
+    security_max_header_size: int = Field(
+        default=8192, validation_alias="SECURITY_MAX_HEADER_SIZE"
+    )
+    security_fallback_rate_limit: int = Field(
+        default=100, validation_alias="SECURITY_FALLBACK_RATE_LIMIT"
+    )
+    security_fallback_rate_window: int = Field(
+        default=60, validation_alias="SECURITY_FALLBACK_RATE_WINDOW"
     )
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
     admin_enforce_totp: bool = Field(default=True, validation_alias="ADMIN_ENFORCE_TOTP")

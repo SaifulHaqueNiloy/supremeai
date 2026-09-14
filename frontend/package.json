@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "build": "node scripts/validate-build-env.mjs && cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "build:report": "vite build --mode production --reporter=json",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.app.json --noEmit",

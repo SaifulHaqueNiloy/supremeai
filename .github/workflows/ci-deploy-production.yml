@@ -1,5 +1,9 @@
 # Reusable workflow: Production Deploy (Render + Cloudflare + DB Schema Check + Notify)
 # Called by ci.yml after Docker images are published.
+# Also manually dispatchable (Actions → Production Deploy → Run workflow) to run
+# ONLY the production smoke test against an already-deployed environment — the
+# deploy/db-schema jobs are gated to the workflow_call event so a manual run can
+# never trigger a redeploy.
 name: Production Deploy
 
 on:
@@ -71,6 +75,19 @@ on:
       SLACK_WEBHOOK_URL:
         required: false
 
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Production base URL to smoke test (defaults to RENDER_CORE_URL secret)'
+        required: false
+        type: string
+        default: ''
+      skip_auth:
+        description: 'Health-only probes (skip authenticated smoke steps)'
+        required: false
+        type: boolean
+        default: false
+
 permissions:
   contents: read
 
@@ -79,7 +96,8 @@ jobs:
     name: 🚀 Deploy Core
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
+    # workflow_call-only: a manual workflow_dispatch must not redeploy production.
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main'
     environment:
       name: production
     concurrency:
@@ -111,7 +129,7 @@ jobs:
     name: 🚀 Deploy Worker
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main'
     environment:
       name: production
     concurrency:
@@ -143,7 +161,7 @@ jobs:
     name: 🚀 Deploy Scraper
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main' && inputs.deploy-scraper
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main' && inputs.deploy-scraper
     environment:
       name: production
     concurrency:
@@ -175,7 +193,7 @@ jobs:
     name: 🚀 Deploy MCP Control Tower
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main' && inputs.deploy-mcp
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main' && inputs.deploy-mcp
     environment:
       name: production
     concurrency:
@@ -208,7 +226,7 @@ jobs:
     needs: [deploy-core]
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -249,7 +267,7 @@ jobs:
     name: ⚡ Deploy Cloudflare Worker
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: github.ref == 'refs/heads/main' && inputs.deploy-cloudflare
+    if: github.event_name == 'workflow_call' && github.ref == 'refs/heads/main' && inputs.deploy-cloudflare
     environment:
       name: production
     steps:
@@ -306,6 +324,68 @@ jobs:
             echo "Worker URL: [$CF_URL]($CF_URL)" >> $GITHUB_STEP_SUMMARY
           else
             echo "Worker deployed, check logs for exact URL (set CLOUDFLARE_WORKER_URL secret for custom domains)." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # 🩺 Critical-path smoke test (scripts/ci/production_smoke_test.py).
+  # Post-deploy: runs after deploy-core succeeds (workflow_call on main).
+  # Manual:     runs standalone via workflow_dispatch against inputs.base_url
+  #             (falls back to the RENDER_CORE_URL secret, then the
+  #             PRODUCTION_BASE_URL repo variable).
+  # Authenticated steps are skipped automatically when SMOKE_EMAIL/SMOKE_PASSWORD
+  # are not configured as (environment) secrets — set them in the `production`
+  # environment or at repo level, or dispatch with skip_auth=true for health-only.
+  production-smoke-test:
+    name: 🩺 Production Smoke Test
+    needs: [deploy-core]
+    # Run when deploy-core succeeded OR was skipped (manual dispatch); skip on failure.
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.11'
+
+      - name: Resolve target base URL
+        id: target
+        env:
+          INPUT_URL: ${{ inputs.base_url }}
+          SECRET_URL: ${{ secrets.RENDER_CORE_URL }}
+          VAR_URL: ${{ vars.PRODUCTION_BASE_URL }}
+        run: |
+          URL="$( [ -n "${INPUT_URL}" ] && echo "$INPUT_URL" || ( [ -n "${VAR_URL}" ] && echo "$VAR_URL" || echo "${SECRET_URL}" ) )"
+          if [ -z "$URL" ]; then
+            echo "::error::No base URL resolved. Provide the base_url input, or set the PRODUCTION_BASE_URL variable / RENDER_CORE_URL secret."
+            exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Smoke target: $URL"
+
+      - name: Run production smoke test
+        id: smoke
+        env:
+          SMOKE_BASE_URL: ${{ steps.target.outputs.url }}
+          SMOKE_EMAIL: ${{ secrets.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          SMOKE_SKIP_AUTH: ${{ inputs.skip_auth == true && 'true' || 'false' }}
+        run: python scripts/ci/production_smoke_test.py
+
+      - name: Record result in step summary
+        if: always()
+        run: |
+          if [ "${{ steps.smoke.outcome }}" = "success" ]; then
+            echo "### 🩺 Production Smoke Test: PASSED" >> "$GITHUB_STEP_SUMMARY"
+            echo "Target: ${{ steps.target.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### 🩺 Production Smoke Test: FAILED" >> "$GITHUB_STEP_SUMMARY"
+            echo "Target: ${{ steps.target.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::Production smoke test failed — see the job log for the failing step."
           fi
 
   notify-failure:

@@ -102,17 +102,40 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class RequestValidationMiddleware(BaseHTTPMiddleware):
-    """Validate requests for common attack patterns."""
+    """Validate requests for common attack patterns.
 
-    # Maximum request sizes (bytes)
+    FINAL-TEST P1 FIX (zero-hardcode + multi-instance clarity, 2026-09-14):
+    - All operational limits are now env-driven via settings
+      (SECURITY_MAX_BODY_BYTES, SECURITY_MAX_QUERY_LENGTH,
+      SECURITY_FALLBACK_RATE_LIMIT, SECURITY_FALLBACK_RATE_WINDOW).
+    - The in-memory REQUEST_LOG is an EMERGENCY FALLBACK ONLY. It is per-process:
+      with 2+ instances the aggregate limit is per-instance, so the authoritative
+      production rate limiter is the Redis-backed core.rate_limit.RateLimiter.
+      Set RATE_LIMIT_ENABLED=false to disable this fallback entirely.
+    """
+
+    def __init__(self, app):
+        super().__init__(app)
+        # Maximum request sizes (bytes) — env-driven, zero hardcode
+        self.max_body_size = int(getattr(settings, "security_max_body_bytes", 10 * 1024 * 1024))
+        self.max_query_length = int(getattr(settings, "security_max_query_length", 2048))
+        self.max_header_size = int(getattr(settings, "security_max_header_size", 8192))
+
+        # Default Rate limiting per IP (in-memory emergency fallback)
+        self.rate_limit = int(getattr(settings, "security_fallback_rate_limit", 100))
+        self.rate_window = int(getattr(settings, "security_fallback_rate_window", 60))
+
+    # Class-level defaults kept ONLY for backward compatibility with tests that
+    # reference them; runtime values come from settings via __init__.
     MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
     MAX_QUERY_LENGTH = 2048
     MAX_HEADER_SIZE = 8192
-
-    # Default Rate limiting per IP
-    REQUEST_LOG: dict = {}
     RATE_LIMIT = 100  # Requests per minute
     RATE_WINDOW = 60  # Seconds
+
+    # Per-process emergency-fallback request log (see class docstring — the
+    # Redis-backed limiter is the authoritative multi-instance limiter).
+    REQUEST_LOG: dict = {}
 
     # Path-specific rate limits (critical paths)
     SIMPLE_RATE_LIMITS = {
@@ -127,7 +150,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
         # Check request size
         content_length = request.headers.get("content-length")
-        if content_length and int(content_length) > self.MAX_BODY_SIZE:
+        if content_length and int(content_length) > self.max_body_size:
             logger.warning(f"Oversized request from {client_ip}: {content_length} bytes")
             return Response(
                 status_code=413,
@@ -136,7 +159,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             )
 
         # Check query string length
-        if len(str(request.query_params)) > self.MAX_QUERY_LENGTH:
+        if len(str(request.query_params)) > self.max_query_length:
             return Response(
                 status_code=414, content=b'{"error": "URI too long"}', media_type="application/json"
             )
@@ -191,13 +214,18 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         return get_client_ip(request)
 
     async def _check_rate_limit(self, client_ip: str, path: str) -> bool:
-        """Simple in-memory rate limiting with path specificity."""
+        """Simple in-memory rate limiting with path specificity.
+
+        NOTE (FINAL-TEST P1): per-process fallback only. With multiple service
+        instances each process enforces its own bucket — the authoritative
+        cross-instance limiter is the Redis-backed RateLimiter (core/rate_limit.py).
+        """
 
         now = time.time()
 
         # Determine applicable limits
-        limit = self.RATE_LIMIT
-        window = self.RATE_WINDOW
+        limit = self.rate_limit
+        window = self.rate_window
 
         for critical_path, config in self.SIMPLE_RATE_LIMITS.items():
             if path.startswith(critical_path):
@@ -207,25 +235,27 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
         # Use a combination of IP and path prefix for tracking critical paths
         # For general requests, just use IP to group them
-        tracking_key = f"{client_ip}:{path}" if limit != self.RATE_LIMIT else client_ip
+        tracking_key = f"{client_ip}:{path}" if limit != self.rate_limit else client_ip
 
         # Clean old entries across the entire log periodically (simplified)
-        self.REQUEST_LOG = {
+        type(self).REQUEST_LOG = {
             k: timestamps
-            for k, timestamps in self.REQUEST_LOG.items()
+            for k, timestamps in type(self).REQUEST_LOG.items()
             if any(ts > now - 3600 for ts in timestamps)  # Keep at most 1 hour history
         }
 
         # Check current IP/Key
-        if tracking_key not in self.REQUEST_LOG:
-            self.REQUEST_LOG[tracking_key] = []
+        if tracking_key not in type(self).REQUEST_LOG:
+            type(self).REQUEST_LOG[tracking_key] = []
 
-        recent_requests = [ts for ts in self.REQUEST_LOG[tracking_key] if ts > now - window]
+        recent_requests = [
+            ts for ts in type(self).REQUEST_LOG[tracking_key] if ts > now - window
+        ]
 
         if len(recent_requests) >= limit:
             return False
 
-        self.REQUEST_LOG[tracking_key] = recent_requests + [now]
+        type(self).REQUEST_LOG[tracking_key] = recent_requests + [now]
         return True
 
     @staticmethod

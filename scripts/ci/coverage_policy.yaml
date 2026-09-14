@@ -1,8 +1,12 @@
 version: 1
 
+# FINAL-TEST P1 (staged coverage baseline, 2026-09-14):
+# ladder 30 → 40 → 50 → 60 overall. This file is the AUTHORITATIVE backend
+# gate (coverage_quality_gate.py); MIN_BACKEND_COVERAGE in ci.yml is enforced
+# on top of it in the backend-aggregate job. Keep both in sync.
 thresholds:
   overall:
-    pr: 25
+    pr: 30
     # release: 70
   critical:
     pr: 80
