@@ -55,6 +55,9 @@ ALL_ROUTERS = [
     },
     {"path": "api.routes.task", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.capabilities", "prefix": "", "is_admin": False, "is_critical": False},
+    # FCC (Federated Capability Circles): topology/health are user-gated,
+    # POST /dispatch enforces admin auth inside the router itself.
+    {"path": "api.routes.circles", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.social_growth", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.markdown", "prefix": "/api/v1", "is_admin": False, "is_critical": False},
     {"path": "api.routes.simulator", "prefix": "", "is_admin": False, "is_critical": False},
