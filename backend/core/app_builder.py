@@ -222,9 +222,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 )
                 serve_ready, reason = db_failure_readiness(role, settings.env, degradation_requested)
                 if serve_ready:
-                    logger.warning("Database degraded mode ACTIVE: %s", reason)
+                    logger.warning(f"Database degraded mode ACTIVE: {reason}")
                 else:
-                    logger.error("Database readiness refused: %s", reason)
+                    logger.error(f"Database readiness refused: {reason}")
                 return serve_ready
 
         def _check_memory() -> bool:
@@ -282,9 +282,8 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     openapi_url = f"{settings.API_V1_STR}/openapi.json" if _docs_exposed else None
     if settings.env.lower() in ("production", "staging"):
         logger.info(
-            "🛡️ Docs/OpenAPI exposure policy: %s (env=%s)",
-            "ENABLED (admin-gated)" if _docs_exposed else "DISABLED",
-            settings.env,
+            f"🛡️ Docs/OpenAPI exposure policy: "
+            f"{'ENABLED (admin-gated)' if _docs_exposed else 'DISABLED'} (env={settings.env})"
         )
 
     # বাংলা মন্তব্ব্য: অ্যাপ্লিকেশন ইনস্ট্যান্স তৈরি করা হচ্ছে
