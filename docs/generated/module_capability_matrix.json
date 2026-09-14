@@ -12534,6 +12534,15 @@
       "path": "backend/tests/services/test_config_registry.py"
     },
     {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_context_collector.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -23220,5 +23229,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2694
+  "source_file_count": 2695
 }
