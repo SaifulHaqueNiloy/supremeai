@@ -1,5 +1,13 @@
 # SupremeAI Living Architecture Plans Catalog
 
+## Governance and source of truth
+
+- [Plan lifecycle policy](./PLAN_LIFECYCLE_POLICY.md)
+- [Plan-to-code traceability matrix](./PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
+- [Plan reconciliation register](./PLAN_RECONCILIATION_REGISTER.md)
+
+Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md` for the current architecture baseline. Existing plans remain protected until their content, links, and runtime evidence are reconciled.
+
 > **Constitutional Protection Rule (AGENTS.md Mandatory Second Rule):**
 > Architectural plans are first-class, protected living project assets. Plans must NEVER be discarded, purged, or orphaned.
 > As operational realities and technical paradigms shift, plans are evolved, annotated with shift matrices, and kept as active lineage.
