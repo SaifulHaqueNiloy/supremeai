@@ -807,6 +807,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P4) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
+        "MCP_GATEWAY_DOMAIN",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="MCP gateway vanity-slug routing base (mcp_hub hub management, PR #305): public routing base only, non-secret, code default mcp.supremeai.ai.",
+    ),
+    ConfigSpec(
         "MEDIA_SERVICE_URL",
         frozenset({ConfigClass.OPTIONAL}),
         frozenset({ConfigSource.ENV}),
