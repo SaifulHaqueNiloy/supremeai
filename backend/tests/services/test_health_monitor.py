@@ -158,12 +158,26 @@ def test_health_monitor_uptime_increases():
 
 
 def test_health_monitor_reports_elapsed_process_time_not_cpu_time():
+    # FIX (final-test hardening-2): the old mock patched time.time with a
+    # two-entry side_effect list. health_monitor.time IS the global time
+    # module, so any other time.time() consumer during the patch window
+    # (structured-logging timestamps, pytest internals) burned an entry and
+    # raised StopIteration — the test could never pass reliably in CI.
+    # A controlled fake clock keeps the contract under test intact:
+    # uptime_seconds must be ELAPSED WALL TIME (start→now), independent of
+    # the CPU-usage sample reported alongside it.
+    fake_clock = {"now": 100.0}
+
+    def _fake_time() -> float:
+        return fake_clock["now"]
+
     with (
         patch.object(HealthMonitor, "_setup_metrics"),
         patch("core.health.health_monitor.start_http_server", create=True),
-        patch("core.health.health_monitor.time.time", side_effect=[100.0, 112.9]),
+        patch("core.health.health_monitor.time.time", side_effect=_fake_time),
     ):
-        monitor = HealthMonitor(metrics_port=9092)
+        monitor = HealthMonitor(metrics_port=9092)  # start_time = 100.0
+        fake_clock["now"] = 112.9  # advance the wall clock by 12.9s
 
         with (
             patch("psutil.cpu_percent", return_value=73.0),

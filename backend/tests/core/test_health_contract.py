@@ -62,18 +62,35 @@ def test_canonical_full_health(client):
 # ---------------------------------------------------------------------------
 
 
+def _contract_fields(body: dict) -> dict:
+    """Payload minus the wall-clock timestamp.
+
+    The health payloads embed a timestamp with 1-second resolution; two
+    separate requests (canonical + legacy) can straddle a second boundary
+    (seen live on CI run 34825462035), so full-body dict equality is racy.
+    Equality is asserted on the contract fields; timestamp presence is
+    asserted separately — the timestamp FORMAT contract is locked by the
+    canonical-endpoint tests above.
+    """
+    return {k: v for k, v in body.items() if k != "timestamp"}
+
+
 def test_legacy_alias_liveness_equivalent(client):
     canonical = client.get("/health/live")
     legacy = client.get("/api/v1/health/live")
     assert legacy.status_code == canonical.status_code
-    assert legacy.json() == canonical.json()
+    assert _contract_fields(legacy.json()) == _contract_fields(canonical.json())
+    assert "timestamp" in legacy.json()
+    assert "timestamp" in canonical.json()
 
 
 def test_legacy_alias_readiness_equivalent(client):
     canonical = client.get("/health/ready")
     legacy = client.get("/api/v1/health/ready")
     assert legacy.status_code == canonical.status_code
-    assert legacy.json() == canonical.json()
+    assert _contract_fields(legacy.json()) == _contract_fields(canonical.json())
+    assert "timestamp" in legacy.json()
+    assert "timestamp" in canonical.json()
 
 
 def test_legacy_alias_full_equivalent(client):
