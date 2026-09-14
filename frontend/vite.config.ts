@@ -32,6 +32,33 @@ if (process.env.NODE_ENV === 'production' && !UNIFIED_BACKEND) {
   console.warn('No backend URL configured; building public viewer mode.')
 }
 
+// P0 build-contract (production sign-off): a LOCALHOST backend baked into a
+// production bundle is always the Docker-default leak (VITE_API_URL unset in
+// the Dockerfile), never intentional. Fail the build loudly; operators can
+// opt out for a local throwaway build with VITE_ALLOW_LOCALHOST_BACKEND=true.
+// CI additionally verifies the baked bundle via scripts/ci/verify_frontend_build_contract.py.
+const isLocalhostUrl = (value: string) => {
+  if (!value) return false
+  try {
+    const host = new URL(value).hostname.toLowerCase()
+    return ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(host)
+  } catch {
+    return false
+  }
+}
+if (
+  process.env.NODE_ENV === 'production' &&
+  (isLocalhostUrl(UNIFIED_BACKEND) || isLocalhostUrl(ADMIN_BACKEND)) &&
+  process.env.VITE_ALLOW_LOCALHOST_BACKEND !== 'true'
+) {
+  throw new Error(
+    '[build-contract] Production build would bake a localhost backend URL into the bundle ' +
+      `(user=${UNIFIED_BACKEND || '(empty)'}, admin=${ADMIN_BACKEND || '(empty)'}). ` +
+      'Set VITE_API_URL/VITE_USER_BACKEND/VITE_ADMIN_BACKEND to the real backend, ' +
+      'or pass VITE_ALLOW_LOCALHOST_BACKEND=true only for a local throwaway build.',
+  )
+}
+
 // 🔬 Evolution v3.0: Dump build config for debugging
 const buildInfoPlugin = () => {
   return {
