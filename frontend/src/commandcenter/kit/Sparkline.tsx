@@ -8,6 +8,7 @@ interface SparklineProps {
     data: number[];
     width?: number;
     height?: number;
+    color?: string; // বাংলা মন্তব্য: stroke-এর সংক্ষিপ্ত বিকল্প — মডিউলগুলো `color` পাঠায়
     stroke?: string;
     fill?: string;
     strokeWidth?: number;
@@ -17,10 +18,13 @@ export function Sparkline({
     data,
     width = 120,
     height = 32,
-    stroke = 'var(--sa-cyan)',
+    color,
+    stroke: strokeProp,
     fill = 'rgba(0,243,255,0.08)',
     strokeWidth = 1.5,
 }: SparklineProps) {
+    const stroke = strokeProp ?? color ?? 'var(--sa-cyan)';
+
     if (!data || data.length === 0) {
         return (
             <div className="w-full flex items-center justify-center text-[8px] text-[var(--sa-text-2)] font-mono">

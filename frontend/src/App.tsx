@@ -36,6 +36,18 @@ const ScheduledTasksPanel = React.lazy(() => import("./components/schedule/Sched
 const MemoryPanel = React.lazy(() => import("./components/memory/MemoryPanel"));
 const SecretsPage = React.lazy(() => import("./components/dashboard/SecretsPage").then(m => ({ default: m.SecretsPage })));
 
+// RESTORE-AND-WIRE (2026-09-14): previously-deleted capability pages are restored
+// AND routed again — per repo doctrine ("near-ready = wire it"; deletion without
+// admin approval is forbidden). Lazy-loaded to keep the main bundle lean.
+const RealSettingsPage = React.lazy(() => import("./pages/user/WorkspaceSettingsPage"));
+const VaultPage = React.lazy(() => import("./components/dashboard/VaultPage").then(m => ({ default: m.VaultPage })));
+const ConnectedPlatformsVault = React.lazy(() => import("./components/dashboard/ConnectedPlatformsVault"));
+const AutomationQueuePage = React.lazy(() => import("./components/dashboard/AutomationQueuePage").then(m => ({ default: m.AutomationQueuePage })));
+const LlmGatewayPage = React.lazy(() => import("./components/dashboard/LlmGatewayPage").then(m => ({ default: m.LlmGatewayPage })));
+const TelemetryCockpitPage = React.lazy(() => import("./pages/user/TelemetryCockpitPage"));
+// AETHEL Command Center shell (restored sub-app; backend routes + e2e spec exist)
+const CommandCenterApp = React.lazy(() => import("./commandcenter/shell/CommandCenterApp").then(m => ({ default: m.CommandCenterApp })));
+
 import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
@@ -186,8 +198,15 @@ const AppContent: React.FC = () => {
   <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><DeepResearchPanel /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/scheduled-tasks" element={<ProtectedRoute><WorkspaceLayout><ScheduledTasksPanel /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/memory" element={<ProtectedRoute><WorkspaceLayout><MemoryPanel /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/settings" element={<ProtectedRoute><WorkspaceModulePage module="settings" /></ProtectedRoute>} />
+  <Route path="/settings" element={<ProtectedRoute><WorkspaceLayout><RealSettingsPage /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/settings/api-keys" element={<ProtectedRoute><WorkspaceLayout><SecretsPage /></WorkspaceLayout></ProtectedRoute>} />
+  {/* RESTORE-AND-WIRE (2026-09-14): restored capability pages, now reachable */}
+  <Route path="/vault" element={<ProtectedRoute><WorkspaceLayout><VaultPage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/platform-vault" element={<ProtectedRoute><WorkspaceLayout><ConnectedPlatformsVault /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/automation-queue" element={<ProtectedRoute><WorkspaceLayout><AutomationQueuePage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/llm-gateway" element={<ProtectedRoute><WorkspaceLayout><LlmGatewayPage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/telemetry" element={<ProtectedRoute><WorkspaceLayout><TelemetryCockpitPage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/commandcenter" element={<ProtectedRoute><React.Suspense fallback={null}><CommandCenterApp /></React.Suspense></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
   <Route path="/workspace" element={
                 <ProtectedRoute>
