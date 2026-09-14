@@ -99,7 +99,7 @@ def test_group_b_tables_never_use_rls_bound_client(relative_path, tables):
             f"{relative_path}: found {all_occurrences - safe_occurrences} call(s) to "
             f'.table("{table}") NOT routed through .service_client. '
             f"{table} has RLS enabled with zero authenticated/anon policies "
-            "(see migrations/17_enable_rls.sql + 18_fix_missing_rls_policies.sql) -- "
+            "(see migrations/legacy/17_enable_rls.sql + 18_fix_missing_rls_policies.sql) -- "
             "any write through the plain .client will fail with 42501 in production."
         )
 
@@ -139,8 +139,10 @@ def test_migration_18_does_not_grant_authenticated_access_to_group_b_tables():
     silently reopen these backend-only tables to any authenticated user --
     catch that here rather than in production.
     """
-    migration_path = REPO_ROOT / "database" / "migrations" / "18_fix_missing_rls_policies.sql"
-    assert migration_path.exists(), "expected migrations/18_fix_missing_rls_policies.sql"
+    migration_path = (
+        REPO_ROOT / "database" / "migrations" / "legacy" / "18_fix_missing_rls_policies.sql"
+    )
+    assert migration_path.exists(), "expected migrations/legacy/18_fix_missing_rls_policies.sql"
     sql = migration_path.read_text(encoding="utf-8")
 
     for table in GROUP_B_SERVICE_ONLY_TABLES:

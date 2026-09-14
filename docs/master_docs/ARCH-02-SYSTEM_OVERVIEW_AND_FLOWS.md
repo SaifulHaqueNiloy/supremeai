@@ -521,7 +521,7 @@ The previous ADMIN_TASKS instructed to "Mount /data/ Volume on Render" — that
 is IMPOSSIBLE on the free tier. Instead, use Supabase pgvector which is
 remote + persistent + already provisioned (free-tier 500MB Postgres).
 
-**File:** `backend/database/migrations/16_add_match_experiences_rpc.sql`
+**File:** `backend/database/migrations/legacy/16_add_match_experiences_rpc.sql`
 
 **Why:** Without this RPC function, the new `SupabaseVectorBackend` cannot do
 similarity search. ChromaDB/Qdrant (which require local disk) will silently
@@ -568,7 +568,7 @@ DROP FUNCTION IF EXISTS match_experiences;
 
 ### 2. Run the User Indexes Migration
 
-**File:** `backend/database/migrations/15_add_user_indexes.sql`
+**File:** `backend/database/migrations/legacy/15_add_user_indexes.sql`
 
 **Why:** Without indexes, list endpoints (`GET /api/conversations`, `GET /api/messages`, etc.) do full table scans. As data grows, this exhausts Supabase free-tier DB CPU.
 
@@ -3314,7 +3314,7 @@ Areas needing help:
 
 ## 2. Database (Supabase)
 
-- [ ] All SQL migrations in `backend/database/migrations/` applied to the target Supabase project (idempotent — safe to re-run; key one: `15_add_user_indexes.sql`)
+- [ ] All SQL migrations in `backend/database/migrations/` applied to the target Supabase project (idempotent — safe to re-run; key one: `legacy/15_add_user_indexes.sql`)
 - [ ] Alembic heads merged, no multiple heads: `cd backend && poetry run alembic heads`
 - [ ] Row Level Security enabled where required (`17_enable_rls.sql`, `18_fix_missing_rls_policies.sql`)
 - [ ] Connection pooling via PgBouncer-compatible URL (port 6543) for free-tier connection limits
@@ -4835,9 +4835,9 @@ After merging the previous regression fixes, a deeper analysis revealed **15 rea
 - **Verify:** `grep -n "global_http_client" backend/api/routes/github.py`
 
 ### Fix #9 — Missing DB indexes on user tables
-- **File:** New migration `backend/database/migrations/15_add_user_indexes.sql`
+- **File:** New migration `backend/database/migrations/legacy/15_add_user_indexes.sql`
 - **Tables:** conversations.user_id, messages.conversation_id, shared_conversations.user_id, user_keys.user_id, voice_interactions.user_id, artifacts.conversation_id, scheduled_tasks.user_id
-- **Evidence:** `grep -rE "CREATE INDEX.*user_id\|CREATE INDEX.*conversation_id" backend/database/migrations/` → 0 hits
+- **Evidence:** `grep -rE "CREATE INDEX.*user_id\|CREATE INDEX.*conversation_id" backend/database/migrations/legacy/` → 0 hits
 - **Fix:** Add 7 CREATE INDEX statements
 - **Verify:** `psql ... -c "\di" 2>/dev/null | grep user_id` (or just check migration file)
 
@@ -5113,7 +5113,7 @@ exist → full table scans as data grows.
 **Smart trick:** DEPLOYMENT_CHECKLIST.md (added this iteration) makes migration
 application an explicit human step with a one-liner (`supabase db execute` per
 file, in numeric order — all files are IF NOT EXISTS/DO $$ idempotent). Optionally
-add `scripts/db/apply_migrations.sh` that loops `database/migrations/*.sql` in
+add `scripts/db/apply_migrations.sh` that loops `database/migrations/legacy/*.sql` in
 order with psql. **Never** auto-run migrations on boot in production (partial
 apply during traffic is worse than explicit step).
 
@@ -6403,7 +6403,7 @@ Once all boxes are checked, you are ready for **Phase 1: Fix embedding dimension
 
 # SupremeAI Board Strategy and Execution TODO
 
-> Long-term training source: `backend/data/supremeai_long_term_knowledge_v1.json`; validate with `python backend/scripts/import_knowledge_base.py --validate-only` and import only after applying `backend/database/migrations/19_harden_knowledge_base.sql`.
+> Long-term training source: `backend/data/supremeai_long_term_knowledge_v1.json`; validate with `python backend/scripts/import_knowledge_base.py --validate-only` and import only after applying `backend/database/migrations/legacy/19_harden_knowledge_base.sql`.
 
 **Version:** 1.0  
 **Date:** 4 September 2026  
@@ -16595,7 +16595,7 @@ STRONG TEST/CI
 
 | # | ফাইল পাথ | ট্র্যাক করা? | বর্তমান স্থিতি |
 |---|-----------|:---:|-----|
-| ১ | `backend/database/migrations/20_create_browser_credentials.sql` | ✅ হ্যাঁ | **ট্র্যাক করা হয়েছে** (`git ls-files` দ্বারা যাচাইকৃত) |
+| ১ | `backend/database/migrations/legacy/20_create_browser_credentials.sql` | ✅ হ্যাঁ | **ট্র্যাক করা হয়েছে** (`git ls-files` দ্বারা যাচাইকৃত) |
 | ২–১৫ | (অন্যান্য ১৪টি ওপেন-ট্যাব ফাইল) | ✔️ হ্যাঁ | স্বাভাবিকভাবে ট্র্যাক করা আছে |
 
 **সারসংক্ষেপ:** ১৫টি ওপেন-ট্যাব ফাইলের সবকটিই (১০০%) এখন গিট-ট্র্যাক করা।
@@ -17206,7 +17206,7 @@ async def extract(url: str, extraction_prompt: str):
 ### ৬.৫ গিট ট্র্যাকিং পরিষ্কার (Git Tracking Cleanup) — [✅ সম্পূর্ণ সমাধানকৃত]
 
 - সেকশন ২-এ উল্লেখিত সমস্ত ফাইল বর্তমানে গিটে ট্র্যাক করা হয়েছে (`git ls-files` দ্বারা প্রতিপাদিত):
-  - `backend/database/migrations/20_create_browser_credentials.sql` (✅ ট্র্যাকড)
+  - `backend/database/migrations/legacy/20_create_browser_credentials.sql` (✅ ট্র্যাকড)
   - `backend/models/render_account_state.py` (✅ ট্র্যাকড)
   - `backend/services/render_account_service.py` (✅ ট্র্যাকড)
   - `backend/api/routes/render_preflight_admin.py` (✅ ট্র্যাকড)
