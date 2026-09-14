@@ -33,23 +33,23 @@ def test_defaults(mock_fetch):
     os.environ,
     {
         "PROJECT_NAME": "TestApp",
-        "env": "production",
-        "debug": "false",
-        "port": "9000",
-        "host": "0.0.0.0",
-        "supremeai_admin_password_hash": "mock_hash_value_for_test_pass",
-        "openrouter_api_key": "TEST_ONLY_OPENROUTER_API_KEY",
-        "hf_api_key": "TEST_ONLY_HF_API_KEY",
-        "gemini_api_key": "TEST_ONLY_GEMINI_API_KEY",
-        "deepseek_api_key": "TEST_ONLY_DEEPSEEK_API_KEY",
-        "groq_api_key": "TEST_ONLY_GROQ_API_KEY",
-        "nvidia_api_key": "TEST_ONLY_NVIDIA_API_KEY",
-        "firecrawl_api_key": "TEST_ONLY_FIRECRAWL_API_KEY",
-        "sentry_dsn": "https://sentry.io/123",
-        "ollama_url": "http://ollama:11434",
-        "gcp_project_id": "test-project",
-        "gcp_region": "europe-west1",
-        "max_cost_per_task": "1.5",
+        "ENV": "production",
+        "DEBUG": "false",
+        "PORT": "9000",
+        "HOST": "0.0.0.0",
+        "SUPREMEAI_ADMIN_PASSWORD_HASH": "mock_hash_value_for_test_pass",
+        "OPENROUTER_API_KEY": "TEST_ONLY_OPENROUTER_API_KEY",
+        "HF_API_KEY": "TEST_ONLY_HF_API_KEY",
+        "GEMINI_API_KEY": "TEST_ONLY_GEMINI_API_KEY",
+        "DEEPSEEK_API_KEY": "TEST_ONLY_DEEPSEEK_API_KEY",
+        "GROQ_API_KEY": "TEST_ONLY_GROQ_API_KEY",
+        "NVIDIA_API_KEY": "TEST_ONLY_NVIDIA_API_KEY",
+        "FIRECRAWL_API_KEY": "TEST_ONLY_FIRECRAWL_API_KEY",
+        "SENTRY_DSN": "https://sentry.io/123",
+        "OLLAMA_URL": "http://ollama:11434",
+        "GCP_PROJECT_ID": "test-project",
+        "GCP_REGION": "europe-west1",
+        "MAX_COST_PER_TASK": "1.5",
         "STRIPE_API_KEY": "TEST_ONLY_STRIPE_API_KEY",
         "STRIPE_WEBHOOK_SECRET": "TEST_ONLY_STRIPE_WEBHOOK_SECRET",
         "CI_WEBHOOK_SECRET": "TEST_ONLY_CI_WEBHOOK_SECRET",
@@ -68,15 +68,13 @@ def test_defaults(mock_fetch):
     "core.security.secret_vault.secret_vault.fetch_secret",
     side_effect=lambda k, default="": os.environ.get(k) or os.environ.get(k.lower()) or default,
 )
-@pytest.mark.skip(
-    reason="Pre-existing test-isolation bug, unrelated to auth: conftest.py sets OPENROUTER_API_KEY (uppercase) via os.environ.setdefault at module level; this test's patch.dict uses lowercase 'openrouter_api_key', which does not override the existing uppercase key in os.environ. Needs test fix (use matching case) or conftest fix."
-)
 def test_env_override(mock_fetch):
     from core.config import settings
 
-    settings._cached_secrets.clear()
-    Settings._cached_secrets.clear()
-    Settings._secrets_batch_loaded = False
+    # Reset the secret cache via the mixin's sanctioned private-state accessor
+    # (the old settings._cached_secrets.clear() broke on pydantic PrivateAttr).
+    settings._get_private_state()["_cached_secrets"].clear()
+    settings._get_private_state()["_secrets_batch_loaded"] = False
     s = Settings()
     assert s.PROJECT_NAME == "TestApp"
     assert s.env == "production"
