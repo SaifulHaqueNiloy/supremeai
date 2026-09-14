@@ -225,6 +225,7 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
       <div className="relative">
         <button
           type="button"
+          data-testid="account-menu-btn"
           onClick={() => { setProfileOpen((v) => !v); setNotifOpen(false); }}
           aria-label="Account menu"
           className="flex items-center gap-2 rounded-lg hover:surface-2 px-1.5 py-1 transition-colors"
@@ -247,6 +248,7 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
             </div>
             <button
               type="button"
+              data-testid="logout-btn"
               onClick={handleUserLogout}
               className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-rose-400 hover:surface-3 transition-colors"
             >

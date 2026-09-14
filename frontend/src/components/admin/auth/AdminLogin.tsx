@@ -187,6 +187,7 @@ export function LoginView({
                 <label htmlFor="admin-email" className="sr-only">Admin Email</label>
                 <input
                   id="admin-email"
+                  data-testid="admin-email-input"
                   type="email"
                   placeholder="Admin Email"
                   value={adminEmail}
@@ -202,6 +203,7 @@ export function LoginView({
                 <label htmlFor="admin-password" className="sr-only">Password</label>
                 <input
                   id="admin-password"
+                  data-testid="admin-password-input"
                   type="password"
                   placeholder="Password"
                   value={localPassword}
@@ -303,6 +305,7 @@ export function LoginView({
               <label htmlFor="admin-otp" className="sr-only">Enter 6-digit OTP</label>
               <input
                 id="admin-otp"
+                data-testid="otp-input"
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]{6}"
@@ -340,6 +343,7 @@ export function LoginView({
 
           <button
             type="submit"
+            data-testid={otpRequired ? 'otp-submit' : 'admin-login-submit'}
             disabled={isSubmitting || isLocked}
             className="cyber-button w-full uppercase py-3 text-xs tracking-wider font-mono font-bold mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
