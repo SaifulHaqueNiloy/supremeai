@@ -82,13 +82,21 @@ class TestRouterWiring:
 # ── Parity audit (2026-09-11): these functional routers existed but were never
 # registered in ALL_ROUTERS, so every endpoint 404'd at boot. These tests lock
 # the mounts in (same regression-guard pattern as the classes above).
+#
+# Mount-hygiene note (2026-09-15): `agents.vulnerability_prophet` was listed
+# here and in ALL_ROUTERS, but vulnerability_prophet.py is a legacy re-export
+# shim whose `router` IS `agents.code_vulnerability_scanner_agent.router` —
+# registering both double-mounted /security/vulnerabilities/* (the shim's
+# copy was a dead shadow: the canonical entry mounts first, with auth deps).
+# The lock now points at the CANONICAL module; the endpoints it guards remain
+# mounted exactly once.
 PARITY_AUDIT_ROUTERS = (
     "tools.code.diagram_to_architecture",
     "tools.code.voice_coder",
     "tools.code.ai_pair_programmer",
     "tools.self_planner",
     "services.video_to_code_pipeline",
-    "agents.vulnerability_prophet",
+    "agents.code_vulnerability_scanner_agent",
     "ws.command_center",
 )
 

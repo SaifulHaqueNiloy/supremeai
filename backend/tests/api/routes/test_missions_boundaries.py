@@ -35,7 +35,13 @@ _api_tables_ready = False
 
 @pytest_asyncio.fixture
 async def missions_tables(client):
-    """Create the missions tables on the app engine's sqlite test DB (once)."""
+    """Create the missions tables on the app engine (once per process).
+
+    Engine-agnostic by design: locally the conftest app fixture points at a
+    sqlite test.db, while the CI api/security matrix jobs point at the real
+    postgres test service — the missions tables compile on BOTH (JSON columns
+    use JSON().with_variant(JSONB, "postgresql"), mirroring missions/models.py).
+    """
     global _api_tables_ready
     if not _api_tables_ready:
         import database.session as dbs
@@ -43,11 +49,7 @@ async def missions_tables(client):
         from models.base import Base
 
         dbs.init_engine()
-        engine = dbs.engine
-        assert engine.url.get_backend_name() == "sqlite", (
-            f"expected sqlite test engine, got {engine.url}"
-        )
-        async with engine.begin() as conn:
+        async with dbs.engine.begin() as conn:
             await conn.run_sync(
                 lambda sync_conn: Base.metadata.create_all(
                     sync_conn,
