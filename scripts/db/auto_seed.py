@@ -60,22 +60,22 @@ def seed_database() -> None:
                 default_configs = [
                     {"key": "system_maintenance_mode", "value": False, "description": "Whether the system is in maintenance mode", "category": "system"},
                     {"key": "max_concurrent_requests", "value": 100, "description": "Maximum number of concurrent requests", "category": "system"},
-                    
+
                     # Rate Limit Tiers (requests per minute)
                     {"key": "rate_limit_anonymous", "value": {"limit": 10, "window": 60}, "description": "Anonymous user rate limit", "category": "rate_limits"},
                     {"key": "rate_limit_authenticated", "value": {"limit": 60, "window": 60}, "description": "Authenticated user rate limit", "category": "rate_limits"},
                     {"key": "rate_limit_premium", "value": {"limit": 300, "window": 60}, "description": "Premium user rate limit", "category": "rate_limits"},
                     {"key": "rate_limit_admin", "value": {"limit": 1000, "window": 60}, "description": "Admin rate limit", "category": "rate_limits"},
-                    
+
                     # Rate Limit Overrides
                     {"key": "rate_limit_override_chat_stream", "value": {"limit": 30, "window": 60}, "description": "Rate limit for /api/chat/stream", "category": "rate_limits"},
                     {"key": "rate_limit_override_ai_generate", "value": {"limit": 20, "window": 60}, "description": "Rate limit for /api/ai/generate", "category": "rate_limits"},
                     {"key": "rate_limit_override_browser_scrape", "value": {"limit": 5, "window": 60}, "description": "Rate limit for /api/browser/scrape", "category": "rate_limits"},
-                    
+
                     # Retry Budget
                     {"key": "retry_budget_max_tokens", "value": 20, "description": "Max tokens for retry budget", "category": "retry_budget"},
                     {"key": "retry_budget_refill_rate", "value": 1.0, "description": "Refill rate per sec for retry budget", "category": "retry_budget"},
-                    
+
                     # LLM Configurations
                     {"key": "llm_max_tokens_video", "value": 1500, "description": "Max tokens for Video to Code Pipeline", "category": "llm_config"},
                     {"key": "llm_max_tokens_diagram", "value": 1500, "description": "Max tokens for Diagram Parser", "category": "llm_config"},

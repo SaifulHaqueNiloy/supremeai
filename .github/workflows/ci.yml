@@ -214,7 +214,7 @@ jobs:
       # বৃহত্তর rule-set (F = unused imports/vars, W = whitespace) এর
       # বর্তমান violation সংখ্যা CI লগে দৃশ্যমান করে, যাতে batch-fix
       # রাউন্ডগুলো trend মেপে blocking gate-এ উন্নীত করা যায়।
-      # Baseline: docs/audits/root_lint_baseline.md (2,118 @ 2026-09-15)।
+      # Baseline: docs/audits/root_lint_baseline.md (1,837 @ 2026-09-15; batch 1 -> 254)।
       # ⚠️ F401 auto-fix নিষেধ — import-এর side effect আছে (module
       # registration patterns); প্রতিটি কেস manual review ছাড়া মোছা যাবে না।
       - name: Root-level lint drift report (non-blocking)

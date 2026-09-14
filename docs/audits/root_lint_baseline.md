@@ -22,10 +22,21 @@ watch the CI report trend → flip rule classes to blocking when a class hits 0.
 | F841 | unused-variable | 23 | no (`[-]`) |
 | F811 | redefined-while-unused | 4 | no |
 | F402 | import-shadowed-by-loop-var | 1 | no — **highest real-bug risk of the class** |
-| W293 | blank-line-with-whitespace | 1,591 | yes |
-| W291 | trailing-whitespace | 74 | yes |
+| W293 | blank-line-with-whitespace | 1,591 | 1,583 safe-fix; 94 string-interior cases need manual review |
+| W291 | trailing-whitespace | 74 | most safe-fix; remainder string-interior |
 | W292 | missing-newline-at-EOF | 12 | yes |
-| **Total (E9,F,W)** | | **2,118** | |
+| **Total (E9,F,W)** | | **1,837** | |
+
+(For reference, the default ruff rule set across the four dirs totals 2,118 —
+that broader number is NOT this ladder's baseline; the ladder tracks E9,F,W.)
+
+## Batch 1 result (2026-09-15, this PR)
+
+`ruff check --select W291,W292,W293 --fix` (safe fixes only) resolved
+**1,583** violations across 56 files → remaining **254** = 160 F-class +
+94 W-class string-interior cases (whitespace INSIDE docstrings/prompts —
+left for manual review; auto-fixing would mutate string content, incl.
+possible LLM prompts and printed output). Ladder now: 1,837 → 254 (−86%).
 
 Per-directory F-rule counts: `tools/` 9 · `scripts/` 145 · `packages/` 0 · `.github/scripts/` 6.
 

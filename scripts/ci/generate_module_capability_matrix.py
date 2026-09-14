@@ -47,7 +47,7 @@ def build() -> dict:
         "site-packages", ".pytest_cache", ".ruff_cache", ".mypy_cache", "archive"
     }
     target_dirs = ["backend", "frontend", "infrastructure", "scripts"]
-    
+
     # Try git ls-files first for absolute consistency across CI and local environments
     candidate_paths: list[Path] = []
     try:
