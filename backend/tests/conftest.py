@@ -82,6 +82,21 @@ _CRITICAL_TEST_PARTS = (
     ("tools", "checkpoint_manager"),
     ("tools", "parallel_agent_executor"),
     ("database",),
+    # ── PR-CI integrity fix (hardening-2 round 2) ──────────────────────────
+    # CI's PR marker filter runs only (critical or important); everything
+    # below used to fall through to `overall` and was DESELECTED on PRs —
+    # e.g. tests/agents/test_parallel_agent_executor.py passed locally yet
+    # tools/parallel_agent_executor.py showed 7.8% in the CI-combined
+    # coverage. These entries map the tier-critical production modules of
+    # coverage_policy.yaml to the test paths that exercise them.
+    ("memory",),  # services/memory_service.py (coverage policy: services/memory*)
+    ("llm",),  # core/llm/** (coverage policy: core/llm/**)
+    ("core", "test_secret_vault*"),  # core/security/secret_vault.py
+    ("core", "test_auth_middleware*"),  # core/security/authentication/auth_middleware.py
+    ("core", "test_memory_service*"),  # services/memory_service.py
+    ("core", "test_token_budget*"),  # core/llm/token_budget.py
+    ("agents", "test_parallel_agent_executor*"),  # tools/parallel_agent_executor.py
+    ("api", "test_billing*"),  # api/routes/billing_api.py
 )
 
 _IMPORTANT_TEST_PARTS = (
@@ -93,6 +108,37 @@ _IMPORTANT_TEST_PARTS = (
     ("core", "test_model_registry_readiness"),
     ("scout_tests",),
     ("missions",),
+    # ── PR-CI integrity fix (hardening-2 round 2) ──────────────────────────
+    # Promote the remaining collected-by-a-matrix-group paths from the
+    # never-run `overall` tier into the PR regression tier. Critical is
+    # evaluated first, so these catch-alls never demote a critical match.
+    # Deliberately NOT classified (stay `overall`, excluded from PR CI):
+    # tests/hitl (human-gated), tests/integration + tests/load (--runslow /
+    # load rig), tests/e2e (playwright owns E2E in CI), tests/factories
+    # (helpers, no tests).
+    ("core",),
+    ("agents",),
+    ("ai",),
+    ("byoc",),
+    ("scripts",),
+    ("unit_light",),
+    ("brain",),
+    ("adaptive_engine",),
+    ("engine",),
+    ("middleware",),
+    ("monitoring",),
+    ("verification",),
+    ("learning",),
+    ("rag",),
+    ("runtime",),
+    ("workers",),
+    ("unit",),
+    ("utils",),
+    ("orchestration",),
+    ("test_evolution",),
+    ("test_strategic_patches",),
+    ("p2p_tests",),
+    ("test_*",),  # root-level test files (services group pattern tests/test_*.py)
 )
 
 

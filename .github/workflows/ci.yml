@@ -349,6 +349,10 @@ jobs:
           - group: core
             paths: >-
               tests/core tests/brain tests/adaptive_engine tests/llm
+              tests/database tests/orchestration tests/learning tests/rag
+              tests/runtime tests/workers tests/middleware tests/monitoring
+              tests/verification tests/unit tests/engine tests/utils
+              tests/test_evolution tests/test_strategic_patches tests/p2p_tests
               --ignore=tests/core/security
               --ignore=tests/core/test_core_rate_limiter.py
               --ignore=tests/core/test_multi_tenant_isolation.py
@@ -356,6 +360,7 @@ jobs:
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
               tests/test_*.py tests/scripts tests/services
+              tests/memory tests/scout_tests tests/missions
 
     defaults:
       run:
