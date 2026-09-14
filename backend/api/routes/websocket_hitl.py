@@ -8,6 +8,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 from core.config import settings
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorEvent, error_event_bus
+from core.security import ALGORITHM
 
 router = APIRouter(prefix="/ws/hitl", tags=["hitl"])
 
@@ -121,7 +122,14 @@ async def verify_hitl_token(websocket: WebSocket) -> bool:
         token = token[7:]
 
     try:
-        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        # FIX (latent-crash): this decode previously passed `settings.jwt_algorithm`,
+        # but the Settings object has NO such field — every call raised
+        # AttributeError, which the broad handler below swallowed, so the HITL
+        # WebSocket could NEVER authenticate anyone (every admin/supervisor got
+        # a 1008 policy-violation close). Wire the canonical core.security
+        # ALGORITHM constant ("HS256") instead — the same constant the auth
+        # middleware and token issuer use.
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[ALGORITHM])
         role = payload.get("role", "").lower()
 
         # হার্ডকোডেড রোলের বদলে কনফিগারেশন থেকে রোল নেয়া যেতে পারে (আপাতত settings.allowed_hitl_roles ব্যবহার করা হচ্ছে, না থাকলে ডিফল্ট)
