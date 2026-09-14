@@ -1,105 +1,136 @@
-# SupremeAI Architecture & Plans Master Index (Living Archive)
-**Last Updated:** September 2026  
-**Governing Rule:** *AGENTS.md Clause 6: "Architectural Plans as Protected Living Assets (Never Discard, Always Document)"*
+# SupremeAI Living Architecture Plans Catalog
 
-This directory contains the historical, iterative, and unified master plans of SupremeAI. To avoid confusion between earlier iterations and active architectures, all plans are organized below with their respective versions and active status.
+> **Constitutional Protection Rule (AGENTS.md Mandatory Second Rule):**
+> Architectural plans are first-class, protected living project assets. Plans must NEVER be discarded, purged, or orphaned.
+> As operational realities and technical paradigms shift, plans are evolved, annotated with shift matrices, and kept as active lineage.
 
----
+## Architecture Master Blueprints (docs/plans/architecture/) — (20 files)
 
-## 🌟 1. Active Master Architectural Blueprints (The Living Source of Truth)
+- [ARCHITECTURE_MAP.md](file:///f:/supremeai/docs/plans/architecture/ARCHITECTURE_MAP.md)
+- [ENTERPRISE_ROADMAP.md](file:///f:/supremeai/docs/plans/architecture/ENTERPRISE_ROADMAP.md)
+- [MASTER_PLAN_ANALYSIS_BANGLA.md](file:///f:/supremeai/docs/plans/architecture/MASTER_PLAN_ANALYSIS_BANGLA.md)
+- [MASTER_PLAN_BANGLA.md](file:///f:/supremeai/docs/plans/architecture/MASTER_PLAN_BANGLA.md)
+- [REGISTRY CONTROL IN PIPELINE AND DASHBOARD.md](file:///f:/supremeai/docs/plans/architecture/REGISTRY CONTROL IN PIPELINE AND DASHBOARD.md)
+- [ROADMAP_BANGLA.md](file:///f:/supremeai/docs/plans/architecture/ROADMAP_BANGLA.md)
+- [SUPREMAI_DYNAMIC_AI_ARCHITECTURE_V5.md](file:///f:/supremeai/docs/plans/architecture/SUPREMAI_DYNAMIC_AI_ARCHITECTURE_V5.md)
+- [SUPREMEAI_COMPLETE_INTEGRATION_BLUEPRINT.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_COMPLETE_INTEGRATION_BLUEPRINT.md)
+- [SUPREMEAI_COMPONENT_INTEGRATION_MAP.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_COMPONENT_INTEGRATION_MAP.md)
+- [SUPREMEAI_CURRENT_CODEBASE_ALIGNED_MASTER_ROADMAP.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_CURRENT_CODEBASE_ALIGNED_MASTER_ROADMAP.md)
+- [SUPREMEAI_DISTRIBUTED_INFRASTRUCTURE_CENTRALIZED_CONTROL_PLANE_PLAN.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_DISTRIBUTED_INFRASTRUCTURE_CENTRALIZED_CONTROL_PLANE_PLAN.md)
+- [SUPREMEAI_DYNAMIC_CONFIGURATION_ZERO_HARDCODE_ROADMAP.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_DYNAMIC_CONFIGURATION_ZERO_HARDCODE_ROADMAP.md)
+- [SUPREMEAI_ECOSYSTEM_TRANSFORMATION_FINAL_ROADMAP.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_ECOSYSTEM_TRANSFORMATION_FINAL_ROADMAP.md)
+- [SUPREMEAI_UNIFIED_MCP_CONTROL_TOWER_MULTI_TENANT_EXPANDABLE_MASTER_PLAN_BN.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_UNIFIED_MCP_CONTROL_TOWER_MULTI_TENANT_EXPANDABLE_MASTER_PLAN_BN.md)
+- [SUPREMEAI_VENDOR_INDEPENDENT_INTEGRATION_IMPLEMENTATION_PLAN.md](file:///f:/supremeai/docs/plans/architecture/SUPREMEAI_VENDOR_INDEPENDENT_INTEGRATION_IMPLEMENTATION_PLAN.md)
+- [circle_in_codebase.md](file:///f:/supremeai/docs/plans/architecture/circle_in_codebase.md)
+- [crown_jewel_implementation_plan.md](file:///f:/supremeai/docs/plans/architecture/crown_jewel_implementation_plan.md)
+- [wiring_feature.md](file:///f:/supremeai/docs/plans/architecture/wiring_feature.md)
+- [আউট-অফ-দ্য-বক্স (Out-of-the-Box) রেভোলিউশনারি ব্লুপ্রিন্ট.md](file:///f:/supremeai/docs/plans/architecture/আউট-অফ-দ্য-বক্স (Out-of-the-Box) রেভোলিউশনারি ব্লুপ্রিন্ট.md)
+- [ইমপ্লিমেন্টেশন প্ল্যান ডাইনামিক কনট্রোল প্লেন (Zero-Hardcoded Runtime Configuration).md](file:///f:/supremeai/docs/plans/architecture/ইমপ্লিমেন্টেশন প্ল্যান ডাইনামিক কনট্রোল প্লেন (Zero-Hardcoded Runtime Configuration).md)
 
-These documents govern the current production architecture and unified ecosystem:
+## Feature Specifications & Capabilities (docs/plans/features/) — (68 files)
 
-| Plan Document | Status | Key Focus |
-|---|---|---|
-| [`UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`](file:///F:/supremeai/docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md) | 🟢 **Active Master** | Hub-and-Spoke Federated Hybrid topology, Zero-Duplication Composable Dynamics, Control vs Data Plane decoupling, 10 Domain Circles. |
-| [`UNIVERSAL_ZERO_COMPLEXITY_INTERFACE_PLAN.md`](file:///F:/supremeai/docs/plans/UNIVERSAL_ZERO_COMPLEXITY_INTERFACE_PLAN.md) | 🟢 **Active Spec** | Developer UX, minimal operational friction, plug-and-play ergonomics. |
-| [`SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md`](file:///F:/supremeai/docs/plans/SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md) | 🟢 **Active Baseline** | Sustainable multi-service distribution across free tiers (Render, Supabase, Cloudflare, Upstash Redis). |
-| [`IMPLEMENTATION_TRACKERS.md`](file:///F:/supremeai/docs/plans/IMPLEMENTATION_TRACKERS.md) | 🟢 **Active Tracker** | Ongoing checklist and task progress across engineering milestones. |
+- [PRODUCTION_ROADMAP_2026-09-11.md](file:///f:/supremeai/docs/plans/features/PRODUCTION_ROADMAP_2026-09-11.md)
+- [PROJECT_REMEDIATION_PLAN_BN.md](file:///f:/supremeai/docs/plans/features/PROJECT_REMEDIATION_PLAN_BN.md)
+- [Plan_01_Dynamic_AI_Agent_System.md](file:///f:/supremeai/docs/plans/features/Plan_01_Dynamic_AI_Agent_System.md)
+- [Plan_02_API_Key_Rotation_System.md](file:///f:/supremeai/docs/plans/features/Plan_02_API_Key_Rotation_System.md)
+- [Plan_03_Continuous_Learning.md](file:///f:/supremeai/docs/plans/features/Plan_03_Continuous_Learning.md)
+- [Plan_04_Intent_Analysis_Confirmation.md](file:///f:/supremeai/docs/plans/features/Plan_04_Intent_Analysis_Confirmation.md)
+- [Plan_05_Plan_Compatibility_Analysis.md](file:///f:/supremeai/docs/plans/features/Plan_05_Plan_Compatibility_Analysis.md)
+- [Plan_06_Dual_Repo_System.md](file:///f:/supremeai/docs/plans/features/Plan_06_Dual_Repo_System.md)
+- [Plan_07_Dashboard_Plugin_Settings.md](file:///f:/supremeai/docs/plans/features/Plan_07_Dashboard_Plugin_Settings.md)
+- [Plan_08_Adaptive_Response_Depth.md](file:///f:/supremeai/docs/plans/features/Plan_08_Adaptive_Response_Depth.md)
+- [Plan_09_Smart_Data_Storage.md](file:///f:/supremeai/docs/plans/features/Plan_09_Smart_Data_Storage.md)
+- [Plan_10_API_Limit_Discovery.md](file:///f:/supremeai/docs/plans/features/Plan_10_API_Limit_Discovery.md)
+- [Plan_11_Pre_Push_Verification.md](file:///f:/supremeai/docs/plans/features/Plan_11_Pre_Push_Verification.md)
+- [Plan_12_Multi_Platform_Expansion.md](file:///f:/supremeai/docs/plans/features/Plan_12_Multi_Platform_Expansion.md)
+- [Plan_13_Marketing_Strategy_Advisor.md](file:///f:/supremeai/docs/plans/features/Plan_13_Marketing_Strategy_Advisor.md)
+- [Plan_14_Vision_Image_Integration.md](file:///f:/supremeai/docs/plans/features/Plan_14_Vision_Image_Integration.md)
+- [Plan_15_Hybrid_Voice_System.md](file:///f:/supremeai/docs/plans/features/Plan_15_Hybrid_Voice_System.md)
+- [Plan_16_CICD_Sandbox.md](file:///f:/supremeai/docs/plans/features/Plan_16_CICD_Sandbox.md)
+- [Plan_17_Data_Lifecycle_Management.md](file:///f:/supremeai/docs/plans/features/Plan_17_Data_Lifecycle_Management.md)
+- [Plan_18_Crowdsourced_API_Model.md](file:///f:/supremeai/docs/plans/features/Plan_18_Crowdsourced_API_Model.md)
+- [Plan_19_Brilliant_Idea_Detection.md](file:///f:/supremeai/docs/plans/features/Plan_19_Brilliant_Idea_Detection.md)
+- [Plan_20_Learning_from_Examples.md](file:///f:/supremeai/docs/plans/features/Plan_20_Learning_from_Examples.md)
+- [Plan_21_Best_Pattern_Curation.md](file:///f:/supremeai/docs/plans/features/Plan_21_Best_Pattern_Curation.md)
+- [Plan_22_Simulator_Controller_Perfection.md](file:///f:/supremeai/docs/plans/features/Plan_22_Simulator_Controller_Perfection.md)
+- [Plan_23_Website_Reverse_Engineering_Master_Guide.md](file:///f:/supremeai/docs/plans/features/Plan_23_Website_Reverse_Engineering_Master_Guide.md)
+- [Plan_24_AI_Agent_Ecosystem_Integration.md](file:///f:/supremeai/docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md)
+- [Public_mcp_server_implementation_plan.md](file:///f:/supremeai/docs/plans/features/Public_mcp_server_implementation_plan.md)
+- [SUPREMAI_MISSING_SERVICES_INTEGRATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMAI_MISSING_SERVICES_INTEGRATION_PLAN.md)
+- [SUPREMEAI_AUDIT_ROADMAP_2026-08-25.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_AUDIT_ROADMAP_2026-08-25.md)
+- [SUPREMEAI_AUTONOMOUS_USER_TASK_AND_SELF_EVOLUTION_MASTER_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_AUTONOMOUS_USER_TASK_AND_SELF_EVOLUTION_MASTER_PLAN.md)
+- [SUPREMEAI_CAREFULLY_SELECTED_OPEN_SOURCE_COMPONENTS_IMPLEMENTATION_PLAN_UPDATED.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_CAREFULLY_SELECTED_OPEN_SOURCE_COMPONENTS_IMPLEMENTATION_PLAN_UPDATED.md)
+- [SUPREMEAI_FREE_TIER_FEDERATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_FREE_TIER_FEDERATION_PLAN.md)
+- [SUPREMEAI_FREE_TIER_MEMORY_CRISIS_REMEDIATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_FREE_TIER_MEMORY_CRISIS_REMEDIATION_PLAN.md)
+- [SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md)
+- [SUPREMEAI_FREE_TIER_UPGRADE_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_FREE_TIER_UPGRADE_PLAN.md)
+- [SUPREMEAI_N8N_INTEGRATION_MASTER_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_N8N_INTEGRATION_MASTER_PLAN.md)
+- [SUPREMEAI_REMAINING_DYNAMIC_CONFIGURATION_IMPLEMENTATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_REMAINING_DYNAMIC_CONFIGURATION_IMPLEMENTATION_PLAN.md)
+- [SUPREMEAI_REMAINING_OPEN_SOURCE_INTEGRATION_HARDENING_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_REMAINING_OPEN_SOURCE_INTEGRATION_HARDENING_PLAN.md)
+- [SUPREMEAI_SELF_EVOLUTION_ZERO_COST_IMPLEMENTATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_SELF_EVOLUTION_ZERO_COST_IMPLEMENTATION_PLAN.md)
+- [SUPREMEAI_SPEC_KIT_FULL_IMPLEMENTATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_SPEC_KIT_FULL_IMPLEMENTATION_PLAN.md)
+- [SUPREMEAI_WARNING_ELIMINATION_IMPLEMENTATION_PLAN.md](file:///f:/supremeai/docs/plans/features/SUPREMEAI_WARNING_ELIMINATION_IMPLEMENTATION_PLAN.md)
+- [Self-Tracing & Bounded Black-Box Architecture Implementation Plan.md](file:///f:/supremeai/docs/plans/features/Self-Tracing & Bounded Black-Box Architecture Implementation Plan.md)
+- [auto_checking_implementation_plan.md](file:///f:/supremeai/docs/plans/features/auto_checking_implementation_plan.md)
+- [crown_jewel_wiring_masterplan.md](file:///f:/supremeai/docs/plans/features/crown_jewel_wiring_masterplan.md)
+- [current_plan.md](file:///f:/supremeai/docs/plans/features/current_plan.md)
+- [implementation_plan.md](file:///f:/supremeai/docs/plans/features/implementation_plan.md)
+- [implementation_plan2.md](file:///f:/supremeai/docs/plans/features/implementation_plan2.md)
+- [implementation_plan22.md](file:///f:/supremeai/docs/plans/features/implementation_plan22.md)
+- [implementation_plan_4pilarevulution.md](file:///f:/supremeai/docs/plans/features/implementation_plan_4pilarevulution.md)
+- [implementation_plan_for_checking core_philoshopy.md](file:///f:/supremeai/docs/plans/features/implementation_plan_for_checking core_philoshopy.md)
+- [implementation_plan_for_remaining_task.md](file:///f:/supremeai/docs/plans/features/implementation_plan_for_remaining_task.md)
+- [implementation_plan_from_old_plan.md](file:///f:/supremeai/docs/plans/features/implementation_plan_from_old_plan.md)
+- [implementation_plan_gap_solution.md](file:///f:/supremeai/docs/plans/features/implementation_plan_gap_solution.md)
+- [kaggle_implementation_plan.md](file:///f:/supremeai/docs/plans/features/kaggle_implementation_plan.md)
+- [kilo.md](file:///f:/supremeai/docs/plans/features/kilo.md)
+- [kilo_implementation_plan.md](file:///f:/supremeai/docs/plans/features/kilo_implementation_plan.md)
+- [mcp-server.md](file:///f:/supremeai/docs/plans/features/mcp-server.md)
+- [mcp_gateway_implementation_plan.md](file:///f:/supremeai/docs/plans/features/mcp_gateway_implementation_plan.md)
+- [mega_audit_172_files_plan.md](file:///f:/supremeai/docs/plans/features/mega_audit_172_files_plan.md)
+- [mega_free_implementation_plan.md](file:///f:/supremeai/docs/plans/features/mega_free_implementation_plan.md)
+- [multi model implementation_plan.md](file:///f:/supremeai/docs/plans/features/multi model implementation_plan.md)
+- [need_&_supply_implementation_plan.md](file:///f:/supremeai/docs/plans/features/need_&_supply_implementation_plan.md)
+- [openworked_implementation_plan.md](file:///f:/supremeai/docs/plans/features/openworked_implementation_plan.md)
+- [plan_analysis.md](file:///f:/supremeai/docs/plans/features/plan_analysis.md)
+- [plugin becomes an agent capability complete lifecycle.md](file:///f:/supremeai/docs/plans/features/plugin becomes an agent capability complete lifecycle.md)
+- [supremeai_complete_action_plan.md](file:///f:/supremeai/docs/plans/features/supremeai_complete_action_plan.md)
+- [supremeai_strict_roadmap.md](file:///f:/supremeai/docs/plans/features/supremeai_strict_roadmap.md)
+- [ultimate_implementation_plan.md](file:///f:/supremeai/docs/plans/features/ultimate_implementation_plan.md)
 
----
+## Infrastructure & Multi-Cloud Federation (docs/plans/infrastructure/) — (12 files)
 
-## 🔄 2. Version Evolution & Lineage (Successive Iterations)
+- [INFISICAL_SETUP_GUIDE.md](file:///f:/supremeai/docs/plans/infrastructure/INFISICAL_SETUP_GUIDE.md)
+- [SUPREMAI_FREE_TIER_FEDERATION_MASTER_PLAN_V4.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMAI_FREE_TIER_FEDERATION_MASTER_PLAN_V4.md)
+- [SUPREMEAI_3_RENDER_SERVICES_GHCR_DEPLOYMENT_ROADMAP_BN.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_3_RENDER_SERVICES_GHCR_DEPLOYMENT_ROADMAP_BN.md)
+- [SUPREMEAI_CI_RENDER_BUILD_RUNTIME_OPTIMIZATION_PLAN_BN.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_CI_RENDER_BUILD_RUNTIME_OPTIMIZATION_PLAN_BN.md)
+- [SUPREMEAI_PRODUCTION_UPGRADE_PLAN.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_PRODUCTION_UPGRADE_PLAN.md)
+- [SUPREMEAI_RENDER_MEMORY_REMAINING_ROADMAP.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_RENDER_MEMORY_REMAINING_ROADMAP.md)
+- [SUPREMEAI_RENDER_PRODUCTION_ERROR_WARNING_CLEANUP_PLAN.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_RENDER_PRODUCTION_ERROR_WARNING_CLEANUP_PLAN.md)
+- [SUPREMEAI_THIRD_PARTY_ENV_SECRET_CHECKLIST.md](file:///f:/supremeai/docs/plans/infrastructure/SUPREMEAI_THIRD_PARTY_ENV_SECRET_CHECKLIST.md)
+- [docker.md](file:///f:/supremeai/docs/plans/infrastructure/docker.md)
+- [render.md](file:///f:/supremeai/docs/plans/infrastructure/render.md)
+- [supabase_database_manage.md](file:///f:/supremeai/docs/plans/infrastructure/supabase_database_manage.md)
+- [superai_free_tier_survival_guide.md](file:///f:/supremeai/docs/plans/infrastructure/superai_free_tier_survival_guide.md)
 
-Over time, several plans evolved into higher versions. Previous versions are preserved here for historical lineage and audit:
+## UI/UX & Frontend Experiences (docs/plans/design/) — (12 files)
 
-### A. Federation & Multi-Service Scaling Lineage
-1. **v3.0:** [`FREE_TIER_FEDERATION_PLAN_V3.md`](file:///F:/supremeai/docs/plans/FREE_TIER_FEDERATION_PLAN_V3.md) *(Early federation experiments)*
-2. **v4.0:** [`FREE_TIER_FEDERATION_MASTER_PLAN_V4.md`](file:///F:/supremeai/docs/plans/FREE_TIER_FEDERATION_MASTER_PLAN_V4.md) *(Consolidated federation architecture)*
-3. **v4.1:** [`MISSING_SERVICES_INTEGRATION_PLAN_V4.1.md`](file:///F:/supremeai/docs/plans/MISSING_SERVICES_INTEGRATION_PLAN_V4.1.md) *(Comprehensive integration specs for external cloud providers)*
-4. **Current / Living:** [`SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md`](file:///F:/supremeai/docs/plans/SUPREMEAI_FREE_TIER_MULTI_SERVICE_SCALE_MASTER_PLAN.md) & [`UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`](file:///F:/supremeai/docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
+- [SUPREMEAI_2_AUTONOMOUS_UI_AGENT_PROMPT.md](file:///f:/supremeai/docs/plans/design/SUPREMEAI_2_AUTONOMOUS_UI_AGENT_PROMPT.md)
+- [SUPREMEAI_2_UI_UX_MASTER_PLAN.md](file:///f:/supremeai/docs/plans/design/SUPREMEAI_2_UI_UX_MASTER_PLAN.md)
+- [SUPREMEAI_ADMIN_DASHBOARD_GAP_ANALYSIS.md](file:///f:/supremeai/docs/plans/design/SUPREMEAI_ADMIN_DASHBOARD_GAP_ANALYSIS.md)
+- [SUPREMEAI_SINGLE_FRONTEND_ROLE_BASED_ROADMAP.md](file:///f:/supremeai/docs/plans/design/SUPREMEAI_SINGLE_FRONTEND_ROLE_BASED_ROADMAP.md)
+- [SupremeAI সম্পূর্ণ Frontend পরিকল্পনা.md](file:///f:/supremeai/docs/plans/design/SupremeAI সম্পূর্ণ Frontend পরিকল্পনা.md)
+- [admin_dashboard_plan.md](file:///f:/supremeai/docs/plans/design/admin_dashboard_plan.md)
+- [ai_providers_tab_plan.md](file:///f:/supremeai/docs/plans/design/ai_providers_tab_plan.md)
+- [dashboard_design_mockups.md](file:///f:/supremeai/docs/plans/design/dashboard_design_mockups.md)
+- [dashboard_tab_design_plan.md](file:///f:/supremeai/docs/plans/design/dashboard_tab_design_plan.md)
+- [intelligent_chat_plan.md](file:///f:/supremeai/docs/plans/design/intelligent_chat_plan.md)
+- [knowledge_acquisition_plan.md](file:///f:/supremeai/docs/plans/design/knowledge_acquisition_plan.md)
+- [mission_orchestration_plan.md](file:///f:/supremeai/docs/plans/design/mission_orchestration_plan.md)
 
-### B. Production Upgrades & Reconciliation Lineage
-1. **Foundation:** [`FREE_TIER_UPGRADE_PLAN.md`](file:///F:/supremeai/docs/plans/FREE_TIER_UPGRADE_PLAN.md) *(Early free tier roadmap)*
-2. **Reconciliation:** [`PLAN_RECONCILIATION_2026-09-03.md`](file:///F:/supremeai/docs/plans/PLAN_RECONCILIATION_2026-09-03.md) *(Gap analysis as of early September 2026)*
-3. **Production Spec:** [`PRODUCTION_UPGRADE_PLAN.md`](file:///F:/supremeai/docs/plans/PRODUCTION_UPGRADE_PLAN.md) *(2800+ lines deep dive into parity and deployment)*
+## Project Execution Phases (docs/plans/phases/) — (4 files)
 
----
-
-## ⚖️ 3. The Great Architectural Evolution: Old Plans vs. New Plan (Why the 99% Shift Happened)
-
-As SupremeAI evolved from early Java/Spring-Boot prototypes in early 2026 to the current production Python/TypeScript MCP Control Plane in September 2026, **nearly 99% of the operational assumptions changed**. 
-
-The table below explains **what the old plans envisioned**, **what the new active plan establishes**, and **why the new plan is fundamentally superior**:
-
-| Architectural Vector | Old Historical Plans (May 2026 & earlier) | New Active Architecture (Sept 2026 Master) | Why the New Plan is 100x Better (Rationale) |
-|---|---|---|---|
-| **Core Technology Stack** | Java 21 + Spring Boot 3 (`src/main/java/`) + heavy local monolithic daemons. | Python 3.12 (FastAPI + Pydantic v2) + Node/TypeScript MCP Control Plane + Docker. | **Native AI Ecosystem:** AI libraries, LLM SDKs, AST parsers, and Model Context Protocol (MCP) are first-class citizens in Python/TS; eliminating Java JVM startup lag and memory footprint. |
-| **Agent Pool Dynamics** | Fixed "5-Model Structure" (`SupremeAI_Final_5Model_Structure.md`) or rigid "Trio" (Gemini-Kilo-Cline). | **Dynamic Agent Pool ($1 \dots N$ resources):** Auto-discovers whatever local/remote LLMs or tools exist on the user's host. | **Zero "Example Trap":** The user isn't locked into 3 or 5 models. If an environment has 1 agent or 100 agents, the new pipeline adapts dynamically without rewriting code. |
-| **Tool Integration Topology** | Monolithic Tool Bloat: Adding every feature and endpoint directly into one centralized server. | **Hub-and-Spoke Federated Gateway:** MCP Control Tower links to ~10 Domain Circle Centers; workers run decoupled. | **Prevents Context Collapse:** The AI isn't blasted with 200 raw tools per prompt; Tower stays featherweight (<50MB RAM), fast, and cost-efficient. |
-| **Inter-Module Coupling** | Point-to-Point Glue Code: `Table (Trio)` hard-wired to `Orange (Qdrant)` or storage ($N \times (N-1)$ duplicate adapters). | **Zero-Duplication Composable Dynamics:** Modules operate as pure Lego blocks. Central Tower orchestrates them via data tickets (`ref://`). | **Eliminates Code Duplication:** Chaining `Table + Orange` or `Table + Water` requires ZERO modifications in Table or Water. Modules remain pure single sources of truth. |
-| **Execution Latency & Timeout** | Synchronous REST calls (`POST /api/simulator/execute`, wait for 5 minutes). | **Async Task Bus + Ticket Referencing:** Immediate `task_id` dispatch, background execution, SSE/MCP progress streaming. | **Eliminates HTTP/MCP Timeouts:** Deep scans, security audits, and deployments run reliably without freezing the UI or dropping HTTP connections. |
-| **Frontend/Chat Role** | Frontend held fragmented business logic and direct database/backend ties. | **"The Face, Not the Brain":** Frontend/Chat only observes status, handles approvals (HITL), and streams output. | **Total Separation of Concerns:** Core reasoning, keys, and orchestration stay secure in the Control Plane; UI remains blazing fast. |
-
----
-
-## 🧩 4. Core Feature Plans (`features/`)
-
-The 24 canonical architectural capability plans defining SupremeAI's core intelligences:
-
-| ID | Plan Name | Core Domain |
-|---|---|---|
-| **01** | [`Plan_01_Dynamic_AI_Agent_System.md`](file:///F:/supremeai/docs/plans/features/Plan_01_Dynamic_AI_Agent_System.md) | Dynamic multi-agent discovery & orchestration |
-| **02** | [`Plan_02_API_Key_Rotation_System.md`](file:///F:/supremeai/docs/plans/features/Plan_02_API_Key_Rotation_System.md) | Security & secret rotation |
-| **03** | [`Plan_03_Continuous_Learning.md`](file:///F:/supremeai/docs/plans/features/Plan_03_Continuous_Learning.md) | Autonomous self-evolution loop |
-| **04** | [`Plan_04_Intent_Analysis_Confirmation.md`](file:///F:/supremeai/docs/plans/features/Plan_04_Intent_Analysis_Confirmation.md) | Intent breakdown & HITL governance |
-| **05** | [`Plan_05_Plan_Compatibility_Analysis.md`](file:///F:/supremeai/docs/plans/features/Plan_05_Plan_Compatibility_Analysis.md) | Plan evaluation & regression checks |
-| **06** | [`Plan_06_Dual_Repo_System.md`](file:///F:/supremeai/docs/plans/features/Plan_06_Dual_Repo_System.md) | Core vs distribution repo topology |
-| **07** | [`Plan_07_Dashboard_Plugin_Settings.md`](file:///F:/supremeai/docs/plans/features/Plan_07_Dashboard_Plugin_Settings.md) | Dynamic UI extension & plugin ecosystem |
-| **08** | [`Plan_08_Adaptive_Response_Depth.md`](file:///F:/supremeai/docs/plans/features/Plan_08_Adaptive_Response_Depth.md) | Context-aware reasoning scaling |
-| **09** | [`Plan_09_Smart_Data_Storage.md`](file:///F:/supremeai/docs/plans/features/Plan_09_Smart_Data_Storage.md) | Hybrid persistence (SQL + Vector + KV) |
-| **10** | [`Plan_10_API_Limit_Discovery.md`](file:///F:/supremeai/docs/plans/features/Plan_10_API_Limit_Discovery.md) | Rate-limit detection & self-throttling |
-| **11** | [`Plan_11_Pre_Push_Verification.md`](file:///F:/supremeai/docs/plans/features/Plan_11_Pre_Push_Verification.md) | Local pre-commit guardrails |
-| **12** | [`Plan_12_Multi_Platform_Expansion.md`](file:///F:/supremeai/docs/plans/features/Plan_12_Multi_Platform_Expansion.md) | Multi-cloud and cross-OS readiness |
-| **13** | [`Plan_13_Marketing_Strategy_Advisor.md`](file:///F:/supremeai/docs/plans/features/Plan_13_Marketing_Strategy_Advisor.md) | Strategic intelligence adapter |
-| **14** | [`Plan_14_Vision_Image_Integration.md`](file:///F:/supremeai/docs/plans/features/Plan_14_Vision_Image_Integration.md) | Multimodal visual recognition |
-| **15** | [`Plan_15_Hybrid_Voice_System.md`](file:///F:/supremeai/docs/plans/features/Plan_15_Hybrid_Voice_System.md) | Voice interface & real-time audio |
-| **16** | [`Plan_16_CICD_Sandbox.md`](file:///F:/supremeai/docs/plans/features/Plan_16_CICD_Sandbox.md) | Isolated GitHub Actions experimentation |
-| **17** | [`Plan_17_Data_Lifecycle_Management.md`](file:///F:/supremeai/docs/plans/features/Plan_17_Data_Lifecycle_Management.md) | Retention, archival, and purging |
-| **18** | [`Plan_18_Crowdsourced_API_Model.md`](file:///F:/supremeai/docs/plans/features/Plan_18_Crowdsourced_API_Model.md) | Community-shared provider pools |
-| **19** | [`Plan_19_Brilliant_Idea_Detection.md`](file:///F:/supremeai/docs/plans/features/Plan_19_Brilliant_Idea_Detection.md) | Emergent pattern & innovation capture |
-| **20** | [`Plan_20_Learning_from_Examples.md`](file:///F:/supremeai/docs/plans/features/Plan_20_Learning_from_Examples.md) | Few-shot knowledge distillation |
-| **21** | [`Plan_21_Best_Pattern_Curation.md`](file:///F:/supremeai/docs/plans/features/Plan_21_Best_Pattern_Curation.md) | Canonical pattern library |
-| **22** | [`Plan_22_Simulator_Controller_Perfection.md`](file:///F:/supremeai/docs/plans/features/Plan_22_Simulator_Controller_Perfection.md) | Environmental simulation engine |
-| **23** | [`Plan_23_Website_Reverse_Engineering_Master_Guide.md`](file:///F:/supremeai/docs/plans/features/Plan_23_Website_Reverse_Engineering_Master_Guide.md) | Browser crawling & reverse analysis |
-| **24** | [`Plan_24_AI_Agent_Ecosystem_Integration.md`](file:///F:/supremeai/docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md) | External agent protocol compatibility |
-
----
-
-## 🏛️ 5. Sub-Directory Specifications
-
-- **[`phases/`](file:///F:/supremeai/docs/plans/phases/)**:
-  - `phase1_foundation.md` (Core scaffolding)
-  - `phase2_development.md` (Domain adapters)
-  - `phase3_integration.md` (Ecosystem wiring)
-  - `phase4_optimization.md` (Hardening & production)
-- **[`design/`](file:///F:/supremeai/docs/plans/design/)**: Detailed UI/UX and subsystem specifications (Admin dashboard, chat tab, mission orchestration).
-- **[`summary/`](file:///F:/supremeai/docs/plans/summary/)**: High-level deliverables, checklists, quick-start guides, and Bengali project documentation.
-
----
-
-## 🇧🇩 6. Bengali Documentation & Guides (বাংলা ডকুমেন্টস)
-- [`SupremeAI_প্রকল্প_সম্পূর্ণ_পরিচিতি_বাংলা.md`](file:///F:/supremeai/docs/plans/SupremeAI_প্রকল্প_সম্পূর্ণ_পরিচিতি_বাংলা.md)
-- [`SupremeAI_কাজের_পরিকল্পনা_বাংলা.md`](file:///F:/supremeai/docs/plans/SupremeAI_কাজের_পরিকল্পনা_বাংলা.md)
-- [`AI_MODEL_COMPARISON_BANGLA.md`](file:///F:/supremeai/docs/plans/AI_MODEL_COMPARISON_BANGLA.md)
-- [`PROJECT_ANALYSIS_BANGLA.md`](file:///F:/supremeai/docs/plans/PROJECT_ANALYSIS_BANGLA.md)
+- [phase1_foundation.md](file:///f:/supremeai/docs/plans/phases/phase1_foundation.md)
+- [phase2_development.md](file:///f:/supremeai/docs/plans/phases/phase2_development.md)
+- [phase3_integration.md](file:///f:/supremeai/docs/plans/phases/phase3_integration.md)
+- [phase4_optimization.md](file:///f:/supremeai/docs/plans/phases/phase4_optimization.md)
