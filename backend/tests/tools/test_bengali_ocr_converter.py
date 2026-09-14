@@ -22,8 +22,17 @@ import types
 from types import SimpleNamespace
 
 import backend.tools.localization.bengali_ocr_converter as boc
-import pandas as pd
 import pytest
+
+try:
+    # CI parity: pandas is an optional dependency for this module (the owner's
+    # try/except keeps the converter importable without it). Mirror that here
+    # so collection never fails on environments without pandas; the
+    # pandas-dependent tests gate themselves below.
+    import pandas as pd
+except ImportError:  # pragma: no cover - depends on environment
+    pd = None
+
 from backend.tools.localization.bengali_ocr_converter import (
     batch_convert_images,
     convert_image_to_excel,
@@ -31,6 +40,8 @@ from backend.tools.localization.bengali_ocr_converter import (
     parse_table_text,
     setup_google_vision,
 )
+
+PANDAS_REASON = "pandas not installed in this environment"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fakes for the google.cloud.vision boundary
@@ -285,7 +296,11 @@ def read_sheet(xlsx_path: str, sheet: str, **kwargs) -> pd.DataFrame:
     return pd.read_excel(xlsx_path, sheet_name=sheet, engine="openpyxl", **kwargs)
 
 
+xlsx_test = pytest.mark.skipif(pd is None, reason=PANDAS_REASON)
+
+
 class TestConvertImageToExcel:
+    @xlsx_test
     def test_table_text_produces_two_sheet_workbook(self, monkeypatch, tmp_path):
         img = tmp_path / "invoice.png"
         img.write_bytes(b"x")
@@ -312,6 +327,7 @@ class TestConvertImageToExcel:
         # ragged last row padded to 3 columns (Milk has no Price cell)
         assert pd.isna(data.iloc[3, 2]) or str(data.iloc[3, 2]) in ("", "nan", "None")
 
+    @xlsx_test
     def test_ragged_rows_padded_to_max_columns(self, monkeypatch, tmp_path):
         img = tmp_path / "r.png"
         img.write_bytes(b"x")
@@ -323,6 +339,7 @@ class TestConvertImageToExcel:
         assert data.shape == (3, 3)  # header row + 2 data rows
         assert str(data.iloc[2, 2]) in ("", "nan", "None") or pd.isna(data.iloc[2, 2])
 
+    @xlsx_test
     def test_whitespace_text_uses_raw_text_fallback_sheet(self, monkeypatch, tmp_path):
         # Text that is non-empty but parses to zero rows (newlines/whitespace
         # only) takes the raw-text DataFrame branch and still produces a file.
@@ -353,6 +370,7 @@ class TestConvertImageToExcel:
             is False
         )
 
+    @xlsx_test
     def test_excel_write_oserror_is_caught(self, monkeypatch, tmp_path):
         img = tmp_path / "ok.png"
         img.write_bytes(b"x")
@@ -379,6 +397,7 @@ class TestConvertImageToExcel:
         with pytest.raises(ZeroDivisionError):
             convert_image_to_excel(str(img), str(excel), client)
 
+    @xlsx_test
     def test_local_fallback_text_converts_to_excel(self, monkeypatch, tmp_path):
         img = tmp_path / "fb.png"
         img.write_bytes(b"x")
@@ -414,6 +433,7 @@ class SequentialVisionClient(FakeVisionClient):
 
 
 class TestBatchConvertImages:
+    @xlsx_test
     def test_converts_jpg_files_sorted_with_xlsx_outputs(self, monkeypatch, tmp_path):
         (tmp_path / "b.jpg").write_bytes(b"x")
         (tmp_path / "a.jpg").write_bytes(b"x")
@@ -430,6 +450,7 @@ class TestBatchConvertImages:
         assert (tmp_path / "b_vision.xlsx").exists()
         assert not (tmp_path / "c_vision.xlsx").exists()
 
+    @xlsx_test
     def test_uppercase_jpg_extension_included(self, monkeypatch, tmp_path):
         (tmp_path / "UPPER.JPG").write_bytes(b"x")
         client = FakeVisionClient(descriptions=["k    v"])
@@ -438,6 +459,7 @@ class TestBatchConvertImages:
         batch_convert_images(str(tmp_path))
         assert (tmp_path / "UPPER_vision.xlsx").exists()
 
+    @xlsx_test
     def test_empty_text_files_not_counted(self, monkeypatch, tmp_path):
         (tmp_path / "good.jpg").write_bytes(b"x")
         (tmp_path / "empty.jpg").write_bytes(b"x")
@@ -462,6 +484,7 @@ class TestBatchConvertImages:
         with pytest.raises(FileNotFoundError):
             batch_convert_images(str(tmp_path / "no-such-folder"))
 
+    @xlsx_test
     def test_credentials_path_forwarded_to_setup(self, monkeypatch, tmp_path):
         seen: dict = {}
         client = FakeVisionClient(descriptions=["a    b"])
@@ -502,6 +525,8 @@ _RESTORE_KEYS = (
     "google.oauth2.service_account",
 )
 
+_ABSENT = object()  # sentinel: key was NOT in sys.modules before the reload
+
 
 class TestModuleImportDegradation:
     """The module degrades gracefully at IMPORT time when optional deps are
@@ -523,7 +548,9 @@ class TestModuleImportDegradation:
         import importlib
 
         snapshot = {}
-        saved = {k: sys.modules.get(k) for k in _RESTORE_KEYS}
+        # Distinguish "key absent" from "key present but None" (None in
+        # sys.modules is itself a legitimate blocked-import state).
+        saved = {k: (sys.modules[k] if k in sys.modules else _ABSENT) for k in _RESTORE_KEYS}
         try:
             for k, v in overrides.items():
                 sys.modules[k] = v
@@ -534,7 +561,7 @@ class TestModuleImportDegradation:
             snapshot["service_account"] = reloaded.service_account
         finally:
             for k, v in saved.items():
-                if v is None:
+                if v is _ABSENT:
                     sys.modules.pop(k, None)
                 else:
                     sys.modules[k] = v
