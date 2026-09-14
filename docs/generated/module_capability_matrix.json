@@ -4340,13 +4340,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/grpc_client.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/health/__init__.py"
     },
     {
@@ -8253,17 +8246,6 @@
       "path": "backend/p2p/credit_system.py"
     },
     {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/p2p/resource_broker.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -8815,6 +8797,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/scripts/audit_import_walk.py"
     },
     {
       "capability_signals": [],
@@ -23348,5 +23339,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2707
+  "source_file_count": 2706
 }
