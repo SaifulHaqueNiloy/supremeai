@@ -51,8 +51,8 @@ SupremeAI is designed as an autonomous, self-evolving, production-ready AI platf
    Module A (e.g., `Trio`) never imports or directly invokes Module B (e.g., `Qdrant`). They operate in isolation. Data exchange occurs through Central Orchestration.
 3. **Control Plane vs. Data Plane Separation:**
    The Central MCP Tower only manages control commands, task dispatches, and metadata references. Heavy payload data (e.g., full AST dumps, massive logs) flows via references/artifacts, never congesting the Tower.
-4. **The Frontend is the Face, Not the Brain:**
-   The frontend / chat interface observes status, user prompts, approvals, and summaries. Internal chain-of-thought, secret handling, and raw routing logic remain hidden within the Control Plane.
+4. **The Frontend is the Face, Not the Brain (Dual-Driven: Customer & Admin):**
+   The frontend / chat interface observes status, user prompts, approvals, and summaries while keeping internal reasoning and secrets hidden. Crucially, the frontend is **Dual-Driven**: it serves **End Customers** (zero-complexity, outcome-focused, progressive disclosure of capabilities) and **System Administrators** (mission control, full telemetry, governance, and HITL overrides) within one unified application without confusing or cluttering customer screens with internal admin wiring.
 5. **Intent-First Generalization (Avoid the "Example Trap"):**
    Agents must never confuse an illustrative example with a rigid specification. If a user names 3 specific models (e.g. Gemini, Kilo, Cline) or a specific cloud provider as an example, the architecture MUST remain generalized to dynamic discovery ($1 \dots N$ resources). Hardcoding illustrative examples into rigid filenames or fixed 3-stage bounds is an architectural anti-pattern.
 6. **Mandatory Canonical Documentation for Every Module:**
