@@ -50,9 +50,7 @@ class SettingsFieldsMixin:
 
     # এই ডিফল্ট পাসওয়ার্ডটি শুধু local ডেভেলপমেন্টের জন্য; প্রোডাকশনে
     # এটি কখনোই বৈধ গেট হিসেবে গণ্য হবে না।
-    DOCS_DEV_FALLBACK_PASSWORDS: ClassVar[frozenset[str]] = frozenset(
-        {"", "dev_password_only"}
-    )
+    DOCS_DEV_FALLBACK_PASSWORDS: ClassVar[frozenset[str]] = frozenset({"", "dev_password_only"})
 
     @property
     def docs_password_ok(self) -> bool:
@@ -84,7 +82,8 @@ class SettingsFieldsMixin:
     port: int = Field(
         default=8080, validation_alias="PORT"
     )  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
-    host: str = Field(default="0.0.0.0", validation_alias="HOST")
+    # bind-all listen default; HOST env overrides it (dev/local semantics)
+    host: str = Field(default="0.0.0.0", validation_alias="HOST")  # is_local()
 
     # ── Canonical Portal Endpoints ──────────────────────────────────────────
     frontend_url: str = Field(default="", validation_alias="FRONTEND_URL")
@@ -98,7 +97,7 @@ class SettingsFieldsMixin:
         if self.frontend_url:
             return self.frontend_url
         if self.is_local():
-            return "http://localhost:3000"
+            return "http://localhost:3000"  # is_local() guarded dev portal URL
         return ""
 
     # CORS origins is implemented as a dynamic @property on SettingsSecretsMixin

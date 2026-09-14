@@ -101,6 +101,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
     from core.idempotency_middleware import IdempotencyMiddleware
     from core.lifespan import app_lifespan
+
     # P0 (production docs exposure policy): gates /docs, /redoc and openapi.json.
     from core.middleware.docs_auth import DocsAuthMiddleware
 
@@ -220,7 +221,9 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 degradation_requested = (
                     os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").lower() == "true"
                 )
-                serve_ready, reason = db_failure_readiness(role, settings.env, degradation_requested)
+                serve_ready, reason = db_failure_readiness(
+                    role, settings.env, degradation_requested
+                )
                 if serve_ready:
                     logger.warning(f"Database degraded mode ACTIVE: {reason}")
                 else:
@@ -240,7 +243,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         # বাংলা: criticality সিদ্ধান্তও একক পলিসি মডিউল থেকে (P1 consistency)
         from core.health_policy import is_critical_db_check
 
-        register_check("database", _check_database, critical=is_critical_db_check(os.getenv("SUPREMEAI_SERVICE_ROLE", "")))
+        register_check(
+            "database",
+            _check_database,
+            critical=is_critical_db_check(os.getenv("SUPREMEAI_SERVICE_ROLE", "")),
+        )
         register_check("memory", _check_memory, critical=False)
 
         monitoring_task = None

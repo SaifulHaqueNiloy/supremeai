@@ -24,7 +24,7 @@ from __future__ import annotations
 import base64
 import json
 import secrets
-from typing import Callable
+from collections.abc import Callable
 
 from core.config import settings
 from core.logging_config import logger
@@ -57,7 +57,8 @@ def _check_basic_auth(header_value: str | None) -> bool:
     try:
         decoded = base64.b64decode(header_value.split(" ", 1)[1].strip()).decode("utf-8")
         username, _, password = decoded.partition(":")
-    except Exception:  # noqa: BLE001 — malformed header must never 500
+    except Exception as exc:  # noqa: BLE001 — malformed header must never 500
+        logger.debug(f"Malformed Basic auth header on docs gate rejected: {exc}")
         return False
     expected_user = settings.docs_username or "admin"
     expected_pass = settings.docs_password.get_secret_value() if settings.docs_password else ""
@@ -111,9 +112,7 @@ class DocsAuthMiddleware:
         await self.app(scope, receive, send)
 
 
-def _json_response(
-    status_code: int, body: dict, headers: dict[str, str] | None = None
-) -> Callable:
+def _json_response(status_code: int, body: dict, headers: dict[str, str] | None = None) -> Callable:
     """Build a raw ASGI JSON response sender (mirrors auth_middleware helper)."""
 
     async def _send(scope, receive, send):
