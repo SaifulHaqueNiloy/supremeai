@@ -1,6 +1,6 @@
 """Pydantic field declarations for SupremeAI settings."""
 
-from typing import Annotated
+from typing import Annotated, ClassVar
 
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import NoDecode
@@ -32,6 +32,15 @@ class SettingsFieldsMixin:
         default=30.0, validation_alias="CIRCUIT_COOLDOWN_SECONDS"
     )
     MAX_ROUTING_ATTEMPTS: int = Field(default=3, validation_alias="MAX_ROUTING_ATTEMPTS")
+
+    # ── Docs / OpenAPI exposure policy (P0 — production sign-off) ──────────
+    # বাংলা: প্রোডাকশনে /docs, /redoc, openapi.json ডিফল্টভাবে বন্ধ থাকবে।
+    # docs_enabled হলো tri-state: None (unset) → local-এ চালু, production/
+    # staging-এ বন্ধ। SUPREMEAI_DOCS_ENABLED=true দিয়ে প্রোডাকশনে স্পষ্ট
+    # অপট-ইন করা যায়, তখন শক্তিশালী SUPREMEAI_DOCS_PASSWORD বাধ্যতামূলক
+    # (validate_all ফেইল-ফাস্ট করে) — "dev_password_only" কখনো প্রোডাকশন
+    # ফলব্যাক হতে পারবে না।
+    docs_enabled: bool | None = Field(default=None, validation_alias="SUPREMEAI_DOCS_ENABLED")
     docs_auth_enabled: bool = True
     docs_username: str = Field(default="admin", validation_alias="SUPREMEAI_DOCS_USERNAME")
     docs_password: SecretStr = Field(
@@ -39,11 +48,42 @@ class SettingsFieldsMixin:
         validation_alias="SUPREMEAI_DOCS_PASSWORD",
     )
 
+    # এই ডিফল্ট পাসওয়ার্ডটি শুধু local ডেভেলপমেন্টের জন্য; প্রোডাকশনে
+    # এটি কখনোই বৈধ গেট হিসেবে গণ্য হবে না।
+    DOCS_DEV_FALLBACK_PASSWORDS: ClassVar[frozenset[str]] = frozenset({"", "dev_password_only"})
+
+    @property
+    def docs_password_ok(self) -> bool:
+        """Return True when the docs password is strong enough for a gated deployment.
+
+        বাংলা: ডকুমেন্টেশন গেটের জন্য পাসওয়ার্ড যথেষ্ট শক্তিশালী কিনা।
+        ডিফল্ট ডেভ ফলব্যাক বা খুব ছোট পাসওয়ার্ড প্রোডাকশনে গ্রহণযোগ্য নয়।
+        """
+        pwd = self.docs_password.get_secret_value() if self.docs_password else ""
+        if pwd.lower() in self.DOCS_DEV_FALLBACK_PASSWORDS:
+            return False
+        return len(pwd) >= 12
+
+    @property
+    def effective_docs_enabled(self) -> bool:
+        """Resolve the runtime docs/OpenAPI exposure policy.
+
+        বাংলা: local/dev-এ ডিফল্ট চালু; production/staging-এ ডিফল্ট বন্ধ,
+        শুধুমাত্র স্পষ্ট SUPREMEAI_DOCS_ENABLED=true এবং শক্তিশালী
+        পাসওয়ার্ড থাকলে চালু হয়।
+        """
+        if (self.env or "").lower() in ("production", "staging"):
+            return bool(self.docs_enabled) and self.docs_password_ok
+        if self.docs_enabled is None:
+            return True
+        return bool(self.docs_enabled)
+
     # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
     port: int = Field(
         default=8080, validation_alias="PORT"
     )  # বাংলা: Dockerfile CMD-এর ${PORT:-8080} default-এর সাথে consistent
-    host: str = Field(default="0.0.0.0", validation_alias="HOST")
+    # bind-all listen default; HOST env overrides it (dev/local semantics)
+    host: str = Field(default="0.0.0.0", validation_alias="HOST")  # is_local()
 
     # ── Canonical Portal Endpoints ──────────────────────────────────────────
     frontend_url: str = Field(default="", validation_alias="FRONTEND_URL")
@@ -57,7 +97,7 @@ class SettingsFieldsMixin:
         if self.frontend_url:
             return self.frontend_url
         if self.is_local():
-            return "http://localhost:3000"
+            return "http://localhost:3000"  # is_local() guarded dev portal URL
         return ""
 
     # CORS origins is implemented as a dynamic @property on SettingsSecretsMixin

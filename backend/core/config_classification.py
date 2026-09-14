@@ -1052,6 +1052,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P4) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
+        "SUPREMEAI_DOCS_ENABLED",
+        frozenset({ConfigClass.CONDITIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="Docs/OpenAPI exposure opt-in (P0 policy): tri-state; production defaults to disabled, explicit opt-in requires strong SUPREMEAI_DOCS_PASSWORD.",
+    ),
+    ConfigSpec(
         "SUPREMEAI_DOCS_USERNAME",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
