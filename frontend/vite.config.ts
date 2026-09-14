@@ -108,11 +108,20 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
-          'vendor-flow': ['@xyflow/react'],
-          'vendor-query': ['@tanstack/react-query'],
-        },
+        // FIX (final-test ci-fixes): react + react-dom অবশ্যই একটাই chunk-এ থাকতে হবে
+        // এবং সেই chunk অন্য কোনো vendor chunk-কে import করবে না। আগে react জোরপূর্বক
+        // vendor-ui-তে (framer-motion/lucide/recharts) আর react-dom অনাকাঙ্ক্ষিতভাবে
+        // vendor-flow-তে (@xyflow/react graph-এ) গিয়ে পড়ছিল → vendor-ui ⇄ vendor-flow
+        // circular import → react-এর CJS factory (requireReact) vendor-ui-এর module body
+        // চলার আগেই vendor-flow থেকে call হয়ে "Cannot set properties of undefined
+        // (setting 'Activity')" boot crash দিচ্ছিল → পুরো অ্যাপ "Loading SupremeAI..."
+        // splash-এ আটকে যেত (E2E "home loads KPI tiles" failure-এর আসল কারণ)।
+        // react/react-dom/scheduler একসাথে + zero outgoing vendor imports = অন্তত
+        // react চক্রমুক্ত ও সবসময় প্রথমে initialize হয়।
+        'vendor-react': ['react', 'react-dom', 'scheduler'],
+        'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
+        'vendor-flow': ['@xyflow/react'],
+        'vendor-query': ['@tanstack/react-query'],
       },
     },
     chunkSizeWarningLimit: 600,
