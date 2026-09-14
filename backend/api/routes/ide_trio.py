@@ -59,9 +59,9 @@ async def execute_trio(request: TrioExecuteRequest) -> dict[str, Any]:
 async def trio_status() -> dict[str, Any]:
     """Return the availability status of the three IDE agents."""
     try:
-        from agents.ide.trio_adapters import ClineChecker, GeminiWriter, KiloReviewer
-
         import os
+
+        from agents.ide.trio_adapters import ClineChecker, GeminiWriter, KiloReviewer
 
         # Availability describes importable workflow stages. Provider/model selection
         # remains delegated to the runtime gateway and is never encoded here.
