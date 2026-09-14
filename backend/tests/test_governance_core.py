@@ -124,9 +124,7 @@ class GovernanceCoreTests(unittest.TestCase):
 
     def test_overall_deadline_enforced_by_core(self) -> None:
         core, _ = self._core()
-        result = asyncio.run(
-            core.route(_envelope(capability="test.slow", deadline_ms=50))
-        )
+        result = asyncio.run(core.route(_envelope(capability="test.slow", deadline_ms=50)))
         self.assertEqual(result.status, ExecutionStatus.FAILED)
         assert result.error is not None
         self.assertEqual(result.error.code, "deadline_exceeded")
@@ -161,8 +159,9 @@ class GovernanceCoreTests(unittest.TestCase):
         realtime = core.resolve(CircleName.REALTIME)
         assert realtime is not None
         result = asyncio.run(
-            core.dispatch_to("memory", "memory.recall", {"query": "x"},
-                             actor_id="user-1", tenant_id="tenant-1")
+            core.dispatch_to(
+                "memory", "memory.recall", {"query": "x"}, actor_id="user-1", tenant_id="tenant-1"
+            )
         )
         # Handler may fail if the vector store is unavailable in tests — the
         # contract we assert is that the EVENT reaches the realtime mirror.
