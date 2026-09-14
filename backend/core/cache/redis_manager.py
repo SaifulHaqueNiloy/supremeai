@@ -57,6 +57,28 @@ class SecureRedisManager:
         async with self._init_lock:
             if self._initialized:
                 return
+            # FIX (memory-fallback contract): REDIS_URL="memory://" is the codebase's
+            # documented in-memory fallback scheme (core/rate_limit.py,
+            # core/middleware/security.py, tests). redis-py cannot parse it, and the
+            # settings normalizer (config_secrets.redis_url) mangles it into a
+            # VALID-looking TCP URL "redis://memory://" — so this method used to build
+            # a broken TCP pool and cache the client on the SINGLETON. Any later
+            # consumer (e.g. TenantRateLimiter with redis_client=None) then hit a
+            # real ConnectionError storm against host "memory" instead of falling
+            # back to its own documented in-memory path (observed: health-check
+            # poisoning billing tests in group runs; 4 failures, order-dependent).
+            # Honor the contract: stay fail-closed (client None) for the memory
+            # scheme — both the plain and the mangled-normalized form — so every
+            # consumer engages its own in-memory fallback. Real redis URLs are
+            # completely unaffected.
+            if self.url and "memory://" in self.url:
+                logger.info(
+                    "REDIS_URL memory:// in-memory fallback active — SecureRedisManager "
+                    "stays fail-closed (no TCP client); consumers use their documented "
+                    "in-memory fallbacks."
+                )
+                self._initialized = True
+                return
             if self.url and aioredis is not None:
                 pool = aioredis.ConnectionPool.from_url(
                     self.url,
