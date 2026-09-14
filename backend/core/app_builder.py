@@ -101,15 +101,16 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     )
     from core.idempotency_middleware import IdempotencyMiddleware
     from core.lifespan import app_lifespan
+
+    # RESTORE-AND-WIRE (2026-09-14): QueryTimingMiddleware was previously deleted as
+    # "orphan"; per the repo doctrine (wire-next before archive) it is now restored
+    # and wired — slow-request logging + rolling percentile history for /metrics.
+    from core.middleware.query_timing import QueryTimingMiddleware
     from core.middleware.security import (
         RequestValidationMiddleware,
         SecurityHeadersMiddleware,
     )
     from core.observability.observability_middleware import ObservabilityMiddleware
-    # RESTORE-AND-WIRE (2026-09-14): QueryTimingMiddleware was previously deleted as
-    # "orphan"; per the repo doctrine (wire-next before archive) it is now restored
-    # and wired — slow-request logging + rolling percentile history for /metrics.
-    from core.middleware.query_timing import QueryTimingMiddleware
     from core.rate_limit import RateLimitMiddleware
     from core.request_context import RequestContextMiddleware
     from core.security.api_key_middleware import APIKeyAuthMiddleware

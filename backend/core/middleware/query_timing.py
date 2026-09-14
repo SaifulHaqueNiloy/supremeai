@@ -16,7 +16,6 @@ from typing import Any
 # RESTORE-AND-WIRE (2026-09-14): `from typing import ASGI` never existed in the
 # stdlib (module failed to import on Python 3.12) — replaced with the correct
 # ASGI application callable type.
-
 from core.logging_config import logger
 
 # Configuration

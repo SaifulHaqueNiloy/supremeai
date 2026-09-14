@@ -148,7 +148,7 @@ export function parseBackendUrl(raw: string): ParsedBackend {
   const value = (raw || '').trim()
   if (!value || value === '/') return { prefix: '', port: null }
   try {
-    // Absolute URL (e.g. "http://localhost:8010" or "http://host:8010/prefix")
+    // Absolute URL (e.g. "http://example.internal:8010" or "http://host:8010/prefix")
     const u = new URL(value)
     const prefix = u.pathname.replace(/\/+$/, '')
     return { prefix, port: u.port ? Number(u.port) : null }

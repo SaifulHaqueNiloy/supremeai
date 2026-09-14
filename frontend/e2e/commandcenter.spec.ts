@@ -5,9 +5,15 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function waitForCommandCenter(page: Page) {
-  await page.goto(BASE_URL);
-  await page.waitForLoadState('networkidle');
-  // The app should load; we look for a Command Center indicator
+  // Pre-seed localStorage auth token so ProtectedRoute allows /commandcenter
+  await page.addInitScript(() => {
+    window.localStorage.setItem('supremai-auth-token', 'demo-token');
+    window.localStorage.setItem('supremeai_token', 'demo-token');
+    window.localStorage.setItem('supremeai_role', 'admin');
+  });
+  await page.goto(BASE_URL + '/commandcenter');
+  await page.waitForLoadState('domcontentloaded');
+  // Look for Command Center indicator
   await page.waitForSelector('text=কমান্ড সেন্টার', { timeout: 15_000 }).catch(() => {});
 }
 
@@ -53,8 +59,8 @@ test.describe('AETHEL Command Center — Smoke Tests', () => {
 
   test('OTP modal appears for gate action', async ({ page }) => {
     // Navigate to deck (home)
-    await page.goto(BASE_URL);
-    await page.waitForLoadState('networkidle');
+    await page.goto(BASE_URL + '/commandcenter');
+    await page.waitForLoadState('domcontentloaded');
 
     // Click gate action to trigger confirmation modal
     const gateBtn = page.locator('button:has-text("গেট লক")').first();

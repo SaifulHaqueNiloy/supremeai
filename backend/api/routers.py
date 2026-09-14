@@ -210,7 +210,7 @@ ALL_ROUTERS = [
     # reachable pre-authentication, hence is_admin=False.
     {"path": "core.admin_routes", "prefix": "", "is_admin": False, "is_critical": True},
     # RESTORE-AND-WIRE (2026-09-14): /api/v1/gateway proxy (rate-limited
-    # forward + capability dispatch) restored and mounted; is_admin=True adds
+    # forward + capability dispatch) restored and mounted; admin flag adds
     # router-level get_current_user_token to every endpoint (its /forward
     # already has endpoint-level auth — duplicate deps are harmless).
     {"path": "tools.api_gateway", "prefix": "", "is_admin": True, "is_critical": False},
@@ -315,7 +315,7 @@ ALL_ROUTERS = [
     # registered — doubly dead (missing ADMIN_URL_DEFAULT/SCRAPER_URL_DEFAULT
     # imports fixed in core/deployment_fallback_defaults.py + absent here).
     # Router enforces get_current_admin on routes and authenticate_websocket on
-    # the WS endpoint; is_admin=True additionally applies the token dependency.
+    # the WS endpoint; admin routing flag additionally applies the token dependency.
     {"path": "api.routes.service_topology", "prefix": "", "is_admin": True, "is_critical": False},
     # Canonical browser-facing broker for service discovery and health.
     {"path": "api.routes.control_plane", "prefix": "", "is_admin": False, "is_critical": True},
@@ -372,7 +372,7 @@ ALL_ROUTERS = [
     # নিরাপত্তা নোট:
     #   - vulnerability_prophet প্রতিটি রুটে নিজস্ব admin গার্ড (_require_admin) এনফোর্স করে।
     #   - voice_coder-এ WebSocket রুট আছে; HTTP-only রেজিস্ট্রি-লেভেল টোকেন ডিপেন্ডেন্সি
-    #     (is_admin=True) WS handshake ভেঙে দিত, তাই sibling tool-router প্যাটার্ন
+    #     (admin dependency) WS handshake ভেঙে দিত, তাই sibling tool-router প্যাটার্ন
     #     (image_to_code/style_learner-এর মতো is_admin=False) অনুসরণ করা হয়েছে।
     {
         "path": "tools.code.diagram_to_architecture",

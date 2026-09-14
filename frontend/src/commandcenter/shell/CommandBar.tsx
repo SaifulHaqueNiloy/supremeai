@@ -48,8 +48,9 @@ export function CommandBar({
 
   return (
     <header className="flex items-center gap-4 px-4 h-12 border-b border-[var(--sa-line)] bg-[var(--sa-bg-1)]">
-      {/* System Pulse */}
+      {/* Brand & System Pulse */}
       <div className="flex items-center gap-2">
+        <span className="text-xs font-bold tracking-wider font-mono text-[var(--sa-text-0)]">কমান্ড সেন্টার</span>
         <span className={`h-2.5 w-2.5 rounded-full ${healthColor}`} />
         <span className="text-[10px] font-mono font-bold text-[var(--sa-text-0)]">
           {healthPercent !== null && healthPercent !== undefined ? `${healthPercent}%` : '—'}

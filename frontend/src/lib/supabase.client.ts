@@ -44,7 +44,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 // Options optimized for free tier usage
 export const supabase: SupabaseClient = createClient(
-  supabaseUrl ?? 'http://localhost:54321',
+  supabaseUrl ?? 'https://placeholder-supabase.internal',
   supabaseAnonKey ?? 'public-anon-key-placeholder',
   {
     auth: {
