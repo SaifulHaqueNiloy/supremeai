@@ -1,9 +1,13 @@
-# SimulatorController - Perfect Implementation Guide
+# SimulatorController & Preview Sandbox - Implementation Guide
+**Status:** 🔄 **EVOLVED / INTEGRATED INTO PLAYWRIGHT & DOCKER SANDBOX ARCHITECTURE**  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C1 (Quality & Verification) + Circle C2 (Cloud Infra)
 
-**Status:** P2 Feature - Supporting Infrastructure  
-**Component:** `/api/simulator/*` endpoints  
-**Phase:** Phase 8 (Simulator & Visualization)  
-**Last Updated:** 2026-04-26
+> [!NOTE]
+> **Architectural Evolution Notice:**
+> - **Historical Java Draft (April 2026):** Envisioned a heavy Java Spring-Boot simulator manager (`SimulatorController.java`) storing profiles in memory.
+> - **Active Architecture (Sept 2026):** Transformed into **Automated Playwright Browser Subagents** and **Dockerized Execution Sandboxes** (`backend/sandbox/`). Preview environments are spun up ephemerally via Render and Cloudflare without local JVM overhead.
+> - *This document is preserved for historical audit of simulator data models and quota requirements.*
 
 ---
 
