@@ -128,7 +128,7 @@ export function UserManager({
       {isLoading ? (
         <div className="text-center py-8 text-slate-400 font-mono text-xs">Loading users...</div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div data-testid="user-list" className="flex flex-col gap-3">
           {paginatedUsers.map(user => {
             const perms = Array.isArray(user.permissions) ? user.permissions : [];
             return (
