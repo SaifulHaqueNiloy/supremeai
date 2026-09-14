@@ -57,6 +57,11 @@ SupremeAI is designed as an autonomous, self-evolving, production-ready AI platf
    Agents must never confuse an illustrative example with a rigid specification. If a user names 3 specific models (e.g. Gemini, Kilo, Cline) or a specific cloud provider as an example, the architecture MUST remain generalized to dynamic discovery ($1 \dots N$ resources). Hardcoding illustrative examples into rigid filenames or fixed 3-stage bounds is an architectural anti-pattern.
 6. **Mandatory Canonical Documentation for Every Module:**
    No module exists as an undocumented "magic box". Every current and future module in SupremeAI must maintain comprehensive, living documentation outlining: its true generalized intent, operational lifecycle, inputs/outputs, and decoupling boundaries.
+7. **End-to-End Dual-Driven Architecture (Full-Stack: Backend & Frontend):**
+   SupremeAI is comprehensively **Dual-Driven across both Backend and Frontend layers**.
+   - **Backend:** Exposes dedicated, rate-limited, multi-tenant customer APIs (`/api/v1/*`) alongside authoritative, audit-trailed admin control APIs (`/admin-api/*` and MCP tools), backed by strict RLS and tenant database isolation.
+   - **Frontend:** Provides a progressive-disclosure, outcome-driven customer studio alongside an authoritative mission command center within a unified single-page architecture.
+   Neither layer may ever be reduced to an "admin-only" internal utility or an unmanageable consumer black box.
 
 ---
 
