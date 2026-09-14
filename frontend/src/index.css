@@ -1020,3 +1020,28 @@ body {
   border-radius: 14px;
   overflow: hidden;
 }
+
+/* Guest chat detail polish (hardening-2 round 3): subtle entrance for
+   assistant bubbles + typing dots, with a reduced-motion guard so users
+   who opt out of animation get an instant, calm transcript. */
+@keyframes guest-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-guest-bubble-in {
+  animation: guest-bubble-in 0.22s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-guest-bubble-in,
+  .animate-bounce {
+    animation: none;
+  }
+}
