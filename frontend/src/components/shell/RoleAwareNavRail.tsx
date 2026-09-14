@@ -73,6 +73,9 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction,
       <button
         key={item.id}
         type="button"
+        // Part-9 QA instrumentation: stable sub-tab selector, e.g.
+        // admin-overview-tab / admin-tenants-rbac-tab (context-scoped action id).
+        data-testid={`${context}-${item.actionId}-tab`}
         title={titleAttr}
         onClick={() => onAction?.(item.actionId)}
         className={`${baseCls} ${active
