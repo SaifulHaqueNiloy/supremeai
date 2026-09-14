@@ -2232,7 +2232,7 @@
     {
       "evidence": [
         {
-          "line": 909,
+          "line": 915,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -2322,7 +2322,7 @@
     {
       "evidence": [
         {
-          "line": 12,
+          "line": 13,
           "path": "backend/core/ai_memory/vector_store.py"
         }
       ],

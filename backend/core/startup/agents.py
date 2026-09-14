@@ -367,5 +367,45 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ DisasterRecoveryAgent failed to start: {exc}")
 
+    # Agent: ai_memory Retention — periodic decay/cleanup of the canonical
+    # ai_memory table via the Supabase RPC fn_ai_memory_retention_cleanup.
+    # M0.6 checkpoint (roadmap M0.6 / PR #303 §10): the Phase C SQL ships the
+    # function and the retention indexes, but nothing invoked it on a schedule
+    # until now. Env-gated like every other infrastructure agent.
+    try:
+        if os.getenv("ENABLE_AI_MEMORY_RETENTION", "false").lower() == "true":
+
+            async def _ai_memory_retention_loop() -> None:
+                interval = int(os.getenv("AI_MEMORY_RETENTION_INTERVAL_SECONDS", "86400"))
+                while True:
+                    try:
+                        from services.memory_service import _get_supabase
+
+                        client = _get_supabase()
+
+                        def _run_retention_rpc(client=client):
+                            return client.rpc("fn_ai_memory_retention_cleanup", {}).execute()
+
+                        result = await asyncio.to_thread(_run_retention_rpc)
+                        logger.info(f"✅ ai_memory retention cleanup executed: {result.data}")
+                    except Exception as _e:
+                        logger.warning(f"⚠️ ai_memory retention cycle failed (non-fatal): {_e}")
+                    await asyncio.sleep(interval)
+
+            await agent_supervisor.start_agent(
+                "ai-memory-retention",
+                lambda: _ai_memory_retention_loop(),
+                health_check_interval=3600,
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info("✅ ai_memory retention agent started (daily decay/cleanup cycle).")
+        else:
+            logger.info(
+                "ℹ️ ai_memory retention agent disabled (set ENABLE_AI_MEMORY_RETENTION=true)."
+            )
+    except Exception as exc:
+        logger.warning(f"⚠️ ai_memory retention agent failed to start: {exc}")
+
     # Start the agent health monitor
     await agent_supervisor.start_monitor(check_interval=30)

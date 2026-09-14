@@ -690,16 +690,22 @@ memory_service = LazyCascadeMemoryService()
 
 
 def get_embedding(text: str) -> list[float]:
-    """Return a 1536-d embedding for *text*."""
+    """Return a 384-d embedding for *text*.
+
+    M0.6 (roadmap / PR #303 §10): was 1536 — the ai_memory column is
+    vector(384) (typmod-enforced; core/embeddings.py _PG_DIM = 384), so a
+    1536-d hash fallback either got rejected by the column or silently
+    poisoned the dimension contract.
+    """
     from core.embeddings import embed_for_pgvector
 
     try:
-        embedding = embed_for_pgvector(text, pg_dim=1536)
+        embedding = embed_for_pgvector(text, pg_dim=384)
         if embedding:
             return embedding
     except Exception as e:
         logger.debug(f"LiteLLM encoding error: {e}")
-    return hash_vectorize(text, size=1536)
+    return hash_vectorize(text, size=384)
 
 
 # ---------------------------------------------------------------------------

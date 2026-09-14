@@ -4,12 +4,29 @@ Reduces memory usage while maintaining search quality.
 """
 
 import asyncio
+import uuid
 from datetime import UTC
 from typing import Any
 
 from supabase import create_client
 
 from core.logging_config import logger
+
+
+def _coerce_uuid(raw: str) -> str:
+    """Return a valid UUID string for any id.
+
+    M0.6 (roadmap M0.6 / PR #303 §10): the ai_memory PK is `id uuid`, but
+    AutoRAG writers pass deterministic string ids like
+    "user:session:<sha256[:24]>" — the upsert then fails with
+    `invalid input syntax for type uuid` and (pre-fix) the exception block
+    swallowed it as a debug log, so nothing persisted. uuid5 of the raw id
+    keeps the dedupe semantics deterministic: same id -> same uuid.
+    """
+    try:
+        return str(uuid.UUID(raw))
+    except (ValueError, AttributeError, TypeError):
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, str(raw)))
 
 
 class FreeTierOptimizedVectorStore:
@@ -52,11 +69,26 @@ class FreeTierOptimizedVectorStore:
                 batch_payloads = payloads[i : i + self.BATCH_SIZE]
                 batch_ids = ids[i : i + self.BATCH_SIZE]
 
-                from datetime import datetime, timezone
+                from datetime import datetime
 
                 now_str = datetime.now(UTC).isoformat()
                 records = [
-                    {"id": bid, "embedding": emb, "metadata": payload, "created_at": now_str}
+                    {
+                        "id": _coerce_uuid(bid),
+                        "embedding": emb,
+                        "metadata": payload,
+                        "created_at": now_str,
+                        # M0.6 (roadmap M0.6 / PR #303 §10): promote writer
+                        # fields into their first-class columns. Previously
+                        # they only lived inside the `metadata` JSONB blob:
+                        # row-level queries, RLS scoping and retention cleanup
+                        # never saw them (session_id/content effectively
+                        # discarded). `metadata` is kept for recall fallback.
+                        "content": payload.get("content", ""),
+                        "user_id": payload.get("user_id"),
+                        "session_id": payload.get("session_id") or "default",
+                        "importance_score": payload.get("importance"),
+                    }
                     for bid, emb, payload in zip(
                         batch_ids, batch_embeddings, batch_payloads, strict=True
                     )
