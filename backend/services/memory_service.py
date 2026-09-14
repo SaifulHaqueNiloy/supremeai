@@ -126,7 +126,7 @@ class CascadeMemoryService:
     # ═══════════════════════════════════════════════════════════════════
     # pgvector RPC support (production-readiness plan, item 4b)
     #
-    # `match_ai_memories` RPC (database/migrations/001_pgvector_match_fn.sql)
+    # `match_ai_memories` RPC (database/migrations/legacy/001_pgvector_match_fn.sql)
     # থাকলে similarity ranking সম্পূর্ণ ডাটাবেসেই হয় — ২০০০ রো × ১৫৩৬-ডিম
     # ভেক্টর Python-এ লোড + কসাইন লুপের ইভেন্ট-লুপ স্তাল ঝুঁকি দূর হয়।
     # Extension/কলাম না পাওয়া গেলে পুরনো ইন-পাইথন কসাইন fallback চলে।

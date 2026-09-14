@@ -85,9 +85,7 @@ async def federation_health(user: dict = Depends(get_current_user_token)) -> dic
 
 
 @router.get("/events")
-async def federation_events(
-    limit: int = 50, user: dict = Depends(get_current_user_token)
-) -> dict:
+async def federation_events(limit: int = 50, user: dict = Depends(get_current_user_token)) -> dict:
     _identity(user)
     governance = get_governance_core()
     realtime = governance.resolve(CircleName.REALTIME)
@@ -98,9 +96,7 @@ async def federation_events(
 
 
 @router.post("/dispatch")
-async def dispatch_envelope(
-    body: DispatchBody, user: dict = Depends(get_current_admin)
-) -> dict:
+async def dispatch_envelope(body: DispatchBody, user: dict = Depends(get_current_admin)) -> dict:
     actor, tenant = _identity(user)
     circle = _resolve_circle(body.circle)
     envelope = ExecutionEnvelope(
