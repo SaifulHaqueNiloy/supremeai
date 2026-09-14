@@ -135,8 +135,11 @@ async def test_refresh_token_rejected_as_access(no_test_env):
 
 async def test_missing_jwt_secret_fails_closed(no_test_env, monkeypatch):
     """Without JWT_SECRET every token must be rejected (fail-closed policy)."""
-    monkeypatch.setattr(type(settings), "jwt_secret", property(lambda self: ""))
+    # CI GOTCHA: encode with the REAL secret first — PyJWT refuses to sign
+    # with an empty HMAC key, and the patched property must be observable
+    # only inside the middleware under test.
     token = _encode({"sub": "u-1"})
+    monkeypatch.setattr(type(settings), "jwt_secret", property(lambda self: ""))
     sent, _ = await _run(_scope(headers=_bearer(token)))
     start = next(m for m in sent if m.get("type") == "http.response.start")
     assert start["status"] == 401

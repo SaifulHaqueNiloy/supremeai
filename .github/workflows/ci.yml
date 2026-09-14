@@ -356,11 +356,16 @@ jobs:
               --ignore=tests/core/security
               --ignore=tests/core/test_core_rate_limiter.py
               --ignore=tests/core/test_multi_tenant_isolation.py
+          # NOTE: tests/missions is verified-green locally but HUNG IN TEARDOWN
+          # in CI (run 34817278198: pytest-timeout dump inside
+          # pytest_runtest_teardown of a governed-research test —
+          # scout.persistence aiosqlite connection + pytest-asyncio scoped
+          # loop teardown). De-wired until that teardown is root-caused.
           - group: services
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
               tests/test_*.py tests/scripts tests/services
-              tests/memory tests/scout_tests tests/missions
+              tests/memory tests/scout_tests
 
     defaults:
       run:
