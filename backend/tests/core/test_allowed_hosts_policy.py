@@ -171,6 +171,11 @@ def _boot_env(**extra) -> dict[str, str]:
     env["SUPREMEAI_JWT_SECRET"] = PROD_JWT
     # Minimal complete production env (verified by the boot probes below).
     env["ENCRYPTION_KEY"] = "k" * 32
+    # P0 fail-closed admin secret (>=12 chars, not the dev fallback, and never
+    # equal to SUPREMEAI_DOCS_PASSWORD which this minimal env does not set):
+    # without it the #297 boot validator rejects every probe before the
+    # ALLOWED_HOSTS policy under test can even run.
+    env["SUPREMEAI_ADMIN_SECRET"] = "boot-probe-admin-secret-0123456789"
     env["SUPABASE_URL"] = "https://proj.supabase.co"
     env["SUPABASE_KEY"] = "sb-key-123"
     env["SUPABASE_SERVICE_ROLE_KEY"] = "sb-role-456"
