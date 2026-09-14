@@ -356,16 +356,17 @@ jobs:
               --ignore=tests/core/security
               --ignore=tests/core/test_core_rate_limiter.py
               --ignore=tests/core/test_multi_tenant_isolation.py
-          # NOTE: tests/missions is verified-green locally but HUNG IN TEARDOWN
-          # in CI (run 34817278198: pytest-timeout dump inside
-          # pytest_runtest_teardown of a governed-research test —
-          # scout.persistence aiosqlite connection + pytest-asyncio scoped
-          # loop teardown). De-wired until that teardown is root-caused.
+          # tests/missions re-wired (round 3): the round-2 teardown hang was
+          # root-caused — the error bus' RefactorWiz auto-patch listener
+          # spawned a real subprocess from inside a mission test and its task
+          # survived asyncio cancel-all-tasks. Fixed with a test-env guard in
+          # core/errors/error_remediation.py; missions is green again
+          # (1364 passed locally in the full services-order run).
           - group: services
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
               tests/test_*.py tests/scripts tests/services
-              tests/memory tests/scout_tests
+              tests/memory tests/scout_tests tests/missions
 
     defaults:
       run:
