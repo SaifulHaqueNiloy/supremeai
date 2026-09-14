@@ -58,6 +58,8 @@ SupremeAI-এর মূল দর্শন হলো: **একটাই সে�
 |---|:---:|:---:|:---:|
 | **Authentication Mode** | Supabase JWT & Cookie Session | Telegram `initData` + TOTP 2FA | Phone ID Match + WhatsApp TOTP 2FA |
 | **System Health Sweep** | Real-time SVG / Charts | `/status` Inline Keyboard | `status` Interactive Button Menu |
+| **Customer Experience** | Clean conversation & prompt runner | Natural Language Assistant & project status | Ubiquitous chat assistant & task notifications |
+| **Admin Experience** | Full Mission Control & 3D Telemetry | `/admin` commands, quick approval & TelDrive | Emergency commands, 2FA kill-switch & alerts |
 | **Task / Prompt Execution**| Studio Terminal / Chat Tab | Direct Message NLP Dispatch | Direct Message NLP Dispatch |
 | **Destructive HITL Approval**| Modal Dialog Confirm Button | Inline 2FA Callback Button | WhatsApp Quick Reply 2FA Button |
 | **Telemetry & Metrics** | 3D Graph + WebSockets | Live Markdown Metric Snap | Compact Text / Card Summary |
