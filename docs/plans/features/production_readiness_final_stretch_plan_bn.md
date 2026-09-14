@@ -187,7 +187,7 @@ END; $$;
 - Extension পাওয়া গেলে `match_ai_memories` RPC কল করা — ডাটাবেসেই similarity ranking।
 - না পাওয়া গেলে বর্তমান `_MEMORY_ROW_CAP=2000` কসাইন fallback ব্যবহার করা।
 
-**[NEW]** `backend/database/migrations/001_pgvector_match_fn.sql` — Supabase-এ run করার জন্য migration ফাইল।
+**[NEW]** `backend/database/migrations/legacy/001_pgvector_match_fn.sql` — Supabase-এ run করার জন্য migration ফাইল।
 
 **ফাইল সংখ্যা:** ২টি (১ modified + ১ new) | **লাইন পরিবর্তন:** ~+60 লাইন
 
@@ -201,7 +201,7 @@ END; $$;
 | ২ | Admin JWT revocation fail-closed + TTL LRU ক্যাশ | P1 | `core/security/__init__.py`, `api/dependencies.py` | ~+25 লাইন |
 | ৩a | Backend: `_set_auth_cookies()` login/register/logout-এ activate | P1 | `api/routes/auth.py` | ~+8 লাইন |
 | ৩b | Frontend: cookie-aware `initialize()` + dual-mode transition | P1 | `store/authStore.ts`, `services/apiClient.ts` | ~+22 লাইন |
-| ৪a | pgvector SQL migration ফাইল | P2 | `database/migrations/001_pgvector_match_fn.sql` | নতুন ফাইল |
+| ৪a | pgvector SQL migration ফাইল | P2 | `database/migrations/legacy/001_pgvector_match_fn.sql` | নতুন ফাইল |
 | ৪b | `query_context()` এ pgvector RPC detect + call | P2 | `services/memory_service.py` | ~+60 লাইন |
 
 ---
