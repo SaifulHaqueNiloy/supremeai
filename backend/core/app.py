@@ -56,3 +56,8 @@ app.include_router(chat_stream_legacy_router)
 from api.routes.missions import router as missions_router
 
 app.include_router(missions_router)
+
+# Task 7-d: MCP hub management API
+from api.routes.mcp_hub import router as mcp_hub_router  # noqa: E402
+
+app.include_router(mcp_hub_router)
