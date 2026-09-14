@@ -12,14 +12,29 @@ version: 1
 #   overall: 27.20%   critical tier: 39.01%   important tier: 29.19%
 #
 # RAMP PLAN (owner verdict, critical tier): 40 → 50 → 60
-#   step 1 (NOW):        critical 40  — achieved this round by (a) writing
-#                        tests for the worst critical files (task_queue_enhanced
-#                        0%→72%, token_budget 26%→89%) and (b) wiring the
-#                        previously-orphaned tests/llm + tests/services dirs
-#                        into CI so their coverage actually counts
-#   step 2 (next round): critical 45+ — remaining worst offenders:
-#                        memory_service 13%, parallel_agent_executor 11%,
-#                        secret_vault 35%, billing_api 22%, auth_middleware 23%
+#   step 1 (DONE, hardening-2 round 1): critical 40 — achieved at 44.71% by
+#                        (a) writing tests for the worst critical files
+#                        (task_queue_enhanced 0%→72%, token_budget 26%→89%)
+#                        and (b) wiring the previously-orphaned tests/llm +
+#                        tests/services dirs into CI so their coverage counts
+#   step 2 (NOW, hardening-2 round 2): critical 45 — two-part integrity fix:
+#                        (a) PR CI's marker filter used to deselect ~96% of
+#                        the backend suite (57/1879 core tests ran) because
+#                        the conftest tier classification missed most paths —
+#                        tests/agents, tests/memory, tests/core/test_*.py all
+#                        landed in the never-run `overall` tier. The
+#                        classification now covers every collected path, and
+#                        15 previously-orphaned test dirs are wired into the
+#                        CI matrix (tests/memory, tests/missions,
+#                        tests/utils, tests/engine, ... ).
+#                        (b) new branch tests for the named offenders:
+#                        billing_api (18%→58%, plus a real bug fix: the
+#                        intended Stripe 503 was swallowed into a generic
+#                        500), auth_middleware_contract (SSE query-token
+#                        policy, refresh rejection, jti revocation
+#                        fail-closed/fail-open), cost-optimizer stale
+#                        expectations refreshed to the settings contract.
+#                        CI-combined projection: ≥ 49% (was 44.71%).
 #   step 3:              raise with each ramp until the tier is strong.
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -28,7 +43,7 @@ thresholds:
     pr: 25
     # release: 40   # honest release bar once ramp advances
   critical:
-    pr: 40
+    pr: 45
     # release: 50
   important:
     pr: 27
