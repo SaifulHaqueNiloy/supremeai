@@ -1095,3 +1095,49 @@ body {
   }
 }
 
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GLOBAL DETAIL POLISH (final-test/hardening-8)
+   Keyboard/a11y + text-selection consistency for the cyber theme.
+
+   Before this block:
+   - text selection rendered the browser-default blue, which visually clashes
+     with the neon-on-ink design language (and can drop contrast on #06070B);
+   - keyboard focus was only styled locally (App.css button) — interactive
+     elements reached via Tab elsewhere (links, inputs, cards) either kept the
+     browser default ring or, where resets applied, showed NO ring at all.
+
+   Both additions are pure pseudo-element/pseudo-class rules: no component
+   class is shadowed, no markup changes, no JS. Token-driven so theme flips
+   (light roots at :root, dark at .dark) stay coherent.
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* 1. Selection: neon-cyan wash on dark ink keeps selected text legible and
+      on-brand. A translucent layer is used instead of a solid accent so
+      glyphs never invert (white text stays white, colored text keeps hue). */
+::selection {
+  background-color: rgb(0 243 255 / 0.28);
+  color: var(--foreground);
+  text-shadow: none;
+}
+
+/* 2. Keyboard focus ring: consistent, visible, and distinctly NEON so it is
+      not confused with the mouse-hover state. :focus-visible (not :focus)
+      keeps pointer interactions clean; the offset separates the ring from
+      filled surfaces like sidebar items and tab bars. Respect reduced-motion
+      is not needed here — the ring is static by design. */
+:focus-visible {
+  outline: 2px solid var(--neon-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 3. Form fields: tie the field border to the ring color while focused so
+      the outline and the 1px border read as one continuous surface instead
+      of two competing rectangles (inputs in panels/cards especially). */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: color-mix(in srgb, var(--neon-blue) 55%, transparent);
+  transition: border-color 120ms ease-out;
+}
