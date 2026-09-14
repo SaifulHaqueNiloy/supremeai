@@ -124,7 +124,7 @@ def collect_evidence(mods: dict[str, Mod], rules: dict, repo: Path, ctx):
             texts[d] = m.file.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             texts[d] = ""
-
+            
     cfg = []
     for f in fast_walk(repo, CONFIG_EXTS):
         try:
@@ -185,7 +185,7 @@ def collect_evidence(mods: dict[str, Mod], rules: dict, repo: Path, ctx):
         r'import_module\(\s*f?["\']([A-Za-z_][\w\.]*?)["\']?\s*[+\{]', combined_texts)}
     for m in mods.values():
         if any(m.dotted == n or m.dotted.startswith(n + ".") for n in ns): m.ev_kinds.add("dyn")
-
+        
     for m in mods.values():
         for var in m.router_vars:
             rx = re.compile(rf"include_router\(\s*(?:[\w\.]+\.)?{re.escape(var)}\b")
@@ -193,7 +193,7 @@ def collect_evidence(mods: dict[str, Mod], rules: dict, repo: Path, ctx):
                 if d != m.dotted and rx.search(t):
                     kind = "test" if (d.startswith("tests.") or "tests/" in d) else "router"
                     add(m, kind, d)
-
+                        
     for fn in ctx.wiring_detectors: fn(mods, rules, add)
     return ns
 
@@ -259,7 +259,7 @@ def scan_capability_refs(caps: list[dict], repo: Path) -> None:
                 files.append((f, f.read_text(encoding="utf-8", errors="ignore")))
         except OSError:
             pass
-
+            
     # Index tokens for fast presence check
     for c in caps:
         tok = c['token']
@@ -296,7 +296,7 @@ def smoke_import(dotted: str, root: Path, timeout: int = 15):
     return False, (p.stderr.strip().splitlines() or ["<no stderr>"])[-1]
 
 # ---------------------------------------------------------------- learning & reports
-def _load(p: Path, default):
+def _load(p: Path, default): 
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else default
 def _now(): return datetime.now(timezone.utc)
 
@@ -419,7 +419,7 @@ def main(argv=None) -> int:
                     if not ok:
                         f.update(rule="IMPORT_BROKEN", severity="high",
                                  message=f"{m.dotted} fails to import: {err}")
-
+                        
     apply_allowlist(findings, args.allowlist)
     if args.update_baseline or seeded:
         update_baseline(args.baseline, [f["key"] for f in findings], args.prune_after_days)

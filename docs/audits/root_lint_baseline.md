@@ -38,6 +38,18 @@ that broader number is NOT this ladder's baseline; the ladder tracks E9,F,W.)
 left for manual review; auto-fixing would mutate string content, incl.
 possible LLM prompts and printed output). Ladder now: 1,837 → 254 (−86%).
 
+## Audit-ratchet quarantine (batch 1 scope adjustment)
+
+CI's Constitution Audit runs `--pr-diff` — touching a file with pre-existing
+blocking findings (even whitespace-only) pulls those findings into the PR's
+audit scope. 8 files carried 18 pre-existing blocking findings
+(REL-001 except:pass × 7, ARCH-001 × 10, SEC-003 × 1) and are therefore
+**quarantined out of batch 1**; their whitespace fixes land together with the
+actual violation fixes (batch 2). Quarantined: validators.py, card_builder.py,
+audit_isolated_modules_and_capabilities.py, check_truthy_env_var.py,
+generate_module_capability_matrix.py, generate_module_docs.py,
+superai_health_check.py, auto_seed.py.
+
 Per-directory F-rule counts: `tools/` 9 · `scripts/` 145 · `packages/` 0 · `.github/scripts/` 6.
 
 ## Suggested fix order (smallest safe batches first)
