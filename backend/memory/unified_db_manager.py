@@ -10,8 +10,14 @@ from typing import Any
 from core.logging_config import logger
 from memory.chromadb_store import ChromaDBStore
 from memory.cloud_postgres_store import CloudPostgresStore
-from memory.sqlite_store import SQLiteStore
+from memory.sqlite_store import SQLiteMemoryStore
 from memory.supabase_store import SupabaseStore
+
+# M0-D (AUDIT F4): sqlite_store.py ক্লাসটির আসল নাম SQLiteMemoryStore —
+# পুরনো SQLiteStore নামটি কখনোই ছিল না, ফলে এই মডিউল import-ই হতো না।
+# Back-compat alias রাখা হলো (M3 memory inventory-তে চূড়ান্ত keep/merge/retire
+# সিদ্ধান্ত হবে)।
+SQLiteStore = SQLiteMemoryStore
 
 # বাংলা মন্তব্য: collection নামে SQL injection প্রতিরোধ করতে whitelist pattern ব্যবহার করা হচ্ছে —
 # একই প্যাটার্ন admin.py ও db_repository.py-তেও ব্যবহার হয়।
