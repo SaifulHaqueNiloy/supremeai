@@ -13,7 +13,11 @@ interface LogEntry {
 }
 
 interface LogStreamProps {
-    entries: LogEntry[];
+    entries?: LogEntry[];
+    /** বাংলা মন্তব্য: `entries`-এর অ্যালিয়াস — মডিউলগুলো `logs` প্রপ পাঠায় */
+    logs?: LogEntry[];
+    /** বাংলা মন্তব্য: কন্ট্রোলড অটো-স্ক্রল — দিলে ভিতরের pause-state-এর সাথে সিঙ্ক হয় */
+    autoScroll?: boolean;
     maxHeight?: number;
     filterLevel?: string;
     loading?: boolean;
@@ -29,13 +33,22 @@ const LEVEL_COLORS: Record<string, string> = {
     success: 'text-[#10b981]',
 };
 
-export function LogStream({ entries, maxHeight = 240, filterLevel, loading }: LogStreamProps) {
-    const [autoScroll, setAutoScroll] = useState(true);
+export function LogStream({ entries, logs, autoScroll: autoScrollProp, maxHeight = 240, filterLevel, loading }: LogStreamProps) {
+    const [autoScroll, setAutoScroll] = useState(autoScrollProp ?? true);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // বাংলা মন্তব্য: কন্ট্রোলড প্রপ দিলে ভিতরের স্টেটের সাথে সিঙ্ক করা হয় — স্ক্রল-পজ আচরণ অক্ষত থাকে।
+    useEffect(() => {
+        if (autoScrollProp !== undefined) {
+            setAutoScroll(autoScrollProp);
+        }
+    }, [autoScrollProp]);
+
+    const items = entries ?? logs ?? [];
+
     const filtered = filterLevel
-        ? entries.filter(e => e.level.toLowerCase() === filterLevel.toLowerCase())
-        : entries;
+        ? items.filter(e => e.level.toLowerCase() === filterLevel.toLowerCase())
+        : items;
 
     useEffect(() => {
         if (autoScroll && containerRef.current) {
