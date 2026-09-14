@@ -307,8 +307,17 @@ class DistributedConnectionManager:
                 backoff = min(backoff * 2.0, 30.0)
 
     async def connect(
-        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
-    ):  # is_local()
+        self,
+        websocket: WebSocket,
+        user_id: str,
+        ip_address: str = "127.0.0.1",  # is_local()
+    ):
+        # FIX (dup-defect): this method was defined TWICE — a locked version and a
+        # stale unlocked copy. Python silently keeps the LAST definition, so the
+        # owner's race-condition fix (the _connection_lock below) was dead code and
+        # the unlocked pre-fix copy was winning at runtime. The stale unlocked
+        # duplicate was removed so the locked, atomic check-and-connect path below
+        # is the single live definition (wire-first: the intended fix is now wired).
         import time
 
         # বাংলা মন্তব্য: Atomic operation - check এবং connect একসাগে হবে
@@ -351,52 +360,12 @@ class DistributedConnectionManager:
         logger.info(f"🟢 [WS] Connected: {user_id} from {ip_address}")
         return True
 
-    async def connect(
-        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
-    ):  # is_local()
-        import time
-
-        if self._is_memory_pressure():
-            logger.warning(f"⚠️ [WS] Rejecting {user_id}: memory pressure")
-            await websocket.close(code=1013, reason="Server overloaded")
-            return False
-
-        if self._total_connections() >= self.MAX_TOTAL_CONNECTIONS:
-            logger.warning(f"⚠️ [WS] Rejecting {user_id}: total limit reached")
-            await websocket.close(code=1013, reason="Too many connections")
-            return False
-
-        per_user = len(self.active_connections.get(user_id, []))
-        if per_user >= self.MAX_PER_USER:
-            logger.warning(f"⚠️ [WS] Rejecting {user_id}: per-user limit")
-            await websocket.close(code=1013, reason="Too many connections for user")
-            return False
-
-        ip_count = self._ip_connections.get(ip_address, 0)
-        if ip_count >= self.MAX_PER_IP:
-            logger.warning(f"⚠️ [WS] Rejecting {user_id}: IP limit")
-            await websocket.close(code=1013, reason="IP limit exceeded")
-            return False
-
-        await websocket.accept()
-        if user_id not in self.active_connections:
-            self.active_connections[user_id] = []
-        self.active_connections[user_id].append(websocket)
-
-        socket_id = id(websocket)
-        self._ip_connections[ip_address] += 1
-        self._connection_ips[socket_id] = ip_address
-        self._last_activity[socket_id] = time.time()
-
-        await self._get_redis()
-        await self.start_background_tasks()
-
-        logger.info(f"🟢 [WS] Connected: {user_id} from {ip_address}")
-        return True
-
     def disconnect(
-        self, websocket: WebSocket, user_id: str, ip_address: str = "127.0.0.1"
-    ):  # is_local()
+        self,
+        websocket: WebSocket,
+        user_id: str,
+        ip_address: str = "127.0.0.1",  # is_local()
+    ):
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)

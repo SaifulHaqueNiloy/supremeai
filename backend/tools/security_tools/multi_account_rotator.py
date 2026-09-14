@@ -462,6 +462,46 @@ class MultiAccountRotator:
                             # বাংলা মন্তব্য: অ্যাকাউন্টের কী এক্সট্রাকশন পেন্ডিং স্ট্যাটাস লোড করা হলো।
                             account_data["status"] = ProviderStatus.PENDING_KEY_EXTRACTION
 
+            # FIX (dict-accounts reload): accounts were left as raw dicts after
+            # load, so any restart with configured accounts crashed rotation
+            # selection ('dict' object has no attribute 'is_available'). Rebuild
+            # real Account objects — with ISO datetime parsing — so the documented
+            # rotation_config.json admin path actually survives a restart.
+            if "accounts" in provider_data:
+                rebuilt_accounts: list[Account] = []
+                for account_data in provider_data["accounts"]:
+                    if not isinstance(account_data, dict):
+                        rebuilt_accounts.append(account_data)
+                        continue
+                    for ts_field in ("created_at", "last_used", "reset_time"):
+                        value = account_data.get(ts_field)
+                        if isinstance(value, str):
+                            try:
+                                account_data[ts_field] = datetime.fromisoformat(value)
+                            except ValueError:
+                                # REL-002 (error observability): log the coercion —
+                                # a silently nulled timestamp hides config corruption.
+                                logger.warning(
+                                    "[ROTATOR] Unparseable %s value %r for provider "
+                                    "'%s' in rotation_config.json — treating as None",
+                                    ts_field,
+                                    value,
+                                    provider_data.get("name", "<unnamed>"),
+                                )
+                                account_data[ts_field] = None
+                    known_fields = {
+                        key: val
+                        for key, val in account_data.items()
+                        if key in Account.__dataclass_fields__
+                    }
+                    try:
+                        rebuilt_accounts.append(Account(**known_fields))
+                    except TypeError:
+                        logger.warning(
+                            "[ROTATOR] Skipping malformed account entry during config load"
+                        )
+                provider_data["accounts"] = rebuilt_accounts
+
             provider = Provider(**provider_data)
             self.providers[provider.name] = provider
 
@@ -733,8 +773,16 @@ class MultiAccountRotator:
         logger.error("No available provider/account found")
         return None
 
-    def _meets_requirements(self, provider: Provider, account: Account, requirements: dict) -> bool:
-        """Check if provider/account meets specific requirements"""
+    def _meets_requirements(
+        self, provider: Provider, account: Account, requirements: dict | None = None
+    ) -> bool:
+        """Check if provider/account meets specific requirements.
+
+        FIX (none-requirements crash): get_best_provider_for_task() defaults
+        requirements=None and forwarded it verbatim, so every default-path call
+        ('x' in None) raised TypeError. Empty dict is the correct neutral value.
+        """
+        requirements = requirements or {}
         # Check cost requirements
         if (
             "max_cost_per_token" in requirements
@@ -811,11 +859,14 @@ class MultiAccountRotator:
                 raise ValueError(f"Provider '{provider.name}'-এর জন্য কোনো মডেল নির্ধারিত নেই।")
 
             # বাংলা মন্তব্য: litellm গেটওয়ের acompletion কল করা হচ্ছে এবং rotator থেকে এপিআই কী পাস হচ্ছে।
+            # FIX (kwarg-collision): caller-supplied kwargs এ "model" থাকলে আগের কোডে
+            # model= দুইবার যাওয়ায় TypeError হতো; স্পষ্ট model= এর সাথে সংঘর্ষ এড়ানো হলো।
+            call_kwargs = {key: value for key, value in kwargs.items() if key != "model"}
             response = await gateway.acompletion(
                 model=model,
                 messages=[{"role": "user", "content": prompt}],
                 api_key=account.api_key,
-                **kwargs,
+                **call_kwargs,
             )
 
             if isinstance(response, dict) and response.get("success"):
