@@ -203,8 +203,9 @@ class CircleCenter:
                 error_code = error_message = None
                 break
             except TimeoutError:
-                error_code, error_message = "deadline_exceeded", (
-                    f"{envelope.capability} exceeded {spec.timeout_ms}ms"
+                error_code, error_message = (
+                    "deadline_exceeded",
+                    (f"{envelope.capability} exceeded {spec.timeout_ms}ms"),
                 )
                 break  # deadlines are never retried
             except Exception as exc:  # noqa: BLE001 — center-level failure isolation
@@ -212,9 +213,7 @@ class CircleCenter:
                 if attempt < attempts:
                     await asyncio.sleep(self._retry_policy.backoff_ms / 1000.0)
 
-        status = (
-            ExecutionStatus.SUCCEEDED if error_code is None else ExecutionStatus.FAILED
-        )
+        status = ExecutionStatus.SUCCEEDED if error_code is None else ExecutionStatus.FAILED
         if status is ExecutionStatus.SUCCEEDED and cache_key is not None:
             self._cache_put(cache_key, data, ttl_ms=spec.cache_ttl_ms)
 
@@ -278,11 +277,7 @@ class CircleCenter:
             status = "degraded"
         else:
             status = "healthy"
-        avg = (
-            round(sum(self._latencies) / len(self._latencies), 3)
-            if self._latencies
-            else None
-        )
+        avg = round(sum(self._latencies) / len(self._latencies), 3) if self._latencies else None
         return CenterHealth(
             circle=self.circle,
             display_name=self.display_name,
