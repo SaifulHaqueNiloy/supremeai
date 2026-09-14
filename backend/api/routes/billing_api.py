@@ -290,6 +290,13 @@ async def create_checkout_session(
             "session_id": stripe_session.id,
             "url": stripe_session.url,
         }
+    except HTTPException:
+        # FINAL-TEST FIX (hardening-2 round 2): the deliberate 503 above was
+        # being swallowed by the blanket `except Exception` below and
+        # converted into an opaque 500, so production clients could never see
+        # the intended "Stripe is not configured" signal. HTTPException must
+        # propagate untouched (same idiom as sslcommerz_webhook_listener).
+        raise
     except Exception as e:
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # Generic message to client (never expose internals or stack traces)
