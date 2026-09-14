@@ -1,50 +1,52 @@
-# Plan 5: Plan Compatibility Analysis
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 5: Plan Compatibility & Blast-Radius Conflict Analysis
+**Status:** 🔄 **EVOLVED / ACTIVE IN MCP DEPENDENCY & BLAST-RADIUS ENGINE**  
+**Completion:** ~95% (MCP Dependency Graph + Rule Conflict Resolver)  
+**Priority:** HIGH (P0 Systemic Coherence)  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C5 (Agent Orchestration) + Circle C4 (Safety & Policy)
 
 ---
 
-## Overview
-System for analyzing and validating compatibility between different project plans, requirements, and technical specifications to ensure feasible and conflict-free application generation.
+## 🏛️ Architectural Evolution (Java Drools Rules ➔ MCP Dependency Graph & Blast-Radius Engine)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Relied on Java Drools rule files and static Firestore checks that could not detect real runtime service conflicts.
+> - **Active Architecture (Sept 2026):** Powered by the **Central MCP Dependency Graph** (`system_dependencies`, `system_summary`) and the constitutional **Rule Precedence & Conflict Protocol** (`AGENTS.md` Section 5).
+> - **Blast-Radius Mandate:** Ensures every architectural plan, capability update, or refactor automatically forecasts ripple effects across all upstream callers and downstream consumers before execution.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Compatibility Analyzer** (`src/main/java/com/supremeai/compatibility/CompatibilityAnalyzer.java`)
-   - Cross-plan dependency analysis
-   - Conflict detection algorithms
-   - Feasibility assessment
+## 🎯 Architectural Intent & Overview
+Systematic cross-plan validation engine that detects conflicting architectural requirements, missing environmental secrets, and circular dependencies. Enforces deterministic rule hierarchy when two operational policies compete.
 
-2. **Plan Validator** (`src/main/java/com/supremeai/validation/PlanValidator.java`)
-   - Technical requirement validation
-   - Resource availability checking
-   - Constraint verification
+---
 
-3. **Integration Checker** (`src/main/java/com/supremeai/integration/IntegrationChecker.java`)
-   - Third-party service compatibility
-   - API integration validation
-   - Platform-specific checks
+## ⚙️ Active Implementation Details (Python & MCP Control Plane)
 
-### Key Features
-- ✅ Cross-plan dependency analysis
-- ✅ Technical conflict detection
-- ✅ Resource availability validation
-- ✅ Platform compatibility checking
-- ✅ Integration feasibility assessment
+### 1. Central MCP Analysis Tools
+- `system_dependencies` — Visualizes all active service connections, cross-circle links, and dependency status.
+- `system_summary` & `system_health` — Verifies end-to-end platform reachability.
+- `policy_preview` — Simulates execution conflicts and blast radius before deployment.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-### Technical Stack
-- **Backend**: Spring Boot 3, Java 21
-- **Analysis Engine**: Custom compatibility algorithms
-- **Database**: Firebase Firestore
-- **Rules Engine**: Drools for complex rule evaluation
+### 2. Backend Validation Engines
+- **Pre-Merge Contract Validator:** `workflow-contract-report.json` & route drift checks.
+- **Constitutional Conflict Resolver:** `AGENTS.md` Section 5 protocol (Safety ➔ Tenancy ➔ Mandatory Governance ➔ Project ➔ UX/Cost).
+- **Backend Verification Suite:** `backend/verification/`
 
-### API Endpoints
-- `POST /api/compatibility/analyze` - Analyze plan compatibility
-- `GET /api/compatibility/report` - Generate compatibility report
-- `POST /api/compatibility/validate` - Validate against constraints
+### 3. Key Active Features
+- ✅ Automated dependency graph discovery across all 10 domain circles
+- ✅ Upstream/downstream blast radius resolution
+- ✅ Deterministic rule precedence resolution (pauses for HITL if irreconcilable)
+- ✅ Zero-drift contract auditing between API models and frontend callers
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/compatibility/CompatibilityAnalyzer.java`
+- `src/main/java/com/supremeai/validation/PlanValidator.java`
+- `src/main/java/com/supremeai/integration/IntegrationChecker.java`
 
 ---
 

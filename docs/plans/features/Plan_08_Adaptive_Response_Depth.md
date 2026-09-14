@@ -1,32 +1,51 @@
-# Plan 8: Adaptive Response Depth
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 8: Adaptive Response Depth & Risk-Aware Verification Scaling
+**Status:** 🔄 **EVOLVED / ACTIVE IN ADAPTIVE ENGINE & VERIFICATION**  
+**Completion:** ~95% (Risk-Tiered Routing + Cognitive Depth Scaling)  
+**Priority:** MEDIUM  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C5 (Agent Orchestration) + Circle C1 (Quality Gates)
 
 ---
 
-## Overview
-Intelligent system that dynamically adjusts AI response depth and detail level based on user context, expertise, preferences, and interaction patterns to optimize communication effectiveness.
+## 🏛️ Architectural Evolution (Simple Word-Count Trim ➔ Risk-Aware Verification Scaling)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Basic word-counter attempting to truncate text based on 4 arbitrary levels.
+> - **Active Architecture (Sept 2026):** Governed by the constitutional principle: **"Verification depth scales with Risk × Blast Radius × Irreversibility"** (`AGENTS.md` Section 4).
+> - **Cost & Model Routing:** Dynamically adjusts model size (e.g. Free Tier Groq / Local LLM for low risk ➔ DeepSeek / Claude / Gemini Pro for high-risk verification) ensuring near-zero operation costs while preserving correctness.
 
-## Implementation Details
+---
 
-### Core Components
-1. **Context Analyzer** (`src/main/java/com/supremeai/context/ContextAnalyzer.java`)
-   - User interaction pattern analysis
-   - Expertise level assessment
-   - Conversation context tracking
+## 🎯 Architectural Intent & Overview
+Dynamically scales analytical depth, verification rigor, and response granularity based on the user's intent and the operational risk of the task. Prevents burning expensive tokens on trivial queries while ensuring deep adversarial reviews for consequential operations.
 
-2. **Response Depth Engine** (`src/main/java/com/supremeai/response/ResponseDepthEngine.java`)
-   - Dynamic detail level adjustment
-   - Content summarization/expansion
-   - Response formatting optimization
+---
 
-3. **User Profile Manager** (`src/main/java/com/supremeai/profile/UserProfileManager.java`)
-   - User preference storage
-   - Expertise tracking
-   - Interaction history analysis
+## ⚙️ Active Implementation Details (Python & MCP Control Plane)
+
+### 1. Verification Depth Tiers
+- **Low Risk (Trivial/Doc fixes):** Rule Gate ➔ Relevant Unit Tests ➔ Instant response.
+- **Medium Risk (Routing/Non-critical UX):** Rule Gate ➔ Automated CI ➔ Independent linter check ➔ Response.
+- **High Risk (Security/Database/Deploy):** Full Rule Gate ➔ GitHub CI ➔ Adversarial Security Audit ➔ Staging / Canary ➔ HITL Approval.
+
+### 2. Backend Engine Subsystems
+- **Adaptive Engine:** `backend/adaptive_engine/` (Routes prompts to optimal depth and token budgets).
+- **Verification Planner:** `backend/verification/` (Configures verification matrix dynamically).
+- **Cost Optimizer Agent:** Evaluates whether low-cost cached results or smaller models satisfy requirements.
+
+### 3. Key Active Features
+- ✅ Context-aware prompt trimming and token optimization
+- ✅ Dynamic model tiering (Fast/Free ➔ Heavyweight Reasoning on demand)
+- ✅ Autonomous test matrix expansion for high-risk changes
+- ✅ Zero unnecessary latency for simple read operations
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original Java 21 classes:*
+- `src/main/java/com/supremeai/context/ContextAnalyzer.java`
+- `src/main/java/com/supremeai/response/ResponseDepthEngine.java`
+- `src/main/java/com/supremeai/profile/UserProfileManager.java`
 
 ### Adaptive Depth Levels
 

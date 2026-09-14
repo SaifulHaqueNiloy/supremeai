@@ -1,63 +1,52 @@
-# Plan 7: Dashboard & Plugin Settings
-
-## Status: ✅ **FINISHED**
-## Completion: ~95%
-## Priority: HIGH
-## Last Updated: 2026-05-04
+# Plan 7: Unified Dashboard & Dynamic Plugin/MCP Registry
+**Status:** 🔄 **EVOLVED / ACTIVE IN DASHBOARD & MCP REGISTRY**  
+**Completion:** ~95% (Health Dashboard + MCP Dynamic Client Registry)  
+**Priority:** HIGH  
+**Last Updated:** September 2026  
+**Domain Circle:** Frontend Face + Circle C4 (Client Registry)
 
 ---
 
-## Overview
-Comprehensive dashboard and plugin configuration system providing unified settings management, AI toggle controls, and visual workflow management for application generation.
+## 🏛️ Architectural Evolution (Hardcoded UI Toggles ➔ The Frontend Face & Dynamic MCP Registry)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Basic React form with hardcoded dropdowns and local VS Code extension settings panel.
+> - **Active Architecture (Sept 2026):** **"The Frontend is the Face, Not the Brain"** philosophy (`AGENTS.md` Section 7). 
+> - **Dynamic Plugin & Server Discovery:** Instead of hardcoded settings, plugins and IDE agents register dynamically via **MCP Client Registry** (`client_register_mcp_server`, `client_list_mcp_servers`, `client_discover_mcp_server`).
+> - **Real-Time Dashboards:** Control Tower surfaces unified live observability via `health_dashboard` and `resources_dashboard`.
 
-## Implementation Details
+---
 
-### Dashboard Components
+## 🎯 Architectural Intent & Overview
+Visual command deck providing real-time system visibility, service health monitoring, and dynamic plugin/agent registration. Separates clean observability at the face layer from core execution in the Control Plane.
 
-#### Admin Dashboard (`dashboard/src/pages/AdminProjects.tsx`)
-- **Generate New App Card**: Requirements input form
-- **Platform Selector**: Web, Android, iOS, Desktop, Full-Stack
-- **Database Selector**: PostgreSQL, MySQL, MongoDB
-- **AI Toggle**: Enable/disable AI-powered generation
-- **Progress Tracker**: Visual 4-step workflow
+---
 
-#### Plugin Settings (VS Code Extension)
-- **Settings Panel**: `src/supremeai-vscode-extension/src/settings.ts`
-- **Configuration Options**: API keys, preferences, behavior
-- **Real-time Sync**: Settings synchronization across instances
-- **Context Menu**: Quick access to generation features
+## ⚙️ Active Implementation Details
 
-### Core Features
+### 1. Central MCP Management Tools
+- `health_dashboard` — Complete operational status across all cloud services (Render, Supabase, Cloudflare, Redis, Infisical).
+- `resources_dashboard` — Real-time memory, storage quotas, and provider compute tracking.
+- `client_register_mcp_server` & `client_discover_mcp_server` — Plug-and-play registration for IDE extensions (Claude Code, Cursor, Windsurf, Cline).
+- `tenant_list` & `tenant_update` — Multi-tenant environment configuration.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-#### 1. Requirements Input Form
-- App name and description
-- Platform selection dropdown
-- Database selection dropdown
-- AI toggle switch
-- Entity definitions
-- Custom requirements
+### 2. Frontend Face Implementation
+- **Dashboard App:** `frontend/` (Next.js / React 18 with reactive event streams).
+- **Websocket / SSE Stream:** `backend/ws/` (Pushes live build and review progress).
 
-#### 2. Visual Progress Tracking
-- **Step 1: Analyzing** - Requirement analysis and validation
-- **Step 2: Designing** - Architecture and component design
-- **Step 3: Generating** - Code generation and compilation
-- **Step 4: Complete** - Deployment and testing
+### 3. Key Active Features
+- ✅ Zero private reasoning leakage into the frontend UI
+- ✅ Dynamic MCP extension discovery without restarting services
+- ✅ Live system health sweeps and visual status badges
+- ✅ Tenant isolation and role-based access control (RBAC)
 
-#### 3. Real-time Status Updates
-- WebSocket connections for live updates
-- Progress bar visualization
-- Success/error notifications
-- Download links for generated code
+---
 
-### Key Features
-- ✅ "Generate New App" card with requirements form
-- ✅ Input fields for app name, description, platform, database
-- ✅ AI toggle for enhanced generation
-- ✅ Platform selection (5 platforms)
-- ✅ Database selection (3 databases)
-- ✅ Visual progress tracking with 4 steps
-- ✅ Real-time status updates and notifications
-- ✅ Plugin settings synchronization
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original prototype files:*
+- `dashboard/src/pages/AdminProjects.tsx`
+- `src/supremeai-vscode-extension/src/settings.ts`
 
 ### Technical Stack
 - **Frontend**: React 18, TypeScript, Vite
