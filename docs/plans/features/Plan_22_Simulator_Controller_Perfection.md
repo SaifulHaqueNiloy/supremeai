@@ -1,53 +1,52 @@
-# Plan 22: Simulator Controller Perfection
-
-## Status: 🔴 **NEW**
-## Completion: ~0%
-## Priority: MEDIUM
-## Last Updated: 2026-05-04
+# Plan 22: Environmental Simulator & Execution Sandbox
+**Status:** 🔄 **EVOLVED / ACTIVE IN SANDBOX & MCP HEALTH SWEEP**  
+**Completion:** ~90% (Dockerized Sandbox + Browser Subagent + Health Sweeps)  
+**Priority:** MEDIUM  
+**Last Updated:** September 2026  
+**Domain Circle:** Circle C1 (Quality & Verification) + Circle C2 (Cloud Infra)
 
 ---
 
-## Overview
-Advanced simulator controller system for managing and optimizing simulation environments, providing precise control over simulation parameters, real-time monitoring, and automated scenario testing for application validation.
+## 🏛️ Architectural Evolution (Java Apache Spark ➔ Docker Sandbox & Browser Subagents)
+> [!NOTE]
+> **Why this evolved from the May 2026 prototype:**
+> - **Old Prototype (May 2026):** Theoretical proposal for heavy Apache Spark simulation clusters and Java `SimulationManager.java`.
+> - **Active Architecture (Sept 2026):** **Isolated Docker Execution Sandboxes** (`backend/sandbox/`) paired with **Browser Subagents** (Playwright-driven end-to-end environment testing) and **Central Health Sweepers** (`health_full_sweep`, `system_health`).
+> - **Zero Developer-Machine Dependency:** Simulations run inside reproducible containerized sandboxes or isolated GitHub Action environments rather than polluting the host machine.
 
-## Implementation Details
+---
 
-### Core Components (To Be Implemented)
-1. **Simulation Manager** (`src/main/java/com/supremeai/simulator/SimulationManager.java`)
-   - Simulation environment orchestration
-   - Scenario management
-   - Resource allocation
+## 🎯 Architectural Intent & Overview
+Provides isolated, multi-scenario simulation runtimes where newly generated code, API connectors, and UI components can be safely executed, stress-tested, and visually verified before merging or deploying to production.
 
-2. **Controller Engine** (`src/main/java/com/supremeai/simulator/ControllerEngine.java`)
-   - Real-time parameter control
-   - Automated scenario execution
-   - Performance monitoring
+---
 
-3. **Result Analyzer** (`src/main/java/com/supremeai/simulator/ResultAnalyzer.java`)
-   - Simulation result processing
-   - Performance metrics analysis
-   - Optimization recommendations
+## ⚙️ Active Implementation Details (Python, Docker & Playwright)
 
-### Key Features (Planned)
-- ❌ Multi-scenario simulation management
-- ❌ Real-time parameter adjustment
-- ❌ Automated test scenario generation
-- ❌ Performance benchmarking
-- ❌ Resource optimization
-- ❌ Result visualization and reporting
+### 1. Central MCP Health & Simulation Verification Tools
+- `health_full_sweep` — Comprehensive sweep testing all connected services under simulated load.
+- `render_service_health` — Verifies cloud container startup and runtime execution.
+- `ai_test_provider` — Simulates LLM inference scenarios and latency metrics.
+- **Location:** `infrastructure/mcp-control-plane/src/index.ts`
 
-### Technical Stack (Proposed)
-- **Backend**: Spring Boot 3, Java 21
-- **Simulation**: Custom simulation engine
-- **Processing**: Apache Spark for large-scale simulations
-- **Storage**: Firebase Firestore for results
-- **Visualization**: React dashboard for monitoring
+### 2. Sandbox Subsystems
+- **Backend Sandbox:** `backend/sandbox/` (Isolated Python/Docker runtime environment).
+- **Headless Browser Runner:** Playwright container runner (`playwright.config.ts`).
+- **Benchmark Generator:** `supremeai_performance_benchmark.json`.
 
-### API Endpoints (Planned)
-- `POST /api/simulate/create` - Create simulation scenario
-- `POST /api/simulate/execute` - Execute simulation
-- `GET /api/simulate/status` - Check simulation status
-- `GET /api/simulate/results` - Retrieve results
+### 3. Key Active Features
+- ✅ Multi-environment scenario simulation (local sandbox vs cloud staging)
+- ✅ End-to-end visual browser test automation with WebP recording
+- ✅ Resource throttling and memory-leak profiling
+- ✅ Safe dry-run execution of generated code with zero risk to host OS
+
+---
+
+## 📊 Legacy Java Prototype Reference (Historical Archive)
+*Original proposal files:*
+- `src/main/java/com/supremeai/simulator/SimulationManager.java`
+- `src/main/java/com/supremeai/simulator/ControllerEngine.java`
+- `src/main/java/com/supremeai/simulator/ResultAnalyzer.java`
 
 ---
 
