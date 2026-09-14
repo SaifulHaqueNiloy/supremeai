@@ -1,42 +1,58 @@
 version: 1
 
+# ─────────────────────────────────────────────────────────────────────────────
+# HONEST RATCHET (final-test hardening-2, 2026-09-14)
+#
+# The gate previously reported a vacuous 100% for every tier (globs never
+# matched coverage.json paths) and enforced nothing. Thresholds below are the
+# FIRST HONEST values, set just under the measured baseline so any coverage
+# REGRESSION now fails CI, while the ramp plan raises them over time.
+#
+# Measured baseline (CI combined coverage of all 4 test groups, 2026-09-14):
+#   overall: 27.20%   critical tier: 39.01%   important tier: 29.19%
+#
+# RAMP PLAN (owner verdict, critical tier): 40 → 50 → 60
+#   step 1 (now):        critical 37  — regression-proof the current 39.01%
+#   step 2 (next round): critical 40+ — add tests for the worst critical files
+#                        (task_queue_enhanced 0%, memory_service 13%,
+#                         parallel_agent_executor 11%, secret_vault 35%,
+#                         billing_api 22%, auth_middleware 23%)
+#   step 3:              raise with each ramp until the tier is strong.
+# ─────────────────────────────────────────────────────────────────────────────
+
 thresholds:
   overall:
     pr: 25
-    # release: 70
+    # release: 40   # honest release bar once ramp advances
   critical:
-    pr: 80
-    # release: 90
+    pr: 37
+    # release: 50
   important:
-    pr: 60
-    # release: 80
-  changed:
-    critical: 80
-    standard: 60
-  release_changed:
-    critical: 90
-    standard: 75
-  critical_paths:
-    pr: 95
-    # release: 100
+    pr: 27
+    # release: 40
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Tier globs — paths are relative to the backend root (coverage.json format).
+# The gate also accepts "backend/"-prefixed spellings; keep them bare here so
+# they read exactly like the coverage.json keys they must match.
+# ─────────────────────────────────────────────────────────────────────────────
 
 critical:
-  - backend/core/llm/**
-  - backend/core/orchestration/**
-  - backend/core/security/**
-  - backend/api/auth/**
-  - backend/api/routes/agent*
-  - backend/api/routes/api_keys*
-  - backend/api/routes/billing*
-  - backend/services/usage*
-  - backend/services/memory*
-  - backend/core/queue/**
-  - backend/tools/checkpoint_manager*
-  - backend/tools/parallel_agent_executor*
-  - backend/core/microvm_sandbox*
+  - core/llm/**
+  - core/orchestration/**
+  - core/security/**
+  - api/auth/**
+  - api/routes/agent*
+  - api/routes/api_keys*
+  - api/routes/billing*
+  - services/usage*
+  - services/memory*
+  - core/queue/**
+  - tools/checkpoint_manager*
+  - tools/parallel_agent_executor*
+  - core/microvm_sandbox*
 
 important:
-  - backend/services/**
-  - backend/tools/**
-  - backend/api/routes/**
-  - backend/tools/knowledge/**
+  - services/**
+  - tools/**
+  - api/routes/**

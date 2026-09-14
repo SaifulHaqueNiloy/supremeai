@@ -355,7 +355,7 @@ jobs:
           - group: services
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
-              tests/test_*.py
+              tests/test_*.py tests/scripts
 
     defaults:
       run:
