@@ -221,7 +221,9 @@ def test_generate_report_empty_database_yields_zeros(reporter_env) -> None:
     assert report["period_start"] == "2026-03-01T00:00:00"
     assert report["period_end"] == "2026-04-01T00:00:00"
     # generated_at is pinned by FixedDateTime and ISO-parseable
-    assert datetime.fromisoformat(report["generated_at"]) == datetime(2026, 3, 15, 12, 0, 0, tzinfo=UTC)
+    assert datetime.fromisoformat(report["generated_at"]) == datetime(
+        2026, 3, 15, 12, 0, 0, tzinfo=UTC
+    )
 
 
 def test_generate_report_aggregates_only_in_window(reporter_env) -> None:
@@ -288,7 +290,9 @@ async def test_send_skipped_when_token_missing(reporter_env) -> None:
     ok = await reporter_env["rep"].send_to_admin(report)
     assert ok is False
     assert FakeAsyncClient.last_post is None
-    assert any("Telegram credentials not configured" in m for _, m in reporter_env["logger"].records)
+    assert any(
+        "Telegram credentials not configured" in m for _, m in reporter_env["logger"].records
+    )
 
 
 async def test_send_skipped_when_chat_missing_but_token_set(reporter_env, monkeypatch) -> None:
