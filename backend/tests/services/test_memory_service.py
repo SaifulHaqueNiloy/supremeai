@@ -696,19 +696,20 @@ def test_module_singleton_is_lazy_wrapper():
 
 
 def test_get_embedding_success(monkeypatch):
+    # M0-F: canonical ai_memory dimension is 384 (vector(384) typmod).
     monkeypatch.setattr(
-        "core.embeddings.embed_for_pgvector", lambda text, pg_dim=1536: [0.1] * pg_dim
+        "core.embeddings.embed_for_pgvector", lambda text, pg_dim=384: [0.1] * pg_dim
     )
-    assert ms.get_embedding("hello") == [0.1] * 1536
+    assert ms.get_embedding("hello") == [0.1] * 384
 
 
 def test_get_embedding_failure_falls_back(monkeypatch):
-    def boom(text, pg_dim=1536):
+    def boom(text, pg_dim=384):
         raise RuntimeError("down")
 
     monkeypatch.setattr("core.embeddings.embed_for_pgvector", boom)
     vec = ms.get_embedding("hello")
-    assert len(vec) == 1536
+    assert len(vec) == 384
     assert pytest.approx(sum(x * x for x in vec), abs=1e-9) == 1.0
 
 
