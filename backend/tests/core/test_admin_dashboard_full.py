@@ -304,9 +304,7 @@ class TestGetProviders:
 
         import services.dynamic_ai.orchestrator as orchestrator_module
 
-        fake_orchestrator = SimpleNamespace(
-            registry=SimpleNamespace(get_all_providers=lambda: {})
-        )
+        fake_orchestrator = SimpleNamespace(registry=SimpleNamespace(get_all_providers=lambda: {}))
 
         async def _fake_get_orchestrator():
             return fake_orchestrator
