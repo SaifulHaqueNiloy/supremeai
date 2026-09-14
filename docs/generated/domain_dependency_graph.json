@@ -3122,7 +3122,7 @@
     {
       "evidence": [
         {
-          "line": 29,
+          "line": 30,
           "path": "backend/api/routes/crawler_admin.py"
         }
       ],
@@ -3132,7 +3132,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3142,7 +3142,7 @@
     {
       "evidence": [
         {
-          "line": 198,
+          "line": 199,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3232,7 +3232,7 @@
     {
       "evidence": [
         {
-          "line": 296,
+          "line": 297,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3242,7 +3242,7 @@
     {
       "evidence": [
         {
-          "line": 528,
+          "line": 531,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3312,7 +3312,17 @@
     {
       "evidence": [
         {
-          "line": 24,
+          "line": 28,
+          "path": "backend/api/routes/crawler_admin.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 25,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3322,7 +3332,7 @@
     {
       "evidence": [
         {
-          "line": 341,
+          "line": 342,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
