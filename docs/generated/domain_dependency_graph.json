@@ -2102,6 +2102,16 @@
     {
       "evidence": [
         {
+          "line": 30,
+          "path": "backend/core/middleware/docs_auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 18,
           "path": "backend/core/security/authentication/auth_middleware.py"
         }
@@ -3904,6 +3914,16 @@
         {
           "line": 8,
           "path": "backend/tests/core/test_auth_security_extension.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 13,
+          "path": "backend/tests/core/test_docs_exposure_policy.py"
         }
       ],
       "source": "security",
