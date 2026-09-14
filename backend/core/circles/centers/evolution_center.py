@@ -53,9 +53,10 @@ class EvolutionCenter(CircleCenter):
         )
 
     def local_permission(self, envelope: ExecutionEnvelope) -> str | None:
-        if envelope.capability == "evolution.approval.required" and not str(
-            envelope.payload.get("kind", "")
-        ).strip():
+        if (
+            envelope.capability == "evolution.approval.required"
+            and not str(envelope.payload.get("kind", "")).strip()
+        ):
             return "kind is required for evolution.approval.required"
         return None
 

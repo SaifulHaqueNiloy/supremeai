@@ -75,9 +75,7 @@ def default_manifests() -> tuple[CircleManifest, ...]:
                     owner_circle=CircleName.BROWSER,
                     risk_level=RiskLevel.MEDIUM,
                 ),
-                CapabilityRef(
-                    name="browser.sessions.snapshot", owner_circle=CircleName.BROWSER
-                ),
+                CapabilityRef(name="browser.sessions.snapshot", owner_circle=CircleName.BROWSER),
             ),
         ),
         CircleManifest(
@@ -136,9 +134,7 @@ def default_manifests() -> tuple[CircleManifest, ...]:
             name=CircleName.ARTIFACT,
             display_name="Artifacts and projects",
             owner="backend/storage",
-            capabilities=(
-                CapabilityRef(name="artifact.url", owner_circle=CircleName.ARTIFACT),
-            ),
+            capabilities=(CapabilityRef(name="artifact.url", owner_circle=CircleName.ARTIFACT),),
         ),
         CircleManifest(
             name=CircleName.EVOLUTION,

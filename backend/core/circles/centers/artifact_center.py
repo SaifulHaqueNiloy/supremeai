@@ -29,9 +29,10 @@ class ArtifactCenter(CircleCenter):
         )
 
     def local_permission(self, envelope: ExecutionEnvelope) -> str | None:
-        if envelope.capability == "artifact.url" and not str(
-            envelope.payload.get("path", "")
-        ).strip():
+        if (
+            envelope.capability == "artifact.url"
+            and not str(envelope.payload.get("path", "")).strip()
+        ):
             return "path is required for artifact.url"
         return None
 

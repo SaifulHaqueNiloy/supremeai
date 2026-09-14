@@ -62,13 +62,9 @@ class ExecutionEnvelope(BaseModel):
     policy: dict[str, Any] = Field(default_factory=dict)
     deadline_ms: int = Field(default=30_000, ge=1, le=300_000)
 
-    def to_capability_request(
-        self, ref: CapabilityRef | None = None
-    ) -> CapabilityRequest:
+    def to_capability_request(self, ref: CapabilityRef | None = None) -> CapabilityRequest:
         """Bridge into the legacy in-process request contract."""
-        capability_ref = ref or CapabilityRef(
-            name=self.capability, owner_circle=self.circle
-        )
+        capability_ref = ref or CapabilityRef(name=self.capability, owner_circle=self.circle)
         return CapabilityRequest(
             capability=capability_ref,
             context=ExecutionContext(

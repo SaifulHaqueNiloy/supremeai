@@ -46,9 +46,7 @@ class CircleCenterTests(unittest.TestCase):
     def test_registers_and_rejects_duplicates(self) -> None:
         center = self._center()
         with self.assertRaises(ValueError):
-            center.register(
-                LocalCapability(name="memory.recall"), lambda r: None
-            )
+            center.register(LocalCapability(name="memory.recall"), lambda r: None)
         self.assertEqual(center.capabilities(), ("memory.recall",))
 
     def test_handle_success_returns_result_envelope_with_event(self) -> None:
@@ -97,9 +95,7 @@ class CircleCenterTests(unittest.TestCase):
             handler,
         )
         result = asyncio.run(
-            center.handle(
-                _envelope("browser.navigate", circle=CircleName.BROWSER)
-            )
+            center.handle(_envelope("browser.navigate", circle=CircleName.BROWSER))
         )
         self.assertEqual(result.status, ExecutionStatus.APPROVAL_REQUIRED)
         assert result.error is not None
@@ -137,9 +133,7 @@ class CircleCenterTests(unittest.TestCase):
 
     def test_timeout_becomes_deadline_exceeded(self) -> None:
         center = _HarnessCenter()
-        center.register(
-            LocalCapability(name="memory.recall", timeout_ms=50), lambda r: _sleep()
-        )
+        center.register(LocalCapability(name="memory.recall", timeout_ms=50), lambda r: _sleep())
         result = asyncio.run(center.handle(_envelope("memory.recall")))
         self.assertEqual(result.status, ExecutionStatus.FAILED)
         assert result.error is not None

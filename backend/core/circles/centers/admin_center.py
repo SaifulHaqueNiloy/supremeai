@@ -67,9 +67,10 @@ class AdminCenter(CircleCenter):
         if envelope.capability in {"admin.approve", "admin.reject", "admin.cancel"}:
             if not str(envelope.payload.get("task_id", "")).strip():
                 return f"task_id is required for {envelope.capability}"
-            if envelope.capability != "admin.cancel" and not str(
-                envelope.payload.get("reason", "")
-            ).strip():
+            if (
+                envelope.capability != "admin.cancel"
+                and not str(envelope.payload.get("reason", "")).strip()
+            ):
                 return f"reason is required for {envelope.capability}"
         return None
 
@@ -80,9 +81,7 @@ class AdminCenter(CircleCenter):
 
     async def _list_pending(self, request) -> dict:
         adapter = self.resolve_adapter(request)
-        rows = await asyncio.to_thread(
-            adapter.list_pending, request.context.tenant_id
-        )
+        rows = await asyncio.to_thread(adapter.list_pending, request.context.tenant_id)
         return {
             "tasks": [task.model_dump(mode="json") for task in rows],
             "count": len(rows),
