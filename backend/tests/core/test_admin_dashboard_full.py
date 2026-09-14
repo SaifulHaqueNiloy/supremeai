@@ -293,28 +293,60 @@ class TestGetMetrics:
 
 
 class TestGetProviders:
-    def test_providers_with_keys(self, monkeypatch):
-        """API keys set → providers listed."""
+    # FIX (final-test ci-fixes): get_providers() এখন ASYNC এবং সৎ (honest) ডেটা রিপোর্ট করে —
+    # ProviderRegistry-তে আসল traffic না থাকলে fallback-এ key-presence দেখায়।
+    # পুরনো sync + hardcoded-contract test দুটো নতুন কন্ট্রাক্ট অনুযায়ী rewrite করা হলো।
+
+    @staticmethod
+    def _empty_registry(monkeypatch):
+        """Force the honest fallback path (registry available but empty)."""
+        from types import SimpleNamespace
+
+        import services.dynamic_ai.orchestrator as orchestrator_module
+
+        fake_orchestrator = SimpleNamespace(registry=SimpleNamespace(get_all_providers=lambda: {}))
+
+        async def _fake_get_orchestrator():
+            return fake_orchestrator
+
+        monkeypatch.setattr(orchestrator_module, "get_ai_orchestrator", _fake_get_orchestrator)
+
+    async def test_providers_with_keys(self, monkeypatch):
+        """API keys set → fallback list marks those providers as configured/unknown."""
         from core.config import settings
 
-        monkeypatch.setattr(
-            settings,
-            "_get_cached_secret",
-            lambda k: "key" if k in {"OPENROUTER_API_KEY", "GEMINI_API_KEY"} else "",
-        )
-        result = get_providers()
-        assert len(result) == 2
-        assert result[0]["id"] == "openrouter"
-        assert result[1]["id"] == "gemini"
+        self._empty_registry(monkeypatch)
+        monkeypatch.setattr(settings, "openrouter_api_key", "key", raising=False)
+        monkeypatch.setattr(settings, "gemini_api_key", "key", raising=False)
 
-    def test_providers_no_keys(self, monkeypatch):
-        """No API keys → falls back to ollama."""
+        result = await get_providers()
+        by_id = {p["id"]: p for p in result}
+
+        assert {"openrouter", "gemini"} <= set(by_id)  # providers listed honestly
+        assert by_id["openrouter"]["api_key_valid"] is True
+        assert by_id["openrouter"]["status"] == "unknown"  # key present, no traffic yet
+        assert by_id["gemini"]["api_key_valid"] is True
+
+    async def test_providers_no_keys(self, monkeypatch):
+        """No API keys → every fallback provider reported as not_configured (no fake data)."""
         from core.config import settings
 
-        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
-        result = get_providers()
-        assert len(result) == 1
-        assert result[0]["id"] == "ollama"
+        self._empty_registry(monkeypatch)
+        for provider in (
+            "openrouter_api_key",
+            "gemini_api_key",
+            "groq_api_key",
+            "deepseek_api_key",
+            "openai_api_key",
+        ):  # NOTE: mistral_api_key Settings-এ নেই — getattr fallback None-ই not_configured দেয়
+            monkeypatch.setattr(settings, provider, "", raising=False)
+
+        result = await get_providers()
+
+        assert len(result) > 0
+        assert all(p["status"] == "not_configured" for p in result)
+        assert all(p["api_key_valid"] is False for p in result)
+        assert all(p["latency_ms"] is None for p in result)  # no fabricated latency
 
 
 # ── get_model_router / set_router_override ─────────────────────────────
