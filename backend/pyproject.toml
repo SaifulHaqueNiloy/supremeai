@@ -47,6 +47,10 @@ qdrant-client = "^1.12.1"
 psycopg2-binary = "^2.9.9"
 
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)
+# বাংলা মন্তব্য (M0-A / AUDIT F1): openpyxl প্রোডাকশন কোডে সরাসরি ব্যবহৃত
+# (tools/localization/bengali_ocr_converter.py, tools/localization/local_ocr_extractor.py)
+# কিন্তু pyproject-এ ঘোষিত ছিল না — ফলে fresh install-এ tools OCR suite 8/8 fail করত।
+openpyxl = "^3.1.5"
 cryptography = "^50.0.0"  # CVE fix floor (AUDIT-014, CVE-2026-69247, CVE-2026-69249)
 pybreaker = "^1.4.1"
 cachetools = ">=5.0.0"  # Required for per-user TTLCache in rate_limit.py, free_tier_tracker.py, token_budget.py
@@ -141,6 +145,10 @@ pytest-mock = "^3.14.0"
 pytest-timeout = "^2.3.0"
 pytest-xdist = "^3.6.1"
 respx = "^0.21.1"
+# বাংলা মন্তব্য (M0-A / AUDIT F2): tests/models/test_ai_memory_schema_contract.py
+# sqlglot ব্যবহার করে (SQL পার্স/ভ্যালিডেশন), কিন্তু dev-dependency হিসেবে ঘোষণা
+# ছিল না — ফলে tests/models collection error হতো।
+sqlglot = "^27.0.0"
 pytest-md = "^0.2.0"
 typeguard = "^4.2"
 pytest-html = "^4.1.1"
