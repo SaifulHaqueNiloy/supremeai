@@ -73,7 +73,9 @@ async def test_trio_pipeline_writer_failure(mock_pipeline_agents):
     assert result["status"] == "failed"
     assert result["generated_code"] == ""
     assert result["ready_for_production"] is False
-    assert "Stage 1 (Gemini) failed" in result["summary"]
+    # FIX (final-test ci-fixes): production contract এখন stage-নাম সহ সৎ summary দেয়
+    # ("Writer stage failed: <output>") — পুরনো "Stage 1 (Gemini) failed" ফরম্যাট আর নেই।
+    assert "Writer stage failed" in result["summary"]
 
     # Ensure downstream agents are NOT called
     mock_pipeline_agents["reviewer"].assert_not_called()

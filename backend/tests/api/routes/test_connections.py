@@ -21,7 +21,7 @@ def _make_client():
     app.include_router(access_router)
     from fastapi.testclient import TestClient
 
-    return TestClient(app)
+    return TestClient(app), app
 
 
 FAKE_USER = {"sub": "user-123", "tenant_id": "t-1"}
@@ -34,7 +34,12 @@ def _auth_headers():
 
 class TestConnectionsAPI(unittest.TestCase):
     def setUp(self):
-        self.client = _make_client()
+        # FIX (final-test ci-fixes): app রেফারেন্সও রাখা হলো যেন per-test
+        # dependency_overrides দেওয়া যায় (register endpoint-এর tenant contract-এর জন্য)।
+        self.client, self.app = _make_client()
+
+    def tearDown(self):
+        self.app.dependency_overrides.clear()
 
     def test_detect_github_oauth(self):
         res = self.client.post(
@@ -78,6 +83,12 @@ class TestConnectionsAPI(unittest.TestCase):
         self.assertIsInstance(data["connections"], list)
 
     def test_register_creates_capability(self):
+        # FIX (final-test ci-fixes): register endpoint এখন tenant-scoped fail-closed —
+        # pytest RBAC fallback user-এ tenant_id থাকে না, তাই সত্যিকারের production
+        # contract পরীক্ষা করতে tenant-সহ FAKE_USER দিয়ে dependency override করা হলো।
+        from core.security.authentication.rbac import get_current_user_token
+
+        self.app.dependency_overrides[get_current_user_token] = lambda: FAKE_USER
         with patch("api.routes.connections.get_capability_registry") as getter:
             registry = getter.return_value
             registry.register.return_value.capability_id = "cap-abc"

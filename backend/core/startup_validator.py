@@ -62,7 +62,21 @@ class StartupValidator:
             cls._validation_results["api_keys_configured"] = len(configured_keys)
 
             if not configured_keys:
-                errors.append("No LLM API keys configured — LLM gateway will fail")
+                # CI/test/local এনভায়রনমেন্টে LLM key না থাকাটাই স্বাভাবিক — এটা
+                # blocking error নয়, warning। Production-এ অবশ্যই hard-fail থাকবে।
+                # (বাংলা: test/local-এ key ছাড়া চলা expected, production-এ fail-closed)
+                if settings.is_local() or settings.env == "test":
+                    warnings.append(
+                        "No LLM API keys configured — LLM gateway will fail "
+                        f"(non-blocking in {settings.env or 'local'} environment)"
+                    )
+                    logger.warning(
+                        "⚠️  No LLM API keys configured — LLM gateway will fail "
+                        "(non-blocking in %s environment)",
+                        settings.env or "local",
+                    )
+                else:
+                    errors.append("No LLM API keys configured — LLM gateway will fail")
             else:
                 logger.info(f"LLM providers configured: {len(configured_keys)}")
                 if len(api_keys) > len(configured_keys):

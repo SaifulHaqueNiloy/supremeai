@@ -12,15 +12,22 @@ from __future__ import annotations
 
 import asyncio
 
+from fastapi import APIRouter, Request, Response  # FIX: must be module-level — see below
+
 from .handler import TelegramBotHandler
+
+# FIX (final-test ci-fixes): ``from __future__ import annotations`` এর কারণে endpoint-এর
+# ``request: Request`` annotation string ("Request") হয়ে যায়। FastAPI সেটা module globals
+# থেকে resolve করে — কিন্তু import টা create_telegram_router()-এর LOCAL scope-এ ছিল,
+# ফলে ForwardRef('Request') unresolved থেকে OpenAPI build ক্র্যাশ করত
+# (PydanticUserError: TypeAdapter ... not fully defined → /openapi.json 500)।
+# তাই Request/APIRouter/Response এখন module-level।
 
 # ── FastAPI webhook endpoint helper ──────────────────────────────
 
 
 def create_telegram_router(handler: TelegramBotHandler):
     """Returns a FastAPI router for Telegram webhook endpoint."""
-    from fastapi import APIRouter, Request, Response
-
     router = APIRouter(prefix="/telegram", tags=["telegram"])
     _webhook_background_tasks: set[asyncio.Task] = set()
 
