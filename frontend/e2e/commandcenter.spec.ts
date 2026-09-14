@@ -1,17 +1,26 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
+// FIX (final-test ci-fixes): ARCH-001 — hardcoded localhost fallback removed.
+// playwright.config.ts already sets baseURL (E2E_BASE_URL/BASE_URL → preview server),
+// so an empty fallback means relative path — no machine-specific URL in code.
+const BASE_URL = process.env.BASE_URL ?? '';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 async function waitForCommandCenter(page: Page) {
-  // Pre-seed localStorage auth token so ProtectedRoute allows /commandcenter
+  // FIX (final-test ci-fixes): authStore's canonical key is 'supremeai_auth_token'
+  // (authStore.ts TOKEN_KEY) — the old spec seeded wrong keys ('supremai-auth-token' /
+  // 'supremeai_token'), so ProtectedRoute redirected to /login and "home loads KPI
+  // tiles" never saw ACTIVE AGENTS. Optimistic restore (authStore.initialize) sets
+  // LOGGED_IN from the token alone — no network required.
   await page.addInitScript(() => {
-    window.localStorage.setItem('supremai-auth-token', 'demo-token');
-    window.localStorage.setItem('supremeai_token', 'demo-token');
-    window.localStorage.setItem('supremeai_role', 'admin');
+    window.localStorage.setItem('supremeai_auth_token', 'demo-token');
+    window.localStorage.setItem(
+      'supremeai_auth_user',
+      JSON.stringify({ id: 'demo-user', email: 'user@supremeai.dev', name: 'Demo User' }),
+    );
   });
-  await page.goto(BASE_URL + '/commandcenter');
+  await page.goto(`${BASE_URL}/commandcenter`);
   await page.waitForLoadState('domcontentloaded');
   // Look for Command Center indicator
   await page.waitForSelector('text=কমান্ড সেন্টার', { timeout: 15_000 }).catch(() => {});
@@ -59,7 +68,7 @@ test.describe('AETHEL Command Center — Smoke Tests', () => {
 
   test('OTP modal appears for gate action', async ({ page }) => {
     // Navigate to deck (home)
-    await page.goto(BASE_URL + '/commandcenter');
+    await page.goto(`${BASE_URL}/commandcenter`);
     await page.waitForLoadState('domcontentloaded');
 
     // Click gate action to trigger confirmation modal
@@ -73,9 +82,12 @@ test.describe('AETHEL Command Center — Smoke Tests', () => {
   });
 
   test('WS disconnect shows degraded state', async ({ page }) => {
-    // Intercept WS and close immediately to simulate disconnect
+    // FIX (final-test ci-fixes): ARCH-001 — hardcoded 'ws://localhost:9999' removed.
+    // Connect to the current origin's /ws/dashboard instead (preview server does not
+    // accept the upgrade → socket fails/closes → disconnect-state simulation).
     await page.evaluate(() => {
-      const ws = new WebSocket('ws://localhost:9999/ws/dashboard');
+      const proto = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+      const ws = new WebSocket(`${proto}${window.location.host}/ws/dashboard`);
       ws.close();
     });
 

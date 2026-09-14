@@ -39,15 +39,33 @@ class EconomicOptimizer:
             "huggingface": {"model": "zephyr-7b", "cost_per_1k": 0.00005, "tier": "free/cheap"},
         }
 
+    # FIX (final-test ci-fixes): DB/Redis-এর আংশিক বা ত্রুটিপূর্ণ config যেন baseline
+    # provider-গুলোকে মুছে না দিতে পারে — তাই clear()+update() নয়, MERGE। আগে CI-তে
+    # partial config sync হলে 'huggingface' হারিয়ে KeyError হচ্ছিল।
+    DEFAULT_TIERS: dict[str, dict[str, Any]] = {
+        "huggingface": {"model": "zephyr-7b", "cost_per_1k": 0.00005, "tier": "free/cheap"},
+        "groq": {"model": "llama-3.3-70b-versatile", "cost_per_1k": 0.0001, "tier": "free/cheap"},
+    }
+
     async def sync_from_db(self, db: Any) -> None:
-        """Sync provider_tiers from the database configuration."""
+        """Sync provider_tiers from the database configuration (merge, never wipe)."""
         try:
-            configs = await ConfigService.get_config(db, "model_cost_per_1k", self.provider_tiers)
-            if configs:
+            configs = await ConfigService.get_config(db, "model_cost_per_1k", None)
+            if isinstance(configs, dict) and configs:
+                # MERGE: DB value overrides matching providers, but baseline providers
+                # (huggingface fallback route) always stay available.
+                merged = dict(self.provider_tiers)
+                for provider, info in configs.items():
+                    if isinstance(info, dict):
+                        merged[provider] = info
                 self.provider_tiers.clear()
-                self.provider_tiers.update(configs)
+                self.provider_tiers.update(merged)
                 logger.info(
-                    f"✅ Synced {len(self.provider_tiers)} model_cost_per_1k entries from DB."
+                    f"✅ Synced {len(self.provider_tiers)} model_cost_per_1k entries from DB (merged with baseline)."
+                )
+            elif configs:
+                logger.warning(
+                    "⚠️  model_cost_per_1k config in DB is not a valid mapping — keeping baseline providers"
                 )
         except Exception as e:
             logger.error(f"❌ Failed to sync model_cost_per_1k from DB: {e}")
@@ -65,17 +83,33 @@ class EconomicOptimizer:
         else:
             allowed_tiers = ["free/cheap", "cheap", "mid", "premium"]
 
-        best_provider = "huggingface"
+        # DEFENSIVE (final-test ci-fixes): DB-synced config-এ malformed/incomplete entry
+        # বা allowed-tier-এ কোনো provider না থাকলেও এই ফাংশন কখনো KeyError দেবে না।
+        best_provider: str | None = None
         best_cost = float("inf")
 
         for provider, info in self.provider_tiers.items():
-            if info["tier"] in allowed_tiers:
-                if info["cost_per_1k"] < best_cost:
-                    best_cost = info["cost_per_1k"]
-                    best_provider = provider
+            if not isinstance(info, dict):
+                continue
+            tier = info.get("tier")
+            cost = info.get("cost_per_1k")
+            if tier in allowed_tiers and isinstance(cost, (int, float)) and cost < best_cost:
+                best_cost = cost
+                best_provider = provider
 
-        model = self.provider_tiers[best_provider]["model"]
-        reasoning = f"Selected {best_provider} (tier: {self.provider_tiers[best_provider]['tier']}) due to remaining budget of ${remaining_budget:.2f} and cost sensitivity {budget_context.cost_sensitivity}"
+        if best_provider is None:
+            # allowed tier-এ কিছু নেই → baseline fallback (সৎ default, state না বদলে)
+            best_provider = "huggingface"
+            best_cost = self.DEFAULT_TIERS["huggingface"]["cost_per_1k"]
+            model = self.DEFAULT_TIERS["huggingface"]["model"]
+            tier_label = self.DEFAULT_TIERS["huggingface"]["tier"]
+        else:
+            model = self.provider_tiers[best_provider].get(
+                "model", self.DEFAULT_TIERS.get(best_provider, {}).get("model", "unknown")
+            )
+            tier_label = self.provider_tiers[best_provider].get("tier", "unknown")
+
+        reasoning = f"Selected {best_provider} (tier: {tier_label}) due to remaining budget of ${remaining_budget:.2f} and cost sensitivity {budget_context.cost_sensitivity}"
 
         return OptimizationDecision(
             provider=best_provider, model=model, estimated_cost=best_cost, reasoning=reasoning
