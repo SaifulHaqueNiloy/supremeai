@@ -97,6 +97,14 @@ _CRITICAL_TEST_PARTS = (
     ("core", "test_token_budget*"),  # core/llm/token_budget.py
     ("agents", "test_parallel_agent_executor*"),  # tools/parallel_agent_executor.py
     ("api", "test_billing*"),  # api/routes/billing_api.py
+    # ── PR-CI integrity fix (hardening-2 round 4) ──────────────────
+    # The critical entry above for api/routes/api_keys ("api", "routes",
+    # "api_keys") matches a DIRECTORY layout, but the tests that exercise
+    # api/routes/api_keys.py live at tests/api/test_api_keys.py (2 path
+    # parts) and never matched — CI measured the tier-critical API key
+    # routes at 35% while the expanded local suite held them at 91%.
+    # Mirror the test_billing* idiom for the test FILE.
+    ("api", "test_api_keys*"),  # api/routes/api_keys.py
 )
 
 _IMPORTANT_TEST_PARTS = (
@@ -117,6 +125,15 @@ _IMPORTANT_TEST_PARTS = (
     # load rig), tests/e2e (playwright owns E2E in CI), tests/factories
     # (helpers, no tests).
     ("core",),
+    # ── PR-CI integrity fix (hardening-2 round 4) ──────────────────
+    # tests/api was the one collected-by-a-matrix-group dir still missing
+    # its catch-all: of 368 collected tests, the PR marker filter selected
+    # only 79 (CI run 34826157661) — the rest fell through to `overall`
+    # and were DESELECTED, so 289 api tests (incl. all of
+    # tests/api/test_api_keys.py, test_admin*, test_auth_routes,
+    # test_route_rbac_matrix, ...) never ran on PRs. Critical is evaluated
+    # first, so test_billing*/test_api_keys* stay critical.
+    ("api",),
     ("agents",),
     ("ai",),
     ("byoc",),
