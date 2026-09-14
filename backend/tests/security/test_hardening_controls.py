@@ -400,7 +400,9 @@ class TestHardeningRegressions:
     @pytest.mark.unit
     def test_render_proxy_never_allows_arbitrary_framing(self):
         """P6: browser render proxy must not send ALLOWALL / frame-ancestors *."""
-        src = _source_of("api/routes/browser.py")
+        # FIX (final-test ci-fixes): browser.py monolith এখন api/routes/browser/ প্যাকেজ —
+        # render proxy লজিক _render_proxy.py-তে। সেই মডিউলই এই security contract-এর source।
+        src = _source_of("api/routes/browser/_render_proxy.py")
         # Banned executable header values (comments may mention the keyword).
         assert '"X-Frame-Options": "ALLOWALL"' not in src
         assert '"Content-Security-Policy": "frame-ancestors *"' not in src
