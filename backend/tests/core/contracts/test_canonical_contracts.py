@@ -67,3 +67,25 @@ def test_result_is_serializable():
         ExecutionResult(ExecutionStatus.SUCCEEDED, output={"ok": True}).to_dict()["status"]
         == "succeeded"
     )
+
+
+def test_ecosystem_contracts_validate_identity_and_artifact_size():
+    from backend.core.contracts.canonical import (
+        ArtifactReference,
+        CapabilityContract,
+        PolicyDecision,
+        PolicyEvaluation,
+        ResourceContract,
+    )
+
+    capability = CapabilityContract("cap.task", "1.0.0", {"type": "object"}, {"type": "object"})
+    resource = ResourceContract("resource.worker", "internal", "worker", capabilities=(capability.capability_id,))
+    artifact = ArtifactReference("artifact-1", "ref://run/r/artifact/a", "text/plain", "a" * 64, 4, "tenant-a", "run-1")
+    evaluation = PolicyEvaluation(PolicyDecision.ALLOW, capability.capability_id, "actor-1", "tenant-a")
+
+    assert capability.capability_id in resource.capabilities
+    assert artifact.size_bytes == 4
+    assert evaluation.decision is PolicyDecision.ALLOW
+
+    with pytest.raises(ValueError):
+        ArtifactReference("artifact-2", "ref://bad", "text/plain", "", -1, "tenant-a", "run-1")
