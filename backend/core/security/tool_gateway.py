@@ -140,9 +140,13 @@ class ToolPolicyGateway:
         self._risk_registry[tool_name] = risk
 
     def get_risk(self, tool_name: str, declared_risk: str | None = None) -> str:
-        if declared_risk:
-            return declared_risk if declared_risk in RISK_LEVELS else "high"
-        return self._risk_registry.get(tool_name, "high")  # fail-closed default
+        registered_risk = self._risk_registry.get(tool_name)
+        if registered_risk is None:
+            return "high"  # fail-closed default for unclassified tools
+        if declared_risk not in RISK_LEVELS:
+            return registered_risk
+        # Callers may refine a classification upward, never downgrade it.
+        return max((registered_risk, declared_risk), key=RISK_LEVELS.__getitem__)
 
     # -- the canonical decision ---------------------------------------------
     async def evaluate(
