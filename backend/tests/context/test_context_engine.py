@@ -8,6 +8,7 @@ from context.budget import ContextBudget
 from context.engine import ContextEngine, RawCandidate
 from context.items import ItemKind, SummaryLevel
 from context.scopes import Scope, ScopeChainError, ScopeLevel
+from context.sources import memory_source
 
 
 def _mem_source(cands: list[RawCandidate]):
@@ -19,6 +20,23 @@ def _mem_source(cands: list[RawCandidate]):
 
 def _scope(level=ScopeLevel.CHAT, user="u1", chat="c1") -> Scope:
     return Scope(level=level, user_id=user, chat_id=chat)
+
+
+class TestMemorySource:
+    @pytest.mark.asyncio
+    async def test_memory_source_maps_existing_recall_contract(self, monkeypatch):
+        async def fake_recall_memories(*, task_description, user_id, limit):
+            assert task_description == "deploy task"
+            assert user_id == "u1"
+            assert limit == 20
+            return [{"id": "m1", "user_id": "u1", "summary": "deployment memory", "score": 0.8}]
+
+        monkeypatch.setattr("context.sources.recall_memories", fake_recall_memories)
+        candidates = await memory_source(_scope(level=ScopeLevel.USER, chat=None), "deploy task")
+        assert len(candidates) == 1
+        assert candidates[0].source_ref == "ai_memory:m1"
+        assert candidates[0].kind is ItemKind.memory
+        assert candidates[0].user_id == "u1"
 
 
 class TestTenantFilter:
