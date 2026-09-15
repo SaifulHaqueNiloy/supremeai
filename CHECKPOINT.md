@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-14 02:52 UTC
+- **Date:** 2026-09-15 01:17 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,18 +10,42 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/core/orchestration/test_trio_pipeline.py`
-  - `.github/workflows/ci.yml`
-  - `frontend/e2e/commandcenter.spec.ts`
-  - `backend/tools/social/telegram_bot/router.py`
-  - `backend/tests/api/routes/test_connections.py`
-  - `backend/core/startup_validator.py`
-  - `backend/tests/core/test_main_entrypoint_guards.py`
-  - `frontend/vite.config.ts`
-  - `backend/brain/economic_optimizer.py`
-  - `backend/tests/core/test_admin_dashboard_full.py`
-  - `backend/tests/security/test_hardening_controls.py`
+  - `backend/tests/runs/test_run_hitl.py`
+  - `docs/audits/SYSTEM_DEFECT_REGISTER_2026-09-15.md`
+  - `backend/runs/service.py`
+  - `backend/api/routers.py`
+  - `docs/audits/SYSTEM_DEFECT_REGISTER_SUPPLEMENT_2026-09-15.md`
+  - `.gitignore`
+  - `backend/runs/schemas.py`
+  - `scripts/audit/system_deep_scan_2026_09_15.py`
+  - `docs/audits/evidence/2026-09-15/frontend_calls.txt`
+  - `backend/tests/runs/test_run_service.py`
+  - `docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md`
   - `docs/generated/module_capability_matrix.json`
+  - `backend/runs/bridges.py`
+  - `backend/tests/models/test_chat_attachment_metadata.py`
+  - `docs/plans/CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md`
+  - `docs/plans/README.md`
+  - `docs/audits/evidence/2026-09-15/stubs_backend.txt`
+  - `docs/plans/UNIFIED_NEXT_ROADMAP_2026-09-15.md`
+  - `docs/generated/route_knowledge_graph.json`
+  - `AGENTS.md`
+  - `backend/tests/runs/test_run_bridges.py`
+  - `docs/audits/evidence/2026-09-15/stubs_frontend.txt`
+  - `docs/audits/evidence/2026-09-15/orphan_routes.txt`
+  - `backend/models/__init__.py`
+  - `docs/audits/evidence/2026-09-15/missing_calls.txt`
+  - `backend/runs/api.py`
+  - `CHECKPOINT.md`
+  - `docs/audits/evidence/2026-09-15/backend_routes.txt`
+  - `backend/runs/hitl.py`
+  - `docs/generated/route_inventory.json`
+  - `backend/models/chat_attachment.py`
+  - `backend/tests/runs/test_run_budgets.py`
+  - `backend/alembic_migrations/versions/2026_09_15_130000_add_context_metadata_to_chat_attachments.py`
+  - `backend/tests/runs/test_run_api.py`
+  - `backend/runs/budgets.py`
+  - `backend/openapi.json`
 
 ## Pending (Carry Forward)
 - Phase 2: Expand mission suite from 5 to 20 missions (see MASTER_PLAN.md Phase 2)

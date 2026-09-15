@@ -15,6 +15,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 ## Root Blueprints
 
 - [UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md](UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
+- [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md)
 - [implementation_plan.md](implementation_plan.md)
 
 ## Architecture Master Blueprints (docs/plans/architecture/) — (26 files)

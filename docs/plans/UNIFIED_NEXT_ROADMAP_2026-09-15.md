@@ -108,6 +108,24 @@ Executed as seven small sequential evidence-driven PRs per the approved executio
 
 **Sequencing note:** with M0 closed, per the approved plan M5 (Architecture Intelligence) may start **in parallel** with M1 Canonical Run → M2 Context Engine → M3 Memory → M4 Browser. M1+M2+M3 must be implemented as one unified execution/context architecture, not three separate features.
 
+### M1 EXECUTION STATUS — ✅ CODE COMPLETE (2026-09-15)
+
+Executed as three small sequential evidence-driven PRs per the approved execution order (same discipline as M0-A…M0-G):
+
+| Slice | PR (merged) | Delivered | Evidence |
+|---|---|---|---|
+| M1-A model + lifecycle | #341 (`6e5acb39`) | `backend/runs/` package: pure-stdlib lifecycle state machine (12 states incl. RUNNING cluster + FINALIZED seal), fixed 8-class retry enum, `Run`/`RunEvent` models, Alembic `2026_09_15_120000` (single head preserved) | 49 tests; edge-matrix caught the missing `RETRYING → CANCELLED` edge (fixed before merge); both import orders green; offline DDL slice 20 stmts |
+| M1-B service + budgets | #342 (`0226500c`) | `RunService` (guard-before-mutation, timestamp stamping, idempotent creation), budget admission control (overspend **refused**, `budget_exceeded` recorded — not post-hoc detection), retry flow, cancellation matrix + terminal-race honesty, finalize seal | 37 tests; CI fully green (24-25 checks) |
+| M1-C bridges + HITL + API | #344 | Evidence bridges (mission/tool/MCP/automation observed as Runs through ONE boundary), HITL hook (existing manager contract shape, AUD-4.4 payload-hash discipline), `/api/v1/runs` 8 endpoints with `run_id` ack async-boundary contract, ownership 404-policy (missions parity) | 29 tests; boot evidence 148/148 routers mounted; route inventory 762 routes (9 runs endpoints) |
+
+**Exit-criteria verification (roadmap §M1):**
+- ✅ missions + one tool path + one MCP path observable as Runs in a test DB — `tests/runs/test_run_bridges.py::TestUnifiedView` (one query returns mission+tool+mcp+automation)
+- ✅ lifecycle/retry/budget tests green — `tests/runs/` 116/116
+- ✅ traceability matrix Execution row → **active** (this PR)
+- ◻ staging runtime evidence + dispatch-path wiring of live callers — tracked as the row's known gap; production wiring proceeds per-subsystem (missions first, then tool/MCP call sites)
+
+**Design decisions encoded (user-verdict contract):** Run is an execution boundary, not just a persistence model (service = single legal state-change choke point with admission control); budgets are plain DB columns (colibrì-free); `run_id` ack contract lands without committing to a queue; HITL reuses the existing manager contract; no duplicate execution subsystem (bridges anchor, never rewrite).
+
 ---
 
 

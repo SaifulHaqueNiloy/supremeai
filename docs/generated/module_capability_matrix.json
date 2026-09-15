@@ -836,6 +836,13 @@
       "path": "backend/alembic_migrations/versions/2026_09_15_120000_create_canonical_run_tables.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_15_130000_add_context_metadata_to_chat_attachments.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -7980,6 +7987,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/models/chat_attachment.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/models/ci_report.py"
     },
     {
@@ -8606,6 +8620,42 @@
     },
     {
       "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/api.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/bridges.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/budgets.py"
+    },
+    {
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/hitl.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "execute",
         "mcp"
@@ -8623,6 +8673,20 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/runs/retry.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/schemas.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/service.py"
     },
     {
       "capability_signals": [
@@ -12451,6 +12515,15 @@
       "path": "backend/tests/models/test_ai_memory_schema_contract.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/models/test_chat_attachment_metadata.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12490,6 +12563,44 @@
     },
     {
       "capability_signals": [
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_api.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute",
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_bridges.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_budgets.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_hitl.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "memory",
         "register"
@@ -12498,6 +12609,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/runs/test_run_models.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_service.py"
     },
     {
       "capability_signals": [],
@@ -21122,6 +21244,16 @@
       "path": "scripts/apply_plan_renames.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/audit/system_deep_scan_2026_09_15.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -23507,5 +23639,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2722
+  "source_file_count": 2737
 }
