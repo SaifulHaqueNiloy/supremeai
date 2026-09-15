@@ -1,8 +1,12 @@
 import pytest
 
-from backend.core.contracts.canonical import EventEnvelope, ExecutionContext, PolicyDecision
-from backend.core.contracts.event_bus import EventBus
-from backend.core.contracts.policy import PolicyEvaluator
+# বাংলা: bare import বাধ্যতামূলক — production কোড `core.contracts.*` bare path দিয়ে
+# import করে; `backend.` prefix দিলে একই মডিউল দুবার লোড হয় এবং PolicyDecision-এর
+# দুটি আলাদা enum ক্লাস তৈরি হয় → `is` identity check ব্যর্থ হয় (repo-wide test idiom:
+# backend/ cwd + bare imports)।
+from core.contracts.canonical import EventEnvelope, ExecutionContext, PolicyDecision
+from core.contracts.event_bus import EventBus
+from core.contracts.policy import PolicyEvaluator
 
 
 def ctx(tenant="t1"):
@@ -31,7 +35,11 @@ def test_policy_denies_rule_and_allows_granted_permission():
         capability_id="cap.delete", actor_id="a1", tenant_id="t1"
     )
     allowed = PolicyEvaluator().evaluate(
-        capability_id="cap.read", actor_id="a1", tenant_id="t1", required_permissions=("read",), granted_permissions=frozenset({"read"})
+        capability_id="cap.read",
+        actor_id="a1",
+        tenant_id="t1",
+        required_permissions=("read",),
+        granted_permissions=frozenset({"read"}),
     )
     assert denied.decision is PolicyDecision.DENY
     assert allowed.decision is PolicyDecision.ALLOW

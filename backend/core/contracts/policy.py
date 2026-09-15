@@ -26,8 +26,14 @@ class PolicyEvaluator:
         approval_id: str | None = None,
     ) -> PolicyEvaluation:
         if not actor_id or not tenant_id:
-            return PolicyEvaluation(PolicyDecision.DENY, capability_id, actor_id, tenant_id, "missing_identity")
-        missing = [permission for permission in required_permissions if permission not in granted_permissions]
+            return PolicyEvaluation(
+                PolicyDecision.DENY, capability_id, actor_id, tenant_id, "missing_identity"
+            )
+        missing = [
+            permission
+            for permission in required_permissions
+            if permission not in granted_permissions
+        ]
         if missing:
             return PolicyEvaluation(
                 PolicyDecision.REQUIRE_APPROVAL,
@@ -39,8 +45,12 @@ class PolicyEvaluator:
             )
         rule = self._rules.get(capability_id)
         if rule is not None and not rule(actor_id, tenant_id):
-            return PolicyEvaluation(PolicyDecision.DENY, capability_id, actor_id, tenant_id, "rule_denied")
-        return PolicyEvaluation(PolicyDecision.ALLOW, capability_id, actor_id, tenant_id, "policy_allowed")
+            return PolicyEvaluation(
+                PolicyDecision.DENY, capability_id, actor_id, tenant_id, "rule_denied"
+            )
+        return PolicyEvaluation(
+            PolicyDecision.ALLOW, capability_id, actor_id, tenant_id, "policy_allowed"
+        )
 
 
 __all__ = ["PolicyEvaluator"]
