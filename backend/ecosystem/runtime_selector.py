@@ -56,7 +56,10 @@ def select_placement(
             continue
         if required_provider and resource.provider.value != required_provider:
             continue
-        if capability.capability_id not in resource.capabilities and capability.signature not in resource.capabilities:
+        if (
+            capability.capability_id not in resource.capabilities
+            and capability.signature not in resource.capabilities
+        ):
             continue
         score = 2.0 if resource.state is ResourceState.HEALTHY else 1.0
         if resource.tenant_id == tenant_id and tenant_id is not None:
