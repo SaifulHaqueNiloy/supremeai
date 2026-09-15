@@ -68,9 +68,19 @@ export const AgentWorkspace: React.FC = () => {
 
   const handleExecute = async () => {
     if (!prompt.trim() || isLoading || agentPaused) return;
+    const trimmed = prompt.trim();
     const next = [...messages, { role: 'user' as const, content: prompt }]; setMessages(next); setPrompt(''); setIsLoading(true);
+    // ফিক্স (ERR-A01 guard, defect register 2026-09-15): backend AgentTaskRequest enforces
+    // prompt min_length=10 — fail fast in the UI with an actionable message instead of a deterministic 422.
+    if (trimmed.length < 10) {
+      setMessages([...next, { role: 'agent', content: 'Please add a bit more detail — the agent needs at least 10 characters to execute a task.', source: 'ai_api' }]);
+      setIsLoading(false);
+      return;
+    }
     try {
-      const data = (await apiClient.post<Record<string, unknown>>('/api/v1/agents/execute', { prompt, project_id: 'default' }) || {}) as Record<string, unknown>;
+      // ফিক্স (ERR-A01): backend AgentTaskRequest requires task_id — আগে { prompt, project_id }
+      // পাঠানো হতো, তাই প্রতিটি execution 422 দিত। এখন সম্পূর্ণ contract অনুযায়ী payload।
+      const data = (await apiClient.post<Record<string, unknown>>('/api/v1/agents/execute', { task_id: crypto.randomUUID(), prompt: trimmed, auto_execute: false }) || {}) as Record<string, unknown>;
       setMessages([...next, { role: 'agent', content: (data.result as string) || (data.message as string) || 'Agent completed the request.', source: 'ai_api' }]);
       if (typeof data.code === 'string') setGeneratedCode(data.code);
     } catch { setMessages([...next, { role: 'agent', content: 'Connection error to SupremeAI Backend.' }]); }

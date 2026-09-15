@@ -15,18 +15,27 @@ describe('agentService', () => {
     vi.clearAllMocks();
   });
 
-  it('executeAgentTask posts the instruction', async () => {
-    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      id: '1',
-      name: 't',
-      status: 'done',
-    });
-    const res = await agentService.executeAgentTask('a1', 'do it');
-    expect(apiClient.post).toHaveBeenCalledWith('/api/v1/agent/execute', {
-      prompt: 'do it',
-      project_id: 'a1',
-    });
-    expect(res.status).toBe('done');
+  it('executeAgentTask posts the instruction to the plural agents endpoint with task_id', async () => {
+    // ERR-A02 contract fix (defect register 2026-09-15): plural /api/v1/agents/execute +
+    // mandatory task_id per backend AgentTaskRequest.
+    const uuid = 'fixed-uuid';
+    vi.stubGlobal('crypto', { randomUUID: () => uuid });
+    try {
+      (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+        id: '1',
+        name: 't',
+        status: 'done',
+      });
+      const res = await agentService.executeAgentTask('a1', 'do it now please');
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/agents/execute', {
+        task_id: `a1-${uuid}`,
+        prompt: 'do it now please',
+        auto_execute: false,
+      });
+      expect(res.status).toBe('done');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('listAgents gets the agents endpoint', async () => {

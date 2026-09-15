@@ -14,11 +14,15 @@ export interface AgentTask {
 }
 
 export const agentService = {
-  // বাংলা মন্তব্য: agentId প্যারামিটার বর্তমানে ব্যবহৃত হচ্ছে না, তাই tsc/eslint warning এড়াতে '_' প্রিফিক্স দেওয়া হলো।
-  executeAgentTask: async (_agentId: string, instruction: string): Promise<AgentTask> => {
-    return apiClient.post<AgentTask>('/api/v1/agent/execute', {
+  // বাংলা মন্তব্য: ফিক্স (ERR-A02, defect register 2026-09-15) — ব্যাকএন্ড রাউটার prefix প্লুরাল
+  // `/api/v1/agents` (backend/api/routes/agent.py), তাই সিঙ্গুলার URL 404 দিত। এখন প্লুরাল
+  // এন্ডপয়েন্ট ব্যবহার হচ্ছে এবং backend AgentTaskRequest contract অনুযায়ী বাধ্যতামূলক
+  // `task_id` পাঠানো হচ্ছে (agentId + per-execution UUID দিয়ে ইউনিক correlation)।
+  executeAgentTask: async (agentId: string, instruction: string): Promise<AgentTask> => {
+    return apiClient.post<AgentTask>('/api/v1/agents/execute', {
+      task_id: `${agentId}-${crypto.randomUUID()}`,
       prompt: instruction,
-      project_id: _agentId,
+      auto_execute: false,
     });
   },
 

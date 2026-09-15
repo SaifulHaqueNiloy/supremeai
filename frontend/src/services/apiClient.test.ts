@@ -54,15 +54,19 @@ describe('apiClient', () => {
 
   it('does not clear the persisted login for a feature endpoint 401', async () => {
     localStorage.setItem('supremeai_auth_token', 'persisted-token');
-     
+
+    // ERR-A05 fixture fix (defect register 2026-09-15): use a REAL backend feature route
+    // (GET /api/agents/ exists in backend/api/routes/agents.py) instead of the phantom
+    // /api/v1/projects route. The behavior under test is unchanged: non-session 401 must
+    // not clear the persisted login.
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
       status: 401,
-      url: 'https://api.test-domain.com/api/v1/projects',
+      url: 'https://api.test-domain.com/api/agents/',
       json: async () => ({ detail: 'Unauthorized' }),
     });
 
-    await expect(apiClient.get('/api/v1/projects')).rejects.toThrow('Unauthorized');
+    await expect(apiClient.get('/api/agents/')).rejects.toThrow('Unauthorized');
     expect(localStorage.getItem('supremeai_auth_token')).toBe('persisted-token');
   });
 
