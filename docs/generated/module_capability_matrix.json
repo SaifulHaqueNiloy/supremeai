@@ -21244,6 +21244,16 @@
       "path": "scripts/apply_plan_renames.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/audit/system_deep_scan_2026_09_15.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -23629,5 +23639,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2736
+  "source_file_count": 2737
 }
