@@ -212,9 +212,7 @@ def test_unusable_client_missing_table_rpc(tmp_path, monkeypatch):
     class _BareClient:
         pass  # table/rpc অ্যাট্রিবিউট নেই
 
-    _install_fake_supabase_module(
-        monkeypatch, lambda url, key: _BareClient()
-    )
+    _install_fake_supabase_module(monkeypatch, lambda url, key: _BareClient())
     monkeypatch.setenv("SUPABASE_KEY", "test-key")
     s = SupabaseStore(
         database_url="https://myproject.supabase.co",
@@ -268,9 +266,7 @@ def test_save_learned_fact_sqlite_auto_id_and_created_at(store):
     fact_id = fact["id"]
     assert fact_id.startswith("fact_")
     assert fact["created_at"]  # ISO timestamp injected
-    rows = [
-        r for r in store.get_task_history() if r.get("task_type") == "learned_fact"
-    ]
+    rows = [r for r in store.get_task_history() if r.get("task_type") == "learned_fact"]
     assert len(rows) == 1
     payload = json.loads(rows[0]["task_description"])
     assert payload["id"] == fact_id  # আসল TEXT id JSON payload-এ সংরক্ষিত
@@ -333,9 +329,7 @@ def test_supabase_conversation_requires_tenant(store):
 def test_supabase_conversation_upserts_tenant_payload(store):
     client = _FakeSupabaseClient()
     _attach_client(store, client)
-    store.save_conversation(
-        "sess-9", [{"role": "user", "content": "hi"}], tenant_id="tenant-A"
-    )
+    store.save_conversation("sess-9", [{"role": "user", "content": "hi"}], tenant_id="tenant-A")
     assert len(client.upserts) == 1
     table, payload = client.upserts[0]
     assert table == "conversations"
@@ -486,7 +480,11 @@ def test_generate_embedding_primary_path(store, monkeypatch):
 def test_generate_embedding_all_methods_fail_returns_none(store, monkeypatch):
     import core.embeddings as emb
 
-    monkeypatch.setattr(emb, "embed_for_pgvector", lambda text, pg_dim: (_ for _ in ()).throw(RuntimeError("no api")))
+    monkeypatch.setattr(
+        emb,
+        "embed_for_pgvector",
+        lambda text, pg_dim: (_ for _ in ()).throw(RuntimeError("no api")),
+    )
     monkeypatch.setitem(sys.modules, "sentence_transformers", None)  # import ব্যর্থ
     monkeypatch.setitem(sys.modules, "litellm", None)
     assert store._generate_embedding("hello") is None
