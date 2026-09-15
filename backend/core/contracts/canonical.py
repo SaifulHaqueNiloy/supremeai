@@ -30,6 +30,12 @@ class ApprovalStatus(StrEnum):
     CONSUMED = "consumed"
 
 
+class PolicyDecision(StrEnum):
+    ALLOW = "allow"
+    DENY = "deny"
+    REQUIRE_APPROVAL = "require_approval"
+
+
 def utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -97,6 +103,71 @@ class ExecutionResult:
 
 
 @dataclass(frozen=True)
+class CapabilityContract:
+    """Provider-neutral description of an executable capability."""
+
+    capability_id: str
+    version: str
+    input_schema: dict[str, Any]
+    output_schema: dict[str, Any]
+    permissions: tuple[str, ...] = ()
+    resource_requirements: dict[str, Any] = field(default_factory=dict)
+    tenant_id: str | None = None
+
+    def __post_init__(self) -> None:
+        _required(self.capability_id, "capability_id")
+        _required(self.version, "version")
+
+
+@dataclass(frozen=True)
+class ResourceContract:
+    """A selectable execution resource without provider-specific behavior."""
+
+    resource_id: str
+    provider: str
+    kind: str
+    state: str = "available"
+    capabilities: tuple[str, ...] = ()
+    tenant_id: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        _required(self.resource_id, "resource_id")
+        _required(self.provider, "provider")
+        _required(self.kind, "kind")
+
+
+@dataclass(frozen=True)
+class ArtifactReference:
+    """Small control-plane pointer to a potentially large immutable artifact."""
+
+    artifact_id: str
+    uri: str
+    media_type: str
+    sha256: str
+    size_bytes: int
+    tenant_id: str
+    run_id: str
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        for name in ("artifact_id", "uri", "media_type", "sha256", "tenant_id", "run_id"):
+            _required(getattr(self, name), name)
+        if self.size_bytes < 0:
+            raise ValueError("size_bytes must be non-negative")
+
+
+@dataclass(frozen=True)
+class PolicyEvaluation:
+    decision: PolicyDecision
+    capability_id: str
+    actor_id: str
+    tenant_id: str
+    reason: str = ""
+    approval_id: str | None = None
+
+
+@dataclass(frozen=True)
 class EventEnvelope:
     event_type: str
     context: ExecutionContext
@@ -158,8 +229,13 @@ class ApprovalRequest:
 __all__ = [
     "ApprovalRequest",
     "ApprovalStatus",
+    "ArtifactReference",
+    "CapabilityContract",
     "EventEnvelope",
     "ExecutionContext",
     "ExecutionResult",
     "ExecutionStatus",
+    "PolicyDecision",
+    "PolicyEvaluation",
+    "ResourceContract",
 ]
