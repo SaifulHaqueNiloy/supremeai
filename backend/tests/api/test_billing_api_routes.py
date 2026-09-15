@@ -246,7 +246,10 @@ async def test_plans_route_returns_plan_catalog(billing_app):
     assert plans["free"]["name"]
 
 
-async def test_checkout_returns_mock_session_when_stripe_disabled(billing_app):
+# ERR-G01 FIX (2026-09-15): the fabricated "mock checkout session" path was
+# removed — a paid-looking success state must never be manufactured in any
+# environment. Without Stripe, checkout now returns 503 in ALL environments.
+async def test_checkout_without_stripe_returns_503_in_all_environments(billing_app):
     client, _factory, _auth = billing_app
     response = await client.post(
         "/api/billing/checkout",
@@ -256,11 +259,8 @@ async def test_checkout_returns_mock_session_when_stripe_disabled(billing_app):
             "cancel_url": "https://app.example.com/cancel",
         },
     )
-    assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "mock"
-    assert body["session_id"] == "mock_session_123"
-    assert body["url"].startswith("https://app.example.com/success?session_id=")
+    assert response.status_code == 503
+    assert "Stripe is not configured" in response.json()["detail"]
 
 
 async def test_checkout_production_without_stripe_returns_503(billing_app, monkeypatch):
