@@ -101,3 +101,13 @@ scratch DB, boot, run a conversation round-trip + memory recall) and log the res
   already the enforced policy).
 - Optional: set `SUPREMEAI_PUBLIC_PATHS` only if you intentionally want to re-publicize a
   path; `/api/v1/markdown` was removed from the defaults.
+
+## 9. Live env/secrets evidence matrix (P0)
+
+The canonical evidence matrix is `docs/deployment/ENV_EVIDENCE_MATRIX.md`
+(Variable → Source → Required? → Service → Verified? → Date; verification
+levels ✅ verified-live / 🟡 present-in-vault / ⬜ pending). It is
+registry-drift-guarded by `backend/tests/test_env_evidence_matrix.py` against
+`backend/core/config_classification.py` — a new required or condition-bearing
+variable fails CI until a matrix row exists. Re-verify the ⬜/🟡 rows after any
+Render/Supabase/Vercel dashboard change and record the probe date there.
