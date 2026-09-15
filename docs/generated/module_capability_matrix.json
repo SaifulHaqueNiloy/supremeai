@@ -3046,6 +3046,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/sources.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -4051,6 +4060,13 @@
       "path": "backend/core/contracts/control_runtime.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/contracts/event_bus.py"
+    },
+    {
       "capability_signals": [
         "memory"
       ],
@@ -4067,6 +4083,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/contracts/local_adapters.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/contracts/policy.py"
     },
     {
       "capability_signals": [],
@@ -7198,6 +7223,19 @@
       "path": "backend/ecosystem/capability_registry.py"
     },
     {
+      "capability_signals": [
+        "capability",
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "register"
+      ],
+      "kind": "py",
+      "path": "backend/ecosystem/citizen.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -7210,6 +7248,23 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/ecosystem/deployment_tracker.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/ecosystem/evolution_gate.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/ecosystem/federation_bridge.py"
     },
     {
       "capability_signals": [],
@@ -7253,6 +7308,18 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/ecosystem/resource_registry.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "health",
+        "mcp",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/ecosystem/runtime_selector.py"
     },
     {
       "capability_signals": [
@@ -10701,6 +10768,16 @@
       "path": "backend/tests/core/contracts/test_local_adapters.py"
     },
     {
+      "capability_signals": [
+        "capability",
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/contracts/test_policy_event_bus.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -13410,6 +13487,13 @@
       "path": "backend/tests/test_evolution/test_governed_self_evolution_closed_loop.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_evolution_gate.py"
+    },
+    {
       "capability_signals": [
         "capability",
         "health",
@@ -13420,6 +13504,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/test_fcc_boundaries.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_federation_bridge.py"
     },
     {
       "capability_signals": [
@@ -13494,6 +13588,18 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/test_rls_policy_coverage.py"
+    },
+    {
+      "capability_signals": [
+        "capability",
+        "execute",
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_runtime_selector.py"
     },
     {
       "capability_signals": [
@@ -23717,5 +23823,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2746
+  "source_file_count": 2757
 }
