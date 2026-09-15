@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from backend.ecosystem.runtime_selector import PlacementError, select_placement
+from backend.ecosystem.citizen import CitizenManifest, CitizenRegistry
 from adaptive_engine.capability_registry import CapabilityLifecycleState
 from adaptive_engine.resource_registry import ProviderKind, ResourceState
 
@@ -57,3 +58,15 @@ def test_rejects_missing_capability_or_resource():
 
     with pytest.raises(PlacementError, match="resource_unavailable"):
         select_placement(FakeCapabilityRegistry(), FakeResourceRegistry([]), capability_signature="task.execute.v1")
+
+
+def test_citizen_registry_builds_graph_and_detects_boundary_violation():
+    registry = CitizenRegistry()
+    registry.register(CitizenManifest("circle.run", "1.0.0", "execution", provides=("run.execute",)))
+    registry.register(CitizenManifest("circle.tool", "1.0.0", "tools", requires=("run.execute",), provides=("tool.call",)))
+    snapshot = registry.snapshot()
+    assert ("circle.run", "circle.tool", "requires") in snapshot.edges
+    assert snapshot.violations == ()
+    assert registry.validate_boundaries({("circle.run", "circle.tool")}) == [
+        "direct_cross_domain:circle.run->circle.tool"
+    ]
