@@ -173,19 +173,54 @@ async def get_full_health(response: Response) -> dict[str, Any]:
 
 @router.get("/ready")
 async def readiness_probe(response: Response) -> dict[str, Any]:
-    """Readiness probe — is the service ready to accept traffic?"""
-    # Run only critical checks for readiness
+    """Readiness probe — is the service ready to accept traffic?
+
+    Decision semantics follow the P1 DB degradation policy
+    (``core/health_policy.py``): only CRITICAL checks gate readiness. For
+    role=worker/scraper/mcp the database check registers non-critical
+    (``app_builder.register_check`` + ``is_critical_db_check``), so a DB
+    failure leaves the service ready — role-specific degradation allowed.
+    Unhealthy non-critical checks are reported in the ``degraded`` list so a
+    ready-but-degraded state stays observable instead of silently green
+    (this implements the contract's documented ``200 ready/degraded`` shape).
+    """
+    import os
+
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    role = (os.getenv("SUPREMEAI_SERVICE_ROLE", "core") or "core").strip().lower() or "core"
+
     critical_checks = [c for c in _checks if c.critical]
+    non_critical_checks = [c for c in _checks if not c.critical]
+
+    # Degraded visibility: non-critical check failures never block traffic
+    # (role-specific degradation), but the fact must be observable here —
+    # an orchestrator polling /health/ready should see WHAT is degraded.
+    degraded: list[str] = []
+    if non_critical_checks:
+        nc_results = await asyncio.gather(*[_run_check(c) for c in non_critical_checks])
+        degraded = [r.name for r in nc_results if r.status != HealthStatus.HEALTHY]
+
     if not critical_checks:
-        return {"status": "ready", "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+        # No critical checks registered: the service is ready by definition,
+        # but non-critical failures still surface as degraded visibility.
+        response.status_code = 200
+        return {
+            "status": "degraded" if degraded else "ready",
+            "timestamp": now,
+            "role": role,
+            "degraded": degraded,
+        }
 
     results = await asyncio.gather(*[_run_check(c) for c in critical_checks])
     all_healthy = all(r.status == HealthStatus.HEALTHY for r in results)
 
     response.status_code = 200 if all_healthy else 503
+    status = "not_ready" if not all_healthy else ("degraded" if degraded else "ready")
     return {
-        "status": "ready" if all_healthy else "not_ready",
-        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "status": status,
+        "timestamp": now,
+        "role": role,
+        "degraded": degraded,
     }
 
 
