@@ -12591,6 +12591,19 @@
     },
     {
       "capability_signals": [
+        "dispatch",
+        "health",
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_mcp_server_tools.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "health",
         "mcp",
@@ -23835,5 +23848,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2758
+  "source_file_count": 2759
 }
