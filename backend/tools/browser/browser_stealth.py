@@ -1,3 +1,11 @@
+# LATENT-CRASH REPAIR (2026-09-15): this module is DESIGNED to work without
+# playwright (HAS_PLAYWRIGHT guard + optional-dependency pragmas below), but
+# without the deferred-annotations import the parameter annotation on
+# simulate_human_behavior(page: Page) was evaluated at class-definition time
+# and raised NameError in playwright-less environments (e.g. the CI services
+# group venv) — making the whole tools.browser chain unimportable there.
+from __future__ import annotations
+
 import asyncio
 import secrets
 

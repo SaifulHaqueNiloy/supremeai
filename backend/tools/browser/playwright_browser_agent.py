@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import json
 import secrets
+from concurrent.futures import ThreadPoolExecutor
 
 random = secrets.SystemRandom()
 import base64
@@ -148,17 +149,35 @@ class PlaywrightBrowserAgent:
         stealth_manager = BrowserStealth()
 
         # Since this is a sync method, we run the async setup in a new event loop.
+        # LATENT-CRASH REPAIR (2026-09-15): the original code used the RUNNING
+        # loop when one was active (e.g. when the async upload_file path calls
+        # this method) and then called run_until_complete on it, which raises
+        # "RuntimeError: This event loop is already running". When a loop is
+        # already running, complete the coroutine on a private loop inside a
+        # worker thread instead of nesting on the caller's loop.
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
         except RuntimeError:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-        context = loop.run_until_complete(stealth_manager.create_stealth_browser())
+            context = loop.run_until_complete(stealth_manager.create_stealth_browser())
+        else:
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                context = pool.submit(
+                    asyncio.run, stealth_manager.create_stealth_browser()
+                ).result()
 
         if session_name:
             self._load_cookies(context, session_name)
 
-        return context
+        # LATENT-CRASH REPAIR (2026-09-15): this method returned only `context`,
+        # but every caller (perform_task/open/screenshot/click/text/upload_file/
+        # cross_verify_prompt/execute_goal) unpacks a (context, stealth_manager)
+        # tuple — a TypeError made all eight public methods unreachable at
+        # runtime (module measured 0% coverage). Return both, matching the
+        # callers' established contract, so each task can close its own stealth
+        # manager in its finally block.
+        return context, stealth_manager
 
     def start(self) -> None:
         if not self.is_available():
@@ -347,7 +366,12 @@ class PlaywrightBrowserAgent:
         finally:
             page.close()
             context.close()
-            asyncio.run(stealth_manager.close())
+            # LATENT-CRASH REPAIR (2026-09-15): asyncio.run() cannot be called
+            # from inside a coroutine (a loop is already running whenever this
+            # async method is awaited), so the old call raised in the finally
+            # block and masked every upload_file result. Await on the running
+            # loop instead — this method only ever executes inside one.
+            await stealth_manager.close()
 
     def _update_model_behavior_in_background(
         self, model_name: str, latency_ms: float, success: bool
