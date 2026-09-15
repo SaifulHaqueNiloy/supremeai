@@ -61,7 +61,9 @@ class CitizenRegistry:
         violations: list[str] = []
         for manifest in self._manifests.values():
             for required in manifest.requires:
-                providers = [m.module_id for m in self._manifests.values() if required in m.provides]
+                providers = [
+                    m.module_id for m in self._manifests.values() if required in m.provides
+                ]
                 if not providers:
                     violations.append(f"missing_provider:{manifest.module_id}:{required}")
                 edges.extend((provider, manifest.module_id, "requires") for provider in providers)
@@ -80,7 +82,11 @@ class CitizenRegistry:
         for source, target in forbidden_pairs:
             source_manifest = self._manifests.get(source)
             target_manifest = self._manifests.get(target)
-            if source_manifest and target_manifest and source_manifest.domain != target_manifest.domain:
+            if (
+                source_manifest
+                and target_manifest
+                and source_manifest.domain != target_manifest.domain
+            ):
                 violations.append(f"direct_cross_domain:{source}->{target}")
         return sorted(violations)
 
