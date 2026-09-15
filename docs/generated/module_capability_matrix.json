@@ -1988,7 +1988,8 @@
     {
       "capability_signals": [
         "execute",
-        "health"
+        "health",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -4512,6 +4513,7 @@
       "capability_signals": [
         "execute",
         "health",
+        "mcp",
         "register"
       ],
       "classification": "human_review",
@@ -11206,6 +11208,15 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/core/test_competitive_kit.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/core/test_config.py"
     },
     {
@@ -11521,6 +11532,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_db_degradation_policy.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_db_degradation_readiness.py"
     },
     {
       "capability_signals": [
@@ -12425,6 +12447,28 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_zero_cost_phase1_queue.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_zero_cost_redis_breaker_learning.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "test",
@@ -12592,12 +12636,83 @@
     {
       "capability_signals": [
         "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_chromadb_store_adapters.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "health",
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_mcp_server_tools.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute",
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_mcp_server_transport.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_memory_pkg_integrity.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
         "memory"
       ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/memory/test_memory_service.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_sliding_window_memory.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_supabase_store_fallback.py"
     },
     {
       "capability_signals": [
@@ -13757,6 +13872,15 @@
       "path": "backend/tests/tools/test_coverage_auditor.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_dependency_manager_agent.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -13815,6 +13939,16 @@
       "path": "backend/tests/tools/test_mcp_server_kg.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_mcp_telegram.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -13841,6 +13975,18 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/tools/test_multi_account_rotator.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_multi_account_rotator_ramp.py"
     },
     {
       "capability_signals": [],
@@ -23823,5 +23969,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2757
+  "source_file_count": 2770
 }

@@ -28,7 +28,6 @@ import pytest
 import tools.code.dependency_manager_agent as dma_module
 from tools.code.dependency_manager_agent import DependencyManagerAgent
 
-
 # --------------------------------------------------------------------------- #
 # Harness                                                                     #
 # --------------------------------------------------------------------------- #
@@ -71,9 +70,7 @@ class FakeRunner:
         if isinstance(outcome, Exception):
             raise outcome
         if check and outcome.returncode != 0:
-            raise subprocess.CalledProcessError(
-                outcome.returncode, command, stderr=outcome.stderr
-            )
+            raise subprocess.CalledProcessError(outcome.returncode, command, stderr=outcome.stderr)
         return outcome
 
 
@@ -105,7 +102,9 @@ def agent():
 
 
 def test_run_command_parses_stdout_json(agent, monkeypatch):
-    runner = install_runner(monkeypatch, SimpleNamespace(stdout=jso({"a": 1}), stderr="", returncode=0))
+    runner = install_runner(
+        monkeypatch, SimpleNamespace(stdout=jso({"a": 1}), stderr="", returncode=0)
+    )
     assert agent._run_command(["tool", "--json"]) == {"a": 1}
     assert runner.commands == [["tool", "--json"]]
 
@@ -128,9 +127,7 @@ def test_run_command_missing_binary_reports_command_name(agent, monkeypatch):
 
 def test_run_command_called_process_error_captures_stderr(agent, monkeypatch):
     # check=True + non-zero exit -> CalledProcessError -> stderr surfaced.
-    install_runner(
-        monkeypatch, SimpleNamespace(stdout="", stderr="boom", returncode=1)
-    )
+    install_runner(monkeypatch, SimpleNamespace(stdout="", stderr="boom", returncode=1))
     assert agent._run_command(["tool"]) == {"error": "boom"}
 
 
@@ -150,10 +147,10 @@ def test_run_command_generic_exception_contained(agent, monkeypatch):
 
 
 def test_check_npm_dependencies_reports_outdated(agent, monkeypatch):
-    payload = {
-        "typescript": {"current": "4.9.5", "wanted": "4.9.5", "latest": "5.4.5"}
-    }
-    runner = install_runner(monkeypatch, SimpleNamespace(stdout=jso(payload), stderr="", returncode=0))
+    payload = {"typescript": {"current": "4.9.5", "wanted": "4.9.5", "latest": "5.4.5"}}
+    runner = install_runner(
+        monkeypatch, SimpleNamespace(stdout=jso(payload), stderr="", returncode=0)
+    )
     result = agent.check_npm_dependencies("/proj")
     assert result["success"] is True
     assert result["outdated_packages"] == payload
@@ -170,7 +167,9 @@ def test_check_npm_dependencies_propagates_error(agent, monkeypatch):
 
 def test_check_pip_dependencies_reports_outdated(agent, monkeypatch):
     payload = [{"name": "requests", "version": "2.28.0", "latest_version": "2.31.0"}]
-    runner = install_runner(monkeypatch, SimpleNamespace(stdout=jso(payload), stderr="", returncode=0))
+    runner = install_runner(
+        monkeypatch, SimpleNamespace(stdout=jso(payload), stderr="", returncode=0)
+    )
     result = agent.check_pip_dependencies()
     assert result["success"] is True
     assert result["count"] == 1
@@ -190,9 +189,7 @@ def test_check_pip_dependencies_propagates_error(agent, monkeypatch):
 
 
 def test_find_unused_pip_no_unused_reports_clean(agent, monkeypatch, tmp_path):
-    runner = install_runner(
-        monkeypatch, SimpleNamespace(stdout=jso([]), stderr="", returncode=1)
-    )
+    runner = install_runner(monkeypatch, SimpleNamespace(stdout=jso([]), stderr="", returncode=1))
     result = agent.find_and_remove_unused_pip_dependencies(str(tmp_path))
     assert result == {
         "success": True,
@@ -287,7 +284,11 @@ def test_find_unused_npm_error_with_dependencies_still_proceeds(agent, monkeypat
     # the guard only fails when the parsed result carries no dependency keys.
     install_runner(
         monkeypatch,
-        SimpleNamespace(stdout=jso({"error": "stderr noise", "dependencies": ["leftpad"]}), stderr="", returncode=1),
+        SimpleNamespace(
+            stdout=jso({"error": "stderr noise", "dependencies": ["leftpad"]}),
+            stderr="",
+            returncode=1,
+        ),
         SimpleNamespace(stdout="{}", stderr="", returncode=0),
     )
     result = agent.find_and_remove_unused_npm_dependencies("/proj")
@@ -298,7 +299,9 @@ def test_find_unused_npm_skips_failed_removals_and_continues(agent, monkeypatch)
     # A failing uninstall must not abort the remaining packages (loop continues).
     runner = install_runner(
         monkeypatch,
-        SimpleNamespace(stdout=jso({"dependencies": ["goodpkg", "badpkg", "lastpkg"]}), stderr="", returncode=1),
+        SimpleNamespace(
+            stdout=jso({"dependencies": ["goodpkg", "badpkg", "lastpkg"]}), stderr="", returncode=1
+        ),
         SimpleNamespace(stdout="{}", stderr="", returncode=0),
         subprocess.CalledProcessError(1, ["npm", "uninstall", "badpkg"], stderr="npm err"),
         SimpleNamespace(stdout="{}", stderr="", returncode=0),
@@ -317,7 +320,8 @@ def test_find_unused_npm_error_without_dependency_keys_fails(agent, monkeypatch)
 def test_find_unused_npm_devdependencies_only_reports_clean(agent, monkeypatch):
     # Only devDependencies present -> no "dependencies" key -> clean outcome.
     install_runner(
-        monkeypatch, SimpleNamespace(stdout=jso({"devDependencies": ["a"]}), stderr="", returncode=1)
+        monkeypatch,
+        SimpleNamespace(stdout=jso({"devDependencies": ["a"]}), stderr="", returncode=1),
     )
     result = agent.find_and_remove_unused_npm_dependencies("/proj")
     assert result["success"] is True
@@ -381,7 +385,9 @@ async def test_auto_update_rejects_unsupported_package_manager(agent):
 async def test_auto_update_pip_failure_reports_error(agent, monkeypatch):
     install_runner(
         monkeypatch,
-        subprocess.CalledProcessError(1, ["pip", "install", "--upgrade", "requests"], stderr="no net"),
+        subprocess.CalledProcessError(
+            1, ["pip", "install", "--upgrade", "requests"], stderr="no net"
+        ),
     )
     result = await agent.auto_update_and_pr("/repo", "requests")
     assert result == {"status": "error", "message": "Failed to update package: no net"}
@@ -398,7 +404,9 @@ async def test_auto_update_pip_success_creates_pr(agent, monkeypatch):
     pipeline.assert_awaited_once()
     kwargs = pipeline.await_args.kwargs
     assert kwargs["repo_path"] == "/repo"
-    assert kwargs["branch_name"] == f"chore/update-requests-{kwargs['branch_name'].rsplit('-', 1)[1]}"
+    assert (
+        kwargs["branch_name"] == f"chore/update-requests-{kwargs['branch_name'].rsplit('-', 1)[1]}"
+    )
     assert kwargs["branch_name"].rsplit("-", 1)[1].isdigit()
     assert kwargs["pr_title"] == "chore: Update pip dependency requests"
     assert kwargs["commit_message"] == kwargs["pr_title"]

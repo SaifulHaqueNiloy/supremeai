@@ -33,9 +33,8 @@ from datetime import datetime
 from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock
 
-import pytest
-
 import backend.tools.security_tools.multi_account_rotator as rotator_mod
+import pytest
 from backend.tools.security_tools.multi_account_rotator import (
     Account,
     MultiAccountRotator,
@@ -121,9 +120,7 @@ class FakeFirestoreDoc:
         self._data = dict(data)
         self.id = doc_id
         self._updates = updates
-        self.reference = SimpleNamespace(
-            update=lambda patch: self._updates.append(dict(patch))
-        )
+        self.reference = SimpleNamespace(update=lambda patch: self._updates.append(dict(patch)))
 
     def to_dict(self):
         return dict(self._data)
@@ -335,9 +332,7 @@ def install_playwright(monkeypatch, page):
 @pytest.mark.asyncio
 async def test_verification_found_via_firestore(tmp_path, monkeypatch):
     updates = []
-    install_firestore(
-        monkeypatch, docs=[FakeFirestoreDoc({"code": "123456"}, "doc-1", updates)]
-    )
+    install_firestore(monkeypatch, docs=[FakeFirestoreDoc({"code": "123456"}, "doc-1", updates)])
     rotator = make_rotator(tmp_path)
     data = await rotator._wait_for_verification("acct@example.com", timeout=1)
     assert data["code"] == "123456"
@@ -482,7 +477,7 @@ async def test_signup_success_extracts_key_and_activates_account(tmp_path, monke
     assert account.password.startswith("Pass-")
     assert account.email.startswith("supremeai+")
     # OTP was submitted through the page
-    assert ("input[id=\"otp-code\"]", "654321") in page.fill_calls
+    assert ('input[id="otp-code"]', "654321") in page.fill_calls
     assert closed["count"] == 1
     with open(rotator.config_file) as f:
         saved = json.load(f)
@@ -629,23 +624,43 @@ def test_load_config_providers_covers_all_status_and_rebuild_arms(tmp_path):
                     full_account_dict("a5"),
                 ],
             ),
-            full_provider_dict("deepseek", status="failed", accounts=[
-                full_account_dict("d1", provider="deepseek", status="pending_key_extraction"),
-                full_account_dict("d2", provider="deepseek", status="inactive"),
-                # missing required id/email -> Account() TypeError -> skipped
-                {"provider": "deepseek", "email": "x@y.com"},
-            ]),
+            full_provider_dict(
+                "deepseek",
+                status="failed",
+                accounts=[
+                    full_account_dict("d1", provider="deepseek", status="pending_key_extraction"),
+                    full_account_dict("d2", provider="deepseek", status="inactive"),
+                    # missing required id/email -> Account() TypeError -> skipped
+                    {"provider": "deepseek", "email": "x@y.com"},
+                ],
+            ),
             # non-dict container that still supports `in` passes through untouched
             # (see quirk test below: a live Account does NOT get this far)
-            full_provider_dict("cohere", status="maintenance", accounts=[
-                MappingProxyType({"id": "live-1", "provider": "cohere", "email": "l@c.com"})
-            ]),
+            full_provider_dict(
+                "cohere",
+                status="maintenance",
+                accounts=[
+                    MappingProxyType({"id": "live-1", "provider": "cohere", "email": "l@c.com"})
+                ],
+            ),
             # unknown status strings: both elif chains fall through untouched
-            full_provider_dict("google_ai_studio", status="mystery_provider_state", accounts=[
-                full_account_dict("gai-1", provider="google_ai_studio", status="mystery_account_state")
-            ]),
+            full_provider_dict(
+                "google_ai_studio",
+                status="mystery_provider_state",
+                accounts=[
+                    full_account_dict(
+                        "gai-1", provider="google_ai_studio", status="mystery_account_state"
+                    )
+                ],
+            ),
             # no status AND no accounts key at all: both False arcs (447->470, 470->505)
-            {"name": "openai", "base_url": "https://api.openai.com/v1", "models": ["gpt-4"], "rate_limit_rpm": 60, "rate_limit_tpm": 40000},
+            {
+                "name": "openai",
+                "base_url": "https://api.openai.com/v1",
+                "models": ["gpt-4"],
+                "rate_limit_rpm": 60,
+                "rate_limit_tpm": 40000,
+            },
             full_provider_dict("anthropic", status="pending_key_extraction"),
         ],
         "task_preferences": {"coding": ["groq"]},
@@ -709,9 +724,7 @@ def test_load_config_live_account_crashes_status_lookup(tmp_path):
     Only non-dict containers supporting `in` (mapping proxies, tuples) reach it."""
     rotator = make_rotator(tmp_path)
     config = {
-        "providers": [
-            full_provider_dict("groq", accounts=[make_account("live-1")])
-        ],
+        "providers": [full_provider_dict("groq", accounts=[make_account("live-1")])],
         "task_preferences": {},
     }
     with pytest.raises(TypeError, match="not iterable"):
@@ -821,7 +834,9 @@ async def test_extract_key_outer_guard_catches_handler_failure(tmp_path, monkeyp
             raise RuntimeError("selector exploded")
 
     monkeypatch.setattr(
-        rotator_mod.logger, "debug", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("log sink down"))
+        rotator_mod.logger,
+        "debug",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("log sink down")),
     )
     rotator = make_rotator(tmp_path)
     assert await rotator._extract_api_key_from_dashboard(CrashingPage(), "groq") is None

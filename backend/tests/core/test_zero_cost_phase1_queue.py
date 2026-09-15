@@ -30,9 +30,9 @@ from core.zero_cost_architecture.zero_cost_patch_phase1_4 import (
     AdaptiveCircuitBreakerState,
     CircuitBreakerOpenError,
     InProcessAsyncQueue,
+    QueuedTask,
     QueueFullError,
     QueueMetrics,
-    QueuedTask,
     TaskCancelledError,
     TaskFailedError,
     TaskPriority,
@@ -140,13 +140,23 @@ def test_priority_levels_ordered():
     values = [p.value for p in TaskPriority]
     assert values == [0, 1, 2, 3, 4]
     assert [p.name for p in TaskPriority] == [
-        "CRITICAL", "HIGH", "NORMAL", "LOW", "DEFERRED",
+        "CRITICAL",
+        "HIGH",
+        "NORMAL",
+        "LOW",
+        "DEFERRED",
     ]
 
 
 def test_status_lifecycle_values():
     assert {s.value for s in TaskStatus} == {
-        "pending", "queued", "running", "completed", "failed", "cancelled", "timeout",
+        "pending",
+        "queued",
+        "running",
+        "completed",
+        "failed",
+        "cancelled",
+        "timeout",
     }
 
 
@@ -155,10 +165,13 @@ def test_queuedtask_orders_by_priority_only():
     the dataclass's own order=True comparison is broken across DIFFERENT
     priorities because TaskPriority is a plain (non-IntEnum) Enum — a
     documented owner quirk (direct task<task comparison raises TypeError)."""
+
     async def coro():
         return None
 
-    critical = QueuedTask(priority=TaskPriority.CRITICAL, created_at=1.0, task_id="c", coro_func=coro)
+    critical = QueuedTask(
+        priority=TaskPriority.CRITICAL, created_at=1.0, task_id="c", coro_func=coro
+    )
     normal = QueuedTask(priority=TaskPriority.NORMAL, created_at=2.0, task_id="n", coro_func=coro)
     same_a = QueuedTask(priority=TaskPriority.LOW, created_at=1.0, task_id="a", coro_func=coro)
     same_b = QueuedTask(priority=TaskPriority.LOW, created_at=9.0, task_id="b", coro_func=coro)
@@ -168,7 +181,7 @@ def test_queuedtask_orders_by_priority_only():
     assert not (same_a < same_b) and not (same_b < same_a)
     # Owner quirk: direct cross-priority comparison crashes (documented only):
     with pytest.raises(TypeError):
-        critical < normal
+        _ = critical < normal
 
 
 # ───────────────────────── QueueMetrics ─────────────────────────
@@ -235,10 +248,21 @@ def test_get_metrics_shape():
     q = InProcessAsyncQueue(small_config())
     m = q.get_metrics()
     assert set(m) == {
-        "tasks_enqueued", "tasks_started", "tasks_completed", "tasks_failed",
-        "tasks_cancelled", "tasks_timed_out", "tasks_retried", "tasks_rejected",
-        "success_rate", "avg_duration_s", "p95_duration_s",
-        "queues", "active_tasks", "running_count", "registered_tasks",
+        "tasks_enqueued",
+        "tasks_started",
+        "tasks_completed",
+        "tasks_failed",
+        "tasks_cancelled",
+        "tasks_timed_out",
+        "tasks_retried",
+        "tasks_rejected",
+        "success_rate",
+        "avg_duration_s",
+        "p95_duration_s",
+        "queues",
+        "active_tasks",
+        "running_count",
+        "registered_tasks",
         "is_shutdown_requested",
     }
     assert set(m["queues"]) == {p.name for p in TaskPriority}
@@ -416,7 +440,9 @@ async def test_cancel_unknown_task_false():
     assert await q.cancel("ghost") is False
 
 
-@pytest.mark.parametrize("terminal", [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED])
+@pytest.mark.parametrize(
+    "terminal", [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]
+)
 async def test_cancel_terminal_task_false(terminal):
     q = InProcessAsyncQueue(small_config())
     task = make_task()
@@ -478,7 +504,9 @@ async def test_worker_respects_priority_order():
         return name
 
     await q.enqueue(work, "normal-first", priority=TaskPriority.NORMAL, task_id="normal-first")
-    await q.enqueue(work, "critical-second", priority=TaskPriority.CRITICAL, task_id="critical-second")
+    await q.enqueue(
+        work, "critical-second", priority=TaskPriority.CRITICAL, task_id="critical-second"
+    )
     await q.start()
     await q.get_result("critical-second", timeout=5)
     assert order == ["critical-second", "normal-first"]

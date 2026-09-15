@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import time
@@ -257,11 +258,24 @@ class SupabaseStore(SQLiteMemoryStore):
 
     def _save_learned_fact_sqlite(self, fact_id: str, fact: dict) -> None:
         # বাংলা মন্তব্য: SQLite-এ ফ্যাক্ট লেখার একমাত্র জায়গা — Supabase পাথ এবং fallback পাথ উভয়েই এটাই ব্যবহার করে
+        # 🐛 BUGFIX (2026-09-15): tasks.id হলো INTEGER PRIMARY KEY AUTOINCREMENT
+        # (sqlite_store.py:56) — TEXT fact_id ("fact_<ts>") সরাসরি লিখলে
+        # sqlite3.IntegrityError: datatype mismatch হত, অর্থাৎ SQLite fallback
+        # পথে learned fact কখনোই persist হত না (DB-degradation-এ data loss)।
+        # সমাধান: fact_id-কে stable 63-bit integer-এ ম্যাপ করা হলো (sha256) —
+        # একই fact_id → একই row id, ফলে INSERT OR REPLACE-এর dedup অর্থ
+        # অক্ষুণ্ণ থাকে; আসল fact_id task_description-এর JSON payload-এর ভেতরে
+        # ("id" ফিল্ড) সংরক্ষিত থাকে। Integer id অপরিবর্তিত পাস করে।
+        try:
+            row_id = int(fact_id)
+        except (TypeError, ValueError):
+            digest = hashlib.sha256(str(fact_id).encode("utf-8")).digest()
+            row_id = int.from_bytes(digest[:8], "big") >> 1  # 63-bit, sign-safe
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT OR REPLACE INTO tasks (id, task_description, task_type, success, cost, outcome_text) VALUES (?, ?, ?, ?, ?, ?)",
-            (fact_id, json.dumps(fact), "learned_fact", 1, 0.0, json.dumps(fact)),
+            (row_id, json.dumps(fact), "learned_fact", 1, 0.0, json.dumps(fact)),
         )
         conn.commit()
         self._close_connection(conn)
