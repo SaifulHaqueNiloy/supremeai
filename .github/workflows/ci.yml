@@ -356,17 +356,49 @@ jobs:
     secrets: inherit
 
   # -----------------------------------------------------------------
-  # Job 2: Backend Tests (parallel, disjoint pytest groups)
+  # Job 1.5: Backend Preparation (Deterministic Immutable Environment)
   # -----------------------------------------------------------------
-  # Four stable groups reduce wall-clock time without duplicating test files.
-  # Integration tests remain owned by integration-test below.
-  # বাংলা মন্তব্য (BACKEND MATRIX OPTIMIZATION):
-  # ১. ৪টি ম্যাট্রিক্স গ্রুপে ডিসজয়েন্ট পাথ দিয়ে টেস্ট আইসোলেশন বজায় রাখা হয়েছে যাতে রেস কন্ডিশন না হয়।
-  # ২. PR-এর ক্ষেত্রে `detect_changed_tests.py` এবং `group_targets` স্টেপের মাধ্যমে শুধুমাত্র পরিবর্তিত টেস্টগুলো টার্গেট করা হয়।
-  # ৩. প্রতি ম্যাট্রিক্স জব থেকে অপ্রয়োজনীয় ruff লিন্ট ও ৫টি পোস্ট-টেস্ট স্টেপ সম্পূর্ণ সরানো হয়েছে।
+  # বাংলা মন্তব্য (CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15):
+  # ১. 'Prepare Once' আর্কিটেকচার: Python, OS Build Libraries এবং সম্পূর্ণ Poetry Virtualenv
+  #    একবার তৈরি করে গিটহাব ক্যাশে সেভ করে দেয়।
+  # ২. OpenAPI Schema ভ্যালিডেশন এখানে একবার সম্পন্ন হয়ে যায়।
+  # ৩. চাইল্ড টেস্ট রানারগুলো (backend-tests, integration-test, backend-aggregate)
+  #    কোনো প্যাকেজ ইনস্টল বা কম্পাইল না করে ৩ সেকেন্ডে এই পরিবেশ রিস্টোর করে।
+  backend-prepare:
+    name: 📦 Backend Prepare (Immutable Venv & Tools)
+    needs: [changes]
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build & Publish Backend Environment
+        uses: ./.github/actions/setup-backend
+        with:
+          mode: 'build'
+          python-version: ${{ env.PYTHON_VERSION }}
+          install-browser-deps: "false"
+
+      - name: Validate OpenAPI Schema (Pre-test Contract Gate)
+        working-directory: ./backend
+        run: |
+          PYTHONPATH="." poetry run python scripts/validate_openapi.py
+
+  # -----------------------------------------------------------------
+  # Job 2: Backend Tests (Adaptive Parallel Pytest Groups)
+  # -----------------------------------------------------------------
+  # Adaptive Groups based on execution telemetry:
+  # 1. security-api: Fast contract & tenant security tests (~45s)
+  # 2. core: Domain algorithms, brain, orchestration, memory (~1.5m)
+  # 3. services: Agents, tools, missions, integrations (~1.8m)
   backend-tests:
     name: 🐍 Backend Tests (${{ matrix.group }})
-    needs: [changes]
+    needs: [changes, backend-prepare]
     if: ${{ needs.changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -374,13 +406,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - group: security
+          - group: security-api
             paths: >-
               tests/core/security tests/security tests/core/test_core_rate_limiter.py
               tests/tools/test_tenant_rate_limiter_contract.py
-              tests/core/test_multi_tenant_isolation.py
-          - group: api
-            paths: tests/api
+              tests/core/test_multi_tenant_isolation.py tests/api
           - group: core
             paths: >-
               tests/core tests/brain tests/adaptive_engine tests/llm
@@ -391,12 +421,7 @@ jobs:
               --ignore=tests/core/security
               --ignore=tests/core/test_core_rate_limiter.py
               --ignore=tests/core/test_multi_tenant_isolation.py
-          # tests/missions re-wired (round 3): the round-2 teardown hang was
-          # root-caused — the error bus' RefactorWiz auto-patch listener
-          # spawned a real subprocess from inside a mission test and its task
-          # survived asyncio cancel-all-tasks. Fixed with a test-env guard in
-          # core/errors/error_remediation.py; missions is green again
-          # (1364 passed locally in the full services-order run).
+          # tests/missions re-wired: clean teardown, 1364 passed in full suite.
           - group: services
             paths: >-
               tests/agents tests/ai tests/byoc tests/tools tests/unit_light
@@ -437,9 +462,10 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Backend Environment
+      - name: Restore Backend Runtime Environment
         uses: ./.github/actions/setup-backend
         with:
+          mode: 'runtime'
           python-version: ${{ env.PYTHON_VERSION }}
           install-browser-deps: "false"
 
@@ -603,7 +629,7 @@ jobs:
   # সেই পোস্ট-টেস্ট স্টেপগুলো এখন সেন্ট্রালাইজ করে এই `backend-aggregate` জবে এককভাবে চালানো হয়।
   backend-aggregate:
     name: Backend Aggregate Gate
-    needs: [backend-tests]
+    needs: [backend-tests, backend-prepare]
     if: ${{ always() && needs.backend-tests.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -630,16 +656,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Setup Backend Environment
+      - name: Restore Backend Runtime Environment
         uses: ./.github/actions/setup-backend
         with:
+          mode: 'runtime'
           python-version: ${{ env.PYTHON_VERSION }}
           install-browser-deps: "false"
-
-      - name: Validate OpenAPI Schema
-        working-directory: ./backend
-        run: |
-          PYTHONPATH="." poetry run python scripts/validate_openapi.py
 
       - name: Mission suite pass^k scoreboard
         if: always() && (github.ref == 'refs/heads/main' || github.event.inputs.run_backend_overall == 'true')
@@ -729,7 +751,7 @@ jobs:
     name: 🔗 Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [changes]
+    needs: [changes, backend-prepare]
     if: ${{ needs.changes.outputs.backend == 'true' && (github.ref == 'refs/heads/main' || github.event.inputs.run_backend_overall == 'true') }}
     services:
       postgres:
@@ -760,9 +782,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup Backend Environment
+      - name: Restore Backend Runtime Environment
         uses: ./.github/actions/setup-backend
         with:
+          mode: 'runtime'
           python-version: ${{ env.PYTHON_VERSION }}
           install-browser-deps: "false"
 

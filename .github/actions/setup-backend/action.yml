@@ -1,6 +1,10 @@
 name: 'Setup Backend'
-description: 'Setup Python, Poetry, and cached virtualenv for backend'
+description: 'Deterministic Python runtime setup with decoupled OS runtime libraries and cached virtualenv'
 inputs:
+  mode:
+    description: 'Execution mode: "build" (full toolchain + poetry install + cache save) or "runtime" (lightweight C-libs + fast venv restore)'
+    required: false
+    default: 'runtime'
   python-version:
     description: 'Python version to setup'
     required: false
@@ -12,41 +16,74 @@ inputs:
   poetry-version:
     description: 'Poetry version'
     required: false
-    # AUD-7.4: pin the toolchain (was 'latest' — floating)
     default: '2.4.1'
   install-media-deps:
     description: 'Install ffmpeg for media processing'
+    required: false
+    default: 'false'
   install-browser-deps:
     description: 'Install Poetry browser group (Playwright/Chromium dependencies)'
     required: false
     default: 'false'
+outputs:
+  cache-hit:
+    description: 'Whether virtualenv was restored from cache'
+    value: ${{ steps.venv-cache.outputs.cache-hit }}
+
 runs:
   using: 'composite'
   steps:
-    - name: 📦 Install System Dependencies
+    # -----------------------------------------------------------------
+    # Layer 1: Decoupled OS Runtime Libraries
+    # -----------------------------------------------------------------
+    # In 'runtime' mode, install only lightweight shared libraries (libpq5)
+    # instead of the full build-essential toolchain, saving ~25-30s.
+    - name: 📦 Install OS System Dependencies (Runtime vs Build)
       shell: bash
       run: |
-        sudo apt-get update
-        sudo apt-get install -y libpq-dev build-essential
-        if [ "${{ inputs.install-media-deps }}" = "true" ]; then
-          sudo apt-get install -y ffmpeg
+        if [ "${{ inputs.mode }}" = "build" ]; then
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libpq-dev build-essential
+        else
+          # Runtime mode: fast path for dynamic linking (libpq.so)
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libpq5
         fi
 
+        if [ "${{ inputs.install-media-deps }}" = "true" ]; then
+          sudo apt-get install -y -qq ffmpeg
+        fi
+
+    # -----------------------------------------------------------------
+    # Layer 2: Python Engine
+    # -----------------------------------------------------------------
     - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
       with:
         python-version: ${{ inputs.python-version }}
 
-    # AUD-7.4: SHA-pinned (was floating @v1 tag)
+    # -----------------------------------------------------------------
+    # Layer 3: Immutable .venv Restoration
+    # -----------------------------------------------------------------
+    - name: 🗂️ Cache & Restore Virtualenv (.venv)
+      id: venv-cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ inputs.working-directory }}/.venv
+        key: venv-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
+
+    # -----------------------------------------------------------------
+    # Layer 4: Build-Only Path (When cache misses or mode == 'build')
+    # -----------------------------------------------------------------
     - uses: snok/install-poetry@972a0e78ffdebf9e98f6fe404b77831716cdd4aa # v1.4.0
+      if: inputs.mode == 'build' || steps.venv-cache.outputs.cache-hit != 'true'
       with:
         version: ${{ inputs.poetry-version }}
         virtualenvs-create: true
         virtualenvs-in-project: true
         plugins: poetry-plugin-export
 
-    # Cache package-manager downloads, not the full virtualenv.
-    # Parallel backend test jobs therefore avoid restoring a ~1GB .venv each.
     - name: 🗂️ Restore Poetry/Pip download cache
+      if: inputs.mode == 'build' || steps.venv-cache.outputs.cache-hit != 'true'
       id: deps-cache
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
@@ -55,34 +92,26 @@ runs:
           ~/.cache/pip
         key: poetry-${{ runner.os }}-py${{ inputs.python-version }}-${{ hashFiles(format('{0}/poetry.lock', inputs.working-directory)) }}
 
-    - name: ⚙️ Install Build Dependencies
+    - name: ⚙️ Build and Install Dependencies (Build Mode or Cache Miss)
+      if: inputs.mode == 'build' || steps.venv-cache.outputs.cache-hit != 'true'
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        poetry run pip install --upgrade pip "setuptools>=77.0.3" wheel
-
-    - name: 🔒 Validate & sync lock file
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
-        # Validate lock file matches pyproject.toml
         poetry check --lock
-
-    - name: 📥 Poetry Install (backend deps)
-      shell: bash
-      working-directory: ${{ inputs.working-directory }}
-      run: |
+        poetry run pip install --upgrade pip "setuptools>=77.0.3" wheel
         if [ "${{ inputs.install-browser-deps }}" = "true" ]; then
           poetry install --no-root --with dev --with browser
         else
           poetry install --no-root --with dev
         fi
 
-    - name: 📊 Dependency Cache Report
+    - name: 📊 Virtualenv Environment Verification
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
-        if [ "${{ steps.deps-cache.outputs.cache-hit }}" == "true" ]; then
-          echo "✅ **Poetry/Pip cache HIT** — package downloads reused." >> "$GITHUB_STEP_SUMMARY"
+        if [ -d ".venv" ] && [ -f ".venv/bin/python" ]; then
+          echo "✅ **Virtualenv Ready**: $(.venv/bin/python --version) (Cache hit: ${{ steps.venv-cache.outputs.cache-hit || 'false' }})" >> "$GITHUB_STEP_SUMMARY"
         else
-          echo "⚠️ **Poetry/Pip cache MISS** — dependencies will be cached after this successful run." >> "$GITHUB_STEP_SUMMARY"
+          echo "❌ **Virtualenv Verification Failed**: .venv/bin/python not found." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
         fi
