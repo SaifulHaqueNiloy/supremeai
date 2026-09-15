@@ -1553,6 +1553,14 @@ Canonical Run ও Context Engine পুনঃব্যবহার করে sha
 2. Policy evaluation এবং artifact reference persistence।
 3. Runtime caller instrumentation, architecture graph এবং CI evidence।
 
+### Federation slice — 2026-09-15
+
+- Browser execution-এর জন্য `observe_browser_run` adapter যোগ হয়েছে।
+- Self-healing remediation proposal-এর জন্য `observe_remediation_run` adapter যোগ হয়েছে।
+- MCP-এর বিদ্যমান `observe_mcp_run` bridge পুনঃব্যবহার করা হয়েছে; নতুন execution engine তৈরি করা হয়নি।
+- Adapter tests এবং Python syntax validation সফল হয়েছে।
+- পরবর্তী কাজ: production dispatch callers-এ adapter call বসানো এবং run completion/failure event wiring.
+
 ---
 
 ## 34. Implementation Strategy — Dream Big, Build Safely
