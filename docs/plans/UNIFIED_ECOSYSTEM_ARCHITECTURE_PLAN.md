@@ -1559,7 +1559,16 @@ Canonical Run ও Context Engine পুনঃব্যবহার করে sha
 - Self-healing remediation proposal-এর জন্য `observe_remediation_run` adapter যোগ হয়েছে।
 - MCP-এর বিদ্যমান `observe_mcp_run` bridge পুনঃব্যবহার করা হয়েছে; নতুন execution engine তৈরি করা হয়নি।
 - Adapter tests এবং Python syntax validation সফল হয়েছে।
-- পরবর্তী কাজ: production dispatch callers-এ adapter call বসানো এবং run completion/failure event wiring.
+- পরবর্তী কাজ: production dispatch callers-এ adapter call বসানো এবং run completion/failure event wiring।
+
+### Evidence-gated evolution slice — 2026-09-15
+
+- `EvidenceReport` এবং deterministic `evaluate_promotion` gate যোগ হয়েছে।
+- Test failure, security failure, missing rollback readiness এবং invalid impact score সরাসরি reject হয়।
+- উচ্চ-ঝুঁকির change approval/canary ছাড়া promote হয় না।
+- সম্পূর্ণ evidence ছাড়া result `STAGE` থাকে; blind auto-promotion নেই।
+- Evolution gate-এর syntax validation সফল হয়েছে।
+- Full pytest ও staging execution এই environment-এ চালানো হয়নি; CI/staging gate-এ চালাতে হবে।
 
 ---
 
