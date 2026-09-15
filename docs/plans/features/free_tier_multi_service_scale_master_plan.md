@@ -1179,3 +1179,21 @@ reduce work
 > **Do not try to own all compute. Make SupremeAI need as little new compute as possible.**
 
 That makes free tiers an accelerator rather than a dependency, which is the safer long-term strategy for a low-maintenance SupremeAI.
+
+---
+
+# 14. Rejected Approaches (Architecture Lineage & Anti-Patterns)
+
+Per `AGENTS.md` and constitutional governance, earlier proposals must record their rejection rationale so redundant work is not repeated.
+
+### 14.1 Rejected: Free-Tier Federation v3 Multi-Account Multiplexing
+- **The Concept:** Operating 6 Kaggle accounts (180h GPU/week) × Render multi-account rotations × Colab stealth keep-alive relays to simulate an infinite supercomputer.
+- **Why Rejected:**
+  1. **Terms of Service Violation:** Circumventing platform quotas through automated account pools violates cloud provider policies (e.g. Google Cloud / Kaggle terms) and risks systemic ban of production endpoints.
+  2. **Zero-Reliability Runtime:** Free interactive notebooks (Colab/Kaggle) provide dynamic, unreserved preemptible resources. Relying on them as production workers causes silent execution drops and untrackable job failures.
+  3. **Constitutional Breach:** Violates Scaling Rule 1 (*"Free tier is an optimization layer, never the correctness foundation"*) and Rule 2 (*"Never confuse accounts with capacity"*).
+- **Retained Ideas from v3:**
+  - Dynamic Redis-backed backpressure and job queuing.
+  - Multi-tier caching (L1 in-memory + L2 edge/Redis) to eliminate duplicate compute.
+  - Transparent failover to user-authorized external resources when local quotas are exhausted.
+

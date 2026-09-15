@@ -25,8 +25,8 @@ These are bugs where components attempt real execution but fail deterministicall
 
 | ID | Component / File Path | Root Cause | Runtime Symptom & Impact |
 | :--- | :--- | :--- | :--- |
-| **ERR-A01** | `frontend/src/pages/user/AgentWorkspace.tsx:L73` & `backend/api/routes/agent.py:L24` | Frontend sends `{ prompt, project_id: 'default' }` without `task_id`. Backend `AgentTaskRequest` strictly requires `task_id: str = Field(...)`. | HTTP `422 Unprocessable Entity`. Agent Workspace fails on execution; UI displays *"Connection error to SupremeAI Backend"*. |
-| **ERR-A02** | `frontend/src/services/agentService.ts:L19` & `backend/api/routers.py:L100` | Frontend calls `POST /api/v1/agent/execute` (singular). Backend router registers `prefix="/api/v1/agents"` (plural). | HTTP `404 Not Found`. Any client using `agentService.executeAgentTask` cannot reach the route. |
+| **ERR-A01** | `frontend/src/pages/user/AgentWorkspace.tsx:L73` & `backend/api/routes/agent.py:L24` | Live workspace caller sends `{ prompt, project_id: 'default' }` to plural `/api/v1/agents/execute` without `task_id`. Backend `AgentTaskRequest` strictly requires `task_id: str = Field(...)`. | HTTP `422 Unprocessable Entity`. Agent Workspace fails on execution; UI displays *"Connection error to SupremeAI Backend"*. |
+| **ERR-A02** | `frontend/src/services/agentService.ts:L19` & `backend/api/routers.py:L100` | Service layer client calls singular `POST /api/v1/agent/execute` (while live workspace uses `/agents/execute`). Backend router registers `prefix="/api/v1/agents"` (plural). | HTTP `404 Not Found`. Any client importing `agentService.executeAgentTask` hits dead endpoint. Split between live caller (A01) and service-layer drift (A02). |
 | **ERR-A03** | `frontend/src/components/customer/BrowserPreview.tsx:L264` | Browser preview renders `<iframe src={currentUrl}>` directly in the DOM instead of proxying through backend Playwright. | External domains return `X-Frame-Options: SAMEORIGIN` / CSP frame-ancestors errors. Modern websites fail to load; screen stays blank. |
 | **ERR-A04** | `frontend/src/pages/user/IdeWorkspace.tsx:L57` & `AgentWorkspace.tsx:L51` | Browser `@webcontainer/api` requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. | Dev server and preview lack COOP/COEP headers. Terminal displays `[system] Sandbox unavailable in this preview` and fails to spawn shell. |
 | **ERR-A05** | `frontend/src/services/apiClient.test.ts:L61` | Test suite asserts against `GET /api/v1/projects`. No such route exists in the backend (backend only exposes `/repos` and `/workspaces`). | Contract test passes via mock, but real application calls to `/api/v1/projects` hit 404. |
@@ -48,9 +48,9 @@ These are views where navigation routes exist and render nice visuals, but are n
 
 ---
 
-## 3. Class C: Orphan Backend APIs (P1 - 22 Endpoints)
+## 3. Class C: Orphan Backend APIs (P1 - 57 Route Families)
 
-These are functional backend routes fully implemented, registered, and verified in test suites, but completely disconnected from the frontend interface.
+Static route reconstruction confirms 57 route families whose leaf endpoints are never called by `frontend/src`:
 
 ### 3.1 Missions Engine (11 Endpoints)
 * `POST /api/v1/missions` — Create autonomous multi-step mission
@@ -80,11 +80,17 @@ These are functional backend routes fully implemented, registered, and verified 
 * `GET /api/v1/circles/events` — Cross-circle telemetry event stream
 * `POST /api/v1/circles/dispatch` — Central MCP router command dispatch
 
+### 3.4 Newly Identified Route Families (35 Families)
+* **Full CommandCenter Admin API:** `/admin-api/commandcenter/{build/*, events, health, metrics, money/*, observe/*, operate/*}`
+* **Image & Tool Transformation Endpoints:** `/tools/image-to-code`, `/tools/image-to-component`, `/tools/image-to-palette`, `/tools/image-to-tree`, `/tools/smell-check`, `/tools/vulnerability-check`, `/tools/deploy/helm`
+* **Admin & Governance Endpoints:** `/admin-api/cost-caps`, `/admin-api/data-export`, `/admin-api/health-stream` (WS), `/admin-api/ping-all`, `/admin-api/service-topology`, `/admin/free-tier-status`, `/admin/token-budget-stats`, `/config/validation-report`
+* **Agent & Memory Endpoints:** `/api/admin/cloud-mesh/*`, `/api/knowledge/ask-scribe`, `/api/memory/recall`, `/voice/process-audio`, `/ws/cost-updates` (WS)
+
 ---
 
-## 4. Class D: Stubs, Mocks & Simulated Responses (P1/P2)
+## 4. Class D: Stubs, Mocks & Simulated Responses (P1/P2 - 1,157 Backend / 280 Frontend Hits)
 
-These are components where fake data, random mathematical generators, or static strings are returned instead of live runtime results.
+Deep scan uncovered 1,157 backend hits across 340 files (excluding tests) where fake data, static generators, or mock falls are returned:
 
 | ID | File & Line Number | Mocked Data / Logic | Real System Needed |
 | :--- | :--- | :--- | :--- |
@@ -99,11 +105,27 @@ These are components where fake data, random mathematical generators, or static 
 
 ---
 
-## 5. Class E: Test Debt & Skipped Test Cases (P2)
+## 5. Class G: False Assurance Defects (P0/P1)
+
+Components that report success, health, or security while performing no real work:
+
+| ID | File / Location | Fabricated Behavior | Risk Impact |
+| :--- | :--- | :--- | :--- |
+| **ERR-G01** | `backend/api/routes/billing_api.py:271–275` | Missing Stripe API key redirects customer to success URL with fabricated `mock_session_123`. | **P0 Financial Integrity.** User gets paid entitlements without payment. |
+| **ERR-G02** | `backend/core/deployment/production_deploy.py:379–476` | Uses `time.sleep(2)` to simulate deployments and rollbacks with mock URLs. | **P0 Operational Reality.** Deployment & rollback verification is simulated. |
+| **ERR-G03** | `backend/api/routes/browser/_crown_jewel.py:43–45` | `@router.post("/security-scan")` returns unconditional `{"success": True, "score": 100, "issues": []}`. | **P1 Security Theatre.** Falsifies security checks. |
+| **ERR-G04** | `backend/core/orchestration/cloud_sandbox_orchestrator.py:70–140` | Missing API key returns mock stdout `f"Mock output for execution of: {command}"`. | **P1 Integrity.** Fabricates code execution results. |
+| **ERR-G05** | `backend/api/routes/browser/_crown_jewel.py:60–69` | `@router.post("/tasks/{id}/step")` simulates step with static `{"action": "navigated to dashboard", "details": "Autonomous step succeeded"}`. | **P1 Autonomy.** Fabricates forward execution on stalled tasks. |
+| **ERR-G06** | `backend/api/routes/browser/_crown_jewel.py:1` | Module docstring documents itself as `"Crown Jewel mock endpoints"` yet is mounted on live API. | **P1 Architecture.** Live endpoints explicitly built as mocks. |
+| **ERR-G07** | `scripts/find_stub_data.py` | Scans for only 20 literal patterns; passes `backend/` with `[PASS]` despite 1,157 stubs. | **P1 Governance.** False PASS gate. |
+
+---
+
+## 6. Class E: Test Debt & Skipped Test Cases (P2)
 
 Registry source: `docs/SKIPPED_TESTS.md`. Total skipped tests: **96**.
 
-### 5.1 Intentional Skips (28 Tests)
+### 6.1 Intentional Skips (28 Tests)
 Live cloud dependencies requiring paid credits or hardware unavailable in CI (e.g. live AWS S3, Stripe Live Webhook verification, Cloudflare live DNS purge).
 
 ### 5.2 Deferred Ticket Skips (68 Tests - Actionable Debt)
@@ -138,17 +160,31 @@ High-level architecture gaps tracked in `UNIFIED_NEXT_ROADMAP_2026-09-15.md`:
 │ P0 IMMEDIATE (Next 1-3 Days)                                           │
 │ 1. ERR-A01: Fix AgentWorkspace task_id injection (eliminate 422 error) │
 │ 2. ERR-A02: Add singular/plural alias (/agent/execute & /agents/...)   │
-│ 3. ERR-D01: Wire Homepage Guest Chat to real backend stream            │
-│ 4. ERR-B01 & ERR-B02: Add Project Modal & File Dropzone                │
+│ 3. ERR-G01: Eliminate mock Stripe checkout session in billing_api      │
+│ 4. ERR-G02: Replace fake production_deploy simulation with real runner │
+│ 5. ERR-D01: Wire Homepage Guest Chat to real backend stream            │
+│ 6. ERR-B01 & ERR-B02: Add Project Modal & File Dropzone                │
 ├────────────────────────────────────────────────────────────────────────┤
 │ P1 CORE (1-2 Weeks)                                                    │
-│ 5. ERR-F01: Build M1 Canonical Run Fabric                              │
-│ 6. ERR-C01-C03: Connect 22 Orphan APIs (Missions & MCP UI)              │
-│ 7. ERR-D02 & ERR-D03: Replace browser mock screenshot with Playwright  │
+│ 7. ERR-F01: Build M1 Canonical Run Fabric                              │
+│ 8. ERR-C01-C04: Connect 57 Orphan APIs (Missions, MCP & CommandCenter) │
+│ 9. ERR-D02 & ERR-D03: Replace browser mock screenshot with Playwright  │
+│ 10. ERR-M01: Replace find_stub_data regexes with comprehensive gate    │
 ├────────────────────────────────────────────────────────────────────────┤
 │ P2 POLISH & HARDENING (2-3 Weeks)                                      │
-│ 8. ERR-F02: M3 Memory Consolidation (archive duplicate stores)         │
-│ 9. ERR-E02: Burn down 68 Deferred Skipped Tests                        │
-│ 10. ERR-F04: Upgrade frontend libraries to resolve Dependabot drift    │
+│ 11. ERR-F02: M3 Memory Consolidation (archive duplicate stores)        │
+│ 12. ERR-E02: Burn down 68 Deferred Skipped Tests                       │
+│ 13. ERR-F04: Upgrade frontend libraries to resolve Dependabot drift   │
 └────────────────────────────────────────────────────────────────────────┘
 ```
+
+
+---
+
+## 7. Deep Engineering Reference Manuals
+
+For deep root-cause traces and comprehensive catalogs across all subsystems:
+- 📖 **[docs/audits/ANTIPATTERN_PLAYBOOK.md](ANTIPATTERN_PLAYBOOK.md)** — AI agent coding anti-patterns & verification checklist.
+- 📖 **[docs/reference/ERROR_COMPENDIUM.md](../reference/ERROR_COMPENDIUM.md)** — 111+ categorized production failure patterns across 11 architectural layers.
+- 📖 **[docs/reference/ORPHAN_COMPONENTS_CATALOG.md](../reference/ORPHAN_COMPONENTS_CATALOG.md)** — Comprehensive catalog of unmounted endpoints, dormant engines, and isolated components.
+
