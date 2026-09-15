@@ -1526,6 +1526,52 @@ Never introduce:
 
 ---
 
+## 33A. Implementation Status — 2026-09-15
+
+বাংলা: অনুমোদিত বাস্তবায়ন শুরু হয়েছে। প্রথম vertical slice-এ বিদ্যমান
+Canonical Run ও Context Engine পুনঃব্যবহার করে shared ecosystem contracts শক্তিশালী
+করা হয়েছে; কোনো নতুন run/context database বা duplicate engine যোগ করা হয়নি।
+
+### সম্পন্ন এই slice
+
+- `backend/core/contracts/canonical.py`-এ `CapabilityContract`, `ResourceContract`,
+  `PolicyEvaluation`, `ArtifactReference` এবং `PolicyDecision` যোগ হয়েছে।
+- সব contract-এ identity validation, tenant scope এবং artifact size safety guard আছে।
+- বিদ্যমান `backend/context/engine.py`-কে canonical context assembly boundary হিসেবে
+  রাখা হয়েছে; duplicate context facade তৈরি করা হয়নি।
+- canonical contract test-এ নতুন validation ও serialization coverage যোগ হয়েছে।
+
+### যাচাই অবস্থা
+
+- Python test runner এই sandbox-এ উপলব্ধ নয় (`pytest` এবং `poetry` command অনুপস্থিত)।
+- তাই runtime test pass দাবি করা হচ্ছে না। পরবর্তী CI/staging gate-এ test চালিয়ে evidence
+  traceability matrix-এ যোগ করতে হবে।
+
+### অবশিষ্ট অবিলম্বে কাজ
+
+1. Run/Context/Capability/Resource contract-গুলোর adapter wiring।
+2. Policy evaluation এবং artifact reference persistence।
+3. Runtime caller instrumentation, architecture graph এবং CI evidence।
+
+### Federation slice — 2026-09-15
+
+- Browser execution-এর জন্য `observe_browser_run` adapter যোগ হয়েছে।
+- Self-healing remediation proposal-এর জন্য `observe_remediation_run` adapter যোগ হয়েছে।
+- MCP-এর বিদ্যমান `observe_mcp_run` bridge পুনঃব্যবহার করা হয়েছে; নতুন execution engine তৈরি করা হয়নি।
+- Adapter tests এবং Python syntax validation সফল হয়েছে।
+- পরবর্তী কাজ: production dispatch callers-এ adapter call বসানো এবং run completion/failure event wiring।
+
+### Evidence-gated evolution slice — 2026-09-15
+
+- `EvidenceReport` এবং deterministic `evaluate_promotion` gate যোগ হয়েছে।
+- Test failure, security failure, missing rollback readiness এবং invalid impact score সরাসরি reject হয়।
+- উচ্চ-ঝুঁকির change approval/canary ছাড়া promote হয় না।
+- সম্পূর্ণ evidence ছাড়া result `STAGE` থাকে; blind auto-promotion নেই।
+- Evolution gate-এর syntax validation সফল হয়েছে।
+- Full pytest ও staging execution এই environment-এ চালানো হয়নি; CI/staging gate-এ চালাতে হবে।
+
+---
+
 ## 34. Implementation Strategy — Dream Big, Build Safely
 
 The strategic architecture is intentionally much larger than the immediate implementation.
