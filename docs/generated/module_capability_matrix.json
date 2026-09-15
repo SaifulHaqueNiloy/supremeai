@@ -13629,6 +13629,16 @@
     },
     {
       "capability_signals": [
+        "health",
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/test_frontend_build_contract.py"
+    },
+    {
+      "capability_signals": [
         "capability",
         "dispatch",
         "health",
@@ -23969,5 +23979,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2770
+  "source_file_count": 2771
 }
