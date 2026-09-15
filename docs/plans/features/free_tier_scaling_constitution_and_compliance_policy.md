@@ -1,4 +1,12 @@
-# SUPREMEAI FREE-TIER MULTI-SERVICE SCALE MASTER PLAN
+---
+title: SupremeAI Free-Tier Scaling Constitution & Compliance Policy
+status: active
+last_verified: 2026-09-15
+supersedes: free_tier_multi_service_scale_master_plan.md
+canonical: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+---
+
+# SupremeAI Free-Tier Scaling Constitution & Compliance Policy
 
 **Version:** 1.0 — September 2026
 **Purpose:** Combine legitimate free/no-cost service tiers to maximize SupremeAI capacity while keeping the architecture policy-safe, observable, replaceable, and ready for paid escalation.
