@@ -50,30 +50,30 @@ try:
     from core.agents.live.browser_agent import BrowserAgent
 
     register_agent("browser_agent", BrowserAgent, "Playwright browser automation & web extraction")
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(f"[AgentRegistry] Optional agent 'browser_agent' unavailable: {exc}")
 
 try:
     from core.agents.live.vision_agent import VisionAgent
 
     register_agent("vision_agent", VisionAgent, "Visual analysis and UI inspection")
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(f"[AgentRegistry] Optional agent 'vision_agent' unavailable: {exc}")
 
 # Auto-register specialized agents
 try:
     from agents.churn_prophet import ChurnProphet
 
     register_agent("churn_prophet", ChurnProphet, "Customer retention risk & behavioral scorer")
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(f"[AgentRegistry] Optional agent 'churn_prophet' unavailable: {exc}")
 
 try:
     from agents.insight_mage import InsightMage
 
     register_agent("insight_mage", InsightMage, "Data anomaly detection and metrics insight")
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(f"[AgentRegistry] Optional agent 'insight_mage' unavailable: {exc}")
 
 try:
     from agents.code_vulnerability_scanner_agent import CodeVulnerabilityScannerAgent
@@ -83,13 +83,15 @@ try:
         CodeVulnerabilityScannerAgent,
         "Automated code security and vulnerability scanner",
     )
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(f"[AgentRegistry] Optional agent 'vulnerability_scanner' unavailable: {exc}")
 
 try:
     from core.agents.framework.agent_department import CodingAgent, ReviewAgent
 
     register_agent("coding_agent", CodingAgent, "Specialized software engineer agent")
     register_agent("review_agent", ReviewAgent, "Specialized code review & quality agent")
-except ImportError:
-    pass
+except ImportError as exc:
+    logger.warning(
+        f"[AgentRegistry] Optional agents 'coding_agent'/'review_agent' unavailable: {exc}"
+    )

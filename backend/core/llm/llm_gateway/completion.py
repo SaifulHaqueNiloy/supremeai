@@ -432,8 +432,10 @@ class CompletionMixin:
                     # rotation picks a healthy sibling on the next attempt.
                     try:
                         await _provider_key_pool.mark_error(provider_name, api_key, 429)
-                    except Exception:
-                        pass
+                    except Exception as pool_exc:
+                        logger.warning(
+                            f"[LLMGateway] key-pool mark_error failed for {provider_name}: {pool_exc}"
+                        )
                     # Try to handle rate limit with backoff and Retry-After header
                     handled = await self._handle_rate_limit_error(current_model, exc)
                     if handled:
@@ -507,8 +509,10 @@ class CompletionMixin:
                         await _provider_key_pool.mark_error(
                             provider_name, api_key, exc.response.status_code
                         )
-                    except Exception:
-                        pass
+                    except Exception as pool_exc:
+                        logger.warning(
+                            f"[LLMGateway] key-pool mark_error failed for {provider_name}: {pool_exc}"
+                        )
                     cb.mark_failure()
                     continue
 
