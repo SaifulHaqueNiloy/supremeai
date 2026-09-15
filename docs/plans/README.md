@@ -14,9 +14,14 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 
 ## Root Blueprints
 
-- [UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md](UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
-- [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md)
-- [implementation_plan.md](implementation_plan.md)
+- [UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md](UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md) — Master Architecture & Canonical Baseline
+- [UNIFIED_NEXT_ROADMAP_2026-09-15.md](UNIFIED_NEXT_ROADMAP_2026-09-15.md) — Active Operational Execution Roadmap (M0–M9)
+- [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md) — CI/CD Execution Consolidation
+- [implementation_plan.md](implementation_plan.md) — Tactical Implementation Priorities
+
+> [!NOTE]
+> Superseded historical plans and legacy duplicates are preserved in [`docs/archive/plans/`](../archive/plans/) per AGENTS.md living asset protection rules.
+
 
 ## Architecture Master Blueprints (docs/plans/architecture/) — (26 files)
 

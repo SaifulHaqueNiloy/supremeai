@@ -20,8 +20,12 @@ def upgrade() -> None:
         sa.Column("metadata_json", sa.JSON(), nullable=False),
         sa.Column("result", sa.JSON(), nullable=True),
         sa.Column("error", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
+        sa.Column(
+            "created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+        ),
     )
     op.create_index("idx_task_records_tenant", "task_records", ["tenant_id"])
 

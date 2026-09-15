@@ -87,7 +87,12 @@ async def submit_task(
     async with get_db_session_context() as session:
         session.add(record)
         await session.commit()
-    logger.info("[TaskGateway] Task submitted: id=%s tenant=%s actor=%s", record.task_id, tenant_id, actor_id)
+    logger.info(
+        "[TaskGateway] Task submitted: id=%s tenant=%s actor=%s",
+        record.task_id,
+        tenant_id,
+        actor_id,
+    )
     return _handle(record)
 
 
@@ -118,7 +123,9 @@ async def cancel_task(
         if record is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
         if record.status in {"completed", "failed", "cancelled"}:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Task is no longer cancellable")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="Task is no longer cancellable"
+            )
         record.status = "cancelled"
         record.updated_at = datetime.now(UTC)
         await session.commit()

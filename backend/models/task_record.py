@@ -20,7 +20,14 @@ class TaskRecord(Base):
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     result: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
 
     __table_args__ = (Index("idx_task_records_tenant", "tenant_id"),)
