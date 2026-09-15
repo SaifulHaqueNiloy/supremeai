@@ -1,10 +1,11 @@
 # SupremeAI Living Architecture Plans Catalog
 
-## Governance and source of truth
+## Governance and Operational Backlog
 
 - [Plan lifecycle policy](./PLAN_LIFECYCLE_POLICY.md)
 - [Plan-to-code traceability matrix](./PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
 - [Plan reconciliation register](phases/plan_reconciliation_register.md)
+- [Pending Approvals Log](./PENDING_APPROVALS.md) — Tier 3 high-risk tasks awaiting human admin sign-off
 
 Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md` for the current architecture baseline. Existing plans remain protected until their content, links, and runtime evidence are reconciled.
 
@@ -18,9 +19,12 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [UNIFIED_NEXT_ROADMAP_2026-09-15.md](UNIFIED_NEXT_ROADMAP_2026-09-15.md) — Active Operational Execution Roadmap (M0–M9)
 - [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md) — CI/CD Execution Consolidation
 - [implementation_plan.md](implementation_plan.md) — Tactical Implementation Priorities
+- [vision_strategic_positioning.md](vision_strategic_positioning.md) — Competitive positioning, chosen battlefields, and phased execution strategy (renamed from MASTER_PLAN.md)
+- [PRE_PRODUCTION_GO_LIVE_MASTER_TODO.md](../release/PRE_PRODUCTION_GO_LIVE_MASTER_TODO.md) — Authoritative Pre-Production & Go-Live Master Release Checklist (1,878 lines)
 
 > [!NOTE]
-> Superseded historical plans and legacy duplicates are preserved in [`docs/archive/plans/`](../archive/plans/) per AGENTS.md living asset protection rules.
+> Superseded historical plans, redirect stubs, and legacy duplicates are preserved in [`docs/archive/plans/`](../archive/plans/) per AGENTS.md living asset protection rules.
+> The `docs/plans/summary/` and `docs/plans/final/` directories contain only redirect stubs and obsolete strategies; all meaningful content has been migrated to canonical locations.
 
 
 ## Architecture Master Blueprints (docs/plans/architecture/) — (26 files)
@@ -101,7 +105,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [living_autonomous_intelligence_master_plan.md](features/living_autonomous_intelligence_master_plan.md)
 - [mcp_gateway_dynamic_hub_plan.md](features/mcp_gateway_dynamic_hub_plan.md)
 - [messaging_bots_telegram_and_whatsapp_architecture.md](features/messaging_bots_telegram_and_whatsapp_architecture.md)
-- ~~[multi_cloud_free_tier_federation_master_plan_v3.md](features/multi_cloud_free_tier_federation_master_plan_v3.md)~~ → archived; superseded by v4
+- [multi_cloud_free_tier_federation_master_plan_v3.md](features/multi_cloud_free_tier_federation_master_plan_v3.md) (archived; superseded by v4)
 - [n8n_workflow_automation_master_plan.md](features/n8n_workflow_automation_master_plan.md)
 - [open_source_components_hardening_plan.md](features/open_source_components_hardening_plan.md)
 - [orphan_components_wiring_master_plan.md](features/orphan_components_wiring_master_plan.md)
@@ -114,6 +118,9 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [repository_analysis_action_plan.md](features/repository_analysis_action_plan.md)
 - [repository_strict_file_hygiene_roadmap.md](features/repository_strict_file_hygiene_roadmap.md)
 - [risk_remediation_and_hardening_execution_plan_bn.md](features/risk_remediation_and_hardening_execution_plan_bn.md)
+- [codebase_modularization_and_splitting_matrix.md](features/codebase_modularization_and_splitting_matrix.md) — Comprehensive Modularization & File Splitting Matrix
+- [superai_competitor_playbook.md](features/superai_competitor_playbook.md) — Competitive Intelligence & Battle Playbook
+- [supremeai_architectural_evolution_proposals.md](features/supremeai_architectural_evolution_proposals.md) — Phase 3+ Out-of-the-Box Architectural Evolution Proposals
 - [runtime_dynamic_configuration_zero_hardcode_plan.md](features/runtime_dynamic_configuration_zero_hardcode_plan.md)
 - [self_assembling_need_supply_intelligence_plan.md](features/self_assembling_need_supply_intelligence_plan.md)
 - [self_learning_engine_status_report.md](features/self_learning_engine_status_report.md)
@@ -125,8 +132,9 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [vscode_lm_multi_model_ide_support_plan.md](features/vscode_lm_multi_model_ide_support_plan.md)
 - [zero_cost_autonomous_self_evolution_plan.md](features/zero_cost_autonomous_self_evolution_plan.md)
 
-## Infrastructure & Multi-Cloud Federation (docs/plans/infrastructure/) — (13 files)
+## Infrastructure & Multi-Cloud Federation (docs/plans/infrastructure/) — (14 files)
 
+- [SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md](infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md) — Living Single Source of Truth for Services, Secrets & Env Vars
 - [ci_cd_render_build_runtime_optimization_plan_bn.md](infrastructure/ci_cd_render_build_runtime_optimization_plan_bn.md)
 - [cloud_ai_multi_provider_deployment_plan.md](infrastructure/cloud_ai_multi_provider_deployment_plan.md)
 - [docker_build_troubleshooting_record.md](infrastructure/docker_build_troubleshooting_record.md)
