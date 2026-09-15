@@ -1,13 +1,4 @@
-"""backend/api/routes/task_gateway.py — Canonical Core API Task Gateway.
-
-Eliminates Direct Worker Bypass from Frontend (Pure Cloud Production Parity):
-- Exposes:
-  - POST /api/v1/tasks (Submit task)
-  - GET /api/v1/tasks/{task_id} (Poll task status)
-  - POST /api/v1/tasks/{task_id}/cancel (Cancel task)
-- Enforces user authentication, tenant isolation, and audit logging.
-- Routes task execution to internal async worker queue or ephemeral runners.
-"""
+"""Canonical Core API task gateway with durable tenant-scoped records."""
 
 from __future__ import annotations
 
@@ -17,18 +8,18 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from api.deps import get_current_tenant, get_current_user_token
 from core.logging_config import logger
+from database.session import get_db_session_context
+from models.task_record import TaskRecord
 
 router = APIRouter(
     prefix="/api/v1/tasks",
     tags=["TaskGateway"],
     dependencies=[Depends(get_current_user_token)],
 )
-
-# In-memory fast state store for active tasks (synchronized with Redis when available)
-_TASK_STORE: dict[str, dict[str, Any]] = {}
 
 
 class TaskSubmission(BaseModel):
@@ -38,12 +29,38 @@ class TaskSubmission(BaseModel):
 
 class TaskHandle(BaseModel):
     task_id: str
-    status: str  # pending | running | completed | failed | cancelled
+    status: str
     goal: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
     result: Any = None
     error: str | None = None
+
+
+def _handle(record: TaskRecord) -> TaskHandle:
+    return TaskHandle(
+        task_id=record.task_id,
+        status=record.status,
+        goal=record.goal,
+        created_at=record.created_at.isoformat(),
+        updated_at=record.updated_at.isoformat(),
+        result=record.result,
+        error=record.error,
+    )
+
+
+async def _owned_record(task_id: str, tenant_id: str) -> TaskRecord:
+    async with get_db_session_context() as session:
+        result = await session.execute(
+            select(TaskRecord).where(
+                TaskRecord.task_id == task_id,
+                TaskRecord.tenant_id == str(tenant_id),
+            )
+        )
+        record = result.scalar_one_or_none()
+    if record is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    return record
 
 
 @router.post("", response_model=TaskHandle)
@@ -52,35 +69,26 @@ async def submit_task(
     user_token: dict[str, Any] = Depends(get_current_user_token),
     tenant_id: str = Depends(get_current_tenant),
 ) -> TaskHandle:
-    """Submit a task through the governed Core API gateway."""
-    task_id = f"task_{uuid.uuid4().hex[:16]}"
-    now_iso = datetime.now(UTC).isoformat()
-    actor_id = (
+    """Create a durable, tenant-scoped task record."""
+    now = datetime.now(UTC)
+    actor_id = str(
         user_token.get("sub") or user_token.get("uid") or user_token.get("user_id") or "anonymous"
     )
-
-    task_record = {
-        "task_id": task_id,
-        "goal": submission.goal,
-        "status": "pending",
-        "actor_id": str(actor_id),
-        "tenant_id": str(tenant_id),
-        "metadata": submission.metadata,
-        "created_at": now_iso,
-        "updated_at": now_iso,
-        "result": None,
-        "error": None,
-    }
-    _TASK_STORE[task_id] = task_record
-
-    logger.info(f"[TaskGateway] Task submitted: id={task_id} tenant={tenant_id} actor={actor_id}")
-    return TaskHandle(
-        task_id=task_id,
-        status="pending",
+    record = TaskRecord(
+        task_id=f"task_{uuid.uuid4().hex[:16]}",
         goal=submission.goal,
-        created_at=now_iso,
-        updated_at=now_iso,
+        status="pending",
+        actor_id=actor_id,
+        tenant_id=str(tenant_id),
+        metadata_json=submission.metadata,
+        created_at=now,
+        updated_at=now,
     )
+    async with get_db_session_context() as session:
+        session.add(record)
+        await session.commit()
+    logger.info("[TaskGateway] Task submitted: id=%s tenant=%s actor=%s", record.task_id, tenant_id, actor_id)
+    return _handle(record)
 
 
 @router.get("/{task_id}", response_model=TaskHandle)
@@ -89,30 +97,7 @@ async def get_task_status(
     user_token: dict[str, Any] = Depends(get_current_user_token),
     tenant_id: str = Depends(get_current_tenant),
 ) -> TaskHandle:
-    """Retrieve task execution status."""
-    record = _TASK_STORE.get(task_id)
-    if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found"
-        )
-
-    # Verify tenant boundary
-    current_tenant = str(tenant_id)
-    if record["tenant_id"] != current_tenant and current_tenant != "master":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access to task in different tenant forbidden",
-        )
-
-    return TaskHandle(
-        task_id=record["task_id"],
-        status=record["status"],
-        goal=record["goal"],
-        created_at=record["created_at"],
-        updated_at=record["updated_at"],
-        result=record.get("result"),
-        error=record.get("error"),
-    )
+    return _handle(await _owned_record(task_id, str(tenant_id)))
 
 
 @router.post("/{task_id}/cancel", response_model=TaskHandle)
@@ -121,25 +106,24 @@ async def cancel_task(
     user_token: dict[str, Any] = Depends(get_current_user_token),
     tenant_id: str = Depends(get_current_tenant),
 ) -> TaskHandle:
-    """Cancel an active task."""
-    record = _TASK_STORE.get(task_id)
-    if not record:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found"
+    """Cancel a pending or running task without permitting cross-tenant access."""
+    async with get_db_session_context() as session:
+        result = await session.execute(
+            select(TaskRecord).where(
+                TaskRecord.task_id == task_id,
+                TaskRecord.tenant_id == str(tenant_id),
+            )
         )
+        record = result.scalar_one_or_none()
+        if record is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        if record.status in {"completed", "failed", "cancelled"}:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Task is no longer cancellable")
+        record.status = "cancelled"
+        record.updated_at = datetime.now(UTC)
+        await session.commit()
+    logger.info("[TaskGateway] Task cancelled: %s", task_id)
+    return _handle(record)
 
-    current_tenant = str(tenant_id)
-    if record["tenant_id"] != current_tenant and current_tenant != "master":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
 
-    record["status"] = "cancelled"
-    record["updated_at"] = datetime.now(UTC).isoformat()
-    logger.info(f"[TaskGateway] Task cancelled: {task_id}")
-
-    return TaskHandle(
-        task_id=record["task_id"],
-        status="cancelled",
-        goal=record["goal"],
-        created_at=record["created_at"],
-        updated_at=record["updated_at"],
-    )
+__all__ = ["router"]
