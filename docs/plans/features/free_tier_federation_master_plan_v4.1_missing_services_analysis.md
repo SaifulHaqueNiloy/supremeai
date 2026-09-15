@@ -1,5 +1,14 @@
-# 🔄 SupremeAI Free-Tier Federation Master Plan v4.1
-## "Missing Services Integration & Maximization" Update
+---
+title: SupremeAI Free-Tier Federation Master Plan v4.1 — Missing Services Analysis
+status: active
+last_verified: 2026-09-15
+supersedes: free_tier_missing_services_integration_plan.md
+canonical: docs/plans/features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md
+related: docs/plans/infrastructure/free_tier_federation_master_plan_v4.md
+---
+
+# SupremeAI Free-Tier Federation Master Plan v4.1
+## Missing Services Analysis & Maximization Update
 
 **তারিখ:** 2026-08-24  
 **আপডেট:** Missing Services Analysis Complete  

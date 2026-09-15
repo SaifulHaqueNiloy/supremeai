@@ -52,7 +52,10 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [visual_component_integration_topology.md](architecture/visual_component_integration_topology.md)
 - [wiring_feature_investigation_log.md](architecture/wiring_feature_investigation_log.md)
 
-## Feature Specifications & Capabilities (docs/plans/features/) — (76 files)
+## Feature Specifications & Capabilities (docs/plans/features/) — (66 active files; 9 legacy archived)
+
+> [!NOTE]
+> Plan_12–15 and Plan_17–21 are legacy May 2026 Java/Spring Boot prototypes. They are preserved in `docs/archive/plans/features/legacy_plan_series_2026_05/` per AGENTS.md living asset protection rules. Active modern plans are listed below.
 
 - [Plan_01_Dynamic_AI_Agent_System.md](features/Plan_01_Dynamic_AI_Agent_System.md)
 - [Plan_02_API_Key_Rotation_System.md](features/Plan_02_API_Key_Rotation_System.md)
@@ -65,16 +68,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [Plan_09_Smart_Data_Storage.md](features/Plan_09_Smart_Data_Storage.md)
 - [Plan_10_API_Limit_Discovery.md](features/Plan_10_API_Limit_Discovery.md)
 - [Plan_11_Pre_Push_Verification.md](features/Plan_11_Pre_Push_Verification.md)
-- [Plan_12_Multi_Platform_Expansion.md](features/Plan_12_Multi_Platform_Expansion.md)
-- [Plan_13_Marketing_Strategy_Advisor.md](features/Plan_13_Marketing_Strategy_Advisor.md)
-- [Plan_14_Vision_Image_Integration.md](features/Plan_14_Vision_Image_Integration.md)
-- [Plan_15_Hybrid_Voice_System.md](features/Plan_15_Hybrid_Voice_System.md)
 - [Plan_16_CICD_Sandbox.md](features/Plan_16_CICD_Sandbox.md)
-- [Plan_17_Data_Lifecycle_Management.md](features/Plan_17_Data_Lifecycle_Management.md)
-- [Plan_18_Crowdsourced_API_Model.md](features/Plan_18_Crowdsourced_API_Model.md)
-- [Plan_19_Brilliant_Idea_Detection.md](features/Plan_19_Brilliant_Idea_Detection.md)
-- [Plan_20_Learning_from_Examples.md](features/Plan_20_Learning_from_Examples.md)
-- [Plan_21_Best_Pattern_Curation.md](features/Plan_21_Best_Pattern_Curation.md)
 - [Plan_22_Simulator_Controller_Perfection.md](features/Plan_22_Simulator_Controller_Perfection.md)
 - [Plan_23_Website_Reverse_Engineering_Master_Guide.md](features/Plan_23_Website_Reverse_Engineering_Master_Guide.md)
 - [Plan_24_AI_Agent_Ecosystem_Integration.md](features/Plan_24_AI_Agent_Ecosystem_Integration.md)
@@ -96,8 +90,8 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [evolution_patch_v3_implementation_plan.md](features/evolution_patch_v3_implementation_plan.md)
 - [file_organization_and_cleanup_action_plan.md](features/file_organization_and_cleanup_action_plan.md)
 - [free_tier_512mb_memory_pressure_remediation_plan.md](features/free_tier_512mb_memory_pressure_remediation_plan.md)
-- [free_tier_missing_services_integration_plan.md](features/free_tier_missing_services_integration_plan.md)
-- [free_tier_multi_service_scale_master_plan.md](features/free_tier_multi_service_scale_master_plan.md)
+- [free_tier_federation_master_plan_v4.1_missing_services_analysis.md](features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md)
+- [free_tier_scaling_constitution_and_compliance_policy.md](features/free_tier_scaling_constitution_and_compliance_policy.md)
 - [free_tier_production_upgrade_plan_v2.md](features/free_tier_production_upgrade_plan_v2.md)
 - [full_integration_master_blueprint_bn.md](features/full_integration_master_blueprint_bn.md)
 - [github_spec_kit_governance_layer_plan.md](features/github_spec_kit_governance_layer_plan.md)
@@ -107,7 +101,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [living_autonomous_intelligence_master_plan.md](features/living_autonomous_intelligence_master_plan.md)
 - [mcp_gateway_dynamic_hub_plan.md](features/mcp_gateway_dynamic_hub_plan.md)
 - [messaging_bots_telegram_and_whatsapp_architecture.md](features/messaging_bots_telegram_and_whatsapp_architecture.md)
-- [multi_cloud_free_tier_federation_master_plan_v3.md](features/multi_cloud_free_tier_federation_master_plan_v3.md)
+- ~~[multi_cloud_free_tier_federation_master_plan_v3.md](features/multi_cloud_free_tier_federation_master_plan_v3.md)~~ → archived; superseded by v4
 - [n8n_workflow_automation_master_plan.md](features/n8n_workflow_automation_master_plan.md)
 - [open_source_components_hardening_plan.md](features/open_source_components_hardening_plan.md)
 - [orphan_components_wiring_master_plan.md](features/orphan_components_wiring_master_plan.md)

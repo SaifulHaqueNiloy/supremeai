@@ -32,9 +32,9 @@ intent
 
 ### 2. Free-tier federation
 
-- `docs/plans/FREE_TIER_FEDERATION_MASTER_PLAN_V4.md`
-- `docs/plans/FREE_TIER_FEDERATION_PLAN_V3.md`
-- `docs/plans/FREE_TIER_UPGRADE_PLAN.md`
+- `docs/plans/infrastructure/free_tier_federation_master_plan_v4.md`
+- `docs/plans/features/multi_cloud_free_tier_federation_master_plan_v3.md` (archived; superseded by v4)
+- `docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md`
 
 **Status:** Federation remains valid, but it means **capability federation**, not quota circumvention.
 
