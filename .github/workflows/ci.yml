@@ -346,7 +346,7 @@ jobs:
   # বাংলা মন্তব্য (PERF-TRICK-2 & TRICK-3): 
   # পূর্বে `registry` নামক আলাদা ৩ মিনিটের একটি উবুন্টু ভিএম জব এখানে স্বতন্ত্রভাবে চলত।
   # সেই রেজিস্ট্রি চেকগুলো (validate_config_registry, check_config_contract, check_hardcoded_deployment_config)
-  # এখন সরাসরি `ci-advanced-checks.yml`-এর সাথে কনসোলিডেট করা হয়েছে����� ফলে আলাদা রানার বুট করার প্রয়োজন নেই।
+  # এখন সরাসরি `ci-advanced-checks.yml`-এর সাথে কনসোলিডেট করা হয়েছে������� ফলে আলাদা রানার বুট করার প্রয়োজন নেই।
   advanced-checks:
     name: Advanced Pre-Merge Checks
     needs: [changes]
@@ -776,8 +776,7 @@ jobs:
           ls -la coverage-parts/
           poetry run coverage combine coverage-parts
           poetry run coverage json -o coverage.json
-          pip install pyyaml loguru
-          python ../scripts/ci/coverage_quality_gate.py coverage.json ../scripts/ci/coverage_policy.yaml --tiers "$TIERS"
+          poetry run python ../scripts/ci/coverage_quality_gate.py coverage.json ../scripts/ci/coverage_policy.yaml --tiers "$TIERS"
       - name: Upload merged coverage
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
