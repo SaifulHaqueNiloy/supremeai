@@ -115,19 +115,58 @@ async def deep_health_check(response: Response):
 
 @router.get("/ready")
 async def readiness_check():
-    """Kubernetes-style readiness probe."""
+    """Kubernetes-style readiness probe.
+
+    Role-aware per the P1 DB degradation policy (``core/health_policy.py``,
+    the same single source of truth ``core/app_builder.py`` uses for the
+    canonical ``/health/ready``):
+
+    * core / unset role — DB failure means NOT READY (503). In
+      production/staging ``SUPABASE_ALLOW_DB_DEGRADATION`` is IGNORED
+      (fail-closed); in dev it may opt into degraded mode.
+    * worker / scraper / mcp — role-specific degradation allowed: the probe
+      stays 200 with ``status: degraded`` + a ``readiness_policy`` block so
+      the degraded state is visible instead of silently green.
+    """
     db_ok = await _check_database()
     redis_ok = await _check_redis()
 
     persistence_mode = (
         "healthy" if db_ok == "healthy" else ("degraded" if db_degraded() else "unavailable")
     )
+    role = (os.getenv("SUPREMEAI_SERVICE_ROLE", "core") or "core").strip().lower() or "core"
+
     if persistence_mode == "unavailable":
-        raise HTTPException(status_code=503, detail="Database unavailable")
+        degradation_requested = (
+            os.getenv("SUPABASE_ALLOW_DB_DEGRADATION", "false").strip().lower() == "true"
+        )
+        try:
+            from core.config import settings as _settings
+
+            env = str(getattr(_settings, "env", "") or os.getenv("ENV", ""))
+        except Exception:  # circular-import safety / very early boot
+            env = os.getenv("ENV", "")
+        from core.health_policy import db_failure_readiness
+
+        serve_ready, reason = db_failure_readiness(role, env, degradation_requested)
+        if not serve_ready:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Database unavailable — not ready ({reason})",
+            )
+        return {
+            "status": "degraded",
+            "service": "supremeai-backend",
+            "role": role,
+            "persistence_mode": persistence_mode,
+            "cache": "healthy" if redis_ok == "healthy" else "degraded",
+            "readiness_policy": {"decision": "role-tolerated", "reason": reason},
+        }
 
     return {
         "status": "ok" if persistence_mode == "healthy" else "degraded",
         "service": "supremeai-backend",
+        "role": role,
         "persistence_mode": persistence_mode,
         "cache": "healthy" if redis_ok == "healthy" else "degraded",
     }
