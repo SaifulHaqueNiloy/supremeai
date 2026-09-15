@@ -1,6 +1,6 @@
 # Root-Level Lint Baseline (Owner Audit P1 #6 — Escalation Ladder)
 
-**Date:** 2026-09-15 · **Tree:** main @ 7979586e (M0-E) · **Ruff:** 0.16.4 · **Scope:** `tools/ scripts/ packages/ .github/scripts/` (410 py files)
+**Date:** 2026-09-15 · **Tree:** main @ 7979586e (M0-E); batch 2 measured @ 8f162480 · **Ruff:** 0.16.4 · **Scope:** `tools/ scripts/ packages/ .github/scripts/` (410 py files)
 
 ## Why this file exists
 
@@ -30,13 +30,62 @@ watch the CI report trend → flip rule classes to blocking when a class hits 0.
 (For reference, the default ruff rule set across the four dirs totals 2,118 —
 that broader number is NOT this ladder's baseline; the ladder tracks E9,F,W.)
 
-## Batch 1 result (2026-09-15, this PR)
+## Batch 1 result (2026-09-15, PR #334)
 
 `ruff check --select W291,W292,W293 --fix` (safe fixes only) resolved
 **1,583** violations across 56 files → remaining **254** = 160 F-class +
 94 W-class string-interior cases (whitespace INSIDE docstrings/prompts —
 left for manual review; auto-fixing would mutate string content, incl.
 possible LLM prompts and printed output). Ladder now: 1,837 → 254 (−86%).
+
+## Batch 2 result (2026-09-15, this PR)
+
+**REL-001 (silent failure) — 9 of the 24 repo-wide sites fixed in scripts/ tooling.**
+Each bare `except: pass` now logs a contextual stderr warning (or appends to
+discovery notes in `lib/auto_discovery.py`, matching file convention); behavior
+is unchanged — handlers still fall through to the same defaults, they are just
+no longer silent:
+
+| File | Site | Handler now does |
+|---|---|---|
+| scripts/generate_module_docs.py | ×2 | stderr `[module-docs]` read-failure w/ path + exc |
+| scripts/ci/generate_module_capability_matrix.py | ×1 | stderr audit-summary-unreadable w/ path + exc |
+| scripts/ci/check_truthy_env_var.py | ×1 | stderr SyntaxError-skipped w/ file + exc |
+| scripts/health/superai_health_check.py | ×1 | stderr discovery-failed → legacy fallback notice |
+| scripts/audit_isolated_modules_and_capabilities.py | ×2 | stderr config/file skipped w/ path + exc |
+| scripts/lib/auto_discovery.py | ×1 | `disc.notes.append("render.yaml unreadable: …")` |
+| scripts/ci/mission_passk.py | ×1 | stderr junit-unparseable (file + exc) |
+
+**Deferred (2 sites, owner call):** `pre_merge_guard.py:707` and
+`secret_rotation_reminder.py:282` REL-001 fixes were prepared but withheld —
+both files carry pre-existing ARCH-001 blocking findings that the audit ratchet
+would pull into PR scope, and review showed them to be **scanner false-positives**
+(`"localhost" not in o` is a defensive filter that EXCLUDES localhost origins;
+the "Windows-path" hits are `name:\s` regexes whose `e:\s` substring matches the
+scanner's `[eE]:\\` drive-pattern — not paths). Owner call: either adjust the
+scanner heuristic or accept per-file exemptions (the exemption YAML loader
+exists in models.py but is not wired into `run_audit`).
+
+Also completed in this PR: **re-delivery of batch 1's whitespace batch**
+(1,421 W-class fixes across 55 files). The original batch-1 whitespace commit
+was not included when #334 re-applied the hardening branch to main (only
+ci.yml + test_ws_auth.py + this baseline doc landed), so main still carried
+1,677 W-class violations; this PR re-runs the identical
+`ruff check … --select W291,W292,W293 --fix` on `tools/ scripts/ packages/
+.github/scripts/`. 93 string-interior cases remain excluded by the same
+design rule as batch 1 (auto-fix would mutate string content).
+
+**Ladder after batch 2 (E9,F,W scope, measured): 1,837 → 372 (−80%).**
+Remaining 372 = 160 F-class (F401 85 · F541 47 · F841 23 · F811 4 · F402 1)
++ 212 W-class (string-interior cases + the withheld whitespace of the three
+owner-call quarantined files).
+
+Remaining REL-001 sites: **13 in backend/** + the 2 deferred scripts sites
+(production/runtime paths — per-module logger-convention review; separate batch).
+Still owner-call quarantined (whitespace fixes withheld there until resolved):
+`scripts/db/auto_seed.py` (SEC-003:49), `scripts/devops/config/validators.py`
+(ARCH-001:413), `tools/knowledge/card_builder.py` (ARCH-001 ×9 docstring
+misfires).
 
 ## Audit-ratchet quarantine (batch 1 scope adjustment)
 
