@@ -152,6 +152,18 @@ _IMPORTANT_TEST_PARTS = (
     ("unit",),
     ("utils",),
     ("orchestration",),
+    # ── PR-CI integrity fix (M1 run-fabric promotion, 2026-09-15) ────
+    # backend/runs/** (M1 canonical Run fabric: state machine, service,
+    # budget enforcement, bridges, HITL hook, canonical Run API) landed
+    # via #341/#342/#344 with a full offline suite at tests/runs/ — but
+    # ("runs",) was never added to either tier tuple, so all 7 test files
+    # (116 tests) fell through to the never-run-on-PRs `overall` tier and
+    # were DESELECTED by the PR marker filter (verified: same filter
+    # selects 0/116 on main, 116/116 with this entry). Same failure
+    # class as the tests/api fix above. Additive: critical is evaluated
+    # first, so any future critical classification of run tests is
+    # unaffected.
+    ("runs",),
     ("test_evolution",),
     ("test_strategic_patches",),
     ("p2p_tests",),
