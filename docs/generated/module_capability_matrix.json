@@ -3005,6 +3005,47 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/budget.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/engine.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/items.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context/scopes.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -10566,6 +10607,31 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/conftest.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/context/test_context_budget.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/context/test_context_engine.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/context/test_context_scopes.py"
     },
     {
       "capability_signals": [
@@ -23629,5 +23695,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2736
+  "source_file_count": 2744
 }
