@@ -1,0 +1,1838 @@
+# backend stub/mock/hardcode hits: 1157 hits in 340 files (tests excluded)
+
+== scripts/testing/_gen_services.py  (45 hits)
+    589  [mock_literal]  from unittest.mock import AsyncMock, MagicMock, patch
+    596  [mock_literal]  def mock_db():
+    597  [mock_literal]  """Provide mock database session."""
+    604  [mock_literal]  def service(mock_db):
+    606  [mock_literal]  return {service_name}(db_session=mock_db)
+    632  [mock_literal]  async def test_create_success(self, service, mock_db, valid_payload):
+    633  [mock_literal]  mock_db.insert.return_value = MagicMock(id="test-123")
+    638  [mock_literal]  mock_db.insert.assert_awaited_once()
+    641  [mock_literal]  async def test_create_validation_error(self, service, mock_db):
+    648  [mock_literal]  async def test_create_duplicate(self, service, mock_db, valid_payload):
+    649  [mock_literal]  mock_db.insert.side_effect = Exception("duplicate key error")
+    657  [mock_literal]  async def test_get_by_id_found(self, service, mock_db, valid_payload):
+    658  [mock_literal]  mock_db.find_one.return_value = {{"id": "test-123", **valid_payload}}
+    663  [mock_literal]  mock_db.find_one.assert_awaited_once()
+    666  [mock_literal]  async def test_get_by_id_not_found(self, service, mock_db):
+    667  [mock_literal]  mock_db.find_one.return_value = None
+    674  [mock_literal]  async def test_get_by_id_or_404_found(self, service, mock_db, valid_payload):
+    675  [mock_literal]  mock_db.find_one.return_value = {{"id": "test-123", **valid_payload}}
+    681  [mock_literal]  async def test_get_by_id_or_404_not_found(self, service, mock_db):
+    682  [mock_literal]  mock_db.find_one.return_value = None
+    688  [mock_literal]  async def test_list_pagination(self, service, mock_db):
+    689  [mock_literal]  mock_db.find_many.return_value = [
+    697  [mock_literal]  mock_db.find_many.assert_awaited_once()
+    700  [mock_literal]  async def test_search(self, service, mock_db):
+    701  [mock_literal]  mock_db.find_many.return_value = [{{"id": "1", "name": "search result"}}]
+    709  [mock_literal]  async def test_update_success(self, service, mock_db, valid_payload):
+    710  [mock_literal]  mock_db.find_one.return_value = {{"id": "test-123", **valid_payload}}
+    711  [mock_literal]  mock_db.update_one.return_value = MagicMock(modified_count=1)
+    717  [mock_literal]  async def test_update_not_found(self, service, mock_db):
+    718  [mock_literal]  mock_db.find_one.return_value = None
+    726  [mock_literal]  async def test_delete_success(self, service, mock_db):
+    727  [mock_literal]  mock_db.delete_one.return_value = MagicMock(deleted_count=1)
+    733  [mock_literal]  async def test_delete_not_found(self, service, mock_db):
+    734  [mock_literal]  mock_db.delete_one.return_value = MagicMock(deleted_count=0)
+    742  [mock_literal]  async def test_bulk_create(self, service, mock_db, valid_payload):
+    743  [mock_literal]  mock_db.transaction.return_value.__aenter__ = AsyncMock()
+    744  [mock_literal]  mock_db.transaction.return_value.__aexit__ = AsyncMock()
+    745  [mock_literal]  mock_db.insert_many.return_value = [{{"id": "1"}}, {{"id": "2"}}]
+    751  [mock_literal]  async def test_bulk_delete(self, service, mock_db):
+    752  [mock_literal]  mock_db.delete_many.return_value = MagicMock(deleted_count=3)
+    760  [mock_literal]  async def test_count(self, service, mock_db):
+    761  [mock_literal]  mock_db.count.return_value = 42
+    768  [mock_literal]  def test_factory(self, mock_db):
+    769  [mock_literal]  svc = get_{snake_name}_service(db_session=mock_db)
+    858  [for_now]  continue  # Skip enums for now
+
+== backend/core/testing/qa_suite.py  (30 hits)
+    326  [simulation]  # For demo purposes, we'll simulate the connection
+    327  [simulation]  await asyncio.sleep(0.1)  # Simulate async database connection
+    330  [simulation]  # Simulate successful connection and basic query
+    350  [simulation]  # For demo purposes, we'll simulate the connection
+    351  [simulation]  await asyncio.sleep(0.05)  # Simulate async Redis operation
+    353  [simulation]  # Simulate successful connection and basic operation
+    386  [simulation]  # For demo, we'll simulate the check
+    398  [simulation]  """Simulate SQL injection check."""
+    425  [simulation]  # Simulate XSS check
+    437  [simulation]  """Simulate XSS check."""
+    472  [simulation]  """Simulate auth bypass check."""
+    599  [simulation]  # For demo, we'll simulate the effect
+    608  [simulation]  "impact_observed": random.choice([True, False]),  # Simulated result
+    609  [simulation]  "recovery_time": random.randint(5, 30),  # Simulated recovery time
+    618  [simulation]  # Simulate CPU spike by consuming CPU cycles
+    630  [simulation]  "impact_observed": random.choice([True, False]),  # Simulated result
+    631  [simulation]  "recovery_time": random.randint(5, 30),  # Simulated recovery time
+    640  [simulation]  # Simulate memory allocation
+    663  [simulation]  "impact_observed": random.choice([True, False]),  # Simulated result
+    664  [simulation]  "recovery_time": random.randint(5, 30),  # Simulated recovery time
+    714  [mock_literal]  # For demo, we'll create mock unit tests
+    717  [mock_literal]  # Create mock test cases
+    718  [mock_literal]  mock_test_cases = [
+    720  [mock_literal]  name="test_mock_function",
+    723  [mock_literal]  description="Mock unit test",
+    725  [mock_literal]  tags=["mock", "unit"],
+    731  [mock_literal]  description="Another mock unit test",
+    733  [mock_literal]  tags=["mock", "unit"],
+    737  [mock_literal]  for tc in mock_test_cases:
+    851  [mock_literal]  # Using a mock URL since we don't have a real server running
+
+== scripts/devops/_audit.py  (28 hits)
+     54  [dummy_fake]  # ---------- real/fake classification ----------
+     56  [placeholder]  "xxxx", "replaceme", "dummy", "todo", "placeholder", "password123"]
+     84  [dummy_fake]  "TELEGRAM_BOT_TOKEN": lambda x: ("REAL" if re.match(r"^\d{8,10}:[A-Za-z0-9_-]{30,}$", x) else "FAKE"),
+     87  [dummy_fake]  "DISCORD_BOT_TOKEN": lambda x: ("REAL" if len(x) > 40 else "FAKE"),
+     93  [dummy_fake]  "UPSTASH_REDIS_REST_TOKEN": lambda x: ("REAL" if len(x) > 20 else "FAKE"),
+    115  [dummy_fake]  "CLOUDFLARE_ACCOUNT_ID": lambda x: ("REAL" if len(x) >= 24 else "FAKE"),
+    127  [dummy_fake]  "FIREBASE_TOKEN": lambda x: ("REAL" if x.startswith("1//") or x.startswith("ya29.") else "FAKE"),
+    147  [dummy_fake]  "SUPREMEAI_ADMIN_PASSWORD_HASH": lambda x: ("REAL" if x.startswith("$2b$") or x.startswith("$2a$") else "FAKE"),
+    148  [dummy_fake]  "SUPREMEAI_ADMIN_TOTP_SECRET": lambda x: ("FAKE" if x.upper() == "JBSWY3DPEHPK3PXP" else ("UNVERIFIABLE", "base32")),
+    150  [placeholder]  "DOCS_PASSWORD": lambda x: ("PLACEHOLDER", "weak/default-style password"),
+    151  [placeholder]  "CI_WEBHOOK_SECRET": lambda x: ("PLACEHOLDER", "equals literal 'njel.com.bd'"),
+    152  [placeholder]  "SUPREMEAI_ADMIN_LOGIN_PASSWORD": lambda x: ("PLACEHOLDER", "equals literal 'njel.com.bd'"),
+    159  [dummy_fake]  return ("FAKE", f"expected one of {prefixes}")
+    164  [dummy_fake]  return ("FAKE", "not a GitHub token format")
+    167  [dummy_fake]  return ("REAL" if x.startswith("eyJ") else "FAKE", "JWT-like")
+    170  [dummy_fake]  return ("REAL" if x.lstrip("-").isdigit() else "FAKE", "numeric")
+    173  [dummy_fake]  return ("REAL" if "discord.com/api/webhooks/" in x else "FAKE", "Discord webhook URL")
+    176  [dummy_fake]  return ("REAL" if '"private_key"' in x and '"type":"service_account"' in x else "FAKE", "service-account JSON")
+    198  [placeholder]  return ("PLACEHOLDER", f"literal placeholder value '{p}'")
+    288  [placeholder]  lines.append("- **Real/Fake:** provider key-format validation (prefix/JWT/numeric) + placeholder-pattern scan (`njel.com.bd`, `example`, `changeme`, etc.). Opaque secrets (hashes, encryption
+    294  [placeholder]  empty = sum(1 in [r[1] for r in rows] for _ in [0])  # placeholder
+    299  [placeholder]  fake_c = sum(1 for r in rows if r[3] in ("FAKE", "PLACEHOLDER", "WEAK"))
+    317  [placeholder]  lines.append(f"- **Value looks FAKE/PLACEHOLDER:** {fake_c}  |  **EMPTY value:** {empty_val}")
+    334  [placeholder]  lines.append("## Suspicious / Placeholder / Fake / Weak Values")
+    337  [placeholder]  if r[3] in ("FAKE", "PLACEHOLDER", "WEAK"):
+    339  [placeholder]  if not any(r[3] in ("FAKE","PLACEHOLDER") for r in rows):
+    346  [dummy_fake]  lines.append("| Key | .env | Val(len) | Real/Fake | Infisical | GitHub | Render | Target services | Notes |")
+    363  [placeholder]  print("FAKE/PLACEHOLDER", fake_c, "EMPTY", empty_val)
+
+== backend/core/admin_routes.py  (21 hits)
+    174  [mock_literal]  if id_token.startswith("mock-"):
+    182  [mock_literal]  detail="Mock tokens are strictly forbidden outside of local testing environments.",
+    184  [mock_literal]  uid = "mock-admin-uid"
+    187  [mock_literal]  f"Bypassing verification using mock token mode. Token: {id_token[:20]}..."
+    191  [mock_literal]  uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+    278  [mock_literal]  if uid == "mock-admin-uid" and getattr(settings, "env", "local").lower() != "production":
+    279  [mock_literal]  return  # বাংলা মন্তব্য: dev-only mock পথ; production-এ mock token উপরেই ব্লক হয়
+    304  [mock_literal]  if id_token.startswith("mock-"):
+    305  [mock_literal]  # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP সেটআপ বাইপাস কঠোরভাবে নিষিদ্ধ
+    309  [mock_literal]  detail="Mock tokens are strictly forbidden in production.",
+    311  [mock_literal]  uid = "mock-admin-uid"
+    315  [mock_literal]  uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+    365  [mock_literal]  if payload.id_token.startswith("mock-"):
+    368  [mock_literal]  status_code=403, detail="Mock tokens are forbidden in production"
+    370  [mock_literal]  uid = "mock-admin-uid"
+    412  [mock_literal]  if id_token.startswith("mock-"):
+    413  [mock_literal]  # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP ভেরিফিকেশন বাইপাস কঠোরভাবে নিষিদ্ধ
+    417  [mock_literal]  detail="Mock tokens are strictly forbidden in production.",
+    419  [mock_literal]  uid = "mock-admin-uid"
+    423  [mock_literal]  uid = decoded_token.get("uid", decoded_token.get("sub", "mock-admin-uid"))
+    484  [for_now]  detail="Authentication service temporarily unavailable. Please try again later.",
+
+== scripts/find_stub_data.py  (20 hits)
+      5  [placeholder]  SupremeAI 2.0-এর জন্য CI gate স্ক্রিপ্ট। পুরো কোডবেসে stub/placeholder/dummy
+     35  [simulation]  ("simulate_saving", r'Simulate saving to database', "HIGH"),
+     36  [simulation]  ("simulate_saving_comment", r'# Simulate saving', "HIGH"),
+     37  [mock_literal]  ("fake_response", r'Mock different responses based on provider', "MEDIUM"),
+     38  [placeholder]  ("placeholder_implementation", r'placeholder implementation', "MEDIUM"),
+     42  [mock_literal]  ("mock_data_constant", r'\bconst\s+MOCK_[A-Z_]+\s*[:=]', "HIGH"),
+     43  [mock_literal]  ("mock_data_constant_py", r'^\s*MOCK_[A-Z_]+\s*[:=]\s*\[', "HIGH"),
+     44  [mock_literal]  ("hardcoded_mock_pr_url", r'["\']https://github\.com/[^"\']*/pull/\d+["\']', "CRITICAL"),
+     45  [mock_literal]  ("mock_commit_hash", r'mock_commit_hash', "CRITICAL"),
+     47  [mock_literal]  ("todo_replace_mock", r'TODO.*(replace|remove).*mock', "MEDIUM"),
+     54  [mock_literal]  ("**/tests/**", "simulated_api_key"),  # টেস্ট ফাইলে mock acceptable
+     59  [mock_literal]  ("**/tests/**", "hardcoded_mock_pr_url"),
+     60  [mock_literal]  ("**/tests/**", "mock_commit_hash"),
+     61  [mock_literal]  ("**/tests/**", "mock_data_constant"),
+     62  [mock_literal]  ("**/tests/**", "mock_data_constant_py"),
+     71  [mock_literal]  ("**/test_*.py", "hardcoded_mock_pr_url"),
+     72  [mock_literal]  ("**/test_*.py", "mock_commit_hash"),
+     73  [mock_literal]  ("**/test_*.py", "mock_data_constant_py"),
+    151  [placeholder]  description="Zero-Gap Deployment Gate — Stub/Placeholder Detector"
+    176  [placeholder]  print(f"[SCAN] Scanning {args.path} for stub/placeholder patterns...")
+
+== backend/core/human_behavior.py  (15 hits)
+     39  [random_metric]  dataURL.charCodeAt(dataURL.length - 1) ^ (Math.random() * 4 | 0)
+    115  [random_metric]  control1_x = x1 + (x2 - x1) * random.uniform(0.1, 0.4)
+    116  [random_metric]  control1_y = y1 + (y2 - y1) * random.uniform(0.1, 0.3)
+    117  [random_metric]  control2_x = x1 + (x2 - x1) * random.uniform(0.6, 0.9)
+    118  [random_metric]  control2_y = y1 + (y2 - y1) * random.uniform(0.7, 0.9)
+    149  [random_metric]  target_x = box["x"] + box["width"] / 2 + random.uniform(-5, 5)
+    150  [random_metric]  target_y = box["y"] + box["height"] / 2 + random.uniform(-5, 5)
+    153  [random_metric]  start_x = random.uniform(0, 100)
+    154  [random_metric]  start_y = random.uniform(0, 100)
+    157  [random_metric]  (start_x, start_y), (target_x, target_y), steps=random.randint(15, 30)
+    162  [random_metric]  await asyncio.sleep(random.uniform(0.005, 0.015))  # মাইক্রো ডিলে
+    164  [random_metric]  await asyncio.sleep(random.uniform(0.1, 0.25))  # ক্লিকের আগে সামান্য থামা
+    166  [simulation]  logger.debug(f"Simulated natural human click on selector: {selector}")
+    177  [random_metric]  await asyncio.sleep(random.uniform(0.15, 0.3))
+    187  [simulation]  logger.debug(f"Simulated natural typing into selector: {selector}")
+
+== backend/tools/devops/docker_sandbox.py  (15 hits)
+    108  [simulation]  "Docker is not available. Simulating command execution in local process."
+    126  [simulation]  "simulated": True,
+    139  [simulation]  "simulated": True,
+    141  [simulation]  return {"success": False, "error": str(e), "simulated": True}
+    154  [simulation]  "simulated": False,
+    177  [simulation]  "simulated": False,
+    190  [simulation]  "simulated": False,
+    192  [simulation]  return {"success": False, "error": str(e), "simulated": False}
+    240  [simulation]  "simulated": True,
+    246  [simulation]  "simulated": True,
+    250  [simulation]  return {"success": False, "error": str(exc), "simulated": True}
+    264  [simulation]  return {"success": False, "error": "Invalid temp file path.", "simulated": False}
+    296  [simulation]  "simulated": False,
+    303  [simulation]  "simulated": False,
+    307  [simulation]  return {"success": False, "error": str(exc), "simulated": False}
+
+== scripts/advanced_analysis/config_single_source_enforcer.py  (15 hits)
+      6  [hardcoded]  whitelist তৈরি করে এবং পুরো backend-এ hardcoded config values খুঁজে বের করে।
+      7  [hardcoded]  SupremeAI-এর মূল নীতি: "self-healing, no hardcode, DB-driven" —
+     11  [hardcoded]  0 = পরিষ্কার, কোনো hardcoded config পাওয়া যায়নি
+     12  [hardcoded]  1 = hardcoded config পাওয়া গেছে
+     53  [hardcoded]  # বাংলা: timeout, retry, limit, ttl — এগুলো প্রায়ই hardcoded হয়
+    165  [hardcoded]  # বাংলা: এই কনটেক্সটগুলোতে hardcoded value গ্রহণযোগ্য — false positive এড়াতে
+    229  [hardcoded]  """বাংলা: একটি hardcoded config finding প্রতিনিধিত্ব করে।"""
+    795  [hardcoded]  lines.append("# 🔍 SupremeAI Hardcoded Config Audit (Auto-Generated)")
+    811  [hardcoded]  lines.append("এই ভ্যালুগুলো `backend/core/config.py` থেকে আসা উচিত, hardcoded নয়:")
+    952  [hardcoded]  description="SupremeAI Config Single-Source Enforcer — hardcoded config values খোঁজে",
+    956  [hardcoded]  0 = পরিষ্কার, কোনো hardcoded config পাওয়া যায়নি
+    957  [hardcoded]  1 = hardcoded config পাওয়া গেছে
+   1025  [hardcoded]  print("📋 ধাপ ৪: Hardcoded values খোঁজা হচ্ছে...", file=sys.stderr)
+   1105  [hardcoded]  print(f"\n❌ CI FAIL: {red_count}টি 🔴 hardcoded config finding পাওয়া গেছে!", file=sys.stderr)
+   1108  [hardcoded]  print("\n✅ CI PASS: কোনো 🔴 hardcoded config finding নেই", file=sys.stderr)
+
+== scripts/devops/todo_manager.py  (15 hits)
+      3  [todo_fixme]  TODO/FIXME Management System — Scans, categorizes, tracks, and reports technical debt.
+      5  [todo_fixme]  বাংলা: কোডবেসে TODO, FIXME, HACK, XXX এবং অন্যান্য টেকনিক্যাল ডেট ট্যাগ স্ক্যান করে,
+      9  [todo_fixme]  - Scans entire codebase recursively for TODO/FIXME/HACK/XXX/NOTE tags
+     13  [todo_fixme]  - Age tracking: calculates how long each TODO has existed
+     40  [todo_fixme]  "FIXME": "CRITICAL",
+     42  [todo_fixme]  "HACK": "HIGH",
+     43  [todo_fixme]  "XXX": "HIGH",
+     44  [todo_fixme]  "TODO": "MEDIUM",
+     71  [todo_fixme]  """Represents a single TODO/FIXME/HACK item found in the codebase."""
+     94  [todo_fixme]  """Manages TODO/FIXME/HACK scanning and reporting."""
+     99  [todo_fixme]  r"#?\s*\b(TODO|FIXME|HACK|XXX|BUG|OPTIMIZE|NOTE)\b(?::|\s)?\s*(.*)",
+    162  [todo_fixme]  "📋 SupremeAI Technical Debt & TODO Summary",
+    181  [todo_fixme]  "# 📋 Technical Debt & TODO Report",
+    205  [todo_fixme]  parser = argparse.ArgumentParser(description="SupremeAI TODO & Technical Debt Manager")
+    208  [todo_fixme]  scan_parser = subparsers.add_parser("scan", help="Scan codebase for TODO/FIXME tags")
+
+== backend/tools/browser/playwright_browser_agent.py  (14 hits)
+     96  [random_metric]  page.type(selector, char, delay=random.uniform(30, 100))
+    101  [simulation]  This uses a Bezier curve to simulate a more natural mouse movement.
+    116  [random_metric]  target_x = bb["x"] + bb["width"] / 2 + random.uniform(-bb["width"] / 4, bb["width"] / 4)
+    118  [random_metric]  bb["y"] + bb["height"] / 2 + random.uniform(-bb["height"] / 4, bb["height"] / 4)
+    122  [random_metric]  start_x, start_y = random.uniform(0, 500), random.uniform(0, 500)
+    125  [random_metric]  control_1_x = start_x + random.uniform(50, 150) * random.choice([-1, 1])
+    126  [random_metric]  control_1_y = start_y + random.uniform(50, 150) * random.choice([-1, 1])
+    127  [random_metric]  control_2_x = target_x + random.uniform(50, 150) * random.choice([-1, 1])
+    128  [random_metric]  control_2_y = target_y + random.uniform(50, 150) * random.choice([-1, 1])
+    216  [random_metric]  page.wait_for_timeout(int(random.uniform(1000, 2500)))
+    322  [for_now]  # but following the existing pattern of creating context/page per action for now
+    370  [for_now]  # For now, we just upsert the latest data.
+    401  [for_now]  # For now, we use a simple flag.
+    493  [random_metric]  page.wait_for_timeout(int(random.uniform(500, 1000)))
+
+== backend/core/self_evolution/digital_twin/simulator.py  (13 hits)
+     77  [simulation]  Simulate a service failure and predict its impact.
+     85  [simulation]  # Find the service being simulated
+     93  [simulation]  # Simulate cascade effects
+    116  [random_metric]  simulation_id=f"sim_{int(start_time.timestamp())}_{random.randint(1000, 9999)}",
+    137  [simulation]  Simulate a traffic spike and predict its impact.
+    145  [simulation]  # Find the service being simulated
+    150  [simulation]  # Simulate the traffic increase
+    163  [simulation]  # Simulate cascade effects due to increased load
+    188  [random_metric]  simulation_id=f"sim_{int(start_time.timestamp())}_{random.randint(1000, 9999)}",
+    209  [simulation]  Simulate how a failure propagates through the system.
+    244  [random_metric]  if random.random() < cascade_probability:
+    261  [random_metric]  "estimated_delay_minutes": random.randint(1, duration_minutes),
+    272  [simulation]  Simulate how increased load propagates through the system.
+
+== scripts/security/audit_log_analyzer.py  (13 hits)
+    251  [simulation]  elif source == "simulated":
+    278  [simulation]  """Generate realistic simulated logs for testing."""
+    303  [random_metric]  for _ in range(random.randint(1, 5)):
+    305  [random_metric]  actor = f"user_{random.randint(1000, 9999)}"
+    315  [random_metric]  resource=f"/api/v1/{event_type}/{random.randint(1, 100)}",
+    318  [random_metric]  ip_address=f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}",
+    320  [random_metric]  lat=random.uniform(-90, 90),
+    321  [random_metric]  lon=random.uniform(-180, 180),
+    326  [random_metric]  for _ in range(random.randint(5, 15)):
+    329  [random_metric]  timestamp=current + timedelta(seconds=random.randint(0, 60)),
+    376  [random_metric]  current += timedelta(minutes=random.randint(1, 10))
+    436  [for_now]  recommended_action="Block IP(s) temporarily, force MFA, notify security team",
+    798  [simulation]  parser.add_argument("--source", choices=["firestore", "bigquery", "simulated"], default="simulated",
+
+== scripts/security/auto_find_blindspots.py  (13 hits)
+     42  [placeholder]  # বাংলা মন্তব্য: এই নিরীহ placeholder মান গুলো false positive তৈরি করে — ইচ্ছাকৃতভাবে whitelist করা হয়েছে
+     48  [placeholder]  "test-placeholder",
+     51  [dummy_fake]  "dummy-secret",
+     54  [dummy_fake]  # বাংলা মন্তব্য: এই ফাইলগুলো intentionally fake/test secrets ধারণ করে — secret scan থেকে সম্পূর্ণ বাদ
+     57  [dummy_fake]  "test_immune_system.py",     # tests security immune system with fake keys
+     58  [mock_literal]  "test_github_agent.py",      # tests github integration with mock tokens
+     92  [hardcoded]  """Finds hardcoded passwords, API keys, or other secrets."""
+     95  [placeholder]  # বাংলা মন্তব্য: Secret pattern — minimum 16 chars, non-placeholder মান।
+    109  [hardcoded]  # Specific hardcoded password from `blindspots-bangla.md`
+    111  [hardcoded]  findings.append((i, "🔴 Critical: Hardcoded 'supreme-god-" + "password' found."))
+    118  [placeholder]  # বাংলা মন্তব্য: Known test placeholder বা env var reference হলে skip করা হয়
+    124  [hardcoded]  findings.append((i, "🟠 High: Potential hardcoded secret or API key found."))
+    312  [mock_literal]  # কারণ test mock values build fail করা উচিত নয়
+
+== backend/core/orchestration/cloud_sandbox_orchestrator.py  (12 hits)
+     50  [hardcoded]  # বাংলা মন্তব্য: Hardcoded "https://api.runpod.io/v2" রিমুভ করা হলো
+     70  [mock_literal]  "Cannot create sandbox: API key is missing. Running in mock/dry-run mode."
+     72  [mock_literal]  mock_id = f"mock-sandbox-id-{os.urandom(4).hex()}"
+     73  [mock_literal]  self._active_sandboxes[mock_id] = {
+     78  [mock_literal]  "id": mock_id,
+     81  [mock_literal]  "mock": True,
+    116  [mock_literal]  "mock": True,
+    138  [mock_literal]  "stdout": f"Mock output for execution of: {command}",
+    140  [mock_literal]  "mock": True,
+    271  [not_implemented]  raise NotImplementedError(f"Endpoints for provider '{self.provider}' not implemented.")
+    276  [not_implemented]  raise NotImplementedError(
+    277  [not_implemented]  f"Payload preparation for provider '{self.provider}' not implemented."
+
+== backend/core/tier8/agent_evolution_engine.py  (12 hits)
+      4  [hardcoded]  selection, mutation, and fitness scoring. Zero hardcoded
+     50  [random_metric]  if random.random() < mutation_rate:
+     53  [random_metric]  if random.random() < 0.5 and all_skills:
+     61  [random_metric]  if random.random() < mutation_rate:
+     65  [random_metric]  if random.random() < mutation_rate:
+     66  [random_metric]  new_max_tokens = max(256, min(8192, self.max_tokens + random.randint(-512, 512)))
+    199  [hardcoded]  """Return default seed genomes — no hardcoded business logic."""
+    294  [random_metric]  child_skills = list(a.skills) if random.random() < 0.5 else list(b.skills)
+    295  [random_metric]  child_temp = a.temperature if random.random() < 0.5 else b.temperature
+    296  [random_metric]  child_max = a.max_tokens if random.random() < 0.5 else b.max_tokens
+    297  [random_metric]  child_tools = list(a.tool_allowlist) if random.random() < 0.5 else list(b.tool_allowlist)
+    298  [random_metric]  child_prompt = a.prompt_template if random.random() < 0.5 else b.prompt_template
+
+== backend/pyerrorfix/core/catalog.py  (12 hits)
+    136  [not_implemented]  "code": "NotImplementedError",
+    143  [not_implemented]  "fix_strategy": "Flag raise NotImplementedError in non-abstract methods",
+    288  [hardcoded]  "rule_id": "hardcoded-path",
+    611  [hardcoded]  "title": "Hardcoded secret",
+    616  [hardcoded]  "rule_id": "hardcoded-secret",
+    851  [hardcoded]  "rule_id": "hardcoded-path",
+    914  [mock_literal]  "title": "Dead mock (created, never used)",
+    915  [mock_literal]  "description": "unittest.mock created but never asserted on.",
+    916  [mock_literal]  "description_bn": "ইউনিট টেস্টে Mock তৈরি করা হলো কিন্তু ব্যবহার না হওয়া।",
+    919  [mock_literal]  "rule_id": "dead-mock",
+    920  [mock_literal]  "fix_strategy": "Remove the mock or add .assert_called_once()",
+    983  [hardcoded]  "description": "Hardcoded raise HTTPException(401/403) bypassing DI auth.",
+
+== scripts/ci/check_hardcoded_deployment_config.py  (12 hits)
+      4  [hardcoded]  Scans the codebase for hardcoded production hostnames (e.g. .onrender.com).
+      5  [hardcoded]  Enforces zero-hardcode configuration policy.
+      7  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+     84  [simulation]  # deployment hostnames to simulate different environments and are not
+     85  [hardcoded]  # themselves hardcoded production configuration.
+     99  [hardcoded]  r"supreme-admin-\d+-prod" # hardcoded passwords
+    116  [hardcoded]  # Zero-hardcode ALLOWED_HOSTS derivation (#298): the ONLY sanctioned
+    126  [hardcoded]  # Frontend entry is DISCOVERED (glob), not hardcoded.
+    277  [hardcoded]  print("🔍 Scanning codebase for hardcoded deployment configuration...")
+    324  [hardcoded]  print("\n🚨 Hardcoded deployment configuration detected!")
+    326  [hardcoded]  print("⚠️ ADVISORY MODE: Hardcoded deployment configuration detected but non-blocking.")
+    332  [hardcoded]  print("\n✅ PASS: No hardcoded deployment configuration found.")
+
+== scripts/quality/regression_scanner.py  (12 hits)
+     22  [hardcoded]  5. hardcoded-render-id   — CI YAML-এ literal srv-xxxxxxxx Render service ID (আগে বারবার
+     23  [hardcoded]  hardcode হয়ে গিয়েছিল, principle অনুযায়ী নিষিদ্ধ)
+     25  [hardcoded]  7. hardcoded-secret      — literal API key/secret/password/token pattern কোডে
+    308  [hardcoded]  # ── Check 5: hardcoded-render-id ────────────────────────────────────────────
+    323  [hardcoded]  "hardcoded-render-id",
+    328  [hardcoded]  "হিসেবে রাখা উচিত (no-hardcode নীতি অনুযায়ী)।",
+    357  [hardcoded]  # ── Check 7: hardcoded-secret (lightweight heuristic) ───────────────────────
+    362  [placeholder]  SECRET_ALLOW_PATTERNS = re.compile(r'os\.(environ|getenv)|test_|example|dummy|placeholder|xxx|your[_-]?', re.IGNORECASE)
+    379  [hardcoded]  "hardcoded-secret",
+    383  [hardcoded]  f"সম্ভাব্য hardcoded secret literal (key='{m.group(1)}') — manual review করুন, "
+    437  [hardcoded]  ("hardcoded-render-id", check_hardcoded_render_id),
+    439  [hardcoded]  ("hardcoded-secret", check_hardcoded_secret),
+
+== backend/tools/browser/browser_stealth.py  (11 hits)
+    110  [random_metric]  const noise = Math.floor(Math.random() * 10 - 5);
+    125  [random_metric]  for _ in range(random.randint(1, 3)):
+    127  [random_metric]  random.randint(0, 400),
+    128  [random_metric]  random.randint(0, 400),
+    129  [random_metric]  steps=random.randint(3, 6),
+    131  [random_metric]  await asyncio.sleep(random.uniform(0.3, 1.2))
+    132  [random_metric]  await page.mouse.wheel(0, random.randint(-120, 120))
+    134  [random_metric]  if random.random() > 0.6:
+    136  [random_metric]  random.randint(50, 300),
+    137  [random_metric]  random.randint(80, 300),
+    138  [random_metric]  delay=random.randint(80, 220),
+
+== scripts/ci/project_health_check.py  (11 hits)
+     11  [hardcoded]  - Hardcoded credentials in docker-compose
+     12  [placeholder]  - firebase.json placeholder URLs
+    253  [placeholder]  """Check firebase.json for placeholder example.com URLs."""
+    266  [placeholder]  "Placeholder URL 'example.com' found in firebase.json rewrite",
+    350  [hardcoded]  """Check docker-compose files for hardcoded credentials."""
+    371  [hardcoded]  f"Hardcoded default credential: {stripped}",
+    417  [dummy_fake]  if any(x in str(f).lower() for x in ["/tests/", "test_", "/examples/", "sample_", "dummy", "sa_admin.json"]):
+    423  [mock_literal]  # skip test/mock values
+    425  [mock_literal]  ["mock", "test", "example", "dummy", "fake"]):
+    571  [placeholder]  ("Firebase placeholder URLs", check_firebase_placeholder_urls),
+    575  [hardcoded]  ("Hardcoded credentials", check_hardcoded_credentials),
+
+== backend/pyerrorfix/detectors/linter_quality.py  (10 hits)
+      9  [mock_literal]  * `F841`  — dead mock (unittest.mock.Mock/patch created but never used in a test).
+    135  [mock_literal]  mock_names: dict[str, ast.AST] = {}
+    140  [mock_literal]  callee.endswith("Mock")
+    146  [mock_literal]  mock_names[stmt.targets[0].id] = stmt
+    147  [mock_literal]  if not mock_names:
+    154  [mock_literal]  for name, defn in mock_names.items():
+    157  [mock_literal]  rule_id="dead-mock",
+    161  [mock_literal]  title=f"Mock '{name}' created but never used",
+    162  [mock_literal]  message=f"The mock object '{name}' is created but never referenced "
+    167  [mock_literal]  fix_description="Remove the unused mock or add assertions on it.",
+
+== backend/tools/browser/web_fallback_agent.py  (10 hits)
+     92  [for_now]  # Capture final result screenshot (saved in temporary dir)
+    116  [simulation]  "Playwright is not installed. Falling back to simulated headless runner."
+    118  [mock_literal]  mock_steps = [
+    121  [simulation]  "action": f"Navigate to {url} (Simulated)",
+    126  [simulation]  "action": "Perform login sequence (Simulated)",
+    131  [simulation]  "action": f"Perform task: {task.get('action')} (Simulated)",
+    136  [simulation]  "action": "Extract results from UI elements (Simulated)",
+    144  [mock_literal]  "steps_executed": mock_steps,
+    145  [simulation]  "result_summary": f"Task '{task.get('action')}' completed successfully (Simulated fallback).",
+    146  [simulation]  "scraped_data": "Simulated web automation response data.",
+
+== backend/core/competitive_kit.py  (9 hits)
+     12  [dummy_fake]  ║  4. Citation Verifier (Improve on Perplexity's fake citations)    ║
+    802  [dummy_fake]  # 4. CITATION VERIFIER (Improve on Perplexity's Fake Citations!)
+    823  [dummy_fake]  Perplexity Problem: Sometimes generates fake/non-existent citations
+   1264  [simulation]  # Simulate API call (replace with actual calls)
+   1354  [placeholder]  """Call LLM API (placeholder - implement with actual SDK)"""
+   1356  [simulation]  await asyncio.sleep(0.1)  # Simulate network delay
+   1358  [simulation]  # Return simulated response
+   1463  [simulation]  # Simulate long conversation
+   1481  [simulation]  # Simulate various requests
+
+== backend/docs/examples/retry_integration_example.py  (9 hits)
+     23  [simulation]  # Simulate potential failure
+     26  [random_metric]  if random.random() < 0.6:  # 60% chance of failure
+     46  [simulation]  # Simulate potential failure
+     49  [random_metric]  if random.random() < 0.7:  # 70% chance of failure
+     63  [simulation]  # Simulate potential failure
+     66  [random_metric]  if random.random() < 0.5:  # 50% chance of failure
+     85  [random_metric]  if random.random() < 0.4:  # 40% chance of failure
+     94  [random_metric]  if random.random() < 0.4:  # 40% chance of failure
+    103  [random_metric]  if random.random() < 0.4:  # 40% chance of failure
+
+== backend/scripts/benchmark/load_test_phase3.py  (9 hits)
+      4  [mock_literal]  from unittest.mock import AsyncMock, patch
+     34  [mock_literal]  # Pre-configure mock DB if needed
+     41  [mock_literal]  # Mock LiteLLM so we don't make real API calls
+     42  [mock_literal]  with patch("litellm.acompletion", new_callable=AsyncMock) as mock_litellm:
+     43  [simulation]  # Simulate 1% failure rate for SelfHealer testing
+     44  [mock_literal]  def mock_acompletion_side_effect(*args, **kwargs):
+     47  [random_metric]  if random.random() < 0.01:
+     48  [simulation]  raise Exception("Simulated LiteLLM Error for SelfHealer")
+     51  [mock_literal]  mock_litellm.side_effect = mock_acompletion_side_effect
+
+== .github/scripts/constitution/rules/sec002_no_secret_hardcoding.py  (8 hits)
+     13  [hardcoded]  """Detects hardcoded secrets, API keys, tokens, and credentials."""
+     19  [hardcoded]  description="Code must not contain hardcoded API keys, tokens, passwords, or private credentials.",
+     25  [hardcoded]  # Patterns to detect hardcoded secrets
+     43  [hardcoded]  """Scan files for hardcoded secrets."""
+     59  [hardcoded]  """Check a single file for hardcoded secrets."""
+     79  [hardcoded]  message=f"Potential hardcoded secret detected ({description}): {line.strip()[:60]}...",
+     92  [mock_literal]  # Mock/test values
+     93  [mock_literal]  if any(x in line.lower() for x in ["mock", "test", "fake", "example", "dummy"]):
+
+== backend/agents/infrastructure/auto_scaling_agent.py  (8 hits)
+    128  [simulation]  # For now, we'll simulate values
+    138  [simulation]  # If metrics collector is not available, use simulated values
+    206  [simulation]  # Get current resource allocation (simulated)
+    398  [simulation]  """Get current resource allocation (simulated)."""
+    401  [for_now]  # For now, return default values
+    408  [simulation]  """Perform the actual scaling operation (simulated)."""
+    414  [simulation]  # Simulate a successful scaling operation
+    416  [simulation]  await asyncio.sleep(0.1)  # Simulate API call delay
+
+== backend/brain/model_router.py  (8 hits)
+      5  [hardcoded]  # error propagation -- আগে এই একই ফাইলে hardcoded fake "portfolio app" JSON
+      8  [hardcoded]  # hardcoded fake text "This is a response generated via the new UnifiedRouter"
+      9  [dummy_fake]  # রিটার্ন করত -- অর্থাৎ ঠিক সেই fake-response bug-টাই আবার ফিরে এসেছিল, শুধু
+    122  [mock_literal]  # Fallback mock dict structure
+    150  [mock_literal]  # বাংলা মন্তব্য: টেস্টে যদি async_route_and_generate কে mock করা হয়, তবে সেটিকেও সাপোর্ট করার জন্য ডাইনামিক কলিং
+    168  [hardcoded]  # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
+    208  [dummy_fake]  # বাংলা মন্তব্ব: এপিআই কী না থাকলে — আগে এখানে একটা হার্ডকোডেড fake "portfolio app"
+    212  [hardcoded]  # নির্দিষ্ট hardcoded স্কিমাকে বাস্তব জেনারেশন মনে না করে।
+
+== backend/core/config_fields.py  (8 hits)
+    108  [hardcoded]  # ── নেটওয়ার্ক কনফিগ — সব env-driven, কোনো hardcode নেই ────────────────
+    124  [hardcoded]  # hardcoded credential নয়। Control-plane (Node) data-path Phase B-এ।
+    144  [hardcoded]  default=[],  # 🔧 CHANGED: No hardcoded domains! Set USER_CORS_ORIGINS in env.
+    148  [hardcoded]  default=[],  # 🔧 CHANGED: No hardcoded domains! Set ADMIN_CORS_ORIGINS in env.
+    181  [hardcoded]  default=[],  # 🔧 CHANGED: No hardcoded hosts! Set ALLOWED_HOSTS in env.
+    187  [hardcoded]  # ── LLM rate limit thresholds — সব env-driven, hardcode নেই ─────────────
+    425  [hardcoded]  # বাংলা মন্তব্য: আগে llm_gateway.py-এ `estimated_cost = tokens * 0.00001` hardcoded ছিল।
+    437  [hardcoded]  # বাংলা মন্তব্য: health_monitor.py-এ hardcoded interval এখন config-driven।
+
+== backend/core/deployment/production_deploy.py  (8 hits)
+    379  [simulation]  # For demo purposes, we'll simulate the process
+    380  [simulation]  time.sleep(2)  # Simulate deployment time
+    409  [simulation]  time.sleep(1)  # Simulate deployment time
+    421  [simulation]  time.sleep(0.5)  # Simulate deployment time
+    432  [simulation]  time.sleep(1)  # Simulate deployment time
+    440  [mock_literal]  # For demo, we'll use a mock URL - in real implementation this would come from config
+    475  [simulation]  # Simulate rollback process
+    476  [simulation]  time.sleep(2)  # Simulate rollback time
+
+== backend/core/resilience/chaos_engine.py  (8 hits)
+     19  [random_metric]  if random.random() > 0.05:
+     24  [simulation]  logger.warning("💉 Chaos: Injecting 2s latency to simulate network spike")
+     28  [simulation]  raise TimeoutError("Simulated Chaos Timeout")
+     30  [simulation]  logger.warning("💉 Chaos: Simulating Redis connection loss")
+     32  [simulation]  # raise ConnectionError("Simulated Redis Connection Loss")
+     35  [simulation]  logger.critical("💉 Chaos: Simulating LLM Provider failure")
+     36  [simulation]  # We can raise a simulated exception or just rely on the timeout
+     37  [simulation]  raise ConnectionError("Simulated LLM Provider Down")
+
+== tools/knowledge/card_builder.py  (8 hits)
+     24  [hardcoded]  "missing docstring", "hardcoded secret", "missing error handling"
+    953  [dummy_fake]  "Phase 3: AutomatedFitnessEngine with precision scoring and zero fake fallbacks. "
+    984  [hardcoded]  "Uses configurable weights for composite scoring — all thresholds from settings, not hardcoded. "
+   1357  [todo_fixme]  "(2) Technical debt markers: TODO, FIXME, XXX, HACK across all code files. "
+   1599  [hardcoded]  tool_name="Gap Miner — Security Config Miner (Hardcoded Secret & Gitignore Scanner)",
+   1603  [hardcoded]  "scan hardcoded secrets", "security config miner", "gitignore missing rules",
+   1605  [hardcoded]  "api key hardcoded check", "security hygiene scan"
+   1611  [hardcoded]  "(2) possible hardcoded credentials (credential-like assignments >=16 chars), "
+
+== backend/api/routes/browser/_crown_jewel.py  (7 hits)
+      1  [mock_literal]  """Crown Jewel mock endpoints + the legacy in-memory task-step executor.
+     35  [mock_literal]  "summary": "This is a mock summary for " + str(body.get("url")),
+     36  [mock_literal]  "analysis": "This is a mock analysis.",
+     50  [mock_literal]  # Returns the mock screenshot already in /surf/screenshot
+     51  [mock_literal]  mock_png_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+     54  [mock_literal]  return Response(content=base64.b64decode(mock_png_base64), media_type="image/png")
+     64  [simulation]  # Simulate a step execution
+
+== backend/core/evolution_module.py  (7 hits)
+    133  [random_metric]  if random.random() < self.crossover_rate and len(parents) >= 2:
+    208  [random_metric]  if random.random() < gene.mutation_rate:
+    221  [random_metric]  chromosome_id=f"chromo_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}",
+    235  [random_metric]  pt = random.randint(0, min_len - 1)
+    239  [random_metric]  chromosome_id=f"chromo_cross_{datetime.now().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}",
+    266  [random_metric]  new_val = gene.value * random.uniform(0.95, 1.05)
+    290  [random_metric]  value=round(random.uniform(0.8, 0.98), 3),
+
+== backend/core/health/proactive_healer.py  (7 hits)
+     57  [for_now]  if any(term in err_str for term in ["timeout", "rate limit", "temporary", "connection"]):
+     81  [simulation]  # Since we can't truly re-run the transaction here easily, we just simulate L1 success
+    130  [simulation]  বাংলা: আগে এটি শুধু "simulated" log করত। এখন AutoScalingAgent (যদি enabled থাকে)
+    132  [simulation]  graceful fallback (আগের simulated behavior + PARTIAL)।
+    139  [simulation]  # AutoScalingAgent enabled না থাকলে graceful fallback (পুরোনো simulated behavior)
+    142  [simulation]  "ℹ️ L3: AutoScalingAgent disabled — simulated adapt (set ENABLE_AUTOSCALING_AGENT=true for real scaling)"
+    189  [simulation]  f"❌ L3 AutoScalingAgent integration failed: {e!r} — falling back to simulated"
+
+== backend/core/self_evolution/auto_skill_creator.py  (7 hits)
+     46  [dummy_fake]  # silently defined a no-op `run_sandbox_ast_check` dummy when the import failed,
+     56  [dummy_fake]  "without tools.code.fuzz_sandbox; refusing to fall back to an unsecured dummy."
+     70  [mock_literal]  # mock sink. Tests can assert against ``MOCKED_SKILL_WRITES`` — persistence in
+     76  [mock_literal]  """Test-env-only document mock that RECORDS writes instead of discarding."""
+     84  [mock_literal]  """Test-env-only collection mock that RECORDS writes instead of discarding."""
+    123  [mock_literal]  """P0: explicit test-environment detection for the MOCK persistence sink.
+    166  [mock_literal]  # no-op sink. Test env → explicit recording mock (writes captured
+
+== backend/pyerrorfix/detectors/core_python.py  (7 hits)
+      7  [not_implemented]  * NotImplementedError  — abstract method stubs left in production paths
+    118  [not_implemented]  "NotImplementedError",
+    459  [not_implemented]  # ---- NotImplementedError stubs ----
+    463  [not_implemented]  if name in ("NotImplementedError", "NotImplementedError()"):
+    466  [not_implemented]  code="NotImplementedError",
+    469  [not_implemented]  title="NotImplementedError stub",
+    470  [not_implemented]  message="Method raises NotImplementedError — likely an unfinished "
+
+== backend/pyerrorfix/detectors/files.py  (7 hits)
+      4  [hardcoded]  * FileNotFoundError  — open() of a hardcoded relative path without an
+     37  [hardcoded]  # hardcoded string path
+     43  [hardcoded]  rule_id="hardcoded-path",
+     47  [hardcoded]  title="Hardcoded system path in open()",
+     54  [hardcoded]  # missing exists-check / try-except for a relative hardcoded path
+     61  [hardcoded]  title="open() on hardcoded path without guard",
+     88  [hardcoded]  rule_id="hardcoded-path",
+
+== scripts/advanced_analysis/hardcode_config_scanner.py  (7 hits)
+      2  [hardcoded]  """SupremeAI hardcode-config scanner.
+      7  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+     43  [hardcoded]  # 1. No hardcoded production urls
+    157  [hardcoded]  # বাংলা: একটাও ফাইল না পেলে নীরবে 'zero-hardcode verified' বলা যাবে না
+    188  [hardcoded]  logger.error(f"❌ Hardcoded domain '{domain}' found in {p.relative_to(root)}:{idx+1}")
+    202  [hardcoded]  logger.error("🚨 Configuration scanner found hardcoded values. Please move these to Infisical/environment variables.")
+    205  [hardcoded]  logger.success("✅ Zero-hardcode configuration verified.")
+
+== scripts/ci/validate_frontend_build.py  (7 hits)
+      5  [hardcoded]  - No hardcoded Render/Vercel/Firebase URLs leaked into JS.
+     21  [hardcoded]  # These are known OLD hardcoded production hostnames that should not be in the built JS
+     49  [hardcoded]  # Check for hardcoded hostnames
+     51  [hardcoded]  violations.append("  ❌ Contains hardcoded deployment hostname (.onrender.com, etc.)")
+     55  [placeholder]  violations.append("  ❌ Contains unresolved deploy placeholder (e.g., {{USER_BACKEND_URL}})")
+    103  [hardcoded]  print("\n🚨 Build artifact validation failed! Secrets or hardcoded URLs detected.")
+    106  [hardcoded]  print("\n✅ PASS: Build artifact is clean (no leaked secrets or hardcoded deployment URLs).")
+
+== backend/agents/ide/trio_adapters.py  (6 hits)
+    330  [hardcoded]  # Security: hardcoded secrets
+    335  [hardcoded]  "message": f"Potential hardcoded secret on line {i}",
+    364  [todo_fixme]  if stripped.upper().startswith(("TODO", "FIXME")):
+    368  [todo_fixme]  "message": f"TODO/FIXME on line {i}",
+    512  [hardcoded]  f"Check: 1) No debug statements, 2) No hardcoded secrets, "
+    570  [hardcoded]  "output": "\n".join(found_secrets) if found_secrets else "No hardcoded secrets found",
+
+== backend/browser/semantic_dom.py  (6 hits)
+     63  [placeholder]  text: (el.innerText || el.value || el.ariaLabel || el.title || el.placeholder || '').trim().slice(0, 120),
+     65  [placeholder]  placeholder: el.placeholder || '',
+     76  [placeholder]  text: (el.innerText || el.value || el.ariaLabel || el.title || el.placeholder || '').trim().slice(0, 120),
+     78  [placeholder]  placeholder: el.placeholder || '',
+     91  [mock_literal]  # Fallback mock elements for headless or decoupled mode
+    132  [placeholder]  desc = f"{el.get('tag', '')} | {el.get('role', '')} | {el.get('text', '')} | {el.get('placeholder', '')}"
+
+== backend/core/agents/framework/task_runner_agent.py  (6 hits)
+    185  [placeholder]  "message": "Verification placeholder: run tests after applying fix.",
+    190  [placeholder]  "message": "Scaffold placeholder: create module under interfaces/tools/brain/.",
+    194  [placeholder]  output = {"message": "Implementation placeholder: delegate to coding tooling."}
+    197  [placeholder]  "message": "Tests placeholder: add unit tests in tests/ for new feature.",
+    201  [placeholder]  output = {"message": "Inputs review placeholder: gather docs, code, data sources."}
+    204  [placeholder]  "message": "Analysis placeholder: summarize current state and risks.",
+
+== backend/core/optimization/performance_optimizer.py  (6 hits)
+    323  [mock_literal]  # Create a mock connection object (replace with actual connection logic)
+    334  [mock_literal]  # For now, returning a mock object
+    341  [simulation]  # Simulate query execution
+    342  [simulation]  await asyncio.sleep(0.01)  # Simulate network delay
+    677  [simulation]  """Simulate an expensive calculation."""
+    678  [simulation]  await asyncio.sleep(0.1)  # Simulate work
+
+== backend/core/self_evolution/agent_breeder.py  (6 hits)
+     32  [hardcoded]  # Configuration (settings-driven, zero hardcode)
+    112  [random_metric]  parent_a[key] if random.random() < 0.5 else parent_b[key]
+    137  [random_metric]  if random.random() > mutation_rate:
+    153  [random_metric]  if random.random() < 0.5:
+    157  [random_metric]  target_len = max(1, int(len(value) * random.uniform(0.8, 1.2)))
+    310  [random_metric]  if random.random() > self._config.crossover_rate:
+
+== backend/core/self_evolution/digital_twin/remediation_engine.py  (6 hits)
+     43  [mock_literal]  return "mock-backup-id"
+    251  [simulation]  # Simulate traffic spike to understand impact
+    497  [simulation]  # Simulate restart
+    499  [for_now]  return True  # Assume success for now
+    588  [for_now]  # Create a temporary plan-like execution
+    620  [simulation]  # Simulate some remediation actions
+
+== backend/core/universal_rules.py  (6 hits)
+    353  [todo_fixme]  # TODO, pass, NotImplemented pattern থাকলে block করে।
+    358  [todo_fixme]  r"#\s*TODO",
+    359  [todo_fixme]  r"#\s*FIXME",
+    361  [not_implemented]  r"raise\s+NotImplementedError",
+    363  [placeholder]  r"#\s*placeholder",
+    433  [for_now]  # Atomic write using a temporary file
+
+== backend/tools/social/email_agent.py  (6 hits)
+     16  [dummy_fake]  সবসময় একটি হার্ডকোড করা fake OTP ("849301") রিটার্ন করত — /integrations/email/gmail এবং
+     22  [dummy_fake]  সত্যিকারের ইনবক্স পোল করে OTP খোঁজে — কোনো fake ডেটা রিটার্ন করে না।
+     36  [not_implemented]  আগে এখানে চুপচাপ True রিটার্ন হতো — এখন fail-closed: NotImplementedError রেইজ করে
+     40  [not_implemented]  f"Gmail OAuth connect requested (provider={provider}, scopes={scopes}) — OAuth flow not implemented yet."
+     42  [not_implemented]  raise NotImplementedError("Gmail OAuth flow is not implemented yet.")
+    162  [dummy_fake]  """সংযুক্ত ইনবক্স থেকে রিয়েল OTP পোল করে — কখনো fabricated OTP বা fake 'stored_in_vault' দাবি করে না।"""
+
+== scripts/deploy/disaster_recovery_test.py  (6 hits)
+    180  [simulation]  # Create simulated backup
+    183  [simulation]  sim_backup.write_text("-- Simulated backup\nSELECT 1;")
+    184  [simulation]  step.output = "Created simulated backup for testing"
+    237  [simulation]  # Simulate network partition test
+    240  [simulation]  step.output = "Network partition resilience verified (simulated)"
+    282  [simulation]  # Calculate recovery time (simulated)
+
+== scripts/generate_openapi.py  (6 hits)
+     27  [dummy_fake]  os.environ.setdefault("DOCS_PASSWORD", "dummy")
+     30  [dummy_fake]  os.environ.setdefault("OPENROUTER_API_KEY", "dummy")
+     31  [mock_literal]  os.environ.setdefault("SUPABASE_DATABASE_URL", "postgresql+asyncpg://mock:mock@localhost:5432/mock_db")
+     32  [mock_literal]  os.environ.setdefault("SUPABASE_DATABASE_URL_POOLER", "postgresql+asyncpg://mock:mock@localhost:5432/mock_db")
+     33  [mock_literal]  os.environ.setdefault("SUPABASE_URL", "https://mock.supabase.co")
+     34  [mock_literal]  os.environ.setdefault("SUPABASE_KEY", "mock-key")
+
+== scripts/i18n/rtl_support_checker.py  (6 hits)
+    104  [hardcoded]  # Check for hardcoded LTR values that should be RTL-aware
+    112  [hardcoded]  message="Hardcoded margin direction may cause RTL issues",
+    123  [hardcoded]  message="Hardcoded padding direction may cause RTL issues",
+    134  [hardcoded]  message="Hardcoded float direction may cause RTL issues",
+    175  [hardcoded]  # Check for hardcoded text direction
+    182  [hardcoded]  message="Hardcoded LTR direction detected",
+
+== scripts/quality/self_audit_scan.py  (6 hits)
+     15  [hardcoded]  6. Hardcoded secret-সদৃশ প্যাটার্ন (basic heuristic, false-positive-prone)
+     18  [todo_fixme]  9. TODO / FIXME / HACK / XXX ট্র্যাকিং
+     81  [todo_fixme]  if any(x in line for x in ("TODO", "FIXME", "XXX", "HACK")):
+    156  [mock_literal]  continue  # টেস্ট mock value বাদ — false positive কমাতে
+    191  [hardcoded]  print(f"Possible hardcoded secrets: {len(report['possible_hardcoded_secrets'])}")
+    194  [todo_fixme]  print(f"TODO/FIXME/HACK comments:   {len(report['todo_fixmes'])}")
+
+== scripts/security/auto_vulnerability_scanner.py  (6 hits)
+    326  [dummy_fake]  "pytagora", "mitmproxy2", "opencv-python-headless-fake",
+    458  [hardcoded]  category="hardcoded-secret",
+    462  [hardcoded]  message="Potential hardcoded API key in source",
+    530  [placeholder]  if line_content.startswith("#") or "example" in line_content.lower() or "placeholder" in line_content.lower():
+    532  [todo_fixme]  if "YOUR_" in line_content or "XXX" in line_content or "***" in line_content:
+    632  [placeholder]  tool="tfsec-placeholder",
+
+== backend/api/middleware.py  (5 hits)
+    190  [random_metric]  if random.random() < self.latency_spike_chance:
+    191  [random_metric]  delay = random.uniform(0.5, self.max_latency_spike)
+    197  [random_metric]  if random.random() < self.packet_drop_rate:
+    199  [simulation]  f"[CHAOS ENGINE] Simulated Packet Drop! Severing connection for {request.url.path}"
+    204  [simulation]  "title": "Gateway Timeout (Chaos Simulated)",
+
+== backend/api/routes/billing_api.py  (5 hits)
+    269  [for_now]  detail="Stripe is not configured. Payment processing is temporarily unavailable.",
+    271  [mock_literal]  logger.warning("Stripe API key not set in settings. Using mock checkout session.")
+    273  [mock_literal]  "status": "mock",
+    274  [mock_literal]  "session_id": "mock_session_123",
+    275  [mock_literal]  "url": payload.success_url + "?session_id=mock_session_123",
+
+== backend/api/routes/browser/_surf_actions.py  (5 hits)
+      1  [mock_literal]  """Legacy mock surf action endpoints (navigate/click/fill/type/activity feed).
+     41  [mock_literal]  # Return a mock transparent 1x1 PNG or read browser screenshot if initialized
+     42  [mock_literal]  mock_png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+     43  [mock_literal]  return {"screenshot": mock_png}
+    112  [simulation]  @router.post("/simulate-activity")
+
+== backend/api/routes/simulator.py  (5 hits)
+     36  [mock_literal]  _PROFILE_TTL = 30 * 86400  # 30 days — mock/test data, not meant to be permanent
+    158  [mock_literal]  if "Mock" in client_type:
+    161  [mock_literal]  if not url or "mock" in url.lower():
+    281  [hardcoded]  # ✅ FIXED: Use dynamic URL instead of hardcoded 127.0.0.1 # is_local()
+    338  [hardcoded]  # ✅ FIXED: Use dynamic websocket URL instead of hardcoded 127.0.0.1 # is_local()
+
+== backend/core/config.py  (5 hits)
+      7  [hardcoded]  are loaded from environment variables or a secret manager, with zero hardcoded values.
+     45  [hardcoded]  # বাংলা মন্তব্য: সম্পূর্ণ রি-ফ্যাক্টর — Fail-Fast, Zero-Hardcode, Pydantic-Enforced Config Layer।
+     46  [hardcoded]  # কোনো API Key, hardcoded domain বা threshold এখানে নেই।
+     84  [hardcoded]  কোনো hardcoded value নেই। সব env-driven।
+    170  [hardcoded]  return False  # Production-এ সর্বদা False — hardcoded guard
+
+== backend/core/config_validation.py  (5 hits)
+    234  [mock_literal]  "⚠️ Stripe API key missing in production/staging. Billing features will run in mock mode."
+    346  [hardcoded]  # Zero-hardcode policy: bare public platform apex domains are NEVER
+    386  [placeholder]  #      allowed_hosts and deliberately excludes the bare placeholder
+    394  [hardcoded]  # Zero-hardcode: fail closed. The old last-resort bare-apex
+    410  [placeholder]  # placeholder keeps those tests isolated without weakening runtime
+
+== backend/core/llm/token_deductor.py  (5 hits)
+      1  [hardcoded]  """Token Deduction Module — Secure Token Management & Billing Prevention (Zero-Hardcode)
+      4  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven।
+     20  [mock_literal]  from unittest.mock import MagicMock
+     27  [dummy_fake]  # Dummy handle for test monkeypatching compatibility
+     93  [mock_literal]  # Execute mock session query to extract wallet balance
+
+== backend/core/messaging/service.py  (5 hits)
+     11  [mock_literal]  """A mock implementation of MessagingProvider for local development."""
+     17  [mock_literal]  return MessageResult(success=True, message_id=str(uuid.uuid4()), provider="mock")
+     29  [mock_literal]  3. Mock (fallback — local dev এর জন্য)
+     31  [mock_literal]  সব provider optional — কোনোটা configured না থাকলে Mock fallback।
+     92  [mock_literal]  # 4. Fallback to mock adapter
+
+== backend/database/supabase_client.py  (5 hits)
+    159  [mock_literal]  f"Supabase Client initialization failed: {e}. Falling back to Mock Supabase Client."
+    162  [mock_literal]  self.client = create_client("https://mock.supabase.co", "mock-key")
+    163  [mock_literal]  except Exception as mock_err:
+    165  [mock_literal]  logger.error(f"Fallback mock Supabase Client creation failed: {mock_err}")
+    169  [mock_literal]  "SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/mock mode."
+
+== backend/examples/sample_buggy.py  (5 hits)
+     18  [hardcoded]  # --- hardcoded secret (security) - resolved via environment ---
+    106  [todo_fixme]  except:  # TODO(final-test-7a): intentionally kept bare — this file is the pyerrorfix E722 detector fixture; narrowing it would defeat the demo
+    193  [mock_literal]  from unittest.mock import Mock
+    197  [mock_literal]  # dead mock: created but never used
+    198  [mock_literal]  Mock()
+
+== backend/storage/r2_storage_client.py  (5 hits)
+     23  [mock_literal]  "Cloudflare R2 credentials missing. R2StorageClient will run in dry-run/mock mode."
+     41  [mock_literal]  logger.info(f"Dry-run: Generating mock presigned upload URL for {object_name}")
+     42  [mock_literal]  return f"https://mock-r2-upload.local/{self.bucket_name}/{object_name}?expires={expiration}&type={file_type}"
+     62  [mock_literal]  logger.info(f"Dry-run: Generating mock presigned download URL for {object_name}")
+     63  [mock_literal]  return f"https://mock-r2-download.local/{self.bucket_name}/{object_name}?expires={expiration}"
+
+== backend/tools/agent_tools.py  (5 hits)
+      4  [mock_literal]  আগে এগুলো সম্পূর্ণ mock/hardcoded ছিল — এখন সম্পূর্ণ production-ready রিয়েল ইমপ্লিমেন্টেশন।
+     22  [hardcoded]  বাংলা মন্তব্য: আগে hardcoded "Found 3 matching records" রিটার্ন করা হতো।
+     88  [hardcoded]  বাংলা মন্তব্য: আগে hardcoded "CPU: 12%, RAM: 45%" রিটার্ন হতো।
+    170  [hardcoded]  বাংলা মন্তব্য: আগে hardcoded "Hello from SupremeAI Sandbox!" রিটার্ন হতো।
+    190  [simulation]  mode = "simulated" if result.get("simulated") else "docker"
+
+== backend/tools/code/diagram_to_architecture.py  (5 hits)
+     98  [hardcoded]  # hardcoded infrastructure — every failure path now surfaces the real error
+    127  [hardcoded]  # ✅ FIXED: removed hardcoded HCL fallback — a generation failure must be
+    128  [dummy_fake]  # visible to the caller, not disguised as a valid (fake) result.
+    156  [hardcoded]  # ✅ FIXED: removed hardcoded manifest fallback for the same reason as Terraform above.
+    190  [hardcoded]  # ✅ FIXED: removed hardcoded schema fallback for the same reason as Terraform above.
+
+== scripts/advanced_analysis/bengali_i18n_completeness_checker.py  (5 hits)
+     50  [placeholder]  STATUS_PLACEHOLDER = "PLACEHOLDER"
+    440  [placeholder]  "placeholder": pl,
+    520  [placeholder]  print(_bn(f"  কপি-পেস্ট ({e_pl}):         {s['placeholder']}"))
+    536  [placeholder]  gaps = s["missing"] + s["placeholder"] + s["empty"]
+    622  [placeholder]  f"      ⚠️ placeholder মিসম্যাচ: "
+
+== scripts/ai/feature_store_sync.py  (5 hits)
+     99  [simulation]  # Simulate fetching from different source types
+    107  [simulation]  # Default: simulate local store
+    143  [simulation]  logger.warning("Redis not available, using simulated data")
+    171  [simulation]  # Generate simulated features
+    178  [simulation]  description=f"Simulated feature {i}",
+
+== scripts/devops/bug_prophet.py  (5 hits)
+    282  [hardcoded]  # BP010: Hardcoded secrets
+    288  [hardcoded]  "Possible hardcoded secret detected. Move to environment variables or secrets manager.",
+    291  [todo_fixme]  # BP011: TODO/FIXME with high severity keywords
+    292  [for_now]  if "#" in stripped and any(k in stripped.lower() for k in ["hack", "temporary", "temp fix", "xxx"]):
+    294  [for_now]  "Temporary/hacky code comment found. Address before merging.",
+
+== tools/gap_finder/config.py  (5 hits)
+     79  [todo_fixme]  ("TODO", re.compile(r"\bTODO\b", re.IGNORECASE), "debt"),
+     80  [todo_fixme]  ("FIXME", re.compile(r"\bFIXME\b", re.IGNORECASE), "debt"),
+     81  [todo_fixme]  ("HACK", re.compile(r"\bHACK\b", re.IGNORECASE), "debt"),
+     82  [todo_fixme]  ("XXX", re.compile(r"\bXXX\b", re.IGNORECASE), "debt"),
+     83  [todo_fixme]  ("NOT_IMPLEMENTED", re.compile(r"NotImplementedError|TODO.*implement", re.IGNORECASE), "incomplete"),
+
+== tools/gap_finder/scanner.py  (5 hits)
+    154  [placeholder]  if "example" in low or "placeholder" in low or "<your-" in low:
+    162  [hardcoded]  title="Potential hardcoded secret",
+    194  [todo_fixme]  # TODO/FIXME/HACK/stubs
+    229  [simulation]  verification="Simulate dependency failure and verify protected operations return denial/503 rather than proceed.",
+    819  [for_now]  remediation="Choose one canonical token/theme source and expose compatibility adapters temporarily.",
+
+== backend/adaptive_engine/resource_registry.py  (4 hits)
+    123  [not_implemented]  raise NotImplementedError(f"{self.provider} adapter does not implement restart")
+    126  [not_implemented]  raise NotImplementedError(f"{self.provider} adapter does not implement deploy")
+    129  [not_implemented]  raise NotImplementedError(f"{self.provider} adapter does not implement rollback")
+    306  [not_implemented]  except NotImplementedError as exc:
+
+== backend/api/routes/browser_routes.py  (4 hits)
+      5  [mock_literal]  Real API endpoints for CrownJewelBrowser - transforms it from mock to production!
+    150  [mock_literal]  Integrates with LLM Gateway for actual intelligence instead of mock responses.
+    284  [for_now]  status_code=503, detail=f"AI service temporarily unavailable: {str(e)}"
+    291  [hardcoded]  Still better than the original hardcoded responses!
+
+== backend/byoc/container_orchestrator.py  (4 hits)
+     26  [simulation]  logger.warning("Terraform binary not found. Running in simulated fallback mode.")
+     31  [mock_literal]  "service_url": f"https://byoc-skill-{skill}-mock-url.a.run.app",
+     32  [simulation]  "mode": "simulated",
+    126  [simulation]  "mode": "simulated",
+
+== backend/core/health/self_healer.py  (4 hits)
+    206  [for_now]  # This wrapper script will write the fix to a temporary file, run pytest on the tests directory, and return the exit code.
+    207  [simulation]  # Note: In a real scenario, we would mount the codebase into the sandbox. Here we simulate the pytest run.
+    212  [dummy_fake]  # Write the fix to a dummy module or apply patch if we had full codebase access
+    219  [simulation]  # Simulate tests passing for the patched code if syntax is valid in this sandbox run
+
+== backend/core/orchestration/periodic_task_scheduler.py  (4 hits)
+    126  [simulation]  # Calculate simulated/estimated cost based on edge count
+    148  [simulation]  # Simulate executing the skill and updating weights on success
+    149  [simulation]  # Trigger simulated failure specifically on B to verify fallback
+    173  [simulation]  raise RuntimeError("Simulated execution failure inside Skill_B")
+
+== backend/core/performance_enhancer.py  (4 hits)
+    524  [for_now]  # Execute the task - for now we'll skip the direct LLM call to avoid circular import
+    527  [simulation]  # Instead of calling LLM directly, we'll return a simulated result
+    531  [simulation]  "text": f"Simulated result for task: {item.get('prompt', 'default prompt')}",
+    576  [simulation]  # For now, we return a simulated response
+
+== backend/core/retry_handler.py  (4 hits)
+     60  [random_metric]  jitter = random.uniform(0.1, 0.3) * current_delay
+    101  [random_metric]  jitter = random.uniform(0.1, 0.3) * current_delay
+    184  [random_metric]  jitter = random.uniform(0.1, 0.3) * current_delay
+    228  [random_metric]  jitter = random.uniform(0.1, 0.3) * current_delay
+
+== backend/core/security/scanning/secret_scanner.py  (4 hits)
+      3  [hardcoded]  Scans codebase for hardcoded API keys, tokens, and passwords using
+    171  [hardcoded]  "type": "Hardcoded Password",
+    222  [hardcoded]  remediation=f"Remove hardcoded {config['type']} and use environment variables or secret manager",
+    281  [hardcoded]  Review the following code snippet and determine if it contains any hardcoded secrets, API keys, tokens, or passwords.
+
+== backend/core/security/secret_vault.py  (4 hits)
+    412  [mock_literal]  env_fallback = "https://mock.supabase.co"
+    414  [mock_literal]  env_fallback = "mock-key"
+    416  [mock_literal]  env_fallback = f"mock_{secret_id}"
+    456  [mock_literal]  logger.debug(f"Non-JSON or mock value for secret '{secret_id}': {e}")
+
+== backend/core/self_evolution/neural_symbolic/integration.py  (4 hits)
+    159  [placeholder]  # Placeholder for more sophisticated theorem proving
+    163  [for_now]  # For now, implement a basic logical checker
+    280  [placeholder]  )  # Vocabulary size placeholder
+    489  [for_now]  # For now, just return the parsed form
+
+== backend/core/unified_memory.py  (4 hits)
+     55  [for_now]  # For now, assuming it's called from an agent context where summary is pre-made
+     56  [placeholder]  summary = content[:200]  # Placeholder
+     57  [placeholder]  structure = "{}"  # Placeholder
+     59  [for_now]  file_path=session_id,  # Map session_id to file_path for now
+
+== backend/database/session.py  (4 hits)
+    235  [placeholder]  # ── Import-safe placeholder for degraded REST-only mode ────────────────────
+    240  [placeholder]  # update_failed loop (primary + scraper উভয় node প্রভাবিত)। এই placeholder
+    260  [dummy_fake]  # while degraded — never returns a fake object (fail-closed preserved).
+    317  [for_now]  detail="Service temporarily unavailable due to high load (DB pool exhausted).",
+
+== backend/pyerrorfix/detectors/security.py  (4 hits)
+      4  [hardcoded]  * Hardcoded secrets — assignment of string literals to names like
+    129  [hardcoded]  rule_id="hardcoded-secret",
+    133  [hardcoded]  title=f"Hardcoded secret in '{target.id}'",
+    134  [hardcoded]  message=f"'{target.id}' is assigned a hardcoded string. "
+
+== backend/services/dynamic_ai/provider_registry.py  (4 hits)
+     76  [placeholder]  # Check if key looks valid (not empty, not placeholder)
+    116  [hardcoded]  This is where we define provider templates (NOT hardcoded keys!)
+    488  [for_now]  f"🔴 Provider {provider_id} temporarily disabled ({config.consecutive_failures} failures)"
+    511  [for_now]  f"🚫 Provider {provider_id} disabled ({'permanent' if permanent else 'temporary'})"
+
+== backend/services/ide_trio/kilo_reviewer.py  (4 hits)
+     38  [hardcoded]  "SEC003": "No hardcoded secrets or credentials",
+     94  [hardcoded]  message="Potential hardcoded password detected",
+    111  [todo_fixme]  # Check for TODO/FIXME comments
+    112  [todo_fixme]  if "TODO" in line or "FIXME" in line or "HACK" in line:
+
+== backend/services/minio_client.py  (4 hits)
+     78  [mock_literal]  logger.warning("MinIO client not installed, using mock mode")
+    108  [mock_literal]  # Mock mode for zero-cost
+    111  [mock_literal]  "status": "mock_success",
+    202  [mock_literal]  return True  # Mock success
+
+== backend/tools/code/auto_test_generator.py  (4 hits)
+    158  [mock_literal]  mock_instruction = (
+    177  [mock_literal]  "Use vi.mock() for module mocks. Use describe/it/expect.\n"
+    181  [mock_literal]  "Use Jest. Use jest.mock() for mocks. describe/it/expect pattern.\nUse beforeEach/afterEach for setup/teardown."
+    202  [mock_literal]  - {mock_instruction}
+
+== backend/tools/code/image_to_code.py  (4 hits)
+    149  [hardcoded]  # ✅ FIXED: removed hardcoded default palette fallback — a fake palette
+    173  [hardcoded]  # ✅ FIXED: removed hardcoded single-node tree fallback for the same reason as above.
+    183  [dummy_fake]  # that emptiness to silently fall back to fake defaults. Now the failure propagates.
+    228  [placeholder]  # hardcoded placeholder component disguised as a successful generation — every
+
+== backend/tools/code/pr_reviewer.py  (4 hits)
+     60  [hardcoded]  "type": "Hardcoded Password",
+     64  [hardcoded]  "type": "Hardcoded Secret",
+     88  [todo_fixme]  if not found_security_issue and "TODO" in line:
+     94  [todo_fixme]  "body": "Found a 'TODO' comment. Please add a ticket reference.",
+
+== backend/tools/graph_service.py  (4 hits)
+     19  [mock_literal]  # বাংলা মন্তব্য: যদি পাসওয়ার্ড না থাকে, অথবা টেস্ট এনভায়রনমেন্টে মক সিক্রেট থাকে (যেমন: 'mock_NEO4J_URI'), তবে ড্রাই-রান মোড চালু হবে।
+     22  [mock_literal]  or self.uri.startswith("mock_")
+     23  [mock_literal]  or (isinstance(self.password, str) and self.password.startswith("mock_"))
+     28  [mock_literal]  "NEO4J_PASSWORD missing or mock credentials detected. GraphService will run in dry-run/mock mode."
+
+== scripts/advanced_analysis/error_handling_consistency_checker.py  (4 hits)
+    100  [hardcoded]  # লম্বা স্ট্রিং কনস্ট্যান্ট (সম্ভাব্য hardcoded secret)
+    102  [hardcoded]  LONG_STRING_PATTERN = ('f[' + QUOTES + '].*[A-Za-z0-9+/]{32,}.*[' + QUOTES + ']', 'সম্ভাব্য hardcoded secret লিক')
+    349  [not_implemented]  'NotImplementedError', 'StopIteration'):
+    542  [hardcoded]  # লম্বা hardcoded string চেক
+
+== scripts/db/ingest_knowledge.py  (4 hits)
+     86  [mock_literal]  """Deterministic mock for pipeline smoke tests / CI. NOT for production retrieval."""
+     87  [mock_literal]  name = "hash-mock"
+    139  [random_metric]  sleep_for = delay * (2 ** (attempt - 1)) + random.uniform(0, 0.5)
+    432  [mock_literal]  print("[embed] WARNING: hash-mock embedder — output is NOT production-usable")
+
+== scripts/deploy/generate_firebase_config.py  (4 hits)
+      6  [hardcoded]  Zero-hardcode policy — fails fast (exit 1) if any of the following hold:
+    148  [placeholder]  # Placeholder detection must match the *pattern* {{NAME}}, not a bare "}}"
+    155  [placeholder]  f"❌ ERROR: Unresolved placeholder {unresolved.group(0)!r} remains in "
+    166  [hardcoded]  # Verify rewrite semantics — fail closed (was WARNING-only before zero-hardcode)
+
+== scripts/pre_merge_guard.py  (4 hits)
+     44  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+    439  [hardcoded]  Also flags deployed-host URLs hardcoded in src."""
+    449  [hardcoded]  findings.append(Finding("fe-env-hygiene", "MEDIUM", "deployed host hardcoded in source (rotation requires rebuild)",
+    682  [hardcoded]  existing_script("hardcoded-deploy-config", "config", [sys.executable, "scripts/ci/check_hardcoded_deployment_config.py"], severity="MEDIUM"),
+
+== scripts/quality/docs_drift_check.py  (4 hits)
+     12  [todo_fixme]  - "ALL PHASES/TASKS COMPLETED"-জাতীয় claim vs repo-তে এখনো TODO/FIXME থাকা কিনা
+     29  [todo_fixme]  "STATUS.md", "TODO.md", "CHECKPOINT.md", "task_progress.md",
+     59  [todo_fixme]  count += len(re.findall(r"\b(TODO|FIXME|XXX)\b", text))
+     81  [todo_fixme]  f"{name}: claims 'ALL PHASES/TASKS COMPLETED' but {real_todos} TODO/FIXME/XXX "
+
+== scripts/testing/auto_test_generator.py  (4 hits)
+     67  [mock_literal]  3. Mock external dependencies (databases, APIs, file I/O)
+    243  [mock_literal]  "from unittest.mock import Mock, patch, AsyncMock",
+    256  [todo_fixme]  "    # TODO: Implement actual test logic",
+    257  [placeholder]  "    assert True  # Placeholder",
+
+== tools/pipeline_recipe_compiler.py  (4 hits)
+    146  [hardcoded]  recipe_name="Self-Heal: Security Vulnerability / CVE / Hardcoded Secret",
+    149  [hardcoded]  "hardcoded secret", "plaintext password", "CVE", "security vulnerability",
+    152  [hardcoded]  problem_description="A security gap (hardcoded credential, injection vulnerability, or exposed secret) has been detected. The pipeline identifies the exact location, applies a secure pattern
+    292  [hardcoded]  problem_description="Security-focused audit scanning for hardcoded secrets, injection vulnerabilities, SSRF risks, authentication gaps, and memory isolation integrity.",
+
+== .github/scripts/constitution/rules/arch001_no_local_machine.py  (3 hits)
+     13  [hardcoded]  """Detects hardcoded localhost, 127.0.0.1, and Windows-specific paths in production code."""
+     22  [hardcoded]  details="Detected hardcoded local machine dependencies that would break in cloud environments.",
+     80  [hardcoded]  message=f"Hardcoded localhost/127.0.0.1 detected: {line_text.strip()[:80]}",
+
+== backend/adapters/red_team_adapter.py  (3 hits)
+    165  [hardcoded]  description="Hardcoded secret/key found in code",
+    232  [hardcoded]  """Monitor for hardcoded secret patterns."""
+    249  [hardcoded]  description=f"Potential hardcoded secret pattern: {name}",
+
+== backend/agents/infrastructure/cost_optimization_agent.py  (3 hits)
+    189  [simulation]  # Calculate costs based on simulated pricing
+    452  [simulation]  """Get current usage metrics (simulated for demo purposes)."""
+    455  [simulation]  # For now, return simulated values
+
+== backend/api/routes/crawler_admin.py  (3 hits)
+      9  [placeholder]  restart মানেই সব governance state হারানো এবং GET /events ছিল hardcoded placeholder
+     17  [placeholder]  GET   /events                   — সত্যিকারের telemetry (আর placeholder নয়)
+    185  [hardcoded]  """Retrieves real crawl telemetry events (previously a hardcoded stub)."""
+
+== backend/api/routes/stream_voice_sse.py  (3 hits)
+     60  [placeholder]  # NOTE: VoiceService currently returns a dummy placeholder audio
+     63  [placeholder]  # real audio. For now we emit the placeholder + metadata so the
+     65  [placeholder]  audio_bytes = b"RIFF....WAVEfmt ....data...."  # placeholder
+
+== backend/core/app_builder.py  (3 hits)
+      4  [hardcoded]  """FastAPI Application Builder — Centralized Middleware & Dependency Injection (Zero-Hardcode)
+      8  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven।
+    180  [placeholder]  #      placeholder never resolved) → None.connect() AttributeError.
+
+== backend/core/factual_verifier.py  (3 hits)
+     76  [mock_literal]  # বাংলা মন্তব্য: _ddgs attribute যোগ করা হলো যাতে tests mock করতে পারে
+    138  [simulation]  "method": "simulated",
+    141  [mock_literal]  # If _ddgs mock or instance is provided by test or runtime
+
+== backend/core/health_check.py  (3 hits)
+      1  [hardcoded]  """Health Check Implementation — Comprehensive System & Subsystem Monitoring (Zero-Hardcode)
+      4  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven। এগ্রিগেটেড হেল্থ স্ট্যাটাস দেয়।
+    153  [placeholder]  আগে এই মেথডটি placeholder হিসেবে সবসময় "healthy" রিটার্ন করত — যা monitoring-এর
+
+== backend/core/orchestration/swarm_agent_roles.py  (3 hits)
+     17  [not_implemented]  raise NotImplementedError(f"{self.__class__.__name__}.run() must be implemented")
+    154  [simulation]  # Simulating running ImmuneSystem AST scan and Python validations
+    440  [simulation]  # For this PoC, we'll simulate executing the first available tool.
+
+== backend/core/plugins/experimental/base.py  (3 hits)
+     29  [not_implemented]  layer treats NotImplementedError as "not yet connected" instead of a crash
+     38  [not_implemented]  raise NotImplementedError
+     50  [not_implemented]  raise NotImplementedError
+
+== backend/core/security/audit/security_auditor.py  (3 hits)
+    104  [hardcoded]  "title": "Hardcoded Secret Detected",
+    105  [hardcoded]  "description": "A potential API key, secret, or password is hardcoded in source code",
+    638  [hardcoded]  "🔐 Use environment variables for all secrets (never hardcode)",
+
+== backend/core/security/autonoguard_middleware.py  (3 hits)
+     73  [mock_literal]  if admin_id is not None and not hasattr(admin_id, "_mock_name")
+     80  [mock_literal]  str(raw_ip) if raw_ip is not None and not hasattr(raw_ip, "_mock_name") else "unknown"
+     84  [mock_literal]  str(corr_id) if corr_id is not None and not hasattr(corr_id, "_mock_name") else None
+
+== backend/core/self_evolution/adversarial_defense/defense_system.py  (3 hits)
+    581  [dummy_fake]  # Create dummy input
+    599  [dummy_fake]  # Create dummy data loader
+    602  [simulation]  # Simulate one training step
+
+== backend/core/self_evolution/continual_learning/ewc.py  (3 hits)
+    514  [dummy_fake]  # Create dummy data for demonstration
+    521  [simulation]  # Simulate training on Task 1
+    534  [simulation]  # Simulate training on Task 2 (different data distribution)
+
+== backend/core/skills/core_skills.py  (3 hits)
+     82  [simulation]  workspace.log(f"{self.name}: Simulating static analysis and QA review...")
+    171  [simulation]  sys_prompt = "You are an Execution Agent. Simulate the output of running a specific tool."
+    173  [simulation]  f"Simulate execution of tool: {tool_name} with args: {kwargs.get('tool_args', {})}"
+
+== backend/core/zero_cost_architecture/zero_cost_patch_phase1_4.py  (3 hits)
+     20  [hardcoded]  # ❌ No hardcoded thresholds (all dynamic/configurable)
+     57  [hardcoded]  # CONFIGURATION LAYER — Dynamic, Zero-Hardcode, Env-Driven
+     65  [hardcoded]  বাংলা: সব ভ্যালু dynamic/env-driven। কোনো hardcode নেই।
+
+== backend/database/tenant_db.py  (3 hits)
+     24  [mock_literal]  logger.warning("google.cloud.firestore not available — tenant DB will use mock/test mode only")
+     46  [mock_literal]  self._db = self._create_mock_db()
+     54  [mock_literal]  def _create_mock_db():
+
+== backend/evolution/auto_tuner.py  (3 hits)
+      5  [simulation]  (Bayesian, Simulated Annealing, Grid/Random Search, Genetic Algorithm).
+     97  [simulation]  # Bayesian/Simulated Annealing exploration
+     98  [random_metric]  delta = random.uniform(-param.step_size, param.step_size)
+
+== backend/middleware/chaos_injector.py  (3 hits)
+     47  [random_metric]  roll = random.random()  # — intentional non-crypto random for chaos
+     56  [random_metric]  delay = _DELAY_MIN + random.random() * (_DELAY_MAX - _DELAY_MIN)
+     60  [random_metric]  if random.random() < _DROP_THRESHOLD:
+
+== backend/pyerrorfix/pyerrorfix_config.py  (3 hits)
+     52  [hardcoded]  "hardcoded-path": {"enabled": True, "severity": "info"},
+     81  [hardcoded]  "hardcoded-secret": {"enabled": True, "severity": "critical"},
+    106  [mock_literal]  "dead-mock": {"enabled": True, "severity": "warning"},
+
+== backend/services/memory_service.py  (3 hits)
+    359  [for_now]  # For now, keeping the insert statement compatible with the new table conceptually
+    950  [for_now]  # Run audit/test with temporary DB to verify functionality without corrupting live DB
+    986  [for_now]  logger.debug(f"Temporary DB cleanup skipped: {e}")
+
+== backend/skills/core_knowledge_qa.py  (3 hits)
+     43  [mock_literal]  গ্যাপ ফিক্স (Database-Driven Logic নীতি): আগে এখানে `_mock_vector_search()` ছিল যা query
+     44  [hardcoded]  যাই হোক না কেন সবসময় একই ২টা hardcoded fake ডকুমেন্ট রিটার্ন করত — ফলে "permission-aware
+    180  [for_now]  "error": "LLM infrastructure is temporarily unavailable. Circuit breaker active. Please retry in 60 seconds.",
+
+== backend/tools/code/auto_pr_pipeline.py  (3 hits)
+      6  [dummy_fake]  আগে hash(branch_name) % 1000 দিয়ে fake PR number তৈরি হতো — কোনো API call ছিল না।
+     24  [mock_literal]  # বাংলা মন্তব্য: আগে "mock-token" ছিল fallback — এখন token না থাকলে প্রোডাকশনে ব্যর্থ হবে
+     40  [dummy_fake]  বাংলা মন্তব্য: আগে hash(branch_name) % 1000 দিয়ে fake PR URL তৈরি হতো।
+
+== backend/tools/devops/github_agent.py  (3 hits)
+     52  [placeholder]  db_session বাধ্যতামূলক — না দিলে fail-fast করে, যাতে কেউ ভুলে placeholder দিয়ে ডিপ্লয় করতে না পারে।
+     82  [mock_literal]  """Thin wrapper around the GitHub REST API. No mock/simulated responses —
+    118  [not_implemented]  Deep static-analysis scoring is NOT implemented yet — we report that
+
+== backend/tools/learning/rlhf_pipeline.py  (3 hits)
+    136  [not_implemented]  "trl is installed but local DPOTrainer wiring is not implemented; "
+    137  [simulation]  "not fabricating a simulated success."
+    143  [not_implemented]  "Local TRL DPOTrainer wiring is not implemented yet; "
+
+== backend/tools/self_planner.py  (3 hits)
+     95  [hardcoded]  # being masked by a hardcoded fallback plan. A caller must know planning failed.
+    115  [hardcoded]  # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
+    169  [simulation]  # Simulate agent execution
+
+== backend/tools/social/marketplace_agent.py  (3 hits)
+      4  [mock_literal]  আগে 3টি hardcoded mock result রিটার্ন হতো — এখন real API call করা হয়।
+     23  [mock_literal]  বাংলা মন্তব্য: আগে 3টি hardcoded mock result রিটার্ন হতো (pdf-parse, pdfplumber, alpine-pdf)।
+     98  [mock_literal]  বাংলা মন্তব্য: আগে শুধু {"status": "verified_and_installed"} mock রিটার্ন হতো।
+
+== scripts/advanced_analysis/importer_graph.py  (3 hits)
+     27  [mock_literal]  6. `unittest.mock.patch("a.b.c.X")` স্ট্রিং-রেফারেন্স SOFT হিসেবে আলাদা
+     86  [mock_literal]  """স্ট্রিং-ভিত্তিক রেফারেন্স (mock.patch ইত্যাদি) — hard import নয়।"""
+    904  [mock_literal]  "  ℹ️  soft ref = mock.patch/importlib.import_module স্ট্রিং রেফারেন্স।\n"
+
+== scripts/bots/auto_alert_bot.py  (3 hits)
+     51  [placeholder]  # For now, we'll just log it to a file as a placeholder.
+    147  [simulation]  # For simplicity, we'll simulate this with a placeholder
+    152  [placeholder]  # Placeholder implementation
+
+== scripts/bots/auto_daily_standup_bot.py  (3 hits)
+     53  [for_now]  # For now, we'll save it to a local file.
+     78  [mock_literal]  # For this example, we'll return mock data
+     83  [mock_literal]  # Mock data - replace with actual queries to your systems
+
+== scripts/ci/infisical_loader.py  (3 hits)
+    143  [mock_literal]  # Detect dummy/mock credentials (used in unit tests) — skip safely
+    145  [mock_literal]  str(os.environ.get(k, "")).startswith(("dummy-", "mock-", "test-"))
+    149  [mock_literal]  print("::warning::Detected dummy/mock credentials for Infisical. Skipping remote vault load safely.")
+
+== scripts/deploy/canary_deploy.py  (3 hits)
+    113  [simulation]  # Simulated checks
+    145  [simulation]  # Simulated metrics fetch
+    338  [simulation]  parser.add_argument('--dry-run', action='store_true', help='Simulate without changes')
+
+== scripts/devops/generate_modular_audits.py  (3 hits)
+     10  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+    585  [todo_fixme]  - [ ] Flag any `# TODO`, `pass`, or `NotImplemented` left in production paths
+    753  [todo_fixme]  - [ ] No new `# TODO` or `pass` introduced in production paths
+
+== scripts/health/superai_health_check.py  (3 hits)
+     42  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+   1021  [for_now]  # For now, check environment
+   1074  [hardcoded]  patterns) instead of a hardcoded patch list, so renames never leave
+
+== scripts/lib/auto_discovery.py  (3 hits)
+      4  [hardcoded]  WHY THIS EXISTS (user problem): many scripts hardcode file lists, module
+    221  [hardcoded]  This is the one-line replacement for stale hardcoded inventories:
+    321  [hardcoded]  """Locate the load-bearing modules by role, not by hardcoded path.
+
+== scripts/verify_infisical_env.py  (3 hits)
+    159  [mock_literal]  str(v).startswith(("dummy-", "mock-"))
+    167  [dummy_fake]  print(f"::warning::{message} (Detected dummy testing credentials). Skipping vault check safely.")
+    178  [dummy_fake]  print(f"::warning::{message} (Detected dummy testing credentials). Skipping vault check safely.")
+
+== skills/marketplace.py  (3 hits)
+     10  [mock_literal]  # Local mock index of available remote capabilities
+     11  [mock_literal]  self.mock_marketplace_index = [
+     32  [mock_literal]  for item in self.mock_marketplace_index:
+
+== .github/scripts/trigger_render_deploy.py  (2 hits)
+    152  [placeholder]  # REL-002 (error observability): report the real reason, not a placeholder.
+    158  [hardcoded]  # so the configured ID was ALWAYS ignored and the stale hardcoded fallback
+
+== backend/adaptive_engine/self_improving_agent.py  (2 hits)
+     92  [placeholder]  # For now, we'll store in Redis as a placeholder
+    333  [for_now]  # For now, return empty list - would be implemented based on the actual experience_db structure
+
+== backend/agents/code_vulnerability_scanner_agent.py  (2 hits)
+     50  [placeholder]  HARDCODED_SECRET = "hardcoded_secret"  # placeholder
+    201  [hardcoded]  VulnerabilityType.HARDCODED_SECRET: "Hardcoded secret detected in source",
+
+== backend/agents/infrastructure/disaster_recovery_agent.py  (2 hits)
+     63  [hardcoded]  # env var না থাকলে sensible defaults ব্যবহার হয়। এটি "zero-hardcoded" principle follow করে।
+    146  [hardcoded]  defaults ফেরত দেয়। এটি "zero-hardcoded" principle মেনে চলে — deployment-এর
+
+== backend/api/routes/auth.py  (2 hits)
+    340  [for_now]  detail="Login service temporarily unavailable. Please try again.",
+    438  [for_now]  detail="Registration service temporarily unavailable. Please try again.",
+
+== backend/api/routes/browser_action_registry.py  (2 hits)
+    194  [mock_literal]  mock_b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+    197  [mock_literal]  "screenshot_base64": mock_b64,
+
+== backend/api/routes/byoc_api.py  (2 hits)
+     23  [simulation]  # Memory database for tracking deployment jobs (simulating live backend db)
+    135  [mock_literal]  job.service_url = f"https://byoc-skill-{payload.skill_name}-mock-url.a.run.app"
+
+== backend/api/routes/dock_integrations.py  (2 hits)
+     65  [not_implemented]  raise HTTPException(status_code=501, detail="Slack not implemented yet")
+     77  [placeholder]  # গ্যাপ #3 সমাধান: হার্ডকোড করা placeholder টোকেনের বদলে repo-তে যে প্যাটার্ন ইতিমধ্যে
+
+== backend/api/routes/email.py  (2 hits)
+     32  [not_implemented]  except NotImplementedError as e:
+     34  [dummy_fake]  # রিটার্ন করত (fake success)। এখন real না-হওয়া অবস্থা 501 হিসেবে honestly রিপোর্ট হয়।
+
+== backend/api/routes/payments.py  (2 hits)
+     10  [mock_literal]  # Fallback mock stripe with minimal interface for testing
+     73  [mock_literal]  logger.warning("Stripe API key not set — returning 503 Service Unavailable (no mock)")
+
+== backend/api/routes/webhooks_ai.py  (2 hits)
+     54  [mock_literal]  # Mock response or actual httpx call to Telegram Bot API
+     57  [mock_literal]  "chat_id": getattr(settings, "TELEGRAM_CHAT_ID", "mock_chat_123"),
+
+== backend/brain/task_execution_engine.py  (2 hits)
+     13  [mock_literal]  Replaces the mock execute_decomposed_tasks with actual parallel/sequential
+    204  [simulation]  # For this tier, we simulate real llm call
+
+== backend/core/cache/multi_layer_cache.py  (2 hits)
+     98  [mock_literal]  """Mock pipeline for stub implementation."""
+    103  [mock_literal]  """Mock pipeline that preserves the fallback store's safety limits."""
+
+== backend/core/context_manager.py  (2 hits)
+    167  [simulation]  # For now, we'll simulate this with a simple approach
+    172  [simulation]  # Convert hex to floats (simulated embedding)
+
+== backend/core/localization/voice_didi.py  (2 hits)
+    266  [for_now]  # For now, return structured action plan
+    324  [placeholder]  """Generate TTS guidance for voice responses (placeholder for TTS integration)."""
+
+== backend/core/maintenance_pipeline.py  (2 hits)
+     52  [random_metric]  jitter = random.uniform(0.9, 1.1)
+    233  [simulation]  # Simulated checks based on the event payload or type
+
+== backend/core/observability/posthog_client.py  (2 hits)
+     24  [mock_literal]  logger.info("POSTHOG_API_KEY not set. PostHog analytics running in mock/log mode.")
+     35  [mock_literal]  f"[Mock Analytics] User: {distinct_id} | Event: {event} | Props: {properties}"
+
+== backend/core/otp_router.py  (2 hits)
+    129  [hardcoded]  # Previously hardcoded "SupremeAI Security <security@supremeai.app>" —
+    130  [hardcoded]  # violates "zero hardcoded value" principle.
+
+== backend/core/plugins/experimental/notion_plugin.py  (2 hits)
+     10  [not_implemented]  NotImplementedError on first tool call.
+     24  [not_implemented]  raise NotImplementedError(
+
+== backend/core/plugins/official/github_plugin.py  (2 hits)
+     19  [mock_literal]  return {"status": "success", "message": "PR created (mock)", "params": params}
+     23  [not_implemented]  raise NotImplementedError(f"Tool {tool_name} is not implemented for GitHubPlugin")
+
+== backend/core/provider_rate_limiter.py  (2 hits)
+    184  [random_metric]  request_id = f"req_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+    260  [simulation]  # If key is absent and not local, test if we have simulated or live
+
+== backend/core/queue/task_queue_enhanced.py  (2 hits)
+    585  [placeholder]  # Return placeholder as it was sync before, we shouldn't break sync callers easily if we can help it, but now it's async.
+    587  [dummy_fake]  return "unknown"  # Dummy for back-compat until routes are updated
+
+== backend/core/resilience/__init__.py  (2 hits)
+      1  [hardcoded]  """Resilience Package — Consolidated Circuit Breaker & Error Handling (Zero-Hardcode)
+      4  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven।
+
+== backend/core/security/injections/sql_prevention.py  (2 hits)
+     46  [placeholder]  "description": "Positional placeholder without params tuple",
+    478  [placeholder]  "description": "Format string placeholder detected — use ? parameter markers",
+
+== backend/core/security/input_sanitizer.py  (2 hits)
+     18  [dummy_fake]  r"generate fake news",
+     32  [todo_fixme]  # বাংলা: US SSN — XXX-XX-XXXX ফরম্যাট।
+
+== backend/core/security/rate_limiter.py  (2 hits)
+      1  [hardcoded]  """Rate Limiter Implementation — Sliding Window Algorithm with Atomic Operations (Zero-Hardcode)
+      4  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven। Atomic operations নিশ্চিত করে।
+
+== backend/core/self_evolution/evolution_engine.py  (2 hits)
+    365  [hardcoded]  বাংলা মন্তব্য: আগে এই মেথড একটা hardcoded boilerplate ক্লাস টেমপ্লেট জেনারেট করত
+    367  [placeholder]  শুধু একটা fake placeholder ছিল, ইনপুট pattern যাই হোক না কেন একই কোড বেরোতো।
+
+== backend/core/self_evolution/fitness_engine.py  (2 hits)
+     10  [dummy_fake]  🛡️ PHASE 3: AutomatedFitnessEngine — Precision fitness scoring with zero fake fallbacks.
+     45  [dummy_fake]  Eliminates silent ZeroDivisionError and fake fallback (0.5) patterns.
+
+== backend/core/storage/local_adapter.py  (2 hits)
+     55  [mock_literal]  # but for this fallback adapter, standard open is fine for mock return.
+     84  [for_now]  # For now, return a logical internal URL
+
+== backend/core/swarm_pubsub.py  (2 hits)
+     28  [hardcoded]  # RedisURL এখন settings থেকে আসে, hardcode নয়।
+     45  [mock_literal]  """বাংলা মন্তব্য: Allow tests to inject mock Redis client."""
+
+== backend/core/tier8/codebase_refactor_proposer.py  (2 hits)
+      6  [hardcoded]  No hardcoded values. All config via env / config proxy.
+    304  [for_now]  a temporary copy only; the live file is never touched.
+
+== backend/core/tier8/swarm_coordination_agent.py  (2 hits)
+      5  [hardcoded]  No hardcoded agent lists — all discovered at runtime.
+    280  [simulation]  # Here we simulate with LLM call for zero-cost demo
+
+== backend/core/tier8/tier8_integration.py  (2 hits)
+      7  [hardcoded]  No hardcoded values. All config via env vars or ConfigProxy.
+    103  [placeholder]  # Placeholder for future mesh-wide coordination logic
+
+== backend/core/unified_learning.py  (2 hits)
+    178  [random_metric]  return random.random() > 0.5
+    341  [for_now]  # Knowledge storage (in-memory for now, can be persisted)
+
+== backend/database/db_repository.py  (2 hits)
+      5  [mock_literal]  from unittest.mock import MagicMock, Mock
+     43  [mock_literal]  and not isinstance(res, MagicMock | Mock)
+
+== backend/ecosystem/users.py  (2 hits)
+    294  [dummy_fake]  # Always run a dummy verify to keep timing roughly constant.
+    295  [dummy_fake]  verify_password(password, hash_password("dummy"))
+
+== backend/engine/worker_node.py  (2 hits)
+     33  [mock_literal]  "gpu_available": False,  # Mock capability
+     52  [simulation]  # Simulated task execution (e.g. running LangChain/LiteLLM logic)
+
+== backend/monitoring/logging_config.py  (2 hits)
+      1  [hardcoded]  """Logging Configuration — Structured Logging with Correlation IDs (Zero-Hardcode)
+      4  [hardcoded]  যেকোনো hardcoded ভ্যালু নেই। সবকিছু environment-driven। JSON ফরম্যাটে লগিং নিশ্চিত করে।
+
+== backend/monitoring/metrics_collector.py  (2 hits)
+    145  [for_now]  # For now, returning current counts
+    153  [simulation]  আগে এই method ছিল না বলে agent-গুলো simulated values fallback নিত।
+
+== backend/pyerrorfix/detectors/auth_security.py  (2 hits)
+     10  [hardcoded]  * Hardcoded `401`/`403` — `raise HTTPException(401)` / `(403)` without an
+    129  [hardcoded]  # --- hardcoded 401/403 without auth dependency ---
+
+== backend/scout/persistence.py  (2 hits)
+     59  [mock_literal]  বাংলা: test env-এ db.client প্রায়ই MagicMock হয় (offline/mock mode) —
+     68  [mock_literal]  raise RuntimeError("persistence response is not a real list (mock/degraded client)")
+
+== backend/scripts/auto_find_blindspots.py  (2 hits)
+     44  [todo_fixme]  "২. এএসটি এবং টেক্সট স্ক্যানিংয়ের মাধ্যমে TODO/FIXME এবং সিকিউরিটি অ্যান্টি-প্যাটার্ন খোঁজা।"
+     53  [todo_fixme]  if any(debt in line for debt in ["TODO:", "FIXME:", "HACK:", "XXX:"]):
+
+== backend/scripts/devops/ai_log_analyzer.py  (2 hits)
+     45  [placeholder]  """Placeholder for SupremeAI LLM analysis."""
+     51  [for_now]  # For now, we perform a naive analysis.
+
+== backend/scripts/refactor_root_cause.py  (2 hits)
+     38  [for_now]  # This is a complex multiline replacement, for now we will inject an import at the top
+     65  [hardcoded]  # 2. Anti-Hardcode os.getenv:
+
+== backend/services/auto_healer.py  (2 hits)
+    365  [random_metric]  delay *= 0.5 + random.random()
+    853  [dummy_fake]  dep_error = ImportError("No module named 'fake-package-xyz'")
+
+== backend/services/email/email_service.py  (2 hits)
+     66  [mock_literal]  api_key = self.api_key or "mock-key-for-testing"
+     71  [mock_literal]  logger.warning(f"[Mock Email] To: {to_email} | Subject: {subject}")
+
+== backend/services/llm/llm_router.py  (2 hits)
+    256  [not_implemented]  except NotImplementedError as e:
+    360  [for_now]  # V5 Dynamic AI Architecture Bridge (Non-Streaming only for now)
+
+== backend/tools/media/video_generator.py  (2 hits)
+     55  [mock_literal]  "mock": False,
+     76  [mock_literal]  "mock": False,
+
+== backend/tools/security_tools/multi_account_rotator.py  (2 hits)
+    252  [simulation]  # Simulate incoming verification email (SQLite local queue for testing/local env)
+    971  [hardcoded]  # Security: No hardcoded fallback keys - require environment variables
+
+== backend/tools/social/telegram_security.py  (2 hits)
+    146  [for_now]  """Check if chat_id is temporarily locked out due to excessive failed 2FA attempts."""
+    239  [for_now]  f"❌ <b>Invalid OTP code.</b> ({3 - attempts} attempts remaining before temporary lockout).",
+
+== scripts/ai/bias_detector.py  (2 hits)
+    289  [random_metric]  'gender_male': np.random.randint(0, 2, 1000),
+    290  [random_metric]  'age_minority': np.random.randint(0, 2, 1000),
+
+== scripts/ai/prompt_injection_tester.py  (2 hits)
+    169  [placeholder]  # Get response from LLM or use placeholder
+    176  [simulation]  response = "[No LLM callback provided - simulated test]"
+
+== scripts/backup/backup_telegram.py  (2 hits)
+     46  [hardcoded]  "Hardcoded default encryption keys are strictly prohibited."
+    872  [hardcoded]  "Hardcoded default encryption keys are strictly prohibited."
+
+== scripts/backup/superai_backup_manager.py  (2 hits)
+    253  [for_now]  # Create temporary directory for backup contents
+    371  [for_now]  # For now, save connection info for manual restore
+
+== scripts/ci/render_deploy_preflight.py  (2 hits)
+    138  [mock_literal]  if str(key).startswith(("dummy-", "mock-", "test-")) or str(service_id).startswith(("dummy-", "mock-", "test-")):
+    139  [mock_literal]  results.append({"role": role, "status": "ready", "minutes": 0.0, "cap": cap, "plan": "testing-mock"})
+
+== scripts/core_engine/tool_ranker.py  (2 hits)
+    269  [for_now]  # For now, we'll use heuristics based on available data
+    273  [placeholder]  # Placeholder implementation
+
+== scripts/devops/config/validators.py  (2 hits)
+    260  [hardcoded]  (r'password\s*=\s*["\'][^"\']+["\']', 'Hardcoded password'),
+    261  [hardcoded]  (r'secret\s*=\s*["\'][^"\']+["\']', 'Hardcoded secret'),
+
+== scripts/devops/devops_ai_scribe.py  (2 hits)
+    217  [for_now]  # বাংলা মন্তব্য: rate limit এবং temporary ব্লকের ক্ষেত্রে exponential backoff দিয়ে sleep করা হচ্ছে।
+    335  [placeholder]  return file_path.name, f"This is a placeholder summary for {file_path.name}."
+
+== scripts/docs/auto_api_doc_sync.py  (2 hits)
+     10  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+     15  [hardcoded]  (docs/ root resolved via get_layout().docs) instead of a stale hardcoded path.
+
+== scripts/health/check_system_health.py  (2 hits)
+    123  [random_metric]  backoff = (0.5 * (2 ** attempt)) + random.uniform(0.1, 0.3)
+    150  [dummy_fake]  redis_url = getattr(settings, "redis_url", None) or os.getenv("REDIS_URL", "redis://dummy-redis-server:6379")
+
+== scripts/pre_commit_hook.py  (2 hits)
+     84  [mock_literal]  if token and not token.startswith("your-") and not token.startswith("mock-") and not token.startswith("dummy-"):
+     86  [mock_literal]  elif token and (token.startswith("your-") or token.startswith("mock-") or token.startswith("dummy-")):
+
+== scripts/refactor/superai_transform.py  (2 hits)
+     31  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+    767  [simulation]  parser.add_argument("--dry-run", action="store_true", help="Simulate without changes")
+
+== scripts/security/secrets_rotation_manager.py  (2 hits)
+    307  [hardcoded]  # প্রকৃত private_key গণনা করা হয় — কোনো hardcoded মান নেই
+    529  [simulation]  parser.add_argument("--dry-run", action="store_true", help="Simulate without making changes")
+
+== scripts/supreme_ops.py  (2 hits)
+     71  [for_now]  """Clean transient caches, pycache, and temporary logs."""
+     83  [for_now]  print(f"[OK] Cleaned {cleaned_count} temporary cache files.")
+
+== scripts/sync_render_secrets.py  (2 hits)
+     13  [hardcoded]  # ── Credentials (loaded from environment — never hardcode in source) ─────────
+     23  [hardcoded]  # ── Backend results — loaded from env (never hardcode URLs/keys in source) ──
+
+== tools/autonomy/tools/maintenance_watchdog.py  (2 hits)
+     20  [todo_fixme]  if re.search(r'\b(TODO|FIXME|XXX|HACK)\b',line,re.IGNORECASE): todos.append({'file':rel(root,p),'line':i,'marker':line.strip()[:160]})
+     21  [todo_fixme]  result={'large_files':sorted(rows,key=lambda x:-x['bytes'])[:100],'debt_markers':todos[:300],'recommendations':['split high-churn large files','turn important TODO/FIXME markers into tracked
+
+== tools/gap_miner/tools/gap_miner.py  (2 hits)
+     21  [todo_fixme]  TODO_RE = re.compile(r"\\b(TODO|FIXME|HACK|XXX|BUG|TEMP)\\b", re.IGNORECASE)
+    156  [todo_fixme]  self.add("code", "medium", "High concentration of TODO/FIXME/HACK markers", path, f"{count} markers", "Known unfinished work can hide operational or correctness gaps.", "Convert high-value m
+
+== .github/scripts/constitution/rules/cfg001_no_policy_hardcoding.py  (1 hits)
+     25  [hardcoded]  findings.append(self._create_finding(path, line, "Possible hardcoded runtime policy value; register it in the configuration schema.", text, "Add a registry key with immutable bounds and read
+
+== backend/adapters/ux_adapter.py  (1 hits)
+    205  [mock_literal]  "prototype": ["prototype", "mockup", "wireframe", "mock"],
+
+== backend/adaptive_engine/supabase_vector_backend.py  (1 hits)
+     95  [placeholder]  "agent_id": "00000000-0000-0000-0000-000000000000",  # placeholder (no agent FK)
+
+== backend/agents/governance/explainability_agent.py  (1 hits)
+    128  [simulation]  # For now, we'll simulate the call
+
+== backend/agents/governance/governance_agent.py  (1 hits)
+    375  [for_now]  # For now, we'll return a default role
+
+== backend/agents/infrastructure/performance_tuning_agent.py  (1 hits)
+    443  [simulation]  # contract for these changes. Never report a simulated sleep as success.
+
+== backend/agents/internet_monitor_agent.py  (1 hits)
+    208  [placeholder]  # Monitor AI news from a public API (using a placeholder for demo)
+
+== backend/agents/ux/accessibility_agent.py  (1 hits)
+    105  [for_now]  # Would need to check for associated label - simplified for now
+
+== backend/api/dependencies.py  (1 hits)
+    116  [hardcoded]  # (settings.is_bypass_allowed, production-এ hardcoded False) ছাড়া এই fallback
+
+== backend/api/routes/__init__.py  (1 hits)
+     74  [placeholder]  # Clean placeholder kept for backwards-compatibility.
+
+== backend/api/routes/admin.py  (1 hits)
+    222  [mock_literal]  # Fallback for sync mock
+
+== backend/api/routes/admin_dashboard/__init__.py  (1 hits)
+     64  [mock_literal]  # Mock user database path
+
+== backend/api/routes/admin_dashboard/endpoints_command.py  (1 hits)
+    132  [placeholder]  # Default placeholder when audit log is clean
+
+== backend/api/routes/admin_dashboard/endpoints_flags.py  (1 hits)
+     42  [for_now]  # new flags. Added POST alias for backward compat (same as GET for now).
+
+== backend/api/routes/admin_dashboard/endpoints_metrics.py  (1 hits)
+     78  [hardcoded]  """FIX (final-test 2026-09-13): এই endpoint আগে ১০০% ভুয়া hardcoded ডেটা দিত —
+
+== backend/api/routes/agent_tasks.py  (1 hits)
+    133  [for_now]  # For now, we await it directly as requested by the plan.
+
+== backend/api/routes/cloud_mesh.py  (1 hits)
+      9  [dummy_fake]  # For this demo/implementation we use dummy functions that would hook into actual services
+
+== backend/api/routes/evolution.py  (1 hits)
+    263  [simulation]  # ⚡ Simulated dynamic graph state for prototype
+
+== backend/api/routes/github.py  (1 hits)
+     87  [placeholder]  # আসল কনটেন্ট না জেনেই "Optimized content placeholder" স্ট্রিং কমিট করে দেওয়া হতো — অর্থাৎ
+
+== backend/api/routes/keys.py  (1 hits)
+     18  [for_now]  # Generate a temporary key if none provided (keys will be lost on restart)
+
+== backend/api/routes/mobile_bff.py  (1 hits)
+     19  [hardcoded]  Eliminates the need for hardcoded API keys in the mobile source code.
+
+== backend/api/routes/plugin_submissions.py  (1 hits)
+     36  [for_now]  # For now we'll just acknowledge receipt.
+
+== backend/api/routes/sandbox_api.py  (1 hits)
+    115  [mock_literal]  "mock": bool(session.get("mock", False)),
+
+== backend/api/routes/session_takeover.py  (1 hits)
+    283  [mock_literal]  # ২. mock_screencast_emitter() আগে *সব* environment-এ (production সহ) একটি স্ট্যাটিক কালো ফ্রেম
+
+== backend/api/routes/task_workspace.py  (1 hits)
+    122  [for_now]  detail="Quota service temporarily unavailable. Please retry shortly.",
+
+== backend/api/routes/traffic_monitor.py  (1 hits)
+     26  [mock_literal]  # বাংলা মন্তব্য: রেডিস মিসকনফিগ (যেমন 'mock_redis_url') বা কানেকশন এররে
+
+== backend/api/routes/websocket_voice.py  (1 hits)
+     94  [simulation]  # Natural Language Processing (Simulating conversational Groq/LLM)
+
+== backend/api/server.py  (1 hits)
+     77  [hardcoded]  # SECURE FIX: production origins must come from env vars (zero hardcoded value).
+
+== backend/brain/parallel_cloud_router.py  (1 hits)
+    194  [random_metric]  pick = random.uniform(0.0, total_weight)
+
+== backend/browser/swarm_browser.py  (1 hits)
+     67  [simulation]  """ADVANCED: Simulate action flow in the Digital Twin simulator before spending real browser compute."""
+
+== backend/byoc/cloud_connector.py  (1 hits)
+     19  [for_now]  "⚠️ ENCRYPTION_KEY not set in environment. Deriving temporary test/dev key for module initialization."
+
+== backend/core/accessibility/wcag_compliance.py  (1 hits)
+    385  [for_now]  # For now, just acknowledge that contrast checking should happen
+
+== backend/core/cache/autocache_proxy.py  (1 hits)
+    108  [mock_literal]  return {"total_cost": 0.0, "summary": "mock"}
+
+== backend/core/circuit_breaker.py  (1 hits)
+     77  [for_now]  Prevents cascading failures by temporarily stopping calls to
+
+== backend/core/code_validator.py  (1 hits)
+    122  [placeholder]  # Allow common placeholder/external calls like some_async_func or test mocks if they are called as functions
+
+== backend/core/config_proxy.py  (1 hits)
+     60  [hardcoded]  # Source defaults from centralized config_cache instead of hardcoded dummy data
+
+== backend/core/config_secrets.py  (1 hits)
+    604  [hardcoded]  # বাংলা মন্তব্য: পুরনো hardcoded domain allowlist সরানো হয়েছে।
+
+== backend/core/deployment_fallback_defaults.py  (1 hits)
+      4  [hardcoded]  endpoint. Intentionally metadata-only and free of any hardcoded deployment
+
+== backend/core/errors/error_remediation.py  (1 hits)
+     25  [placeholder]  - 🛑 [CRITICAL] Removed zero-vector placeholder `[0.0] * 384` — replaced with proper embedding function
+
+== backend/core/health/health_probes.py  (1 hits)
+     42  [placeholder]  # Here we just check if it exists as a placeholder, since true ping depends on the client library.
+
+== backend/core/llm/free_tier_tracker.py  (1 hits)
+    199  [for_now]  """Temporarily pause this provider (e.g. after a 429 response)."""
+
+== backend/core/llm/llm_gateway/completion.py  (1 hits)
+    498  [random_metric]  await asyncio.sleep(random.uniform(0.5, 1.5))  # Short backoff for server errors
+
+== backend/core/llm/llm_gateway/gateway.py  (1 hits)
+     82  [mock_literal]  from unittest.mock import MagicMock
+
+== backend/core/llm/llm_gateway/resilience.py  (1 hits)
+     84  [random_metric]  jitter = random.uniform(0.1, 0.3) * pause_seconds  # Add 10-30% jitter
+
+== backend/core/llm/llm_gateway/routing.py  (1 hits)
+     22  [hardcoded]  # বাংলা মন্তব্ব: POLICY_PATH এখন os.path দিয়ে বিল্ড হয় — hardcode নেই
+
+== backend/core/localization/bhasha_bot.py  (1 hits)
+     80  [for_now]  # For now, in-memory cache is session-scoped
+
+== backend/core/messaging/adapters.py  (1 hits)
+     17  [mock_literal]  then Mock fallback)।
+
+== backend/core/microvm_sandbox.py  (1 hits)
+    130  [hardcoded]  # বাংলা মন্তব্য: paths Settings থেকে আসছে — hardcode নেই
+
+== backend/core/optimization/economic_optimizer.py  (1 hits)
+     11  [hardcoded]  # Admin can populate it via env-driven configuration if needed (zero hardcoded value).
+
+== backend/core/optimization/optimized_redis_client.py  (1 hits)
+     99  [for_now]  raise Exception("Circuit breaker is OPEN. Redis requests are temporarily blocked.")
+
+== backend/core/orchestration/conversation_orchestrator.py  (1 hits)
+    128  [todo_fixme]  # Durable truth record bridge (Board TODO: "Persist ExecutionRecord
+
+== backend/core/plugins/experimental/__init__.py  (1 hits)
+      3  [not_implemented]  # They return graceful "unavailable" responses instead of crashing with NotImplementedError.
+
+== backend/core/plugins/experimental/gmail_plugin.py  (1 hits)
+     24  [not_implemented]  raise NotImplementedError(
+
+== backend/core/plugins/experimental/google_drive_plugin.py  (1 hits)
+     24  [not_implemented]  raise NotImplementedError(
+
+== backend/core/plugins/experimental/slack_plugin.py  (1 hits)
+     24  [not_implemented]  raise NotImplementedError(
+
+== backend/core/plugins/experimental/telegram_plugin.py  (1 hits)
+     24  [not_implemented]  raise NotImplementedError(
+
+== backend/core/plugins/seed_manifests.py  (1 hits)
+     29  [not_implemented]  # These were previously in official/ but raised NotImplementedError on first tool call.
+
+== backend/core/queue/task_queue.py  (1 hits)
+     10  [placeholder]  # Placeholder URL tokens that indicate "Redis not really configured".
+
+== backend/core/rag/hybrid_retriever.py  (1 hits)
+     70  [simulation]  If dense_vector_results is empty/None, falls back to BM25 sparse search with simulated dense scoring.
+
+== backend/core/security/authentication/rbac.py  (1 hits)
+    121  [hardcoded]  # Fallback to hardcoded roles
+
+== backend/core/security/protection/ssrf_protection.py  (1 hits)
+    272  [mock_literal]  # Skip rebinding flag if both resolved IPs are valid public IPs (e.g., DNS round-robin / CDN load balancing / test mock)
+
+== backend/core/self_evolution/digital_twin/__init__.py  (1 hits)
+     52  [simulation]  - Simulate system changes and failures
+
+== backend/core/sentinel_agent.py  (1 hits)
+      6  [placeholder]  - `audit_dependencies()`: Performs periodic auditing of system dependencies, updating their last audit time (currently a placeholder for more complex version checking logic).
+
+== backend/core/services.py  (1 hits)
+    298  [mock_literal]  mock these singletons can restore a clean state between test cases.
+
+== backend/core/skills/base.py  (1 hits)
+      9  [not_implemented]  raise NotImplementedError
+
+== backend/core/startup/agents.py  (1 hits)
+     80  [for_now]  # Temporarily disabled: Dead import warning (No module named 'scripts.devops.bug_prophet')
+
+== backend/core/tier8/__init__.py  (1 hits)
+     12  [hardcoded]  • Zero hardcoded values (100% env/config driven)
+
+== backend/core/tier8/skill_marketplace_curator.py  (1 hits)
+      5  [hardcoded]  Zero hardcoded skills — all runtime-discovered.
+
+== backend/core/unified_router.py  (1 hits)
+    418  [for_now]  RoutingStrategy.COGNITIVE: IntentBasedStrategy(),  # Reuse for now
+
+== backend/engine/compression/token_juice.py  (1 hits)
+    171  [placeholder]  "placeholder",
+
+== backend/engine/debate_engine.py  (1 hits)
+     10  [hardcoded]  # বাংলা মন্তব্য: Judge-এর জন্য consensus থ্রেশহোল্ড — hardcode value নয়, একটি নামযুক্ত
+
+== backend/engine/tree_of_thought.py  (1 hits)
+    109  [hardcoded]  f"ToT _generate_initial_thoughts failed: {exc}. Falling back to hardcoded."
+
+== backend/evolution/strategy_optimizer.py  (1 hits)
+     86  [random_metric]  if random.random() < self.exploration_rate:
+
+== backend/integrations/graphiti_adapter.py  (1 hits)
+     68  [placeholder]  # NOTE: embedder placeholder — upstream full wiring আমাদের llm_router দিয়ে করা যায়
+
+== backend/middleware/rate_limiter.py  (1 hits)
+     65  [mock_literal]  """Helper for test mock compatibility."""
+
+== backend/models/ai_memory.py  (1 hits)
+     20  [placeholder]  still importable and a placeholder type still renders ``vector(384)`` in DDL;
+
+== backend/models/automation_execution.py  (1 hits)
+     40  [todo_fixme]  # Orchestrator ExecutionRecord bridge (Plan Section 7 / Board TODO:
+
+== backend/models/execution_log.py  (1 hits)
+     19  [placeholder]  reasoning_token = "reasoning_token"  # placeholder
+
+== backend/models/system_config.py  (1 hits)
+     26  [hardcoded]  বাংলা মন্তব্য: প্রতিটা "logic decision" যা বর্তমানে কোডে hardcode করা আছে
+
+== backend/pyerrorfix/detectors/testing.py  (1 hits)
+      7  [mock_literal]  * dead mock — Mock/patch created but never asserted on (also flagged by
+
+== backend/pyerrorfix/fixers/base.py  (1 hits)
+     24  [not_implemented]  raise NotImplementedError
+
+== backend/runs/retry.py  (1 hits)
+     28  [for_now]  #: Random hiccup (network blip, temporary IO error) — retry with backoff.
+
+== backend/schemas/skill_index.py  (1 hits)
+     44  [for_now]  """🔒 Temporary file swap এর মাধ্যমে race condition মুক্ত atomic write নিশ্চিত করে"""
+
+== backend/scripts/auto_test_gen.py  (1 hits)
+    145  [mock_literal]  2. Use `unittest.mock.patch`, `MagicMock`, `AsyncMock` to mock heavy dependencies (DB, Redis, HTTP).
+
+== backend/scripts/superai_free_tier_monitor.py  (1 hits)
+    215  [simulation]  # Simulated values (in production, call Supabase Management API)
+
+== backend/scripts/sync_knowledge.py  (1 hits)
+     30  [for_now]  # For now, we will assume store_memory handles upsert or we just insert.
+
+== backend/services/dynamic_ai/orchestrator.py  (1 hits)
+     54  [not_implemented]  raise NotImplementedError("Dynamic AI learning engine not available")
+
+== backend/services/llm/providers.py  (1 hits)
+    418  [not_implemented]  raise NotImplementedError(
+
+== backend/services/video_to_code_pipeline.py  (1 hits)
+    393  [for_now]  # Save temporarily
+
+== backend/services/voice_service.py  (1 hits)
+     27  [simulation]  # Simulated speech-to-text pipeline (Whisper integration endpoint)
+
+== backend/skills/__init__.py  (1 hits)
+     31  [not_implemented]  raise NotImplementedError(f"Skill provisioning not available for {skill_id}")
+
+== backend/skills/core_doc_summarizer.py  (1 hits)
+     91  [for_now]  "error": "LLM infrastructure is temporarily unavailable. Circuit breaker active. Please retry in 60 seconds.",
+
+== backend/tools/code/cot_reasoner.py  (1 hits)
+    312  [random_metric]  score += thought.score + random.uniform(0.0, 0.1)
+
+== backend/tools/collaborative_editor.py  (1 hits)
+     22  [mock_literal]  # বাংলা মন্তব্য: Redis কানেকশন সেটআপ (Upstash, Local, বা CI Mock)
+
+== backend/tools/knowledge/knowledge_base_indexer.py  (1 hits)
+    392  [not_implemented]  "note": "prune not implemented for live ChromaDB collections in this pass",
+
+== backend/tools/knowledge/local_search_rag.py  (1 hits)
+     66  [mock_literal]  # If chromadb has been set to None by a mock, respect that
+
+== backend/tools/learning/model_trainer.py  (1 hits)
+    143  [simulation]  "message": "Local training is simulated only — no real checkpoint was produced. Configure RUNPOD_API_KEY or MODAL credentials for real training.",
+
+== backend/tools/localization/bengali_ocr_converter.py  (1 hits)
+    187  [for_now]  # For now, try without credentials (requires GOOGLE_APPLICATION_CREDENTIALS env var)
+
+== backend/tools/mcp/mcp_telegram.py  (1 hits)
+    120  [placeholder]  {"configured": False, "status": "TELEGRAM_BOT_TOKEN is missing or set to placeholder."}
+
+== backend/tools/media/image_generator.py  (1 hits)
+     68  [mock_literal]  "mock": False,
+
+== backend/tools/preference_memory.py  (1 hits)
+     51  [for_now]  # Simple dict update for now
+
+== backend/tools/security_tools/vulnerability_predictor.py  (1 hits)
+     78  [hardcoded]  "name": "Hardcoded Credentials",
+
+== backend/tools/social/telegram_bot/handler.py  (1 hits)
+    103  [mock_literal]  return bool(self.bot_token and self.bot_token != "mock_token")
+
+== backend/tools/social/viral_referral_engine.py  (1 hits)
+    390  [placeholder]  destination=user_id,  # placeholder: connect account id
+
+== backend/tools/tenant_rate_limiter.py  (1 hits)
+    276  [mock_literal]  # বাংলা মন্তব্য: আগে customer না পেলে cus_mock_{tenant_id} ব্যবহার হতো।
+
+== backend/utils/platform_detect.py  (1 hits)
+     24  [hardcoded]  # rather than a hardcoded deployment target.
+
+== backend/workers/synaptic_dream.py  (1 hits)
+     50  [simulation]  # Simulated safe execution against DB/Memory store
+
+== packages/scripts/security_guard.py  (1 hits)
+    117  [hardcoded]  print("You are trying to commit hardcoded secrets:")
+
+== scripts/advanced_analysis/dead_code_verified_finder.py  (1 hits)
+      8  [hardcoded]  SCRIPT-INTELLIGENCE v9: auto-discovers targets via scripts/lib/auto_discovery.py — no hardcoded file inventories.
+
+== scripts/advanced_analysis/duplicate_detector.py  (1 hits)
+    188  [placeholder]  # Strip string literals (replace with placeholder)
+
+== scripts/ai/sandboxed_repair.py  (1 hits)
+      2  [for_now]  """Apply a reviewed patch only inside a disposable temporary workspace."""
+
+== scripts/apply_plan_renames.py  (1 hits)
+     13  [hardcoded]  ('architecture', 'ইমপ্লিমেন্টেশন প্ল্যান ডাইনামিক কনট্রোল প্লেন (Zero-Hardcoded Runtime Configuration).md'):
+
+== scripts/audit_env_usage.py  (1 hits)
+    122  [dummy_fake]  # বাংলা: Hybrid Infisical Migration dummy skip সরানো হয়েছে — এখন আসল চেক চলবে
+
+== scripts/audit_observability.py  (1 hits)
+    154  [simulation]  if self.in_main_block or (self.current_function and any(x in self.current_function.lower() for x in ('demo', 'sample', 'simulate', 'test'))):
+
+== scripts/backup/auto_cross_cloud_replicate.py  (1 hits)
+    269  [for_now]  # For now, we'll need to specify collections
+
+== scripts/billing/quota_enforcer.py  (1 hits)
+    401  [simulation]  parser.add_argument("--dry-run", action="store_true", help="Simulate without making changes")
+
+== scripts/billing/usage_reporter.py  (1 hits)
+    383  [simulation]  parser.add_argument("--dry-run", action="store_true", help="Simulate without writing reports")
+
+== scripts/ci/build_quality_evidence.py  (1 hits)
+     31  [todo_fixme]  "todo_fixme_count": count_matches(frontend, (".ts", ".tsx"), "TODO") + count_matches(frontend, (".ts", ".tsx"), "FIXME"),
+
+== scripts/ci/check_dockerfile_security.py  (1 hits)
+     24  [for_now]  # Ignore test-runners, temporary files, python scripts or virtual environments
+
+== scripts/ci/check_truthy_env_var.py  (1 hits)
+     82  [for_now]  print("⚠️ [Audit Mode]: This would normally block the commit, but returning 0 for now.")
+
+== scripts/ci/verify_canonical_startup.py  (1 hits)
+     16  [hardcoded]  root - the old hardcoded cwd="backend" raised FileNotFoundError in CI.
+
+== scripts/deploy/blue_green_deploy.py  (1 hits)
+    333  [simulation]  parser.add_argument('--dry-run', action='store_true', help='Simulate deployment without changes')
+
+== scripts/deploy_all_services.py  (1 hits)
+      9  [hardcoded]  # ── Render API Keys (loaded from env — never hardcode) ──
+
+== scripts/diagnostics/superai_console_detective.py  (1 hits)
+    554  [simulation]  print("🧠 Mode: Simulating experienced developer's eyes...")
+
+== scripts/feature_parity_sentinel.py  (1 hits)
+    543  [mock_literal]  f"this path (path/prefix drift → runtime 404 or mock fallback).",
+
+== scripts/monitoring/cost_analyzer.py  (1 hits)
+    235  [not_implemented]  raise NotImplementedError
+
+== scripts/monitoring/sla_tracker.py  (1 hits)
+    252  [not_implemented]  raise NotImplementedError
+
+== scripts/monitoring/superai_cpu_monitor.py  (1 hits)
+    374  [placeholder]  # Placeholder for webhook integration
+
+== scripts/organize_external_plans.py  (1 hits)
+     36  [hardcoded]  'ইমপ্লিমেন্টেশন প্ল্যান ডাইনামিক কনট্রোল প্লেন (Zero-Hardcoded Runtime Configuration).md',
+
+== scripts/quality/auto_refactor_suggester.py  (1 hits)
+    201  [for_now]  # For now, we'll skip this as it's complex to implement well in a short script
+
+== scripts/quality/check_ollama_test_coverage.py  (1 hits)
+     68  [mock_literal]  - Mock all external dependencies (network, redis, file I/O).
+
+== scripts/safety_guard.py  (1 hits)
+     15  [hardcoded]  # SIL-0d: discover instead of hardcode — the approval-requests file may live in
+
+== scripts/sync_modules_list.py  (1 hits)
+     31  [placeholder]  f"- ⚪ **Planned:** {counts['planned']} modules (Architectural placeholder)", "",
+
+== scripts/testing/api_contract_validator.py  (1 hits)
+    771  [random_metric]  if random.random() < 0.3:
+
+== scripts/testing/mutation_testing.py  (1 hits)
+    112  [for_now]  source_file: str  # Temporary mutated file path
+
+== scripts/testing/performance_benchmark.py  (1 hits)
+    493  [simulation]  Concurrent users simulate করে real-world traffic pattern তৈরি করে।
+
+== scripts/update_cors_hosts.py  (1 hits)
+      4  [hardcoded]  Values are loaded from environment variables — never hardcoded.
+
+== tools/gen_knowledge_seed.py  (1 hits)
+    194  [for_now]  "The Circuit Breaker wraps calls to external services with a proxy that trips open after repeated failures, temporarily stops requests, and probes to recover.",

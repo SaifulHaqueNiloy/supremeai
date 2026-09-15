@@ -1,0 +1,196 @@
+# backend route families whose leaf segment never appears in frontend/src: 57
+# NOTE: candidates - a family may be used via a different naming or by admin tooling.
+
+== /admin-api/cost-caps  (2 routes)
+     GET /admin-api/cost-caps
+     POST /admin-api/cost-caps
+
+== /admin-api/data-export  (1 routes)
+     GET /admin-api/data-export
+
+== /admin-api/emergency-deploy  (1 routes)
+     POST /admin-api/emergency-deploy
+
+== /admin-api/health-stream  (1 routes)
+     WEBSOCKET /admin-api/health-stream
+
+== /admin-api/ping-all  (1 routes)
+     GET /admin-api/ping-all
+
+== /admin-api/ping-service  (1 routes)
+     GET /admin-api/ping-service
+
+== /admin-api/service-categories  (1 routes)
+     GET /admin-api/service-categories
+
+== /admin-api/service-topology  (1 routes)
+     GET /admin-api/service-topology
+
+== /admin/free-tier-status  (1 routes)
+     GET /admin/free-tier-status
+
+== /admin/token-budget-stats  (1 routes)
+     GET /admin/token-budget-stats
+
+== /api/admin-api/provider-readiness  (1 routes)
+     GET /api/admin-api/provider-readiness
+
+== /api/admin-api/test-service  (1 routes)
+     POST /api/admin-api/test-service
+
+== /api/admin/cloud-mesh  (4 routes)
+     POST /api/admin/cloud-mesh/defcon
+     POST /api/admin/cloud-mesh/kill-switch
+     POST /api/admin/cloud-mesh/purge-cache
+     POST /api/admin/cloud-mesh/rotate-keys
+
+== /api/admin/model-branding  (1 routes)
+     GET /api/admin/model-branding
+
+== /api/billing/add-funds  (1 routes)
+     POST /api/billing/add-funds
+
+== /api/billing/checkout  (1 routes)
+     POST /api/billing/checkout
+
+== /api/billing/wallet  (1 routes)
+     GET /api/billing/wallet
+
+== /api/browser/browse-sessions  (1 routes)
+     GET /api/browser/browse-sessions
+
+== /api/browser/semantic-click  (1 routes)
+     POST /api/browser/semantic-click
+
+== /api/browser/simulate-activity  (1 routes)
+     POST /api/browser/simulate-activity
+
+== /api/browser/smart-click  (1 routes)
+     POST /api/browser/smart-click
+
+== /api/browser/system-learning  (2 routes)
+     GET /api/browser/system-learning
+     POST /api/browser/system-learning/toggle
+
+== /api/chat/get_completion  (1 routes)
+     POST /api/chat/get_completion
+
+== /api/chat/stream_chat  (1 routes)
+     POST /api/chat/stream_chat
+
+== /api/comment-ai/handle-comment  (1 routes)
+     POST /api/comment-ai/handle-comment
+
+== /api/comment-ai/stale-prs  (1 routes)
+     GET /api/comment-ai/stale-prs/{owner}/{repo}
+
+== /api/knowledge/ask-scribe  (1 routes)
+     POST /api/knowledge/ask-scribe
+
+== /api/memory/recall  (3 routes)
+     DELETE /api/memory/recall
+     GET /api/memory/recall
+     POST /api/memory/recall
+
+== /api/v1/collaborate  (1 routes)
+     WEBSOCKET /api/v1/collaborate/ws/{session_id}/{client_id}
+
+== /api/v1/localization  (3 routes)
+     POST /api/v1/localization/ai-translate
+     POST /api/v1/localization/translate
+     POST /api/v1/localization/voice-command
+
+== /api/v1/meta-ai  (8 routes)
+     GET /api/v1/meta-ai/metrics/{agent}
+     GET /api/v1/meta-ai/pool
+     GET /api/v1/meta-ai/top-performers
+     GET /api/v1/meta-ai/weakest-links
+     POST /api/v1/meta-ai/breed
+     POST /api/v1/meta-ai/metrics
+     POST /api/v1/meta-ai/pool
+     POST /api/v1/meta-ai/weakest-links/{id}/ack
+
+== /api/v1/pr-review  (2 routes)
+     GET /api/v1/pr-review/{pr_id}/status
+     POST /api/v1/pr-review/webhook
+
+== /api/v1/syncguard  (1 routes)
+     POST /api/v1/syncguard/audit
+
+== /api/v1/tools-registry  (4 routes)
+     DELETE /api/v1/tools-registry/{tool_id}
+     GET /api/v1/tools-registry/
+     PATCH /api/v1/tools-registry/{tool_id}
+     POST /api/v1/tools-registry/
+
+== /api/voice/stream_audio  (1 routes)
+     GET /api/voice/stream_audio
+
+== /auth/sso/oidc  (4 routes)
+     GET /auth/sso/oidc/{provider}/logout
+     POST /auth/sso/oidc/discovery
+     POST /auth/sso/oidc/{provider}/authorize
+     POST /auth/sso/oidc/{provider}/callback
+
+== /auth/sso/saml  (1 routes)
+     POST /auth/sso/saml
+
+== /config/validation-report  (1 routes)
+     GET /config/validation-report
+
+== /diagram/api-spec  (1 routes)
+     POST /diagram/api-spec
+
+== /diagram/to-kubernetes  (1 routes)
+     POST /diagram/to-kubernetes
+
+== /diagram/to-schema  (1 routes)
+     POST /diagram/to-schema
+
+== /diagram/to-terraform  (1 routes)
+     POST /diagram/to-terraform
+
+== /integrations/email/gmail  (1 routes)
+     POST /integrations/email/gmail
+
+== /internal/run-daily-evolution  (1 routes)
+     POST /internal/run-daily-evolution
+
+== /internet-monitor/start-monitoring  (1 routes)
+     POST /internet-monitor/start-monitoring
+
+== /llm-gateway/admin/circuit-breaker  (1 routes)
+     POST /llm-gateway/admin/circuit-breaker/reset/{name}
+
+== /payments/checkout  (1 routes)
+     POST /payments/checkout
+
+== /security/vulnerabilities/scan-project  (1 routes)
+     POST /security/vulnerabilities/scan-project
+
+== /tools/deploy/helm  (1 routes)
+     POST /tools/deploy/helm
+
+== /tools/image-to-code  (1 routes)
+     POST /tools/image-to-code
+
+== /tools/image-to-component  (1 routes)
+     POST /tools/image-to-component
+
+== /tools/image-to-palette  (1 routes)
+     POST /tools/image-to-palette
+
+== /tools/image-to-tree  (1 routes)
+     POST /tools/image-to-tree
+
+== /tools/smell-check  (1 routes)
+     POST /tools/smell-check
+
+== /tools/vulnerability-check  (1 routes)
+     POST /tools/vulnerability-check
+
+== /voice/process-audio  (1 routes)
+     POST /voice/process-audio
+
+== /ws/cost-updates  (1 routes)
+     WEBSOCKET /ws/cost-updates
