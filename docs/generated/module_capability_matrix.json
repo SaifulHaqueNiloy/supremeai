@@ -12591,6 +12591,17 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/memory/test_chromadb_store_adapters.py"
+    },
+    {
+      "capability_signals": [
         "dispatch",
         "health",
         "mcp",
@@ -23848,5 +23859,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2759
+  "source_file_count": 2760
 }
