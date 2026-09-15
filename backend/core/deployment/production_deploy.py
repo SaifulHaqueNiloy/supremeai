@@ -366,72 +366,59 @@ class DeploymentManager:
     def _deploy_to_production(
         self, deployment_id: str, config: DeploymentConfig, env_config: dict[str, Any]
     ) -> bool:
-        """Deploy to production environment using blue-green deployment."""
-        logger.info(f"Deploying to production: {deployment_id}")
+        """Deploy to production environment using blue-green deployment.
 
-        # Implement blue-green deployment
-        # This would typically involve:
-        # 1. Deploying to green environment
-        # 2. Running health checks
-        # 3. Switching traffic to green
-        # 4. Decommissioning blue
-
-        # For demo purposes, we'll simulate the process
-        time.sleep(2)  # Simulate deployment time
-
-        # In a real implementation, you'd use Kubernetes, AWS ECS, etc.
-        # Here's a conceptual approach:
-
-        # 1. Prepare new deployment
-        logger.info("Setting up new deployment slot...")
-
-        # 2. Deploy to new slot
-        logger.info("Deploying to new slot...")
-
-        # 3. Run health checks on new deployment
-        logger.info("Running health checks on new deployment...")
-
-        # 4. Switch traffic
-        logger.info("Switching traffic to new deployment...")
-
-        # 5. Verify traffic switch
-        logger.info("Verifying traffic switch...")
-
-        return True
+        ERR-G02 FIX (2026-09-15): this method previously *simulated* a deploy
+        (``time.sleep(2)`` → ``return True``) while reporting
+        DeploymentStatus.ACTIVE upstream. A module named ``production_deploy``
+        must never fake a deploy or a rollback — a fabricated success poisons
+        rollout evidence and rollback trust. It now fails loudly until a real
+        deployment backend (Render/K8s/ECS) is wired in.
+        """
+        logger.error(
+            "Deploy-to-production is NOT implemented: no real deployment backend "
+            "(Render/Kubernetes/ECS) is wired to core.deployment.production_deploy. "
+            f"Refusing to fabricate a deployment for {deployment_id}."
+        )
+        raise NotImplementedError(
+            "production_deploy._deploy_to_production is not implemented — "
+            "wire a real deployment backend before calling this."
+        )
 
     def _deploy_to_staging(
         self, deployment_id: str, config: DeploymentConfig, env_config: dict[str, Any]
     ) -> bool:
         """Deploy to staging environment."""
-        logger.info(f"Deploying to staging: {deployment_id}")
-
-        # Similar to production but simpler
-        time.sleep(1)  # Simulate deployment time
-
-        # In real implementation, deploy to staging cluster/environment
-        return True
+        # ERR-G02 FIX: no simulated deploy — fail loudly (see _deploy_to_production).
+        logger.error("Deploy-to-staging is NOT implemented — refusing to fabricate a deployment.")
+        raise NotImplementedError(
+            "production_deploy._deploy_to_staging is not implemented — "
+            "wire a real deployment backend before calling this."
+        )
 
     def _deploy_to_development(
         self, deployment_id: str, config: DeploymentConfig, env_config: dict[str, Any]
     ) -> bool:
         """Deploy to development environment."""
-        logger.info(f"Deploying to development: {deployment_id}")
-
-        # For dev, might just run locally or in dev cluster
-        time.sleep(0.5)  # Simulate deployment time
-
-        return True
+        # ERR-G02 FIX: no simulated deploy — fail loudly (see _deploy_to_production).
+        logger.error(
+            "Deploy-to-development is NOT implemented — refusing to fabricate a deployment."
+        )
+        raise NotImplementedError(
+            "production_deploy._deploy_to_development is not implemented — "
+            "wire a real deployment backend before calling this."
+        )
 
     def _deploy_to_generic(
         self, deployment_id: str, config: DeploymentConfig, env_config: dict[str, Any]
     ) -> bool:
         """Generic deployment method."""
-        logger.info(f"Deploying to generic environment: {deployment_id}")
-
-        # Generic deployment steps
-        time.sleep(1)  # Simulate deployment time
-
-        return True
+        # ERR-G02 FIX: no simulated deploy — fail loudly (see _deploy_to_production).
+        logger.error("Generic deploy is NOT implemented — refusing to fabricate a deployment.")
+        raise NotImplementedError(
+            "production_deploy._deploy_to_generic is not implemented — "
+            "wire a real deployment backend before calling this."
+        )
 
     async def run_health_checks(self, deployment_id: str, config: DeploymentConfig) -> bool:
         """Run health checks after deployment."""
@@ -463,32 +450,23 @@ class DeploymentManager:
             return False
 
     def rollback_deployment(self, deployment_id: str) -> bool:
-        """Rollback a failed deployment."""
-        try:
-            self._update_deployment_status(deployment_id, DeploymentStatus.ROLLING_BACK)
+        """Rollback a failed deployment.
 
-            # Implementation would depend on deployment platform
-            # Could involve reverting to previous version, restoring from backup, etc.
-
-            logger.info(f"Rolling back deployment: {deployment_id}")
-
-            # Simulate rollback process
-            time.sleep(2)  # Simulate rollback time
-
-            # In real implementation:
-            # 1. Identify previous stable version
-            # 2. Deploy previous version
-            # 3. Run health checks on rollback
-            # 4. Update status
-
-            self._update_deployment_status(deployment_id, DeploymentStatus.ROLLED_BACK)
-            logger.info(f"Successfully rolled back deployment: {deployment_id}")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Rollback failed for {deployment_id}: {e}")
-            return False
+        ERR-G02 FIX (2026-09-15): this previously *simulated* a rollback
+        (``time.sleep(2)`` → status ROLLED_BACK → ``return True``). Rollback
+        evidence must be real — an operator trusting a fabricated rollback
+        during an outage is worse than an explicit failure. It now fails loudly
+        until a real deployment backend is wired in.
+        """
+        logger.error(
+            "Rollback is NOT implemented: no real deployment backend is wired to "
+            "core.deployment.production_deploy. Refusing to fabricate rollback "
+            f"evidence for {deployment_id}."
+        )
+        raise NotImplementedError(
+            "production_deploy.rollback_deployment is not implemented — "
+            "wire a real deployment backend before calling this."
+        )
 
     def _update_deployment_status(
         self, deployment_id: str, status: DeploymentStatus, error_message: str | None = None

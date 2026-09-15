@@ -67,7 +67,7 @@ class FakeResult:
         holder = self
 
         class _S:
-            def all(self_inner):
+            def all(self):
                 return holder._scalars or []
 
         return _S()
@@ -241,9 +241,7 @@ class TestRules:
         assert "Rule k updated" in body["message"]
         god.set_rule.assert_called_once_with("k", "v")
 
-    def test_post_rule_god_failure_returns_500_with_correlation_id(
-        self, client, monkeypatch
-    ):
+    def test_post_rule_god_failure_returns_500_with_correlation_id(self, client, monkeypatch):
         god = SimpleNamespace(set_rule=MagicMock(side_effect=RuntimeError("boom")))
         monkeypatch.setattr(ar, "god_layer", god)
         resp = client.post("/api/admin/rules", json={"key": "k", "value": "v"})
@@ -285,9 +283,7 @@ class TestQuickActions:
                 FakeResult(rows=[("r1",)], columns=["id"]),
             ]
         )
-        monkeypatch.setattr(
-            "database.session.get_db_session", lambda: fake_session_gen(session)
-        )
+        monkeypatch.setattr("database.session.get_db_session", lambda: fake_session_gen(session))
         resp = client.post("/api/admin/actions/backup")
         assert resp.status_code == 200
         assert resp.json()["status"] == "success"
@@ -299,18 +295,14 @@ class TestQuickActions:
                 FakeResult(rows=[("r1", datetime(2026, 9, 15, 12, 0, 0))], columns=["id", "at"]),
             ]
         )
-        monkeypatch.setattr(
-            "database.session.get_db_session", lambda: fake_session_gen(session)
-        )
+        monkeypatch.setattr("database.session.get_db_session", lambda: fake_session_gen(session))
         resp = client.post("/api/admin/actions/backup")
         assert resp.status_code == 200
         assert "backup" in resp.json()["message"]
 
     def test_backup_failure_500(self, client, monkeypatch):
         session = FakeSession(results=[RuntimeError("db down")])
-        monkeypatch.setattr(
-            "database.session.get_db_session", lambda: fake_session_gen(session)
-        )
+        monkeypatch.setattr("database.session.get_db_session", lambda: fake_session_gen(session))
         resp = client.post("/api/admin/actions/backup")
         assert resp.status_code == 500
         assert "Database backup failed" in resp.json()["detail"]
@@ -374,10 +366,10 @@ class TestFixesLifecycle:
 
         def make_query():
             class Q:
-                def where(self_inner, *_a):
-                    return self_inner
+                def where(self, *_a):
+                    return self
 
-                def get(self_inner):
+                def get(self):
                     if query_holder.get("first") is None:
                         query_holder["first"] = True
                         raise TypeError("sync mock")
@@ -388,9 +380,7 @@ class TestFixesLifecycle:
         db = SimpleNamespace(
             collection=lambda *_: SimpleNamespace(
                 document=lambda *_: SimpleNamespace(
-                    collection=lambda *_: SimpleNamespace(
-                        where=lambda *_: make_query()
-                    )
+                    collection=lambda *_: SimpleNamespace(where=lambda *_: make_query())
                 )
             )
         )
@@ -534,9 +524,7 @@ class TestVerifyOtp:
         resp = client.post("/api/admin/verify-otp", json={"code": "123456"})
         assert resp.status_code == 200
         assert resp.json() == {"status": "verified"}
-        assert json.loads(store["security:last_context:admin-ramp"]) == {
-            "ip": "10.0.0.9"
-        }
+        assert json.loads(store["security:last_context:admin-ramp"]) == {"ip": "10.0.0.9"}
         assert "security:otp_pending:admin-ramp" not in store
         fake.client.delete.assert_awaited_once_with("security:otp_pending:admin-ramp")
 
@@ -562,8 +550,12 @@ class TestSystemAlerts:
 
     def test_get_alerts(self, client, monkeypatch):
         record = SimpleNamespace(
-            id="a1", level="warn", message="m", created_at=datetime.now(UTC),
-            resolved=False, resolved_at=None,
+            id="a1",
+            level="warn",
+            message="m",
+            created_at=datetime.now(UTC),
+            resolved=False,
+            resolved_at=None,
         )
         session = FakeSession(results=[FakeResult(scalars_list=[record])])
         self._patch_db(monkeypatch, session)
@@ -573,9 +565,7 @@ class TestSystemAlerts:
 
     def test_create_alert_401_when_key_not_configured(self, client, monkeypatch):
         self._settings(monkeypatch, None)
-        resp = client.post(
-            "/api/admin/alerts", json={"level": "warn", "message": "m"}
-        )
+        resp = client.post("/api/admin/alerts", json={"level": "warn", "message": "m"})
         assert resp.status_code == 401
 
     def test_create_alert_401_wrong_key(self, client, monkeypatch):
@@ -630,9 +620,7 @@ class TestBrandingAndConfigs:
 
     def _patch_refresh_stack(self, monkeypatch, fail_on=None):
         session = SimpleNamespace()
-        monkeypatch.setattr(
-            "database.session.get_db_session_context", fake_session_ctx(session)
-        )
+        monkeypatch.setattr("database.session.get_db_session_context", fake_session_ctx(session))
 
         async def sync_ok(db):
             return None
@@ -838,9 +826,7 @@ class TestInfrastructureAgents:
     def test_manual_backup_invalid_type_400(self, client, monkeypatch):
         monkeypatch.setenv("ENABLE_DISASTER_RECOVERY_AGENT", "true")
         self._install_dr_agent(monkeypatch)
-        resp = client.post(
-            "/api/admin/infrastructure/disaster-recovery/backup?backup_type=delta"
-        )
+        resp = client.post("/api/admin/infrastructure/disaster-recovery/backup?backup_type=delta")
         assert resp.status_code == 400
         assert "backup_type must be one of" in resp.json()["detail"]
 
@@ -949,8 +935,9 @@ class TestInfrastructureAgents:
 
     def test_cost_report_http_exception_passthrough(self, client, monkeypatch):
         monkeypatch.setenv("ENABLE_COST_OPTIMIZATION_AGENT", "true")
-        self._http_boom(monkeypatch, "agents.infrastructure.cost_optimization_agent",
-                        "cost_optimization_agent")
+        self._http_boom(
+            monkeypatch, "agents.infrastructure.cost_optimization_agent", "cost_optimization_agent"
+        )
         resp = client.get("/api/admin/infrastructure/cost/report")
         assert resp.status_code == 418
 
@@ -981,8 +968,11 @@ class TestInfrastructureAgents:
 
     def test_performance_summary_http_exception_passthrough(self, client, monkeypatch):
         monkeypatch.setenv("ENABLE_PERFORMANCE_TUNING_AGENT", "true")
-        self._http_boom(monkeypatch, "agents.infrastructure.performance_tuning_agent",
-                        "performance_tuning_agent")
+        self._http_boom(
+            monkeypatch,
+            "agents.infrastructure.performance_tuning_agent",
+            "performance_tuning_agent",
+        )
         resp = client.get("/api/admin/infrastructure/performance/summary")
         assert resp.status_code == 418
 
@@ -1051,9 +1041,7 @@ class TestInfrastructureAgents:
             async def get(self, key):
                 raise HTTPException(status_code=418, detail="scaling http error")
 
-        monkeypatch.setattr(
-            ar, "redis_manager", HttpRedis(client=SimpleNamespace())
-        )
+        monkeypatch.setattr(ar, "redis_manager", HttpRedis(client=SimpleNamespace()))
         resp = client.get("/api/admin/infrastructure/auto-scaling/status")
         assert resp.status_code == 418
 
@@ -1071,8 +1059,15 @@ class TestAutomationAndIntegrations:
         if body["workflows"]:
             wf = body["workflows"][0]
             for field in (
-                "key", "route", "enabled", "timeout_seconds", "max_retries",
-                "synchronous", "sensitive", "version", "description",
+                "key",
+                "route",
+                "enabled",
+                "timeout_seconds",
+                "max_retries",
+                "synchronous",
+                "sensitive",
+                "version",
+                "description",
             ):
                 assert field in wf
 
@@ -1087,8 +1082,16 @@ class TestAutomationAndIntegrations:
         if body["integrations"]:
             integ = body["integrations"][0]
             for field in (
-                "key", "name", "category", "scope", "enabled", "status",
-                "required_for_core", "fallback", "privacy_mode", "capabilities",
+                "key",
+                "name",
+                "category",
+                "scope",
+                "enabled",
+                "status",
+                "required_for_core",
+                "fallback",
+                "privacy_mode",
+                "capabilities",
                 "config_note",
             ):
                 assert field in integ
@@ -1114,11 +1117,20 @@ class TestAutomationAndIntegrations:
 
 def _exec_record(**over):
     base = dict(
-        id="x1", event_id="ev1", workflow_key="wf_a", provider="jira",
-        status="SUCCESS", attempt=1, started_at=datetime(2026, 9, 15, 10, 0, 0),
-        completed_at=datetime(2026, 9, 15, 10, 0, 1), duration_ms=1000,
-        http_status=200, external_execution_id=None, trace_id="tr1",
-        error_code=None, error_message=None,
+        id="x1",
+        event_id="ev1",
+        workflow_key="wf_a",
+        provider="jira",
+        status="SUCCESS",
+        attempt=1,
+        started_at=datetime(2026, 9, 15, 10, 0, 0),
+        completed_at=datetime(2026, 9, 15, 10, 0, 1),
+        duration_ms=1000,
+        http_status=200,
+        external_execution_id=None,
+        trace_id="tr1",
+        error_code=None,
+        error_message=None,
     )
     base.update(over)
     return SimpleNamespace(**base)
@@ -1128,6 +1140,7 @@ class TestAutomationExecutions:
     def _patch_ctx(self, monkeypatch, records, raises=None):
         session = FakeSession(results=[FakeResult(scalars_list=records)])
         if raises:
+
             @asynccontextmanager
             async def ctx():
                 raise raises
@@ -1195,9 +1208,7 @@ class TestAutomationExecutions:
 
 class TestRenderPreflight:
     def _install(self, monkeypatch, **methods):
-        store = SimpleNamespace(
-            get_events=lambda limit=20: [{"event": "e1"}][: min(limit, 1)]
-        )
+        store = SimpleNamespace(get_events=lambda limit=20: [{"event": "e1"}][: min(limit, 1)])
 
         class FakeSvc:
             def __init__(self):
@@ -1209,15 +1220,18 @@ class TestRenderPreflight:
             def refresh_account_status(self, account_role, service_id, api_key, force):
                 hook = methods.get("refresh")
                 if hook:
-                    return hook(account_role=account_role, service_id=service_id,
-                                api_key=api_key, force=force)
+                    return hook(
+                        account_role=account_role,
+                        service_id=service_id,
+                        api_key=api_key,
+                        force=force,
+                    )
                 return {"role": account_role, "api_key_present": bool(api_key)}
 
             def manual_override(self, account_role, approved_by, reason):
                 hook = methods.get("override")
                 if hook:
-                    return hook(account_role=account_role, approved_by=approved_by,
-                                reason=reason)
+                    return hook(account_role=account_role, approved_by=approved_by, reason=reason)
                 return {"role": account_role, "overridden": True}
 
         install_sysmodule(
@@ -1274,9 +1288,7 @@ class TestRenderPreflight:
         assert "Failed to recheck role web" in resp.json()["detail"]
 
     def test_override_requires_min_5_char_reason(self, client):
-        resp = client.post(
-            "/api/admin/render/accounts/web/override", json={"reason": "no"}
-        )
+        resp = client.post("/api/admin/render/accounts/web/override", json={"reason": "no"})
         assert resp.status_code == 400
         assert "min 5 chars" in resp.json()["detail"]
 

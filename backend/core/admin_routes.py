@@ -162,25 +162,51 @@ def get_current_admin(payload: dict = Depends(get_current_user_token)) -> dict:
 auth = get_firebase_auth()
 
 
+# ERR-S01 FIX (2026-09-15): single shared, ALLOW-LIST gate for every `mock-`
+# token bypass site in this file. Previously several sites used deny-list
+# comparisons (`env == "production"` / `env != "production"`) while login and
+# TOTP-setup used allow-lists — the same token prefix had two different
+# policies. Deny-lists fail open for "prod", "staging", misspelled or unset
+# ENV values (config.py itself treats "prod" as production in is_bypass_allowed).
+_MOCK_TOKEN_ALLOWED_ENVS = frozenset({"local", "dev", "development", "test", "testing", "ci"})
+
+
+def _mock_token_allowed() -> bool:
+    """Return True only in explicitly permitted local/test environments.
+
+    Fail-closed by design: production, prod, staging, and any unknown/unset
+    env value are all rejected. This is the only gate that should guard
+    ``mock-`` token bypasses in this module.
+    """
+    env = str(getattr(settings, "env", "local") or "local").lower()
+    return env in _MOCK_TOKEN_ALLOWED_ENVS
+
+
+def _reject_mock_token() -> None:
+    """Raise the standard 403 for mock-token bypass attempts outside dev/test."""
+    logger.warning(
+        "Mock-token bypass attempt rejected (env=%r is not in the local/test allow-list).",
+        getattr(settings, "env", "local"),
+    )
+    raise HTTPException(
+        status_code=403,
+        detail="Mock tokens are strictly forbidden outside of local testing environments.",
+    )
+
+
 # বাংলা মন্��ব্য: শুধুমাত্র স্ট্যান্ডার্ড ২-স্টেপ পাসওয়ার্ড + TOTP ফ্লো এবং ৭-ডিজিট ফায়ারবেস অথেনটিকেশন ফ্লোটি সক্রিয় রাখা হয়েছে।
 
 
 @router.post("/api/admin/firebase-login")
 async def admin_firebase_login(payload: AdminFirebaseLoginRequest, request: Request):
     id_token = payload.id_token
-    is_production = getattr(settings, "env", "local").lower() == "production"
 
     try:
         if id_token.startswith("mock-"):
-            if is_production or getattr(settings, "env", "local").lower() not in (
-                "local",
-                "test",
-                "testing",
-            ):
-                raise HTTPException(
-                    status_code=403,
-                    detail="Mock tokens are strictly forbidden outside of local testing environments.",
-                )
+            # ERR-S01 FIX: shared allow-list gate (single source of truth for all
+            # mock-token sites in this module — fail-closed outside dev/test).
+            if not _mock_token_allowed():
+                _reject_mock_token()
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
             logger.warning(
@@ -275,8 +301,13 @@ def _ensure_admin_authorized(uid: str, email: str = "") -> None:
     ADMIN_EMAILS allowlist-এ থাকা ইমেইল এগোতে পারবে। Firestore lookup ব্যর্থ হলে
     fail-closed (অনুমোদন দেওয়া হবে না) — login flow-এর সাথে সামঞ্জস্যপূর্ণ।
     """
-    if uid == "mock-admin-uid" and getattr(settings, "env", "local").lower() != "production":
-        return  # বাংলা মন্তব্য: dev-only mock পথ; production-এ mock token উপরেই ব্লক হয়
+    # ERR-S01 FIX (2026-09-15): was a deny-list (`env != "production"`), which
+    # authorized mock-admin-uid for ANY non-"production" env value — including
+    # "prod" (which config.py treats as production) and unset/unknown values.
+    # Now it uses the shared allow-list helper so all five mock-token sites in
+    # this file enforce one identical, fail-closed policy.
+    if uid == "mock-admin-uid" and _mock_token_allowed():
+        return  # বাংলা মন্তব্য: dev/test-only mock পথ; বাকি সব env-এ fail-closed
 
     admin_emails = {e.lower() for e in (getattr(settings, "admin_emails", None) or [])}
     if email and email.lower() in admin_emails:
@@ -298,16 +329,13 @@ def _ensure_admin_authorized(uid: str, email: str = "") -> None:
 @router.post("/api/admin/firebase-totp-setup")
 def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     id_token = payload.id_token
-    is_production = getattr(settings, "env", "local").lower() == "production"
 
     try:
         if id_token.startswith("mock-"):
-            # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP সেটআপ বাইপাস কঠোরভাবে নিষিদ্ধ
-            if is_production:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Mock tokens are strictly forbidden in production.",
-                )
+            # বাংলা মন্তব্য: mock টোকেন দিয়ে TOTP সেটআপ বাইপাস শুধুমাত্র local/test env-এ অনুমোদিত
+            # ERR-S01 FIX: shared fail-closed allow-list gate (was: deny-list `== production`).
+            if not _mock_token_allowed():
+                _reject_mock_token()
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
         elif auth:
@@ -363,10 +391,9 @@ def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
     """Consume one single-use recovery code and issue a fresh TOTP enrollment."""
     try:
         if payload.id_token.startswith("mock-"):
-            if getattr(settings, "env", "local").lower() == "production":
-                raise HTTPException(
-                    status_code=403, detail="Mock tokens are forbidden in production"
-                )
+            # ERR-S01 FIX: shared fail-closed allow-list gate (was: deny-list `== production`).
+            if not _mock_token_allowed():
+                _reject_mock_token()
             uid = "mock-admin-uid"
             email = settings.admin_emails[0] if settings.admin_emails else "admin@example.com"
         elif auth:
@@ -406,16 +433,13 @@ def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
 async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, response: Response):
     id_token = payload.id_token
     otp = payload.otp
-    is_production = getattr(settings, "env", "local").lower() == "production"
 
     try:
         if id_token.startswith("mock-"):
-            # বাংলা মন্তব্য: প্রোডাকশনে mock টোকেন দিয়ে TOTP ভেরিফিকেশন বাইপাস কঠোরভাবে নিষিদ্ধ
-            if is_production:
-                raise HTTPException(
-                    status_code=403,
-                    detail="Mock tokens are strictly forbidden in production.",
-                )
+            # বাংলা মন্তব্য: mock টোকেন দিয়ে TOTP ভেরিফিকেশন বাইপাস শুধুমাত্র local/test env-এ অনুমোদিত
+            # ERR-S01 FIX: shared fail-closed allow-list gate (was: deny-list `== production`).
+            if not _mock_token_allowed():
+                _reject_mock_token()
             uid = "mock-admin-uid"
             email = ""
         elif auth:

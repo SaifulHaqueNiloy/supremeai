@@ -262,18 +262,22 @@ async def create_checkout_session(
         # SecretStr object, which is always truthy, so unconfigured/invalid keys
         # sailed through and failed inside the Stripe SDK with a 500. Use the
         # validated STRIPE_ENABLED flag instead and return a clean 503.
+        #
+        # ERR-G01 FIX (2026-09-15): the previous non-production path fabricated a
+        # paid success state ("mock_session_123" + the customer's success_url)
+        # when Stripe was unconfigured — indistinguishable from a real checkout.
+        # A fabricated billing success poisons entitlement/revenue integrity, so
+        # it is forbidden in EVERY environment. Checkout now fails closed with a
+        # clear 503 until a valid Stripe key is configured.
         if not STRIPE_ENABLED:
-            if settings.env == "production":
-                raise HTTPException(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="Stripe is not configured. Payment processing is temporarily unavailable.",
-                )
-            logger.warning("Stripe API key not set in settings. Using mock checkout session.")
-            return {
-                "status": "mock",
-                "session_id": "mock_session_123",
-                "url": payload.success_url + "?session_id=mock_session_123",
-            }
+            logger.warning(
+                "Stripe is not configured — rejecting checkout session request "
+                "without fabricating a payment session (billing integrity guard)."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Stripe is not configured. Payment processing is temporarily unavailable.",
+            )
 
         stripe.api_key = _raw_stripe_key
         stripe_session = stripe.checkout.Session.create(
