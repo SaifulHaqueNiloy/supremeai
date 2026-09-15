@@ -9,9 +9,9 @@ from __future__ import annotations
 import hashlib
 from typing import Any
 
+from context.engine import RawCandidate
 from context.items import ItemKind
 from context.scopes import Scope
-from context.engine import RawCandidate
 from services.memory_service import recall_memories
 
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 import uuid
 
 import pytest
-
 from backend.ecosystem.federation_bridge import observe_browser_run, observe_remediation_run
 
 
