@@ -146,6 +146,50 @@ class TestOwnership:
         theirs = (await client.get("/api/v1/runs")).json()
         assert all(r["id"] != ack["run_id"] for r in theirs)
 
+    @pytest.mark.asyncio
+    async def test_list_filters_by_status_and_run_type(self, client, runs_api_tables, principal):
+        """?status= and ?run_type= query filters narrow the listing (contract)."""
+        ack_t, sub = await _create_run(client, principal, sub="filter-owner", run_type="tool")
+        await _create_run(client, principal, sub="filter-owner", run_type="agent")
+
+        principal("filter-owner")
+        # run_type filter: only the tool run matches
+        tools = (await client.get("/api/v1/runs", params={"run_type": "tool"})).json()
+        assert tools, "expected at least one tool run"
+        assert all(r["run_type"] == "tool" for r in tools)
+        assert any(r["id"] == ack_t["run_id"] for r in tools)
+
+        # status filter: nothing is policy_checked yet -> empty
+        checked = (await client.get("/api/v1/runs", params={"status": "policy_checked"})).json()
+        assert checked == []
+        await client.post(
+            f"/api/v1/runs/{ack_t['run_id']}/transition", json={"to": "policy_checked"}
+        )
+        checked = (await client.get("/api/v1/runs", params={"status": "policy_checked"})).json()
+        assert [r["id"] for r in checked] == [ack_t["run_id"]]
+
+    @pytest.mark.asyncio
+    async def test_non_uuid_run_id_404(self, client, runs_api_tables, principal):
+        """A malformed run id must 404 (no 500/422 leak from uuid parsing)."""
+        principal("probe-user")
+        for path in ("not-a-uuid", "%20", "1234"):
+            resp = await client.get(f"/api/v1/runs/{path}")
+            assert resp.status_code == 404, (path, resp.status_code, resp.text)
+
+    @pytest.mark.asyncio
+    async def test_empty_principal_403(self, client, runs_api_tables):
+        """A token payload with no sub/user_id/email must 403 (identity required)."""
+        from api.dependencies import get_current_user_token
+        from core.app import app as application
+
+        application.dependency_overrides[get_current_user_token] = lambda: {"role": "user"}
+        try:
+            resp = await client.post("/api/v1/runs", json={"run_type": "tool"})
+            assert resp.status_code == 403, (resp.status_code, resp.text)
+            assert resp.json()["detail"] == "Authenticated principal required"
+        finally:
+            application.dependency_overrides.pop(get_current_user_token, None)
+
 
 class TestTransitionsAndGuards:
     @pytest.mark.asyncio
