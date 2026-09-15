@@ -1,3 +1,4 @@
+from .chat_attachment import ChatAttachment
 from .crawler import CrawlHistoryModel, CrawlPolicyModel, DomainRuleModel
 from .dynamic_agent import DynamicAgent
 from .execution_log import ExecutionLog
@@ -17,6 +18,7 @@ __all__ = [
     "AutomationExecution",
     "CrawlHistoryModel",
     "CrawlPolicyModel",
+    "ChatAttachment",
     "DomainRuleModel",
     "DynamicAgent",
     "DynamicCapability",
