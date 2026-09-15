@@ -5,11 +5,15 @@
 # pyproject.toml উভয়ের সাথে consistent।
 
 [run]
+# memory added 2026-09-15 (PR-CI measurement integrity): backend/memory/ was
+# a measurement blind spot — CI's --cov list never included it. This local
+# source list mirrors the CI contract (see ci.yml pytest --cov comment).
 source = core
        api
        tools
        ws
        workers
+       memory
 branch = True
 omit =
     */site-packages/*
@@ -21,6 +25,11 @@ omit =
     */__init__.py
     tools/cli.py
     core/worker_main.py
+    # in-package test file — never CI-collected (uses the repo-root `backend.`
+    # import prefix); a functional CI-collected twin lives at
+    # tests/memory/test_memory_pkg_integrity.py. Measuring a test FILE as
+    # production coverage is noise, not honesty.
+    memory/test_hierarchical_tree.py
 
 [report]
 exclude_lines =

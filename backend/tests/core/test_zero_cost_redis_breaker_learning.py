@@ -712,7 +712,11 @@ def test_breaker_get_status_shape():
     assert status["state"] == "closed"
     assert status["is_available"] is True
     assert status["metrics"]["failure_rate"] == 0.0
-    assert status["adaptive"] == {"enabled": True, "threshold_adjustments": 0, "recent_threshold": []}
+    assert status["adaptive"] == {
+        "enabled": True,
+        "threshold_adjustments": 0,
+        "recent_threshold": [],
+    }
     assert status["time_in_current_state_s"] >= 0
 
 
@@ -876,7 +880,9 @@ async def test_optimize_parameter_no_metrics_returns_early():
 
 async def test_optimize_parameter_applies_suggestion():
     e = make_engine()
-    param = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    param = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     e._metric_samples["queue_active_tasks"] = [(time.monotonic(), 95.0)]
     await e._optimize_parameter("queue_max_concurrent", param)
     assert param.optimal_value == 110.0  # utilization 0.95 > 0.9 -> +10%
@@ -886,7 +892,9 @@ async def test_optimize_parameter_applies_suggestion():
 
 async def test_optimize_parameter_clamps_to_bounds():
     e = make_engine()
-    param = LearnedParameter(name="queue_max_concurrent", current_value=195, min_value=1, max_value=200)
+    param = LearnedParameter(
+        name="queue_max_concurrent", current_value=195, min_value=1, max_value=200
+    )
     e._metric_samples["queue_active_tasks"] = [(time.monotonic(), 195.0)]
     await e._optimize_parameter("queue_max_concurrent", param)
     assert param.optimal_value == 200  # 195 + 19.5 clamped
@@ -894,7 +902,9 @@ async def test_optimize_parameter_clamps_to_bounds():
 
 async def test_optimize_parameter_clamped_equal_skips_update():
     e = make_engine()
-    param = LearnedParameter(name="queue_max_concurrent", current_value=200, min_value=1, max_value=200)
+    param = LearnedParameter(
+        name="queue_max_concurrent", current_value=200, min_value=1, max_value=200
+    )
     e._metric_samples["queue_active_tasks"] = [(time.monotonic(), 195.0)]
     await e._optimize_parameter("queue_max_concurrent", param)
     assert param.optimal_value is None  # clamped value == current -> no update
@@ -902,7 +912,9 @@ async def test_optimize_parameter_clamped_equal_skips_update():
 
 async def test_optimize_parameter_confidence_caps_at_one():
     e = make_engine()
-    param = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    param = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     param.confidence = 0.97
     e._metric_samples["queue_active_tasks"] = [(time.monotonic(), 95.0)]
     await e._optimize_parameter("queue_max_concurrent", param)
@@ -911,7 +923,9 @@ async def test_optimize_parameter_confidence_caps_at_one():
 
 async def test_optimize_parameter_zero_adjustment_leaves_param_untouched():
     e = make_engine()
-    param = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    param = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     e._metric_samples["queue_active_tasks"] = [(time.monotonic(), 50.0)]  # util 0.5 -> adjustment 0
     await e._optimize_parameter("queue_max_concurrent", param)
     assert param.optimal_value is None
@@ -970,11 +984,17 @@ def test_performance_score_clamped():
 def test_adjustment_queue_utilization_arms():
     e = make_engine()
     now = time.monotonic()
-    hi = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    hi = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     assert e._calculate_adjustment(hi, {"queue_active_tasks": [(now, 95.0)]}, 50.0) == 10.0
-    lo = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    lo = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     assert e._calculate_adjustment(lo, {"queue_active_tasks": [(now, 10.0)]}, 50.0) == -5.0
-    mid = LearnedParameter(name="queue_max_concurrent", current_value=100, min_value=1, max_value=200)
+    mid = LearnedParameter(
+        name="queue_max_concurrent", current_value=100, min_value=1, max_value=200
+    )
     assert e._calculate_adjustment(mid, {"queue_active_tasks": [(now, 50.0)]}, 50.0) == 0
     zero = LearnedParameter(name="queue_max_concurrent", current_value=0, min_value=0, max_value=10)
     assert e._calculate_adjustment(zero, {"queue_active_tasks": [(now, 5.0)]}, 50.0) == 0
@@ -984,28 +1004,45 @@ def test_adjustment_timeout_branch_requires_non_queue_name():
     # quirk 5: "queue_task_timeout" contains "queue" -> queue branch -> always 0
     e = make_engine()
     now = time.monotonic()
-    registered = LearnedParameter(name="queue_task_timeout", current_value=100.0, min_value=1, max_value=600)
+    registered = LearnedParameter(
+        name="queue_task_timeout", current_value=100.0, min_value=1, max_value=600
+    )
     assert e._calculate_adjustment(registered, {"task_timeout_count": [(now, 0.2)]}, 50.0) == 0
     # a timeout-named parameter without "queue" reaches the timeout branch
-    timeout_param = LearnedParameter(name="task_timeout", current_value=100.0, min_value=1, max_value=600)
-    assert e._calculate_adjustment(timeout_param, {"task_timeout_count": [(now, 0.2)]}, 50.0) == 20.0
+    timeout_param = LearnedParameter(
+        name="task_timeout", current_value=100.0, min_value=1, max_value=600
+    )
+    assert (
+        e._calculate_adjustment(timeout_param, {"task_timeout_count": [(now, 0.2)]}, 50.0) == 20.0
+    )
     assert e._calculate_adjustment(timeout_param, {"task_timeout_count": [(now, 0.01)]}, 50.0) == 0
 
 
 def test_adjustment_threshold_and_other_arms():
     e = make_engine()
     now = time.monotonic()
-    thr_up = LearnedParameter(name="cb_failure_threshold", current_value=5, min_value=2, max_value=20)
+    thr_up = LearnedParameter(
+        name="cb_failure_threshold", current_value=5, min_value=2, max_value=20
+    )
     assert e._calculate_adjustment(thr_up, {"circuit_breaker_trips": [(now, 2.0)]}, 50.0) == 1
-    thr_down = LearnedParameter(name="cb_failure_threshold", current_value=5, min_value=2, max_value=20)
+    thr_down = LearnedParameter(
+        name="cb_failure_threshold", current_value=5, min_value=2, max_value=20
+    )
     assert e._calculate_adjustment(thr_down, {"circuit_breaker_trips": [(now, 0.05)]}, 50.0) == -1
-    thr_mid = LearnedParameter(name="cb_failure_threshold", current_value=5, min_value=2, max_value=20)
+    thr_mid = LearnedParameter(
+        name="cb_failure_threshold", current_value=5, min_value=2, max_value=20
+    )
     assert e._calculate_adjustment(thr_mid, {"circuit_breaker_trips": [(now, 0.5)]}, 50.0) == 0
     other = LearnedParameter(name="mystery_param", current_value=5, min_value=1, max_value=10)
     assert e._calculate_adjustment(other, {"anything": [(now, 9.0)]}, 50.0) == 0
     # threshold param whose metrics lack the "trips" keyword -> trips None -> 0
-    thr_no_trips = LearnedParameter(name="cb_failure_threshold", current_value=5, min_value=2, max_value=20)
-    assert e._calculate_adjustment(thr_no_trips, {"circuit_breaker_recovery_time": [(now, 5.0)]}, 50.0) == 0
+    thr_no_trips = LearnedParameter(
+        name="cb_failure_threshold", current_value=5, min_value=2, max_value=20
+    )
+    assert (
+        e._calculate_adjustment(thr_no_trips, {"circuit_breaker_recovery_time": [(now, 5.0)]}, 50.0)
+        == 0
+    )
 
 
 def test_extract_avg_last_twenty_and_missing():
@@ -1304,7 +1341,9 @@ def test_get_orchestrator_global_singleton(monkeypatch):
 
 async def test_lifespan_manager_startup_and_shutdown(monkeypatch):
     monkeypatch.setattr(zc, "_global_orchestrator", None)
-    monkeypatch.setattr(zc, "get_zero_cost_config", lambda: small_config(GRACEFUL_SHUTDOWN_TIMEOUT=1.0))
+    monkeypatch.setattr(
+        zc, "get_zero_cost_config", lambda: small_config(GRACEFUL_SHUTDOWN_TIMEOUT=1.0)
+    )
     app = types.SimpleNamespace(state=types.SimpleNamespace())
     async with zc.lifespan_manager(app):
         o = zc.get_orchestrator()

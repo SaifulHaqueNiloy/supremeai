@@ -47,7 +47,6 @@ from core.competitive_kit import (
     demonstrate_competitive_advantages,
 )
 
-
 # ───────────────────────── 1. Personality engine ─────────────────────────
 
 
@@ -277,14 +276,15 @@ def test_source_support_scales_and_caps():
     assert scorer._check_source_support("plain answer", [{"url": "u"}]) == pytest.approx(0.36)
     assert scorer._check_source_support("plain answer", [{"url": "u"}] * 5) == pytest.approx(1.0)
     # citation marker would push 1.0 → 1.1, capped back to 1.0
-    assert scorer._check_source_support("answer [1] cited", [{"url": "u"}] * 5) == pytest.approx(1.0)
+    assert scorer._check_source_support("answer [1] cited", [{"url": "u"}] * 5) == pytest.approx(
+        1.0
+    )
 
 
 def test_estimate_factual_accuracy_specificity_penalty():
     scorer = ConfidenceScorer()
     numbers = (
-        "In 2020, 2021, 2022, 2023, 2024 the ratios 1.1, 2.2, 3.3, 4.4, 5.5, "
-        "6.6 held ($700, $800)."
+        "In 2020, 2021, 2022, 2023, 2024 the ratios 1.1, 2.2, 3.3, 4.4, 5.5, 6.6 held ($700, $800)."
     )
     assert scorer._estimate_factual_accuracy(numbers, []) == pytest.approx(0.5)  # capped
 
@@ -294,13 +294,17 @@ def test_analyze_certainty_language_mixes():
     assert scorer._analyze_certainty_language("Definitely, absolutely.") == pytest.approx(1.0)
     assert scorer._analyze_certainty_language("It might possibly work.") == pytest.approx(0.4)
     assert scorer._analyze_certainty_language("As far as I know, yes.") == pytest.approx(0.3)
-    assert scorer._analyze_certainty_language("Definitely, as far as I know.") == pytest.approx(0.65)
+    assert scorer._analyze_certainty_language("Definitely, as far as I know.") == pytest.approx(
+        0.65
+    )
     assert scorer._analyze_certainty_language("A plain statement.") == pytest.approx(0.7)
 
 
 def test_internal_consistency_detects_contradiction():
     scorer = ConfidenceScorer()
-    assert scorer._check_internal_consistency("It always works. It never works.") == pytest.approx(0.0)
+    assert scorer._check_internal_consistency("It always works. It never works.") == pytest.approx(
+        0.0
+    )
     assert scorer._check_internal_consistency("Single sentence only.") == pytest.approx(1.0)
 
 
@@ -599,7 +603,9 @@ def test_calculate_importance_branches():
     mgr = SmartContextManager()
     assert mgr._calculate_importance({"role": "assistant", "content": "ok"}) == pytest.approx(0.5)
     assert mgr._calculate_importance({"role": "user", "content": "what?"}) == pytest.approx(0.7)
-    assert mgr._calculate_importance({"role": "assistant", "content": "x" * 120}) == pytest.approx(0.6)
+    assert mgr._calculate_importance({"role": "assistant", "content": "x" * 120}) == pytest.approx(
+        0.6
+    )
     assert mgr._calculate_importance(
         {"role": "assistant", "content": "remember the decision"}
     ) == pytest.approx(0.7)
@@ -771,7 +777,9 @@ def test_select_provider_free_tier_exhaustion_fallbacks():
     assert router._select_provider("qa", prefer_free=True, max_cost=0.01) == "groq"
     router.usage_tracker["groq"]["count"] = 14400  # both exhausted → task mapping
     assert router._select_provider("coding", prefer_free=True, max_cost=1.0) == "openai"
-    assert router._select_provider("creative_writing", prefer_free=True, max_cost=1.0) == "anthropic"
+    assert (
+        router._select_provider("creative_writing", prefer_free=True, max_cost=1.0) == "anthropic"
+    )
     assert router._select_provider("analysis", prefer_free=True, max_cost=1.0) == "anthropic"
     assert router._select_provider("qa", prefer_free=True, max_cost=1.0) == "openai"
     # prefer_free=False skips the free loop entirely
@@ -839,7 +847,7 @@ async def test_route_request_paid_provider_tracks_cost():
     assert result["provider"] == "openai"
     assert result["model"] == "o1-preview"
     assert result["cached"] is False
-    expected_tokens = len("write code now".split()) + len(result["response"].split())
+    expected_tokens = len(["write", "code", "now"]) + len(result["response"].split())
     expected_cost = expected_tokens / 1000 * MultiLLMRouter.PROVIDERS["openai"].cost_per_1k_tokens
     assert result["cost"] == pytest.approx(expected_cost)
     assert router.usage_tracker["openai"]["tokens"] == expected_tokens
