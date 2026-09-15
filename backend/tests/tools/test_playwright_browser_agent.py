@@ -258,6 +258,13 @@ def stealth_env(monkeypatch):
     recorder.stealth = st
     recorder.context = st._context
     monkeypatch.setattr(pa, "BrowserStealth", lambda: st)
+    # The agent's public flows gate on start() -> is_available() (a real
+    # importlib spec check). CI venvs may not install playwright (the module
+    # treats it as an optional dependency), so the availability gate is faked
+    # TRUE here to let the scripted fake-browser flows run everywhere. The
+    # real gate behaviour keeps dedicated coverage below
+    # (test_is_available_true_and_false / test_start_raises_when_unavailable).
+    monkeypatch.setattr(pa.PlaywrightBrowserAgent, "is_available", lambda self: True)
     db_double = SimpleNamespace(
         get_model_behavior=lambda name: None,
         upsert_model_behavior=lambda data: data,
@@ -286,8 +293,14 @@ def test_init_defaults_and_cookie_dir(agent, tmp_path):
 
 
 def test_is_available_true_and_false(agent, monkeypatch):
-    assert agent.is_available() is True  # playwright installed in the venv
     import importlib.util
+
+    # Real spec detection: the module treats playwright as OPTIONAL, so both
+    # branches must hold regardless of whether this environment installs it.
+    if importlib.util.find_spec("playwright") is not None:
+        assert agent.is_available() is True
+    else:
+        assert agent.is_available() is False
 
     with patch("importlib.util.find_spec", return_value=None):
         assert agent.is_available() is False
@@ -299,9 +312,13 @@ def test_start_raises_when_unavailable(agent):
             agent.start()
 
 
-def test_start_and_stop_are_safe_noops(agent):
+def test_start_and_stop_are_safe_noops(agent, monkeypatch):
+    # start() is an availability check and stop() is a debug log (cleanup lives
+    # in per-task finally blocks) — neither needs real playwright, so the gate
+    # is faked for environments where the optional dependency is absent.
+    monkeypatch.setattr(pa.PlaywrightBrowserAgent, "is_available", lambda self: True)
     agent.start()
-    agent.stop()  # cleanup moved into per-task finally blocks; must not raise
+    agent.stop()
 
 
 # ---------------------------------------------------------------------------
