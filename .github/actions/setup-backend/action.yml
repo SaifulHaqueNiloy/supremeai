@@ -105,12 +105,21 @@ runs:
           poetry install --no-root --with dev
         fi
 
-    - name: 📊 Virtualenv Environment Verification
+    - name: 📊 Virtualenv Environment Verification & PATH Configuration
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -d ".venv" ] && [ -f ".venv/bin/python" ]; then
           echo "✅ **Virtualenv Ready**: $(.venv/bin/python --version) (Cache hit: ${{ steps.venv-cache.outputs.cache-hit || 'false' }})" >> "$GITHUB_STEP_SUMMARY"
+          # AUD-PATH: Add .venv/bin to GITHUB_PATH so pytest, ruff, coverage etc are directly in PATH
+          VENV_BIN="$(pwd)/.venv/bin"
+          echo "$VENV_BIN" >> "$GITHUB_PATH"
+          # Create a shim for 'poetry run' so legacy commands like 'poetry run pytest' run directly via .venv without requiring full poetry installation
+          if ! command -v poetry &>/dev/null; then
+            echo '#!/usr/bin/env bash' > "$VENV_BIN/poetry"
+            echo 'if [ "$1" = "run" ]; then shift; exec "$@"; else echo "Poetry run shim invoked with: $@"; exit 1; fi' >> "$VENV_BIN/poetry"
+            chmod +x "$VENV_BIN/poetry"
+          fi
         else
           echo "❌ **Virtualenv Verification Failed**: .venv/bin/python not found." >> "$GITHUB_STEP_SUMMARY"
           exit 1
