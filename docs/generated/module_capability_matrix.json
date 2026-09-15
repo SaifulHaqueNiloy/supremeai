@@ -8605,11 +8605,40 @@
       "path": "backend/runs/__init__.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/api.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/bridges.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/runs/budgets.py"
+    },
+    {
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/hitl.py"
     },
     {
       "capability_signals": [
@@ -8630,6 +8659,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/runs/retry.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/schemas.py"
     },
     {
       "capability_signals": [],
@@ -12503,11 +12539,42 @@
       "path": "backend/tests/rag/test_hybrid_retriever.py"
     },
     {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_api.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute",
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_bridges.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/runs/test_run_budgets.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/runs/test_run_hitl.py"
     },
     {
       "capability_signals": [
@@ -23539,5 +23606,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2726
+  "source_file_count": 2733
 }

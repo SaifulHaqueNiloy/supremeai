@@ -416,6 +416,11 @@ ALL_ROUTERS = [
     # রাউট-লেভেলেই এনফোর্স করে, তাই sibling tool-router প্যাটার্ন (is_admin=False)।
     {"path": "api.routes.missions", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.mcp_hub", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── M1 Canonical Run fabric (roadmap M1 / PR-chain #341 → M1-B → M1-C):
+    # runs রাউটার নিজস্ব prefix (/api/v1/runs) সহ আসে, তাই registry prefix ""।
+    # identity verified JWT থেকে derive হয় (get_current_user_token); ownership
+    # enforcement রাউট-লেভেলেই (foreign run → 404, missions parity)।
+    {"path": "runs.api", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 

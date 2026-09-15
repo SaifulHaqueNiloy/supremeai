@@ -36,10 +36,12 @@ from runs.models import Run, RunEvent, RunType
 from runs.retry import RetryClass, is_retryable
 from runs.state_machine import (
     CANCELLED,
+    FAILED,
     FINALIZED,
     RETRYING,
     RUNNING,
     TERMINAL_STATES,
+    WAITING_APPROVAL,
     IllegalTransition,
     assert_transition,
 )
@@ -64,9 +66,17 @@ class RunNotFound(LookupError):
 class RunService:
     """Run lifecycle service — all DB access via the injected AsyncSession.
 
-    Stateless (like ``MissionService``): safe to share one instance across
-    requests; all per-run state lives in the rows.
+    Stateless per-run (all run state lives in the rows); the approval hook
+    is injectable per instance (same pattern as ``MissionService``'s
+    assigner hook) so production can wire the existing HITL manager while
+    tests stay offline.
     """
+
+    def __init__(self, approval_hook: Any | None = None) -> None:
+        # approval_hook: runs.hitl.ApprovalHook (suspend -> record_id) or None.
+        # None means "WAITING_APPROVAL reachable without external record" —
+        # acceptable for direct-API callers; subsystem bridges pass a hook.
+        self._approval_hook = approval_hook
 
     # ------------------------------------------------------------------
     # Internal helpers
@@ -120,8 +130,13 @@ class RunService:
         """Snapshot the run's budget limits + consumption for enforcement."""
         wall_clock_ms = 0
         if run.started_at is not None:
+            started = run.started_at
+            if started.tzinfo is None:
+                # sqlite round-trip: naive values were written as UTC
+                # (client-side _utcnow defaults) — interpret back as UTC.
+                started = started.replace(tzinfo=UTC)
             end = now or datetime.now(UTC)
-            wall_clock_ms = max(0, int((end - run.started_at).total_seconds() * 1000))
+            wall_clock_ms = max(0, int((end - started).total_seconds() * 1000))
         return BudgetSnapshot(
             max_wall_clock_ms=run.max_wall_clock_ms,
             max_tokens=run.max_tokens,
@@ -460,3 +475,74 @@ class RunService:
             actor=actor,
             detail=detail,
         )
+
+    # ------------------------------------------------------------------
+    # HITL (M1-C): reuse the existing HITL manager contract
+    # ------------------------------------------------------------------
+    async def request_approval(
+        self,
+        session: AsyncSession,
+        run_id: Any,
+        *,
+        payload: dict[str, Any] | None = None,
+        actor: str | None = None,
+    ) -> Run:
+        """Suspend the run for human approval (RUNNING -> WAITING_APPROVAL).
+
+        Calls the injectable approval hook (existing HITL manager contract:
+        ``suspend(target_resource, payload) -> record_id``) and records the
+        external record id + payload hash on the run's event stream. When
+        the external decision lands, callers resolve via ``transition``
+        (-> RUNNING approved / -> FAILED rejected) — see ``resolve_approval``.
+        """
+        from runs.hitl import make_approval_detail
+
+        run = await self.get_run(session, run_id)
+        assert_transition(run.status, WAITING_APPROVAL)
+
+        record_id: str | None = None
+        if self._approval_hook is not None:
+            record_id = await self._approval_hook.suspend(
+                f"run:{run.id}", payload or {"run_id": str(run.id)}
+            )
+
+        run.status = WAITING_APPROVAL
+        run.retry_class = str(RetryClass.approval_required)
+        await self._emit(
+            session,
+            run,
+            "approval_requested",
+            detail={"actor": actor, **make_approval_detail(record_id or "", payload)},
+        )
+        return run
+
+    async def resolve_approval(
+        self,
+        session: AsyncSession,
+        run_id: Any,
+        *,
+        approved: bool,
+        actor: str | None = None,
+        reason: str | None = None,
+    ) -> Run:
+        """Close the HITL loop: WAITING_APPROVAL -> RUNNING (or FAILED)."""
+        run = await self.get_run(session, run_id)
+        target = RUNNING if approved else FAILED
+        assert_transition(run.status, target)
+        from_status = run.status
+        run.status = target
+        if not approved:
+            run.terminal_at = datetime.now(UTC)
+        await self._emit(
+            session,
+            run,
+            "approval_resolved",
+            detail={
+                "from": from_status,
+                "to": target,
+                "approved": approved,
+                "actor": actor,
+                "reason": reason,
+            },
+        )
+        return run
