@@ -21,8 +21,13 @@ config = context.config
 migration_url = (
     os.getenv("SUPABASE_DATABASE_URL_WRITER")
     or getattr(settings, "database_url", None)
-    or settings.supabase_database_url
+    or getattr(settings, "supabase_database_url", None)
 )
+if not migration_url:
+    raise RuntimeError(
+        "Database URL is required for Alembic. Set SUPABASE_DATABASE_URL_WRITER "
+        "or the canonical database URL setting before running migrations."
+    )
 config.set_main_option("sqlalchemy.url", migration_url)
 
 # Interpret the config file for Python logging.

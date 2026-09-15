@@ -59,6 +59,17 @@ async def test_admin_can_run_high_risk_tool(gateway):
 
 
 @pytest.mark.asyncio
+async def test_declared_risk_cannot_downgrade_registered_risk(gateway):
+    decision = await gateway.evaluate(
+        tool_name="platform_action.slack",
+        user={"sub": "user-1", "role": "user"},
+        risk="low",
+    )
+    assert decision.risk == "high"
+    assert decision.allowed is False
+
+
+@pytest.mark.asyncio
 async def test_unregistered_tool_defaults_to_high_risk(gateway):
     """Fail-closed: unknown tools behave as high risk until classified."""
     decision = await gateway.evaluate(

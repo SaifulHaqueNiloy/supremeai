@@ -34,3 +34,10 @@ async def test_task_gateway_lifecycle():
         )
         assert cancel_res.status_code == 200
         assert cancel_res.json()["status"] == "cancelled"
+
+        # A different tenant must not be able to discover the task.
+        cross_tenant_res = await client.get(
+            f"/api/v1/tasks/{task_id}",
+            headers={"Authorization": "Bearer mock-token", "X-Tenant-ID": "tenant_other"},
+        )
+        assert cross_tenant_res.status_code == 404

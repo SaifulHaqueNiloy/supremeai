@@ -8,19 +8,19 @@ from utils.environment import (
 
 
 class TestIsTestEnvironment:
-    def test_returns_true_when_ci_set(self):
+    def test_returns_true_when_testing_flag_set(self):
+        os.environ["TESTING"] = "true"
+        try:
+            assert is_test_environment() is True
+        finally:
+            del os.environ["TESTING"]
+
+    def test_ci_does_not_enable_test_mode(self):
         os.environ["CI"] = "true"
         try:
-            assert is_test_environment() is True
+            assert is_test_environment() is False
         finally:
             del os.environ["CI"]
-
-    def test_returns_true_when_github_actions_set(self):
-        os.environ["GITHUB_ACTIONS"] = "true"
-        try:
-            assert is_test_environment() is True
-        finally:
-            del os.environ["GITHUB_ACTIONS"]
 
     def test_returns_false_in_production(self):
         os.environ["ENV"] = "production"
