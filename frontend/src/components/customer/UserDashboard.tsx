@@ -97,7 +97,7 @@ export const UserDashboard: React.FC = () => {
     setRecentLoading(true);
     try {
       const data = await apiClient.get<RecentConversation[] | { data?: RecentConversation[] }>(
-        '/api/conversations',
+        '/api/v1/conversations/',
       );
       const rows = Array.isArray(data) ? data : (data?.data ?? []);
       setRecentConversations(rows.slice(0, 3));

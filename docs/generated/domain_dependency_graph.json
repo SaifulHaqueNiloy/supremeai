@@ -2002,7 +2002,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 22,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2082,7 +2082,7 @@
     {
       "evidence": [
         {
-          "line": 16,
+          "line": 19,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2202,7 +2202,7 @@
     {
       "evidence": [
         {
-          "line": 18,
+          "line": 21,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2252,7 +2252,7 @@
     {
       "evidence": [
         {
-          "line": 915,
+          "line": 905,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -2312,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 10,
+          "line": 11,
           "path": "backend/api/routes/knowledge.py"
         }
       ],
@@ -2352,7 +2352,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 14,
           "path": "backend/core/embeddings.py"
         }
       ],
@@ -2662,7 +2662,7 @@
     {
       "evidence": [
         {
-          "line": 12,
+          "line": 13,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -3152,7 +3152,7 @@
     {
       "evidence": [
         {
-          "line": 29,
+          "line": 30,
           "path": "backend/api/routes/crawler_admin.py"
         }
       ],
@@ -3334,6 +3334,16 @@
         {
           "line": 27,
           "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/api/routes/crawler_admin.py"
         }
       ],
       "source": "research",
