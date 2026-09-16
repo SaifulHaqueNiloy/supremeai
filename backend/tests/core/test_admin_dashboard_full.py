@@ -238,10 +238,17 @@ class TestGetHealthMap:
 
 class TestTriggerDeploy:
     def test_trigger_deploy(self):
-        """Deploy trigger returns success."""
-        result = trigger_deploy()
-        assert result["status"] == "success"
-        assert "triggered" in result["message"]
+        """Deploy trigger FAILS CLOSED (501) until a deploy provider is configured.
+
+        CONTRACT UPDATE (CI FIX 2026-09-16): the endpoint was deliberately
+        hardened to always raise 501 Not Implemented ("fail closed until a real
+        deployment provider is configured") — the old assertion expected the
+        pre-hardening success payload and failed on every main-CI run since.
+        """
+        with pytest.raises(HTTPException) as excinfo:
+            trigger_deploy()
+        assert excinfo.value.status_code == 501
+        assert "not configured" in str(excinfo.value.detail).lower()
 
 
 # ── get_metrics ────────────────────────────────────────────────────────
