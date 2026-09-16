@@ -354,6 +354,24 @@ export const apiClient = {
     return handleResponse(res);
   },
 
+  // ERR-B02 (defect register 2026-09-15): multipart upload path. Unlike post(),
+  // the body is passed through untouched (FormData) and NO Content-Type header is
+  // set — the browser must generate the multipart boundary itself.
+  postForm: async <T>(path: string, body: FormData, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    delete authHeaders['Content-Type'];
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+      ...options,
+      method: 'POST',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body,
+    });
+    return handleResponse(res);
+  },
+
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
