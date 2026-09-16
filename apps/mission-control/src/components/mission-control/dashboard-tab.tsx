@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Activity, Bell, Bot, Cpu, ExternalLink, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, Rocket, ServerCog, Wrench, Zap } from "lucide-react";
+import { Activity, Bell, Bot, Cpu, ExternalLink, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, Rocket, ServerCog, ShieldCheck, Wrench, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { DashboardData } from "@/lib/mission-types";
+import type { DashboardData, SettingsData } from "@/lib/mission-types";
+import { cn } from "@/lib/utils";
 import { callTowerTool } from "@/lib/tower-gateway";
 import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon, UptimeStrip } from "./widgets";
 
@@ -212,7 +213,17 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                       {filteredServices.map((s) => {
                         const { Icon, cls } = serviceIcon(s.provider);
                         return (
-                          <TableRow key={s.provider} className="text-sm transition-colors odd:bg-muted/10 hover:bg-primary/5">
+                          <TableRow
+                            key={s.provider}
+                            className={cn(
+                              "text-sm transition-colors hover:bg-primary/5",
+                              s.status === "down"
+                                ? "bg-red-500/[0.06] hover:bg-red-500/10"
+                                : s.status === "degraded"
+                                  ? "bg-amber-500/[0.05] hover:bg-amber-500/10"
+                                  : "odd:bg-muted/10",
+                            )}
+                          >
                             <TableCell className="max-w-[170px] py-2 sm:max-w-[240px]">
                               <span className="flex items-center gap-2">
                                 <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} aria-hidden />
@@ -272,6 +283,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
               <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4 text-primary" />
                 Activity Stream
+                <WatchdogChip />
               </CardTitle>
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => refetch()} aria-label="Refresh dashboard">
                 <RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />
@@ -321,7 +333,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
           ["Secure", "not complex"],
           ["Dynamic", "config over code"],
         ].map(([t, d]) => (
-          <div key={t} className="rounded-lg border bg-card/60 p-3 text-center">
+          <div key={t} className="rounded-lg border bg-card/60 p-3 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">{t}</p>
             <p className="mt-1 text-[11px] text-muted-foreground">{d}</p>
           </div>
@@ -776,5 +788,34 @@ function TriggerDeploy({ serviceId, serviceName }: { serviceId: string; serviceN
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  );
+}
+
+/* ── Watchdog status chip (dynamic settings, silent poll) ────────── */
+function WatchdogChip() {
+  const { data } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async (): Promise<SettingsData> => fetch("/api/settings", { cache: "no-store" }).then((r) => r.json()),
+    refetchInterval: 120_000,
+    staleTime: 60_000,
+  });
+  if (!data) return null;
+  const armed = data.watchdogEnabled === true;
+  const channel = data.watchdogNotifyChannel;
+  return (
+    <span
+      className={cn(
+        "ml-1 inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider",
+        armed ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-muted bg-muted/40 text-muted-foreground",
+      )}
+      title={
+        armed
+          ? `Service watchdog armed — transitions alert via ${channel === "none" ? "activity stream" : channel}${channel !== "none" ? ` (cooldown ${data.watchdogCooldownMin}m)` : ""}`
+          : "Service watchdog disarmed — enable in Settings"
+      }
+    >
+      <ShieldCheck className="h-2.5 w-2.5" />
+      watchdog {armed ? (channel === "none" ? "on" : channel) : "off"}
+    </span>
   );
 }

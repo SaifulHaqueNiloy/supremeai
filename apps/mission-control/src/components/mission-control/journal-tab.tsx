@@ -275,7 +275,17 @@ export function JournalTab() {
                       transition={{ duration: 0.2, delay: i * 0.05 }}
                     >
                       <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-                        <span className="truncate font-mono text-primary/90">{t.tool}</span>
+                        <button
+                          onClick={() => {
+                            setSearch(t.tool);
+                            toast.info(`Filtering journal by ${t.tool}`);
+                          }}
+                          className="truncate font-mono text-primary/90 hover:text-primary hover:underline focus-visible:outline focus-visible:outline-1 focus-visible:outline-primary"
+                          aria-label={`Filter journal by ${t.tool}`}
+                          title="Click to filter the journal by this tool"
+                        >
+                          {t.tool}
+                        </button>
                         <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                           {t.calls}
                           {t.failures > 0 && <span className="ml-1 text-red-500">·{t.failures}✕</span>}

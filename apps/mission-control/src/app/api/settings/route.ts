@@ -16,6 +16,9 @@ export async function GET() {
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,
     journalRetentionDays: Number(s.journalRetentionDays) || 14,
+    watchdogEnabled: s.watchdogEnabled !== "false",
+    watchdogNotifyChannel: (s.watchdogNotifyChannel as SettingsData["watchdogNotifyChannel"]) || "none",
+    watchdogCooldownMin: Number(s.watchdogCooldownMin) || 15,
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);
@@ -32,6 +35,9 @@ export async function PUT(request: Request) {
     autoSyncPrs: boolean;
     refreshIntervalSec: number;
     journalRetentionDays: number;
+    watchdogEnabled: boolean;
+    watchdogNotifyChannel: SettingsData["watchdogNotifyChannel"];
+    watchdogCooldownMin: number;
     theme: "dark" | "light" | "system";
   }> | null;
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
@@ -48,6 +54,11 @@ export async function PUT(request: Request) {
     updates.refreshIntervalSec = String(Math.floor(body.refreshIntervalSec));
   if (typeof body.journalRetentionDays === "number" && body.journalRetentionDays >= 1 && body.journalRetentionDays <= 365)
     updates.journalRetentionDays = String(Math.floor(body.journalRetentionDays));
+  if (typeof body.watchdogEnabled === "boolean") updates.watchdogEnabled = String(body.watchdogEnabled);
+  if (body.watchdogNotifyChannel && ["none", "telegram", "discord"].includes(body.watchdogNotifyChannel))
+    updates.watchdogNotifyChannel = body.watchdogNotifyChannel;
+  if (typeof body.watchdogCooldownMin === "number" && body.watchdogCooldownMin >= 0 && body.watchdogCooldownMin <= 240)
+    updates.watchdogCooldownMin = String(Math.floor(body.watchdogCooldownMin));
   if (body.theme && ["dark", "light", "system"].includes(body.theme)) updates.theme = body.theme;
 
   await setSettings(updates);
@@ -62,6 +73,9 @@ export async function PUT(request: Request) {
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,
     journalRetentionDays: Number(s.journalRetentionDays) || 14,
+    watchdogEnabled: s.watchdogEnabled !== "false",
+    watchdogNotifyChannel: (s.watchdogNotifyChannel as SettingsData["watchdogNotifyChannel"]) || "none",
+    watchdogCooldownMin: Number(s.watchdogCooldownMin) || 15,
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);

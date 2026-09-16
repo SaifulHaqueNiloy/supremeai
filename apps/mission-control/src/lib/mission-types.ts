@@ -114,5 +114,8 @@ export interface SettingsData {
   autoSyncPrs: boolean;
   refreshIntervalSec: number;
   journalRetentionDays: number;
+  watchdogEnabled: boolean;
+  watchdogNotifyChannel: "none" | "telegram" | "discord";
+  watchdogCooldownMin: number;
   theme: "dark" | "light" | "system";
 }

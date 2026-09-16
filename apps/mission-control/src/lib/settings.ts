@@ -15,6 +15,9 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   autoSyncPrs: "true",
   refreshIntervalSec: "30",
   journalRetentionDays: "14", // ToolCallLog pruning window (dynamic)
+  watchdogEnabled: "true", // service transition alerts (dynamic)
+  watchdogNotifyChannel: "none", // none | telegram | discord (tower notify tools)
+  watchdogCooldownMin: "15", // per-provider alert suppression window
   theme: "dark",
 };
 

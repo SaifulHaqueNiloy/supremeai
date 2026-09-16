@@ -133,6 +133,46 @@ export function SettingsTab() {
             </div>
             <Switch checked={draft.autoSyncPrs} onCheckedChange={(v) => update("autoSyncPrs", v)} aria-label="Toggle auto sync" />
           </div>
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-sm font-medium">Service watchdog</p>
+              <p className="text-xs text-muted-foreground">Alert on service status transitions (down / degraded / recovered)</p>
+            </div>
+            <Switch checked={draft.watchdogEnabled} onCheckedChange={(v) => update("watchdogEnabled", v)} aria-label="Toggle service watchdog" />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label>Watchdog notify channel</Label>
+              <Select
+                value={draft.watchdogNotifyChannel}
+                onValueChange={(v) => update("watchdogNotifyChannel", v as SettingsData["watchdogNotifyChannel"])}
+              >
+                <SelectTrigger aria-label="Watchdog notify channel">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None — activity stream only</SelectItem>
+                  <SelectItem value="telegram">Telegram (tower notify_send_telegram)</SelectItem>
+                  <SelectItem value="discord">Discord (tower notify_send_discord)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Tower env must have TELEGRAM_CHAT_ID / webhook configured.
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="cooldown">Alert cooldown (minutes)</Label>
+              <Input
+                id="cooldown"
+                type="number"
+                min={0}
+                max={240}
+                value={draft.watchdogCooldownMin}
+                onChange={(e) => update("watchdogCooldownMin", Number(e.target.value) || 15)}
+              />
+              <p className="text-[11px] text-muted-foreground">Per-provider suppression window (0–240).</p>
+            </div>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="refresh">Refresh interval (seconds)</Label>

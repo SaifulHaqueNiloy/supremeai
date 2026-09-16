@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   Bot,
   Brain,
+  Download,
   ExternalLink,
   GitMerge,
   LayoutDashboard,
@@ -15,6 +16,7 @@ import {
   RefreshCw,
   ScrollText,
   Settings2,
+  ShieldAlert,
   Sun,
   UsersRound,
   Zap,
@@ -75,6 +77,27 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
   const sweep = () => runAction("sweep", "Sync sweep", () => fetch("/api/git/sync", { method: "POST" }).then((r) => r.json()));
   const refresh = () => runAction("refresh", "Refreshing telemetry", () => fetch("/api/dashboard?refresh=1").then((r) => r.json()));
 
+  const exportCsv = () =>
+    run(() => {
+      window.location.assign("/api/journal?format=csv&csvLimit=1000");
+      toast.success("Journal export started (CSV, max 1000 rows)");
+    });
+
+  const toggleWatchdog = () =>
+    runAction(
+      "watchdog",
+      "Toggling service watchdog",
+      async () => {
+        const s = await fetch("/api/settings", { cache: "no-store" }).then((r) => r.json());
+        const next = !(s?.watchdogEnabled === true);
+        return fetch("/api/settings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ watchdogEnabled: next }),
+        }).then((r) => r.json());
+      },
+    );
+
   const run = React.useCallback(
     (fn: () => void) => {
       setOpen(false);
@@ -114,6 +137,16 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
           <CommandItem value="refresh telemetry" onSelect={() => run(refresh)}>
             <RefreshCw className="h-4 w-4" />
             <span className="ml-2">Force refresh telemetry</span>
+          </CommandItem>
+          <CommandItem value="export journal csv" onSelect={exportCsv}>
+            <Download className="h-4 w-4" />
+            <span className="ml-2">Export journal as CSV</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">≤1000 rows</span>
+          </CommandItem>
+          <CommandItem value="toggle service watchdog" onSelect={() => run(toggleWatchdog)}>
+            <ShieldAlert className="h-4 w-4" />
+            <span className="ml-2">Toggle service watchdog</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">transition alerts</span>
           </CommandItem>
           <CommandItem
             value="toggle theme"

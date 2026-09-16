@@ -56,6 +56,15 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.6 — Service Watchdog & Operator Flow
+- **Service-down watchdog** (server-side, zero-cost): every dashboard refresh compares fresh tower statuses against local ServiceSnapshot evidence and detects transitions (down / degraded / recovered) — journals an ActivityEvent with severity coloring, always auditable
+- **Dynamic notify channel**: on actionable transitions the watchdog broadcasts via tower `notify_send_telegram`/`notify_send_discord` (Settings: none | telegram | discord) with per-provider **cooldown window** (0–240 min) to prevent alert storms; failed notifies are retried on the next transition and logged gracefully (tower asleep / chat id missing never break the dashboard)
+- **Settings UI**: watchdog arm/disarm switch, notify channel select, cooldown input — all Dynamic-by-Design (no redeploy)
+- **Command palette**: new "Export journal as CSV" and "Toggle service watchdog" actions
+- **Journal drill-down**: click any tool in the "Most used · 24h" chart to filter the journal table by that tool
+- **Watchdog status chip** in the Activity Stream header (armed / channel / off with tooltip)
+- **Styling**: matrix rows tinted by status (red for down, amber for degraded — works in light + dark), philosophy cards hover lift, footer v1.6
+
 ### v1.5 — Journal Intelligence & HITL Approvals
 - **HITL Approvals panel** (Journal tab): live `policy_list_pending` view with approve/reject via `policy_approve` (APPROVED/REJECTED), silent 60s polling (no journal spam), decisions ARE journaled for audit; collapses to a slim "policy engine clear" line when empty; defensive normalization of tower payload shapes
 - **Journal CSV export**: one-click filtered export (max 5000 rows) from the Operations Journal
