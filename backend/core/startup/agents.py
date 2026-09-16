@@ -77,20 +77,30 @@ async def start_background_services(app):
         logger.warning(f"⚠️ System Telemetry Broadcaster failed to start: {exc}")
 
     # Agent 4: Bug Prophet Anomaly Detector
-    # Temporarily disabled: Dead import warning (No module named 'scripts.devops.bug_prophet')
-    # try:
-    #     from scripts.devops.bug_prophet import run_anomaly_detector_loop
-    #
-    #     await agent_supervisor.start_agent(
-    #         "bug-prophet-anomaly-detector",
-    #         run_anomaly_detector_loop,
-    #         health_check_interval=60,
-    #         max_restarts=5,
-    #         restart_delay=5.0,
-    #     )
-    #     logger.info("✅ BugProphet Anomaly Detector started.")
-    # except Exception as exc:
-    #     logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
+    # FIX (incident #11, ERROR_COMPENDIUM register): the module used to live at
+    # repo-root `scripts/devops/` which is NOT importable from the backend
+    # process (backend/ is the runtime root), so the import always failed and
+    # the whole agent stayed commented out. It now lives in
+    # `backend/scripts/devops/bug_prophet.py`. Enabled behind ENABLE_BUG_PROPHET
+    # (default off) — consistent with Sentinel/System-Telemetry gating.
+    try:
+        import os
+
+        if os.getenv("ENABLE_BUG_PROPHET", "false").lower() == "true":
+            from scripts.devops.bug_prophet import run_anomaly_detector_loop
+
+            await agent_supervisor.start_agent(
+                "bug-prophet-anomaly-detector",
+                run_anomaly_detector_loop,
+                health_check_interval=60,
+                max_restarts=5,
+                restart_delay=5.0,
+            )
+            logger.info("✅ BugProphet Anomaly Detector started.")
+        else:
+            logger.info("ℹ️ BugProphet Anomaly Detector disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
 
     import os
 
