@@ -78,8 +78,24 @@ def _validate_image_header(content: bytes, mime_type: str) -> bool:
     if mime_type == "image/webp" and header[:4] == b"RIFF" and content[8:12] == b"WEBP":
         return True
     if mime_type == "image/svg+xml":
-        text = content[:512].decode("utf-8", errors="ignore").strip()
-        return text.startswith("<") and ("svg" in text.lower())
+        try:
+            try:
+                import defusedxml.ElementTree as ET
+            except ImportError:
+                import xml.etree.ElementTree as ET
+
+            tree = ET.fromstring(content)
+            for elem in list(tree.iter()):
+                tag_name = elem.tag.split("}")[-1].lower() if "}" in elem.tag else elem.tag.lower()
+                if tag_name in ("script", "foreignobject"):
+                    return False
+                for attr in list(elem.attrib.keys()):
+                    attr_name = attr.split("}")[-1].lower() if "}" in attr else attr.lower()
+                    if attr_name.startswith("on"):
+                        return False
+            return True
+        except Exception:
+            return False
     # BMP starts with "BM"
     if mime_type == "image/bmp" and header[:2] == b"BM":
         return True
