@@ -1,4 +1,3 @@
-import uuid
 
 from core.config import settings
 from core.logging_config import logger
@@ -8,13 +7,27 @@ from .models import MessageEvent, MessageResult
 
 
 class MockMessagingAdapter:
-    """A mock implementation of MessagingProvider for local development."""
+    """Explicit no-provider fallback for local development.
+
+    Register 7.2 / ERR-M01 follow-up (2026-09-16): this adapter used to
+    return ``success=True`` with a fresh message id while contacting NO
+    provider — fabricated delivery. It now reports the truth: the message
+    was NOT sent, with an explicit error naming the missing configuration.
+    """
 
     async def send(self, event: MessageEvent) -> MessageResult:
-        logger.info(
-            f"MockMessagingAdapter: Sending message to {event.recipient}. Subject: {event.subject}"
+        logger.warning(
+            "MockMessagingAdapter: NOT sending message to %s — no messaging "
+            "provider is configured (telegram/email unset). Delivery "
+            "fabrication is disabled.",
+            event.recipient,
         )
-        return MessageResult(success=True, message_id=str(uuid.uuid4()), provider="mock")
+        return MessageResult(
+            success=False,
+            message_id=None,
+            provider="mock",
+            error="No messaging provider configured — message was NOT delivered.",
+        )
 
 
 class MessagingDispatcher:

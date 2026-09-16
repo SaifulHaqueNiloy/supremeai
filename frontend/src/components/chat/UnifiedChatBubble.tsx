@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
+import { apiClient } from '../../services/apiClient';
 
 // --- Bangla comment: UnifiedChatBubble-এ action button-এর জন্য প্রপস ---
 interface PromptActionMeta {
@@ -84,8 +85,35 @@ export function UnifiedChatBubble({
         setActionStatus('📋 Copied to clipboard!');
         setTimeout(() => setCopied(false), 2000);
       } else if (act.type === 'run') {
-        setActionStatus('▶️ Running in sandbox...');
-        setTimeout(() => setActionStatus('✅ Executed!'), 1500);
+        // ERR-G12 class fix (found by the hardened ERR-M01 stub scanner):
+        // this branch fabricated "✅ Executed!" after 1.5s without running
+        // anything. JS snippets now really execute in the backend sandbox
+        // (POST /api/v1/sandbox/create → /{id}/execute, base64-wrapped) and
+        // the ACTUAL exit code / output is displayed; anything else is an
+        // explicit refusal instead of a fake success.
+        const language = (filename ? filename.split('.').pop() || '' : '').toLowerCase();
+        const nodeRunnable = ['js', 'mjs', 'cjs'].includes(language);
+        if (!nodeRunnable) {
+          setActionStatus(`❌ NOT RUN: no sandbox runtime for '${language || 'unknown'}' (JavaScript only).`);
+          return;
+        }
+        setActionStatus('▶️ Requesting backend sandbox...');
+        const created = await apiClient.post<{ session_id: string }>('/api/v1/sandbox/create', {});
+        if (!created?.session_id) {
+          setActionStatus('❌ Sandbox unavailable — code was NOT executed.');
+          return;
+        }
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const executed = await apiClient.post<{ exitCode?: number; stdout?: string; stderr?: string; mock?: boolean }>(
+          `/api/v1/sandbox/${encodeURIComponent(created.session_id)}/execute`,
+          { command: `node -e "eval(Buffer.from('${encoded}','base64').toString())"`, timeout: 120 }
+        );
+        const exit = typeof executed?.exitCode === 'number' ? executed.exitCode : -1;
+        const output = ((executed?.stdout || '') + (executed?.stderr ? `\n${executed.stderr}` : '')).trim();
+        const mockNote = executed?.mock ? ' [sandbox MOCK output — no provider configured]' : '';
+        setActionStatus(
+          `${exit === 0 && !executed?.mock ? '✅' : '❌'} exit ${exit}${mockNote}${output ? ` · ${output.slice(0, 140)}` : ''}`
+        );
       } else if (act.type === 'deploy') {
         setActionStatus('🚀 Deploying...');
         try {
