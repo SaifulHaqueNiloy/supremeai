@@ -221,7 +221,7 @@ describe('App component', () => {
       <ToastProvider>
         <ThemeProvider>
           <SharedProviders>
-            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <MemoryRouter initialEntries={['/workspace']}>
               <App />
             </MemoryRouter>
           </SharedProviders>
@@ -247,7 +247,7 @@ describe('App component', () => {
       <ToastProvider>
         <ThemeProvider>
           <SharedProviders>
-            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <MemoryRouter initialEntries={['/workspace']}>
               <App />
             </MemoryRouter>
           </SharedProviders>
@@ -265,7 +265,7 @@ describe('App component', () => {
       <ToastProvider>
         <ThemeProvider>
           <SharedProviders>
-            <MemoryRouter initialEntries={['/workspace']} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <MemoryRouter initialEntries={['/workspace']}>
               <App />
             </MemoryRouter>
           </SharedProviders>
