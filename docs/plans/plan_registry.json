@@ -4,7 +4,7 @@
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
     "documents": 157,
-    "with_frontmatter": 22,
+    "with_frontmatter": 31,
     "families": {
       "control-tower-mcp": 33,
       "execution-phases": 30,
@@ -275,7 +275,7 @@
       "disposition": "retain",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 1949
+      "lines": 1950
     },
     {
       "id": "unified-next-roadmap-2026-09-15",
@@ -319,14 +319,20 @@
       "canonical": true,
       "status": "active",
       "source_file": "docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md",
-      "supersedes": [],
+      "supersedes": [
+        "docs/archive/plans/architecture/MASTER_PLAN_BANGLA.md",
+        "docs/archive/plans/architecture/supremeai_master_blueprint_bangla.md",
+        "docs/archive/plans/architecture/ROADMAP_BANGLA.md",
+        "docs/archive/plans/architecture/master_plan_strategic_analysis_bn.md",
+        "docs/archive/plans/architecture/supremeai_project_complete_overview_bangla.md"
+      ],
       "superseded_by": [],
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 1037
+      "lines": 1042
     },
     {
       "id": "auto:ai_model_comparative_matrix_bangla",
@@ -367,7 +373,7 @@
       "subject": "SupremeAI Browser Automation — Canonical Plan",
       "document_role": "architecture",
       "planning_authority": "CircleName.BROWSER",
-      "canonical": "candidate",
+      "canonical": true,
       "status": "active",
       "source_file": "docs/plans/architecture/browser_automation.md",
       "supersedes": [],
@@ -377,7 +383,7 @@
       "disposition": "retain",
       "family": "browser-automation",
       "frontmatter_present": true,
-      "lines": 188
+      "lines": 206
     },
     {
       "id": "auto:codebase_aligned_master_roadmap",
@@ -448,21 +454,21 @@
       "lines": 2346
     },
     {
-      "id": "auto:dynamic_configuration_zero_hardcode_roadmap",
+      "id": "dynamic-configuration-zero-hardcode-roadmap",
       "subject": "SupremeAI Dynamic Configuration & Zero-Hardcode Roadmap",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/architecture/dynamic_configuration_zero_hardcode_roadmap.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "partial",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "dynamic-configuration",
-      "frontmatter_present": false,
-      "lines": 1337
+      "frontmatter_present": true,
+      "lines": 1354
     },
     {
       "id": "auto:federated_capability_circles_topology",
@@ -550,21 +556,21 @@
       "lines": 3695
     },
     {
-      "id": "auto:vendor_independent_integration_architecture_plan",
+      "id": "vendor-independent-integration-architecture",
       "subject": "SupremeAI Vendor-Independent Integration Implementation Plan",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": false,
+      "status": "active",
       "source_file": "docs/plans/architecture/vendor_independent_integration_architecture_plan.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 1334
+      "frontmatter_present": true,
+      "lines": 1349
     },
     {
       "id": "auto:visual_component_integration_topology",
@@ -1417,21 +1423,21 @@
       "lines": 308
     },
     {
-      "id": "auto:free_tier_512mb_memory_pressure_remediation_plan",
+      "id": "free-tier-512mb-memory-pressure-remediation",
       "subject": "SupremeAI — Free-Tier Memory Crisis Remediation Plan",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "implementation",
+      "planning_authority": "Infrastructure Circle",
+      "canonical": false,
+      "status": "active",
       "source_file": "docs/plans/features/free_tier_512mb_memory_pressure_remediation_plan.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 592
+      "frontmatter_present": true,
+      "lines": 607
     },
     {
       "id": "free-tier-federation-v4.1-missing-services-analysis",
@@ -1451,28 +1457,28 @@
       "lines": 2150
     },
     {
-      "id": "auto:free_tier_production_upgrade_plan_v2",
+      "id": "free-tier-production-upgrade",
       "subject": "🚀 SupremeAI Free-Tier Production Upgrade Plan",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "implementation",
+      "planning_authority": "Infrastructure Circle",
+      "canonical": false,
+      "status": "active",
       "source_file": "docs/plans/features/free_tier_production_upgrade_plan_v2.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 1529
+      "frontmatter_present": true,
+      "lines": 1544
     },
     {
       "id": "free-tier-scaling-constitution-and-compliance",
       "subject": "SupremeAI Free-Tier Scaling Constitution & Compliance Policy",
       "document_role": "policy",
       "planning_authority": "Infrastructure Circle",
-      "canonical": "candidate",
+      "canonical": true,
       "status": "active",
       "source_file": "docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md",
       "supersedes": [],
@@ -1706,38 +1712,38 @@
       "lines": 552
     },
     {
-      "id": "auto:production_hardening_and_p1_p2_roadmap_2026_09_11",
+      "id": "production-hardening-p1-p2-roadmap",
       "subject": "SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "roadmap",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/features/production_hardening_and_p1_p2_roadmap_2026_09_11.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "partial",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 44
+      "frontmatter_present": true,
+      "lines": 61
     },
     {
-      "id": "auto:production_readiness_final_stretch_plan_bn",
+      "id": "production-readiness-final-stretch",
       "subject": "🏗️ ইমপ্লিমেন্টেশন প্ল্যান: বাকি ১৫% প্রডাকশন রেডিনেস পূরণ",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "implementation",
+      "planning_authority": "Architecture Circle",
+      "canonical": false,
+      "status": "active",
       "source_file": "docs/plans/features/production_readiness_final_stretch_plan_bn.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 228
+      "frontmatter_present": true,
+      "lines": 243
     },
     {
       "id": "auto:qa_engine_auto_checking_implementation_plan",
@@ -1808,38 +1814,38 @@
       "lines": 664
     },
     {
-      "id": "auto:risk_remediation_and_hardening_execution_plan_bn",
+      "id": "risk-remediation-hardening-execution",
       "subject": "SupremeAI প্রকল্প: ঝুঁকি থেকে বাস্তব Fix Plan",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "implementation",
+      "planning_authority": "Architecture Circle",
+      "canonical": false,
+      "status": "active",
       "source_file": "docs/plans/features/risk_remediation_and_hardening_execution_plan_bn.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 1309
+      "frontmatter_present": true,
+      "lines": 1324
     },
     {
-      "id": "auto:runtime_dynamic_configuration_zero_hardcode_plan",
+      "id": "runtime-dynamic-configuration-zero-hardcode",
       "subject": "SupremeAI — Remaining Dynamic Configuration / Zero-Hardcode Implementation Plan",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "implementation",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/features/runtime_dynamic_configuration_zero_hardcode_plan.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "partial",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "dynamic-configuration",
-      "frontmatter_present": false,
-      "lines": 798
+      "frontmatter_present": true,
+      "lines": 813
     },
     {
       "id": "auto:self_assembling_need_supply_intelligence_plan",
@@ -2131,21 +2137,21 @@
       "lines": 403
     },
     {
-      "id": "auto:free_tier_federation_master_plan_v4",
+      "id": "free-tier-federation-master-plan-v4",
       "subject": "🚀 SupremeAI Free-Tier Federation Master Plan v4.0",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "document_role": "architecture",
+      "planning_authority": "Infrastructure Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/infrastructure/free_tier_federation_master_plan_v4.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 2154
+      "frontmatter_present": true,
+      "lines": 2171
     },
     {
       "id": "auto:free_tier_survival_and_resource_optimization_guide",
@@ -2570,7 +2576,7 @@
       "disposition": null,
       "family": "control-tower-mcp",
       "frontmatter_present": false,
-      "lines": 47
+      "lines": 56
     },
     {
       "id": "auto:project_milestones_and_completion_tracker",
