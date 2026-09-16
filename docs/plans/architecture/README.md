@@ -9,6 +9,7 @@
 | Plan | Status | Description |
 |------|--------|-------------|
 | `SUPREMEAI_MASTER_PLAN_CANONICAL.md` | active | **Master Plan** — Consolidated from UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md + multiple Bangla variants (v1.0.0, 2026-09-16) |
+| `unified_fastmcp_control_tower_multitenant_master_plan_bn.md` | active | **Unified FastMCP Control Tower** — Authoritative Control Plane & Multi-Tenant Tower blueprint |
 | `browser_automation.md` | active | **NEW** — Canonical browser plan (consolidates EAOL + dual_channel) |
 | `distributed_infrastructure_central_control_plane_plan.md` | active | Control plane architecture |
 | `dynamic_ai_architecture_v5_zero_downtime.md` | active | Zero-downtime AI provider architecture |
@@ -20,6 +21,7 @@
 
 | Area | Plan | Description |
 |------|------|-------------|
+| Autonomous Intelligence | `living_autonomous_intelligence_synthesis.md` | 4-Perspective Living & Self-Evolving Intelligence Synthesis |
 | Integration Blueprint | `crown_jewel_complete_system_integration_blueprint.md` | Master component integration blueprint |
 | Configuration | `dynamic_configuration_zero_hardcode_roadmap.md` | Dynamic configuration / zero-hardcode roadmap |
 | Registry/Config | `registry_control_in_pipeline_and_dashboard.md` | Registry-as-configuration pattern |
@@ -28,7 +30,6 @@
 | Model Comparison | `ai_model_comparative_matrix_bangla.md` | Model comparison matrix |
 | Verification Engine | `autonomous_product_verification_engine.md` | Autonomous QA engine blueprint |
 | Roadmap Delta | `codebase_aligned_master_roadmap.md` | Delta/hardening roadmap aligned to codebase |
-| Product Verification | `autonomous_product_verification_engine.md` | Product verification architecture |
 | Visualization | `visual_component_integration_topology.md` | Component integration visualization |
 
 ---
@@ -55,7 +56,7 @@
 | `crown_jewel_real_wiring_analysis.md` | Archive | Subsumed into blueprint |
 | `wiring_feature_investigation_log.md` | Archive | Raw investigation logs |
 | `feature_implementation_patch_roadmap_bn.md` | Archive | Already-implemented patch record |
-| `unified_fastmcp_control_tower_multitenant_master_plan_bn.md` | Archive | Older parallel master plan |
+
 
 ---
 
