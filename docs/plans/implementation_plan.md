@@ -432,3 +432,13 @@ When a new plan is added to `docs/`:
 7. reconcile it into this master plan
 
 This prevents plan sprawl from becoming an architecture problem.
+
+---
+
+## 13. Proposed Plan Candidates — Reconciliation Register (2026-09-17)
+
+Per the strengthened [PLAN_LIFECYCLE_POLICY.md](PLAN_LIFECYCLE_POLICY.md) (2026-09-17): a candidate list is not an execution queue (rule 10). The entries below are `proposed` candidates awaiting explicit founder approval; **none is executable** until one is approved as the single active plan (Gate 2/6).
+
+| Plan | Status | Scope (one line) | Resource delta | Reconciliation note |
+|---|---|---|---|---|
+| [PLAN_002 — Claude Code-style semantic context compaction](PLAN_002_CLAUDE_STYLE_CONTEXT_COMPACTION_2026-09-16.md) | proposed | Replace silent `deque(maxlen=50)` eviction in WS chat with summarization-based compaction on the existing zero-cost chain | 0 dep / 0 infra / 0 CI | Complementary to PLAN_001 (cache ≠ compaction); supports §1 discovery-first, §2 efficiency, §10 P1; Gate 0 evidence in plan Part 1.5 |

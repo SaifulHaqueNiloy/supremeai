@@ -19,8 +19,26 @@ implements:
   - No new subsystem, no new dependency, no new infra (Constitution #3 Reuse Before Creation)
 supersedes: []
 superseded_by: []
-last_verified: 2026-09-16 (code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; fresh main clone c812985)
-plan_lifecycle: living — single complete plan #002; founder reviews + approves → engineering PR → merge → THEN next plan (#003 ইতিমধ্যে scouting-এ আছে: Aider-style repo map)
+source_of_truth: false (proposed candidate — tested code + contracts remain the reality; execution only after founder approval per Gate 2)
+last_verified: 2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260, prompt_handler delta unchanged)
+code_evidence:
+  - backend/api/routes/websocket_agent.py L469–532 (deque(maxlen=50), MEMLEAK-004 comment, messages_payload build, llm_gateway.acompletion call)
+  - backend/core/prompt_handler.py L1–67 (Caveman-lite only; no semantic summarization anywhere in backend/ — grep verified 2026-09-16 & 2026-09-17)
+  - backend/core/llm/llm_gateway/completion.py L183 (compress_prompt_messages applied per call), L245 (task_type already generic in dedup_key)
+  - backend/services/dynamic_ai/local_fallback.py + backend/core/llm/provider_router.py (zero-cost chain for summarizer route)
+test_evidence: none yet — implementation PR must deliver backend/tests/routes/test_websocket_compaction.py (≥7 assertions: summary block placement, bounded deque, failure fallback, empty-summary fallback, pure-function behavior) per Part 5 acceptance criteria below
+acceptance_criteria:
+  - pytest backend/tests/routes/test_websocket_compaction.py → all PASS
+  - existing backend test paths touched by the change show zero regression (local before/after run)
+  - live 60+ turn WS session: turn-1 fact recalled; WS-COMPACTION log entries present; RSS stable
+  - forced summarizer failure: session survives, honest warning logged, response still delivered
+  - no new dependency in pyproject.toml diff; no infra/config change
+test_evidence_note: mocked-gateway tests prove contract behavior only (Gate 4); live WS session evidence is required before any completion claim (Gate 5)
+risk_and_rollback: single-commit docs→code revert path; no DB schema, no config, no data migration — `git revert` restores pre-plan behavior; summarizer failure degrades to today's dumb eviction with honest warning (Part 2 §2.6 risk table)
+baseline: (hypothesis — to be measured during execution PR) today's behavior: history silently truncated at 50 messages (25 turns); turn-1 facts unrecoverable past turn ~25; per-turn prompt token cost constant at maxlen=50
+measurement_method: (a) WS long-session script — ask turn-1 fact at turn 60, grade answer correctness; (b) gateway telemetry/Langfuse — compaction event count, summary latency, fallback rate; (c) process RSS before/after 100-turn session
+success_threshold: turn-1 fact correctly recalled at turn 60 in live session AND fallback rate <10% of compaction attempts AND RSS delta within ±10% of pre-change baseline (acceptance threshold — hypothesis until measured per Gate 5)
+plan_lifecycle: living — proposed candidate under the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). Single-plan execution discipline: PLAN_002 becomes the ONLY active execution plan if and when the founder approves it; meanwhile it is a reviewable candidate, not an executable instruction. Next candidates (#003 Aider-style repo map) remain reference-only scouts.
 ---
 
 # Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction
@@ -61,11 +79,20 @@ plan_lifecycle: living — single complete plan #002; founder reviews + approves
 
 ---
 
+## Part 1.5 — Gate 0 Reconciliation (updated PLAN_LIFECYCLE_POLICY 2026-09-17)
+
+1. **বিদ্যমান সমতুল্য প্ল্যান আছে কি?** না — `docs/plans/` জুড়ে history-compaction/repo-context বিষয়ে কোনো সক্রিয় বা প্রস্তাবিত প্ল্যান নেই (index-verified 2026-09-17, main 5155c27)। PLAN_001 (Anthropic Prompt Caching) হলো **ইচ্ছাকৃতভাবে সম্পূরক**: PLAN_001 প্রতি-টার্নে পুনঃপ্রেরিত prefix-এর খরচ কমায় (cache), PLAN_002 হিস্ট্রির কার্যকর আয়তন/স্মৃতি বাড়ায় (compaction) — একটির বাস্তবায়ন অন্যটিকে বাতিল বা দ্বন্দ্ব করে না।
+2. **implementation_plan.md-র সাথে reconciliation:** এই প্ল্যানটি §1 (Bootstrap Brain — discovery-first), §2 (P2 Efficiency — token/bounded-context), §10 (P1 Brain decision loop — verification) লক্ষ্যের সাথে সামঞ্জস্যপূর্ণ; §12 Plan Governance-এর নিয়ম অনুসরণ করে এই PR-এর মাধ্যমে implementation_plan.md-তে §13 Reconciliation Register-এ নিবন্ধিত হচ্ছে।
+3. **HEAD_OF_PLANNING_STRATEGIC_LEVERAGE-এর সাথে:** Lever L4 (Memory Flywheel) ও L1 (Reliability) সমর্থন করে — নতুন lever/conflict তৈরি করে না।
+4. **Code reality check পুনঃযাচাই:** fresh main 5155c27-এ `cache_control` এখনো অনুপস্থিত (PLAN_001 বাস্তবায়িত হয়নি) এবং websocket_agent.py অপরিবর্তিত — তাই এই প্ল্যানের ভিত্তি-দাবিগুলো এখনো সত্য।
+
 ## Part 2 — Plan #002: Semantic Context Compaction (Six-Field Complete Plan)
 
 Plan identifier: `PLAN-002-CLAUDE-STYLE-CONTEXT-COMPACTION`
 Owner Circle: Memory Circle (`backend/core/circles/centers/memory_center.py` বিদ্যমান) + C5 (Execution — LLM Gateway)
 Constitution anchor: #11 Memory Must Compound (primary), #13 No Silent Failure (primary), #8 Graceful Degradation, #14 Sustainable Cost, #3 Reuse Before Creation (filter)
+
+**Out of scope (সুস্পষ্ট সীমা — Gate 1):** সেশন-জুড়ে persistent memory promotion (#004-এ স্থগিত), ফ্রন্টএন্ড manual `/compact` UI (#005-এ স্থগিত), অন্য কোনো WS endpoint/chat path-এ বিস্তার, tree-sitter/নতুন parser dependency, সামারি ডেটাবেজে persistence, মেট্রিক ড্যাশবোর্ড UI। এই তালিকার কোনো কিছু এই প্ল্যানের ইঞ্জিনিয়ারিং PR-এ নীরবে ঢুকবে না; দরকার হলে প্ল্যান re-review হবে (Gate 3)।
 
 ### ২.১ কি আছে (What we have — code-verified)
 
@@ -195,10 +222,10 @@ chat_history.append({"role": "user", "content": content_to_send})
 
 **পরিবর্তনের মোট পরিসর:** ২টি বিদ্যমান ফাইলে ছোট এডিট + ১টি নতুন টেস্ট ফাইল (নতুন ডিরেক্টরি নয় — `backend/tests/` বিদ্যমান ট্রি) + ০ নতুন dependency + ০ নতুন infra + ০ frontend পরিবর্তন।
 
-### ২.৫ বেনিফিট (Benefit — quantified)
+### ২.৫ বেনিফিট (Benefit — estimates labeled per quantitative-claim discipline)
 
-1. **Amnesia নির্মূল:** আজ ২৫ টার্ন পর সেশন প্রথম দিকের সব সিদ্ধান্ত ভুলে যায়; পরে সেশন **প্রায় অসীম** — প্রতি ~১২ টার্নে (২৫ user+assistant মেসেজ পূর্ণ হলে) পুরনো অর্ধেক সারসংক্ষেপ হয়ে কনটেক্সটে টিকে থাকে। Claude Code-এর ফ্ল্যাগশিপ UX বৈশিষ্ট্যের সাথে কার্যকর parity।
-2. **Cost সসীম ও ~$0:** প্রতি compaction-এ ১টি সামারাইজেশন কল বিদ্যমান zero-cost chain-এ (Groq/Gemini ফ্রি কোটা বা local Ollama)। প্রতি ~২৫ এক্সচেঞ্জে ১ কল → হার্ড সিলিং: বিদ্যমান কোটার <1%। বিপরীতে naive সমাধান (maxlen বাড়িয়ে ৫০০ করা) প্রতি টার্নে ১০x টোকেন পাঠাত — এই প্ল্যান প্রতি-টার্ন খরচ **অপরিবর্তিত** রাখে।
+1. **Amnesia নির্মূল (estimate):** আজ ২৫ টার্ন পর সেশন প্রথম দিকের সব সিদ্ধান্ত ভুলে যায়; পরে সেশন **প্রায় অসীম** (hypothesis — Part 5 measurement দ্বারা যাচাই হবে) — প্রতি ~১২ টার্নে (২৫ user+assistant মেসেজ পূর্ণ হলে) পুরনো অর্ধেক সারসংক্ষেপ হয়ে কনটেক্সটে টিকে থাকে। Claude Code-এর ফ্ল্যাগশিপ UX বৈশিষ্ট্যের সাথে কার্যকর parity (vendor-documented capability parity লক্ষ্য, SupremeAI-নির্দিষ্ট ফলাফল নয়)।
+2. **Cost সসীম ও ~$0 (estimate):** প্রতি compaction-এ ১টি সামারাইজেশন কল বিদ্যমান zero-cost chain-এ (Groq/Gemini ফ্রি কোটা বা local Ollama)। প্রতি ~২৫ এক্সচেঞ্জে ১ কল → হার্ড সিলিং: বিদ্যমান কোটার <1% (estimate — প্রকৃত কোটা ব্যবহার Gate 5-এ মাপা হবে)। বিপরীতে naive সমাধান (maxlen বাড়িয়ে ৫০০ করা) প্রতি টার্নে ১০x টোকেন পাঠাত (arithmetic estimate) — এই প্ল্যান প্রতি-টার্ন খরচ **অপরিবর্তিত** রাখে।
 3. **OOM সুরক্ষা অটুট:** deque bounded থাকে (MEMLEAK-004 fix অক্ষত) — Render 512MB container (Rule 7) সম্মত।
 4. **No Silent Failure পূরণ:** প্রতিটি এভিকশন এখন (ক) summary হিসেবে দৃশ্যমান, (খ) `logger.warning`-এ অডিটেবল, (গ) Langfuse-এ মাপা যায়।
 5. **Memory flywheel-এর ভিত্তি (Constitution #11):** স্ট্রাকচার্ড summary ভবিষ্যতের সেশন-জুড়ে memory promotion-এর ইনপুট — Plan #004+ (Memory Circle)-এর জন্য প্রস্তুত ডেটা।
