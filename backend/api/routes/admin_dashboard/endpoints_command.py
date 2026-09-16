@@ -319,8 +319,11 @@ def get_commandcenter_memory_stats():
       (per-layer write counts are not tracked yet — zero, not invented)
     - ``semantic_cache_hit_rate``: real hits/total ratio (null until
       enough accesses exist; the frontend renders null as "—")
-    - ``tokens_saved``: real hit count x ESTIMATED_AVG_COMPLETION_TOKENS
-      (documented estimate, no fabricated floor — 0 hits => 0 saved)
+    - ``tokens_saved``: real cumulative per-hit accounting from the
+      multi-layer cache (tokens estimated from each served response via the
+      canonical estimate_tokens heuristic). Falls back to
+      hits x ESTIMATED_AVG_COMPLETION_TOKENS only if the cache layer does not
+      report it. 0 hits => 0 saved.
     """
     try:
         from core.cache.multi_layer_cache import multi_layer_cache
@@ -344,6 +347,15 @@ def get_commandcenter_memory_stats():
 
         ESTIMATED_AVG_COMPLETION_TOKENS = 1250  # documented estimate per served hit
 
+        # Prefer the cache layer's real per-hit accounting; only estimate when
+        # an older stats payload lacks the field.
+        real_tokens_saved = raw_stats.get("tokens_saved")
+        tokens_saved = (
+            int(real_tokens_saved)
+            if real_tokens_saved is not None
+            else hits * ESTIMATED_AVG_COMPLETION_TOKENS
+        )
+
         banks = [
             {"name": "Exact Match Layer", "entry_count": int(raw_stats.get("exact_hits") or 0), "recent_writes": 0},
             {"name": "Semantic Layer", "entry_count": int(raw_stats.get("semantic_hits") or 0), "recent_writes": 0},
@@ -354,7 +366,8 @@ def get_commandcenter_memory_stats():
         return {
             "banks": banks,
             "semantic_cache_hit_rate": round(hit_rate, 4) if hit_rate is not None else None,
-            "tokens_saved": hits * ESTIMATED_AVG_COMPLETION_TOKENS,
+            "tokens_saved": tokens_saved,
+            "avg_tokens_saved_per_hit": raw_stats.get("avg_tokens_saved_per_hit"),
         }
     except Exception:
         # Honest degraded mode: no data instead of invented 0.95/10000.
