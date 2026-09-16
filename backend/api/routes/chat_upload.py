@@ -166,6 +166,24 @@ async def upload_chat_image(
         logger.error(f"Failed to write upload file: {e}")
         raise HTTPException(status_code=500, detail="Failed to save uploaded file") from e
 
+    # ERR-B02 (defect register 2026-09-15): persist original metadata next to the
+    # file so the /files explorer's LIST endpoint survives process restarts (the
+    # in-memory `_uploads` registry does not). Sidecar: <attachment_id>.meta.json
+    try:
+        with open(os.path.join(user_dir, f"{attachment_id}.meta.json"), "w") as meta_fh:
+            json.dump(
+                {
+                    "name": original_name,
+                    "mime_type": mime_type,
+                    "size": len(content),
+                    "user_id": user_id,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                },
+                meta_fh,
+            )
+    except OSError as meta_err:
+        logger.warning(f"Sidecar metadata write failed (non-critical): {meta_err}")
+
     url = _get_attachment_url(attachment_id)
 
     metadata = {
@@ -220,6 +238,62 @@ async def upload_chat_image(
         size=len(content),
         mime_type=mime_type,
     )
+
+
+# Reverse MIME map for disk-derived listing fallback
+_EXT_TO_MIME = {v: k for k, v in ALLOWED_MIME_TYPES.items()}
+
+
+@router.get("")
+async def list_uploads(user: dict = Depends(get_current_user_token)):
+    """ERR-B02: list the current user's uploaded files for the /files explorer.
+
+    বাংলা: ডিস্ক থেকে user-এর ডিরেক্টরি স্ক্যান করে লিস্ট — প্রসেস রিস্টার্টেও
+    ফাইল এক্সপ্লোরার ঠিক থাকে। মেটাডেটা priority: in-memory registry →
+    sidecar .meta.json → disk-derived (stat + ext→mime)।
+    """
+    user_id = user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    user_dir = os.path.join(UPLOAD_DIR, user_id[:8])
+    items: list[dict] = []
+    if os.path.isdir(user_dir):
+        for fname in sorted(os.listdir(user_dir)):
+            if fname.endswith(".meta.json"):
+                continue  # sidecar, not a real attachment
+            fpath = os.path.join(user_dir, fname)
+            if not os.path.isfile(fpath):
+                continue
+            attachment_id = os.path.splitext(fname)[0]
+            meta = _uploads.get(attachment_id) or {}
+            if not meta:
+                sidecar_path = os.path.join(user_dir, f"{attachment_id}.meta.json")
+                if os.path.isfile(sidecar_path):
+                    try:
+                        with open(sidecar_path) as meta_fh:
+                            meta = json.load(meta_fh)
+                    except (OSError, ValueError):
+                        meta = {}
+            ext = os.path.splitext(fname)[1]
+            try:
+                stat = os.stat(fpath)
+            except OSError:
+                continue
+            items.append(
+                {
+                    "attachment_id": attachment_id,
+                    "url": _get_attachment_url(attachment_id),
+                    "name": meta.get("name") or meta.get("file_name") or fname,
+                    "size": meta.get("size", stat.st_size),
+                    "mime_type": meta.get("mime_type")
+                    or _EXT_TO_MIME.get(ext, "application/octet-stream"),
+                    "created_at": meta.get("created_at")
+                    or datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+                }
+            )
+    items.sort(key=lambda item: item["created_at"] or "", reverse=True)
+    return {"items": items, "total": len(items)}
 
 
 @router.get("/{attachment_id}")
@@ -322,13 +396,21 @@ async def delete_upload(
     if metadata.get("user_id") != user_id:
         raise HTTPException(status_code=403, detail="You do not own this attachment")
 
-    # Delete from disk
+    # Delete from disk (file + sidecar metadata)
     file_path = metadata.get("file_path", "")
     if file_path and os.path.isfile(file_path):
         try:
             os.remove(file_path)
         except OSError as e:
             logger.warning(f"Failed to delete file from disk: {e}")
+    try:
+        sidecar_path = os.path.join(
+            UPLOAD_DIR, user_id[:8], f"{attachment_id}.meta.json"
+        )
+        if os.path.isfile(sidecar_path):
+            os.remove(sidecar_path)
+    except OSError as sidecar_err:
+        logger.warning(f"Failed to delete sidecar metadata: {sidecar_err}")
 
     # Delete from DB
     try:
