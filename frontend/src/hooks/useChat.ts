@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { useCustomerStore } from '../store/customerStore';
 import type { ChatMessage } from '../types/customer';
 import { getApiBaseUrl } from '../utils/api';
 // বাংলা মন্তব্য: getAuthHeaders import — streaming fetch এ Authorization header মিসিং ছিল, এখন যোগ হলো
@@ -24,8 +23,13 @@ interface UseChatReturn {
 
 export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const { projectId, streaming = true } = options;
-  const { addMessage: addCustomerMessage } = useCustomerStore();
-  const { addMessage: addStoreMessage, triggerOrchestration } = useStore();
+  // FIX(triple-write): this hook used to mirror every message into BOTH
+  // useStore.chatHistory and customerStore.chatHistory in addition to its own
+  // local state — three copies of the same message with no single source of
+  // truth. Messages now live ONLY in the hook's local `messages` state, which
+  // is what consumers render. (Nothing read those mirrored copies: the only
+  // other chat UI, ChatInterface, manages useStore.chatHistory itself.)
+  const { triggerOrchestration } = useStore();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -56,8 +60,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
     };
 
     setMessages(prev => [...prev, userMsg]);
-    addCustomerMessage(userMsg);
-    addStoreMessage({ role: 'user', content: input.trim() });
     setInput('');
     setLoading(true);
     setError(null);
@@ -139,8 +141,17 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
           project_id: projectId,
         };
 
-        addCustomerMessage(finalMsg);
-        addStoreMessage({ role: 'assistant', content: finalMsg.content });
+        // Finalize the streamed message in local state (it was added as a
+        // partial during streaming; update in place, append only if missing).
+        setMessages(prev => {
+          const existing = prev.findIndex(m => m.id === assistantId);
+          if (existing >= 0) {
+            const updated = [...prev];
+            updated[existing] = finalMsg;
+            return updated;
+          }
+          return [...prev, finalMsg];
+        });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (err.name !== 'AbortError') {
@@ -176,8 +187,6 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         };
 
         setMessages(prev => [...prev, assistantMsg]);
-        addCustomerMessage(assistantMsg);
-        addStoreMessage({ role: 'assistant', content: assistantMsg.content });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(err.message || 'Unknown error occurred');
@@ -186,7 +195,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         triggerOrchestration(false);
       }
     }
-  }, [input, projectId, streaming, addCustomerMessage, addStoreMessage, triggerOrchestration]);
+  }, [input, projectId, streaming, triggerOrchestration]);
 
   const clear = useCallback(() => {
     setMessages([]);
