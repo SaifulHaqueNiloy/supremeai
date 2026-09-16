@@ -20,7 +20,7 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false (proposed candidate — tested code + contracts remain the reality; execution only after founder approval per Gate 2)
-last_verified: 2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260, prompt_handler delta unchanged)
+last_verified: 2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260)
 code_evidence:
   - backend/api/routes/websocket_agent.py L469–532 (deque(maxlen=50), MEMLEAK-004 comment, messages_payload build, llm_gateway.acompletion call)
   - backend/core/prompt_handler.py L1–67 (Caveman-lite only; no semantic summarization anywhere in backend/ — grep verified 2026-09-16 & 2026-09-17)
