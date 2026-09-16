@@ -2,10 +2,10 @@
   "functional_module_count": 194,
   "functional_module_inventory": "MODULES_LIST.md",
   "functional_status_counts": {
-    "broken": 0,
-    "env_dependent": 4,
-    "operational": 128,
-    "partially_wired": 62,
+    "broken": 1,
+    "env_dependent": 3,
+    "operational": 127,
+    "partially_wired": 63,
     "planned": 0
   },
   "inventory_type": "source_file_capability",
@@ -825,6 +825,13 @@
       "path": "backend/alembic_migrations/versions/2026_09_14_010000_create_mcp_gateway_tables.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_15_020000_create_task_records.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "mcp",
@@ -1465,7 +1472,8 @@
       "capability_signals": [
         "browser",
         "execute",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -2538,7 +2546,7 @@
     },
     {
       "capability_signals": [
-        "memory"
+        "execute"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -8299,6 +8307,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/models/task_record.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/models/transaction_ledger.py"
     },
     {
@@ -10262,6 +10277,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_admin.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_admin_ramp.py"
     },
     {
       "capability_signals": [
@@ -19145,7 +19171,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "register"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
@@ -19155,7 +19182,8 @@
     {
       "capability_signals": [
         "execute",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
@@ -19966,8 +19994,7 @@
     },
     {
       "capability_signals": [
-        "browser",
-        "memory"
+        "browser"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -22485,6 +22512,17 @@
     },
     {
       "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/vercel_deploy_preflight.py"
+    },
+    {
+      "capability_signals": [
         "register"
       ],
       "classification": "human_review",
@@ -23988,5 +24026,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2772
+  "source_file_count": 2776
 }
