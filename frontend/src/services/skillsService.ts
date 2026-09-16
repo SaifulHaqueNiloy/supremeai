@@ -129,6 +129,20 @@ export const installSkill = async (skillId: string): Promise<InstallResult> => {
   };
 };
 
+// ERR-B05 FIX (defect register 2026-09-15): user-facing marketplace search —
+// the admin-buried EnhancedSkillMarketplace used /api/skills/search; now the
+// normal user marketplace gets the same keyword search (server-side).
+export const searchSkills = async (query: string): Promise<SkillManifest[]> => {
+  return apiClient.get<SkillManifest[]>(
+    `/api/skills/search?query=${encodeURIComponent(query)}`,
+  );
+};
+
+export const listInstalledSkills = async (): Promise<SkillManifest[]> => {
+  // installed_only=true filters against the backend's persisted install state.
+  return apiClient.get<SkillManifest[]>(`/api/skills/search?installed_only=true`);
+};
+
 export const uninstallSkill = async (skillId: string): Promise<void> => {
   // ERR-H02 FIX: backend route is DELETE /api/skills/uninstall?skill=<id>
   // (the old /{id}/uninstall path never existed → 404, uninstall was broken).
