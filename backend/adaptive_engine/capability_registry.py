@@ -351,6 +351,33 @@ class CapabilityRegistry:
     def archive(self, capability_id: str, *, actor: str = "system") -> Capability:
         return self.transition(capability_id, CapabilityLifecycleState.ARCHIVED, actor=actor)
 
+    def delete(self, capability_id: str) -> bool:
+        """Hard-delete a capability (admin C5).
+
+        Only ARCHIVED capabilities may be deleted — anything still active must
+        go through the lifecycle first (honest contract, no silent teardown).
+        Returns False when the id is unknown; raises CapabilityStateError when
+        the capability is not ARCHIVED yet.
+        """
+        with get_conn() as conn:
+            row = conn.execute(
+                f"SELECT lifecycle_state FROM {self.TABLE} WHERE capability_id = ?",
+                (capability_id,),
+            ).fetchone()
+            if row is None:
+                return False
+            if row["lifecycle_state"] != CapabilityLifecycleState.ARCHIVED:
+                raise CapabilityStateError(
+                    f"capability {capability_id} must be ARCHIVED before delete "
+                    f"(current: {row['lifecycle_state']})"
+                )
+            cur = conn.execute(
+                f"DELETE FROM {self.TABLE} WHERE capability_id = ?",
+                (capability_id,),
+            )
+            conn.commit()
+            return bool(cur.rowcount)
+
     def record_usage(
         self,
         capability_id: str,

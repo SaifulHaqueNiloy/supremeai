@@ -247,6 +247,40 @@ class SourceGovernance:
             conn.commit()
         return {"source_id": source_id, "url": url, "state": state}
 
+    def list_sources(
+        self,
+        *,
+        state: SourceState | str | None = None,
+        category: SourceCategory | str | None = None,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        """List discovered sources (admin SO1), newest-seen first."""
+        clauses: list[str] = []
+        params: list[Any] = []
+        if state is not None:
+            clauses.append("state = ?")
+            params.append(str(state))
+        if category is not None:
+            clauses.append("category = ?")
+            params.append(str(category))
+        params.append(limit)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        with get_conn() as conn:
+            rows = conn.execute(
+                f"SELECT * FROM {self.SOURCE_TABLE} {where} ORDER BY last_seen_at DESC LIMIT ?",
+                params,
+            ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_source(self, source_id: str) -> dict[str, Any] | None:
+        """Fetch one source by id (admin SO4); None when unknown."""
+        with get_conn() as conn:
+            row = conn.execute(
+                f"SELECT * FROM {self.SOURCE_TABLE} WHERE source_id = ?",
+                (source_id,),
+            ).fetchone()
+        return dict(row) if row is not None else None
+
     def transition_source(
         self, source_id: str, to_state: SourceState, *, actor: str = "admin"
     ) -> dict[str, Any]:
@@ -283,6 +317,35 @@ class SourceGovernance:
         return SourceState(row["state"]) == SourceState.ALLOWLISTED
 
     # -- policies ----------------------------------------------------------
+
+    def list_policies(self, *, limit: int = 200) -> list[SourcePolicy]:
+        """List source policies (admin SP1), newest first."""
+        with get_conn() as conn:
+            rows = conn.execute(
+                f"SELECT * FROM {self.POLICY_TABLE} ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [self._policy_from_row(r) for r in rows]
+
+    def delete_policy(self, policy_id: str) -> bool:
+        """Hard-delete a policy (admin SP3); False when unknown."""
+        with get_conn() as conn:
+            cur = conn.execute(
+                f"DELETE FROM {self.POLICY_TABLE} WHERE policy_id = ?",
+                (policy_id,),
+            )
+            conn.commit()
+            return bool(cur.rowcount)
+
+    def delete_learned(self, item_id: str) -> bool:
+        """Hard-delete a learned item (admin LE3); False when unknown."""
+        with get_conn() as conn:
+            cur = conn.execute(
+                f"DELETE FROM {self.LEARNED_TABLE} WHERE item_id = ?",
+                (item_id,),
+            )
+            conn.commit()
+            return bool(cur.rowcount)
 
     def add_policy(self, policy: SourcePolicy) -> SourcePolicy:
         with get_conn() as conn:

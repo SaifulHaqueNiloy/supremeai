@@ -18,9 +18,24 @@ export const agentService = {
   // `/api/v1/agents` (backend/api/routes/agent.py), তাই সিঙ্গুলার URL 404 দিত। এখন প্লুরাল
   // এন্ডপয়েন্ট ব্যবহার হচ্ছে এবং backend AgentTaskRequest contract অনুযায়ী বাধ্যতামূলক
   // `task_id` পাঠানো হচ্ছে (agentId + per-execution UUID দিয়ে ইউনিক correlation)।
+  //
+  // ERR-H08 fix (2026-09-16): the backend now READS auto_execute (it used to be
+  // declared-but-ignored). This is an EXECUTE call, so it sends auto_execute: true
+  // — the same effective behavior the route had before the field was honored.
+  // Plan-only callers use planAgentTask below.
   executeAgentTask: async (agentId: string, instruction: string): Promise<AgentTask> => {
     return apiClient.post<AgentTask>('/api/v1/agents/execute', {
       task_id: `${agentId}-${crypto.randomUUID()}`,
+      prompt: instruction,
+      auto_execute: true,
+    });
+  },
+
+  // ERR-H08: honest plan-only mode — the backend returns the planner's steps
+  // without running anything (status: 'planned').
+  planAgentTask: async (agentId: string, instruction: string): Promise<AgentTask> => {
+    return apiClient.post<AgentTask>('/api/v1/agents/execute', {
+      task_id: `${agentId}-plan-${crypto.randomUUID()}`,
       prompt: instruction,
       auto_execute: false,
     });
