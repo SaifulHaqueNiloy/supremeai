@@ -1,9 +1,9 @@
-# PR Guardian — Improvement-Only Merge Automation (Design Draft)
+# PR Guardian — Improvement-Only Merge Automation
 
 **Purpose**: Define how an MCP-connected guardian can review open GitHub PRs, decide “improvement vs regression,” and act accordingly — merge if improvement with no regression, otherwise close PR or fix regression before merge.
 
-**Status**: Working draft for alignment with the repository governance model and SupremeAI principles.
-**Scope**: This is an implementation/planning proposal for the SupremeAI PR automation workflow. It is not yet a committed plan.
+**Status**: ✅ IMPLEMENTED (v1) — live in the MCP Control Tower (`infrastructure/mcp-control-plane`), registered as the `guardian.*` tool family. Decision engine is deterministic and diff-derived; CI status is recorded as evidence and is deliberately NOT the merge gate.
+**Scope**: SupremeAI PR automation workflow. This document is a protected living asset: the design intent below stays authoritative; the implementation status section at the end records verified reality.
 
 ---
 
@@ -232,3 +232,36 @@ A better model is:
 - If regression severe or benefit absent → close or escalate.
 
 This keeps automation useful without turning it into a blind merger.
+
+---
+
+## 13. Implementation Status (v1, 2026-09-16) — Verified Evidence
+
+The guardian is implemented inside the existing MCP Control Tower (no new service, no new dependency, no LLM inference in the decision path — zero-cost routing respected).
+
+**Modules** (`infrastructure/mcp-control-plane/src/guardian/`):
+
+| Module | Responsibility |
+| --- | --- |
+| `improvement.ts` | Pure decision engine: metric outcomes, weighted improvement score, regression severity, verdict table, competing-candidate ranking |
+| `signals.ts` | Deterministic diff→metric extraction (7 signal rules, CI summaries, merge-conflict/test-removal/out-of-scope metrics) |
+| `policy.ts` | Blast-radius tier classification (TIER1/2/3 → autonomous/canary/HITL) and the bounded-remediation playbook |
+| `github-api.ts` | Evidence + review-action REST client (reuses the existing GitHub account registry — no second credential path) |
+| `engine.ts` | Orchestration: evidence gathering, evaluation, sweep with best-candidate selection per problem group |
+| `../tools/guardian.tools.ts` | MCP surface: `guardian_evaluate_pr`, `guardian_sweep`, `guardian_act` + audit-grade evidence report |
+
+**Verdict table (implemented exactly as designed in §12):**
+
+- improvement + zero regressions → `MERGE` (only when the blast-radius tier permits: TIER1 autonomous, TIER2 with explicit canary authorisation, TIER3 always via HITL approval)
+- bounded regression with a mechanical fix → `FIX_REGRESSION_THEN_MERGE` (fix plan published on the PR)
+- regression too severe to fix safely → `CLOSE_PR` (reversible: branch preserved, evidence comment posted)
+- regression needing human intent (secrets, deleted tests, swallowed errors, disabled tests) → `ESCALATE_TO_ADMIN` through the governed approval + HITL path
+- clean but no measurable improvement → `CLOSE_PR` (never merge busywork)
+
+**Safety invariants:** `guardian_act` re-evaluates evidence before acting and hard-refuses to merge any PR with a detected regression, regardless of the caller's requested decision. Tier-3 files (auth/RBAC, tenant isolation, payments, migrations, infra, secrets) can never merge autonomously.
+
+**Verification (2026-09-16, local):** `npx tsc --noEmit` PASS; `npm run test:guardian` **44/44 PASS** (`test_guardian.ts`, registered in the `test:unit` chain). `test_registry` / `test_events` / `test_policy` PASS. `test_resource_list` FAILS on a clean tree too (pre-existing local-environment limitation: memory sidecar port 3771 not running) — verified via `git stash` baseline run, so it is **not** a regression from this work.
+
+**Bug fixed during independent verification:** `classifyChangeTier()` started at `TIER1`, so Tier-1 files (docs/tests) never recorded `matchedRule` and every docs-only PR was misclassified as Tier 2 (canary-gated) instead of Tier 1 (autonomous). Caught by the unit test, fixed, and covered by test case [10].
+
+**Known limitations (honest gaps, not claims):** improvement is judged from diff-derived metrics only (no semantic/LLM judgement yet — §11 open question stands); remediation is advisory (the Guardian publishes bounded fix plans rather than editing the PR branch); baseline CI evidence is best-effort (disclosed as `skipped` when unavailable).
