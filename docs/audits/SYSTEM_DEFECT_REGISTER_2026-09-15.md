@@ -3,7 +3,11 @@
 **Status:** Canonical Living Baseline & Master Technical Debt Register (Single Source of Truth)  
 **Scope:** Full Stack (Backend, Frontend, Shared Contracts, CI/CD, Test Suites, Infrastructure)  
 **Audit Coverage:** 3,700 Git-Tracked Files | 1,189 Modules | 765 Backend Routes | 287 Frontend Endpoints | 37 Test Suites  
+<<<<<<< HEAD
 **Last Updated:** 2026-09-16 (round-14 status sweep) — every OPEN item re-verified against live main; fixes landed via PRs #383–#390 (status column reflects post-sweep state).
+=======
+**Last Updated:** 2026-09-16 (Refresh 2) — Re-verified against live main branch (commit `52519ad1`) + fresh code-level defect scan (`scripts/audit/system_defect_scan_2026_09_16.py`, evidence: `docs/audits/evidence/2026-09-16/`)
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ---
 
@@ -25,8 +29,14 @@
 11. [Class P: Dependency & Version Inconsistencies](#11-class-p-dependency--version-inconsistencies)
 12. [Class E: Test Debt & Skipped Test Cases (Formal Registry Summary)](#12-class-e-test-debt--skipped-test-cases-formal-registry-summary)
 13. [Class F: Core Architectural Debt & Subsystem Duplication](#13-class-f-core-architectural-debt--subsystem-duplication)
+<<<<<<< HEAD
 14. [Master Priority Remediation Roadmap](#14-master-priority-remediation-roadmap)
 15. [Methodology, Reproduction Commands & Verification Limits](#15-methodology-reproduction-commands--verification-limits)
+=======
+14. [Class Q: Code-Level Defect Scan (2026-09-16 — Silent Failures, Bare Excepts, Stubs, TS Escape Hatches)](#14-class-q-code-level-defect-scan-2026-09-16--silent-failures-bare-excepts-stubs-ts-escape-hatches)
+15. [Master Priority Remediation Roadmap](#15-master-priority-remediation-roadmap)
+16. [Methodology, Reproduction Commands & Verification Limits](#16-methodology-reproduction-commands--verification-limits)
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ---
 
@@ -63,10 +73,17 @@ These are bugs where components attempt real execution but fail deterministicall
 | :--- | :--- | :--- | :--- | :--- |
 | **ERR-A01** | `frontend/src/pages/user/AgentWorkspace.tsx:L73`<br>`backend/api/routes/agent.py:L24` | Live workspace caller sends `{ prompt, project_id: 'default' }` to plural `/api/v1/agents/execute` without `task_id`. Backend `AgentTaskRequest` strictly requires `task_id: str = Field(...)`. | HTTP `422 Unprocessable Entity`. Agent Workspace fails on execution; UI displays *"Connection error to SupremeAI Backend"*. | ✅ FIXED — Frontend now generates `crypto.randomUUID()` task_id and sends full contract. |
 | **ERR-A02** | `frontend/src/services/agentService.ts:L19`<br>`backend/api/routers.py:L100` | Service layer client calls singular `POST /api/v1/agent/execute` (while live workspace uses `/agents/execute`). Backend router registers `prefix="/api/v1/agents"` (plural). | HTTP `404 Not Found`. Any client importing `agentService.executeAgentTask` hits dead endpoint. Split between live caller (A01) and service-layer drift (A02). | ✅ FIXED — Service now uses `/api/v1/agents/execute` (plural) with `task_id`. |
+<<<<<<< HEAD
 | **ERR-A03** | `frontend/src/components/customer/BrowserPreview.tsx:L264` | Browser preview renders `<iframe src={currentUrl}>` directly in the DOM instead of proxying through backend Playwright. | External domains return `X-Frame-Options: SAMEORIGIN` / CSP frame-ancestors errors. Modern websites fail to load; screen stays blank. | ❌ OPEN — Still renders iframe directly; a real Playwright screenshot-proxy pipeline is the tracked remediation (large ticket). |
 | **ERR-A04** | `frontend/src/pages/user/IdeWorkspace.tsx:L57`<br>`AgentWorkspace.tsx:L51` | Browser `@webcontainer/api` requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. | Dev server and preview lack COOP/COEP headers. Terminal displays `[system] Sandbox unavailable in this preview` and fails to spawn shell. | ✅ FIXED (PR #389) — COOP/COEP now set on nginx (Docker prod) and vite preview; Vite dev server already had them. |
 | **ERR-A05** | `frontend/src/services/apiClient.test.ts:L61` | Test suite asserts against `GET /api/v1/projects`. No such route exists in the backend (backend only exposes `/repos` and `/workspaces`). | Contract test passes via mock, but real application calls to `/api/v1/projects` hit 404. | ✅ FIXED — Test now uses real `GET /api/agents/` route. |
 | **ERR-A06** | `backend/api/routes/browser/_automation.py:L142` | Playwright action handlers lack explicit element-state checks before click/type actions on dynamic SPAs. | Intermittent timeouts (`TimeoutError: 15000ms exceeded`) on dynamic DOM mutations. | ✅ FIXED (PR #390) — explicit wait_for(visible) gate before click/fill/type; timeout → honest HTTP 408 with verbatim reason. |
+=======
+| **ERR-A03** | `frontend/src/components/customer/BrowserPreview.tsx:L264` | Browser preview renders `<iframe src={currentUrl}>` directly in the DOM instead of proxying through backend Playwright. | External domains return `X-Frame-Options: SAMEORIGIN` / CSP frame-ancestors errors. Modern websites fail to load; screen stays blank. | ❌ OPEN — Still renders iframe directly; no proxy implemented. |
+| **ERR-A04** | `frontend/src/pages/user/IdeWorkspace.tsx:L57`<br>`AgentWorkspace.tsx:L51` | Browser `@webcontainer/api` requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. | Dev server and preview lack COOP/COEP headers. Terminal displays `[system] Sandbox unavailable in this preview` and fails to spawn shell. | ❌ OPEN — COOP/COEP headers still not configured on dev server. |
+| **ERR-A05** | `frontend/src/services/apiClient.test.ts:L61` | Test suite asserts against `GET /api/v1/projects`. No such route exists in the backend (backend only exposes `/repos` and `/workspaces`). | Contract test passes via mock, but real application calls to `/api/v1/projects` hit 404. | ✅ FIXED — Test now uses real `GET /api/agents/` route. |
+| **ERR-A06** | `backend/api/routes/browser/_automation.py:L142` | Playwright action handlers lack explicit element-state checks before click/type actions on dynamic SPAs. | Intermittent timeouts (`TimeoutError: 15000ms exceeded`) on dynamic DOM mutations. | ❌ OPEN — No element-state waits added before actions. |
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ---
 
@@ -82,7 +99,11 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * `frontend/src/store/themeStore.ts:69,85` calls `/api/user/preferences` ➔ **404**
   * `frontend/src/pages/ProfilePage.tsx:33` calls `/api/user/preferences` ➔ **404**
 * **Impact:** Theme, locale, and user profile settings silently fail to persist across 5 call sites.
+<<<<<<< HEAD
 * **Status:** ✅ FIXED (PR #383) — all 5 callers moved to GET/POST `/api/preferences`; extended prefs (preferred_language/profile/security/notifications) really persist via custom_shortcuts._extended; 4 regression tests.
+=======
+* **Status:** ❌ OPEN — Frontend callers not yet updated to match `/api/preferences/` backend route.
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ### 4.2 `/api/skills/...` — Three Dead Calls (`ERR-H02`)
 * **Backend Definition (`backend/api/routes/skills.py`):** Real paths are `/api/skills/catalog`, `/api/skills/search`, `/api/skills/install` (no id in path).
@@ -91,12 +112,20 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * `frontend/src/services/skillsService.ts:118` calls `DELETE /api/skills/${skillId}/uninstall` ➔ **404** (no uninstall route exists)
   * `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx:293` calls `POST /api/skills/deploy-blueprint` ➔ **404** (route absent)
 * **Impact:** Skill installation and uninstallation are broken.
+<<<<<<< HEAD
 * **Status:** ✅ FIXED (PR #385) — frontend uses the real contract; DELETE /api/skills/uninstall added; install state persisted atomically; deploy-blueprint writes real manifests into the catalog; installed_only filter now real.
+=======
+* **Status:** ⚠️ PARTIAL — Backend has `/api/skills/install` (no id) but frontend still sends `/install/{id}`; `/uninstall` and `/deploy-blueprint` are missing entirely.
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ### 4.3 `/api/v1/workspaces/bind-target` — Wrong Prefix (`ERR-H03`)
 * **Backend Definition (`backend/api/routes/workspaces_route.py:30`):** Real path is `POST /admin-api/workspaces/bind-target`.
 * **Caller:** `frontend/src/services/aiActions.ts:174` calls `POST /api/v1/workspaces/bind-target` ➔ **404**.
+<<<<<<< HEAD
 * **Status:** ✅ FIXED (PR #383) — caller moved to `/admin-api/workspaces/bind-target`.
+=======
+* **Status:** ❌ OPEN — Frontend caller still uses wrong prefix.
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ### 4.4 `/api/v1/ecosystem/admin/*` — 17 Dead Admin Calls (`ERR-H04`)
 * **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposes `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals`.
@@ -124,7 +153,11 @@ Every row below was confirmed by reading **both** the frontend call site and the
 * **Location:** `backend/api/routes/agents.py:55` imports `from agents.research_assistant import ResearchAssistant`.
 * **Defect:** `backend/agents/research_assistant.py` does not exist anywhere in the repository.
 * **Impact:** `POST /api/agents/research/search`, `/research/summarize`, and `/research/cite` (`agents.py:52,71,82`) fail with **HTTP 500 unconditionally**.
+<<<<<<< HEAD
 * **Status:** ✅ FIXED (PR #384) — real research_assistant implemented: live arXiv search, extractive summarization, deterministic citations (apa/mla/ieee/bibtex); honest 400/502 error mapping; 10 tests.
+=======
+* **Status:** ❌ OPEN — Missing module not yet implemented.
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ### 4.7 Dual Divergent Agent Routers (`ERR-H07` & `ERR-H08`)
 * `backend/api/routers.py` mounts both `/api/agents` (`api.routes.agents` with user token) and `/api/v1/agents` (`api.routes.agent` with autonomous agent token).
@@ -220,6 +253,11 @@ Static route reconstruction confirms 57 route families whose leaf endpoints are 
   * `/api/admin/firebase-totp-recover` and `/firebase-totp-verify` use deny-lists (`env == "production"` only).
   * `_ensure_admin_authorized()` returns early without checking Firestore if `env != "production"`.
 * **Consequence:** If `ENV` is unset or misspelled, `config.py` defaults to `local`, allowing deny-list endpoints to accept `mock-*` tokens and mint admin JWTs with full permissions. Furthermore, `config.py` treats `ENV=prod` as production, but `admin_routes.py` checks literal `"production"`.
+<<<<<<< HEAD
+=======
+* **Status:** ✅ REMEDIATED (2026-09-16 code re-verification) — All four `mock-` token sites (`admin_routes.py:205, 334, 393, 438`) now route through a shared fail-closed gate `_mock_token_allowed()` with a standardized `_reject_mock_token()` 403 (lines 185–194, annotated `ERR-S01 FIX`). Allow-list semantics: mock tokens strictly forbidden outside local/test envs.
+* **Residual (tracked as follow-up):** The 2 remaining items below were partially addressed by the same hardening wave, but the `_ensure_admin_authorized()` Firestore-early-return behavior and the `prod` vs `production` alias mismatch in `config.py` should be covered by a dedicated fail-closed regression test (`backend/tests/core/` gap — see Class Q follow-ups).
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 
 ### 9.2 `ERR-S02` (P1): Production CORS Failure & Idempotency Key Workaround
 * `frontend/src/services/apiClient.ts:262–279` hardcodes `IDEMPOTENCY_REQUIRED_PREFIXES` to avoid sending `idempotency-key` on unlisted routes because the deployed backend's CORS policy rejects OPTIONS requests with `400 Disallowed CORS headers`.
@@ -231,9 +269,15 @@ Static route reconstruction confirms 57 route families whose leaf endpoints are 
 
 | ID | Artifact | Defect | Impact | Status |
 | :--- | :--- | :--- | :--- | :--- |
+<<<<<<< HEAD
 | **ERR-M01** | `scripts/find_stub_data.py` | Scans for only 20 literal regexes. Completely blind to `mock`, `fake`, `Math.random`, or canned responses. | Prints `[PASS] No stub patterns found` on `backend/` despite 1,157 stubs. | ❌ OPEN |
 | **ERR-M02** | `.github/workflows/ci.yml` | The stub-blocker gate is not wired into GitHub Actions CI at all. | Developers without local pre-commit hooks push stubs without blocking. | ❌ OPEN |
 | **ERR-M03** | `scripts/feature_parity_sentinel.py:729` | Crashes on Windows with `UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d'` (emoji). | Sentinel cannot be run locally on Windows development machines. | ❌ OPEN |
+=======
+| **ERR-M01** | `scripts/find_stub_data.py` | Scans for only 20 literal regexes. Completely blind to `mock`, `fake`, `Math.random`, or canned responses. | Prints `[PASS] No stub patterns found` on `backend/` despite 1,157 stubs. | ❌ OPEN — re-confirmed 2026-09-16 (superseded functionally by `scripts/audit/system_defect_scan_2026_09_16.py`; still not hardened in-place) |
+| **ERR-M02** | `.github/workflows/ci.yml` | The stub-blocker gate is not wired into GitHub Actions CI at all. | Developers without local pre-commit hooks push stubs without blocking. | ❌ OPEN — re-confirmed 2026-09-16 via `findstr` over `ci.yml` (no `find_stub_data` / `feature_parity_sentinel` invocations) |
+| **ERR-M03** | `scripts/feature_parity_sentinel.py:729` | Crashes on Windows with `UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d'` (emoji). | Sentinel cannot be run locally on Windows development machines. | ❌ OPEN — re-confirmed 2026-09-16: `print("🔍 Scanning backend (AST)...")` still present at line 729; needs `sys.stdout.reconfigure(encoding="utf-8")` guard |
+>>>>>>> 5ed0abd5 (docs(audits): consolidate system defect register and add code-level defect scanner)
 | **ERR-M05** | Remote Refs | ~320 stale remote branches fetched locally. | Clutters branch discovery and git status. | ❌ OPEN |
 | **ERR-M08** | `.gitignore:479` | Blanket `*.txt` rule previously ignored audit evidence in `docs/audits/evidence/`. | Scoped negation rule `!docs/audits/evidence/**` added to keep audit evidence committed. | ✅ FIXED |
 
@@ -270,7 +314,71 @@ Source registry: `docs/SKIPPED_TESTS.md`. Total skipped test markers: **96 activ
 
 ---
 
-## 14. Master Priority Remediation Roadmap
+## 14. Class Q: Code-Level Defect Scan (2026-09-16 — Silent Failures, Bare Excepts, Stubs, TS Escape Hatches)
+
+**Source:** `scripts/audit/system_defect_scan_2026_09_16.py` (AST-based, read-only) — full evidence at `docs/audits/evidence/2026-09-16/defect_scan_summary.txt` and `defect_scan_report.json`.
+**Coverage:** 2,250 Python files + 842 TS/TSX files (git-tracked, vendor dirs excluded). **Syntax errors: 0** (clean), **hardcoded secret candidates: 0** (clean).
+
+### 14.1 Silent Failure Handlers — `except: pass` (16 hits)
+
+These swallow exceptions with no logging, no metrics, no re-raise — the "Silent Failure" anti-pattern:
+
+| # | File:Line | Handler | Risk Note |
+| :-- | :-- | :-- | :-- |
+| 1 | `backend/api/routes/crawler_admin.py:80` | `Exception` | Default policy seed failure hidden; tenant sees empty policy list with no diagnostics. |
+| 2 | `backend/api/routes/deep_research.py:344` | `Exception` | Reasoning-stream emit failures dropped (intentional by comment — needs `logger.debug` at minimum). |
+| 3 | `backend/core/orchestration/cloud_sandbox_orchestrator.py:391` | `Exception` | `download_file` JSON parse failure silently falls through to raw-content path; may return empty bytes. |
+| 4 | `backend/memory/mcp_server.py:1218` | `Exception` | Memory-sidecar operation errors invisible to admin telemetry. |
+| 5 | `backend/services/integration_discovery.py:193` | `Exception` | Integration probe failures silently skipped; discovery results look healthy when partial. |
+| 6 | `.github/scripts/constitution/rules/base.py:50,67,70,91` | `Exception`/`SyntaxError` | Constitution rule engine self-suppresses parse/eval errors — a rule that crashes counts as "passed". |
+| 7 | `.github/scripts/constitution/rules/rel001_no_silent_failure.py:84,86` | `SyntaxError`/`Exception` | Ironic: the no-silent-failure rule itself swallows exceptions. |
+| 8 | `.github/scripts/constitution/rules/sec002_no_secret_hardcoding.py:85` | `Exception` | Secret-scanning rule errors silently ignored. |
+| 9 | `scripts/advanced_analysis/secret_rotation_reminder.py:282` | `(TimeoutExpired, FileNotFoundError, OSError)` | Rotation reminder failures invisible. |
+| 10 | `scripts/pre_merge_guard.py:707` | `json.JSONDecodeError` | Malformed guard-config silently treated as "no config". |
+| 11 | `backend/tests/core/queue/test_task_queue_enhanced.py:199` | `asyncio.CancelledError` | Swallowing `CancelledError` breaks cooperative cancellation semantics. |
+| 12 | `backend/tests/test_supreme_kernel.py:34` | `ValueError` | Test-side suppression masks real kernel contract violations. |
+
+**Remediation policy:** every site must be converted to `logger.warning(..., exc_info=True)` with a scoped reason, or re-raise. The `.github/scripts/constitution/rules/*` cluster is highest priority — governance tooling must not falsify rule outcomes.
+
+### 14.2 Bare `except:` (1 hit)
+* `backend/examples/sample_buggy.py:106` — intentional fixture file (sample buggy code used by repair-flow demos). **No action** beyond keeping it excluded from production lints.
+
+### 14.3 `NotImplementedError` Stubs (21 hits — must be wired or gated)
+
+| File | Symbols |
+| :-- | :-- |
+| `backend/adaptive_engine/resource_registry.py:123,126,129` | `restart`, `deploy`, `rollback` |
+| `backend/core/deployment/production_deploy.py:383,394,407,418,466` | `_deploy_to_production`, `_deploy_to_staging`, `_deploy_to_development`, `_deploy_to_generic`, `rollback_deployment` (✅ intentional per ERR-G02 fix — keep gated) |
+| `backend/core/orchestration/cloud_sandbox_orchestrator.py:271,276` | `_get_endpoint`, `_prepare_creation_payload` (missing provider branches → HTTP 500 on `provider="local"`, see §7.2) |
+| `backend/core/orchestration/swarm_agent_roles.py:17` | `run` (base role contract) |
+| `backend/core/plugins/experimental/{gmail,google_drive,notion,slack,telegram}_plugin.py` | `execute_tool` (5 plugins — see §7.3) |
+| *(remaining entries see `defect_scan_report.json` → `not_implemented`)* | |
+
+### 14.4 TODO/FIXME/HACK/XXX Markers (67 hits across ~40 files)
+Top density: `backend/core/deployment/production_deploy.py` (7), `backend/tools/learning/*` (6), `backend/services/ide_trio/*` (5), `scripts/find_stub_data.py` (4). Full per-file distribution in evidence summary. **Policy:** triage into fix-tickets or convert to documented deferrals; XXX markers in security-adjacent files (`input_sanitizer.py:1`) get priority.
+
+### 14.5 TypeScript Escape Hatches (237 hits across ~60 files)
+
+`@ts-ignore` / `@ts-expect-error` / `as any` / `: any` suppressions defeating strict typing:
+
+| File | Hits | File | Hits |
+| :-- | --: | :-- | --: |
+| `infrastructure/mcp-control-plane/src/adapters/github/external.ts` | 17 | `frontend/src/store/adminStore.ts` | 6 |
+| `infrastructure/mcp-control-plane/src/index.ts` | 13 | `tools/vscode-extension/src/utils/logger.ts` | 6 |
+| `tools/vscode-extension/src/handlers/CodeFlowHandler.ts` | 13 | `frontend/src/hooks/useAdminApi.ts` | 5 |
+| `packages/shared-services/src/services/SupremeAIService.ts` | 12 | `frontend/src/hooks/useAuth.ts` | 4 |
+| `tools/vscode-extension/src/services/AuthService.ts` | 8 | `infrastructure/mcp-control-plane/src/health/engine.ts` | 4 |
+
+**Remediation policy:** burn down top-10 files first (105 of 237 hits); replace `as any` with generated contract types from `packages/shared-types`. Note: `tsc --noEmit` passes today, so these are latent-robustness debt, not current compile breaks (contrast with ERR-F04 dependency pins).
+
+### 14.6 Follow-Up Gaps Surfaced by This Scan
+* **ERR-S01 regression test missing:** no test asserts `_mock_token_allowed()` fail-closed behavior for `ENV=prod`/unset (see §9.1 residual).
+* **Constitution rule engine (§14.1 #6–8):** governance scripts fail-open — treat as P1.
+* `ERR-M02` synergy: wire the new `system_defect_scan_2026_09_16.py` into CI as a **reporting (non-blocking)** step so silent-failure counts trend monotonically downward.
+
+---
+
+## 15. Master Priority Remediation Roadmap
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────────────────┐
@@ -304,7 +412,7 @@ Source registry: `docs/SKIPPED_TESTS.md`. Total skipped test markers: **96 activ
 
 ---
 
-## 15. Methodology, Reproduction Commands & Verification Limits
+## 16. Methodology, Reproduction Commands & Verification Limits
 
 ### Execution Commands
 ```bash
@@ -316,10 +424,15 @@ python scripts/find_stub_data.py --path backend --fail-on HIGH
 
 # 3. Route parity sentinel scan:
 python scripts/feature_parity_sentinel.py --fail-on never
+
+# 4. Code-level defect scan (silent failures, bare excepts, NotImplementedError,
+#    TODO markers, secret candidates, TS escape hatches) — 2026-09-16 addition:
+python scripts/audit/system_defect_scan_2026_09_16.py
 ```
 
 ### Verification Limits & Reality Checks
 * All HTTP 404/422/500 classifications derive from AST route table reconstruction and source code analysis.
-* `ERR-S01` is a static analysis finding based on conditional logic in `admin_routes.py` and defaults in `config.py`.
-* `docs/audits/evidence/` contains raw text outputs for full traceability.
-* Status verification performed against live `main` branch at commit `52519ad1` (2026-09-16).
+* `ERR-S01` was a static analysis finding based on conditional logic in `admin_routes.py` and defaults in `config.py`; its REMEDIATED status (2026-09-16) is verified by direct code inspection of the `_mock_token_allowed()` gate — runtime/env-matrix regression test still outstanding (§14.6).
+* `docs/audits/evidence/` contains raw text outputs for full traceability, now including `2026-09-16/defect_scan_summary.txt` + `defect_scan_report.json`.
+* Status verification performed against live `main` branch at commit `52519ad1` (2026-09-16); Class Q counts generated from the same working tree (2,250 py / 842 ts files).
+* Control Tower telemetry during this audit reported `0/18` remote services available (local/offline run) — live-platform claims in this register therefore rest on static evidence only.

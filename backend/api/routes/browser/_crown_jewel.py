@@ -7,7 +7,7 @@ summary, a hardcoded 1x1 blank PNG "screenshot", a constant security score of
 100, and a task-step executor that always claimed "Autonomous step succeeded".
 That was false assurance (Class G): the system reporting success while doing
 no work. Every endpoint here now either performs REAL work or fails loudly
-with an explicit HTTP error. See docs/audits/SYSTEM_DEFECT_REGISTER_SUPPLEMENT_2026-09-15.md.
+with an explicit HTTP error. See docs/audits/SYSTEM_DEFECT_REGISTER_2026-09-15.md.
 
 NOTE: ``execute_step`` (POST /tasks/{id}/step) stays registered at this exact
 position because route registration order determines which handler wins for

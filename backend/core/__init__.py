@@ -116,19 +116,37 @@ except ImportError:
 # (`from core import EWC` ইত্যাদি) অপরিবর্তিত থাকে, import-time cost শূন্য।
 _EVOLUTION_LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     # name → (module, attr)
-    "AdversarialDefenseSystem": ("core.self_evolution.adversarial_defense.defense_system", "AdversarialDefenseSystem"),
-    "AdversarialTrainer": ("core.self_evolution.adversarial_defense.defense_system", "AdversarialTrainer"),
+    "AdversarialDefenseSystem": (
+        "core.self_evolution.adversarial_defense.defense_system",
+        "AdversarialDefenseSystem",
+    ),
+    "AdversarialTrainer": (
+        "core.self_evolution.adversarial_defense.defense_system",
+        "AdversarialTrainer",
+    ),
     "DefenseConfig": ("core.self_evolution.adversarial_defense.defense_system", "DefenseConfig"),
     "EWC": ("core.self_evolution.continual_learning.ewc", "EWC"),
     "EWCConfig": ("core.self_evolution.continual_learning.ewc", "EWCConfig"),
     "EWCTrainer": ("core.self_evolution.continual_learning.ewc", "EWCTrainer"),
     "OnlineEWC": ("core.self_evolution.continual_learning.ewc", "OnlineEWC"),
-    "RemediationEngine": ("core.self_evolution.digital_twin.remediation_engine", "RemediationEngine"),
+    "RemediationEngine": (
+        "core.self_evolution.digital_twin.remediation_engine",
+        "RemediationEngine",
+    ),
     "ImpactSimulator": ("core.self_evolution.digital_twin.simulator", "ImpactSimulator"),
     "SystemTopologyMapper": ("core.self_evolution.digital_twin.topology", "SystemTopologyMapper"),
-    "FederatedLearningCoordinator": ("core.self_evolution.federated_learning.fed_learning", "FederatedLearningCoordinator"),
-    "NeuralSymbolicConfig": ("core.self_evolution.neural_symbolic.integration", "NeuralSymbolicConfig"),
-    "NeuralSymbolicIntegrator": ("core.self_evolution.neural_symbolic.integration", "NeuralSymbolicIntegrator"),
+    "FederatedLearningCoordinator": (
+        "core.self_evolution.federated_learning.fed_learning",
+        "FederatedLearningCoordinator",
+    ),
+    "NeuralSymbolicConfig": (
+        "core.self_evolution.neural_symbolic.integration",
+        "NeuralSymbolicConfig",
+    ),
+    "NeuralSymbolicIntegrator": (
+        "core.self_evolution.neural_symbolic.integration",
+        "NeuralSymbolicIntegrator",
+    ),
 }
 
 _EVOLUTION_LAZY_FLAGS: dict[str, tuple[str, ...]] = {
@@ -175,6 +193,7 @@ def _resolve_or_none(attr: str) -> Any:
 
 def __dir__() -> list[str]:
     return sorted(set(globals()) | set(_EVOLUTION_LAZY_EXPORTS))
+
 
 # Version information
 __version__ = "2.0.0"
@@ -324,10 +343,7 @@ def __getattr__(name: str) -> Any:
         globals()[name] = value
         return value
     if name in _EVOLUTION_LAZY_FLAGS:
-        available = all(
-            _resolve_or_none(attr) is not None
-            for attr in _EVOLUTION_LAZY_FLAGS[name]
-        )
+        available = all(_resolve_or_none(attr) is not None for attr in _EVOLUTION_LAZY_FLAGS[name])
         globals()[name] = available
         return available
     if name == "EVOLUTION_COMPONENTS_AVAILABLE":
