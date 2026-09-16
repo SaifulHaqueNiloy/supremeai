@@ -109,19 +109,21 @@ describe('skillsService', () => {
     expect(res.subsystems).toEqual({});
   });
 
-  it('installSkill posts and emits SKILL_AUTO_CREATED', async () => {
-    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true, skillId: 's1', installedVersion: '1.0', message: 'ok' });
+  it('installSkill posts to the real contract and emits SKILL_AUTO_CREATED', async () => {
+    (apiClient.post as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ status: 'installed', skill: 's1', version: '1.0', message: 'ok' });
     const res = await installSkill('s1');
-    expect(apiClient.post).toHaveBeenCalledWith('/api/skills/s1/install');
+    expect(apiClient.post).toHaveBeenCalledWith('/api/skills/install?skill=s1');
     expect(res.success).toBe(true);
+    expect(res.skillId).toBe('s1');
+    expect(res.installedVersion).toBe('1.0');
     expect(mockEmit).toHaveBeenCalledWith(mockEvents.SKILL_AUTO_CREATED, expect.any(Object));
   });
 
-  it('uninstallSkill deletes the skill', async () => {
+  it('uninstallSkill deletes via the real contract', async () => {
     (apiClient.delete as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
       undefined
     );
     await uninstallSkill('s1');
-    expect(apiClient.delete).toHaveBeenCalledWith('/api/skills/s1/uninstall');
+    expect(apiClient.delete).toHaveBeenCalledWith('/api/skills/uninstall?skill=s1');
   });
 });

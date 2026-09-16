@@ -34,7 +34,10 @@ export function useSkills(query = '') {
 export function useInstallSkill() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (skill: string) => apiClient.post(`/api/skills/install`, { skill }),
+    // ERR-H02 FIX: backend contract is POST /api/skills/install?skill=<id> —
+    // the backend reads `skill` as a query param, a JSON body was ignored.
+    mutationFn: (skill: string) =>
+      apiClient.post(`/api/skills/install?skill=${encodeURIComponent(skill)}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['skills'] }),
   });
 }
