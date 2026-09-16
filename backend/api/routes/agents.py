@@ -12,6 +12,11 @@ from agents.research_assistant import ResearchAssistant, ResearchSourceError
 from core.logging_config import logger
 from core.security.authentication.rbac import get_current_user_token
 
+# ERR-H07 CONTRACT: this router is the USER-facing read surface (catalog,
+# status, research tools). The canonical EXECUTION surface lives in
+# ``api.routes.agent`` at ``/api/v1/agents/execute`` (integration JWT).
+# Do not add execution endpoints here; see the drift-guard contract test
+# ``backend/tests/api/test_agent_execute_contract.py``.
 router = APIRouter(
     prefix="/api/agents",
     tags=["specialized-agents"],
