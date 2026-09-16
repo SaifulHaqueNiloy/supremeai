@@ -296,28 +296,61 @@ def get_commandcenter_rate_limits():
 
 @router.get("/memory")
 def get_commandcenter_memory_stats():
-    """Bridge for CommandCenter MemoryKnowledge module."""
-    try:
-        from core.cache.redis_manager import redis_manager
+    """Bridge for CommandCenter MemoryKnowledge module.
 
-        client = getattr(redis_manager, "client", None)
-        cache_hits = 0
-        if client:
-            cache_hits = int(client.get("metrics:cache:semantic_hits") or 0)
+    FIX(fake-data): this endpoint previously returned invented content —
+    three hardcoded "banks" (48/12/120 entries), a hardcoded 0.88 hit rate
+    (0.95 on error!), and a fabricated 45,200-token floor. It now reports
+    ONLY real values from the multi-layer cache:
+
+    - ``banks``: one entry per real cache layer, ``entry_count`` carrying
+      that layer's observed hit count and ``recent_writes`` always 0
+      (per-layer write counts are not tracked yet — zero, not invented)
+    - ``semantic_cache_hit_rate``: real hits/total ratio (null until
+      enough accesses exist; the frontend renders null as "—")
+    - ``tokens_saved``: real hit count x ESTIMATED_AVG_COMPLETION_TOKENS
+      (documented estimate, no fabricated floor — 0 hits => 0 saved)
+    """
+    try:
+        from core.cache.multi_layer_cache import multi_layer_cache
+
+        hit_rate: float | None = None
+
+        import asyncio
+
+        raw_stats = multi_layer_cache.get_cache_statistics()
+        # get_cache_statistics is async; support both call styles defensively.
+        if asyncio.iscoroutine(raw_stats):
+            raw_stats = asyncio.run(raw_stats)
+
+        hits = sum(
+            int(raw_stats.get(k) or 0)
+            for k in ("exact_hits", "semantic_hits", "prefix_hits", "session_hits")
+        )
+        total = hits + int(raw_stats.get("misses") or 0)
+        if total > 0:
+            hit_rate = hits / total
+
+        ESTIMATED_AVG_COMPLETION_TOKENS = 1250  # documented estimate per served hit
+
+        banks = [
+            {"name": "Exact Match Layer", "entry_count": int(raw_stats.get("exact_hits") or 0), "recent_writes": 0},
+            {"name": "Semantic Layer", "entry_count": int(raw_stats.get("semantic_hits") or 0), "recent_writes": 0},
+            {"name": "Prefix Layer", "entry_count": int(raw_stats.get("prefix_hits") or 0), "recent_writes": 0},
+            {"name": "Session Layer", "entry_count": int(raw_stats.get("session_hits") or 0), "recent_writes": 0},
+        ]
+
         return {
-            "banks": [
-                {"name": "General Knowledge", "entry_count": 48, "recent_writes": 3},
-                {"name": "Tenant Preferences", "entry_count": 12, "recent_writes": 1},
-                {"name": "Codebase Graph", "entry_count": 120, "recent_writes": 14},
-            ],
-            "semantic_cache_hit_rate": 0.88,
-            "tokens_saved": max(cache_hits * 1250, 45200),
+            "banks": banks,
+            "semantic_cache_hit_rate": round(hit_rate, 4) if hit_rate is not None else None,
+            "tokens_saved": hits * ESTIMATED_AVG_COMPLETION_TOKENS,
         }
     except Exception:
+        # Honest degraded mode: no data instead of invented 0.95/10000.
         return {
-            "banks": [{"name": "System Memory", "entry_count": 1, "recent_writes": 0}],
-            "semantic_cache_hit_rate": 0.95,
-            "tokens_saved": 10000,
+            "banks": [],
+            "semantic_cache_hit_rate": None,
+            "tokens_saved": 0,
         }
 
 
