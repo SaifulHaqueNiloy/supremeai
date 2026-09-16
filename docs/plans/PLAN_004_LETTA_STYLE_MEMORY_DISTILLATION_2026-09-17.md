@@ -22,10 +22,10 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false
-last_verified: "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below)"
+last_verified: "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত)"
 code_evidence:
   - "backend/core/unified_memory.py L57–58: summary = content[:200]  # Placeholder ; structure = \"{}\"  # Placeholder (literal placeholder comments in the Eternal Brain write path)"
-  - "backend/services/memory_service.py L316: embedding = self._embed(summary) — retrieval embedding is computed from the summary only; pg INSERT (L323–333) persists summary+embedding+metadata but NOT content or structure"
+  - "backend/services/memory_service.py L306: embedding = self._embed(summary) — retrieval embedding is computed from the summary only; pg INSERT INTO ai_memory (L312–321) persists summary+embedding+metadata but NOT content or structure (lines updated for eb589909 drift on b37f3f10; was L316/L323–333 on 37b05f4b)"
   - "backend/agents/syncguard/syncguard_agent.py L83–90: production async writer sends full JSON audit report as content → truncated to 200 chars by L57"
   - "backend/core/unified_memory.py L95–110: store_short_term_memory has zero non-test production callers (grep-verified 2026-09-17)"
   - "backend/api/routes/websocket_agent.py L9: 'from core.llm.llm_gateway import llm_gateway' — established singleton import pattern"
@@ -40,7 +40,7 @@ risk_and_rollback:
   - "Rollback = git revert of the single implementation commit; no DB migration, no config migration, no data migration — pre-existing memories remain valid"
   - "Runtime kill-switch: env flag SUPREMEAI_MEMORY_DISTILL=false forces the distilled variant to delegate straight to legacy truncation (checked at call time)"
 baseline:
-  - "Code-verified (2026-09-17): Eternal Brain summary = first 200 chars of content (unified_memory.py L57); structure = literal '{}' (L58); retrieval embedding derived from that summary (memory_service.py L316)"
+  - "Code-verified (2026-09-17): Eternal Brain summary = first 200 chars of content (unified_memory.py L57); structure = literal '{}' (L58); retrieval embedding derived from that summary (memory_service.py L306)"
 measurement_method:
   - "Offline, on-demand (never per-CI): seed ≥20 representative memory entries (syncguard-style JSON reports, browser-session payloads, API-endpoint-style notes); write each twice — legacy truncation vs distilled — into the degraded-mode SQLite path; run CascadeMemoryService.query_context with ≥10 natural-language seed queries; compare top-3 hit-rate between the two corpora; record per-query results in the plan's outcome evidence block"
 success_threshold:
@@ -77,7 +77,7 @@ plan_lifecycle: "living — single complete plan #004; proposed candidate awaiti
 |---|---|---|---|---|
 | লেখার সময়ে ঘন সারসংক্ষেপ | ✅ | ✅ | ✅ | ❌ `content[:200]` কাঁচা কাট (L57 `# Placeholder`) |
 | স্ট্রাকচার্ড facts (entity/preference) | ✅ blocks | ✅ saved memory | ✅ topic files | ❌ `structure = "{}"` (L58 literal) |
-| সারসংক্ষেপ-ভিত্তিক ভেক্টর অনুসন্ধান | ✅ | ✅ | ✅ | ⚠️ আছে, কিন্তু খারাপ summary-র উপর (memory_service.py L316) |
+| সারসংক্ষেপ-ভিত্তিক ভেক্টর অনুসন্ধান | ✅ | ✅ | ✅ | ⚠️ আছে, কিন্তু খারাপ summary-র উপর (memory_service.py L306) |
 | ব্যর্থতায় সৎ fallback | ✅ | — | — | এই প্ল্যান যোগ করছে (#13) |
 
 ---
@@ -100,11 +100,11 @@ Owner Circle: Memory Circle + C5 (LLM Gateway) · Constitution anchor: #11 (prim
 ### ২.১ কি আছে (code-verified, fresh main 37b05f4b)
 
 1. **পূর্ণাঙ্গ মেমোরি ফ্যাসাড** — `UnifiedMemoryInterface` (backend/core/unified_memory.py L27–121): long-term store/query, short-term store/recall, task checkpoint — কাগজে সম্পূর্ণ Eternal Brain।
-2. **ব্যাকিং সার্ভিস** — `CascadeMemoryService` (backend/services/memory_service.py): `store_memory` L298 (pg `ai_memory` INSERT: user_id, session_id, agent_type, task_type, summary, embedding, metadata), `query_context` L496 (pgvector RPC ranking + in-Python cosine fallback + row cap), `_embed` L218 → `embed_for_pgvector` (local-first, 384-dim, hash fallback — backend/core/embeddings.py)।
+2. **ব্যাকিং সার্ভিস** — `CascadeMemoryService` (backend/services/memory_service.py): `store_memory` L288 (pg `ai_memory` INSERT: user_id, session_id, agent_type, task_type, summary, embedding, metadata), `query_context` L486 (pgvector RPC ranking + in-Python cosine fallback + row cap), `_embed` L208 → `embed_for_pgvector` (local-first, 384-dim, hash fallback — backend/core/embeddings.py; eb589909-এর পর থেকে hash fallback deterministic)।
 3. **LLM Gateway singleton** — `from core.llm.llm_gateway import llm_gateway` (websocket_agent.py L9-এ প্রতিষ্ঠিত ইমপোর্ট প্যাটার্ন); `acompletion(prompt=..., task_type=...)` জেনেরিক; zero-cost provider chain (router + local Ollama fallback) সক্রিয়।
 4. **বাস্তব প্রোডাকশন লেখক** — `syncguard_agent.py` `run_full_audit()` (async, L35) L83-90: পূর্ণ JSON অডিট রিপোর্ট মেমোরিতে লেখে; `unified_memory_api.py` L21–41: HTTP এন্ডপয়েন্ট (async); `browser_routes.py` L652: ব্রাউজ-সেশন লেখে (content = শুধু URL)।
 5. **টেস্ট ট্রি** — `backend/tests/memory/` বিদ্যমান (test_memory_service.py, test_sliding_window_memory.py ইত্যাদি) — প্রতিষ্ঠিত pytest প্যাটার্ন।
-6. **metadata JSON কলাম বিদ্যমান** — pg INSERT-এ metadata পার্সিস্ট হয় (memory_service.py L323–333) — স্ট্রাকচার্ড facts নতুন কলাম ছাড়াই এখানে ভ্রমণ করতে পারে (**শূন্য schema change**)।
+6. **metadata JSON কলাম বিদ্যমান** — pg INSERT-এ metadata পার্সিস্ট হয় (memory_service.py L312–321) — স্ট্রাকচার্ড facts নতুন কলাম ছাড়াই এখানে ভ্রমণ করতে পারে (**শূন্য schema change**)।
 
 ### ২.২ কি নাই
 
