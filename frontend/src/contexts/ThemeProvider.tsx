@@ -27,7 +27,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const loadTheme = async () => {
       if (!token) return;
       try {
-        const response = await apiClient.get<{ theme?: string; data?: { theme?: string } }>('/api/v1/preferences', { signal: controller.signal });
+        const response = await apiClient.get<{ theme?: string; data?: { theme?: string } }>('/api/preferences', { signal: controller.signal });
         const remoteTheme = response.data?.theme || response.theme;
         if (remoteTheme && THEME_ORDER.includes(remoteTheme as Theme)) {
           setTheme(remoteTheme as Theme);
@@ -71,7 +71,9 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.removeItem('supremeai_theme');
 
     // ব্যাকএন্ডে async সিঙ্ক করা
-    apiClient.post('/api/v1/preferences', { theme: newTheme })
+    // ERR-H01 FIX: real backend route is POST /api/preferences (mounted at
+    // prefix /api + router /preferences) — /api/v1/preferences never existed (404).
+    apiClient.post('/api/preferences', { theme: newTheme })
       .catch(err => console.error('Failed to sync theme to DB:', err));
 
     eventBus.emit(Events.THEME_CHANGED, {

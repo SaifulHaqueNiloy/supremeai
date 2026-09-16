@@ -26,6 +26,44 @@ class PreferenceUpdate(BaseModel):
     custom_shortcuts: dict | None = None
     verbosity: str | None = None
     preferred_frameworks: list[str] | None = None
+    # ERR-H01 FIX (2026-09-16): extended preference surfaces the frontend
+    # actually sends — I18nProvider → ``preferred_language``; ProfilePage →
+    # ``profile`` / ``security`` / ``notifications``. Previously these were
+    # not accepted at all (callers also hit 404s on wrong paths — fixed on
+    # the frontend side in the same change), so locale/profile settings
+    # could never persist.
+    preferred_language: str | None = None
+    profile: dict | None = None
+    security: dict | None = None
+    notifications: dict | None = None
+
+
+# ERR-H01 FIX: physical columns that actually exist in ``user_preferences``
+# (migration 03_user_preferences_and_metrics.sql). Everything else the model
+# accepts is persisted inside the JSONB ``custom_shortcuts`` column under an
+# "_extended" key — nothing silently dropped, no schema migration required.
+# ``verbosity`` / ``preferred_frameworks`` were already accepted by the model
+# but are NOT physical columns, so upserting them verbatim used to fail with
+# an unknown-column error (latent 500) — they now flow through _extended too.
+_DB_COLUMNS = frozenset({"theme", "default_model", "max_tokens", "auto_save", "custom_shortcuts"})
+_EXTENDED_KEYS = frozenset(
+    {"verbosity", "preferred_frameworks", "preferred_language", "profile", "security", "notifications"}
+)
+
+
+def _split_extended(data: dict) -> tuple[dict, dict]:
+    """Split an update payload into (physical-column values, extended values)."""
+    extended = {k: data.pop(k) for k in list(data) if k in _EXTENDED_KEYS}
+    return data, extended
+
+
+def _hoist_extended(row: dict) -> dict:
+    """Return the row with ``_extended`` values hoisted back to top level."""
+    shortcuts = row.get("custom_shortcuts")
+    extended = shortcuts.get("_extended") if isinstance(shortcuts, dict) else None
+    if isinstance(extended, dict) and extended:
+        return {**row, **extended}
+    return row
 
 
 @router.get("/")
@@ -43,7 +81,9 @@ async def get_preferences(user_id: str = Query(default="default")):
         res = await db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
         rows = res.data or []
         if rows:
-            return rows[0]
+            # ERR-H01 FIX: hoist _extended prefs so callers read them back as
+            # top-level keys (preferred_language, profile, security, …).
+            return _hoist_extended(dict(rows[0]))
         return {
             "user_id": user_id,
             "theme": "dark",
@@ -90,6 +130,28 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
             "adaptive_suggestions": suggestions,
         }
 
+    # ERR-H01 FIX: persist extended prefs inside the JSONB custom_shortcuts
+    # column (only real physical columns may go to the top-level upsert).
+    data, extended = _split_extended(data)
+    if extended:
+        shortcuts_base = dict(data.get("custom_shortcuts") or {})
+        if "custom_shortcuts" not in data:
+            try:
+                cur = (
+                    await db.client.table("user_preferences")
+                    .select("custom_shortcuts")
+                    .eq("user_id", user_id)
+                    .execute()
+                )
+                cur_rows = cur.data or []
+                if cur_rows and isinstance(cur_rows[0].get("custom_shortcuts"), dict):
+                    shortcuts_base = dict(cur_rows[0]["custom_shortcuts"])
+            except Exception as exc:  # noqa: BLE001 — read is best-effort; upsert must proceed
+                logger.warning(f"[Preferences] could not read existing custom_shortcuts: {exc}")
+        merged_ext = dict(shortcuts_base.get("_extended") or {})
+        merged_ext.update(extended)
+        shortcuts_base["_extended"] = merged_ext
+        data["custom_shortcuts"] = shortcuts_base
     data["user_id"] = user_id
     try:
         res = await db.client.table("user_preferences").upsert(data).execute()
