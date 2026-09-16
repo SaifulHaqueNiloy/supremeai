@@ -128,6 +128,13 @@ export default defineConfig({
     proxy: devProxy
   },
   preview: {
+    // ERR-A04 FIX: `vite preview` serves the production build locally — give
+    // it the same cross-origin-isolation headers as the dev server and nginx
+    // so the WebContainer sandbox can be validated before shipping.
+    headers: {
+      'Cross-Origin-Opener-Policy': process.env.COOP_HEADER || 'same-origin',
+      'Cross-Origin-Embedder-Policy': process.env.COEP_HEADER || 'require-corp',
+    },
     proxy: devProxy
   },
   build: {
