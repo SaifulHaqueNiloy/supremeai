@@ -55,6 +55,7 @@ import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 import { RunsPage } from './pages/RunsPage';
+import { MarketplacePage } from './pages/MarketplacePage';
 import { ActivityPage } from './pages/ActivityPage';
 import { FilesPage } from './pages/FilesPage';
 import { ProjectsPage } from './pages/ProjectsPage';
@@ -196,7 +197,7 @@ const AppContent: React.FC = () => {
   <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
   <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><AgentWorkspace /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
-  <Route path="/marketplace" element={<ProtectedRoute><WorkspaceModulePage module="marketplace" /></ProtectedRoute>} />
+  <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
   <Route path="/runs" element={<ProtectedRoute><RunsPage /></ProtectedRoute>} />
   <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><CostDashboard /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><DeepResearchPanel /></WorkspaceLayout></ProtectedRoute>} />
