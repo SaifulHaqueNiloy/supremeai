@@ -16,7 +16,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DashboardData } from "@/lib/mission-types";
 import { callTowerTool } from "@/lib/tower-gateway";
-import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon } from "./widgets";
+import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon, UptimeStrip } from "./widgets";
 
 async function fetchDashboard(): Promise<DashboardData> {
   const res = await fetch("/api/dashboard", { cache: "no-store" });
@@ -56,6 +56,35 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
+
+  // Local reliability memory: per-service uptime trend (6h window, zero tower dependency)
+  const { data: uptimeData } = useQuery({
+    queryKey: ["matrix-history"],
+    queryFn: async () => {
+      const res = await fetch("/api/matrix/history", { cache: "no-store" });
+      return res.json() as Promise<{ ok: boolean; history: { provider: string; points: (0 | 1 | 2 | null)[]; uptimePct: number | null }[] }>;
+    },
+    refetchInterval: 120_000,
+    staleTime: 60_000,
+  });
+  const uptimeByProvider = React.useMemo(() => {
+    const map = new Map<string, { points: (0 | 1 | 2 | null)[]; uptimePct: number | null }>();
+    for (const h of uptimeData?.history ?? []) map.set(h.provider, { points: h.points, uptimePct: h.uptimePct });
+    return map;
+  }, [uptimeData]);
+  const uptimeFor = React.useCallback(
+    (provider: string) => {
+      const exact = uptimeByProvider.get(provider);
+      if (exact) return exact;
+      const p = provider.toLowerCase();
+      for (const [k, v] of uptimeByProvider) {
+        const kk = k.toLowerCase();
+        if (kk.includes(p) || p.includes(kk)) return v;
+      }
+      return undefined;
+    },
+    [uptimeByProvider],
+  );
 
   const tower = data?.tower;
   const services = data?.services ?? [];
@@ -168,12 +197,13 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                   </Button>
                 </div>
               ) : (
-                <div className="overflow-hidden rounded-lg border">
+                <div className="overflow-x-auto rounded-lg border">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/40">
                         <TableHead className="h-9">Service</TableHead>
                         <TableHead className="h-9">Status</TableHead>
+                        <TableHead className="hidden h-9 md:table-cell">Trend · 6h</TableHead>
                         <TableHead className="h-9 text-right">Latency</TableHead>
                         <TableHead className="h-9 text-right">Checked</TableHead>
                       </TableRow>
@@ -183,7 +213,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                         const { Icon, cls } = serviceIcon(s.provider);
                         return (
                           <TableRow key={s.provider} className="text-sm transition-colors odd:bg-muted/10 hover:bg-primary/5">
-                            <TableCell className="max-w-[240px] py-2">
+                            <TableCell className="max-w-[170px] py-2 sm:max-w-[240px]">
                               <span className="flex items-center gap-2">
                                 <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} aria-hidden />
                                 <span className="truncate font-medium">{s.provider}</span>
@@ -194,6 +224,22 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                                 <StatusDot status={s.status} />
                                 {s.status}
                               </span>
+                            </TableCell>
+                            <TableCell className="hidden py-2 md:table-cell">
+                              {(() => {
+                                const u = uptimeFor(s.provider);
+                                if (!u) return <span className="text-xs text-muted-foreground/40">gathering…</span>;
+                                return (
+                                  <span className="flex items-center gap-2">
+                                    <UptimeStrip points={u.points} />
+                                    {u.uptimePct != null && (
+                                      <MetricBadge tone={u.uptimePct >= 95 ? "good" : u.uptimePct >= 75 ? "warn" : "bad"}>
+                                        {u.uptimePct}%
+                                      </MetricBadge>
+                                    )}
+                                  </span>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell className="py-2 text-right font-mono text-xs">
                               {s.latencyMs != null ? <MetricBadge tone={s.latencyMs < 500 ? "good" : s.latencyMs < 2000 ? "warn" : "bad"}>{s.latencyMs}ms</MetricBadge> : <span className="text-muted-foreground">—</span>}

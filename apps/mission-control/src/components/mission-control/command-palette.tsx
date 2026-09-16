@@ -13,6 +13,7 @@ import {
   Moon,
   RadioTower,
   RefreshCw,
+  ScrollText,
   Settings2,
   Sun,
   UsersRound,
@@ -36,6 +37,7 @@ const TAB_ICONS: Record<TabId, React.ReactNode> = {
   git: <GitMerge className="h-4 w-4" />,
   brain: <Brain className="h-4 w-4" />,
   autonomy: <Bot className="h-4 w-4" />,
+  journal: <ScrollText className="h-4 w-4" />,
   tenancy: <UsersRound className="h-4 w-4" />,
   settings: <Settings2 className="h-4 w-4" />,
 };

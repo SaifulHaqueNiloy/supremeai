@@ -6,12 +6,13 @@ import { TowerTab } from "@/components/mission-control/tower-tab";
 import { GitTab } from "@/components/mission-control/git-tab";
 import { BrainTab } from "@/components/mission-control/brain-tab";
 import { AutonomyTab } from "@/components/mission-control/autonomy-tab";
+import { JournalTab } from "@/components/mission-control/journal-tab";
 import { TenancyTab } from "@/components/mission-control/tenancy-tab";
 import { SettingsTab } from "@/components/mission-control/settings-tab";
 import { CommandPalette } from "@/components/mission-control/command-palette";
 import { Footer, Header, TabShell, type TabId } from "@/components/mission-control/shell";
 
-const VALID: TabId[] = ["dashboard", "tower", "git", "brain", "autonomy", "tenancy", "settings"];
+const VALID: TabId[] = ["dashboard", "tower", "git", "brain", "autonomy", "journal", "tenancy", "settings"];
 
 export default function MissionControlPage() {
   const [tab, setTab] = React.useState<TabId>("dashboard");
@@ -23,6 +24,7 @@ export default function MissionControlPage() {
       tab === "git" ? "Git Sync"
       : tab === "tower" ? "Tower Explorer"
       : tab === "brain" ? "Brain & Memory"
+      : tab === "journal" ? "Operations Journal"
       : tab === "tenancy" ? "Tenancy & Clients"
       : tab.charAt(0).toUpperCase() + tab.slice(1);
     document.title = `SupremeAI · ${label}`;
@@ -76,6 +78,7 @@ export default function MissionControlPage() {
         {tab === "git" && <GitTab />}
         {tab === "brain" && <BrainTab />}
         {tab === "autonomy" && <AutonomyTab />}
+        {tab === "journal" && <JournalTab />}
         {tab === "tenancy" && <TenancyTab />}
         {tab === "settings" && <SettingsTab />}
       </TabShell>

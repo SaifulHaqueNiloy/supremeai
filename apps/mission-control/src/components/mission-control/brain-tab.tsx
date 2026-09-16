@@ -112,6 +112,32 @@ export function BrainTab() {
   );
 
   const [pulling, setPulling] = React.useState(false);
+
+  // Tower-side memory engine status (lazy, silent poll — one call per mount + manual)
+  const { data: memStatus, refetch: refetchMemStatus } = useQuery({
+    queryKey: ["tower-memory-status"],
+    queryFn: async () => {
+      const res = await callTowerTool("memory_status", {}, { silent: true });
+      return res;
+    },
+    staleTime: 300_000,
+    retry: 0,
+  });
+  const memStatusOk = memStatus?.ok === true;
+  const memStatusDetail = React.useMemo(() => {
+    const raw = memStatus?.result;
+    if (!raw || typeof raw !== "object") return null;
+    const obj = raw as Record<string, unknown>;
+    const inner = (obj.result ?? obj) as Record<string, unknown>;
+    const parts: string[] = [];
+    for (const key of ["entities", "relations", "facts", "episodes", "documents", "memories"]) {
+      const v = inner[key];
+      if (typeof v === "number") parts.push(`${key}: ${v}`);
+      else if (v && typeof v === "object" && typeof (v as Record<string, unknown>).count === "number") parts.push(`${key}: ${(v as Record<string, unknown>).count}`);
+    }
+    return parts.length ? parts.join(" · ") : null;
+  }, [memStatus]);
+
   const pullFromTower = React.useCallback(async () => {
     setPulling(true);
     try {
@@ -175,6 +201,19 @@ export function BrainTab() {
         <Badge variant="secondary" className="gap-1.5">
           <Brain className="h-3.5 w-3.5 text-primary" /> {data?.total ?? 0} memories
         </Badge>
+        <Badge variant="secondary" className="gap-1.5">
+          <span
+            className={`h-2 w-2 rounded-full ${memStatusOk ? "bg-emerald-500" : "bg-zinc-400"}`}
+            aria-label={`tower memory engine ${memStatusOk ? "online" : "unknown"}`}
+          />
+          tower memory: {memStatusOk ? "online" : "…"}
+          {memStatusOk && (
+            <button onClick={() => refetchMemStatus()} className="ml-0.5 rounded px-1 text-[10px] text-muted-foreground hover:text-primary" aria-label="Refresh tower memory status">
+              ⟳
+            </button>
+          )}
+        </Badge>
+        {memStatusDetail && <MetricBadge>{memStatusDetail}</MetricBadge>}
         {Object.entries(stats).map(([k, v]) => (
           <MetricBadge key={k}>{KIND_META[k]?.label ?? k}: {v}</MetricBadge>
         ))}

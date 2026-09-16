@@ -185,6 +185,26 @@ export function Tip({ children, label }: { children: React.ReactNode; label: str
   );
 }
 
+/* ── Uptime sparkline strip (local reliability memory) ──────────── */
+export function UptimeStrip({ points, className }: { points: (0 | 1 | 2 | null)[]; className?: string }) {
+  return (
+    <span className={cn("inline-flex items-end gap-px", className)} aria-hidden>
+      {points.map((p, i) => (
+        <span
+          key={i}
+          className={cn(
+            "w-1 rounded-[2px]",
+            p === 2 && "h-2.5 bg-emerald-500/80",
+            p === 1 && "h-2 bg-amber-500/90",
+            p === 0 && "h-2.5 bg-red-500/90",
+            p === null && "h-1 bg-muted-foreground/20",
+          )}
+        />
+      ))}
+    </span>
+  );
+}
+
 /* ── Relative time (compact) ────────────────────────────────────── */
 export function ago(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();

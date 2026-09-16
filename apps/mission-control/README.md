@@ -56,6 +56,14 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.4 — Operations Journal & Reliability
+- **Journal tab (new, 8th nav tab)**: every governed tool call, journaled locally — works even while the tower sleeps. 24h KPI rail (calls, success rate with tone thresholds, avg latency, top tool), status filter chips (All/Ok/Failed) + debounced tool-name search, zebra table with duration + relative time, click-any-row detail dialog (parsed response snippet + UTC timestamp), **Most Used · 24h** animated bar chart with failure marks and a failed-calls callout. Backed by new `GET /api/journal` (Prisma groupBy stats + filtered entries over the local `ToolCallLog`)
+- **Uptime trend in the System Matrix**: new `Trend · 6h` column (hidden on mobile) renders per-service sparkline strips + uptime % badge from the local `ServiceSnapshot` reliability memory (new `GET /api/matrix/history`, 6h window bucketed into 16 slots, stale provider identities auto-dropped, fuzzy provider matching in the UI against tower payload shape drift)
+- **Risk-aware tool invocation (HITL)**: Tower Explorer invoke dialog now classifies every tool — heuristic mutation detection surfaces an amber `mutating` badge vs green `read-only`. Mutating tools trigger an automatic `policy_preview` consult (silent governed call, defensively normalized: risk / decision / allowed badges) and gate the invoke button behind an "I understand" acknowledgment checkbox with destructive styling until acknowledged
+- **Tower memory engine chip in Brain**: `memory_status` poll (silent, 5-min stale) shows online/offline pill with engine counters (entities/relations/facts/episodes/documents) and inline refresh
+- **Styling/UX details**: tool cards denser on mobile (p-3) with the "click to invoke" hint always visible on touch devices, matrix table horizontally scrollable on small screens with tighter service-name truncation, per-tab document title for the Journal, command palette auto-gains the Journal entry, footer bumped to v1.4
+- Verified in-browser: journal stats match API (66 calls / 89% / 175ms), failed-filter + detail dialog surface real tower diagnostics (e.g. `TELEGRAM_CHAT_ID not configured`), trend strips live (100% up / 0% for the down Cloudflare probe), risk gate blocks then releases on acknowledgment, mobile 390px + footer flush
+
 ### v1.3.1 — Render Fleet, tenant creation, alert broadcast (same PR, incremental)
 - **Render Fleet panel** on Dashboard (lazy): live service inventory from `render_list_services` (account id from dynamic settings, default `render-primary`) — region / plan / branch / suspended badges, service + dashboard links, **Latest deploy dialog** (`render_get_logs` -> deploy id, status, commit, age, raw payload), **Trigger deploy** with governed confirm (risky actions surface as HITL pending requests)
 - **Create tenant dialog** in Tenancy: name + owner email + type (admin/customer) + plan -> `tenant_create`, one-time admin-token reveal
