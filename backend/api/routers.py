@@ -34,6 +34,9 @@ ALL_ROUTERS = [
     {"path": "api.routes.chat_export", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.chat_search", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.chat_upload", "prefix": "", "is_admin": False, "is_critical": False},
+    # ERR-B01 (defect register 2026-09-15): Project Spaces CRUD — real backend
+    # for the formerly-static /projects page. Own APIRouter prefix (/api/v1/projects).
+    {"path": "api.routes.projects", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.code_dependency_graph",
         "prefix": "",
