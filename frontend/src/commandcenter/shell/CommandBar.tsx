@@ -13,7 +13,9 @@ interface CommandBarProps {
   version?: string;
   adminName?: string;
   adminRole?: string;
-  onOpenPalette: () => void;
+  // Optional extra hook for consumers; the palette itself is now driven by
+  // the store's isPaletteOpen + <CommandPalette /> (⌘K works globally).
+  onOpenPalette?: () => void;
 }
 
 export function CommandBar({
