@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { McpToolInfo, ToolCallResult } from "@/lib/mission-types";
 import { callTowerTool } from "@/lib/tower-gateway";
 import { JsonViewer, MetricBadge, SectionHeader, StatusDot, Tip, ago } from "./widgets";
+import { DocsSources } from "./docs-sources";
 
 interface ToolsResponse {
   ok: boolean;
@@ -186,7 +187,7 @@ export function TowerTab() {
       <div className="flex flex-col gap-2 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search 106 tools — health, memory, github, autonomy…" className="pl-9" aria-label="Search tools" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${tools.length || "…"} tools — health, memory, github, autonomy…`} className="pl-9" aria-label="Search tools" />
         </div>
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-full sm:w-44" aria-label="Filter by category">
@@ -344,6 +345,8 @@ export function TowerTab() {
           )}
         </DialogContent>
       </Dialog>
+
+      <DocsSources />
     </div>
   );
 }

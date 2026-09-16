@@ -143,19 +143,22 @@ export function SettingsTab() {
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label>Watchdog notify channel</Label>
-              <Select
-                value={draft.watchdogNotifyChannel}
-                onValueChange={(v) => update("watchdogNotifyChannel", v as SettingsData["watchdogNotifyChannel"])}
-              >
-                <SelectTrigger aria-label="Watchdog notify channel">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None — activity stream only</SelectItem>
-                  <SelectItem value="telegram">Telegram (tower notify_send_telegram)</SelectItem>
-                  <SelectItem value="discord">Discord (tower notify_send_discord)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={draft.watchdogNotifyChannel}
+                  onValueChange={(v) => update("watchdogNotifyChannel", v as SettingsData["watchdogNotifyChannel"])}
+                >
+                  <SelectTrigger aria-label="Watchdog notify channel">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None — activity stream only</SelectItem>
+                    <SelectItem value="telegram">Telegram (tower notify_send_telegram)</SelectItem>
+                    <SelectItem value="discord">Discord (tower notify_send_discord)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <NotifyTestButton channel={draft.watchdogNotifyChannel} />
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 Tower env must have TELEGRAM_CHAT_ID / webhook configured.
               </p>
@@ -222,5 +225,44 @@ export function SettingsTab() {
         </Button>
       </div>
     </div>
+  );
+}
+
+/* ── Notify channel test button (send-and-see-result) ────────────── */
+function NotifyTestButton({ channel }: { channel: SettingsData["watchdogNotifyChannel"] }) {
+  const [testing, setTesting] = React.useState(false);
+
+  const sendTest = async () => {
+    setTesting(true);
+    try {
+      const res = await fetch("/api/tower/call", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tool: channel === "discord" ? "notify_send_discord" : "notify_send_telegram",
+          args: { message: `✅ SupremeAI Mission Control test alert — ${channel} channel OK at ${new Date().toISOString().slice(11, 19)} UTC` },
+        }),
+      });
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (res.ok && data.ok !== false) toast.success(`Test alert sent via ${channel} ✓`);
+      else toast.error(`Test failed: ${(data.error ?? "tower rejected").slice(0, 120)}`);
+    } catch (err) {
+      toast.error(`Test failed: ${String(err).slice(0, 120)}`);
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  if (channel === "none") {
+    return (
+      <Button variant="outline" size="sm" className="h-9 shrink-0 text-xs opacity-40" disabled aria-label="Select a channel to enable test">
+        Test
+      </Button>
+    );
+  }
+  return (
+    <Button variant="outline" size="sm" className="h-9 shrink-0 text-xs" onClick={sendTest} disabled={testing} aria-label={`Send test alert via ${channel}`}>
+      {testing ? "Sending…" : "Test"}
+    </Button>
   );
 }

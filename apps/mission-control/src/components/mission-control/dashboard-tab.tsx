@@ -93,9 +93,14 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
   const degraded = services.filter((s) => s.status === "degraded" || s.status === "unknown").length;
   const down = services.filter((s) => s.status === "down").length;
   const [statusFilter, setStatusFilter] = React.useState("all");
-  const filteredServices = services.filter((s) =>
-    statusFilter === "all" ? true : statusFilter === "degraded" ? s.status === "degraded" || s.status === "unknown" : s.status === statusFilter,
-  );
+  const filteredServices = services
+    .filter((s) => (statusFilter === "all" ? true : statusFilter === "degraded" ? s.status === "degraded" || s.status === "unknown" : s.status === statusFilter))
+    .sort((a, b) => {
+      // Severity-first glanceability: down → degraded → unknown → healthy, then name
+      const rank: Record<string, number> = { down: 0, degraded: 1, unknown: 2, healthy: 3 };
+      const d = (rank[a.status] ?? 9) - (rank[b.status] ?? 9);
+      return d !== 0 ? d : a.provider.localeCompare(b.provider);
+    });
 
   const towerTone = tower?.status === "live" ? "good" : tower?.status === "sleeping" ? "warn" : "bad";
 

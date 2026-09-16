@@ -56,6 +56,14 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.7 — Reliability History & Docs Registry
+- **Watchdog History panel** (Autonomy tab): filterable reliability audit over every automated transition + notify attempt (kind filters: down / degraded / recovered / notify), per-provider summary chips with event counts (↓ down ≈ degraded ↑ recovered ✉ notifies) that double as provider filters, animated timeline, new `GET /api/watchdog/history` (local journal — tower-independent)
+- **Notify channel test button** (Settings): send-and-see-result test via the selected channel, graceful tower-side error surfacing (journaled)
+- **Docs Sources panel** (Tower Explorer): the tower's documentation registry via `docs_list`/`docs_search` — lazy, collapsed by default, category badges, relevance scores, external links
+- **Matrix severity sort**: down services surface first (down → degraded → unknown → healthy, then name)
+- **Dynamic-by-Design fix**: Tower Explorer search placeholder now reflects the live tool count instead of a hardcoded "106"
+- Footer v1.7
+
 ### v1.6 — Service Watchdog & Operator Flow
 - **Service-down watchdog** (server-side, zero-cost): every dashboard refresh compares fresh tower statuses against local ServiceSnapshot evidence and detects transitions (down / degraded / recovered) — journals an ActivityEvent with severity coloring, always auditable
 - **Dynamic notify channel**: on actionable transitions the watchdog broadcasts via tower `notify_send_telegram`/`notify_send_discord` (Settings: none | telegram | discord) with per-provider **cooldown window** (0–240 min) to prevent alert storms; failed notifies are retried on the next transition and logged gracefully (tower asleep / chat id missing never break the dashboard)
