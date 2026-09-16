@@ -363,8 +363,16 @@ export const apiClient = {
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       ...options,
       method: 'POST',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body,
+    });
+    return handleResponse(res);
+  },
 
-patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
+  patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
     const finalUrl = `${getApiBaseUrl(path)}${path}`;
     if (
@@ -382,11 +390,7 @@ patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T
         ...(options?.headers as Record<string, string>),
         ...authHeaders,
       },
-<<<<<<< HEAD
-      body,
-=======
       body: body ? JSON.stringify(body) : undefined,
->>>>>>> origin/main
     });
     return handleResponse(res);
   },
