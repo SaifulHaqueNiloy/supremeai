@@ -798,7 +798,7 @@ Static route reconstruction confirms 57 route families whose leaf endpoints are 
 
 ## 11. Class P: Dependency & Version Inconsistencies
 
-* **`ERR-P01`: Intra-Package Storybook Conflict:** `frontend/package.json` declares `"storybook": "^10.5.10"` alongside v8 addons (`@storybook/addon-essentials: ^8.6.14`, `@storybook/blocks: ^8.6.14`). `addon-essentials` was removed in Storybook 10.
+* **`ERR-P01`: Intra-Package Storybook Conflict:** ✅ FIXED (2026-09-17, direct-to-main) — `frontend/package.json` declared `"storybook": "^10.5.10"` alongside v8 leftovers (`@storybook/addon-essentials ^8.6.14`, `addon-interactions ^8.6.14`, `addon-links ^8.6.18`, `@storybook/blocks ^8.6.14`, `@storybook/test ^8.6.15`) and v8 framework packages (`@storybook/react ^8.6.18`, `@storybook/react-vite ^8.6.18`) while `.storybook/main.ts` only references v10 addons. The five v8-only packages (removed/merged into core `storybook` in v9) were dropped, `@storybook/react` + `@storybook/react-vite` were aligned to `^10.5.10`, zero source imports referenced the removed packages (verified via repo-wide search), pnpm lockfile regenerated (`-554` stale resolution lines), and `tsc -p tsconfig.app.json --noEmit` passes.
 * **`ERR-P02`: React Router Major Drift:** `"react-router-dom": "^6.30.6"` prevents updating modern routing features and blocks Dependabot updates.
 
 ---
