@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { MemoryNoteData } from "@/lib/mission-types";
 import { callTowerTool } from "@/lib/tower-gateway";
+import { KnowledgeGraphPanel } from "./knowledge-graph";
 import { MetricBadge, SectionHeader, ago, Tip } from "./widgets";
 
 const KIND_META: Record<string, { label: string; cls: string }> = {
@@ -293,6 +294,9 @@ export function BrainTab() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Knowledge Graph + semantic search over tower memory sidecar */}
+      <KnowledgeGraphPanel />
     </div>
   );
 }

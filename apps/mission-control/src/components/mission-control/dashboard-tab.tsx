@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Activity, Bell, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, ServerCog, Wrench, Zap } from "lucide-react";
+import { Activity, Bell, Bot, Cpu, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, ServerCog, Wrench, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,10 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
   const healthy = services.filter((s) => s.status === "healthy").length;
   const degraded = services.filter((s) => s.status === "degraded" || s.status === "unknown").length;
   const down = services.filter((s) => s.status === "down").length;
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const filteredServices = services.filter((s) =>
+    statusFilter === "all" ? true : statusFilter === "degraded" ? s.status === "degraded" || s.status === "unknown" : s.status === statusFilter,
+  );
 
   const towerTone = tower?.status === "live" ? "good" : tower?.status === "sleeping" ? "warn" : "bad";
 
@@ -121,6 +125,27 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                 {data?.updatedAt && <span>· updated {ago(data.updatedAt)}</span>}
                 {tower?.wakeAttempts ? <MetricBadge tone="warn">wake×{tower.wakeAttempts}</MetricBadge> : null}
               </div>
+              <div className="flex flex-wrap gap-1.5 pt-2" role="group" aria-label="Filter services by status">
+                {([
+                  ["all", services.length],
+                  ["healthy", healthy],
+                  ["degraded", degraded],
+                  ["down", down],
+                ] as [string, number][]).map(([key, n]) => (
+                  <button
+                    key={key}
+                    onClick={() => setStatusFilter(key)}
+                    aria-pressed={statusFilter === key}
+                    className={`rounded-full border px-2.5 py-0.5 text-[11px] font-medium capitalize transition-colors ${
+                      statusFilter === key
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                    }`}
+                  >
+                    {key} <span className="opacity-60">{n}</span>
+                  </button>
+                ))}
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -152,7 +177,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {services.map((s) => {
+                      {filteredServices.map((s) => {
                         const { Icon, cls } = serviceIcon(s.provider);
                         return (
                           <TableRow key={s.provider} className="text-sm transition-colors hover:bg-primary/5">
@@ -233,8 +258,11 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
         </motion.div>
       </div>
 
-      {/* Dependency map + philosophy strip */}
-      <DependencyMap />
+      {/* Dependency map + AI provider pools + philosophy strip */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DependencyMap />
+        <AiProviderPools />
+      </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
           ["Zero Cost", "free-tier everything"],
@@ -258,6 +286,105 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
         </div>
       )}
     </div>
+  );
+}
+
+/* ── AI provider key pools (lazy: tower ai_list_providers) ─────── */
+function AiProviderPools() {
+  const [open, setOpen] = React.useState(false);
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["ai-pools"],
+    queryFn: async (): Promise<{ name: string; keys: number | null; healthy?: boolean }[]> => {
+      const r = await callTowerTool("ai_list_providers", {});
+      const payload = r.result as unknown;
+      let list: Record<string, unknown>[] = [];
+      if (Array.isArray(payload)) list = payload as Record<string, unknown>[];
+      else if (payload && typeof payload === "object") {
+        const rec = payload as Record<string, unknown>;
+        for (const k of ["providers", "pools", "items", "data"]) {
+          if (Array.isArray(rec[k])) {
+            list = rec[k] as Record<string, unknown>[];
+            break;
+          }
+        }
+        if (!list.length) {
+          // shape: { gemini: {keys: 6}, groq: {...} }
+          list = Object.entries(rec)
+            .filter(([, v]) => v && typeof v === "object")
+            .map(([k, v]) => ({ name: k, ...(v as Record<string, unknown>) }));
+        }
+      }
+      return list.slice(0, 24).map((p) => ({
+        name: String(p.name ?? p.provider ?? p.id ?? "provider"),
+        keys: typeof p.keys === "number" ? p.keys : typeof p.keyCount === "number" ? p.keyCount : typeof p.count === "number" ? p.count : null,
+        healthy: typeof p.healthy === "boolean" ? p.healthy : typeof p.status === "string" ? p.status === "healthy" : undefined,
+      }));
+    },
+    enabled: open,
+    refetchInterval: 180_000,
+  });
+
+  const rows = data ?? [];
+  const totalKeys = rows.reduce((a, r) => a + (r.keys ?? 0), 0);
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <Card>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer select-none pb-3 transition-colors hover:bg-muted/30">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Cpu className="h-4 w-4 text-primary" />
+              AI Provider Pools
+              {rows.length > 0 && <Badge variant="secondary" className="text-[10px]">{rows.length} pools · {totalKeys} keys</Badge>}
+              <span className="ml-auto flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
+                {open ? "collapse" : "expand from tower"}
+                {isFetching && <RefreshCw className="h-3 w-3 animate-spin" />}
+              </span>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-1">
+            {isLoading ? (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
+              </div>
+            ) : rows.length === 0 ? (
+              <p className="py-6 text-center text-xs text-muted-foreground">
+                No AI provider pools reported (tower asleep or none configured) — wake and re-scan.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {rows.map((p, i) => (
+                  <motion.div
+                    key={p.name}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.15, delay: Math.min(i * 0.04, 0.3) }}
+                    className="rounded-lg border bg-muted/20 p-2.5 transition-colors hover:border-primary/40"
+                  >
+                    <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
+                      <Bot className="h-3.5 w-3.5 text-primary" /> {p.name}
+                    </p>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <MetricBadge tone={p.keys == null ? "default" : p.keys > 0 ? "good" : "bad"}>
+                        {p.keys == null ? "n/a" : `${p.keys} keys`}
+                      </MetricBadge>
+                      {p.healthy === false && <MetricBadge tone="bad">unhealthy</MetricBadge>}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
+                <RefreshCw className={`mr-1.5 h-3 w-3 ${isFetching ? "animate-spin" : ""}`} /> Test pools
+              </Button>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   );
 }
 

@@ -3,8 +3,10 @@ import { db } from "@/lib/db";
 /** Dynamic settings (Dynamic by Design) — DB-backed with sane defaults. */
 
 export const SETTING_DEFAULTS: Record<string, string> = {
-  towerUrl: "https://supremeai-mcp-tower.onrender.com",
-  towerKey: "supremeai_mcp_admin_88f1a2b3c4d5e6f7",
+  // Zero-hardcode policy: deployment URLs & secrets NEVER live in source.
+  // Resolution order: DB setting → environment (TOWER_URL / TOWER_ADMIN_KEY).
+  towerUrl: "",
+  towerKey: "",
   githubRepo: "SaifulHaqueNiloy/supremeai",
   githubToken: "", // falls back to env GITHUB_TOKEN
   watchBranch: "main",
@@ -20,6 +22,8 @@ export async function getSettings(): Promise<Record<string, string>> {
     const rows = await db.setting.findMany();
     for (const r of rows) if (r.value !== "") out[r.key] = r.value;
     if (!out.githubToken && process.env.GITHUB_TOKEN) out.githubToken = process.env.GITHUB_TOKEN;
+    if (!out.towerUrl && process.env.TOWER_URL) out.towerUrl = process.env.TOWER_URL;
+    if (!out.towerKey && process.env.TOWER_ADMIN_KEY) out.towerKey = process.env.TOWER_ADMIN_KEY;
   } catch {
     /* DB not ready */
   }

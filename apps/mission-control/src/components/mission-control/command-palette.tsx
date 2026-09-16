@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Settings2,
   Sun,
+  UsersRound,
   Zap,
 } from "lucide-react";
 import {
@@ -35,6 +36,7 @@ const TAB_ICONS: Record<TabId, React.ReactNode> = {
   git: <GitMerge className="h-4 w-4" />,
   brain: <Brain className="h-4 w-4" />,
   autonomy: <Bot className="h-4 w-4" />,
+  tenancy: <UsersRound className="h-4 w-4" />,
   settings: <Settings2 className="h-4 w-4" />,
 };
 
@@ -131,7 +133,11 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
           <CommandItem
             value="open github pull requests"
             onSelect={() =>
-              run(() => window.open("https://github.com/SaifulHaqueNiloy/supremeai/pulls", "_blank"))
+              run(async () => {
+                const s = await fetch("/api/settings", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+                const repo = s?.githubRepo || process.env.NEXT_PUBLIC_GITHUB_REPO || "SaifulHaqueNiloy/supremeai";
+                window.open(`https://github.com/${repo}/pulls`, "_blank");
+              })
             }
           >
             <ExternalLink className="h-4 w-4" />
@@ -139,7 +145,16 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
           </CommandItem>
           <CommandItem
             value="open central tower health"
-            onSelect={() => run(() => window.open("https://supremeai-mcp-tower.onrender.com/health", "_blank"))}
+            onSelect={() =>
+              run(async () => {
+                const s = await fetch("/api/settings", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+                if (!s?.towerUrl) {
+                  toast.error("Tower URL not configured — set it in Settings");
+                  return;
+                }
+                window.open(`${s.towerUrl}/health`, "_blank");
+              })
+            }
           >
             <RadioTower className="h-4 w-4" />
             <span className="ml-2">Tower health endpoint</span>

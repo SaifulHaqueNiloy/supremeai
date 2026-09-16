@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { AlertTriangle, CheckCircle2, CircleDashed, ExternalLink, GitBranch, GitCommitHorizontal, GitMerge, GitPullRequest, Loader2, RefreshCw, ShieldCheck, Terminal, XCircle } from "lucide-react";
@@ -61,6 +61,7 @@ export function GitTab() {
       return res.json();
     },
     refetchInterval: 90_000,
+    placeholderData: keepPreviousData,
   });
 
   const { data: logData } = useQuery({

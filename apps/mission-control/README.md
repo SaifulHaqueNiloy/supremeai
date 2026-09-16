@@ -56,6 +56,14 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.3 — Governance & Zero-Hardcode
+- **Zero-hardcode compliance (CI policy fix)**: tower URL + admin key removed from source (`tower-client.ts`, `settings.ts`, footer, palette). Resolution is now fully dynamic: DB setting → `TOWER_URL` / `TOWER_ADMIN_KEY` env → graceful "not configured" state with operator guidance. Added `.env.example` (referenced since v1.0 — now actually present)
+- **Tenancy & Clients tab** (new): multi-tenant governance over tower tools — tenant list with suspend/activate + admin-token rotation (one-time token reveal dialog), AI client registry with provider/role/protocol enrollment (`client_register`), inline role switching (viewer/agent/admin), approve pending clients, rotate client tokens, revoke with confirm; raw-payload inspector for operators
+- **Knowledge Graph & Semantic Search** in Brain: interactive SVG graph from `memory_read_graph` (type-colored nodes sized by observations, hover highlights relations, click for entity detail), node search (`memory_search_nodes`), meaning-based search (`memory_search_semantic`) with similarity scores
+- **AI Provider Pools** panel on Dashboard: lazy per-provider key counts from `ai_list_providers` (gemini/groq/openrouter/mistral) with health flags
+- **System Matrix status filters**: one-click all/healthy/degraded/down chips with live counts
+- **UX fixes**: Git Sync Center keeps previous data while refetching (no more `…` flash), sync ledger now reports `conflict-free` / `mergeability pending (CI running)` instead of raw `unknown`
+
 ### v1.2 — Tower memory sync
 - **Pull from Tower**: import recent tower episodic memories (`memory_get_recent_episodes`) into the local brain as insights — the bridge now works **both ways**
 - **Per-tab document titles** (browser history readability)
@@ -76,3 +84,4 @@ See `.env.example` for the full list.
 
 - Lint-clean, E2E-verified via agent-browser (desktop + mobile, sticky footer, tool invocation, memory write, git sweep, command palette, CI panel, tower memory bridge).
 - Live tower telemetry: `17/18 services available`, 106 tools discovered.
+- v1.3 E2E-verified: tenancy tables + register dialog, knowledge graph panel, semantic search (graceful tower-sidecar cold start), AI pools (4 pools/4 keys), matrix filters, dynamic footer host, mobile 390px.
