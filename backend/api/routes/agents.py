@@ -79,12 +79,11 @@ async def list_agents():
 async def get_agent_status(agent_id: str):
     """Honest status for a specialized agent type.
 
-    ERR-G07 FIX: previously ANY agent id got a hardcoded
-    ``{"status": "active", "last_activity": "2026-01-01T00:00:00Z"}`` — a
-    frozen timestamp that could not distinguish alive from dead. Now an
-    unknown id is a 404, and a known id reports a real import-based
-    availability check with an explicit "no runtime telemetry" note instead
-    of a fabricated timestamp.
+    ERR-G07 FIX: previously ANY agent id got a hardcoded status "active"
+    with a frozen January-2026 timestamp — a value that could not
+    distinguish alive from dead. Now an unknown id is a 404, and a known id
+    reports a real import-based availability check with an explicit "no
+    runtime telemetry" note instead of a fabricated timestamp.
     """
     known = {entry["id"] for entry in _agent_catalog()}
     if agent_id not in known:
