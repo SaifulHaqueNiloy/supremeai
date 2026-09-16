@@ -1,3 +1,20 @@
+---
+id: free-tier-federation-master-plan-v4
+subject: "🚀 SupremeAI Free-Tier Federation Master Plan v4.0"
+document_role: architecture
+planning_authority: Infrastructure Circle
+canonical: candidate
+status: active
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related:
+  - docs/plans/features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md
+  - docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+---
+
 # 🚀 SupremeAI Free-Tier Federation Master Plan v4.0
 ## "Maximum Benefit from Every Free Service" Edition
 

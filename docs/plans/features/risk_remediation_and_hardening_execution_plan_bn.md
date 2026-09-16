@@ -1,3 +1,18 @@
+---
+id: risk-remediation-hardening-execution
+subject: "SupremeAI প্রকল্প: ঝুঁকি থেকে বাস্তব Fix Plan"
+document_role: implementation
+planning_authority: Architecture Circle
+canonical: false
+status: active
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related: docs/plans/features/production_hardening_and_p1_p2_roadmap_2026_09_11.md
+---
+
 # SupremeAI প্রকল্প: ঝুঁকি থেকে বাস্তব Fix Plan
 
 > **উদ্দেশ্য:** এই নথিতে শুধু পরামর্শ নয়—প্রতিটি বড় ঝুঁকির জন্য কোথায় পরিবর্তন করতে হবে, কীভাবে করতে হবে, কীভাবে যাচাই করতে হবে এবং কোন পর্যায়ে কাজটি সম্পূর্ণ ধরা হবে তা দেওয়া হয়েছে।
