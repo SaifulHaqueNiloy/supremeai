@@ -24,9 +24,10 @@ export const TranslationProvider = ({ locale: initialLocale, children }: { local
   const setLocale = (next: Locale) => {
     if (!locales.includes(next)) return;
     setLocaleState(next);
-    void apiClient.put('/api/user/preferences', {
+    // ERR-H01 FIX: real backend route is POST /api/preferences (no PUT, no
+    // /api/user/preferences path); locale persists as preferred_language.
+    void apiClient.post('/api/preferences', {
       preferred_language: next,
-      updatedAt: new Date().toISOString(),
     }).catch(() => {
       // Local state remains usable when the account is offline or unauthenticated.
     });

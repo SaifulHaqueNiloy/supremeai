@@ -66,7 +66,8 @@ export const useThemeStore = create<ThemeState>()(
       
       initializeFromBackend: async () => {
         try {
-          const response = await apiClient.get<Record<string, unknown>>('/api/user/preferences');
+          // ERR-H01 FIX: real backend route is GET /api/preferences.
+          const response = await apiClient.get<Record<string, unknown>>('/api/preferences');
           const prefs = (response && typeof response === 'object' && 'data' in response ? response.data : response) as Record<string, unknown> | null | undefined;
           
           const backendTheme = prefs?.theme;
@@ -82,10 +83,11 @@ export const useThemeStore = create<ThemeState>()(
       },
       
       syncToBackend: async (theme) => {
-        await apiClient.put('/api/user/preferences', { 
-          theme,
-          updatedAt: new Date().toISOString()
-        });
+      // ERR-H01 FIX: backend has no PUT — upsert is POST /api/preferences.
+      // updatedAt was never part of the backend contract; dropped.
+      await apiClient.post('/api/preferences', {
+        theme,
+      });
       },
     }),
     {
