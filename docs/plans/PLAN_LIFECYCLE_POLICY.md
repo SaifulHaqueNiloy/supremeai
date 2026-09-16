@@ -49,7 +49,34 @@ Every proposed, active, blocked, or complete execution plan must contain:
 id:
 title:
 status: proposed | active | blocked | complete | historical | superseded
-owner_circle:
+document_role: architecture | roadmap | implementation | policy | audit
+planning_authority:   # owner circle (legacy key `owner_circle` is accepted as an alias)
+canonical: true | false | candidate
+evidence_state: verified | partial | unverified
+disposition: retain | merge | archive | redirect | delete-approved
+scope:
+depends_on:
+implements:
+supersedes:       # list of repository paths this plan replaces
+superseded_by:    # list of repository paths that replace this plan
+source_of_truth: true | false
+last_verified:    # YYYY-MM-DD
+code_evidence:
+test_evidence:
+acceptance_criteria:
+risk_and_rollback:
+```
+
+**Vocabulary authority (2026-09-17):** the status vocabulary and the registry
+field model above are canonically defined by
+[`CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md`](./CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md)
+(§3 Canonical Plan Registry Model). `owner_circle` and `title` are accepted as
+legacy aliases of `planning_authority` and `subject` by the automated scanner
+(`scripts/governance/lint_plans.py`), which is the enforcement tool for this
+policy; `docs/plans/plan_registry.json` is its generated machine cache.
+
+Legacy schema (still valid, auto-normalized): `owner_circle:`
+
 scope:
 depends_on:
 implements:
