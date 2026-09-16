@@ -27,9 +27,11 @@ def _override_identity(app, sub: str) -> None:
     FastAPI-র ক্যানোনিকাল dependency_overrides প্যাটার্নে সরাসরি identity
     ইনজেক্ট করা হচ্ছে (রাউটারের get_current_user_token dependency)।
     """
-    app.dependency_overrides[get_current_user_token] = (
-        lambda: {"sub": sub, "role": "user", "tenant_id": "t1"}
-    )
+    app.dependency_overrides[get_current_user_token] = lambda: {
+        "sub": sub,
+        "role": "user",
+        "tenant_id": "t1",
+    }
 
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
@@ -45,9 +47,7 @@ async def ensure_projects_table(db_engine):
     """
     async with db_engine.begin() as conn:
         await conn.run_sync(
-            lambda sync_conn: Base.metadata.create_all(
-                sync_conn, tables=[Project.__table__]
-            )
+            lambda sync_conn: Base.metadata.create_all(sync_conn, tables=[Project.__table__])
         )
         # Deterministic reruns: wipe leftovers from previous runs.
         await conn.execute(text("DELETE FROM projects"))
@@ -69,9 +69,7 @@ def project_payload():
 
 class TestProjectSpacesCrud:
     async def test_create_and_list(self, client: AsyncClient, auth_headers, project_payload):
-        resp = await client.post(
-            "/api/v1/projects", json=project_payload, headers=auth_headers
-        )
+        resp = await client.post("/api/v1/projects", json=project_payload, headers=auth_headers)
         assert resp.status_code == 201, resp.text
         body = resp.json()
         assert body["status"] == "success"
@@ -105,20 +103,14 @@ class TestProjectSpacesCrud:
             await client.post("/api/v1/projects", json=project_payload, headers=auth_headers)
         ).json()["project"]
 
-        resp = await client.delete(
-            f"/api/v1/projects/{created['id']}", headers=auth_headers
-        )
+        resp = await client.delete(f"/api/v1/projects/{created['id']}", headers=auth_headers)
         assert resp.status_code == 200, resp.text
 
         listing = await client.get("/api/v1/projects", headers=auth_headers)
         assert all(p["id"] != created["id"] for p in listing.json()["items"])
 
-    async def test_validation_empty_name_rejected(
-        self, client: AsyncClient, auth_headers
-    ):
-        resp = await client.post(
-            "/api/v1/projects", json={"name": ""}, headers=auth_headers
-        )
+    async def test_validation_empty_name_rejected(self, client: AsyncClient, auth_headers):
+        resp = await client.post("/api/v1/projects", json={"name": ""}, headers=auth_headers)
         assert resp.status_code == 422
 
 
@@ -127,9 +119,7 @@ class TestOwnershipIsolation:
         self, client: AsyncClient, app, project_payload
     ):
         _override_identity(app, "owner-a@example.com")
-        created = (
-            await client.post("/api/v1/projects", json=project_payload)
-        ).json()["project"]
+        created = (await client.post("/api/v1/projects", json=project_payload)).json()["project"]
 
         # Switch to a different user — must not see, rename, or delete A's project.
         _override_identity(app, "owner-b@example.com")
@@ -139,13 +129,9 @@ class TestOwnershipIsolation:
         assert all(p["id"] != created["id"] for p in listing.json()["items"])
 
         assert (
-            await client.patch(
-                f"/api/v1/projects/{created['id']}", json={"name": "hijacked"}
-            )
+            await client.patch(f"/api/v1/projects/{created['id']}", json={"name": "hijacked"})
         ).status_code == 404
-        assert (
-            await client.delete(f"/api/v1/projects/{created['id']}")
-        ).status_code == 404
+        assert (await client.delete(f"/api/v1/projects/{created['id']}")).status_code == 404
 
         # Owner still has full access.
         _override_identity(app, "owner-a@example.com")
@@ -187,9 +173,7 @@ class TestAuthGate:
         # _current_user_id 401 দিতে হবে (defense in depth — plugins.py প্যাটার্ন)।
         from api.routes.projects import _current_user_id
 
-        monkeypatch.setattr(
-            "api.routes.projects.get_current_user_token", lambda: {"role": "user"}
-        )
+        monkeypatch.setattr("api.routes.projects.get_current_user_token", lambda: {"role": "user"})
         with pytest.raises(HTTPException) as excinfo:
             await _current_user_id({"role": "user"})
         assert excinfo.value.status_code == 401
