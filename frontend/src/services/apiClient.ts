@@ -257,19 +257,15 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
   }) as Promise<Response>;
 };
 
-// FINAL-TEST FIX (2026-09-14): the backend (backend/api/middleware.py →
-// IDEMPOTENCY_PATHS) only REQUIRES the 'Idempotency-Key' header on a small
-// set of mutating paths: /api/task, /api/github, /api/auth/callback, /api/pr,
-// /api/agent. Every other POST/PUT never needs it — and while the deployed
-// backend's CORS allow-list still omits 'idempotency-key', sending that header
-// on ANY request fails the CORS preflight outright (Starlette returns 400
-// "Disallowed CORS headers" for OPTIONS), which made login (and every
-// key-less route) impossible on the deployed app — users saw a misleading
-// "Network Error" toast on /login.
-// So: inject the key ONLY when the final request path matches the backend's
-// required prefixes. This shrinks the CORS preflight surface for every other
-// call AND unblocks production login without waiting for the backend
-// redeploy (the CORS allow-list fix remains as defense-in-depth).
+// ERR-S02 RESOLVED (2026-09-16): the backend's CORS allow-list now includes
+// 'Idempotency-Key' (backend/core/app_builder.py — and api/server.py kept in
+// sync), so the preflight failure described below can no longer happen.
+// The scoped injection below is intentionally KEPT: the backend
+// (backend/api/middleware.py → IDEMPOTENCY_PATHS) still REQUIRES the header
+// on a small set of mutating paths (/api/task, /api/github,
+// /api/auth/callback, /api/pr, /api/agent) — sending it only there both
+// satisfies the middleware and keeps the CORS preflight surface minimal for
+// every other call.
 const IDEMPOTENCY_REQUIRED_PREFIXES = [
   '/api/task',
   '/api/github',
