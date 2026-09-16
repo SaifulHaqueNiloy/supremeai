@@ -11,7 +11,7 @@ This first pass classifies overlapping plan families without deleting or moving 
 ## Canonical hierarchy
 
 - Global implementation source: [`implementation_plan.md`](../implementation_plan.md)
-- Architecture source: [`UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`](../UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
+- Architecture source: [`architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md`](../architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md)
 - Lifecycle rules: [`PLAN_LIFECYCLE_POLICY.md`](../PLAN_LIFECYCLE_POLICY.md)
 - Evidence map: [`PLAN_TO_CODE_TRACEABILITY_MATRIX.md`](../PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
 

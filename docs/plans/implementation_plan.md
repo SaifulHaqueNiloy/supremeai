@@ -163,6 +163,7 @@ The existing plan correctly emphasizes:
 - multi-model routing
 - resilience
 - observability
+- **Browser automation** → `architecture/browser_automation.md`
 
 But implementation should be driven by current code evidence rather than the plan's historical “missing” label.
 

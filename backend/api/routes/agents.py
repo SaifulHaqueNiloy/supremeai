@@ -52,7 +52,7 @@ def _agent_catalog() -> tuple[dict[str, str], ...]:
             module = importlib.import_module(f"agents.{stem}")
             doc = (module.__doc__ or "").strip()
         except Exception as exc:  # noqa: BLE001 — a broken module must not hide the catalog entry
-            doc = f""  # import failure is reported truthfully by /status
+            doc = ""  # import failure is reported truthfully by /status
             logger.warning(f"[agent-catalog] import check failed for agents.{stem}: {exc}")
         for line in doc.splitlines():
             line = line.strip()

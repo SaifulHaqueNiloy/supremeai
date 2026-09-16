@@ -6,7 +6,7 @@ title: Platform architecture enhancement & open-source integration evaluation (O
 status: active
 owner_circle: C1 (Code & Quality)
 scope: concept-adoption decisions + phase plan; no runtime dependencies introduced by this document
-depends_on: [UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md, UNIFIED_NEXT_ROADMAP_2026-09-15.md]
+depends_on: [architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md, UNIFIED_NEXT_ROADMAP_2026-09-15.md]
 implements: []
 supersedes: []
 superseded_by: []

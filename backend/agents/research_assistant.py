@@ -41,20 +41,18 @@ class ResearchAssistant:
 
     # ------------------------------------------------------------------ search
 
-    def search(self, query: str, source: str = "arxiv", max_results: int = 5) -> list[dict[str, Any]]:
+    def search(
+        self, query: str, source: str = "arxiv", max_results: int = 5
+    ) -> list[dict[str, Any]]:
         """Query a real research source. Only ``arxiv`` is supported today;
         anything else is rejected explicitly (never silently fabricated)."""
         if not query or not query.strip():
             raise ValueError("query must not be empty")
         if source != "arxiv":
-            raise ValueError(
-                f"unsupported research source {source!r}: only 'arxiv' is implemented"
-            )
+            raise ValueError(f"unsupported research source {source!r}: only 'arxiv' is implemented")
         max_results = max(1, min(int(max_results), 50))
 
-        url = (
-            f"{_ARXIV_API}?{urllib.parse.urlencode({'search_query': f'all:{query.strip()}', 'start': 0, 'max_results': max_results})}"
-        )
+        url = f"{_ARXIV_API}?{urllib.parse.urlencode({'search_query': f'all:{query.strip()}', 'start': 0, 'max_results': max_results})}"
         try:
             with urllib.request.urlopen(url, timeout=_REQUEST_TIMEOUT_S) as resp:  # noqa: S310 — fixed https endpoint
                 body = resp.read().decode("utf-8", errors="replace")
@@ -110,9 +108,39 @@ class ResearchAssistant:
             sentences = [text]
 
         stop = {
-            "the", "a", "an", "and", "or", "but", "of", "to", "in", "on", "for", "with",
-            "is", "are", "was", "were", "be", "been", "that", "this", "these", "those",
-            "we", "our", "it", "its", "as", "at", "by", "from", "not", "can", "will",
+            "the",
+            "a",
+            "an",
+            "and",
+            "or",
+            "but",
+            "of",
+            "to",
+            "in",
+            "on",
+            "for",
+            "with",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "that",
+            "this",
+            "these",
+            "those",
+            "we",
+            "our",
+            "it",
+            "its",
+            "as",
+            "at",
+            "by",
+            "from",
+            "not",
+            "can",
+            "will",
         }
         freq: dict[str, int] = {}
         for word in _WORD.findall(text.lower()):
@@ -164,11 +192,13 @@ class ResearchAssistant:
         if style == "mla":
             names = self._mla_names(authors)
             tail = f" {venue}," + (f" {year}," if year else "") + (" " + url if url else "") + "."
-            return f"{names} \"{title}.\"{tail}"
+            return f'{names} "{title}."{tail}'
         if style == "ieee":
             names = self._ieee_names(authors)
             tail = f", {year}." if year else "."
-            return f"{names} \"{title},\" {venue}{tail}" + (f" [Online]. Available: {url}" if url else "")
+            return f'{names} "{title}," {venue}{tail}' + (
+                f" [Online]. Available: {url}" if url else ""
+            )
         if style == "bibtex":
             key = (authors[0].split()[-1].lower() if authors else "unknown") + (year or "")
             lines = [

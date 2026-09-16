@@ -17,8 +17,8 @@ from fastapi import HTTPException
 from agents.research_assistant import ResearchAssistant, ResearchSourceError
 from api.routes import agents as agents_routes
 
-
 # ----------------------------------------------------------------- summarize
+
 
 def test_summarize_is_real_extractive_summarization() -> None:
     text = (
@@ -32,7 +32,9 @@ def test_summarize_is_real_extractive_summarization() -> None:
     out = ResearchAssistant().summarize(paper)
     assert out["method"] == "extractive-term-frequency"
     assert out["key_sentences"], "must keep at least one sentence"
-    assert all(s in text for s in out["key_sentences"]), "sentences must come from the input (no fabrication)"
+    assert all(s in text for s in out["key_sentences"]), (
+        "sentences must come from the input (no fabrication)"
+    )
     assert out["keywords"], "must extract keywords"
     assert out["compression"]["original_sentences"] == 5
 
@@ -43,6 +45,7 @@ def test_summarize_rejects_empty_paper() -> None:
 
 
 # ----------------------------------------------------------------- citations
+
 
 def test_citations_apa_ieee_bibtex_deterministic() -> None:
     paper = {
@@ -70,6 +73,7 @@ def test_citations_unknown_style_rejected() -> None:
 
 # -------------------------------------------------------------------- search
 
+
 def test_search_rejects_unsupported_source_instead_of_fabricating() -> None:
     with pytest.raises(ValueError, match="unsupported research source"):
         ResearchAssistant().search("attention", source="not-a-real-source")
@@ -95,6 +99,7 @@ def test_search_hits_live_arxiv() -> None:
 
 
 # ------------------------------------------------------------------- catalog
+
 
 def test_list_agents_reflects_real_directory() -> None:
     catalog = agents_routes._agent_catalog()
