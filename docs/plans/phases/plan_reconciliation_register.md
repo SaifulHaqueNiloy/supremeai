@@ -47,6 +47,16 @@ Tooling: `scripts/governance/lint_plans.py` · Machine cache: [`plan_registry.js
 4. Completion claims must be matched to code, tests, and runtime evidence.
 5. The catalog contains legacy file URLs; repository-relative links are preferred.
 
+## 2026-09-17 Phase 5 — controlled archive & lineage record
+
+Executed the move that `docs/plans/phases/README.md` had already planned but never carried out:
+
+| File | Disposition | Destination | Cross-reference handling |
+|---|---|---|---|
+| `docs/plans/phases/historical_status_snapshot_2026_05_10.md` | archive (historical lineage — pre-pivot Spring Boot/Firebase/Flutter architecture snapshot; evidence only) | `docs/archive/plans/phases/historical_status_snapshot_2026_05_10.md` | **Redirect stub** left at the old path (frontmatter `status: historical`, `disposition: redirect`, `superseded_by` link) so all inbound links keep resolving. Inbound refs found: `phases/README.md` (already pointed at the archive destination), this register's evidence rows, generated registry (regenerates). |
+
+Archive protocol applied (per CANONICAL_PLANNING…PLAN.md §7 Phase 5): content preserved verbatim (git mv), no deletion, cross-reference scan executed before the move, redirect stub created, lineage recorded here.
+
 ## Next reconciliation pass
 
 1. Add metadata headers to the canonical root and active domain plans.

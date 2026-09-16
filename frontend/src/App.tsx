@@ -54,6 +54,11 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
+import { RunsPage } from './pages/RunsPage';
+import { MarketplacePage } from './pages/MarketplacePage';
+import { ActivityPage } from './pages/ActivityPage';
+import { FilesPage } from './pages/FilesPage';
+import { ProjectsPage } from './pages/ProjectsPage';
 import { MCPConnector } from './components/plugins/MCPConnector';
 
 // The public viewer is intentionally available before authentication: a shared URL is
@@ -188,12 +193,12 @@ const AppContent: React.FC = () => {
                   <ProfilePage />
                 </ProtectedRoute>
   } />
-  <Route path="/projects" element={<ProtectedRoute><WorkspaceModulePage module="projects" /></ProtectedRoute>} />
-  <Route path="/files" element={<ProtectedRoute><WorkspaceModulePage module="files" /></ProtectedRoute>} />
+  <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+  <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
   <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><AgentWorkspace /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/activity" element={<ProtectedRoute><WorkspaceModulePage module="activity" /></ProtectedRoute>} />
-  <Route path="/marketplace" element={<ProtectedRoute><WorkspaceModulePage module="marketplace" /></ProtectedRoute>} />
-  <Route path="/runs" element={<ProtectedRoute><WorkspaceModulePage module="runs" /></ProtectedRoute>} />
+  <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
+  <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
+  <Route path="/runs" element={<ProtectedRoute><RunsPage /></ProtectedRoute>} />
   <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><CostDashboard /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><DeepResearchPanel /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/scheduled-tasks" element={<ProtectedRoute><WorkspaceLayout><ScheduledTasksPanel /></WorkspaceLayout></ProtectedRoute>} />

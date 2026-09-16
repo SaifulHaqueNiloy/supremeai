@@ -18,11 +18,19 @@ COPY frontend/ ./frontend/
 
 # Build frontend
 WORKDIR /app/frontend
-ARG VITE_API_URL=http://localhost:8080
+# FIX(localhost-bake): default to relative API paths. Vite bakes VITE_* into
+# the bundle at build time; the old http://localhost:8080 default only worked
+# when the browser ran on the docker host. The nginx runtime image proxies
+# /api, /admin-api, /auth and /ws to backend:8080, so relative paths work
+# from every host. VITE_USE_RELATIVE_PATH=true makes getApiBaseUrl() return
+# '' (see frontend/src/utils/api.ts).
+ARG VITE_API_URL=""
+ARG VITE_USE_RELATIVE_PATH=true
 ENV VITE_API_URL=$VITE_API_URL \
     VITE_BACKEND_URL=$VITE_API_URL \
     VITE_USER_BACKEND=$VITE_API_URL \
     VITE_ADMIN_BACKEND=$VITE_API_URL \
+    VITE_USE_RELATIVE_PATH=$VITE_USE_RELATIVE_PATH \
     NODE_ENV=production
 
 RUN pnpm run build

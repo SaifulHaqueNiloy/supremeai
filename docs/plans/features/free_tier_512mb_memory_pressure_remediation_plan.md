@@ -1,3 +1,18 @@
+---
+id: free-tier-512mb-memory-pressure-remediation
+subject: "SupremeAI — Free-Tier Memory Crisis Remediation Plan"
+document_role: implementation
+planning_authority: Infrastructure Circle
+canonical: false
+status: active
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related: docs/plans/infrastructure/free_tier_federation_master_plan_v4.md
+---
+
 # SupremeAI — Free-Tier Memory Crisis Remediation Plan
 
 ## লক্ষ্য

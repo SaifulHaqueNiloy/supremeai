@@ -5,6 +5,7 @@ from .execution_log import ExecutionLog
 from .integration import Integration
 from .morphic import AgentReflection, DynamicCapability, ExecutionChain
 from .plugin_manifest import PluginManifest
+from .project import Project
 from .render_account_state import RenderAccountState, RenderPreflightEvent
 from .sentinel import ApiEndpoint, SystemDependency, SystemIncident
 from .system_alert import SystemAlert
@@ -25,6 +26,7 @@ __all__ = [
     "ExecutionChain",
     "ExecutionLog",
     "PluginManifest",
+    "Project",
     "RenderAccountState",
     "RenderPreflightEvent",
     "SystemAlert",

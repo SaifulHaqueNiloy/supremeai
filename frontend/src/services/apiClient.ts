@@ -354,6 +354,47 @@ export const apiClient = {
     return handleResponse(res);
   },
 
+  // ERR-B02 (defect register 2026-09-15): multipart upload path. Unlike post(),
+  // the body is passed through untouched (FormData) and NO Content-Type header is
+  // set — the browser must generate the multipart boundary itself.
+  postForm: async <T>(path: string, body: FormData, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    delete authHeaders['Content-Type'];
+    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+      ...options,
+      method: 'POST',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body,
+    });
+    return handleResponse(res);
+  },
+
+  patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    if (
+      !authHeaders['Idempotency-Key'] &&
+      !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
+      pathRequiresIdempotencyKey(finalUrl)
+    ) {
+      authHeaders['Idempotency-Key'] = buildIdempotencyKey();
+    }
+    const res = await throttledFetch(finalUrl, {
+      // FIX (P1, review 2026-09-12): options first — see get() above.
+      ...options,
+      method: 'PATCH',
+      headers: {
+        ...(options?.headers as Record<string, string>),
+        ...authHeaders,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return handleResponse(res);
+  },
+
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
