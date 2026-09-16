@@ -46,6 +46,9 @@ export async function GET(request: Request) {
   const format = url.searchParams.get("format"); // undefined | "csv"
   const limit = Math.min(Number(url.searchParams.get("limit") ?? 60) || 60, 200);
   const csvLimit = Math.min(Number(url.searchParams.get("csvLimit") ?? 1000) || 1000, 5000);
+  // Optional time window in minutes-ago (uptime-bucket deep links + presets). 0 = no bound.
+  const sinceMin = Math.min(Math.max(Number(url.searchParams.get("sinceMin") ?? 0) || 0, 0), 10_080);
+  const untilMin = Math.min(Math.max(Number(url.searchParams.get("untilMin") ?? 0) || 0, 0), 10_080);
 
   try {
     const since24h = new Date(Date.now() - 24 * 3600_000);
@@ -134,6 +137,12 @@ export async function GET(request: Request) {
     if (status === "ok") where.ok = true;
     if (status === "failed") where.ok = false;
     if (q) where.tool = { contains: q };
+    if (sinceMin > 0 || untilMin > 0) {
+      const created: { gte?: Date; lte?: Date } = {};
+      if (sinceMin > 0) created.gte = new Date(Date.now() - sinceMin * 60_000);
+      if (untilMin > 0) created.lte = new Date(Date.now() - untilMin * 60_000);
+      where.createdAt = created;
+    }
 
     const rows = await db.toolCallLog.findMany({
       where,

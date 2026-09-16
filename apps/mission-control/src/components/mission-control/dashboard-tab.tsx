@@ -15,9 +15,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DashboardData, SettingsData } from "@/lib/mission-types";
+import { setJournalIntent } from "@/lib/journal-intent";
 import { cn } from "@/lib/utils";
 import { callTowerTool } from "@/lib/tower-gateway";
-import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon, UptimeStrip } from "./widgets";
+import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon, UptimeStrip, type UptimeBucketInfo } from "./widgets";
 
 async function fetchDashboard(): Promise<DashboardData> {
   const res = await fetch("/api/dashboard", { cache: "no-store" });
@@ -276,7 +277,17 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                                 if (!u) return <span className="text-xs text-muted-foreground/40">gathering…</span>;
                                 return (
                                   <span className="flex items-center gap-2">
-                                    <UptimeStrip points={u.points} />
+                                    <UptimeStrip
+                                      points={u.points}
+                                      onBucketClick={(info: UptimeBucketInfo) => {
+                                        setJournalIntent({
+                                          sinceMin: info.sinceMin,
+                                          untilMin: info.untilMin,
+                                          label: `${info.rangeLabel} UTC · ${info.status}`,
+                                        });
+                                        window.dispatchEvent(new CustomEvent("mc-navigate", { detail: "journal" }));
+                                      }}
+                                    />
                                     {u.uptimePct != null && (
                                       <MetricBadge tone={u.uptimePct >= 95 ? "good" : u.uptimePct >= 75 ? "warn" : "bad"}>
                                         {u.uptimePct}%

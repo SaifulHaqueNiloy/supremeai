@@ -17,6 +17,7 @@ interface WatchdogEvent {
   kind: string | null;
   provider: string | null;
   channel: string | null;
+  drill: boolean;
   createdAt: string;
 }
 
@@ -29,10 +30,10 @@ interface ProviderSummary {
   lastAt: string | null;
 }
 
-function parseMeta(raw: string | null): { provider?: string; kind?: string; channel?: string } {
+function parseMeta(raw: string | null): { provider?: string; kind?: string; channel?: string; drill?: boolean } {
   if (!raw) return {};
   try {
-    return JSON.parse(raw) as { provider?: string; kind?: string; channel?: string };
+    return JSON.parse(raw) as { provider?: string; kind?: string; channel?: string; drill?: boolean };
   } catch {
     return {};
   }
@@ -70,6 +71,7 @@ export async function GET(request: Request) {
         kind: evKind,
         provider: meta.provider ?? null,
         channel: meta.channel ?? null,
+        drill: meta.drill === true,
         createdAt: r.createdAt.toISOString(),
       });
       if (r.createdAt.getTime() >= since24h) total24h++;

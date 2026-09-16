@@ -232,7 +232,7 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
           <span><kbd className="rounded border bg-muted px-1 font-mono">↵</kbd> run</span>
           <span><kbd className="rounded border bg-muted px-1 font-mono">esc</kbd> close</span>
         </span>
-        <span className="font-mono">mission control · v1.8</span>
+        <span className="font-mono">mission control · v1.9</span>
       </div>
     </CommandDialog>
   );

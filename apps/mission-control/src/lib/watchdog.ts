@@ -131,6 +131,73 @@ export async function detectServiceTransitions(services: ServiceStatus[]): Promi
   return transitions;
 }
 
+/**
+ * Operator drill — simulate a DOWN transition for a provider to verify the
+ * full watchdog path (journal entry + tower broadcast) without waiting for a
+ * real outage. No snapshot is written and no real status changes: the drill
+ * is purely a journaled, clearly-labeled test event. Drills bypass cooldown
+ * (explicit operator action) but still respect mute overrides and require the
+ * watchdog to be armed.
+ */
+export async function runWatchdogDrill(
+  provider: string,
+): Promise<{ journaled: boolean; notified: boolean | null; channel: NotifyChannel; error?: string }> {
+  const name = provider.trim();
+  if (!name || name.length > 80) return { journaled: false, notified: null, channel: "none", error: "invalid provider name" };
+
+  let settings: Record<string, string>;
+  try {
+    settings = await getSettings();
+  } catch (err) {
+    return { journaled: false, notified: null, channel: "none", error: String(err).slice(0, 160) };
+  }
+  if (settings.watchdogEnabled === "false") {
+    return { journaled: false, notified: null, channel: "none", error: "watchdog is disabled — arm it first" };
+  }
+
+  const overrides = parseWatchdogOverrides(settings.watchdogOverrides);
+  const globalChannel = (settings.watchdogNotifyChannel ?? "none") as NotifyChannel;
+  const ov = overrideFor(overrides, name);
+  if (ov?.enabled === false) {
+    return { journaled: false, notified: null, channel: "none", error: `"${name}" is muted by a per-provider override` };
+  }
+  const effChannel = ov?.channel ?? globalChannel;
+
+  const nowUtc = new Date().toISOString().slice(11, 19);
+  await logActivity(
+    "watchdog",
+    "warn",
+    `Watchdog drill: ${name} simulated DOWN`,
+    `drill · healthy → down · fired at ${nowUtc} UTC — no real status change`,
+    { provider: name, kind: "down", drill: true, from: "healthy", to: "down" },
+  ).catch(() => undefined);
+
+  if (effChannel === "none") return { journaled: true, notified: null, channel: effChannel };
+
+  const message = `🧪 SupremeAI watchdog DRILL: ${name} simulated DOWN (healthy → down) at ${nowUtc} UTC — test of the notify path, no action needed`;
+  try {
+    const tool = effChannel === "telegram" ? "notify_send_telegram" : "notify_send_discord";
+    const res = await callTowerTool(tool, { message: message.slice(0, effChannel === "telegram" ? 4000 : 1900) });
+    await logActivity(
+      "watchdog",
+      res.ok ? "success" : "warn",
+      `Drill notify via ${effChannel} ${res.ok ? "sent" : "failed"}`,
+      res.ok ? `${name} drill broadcast delivered` : (res.error ?? "tower rejected").slice(0, 200),
+      { provider: name, kind: "down", drill: true, channel: effChannel, notified: res.ok },
+    ).catch(() => undefined);
+    return { journaled: true, notified: res.ok, channel: effChannel, error: res.ok ? undefined : (res.error ?? "tower rejected").slice(0, 160) };
+  } catch (err) {
+    await logActivity("watchdog", "warn", `Drill notify via ${effChannel} errored`, String(err).slice(0, 200), {
+      provider: name,
+      kind: "down",
+      drill: true,
+      channel: effChannel,
+      notified: false,
+    }).catch(() => undefined);
+    return { journaled: true, notified: false, channel: effChannel, error: String(err).slice(0, 160) };
+  }
+}
+
 /** Handle transitions: journal + optional tower broadcast. Never throws. */
 export async function handleServiceTransitions(transitions: ServiceTransition[]): Promise<void> {
   if (transitions.length === 0) return;

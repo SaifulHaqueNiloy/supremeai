@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { EyeOff, Plus, Save, Settings2, ShieldCheck, Trash2 } from "lucide-react";
+import { EyeOff, FlaskConical, Plus, Save, Settings2, ShieldCheck, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,6 +177,7 @@ export function SettingsTab() {
             </div>
           </div>
           <WatchdogOverridesEditor value={draft.watchdogOverrides} onChange={(json) => update("watchdogOverrides", json)} />
+          <WatchdogDrill armed={draft.watchdogEnabled} />
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="refresh">Refresh interval (seconds)</Label>
@@ -403,6 +404,93 @@ function WatchdogOverridesEditor({ value, onChange }: { value: string; onChange:
           Muted providers are skipped entirely — transitions are neither journaled nor broadcast.
         </p>
       )}
+    </div>
+  );
+}
+
+/* ── Watchdog drill — synthetic DOWN transition to verify the alert path ── */
+function WatchdogDrill({ armed }: { armed: boolean }) {
+  const qc = useQueryClient();
+  const [provider, setProvider] = React.useState("");
+  const [running, setRunning] = React.useState(false);
+
+  // Reuse the shared dashboard cache for the live provider list (no extra tower call)
+  const { data: dash } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async (): Promise<DashboardData> => {
+      const res = await fetch("/api/dashboard", { cache: "no-store" });
+      return res.json();
+    },
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const providers = (dash?.services ?? []).map((s) => s.provider);
+
+  const runDrill = async () => {
+    if (!provider) return;
+    setRunning(true);
+    try {
+      const res = await fetch("/api/watchdog/drill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ provider }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        error?: string;
+        drill?: { notified: boolean | null; channel: string; error?: string };
+      };
+      if (res.ok && data.ok) {
+        const d = data.drill!;
+        if (d.notified === true) toast.success(`Drill complete — journaled ✓ · notify sent via ${d.channel} ✓`);
+        else if (d.notified === false) toast.warning(`Drill journaled ✓ · notify via ${d.channel} failed: ${(d.error ?? "tower rejected").slice(0, 100)}`);
+        else toast.success(`Drill complete — journaled ✓ (channel: ${d.channel} — journal/stream only)`);
+        qc.invalidateQueries({ queryKey: ["watchdog-history"] });
+        qc.invalidateQueries({ queryKey: ["journal"] });
+      } else {
+        toast.error(`Drill failed: ${(data.error ?? `HTTP ${res.status}`).slice(0, 140)}`);
+      }
+    } catch (err) {
+      toast.error(`Drill failed: ${String(err).slice(0, 140)}`);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-dashed p-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <FlaskConical className="h-4 w-4 shrink-0 text-violet-500" />
+          <Label className="text-sm font-medium">Watchdog drill</Label>
+        </div>
+        <Select value={provider} onValueChange={setProvider} disabled={providers.length === 0}>
+          <SelectTrigger className="h-9 flex-1 text-xs" aria-label="Provider for watchdog drill">
+            <SelectValue placeholder={providers.length === 0 ? "Load dashboard first…" : "Pick a provider"} />
+          </SelectTrigger>
+          <SelectContent className="max-h-64">
+            {providers.map((p) => (
+              <SelectItem key={p} value={p} className="text-xs">
+                {p}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 shrink-0 border-violet-500/40 text-xs text-violet-600 hover:bg-violet-500/10 hover:text-violet-600 dark:text-violet-400"
+          onClick={runDrill}
+          disabled={!provider || running || !armed}
+          aria-label="Run watchdog drill"
+        >
+          {running ? "Firing…" : "Run drill"}
+        </Button>
+      </div>
+      <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+        Fires a clearly-labeled synthetic DOWN transition through the full path — journal entry, activity stream, notify channel — without touching real statuses. Bypasses cooldown; respects mute overrides.
+        {!armed && <span className="ml-1 text-amber-500">Arm the watchdog first.</span>}
+      </p>
     </div>
   );
 }

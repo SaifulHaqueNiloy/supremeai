@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronDown, Copy, ExternalLink, FileText, RefreshCw, Search } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { BookOpen, ChevronDown, Code2, Copy, ExternalLink, FileText, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -175,7 +176,7 @@ export function DocsSources() {
 
 /* ── Inline doc reader — fetches full page content via docs_fetch ─── */
 
-function extractDocText(payload: unknown): { text: string; title: string | null } {
+function extractDocText(payload: unknown): { text: string; title: string | null; sourceHtml: string | null } {
   // Tower may return a plain string, {content}, {text}, {docs}, or nested JSON.
   let raw = payload;
   if (raw && typeof raw === "object" && !Array.isArray(raw)) {
@@ -186,18 +187,118 @@ function extractDocText(payload: unknown): { text: string; title: string | null 
     // Sometimes the string itself is JSON — try to unwrap once.
     if (raw.trimStart().startsWith("{") || raw.trimStart().startsWith("[")) {
       try {
-        return extractDocText(JSON.parse(raw));
+        const inner = extractDocText(JSON.parse(raw));
+        return { text: inner.text, title: inner.title, sourceHtml: inner.sourceHtml };
       } catch {
         /* keep as plain text */
       }
     }
-    return { text: raw, title: null };
+    // docs_fetch often returns raw page HTML — extract readable text + title.
+    if (/<html[\s>]|<head[\s>]|<body[\s>]|<div[\s>]|<meta[\s>]/i.test(raw)) {
+      const titleMatch = raw.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? decodeEntities(titleMatch[1]).trim().slice(0, 140) : null;
+      return { text: htmlToText(raw), title, sourceHtml: raw };
+    }
+    return { text: raw, title: null, sourceHtml: null };
   }
-  if (raw == null) return { text: "", title: null };
-  return { text: JSON.stringify(raw, null, 2), title: null };
+  if (raw == null) return { text: "", title: null, sourceHtml: null };
+  return { text: JSON.stringify(raw, null, 2), title: null, sourceHtml: null };
 }
 
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#x27;|&#39;|&apos;/gi, "'")
+    .replace(/&lrm;|&rlm;/gi, "")
+    .replace(/&#(\d+);/g, (_m, d) => { try { return String.fromCodePoint(Number(d)); } catch { return " "; } })
+    .replace(/&#x([0-9a-f]+);/gi, (_m, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch { return " "; } });
+}
+
+/**
+ * HTML → readable markdown-ish text. docs_fetch returns raw page HTML, so the
+ * reader converts it: headings become markdown, lists become bullets, links
+ * become markdown links — then the markdown renderer takes over. Raw source
+ * stays available via the Raw toggle.
+ */
+export function htmlToText(html: string): string {
+  if (!/<[a-z!/][\s\S]*>/i.test(html)) return html;
+  let t = html
+    .replace(/<!doctype[^>]*>/gi, " ")
+    .replace(/<\?xml[^>]*>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+    .replace(/<head[\s\S]*?<\/head>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<!--[\s\S]*$/g, " ") // truncated unterminated comment (fetch cap)
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<hr\s*\/?>/gi, "\n---\n")
+    .replace(/<a [^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi, (_m, href, label) => {
+      const txt = label.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      if (!txt) return " ";
+      return `[${txt}](${href})`;
+    })
+    .replace(/<h([1-6])[^>]*>/gi, (_m, l) => "\n\n" + "#".repeat(Number(l)) + " ")
+    .replace(/<li[^>]*>/gi, "\n- ")
+    .replace(/<p[^>]*>/gi, "\n\n")
+    .replace(/<dt[^>]*>/gi, "\n\n")
+    .replace(/<dd[^>]*>/gi, "\n- ")
+    .replace(/<pre[^>]*>/gi, "\n\n```\n")
+    .replace(/<\/pre>/gi, "\n```\n\n")
+    .replace(/<td[^>]*>/gi, " | ")
+    .replace(/<th[^>]*>/gi, " | ")
+    .replace(/<\/tr>/gi, " |\n")
+    .replace(/<\/?[a-z][^>]*>/gi, " ");
+  t = decodeEntities(t);
+  t = t
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^[ \t]+|[ \t]+$/gm, "")
+    .replace(/<[a-z!/-]*$/i, ""); // trailing tag fragment from truncated fetch
+  return t.trim();
+}
+
+/** Heuristic: does this look like markdown worth rendering? */
+function looksLikeMarkdown(text: string): boolean {
+  if (text.length < 24) return false;
+  return /(^|\n)#{1,6}\s+|\n\s*[-*+]\s+|^\s*\d+\.\s+|```|\*\*[^*\n]+\*\*|(^|\n)\|.+|\]\([^)\s]{4,}\)/m.test(text);
+}
+
+/** Styled markdown components — compact mission-deck typography. */
+const MD_COMPONENTS = {
+  h1: (p: React.ComponentPropsWithoutRef<"h1">) => <h1 className="mb-2 mt-4 border-b pb-1 text-base font-bold first:mt-0" {...p} />,
+  h2: (p: React.ComponentPropsWithoutRef<"h2">) => <h2 className="mb-1.5 mt-4 text-sm font-bold" {...p} />,
+  h3: (p: React.ComponentPropsWithoutRef<"h3">) => <h3 className="mb-1 mt-3 text-[13px] font-semibold" {...p} />,
+  h4: (p: React.ComponentPropsWithoutRef<"h4">) => <h4 className="mb-1 mt-2 text-xs font-semibold" {...p} />,
+  p: (p: React.ComponentPropsWithoutRef<"p">) => <p className="my-1.5 text-[12.5px] leading-relaxed" {...p} />,
+  ul: (p: React.ComponentPropsWithoutRef<"ul">) => <ul className="my-1.5 list-disc space-y-0.5 pl-5 text-[12.5px] leading-relaxed" {...p} />,
+  ol: (p: React.ComponentPropsWithoutRef<"ol">) => <ol className="my-1.5 list-decimal space-y-0.5 pl-5 text-[12.5px] leading-relaxed" {...p} />,
+  li: (p: React.ComponentPropsWithoutRef<"li">) => <li className="pl-0.5" {...p} />,
+  a: (p: React.ComponentPropsWithoutRef<"a">) => <a className="text-primary underline underline-offset-2 hover:opacity-80" target="_blank" rel="noreferrer" {...p} />,
+  blockquote: (p: React.ComponentPropsWithoutRef<"blockquote">) => <blockquote className="my-2 border-l-2 border-primary/40 pl-3 text-[12.5px] italic text-muted-foreground" {...p} />,
+  code: (p: React.ComponentPropsWithoutRef<"code">) => {
+    const inline = !String(p.className ?? "").includes("language-");
+    return inline ? (
+      <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-primary/90" {...p} />
+    ) : (
+      <code className="font-mono text-[11px]" {...p} />
+    );
+  },
+  pre: (p: React.ComponentPropsWithoutRef<"pre">) => <pre className="my-2 overflow-auto rounded-md border bg-zinc-950/95 p-2.5 text-emerald-300/90" {...p} />,
+  table: (p: React.ComponentPropsWithoutRef<"table">) => <table className="my-2 w-full border-collapse text-[11.5px]" {...p} />,
+  th: (p: React.ComponentPropsWithoutRef<"th">) => <th className="border bg-muted/50 px-2 py-1 text-left font-semibold" {...p} />,
+  td: (p: React.ComponentPropsWithoutRef<"td">) => <td className="border px-2 py-1 align-top" {...p} />,
+  hr: () => <hr className="my-3 border-border" />,
+};
+
 function DocReader({ doc, onClose }: { doc: DocSource | null; onClose: () => void }) {
+  const [rawMode, setRawMode] = React.useState(false);
   // Fetch only while a doc is selected; one-shot (no polling), fresh per open.
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["doc-fetch", doc?.url],
@@ -209,6 +310,11 @@ function DocReader({ doc, onClose }: { doc: DocSource | null; onClose: () => voi
 
   const extracted = React.useMemo(() => (data?.result !== undefined ? extractDocText(data.result) : null), [data]);
   const words = extracted ? extracted.text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const isMd = looksLikeMarkdown(extracted?.text ?? "");
+  const hasSource = !!extracted?.sourceHtml;
+  // Tower docs_fetch caps the payload (~5KB, mostly <head>) — surface that.
+  const truncated = !!extracted?.sourceHtml && extracted.sourceHtml.length >= 4_800;
+  const renderMd = isMd && !rawMode;
 
   const copyDoc = async () => {
     if (!extracted?.text) return;
@@ -224,10 +330,18 @@ function DocReader({ doc, onClose }: { doc: DocSource | null; onClose: () => voi
     <Dialog open={!!doc} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="flex max-h-[85vh] flex-col gap-0 sm:max-w-2xl">
         <DialogHeader className="min-w-0 pr-8">
-          <DialogTitle className="flex min-w-0 items-center gap-2 text-sm">
+          <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
             <FileText className="h-4 w-4 shrink-0 text-primary" />
-            <span className="truncate">{doc?.name ?? "Document"}</span>
+            <span className="truncate">{extracted?.title ?? doc?.name ?? "Document"}</span>
             {words > 0 && <MetricBadge>{words.toLocaleString()} words</MetricBadge>}
+            {words > 0 && (
+              <MetricBadge tone={isMd ? "good" : "default"}>
+                {isMd ? "markdown" : "plain text"}
+              </MetricBadge>
+            )}
+            {truncated && (
+              <MetricBadge tone="warn" >excerpt — tower fetch cap</MetricBadge>
+            )}
           </DialogTitle>
           <DialogDescription className="truncate text-[11px]">{doc?.url}</DialogDescription>
         </DialogHeader>
@@ -245,6 +359,12 @@ function DocReader({ doc, onClose }: { doc: DocSource | null; onClose: () => voi
               <p className="text-xs text-muted-foreground">
                 Could not fetch this page ({(data?.error ?? (error as Error)?.message ?? "tower unreachable").slice(0, 120)}).
               </p>
+            ) : renderMd ? (
+              <div className="max-w-none break-words text-foreground/90">
+                <ReactMarkdown components={MD_COMPONENTS}>{extracted?.text}</ReactMarkdown>
+              </div>
+            ) : rawMode && extracted?.sourceHtml ? (
+              <pre className="whitespace-pre-wrap break-words font-mono text-[10.5px] leading-relaxed text-muted-foreground/80">{extracted.sourceHtml.slice(0, 20_000)}</pre>
             ) : (
               <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-foreground/90">{extracted?.text}</pre>
             )}
@@ -255,6 +375,19 @@ function DocReader({ doc, onClose }: { doc: DocSource | null; onClose: () => voi
           <span className="min-w-0 flex-1 truncate text-[10px] uppercase tracking-wide text-muted-foreground/60">
             tower tool · docs_fetch · silent off (journaled)
           </span>
+          {hasSource && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1 text-xs"
+              onClick={() => setRawMode((r) => !r)}
+              aria-pressed={rawMode}
+              aria-label={rawMode ? "Switch to rendered view" : "Switch to raw source view"}
+            >
+              <Code2 className="h-3 w-3" />
+              {rawMode ? "Rendered" : "Raw source"}
+            </Button>
+          )}
           <Button variant="outline" size="sm" className="h-7 text-xs" onClick={copyDoc} disabled={!extracted?.text}>
             <Copy className="mr-1 h-3 w-3" /> Copy
           </Button>

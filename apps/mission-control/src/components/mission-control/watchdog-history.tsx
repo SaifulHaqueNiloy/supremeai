@@ -25,6 +25,7 @@ interface WatchdogEvent {
   kind: string | null;
   provider: string | null;
   channel: string | null;
+  drill: boolean;
   createdAt: string;
 }
 
@@ -169,6 +170,11 @@ export function WatchdogHistory() {
                     <span className={cn("absolute -left-[21px] top-1.5 h-2 w-2 rounded-full", LEVEL_DOT[e.level] ?? "bg-muted-foreground")} />
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="min-w-0 flex-1 truncate text-xs font-medium">{e.title}</p>
+                      {e.drill && (
+                        <Badge variant="outline" className="h-4 shrink-0 border border-violet-500/40 bg-violet-500/10 px-1 text-[9px] text-violet-600 dark:text-violet-400">
+                          DRILL
+                        </Badge>
+                      )}
                       {tone && <Badge variant="outline" className={cn("h-4 shrink-0 border px-1 text-[9px]", tone.cls)}>{tone.label}</Badge>}
                       {e.channel && <Badge variant="outline" className="h-4 shrink-0 px-1 text-[9px] text-muted-foreground">{e.channel}</Badge>}
                     </div>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Activity, CheckCircle2, Download, Gauge, ScrollText, Search, Timer, TrendingUp, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, Clock, Download, Gauge, ScrollText, Search, Timer, TrendingUp, X, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KpiCard, SectionHeader, MetricBadge, JsonViewer, ago } from "./widgets";
 import { ApprovalsPanel } from "./approvals-panel";
+import { consumeJournalIntent } from "@/lib/journal-intent";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -51,10 +52,33 @@ interface JournalResponse {
 
 type StatusFilter = "all" | "ok" | "failed";
 
+/** Quick time-window presets (minutes back from now). */
+const TIME_PRESETS: { label: string; sinceMin: number | null }[] = [
+  { label: "All", sinceMin: null },
+  { label: "1h", sinceMin: 60 },
+  { label: "6h", sinceMin: 360 },
+  { label: "24h", sinceMin: 1440 },
+];
+
 export function JournalTab() {
   const [search, setSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
   const [detail, setDetail] = React.useState<JournalEntry | null>(null);
+  // Time window: null sinceMin = all; untilMin only set for single-bucket deep links.
+  const [sinceMin, setSinceMin] = React.useState<number | null>(null);
+  const [untilMin, setUntilMin] = React.useState<number | null>(null);
+  const [windowLabel, setWindowLabel] = React.useState<string | null>(null);
+
+  // Deep-link intent from the dashboard (uptime-bucket click) — consumed once on mount.
+  React.useEffect(() => {
+    const intent = consumeJournalIntent();
+    if (intent) {
+      setSinceMin(intent.sinceMin);
+      setUntilMin(intent.untilMin ?? null);
+      setWindowLabel(intent.label ?? `${intent.sinceMin}m window`);
+      toast.info(`Journal filtered to ${intent.label ?? `${intent.sinceMin}m window`}`);
+    }
+  }, []);
 
   // Debounced search keeps the journal query cheap
   const [debounced, setDebounced] = React.useState("");
@@ -64,11 +88,13 @@ export function JournalTab() {
   }, [search]);
 
   const { data, isLoading, isError, refetch, isFetching } = useQuery({
-    queryKey: ["journal", debounced, statusFilter],
+    queryKey: ["journal", debounced, statusFilter, sinceMin, untilMin],
     queryFn: async (): Promise<JournalResponse> => {
       const params = new URLSearchParams();
       if (debounced) params.set("q", debounced);
       if (statusFilter !== "all") params.set("status", statusFilter);
+      if (sinceMin != null) params.set("sinceMin", String(sinceMin));
+      if (untilMin != null) params.set("untilMin", String(untilMin));
       params.set("limit", "80");
       const res = await fetch(`/api/journal?${params.toString()}`, { cache: "no-store" });
       return res.json();
@@ -93,6 +119,8 @@ export function JournalTab() {
                 const params = new URLSearchParams({ format: "csv", csvLimit: "1000" });
                 if (debounced) params.set("q", debounced);
                 if (statusFilter !== "all") params.set("status", statusFilter);
+                if (sinceMin != null) params.set("sinceMin", String(sinceMin));
+                if (untilMin != null) params.set("untilMin", String(untilMin));
                 window.location.assign(`/api/journal?${params.toString()}`);
                 toast.success("Journal export started (CSV, max 1000 rows)");
               }}
@@ -157,7 +185,7 @@ export function JournalTab() {
         {/* Entries table */}
         <Card className="min-w-0 lg:col-span-2">
           <CardContent className="p-4">
-            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="mb-3 flex flex-wrap items-center gap-2 sm:flex-nowrap">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -187,6 +215,46 @@ export function JournalTab() {
                     </span>
                   </button>
                 ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter journal by time window">
+                {TIME_PRESETS.map((p) => {
+                  const active = sinceMin === p.sinceMin && untilMin == null;
+                  return (
+                    <button
+                      key={p.label}
+                      onClick={() => {
+                        setSinceMin(p.sinceMin);
+                        setUntilMin(null);
+                        setWindowLabel(null);
+                      }}
+                      aria-pressed={active}
+                      className={cn(
+                        "rounded-full border px-2.5 py-0.5 text-[11px] font-medium transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:border-foreground/30 hover:text-foreground",
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+                {sinceMin != null && untilMin != null && (
+                  <button
+                    onClick={() => {
+                      setSinceMin(null);
+                      setUntilMin(null);
+                      setWindowLabel(null);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full border border-violet-500/50 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-medium text-violet-600 dark:text-violet-400"
+                    aria-label="Clear custom time window"
+                    title="Custom window from an uptime bucket — click to clear"
+                  >
+                    <Clock className="h-3 w-3" />
+                    {windowLabel ?? "custom"}
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
               </div>
             </div>
 

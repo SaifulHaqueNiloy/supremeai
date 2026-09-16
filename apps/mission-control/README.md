@@ -56,6 +56,13 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.9 — Journal Deep-Linking, Watchdog Drill & Doc Extraction
+- **Uptime → journal deep link**: every uptime-strip bucket in the service matrix is a button — click it to jump to the Operations Journal pre-filtered to that exact time window (violet custom-window chip, one click to clear); closes the observe→inspect loop
+- **Journal time-window presets**: All / 1h / 6h / 24h chips next to the status filter; `GET /api/journal` accepts `sinceMin` + `untilMin` (minutes-ago bounds, also honored by CSV export)
+- **Watchdog drill** (Settings): fires a clearly-labeled synthetic DOWN transition through the full alerting path — journal entry, activity stream, notify channel — without touching real statuses; bypasses cooldown, respects mute overrides, requires the watchdog armed; `POST /api/watchdog/drill`; events carry a violet **DRILL** badge in Watchdog History
+- **Doc reader HTML extraction** (bug fix + upgrade): tower `docs_fetch` returns raw page HTML — the reader now strips scripts/styles/head/comments, converts headings/lists/links/tables to markdown, decodes entities, and renders proper typography (react-markdown) instead of HTML soup; **Raw source** toggle keeps the original payload; "excerpt — tower fetch cap" badge surfaces the tower's ~5KB truncation
+- Footer v1.9
+
 ### v1.8 — Per-Provider Overrides & Inline Docs
 - **Per-provider watchdog overrides** (Settings): mute noisy providers, or give each its own cooldown / notify channel — dynamic JSON setting (`watchdogOverrides`), validated + normalized server-side, prefix-aware matching (`cloudflare` covers `Cloudflare (DNS + Workers + Analytics)`); muted providers are skipped entirely (no journal, no broadcast)
 - **Matrix mute indicator**: dashboard rows show an eye-off badge for providers muted via overrides
