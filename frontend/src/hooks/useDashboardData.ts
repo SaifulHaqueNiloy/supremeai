@@ -93,7 +93,10 @@ export function useMetrics(refetchIntervalMs?: number | false) {
     queryFn: () => apiClient.get<MetricsData>('/admin-api/metrics'),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // SSE (useDashboardSSE) is the primary update path, but staleTime must be
+    // finite: with Infinity a dead SSE connection left metrics frozen for the
+    // whole session — never refetched on remount, focus or reconnect.
+    staleTime: 30_000,
   });
 }
 
@@ -103,7 +106,8 @@ export function useCostReport() {
     queryFn: () => apiClient.get<CostReport>('/admin-api/costs'),
     refetchInterval: false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // Slow-moving data — generous but finite (was Infinity).
+    staleTime: 300_000,
   });
 }
 
@@ -113,7 +117,8 @@ export function useHealthMap(refetchIntervalMs?: number | false) {
     queryFn: () => apiClient.get<HealthMapData>('/admin-api/health-map'),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // Volatile provider health — finite (was Infinity, froze on SSE loss).
+    staleTime: 60_000,
   });
 }
 
@@ -123,7 +128,8 @@ export function useCIReports(limit = 5, refetchIntervalMs?: number | false) {
     queryFn: () => apiClient.get<CIReport[]>(`/admin-api/ci-logs?limit=${limit}`),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // New CI runs land continuously — finite (was Infinity).
+    staleTime: 60_000,
   });
 }
 
@@ -134,7 +140,8 @@ export function useThreatScan() {
     // বাংলা মন্তব্য: পোলিং বন্ধ করে SSE-এর মাধ্যমে ডেটা আপডেট করা হবে
     refetchInterval: false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // Scans run periodically, not per-request — finite (was Infinity).
+    staleTime: 600_000,
   });
 }
 
@@ -178,7 +185,8 @@ export function useDashboardEvents(limit = 50, refetchIntervalMs?: number | fals
     queryFn: () => apiClient.get<DashboardEvent[]>(`/admin-api/events?limit=${limit}`),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
-    staleTime: Infinity,
+    // Live event feed — finite (was Infinity, froze on SSE loss).
+    staleTime: 30_000,
   });
 }
 
