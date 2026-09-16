@@ -3099,6 +3099,33 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context_engine/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context_engine/budget.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/context_engine/engine.py"
+    },
+    {
+      "capability_signals": [
         "health",
         "register"
       ],
@@ -10861,6 +10888,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/context/test_context_scopes.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/context_engine/test_context_engine.py"
     },
     {
       "capability_signals": [
@@ -24343,5 +24379,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2809
+  "source_file_count": 2813
 }
