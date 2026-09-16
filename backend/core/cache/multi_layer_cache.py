@@ -25,11 +25,11 @@ try:
 except ImportError:
     TTLCache = dict  # fallback for lightweight environments lacking cachetools
 
+from core.llm.token_budget import estimate_tokens
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector, record_cache_access
 from core.swarm_pubsub import swarm_streamer
-from core.llm.token_budget import estimate_tokens
 
 # বাংলা মন্তব্ব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
