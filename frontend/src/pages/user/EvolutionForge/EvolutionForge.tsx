@@ -301,8 +301,11 @@ const EvolutionForgeCanvas = () => {
       
       setDeployStatus('success');
       
-      const deployResult = result as { data?: { skillId?: string } } | undefined;
-      const generatedSkillId = deployResult?.data?.skillId || `skill_${Date.now()}`;
+      // ERR-H02 FIX: read the REAL deployed skill id from the backend
+      // response ({status, skill_id, manifest}) — the old code ignored the
+      // response and fabricated `skill_${Date.now()}` as a fallback id.
+      const deployResult = result as { skill_id?: string } | undefined;
+      const generatedSkillId = deployResult?.skill_id || `skill_${Date.now()}`;
       
       // Notify listeners
       eventBus.emit(Events.SKILL_APPROVAL_NEEDED, {
