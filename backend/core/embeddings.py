@@ -6,6 +6,7 @@ therefore guarantees that every pgvector embedding is exactly 384 dimensions.
 
 from __future__ import annotations
 
+import hashlib
 import math
 import os
 
@@ -46,16 +47,33 @@ def get_local_encoder():
     return _encoder
 
 
+def _stable_hash(token: str) -> int:
+    """Deterministic 64-bit hash — independent of PYTHONHASHSEED and process.
+
+    Python's built-in ``hash()`` randomizes str hashes per process, which made
+    ``hash_vectorize()`` output non-reproducible across workers/restarts and
+    silently broke stored-vs-query cosine comparisons in every vector store
+    that used this fallback.
+    """
+    digest = hashlib.blake2b(token.encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big")
+
+
 def hash_vectorize(text: str, size: int = _LOCAL_DIM) -> list[float]:
-    """Pure-Python feature hashing fallback — zero-cost and exactly ``size`` dims."""
+    """Pure-Python feature hashing fallback — zero-cost and exactly ``size`` dims.
+
+    Uses a process-stable hash (blake2b), so identical text always maps to the
+    same vector in every process, on every restart, on every worker.
+    """
     vector = [0.0] * size
     words = [w.lower() for w in text.split() if len(w) > 1]
     if not words:
         vector[0] = 1.0
         return vector
     for word in words:
-        h = abs(hash(word)) % size
-        sign = 1 if (abs(hash(word)) // size) % 2 == 0 else -1
+        hv = _stable_hash(word)
+        h = hv % size
+        sign = 1 if (hv // size) % 2 == 0 else -1
         vector[h] += sign
     norm = math.sqrt(sum(x * x for x in vector))
     if norm > 0:
