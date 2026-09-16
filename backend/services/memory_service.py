@@ -9,6 +9,7 @@ from typing import Any
 
 from core.config import settings
 from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
+from core.embeddings import hash_vectorize as _canonical_hash_vectorize
 from core.logging_config import logger
 from core.persistence import pooled_pg
 
@@ -20,25 +21,14 @@ def hash_vectorize(text: str, size: int = 384) -> list[float]:
     """
     Pure Python Feature Hashing (Hashing Trick) to convert text into a 384-dimensional vector.
     Serves as a robust, zero-cost fallback when SentenceTransformer is unavailable.
+
+    FIX(stable-hash): delegates to the canonical core.embeddings implementation,
+    which uses a process-stable blake2b hash. The previous local copy used
+    Python's built-in ``hash()``, which is randomized per process
+    (PYTHONHASHSEED) — vectors were non-reproducible across workers/restarts
+    and stored-vs-query cosine comparisons silently broke.
     """
-    vector = [0.0] * size
-    words = [w.lower() for w in text.split() if len(w) > 1]
-    if not words:
-        # Return a non-empty unit vector to prevent division by zero
-        vector[0] = 1.0
-        return vector
-
-    for word in words:
-        # Generate stable hash key using fnv1a style simple hashing
-        h = abs(hash(word)) % size
-        sign = 1 if (abs(hash(word)) // size) % 2 == 0 else -1
-        vector[h] += sign
-
-    # L2 Normalization
-    norm = math.sqrt(sum(x * x for x in vector))
-    if norm > 0:
-        vector = [x / norm for x in vector]
-    return vector
+    return _canonical_hash_vectorize(text, size=size)
 
 
 _PG_SCHEMA = """
