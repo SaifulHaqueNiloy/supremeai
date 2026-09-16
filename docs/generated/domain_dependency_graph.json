@@ -1182,7 +1182,7 @@
     {
       "evidence": [
         {
-          "line": 422,
+          "line": 426,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -1612,6 +1612,16 @@
     {
       "evidence": [
         {
+          "line": 9,
+          "path": "backend/models/task_record.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 38,
           "path": "backend/worker_service.py"
         }
@@ -1624,6 +1634,16 @@
         {
           "line": 10,
           "path": "backend/api/routes/execution_policies.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/api/routes/task_gateway.py"
         }
       ],
       "source": "execution",
@@ -1712,7 +1732,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 14,
           "path": "backend/api/routes/task_gateway.py"
         }
       ],
@@ -2912,6 +2932,16 @@
     {
       "evidence": [
         {
+          "line": 199,
+          "path": "backend/api/routes/browser/_crown_jewel.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 13,
           "path": "backend/browser/autonomous_browser.py"
         }
@@ -2972,7 +3002,7 @@
     {
       "evidence": [
         {
-          "line": 24,
+          "line": 25,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3192,7 +3222,7 @@
     {
       "evidence": [
         {
-          "line": 26,
+          "line": 27,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3262,7 +3292,7 @@
     {
       "evidence": [
         {
-          "line": 27,
+          "line": 28,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3462,7 +3492,7 @@
     {
       "evidence": [
         {
-          "line": 12,
+          "line": 20,
           "path": "backend/tools/browser/browser_stealth.py"
         }
       ],
@@ -3472,7 +3502,7 @@
     {
       "evidence": [
         {
-          "line": 15,
+          "line": 16,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3702,7 +3732,7 @@
     {
       "evidence": [
         {
-          "line": 41,
+          "line": 49,
           "path": "backend/tools/browser/browser_stealth.py"
         }
       ],
@@ -3712,7 +3742,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
