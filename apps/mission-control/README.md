@@ -56,6 +56,15 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.3.1 — Render Fleet, tenant creation, alert broadcast (same PR, incremental)
+- **Render Fleet panel** on Dashboard (lazy): live service inventory from `render_list_services` (account id from dynamic settings, default `render-primary`) — region / plan / branch / suspended badges, service + dashboard links, **Latest deploy dialog** (`render_get_logs` -> deploy id, status, commit, age, raw payload), **Trigger deploy** with governed confirm (risky actions surface as HITL pending requests)
+- **Create tenant dialog** in Tenancy: name + owner email + type (admin/customer) + plan -> `tenant_create`, one-time admin-token reveal
+- **Operator Alert - Test Broadcast** in Autonomy: Telegram/Discord test messages via `notify_send_telegram` / `notify_send_discord`, optional chat-id override; targets stay tower-side (never in the console)
+- **Zero-hardcode fix #2**: `git/status` no longer hardcodes the console branch - watch branch comes from dynamic settings and the banner tracks the primary open PR branch automatically (`trackedBranch`)
+- **Quiet polls**: background tenant/client polls now use a `silent` flag on the governed call proxy - no more activity-stream/telemetry spam from `client_list`/`tenant_list` errors while a tab is open
+- **Styling/UX**: git banner shows skeletons while loading (no fallback flash), matrix zebra rows, KPI subtitles wrap on mobile (no more `...` truncation), tenancy empty-state copy updated
+- Verified in-browser: Render Fleet (1 service live, deploy dialog surfaces real `update_failed` diagnostic), tenant dialog validation, notify panel (graceful `TELEGRAM_CHAT_ID not configured` tower error surfaced), tracked-branch banner, mobile 390px + footer flush
+
 ### v1.3 — Governance & Zero-Hardcode
 - **Zero-hardcode compliance (CI policy fix)**: tower URL + admin key removed from source (`tower-client.ts`, `settings.ts`, footer, palette). Resolution is now fully dynamic: DB setting → `TOWER_URL` / `TOWER_ADMIN_KEY` env → graceful "not configured" state with operator guidance. Added `.env.example` (referenced since v1.0 — now actually present)
 - **Tenancy & Clients tab** (new): multi-tenant governance over tower tools — tenant list with suspend/activate + admin-token rotation (one-time token reveal dialog), AI client registry with provider/role/protocol enrollment (`client_register`), inline role switching (viewer/agent/admin), approve pending clients, rotate client tokens, revoke with confirm; raw-payload inspector for operators

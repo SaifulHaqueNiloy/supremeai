@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Activity, Bell, Bot, Cpu, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, ServerCog, Wrench, Zap } from "lucide-react";
+import { Activity, Bell, Bot, Cpu, ExternalLink, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, Rocket, ServerCog, Wrench, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DashboardData } from "@/lib/mission-types";
 import { callTowerTool } from "@/lib/tower-gateway";
 import { KpiCard, SectionHeader, StatusDot, MetricBadge, JsonViewer, ago, serviceIcon } from "./widgets";
@@ -180,7 +182,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                       {filteredServices.map((s) => {
                         const { Icon, cls } = serviceIcon(s.provider);
                         return (
-                          <TableRow key={s.provider} className="text-sm transition-colors hover:bg-primary/5">
+                          <TableRow key={s.provider} className="text-sm transition-colors odd:bg-muted/10 hover:bg-primary/5">
                             <TableCell className="max-w-[240px] py-2">
                               <span className="flex items-center gap-2">
                                 <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} aria-hidden />
@@ -258,10 +260,11 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
         </motion.div>
       </div>
 
-      {/* Dependency map + AI provider pools + philosophy strip */}
+      {/* Dependency map + AI provider pools + Render fleet + philosophy strip */}
       <div className="grid gap-6 lg:grid-cols-2">
         <DependencyMap />
         <AiProviderPools />
+        <RenderFleet className="lg:col-span-2" />
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
@@ -477,5 +480,255 @@ function DependencyMap() {
         </CollapsibleContent>
       </Card>
     </Collapsible>
+  );
+}
+
+/* ── Render fleet (lazy: render_list_services + deploy info/trigger) ── */
+
+interface RenderService {
+  id: string;
+  name: string;
+  url: string | null;
+  dashboardUrl: string | null;
+  region: string | null;
+  plan: string | null;
+  suspended: boolean;
+  branch: string | null;
+  updatedAt: string | null;
+}
+
+function normalizeServices(payload: unknown): RenderService[] {
+  let list: Record<string, unknown>[] = [];
+  if (Array.isArray(payload)) list = payload as Record<string, unknown>[];
+  else if (payload && typeof payload === "object") {
+    const rec = payload as Record<string, unknown>;
+    for (const k of ["services", "items", "data", "results"]) {
+      if (Array.isArray(rec[k])) { list = rec[k] as Record<string, unknown>[]; break; }
+    }
+  }
+  return list
+    .map((row) => {
+      const s = (row.service ?? row) as Record<string, unknown>;
+      const det = (s.serviceDetails ?? {}) as Record<string, unknown>;
+      return {
+        id: String(s.id ?? s.serviceId ?? ""),
+        name: String(s.name ?? s.slug ?? s.id ?? "service"),
+        url: typeof s.url === "string" ? s.url : null,
+        dashboardUrl: typeof s.dashboardUrl === "string" ? s.dashboardUrl : null,
+        region: typeof det.region === "string" ? det.region : null,
+        plan: typeof det.plan === "string" ? det.plan : null,
+        suspended: String(s.suspended ?? "not_suspended") === "suspended",
+        branch: typeof s.branch === "string" ? s.branch : null,
+        updatedAt: typeof s.updatedAt === "string" ? s.updatedAt : null,
+      };
+    })
+    .filter((s) => s.id);
+}
+
+function RenderFleet({ className }: { className?: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [infoFor, setInfoFor] = React.useState<RenderService | null>(null);
+
+  const { data: settings } = useQuery({
+    queryKey: ["settings"],
+    queryFn: async () => (await fetch("/api/settings")).json() as Promise<{ renderAccountId: string }>,
+    staleTime: 120_000,
+  });
+
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["render-fleet", settings?.renderAccountId],
+    queryFn: async (): Promise<RenderService[]> => {
+      const r = await callTowerTool("render_list_services", { accountId: settings?.renderAccountId || "render-primary" }, { silent: true });
+      return normalizeServices(r.result);
+    },
+    enabled: open && Boolean(settings),
+    refetchInterval: 300_000,
+  });
+
+  const services = data ?? [];
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className={className}>
+      <Card>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer select-none pb-3 transition-colors hover:bg-muted/30">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Rocket className="h-4 w-4 text-primary" />
+              Render Fleet
+              {services.length > 0 && <Badge variant="secondary" className="text-[10px]">{services.length} service{services.length === 1 ? "" : "s"}</Badge>}
+              {services.some((s) => s.suspended) && <MetricBadge tone="warn">suspended</MetricBadge>}
+              <span className="ml-auto flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
+                {open ? "collapse" : "expand from tower"}
+                {isFetching && <RefreshCw className="h-3 w-3 animate-spin" />}
+              </span>
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-1">
+            {isLoading ? (
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}
+              </div>
+            ) : services.length === 0 ? (
+              <p className="py-6 text-center text-xs text-muted-foreground">
+                No Render services reported (check the account id in Settings — default render-primary).
+              </p>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {services.map((s, i) => (
+                  <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.18, delay: Math.min(i * 0.05, 0.3) }}
+                    className="flex flex-col gap-2 rounded-lg border bg-muted/20 p-3 transition-colors hover:border-primary/40"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold" title={s.name}>{s.name}</p>
+                        <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{s.id}</p>
+                      </div>
+                      <span className={`inline-flex shrink-0 items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide ${s.suspended ? "text-amber-500" : "text-emerald-500"}`}>
+                        <StatusDot status={s.suspended ? "sleeping" : "healthy"} /> {s.suspended ? "suspended" : "live"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.region && <MetricBadge>{s.region}</MetricBadge>}
+                      {s.plan && <MetricBadge tone={s.plan === "free" ? "good" : "default"}>{s.plan}</MetricBadge>}
+                      {s.branch && <MetricBadge>ↈ {s.branch}</MetricBadge>}
+                    </div>
+                    <div className="mt-auto flex flex-wrap items-center gap-1.5 border-t pt-2">
+                      <Button size="sm" variant="outline" className="h-7 px-2 text-[11px]" onClick={() => setInfoFor(s)}>
+                        Latest deploy
+                      </Button>
+                      <TriggerDeploy serviceId={s.id} serviceName={s.name} />
+                      {s.url && (
+                        <a href={s.url} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground transition-colors hover:text-primary" aria-label={`Open ${s.name}`}>
+                          <ExternalLink className="h-3 w-3" /> url
+                        </a>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            <div className="mt-3 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={() => refetch()} disabled={isFetching}>
+                <RefreshCw className={`mr-1.5 h-3 w-3 ${isFetching ? "animate-spin" : ""}`} /> Re-scan fleet
+              </Button>
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+
+      {/* Latest deploy info dialog */}
+      <DeployInfoDialog service={infoFor} onClose={() => setInfoFor(null)} />
+    </Collapsible>
+  );
+}
+
+interface DeployInfo {
+  id: string | null;
+  status: string | null;
+  commitMessage: string | null;
+  commitId: string | null;
+  createdAt: string | null;
+  raw: unknown;
+}
+
+function DeployInfoDialog({ service, onClose }: { service: RenderService | null; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["deploy-info", service?.id],
+    enabled: Boolean(service),
+    queryFn: async (): Promise<DeployInfo> => {
+      const r = await callTowerTool("render_get_logs", { accountId: "render-primary", serviceId: service!.id }, { silent: true });
+      const payload = (r.result ?? {}) as Record<string, unknown>;
+      const dep = (payload.latestDeploy ?? payload.deploy ?? {}) as Record<string, unknown>;
+      const commit = (dep.commit ?? {}) as Record<string, unknown>;
+      return {
+        id: typeof dep.id === "string" ? dep.id : null,
+        status: typeof dep.status === "string" ? dep.status : null,
+        commitMessage: typeof commit.message === "string" ? commit.message.split("\n")[0] : null,
+        commitId: typeof commit.id === "string" ? commit.id.slice(0, 7) : null,
+        createdAt: typeof dep.createdAt === "string" ? dep.createdAt : typeof dep.finishedAt === "string" ? dep.finishedAt : null,
+        raw: r.result,
+      };
+    },
+  });
+
+  return (
+    <Dialog open={Boolean(service)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Rocket className="h-4 w-4 text-primary" /> Latest deploy — {service?.name}
+          </DialogTitle>
+          <DialogDescription>
+            Render v1 returns latest deploy info (full log streaming is not exposed by the API).
+          </DialogDescription>
+        </DialogHeader>
+        {isLoading || !data ? (
+          <div className="space-y-2">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        ) : (
+          <div className="space-y-2.5 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              {data.id && <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px]">{data.id}</code>}
+              {data.status && (
+                <MetricBadge tone={/fail|error|cancel|deactivate/i.test(data.status) ? "bad" : data.status === "live" ? "good" : "warn"}>
+                  {data.status}
+                </MetricBadge>
+              )}
+              {data.createdAt && <span className="text-xs text-muted-foreground">{ago(data.createdAt)}</span>}
+            </div>
+            {data.commitMessage && (
+              <p className="rounded-lg border bg-muted/30 p-2.5 text-xs leading-relaxed">
+                <span className="font-mono text-primary">{data.commitId}</span> — {data.commitMessage}
+              </p>
+            )}
+            <JsonViewer data={data.raw} maxHeight={220} />
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function TriggerDeploy({ serviceId, serviceName }: { serviceId: string; serviceName: string }) {
+  const qc = useQueryClient();
+  const deploy = useMutation({
+    mutationFn: async () => callTowerTool("action_render_deploy", { serviceId }),
+    onSuccess: (r) => {
+      if (r.ok) toast.success(`Deploy queued for ${serviceName} (${r.durationMs}ms)`);
+      else toast.error(`Deploy rejected: ${(r.error ?? "policy").slice(0, 90)}`);
+      qc.invalidateQueries({ queryKey: ["render-fleet"] });
+    },
+  });
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button size="sm" variant="outline" className="h-7 px-2 text-[11px] text-amber-600 hover:text-amber-500" disabled={deploy.isPending}>
+          {deploy.isPending ? "Queueing…" : "Trigger deploy"}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Deploy {serviceName}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Triggers a fresh deployment of the current branch via the governed policy engine. Risky actions may require HITL approval — you will see a pending request on the Autonomy tab.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction className="bg-amber-600 hover:bg-amber-700" onClick={() => deploy.mutate()}>
+            Trigger deploy
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

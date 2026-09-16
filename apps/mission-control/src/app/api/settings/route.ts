@@ -11,6 +11,7 @@ export async function GET() {
     towerKeyMasked: maskKey(s.towerKey),
     githubRepo: s.githubRepo,
     watchBranch: s.watchBranch,
+    renderAccountId: s.renderAccountId,
     autoWake: s.autoWake === "true",
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,
@@ -25,6 +26,7 @@ export async function PUT(request: Request) {
     towerKey: string; // only updated when a non-masked new value arrives
     githubRepo: string;
     watchBranch: string;
+    renderAccountId: string;
     autoWake: boolean;
     autoSyncPrs: boolean;
     refreshIntervalSec: number;
@@ -37,6 +39,7 @@ export async function PUT(request: Request) {
   if (body.towerKey && !body.towerKey.includes("••")) updates.towerKey = body.towerKey.trim();
   if (body.githubRepo) updates.githubRepo = body.githubRepo.trim();
   if (body.watchBranch) updates.watchBranch = body.watchBranch.trim();
+  if (body.renderAccountId) updates.renderAccountId = body.renderAccountId.trim();
   if (typeof body.autoWake === "boolean") updates.autoWake = String(body.autoWake);
   if (typeof body.autoSyncPrs === "boolean") updates.autoSyncPrs = String(body.autoSyncPrs);
   if (typeof body.refreshIntervalSec === "number" && body.refreshIntervalSec >= 10 && body.refreshIntervalSec <= 600)
@@ -50,6 +53,7 @@ export async function PUT(request: Request) {
     towerKeyMasked: maskKey(s.towerKey),
     githubRepo: s.githubRepo,
     watchBranch: s.watchBranch,
+    renderAccountId: s.renderAccountId,
     autoWake: s.autoWake === "true",
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,

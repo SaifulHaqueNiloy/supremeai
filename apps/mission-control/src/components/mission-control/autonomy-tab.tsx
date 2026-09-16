@@ -3,12 +3,15 @@
 import * as React from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertTriangle, CheckCircle2, Bot, PowerOff, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Bot, Megaphone, PowerOff, Send, ShieldCheck, XCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { callTowerTool } from "@/lib/tower-gateway";
 import { JsonViewer, SectionHeader, StatusDot, ago } from "./widgets";
@@ -219,6 +222,92 @@ export function AutonomyTab() {
           </CardContent>
         </Card>
       </div>
+
+      <NotifyTest />
     </div>
+  );
+}
+
+/* ── Notify test panel (telegram/discord via governed tower tools) ── */
+function NotifyTest() {
+  const [channel, setChannel] = React.useState("telegram");
+  const [message, setMessage] = React.useState("");
+  const [chatId, setChatId] = React.useState("");
+  const [result, setResult] = React.useState<unknown>(null);
+
+  const send = useMutation({
+    mutationFn: async () => {
+      const args: Record<string, unknown> = { message: message.trim() };
+      if (channel === "telegram" && chatId.trim()) args.chatId = chatId.trim();
+      return callTowerTool(channel === "telegram" ? "notify_send_telegram" : "notify_send_discord", args);
+    },
+    onSuccess: (r) => {
+      setResult(r.result ?? r.error ?? null);
+      if (r.ok) {
+        toast.success(`Alert sent via ${channel} (${r.durationMs}ms)`);
+        setMessage("");
+      } else {
+        toast.error(`Send failed: ${(r.error ?? "unknown").slice(0, 90)}`);
+      }
+    },
+    onError: (e) => toast.error(String(e)),
+  });
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Megaphone className="h-4 w-4 text-primary" />
+          Operator Alert — Test Broadcast
+          <Badge variant="secondary" className="text-[10px]">notify_*</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="grid w-full max-w-[180px] gap-1.5">
+            <Label htmlFor="notifyChannel">Channel</Label>
+            <Select value={channel} onValueChange={setChannel}>
+              <SelectTrigger id="notifyChannel" aria-label="Alert channel"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="telegram">Telegram</SelectItem>
+                <SelectItem value="discord">Discord</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid flex-1 gap-1.5">
+            <Label htmlFor="notifyMsg">Message</Label>
+            <Input
+              id="notifyMsg"
+              placeholder="e.g. Mission Control deploy test ✅"
+              maxLength={channel === "telegram" ? 4000 : 1900}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && message.trim() && !send.isPending) send.mutate();
+              }}
+            />
+          </div>
+          {channel === "telegram" && (
+            <div className="grid w-full max-w-[170px] gap-1.5">
+              <Label htmlFor="notifyChat">Chat ID</Label>
+              <Input
+                id="notifyChat"
+                placeholder="override (optional)"
+                value={chatId}
+                onChange={(e) => setChatId(e.target.value)}
+              />
+            </div>
+          )}
+          <Button disabled={!message.trim() || send.isPending} onClick={() => send.mutate()}>
+            <Send className="mr-1.5 h-3.5 w-3.5" />
+            {send.isPending ? "Sending…" : "Send alert"}
+          </Button>
+        </div>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Targets are configured on the tower (TELEGRAM_CHAT_ID / Discord webhook) — never stored in this console.
+        </p>
+        {result != null && <div className="mt-3"><JsonViewer data={result} maxHeight={140} /></div>}
+      </CardContent>
+    </Card>
   );
 }

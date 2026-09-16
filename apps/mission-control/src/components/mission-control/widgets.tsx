@@ -111,7 +111,7 @@ export function KpiCard({
             ) : (
               <p className="mt-1 truncate font-mono text-2xl font-semibold tabular-nums">{value}</p>
             )}
-            {sub && !loading && <p className="mt-1 truncate text-xs text-muted-foreground">{sub}</p>}
+            {sub && !loading && <p className="mt-1 line-clamp-2 text-xs leading-snug text-muted-foreground">{sub}</p>}
           </div>
           {icon && (
             <div className={cn(

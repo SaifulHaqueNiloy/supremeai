@@ -134,37 +134,61 @@ export function GitTab() {
       {/* Main head + watch banner */}
       <Card className="overflow-hidden">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2 text-primary">
-              <GitBranch className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">
-                {data?.defaultBranch ?? "main"} <span className="font-mono text-xs text-muted-foreground">· {data?.mainHeadSha?.slice(0, 7) ?? "…"} </span>
-              </p>
-              <p className="text-xs text-muted-foreground">
-                repo SaifulHaqueNiloy/supremeai · branch <span className="font-mono">{data?.branch ?? "feat/mission-control-console"}</span>
-                {data?.checkedAt ? ` · checked ${ago(data.checkedAt)}` : ""}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {conflicts.length === 0 && stale.length === 0 && (
-              <Badge variant="default" className="gap-1.5 bg-emerald-600/90 hover:bg-emerald-600/90">
-                <ShieldCheck className="h-3.5 w-3.5" /> No conflicts
-              </Badge>
-            )}
-            {conflicts.length > 0 && (
-              <Badge variant="destructive" className="gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" /> {conflicts.length} conflict(s)
-              </Badge>
-            )}
-            {stale.length > 0 && (
-              <Badge variant="secondary" className="gap-1.5">
-                <GitCommitHorizontal className="h-3.5 w-3.5" /> {stale.length} behind main
-              </Badge>
-            )}
-          </div>
+          {!data ? (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <GitBranch className="h-5 w-5" />
+                </div>
+                <div className="space-y-1.5">
+                  <Skeleton className="h-4 w-36" />
+                  <Skeleton className="h-3 w-56" />
+                </div>
+              </div>
+              <Skeleton className="h-6 w-28 rounded-full" />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                  <GitBranch className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 text-sm font-semibold">
+                    {data.defaultBranch} <span className="font-mono text-xs text-muted-foreground">· {data.mainHeadSha?.slice(0, 7)}</span>
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {data.trackedBranch ? (
+                      <>
+                        tracking PR branch <span className="font-mono text-foreground/80">{data.trackedBranch}</span>
+                        {" \u00b7 "}{data.prs.filter((p) => p.state === "open").length} open PR{data.prs.filter((p) => p.state === "open").length === 1 ? "" : "s"}
+                      </>
+                    ) : (
+                      <>watch branch <span className="font-mono">{data.branch}</span>{" \u00b7 "}no open PRs</>
+                    )}
+                    {data.checkedAt ? ` \u00b7 checked ${ago(data.checkedAt)}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {conflicts.length === 0 && stale.length === 0 && (
+                  <Badge variant="default" className="gap-1.5 bg-emerald-600/90 hover:bg-emerald-600/90">
+                    <ShieldCheck className="h-3.5 w-3.5" /> No conflicts
+                  </Badge>
+                )}
+                {conflicts.length > 0 && (
+                  <Badge variant="destructive" className="gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" /> {conflicts.length} conflict(s)
+                  </Badge>
+                )}
+                {stale.length > 0 && (
+                  <Badge variant="secondary" className="gap-1.5">
+                    <GitCommitHorizontal className="h-3.5 w-3.5" /> {stale.length} behind main
+                  </Badge>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

@@ -10,6 +10,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   githubRepo: "SaifulHaqueNiloy/supremeai",
   githubToken: "", // falls back to env GITHUB_TOKEN
   watchBranch: "main",
+  renderAccountId: "render-primary", // tower resource id for the Render fleet
   autoWake: "true",
   autoSyncPrs: "true",
   refreshIntervalSec: "30",

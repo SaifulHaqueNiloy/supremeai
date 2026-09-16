@@ -98,6 +98,19 @@ export function SettingsTab() {
               <Input id="branch" value={draft.watchBranch} onChange={(e) => update("watchBranch", e.target.value)} className="font-mono text-xs" />
             </div>
           </div>
+          <div className="grid gap-2">
+            <Label htmlFor="renderAccount">Render Account ID (tower resource)</Label>
+            <Input
+              id="renderAccount"
+              value={draft.renderAccountId}
+              onChange={(e) => update("renderAccountId", e.target.value)}
+              className="font-mono text-xs"
+              placeholder="render-primary"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Used by the Render Fleet panel (render_list_services / deploy tools).
+            </p>
+          </div>
         </CardContent>
       </Card>
 

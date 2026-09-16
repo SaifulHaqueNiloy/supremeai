@@ -157,7 +157,7 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
   const tenants = useQuery({
     queryKey: ["tenants"],
     queryFn: async () => {
-      const r = await callTowerTool("tenant_list", {});
+      const r = await callTowerTool("tenant_list", {}, { silent: true });
       if (!r.ok && r.error?.includes("not configured")) onToolError?.(r.error);
       return extractList(r.result, ["tenants", "items", "data", "results"]);
     },
@@ -168,7 +168,7 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
   const clients = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
-      const r = await callTowerTool("client_list", {});
+      const r = await callTowerTool("client_list", {}, { silent: true });
       if (!r.ok && r.error?.includes("not configured")) onToolError?.(r.error);
       return extractList(r.result, ["clients", "items", "data", "results"]);
     },
@@ -235,6 +235,28 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
     },
   });
 
+  /* create-tenant dialog state */
+  const [tenantOpen, setTenantOpen] = React.useState(false);
+  const [tn, setTn] = React.useState({ name: "", ownerEmail: "", type: "customer", plan: "free" });
+  const createTenant = useMutation({
+    mutationFn: async () =>
+      callTowerTool("tenant_create", {
+        name: tn.name.trim(),
+        ownerEmail: tn.ownerEmail.trim(),
+        type: tn.type,
+        plan: tn.plan.trim() || "free",
+      }),
+    onSuccess: (r) => {
+      setTenantOpen(false);
+      setTn({ name: "", ownerEmail: "", type: "customer", plan: "free" });
+      invalidate();
+      const t = tokenFrom(r.result);
+      if (r.ok && t) setTokenReveal({ token: t, title: "Tenant created — admin token" });
+      else if (r.ok) toast.success("Tenant created");
+      else toast.error(`Tenant create failed: ${(r.error ?? "unknown").slice(0, 90)}`);
+    },
+  });
+
   const tenantRows = tenants.data ?? [];
   const clientRows = clients.data ?? [];
   const suspended = tenantRows.filter((t) => String(t.status ?? "").toLowerCase() === "suspended").length;
@@ -246,9 +268,14 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
         title="Tenancy & Clients"
         desc="Multi-tenant governance — every AI client registered, scoped and revocable"
         right={
-          <Button size="sm" onClick={() => setRegOpen(true)}>
-            <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Register client
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setTenantOpen(true)}>
+              <Building2 className="mr-1.5 h-3.5 w-3.5" /> Create tenant
+            </Button>
+            <Button size="sm" onClick={() => setRegOpen(true)}>
+              <UserPlus className="mr-1.5 h-3.5 w-3.5" /> Register client
+            </Button>
+          </div>
         }
       />
 
@@ -285,7 +312,7 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
                 <p className="max-w-xs text-xs">
                   {tenants.isError
                     ? "tenant_list unavailable — tower unreachable or not configured."
-                    : "No tenants yet — create one from the Tower Explorer with tenant_create."}
+                    : "No tenants yet — hit “Create tenant” above to spin one up in seconds."}
                 </p>
               </div>
             ) : (
@@ -578,6 +605,70 @@ export function TenancyTab({ onToolError }: TenancyTabProps = {}) {
             <Button disabled={!reg.name.trim() || register.isPending} onClick={() => register.mutate()}>
               <UserPlus className="mr-2 h-4 w-4" />
               {register.isPending ? "Registering…" : "Register"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create tenant dialog */}
+      <Dialog open={tenantOpen} onOpenChange={setTenantOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create tenant</DialogTitle>
+            <DialogDescription>
+              Spin up an isolated tenant with its own admin token — internal team or external customer.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid gap-2">
+              <Label htmlFor="tenantName">Tenant name</Label>
+              <Input
+                id="tenantName"
+                placeholder="e.g. Saiful's Startup"
+                value={tn.name}
+                onChange={(e) => setTn({ ...tn, name: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tenantEmail">Owner email</Label>
+              <Input
+                id="tenantEmail"
+                type="email"
+                placeholder="owner@example.com"
+                value={tn.ownerEmail}
+                onChange={(e) => setTn({ ...tn, ownerEmail: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2">
+                <Label>Type</Label>
+                <Select value={tn.type} onValueChange={(v) => setTn({ ...tn, type: v })}>
+                  <SelectTrigger aria-label="Tenant type"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer">customer</SelectItem>
+                    <SelectItem value="admin">admin (internal)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="tenantPlan">Plan</Label>
+                <Input
+                  id="tenantPlan"
+                  placeholder="free"
+                  value={tn.plan}
+                  onChange={(e) => setTn({ ...tn, plan: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTenantOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!tn.name.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tn.ownerEmail.trim()) || createTenant.isPending}
+              onClick={() => createTenant.mutate()}
+            >
+              <Building2 className="mr-2 h-4 w-4" />
+              {createTenant.isPending ? "Creating…" : "Create tenant"}
             </Button>
           </DialogFooter>
         </DialogContent>
