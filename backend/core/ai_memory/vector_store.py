@@ -42,7 +42,13 @@ class FreeTierOptimizedVectorStore:
 
     BATCH_SIZE = 50  # Smaller batches for less memory
     MAX_RESULTS = 20  # Limit results to save memory
-    EMBEDDING_DIM = 1536  # OpenAI ada-002 dimension
+    # Canonical production contract is `ai_memory.embedding vector(384)`
+    # (see models/ai_memory.EMBEDDING_DIMENSIONS and core/embeddings._PG_DIM,
+    # both enforced by tests/models/test_ai_memory_schema_contract.py).
+    # The old value here (1536, OpenAI ada-002) was stale and drifted from
+    # every writer — any consumer using it would create dimension-mismatched
+    # vectors that pgvector would reject.
+    EMBEDDING_DIM = 384
 
     def __init__(self, supabase_url: str, supabase_key: str):
         self.client = create_client(supabase_url, supabase_key)
