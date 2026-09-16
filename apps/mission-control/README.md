@@ -56,6 +56,13 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.8 — Per-Provider Overrides & Inline Docs
+- **Per-provider watchdog overrides** (Settings): mute noisy providers, or give each its own cooldown / notify channel — dynamic JSON setting (`watchdogOverrides`), validated + normalized server-side, prefix-aware matching (`cloudflare` covers `Cloudflare (DNS + Workers + Analytics)`); muted providers are skipped entirely (no journal, no broadcast)
+- **Matrix mute indicator**: dashboard rows show an eye-off badge for providers muted via overrides
+- **Inline doc reader** (Tower Explorer → Docs Sources): per-source "Read" button opens a dialog that fetches full page content via tower `docs_fetch` — skeleton loading, word count, copy-to-clipboard, original link; journaled (operator action)
+- **Command palette**: keyboard-hints footer (↑↓ navigate · ↵ run · esc close) + new **Copy diagnostics to clipboard** action (tower health + fleet statuses + git snapshot as JSON)
+- Footer v1.8
+
 ### v1.7 — Reliability History & Docs Registry
 - **Watchdog History panel** (Autonomy tab): filterable reliability audit over every automated transition + notify attempt (kind filters: down / degraded / recovered / notify), per-provider summary chips with event counts (↓ down ≈ degraded ↑ recovered ✉ notifies) that double as provider filters, animated timeline, new `GET /api/watchdog/history` (local journal — tower-independent)
 - **Notify channel test button** (Settings): send-and-see-result test via the selected channel, graceful tower-side error surfacing (journaled)

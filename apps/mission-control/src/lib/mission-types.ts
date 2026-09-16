@@ -117,5 +117,7 @@ export interface SettingsData {
   watchdogEnabled: boolean;
   watchdogNotifyChannel: "none" | "telegram" | "discord";
   watchdogCooldownMin: number;
+  /** Per-provider watchdog overrides — JSON string (Dynamic by Design). */
+  watchdogOverrides: string;
   theme: "dark" | "light" | "system";
 }

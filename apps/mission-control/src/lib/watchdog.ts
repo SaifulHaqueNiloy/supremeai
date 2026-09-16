@@ -30,6 +30,63 @@ export interface ServiceTransition {
 export const NOTIFY_CHANNELS = ["none", "telegram", "discord"] as const;
 export type NotifyChannel = (typeof NOTIFY_CHANNELS)[number];
 
+/**
+ * Per-provider watchdog overrides (dynamic setting `watchdogOverrides`, JSON).
+ * Lets the operator mute noisy providers, give them a custom cooldown, or a
+ * dedicated notify channel — without touching code. Example:
+ *   {"cloudflare":{"enabled":false},"render":{"cooldownMin":60,"channel":"discord"}}
+ */
+export interface WatchdogOverride {
+  enabled?: boolean;
+  cooldownMin?: number;
+  channel?: NotifyChannel;
+}
+export type WatchdogOverridesMap = Record<string, WatchdogOverride>;
+
+/** Defensive parser: never throws, always returns a valid map (≤64 providers). */
+export function parseWatchdogOverrides(raw: string | undefined | null): WatchdogOverridesMap {
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    const out: WatchdogOverridesMap = {};
+    for (const [k, v] of Object.entries(parsed as Record<string, unknown>).slice(0, 64)) {
+      if (!v || typeof v !== "object" || Array.isArray(v)) continue;
+      const r = v as Record<string, unknown>;
+      const o: WatchdogOverride = {};
+      if (typeof r.enabled === "boolean") o.enabled = r.enabled;
+      if (typeof r.cooldownMin === "number" && r.cooldownMin >= 0 && r.cooldownMin <= 240)
+        o.cooldownMin = Math.floor(r.cooldownMin);
+      if (typeof r.channel === "string" && (NOTIFY_CHANNELS as readonly string[]).includes(r.channel))
+        o.channel = r.channel as NotifyChannel;
+      if (Object.keys(o).length > 0) out[k.trim().toLowerCase()] = o;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Match an override key against a provider name — case-insensitive and
+ * prefix-aware, because tower provider names are descriptive
+ * ("Cloudflare (DNS + Workers + Analytics)") while operators type short
+ * keys ("cloudflare"). An exact match always wins via map iteration order
+ * only if listed first; prefix matches are accepted for convenience.
+ */
+export function overrideMatches(key: string, provider: string): boolean {
+  const k = key.trim().toLowerCase();
+  const p = provider.trim().toLowerCase();
+  return p === k || p.startsWith(k);
+}
+
+function overrideFor(map: WatchdogOverridesMap, provider: string): WatchdogOverride | undefined {
+  for (const [key, ov] of Object.entries(map)) {
+    if (overrideMatches(key, provider)) return ov;
+  }
+  return undefined;
+}
+
 async function latestSnapshotStatus(provider: string): Promise<string | null> {
   const snap = await db.serviceSnapshot.findFirst({
     where: { provider },
@@ -85,10 +142,17 @@ export async function handleServiceTransitions(transitions: ServiceTransition[])
   }
   if (settings.watchdogEnabled === "false") return;
 
+  const overrides = parseWatchdogOverrides(settings.watchdogOverrides);
   const channel = (settings.watchdogNotifyChannel ?? "none") as NotifyChannel;
   const cooldownMin = Math.max(0, Math.min(240, Number(settings.watchdogCooldownMin) || 15));
 
   for (const t of transitions) {
+    // Per-provider override wins over global defaults (mute / custom cooldown / channel)
+    const ov = overrideFor(overrides, t.provider);
+    if (ov?.enabled === false) continue; // muted provider — skip entirely
+    const effChannel = ov?.channel ?? channel;
+    const effCooldown = ov?.cooldownMin ?? cooldownMin;
+
     const icon = t.kind === "down" ? "🔴" : t.kind === "degraded" ? "🟠" : "🟢";
     const title =
       t.kind === "down"
@@ -107,25 +171,25 @@ export async function handleServiceTransitions(transitions: ServiceTransition[])
     }).catch(() => undefined);
 
     // Broadcast only for actionable transitions + cooldown window
-    if (channel === "none" || t.kind === "recovered") continue;
-    if (await recentlyAlerted(t.provider, t.kind, cooldownMin)) continue;
+    if (effChannel === "none" || t.kind === "recovered") continue;
+    if (await recentlyAlerted(t.provider, t.kind, effCooldown)) continue;
 
     const message = `${icon} SupremeAI watchdog: ${t.provider} ${t.kind.toUpperCase()} (${t.from} → ${t.to}) at ${new Date().toISOString().slice(11, 19)} UTC${t.note ? ` — ${t.note}` : ""}`;
     try {
-      const tool = channel === "telegram" ? "notify_send_telegram" : "notify_send_discord";
-      const res = await callTowerTool(tool, { message: message.slice(0, channel === "telegram" ? 4000 : 1900) });
+      const tool = effChannel === "telegram" ? "notify_send_telegram" : "notify_send_discord";
+      const res = await callTowerTool(tool, { message: message.slice(0, effChannel === "telegram" ? 4000 : 1900) });
       await logActivity(
         "watchdog",
         res.ok ? "success" : "warn",
-        `Watchdog notify via ${channel} ${res.ok ? "sent" : "failed"}`,
+        `Watchdog notify via ${effChannel} ${res.ok ? "sent" : "failed"}`,
         res.ok ? `${t.provider} ${t.kind} broadcast delivered` : (res.error ?? "tower rejected").slice(0, 200),
-        { provider: t.provider, kind: t.kind, channel, notified: res.ok },
+        { provider: t.provider, kind: t.kind, channel: effChannel, notified: res.ok },
       ).catch(() => undefined);
     } catch (err) {
-      await logActivity("watchdog", "warn", `Watchdog notify via ${channel} errored`, String(err).slice(0, 200), {
+      await logActivity("watchdog", "warn", `Watchdog notify via ${effChannel} errored`, String(err).slice(0, 200), {
         provider: t.provider,
         kind: t.kind,
-        channel,
+        channel: effChannel,
         notified: false,
       }).catch(() => undefined);
     }

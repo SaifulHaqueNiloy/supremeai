@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { Activity, Bell, Bot, Cpu, ExternalLink, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, Rocket, ServerCog, ShieldCheck, Wrench, Zap } from "lucide-react";
+import { Activity, Bell, Bot, Cpu, ExternalLink, EyeOff, Gauge, GitPullRequest, Hammer, RadioTower, RefreshCw, Rocket, ServerCog, ShieldCheck, Wrench, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,10 +36,31 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
   const qc = useQueryClient();
   const { data: settings } = useQuery({
     queryKey: ["settings"],
-    queryFn: async () => (await fetch("/api/settings")).json() as Promise<{ refreshIntervalSec: number }>,
+    queryFn: async () =>
+      (await fetch("/api/settings")).json() as Promise<{ refreshIntervalSec: number; watchdogOverrides?: string }>,
     staleTime: 120_000,
   });
   const refreshMs = Math.max(10, settings?.refreshIntervalSec ?? 45) * 1000;
+
+  // Providers muted via per-provider watchdog overrides (surfaced as eye-off in the matrix).
+  // Prefix-aware: "cloudflare" mutes "Cloudflare (DNS + Workers + Analytics)" too.
+  const mutedProviderKeys = React.useMemo(() => {
+    try {
+      const obj = JSON.parse(settings?.watchdogOverrides ?? "{}") as Record<string, { enabled?: boolean }>;
+      return Object.entries(obj)
+        .filter(([, o]) => o?.enabled === false)
+        .map(([p]) => p.toLowerCase());
+    } catch {
+      return [] as string[];
+    }
+  }, [settings?.watchdogOverrides]);
+  const isMuted = React.useCallback(
+    (provider: string) => {
+      const p = provider.trim().toLowerCase();
+      return mutedProviderKeys.some((k) => p === k || p.startsWith(k));
+    },
+    [mutedProviderKeys],
+  );
 
   const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
     queryKey: ["dashboard"],
@@ -233,6 +254,14 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
                               <span className="flex items-center gap-2">
                                 <Icon className={`h-3.5 w-3.5 shrink-0 ${cls}`} aria-hidden />
                                 <span className="truncate font-medium">{s.provider}</span>
+                                {isMuted(s.provider) && (
+                                  <span
+                                    title="Watchdog muted via per-provider override"
+                                    aria-label="watchdog muted"
+                                  >
+                                    <EyeOff className="h-3 w-3 text-amber-500" />
+                                  </span>
+                                )}
                               </span>
                             </TableCell>
                             <TableCell className="py-2">

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import {
   Bot,
   Brain,
+  ClipboardCopy,
   Download,
   ExternalLink,
   GitMerge,
@@ -98,6 +99,24 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
       },
     );
 
+  const copyDiagnostics = () =>
+    run(async () => {
+      const [dash, git] = await Promise.all([
+        fetch("/api/dashboard", { cache: "no-store" }).then((r) => r.json()).catch(() => null),
+        fetch("/api/git/status", { cache: "no-store" }).then((r) => r.json()).catch(() => null),
+      ]);
+      const diag = {
+        exportedAt: new Date().toISOString(),
+        tower: dash?.tower,
+        services: dash?.services?.map((s: { provider: string; status: string; latencyMs: number | null }) => ({ provider: s.provider, status: s.status, latencyMs: s.latencyMs })),
+        git: git ? { branch: git.trackedBranch ?? git.branch, mainHead: git.mainHeadSha, openPrs: git.prs?.length ?? 0 } : null,
+      };
+      await navigator.clipboard
+        .writeText(JSON.stringify(diag, null, 2))
+        .then(() => toast.success("Diagnostics copied — paste anywhere"))
+        .catch(() => toast.error("Clipboard unavailable in this context"));
+    });
+
   const run = React.useCallback(
     (fn: () => void) => {
       setOpen(false);
@@ -149,6 +168,14 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
             <span className="ml-auto text-[10px] text-muted-foreground">transition alerts</span>
           </CommandItem>
           <CommandItem
+            value="copy diagnostics snapshot"
+            onSelect={copyDiagnostics}
+          >
+            <ClipboardCopy className="h-4 w-4" />
+            <span className="ml-2">Copy diagnostics to clipboard</span>
+            <span className="ml-auto text-[10px] text-muted-foreground">tower + fleet JSON</span>
+          </CommandItem>
+          <CommandItem
             value="toggle theme"
             onSelect={() =>
               run(() => {
@@ -196,6 +223,17 @@ export function CommandPalette({ open, setOpen }: { open: boolean; setOpen: (o: 
           </CommandItem>
         </CommandGroup>
       </CommandList>
+      <div
+        className="flex items-center justify-between border-t px-3 py-2 text-[10px] text-muted-foreground"
+        aria-hidden
+      >
+        <span className="flex gap-3">
+          <span><kbd className="rounded border bg-muted px-1 font-mono">↑↓</kbd> navigate</span>
+          <span><kbd className="rounded border bg-muted px-1 font-mono">↵</kbd> run</span>
+          <span><kbd className="rounded border bg-muted px-1 font-mono">esc</kbd> close</span>
+        </span>
+        <span className="font-mono">mission control · v1.8</span>
+      </div>
     </CommandDialog>
   );
 }

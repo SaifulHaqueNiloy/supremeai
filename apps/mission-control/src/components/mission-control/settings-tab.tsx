@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save, Settings2, ShieldCheck } from "lucide-react";
+import { EyeOff, Plus, Save, Settings2, ShieldCheck, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { SettingsData } from "@/lib/mission-types";
-import { SectionHeader } from "./widgets";
+import type { DashboardData, SettingsData } from "@/lib/mission-types";
+import { SectionHeader, MetricBadge } from "./widgets";
 
 export function SettingsTab() {
   const qc = useQueryClient();
@@ -176,6 +176,7 @@ export function SettingsTab() {
               <p className="text-[11px] text-muted-foreground">Per-provider suppression window (0–240).</p>
             </div>
           </div>
+          <WatchdogOverridesEditor value={draft.watchdogOverrides} onChange={(json) => update("watchdogOverrides", json)} />
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="refresh">Refresh interval (seconds)</Label>
@@ -224,6 +225,184 @@ export function SettingsTab() {
           {saveMutation.isPending ? "Saving…" : "Save settings"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+/* ── Per-provider watchdog overrides editor (Dynamic by Design) ─────── */
+interface OverrideRow {
+  provider: string;
+  enabled: boolean;
+  cooldownMin: number | null; // null = inherit global
+  channel: "inherit" | "none" | "telegram" | "discord";
+}
+
+function parseOverrideRows(json: string): OverrideRow[] {
+  try {
+    const obj = JSON.parse(json) as Record<string, Record<string, unknown>>;
+    return Object.entries(obj ?? {}).map(([provider, o]) => ({
+      provider,
+      enabled: o.enabled !== false,
+      cooldownMin: typeof o.cooldownMin === "number" ? o.cooldownMin : null,
+      channel: (typeof o.channel === "string" ? o.channel : "inherit") as OverrideRow["channel"],
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function rowsToOverridesJson(rows: OverrideRow[]): string {
+  const out: Record<string, Record<string, unknown>> = {};
+  for (const r of rows) {
+    const o: Record<string, unknown> = {};
+    // Always persist `enabled` explicitly — a brand-new all-default row must
+    // still survive serialization round-trips (client↔API↔client).
+    o.enabled = r.enabled;
+    if (r.cooldownMin != null) o.cooldownMin = r.cooldownMin;
+    if (r.channel !== "inherit") o.channel = r.channel;
+    out[r.provider.trim().toLowerCase()] = o;
+  }
+  return JSON.stringify(out);
+}
+
+function WatchdogOverridesEditor({ value, onChange }: { value: string; onChange: (json: string) => void }) {
+  const [adding, setAdding] = React.useState(false);
+  const [newProvider, setNewProvider] = React.useState("");
+  const rows = React.useMemo(() => parseOverrideRows(value), [value]);
+
+  // Live provider names come free from the shared dashboard query (deduped by react-query)
+  const { data: dash } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async (): Promise<DashboardData> => {
+      const res = await fetch("/api/dashboard", { cache: "no-store" });
+      return res.json();
+    },
+    enabled: adding && rows.length === 0,
+    staleTime: 60_000,
+  });
+  const knownProviders = (dash?.services ?? []).map((s) => s.provider).filter((p) => !rows.some((r) => r.provider === p.toLowerCase()));
+
+  const setRows = (next: OverrideRow[]) => onChange(rowsToOverridesJson(next));
+
+  const addProvider = (name: string) => {
+    const p = name.trim().toLowerCase();
+    if (!p || rows.some((r) => r.provider === p)) return;
+    setRows([...rows, { provider: p, enabled: true, cooldownMin: null, channel: "inherit" }]);
+    setNewProvider("");
+  };
+
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <EyeOff className="h-4 w-4 text-primary" />
+        <p className="text-sm font-medium">Per-provider overrides</p>
+        {rows.length > 0 && <MetricBadge>{rows.length} custom</MetricBadge>}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="ml-auto h-7 px-2 text-xs"
+          onClick={() => setAdding((v) => !v)}
+          aria-expanded={adding}
+          aria-label="Add provider override"
+        >
+          <Plus className="mr-1 h-3.5 w-3.5" /> Add
+        </Button>
+      </div>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Mute noisy providers, or give them their own cooldown / notify channel. Everything else inherits the global watchdog config above.
+      </p>
+
+      {adding && (
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={newProvider}
+            onChange={(e) => setNewProvider(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") addProvider(newProvider);
+            }}
+            placeholder="provider name — e.g. cloudflare"
+            className="h-8 text-xs"
+            list="provider-suggestions"
+            aria-label="New provider name"
+          />
+          <datalist id="provider-suggestions">
+            {knownProviders.slice(0, 24).map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+          <Button size="sm" className="h-8 shrink-0 text-xs" onClick={() => addProvider(newProvider)} disabled={!newProvider.trim()}>
+            Add override
+          </Button>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {rows.map((r, i) => (
+            <li key={r.provider} className="grid grid-cols-2 items-center gap-2 rounded-md border bg-muted/10 p-2 sm:grid-cols-[1fr_auto_auto_auto]">
+              <p className="flex min-w-0 items-center gap-1.5 text-xs font-medium">
+                {!r.enabled && <EyeOff className="h-3.5 w-3.5 shrink-0 text-amber-500" aria-label="muted" />}
+                <span className="truncate font-mono" title={r.provider}>
+                  {r.provider}
+                </span>
+                {!r.enabled && <span className="shrink-0 text-[10px] uppercase tracking-wide text-amber-500">muted</span>}
+              </p>
+              <div className="flex items-center justify-end gap-1.5 sm:justify-center">
+                <span className="text-[10px] text-muted-foreground">on</span>
+                <Switch
+                  checked={r.enabled}
+                  onCheckedChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, enabled: v } : x)))}
+                  aria-label={`Watchdog enabled for ${r.provider}`}
+                />
+              </div>
+              <Input
+                type="number"
+                min={0}
+                max={240}
+                value={r.cooldownMin ?? ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  const n = raw === "" ? null : Math.max(0, Math.min(240, Number(raw) || 0));
+                  setRows(rows.map((x, j) => (j === i ? { ...x, cooldownMin: n } : x)));
+                }}
+                placeholder="∞"
+                className="h-7 w-16 text-xs"
+                aria-label={`Cooldown override for ${r.provider}`}
+              />
+              <div className="flex items-center gap-1.5">
+                <Select
+                  value={r.channel}
+                  onValueChange={(v) => setRows(rows.map((x, j) => (j === i ? { ...x, channel: v as OverrideRow["channel"] } : x)))}
+                >
+                  <SelectTrigger className="h-7 w-[110px] text-xs" aria-label={`Notify channel for ${r.provider}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="inherit">inherit</SelectItem>
+                    <SelectItem value="none">none</SelectItem>
+                    <SelectItem value="telegram">telegram</SelectItem>
+                    <SelectItem value="discord">discord</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => setRows(rows.filter((_, j) => j !== i))}
+                  aria-label={`Remove override for ${r.provider}`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {rows.some((r) => !r.enabled) && (
+        <p className="mt-2 text-[11px] text-amber-500">
+          Muted providers are skipped entirely — transitions are neither journaled nor broadcast.
+        </p>
+      )}
     </div>
   );
 }

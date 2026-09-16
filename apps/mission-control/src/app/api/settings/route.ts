@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSettings, setSettings, maskKey } from "@/lib/settings";
+import { parseWatchdogOverrides } from "@/lib/watchdog";
 import type { SettingsData } from "@/lib/mission-types";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,7 @@ export async function GET() {
     watchdogEnabled: s.watchdogEnabled !== "false",
     watchdogNotifyChannel: (s.watchdogNotifyChannel as SettingsData["watchdogNotifyChannel"]) || "none",
     watchdogCooldownMin: Number(s.watchdogCooldownMin) || 15,
+    watchdogOverrides: JSON.stringify(parseWatchdogOverrides(s.watchdogOverrides)),
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);
@@ -38,6 +40,7 @@ export async function PUT(request: Request) {
     watchdogEnabled: boolean;
     watchdogNotifyChannel: SettingsData["watchdogNotifyChannel"];
     watchdogCooldownMin: number;
+    watchdogOverrides: string; // JSON — validated & normalized server-side
     theme: "dark" | "light" | "system";
   }> | null;
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
@@ -59,6 +62,8 @@ export async function PUT(request: Request) {
     updates.watchdogNotifyChannel = body.watchdogNotifyChannel;
   if (typeof body.watchdogCooldownMin === "number" && body.watchdogCooldownMin >= 0 && body.watchdogCooldownMin <= 240)
     updates.watchdogCooldownMin = String(Math.floor(body.watchdogCooldownMin));
+  if (typeof body.watchdogOverrides === "string" && body.watchdogOverrides.length <= 4000)
+    updates.watchdogOverrides = JSON.stringify(parseWatchdogOverrides(body.watchdogOverrides)); // normalize or reset to {}
   if (body.theme && ["dark", "light", "system"].includes(body.theme)) updates.theme = body.theme;
 
   await setSettings(updates);
@@ -76,6 +81,7 @@ export async function PUT(request: Request) {
     watchdogEnabled: s.watchdogEnabled !== "false",
     watchdogNotifyChannel: (s.watchdogNotifyChannel as SettingsData["watchdogNotifyChannel"]) || "none",
     watchdogCooldownMin: Number(s.watchdogCooldownMin) || 15,
+    watchdogOverrides: JSON.stringify(parseWatchdogOverrides(s.watchdogOverrides)),
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);

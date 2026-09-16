@@ -18,6 +18,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   watchdogEnabled: "true", // service transition alerts (dynamic)
   watchdogNotifyChannel: "none", // none | telegram | discord (tower notify tools)
   watchdogCooldownMin: "15", // per-provider alert suppression window
+  watchdogOverrides: "{}", // per-provider JSON overrides: mute / custom cooldown / channel
   theme: "dark",
 };
 
