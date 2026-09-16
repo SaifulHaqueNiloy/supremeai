@@ -2,6 +2,7 @@
 id: head-of-planning-strategic-leverage-2026-09-16
 title: "Head of Planning — Strategic Leverage Memo v1 (Constitution-Anchored Path to 'One of the Best AI Models')"
 status: active
+document_role: roadmap
 owner_circle: C1 (Code & Quality) and cross-circle (C2/C3/C5/C6) per lever
 scope: planning-department strategic memo; identifies highest-leverage next moves toward battlefield wins B1–B6 without violating the Constitution; no code changes in this document
 depends_on:

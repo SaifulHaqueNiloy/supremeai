@@ -1,3 +1,17 @@
+---
+id: pr-guardian-analysis
+subject: "PR Guardian — Improvement-Only Merge Automation"
+document_role: audit
+planning_authority: DevEx / CI Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # PR Guardian — Improvement-Only Merge Automation
 
 **Purpose**: Define how an MCP-connected guardian can review open GitHub PRs, decide “improvement vs regression,” and act accordingly — merge if improvement with no regression, otherwise close PR or fix regression before merge.

@@ -1,9 +1,14 @@
 ---
 title: SupremeAI Free-Tier Scaling Constitution & Compliance Policy
+id: free-tier-scaling-constitution-and-compliance
+document_role: policy
+planning_authority: Infrastructure Circle
 status: active
 last_verified: 2026-09-15
-supersedes: free_tier_multi_service_scale_master_plan.md
-canonical: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+canonical: candidate
+source_file: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+supersedes: []  # referenced target free_tier_multi_service_scale_master_plan.md no longer exists in repository (historical)
+superseded_by: []
 ---
 
 # SupremeAI Free-Tier Scaling Constitution & Compliance Policy

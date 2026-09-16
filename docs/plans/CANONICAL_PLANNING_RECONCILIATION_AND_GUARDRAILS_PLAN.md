@@ -2,7 +2,7 @@
 id: canonical-planning-reconciliation-guardrails-2026-09-17
 title: "Canonical Planning, Reconciliation, Evidence Lifecycle and Automated Guardrails"
 status: active
-document_role: policy_and_implementation_governance
+document_role: policy  # governance policy + §7 execution phases (role vocabulary: §3)
 planning_authority: Architecture Governance / Planning Circle
 scope: "docs/plans/-এর canonical planning, reconciliation, evidence, lifecycle ও automated guardrails"
 depends_on:
@@ -18,8 +18,7 @@ implements:
   - Structured YAML frontmatter and dynamic registry generation
   - Non-destructive, evidence-first reconciliation protocol
   - Decoupled Browser Execution vs Credential Vaulting architecture
-supersedes:
-  - Ad-hoc and unverified plan reconciliation proposals
+supersedes: []  # supersedes ad-hoc, unverified reconciliation proposals (no single repository file)
 superseded_by: []
 evidence_state: verified
 last_verified: 2026-09-17 (repository scan of docs/plans/ and backend/core/circles/)

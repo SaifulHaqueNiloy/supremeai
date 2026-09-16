@@ -1,3 +1,17 @@
+---
+id: supremeai-master-plan-canonical
+subject: "SupremeAI Master Plan & Strategic Vision — Canonical"
+document_role: architecture
+planning_authority: Architecture Circle
+canonical: true
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Master Plan & Strategic Vision — Canonical
 
 **Document ID:** `MASTER-PLAN-CANONICAL-001`  

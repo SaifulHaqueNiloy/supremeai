@@ -1,3 +1,17 @@
+---
+id: platform-oss-integration
+subject: "SupremeAI — Platform Architecture Enhancement & Open-Source Integration Plan"
+document_role: implementation
+planning_authority: Platform Circle
+canonical: false
+status: blocked
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI — Platform Architecture Enhancement & Open-Source Integration Plan
 
 ```yaml

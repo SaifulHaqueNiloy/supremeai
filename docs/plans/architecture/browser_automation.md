@@ -1,3 +1,17 @@
+---
+id: browser-automation-core
+subject: "SupremeAI Browser Automation — Canonical Plan"
+document_role: architecture
+planning_authority: CircleName.BROWSER
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Browser Automation — Canonical Plan
 
 **plan_id:** PLAN-AUTOMATION-BROWSER-001  

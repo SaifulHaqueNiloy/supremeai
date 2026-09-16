@@ -30,6 +30,15 @@ This first pass classifies overlapping plan families without deleting or moving 
 | Execution phases | Current release train | `phases/phase1_*` through `phase4_*`, Q1/yearly roadmaps, milestone trackers | Treat as historical planning lineage until reconciled with current release gates |
 | Historical/reference records | Evidence only | `phases/historical_status_snapshot*`, deployment records, troubleshooting records, reference guides | Preserve; do not use as implementation source |
 
+## 2026-09-17 automated pass (Phase 2 — canonical registry)
+
+Tooling: `scripts/governance/lint_plans.py` · Machine cache: [`plan_registry.json`](../plan_registry.json) · Inventory: [`plan_inventory_2026-09-17.md`](./plan_inventory_2026-09-17.md)
+
+- Frontmatter conformance sweep executed: canonical governance plan self-conformance fixed (`document_role: policy`, `supersedes: []` with prose moved to comments), PLAN_001–004 colon-bearing prose values quoted, missing `document_role`/`id`/`planning_authority` backfilled on the free-tier v4.1 analysis and scaling constitution (their `canonical:` self-path fields re-typed as boolean + `source_file`, dead `supersedes` targets documented as no-longer-in-repository), and root canonical docs (lifecycle policy, traceability matrix, implementation index, README, unified/master architecture, roadmaps, CI consolidation) received full canonical frontmatter.
+- Scanner state after sweep: **0 errors / 143 warnings / 2 active competing sets** — down from 17 errors on first inventory.
+- Competing-set detection now follows PLAN_LIFECYCLE_POLICY single-active-execution discipline: only `status: active` documents compete; `proposed` candidates are queued, not competing.
+- Registry totals: 157 documents, frontmatter-classified growing pass over pass (family distribution in the JSON `totals.families`).
+
 ## Known drift to resolve
 
 1. `phases/cross_module_dependency_matrix.md` must be checked against actual current services before being authoritative.
