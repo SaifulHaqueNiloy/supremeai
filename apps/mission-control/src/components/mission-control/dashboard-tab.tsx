@@ -142,9 +142,9 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-5">
         {/* Service matrix */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="lg:col-span-3">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="min-w-0 lg:col-span-3">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -266,7 +266,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
         </motion.div>
 
         {/* Activity feed */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.06 }} className="lg:col-span-2">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.06 }} className="min-w-0 lg:col-span-2">
           <Card className="flex h-full flex-col">
             <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -310,7 +310,7 @@ export function DashboardTab({ onNavigate }: { onNavigate?: (tab: string) => voi
       <div className="grid gap-6 lg:grid-cols-2">
         <DependencyMap />
         <AiProviderPools />
-        <RenderFleet className="lg:col-span-2" />
+        <RenderFleet className="min-w-0 lg:col-span-2" />
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[

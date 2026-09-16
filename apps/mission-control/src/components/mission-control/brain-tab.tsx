@@ -18,6 +18,7 @@ import type { MemoryNoteData } from "@/lib/mission-types";
 import { callTowerTool } from "@/lib/tower-gateway";
 import { KnowledgeGraphPanel } from "./knowledge-graph";
 import { MetricBadge, SectionHeader, ago, Tip } from "./widgets";
+import { cn } from "@/lib/utils";
 
 const KIND_META: Record<string, { label: string; cls: string }> = {
   fact: { label: "Fact", cls: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
@@ -114,7 +115,7 @@ export function BrainTab() {
   const [pulling, setPulling] = React.useState(false);
 
   // Tower-side memory engine status (lazy, silent poll — one call per mount + manual)
-  const { data: memStatus, refetch: refetchMemStatus } = useQuery({
+  const { data: memStatus, refetch: refetchMemStatus, isFetching: memStatusFetching, isError: memStatusError } = useQuery({
     queryKey: ["tower-memory-status"],
     queryFn: async () => {
       const res = await callTowerTool("memory_status", {}, { silent: true });
@@ -122,13 +123,17 @@ export function BrainTab() {
     },
     staleTime: 300_000,
     retry: 0,
+    refetchInterval: 300_000,
   });
-  const memStatusOk = memStatus?.ok === true;
+  const memStatusOk = memStatus?.ok === true && (memStatus?.result as Record<string, unknown> | null)?.ready === true;
+  const memStatusDown = memStatus?.ok === true && (memStatus?.result as Record<string, unknown> | null)?.ready === false;
   const memStatusDetail = React.useMemo(() => {
     const raw = memStatus?.result;
     if (!raw || typeof raw !== "object") return null;
     const obj = raw as Record<string, unknown>;
     const inner = (obj.result ?? obj) as Record<string, unknown>;
+    // Surface the engine's own lastError first — real diagnostics beat counters.
+    if (typeof inner.lastError === "string" && inner.lastError.trim()) return `engine: ${inner.lastError.slice(0, 60)}`;
     const parts: string[] = [];
     for (const key of ["entities", "relations", "facts", "episodes", "documents", "memories"]) {
       const v = inner[key];
@@ -201,17 +206,38 @@ export function BrainTab() {
         <Badge variant="secondary" className="gap-1.5">
           <Brain className="h-3.5 w-3.5 text-primary" /> {data?.total ?? 0} memories
         </Badge>
-        <Badge variant="secondary" className="gap-1.5">
-          <span
-            className={`h-2 w-2 rounded-full ${memStatusOk ? "bg-emerald-500" : "bg-zinc-400"}`}
-            aria-label={`tower memory engine ${memStatusOk ? "online" : "unknown"}`}
-          />
-          tower memory: {memStatusOk ? "online" : "…"}
-          {memStatusOk && (
-            <button onClick={() => refetchMemStatus()} className="ml-0.5 rounded px-1 text-[10px] text-muted-foreground hover:text-primary" aria-label="Refresh tower memory status">
-              ⟳
-            </button>
+        <Badge
+          variant="secondary"
+          className={cn(
+            "gap-1.5",
+            memStatusOk && "border-emerald-500/40 bg-emerald-500/10",
+            memStatusDown && "border-amber-500/40 bg-amber-500/10",
+            (memStatusError || memStatus?.ok === false) && "border-red-500/40 bg-red-500/10",
           )}
+        >
+          <span
+            className={cn(
+              "h-2 w-2 rounded-full",
+              memStatusFetching ? "animate-pulse bg-muted-foreground" : memStatusOk ? "bg-emerald-500" : memStatusDown ? "bg-amber-500" : "bg-red-500",
+            )}
+            aria-label={
+              memStatusFetching
+                ? "tower memory engine checking"
+                : memStatusOk
+                  ? "tower memory engine online"
+                  : memStatusDown
+                    ? "tower memory engine starting or unavailable"
+                    : "tower memory engine unreachable"
+            }
+          />
+          tower memory: {memStatusFetching ? "checking…" : memStatusOk ? "online" : memStatusDown ? "engine down" : "unreachable"}
+          <button
+            onClick={() => refetchMemStatus()}
+            className="ml-0.5 rounded px-1 text-[10px] text-muted-foreground hover:text-primary"
+            aria-label="Refresh tower memory status"
+          >
+            ⟳
+          </button>
         </Badge>
         {memStatusDetail && <MetricBadge>{memStatusDetail}</MetricBadge>}
         {Object.entries(stats).map(([k, v]) => (

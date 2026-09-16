@@ -113,5 +113,6 @@ export interface SettingsData {
   autoWake: boolean;
   autoSyncPrs: boolean;
   refreshIntervalSec: number;
+  journalRetentionDays: number;
   theme: "dark" | "light" | "system";
 }

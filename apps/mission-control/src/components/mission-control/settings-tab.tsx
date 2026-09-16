@@ -146,6 +146,22 @@ export function SettingsTab() {
               />
             </div>
             <div className="grid gap-2">
+              <Label htmlFor="retention">Journal retention (days)</Label>
+              <Input
+                id="retention"
+                type="number"
+                min={1}
+                max={365}
+                value={draft.journalRetentionDays}
+                onChange={(e) => update("journalRetentionDays", Number(e.target.value) || 14)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Older journal rows are pruned automatically (1–365).
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid gap-2">
               <Label>Console theme</Label>
               <Select value={draft.theme} onValueChange={(v) => update("theme", v as SettingsData["theme"])}>
                 <SelectTrigger aria-label="Theme"><SelectValue /></SelectTrigger>

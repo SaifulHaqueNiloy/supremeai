@@ -56,6 +56,16 @@ See `.env.example` for the full list.
 
 ## Changelog
 
+### v1.5 — Journal Intelligence & HITL Approvals
+- **HITL Approvals panel** (Journal tab): live `policy_list_pending` view with approve/reject via `policy_approve` (APPROVED/REJECTED), silent 60s polling (no journal spam), decisions ARE journaled for audit; collapses to a slim "policy engine clear" line when empty; defensive normalization of tower payload shapes
+- **Journal CSV export**: one-click filtered export (max 5000 rows) from the Operations Journal
+- **Journal retention** (dynamic setting): `journalRetentionDays` prunes ToolCallLog automatically (1–365 days, default 14) — configurable in Settings
+- **Per-tool p95 latency**: global + per-tool 95th percentile in journal stats and top-tools chart (nearest-rank over 24h samples)
+- **Uptime strip tooltips**: per-bucket UTC time ranges + status on the 6h reliability sparklines, with proper `role="img"` a11y labels and hover emphasis
+- **Brain tower-memory chip upgrade**: online/down/unreachable states with engine's own `lastError` surfaced (real diagnostics beat counters) + inline refresh
+- **Mobile overflow hardening**: fixed grid `min-width:auto` blowouts on Dashboard, Git Sync and Journal (PR titles now clip with `block truncate`; tables scroll inside cards); all 8 tabs verified at 390px
+
+
 ### v1.4 — Operations Journal & Reliability
 - **Journal tab (new, 8th nav tab)**: every governed tool call, journaled locally — works even while the tower sleeps. 24h KPI rail (calls, success rate with tone thresholds, avg latency, top tool), status filter chips (All/Ok/Failed) + debounced tool-name search, zebra table with duration + relative time, click-any-row detail dialog (parsed response snippet + UTC timestamp), **Most Used · 24h** animated bar chart with failure marks and a failed-calls callout. Backed by new `GET /api/journal` (Prisma groupBy stats + filtered entries over the local `ToolCallLog`)
 - **Uptime trend in the System Matrix**: new `Trend · 6h` column (hidden on mobile) renders per-service sparkline strips + uptime % badge from the local `ServiceSnapshot` reliability memory (new `GET /api/matrix/history`, 6h window bucketed into 16 slots, stale provider identities auto-dropped, fuzzy provider matching in the UI against tower payload shape drift)

@@ -185,22 +185,46 @@ export function Tip({ children, label }: { children: React.ReactNode; label: str
   );
 }
 
-/* ── Uptime sparkline strip (local reliability memory) ──────────── */
-export function UptimeStrip({ points, className }: { points: (0 | 1 | 2 | null)[]; className?: string }) {
+/* ── Uptime sparkline strip (local reliability memory) ───────────── */
+export function UptimeStrip({
+  points,
+  className,
+  windowMinutes = 360,
+}: {
+  points: (0 | 1 | 2 | null)[];
+  className?: string;
+  /** Size of the whole window in minutes (default 6h) — used for per-bucket tooltips. */
+  windowMinutes?: number;
+}) {
+  const now = Date.now();
+  const bucketMin = windowMinutes / Math.max(1, points.length);
+  const statusWord = (p: 0 | 1 | 2 | null) =>
+    p === 2 ? "healthy" : p === 1 ? "degraded" : p === 0 ? "down" : "no data";
+  const healthy = points.filter((p) => p === 2).length;
+  const known = points.filter((p) => p !== null).length;
+  const uptimePct = known > 0 ? Math.round((healthy / known) * 100) : null;
+  const label = `uptime trend: ${uptimePct == null ? "no data" : `${uptimePct}% healthy`} over last ${windowMinutes >= 60 ? `${Math.round(windowMinutes / 60)}h` : `${windowMinutes}m`}`;
+
   return (
-    <span className={cn("inline-flex items-end gap-px", className)} aria-hidden>
-      {points.map((p, i) => (
-        <span
-          key={i}
-          className={cn(
-            "w-1 rounded-[2px]",
-            p === 2 && "h-2.5 bg-emerald-500/80",
-            p === 1 && "h-2 bg-amber-500/90",
-            p === 0 && "h-2.5 bg-red-500/90",
-            p === null && "h-1 bg-muted-foreground/20",
-          )}
-        />
-      ))}
+    <span className={cn("inline-flex items-end gap-px", className)} role="img" aria-label={label} title={label}>
+      {points.map((p, i) => {
+        const start = new Date(now - (points.length - i) * bucketMin * 60_000);
+        const end = new Date(now - (points.length - 1 - i) * bucketMin * 60_000);
+        const range = `${start.toUTCString().slice(17, 22)}–${end.toUTCString().slice(17, 22)} UTC`;
+        return (
+          <span
+            key={i}
+            className={cn(
+              "w-1 rounded-[2px] transition-transform hover:scale-y-125",
+              p === 2 && "h-2.5 bg-emerald-500/80",
+              p === 1 && "h-2 bg-amber-500/90",
+              p === 0 && "h-2.5 bg-red-500/90",
+              p === null && "h-1 bg-muted-foreground/20",
+            )}
+            title={`${range} · ${statusWord(p)}`}
+          />
+        );
+      })}
     </span>
   );
 }

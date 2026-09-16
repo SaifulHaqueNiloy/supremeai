@@ -192,9 +192,9 @@ export function GitTab() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 lg:grid-cols-5">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-5">
         {/* PR cards */}
-        <div className="space-y-3 lg:col-span-3">
+        <div className="min-w-0 space-y-3 lg:col-span-3">
           <CiPanel runs={ciData?.runs ?? []} loading={ciLoading} />
 
           {isLoading ? (
@@ -218,7 +218,7 @@ export function GitTab() {
         </div>
 
         {/* Sync log */}
-        <Card className="lg:col-span-2">
+        <Card className="min-w-0 lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShieldCheck className="h-4 w-4 text-primary" />
@@ -270,7 +270,7 @@ function PrCard({ pr, index }: { pr: PullRequestInfo; index: number }) {
         <CardContent className="p-4">
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="min-w-0">
-              <a href={pr.url} target="_blank" rel="noreferrer" className="truncate text-sm font-semibold hover:text-primary hover:underline">
+              <a href={pr.url} target="_blank" rel="noreferrer" className="block truncate text-sm font-semibold hover:text-primary hover:underline">
                 #{pr.number} · {pr.title}
               </a>
               <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground">

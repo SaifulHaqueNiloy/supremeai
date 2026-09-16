@@ -14,6 +14,7 @@ export const SETTING_DEFAULTS: Record<string, string> = {
   autoWake: "true",
   autoSyncPrs: "true",
   refreshIntervalSec: "30",
+  journalRetentionDays: "14", // ToolCallLog pruning window (dynamic)
   theme: "dark",
 };
 

@@ -15,6 +15,7 @@ export async function GET() {
     autoWake: s.autoWake === "true",
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,
+    journalRetentionDays: Number(s.journalRetentionDays) || 14,
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);
@@ -30,6 +31,7 @@ export async function PUT(request: Request) {
     autoWake: boolean;
     autoSyncPrs: boolean;
     refreshIntervalSec: number;
+    journalRetentionDays: number;
     theme: "dark" | "light" | "system";
   }> | null;
   if (!body) return NextResponse.json({ error: "Invalid body" }, { status: 400 });
@@ -44,6 +46,8 @@ export async function PUT(request: Request) {
   if (typeof body.autoSyncPrs === "boolean") updates.autoSyncPrs = String(body.autoSyncPrs);
   if (typeof body.refreshIntervalSec === "number" && body.refreshIntervalSec >= 10 && body.refreshIntervalSec <= 600)
     updates.refreshIntervalSec = String(Math.floor(body.refreshIntervalSec));
+  if (typeof body.journalRetentionDays === "number" && body.journalRetentionDays >= 1 && body.journalRetentionDays <= 365)
+    updates.journalRetentionDays = String(Math.floor(body.journalRetentionDays));
   if (body.theme && ["dark", "light", "system"].includes(body.theme)) updates.theme = body.theme;
 
   await setSettings(updates);
@@ -57,6 +61,7 @@ export async function PUT(request: Request) {
     autoWake: s.autoWake === "true",
     autoSyncPrs: s.autoSyncPrs === "true",
     refreshIntervalSec: Number(s.refreshIntervalSec) || 30,
+    journalRetentionDays: Number(s.journalRetentionDays) || 14,
     theme: (s.theme as SettingsData["theme"]) || "dark",
   };
   return NextResponse.json(data);

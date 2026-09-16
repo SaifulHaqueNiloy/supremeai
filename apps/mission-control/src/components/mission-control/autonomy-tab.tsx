@@ -30,11 +30,52 @@ interface PendingRequest {
   reason?: string;
   requestedBy?: string;
   createdAt?: string;
+  /* tower shape: { id, context: { provider, action }, state, createdAtMs, expiresAtMs } */
+  context?: { provider?: string; action?: string } | null;
+  state?: string;
+  createdAtMs?: number;
+  expiresAtMs?: number;
   [k: string]: unknown;
 }
 
 function pickId(p: PendingRequest): string {
   return String(p.id ?? p.requestId ?? Math.random().toString(36).slice(2));
+}
+
+/** Normalize the tower's pending-policy shapes into display fields. */
+function normalizePending(p: PendingRequest): {
+  label: string;
+  state: string;
+  createdAgo: string | null;
+  expiresIn: string | null;
+  expired: boolean;
+} {
+  const provider = p.context?.provider ?? "";
+  const action = p.context?.action ?? p.action ?? p.title;
+  const label = action
+    ? provider
+      ? `${provider}:${action}`
+      : String(action)
+    : "Unknown action";
+  const createdIso = p.createdAtMs ? new Date(p.createdAtMs).toISOString() : p.createdAt ?? null;
+  const expiresMs = typeof p.expiresAtMs === "number" ? p.expiresAtMs : null;
+  const now = Date.now();
+  const expired = expiresMs != null && expiresMs <= now;
+  let expiresIn: string | null = null;
+  if (expiresMs != null) {
+    if (expired) expiresIn = "expired";
+    else {
+      const mins = Math.max(1, Math.round((expiresMs - now) / 60_000));
+      expiresIn = mins >= 60 ? `expires in ${Math.floor(mins / 60)}h ${mins % 60}m` : `expires in ${mins}m`;
+    }
+  }
+  return {
+    label,
+    state: String(p.state ?? "PENDING"),
+    createdAgo: createdIso ? ago(createdIso) : null,
+    expiresIn,
+    expired,
+  };
 }
 
 export function AutonomyTab() {
@@ -77,10 +118,13 @@ export function AutonomyTab() {
     },
   });
 
+  // Tower schema: policy_approve { requestId, decision: "APPROVED" | "REJECTED" }
   const approve = useMutation({
-    mutationFn: async (id: string) => callTowerTool("policy_approve", { requestId: id, approve: true }),
-    onSuccess: () => {
-      toast.success("Request approved");
+    mutationFn: async ({ id, decision }: { id: string; decision: "APPROVED" | "REJECTED" }) =>
+      callTowerTool("policy_approve", { requestId: id, decision }),
+    onSuccess: (r, vars) => {
+      if (r.ok) toast.success(vars.decision === "APPROVED" ? "Request approved" : "Request rejected");
+      else toast.error(`policy_approve failed: ${(r.error ?? "unknown").slice(0, 90)}`);
       refetchPending();
     },
     onError: (e) => toast.error(String(e)),
@@ -185,37 +229,42 @@ export function AutonomyTab() {
                 </div>
               ) : (
                 <ul className="space-y-2">
-                  {pending!.map((p) => (
-                    <li key={pickId(p)} className="rounded-lg border p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold">{String(p.action ?? p.title ?? "Unknown action")}</p>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
-                            {String(p.reason ?? p.detail ?? "")}
-                            {p.risk ? ` · risk: ${String(p.risk)}` : ""}
-                            {p.createdAt ? ` · ${ago(String(p.createdAt))}` : ""}
-                          </p>
+                  {pending!.map((raw) => {
+                    const p = normalizePending(raw);
+                    return (
+                      <li key={pickId(raw)} className="rounded-lg border p-3 transition-colors hover:bg-muted/20">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="flex items-center gap-1.5 truncate text-xs font-semibold">
+                              {p.label}
+                              <Badge variant="outline" className="h-4 px-1 text-[9px] uppercase tracking-wide text-muted-foreground">{p.state}</Badge>
+                            </p>
+                            <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
+                              REQ {pickId(raw)}
+                              {raw.risk ? ` · risk: ${String(raw.risk)}` : ""}
+                              {p.createdAgo ? ` · raised ${p.createdAgo}` : ""}
+                              {p.expiresIn ? ` · ${p.expiresIn}` : ""}
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 gap-1">
+                            <Button size="icon" variant="outline" className="h-7 w-7 text-emerald-600" aria-label="Approve" onClick={() => approve.mutate({ id: pickId(raw), decision: "APPROVED" })} disabled={approve.isPending}>
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className="h-7 w-7 text-red-500"
+                              aria-label="Reject"
+                              onClick={() => approve.mutate({ id: pickId(raw), decision: "REJECTED" })}
+                              disabled={approve.isPending}
+                            >
+                              <XCircle className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="flex shrink-0 gap-1">
-                          <Button size="icon" variant="outline" className="h-7 w-7 text-emerald-600" aria-label="Approve" onClick={() => approve.mutate(pickId(p))} disabled={approve.isPending}>
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7 text-red-500"
-                            aria-label="Reject"
-                            onClick={() =>
-                              act.mutate({ tool: "policy_approve", args: { requestId: pickId(p), approve: false } })
-                            }
-                            disabled={act.isPending}
-                          >
-                            <XCircle className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </ScrollArea>

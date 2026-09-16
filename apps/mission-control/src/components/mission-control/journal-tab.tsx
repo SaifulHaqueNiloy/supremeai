@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Activity, CheckCircle2, Gauge, ScrollText, Search, Timer, TrendingUp, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, Download, Gauge, ScrollText, Search, Timer, TrendingUp, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,13 +11,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KpiCard, SectionHeader, MetricBadge, JsonViewer, ago } from "./widgets";
+import { ApprovalsPanel } from "./approvals-panel";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface TopTool {
   tool: string;
   calls: number;
   failures: number;
   avgMs: number;
+  p95Ms: number | null;
 }
 
 interface JournalStats {
@@ -26,6 +29,7 @@ interface JournalStats {
   failed24h: number;
   successRate: number;
   avgDurationMs: number;
+  p95DurationMs: number | null;
   topTools: TopTool[];
 }
 
@@ -81,15 +85,35 @@ export function JournalTab() {
         title="Operations Journal"
         desc="Every governed tool call, journaled locally — telemetry that works even while the tower sleeps"
         right={
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh journal">
-            <ScrollText className={cn("mr-1.5 h-3.5 w-3.5", isFetching && "animate-spin")} />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const params = new URLSearchParams({ format: "csv", csvLimit: "1000" });
+                if (debounced) params.set("q", debounced);
+                if (statusFilter !== "all") params.set("status", statusFilter);
+                window.location.assign(`/api/journal?${params.toString()}`);
+                toast.success("Journal export started (CSV, max 1000 rows)");
+              }}
+              aria-label="Export journal as CSV"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" />
+              CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching} aria-label="Refresh journal">
+              <ScrollText className={cn("mr-1.5 h-3.5 w-3.5", isFetching && "animate-spin")} />
+              Refresh
+            </Button>
+          </div>
         }
       />
 
+      {/* HITL approvals — tower policy engine (collapses when clear) */}
+      <ApprovalsPanel />
+
       {/* KPI rail */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           label="Calls · 24h"
           value={stats ? stats.total24h : "—"}
@@ -113,6 +137,14 @@ export function JournalTab() {
           loading={!stats}
         />
         <KpiCard
+          label="P95 · 24h"
+          value={stats?.p95DurationMs != null ? `${stats.p95DurationMs}ms` : "—"}
+          sub={stats && stats.p95DurationMs != null && stats.p95DurationMs > 800 ? "slow tail — inspect top tool" : "95th percentile latency"}
+          icon={<Gauge className="h-5 w-5" />}
+          tone={stats?.p95DurationMs != null && stats.p95DurationMs > 800 ? "warn" : "default"}
+          loading={!stats}
+        />
+        <KpiCard
           label="Top tool"
           value={<span className="text-base">{stats?.topTools[0]?.tool ?? "—"}</span>}
           sub={stats?.topTools[0] ? `${stats.topTools[0].calls} calls · avg ${stats.topTools[0].avgMs}ms` : "no calls yet"}
@@ -121,9 +153,9 @@ export function JournalTab() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-3">
         {/* Entries table */}
-        <Card className="lg:col-span-2">
+        <Card className="min-w-0 lg:col-span-2">
           <CardContent className="p-4">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center">
               <div className="relative flex-1">
@@ -175,7 +207,7 @@ export function JournalTab() {
                 </p>
               </div>
             ) : (
-              <div className="max-h-[460px] overflow-y-auto rounded-lg border">
+              <div className="max-h-[460px] min-w-0 overflow-auto rounded-lg border">
                 <Table>
                   <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur">
                     <TableRow className="bg-muted/40">
@@ -219,7 +251,7 @@ export function JournalTab() {
         </Card>
 
         {/* Top tools mini chart */}
-        <Card className="h-fit">
+        <Card className="h-fit min-w-0">
           <CardContent className="p-4">
             <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <Gauge className="h-4 w-4 text-primary" />
@@ -247,6 +279,7 @@ export function JournalTab() {
                         <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
                           {t.calls}
                           {t.failures > 0 && <span className="ml-1 text-red-500">·{t.failures}✕</span>}
+                          {t.p95Ms != null && <span className="ml-1 opacity-80" title="95th percentile latency">p95 {t.p95Ms}ms</span>}
                         </span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-muted">
