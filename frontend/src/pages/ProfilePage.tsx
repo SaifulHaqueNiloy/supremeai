@@ -30,12 +30,14 @@ export const ProfilePage: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      await apiClient.put('/api/user/preferences', {
+      // ERR-H01 FIX: real backend route is POST /api/preferences (no PUT
+      // route exists); preferred_model maps to the contract's default_model.
+      await apiClient.post('/api/preferences', {
+        theme: darkMode ? 'dark' : 'light',
+        default_model: preferredModel,
         profile: { name, email },
-        preferred_model: preferredModel,
         security: { jit_otp_enabled: jitOtpEnabled },
         notifications,
-        theme: darkMode ? 'dark' : 'light',
       });
       setSaved(true);
       showToast('success', 'Profile preferences saved.');

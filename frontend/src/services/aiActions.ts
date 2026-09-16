@@ -170,8 +170,11 @@ const analyzePerformance = useCallback(
           onOutput({ title: "JIT OTP", content: "অপারেশন বাতিল হয়েছে।", kind: "plain" });
         } else {
           const { apiCall } = await import("./supremeShared");
+          // ERR-H03 FIX: backend route is POST /admin-api/workspaces/bind-target
+          // (workspaces_route.py mounts /admin-api/workspaces) — the old
+          // /api/v1/workspaces/bind-target path never existed (404).
           const res = await apiCall({
-            endpoint: "/api/v1/workspaces/bind-target",
+            endpoint: "/admin-api/workspaces/bind-target",
             method: "POST",
             body: { target: "current-workspace", reason: result.reason, otp: result.otpCode },
           });
