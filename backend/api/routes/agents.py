@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import importlib
+from functools import lru_cache
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from agents.research_assistant import ResearchAssistant, ResearchSourceError
+from core.logging_config import logger
 from core.security.authentication.rbac import get_current_user_token
 
 router = APIRouter(
@@ -25,66 +30,127 @@ class SummarizeRequest(BaseModel):
     style: str = "apa"
 
 
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.listAgents()
-# GET /api/v1/agents কল করে (আগে এই endpoint ছিল না, 404 পেত)।
+# ERR-G08 FIX (2026-09-16): list_agents() used to return a single hardcoded
+# {"id": "research", ...} literal. The catalog is now derived from the real
+# backend/agents/ directory (module stem + first docstring line) so it always
+# reflects what actually ships, and never invents agents that do not exist.
+_AGENTS_DIR = Path(__file__).resolve().parent.parent.parent / "agents"
+
+
+@lru_cache(maxsize=1)
+def _agent_catalog() -> tuple[dict[str, str], ...]:
+    """Real catalog of top-level agent modules shipped in backend/agents/."""
+    entries: list[dict[str, str]] = []
+    if not _AGENTS_DIR.exists():
+        return ()
+    for path in sorted(_AGENTS_DIR.glob("*.py")):
+        stem = path.stem
+        if stem.startswith("_"):
+            continue
+        description = ""
+        try:
+            module = importlib.import_module(f"agents.{stem}")
+            doc = (module.__doc__ or "").strip()
+        except Exception as exc:  # noqa: BLE001 — a broken module must not hide the catalog entry
+            doc = f""  # import failure is reported truthfully by /status
+            logger.warning(f"[agent-catalog] import check failed for agents.{stem}: {exc}")
+        for line in doc.splitlines():
+            line = line.strip()
+            if line:
+                description = line
+                break
+        entries.append(
+            {
+                "id": stem,
+                "name": stem.replace("_", " ").title(),
+                "description": description,
+            }
+        )
+    return tuple(entries)
+
+
 @router.get("/", tags=["specialized-agents"])
 async def list_agents():
-    """List all available specialized agent types."""
-    return {
-        "agents": [
-            {"id": "research", "name": "Research Agent", "description": "Research paper analysis"},
-        ]
-    }
+    """List all available specialized agent types (real catalog, not hardcoded)."""
+    return {"agents": list(_agent_catalog()), "count": len(_agent_catalog())}
 
 
-# বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর agentService.getAgentStatus()
-# GET /api/v1/agents/{agentId}/status কল করে (আগে এই endpoint ছিল না, 404 পেত)।
 @router.get("/{agent_id}/status", tags=["specialized-agents"])
 async def get_agent_status(agent_id: str):
-    """Get status of a specific agent by its ID."""
-    return {
-        "agent_id": agent_id,
-        "status": "active",
-        "last_activity": "2026-01-01T00:00:00Z",
-    }
+    """Honest status for a specialized agent type.
+
+    ERR-G07 FIX: previously ANY agent id got a hardcoded
+    ``{"status": "active", "last_activity": "2026-01-01T00:00:00Z"}`` — a
+    frozen timestamp that could not distinguish alive from dead. Now an
+    unknown id is a 404, and a known id reports a real import-based
+    availability check with an explicit "no runtime telemetry" note instead
+    of a fabricated timestamp.
+    """
+    known = {entry["id"] for entry in _agent_catalog()}
+    if agent_id not in known:
+        raise HTTPException(status_code=404, detail=f"Unknown agent type: {agent_id}")
+    try:
+        importlib.import_module(f"agents.{agent_id}")
+        return {
+            "agent_id": agent_id,
+            "status": "available",
+            "last_activity": None,
+            "detail": "Capability catalog entry — no per-agent runtime telemetry is recorded; last_activity is intentionally not fabricated.",
+        }
+    except Exception as exc:  # noqa: BLE001 — verbatim import failure is the honest status
+        return {
+            "agent_id": agent_id,
+            "status": "unavailable",
+            "last_activity": None,
+            "detail": f"Module import failed: {exc}",
+        }
 
 
 @router.post("/research/search")
 async def research_search(payload: ResearchRequest):
+    """Real research search (live arXiv). Errors map honestly: bad input → 400,
+    upstream failure → 502 with the verbatim reason."""
     try:
-        from agents.research_assistant import ResearchAssistant
-
         assistant = ResearchAssistant()
         results = assistant.search(
             payload.query, source=payload.source, max_results=payload.max_results
         )
-        return {
-            "query": payload.query,
-            "source": payload.source,
-            "papers": results,
-            "count": len(results),
-        }
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ResearchSourceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("research_search failed")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
+    return {
+        "query": payload.query,
+        "source": payload.source,
+        "papers": results,
+        "count": len(results),
+    }
 
 
 @router.post("/research/summarize")
 async def research_summarize(payload: SummarizeRequest):
+    """Real extractive summarization (no fabricated text)."""
     try:
-        from agents.research_assistant import ResearchAssistant
-
         assistant = ResearchAssistant()
         return assistant.summarize(payload.paper)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("research_summarize failed")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
 
 
 @router.post("/research/cite")
 async def research_cite(payload: SummarizeRequest):
+    """Real deterministic citation formatting."""
     try:
-        from agents.research_assistant import ResearchAssistant
-
         assistant = ResearchAssistant()
         return {"citation": assistant.citations(payload.paper, style=payload.style)}
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("research_cite failed")
+        raise HTTPException(status_code=500, detail="Internal server error") from exc
