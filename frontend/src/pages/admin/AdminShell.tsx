@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAdminStore } from "../../store/adminStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
-import { apiClient } from "../../services/apiClient";
+import { apiClient, getAuthHeaders } from "../../services/apiClient";
+import { getApiBaseUrl } from "../../utils/api";
 import { Shield } from "lucide-react";
 import type { AdminSubTab, ChatMessage } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
@@ -43,8 +44,8 @@ export function AdminShell() {
   const { data: healthMapData } = useHealthMap();
   const healthMap = healthMapData || { gcp: { status: 'unknown', latency: '', region: '' }, railway: { status: 'unknown', latency: '', region: '' }, render: { status: 'unknown', latency: '', region: '' } };
 
-  const [adminMessages] = useState<ChatMessage[]>([]);
-  const [loading] = useState(false);
+  const [adminMessages, setAdminMessages] = useState<ChatMessage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState("");
   const [liveLogs, setLiveLogs] = useState<string[]>([]);
   const [newUsername, setNewUsername] = useState("");
@@ -52,6 +53,7 @@ export function AdminShell() {
   const [newUserPerms, setNewUserPerms] = useState("read,write");
   const [adminInput, setAdminInput] = useState("");
   const [rulesJson, setRulesJson] = useState("");
+  const abortRef = useRef<AbortController | null>(null);
 
   // বাংলা (single-frontend migration): আগে এখানে আলাদা useState theme +
   // documentElement.classList effect ছিল — এটি shared ThemeProvider-এর সাথে
@@ -109,14 +111,125 @@ export function AdminShell() {
       });
   };
 
-  const handleSendAdmin = () => {
-    if (import.meta.env.DEV) console.warn("Send admin message", adminInput);
+  // FIX(fake-data): the sandbox previously had zero real behavior — sending a
+  // message only console.warn'ed it away and "SAVED" appeared after a fake
+  // setTimeout. Both now use the real backend endpoints.
+
+  // Load the real constitutional rules (GET /api/admin/rules → [{key,value}])
+  // into the editor as a plain JSON object.
+  useEffect(() => {
+    if (!adminAuthenticated) return;
+    let cancelled = false;
+    apiClient
+      .get<{ rules: Array<{ key: string; value: unknown }> }>("/api/admin/rules")
+      .then((data) => {
+        if (cancelled) return;
+        const list = Array.isArray(data?.rules) ? data.rules : [];
+        const asObject: Record<string, unknown> = {};
+        for (const entry of list) {
+          if (entry && typeof entry.key === "string") asObject[entry.key] = entry.value;
+        }
+        setRulesJson(JSON.stringify(asObject, null, 2));
+      })
+      .catch(() => {
+        // Editor stays empty; the save action surfaces the failure honestly.
+        if (!cancelled) setRulesJson("");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminAuthenticated]);
+
+  const handleSendAdmin = async () => {
+    const prompt = adminInput.trim();
+    if (!prompt || loading) return;
+    const assistantId = `admin_a_${Date.now()}`;
+    setAdminMessages((prev) => [
+      ...prev,
+      { id: `admin_u_${Date.now()}`, role: "user", content: prompt, timestamp: Date.now() },
+      { id: assistantId, role: "assistant", content: "", timestamp: Date.now() },
+    ]);
     setAdminInput("");
+    setLoading(true);
+    abortRef.current = new AbortController();
+    try {
+      // Same real chat endpoint the user-facing chat uses.
+      const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
+        method: "POST",
+        headers: { ...(await getAuthHeaders()), "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: prompt,
+          project_id: "admin_sandbox",
+          idempotency_key: crypto.randomUUID(),
+        }),
+        signal: abortRef.current.signal,
+      });
+      if (!res.ok || !res.body) throw new Error(`Chat request failed: ${res.status}`);
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+      let pending = "";
+      const applyPayload = (payload: string) => {
+        if (!payload || payload === "[DONE]") return;
+        let token = payload;
+        try {
+          const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
+          token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? "";
+        } catch {
+          // Plain-text SSE payloads are valid fallbacks.
+        }
+        assistantContent += token;
+        setAdminMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: assistantContent } : m))
+        );
+      };
+      while (true) {
+        const { done, value } = await reader.read();
+        pending += decoder.decode(value ?? new Uint8Array(), { stream: !done });
+        const lines = pending.split(/\r?\n/);
+        pending = lines.pop() ?? "";
+        lines.forEach((line) => {
+          if (line.startsWith("data:")) applyPayload(line.slice(5).trim());
+        });
+        if (done) break;
+      }
+    } catch (err) {
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        const message = err instanceof Error ? err.message : "Chat request failed";
+        setAdminMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: m.content || `Error: ${message}` } : m))
+        );
+      }
+    } finally {
+      setLoading(false);
+      abortRef.current = null;
+    }
   };
 
-  const handleSaveRules = () => {
+  const handleSaveRules = async () => {
     setSaveStatus("SAVING...");
-    setTimeout(() => setSaveStatus("SAVED"), 1000);
+    try {
+      const parsed = JSON.parse(rulesJson) as Record<string, unknown>;
+      if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+        setSaveStatus("RULES MUST BE A JSON OBJECT");
+        setTimeout(() => setSaveStatus(""), 3000);
+        return;
+      }
+      const entries = Object.entries(parsed);
+      if (entries.length === 0) {
+        setSaveStatus("NO RULES TO SAVE");
+        setTimeout(() => setSaveStatus(""), 3000);
+        return;
+      }
+      // Real contract: POST /api/admin/rules persists one {key, value} per call.
+      await Promise.all(
+        entries.map(([key, value]) => apiClient.post("/api/admin/rules", { key, value: String(value) }))
+      );
+      setSaveStatus("SAVED");
+    } catch (err) {
+      setSaveStatus(err instanceof SyntaxError ? "INVALID JSON" : "SAVE FAILED");
+    }
+    setTimeout(() => setSaveStatus(""), 3000);
   };
 
   if (adminAuthenticated && adminRole !== 'admin') {

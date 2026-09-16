@@ -1,3 +1,18 @@
+---
+id: free-tier-production-upgrade
+subject: "🚀 SupremeAI Free-Tier Production Upgrade Plan"
+document_role: implementation
+planning_authority: Infrastructure Circle
+canonical: false
+status: active
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+---
+
 # 🚀 SupremeAI Free-Tier Production Upgrade Plan
 
 **সংস্করণ:** 2.1.0 (Free-Tier Optimized)  

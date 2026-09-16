@@ -247,77 +247,150 @@ def update_commandcenter_rules(payload: dict):
 
 @router.get("/skills")
 def get_commandcenter_skills():
-    """Bridge for CommandCenter Skills catalog."""
-    return [
-        {
-            "id": "web_scraper",
-            "name": "Web Scraper",
-            "version": "1.0.0",
-            "installed": True,
-            "enabled": True,
-            "source": "builtin",
-        },
-        {
-            "id": "csv_exporter",
-            "name": "CSV Exporter",
-            "version": "1.0.0",
-            "installed": True,
-            "enabled": True,
-            "source": "builtin",
-        },
-        {
-            "id": "market_analyzer",
-            "name": "Market Analyzer",
-            "version": "2.1.0",
-            "installed": True,
-            "enabled": True,
-            "source": "registry",
-        },
-    ]
+    """Bridge for CommandCenter Skills catalog.
+
+    FIX(fake-data): previously returned a hardcoded list including a
+    'Market Analyzer 2.1.0' skill that does not exist anywhere. Now derives
+    from the real manifest registry (backend/skills/manifests/*.json) via
+    the same scan that powers GET /api/skills/catalog — skills shown here
+    are skills that actually exist and are installed.
+    """
+    try:
+        import asyncio
+
+        from api.routes.skills import get_active_skill_catalog
+
+        catalog = asyncio.run(get_active_skill_catalog())
+    except Exception as e:
+        logger.warning(f"CommandCenter skills bridge: catalog scan failed: {e}")
+        return []
+
+    skills = []
+    for manifest in catalog:
+        skill_id = manifest.get("skill_id") or manifest.get("id")
+        if not skill_id:
+            continue
+        skills.append(
+            {
+                "id": skill_id,
+                # manifests carry no display name — derive one from the id
+                "name": manifest.get("name")
+                or skill_id.replace("_", " ").replace("-", " ").title(),
+                "version": manifest.get("version", "1.0.0"),
+                # present on disk = installed; enabled mirrors installed
+                # (enable/disable state is not tracked per-manifest yet)
+                "installed": True,
+                "enabled": True,
+                "source": "manifest",
+            }
+        )
+    return skills
 
 
 @router.get("/rate-limits")
 def get_commandcenter_rate_limits():
-    """Bridge for CommandCenter RateLimits module."""
-    try:
-        # Scan 429 events if available
-        return {
-            "current_429_events": 0,
-            "per_ip": {"[system]": {"limit": 100, "used": 12}},
-            "per_tenant": {"default": {"limit": 1000, "used": 45}},
-        }
-    except Exception:
-        return {
-            "current_429_events": 0,
-            "per_ip": {},
-            "per_tenant": {},
-        }
+    """Bridge for CommandCenter RateLimits module.
+
+    FIX(fake-data): previously reported a fake '[system]' per-IP entry
+    using 12/100 and a fake 'default' tenant using 45/1000 — no such
+    counters were ever recorded. Real per-client usage lives inside the
+    rate limiter's bounded in-memory state and is not exposed via an
+    inspection API yet; until that exists this returns honest zeros/empty
+    maps instead of invented traffic.
+    """
+    return {
+        "current_429_events": 0,
+        "per_ip": {},
+        "per_tenant": {},
+    }
 
 
 @router.get("/memory")
 def get_commandcenter_memory_stats():
-    """Bridge for CommandCenter MemoryKnowledge module."""
-    try:
-        from core.cache.redis_manager import redis_manager
+    """Bridge for CommandCenter MemoryKnowledge module.
 
-        client = getattr(redis_manager, "client", None)
-        cache_hits = 0
-        if client:
-            cache_hits = int(client.get("metrics:cache:semantic_hits") or 0)
+    FIX(fake-data): this endpoint previously returned invented content —
+    three hardcoded "banks" (48/12/120 entries), a hardcoded 0.88 hit rate
+    (0.95 on error!), and a fabricated 45,200-token floor. It now reports
+    ONLY real values from the multi-layer cache:
+
+    - ``banks``: one entry per real cache layer, ``entry_count`` carrying
+      that layer's observed hit count and ``recent_writes`` always 0
+      (per-layer write counts are not tracked yet — zero, not invented)
+    - ``semantic_cache_hit_rate``: real hits/total ratio (null until
+      enough accesses exist; the frontend renders null as "—")
+    - ``tokens_saved``: real cumulative per-hit accounting from the
+      multi-layer cache (tokens estimated from each served response via the
+      canonical estimate_tokens heuristic). Falls back to
+      hits x ESTIMATED_AVG_COMPLETION_TOKENS only if the cache layer does not
+      report it. 0 hits => 0 saved.
+    """
+    try:
+        from core.cache.multi_layer_cache import multi_layer_cache
+
+        hit_rate: float | None = None
+
+        import asyncio
+
+        raw_stats = multi_layer_cache.get_cache_statistics()
+        # get_cache_statistics is async; support both call styles defensively.
+        if asyncio.iscoroutine(raw_stats):
+            raw_stats = asyncio.run(raw_stats)
+
+        hits = sum(
+            int(raw_stats.get(k) or 0)
+            for k in ("exact_hits", "semantic_hits", "prefix_hits", "session_hits")
+        )
+        total = hits + int(raw_stats.get("misses") or 0)
+        if total > 0:
+            hit_rate = hits / total
+
+        ESTIMATED_AVG_COMPLETION_TOKENS = 1250  # documented estimate per served hit
+
+        # Prefer the cache layer's real per-hit accounting; only estimate when
+        # an older stats payload lacks the field.
+        real_tokens_saved = raw_stats.get("tokens_saved")
+        tokens_saved = (
+            int(real_tokens_saved)
+            if real_tokens_saved is not None
+            else hits * ESTIMATED_AVG_COMPLETION_TOKENS
+        )
+
+        banks = [
+            {
+                "name": "Exact Match Layer",
+                "entry_count": int(raw_stats.get("exact_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Semantic Layer",
+                "entry_count": int(raw_stats.get("semantic_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Prefix Layer",
+                "entry_count": int(raw_stats.get("prefix_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Session Layer",
+                "entry_count": int(raw_stats.get("session_hits") or 0),
+                "recent_writes": 0,
+            },
+        ]
+
         return {
-            "banks": [
-                {"name": "General Knowledge", "entry_count": 48, "recent_writes": 3},
-                {"name": "Tenant Preferences", "entry_count": 12, "recent_writes": 1},
-                {"name": "Codebase Graph", "entry_count": 120, "recent_writes": 14},
-            ],
-            "semantic_cache_hit_rate": 0.88,
-            "tokens_saved": max(cache_hits * 1250, 45200),
+            "banks": banks,
+            "semantic_cache_hit_rate": round(hit_rate, 4) if hit_rate is not None else None,
+            "tokens_saved": tokens_saved,
+            "avg_tokens_saved_per_hit": raw_stats.get("avg_tokens_saved_per_hit"),
         }
     except Exception:
+        # Honest degraded mode: no data instead of invented 0.95/10000.
         return {
-            "banks": [{"name": "System Memory", "entry_count": 1, "recent_writes": 0}],
-            "semantic_cache_hit_rate": 0.95,
-            "tokens_saved": 10000,
+            "banks": [],
+            "semantic_cache_hit_rate": None,
+            "tokens_saved": 0,
         }
 
 

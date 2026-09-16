@@ -13,7 +13,9 @@ interface CommandBarProps {
   version?: string;
   adminName?: string;
   adminRole?: string;
-  onOpenPalette: () => void;
+  // Optional extra hook for consumers; the palette itself is now driven by
+  // the store's isPaletteOpen + <CommandPalette /> (⌘K works globally).
+  onOpenPalette?: () => void;
 }
 
 export function CommandBar({
@@ -68,7 +70,7 @@ export function CommandBar({
       <button
         onClick={() => {
           setPaletteOpen(true);
-          onOpenPalette();
+          onOpenPalette?.();
         }}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--sa-line)] hover:border-[#00f3ff]/40 transition-colors"
       >

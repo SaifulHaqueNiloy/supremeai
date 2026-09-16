@@ -7,6 +7,7 @@ online deduplication, automatic compression, and emergency consolidation.
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import pickle
 import threading
@@ -46,6 +47,10 @@ class MemoryBlock:
     compressed: bool = False
     compression_ratio: float = 1.0
     metadata: dict[str, Any] = field(default_factory=dict)
+    # FIX(real-compression): retain the serialized payload so consolidation
+    # can perform actual gzip compression instead of merely decrementing
+    # size_bytes (the old fake made every reported saving imaginary).
+    payload: bytes | None = None
 
 
 @dataclass
@@ -107,6 +112,7 @@ class MemoryConsolidator:
                 last_accessed=datetime.now(),
                 created_at=datetime.now(),
                 metadata=metadata or {},
+                payload=serialized,
             )
 
             self.blocks[block_id] = block
@@ -119,7 +125,16 @@ class MemoryConsolidator:
         with self._lock:
             block = self.blocks.get(block_id)
             if not block:
+                self.stats["cache_misses"] = self.stats.get("cache_misses", 0) + 1
                 return None
+            self.stats["cache_hits"] = self.stats.get("cache_hits", 0) + 1
+            # Transparently decompress on access so the block is usable and
+            # size accounting returns to the real (uncompressed) footprint.
+            if block.compressed and block.payload is not None:
+                block.payload = gzip.decompress(block.payload)
+                block.compressed = False
+                block.compression_ratio = 1.0
+                block.size_bytes = len(block.payload)
             self._access_block(block_id)
             return {"block_id": block_id, "size": block.size_bytes, "tier": block.tier.value}
 
@@ -143,18 +158,26 @@ class MemoryConsolidator:
         start_time = datetime.now()
         freed = 0
         blocks_affected = 0
+        ratios: list[float] = []
 
         with self._lock:
-            # Compress cold blocks
+            # Compress cold blocks — for real. The old implementation just
+            # subtracted 60% from size_bytes and reported imaginary savings.
             if self.compression_enabled:
                 for block_id in list(self.tier_indexes[MemoryTier.COLD]):
                     block = self.blocks[block_id]
-                    if not block.compressed:
-                        block.compressed = True
-                        savings = int(block.size_bytes * 0.6)
-                        block.size_bytes -= savings
-                        freed += savings
-                        blocks_affected += 1
+                    if not block.compressed and block.payload:
+                        compressed = gzip.compress(block.payload)
+                        if len(compressed) < len(block.payload):
+                            original_len = len(block.payload)
+                            savings = original_len - len(compressed)
+                            block.payload = compressed
+                            block.size_bytes = len(compressed)
+                            block.compressed = True
+                            block.compression_ratio = round(len(compressed) / original_len, 4)
+                            freed += savings
+                            blocks_affected += 1
+                            ratios.append(block.compression_ratio)
 
         elapsed = int((datetime.now() - start_time).total_seconds() * 1000)
         self.stats["total_consolidations"] += 1
@@ -166,28 +189,40 @@ class MemoryConsolidator:
             memory_freed_bytes=freed,
             blocks_affected=blocks_affected,
             time_ms=elapsed,
-            details={"compression_ratio": 0.4},
+            details={
+                "compression_ratio": round(sum(ratios) / len(ratios), 4) if ratios else 1.0,
+            },
         )
 
     async def optimize_cache(self, context: dict[str, Any] | None = None) -> dict[str, Any]:
+        # Real hit rate from tracked access() outcomes (was a hardcoded 0.96).
+        hits = self.stats.get("cache_hits", 0)
+        misses = self.stats.get("cache_misses", 0)
+        total = hits + misses
         return {
             "status": "optimized",
-            "cache_hit_rate": 0.96,
+            "cache_hit_rate": round(hits / total, 4) if total else None,
             "prewarmed_blocks": len(self.tier_indexes[MemoryTier.HOT]),
         }
 
     def get_memory_stats(self) -> dict[str, Any]:
         with self._lock:
             total_size = sum(b.size_bytes for b in self.blocks.values())
+            total_blocks = len(self.blocks)
+            cold_blocks = len(self.tier_indexes[MemoryTier.COLD])
             return {
-                "total_blocks": len(self.blocks),
+                "total_blocks": total_blocks,
                 "total_size_bytes": total_size,
-                "memory_used_mb": max(128.0, total_size / (1024 * 1024)),
+                # Real footprint — the old max(128.0, ...) floor reported a
+                # minimum of 128MB even for an empty store.
+                "memory_used_mb": total_size / (1024 * 1024),
                 "tier_distribution": {t.name: len(ids) for t, ids in self.tier_indexes.items()},
                 "utilization_percent": min(
                     100.0, (total_size / max(self.max_memory_bytes, 1)) * 100.0
                 ),
-                "fragmentation_score": 0.12,
+                # Real aging signal (was a hardcoded 0.12 "fragmentation_score"
+                # that no algorithm ever computed).
+                "cold_block_ratio": round(cold_blocks / total_blocks, 4) if total_blocks else 0.0,
                 **self.stats,
             }
 

@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceSettings, WORKSPACE_MODULES } from '../../hooks/useWorkspaceSettings';
 import { connectionsApi } from '../../services/connectionsApi';
+import { apiClient } from '../../services/apiClient';
 import TaskAutomationCard from './TaskAutomationCard';
 
 const quickStarts = [
@@ -15,19 +16,40 @@ const quickStarts = [
   { label: 'Build a workflow', detail: 'Turn a repeatable task into a helper.', icon: Zap, href: '/agents' },
 ];
 
+interface RecentConversation {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export const UserDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [showTools, setShowTools] = useState(false);
   const [showAddWizard, setShowAddWizard] = useState(false);
+  // FIX(intent-carryover): the ask-box used to navigate to /workspace/live
+  // on Enter while discarding the typed text — the user's intent was lost
+  // every time. It is now kept in state and forwarded to the Studio via a
+  // URL param (consumed and stripped by AIStudio on mount).
+  const [ask, setAsk] = useState('');
   const { enabledModules, toggleModule } = useWorkspaceSettings();
   const name = user?.name?.split(' ')[0] || 'there';
+
+  const submitAsk = () => {
+    const intent = ask.trim();
+    if (!intent) return;
+    navigate(`/workspace/live?intent=${encodeURIComponent(intent)}`);
+  };
 
   // State-based capabilities from live backend (Phase 2 Progressive Disclosure)
   const [serverCapabilities, setServerCapabilities] = useState<UserCapability[]>([]);
   const [loadingWorkspace, setLoadingWorkspace] = useState(false);
   // বাংলা: backend-এর Explain-Why payload (unavailableReason) — Explainer UX-এর জন্য
   const [capabilityReasons, setCapabilityReasons] = useState<Record<string, string>>({});
+  // Recent work panel state: null = still loading, [] = honestly empty
+  const [recentConversations, setRecentConversations] = useState<RecentConversation[] | null>(null);
+  const [recentLoading, setRecentLoading] = useState(false);
 
   const fetchWorkspaceState = async () => {
     setLoadingWorkspace(true);
@@ -58,7 +80,38 @@ export const UserDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchWorkspaceState();
+    fetchRecentConversations();
   }, []);
+
+  // FIX(recent-work): this section previously said "Nothing here yet" on a
+  // hardcoded basis — it never asked the backend. It now lists the user's
+  // most recent real conversations (GET /api/conversations, same API the
+  // branch button uses) and degrades honestly to the empty state.
+  const fetchRecentConversations = async () => {
+    setRecentLoading(true);
+    try {
+      const data = await apiClient.get<RecentConversation[] | { data?: RecentConversation[] }>(
+        '/api/conversations',
+      );
+      const rows = Array.isArray(data) ? data : (data?.data ?? []);
+      setRecentConversations(rows.slice(0, 3));
+    } catch {
+      // Auth/permission or backend unavailable — show the honest empty state.
+      setRecentConversations([]);
+    } finally {
+      setRecentLoading(false);
+    }
+  };
+
+  const formatRelativeTime = (iso: string) => {
+    const deltaMs = Date.now() - new Date(iso).getTime();
+    const minutes = Math.round(deltaMs / 60000);
+    if (!Number.isFinite(minutes) || minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.round(hours / 24)}d ago`;
+  };
 
   // Hybrid Progressive Disclosure:
   // Show server capabilities + local active modules (de-duplicated)
@@ -105,15 +158,17 @@ export const UserDashboard: React.FC = () => {
               aria-label="Ask SupremeAI what to accomplish"
               placeholder="Ask a question, describe a task, or share an idea..."
               className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none placeholder:text-[var(--sa-ink-muted)]"
+              value={ask}
+              onChange={(event) => setAsk(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229)
-                  navigate('/workspace/live');
+                  submitAsk();
               }}
             />
             <button
               type="button"
               aria-label="Open SupremeAI Studio"
-              onClick={() => navigate('/workspace/live')}
+              onClick={submitAsk}
               className="flex size-11 shrink-0 items-center justify-center rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] text-white transition hover:opacity-90"
             >
               <ArrowRight size={17} />
@@ -211,11 +266,41 @@ export const UserDashboard: React.FC = () => {
 
         <section className="grid gap-4 lg:grid-cols-2">
           <div className="sa-surface-raised p-5">
-            <p className="sa-eyebrow">Recent work</p>
-            <h2 className="mt-2 text-lg font-semibold">Nothing here yet</h2>
-            <p className="mt-2 text-sm text-[var(--sa-ink-muted)]">
-              Your conversations, projects, and completed tasks will appear here.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="sa-eyebrow">Recent work</p>
+              {recentLoading && <RefreshCw size={13} className="animate-spin text-[var(--sa-ink-muted)]" />}
+            </div>
+            {recentConversations && recentConversations.length > 0 ? (
+              <>
+                <h2 className="mt-2 text-lg font-semibold">Pick up where you left off</h2>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {recentConversations.map((conversation) => (
+                    <li key={conversation.id}>
+                      <Link
+                        to="/workspace/live"
+                        className="flex items-center justify-between gap-3 rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-3 py-2.5 text-sm transition hover:border-[var(--sa-primary)] hover:bg-[var(--sa-primary-soft)]"
+                      >
+                        <span className="min-w-0 flex-1 truncate font-medium">
+                          {conversation.title?.trim() || 'Untitled conversation'}
+                        </span>
+                        <span className="shrink-0 text-xs text-[var(--sa-ink-muted)]">
+                          {formatRelativeTime(conversation.updated_at)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-2 text-lg font-semibold">Nothing here yet</h2>
+                <p className="mt-2 text-sm text-[var(--sa-ink-muted)]">
+                  {recentConversations === null
+                    ? 'Loading your recent conversations…'
+                    : 'Your conversations, projects, and completed tasks will appear here.'}
+                </p>
+              </>
+            )}
           </div>
           <div className="sa-surface-raised p-5">
             <p className="sa-eyebrow">Need a starting point?</p>

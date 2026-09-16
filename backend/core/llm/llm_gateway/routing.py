@@ -45,6 +45,42 @@ _DEFAULT_FALLBACK_MODELS: list[str] = list(
 TASK_MODEL_MAP: dict[str, str] = settings.task_models
 
 
+# Runtime provider/model override (admin API controlled).
+# When set, the override model/provider is prepended to EVERY built call chain
+# until the remaining-request budget is exhausted (remaining_requests=0/None
+# means unlimited). This is real routing behavior — _build_call_chain feeds the
+# gateway's actual request path — not a UI-only flag.
+_RUNTIME_OVERRIDE: dict[str, str | None] = {"provider": None, "model": None}
+_OVERRIDE_REMAINING: int = 0
+
+
+def set_runtime_override(
+    provider: str, model: str | None = None, remaining_requests: int | None = None
+) -> None:
+    """Activate a runtime routing override (admin action)."""
+    global _OVERRIDE_REMAINING
+    _RUNTIME_OVERRIDE["provider"] = provider
+    _RUNTIME_OVERRIDE["model"] = model
+    _OVERRIDE_REMAINING = max(0, int(remaining_requests)) if remaining_requests else 0
+
+
+def get_runtime_override() -> dict[str, str | int | None]:
+    """Current override state, or None values when inactive."""
+    return {
+        "provider": _RUNTIME_OVERRIDE["provider"],
+        "model": _RUNTIME_OVERRIDE["model"],
+        "remaining_requests": _OVERRIDE_REMAINING,
+    }
+
+
+def clear_runtime_override() -> None:
+    """Deactivate the runtime override."""
+    global _OVERRIDE_REMAINING
+    _RUNTIME_OVERRIDE["provider"] = None
+    _RUNTIME_OVERRIDE["model"] = None
+    _OVERRIDE_REMAINING = 0
+
+
 class RoutingMixin:
     """Routing-policy + fallback-chain methods for LLMGateway (verbatim move)."""
 
@@ -89,6 +125,21 @@ class RoutingMixin:
         elif any(kw in task_type.lower() for kw in ("agent", "analysis")):
             difficulty = "medium"
 
+        # Consume the runtime override (if any) for this chain build.
+        global _OVERRIDE_REMAINING
+        override_provider: str | None = None
+        override_model: str | None = None
+        if _RUNTIME_OVERRIDE["provider"]:
+            override_provider = _RUNTIME_OVERRIDE["provider"]
+            override_model = _RUNTIME_OVERRIDE["model"]
+            if _OVERRIDE_REMAINING > 0:
+                _OVERRIDE_REMAINING -= 1
+                if _OVERRIDE_REMAINING == 0:
+                    clear_runtime_override()
+
+        effective_model = model or override_model
+        effective_provider = provider or override_provider
+
         model_candidates: list[str] = self.routing_policy.get("complexity_rules", {}).get(
             difficulty, []
         )
@@ -97,8 +148,8 @@ class RoutingMixin:
         )
 
         call_chain: list[str] = []
-        if model:
-            call_chain.append(model)
+        if effective_model:
+            call_chain.append(effective_model)
 
         task_specific_model = TASK_MODEL_MAP.get(task_type.lower())
         if task_specific_model and task_specific_model not in call_chain:
@@ -111,9 +162,9 @@ class RoutingMixin:
 
         # বাংলা মন্তব্ব: যদি নির্দিষ্ট কোনো প্রোভাইডার (যেমন 'groq') প্রোভাইড করা হয়, তবে কল চেইনের মডেলগুলো রী-অর্ডার করা হবে
         # যাতে সেই প্রোভাইডারের মডেলগুলো সবার আগে স্থান পায়।
-        if provider:
-            provider_models = [m for m in call_chain if m.startswith(f"{provider}/")]
-            other_models = [m for m in call_chain if not m.startswith(f"{provider}/")]
+        if effective_provider:
+            provider_models = [m for m in call_chain if m.startswith(f"{effective_provider}/")]
+            other_models = [m for m in call_chain if not m.startswith(f"{effective_provider}/")]
             call_chain = provider_models + other_models
 
         if not call_chain:

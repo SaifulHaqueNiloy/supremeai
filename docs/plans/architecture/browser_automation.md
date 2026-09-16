@@ -3,7 +3,7 @@ id: browser-automation-core
 subject: "SupremeAI Browser Automation — Canonical Plan"
 document_role: architecture
 planning_authority: CircleName.BROWSER
-canonical: candidate
+canonical: true
 status: active
 evidence_state: partial
 disposition: retain
@@ -186,3 +186,21 @@ The browser supports two execution channels:
 
 - ` EXTERNAL_AGENT_ORCHESTRATION_LAYER_PLAN.md` (archived)
 - `dual_channel_zero_cost_browser_and_distributed_worker.md` (consolidated)
+---
+
+## Evolution (2026-09-17) — Session Lifecycle vs Credential Vaulting Boundary
+
+Canonical scope split per `CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md` §6 / Decision 3, verified against live code:
+
+| Capability | Authority | Code evidence |
+|---|---|---|
+| Browser execution & session lifecycle (cookies, storage state, ephemeral profile, session expiry/revocation) | **CircleName.BROWSER** | `backend/core/circles/centers/browser_center.py`; `core.browser_session_manager`; `CircleName.BROWSER = "browser"` at `backend/core/circles/contracts.py:17` |
+| Credential persistence (API keys, tokens, vault-backed passwords) | **Security Circle** | `backend/core/security/secure_credential_store.py` |
+
+**Honest evidence note:** `CircleName` (`backend/core/circles/contracts.py`) currently has **no `SECURITY` member** (values: gateway, llm, memory, task, browser, mcp, admin, realtime, artifact, evolution). The Security Circle authority above is therefore anchored by the credential-store module, not by a circle enum value — adding a `CircleName.SECURITY` member is a code change outside this plan's scope and is recorded as a follow-up, not claimed as done.
+
+**Session modes in scope:** ephemeral session · user-provided-per-run credentials · authorized vault-backed credentials (one-time injection into the browser session upon authorization).
+
+**Zero-abuse boundary (out of scope):** unauthorized scraping, cookie theft, CAPTCHA bypass, stealth attack tooling.
+
+**Related family files (no supersession claimed):** `features/dual_channel_zero_cost_browser_and_distributed_worker.md`, `architecture/autonomous_product_verification_engine.md`, `features/qa_engine_auto_checking_implementation_plan.md`.
