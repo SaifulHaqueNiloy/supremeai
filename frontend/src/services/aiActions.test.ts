@@ -163,7 +163,7 @@ describe('useAiActions', () => {
       await result.current.jitAction(onOutput, onLoading);
     });
     expect(apiCall).toHaveBeenCalledWith(
-      expect.objectContaining({ endpoint: '/api/v1/workspaces/bind-target', method: 'POST' })
+      expect.objectContaining({ endpoint: '/admin-api/workspaces/bind-target', method: 'POST' })
     );
     expect(onOutput.mock.calls[0][0].content).toContain('OTP যাচাই সফল');
   });

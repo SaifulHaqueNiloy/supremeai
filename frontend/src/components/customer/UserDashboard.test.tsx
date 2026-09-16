@@ -50,11 +50,15 @@ describe('UserDashboard', () => {
     expect(screen.getByText('Good morning, there.')).toBeInTheDocument();
   });
 
-  it('opens Studio from the intent input', () => {
+  it('opens Studio from the intent input carrying the typed intent', () => {
     renderWithProviders(<UserDashboard />);
     const input = screen.getByPlaceholderText('Ask a question, describe a task, or share an idea...');
+    fireEvent.change(input, { target: { value: 'build me a landing page' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    expect(mockedUseNavigate).toHaveBeenCalledWith('/workspace/live');
+    // FIX(intent-carryover): Enter forwards the typed intent as a URL param
+    expect(mockedUseNavigate).toHaveBeenCalledWith(
+      `/workspace/live?intent=${encodeURIComponent('build me a landing page')}`
+    );
   });
 
   it('does not open Studio for composing or unrelated keys', () => {
