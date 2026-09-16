@@ -24,6 +24,7 @@
 |------|--------|------|
 | **Browser Automation** | active | `architecture/browser_automation.md` ⭐ NEW |
 | **Master Plan** | active | `architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md` |
+| **Unified FastMCP Control Tower** | active | `architecture/unified_fastmcp_control_tower_multitenant_master_plan_bn.md` ⭐ |
 | **Control Plane** | active | `architecture/distributed_infrastructure_central_control_plane_plan.md` |
 
 ### IN PROGRESS
@@ -38,8 +39,8 @@
 
 | Plan | Status | Next Review |
 |------|--------|-------------|
-| Antihacking Security Framework | proposed | Security Circle |
-| Living Autonomous Intelligence | proposed | AI Evolution |
+| [Antihacking Security Framework](features/antihacking_security_defense_framework.md) | proposed | Security Circle |
+| [Living Autonomous Intelligence](architecture/living_autonomous_intelligence_synthesis.md) | proposed | AI Evolution |
 | Q1 2026 Foundation Execution | proposed | Q1 Sprint |
 
 ---

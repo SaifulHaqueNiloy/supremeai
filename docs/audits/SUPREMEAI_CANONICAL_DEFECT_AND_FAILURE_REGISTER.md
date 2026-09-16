@@ -649,7 +649,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
 * **Status:** ✅ FIXED (PR #383) — caller moved to `/admin-api/workspaces/bind-target`.
 
 ### 4.4 `/api/v1/ecosystem/admin/*` — 17 Dead Admin Calls (`ERR-H04`)
-* **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposes `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals`.
+* **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposed `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals` — nothing else.
 * **Frontend Caller (`frontend/src/lib/ecosystem/api.ts`):** Calls completely different names:
   * `/api/v1/ecosystem/admin/sources` (+`/discover`, `/{id}/transition`) ➔ **404**
   * `/api/v1/ecosystem/admin/policies` (+`/{id}`, `/match`) ➔ **404**
@@ -658,7 +658,12 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * `/proposals/{id}/decisions` (backend expects `/proposals/{id}/decide`) ➔ **404**
   * `/api/v1/auth/users`, `/api/v1/auth/users/{id}/role` ➔ **404**
 * **Impact:** The ecosystem admin console client is entirely non-functional.
-* **Status:** ❌ OPEN — Backend and frontend route names remain mismatched.
+* **Status:** ✅ FIXED (PR #396) — all 17 calls wired for real, engine-backed (adaptive_engine canonical models; no mocks):
+  * SO1-4/SP1-4/LE1-3/GO1-2/PR4/C5 added to `ecosystem_admin.py`; new real engine methods: `SourceGovernance.list_sources/get_source/list_policies/delete_policy/delete_learned`, `GovernanceEngine.list_decisions/budget_summary`, `ApprovalWorkflow.list_decisions(proposal_id=…)`, `CapabilityRegistry.delete` (ARCHIVED-only, honest 409 otherwise).
+  * A5/A6 added to `api/routes/auth.py` (`GET /users`, `PATCH /users/{user_id}/role`) backed by the deployed admin user registry (same store as `/admin-api/users`), `get_current_admin`-guarded, 404 on unknown user.
+  * `_verify_admin` evolved to JWT-first (module docstring's documented production intent) with static `ADMIN_TOKEN` kept as ops fallback — previously even a valid admin JWT got 403.
+  * Frontend client (`api.ts`/`types.ts`) aligned to the canonical engine shapes.
+  * Contract tests: `backend/tests/api/test_ecosystem_admin_contract.py` (18 tests, isolated per-test SQLite).
 
 ### 4.5 `/api/knowledge/*` — Four Dead Shared Service Calls (`ERR-H05`)
 * **Backend Definition (`backend/api/routes/knowledge.py`):** Exposes `/api/knowledge/ask`, `/ask-scribe`, `/search`, `/seed`.
@@ -668,7 +673,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * Line 127 calls `/api/knowledge/feedback` ➔ **404**
   * Line 136 calls `/api/knowledge/stats` ➔ **404**
 * **Impact:** The learning-loop client fails silently when saving failure/feedback/learning signals.
-* **Status:** ❌ OPEN — Backend has not implemented `/learn`, `/failure`, `/feedback`, or `/stats`.
+* **Status:** ✅ FIXED (PR #397) — all four routes implemented in `backend/api/routes/knowledge.py` with REAL persistence: every accepted payload is stored as an `EvolutionSignal` in the canonical adaptive_engine learning-loop store (`ecosystem_evolution_signals`); descriptions derived verbatim from payload fields (no fabricated data); routes enforce honest type/route semantics; `/stats` aggregates list_signals() into {recentActivity, total}. Contract tests: `backend/tests/api/test_knowledge_learning_loop.py` (11 tests).
 
 ### 4.6 Guaranteed HTTP 500: Missing Module Import (`ERR-H06`)
 * **Location:** `backend/api/routes/agents.py:55` imports `from agents.research_assistant import ResearchAssistant`.
@@ -679,7 +684,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
 ### 4.7 Dual Divergent Agent Routers (`ERR-H07` & `ERR-H08`)
 * `backend/api/routers.py` mounts both `/api/agents` (`api.routes.agents` with user token) and `/api/v1/agents` (`api.routes.agent` with autonomous agent token).
 * `ERR-H08`: `backend/api/routes/agent.py:54` calls `exec_res = agent.execute(task_description=payload.prompt)`. The underlying implementation (`TaskRunnerAgent.execute`) is **synchronous**, blocking the async event loop for the entire run.
-* **Status:** ❌ OPEN — Dual routers not unified; sync execution not offloaded.
+* **Status:** ✅ FIXED (PR #398) — unified dual-router contract + sync execution offloaded to thread pool via `anyio.to_thread.run_sync`. Read surface lives at `/api/agents` while execution surface lives at `/api/v1/agents/execute`. Contract tests: `backend/tests/api/test_agent_execute_contract.py` (10 tests).
 
 ---
 

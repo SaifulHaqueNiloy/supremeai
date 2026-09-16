@@ -15,14 +15,15 @@
 
 ---
 
-## 📊 TRACKING
+## 📊 TRACKING & STATUS
 
 | Plan | Purpose |
 |------|---------|
-| `project_milestones_and_completion_tracker.md` | Milestone tracking |
 | `implementation_and_milestone_trackers.md` | Implementation status |
+| `project_milestones_and_completion_tracker.md` | Milestone tracking |
 | `agent_roles_and_team_assignments.md` | Team structure |
 | `agent_and_engineer_skill_requirements.md` | Skills mapping |
+| `PRODUCTION_ROADMAP_2026-09-11.md` | Production roadmap (P0/P1/P2) |
 
 ---
 
@@ -36,13 +37,24 @@
 
 ---
 
-## 📋 PLANNING TEMPLATES
+## 📋 PLANNING TEMPLATES & ROADMAPS
 
 | Plan | Purpose |
 |------|---------|
 | `sprint_planning_execution_template.md` | Sprint template |
 | `q1_2026_foundation_execution_plan.md` | Quarterly plan |
 | `yearly_strategic_roadmap_2026.md` | Annual roadmap |
+| `team_and_cloud_resource_allocation_plan.md` | Resource allocation |
+
+---
+
+## 🏛️ GOVERNANCE & RECONCILIATION
+
+| Plan | Purpose |
+|------|---------|
+| `plan_reconciliation_register.md` | Reconciliation register (active) |
+| `phase_1_execution_patch_notes.md` | Phase 1 patch notes |
+| `file_disposition_and_retention_list.md` | File retention guidance |
 
 ---
 
@@ -51,6 +63,4 @@
 | Plan | Archive Location |
 |------|------------------|
 | `historical_status_snapshot_2026_05_10.md` | `docs/archive/plans/phases/` |
-| `plan_reconciliation_audit_2026_09_03.md` | Historical |
-| `plan_reconciliation_register.md` | Historical |
-| `phase_1_execution_patch_notes.md` | Historical |
+| `plan_reconciliation_audit_2026_09_03.md` | `docs/archive/plans/phases/` |

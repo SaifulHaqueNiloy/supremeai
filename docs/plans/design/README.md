@@ -10,7 +10,6 @@
 |------|--------|-------|
 | `dashboard_design_mockups.md` | active | UI/UX |
 | `admin_dashboard_plan.md` | active | Admin C6 |
-| `universal_zero_complexity_interface_plan.md` | active | Core |
 
 ---
 
@@ -34,3 +33,11 @@
 | `single_frontend_role_based_auth_migration_roadmap.md` | Auth migration |
 | `complete_frontend_master_plan_bn.md` | Full roadmap (Bangla) |
 | `supremeai_2_product_ui_ux_completeness_master_plan.md` | Product UI |
+
+---
+
+## 🔗 CROSS-REFERENCE
+
+| Plan | Location | Purpose |
+|------|----------|---------|
+| `universal_zero_complexity_interface_plan.md` | `docs/plans/features/` | Zero-complexity interface design |
