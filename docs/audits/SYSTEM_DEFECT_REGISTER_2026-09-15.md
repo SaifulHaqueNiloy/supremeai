@@ -118,7 +118,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * Line 127 calls `/api/knowledge/feedback` ➔ **404**
   * Line 136 calls `/api/knowledge/stats` ➔ **404**
 * **Impact:** The learning-loop client fails silently when saving failure/feedback/learning signals.
-* **Status:** ❌ OPEN — Backend has not implemented `/learn`, `/failure`, `/feedback`, or `/stats`.
+* **Status:** ✅ FIXED (PR #397) — all four routes implemented in `backend/api/routes/knowledge.py` with REAL persistence: every accepted payload is stored as an `EvolutionSignal` in the canonical adaptive_engine learning-loop store (`ecosystem_evolution_signals`); descriptions derived verbatim from payload fields (no fabricated data); routes enforce honest type/route semantics (ERROR_REPORT → /failure, SUGGESTION_FEEDBACK → /feedback, else 400); `/stats` aggregates list_signals() into {recentActivity:[{type,message,timestamp}],total} with an honest empty list when no signals exist. Contract tests: `backend/tests/api/test_knowledge_learning_loop.py` (11 tests).
 
 ### 4.6 Guaranteed HTTP 500: Missing Module Import (`ERR-H06`)
 * **Location:** `backend/api/routes/agents.py:55` imports `from agents.research_assistant import ResearchAssistant`.
