@@ -21,6 +21,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 - [PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16.md](PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16.md) — Plan #001 (corrected discipline): single complete plan to add Anthropic prompt caching on existing LiteLLM Gateway (4 small file changes, 0 new deps, 0 new infra, 0 CI impact); Part 1 fixes the planning discipline (9 rules); Part 2 is the complete plan with have/missing/do/how/benefit/harm
 - [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md) — CI/CD Execution Consolidation
 - [implementation_plan.md](implementation_plan.md) — Tactical Implementation Priorities
+- [PR_GUARDIAN_ANALYSIS_PLAN.md](PR_GUARDIAN_ANALYSIS_PLAN.md) — PR Guardian: improvement-only merge automation (IMPLEMENTED v1 in the MCP Control Tower; merge requires measurable improvement with zero regressions — CI status is evidence, not the gate)
 - [vision_strategic_positioning.md](vision_strategic_positioning.md) — Competitive positioning, chosen battlefields, and phased execution strategy (renamed from MASTER_PLAN.md)
 - [PRE_PRODUCTION_GO_LIVE_MASTER_TODO.md](../release/PRE_PRODUCTION_GO_LIVE_MASTER_TODO.md) — Authoritative Pre-Production & Go-Live Master Release Checklist (1,878 lines)
 
