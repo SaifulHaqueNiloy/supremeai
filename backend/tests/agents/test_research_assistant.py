@@ -84,7 +84,7 @@ def test_search_rejects_empty_query() -> None:
         ResearchAssistant().search("   ")
 
 
-@pytest.mark.network
+@pytest.mark.requires_network
 def test_search_hits_live_arxiv() -> None:
     """Live arXiv round trip (skipped in CI without network)."""
     try:
