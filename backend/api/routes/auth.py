@@ -8,7 +8,7 @@ import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jwt import PyJWTError as JWTError
-from pydantic import BaseModel, EmailStr, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 from core.cache.redis_manager import redis_manager
 from core.config import settings
@@ -16,6 +16,10 @@ from core.error_bus import with_error_bus
 from core.logging_config import logger
 from core.security import is_token_revoked, revoke_token
 from core.security.authentication.rbac import UserContext
+
+# বাংলা: A5/A6 (admin users) রুটের জন্য admin guard — circular import এড়াতে
+# এটি lazy নয়, dependencies মডিউল core-only তাই এখানে safe।
+from api.dependencies import get_current_admin
 from database.supabase_client import db
 
 try:
@@ -645,3 +649,41 @@ async def verify_token(request: Request):
         "role": user.get("role"),
         "message": "Authentication successful",
     }
+
+
+# ---------------------------------------------------------------------------
+# A5/A6 — admin user listing + role management (ecosystem admin contract).
+# Store: the deployed admin user registry (load_users/save_users — the same
+# store /admin-api/users serves). Identity key: ``username``.
+# ---------------------------------------------------------------------------
+
+
+class UserRoleUpdateRequest(BaseModel):
+    role: str = Field(min_length=1, max_length=64)
+
+
+@router.get("/users")
+async def list_users_admin(admin: dict = Depends(get_current_admin)) -> list[dict[str, Any]]:
+    """A5 — list admin-registry users (admin only)."""
+    from api.routes.admin_dashboard import load_users
+
+    users = load_users()
+    return users if isinstance(users, list) else []
+
+
+@router.patch("/users/{user_id}/role")
+async def set_user_role(
+    user_id: str,
+    req: UserRoleUpdateRequest,
+    admin: dict = Depends(get_current_admin),
+) -> dict[str, Any]:
+    """A6 — set a user's role in the admin registry (admin only, 404 if unknown)."""
+    from api.routes.admin_dashboard import load_users, save_users
+
+    users = load_users()
+    for user in users:
+        if user.get("username") == user_id:
+            user["role"] = req.role
+            save_users(users)
+            return user
+    raise HTTPException(status_code=404, detail=f"user not found: {user_id}")

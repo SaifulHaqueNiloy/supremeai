@@ -327,13 +327,20 @@ class ApprovalWorkflow:
         return [self._from_row(r) for r in rows]
 
     def list_decisions(
-        self, *, dedup_key: str | None = None, limit: int = 100
+        self,
+        *,
+        dedup_key: str | None = None,
+        proposal_id: str | None = None,
+        limit: int = 100,
     ) -> list[dict[str, Any]]:
         clauses: list[str] = []
         params: list[Any] = []
         if dedup_key:
             clauses.append("dedup_key = ?")
             params.append(dedup_key)
+        if proposal_id:
+            clauses.append("proposal_id = ?")
+            params.append(proposal_id)
         params.append(limit)
         with get_conn() as conn:
             rows = conn.execute(
