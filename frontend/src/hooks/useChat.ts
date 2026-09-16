@@ -32,6 +32,8 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const loadingRef = useRef(loading);
+  loadingRef.current = loading;
 
   useEffect(() => {
     return () => {
@@ -40,7 +42,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
   }, []);
 
   const send = useCallback(async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loadingRef.current) return;
 
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(),
@@ -181,7 +183,7 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
         triggerOrchestration(false);
       }
     }
-  }, [input, loading, projectId, streaming, addCustomerMessage, addStoreMessage, triggerOrchestration]);
+  }, [input, projectId, streaming, addCustomerMessage, addStoreMessage, triggerOrchestration]);
 
   const clear = useCallback(() => {
     setMessages([]);

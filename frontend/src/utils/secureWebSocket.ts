@@ -21,13 +21,13 @@
  *   });
  */
 
+import { getRawToken } from '../services/apiClient';
+
 /**
- * Reads the best available session token from the in-memory auth cache.
- * Tokens are intentionally not read from localStorage; callers should use
- * cookie-authenticated WebSockets or provide a short-lived in-memory token.
+ * Reads the best available session token from the centralized token cache / storage.
  */
 export function getAuthToken(): string | null {
-  return null;
+  return getRawToken();
 }
 
 export interface SecureWsCallbacks {
