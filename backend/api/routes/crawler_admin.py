@@ -25,6 +25,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_project_admin
+from core.logging_config import logger
 from scout import persistence
 from scout.models import CrawlHistoryRecord, CrawlPolicy, DomainRule, TrustLevel
 
@@ -78,7 +79,16 @@ async def list_policies(user: dict = Depends(get_project_admin)) -> list[CrawlPo
         try:
             await persistence.upsert_policy(default_pol)
         except Exception:
-            pass  # seed failure non-fatal; পরের create-এ আবার চেষ্টা হবে
+            # Seed failure stays non-fatal (next create retries), but it must
+            # be observable — the old bare `except: pass` swallowed DB outages
+            # silently, so a broken persistence layer looked like a fresh
+            # tenant on every request.
+            logger.warning(
+                "Crawl policy seed failed for tenant %s; returning in-memory "
+                "default. Will retry on next create.",
+                tenant_id,
+                exc_info=True,
+            )
         policies = [default_pol]
     return policies
 
