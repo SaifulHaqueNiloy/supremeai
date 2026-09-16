@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
@@ -177,7 +177,7 @@ async def upload_chat_image(
                     "mime_type": mime_type,
                     "size": len(content),
                     "user_id": user_id,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
                 },
                 meta_fh,
             )
@@ -289,7 +289,7 @@ async def list_uploads(user: dict = Depends(get_current_user_token)):
                     "mime_type": meta.get("mime_type")
                     or _EXT_TO_MIME.get(ext, "application/octet-stream"),
                     "created_at": meta.get("created_at")
-                    or datetime.fromtimestamp(stat.st_mtime, timezone.utc).isoformat(),
+                    or datetime.fromtimestamp(stat.st_mtime, UTC).isoformat(),
                 }
             )
     items.sort(key=lambda item: item["created_at"] or "", reverse=True)

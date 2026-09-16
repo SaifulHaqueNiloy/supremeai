@@ -163,16 +163,18 @@ class TestAuthGate:
     """
 
     def test_returns_state_user_when_present(self):
-        from api.dependencies import get_current_user_token
         from starlette.requests import Request
+
+        from api.dependencies import get_current_user_token
 
         user = {"sub": "someone@example.com", "role": "user"}
         request = Request(scope={"type": "http", "state": {"user": user}})
         assert get_current_user_token(request) == user
 
     def test_rejects_anonymous_when_bypass_disabled(self, monkeypatch):
-        import api.dependencies as deps
         from starlette.requests import Request
+
+        import api.dependencies as deps
 
         monkeypatch.setattr(deps, "is_test_environment", lambda: False)
         request = Request(scope={"type": "http", "state": {}})
