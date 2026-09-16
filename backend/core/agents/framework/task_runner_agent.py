@@ -164,20 +164,25 @@ class AutonomousAgent:
         }
 
     def _run_step(self, step: str, task_description: str, context: str | None) -> StepResult:
+        # Register 7.2 / ERR-M01 follow-up (2026-09-16): these steps used to
+        # return fabricated completions ("Investigation complete.", "Fix
+        # applied.") while doing no work. Every scaffold step now states
+        # plainly that NO tooling executed — nothing claims completion it did
+        # not perform.
         if step == "investigate":
             output = {
-                "message": "Investigation complete.",
+                "message": "NOT PERFORMED: no investigation tooling is wired into this pipeline step.",
                 "files_checked": [],
-                "findings": "Detected relevant task keywords.",
+                "findings": "No findings — nothing was scanned.",
             }
         elif step == "propose_fix":
             output = {
-                "message": "Fix proposal generated.",
-                "proposal": f"Review task: {task_description} and apply minimal change.",
+                "message": "NOT GENERATED: no proposal tooling is wired into this pipeline step.",
+                "proposal": None,
             }
         elif step == "apply_fix":
             output = {
-                "message": "Fix applied.",
+                "message": "NOT APPLIED: no fix tooling is wired into this pipeline step; nothing changed.",
                 "changed": [],
             }
         elif step == "verify":
