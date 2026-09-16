@@ -99,21 +99,38 @@ export interface InstallResult {
   message: string;
 }
 
+interface InstallApiResponse {
+  status: string;
+  skill: string;
+  version?: string;
+  installed_at?: string;
+  message: string;
+}
+
 export const installSkill = async (skillId: string): Promise<InstallResult> => {
-  const response = await apiClient.post<InstallResult>(
-    `/api/skills/${skillId}/install`
+  // ERR-H02 FIX: the backend contract is POST /api/skills/install?skill=<id>
+  // (skills.py has no /{id}/install path segment) — the old URL 404'd.
+  const response = await apiClient.post<InstallApiResponse>(
+    `/api/skills/install?skill=${encodeURIComponent(skillId)}`
   );
-  
+
   // Notify evolution system about new skill
   eventBus.emit(Events.SKILL_AUTO_CREATED, {
     skillId,
     source: 'manual_install',
     timestamp: Date.now(),
   });
-  
-  return response;
+
+  return {
+    success: response.status === 'installed',
+    skillId: response.skill,
+    installedVersion: response.version ?? '',
+    message: response.message,
+  };
 };
 
 export const uninstallSkill = async (skillId: string): Promise<void> => {
-  await apiClient.delete(`/api/skills/${skillId}/uninstall`);
+  // ERR-H02 FIX: backend route is DELETE /api/skills/uninstall?skill=<id>
+  // (the old /{id}/uninstall path never existed → 404, uninstall was broken).
+  await apiClient.delete(`/api/skills/uninstall?skill=${encodeURIComponent(skillId)}`);
 };
