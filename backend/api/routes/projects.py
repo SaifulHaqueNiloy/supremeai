@@ -60,9 +60,7 @@ def _serialize(project: Project) -> dict:
     }
 
 
-async def _get_owned_project(
-    project_id: str, owner_id: str, db: AsyncSession
-) -> Project:
+async def _get_owned_project(project_id: str, owner_id: str, db: AsyncSession) -> Project:
     """Fetch a project enforcing ownership — 404 (not 403) to avoid id probing."""
     project = await db.get(Project, project_id)
     if project is None or project.owner_id != owner_id:

@@ -404,9 +404,7 @@ async def delete_upload(
         except OSError as e:
             logger.warning(f"Failed to delete file from disk: {e}")
     try:
-        sidecar_path = os.path.join(
-            UPLOAD_DIR, user_id[:8], f"{attachment_id}.meta.json"
-        )
+        sidecar_path = os.path.join(UPLOAD_DIR, user_id[:8], f"{attachment_id}.meta.json")
         if os.path.isfile(sidecar_path):
             os.remove(sidecar_path)
     except OSError as sidecar_err:
