@@ -317,7 +317,11 @@ class ExperienceDatabase:
 
         # ROADMAP §13, §14: Experience -> Capability Promotion
         # If success, check if it's a repeated pattern to promote to LearningLoop
-        if exp.result == "SUCCESS":
+        # FIX(casing): writers store lowercase "success" (Experience default + all call
+        # sites), so compare case-insensitively — the old `== "SUCCESS"` never matched
+        # and the promotion loop was dead code.
+        result_normalized = (exp.result or "").strip().lower()
+        if result_normalized == "success":
             try:
                 import asyncio
 
@@ -327,10 +331,16 @@ class ExperienceDatabase:
 
                 # Check if we have seen this successful pattern multiple times
                 similar = self.find_similar(request_text, limit=3, threshold=0.85)
-                success_count = sum(1 for s in similar if s.get("result") == "SUCCESS")
+                success_count = sum(
+                    1 for s in similar if str(s.get("result") or "").strip().lower() == "success"
+                )
 
                 if success_count >= 2:
-                    evidence = [s.get("request") for s in similar if s.get("result") == "SUCCESS"]
+                    evidence = [
+                        s.get("request")
+                        for s in similar
+                        if str(s.get("result") or "").strip().lower() == "success"
+                    ]
                     coro = loop_instance.record_signal(
                         kind="REPEATED_SUCCESS",
                         description=f"Repeated success pattern detected: {request_text}",
