@@ -96,6 +96,10 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     {"path": "api.routes.repos", "prefix": "", "is_admin": False, "is_critical": False},
+    # ERR-H07 two-surface agent contract (drift-guarded by
+    # backend/tests/api/test_agent_execute_contract.py):
+    #   api.routes.agents → /api/agents        (USER token, read-only catalog/status)
+    #   api.routes.agent  → /api/v1/agents     (INTEGRATION JWT, canonical execution)
     {"path": "api.routes.agents", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.agent", "prefix": "", "is_admin": False, "is_critical": False},
     {
