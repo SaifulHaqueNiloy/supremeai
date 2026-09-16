@@ -2,6 +2,7 @@
 id: head-of-planning-prompt-caching-v1-2026-09-16
 title: "Head of Planning — Plan #001: Anthropic Prompt Caching on Existing LiteLLM Gateway (Corrected Discipline, Single Complete Plan)"
 status: active
+document_role: implementation
 owner_circle: C5 (Execution — LLM Gateway)
 scope: ONE complete plan, fully grounded in actual repo code, following the corrected planning discipline (small change to existing code, no new infra, no CI amplification, no academic benchmarks, realistic resource budget)
 depends_on:
@@ -16,10 +17,9 @@ implements:
   - Direct token-cost reduction on the zero-cost LLM chain (Constitution #14 Sustainable Cost)
   - Direct latency reduction for cached-prefix portions (Constitution #8 Graceful Degradation)
   - No new subsystem, no new dependency, no new infra (Constitution #3 Reuse Before Creation)
-supersedes:
-  - The 4 rejected ideas from HEAD_OF_PLANNING_LANDSCAPE_INTEL_v1 (Hetzner+OpenObserve, Modal nightly, promptfoo per-CI, GAIA/τ²-bench benchmarks)
+supersedes: []  # supersedes the 4 rejected ideas from HEAD_OF_PLANNING_LANDSCAPE_INTEL_v1 (Hetzner+OpenObserve, Modal nightly, promptfoo per-CI, GAIA/τ²-bench benchmarks) — none are repository files
 superseded_by: []
-last_verified: 2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)
+last_verified: "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)"
 plan_lifecycle: living — single complete plan #001; founder reviews + approves → engineering PR → merge → THEN next plan
 ---
 

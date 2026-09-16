@@ -1,3 +1,17 @@
+---
+id: ci-pipeline-consolidation
+subject: "SupremeAI CI/CD Architecture Optimization Specification (v2.0)"
+document_role: implementation
+planning_authority: DevEx / CI Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI CI/CD Architecture Optimization Specification (v2.0)
 
 **Document ID:** `CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15`  

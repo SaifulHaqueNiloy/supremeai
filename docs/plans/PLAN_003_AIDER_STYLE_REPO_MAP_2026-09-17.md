@@ -2,8 +2,9 @@
 id: head-of-planning-aider-repo-map-v1-2026-09-17
 title: "Head of Planning — Plan #003: Aider-Style Repo Map (stdlib-ast, শূন্য নতুন Dependency) — DynamicPlanningEngine-এর Epistemic Probe-কে সত্যিকারের কোডবেস-দৃষ্টি দেওয়া"
 status: proposed
+document_role: implementation
 owner_circle: C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা)
-scope: ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main 5155c27), following the corrected planning discipline AND the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17): single-plan execution, Gate 0–6, quantitative-claim labeling, explicit out-of-scope
+scope: "ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main 5155c27), following the corrected planning discipline AND the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17): single-plan execution, Gate 0–6, quantitative-claim labeling, explicit out-of-scope"
 depends_on:
   - backend/core/markdown_indexer.py (existing singleton-indexer pattern — এই প্ল্যান একই প্যাটার্ন অনুসরণ করে)
   - backend/core/embeddings.py (existing local-first EmbeddingEngine — all-MiniLM-L6-v2 + hash_vectorize zero-cost fallback)
@@ -21,7 +22,7 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false (proposed candidate — tested code + contracts remain reality; execution only after explicit founder approval per Gate 2; single-plan execution discipline অনুসারে অনুমোদনের পর এটিই হবে একমাত্র active plan)
-last_verified: 2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml)
+last_verified: "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml)"
 code_evidence:
   - backend/core/markdown_indexer.py L18–29 — MarkdownIndexer singleton + get_instance + EmbeddingEngine.get_instance pattern (এই প্ল্যানের CodeIndexer হুবহু এই প্যাটার্ন মেনে চলবে)
   - backend/core/embeddings.py L18–66 — _LOCAL_MODEL_NAME "all-MiniLM-L6-v2" (384-dim), get_local_encoder, hash_vectorize pure-Python zero-cost fallback
@@ -38,7 +39,7 @@ acceptance_criteria:
   - pyproject.toml diff = শূন্য (কোনো নতুন dependency নেই)
 test_evidence_note: Gate 4 অনুযায়ী টেস্ট contract প্রমাণ করে; Gate 5 অনুযায়ী live backend-ওয়াইড index লেটেন্সি/সাইজ মাপা বাধ্যতামূলক
 risk_and_rollback: wiring একটি guard-যুক্ত try/except ব্লকে — CodeIndexer ব্যর্থ হলে probe node আজকের মতোই চলে (no fake repo_map); rollback = একক revert; কোনো DB/config/ডেটা পরিবর্তন নেই; indexer শুধু-পঠন (read-only) — কোনো mutation নেই
-baseline: (hypothesis — execution PR-এ মাপা হবে) আজ: dev-task probe-এর কাছে কোনো কোডবেস সিম্বল-কনটেক্সট নেই; agent ফাইল-পাথ অনুমান করে বা বারবার read করে
+baseline: "(hypothesis — execution PR-এ মাপা হবে) আজ: dev-task probe-এর কাছে কোনো কোডবেস সিম্বল-কনটেক্সট নেই; agent ফাইল-পাথ অনুমান করে বা বারবার read করে"
 measurement_method: (a) render_repo_map() সময় (time.perf_counter, backend নিজের উপর), (b) map আউটপুট সাইজ vs budget, (c) নমুনা dev-intent-এ map-এ প্রাসঙ্গিক ফাইল থাকল কি না (manual grade, 10-sample), (d) PageRank top-20-তে পরিচিত hub ফাইল (orchestrator.py, gateway.py জাতীয়) থাকল কি না
 success_threshold: backend-ওয়াইড index তৈরি ≤5s (acceptance threshold, Render 512MB container-সামঞ্জস্য) এবং 10-sample dev-intent গ্রেডে ≥7 স্যাম্পলে প্রাসঙ্গিক ফাইল map-এ উপস্থিত — উভয়ই hypothesis, Gate 5-এ measured result হবে
 plan_lifecycle: living — proposed candidate under strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). ফাউন্ডার একটি plan অনুমোদন করলে সেটিই একমাত্র active execution plan হবে; PLAN_002 (compaction) ও PLAN_003 (এই ডকুমেন্ট) পরস্পর-সম্পূরক প্রার্থী — কোনোটিই অনুমোদন-পূর্বে executable নয়

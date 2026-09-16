@@ -1,3 +1,17 @@
+---
+id: implementation-plan-index
+subject: "docs/plans — Implementation Plan (Master, Reconciled)"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+canonical: true
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # docs/plans — Implementation Plan (Master, Reconciled)
 
 > **Purpose:** Consolidated implementation direction for the current SupremeAI codebase.

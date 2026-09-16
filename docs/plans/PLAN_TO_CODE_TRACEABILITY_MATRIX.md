@@ -1,3 +1,17 @@
+---
+id: plan-to-code-traceability-matrix
+subject: "SupremeAI Plan-to-Code Traceability Matrix"
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+canonical: true
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Plan-to-Code Traceability Matrix
 
 **Status:** active  

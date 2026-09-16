@@ -1,3 +1,17 @@
+---
+id: plan-lifecycle-policy
+subject: "SupremeAI Plan Lifecycle Policy"
+document_role: policy
+planning_authority: Architecture Governance / Planning Circle
+canonical: true
+status: active
+evidence_state: verified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Plan Lifecycle Policy
 
 **Status:** active  
