@@ -105,93 +105,39 @@ except ImportError:
     _mod.TestSuite = None
     _mod.UnitTestGenerator = None
 
-# Import evolution components
+# Import evolution components — LAZY (PEP 562)
 # বাংলা মন্তব্য: evolution প্যাকেজের কিছু সাব-মডিউল (EWC, adversarial defense,
 # neural-symbolic, federated learning, theory-of-mind) torch দরকার করে। torch এখন
-# আর ডিফল্ট ইনস্টলে নেই (pyproject.toml-এ optional `ml` group-এ সরানো হয়েছে, কারণ
-# এই research/scaffold কোড বাস্তবে কোথাও ব্যবহৃত হয় না -- verify করা হয়েছে গোটা
-# রিপোতে গ্রেপ করে)। কিন্তু `core/__init__.py` প্রায় সব জায়গা থেকে import হয়
-# (`import core` / `from core.X import Y`), তাই আগে torch না থাকলে এই এক লাইনেই
-# পুরো ব্যাকএন্ড (এমনকি health-check টেস্টও) ImportError দিয়ে ক্র্যাশ করত -- এটাই
-# আসল কারণ যে আগের সেশনগুলোতে "poetry install --with dev" ছাড়া pytest কখনো চলত না।
-# try/except দিয়ে গার্ড করে দেওয়া হলো যেন torch অনুপস্থিত থাকলে শুধু এই optional
-# নামগুলো None হয়ে যায়, বাকি পুরো অ্যাপ স্বাভাবিকভাবে import/চলতে পারে।
-try:
-    # BUG FIX #4: original was 'from evolution import (...)' but evolution/
-    # subfolders (theory_of_mind, temporal_abstraction, etc.) were deleted
-    # during UNIFY cleanup. The correct location is core/evolution/ subfolders.
-    # TheoryOfMind and TemporalAbstraction don't exist anymore — set to None.
-    #
-    # BUG FIX (this commit): আগে একটাই বড় try/except ছিল — যেকোনো একটি subsystem
-    # import fail করলে (যেমন torch না থাকলে ewc.py + neural_symbolic দুটোই fail)
-    # সব subsystem None হয়ে যেত। এখন প্রতিটি subsystem আলাদা try/except-এ — torch
-    # unavailable হলেও adversarial_defense/digital_twin/federated_learning available
-    # থাকবে। এটা "no room for mistake" — কোনো production code এগুলো use করে না,
-    # তাই behavior change নেই, শুধু partial availability বাড়ে।
-    from core.self_evolution.adversarial_defense.defense_system import (
-        AdversarialDefenseSystem,
-        AdversarialTrainer,
-        DefenseConfig,
-    )
+# আর ডিফল্ট ইনস্টলে নেই। আগে এই ব্লকটা eager ছিল — `import core` করলেই প্রতিবার
+# sympy (≈1.6s) + adversarial_defense (≈1.3s) লোড হত, অথচ পুরো রিপোতে এই
+# re-export নামগুলোর কোনো consumer নেই (grep-verified; incident #9,
+# ERROR_COMPENDIUM register: pytest collection 30s+, `import scout` ≈11s)।
+# এখন PEP 562 module __getattr__ দিয়ে first-access-এই লোড হয় — public API
+# (`from core import EWC` ইত্যাদি) অপরিবর্তিত থাকে, import-time cost শূন্য।
+_EVOLUTION_LAZY_EXPORTS: dict[str, tuple[str, str]] = {
+    # name → (module, attr)
+    "AdversarialDefenseSystem": ("core.self_evolution.adversarial_defense.defense_system", "AdversarialDefenseSystem"),
+    "AdversarialTrainer": ("core.self_evolution.adversarial_defense.defense_system", "AdversarialTrainer"),
+    "DefenseConfig": ("core.self_evolution.adversarial_defense.defense_system", "DefenseConfig"),
+    "EWC": ("core.self_evolution.continual_learning.ewc", "EWC"),
+    "EWCConfig": ("core.self_evolution.continual_learning.ewc", "EWCConfig"),
+    "EWCTrainer": ("core.self_evolution.continual_learning.ewc", "EWCTrainer"),
+    "OnlineEWC": ("core.self_evolution.continual_learning.ewc", "OnlineEWC"),
+    "RemediationEngine": ("core.self_evolution.digital_twin.remediation_engine", "RemediationEngine"),
+    "ImpactSimulator": ("core.self_evolution.digital_twin.simulator", "ImpactSimulator"),
+    "SystemTopologyMapper": ("core.self_evolution.digital_twin.topology", "SystemTopologyMapper"),
+    "FederatedLearningCoordinator": ("core.self_evolution.federated_learning.fed_learning", "FederatedLearningCoordinator"),
+    "NeuralSymbolicConfig": ("core.self_evolution.neural_symbolic.integration", "NeuralSymbolicConfig"),
+    "NeuralSymbolicIntegrator": ("core.self_evolution.neural_symbolic.integration", "NeuralSymbolicIntegrator"),
+}
 
-    ADVERSARIAL_DEFENSE_AVAILABLE = True
-except (ImportError, OSError, AttributeError):
-    ADVERSARIAL_DEFENSE_AVAILABLE = False
-    AdversarialDefenseSystem = None  # type: ignore[assignment]
-    AdversarialTrainer = None  # type: ignore[assignment]
-    DefenseConfig = None  # type: ignore[assignment]
-
-try:
-    # EWC (Elastic Weight Consolidation) — torch-dependent, free-tier-এ unavailable
-    from core.self_evolution.continual_learning.ewc import (
-        EWC,
-        EWCConfig,
-        EWCTrainer,
-        OnlineEWC,
-    )
-
-    EWC_AVAILABLE = True
-except (ImportError, OSError, AttributeError):
-    EWC_AVAILABLE = False
-    EWC = None  # type: ignore[assignment]
-    EWCConfig = None  # type: ignore[assignment]
-    EWCTrainer = None  # type: ignore[assignment]
-    OnlineEWC = None  # type: ignore[assignment]
-
-try:
-    from core.self_evolution.digital_twin.remediation_engine import RemediationEngine
-    from core.self_evolution.digital_twin.simulator import ImpactSimulator
-    from core.self_evolution.digital_twin.topology import SystemTopologyMapper
-
-    DIGITAL_TWIN_AVAILABLE = True
-except (ImportError, OSError, AttributeError):
-    DIGITAL_TWIN_AVAILABLE = False
-    RemediationEngine = None  # type: ignore[assignment]
-    ImpactSimulator = None  # type: ignore[assignment]
-    SystemTopologyMapper = None  # type: ignore[assignment]
-
-try:
-    from core.self_evolution.federated_learning.fed_learning import (
-        FederatedLearningCoordinator,
-    )
-
-    FEDERATED_LEARNING_AVAILABLE = True
-except (ImportError, OSError, AttributeError):
-    FEDERATED_LEARNING_AVAILABLE = False
-    FederatedLearningCoordinator = None  # type: ignore[assignment]
-
-try:
-    # neural_symbolic — torch-dependent (NeuralModule(nn.Module)), free-tier-এ unavailable
-    from core.self_evolution.neural_symbolic.integration import (
-        NeuralSymbolicConfig,
-        NeuralSymbolicIntegrator,
-    )
-
-    NEURAL_SYMBOLIC_AVAILABLE = True
-except (ImportError, OSError, AttributeError):
-    NEURAL_SYMBOLIC_AVAILABLE = False
-    NeuralSymbolicConfig = None  # type: ignore[assignment]
-    NeuralSymbolicIntegrator = None  # type: ignore[assignment]
+_EVOLUTION_LAZY_FLAGS: dict[str, tuple[str, ...]] = {
+    "ADVERSARIAL_DEFENSE_AVAILABLE": ("AdversarialDefenseSystem",),
+    "EWC_AVAILABLE": ("EWC",),
+    "DIGITAL_TWIN_AVAILABLE": ("RemediationEngine",),
+    "FEDERATED_LEARNING_AVAILABLE": ("FederatedLearningCoordinator",),
+    "NEURAL_SYMBOLIC_AVAILABLE": ("NeuralSymbolicIntegrator",),
+}
 
 # These symbols don't exist anywhere (deleted with evolution/ subfolders):
 # DigitalTwinWorldModel, get_digital_twin_model, FLConfig, AggregationMethod,
@@ -209,14 +155,26 @@ TemporalAbstractionSystem = None
 TemporalAbstractionConfig = None
 TemporalGranularity = None
 
-# Aggregate availability flag — True যদি অন্তত একটি subsystem available হয়
-EVOLUTION_COMPONENTS_AVAILABLE = (
-    ADVERSARIAL_DEFENSE_AVAILABLE
-    or EWC_AVAILABLE
-    or DIGITAL_TWIN_AVAILABLE
-    or FEDERATED_LEARNING_AVAILABLE
-    or NEURAL_SYMBOLIC_AVAILABLE
-)
+
+def _load_evolution_symbol(name: str) -> Any:
+    """Resolve a lazy evolution export; raise ImportError/AttributeError naturally."""
+    module_path, attr = _EVOLUTION_LAZY_EXPORTS[name]
+    import importlib
+
+    module = importlib.import_module(module_path)
+    return getattr(module, attr)
+
+
+def _resolve_or_none(attr: str) -> Any:
+    """Try to resolve a lazy evolution attr; return None if unavailable."""
+    try:
+        return _load_evolution_symbol(attr)
+    except Exception:
+        return None
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | set(_EVOLUTION_LAZY_EXPORTS))
 
 # Version information
 __version__ = "2.0.0"
@@ -348,14 +306,37 @@ def run_complete_system_test():
     logger.debug("Complete SupremeAI 2.0 system ready for advanced AI operations.")
 
 
-def __getattr__(name: str):
-    """
-    Dynamically import submodules when accessed as attributes on core.
+def __getattr__(name: str) -> Any:
+    """PEP 562 lazy access — evolution re-exports first, then submodule fallback.
 
-    Bengali: core প্যাকেজের সাব-মডিউলগুলো ডায়নামিকালি ইমপোর্ট করার জন্য fallback handler।
+    Bengali: core package er submodule gulo dynamically import korar fallback handler.
+    Evolution re-export names (incident #9) load on first access only.
     """
     import importlib
 
+    if name in _EVOLUTION_LAZY_EXPORTS:
+        # Match the historical eager contract: torch/sympy-dependent research
+        # exports become None (not an ImportError) when their deps are absent.
+        try:
+            value = _load_evolution_symbol(name)
+        except (ImportError, OSError, AttributeError):
+            value = None
+        globals()[name] = value
+        return value
+    if name in _EVOLUTION_LAZY_FLAGS:
+        available = all(
+            _resolve_or_none(attr) is not None
+            for attr in _EVOLUTION_LAZY_FLAGS[name]
+        )
+        globals()[name] = available
+        return available
+    if name == "EVOLUTION_COMPONENTS_AVAILABLE":
+        available = any(
+            _resolve_or_none(attr) is not None
+            for attr in {attr for attrs in _EVOLUTION_LAZY_FLAGS.values() for attr in attrs}
+        )
+        globals()[name] = available
+        return available
     try:
         mod = importlib.import_module(f"core.{name}")
         globals()[name] = mod
