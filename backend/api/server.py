@@ -133,6 +133,11 @@ app.add_middleware(
         "X-Request-ID",
         "X-Correlation-ID",
         "apikey",
+        # ERR-S02 hygiene (2026-09-16): keep in sync with app_builder.py and
+        # apiClient.ts — the backend IdempotencyMiddleware requires this
+        # header on some mutating paths, and a CORS allow-list without it
+        # makes every such browser preflight fail with 400.
+        "Idempotency-Key",
     ],
 )
 
