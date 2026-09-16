@@ -20,8 +20,19 @@ export const UserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [showTools, setShowTools] = useState(false);
   const [showAddWizard, setShowAddWizard] = useState(false);
+  // FIX(intent-carryover): the ask-box used to navigate to /workspace/live
+  // on Enter while discarding the typed text — the user's intent was lost
+  // every time. It is now kept in state and forwarded to the Studio via a
+  // URL param (consumed and stripped by AIStudio on mount).
+  const [ask, setAsk] = useState('');
   const { enabledModules, toggleModule } = useWorkspaceSettings();
   const name = user?.name?.split(' ')[0] || 'there';
+
+  const submitAsk = () => {
+    const intent = ask.trim();
+    if (!intent) return;
+    navigate(`/workspace/live?intent=${encodeURIComponent(intent)}`);
+  };
 
   // State-based capabilities from live backend (Phase 2 Progressive Disclosure)
   const [serverCapabilities, setServerCapabilities] = useState<UserCapability[]>([]);
@@ -105,15 +116,17 @@ export const UserDashboard: React.FC = () => {
               aria-label="Ask SupremeAI what to accomplish"
               placeholder="Ask a question, describe a task, or share an idea..."
               className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm outline-none placeholder:text-[var(--sa-ink-muted)]"
+              value={ask}
+              onChange={(event) => setAsk(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229)
-                  navigate('/workspace/live');
+                  submitAsk();
               }}
             />
             <button
               type="button"
               aria-label="Open SupremeAI Studio"
-              onClick={() => navigate('/workspace/live')}
+              onClick={submitAsk}
               className="flex size-11 shrink-0 items-center justify-center rounded-[var(--sa-radius-sm)] bg-[var(--sa-primary)] text-white transition hover:opacity-90"
             >
               <ArrowRight size={17} />
