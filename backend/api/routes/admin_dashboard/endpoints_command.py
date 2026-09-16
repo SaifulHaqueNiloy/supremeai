@@ -247,51 +247,62 @@ def update_commandcenter_rules(payload: dict):
 
 @router.get("/skills")
 def get_commandcenter_skills():
-    """Bridge for CommandCenter Skills catalog."""
-    return [
-        {
-            "id": "web_scraper",
-            "name": "Web Scraper",
-            "version": "1.0.0",
-            "installed": True,
-            "enabled": True,
-            "source": "builtin",
-        },
-        {
-            "id": "csv_exporter",
-            "name": "CSV Exporter",
-            "version": "1.0.0",
-            "installed": True,
-            "enabled": True,
-            "source": "builtin",
-        },
-        {
-            "id": "market_analyzer",
-            "name": "Market Analyzer",
-            "version": "2.1.0",
-            "installed": True,
-            "enabled": True,
-            "source": "registry",
-        },
-    ]
+    """Bridge for CommandCenter Skills catalog.
+
+    FIX(fake-data): previously returned a hardcoded list including a
+    'Market Analyzer 2.1.0' skill that does not exist anywhere. Now derives
+    from the real manifest registry (backend/skills/manifests/*.json) via
+    the same scan that powers GET /api/skills/catalog — skills shown here
+    are skills that actually exist and are installed.
+    """
+    try:
+        import asyncio
+
+        from api.routes.skills import get_active_skill_catalog
+
+        catalog = asyncio.run(get_active_skill_catalog())
+    except Exception as e:
+        logger.warning(f"CommandCenter skills bridge: catalog scan failed: {e}")
+        return []
+
+    skills = []
+    for manifest in catalog:
+        skill_id = manifest.get("skill_id") or manifest.get("id")
+        if not skill_id:
+            continue
+        skills.append(
+            {
+                "id": skill_id,
+                # manifests carry no display name — derive one from the id
+                "name": manifest.get("name")
+                or skill_id.replace("_", " ").replace("-", " ").title(),
+                "version": manifest.get("version", "1.0.0"),
+                # present on disk = installed; enabled mirrors installed
+                # (enable/disable state is not tracked per-manifest yet)
+                "installed": True,
+                "enabled": True,
+                "source": "manifest",
+            }
+        )
+    return skills
 
 
 @router.get("/rate-limits")
 def get_commandcenter_rate_limits():
-    """Bridge for CommandCenter RateLimits module."""
-    try:
-        # Scan 429 events if available
-        return {
-            "current_429_events": 0,
-            "per_ip": {"[system]": {"limit": 100, "used": 12}},
-            "per_tenant": {"default": {"limit": 1000, "used": 45}},
-        }
-    except Exception:
-        return {
-            "current_429_events": 0,
-            "per_ip": {},
-            "per_tenant": {},
-        }
+    """Bridge for CommandCenter RateLimits module.
+
+    FIX(fake-data): previously reported a fake '[system]' per-IP entry
+    using 12/100 and a fake 'default' tenant using 45/1000 — no such
+    counters were ever recorded. Real per-client usage lives inside the
+    rate limiter's bounded in-memory state and is not exposed via an
+    inspection API yet; until that exists this returns honest zeros/empty
+    maps instead of invented traffic.
+    """
+    return {
+        "current_429_events": 0,
+        "per_ip": {},
+        "per_tenant": {},
+    }
 
 
 @router.get("/memory")
