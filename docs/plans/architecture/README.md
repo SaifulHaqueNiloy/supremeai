@@ -36,26 +36,15 @@
 
 ## 📦 ARCHIVED / SUPERSEDED
 
-| Plan | Archived To | Reason |
-|------|-------------|--------|
-| `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md` | `docs/archive/plans/superseded/` | Consolidated into SUPREMEAI_MASTER_PLAN_CANONICAL.md |
-| `EXTERNAL_AGENT_ORCHESTRATION_LAYER_PLAN.md` | `docs/archive/plans/superseded/` | Content merged into browser_automation.md |
-| `dual_channel_zero_cost_browser_and_distributed_worker.md` | `docs/archive/plans/superseded/` | Consolidated into browser_automation.md |
-| `MASTER_PLAN_BANGLA.md` | Archive | Superseded by canonical |
-| `supremeai_master_blueprint_bangla.md` | Archive | Exact duplicate of MASTER_PLAN_BANGLA.md |
-| `ROADMAP_BANGLA.md` | Archive | Content merged into canonical |
-| `master_plan_strategic_analysis_bn.md` | Archive | Content merged into canonical §10 |
-| `supremeai_project_complete_overview_bangla.md` | Archive | Content merged into canonical §12 |
-| `project_core_documentation_bangla.md` | Archive | Historical (Spring Boot era) |
-| `project_deep_analysis_bangla.md` | Archive | May 2026 snapshot; findings in §13 |
-| `out_of_the_box_revolutionary_blueprint_bn.md` | Archive | Content merged into canonical §11 |
-| `full_system_architecture_map.md` | Archive | Stale (Aug 2026); superseded |
-| `historical_master_plan_reconciliation.md` | Archive | Historical/obsolete |
-| `enterprise_grade_incremental_roadmap.md` | Archive | Simplified subset; already in canonicals |
-| `dynamic_control_plane_zero_hardcode_plan_bn.md` | Archive | Bangla summary of English version |
-| `crown_jewel_real_wiring_analysis.md` | Archive | Subsumed into blueprint |
-| `wiring_feature_investigation_log.md` | Archive | Raw investigation logs |
-| `feature_implementation_patch_roadmap_bn.md` | Archive | Already-implemented patch record |
+| Plan | Status | Reason |
+|------|--------|--------|
+| `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md` | Archived (`docs/archive/plans/superseded/`) | Consolidated into `SUPREMEAI_MASTER_PLAN_CANONICAL.md` |
+| `EXTERNAL_AGENT_ORCHESTRATION_LAYER_PLAN.md` | Archived (`docs/archive/plans/superseded/`) | Content merged into `browser_automation.md` |
+| `dual_channel_zero_cost_browser_and_distributed_worker.md` | Archived (`docs/archive/plans/superseded/`) | Consolidated into `browser_automation.md` |
+| `crown_jewel_real_wiring_analysis.md` | Archived (`docs/archive/plans/architecture/`) | Subsystem investigation notes |
+| `wiring_feature_investigation_log.md` | Archived (`docs/archive/plans/architecture/`) | Raw runtime investigation logs |
+| `feature_implementation_patch_roadmap_bn.md` | Archived (`docs/archive/plans/architecture/`) | Historical patch implementation details |
+| `MASTER_PLAN_BANGLA.md` + 11 redundant drafts | Purged from archive | 100% incorporated into `SUPREMEAI_MASTER_PLAN_CANONICAL.md` |
 
 
 ---
