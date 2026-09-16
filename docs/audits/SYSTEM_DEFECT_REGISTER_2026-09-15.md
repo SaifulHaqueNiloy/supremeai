@@ -108,7 +108,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * `/proposals/{id}/decisions` (backend expects `/proposals/{id}/decide`) ➔ **404**
   * `/api/v1/auth/users`, `/api/v1/auth/users/{id}/role` ➔ **404**
 * **Impact:** The ecosystem admin console client is entirely non-functional.
-* **Status:** ✅ FIXED (PR #394) — all 17 calls wired for real, engine-backed (adaptive_engine canonical models; no mocks):
+* **Status:** ✅ FIXED (PR #396) — all 17 calls wired for real, engine-backed (adaptive_engine canonical models; no mocks):
   * SO1-4/SP1-4/LE1-3/GO1-2/PR4/C5 added to `ecosystem_admin.py`; new real engine methods: `SourceGovernance.list_sources/get_source/list_policies/delete_policy/delete_learned`, `GovernanceEngine.list_decisions/budget_summary`, `ApprovalWorkflow.list_decisions(proposal_id=…)`, `CapabilityRegistry.delete` (ARCHIVED-only, honest 409 otherwise).
   * A5/A6 added to `api/routes/auth.py` (`GET /users`, `PATCH /users/{user_id}/role`) backed by the deployed admin user registry (same store as `/admin-api/users`), `get_current_admin`-guarded, 404 on unknown user.
   * `_verify_admin` evolved to JWT-first (module docstring's documented production intent) with static `ADMIN_TOKEN` kept as ops fallback — previously even a valid admin JWT got 403.
@@ -291,7 +291,7 @@ Source registry: `docs/SKIPPED_TESTS.md`. Total skipped test markers: **96 activ
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │ P1 — CORE (1–2 Weeks: Operational Reality & Control Plane Integrity)                   │
 │  8. ERR-M01 & M02: ✅ FIXED (PR #387) — hardened scanner + 'stub-blocker' CI job (--fail-on HIGH) │
-│  9. ERR-H04: ✅ FIXED (PR #394) — all 17 dead ecosystem admin calls wired engine-backed          │
+│  9. ERR-H04: ✅ FIXED (PR #396) — all 17 dead ecosystem admin calls wired engine-backed          │
 │ 10. ERR-H07 & H08: ❌ OPEN — Unify dual agent routers and offload sync execute to thread pool   │
 │ 11. ERR-G03–G06: ✅ MOSTLY FIXED — Crown jewel & sandbox stubs replaced with real runners         │
 │ 12. ERR-B01 & B02: ❌ OPEN — Implement Project Space modal and File dropzone components          │
