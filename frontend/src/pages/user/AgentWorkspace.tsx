@@ -88,7 +88,33 @@ export const AgentWorkspace: React.FC = () => {
   };
 
   const togglePanel = (panel: Panel) => setPanels(value => ({ ...value, [panel]: !value[panel] }));
-  const runCode = async () => { setIsHealing(true); xtermRef.current?.writeln('\r\n[execution] Running current file...'); setTimeout(() => { xtermRef.current?.writeln('[execution] Evaluation queued.'); setIsHealing(false); }, 700); };
+  // ERR-G10 FIX (2026-09-16): runCode used to fake execution with a 700ms
+  // setTimeout ("Evaluation queued.") without running anything. It now runs
+  // the editor's code in the booted WebContainer for real and streams process
+  // output into the terminal; when the sandbox is unavailable it says so
+  // explicitly instead of pretending success.
+  const runCode = async () => {
+    if (isHealing) return;
+    const term = xtermRef.current;
+    const container = webcontainerRef.current;
+    setIsHealing(true);
+    try {
+      if (!container || !term) {
+        term?.writeln('\r\n[execution] NOT RUN: the browser code-execution sandbox (WebContainer) is unavailable in this preview — no evaluation was performed.');
+        return;
+      }
+      term.writeln('\r\n[execution] Writing current file to the sandbox...');
+      await container.fs.writeFile('/index.js', generatedCode);
+      const proc = await container.spawn('jsh', ['-c', 'node index.js']);
+      void proc.output.pipeTo(new WritableStream<string>({ write: data => term.write(data) }));
+      const exit = await proc.exit;
+      term.writeln(exit === 0 ? '\r\n[execution] Process finished (exit 0).' : `\r\n[execution] Process finished (exit ${exit}).`);
+    } catch (error) {
+      term?.writeln(`\r\n[execution] FAILED: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsHealing(false);
+    }
+  };
 
   return (
     <div className="flex min-h-0 w-full flex-1 overflow-hidden bg-[#0d0f12] text-slate-100">
