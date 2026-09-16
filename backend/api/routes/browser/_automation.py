@@ -124,6 +124,21 @@ async def execute_automation_action(
 ):
     from core.security import is_safe_url
 
+    async def _await_actionable(locator, action: str) -> None:
+        """ERR-A06 FIX (2026-09-16): explicitly wait for the element to be
+        visible before click/fill/type. On dynamic SPAs the node can match
+        while still not actionable (mid re-render, animating, detached by a
+        framework patch), which used to surface as raw 15s TimeoutErrors.
+        A wait that still times out becomes an honest HTTP 408 with the
+        verbatim reason instead of an opaque failure."""
+        try:
+            await locator.wait_for(state="visible", timeout=15_000)
+        except Exception as exc:  # noqa: BLE001 — playwright TimeoutError et al.
+            raise HTTPException(
+                status_code=408,
+                detail=f"Element {req.selector!r} not actionable for {action!r} within 15s: {exc}",
+            ) from exc
+
     try:
         session = await session_manager.get(req.session_id, user_token)
     except PermissionError as exc:
@@ -139,11 +154,15 @@ async def execute_automation_action(
     elif action == "click":
         if not req.selector:
             raise HTTPException(status_code=422, detail="selector is required")
-        await page.locator(req.selector).click(timeout=15_000)
+        locator = page.locator(req.selector)
+        await _await_actionable(locator, "click")
+        await locator.click(timeout=15_000)
     elif action in {"fill", "type"}:
         if not req.selector or req.value is None:
             raise HTTPException(status_code=422, detail="selector and value are required")
-        await page.locator(req.selector).fill(req.value, timeout=15_000)
+        locator = page.locator(req.selector)
+        await _await_actionable(locator, action)
+        await locator.fill(req.value, timeout=15_000)
     elif action == "screenshot":
         image = await page.screenshot(type="png", full_page=req.full_page)
         import base64
