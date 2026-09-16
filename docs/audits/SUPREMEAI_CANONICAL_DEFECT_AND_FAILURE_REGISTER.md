@@ -715,7 +715,7 @@ Views where routes exist in navigation and render nice UI cards, but have zero o
 
 | ID | Route / File Path | Current State | Missing Capability | Status |
 | :--- | :--- | :--- | :--- | :--- |
-| **ERR-B01** | `/workspace/projects`<br>`WorkspaceModulePage.tsx:L7` | Static marketing cards (`modules.projects`). Clicking "Create a project space" does nothing. | No Project Creation Modal (`create-project-btn`), no project listing, no deletion or rename. | ❌ OPEN |
+| **ERR-B01** | `/projects`<br>`ProjectsPage.tsx`<br>`backend/api/routes/projects.py` | Static marketing cards (`modules.projects`). Clicking "Create a project space" does nothing. | ✅ FIXED (PR: err-b01-project-spaces) — real `Project` ORM model + `/api/v1/projects` CRUD (create/list/rename/delete, ownership-enforced) wired to a new `ProjectsPage` with create modal (`create-project-btn`), listing, rename, two-step delete, loading/error/empty states; 8 backend + 9 frontend tests. | ✅ FIXED |
 | **ERR-B02** | `/files`<br>`App.tsx:L192` | Renders `WorkspaceModulePage module="files"` (which is undefined in `modules` record, falls back to blank). | No file dropzone/upload component (`file-input`), no file explorer, no storage integration (`/api/chat/upload`). | ❌ OPEN |
 | **ERR-B03** | `/activity`<br>`WorkspaceModulePage.tsx:L8` | Static mock cards describing activity features. | No event timeline component, no connection to backend audit logs or event bus. | ❌ OPEN |
 | **ERR-B04** | `/runs`<br>`WorkspaceModulePage.tsx:L10` | Static mock cards describing execution tracking. | No run observer, no execution list, no step retry interface. | ❌ OPEN |
