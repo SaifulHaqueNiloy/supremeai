@@ -29,6 +29,7 @@ from core.logging_config import logger
 from core.messaging.event_bus import ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector, record_cache_access
 from core.swarm_pubsub import swarm_streamer
+from core.llm.token_budget import estimate_tokens
 
 # বাংলা মন্তব্ব্য: module-level Redis initialization সম্পূর্ণ নিষিদ্ধ।
 # Redis client এখন lazy function-level এ initialize হবে।
@@ -145,7 +146,22 @@ class MultiLayerCache:
             "prefix_hits": 0,
             "session_hits": 0,
             "misses": 0,
+            # Real per-hit token accounting: on every hit, the tokens of the
+            # served response are tokens the model did NOT have to generate.
+            # Estimated with the canonical estimate_tokens() heuristic from
+            # core.llm.token_budget — measured on the actual response bytes,
+            # not a fixed per-hit constant.
+            "tokens_saved": 0,
         }
+
+    def _record_hit(self, layer: str, response: str) -> None:
+        """Record a real cache hit and the tokens it saved.
+
+        A hit serves a previously generated response instead of calling the
+        model — the saved tokens are estimated from the actual response text
+        with the same estimator the token budget module uses everywhere.
+        """
+        self.cache_stats["tokens_saved"] += estimate_tokens(response if isinstance(response, str) else str(response))
 
     def _get_redis_cache(self):
         if self._redis_cache is None:
@@ -199,6 +215,7 @@ class MultiLayerCache:
             if cached_response:
                 logger.info("✅ L1 CACHE HIT: Exact Match")
                 self.cache_stats["exact_hits"] += 1
+                self._record_hit("exact", cached_response)
                 await record_cache_access(True)  # Record cache hit
                 await metrics_collector.observe_histogram(
                     "cache_access_duration_seconds",
@@ -235,6 +252,7 @@ class MultiLayerCache:
             if semantic_result:
                 logger.info("✅ L2 CACHE HIT: Semantic Match")
                 self.cache_stats["semantic_hits"] += 1
+                self._record_hit("semantic", semantic_result.response)
                 await record_cache_access(True)  # Record cache hit
                 await metrics_collector.observe_histogram(
                     "cache_access_duration_seconds",
@@ -288,6 +306,7 @@ class MultiLayerCache:
                     if cached_response:
                         logger.info("✅ L3 CACHE HIT: Prefix Match")
                         self.cache_stats["prefix_hits"] += 1
+                        self._record_hit("prefix", cached_response)
                         await record_cache_access(True)  # Record cache hit
                         prefix_duration = time.time() - prefix_start
                         await metrics_collector.observe_histogram(
@@ -324,6 +343,7 @@ class MultiLayerCache:
                 logger.info("✅ L4 CACHE HIT: Session Match")
                 self.local_cache_hits += 1
                 self.cache_stats["session_hits"] += 1
+                self._record_hit("session", session_response)
                 await record_cache_access(True)  # Record cache hit
                 await metrics_collector.observe_histogram(
                     "cache_access_duration_seconds",
@@ -476,11 +496,27 @@ class MultiLayerCache:
 
     async def get_cache_statistics(self) -> dict[str, Any]:
         """Get cache performance statistics."""
-        total_accesses = sum(self.cache_stats.values())
+        # NOTE: sum only the access counters — cache_stats also carries the
+        # cumulative tokens_saved accounting, which is NOT an access count.
+        total_accesses = (
+            self.cache_stats["exact_hits"]
+            + self.cache_stats["semantic_hits"]
+            + self.cache_stats["prefix_hits"]
+            + self.cache_stats["session_hits"]
+            + self.cache_stats["misses"]
+        )
         hit_rate = 0
         if total_accesses > 0:
             hits = total_accesses - self.cache_stats["misses"]
             hit_rate = hits / total_accesses * 100
+
+        hits_count = (
+            self.cache_stats["exact_hits"]
+            + self.cache_stats["semantic_hits"]
+            + self.cache_stats["prefix_hits"]
+            + self.cache_stats["session_hits"]
+        )
+        tokens_saved = self.cache_stats["tokens_saved"]
 
         return {
             "total_accesses": total_accesses,
@@ -492,6 +528,10 @@ class MultiLayerCache:
             "misses": self.cache_stats["misses"],
             "local_cache_hits": self.local_cache_hits,
             "local_cache_misses": self.local_cache_misses,
+            # Real cumulative per-hit accounting (see _record_hit). Null until
+            # the first hit exists; avg is None when there are no hits.
+            "tokens_saved": tokens_saved,
+            "avg_tokens_saved_per_hit": round(tokens_saved / hits_count, 1) if hits_count else None,
         }
 
 
