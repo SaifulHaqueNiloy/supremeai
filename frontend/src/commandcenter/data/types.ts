@@ -21,6 +21,7 @@ export type CommandModuleId =
   | 'ci'
   | 'health'
   | 'traffic'
+  | 'evolution'
   | 'threats'
   | 'audit'
   | 'approvals'

@@ -13,6 +13,9 @@ interface LeftRailProps {
   badges?: Partial<Record<string, number>>;
 }
 
+export function LeftRail({ badges = {} }: LeftRailProps) {
+  const { activeModule, setActiveModule } = useCommandCenterStore();
+
   return (
     <nav className="w-52 border-r border-[var(--sa-line)] bg-[var(--sa-bg-1)] overflow-y-auto py-3">
       {COMMAND_GROUPS.map((group) => (
@@ -22,6 +25,7 @@ interface LeftRailProps {
           </div>
           {group.items.map((item) => {
             const isActive = activeModule === item.module;
+            const badge = badges?.[item.id] ?? item.badge;
             return (
               <button
                 key={item.id}
@@ -37,9 +41,9 @@ interface LeftRailProps {
                   className={isActive ? 'text-[#00f3ff]' : 'text-[var(--sa-text-2)]'}
                 />
                 <span className="text-[10px] font-mono flex-1">{item.label}</span>
-                {item.badge !== undefined && item.badge > 0 && (
+                {badge !== undefined && badge > 0 && (
                   <span className="text-[8px] font-mono px-1.5 py-0.5 rounded-full bg-[#ef4444]/20 text-[#ef4444]">
-                    {item.badge}
+                    {badge}
                   </span>
                 )}
               </button>
