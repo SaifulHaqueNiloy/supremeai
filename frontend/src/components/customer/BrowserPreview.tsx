@@ -85,9 +85,13 @@ export function BrowserPreview({
   const [liveScreenshot, setLiveScreenshot] = useState<string | null>(null);
   const [allowDirectEmbed, setAllowDirectEmbed] = useState(false);
   const sessionRef = useRef<string | null>(null);
-  sessionRef.current = sessionId;
   // dedupe guard for the auto-proxy effect below
   const lastAutoNavRef = useRef<string | null>(null);
+
+  // react-compiler lint: refs must not be written during render.
+  useEffect(() => {
+    sessionRef.current = sessionId;
+  }, [sessionId]);
 
   const captureLiveScreenshot = useCallback(async (id: string): Promise<string | null> => {
     const result = await browserService.execute(id, { action: 'screenshot', full_page: false });
