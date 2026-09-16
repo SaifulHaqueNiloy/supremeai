@@ -54,7 +54,9 @@ _RUNTIME_OVERRIDE: dict[str, str | None] = {"provider": None, "model": None}
 _OVERRIDE_REMAINING: int = 0
 
 
-def set_runtime_override(provider: str, model: str | None = None, remaining_requests: int | None = None) -> None:
+def set_runtime_override(
+    provider: str, model: str | None = None, remaining_requests: int | None = None
+) -> None:
     """Activate a runtime routing override (admin action)."""
     global _OVERRIDE_REMAINING
     _RUNTIME_OVERRIDE["provider"] = provider

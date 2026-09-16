@@ -357,10 +357,26 @@ def get_commandcenter_memory_stats():
         )
 
         banks = [
-            {"name": "Exact Match Layer", "entry_count": int(raw_stats.get("exact_hits") or 0), "recent_writes": 0},
-            {"name": "Semantic Layer", "entry_count": int(raw_stats.get("semantic_hits") or 0), "recent_writes": 0},
-            {"name": "Prefix Layer", "entry_count": int(raw_stats.get("prefix_hits") or 0), "recent_writes": 0},
-            {"name": "Session Layer", "entry_count": int(raw_stats.get("session_hits") or 0), "recent_writes": 0},
+            {
+                "name": "Exact Match Layer",
+                "entry_count": int(raw_stats.get("exact_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Semantic Layer",
+                "entry_count": int(raw_stats.get("semantic_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Prefix Layer",
+                "entry_count": int(raw_stats.get("prefix_hits") or 0),
+                "recent_writes": 0,
+            },
+            {
+                "name": "Session Layer",
+                "entry_count": int(raw_stats.get("session_hits") or 0),
+                "recent_writes": 0,
+            },
         ]
 
         return {

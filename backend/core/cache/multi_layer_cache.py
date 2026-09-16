@@ -161,7 +161,9 @@ class MultiLayerCache:
         model — the saved tokens are estimated from the actual response text
         with the same estimator the token budget module uses everywhere.
         """
-        self.cache_stats["tokens_saved"] += estimate_tokens(response if isinstance(response, str) else str(response))
+        self.cache_stats["tokens_saved"] += estimate_tokens(
+            response if isinstance(response, str) else str(response)
+        )
 
     def _get_redis_cache(self):
         if self._redis_cache is None:
