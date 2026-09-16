@@ -1,3 +1,20 @@
+---
+id: production-hardening-p1-p2-roadmap
+subject: "SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)"
+document_role: roadmap
+planning_authority: Architecture Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related:
+  - docs/plans/features/production_readiness_final_stretch_plan_bn.md
+  - docs/plans/features/risk_remediation_and_hardening_execution_plan_bn.md
+---
+
 # SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)
 
 > সোর্স: `STATUS.md`, `CHECKPOINT.md`, `AUDIT_REPORT_2026-09-10.md` এবং মেমোরিতে থাকা আগের কাজের ইতিহাস থেকে তৈরি।

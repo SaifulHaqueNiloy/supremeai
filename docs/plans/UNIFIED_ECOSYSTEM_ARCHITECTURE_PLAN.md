@@ -9,7 +9,8 @@ evidence_state: partial
 disposition: retain
 last_verified: 2026-09-17
 supersedes: []
-superseded_by: []
+superseded_by: []  # reconciliation: competes with architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md for the master-architecture role; resolution pending founder review
+related: docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md
 ---
 
 # SupremeAI Unified Ecosystem Architecture — Master Plan

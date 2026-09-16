@@ -8,7 +8,12 @@ status: active
 evidence_state: partial
 disposition: retain
 last_verified: 2026-09-17
-supersedes: []
+supersedes:
+  - docs/archive/plans/architecture/MASTER_PLAN_BANGLA.md
+  - docs/archive/plans/architecture/supremeai_master_blueprint_bangla.md
+  - docs/archive/plans/architecture/ROADMAP_BANGLA.md
+  - docs/archive/plans/architecture/master_plan_strategic_analysis_bn.md
+  - docs/archive/plans/architecture/supremeai_project_complete_overview_bangla.md
 superseded_by: []
 ---
 

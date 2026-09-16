@@ -1,3 +1,18 @@
+---
+id: runtime-dynamic-configuration-zero-hardcode
+subject: "SupremeAI — Remaining Dynamic Configuration / Zero-Hardcode Implementation Plan"
+document_role: implementation
+planning_authority: Architecture Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+related: docs/plans/architecture/dynamic_configuration_zero_hardcode_roadmap.md
+---
+
 # SupremeAI — Remaining Dynamic Configuration / Zero-Hardcode Implementation Plan
 
 > ## Reconciliation Status (final-test, 2026-09-14 — verify-before-implement audit against main@83a7cfba)
