@@ -99,7 +99,7 @@ Every row below was confirmed by reading **both** the frontend call site and the
 * **Status:** ✅ FIXED (PR #383) — caller moved to `/admin-api/workspaces/bind-target`.
 
 ### 4.4 `/api/v1/ecosystem/admin/*` — 17 Dead Admin Calls (`ERR-H04`)
-* **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposes `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals`.
+* **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposed `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals` — nothing else.
 * **Frontend Caller (`frontend/src/lib/ecosystem/api.ts`):** Calls completely different names:
   * `/api/v1/ecosystem/admin/sources` (+`/discover`, `/{id}/transition`) ➔ **404**
   * `/api/v1/ecosystem/admin/policies` (+`/{id}`, `/match`) ➔ **404**
@@ -108,7 +108,13 @@ Every row below was confirmed by reading **both** the frontend call site and the
   * `/proposals/{id}/decisions` (backend expects `/proposals/{id}/decide`) ➔ **404**
   * `/api/v1/auth/users`, `/api/v1/auth/users/{id}/role` ➔ **404**
 * **Impact:** The ecosystem admin console client is entirely non-functional.
-* **Status:** ❌ OPEN — Backend and frontend route names remain mismatched.
+* **Status:** ✅ FIXED (PR #396) — all 17 calls wired for real, engine-backed (adaptive_engine canonical models; no mocks):
+  * SO1-4/SP1-4/LE1-3/GO1-2/PR4/C5 added to `ecosystem_admin.py`; new real engine methods: `SourceGovernance.list_sources/get_source/list_policies/delete_policy/delete_learned`, `GovernanceEngine.list_decisions/budget_summary`, `ApprovalWorkflow.list_decisions(proposal_id=…)`, `CapabilityRegistry.delete` (ARCHIVED-only, honest 409 otherwise).
+  * A5/A6 added to `api/routes/auth.py` (`GET /users`, `PATCH /users/{user_id}/role`) backed by the deployed admin user registry (same store as `/admin-api/users`), `get_current_admin`-guarded, 404 on unknown user.
+  * `_verify_admin` evolved to JWT-first (module docstring's documented production intent) with static `ADMIN_TOKEN` kept as ops fallback — previously even a valid admin JWT got 403.
+  * Frontend client (`api.ts`/`types.ts`) aligned to the canonical engine shapes: SourcePolicy (name/scope/scope_value/decision…), LearnedItem provenance model, LearningOpportunity (`requirement`-based), decide body `resolved_by`/`reason`, prune body `older_than_days`/`min_relevance`, governance params `action`/`limit`, ProposalCreateRequest `description`/`proposed_by`.
+  * Contract tests: `backend/tests/api/test_ecosystem_admin_contract.py` (18 tests, isolated per-test SQLite).
+  * NOTE: `backend/ecosystem/standalone_app.py` advertises the same 48 paths but was written against an OLDER engine API (e.g. `match_policy(url)`, `LearningOpportunity(capability_hint=…)`) — it needs its own drift sweep before it can run against current engines; the main backend is now the wired surface for this client.
 
 ### 4.5 `/api/knowledge/*` — Four Dead Shared Service Calls (`ERR-H05`)
 * **Backend Definition (`backend/api/routes/knowledge.py`):** Exposes `/api/knowledge/ask`, `/ask-scribe`, `/search`, `/seed`.
@@ -285,7 +291,7 @@ Source registry: `docs/SKIPPED_TESTS.md`. Total skipped test markers: **96 activ
 ├─────────────────────────────────────────────────────────────────────────────────────────┤
 │ P1 — CORE (1–2 Weeks: Operational Reality & Control Plane Integrity)                   │
 │  8. ERR-M01 & M02: ✅ FIXED (PR #387) — hardened scanner + 'stub-blocker' CI job (--fail-on HIGH) │
-│  9. ERR-H04: ❌ OPEN — Wire or delete the 17 dead ecosystem admin endpoints                      │
+│  9. ERR-H04: ✅ FIXED (PR #396) — all 17 dead ecosystem admin calls wired engine-backed          │
 │ 10. ERR-H07 & H08: ❌ OPEN — Unify dual agent routers and offload sync execute to thread pool   │
 │ 11. ERR-G03–G06: ✅ MOSTLY FIXED — Crown jewel & sandbox stubs replaced with real runners         │
 │ 12. ERR-B01 & B02: ❌ OPEN — Implement Project Space modal and File dropzone components          │

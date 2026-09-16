@@ -21,6 +21,7 @@
 
 import type {
   AdminOverview,
+  AdminUserRecord,
   ApprovalDecisionRecord,
   AuthResponse,
   Budget,
@@ -343,14 +344,17 @@ export const ecosystemApi = {
     return res
   },
 
-  /** A5 — GET /api/v1/auth/users (admin) */
-  async listUsers(): Promise<User[]> {
-    return get<User[]>('/api/v1/auth/users')
+  /** A5 — GET /api/v1/auth/users (admin) — admin registry rows */
+  async listUsers(): Promise<AdminUserRecord[]> {
+    return get<AdminUserRecord[]>('/api/v1/auth/users')
   },
 
   /** A6 — PATCH /api/v1/auth/users/{id}/role (admin) */
-  async changeRole(userId: string, role: Role | string): Promise<User> {
-    return patch<User>(`/api/v1/auth/users/${encodeURIComponent(userId)}/role`, { role })
+  async changeRole(userId: string, role: Role | string): Promise<AdminUserRecord> {
+    return patch<AdminUserRecord>(
+      `/api/v1/auth/users/${encodeURIComponent(userId)}/role`,
+      { role },
+    )
   },
 
   // -------------------------------------------------------------------
@@ -573,17 +577,17 @@ export const ecosystemApi = {
     return post<Proposal>('/api/v1/ecosystem/admin/proposals', req)
   },
 
-  /** PR3 — POST /api/v1/ecosystem/admin/proposals/{id}/decide */
+  /** PR3 — POST /api/v1/ecosystem/admin/proposals/{id}/decide (canonical: resolved_by/reason) */
   async adminDecideProposal(
     id: string,
     decision: ProposalDecision,
-    rationale?: string,
-    decidedBy?: string,
+    reason?: string,
+    resolvedBy?: string,
   ): Promise<Proposal> {
     const body: ProposalDecisionRequest = {
       decision,
-      decided_by: decidedBy || 'admin',
-      rationale: rationale || '',
+      resolved_by: resolvedBy || 'admin',
+      reason: reason || '',
     }
     return post<Proposal>(
       `/api/v1/ecosystem/admin/proposals/${encodeURIComponent(id)}/decide`,
@@ -636,15 +640,17 @@ export const ecosystemApi = {
     return get<SourcePolicy[]>('/api/v1/ecosystem/admin/policies', limit ? { limit } : undefined)
   },
 
-  /** SP2 — POST /api/v1/ecosystem/admin/policies */
+  /** SP2 — POST /api/v1/ecosystem/admin/policies (canonical engine shape) */
   async adminCreatePolicy(req: PolicyCreateRequest): Promise<SourcePolicy> {
     return post<SourcePolicy>('/api/v1/ecosystem/admin/policies', {
-      url_pattern: req.url_pattern,
-      category: req.category || 'UNKNOWN',
-      state: req.state || 'UNKNOWN',
-      allowed_actions: req.allowed_actions ?? ['read'],
-      source_weight: req.source_weight ?? 1.0,
-      expires_at: req.expires_at ?? null,
+      name: req.name,
+      scope: req.scope || 'domain',
+      scope_value: req.scope_value,
+      decision: req.decision || 'ALLOWLISTED',
+      reason: req.reason ?? null,
+      rate_limit_per_minute: req.rate_limit_per_minute ?? 30,
+      crawl_budget_per_day: req.crawl_budget_per_day ?? 500,
+      requires_approval: req.requires_approval ?? false,
     })
   },
 
@@ -669,11 +675,11 @@ export const ecosystemApi = {
     return get<LearnedItem[]>('/api/v1/ecosystem/admin/learned', opts as Record<string, unknown>)
   },
 
-  /** LE2 — POST /api/v1/ecosystem/admin/learned/prune */
+  /** LE2 — POST /api/v1/ecosystem/admin/learned/prune (canonical params) */
   async adminPruneLearned(req?: PruneLearnedRequest): Promise<PruneLearnedResponse> {
     return post<PruneLearnedResponse>('/api/v1/ecosystem/admin/learned/prune', {
-      threshold: req?.threshold ?? 0.1,
-      max_age_days: req?.max_age_days ?? 30,
+      older_than_days: req?.older_than_days ?? 30,
+      min_relevance: req?.min_relevance ?? 0.1,
     })
   },
 
@@ -696,26 +702,29 @@ export const ecosystemApi = {
     )
   },
 
-  /** OP2 — POST /api/v1/ecosystem/admin/opportunities */
+  /** OP2 — POST /api/v1/ecosystem/admin/opportunities (canonical: requirement) */
   async adminSurfaceOpportunity(req: OpportunityCreateRequest): Promise<LearningOpportunity> {
     return post<LearningOpportunity>('/api/v1/ecosystem/admin/opportunities', {
-      capability_hint: req.capability_hint,
-      gap_description: req.gap_description ?? '',
+      requirement: req.requirement,
       signal_id: req.signal_id ?? null,
-      predicted_value: req.predicted_value ?? 0,
-      predicted_effort: req.predicted_effort ?? 0,
+      source_url: req.source_url ?? null,
+      usefulness: req.usefulness ?? 'unknown',
+      feasibility: req.feasibility ?? 'unknown',
+      risk: req.risk ?? 'medium',
+      cost: req.cost ?? 'medium',
+      maintenance: req.maintenance ?? 'low',
     })
   },
 
-  /** OP3 — POST /api/v1/ecosystem/admin/opportunities/{id}/advance */
+  /** OP3 — POST /api/v1/ecosystem/admin/opportunities/{id}/advance (canonical: note) */
   async adminAdvanceOpportunity(
     id: string,
     toStage: string,
-    proposalId?: string,
+    note?: string,
   ): Promise<LearningOpportunity> {
     const body: OpportunityAdvanceRequest = {
       to_stage: toStage,
-      proposal_id: proposalId ?? null,
+      note: note ?? null,
     }
     return post<LearningOpportunity>(
       `/api/v1/ecosystem/admin/opportunities/${encodeURIComponent(id)}/advance`,
