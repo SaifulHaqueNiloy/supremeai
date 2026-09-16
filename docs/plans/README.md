@@ -175,6 +175,16 @@ Scanned 157 documents under /home/z/supremeai-work/docs/plans
   [WARNING] missing-frontmatter    plans/architecture/autonomous_product_verification_engine.md: no YAML frontmatter — registry cannot classify this plan (inferred family: browser-automation)
   [WARNING] missing-frontmatter    plans/architecture/codebase_aligned_master_roadmap.md: no YAML frontmatter — registry cannot classify this plan (inferred family: production-readiness)
   [WARNING] missing-frontmatter    plans/architecture/crown_jewel_complete_system_integration_blueprint.md: no YAML frontmatter — registry cannot classify this plan (inferred family: unified-architecture)
+Scanned 157 documents under /home/z/supremeai-work/docs/plans
+  errors:   0
+  warnings: 133
+  competing plan sets: 1
+  first warnings:
+  [WARNING] missing-frontmatter    plans/architecture/README.md: no YAML frontmatter — registry cannot classify this plan (inferred family: dynamic-configuration)
+  [WARNING] missing-frontmatter    plans/architecture/ai_model_comparative_matrix_bangla.md: no YAML frontmatter — registry cannot classify this plan (inferred family: intelligence-evolution)
+  [WARNING] missing-frontmatter    plans/architecture/autonomous_product_verification_engine.md: no YAML frontmatter — registry cannot classify this plan (inferred family: browser-automation)
+  [WARNING] missing-frontmatter    plans/architecture/codebase_aligned_master_roadmap.md: no YAML frontmatter — registry cannot classify this plan (inferred family: production-readiness)
+  [WARNING] missing-frontmatter    plans/architecture/crown_jewel_complete_system_integration_blueprint.md: no YAML frontmatter — registry cannot classify this plan (inferred family: unified-architecture)
 <!-- BEGIN GENERATED PLAN CATALOG (scripts/governance/lint_plans.py --readme; do not hand-edit between markers) -->
 
 ### 🟢 ACTIVE (27)
@@ -222,5 +232,11 @@ Scanned 157 documents under /home/z/supremeai-work/docs/plans
 | Plan | Role | Authority | Family |
 |---|---|---|---|
 | [`PLATFORM_OSS_INTEGRATION_PLAN`](./PLATFORM_OSS_INTEGRATION_PLAN.md) | implementation | Platform Circle | execution-phases |
+
+### 🗂️ HISTORICAL (1)
+
+| Plan | Role | Authority | Family |
+|---|---|---|---|
+| [`historical_status_snapshot_2026_05_10`](./phases/historical_status_snapshot_2026_05_10.md) | audit | Architecture Governance / Planning Circle | unclassified |
 
 <!-- END GENERATED PLAN CATALOG -->
