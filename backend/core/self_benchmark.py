@@ -222,18 +222,10 @@ class SelfBenchmarkEngine:
         """Benchmark response times and throughput."""
         results: list[BenchmarkResult] = []
         if not self.ai_system:
-            return [
-                BenchmarkResult(
-                    test_name="avg_response_time",
-                    category=BenchmarkCategory.PERFORMANCE,
-                    score=0.8,
-                    value=150.0,
-                    unit="ms",
-                    passed=True,
-                    threshold=500.0,
-                    duration_ms=150,
-                )
-            ]
+            # FIX(honest-empty): no system to measure -> no fabricated numbers.
+            # The old fallback reported a hardcoded 150ms/0.8 result for a
+            # benchmark that never ran.
+            return []
 
         times: list[float] = []
         for _ in range(5):
@@ -302,21 +294,50 @@ class SelfBenchmarkEngine:
             )
         return results
 
+    async def _safe_process(self, query: str) -> bool:
+        """Run one probe through the real system; True only on a successful call."""
+        try:
+            res = await asyncio.wait_for(
+                self.ai_system.process(query),
+                timeout=self.test_duration_per_query_ms / 1000.0,
+            )
+            return bool(getattr(res, "success", True))
+        except Exception as exc:
+            logger.debug(f"Benchmark probe failed: {exc}")
+            return False
+
     async def _benchmark_stress(self) -> list[BenchmarkResult]:
-        results: list[BenchmarkResult] = []
-        results.append(
+        """Concurrent load burst — measured against the real system.
+
+        Fires concurrent_test_count * stress_test_multiplier simultaneous
+        requests and scores by the real success ratio. The old version
+        reported a hardcoded 0.9/50-requests result without running
+        anything.
+        """
+        if not self.ai_system:
+            return []
+
+        target = max(1, self.concurrent_test_count * self.stress_test_multiplier)
+        start = time.perf_counter()
+        outcomes = await asyncio.gather(
+            *(self._safe_process(f"stress probe {i}") for i in range(target))
+        )
+        wall_ms = int((time.perf_counter() - start) * 1000)
+        succeeded = sum(1 for ok in outcomes if ok)
+        ratio = succeeded / target
+        # Pass = the system handled (almost) the whole burst it was given.
+        return [
             BenchmarkResult(
                 test_name="max_concurrent_requests",
                 category=BenchmarkCategory.STRESS,
-                score=0.9,
-                value=50.0,
+                score=round(ratio, 2),
+                value=float(succeeded),
                 unit="requests",
-                passed=True,
-                threshold=20.0,
-                duration_ms=500,
+                passed=ratio >= 0.9,
+                threshold=float(target),
+                duration_ms=wall_ms,
             )
-        )
-        return results
+        ]
 
     async def _benchmark_memory(self) -> list[BenchmarkResult]:
         results: list[BenchmarkResult] = []
@@ -343,32 +364,78 @@ class SelfBenchmarkEngine:
         return results
 
     async def _benchmark_concurrency(self) -> list[BenchmarkResult]:
+        """Sustained throughput — real req/s measured over a 2s window.
+
+        The old version reported a hardcoded 0.85/25 req/s without
+        executing any request.
+        """
+        if not self.ai_system:
+            return []
+
+        window_seconds = 2.0
+        batch = max(1, self.concurrent_test_count)
+        completed = 0
+        start = time.perf_counter()
+        while (time.perf_counter() - start) < window_seconds:
+            outcomes = await asyncio.gather(
+                *(self._safe_process(f"concurrency probe {completed + i}") for i in range(batch))
+            )
+            completed += sum(1 for ok in outcomes if ok)
+        wall = time.perf_counter() - start
+        rps = completed / wall if wall > 0 else 0.0
+        threshold = float(self.thresholds["concurrent_requests"]["acceptable"])
+        # 5x the acceptable rate counts as a perfect score.
+        score = min(1.0, rps / (threshold * 5)) if threshold > 0 else 0.0
         return [
             BenchmarkResult(
                 test_name="sustained_concurrency_10",
                 category=BenchmarkCategory.CONCURRENCY,
-                score=0.85,
-                value=25.0,
+                score=round(score, 2),
+                value=round(rps, 2),
                 unit="req/s",
-                passed=True,
-                threshold=10.0,
-                duration_ms=1000,
+                passed=rps >= threshold,
+                threshold=threshold,
+                duration_ms=int(wall * 1000),
             )
         ]
 
     async def _benchmark_domain_specific(self) -> list[BenchmarkResult]:
-        return [
-            BenchmarkResult(
-                test_name="dev_python_debugging",
-                category=BenchmarkCategory.DOMAIN_SPECIFIC,
-                score=0.95,
-                value=120.0,
-                unit="ms",
-                passed=True,
-                threshold=0.6,
-                duration_ms=120,
+        """Domain probes — real success ratio of domain queries.
+
+        The old version reported a hardcoded 0.95 score and 120ms value
+        without executing anything.
+        """
+        if not self.ai_system:
+            return []
+
+        results: list[BenchmarkResult] = []
+        for domain in ["development", "business", "ux_design"]:
+            queries = self.test_queries.get(domain, [])[:2]
+            if not queries:
+                continue
+            latencies: list[float] = []
+            successes = 0
+            for q in queries:
+                probe_start = time.perf_counter()
+                ok = await self._safe_process(q)
+                latencies.append((time.perf_counter() - probe_start) * 1000.0)
+                if ok:
+                    successes += 1
+            ratio = successes / len(queries)
+            avg_ms = statistics.mean(latencies)
+            results.append(
+                BenchmarkResult(
+                    test_name=f"domain_{domain}",
+                    category=BenchmarkCategory.DOMAIN_SPECIFIC,
+                    score=round(ratio, 2),
+                    value=round(avg_ms, 2),
+                    unit="ms",
+                    passed=ratio >= 0.5,
+                    threshold=0.6,
+                    duration_ms=int(sum(latencies)),
+                )
             )
-        ]
+        return results
 
     @staticmethod
     def _pass_hat_k_estimator(successes: int, n: int, k: int) -> float:

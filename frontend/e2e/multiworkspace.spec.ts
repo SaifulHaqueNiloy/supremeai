@@ -2,32 +2,19 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
 
-test.describe('AETHEL Multi-Workspace Fleet Canvas — UI Smoke Tests', () => {
-  test('renders target fleet canvas with node cards and connected badges', async ({ page }) => {
-    await page.goto(BASE_URL + '/#/workspace');
-    await page.waitForLoadState('networkidle');
-
-    // MultiWorkspace canvas indicator
-    const heading = page.locator('text=Multi-Platform Target Fleet Canvas').first();
-    if (await heading.count() > 0) {
-      await expect(heading).toBeVisible();
-      const targetBadge = page.locator('text=Targets Connected').first();
-      await expect(targetBadge).toBeVisible();
-    }
-  });
-
-  test('permission scope badges render correctly (READ_ONLY / FULL_CONTROL)', async ({ page }) => {
-    await page.goto(BASE_URL + '/#/workspace');
-    await page.waitForLoadState('networkidle');
-
-    const readOnlyBadge = page.locator('text=READ_ONLY').first();
-    if (await readOnlyBadge.count() > 0) {
-      await expect(readOnlyBadge).toBeVisible();
-    }
-
-    const fullControlBadge = page.locator('text=FULL_CONTROL').first();
-    if (await fullControlBadge.count() > 0) {
-      await expect(fullControlBadge).toBeVisible();
-    }
+// FIX(test-integrity): this spec previously asserted a "Multi-Platform
+// Target Fleet Canvas" UI (Targets Connected / READ_ONLY / FULL_CONTROL
+// badges) that no longer exists anywhere in src/ — and it navigated to
+// a hash route (/#/workspace) the BrowserRouter app never served. With
+// the assertions wrapped in `if (await locator.count() > 0)` the spec
+// passed unconditionally: a false-positive test for deleted UI.
+//
+// The real, testable contract of /workspace today: it is wrapped in
+// ProtectedRoute, so an unauthenticated visitor must be redirected to
+// /login (src/components/core/AuthGuards.tsx:46).
+test.describe('Workspace route protection — UI Smoke Tests', () => {
+  test('unauthenticated visitor to /workspace is redirected to /login', async ({ page }) => {
+    await page.goto(BASE_URL + '/workspace');
+    await expect(page).toHaveURL(/\/login/);
   });
 });

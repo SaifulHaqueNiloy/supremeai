@@ -363,11 +363,30 @@ export const apiClient = {
     const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
       ...options,
       method: 'POST',
+
+patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
+    const authHeaders = await getAuthHeaders();
+    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    if (
+      !authHeaders['Idempotency-Key'] &&
+      !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
+      pathRequiresIdempotencyKey(finalUrl)
+    ) {
+      authHeaders['Idempotency-Key'] = buildIdempotencyKey();
+    }
+    const res = await throttledFetch(finalUrl, {
+      // FIX (P1, review 2026-09-12): options first — see get() above.
+      ...options,
+      method: 'PATCH',
       headers: {
         ...(options?.headers as Record<string, string>),
         ...authHeaders,
       },
+<<<<<<< HEAD
       body,
+=======
+      body: body ? JSON.stringify(body) : undefined,
+>>>>>>> origin/main
     });
     return handleResponse(res);
   },
