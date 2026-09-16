@@ -28,6 +28,10 @@ interface DataTableProps<T> {
     onRowClick?: (row: T) => void;
 }
 
+function getVal<T>(row: T, key: string): unknown {
+    return (row as Record<string, unknown>)[key];
+}
+
 export function DataTable<T extends object>({
     columns,
     data,
@@ -38,8 +42,6 @@ export function DataTable<T extends object>({
     emptyMessage = 'NO DATA',
     onRowClick,
 }: DataTableProps<T>) {
-    const getVal = (row: T, key: string): unknown =>
-        (row as Record<string, unknown>)[key];
 
     const keyOf = (row: T, i: number): string =>
         rowKey ? String(rowKey(row)) : String(getVal(row, keyField ?? 'id') ?? i);

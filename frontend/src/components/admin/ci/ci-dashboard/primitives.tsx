@@ -3,7 +3,6 @@
 // (extracted verbatim from CIDashboard.tsx — mechanical split, no behavior change)
 // ══════════════════════════════════════════════════════════════════════════════
 
-import { useState } from 'react';
 import type { ElementType, ReactNode } from 'react';
 import { Wifi, WifiOff, Loader2, AlertCircle } from 'lucide-react';
 import { COLORS, STATUS_CONFIG } from './constants';

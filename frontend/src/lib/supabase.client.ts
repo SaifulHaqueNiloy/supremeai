@@ -75,7 +75,7 @@ export const supabase: SupabaseClient = createClient(
 // Guarded proxy: throws a clear error on first use when no service key exists
 // (always the case in a browser bundle) instead of crashing at import time.
 export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
+  get(_target, _prop) {
     throw new Error(
       '[supabase.client] supabaseAdmin is unavailable in the browser: service-role keys are ' +
         'server-only. Use the backend API for privileged operations.',
