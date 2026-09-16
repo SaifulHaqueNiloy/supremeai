@@ -27,18 +27,18 @@ class _FakeResult:
 class _FakeTable:
     """Minimal chainable supabase-style builder for select/eq/upsert/execute."""
 
-    def __init__(self, client: "_FakeClient"):
+    def __init__(self, client: _FakeClient):
         self._client = client
         self._op = "select"
 
-    def select(self, _cols: str) -> "_FakeTable":
+    def select(self, _cols: str) -> _FakeTable:
         self._op = "select"
         return self
 
-    def eq(self, *_a: Any, **_k: Any) -> "_FakeTable":
+    def eq(self, *_a: Any, **_k: Any) -> _FakeTable:
         return self
 
-    def upsert(self, data: dict) -> "_FakeTable":
+    def upsert(self, data: dict) -> _FakeTable:
         self._op = "upsert"
         self._client.upserts.append(dict(data))
         return self

@@ -1,4 +1,17 @@
-# SupremeAI Full-Stack Production Failure, Anti-Pattern & Mismatch Compendium
+# SupremeAI — Canonical Defect & Failure Register
+
+**Document ID:** `CANONICAL-DEFECT-REGISTER-001`  
+**Version:** 1.0.0  
+**Status:** ACTIVE — Single Source of Truth  
+**Supersedes:** `ERROR_AND_MISMATCH_COMPENDIUM.md`, `SYSTEM_DEFECT_REGISTER_2026-09-15.md`, `FULL_SYSTEM_AUDIT_2026-09-14.md`, `AUDIT_REPORT_2026-09-10.md`, `ERROR_COMPENDIUM.md` (reference/ exact duplicate)  
+**Last Updated:** 2026-09-16 (round-14 status sweep) — every OPEN item re-verified against live main; fixes landed via PRs #383–#390 (status column reflects post-sweep state).  
+**Scope:** Full Stack (Backend, Frontend, Shared Contracts, CI/CD, Test Suites, Infrastructure)  
+**Audit Coverage:** 3,700 Git-Tracked Files | 1,189 Modules | 765 Backend Routes | 287 Frontend Endpoints | 37 Test Suites
+
+---
+
+## Part A: Production Failure Patterns Reference (111 Traps)
+
 > **Version:** 2.0.0 (Enterprise Architecture Baseline)  
 > **Classification:** Production Reliability Standard & Engineering Defense Manual  
 > **Target Audience:** Principal AI Engineers, Full-Stack Architects, and Autonomous Agents
@@ -6,6 +19,7 @@
 ---
 
 ## 📑 সূচিপত্র (Table of Contents)
+
 1. [ভূমিকা ও উদ্দেশ্য (Overview & Architectural Philosophy)](#ভূমিকা-ও-উদ্দেশ্য)
 2. [স্তর ১: পাইথন ব্যাকএন্ড ও এসিংক রানটাইম ট্র্যাপ (Python & Async Runtime)](#-স্তর-১-পাইথন-ব্যাকএন্ড-ও-এসিংক-রানটাইম-ট্র্যাপ-python--async-runtime)
 3. [স্তর ২: এআই-এজেন্ট সুরক্ষা, নির্ভরযোগ্যতা ও এলএলএম পাইপলাইন ট্র্যাপ (AI Safety & Agent Reliability)](#-স্তর-২-এআই-এজেন্ট-সুরক্ষা-নির্ভরযোগ্যতা-ও-এলএলএম-পাইপলাইন-ট্র্যাপ-ai-safety--agent-reliability)
@@ -24,7 +38,8 @@
 ---
 
 ## ভূমিকা ও উদ্দেশ্য
-SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভোলভিং ও মাল্টি-এজেন্ট বুদ্ধিমত্তা প্ল্যাটফর্ম। সিস্টেম স্কেল করার সাথে সাথে ব্যাকএন্ড, ফ্রন্টএন্ড, ডাটাবেস, এআই মডেল এবং ক্লাউড ইনফ্রাস্ট্রাকচারের সংযোগস্থলে সূক্ষ্ম কিন্তু মারাত্মক ফেইলিউর তৈরি হওয়ার ঝুঁকি থাকে। 
+
+SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভোলভিং ও মাল্টি-এজেন্ট বুদ্ধিমত্তা প্ল্যাটফর্ম। সিস্টেম স্কেল করার সাথে সাথে ব্যাকএন্ড, ফ্রন্টএন্ড, ডাটাবেস, এআই মডেল এবং ক্লাউড ইনফ্রাস্ট্রাকচারের সংযোগস্থলে সূক্ষ্ম কিন্তু মারাত্মক ফেইলিউর তৈরি হওয়ার ঝুঁকি থাকে।
 
 এই কম্পেন্ডিয়ামটি কোনো তাত্ত্বিক তালিকা নয়; এটি বাস্তব প্রোডাকশন এনভায়রনমেন্টে ঘটে যাওয়া এবং ঘটতে পারা **১১১টি সুনির্দিষ্ট ব্যর্থতা, অ্যান্টি-প্যাটার্ন, সিকিউরিটি হোল এবং কন্ট্রাক্ট মিসম্যাচের একটি সমন্বিত কারিগরি রেফারেন্স** (১০৪টি মৌলিক ট্র্যাপ + ৭টি ২০২৬-০৯ লাইভ অডিটে যাচাইকৃত নতুন ট্র্যাপ — দেখুন স্তর ১১ ও ইনসিডেন্ট রেজিস্টার)। এটি সিস্টেম আর্কিটেক্ট, পিআর রিভিউয়ার এবং অটোনোমাস এজেন্টদের সেলফ-হিলিং অডিটের ভিত্তি হিসেবে ব্যবহৃত হবে।
 
@@ -50,7 +65,7 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 
 ### ৫. গ্লোবাল ডিকশনারিতে আনবাউন্ড গ্রোথ (In-Memory Leak / OOM Kill)
 - **বিবরণ:** মডিউল-লেভেলে ইন-মেমরি ডিকশনারিতে আনবাউন্ডেড ডেটা বা সেশন জমা রাখা, যা ক্লাউড কন্টেইনারে মেমোরি শেষ করে প্রসেস কিল করায়।
-- **প্রতিরোধ:** Redis বা TTL Cache (`cachetools.TTLCache(maxsize=1000, ttl=300)`)।
+- **প্রতিরোধ:** Redis বা TTL Cache (`cachetools.TTLCache(maxsize=1000, ttl=300)`).
 
 ---
 
@@ -160,7 +175,7 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 - **বিবরণ:** কোটি কোটি রো-এর টেবিলে `tenant_id` বা `created_at`-এ ইনডেক্স না থাকায় ৫০ মিলিসেকেন্ডের কুয়েরি ৩০ সেকেন্ড সময় নিয়ে ডাটাবেস ডাউন করে দেয়।
 - **প্রতিরোধ:** যৌথ ইনডেক্স (Composite Index) এবং CI-তে `EXPLAIN ANALYZE` স্ক্যান।
 
-### ৩১. মাইগ্রেশন ড্রিফ্ট (Database Migration Drift)
+### ৩১. মাইগ্রেশন ড্রিফট (Database Migration Drift)
 - **বিবরণ:** গিটের মাইগ্রেশন ফাইল, লোকাল ডেটাবেস এবং প্রোডাকশন Supabase স্কিমার মধ্যে অমিল থাকা।
 - **প্রতিরোধ:** মাইগ্রেশন লক এবং CI পাইপলাইনে স্কিমা ডিফ চেক।
 
@@ -340,7 +355,7 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 - **বিবরণ:** ব্যাকএন্ড `None` পাঠায় কিন্তু ফ্রন্টএন্ড ধরে নেয় স্ট্রিং আছে, যার ফলে `TypeError` ঘটে।
 - **প্রতিরোধ:** ফ্রন্টএন্ডে ডিফেন্সিভ অপশনাল চেইনিং (`item?.name ?? ''`).
 
-### ৭৩. এনাম ড্রিফ্ট (Enum Drift Across Stacks)
+### ৭৩. এনাম ড্রিফট (Enum Drift Across Stacks)
 - **বিবরণ:** ব্যাকএন্ডে স্ট্যাটাস `in_progress`, কিন্তু ফ্রন্টএন্ডে পুরনো এনাম `running` ব্যবহার করা হচ্ছে।
 - **প্রতিরোধ:** OpenAPI থেকে ফ্রন্টএন্ড TypeScript টাইপ অটো-জেনারেট করা।
 
@@ -368,7 +383,7 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 - **বিবরণ:** ইউআইতে কাজ সফল দেখালেও ব্যাকএন্ড ফেইল করলে ডেটা আগের অবস্থায় ফিরিয়ে না আনা।
 - **প্রতিরোধ:** এরর ক্যাচে পূর্ববর্তী স্টেটে রোলব্যাক মেকানিজম।
 
-### ৭৯. অথ স্টেট ইনিশিয়ালাইজেশন রেস (Auth State Race Condition)
+### ৭৯. অথ স্টেট ইনিশিয়ালাইজেশন রেস (Auth State Race Condition)
 - **বিবরণ:** টোকেন ভ্যালিডেশন শেষ হওয়ার আগেই প্রটেক্টেড রুট রিডাইরেক্ট হয়ে লগইন পেজে ফেলে দেওয়া।
 - **প্রতিরোধ:** গ্লোবাল `authLoading` স্টেট পর্যবেক্ষণ।
 
@@ -408,7 +423,7 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 - **বিবরণ:** `requirements.txt` এবং `poetry.lock`-এর মধ্যে অসঙ্গতি থাকায় লোকাল ও সিআই এনভায়রনমেন্ট আলাদা হওয়া।
 - **প্রতিরোধ:** সিঙ্গেল সোর্স অফ ট্রুথ লকফাইল।
 
-### ৮৮. এনভায়রনমেন্ট ভেরিয়েবল সাইলেন্ট ড্রিফ্ট (Environment Configuration Drift)
+### ৮৮. এনভায়রনমেন্ট ভেরিয়েবল সাইলেন্ট ড্রিফট (Environment Configuration Drift)
 - **বিবরণ:** লোকাল, স্টেজিং ও প্রোডাকশনে গুরুত্বপূর্ণ ভেরিয়েবল ড্রপ থাকা কিন্তু অ্যাপ বুট হয়ে ক্র্যাশ করা।
 - **প্রতিরোধ:** Pydantic Settings দিয়ে বুট টাইমে বাধ্যতামূলক ভ্যারিয়েবল ভ্যালিডেশন।
 
@@ -488,21 +503,21 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 
 ## 🟣 স্তর ১১: লাইভ অডিটে যাচাইকৃত নতুন ট্র্যাপ (Session-Verified Traps — 2026-09)
 
-> এই স্তরের প্রতিটি আইটেম ২০২৬-০৯-০৫/০৬ সেশনে রানটাইমে প্রমাণিত (লগ/টেস্ট আউটপুটসহ)। ফাইল:লাইন রেফারেন্স ইনসিডেন্ট রেজিস্টারে।
+> এই স্তরের প্রতিটি আইটেম ২০২৬-০৯-০৫/০৬ সেশনের লাইভ অডিটে প্রমাণিত (লগ/টেস্ট আউটপুটসহ)। ফাইল:লাইন রেফারেন্স ইনসিডেন্ট রেজিস্টারে।
 
 ### ১০৫. ইমপোর্ট-টাইম সাইড ইফেক্ট বিস্ফোরণ (Import-Time Side Effect Explosion)
 - **বিবরণ:** ইউটিলিটি/রাউটার মডিউল ইমপোর্ট করতেই DB ক্লায়েন্ট, সিক্রেট ভল্ট (নেটওয়ার্ক I/O!), এজেন্ট ইনস্ট্যান্স জেগে ওঠে। প্রমাণ: `import scout` → ~১১ সেকেন্ড, Infisical bulk-fetch, Supabase/Firestore/ModelRouter init; pytest কালেকশন ৩০ সেকেন্ড+। কোল্ড-স্টার্ট ও CI ধীর করে, লুকানো কাপলিং তৈরি করে।
-- **প্রতিরোধ:** মডিউল-লেভেল কোনো ক্লায়েন্ট/এজেন্ট ইনস্ট্যান্সিয়েশন নয় — lazy `__getattr__` প্যাটার্ন (`main.py`-এ বিদ্যমান প্রেসিডেন্ট) ও ফাংশন-স্কোপড ইমপোর্ট। CI-তে "import budget" (উদা. `python -c "import X"` < ২ সে) টাইম-গেট।
+- **প্রতিরোধ:** মডিউল-লেভেলে কোনো ক্লায়েন্ট/এজেন্ট ইনস্ট্যান্সিয়েশন নয় — lazy `__getattr__` প্যাটার্ন (`main.py`-এ বিদ্যমান প্রেসিডেন্ট) ও ফাংশন-স্কোপড ইমপোর্ট। CI-তে "import budget" (উদা. `python -c "import X"` < ২ সে) টাইম-গেট।
 
 ### ১০৬. সিঙ্গেলটন পুনঃইনস্ট্যান্সিয়েশন (Global Manager Re-Init)
 - **বিবরণ:** ইমপোর্ট চেইনে একই গ্লোবাল ম্যানেজার একাধিকবার init হয়। প্রমাণ: এক ইমপোর্টে `SkillManager initialized` ×৪ — ৫১২MB Render টিয়ারে মেমরি অপচয় ও স্টেট ফর্কিং ঝুঁকি।
 - **প্রতিরোধ:** module-level singleton guard (`if _instance is None`) বা `functools.lru_cache`; init-কাউন্টার মেট্রিক যোগ করে বুটে অ্যালার্ট।
 
-### ১০৭. ট্রান্সপোর্ট-মাইগ্রেশন ড্রিফ্ট (WS→SSE Half-Migration)
-- **বিবরণ:** ব্যাকএন্ড WebSocket→SSE মাইগ্রেট করে পুরনো WS রাউটার কমেন্ট-আউট করলেও ফ্রন্টএন্ড ক্লায়েন্ট মাইগ্রেট না হলে সব রিয়েলটাইম ক্লায়েন্ট নীরবে মারা যায়। নতুন SSE রাউট অরফান থেকে যায় (উল্টো দিকের ড্রিফ্টও সমান বিপজ্জনক)।
-- **প্রতিরোধ:** ট্রান্সপোর্ট মাইগ্রেশন চেকলিস্ট — (১) নতুন ট্রান্সপোর্টে অন্তত একটি কনজিউমার মাইগ্রেট না হওয়া পর্যন্ত পুরনো রাউট মুছবেন না, (২) মাইগ্রেশন PR-এ client-call inventory diff, (৩) Gate-2 কনট্র্যাক্ট টেস্টে transport পাথ মিলান।
+### ১০৭. ট্রান্সপোর্ট-মাইগ্রেশন ড্রিফট (WS→SSE Half-Migration)
+- **বিবরণ:** ব্যাকএন্ড WebSocket→SSE মাইগ্রেট করে পুরনো WS রাউটার কমেন্ট-আউট করলেও ফ্রন্টএন্ড ক্লায়েন্ট মাইগ্রেট না হলে সব রিয়েলটাইম ক্লায়েন্ট নীরবে মারা যায়। নতুন SSE রাউট অরফান থেকে যায় (উল্টো দিকের ড্রিফটও সমান বিপজ্জনক)।
+- **প্রতিরোধ:** ট্রান্সপোর্ট মাইগ্রেশন চেকলিস্ট — (১) নতুন ট্রান্সপোর্টে অন্তত একটি কনজিউমার মাইগ্রেট না হওয়া পর্যন্ত পুরনো রুট মুছবেন না, (২) মাইগ্রেশন PR-এ client-call inventory diff, (৩) Gate-2 কনট্র্যাক্ট টেস্টে transport পাথ মিলান।
 
-### ১০৮. কলার-স্পেসিফিক পেলোড ড্রিফ্ট (Same Endpoint, Two Caller Contracts)
+### ১০৮. কলার-স্পেসিফিক পেলোড ড্রিফট (Same Endpoint, Two Caller Contracts)
 - **বিবরণ:** একই এন্ডপয়েন্টে দুই ভিন্ন ফ্রন্টএন্ড কলার দুই ভিন্ন শেপ পাঠালে একটি নীরবে 422 খায়। প্রমাণ: `chatService.sendMessage` → `{message, history}` vs `getAethelResponse` → `{task, messages}` — একই `/api/task/execute`, একটি ক্রমাগত ফেইলিং।
 - **প্রতিরোধ:** (১) ব্যাকএন্ডে `model_validator(mode="before")` harmonize (alias ফিল্ড গ্রহণ), (২) ফ্রন্টএন্ডে সব endpoint+payload একটি central `endpoints.ts`-এ, (৩) per-endpoint contract test যা **প্রতিটি** কলারের শেপ ভেরিফাই করে।
 
@@ -520,7 +535,6 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 
 ---
 
-
 ## 🛡️ প্রতিরোধমূলক স্থাপত্য নীতি ও সেলফ-হিলিং গেটস (Permanent Safeguards & Quality Gates)
 
 এই ১১১টি ট্র্যাপকে চিরতরে প্রতিরোধ করার জন্য SupremeAI আর্কিটেকচারে নিচের ৪টি স্বয়ংক্রিয় গেট কার্যকর:
@@ -532,39 +546,435 @@ SupremeAI একটি স্বয়ংক্রিয়, সেলফ-ইভ
 | **Gate 3: Production Boot Self-Audit** | রানটাইম | বুট সিকোয়েন্সে সমস্ত ডিপেন্ডেন্সি, RLS পলিসি ও রাউটার ভ্যালিডেট করে সাইলেন্ট ফেইলিউরের বদলে উচ্চস্বরে অ্যালার্ট দেওয়া। |
 | **Gate 4: Autonomous Rollback & Circuit Breaker** | ইনফ্রাস্ট্রাকচার | রানটাইমে কোনো ডিপ্লয়মেন্ট বা কিউতে ক্যাসকেডিং এরর ঘটলে ৩টি ট্রাইয়ের পর `CHECKPOINT.md`-তে অটো-রোলব্যাক। |
 
-## 🗂️ যাচাইকৃত ইনসিডেন্ট রেজিস্টার (Verified Incident Register — 2026-09)
+---
 
-> ২০২৬-০৯-০৫/০৬ সেশনের লাইভ অডিটে আবিষ্কৃত ও ফিক্স করা ইনসিডেন্ট। প্রতিটি এন্ট্রি উপরের ট্র্যাপ নম্বরের সাথে ম্যাপ করা — সেলফ-হিলিং এজেন্ট এই রেজিস্টার প্যাটার্ন-ম্যাচিংয়ের সিড হিসেবে ব্যবহার করবে।
+## Part B: Current Defect Register
 
-### A. API কনট্র্যাক্ট মিসম্যাচ (স্তর ৬/১১)
-
-| # | ইনসিডেন্ট | ট্র্যাপ | প্রমাণ (ফাইল:লাইন) | স্ট্যাটাস |
-|---|---|---|---|---|
-| 1 | নতুন SSE রাউটে `{message}` পাঠালে 422-এর আশঙ্কা (harmonize validator দ্বারা আংশিক সমাধান ছিল) | #৬২, #১০৮ | `stream_chat_sse.py` `ChatStreamRequest.harmonize_contract` | ✅ ফিক্সড (validator + ফ্রন্টএন্ড মাইগ্রেশন) |
-| 2 | **ডেড অ্যালিয়াস:** prefixed router-এ `@router.post("/api/chat/stream")` → `/api/v1/stream/api/chat/stream` | #৬৩ | `stream_chat_sse.py:303` (পুরনো) | ✅ ফিক্সড — prefix-less `legacy_router` + `core/app.py`-তে মাউন্ট |
-| 3 | `POST /api/task/execute`-এ `{message, history}` → Pydantic 422 (TaskRequest-এ `task` বাধ্যতামূলক) | #৬২, #১০৮ | `chatService.ts:119` vs `task.py:52` | ✅ ফিক্সড — TaskRequest harmonize + ফ্রন্টএন্ড canonical শেপ |
-| 4 | `GET /api/dashboard/stream` (SSE) — ফ্রন্টএন্ডে ৩ কনজিউমার, ব্যাকএন্ড রাউট **কোথাও মাউন্ট ছিল না** | #৬৪ | `ServiceHealthMetrics.tsx:24`, `AutomationQueuePage.tsx:76`, `useDashboardData.ts:211`; `events.py:63` (আনমাউন্টেড) | ✅ ফিক্সড — `api.routes.events` prefix `/api` দিয়ে মাউন্ট |
-| 5 | `WS /ws/session/{id}/takeover` — ScreencastViewer/sessionCockpitStore কল করত, রাউটার আনমাউন্টেড | #৬৪ | `ScreencastViewer.tsx:28`, `sessionCockpitStore.ts:127`; `session_takeover.py:298` | ✅ ফিক্সড — মাউন্ট করা হয়েছে |
-| 6 | `WS /ws/cost-updates` — CostDashboard কল করত, ব্যাকএন্ডে রাউটই ছিল না; সাথে `GET /api/billing/analytics`-ও 404 | #৬৪, #১১১ | `CostDashboard.tsx:63,28` | ✅ ফিক্সড — নতুন WS রাউট (realtime_dashboard.py) + analytics এন্ডপয়েন্ট (billing_api.py) |
-| 7 | `WS /api/voice/ws/voice` (CommandCenter) ও `/api/ws/dashboard` (SujonCoreCockpit) — কোনো ব্যাকএন্ড রাউটের সাথে মেলে না | #৬৩, #১০৭ | `CommandCenter.tsx:80`, `SujonCoreCockpit.tsx:31` | ✅ ফিক্সড — ফ্রন্টএন্ড `/ws/voice` ও `/ws/dashboard`-এ রিপয়েন্ট |
-
-### B. পরিবেশ ও পারফরম্যান্স (স্তর ৮/১১) — খোলা আছে
-
-| # | ফাইন্ডিং | ট্র্যাপ | প্রমাণ | স্ট্যাটাস |
-|---|---|---|---|---|
-| 8 | লোকাল `.env`-এ `ENV=production` — লোকাল ইমপোর্টেই Infisical থেকে ১২৮টি প্রোড সিক্রেট লোড | #১১০, #৮৮ | `.env` উভয় ফাইলে `ENV=production` | 🔴 **খোলা** — লোকালে `ENV=local` সেট করতে হবে |
-| 9 | `import scout` → ~১১ সেকেন্ড (Infisical HTTP, Supabase/Firestore init ইমপোর্টেই); pytest কালেকশন ৩০ সে+ | #১০৫ | লাইভ ইমপোর্ট টাইমিং | 🔴 **খোলা** — lazy-import রিফ্যাক্টর প্রয়োজন |
-| 10 | `SkillManager initialized` এক ইমপোর্টে ×৪ | #১০৬ | বুট লগ | 🔴 **খোলা** |
-| 11 | R2 dry-run + `skills.installer` missing + Bug Prophet ডিসেবলড (ভাঙা ইমপোর্ট) | #১১১, #৬৪ | বুট লগ; `startup/agents.py:80-90` | 🟡 আংশিক — কনফিগ/ক্রেডেনশিয়াল মেইনটেইনার সিদ্ধান্ত |
-
-### ভেরিফিকেশন ইভিডেন্স (ফিক্স-ব্যাচ, ২০২৬-০৯-০৬)
-- রাউট-রেজোলিউশন স্মোক: **ALL_ROUTES_OK** — ৯/৯ প্রয়োজনীয় পাথ রেজলভ
-- Pydantic কনট্র্যাক্ট: **TASK_CONTRACT_OK** — `{message, history}` alias গৃহীত
-- ব্যাকএন্ড টেস্ট: **7/7 passed** (`test_stream_chat_contract.py`, `test_session_takeover.py`)
-- ফ্রন্টএন্ড টেস্ট: **6/6 passed** (`chatService.test.ts`)
-- `ruff check` (৬টি পরিবর্তিত ফাইল): **All checks passed**
-- পরিবর্তন: ১০ ফাইল, +১৮২/−৯ লাইন (working tree — কমিট পেন্ডিং)
-
+**Document ID:** `SYSTEM_DEFECT_REGISTER_2026-09-15`  
+**Status:** Canonical Living Baseline & Master Technical Debt Register (Single Source of Truth)  
+**Audit Coverage:** 3,700 Git-Tracked Files | 1,189 Modules | 765 Backend Routes | 287 Frontend Endpoints | 37 Test Suites
 
 ---
-*ডকুমেন্টটি `docs/audit_reports/ERROR_AND_MISMATCH_COMPENDIUM.md`-এ সংরক্ষিত এবং SupremeAI প্ল্যাটফর্মের প্রতিটি আর্কিটেকচারাল ডেভেলপমেন্ট ও সেলফ-ইভোলভিং ডিসিশনে চূড়ান্ত ডিফেন্স স্ট্যান্ডার্ড হিসেবে বাধ্যতামূলক।*
+
+## 📑 Table of Contents
+
+1. [Executive Summary & System Landscape](#1-executive-summary--system-landscape)
+2. [Priority Legend & Defect Classification Matrix](#2-priority-legend--defect-classification-matrix)
+3. [Class A: Broken Operational Flows & Contract Mismatches (P0)](#3-class-a-broken-operational-flows--contract-mismatches-p0)
+4. [Class H: Hand-Verified Frontend-Backend Contract Mismatches (P0 Missing Routes)](#4-class-h-hand-verified-frontend-backend-contract-mismatches-p0-missing-routes)
+5. [Class G: False Assurance Defects (P0/P1 — Systems Falsifying Success)](#5-class-g-false-assurance-defects-p0p1--systems-falsifying-success)
+6. [Class B: Static Shells & Missing User Interfaces (P1)](#6-class-b-static-shells--missing-user-interfaces-p1)
+7. [Class D: Non-Working Subsystems, Simulated & Stubbed Execution (P1/P2)](#7-class-d-non-working-subsystems-simulated--stubbed-execution-p1p2)
+   - [7.1 Machine Learning, Fine-Tuning & Self-Evolution](#71-machine-learning-fine-tuning--self-evolution)
+   - [7.2 Simulated Providers & Fabricated Execution at Runtime](#72-simulated-providers--fabricated-execution-at-runtime)
+   - [7.3 Explicitly Unimplemented / Stubbed Plugins & Tools](#73-explicitly-unimplemented--stubbed-plugins--tools)
+8. [Class C: Orphan Backend Surface (P1 — 57 Route Families)](#8-class-c-orphan-backend-surface-p1--57-route-families)
+9. [Class S: Security, Guard-Consistency & Network Defects (P0/P1)](#9-class-s-security-guard-consistency--network-defects-p0p1)
+10. [Class M: Governance, CI & Tooling Defects ("Gates That Don't Gate")](#10-class-m-governance-ci--tooling-defects-gates-that-dont-gate)
+11. [Class P: Dependency & Version Inconsistencies](#11-class-p-dependency--version-inconsistencies)
+12. [Class E: Test Debt & Skipped Test Cases (Formal Registry Summary)](#12-class-e-test-debt--skipped-test-cases-formal-registry-summary)
+13. [Class F: Core Architectural Debt & Subsystem Duplication](#13-class-f-core-architectural-debt--subsystem-duplication)
+14. [Class Q: Code-Level Defect Scan (2026-09-16 — Silent Failures, Bare Excepts, Stubs, TS Escape Hatches)](#14-class-q-code-level-defect-scan-2026-09-16--silent-failures-bare-excepts-stubs-ts-escape-hatches)
+15. [Master Priority Remediation Roadmap](#15-master-priority-remediation-roadmap)
+16. [Methodology, Reproduction Commands & Verification Limits](#16-methodology-reproduction-commands--verification-limits)
+
+---
+
+## 1. Executive Summary & System Landscape
+
+Through AST analysis, import graph walks, static route reconstruction (`scripts/audit/system_deep_scan_2026_09_15.py`), frontend-backend contract tracing, and test suite auditing, this master register consolidates **all known non-working components, runtime defects, contract mismatches, and technical debt items across SupremeAI into one unified document**.
+
+### Key System Metrics (Audited)
+* **Tracked File Census:** 3,700 git-tracked files.
+* **Reconstructed Route Rows:** 765 backend routes mounted across 149 modules.
+* **Frontend Endpoint Calls:** 287 `/api...` literals in `frontend/src`.
+* **Hand-Verified Dead Frontend Calls:** 26 calls deterministically returning HTTP 404/422.
+* **Orphan Backend Surface:** 57 route families (including the entire `commandcenter` admin API and 6 image conversion tools) with 0 frontend consumers.
+* **Stub / Mock Footprint:** 1,157 backend hits across 340 files; 280 frontend hits across 145 files (excluding test directories).
+* **Test Suite Debt:** 96 active skipped tests (68 deferred tickets, 28 intentional guards).
+
+---
+
+## 2. Priority Legend & Defect Classification Matrix
+
+| Priority | Definition | Architectural Impact |
+|---|---|---|
+| **P0 (Immediate)** | Broken at runtime, HTTP 404/422/500, silent data loss, financial bypass, or false security assurance. | Blocks real user workflows or violates fundamental safety/financial integrity. |
+| **P1 (Core)** | Mounted components that simulate execution, return canned/stubbed data, or are orphan capability families. | Violates "Operational Reality Over Superficial Artifacts" (Zero-Gap Principle). |
+| **P2 (Hardening)** | Test debt, dependency drift, non-reproducible local tooling, and hygiene items. | Degrades developer velocity, CI stability, and long-term maintainability. |
+
+---
+
+## 3. Class A: Broken Operational Flows & Contract Mismatches (P0)
+
+These are bugs where components attempt real execution but fail deterministically due to contract discrepancies, route pluralization mismatches, or missing parameters:
+
+| ID | Component / File Path | Root Cause | Runtime Symptom & Impact | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **ERR-A01** | `frontend/src/pages/user/AgentWorkspace.tsx:L73`<br>`backend/api/routes/agent.py:L24` | Live workspace caller sends `{ prompt, project_id: 'default' }` to plural `/api/v1/agents/execute` without `task_id`. Backend `AgentTaskRequest` strictly requires `task_id: str = Field(...)`. | HTTP `422 Unprocessable Entity`. Agent Workspace fails on execution; UI displays *"Connection error to SupremeAI Backend"*. | ✅ FIXED — Frontend now generates `crypto.randomUUID()` task_id and sends full contract. |
+| **ERR-A02** | `frontend/src/services/agentService.ts:L19`<br>`backend/api/routers.py:L100` | Service layer client calls singular `POST /api/v1/agent/execute` (while live workspace uses `/agents/execute`). Backend router registers `prefix="/api/v1/agents"` (plural). | HTTP `404 Not Found`. Any client importing `agentService.executeAgentTask` hits dead endpoint. Split between live caller (A01) and service-layer drift (A02). | ✅ FIXED — Service now uses `/api/v1/agents/execute` (plural) with `task_id`. |
+| **ERR-A03** | `frontend/src/components/customer/BrowserPreview.tsx:L264` | Browser preview renders `<iframe src={currentUrl}>` directly in the DOM instead of proxying through backend Playwright. | External domains return `X-Frame-Options: SAMEORIGIN` / CSP frame-ancestors errors. Modern websites fail to load; screen stays blank. | ❌ OPEN — Still renders iframe directly; a real Playwright screenshot-proxy pipeline is the tracked remediation (large ticket). |
+| **ERR-A04** | `frontend/src/pages/user/IdeWorkspace.tsx:L57`<br>`AgentWorkspace.tsx:L51` | Browser `@webcontainer/api` requires `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` headers. | Dev server and preview lack COOP/COEP headers. Terminal displays `[system] Sandbox unavailable in this preview` and fails to spawn shell. | ✅ FIXED (PR #389) — COOP/COEP now set on nginx (Docker prod) and vite preview; Vite dev server already had them. |
+| **ERR-A05** | `frontend/src/services/apiClient.test.ts:L61` | Test suite asserts against `GET /api/v1/projects`. No such route exists in the backend (backend only exposes `/repos` and `/workspaces`). | Contract test passes via mock, but real application calls to `/api/v1/projects` hit 404. | ✅ FIXED — Test now uses real `GET /api/agents/` route. |
+| **ERR-A06** | `backend/api/routes/browser/_automation.py:L142` | Playwright action handlers lack explicit element-state checks before click/type actions on dynamic SPAs. | Intermittent timeouts (`TimeoutError: 15000ms exceeded`) on dynamic DOM mutations. | ✅ FIXED (PR #390) — explicit wait_for(visible) gate before click/fill/type; timeout → honest HTTP 408 with verbatim reason. |
+
+---
+
+## 4. Class H: Hand-Verified Frontend-Backend Contract Mismatches (P0 Missing Routes)
+
+Every row below was confirmed by reading **both** the frontend call site and the backend route definition. All produce HTTP 404 or 500 at runtime.
+
+### 4.1 `/api/user/preferences` — Five Callers, Two Wrong Prefixes (`ERR-H01`)
+* **Backend Definition (`backend/api/routes/preferences.py`):** Mounted at `/api/preferences/` (no `v1`, no `user` subpath).
+* **Callers & Outcomes:**
+  * `frontend/src/contexts/ThemeProvider.tsx:30,74` calls `/api/v1/preferences` ➔ **404**
+  * `frontend/src/i18n/I18nProvider.tsx:27` calls `/api/user/preferences` ➔ **404**
+  * `frontend/src/store/themeStore.ts:69,85` calls `/api/user/preferences` ➔ **404**
+  * `frontend/src/pages/ProfilePage.tsx:33` calls `/api/user/preferences` ➔ **404**
+* **Impact:** Theme, locale, and user profile settings silently fail to persist across 5 call sites.
+* **Status:** ✅ FIXED (PR #383) — all 5 callers moved to GET/POST `/api/preferences`; extended prefs (preferred_language/profile/security/notifications) really persist via custom_shortcuts._extended; 4 regression tests.
+
+### 4.2 `/api/skills/...` — Three Dead Calls (`ERR-H02`)
+* **Backend Definition (`backend/api/routes/skills.py`):** Real paths are `/api/skills/catalog`, `/api/skills/search`, `/api/skills/install` (no id in path).
+* **Callers & Outcomes:**
+  * `frontend/src/services/skillsService.ts:104` calls `POST /api/skills/${skillId}/install` ➔ **404** (id segment unexpected)
+  * `frontend/src/services/skillsService.ts:118` calls `DELETE /api/skills/${skillId}/uninstall` ➔ **404** (no uninstall route exists)
+  * `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx:293` calls `POST /api/skills/deploy-blueprint` ➔ **404** (route absent)
+* **Impact:** Skill installation and uninstallation are broken.
+* **Status:** ✅ FIXED (PR #385) — frontend uses the real contract; DELETE /api/skills/uninstall added; install state persisted atomically; deploy-blueprint writes real manifests into the catalog; installed_only filter now real.
+
+### 4.3 `/api/v1/workspaces/bind-target` — Wrong Prefix (`ERR-H03`)
+* **Backend Definition (`backend/api/routes/workspaces_route.py:30`):** Real path is `POST /admin-api/workspaces/bind-target`.
+* **Caller:** `frontend/src/services/aiActions.ts:174` calls `POST /api/v1/workspaces/bind-target` ➔ **404**.
+* **Status:** ✅ FIXED (PR #383) — caller moved to `/admin-api/workspaces/bind-target`.
+
+### 4.4 `/api/v1/ecosystem/admin/*` — 17 Dead Admin Calls (`ERR-H04`)
+* **Backend Definition (`backend/api/routes/ecosystem_admin.py`):** Exposes `/capabilities`, `/decisions`, `/opportunities`, `/overview`, `/proposals`.
+* **Frontend Caller (`frontend/src/lib/ecosystem/api.ts`):** Calls completely different names:
+  * `/api/v1/ecosystem/admin/sources` (+`/discover`, `/{id}/transition`) ➔ **404**
+  * `/api/v1/ecosystem/admin/policies` (+`/{id}`, `/match`) ➔ **404**
+  * `/api/v1/ecosystem/admin/learned` (+`/prune`, `/{id}`) ➔ **404**
+  * `/governance/decisions`, `/governance/budgets` ➔ **404**
+  * `/proposals/{id}/decisions` (backend expects `/proposals/{id}/decide`) ➔ **404**
+  * `/api/v1/auth/users`, `/api/v1/auth/users/{id}/role` ➔ **404**
+* **Impact:** The ecosystem admin console client is entirely non-functional.
+* **Status:** ❌ OPEN — Backend and frontend route names remain mismatched.
+
+### 4.5 `/api/knowledge/*` — Four Dead Shared Service Calls (`ERR-H05`)
+* **Backend Definition (`backend/api/routes/knowledge.py`):** Exposes `/api/knowledge/ask`, `/ask-scribe`, `/search`, `/seed`.
+* **Caller (`packages/shared-services/src/services/SupremeAIService.ts`):**
+  * Lines 98, 154 call `/api/knowledge/learn` ➔ **404**
+  * Line 111 calls `/api/knowledge/failure` ➔ **404**
+  * Line 127 calls `/api/knowledge/feedback` ➔ **404**
+  * Line 136 calls `/api/knowledge/stats` ➔ **404**
+* **Impact:** The learning-loop client fails silently when saving failure/feedback/learning signals.
+* **Status:** ❌ OPEN — Backend has not implemented `/learn`, `/failure`, `/feedback`, or `/stats`.
+
+### 4.6 Guaranteed HTTP 500: Missing Module Import (`ERR-H06`)
+* **Location:** `backend/api/routes/agents.py:55` imports `from agents.research_assistant import ResearchAssistant`.
+* **Defect:** `backend/agents/research_assistant.py` does not exist anywhere in the repository.
+* **Impact:** `POST /api/agents/research/search`, `/research/summarize`, and `/research/cite` (`agents.py:52,71,82`) fail with **HTTP 500 unconditionally**.
+* **Status:** ✅ FIXED (PR #384) — real research_assistant implemented: live arXiv search, extractive summarization, deterministic citations (apa/mla/ieee/bibtex); honest 400/502 error mapping; 10 tests.
+
+### 4.7 Dual Divergent Agent Routers (`ERR-H07` & `ERR-H08`)
+* `backend/api/routers.py` mounts both `/api/agents` (`api.routes.agents` with user token) and `/api/v1/agents` (`api.routes.agent` with autonomous agent token).
+* `ERR-H08`: `backend/api/routes/agent.py:54` calls `exec_res = agent.execute(task_description=payload.prompt)`. The underlying implementation (`TaskRunnerAgent.execute`) is **synchronous**, blocking the async event loop for the entire run.
+* **Status:** ❌ OPEN — Dual routers not unified; sync execution not offloaded.
+
+---
+
+## 5. Class G: False Assurance Defects (P0/P1 — Systems Falsifying Success)
+
+These are components where the system claims success, health, or safety while performing no real work:
+
+| ID | File / Location | Fabricated Behavior | Risk Impact | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **ERR-G01** | `backend/api/routes/billing_api.py:271–275` | Missing Stripe API key redirects customer to success URL with fabricated `mock_session_123`. | **P0 Financial Integrity.** Customer is granted paid entitlements without payment. | ✅ FIXED — Now raises HTTP 503 when Stripe is unconfigured; no mock session created. |
+| **ERR-G02** | `backend/core/deployment/production_deploy.py:379–476` | Uses `time.sleep(2)` to simulate deployments and rollbacks with mock URLs (`# Simulate rollback process`). | **P0 Operational Reality.** Deployment & rollback verification is fiction. | ✅ FIXED — All deploy/rollback methods now raise `NotImplementedError` until real backend is wired. |
+| **ERR-G03** | `backend/api/routes/browser/_crown_jewel.py:43–45` | `@router.post("/security-scan")` returns unconditional `{"success": True, "score": 100, "issues": []}`. | **P1 Security Theatre.** Falsifies security checks. | ✅ FIXED — Now performs real passive header analysis and reports actual score. |
+| **ERR-G04** | `backend/core/orchestration/cloud_sandbox_orchestrator.py:70–140` | Missing API key returns mock stdout `f"Mock output for execution of: {command}"`. | **P1 Integrity.** Fabricates code execution results. | ⚠️ PARTIAL (accepted fail-honest) — mock output stays but is explicitly labeled `"mock": True`; whitelisted in the hardened stub gate (PR #387) as honest labeling, not fabrication. |
+| **ERR-G05** | `backend/api/routes/browser/_crown_jewel.py:60–69` | `@router.post("/tasks/{id}/step")` simulates step with static `{"action": "navigated to dashboard", "details": "Autonomous step succeeded"}`. | **P1 Autonomy.** Fabricates forward progress on stalled tasks. | ✅ FIXED — Now returns HTTP 501 with explicit message that legacy executor is retired. |
+| **ERR-G06** | `backend/api/routes/browser/_crown_jewel.py:21–25` | Returns `session_id = "sess_" + sha256(url)[:16]` — a hash of URL, not a real session. | **P1 Runtime.** Subsequent lookups fail after reporting success. | ✅ FIXED — Now creates real UUID-backed session in session store. |
+| **ERR-G07** | `backend/api/routes/agents.py:42–49` | Returns hardcoded `{"status": "active", "last_activity": "2026-01-01T00:00:00Z"}` for any agent id. | **P1 Telemetry.** Frozen timestamp; cannot distinguish alive from dead. | ✅ FIXED (PR #384) — unknown id → 404; known id → import-based available/unavailable; last_activity stays null (never fabricated). |
+| **ERR-G08** | `backend/api/routes/agents.py:30–37` | `list_agents()` returns a hardcoded single `{"id": "research", ...}` entry. | **P1 Orchestration.** Dynamic agent discovery bypassed by hardcoded literal. | ✅ FIXED (PR #384) — catalog derived from the real backend/agents/ directory (import-checked, cached). |
+| **ERR-G09** | `frontend/src/providers/MockSwarmProvider.tsx:39–79` | CPU/Memory usage generated using `Math.random() * 4` and canned logs. | **P1 Observability.** Fleet monitoring tuned off noise. | ✅ FIXED (PR #386) — dead MockSwarmProvider deleted (0 importers, Math.random metrics, canned logs). |
+| **ERR-G10** | `frontend/src/pages/user/AgentWorkspace.tsx:81` | `runCode` completes via `setTimeout` after 700ms without running code. | **P1 Developer UX.** Evaluation progress is fabricated. | ✅ FIXED (PR #386) — runCode executes in the booted WebContainer and streams real output/exit code; honest NOT-RUN message when sandbox unavailable. |
+| **ERR-G11** | `backend/api/routes/browser/_crown_jewel.py:1` | Module docstring explicitly notes `"Crown Jewel mock endpoints"` yet is mounted on live API. | **P1 Architecture.** Live endpoints built as mocks. | ✅ FIXED — Module docstring updated; all endpoints now perform real work or fail explicitly. |
+| **ERR-G12** | `frontend/src/components/admin/shared/ActionCard.tsx:57` | `setTimeout(() => setActionStatus('✅ Code executed successfully!'), 1500)`. | **P1 Admin Safety.** Administrator told action succeeded while nothing ran. | ✅ FIXED (PR #386 + #387) — ActionCard and UnifiedChatBubble run actions execute in the real backend sandbox showing actual exitCode/stdout (mock-labeled output surfaced); share action really copies. |
+
+---
+
+## 6. Class B: Static Shells & Missing User Interfaces (P1)
+
+Views where routes exist in navigation and render nice UI cards, but have zero operational backing:
+
+| ID | Route / File Path | Current State | Missing Capability | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **ERR-B01** | `/workspace/projects`<br>`WorkspaceModulePage.tsx:L7` | Static marketing cards (`modules.projects`). Clicking "Create a project space" does nothing. | No Project Creation Modal (`create-project-btn`), no project listing, no deletion or rename. | ❌ OPEN |
+| **ERR-B02** | `/files`<br>`App.tsx:L192` | Renders `WorkspaceModulePage module="files"` (which is undefined in `modules` record, falls back to blank). | No file dropzone/upload component (`file-input`), no file explorer, no storage integration (`/api/chat/upload`). | ❌ OPEN |
+| **ERR-B03** | `/activity`<br>`WorkspaceModulePage.tsx:L8` | Static mock cards describing activity features. | No event timeline component, no connection to backend audit logs or event bus. | ❌ OPEN |
+| **ERR-B04** | `/runs`<br>`WorkspaceModulePage.tsx:L10` | Static mock cards describing execution tracking. | No run observer, no execution list, no step retry interface. | ❌ OPEN |
+| **ERR-B05** | `/marketplace`<br>`WorkspaceModulePage.tsx:L9` | Static marketing card. Separate component `EnhancedSkillMarketplace.tsx` exists but is buried in admin. | No skill installation flow, no category filters for normal users. | ❌ OPEN |
+
+---
+
+## 7. Class D: Non-Working Subsystems, Simulated & Stubbed Execution (P1/P2)
+
+### 7.1 Machine Learning, Fine-Tuning & Self-Evolution
+* **Kaggle GPU Kernel Execution (`backend/core/kaggle_orchestrator.py:L167+`):** `_generate_kernel_code()` pushes a template containing `# Task execution logic would go here` and returns dummy `output = {"status": "completed"}`. No model training or LoRA fine-tuning is ever executed.
+* **Local Model Trainer (`backend/tools/learning/model_trainer.py:L65+`):** Triggers fake job ID. Status check explicitly returns: `"Local training is simulated only — no real checkpoint was produced."`
+* **TRL DPOTrainer (`backend/tools/learning/rlhf_pipeline.py:L40+`):** Code explicitly returns `status: "not_implemented"`, `"Local TRL DPOTrainer wiring is not implemented yet"`.
+* **Weekly Fine-Tuning CI Pipeline (`.github/workflows/weekly-fine-tuning.yml`):** Referenced in architecture specs as automated trainer, but the file is **absent** from the repo.
+* **Tree-Sitter Code Learning (`backend/tools/learning/style_learner.py:L20+`):** Looks for missing `build/my-languages.so`; skips AST parsing and falls back to hardcoded dictionaries.
+* **Dynamic AI Learning Engine (`backend/services/dynamic_ai/orchestrator.py:L30+`):** Missing learning engine falls back to raising `NotImplementedError`.
+
+### 7.2 Simulated Providers & Fabricated Execution at Runtime
+* **CloudSandboxOrchestrator (`backend/core/orchestration/cloud_sandbox_orchestrator.py:L46–60`):** `_get_base_url()` raises `ValueError("Unsupported provider: local")` for `provider="local"`. In `sandbox_api.py:L64` local provider is passed ➔ **all sandbox endpoints fail with HTTP 500**.
+* **CompetitiveKit MultiLLMRouter (`backend/core/competitive_kit.py:L1266`):** `_call_llm()` does `await asyncio.sleep(0.1)` and returns fabricated template string instead of invoking SDK.
+* **MockMessagingAdapter (`backend/core/messaging/service.py:L10–17`):** Returns dummy `MessageResult(success=True, message_id=uuid4(), provider="mock")` without provider contact. Real Telegram and Email adapters are commented out.
+* **TaskRunnerAgent (`backend/core/agents/framework/task_runner_agent.py:L166–210`):** Pipeline steps return placeholder text strings: `"Investigation complete."`, `"Fix applied."`, `"Implementation placeholder"`.
+* **DatabaseHealthAgent (`backend/core/agents/legacy/system_health_agent.py:L106–143`):** Evaluates `is_connected = pool is not None or True` — the `or True` causes the check to always pass as healthy regardless of database state.
+* **VoiceService (`backend/services/voice_service.py:L27–53`):** `speech_to_text()` returns hardcoded transcript `"SupremeAI 2.0 সিস্টেমকে ভয়েস কমান্ড দেওয়া হচ্ছে।"`. `text_to_speech()` fails to return audio bytes, causing `stream_voice_sse.py` to fall back to dummy header `b"RIFF....WAVEfmt ...."`.
+* **CommandCenter Sub-Routers (`backend/api/routes/commandcenter/{overview,build,money,observe,operate,secure,system}.py`):** Return hardcoded zeros, empty arrays, or blank responses with no live metrics.
+
+### 7.3 Explicitly Unimplemented / Stubbed Plugins & Tools
+* **Experimental Plugins (`backend/core/plugins/experimental/`):** `gmail_plugin.py`, `google_drive_plugin.py`, `slack_plugin.py`, `telegram_plugin.py`, and `notion_plugin.py` all unconditionally raise `NotImplementedError`.
+* **Official Google Drive Plugin (`backend/core/plugins/official/google_drive_plugin.py`):** Empty shim importing and delegating to experimental plugin, which raises `NotImplementedError`.
+* **Official GitHub Plugin (`backend/core/plugins/official/github_plugin.py:L45`):** `create_pr()` returns fake mock `{"status": "success", "pr_number": 999, "html_url": "https://github.com/mock/pr/999"}`.
+* **Integration Endpoints (`backend/api/routes/integrations.py`):** `dock_slack_endpoint` returns HTTP 501; `gmail_oauth_callback` raises `NotImplementedError` ➔ HTTP 501.
+* **MCP Skeleton Stubs (`backend/adaptive_engine/mcp_skeleton.py`):** Operations return `{"forecast": "stub"}`, `{"correlations": [], "note": "stub"}`.
+* **Creative Tools (`backend/tools/creative/__init__.py`):** Empty package containing only a comment.
+
+---
+
+## 8. Class C: Orphan Backend Surface (P1 — 57 Route Families)
+
+Static route reconstruction confirms 57 route families whose leaf endpoints are never called by `frontend/src`:
+
+1. **Missions Engine (11 Endpoints):** `POST /api/v1/missions`, `GET /api/v1/missions`, `GET /api/v1/missions/{id}`, `POST /api/v1/missions/{id}/start`, `advance`, `approve`, `fail`, `repair`, `cancel`, `trace`, `trace/stream`.
+2. **MCP Hub & Client Management (7 Endpoints):** `GET /api/v1/mcp/gateway`, `POST /api/v1/mcp/slug/claim`, `GET /api/v1/mcp/clients`, `POST /api/v1/mcp/clients`, `GET /api/v1/mcp/clients/{id}`, `rotate`, `DELETE /api/v1/mcp/clients/{id}`.
+3. **Capability Circles (4 Endpoints):** `GET /api/v1/circles`, `GET /api/v1/circles/health`, `GET /api/v1/circles/events`, `POST /api/v1/circles/dispatch`.
+4. **Entire CommandCenter Admin API:** `/admin-api/commandcenter/{build/*, events, health, metrics, money/*, observe/*, operate/*}`.
+5. **Six Image Transformation Tools:** `/tools/image-to-code`, `/tools/image-to-component`, `/tools/image-to-palette`, `/tools/image-to-tree`, `/tools/smell-check`, `/tools/vulnerability-check`.
+6. **Admin & Governance Endpoints:** `/admin-api/cost-caps`, `/admin-api/data-export`, `/admin-api/health-stream` (WS), `/admin-api/ping-all`, `/admin-api/service-topology`, `/admin/free-tier-status`, `/admin/token-budget-stats`, `/config/validation-report`.
+7. **Agent & Memory Endpoints:** `/api/admin/cloud-mesh/*`, `/api/knowledge/ask-scribe`, `/api/memory/recall`, `/voice/process-audio`, `/ws/cost-updates` (WS), `/api/v1/meta-ai/*` (8 routes), `/diagram/{api-spec,to-kubernetes,to-schema,to-terraform}`.
+8. **Double-Prefix Anomaly (`ERR-M06`):** `/api/admin-api/provider-readiness` and `/api/admin-api/test-service` concatenate prefixes.
+
+---
+
+## 9. Class S: Security, Guard-Consistency & Network Defects (P0/P1)
+
+### 9.1 `ERR-S01` (P0): Inconsistent `mock-` Token Acceptance in Admin Auth
+* `backend/core/admin_routes.py` enforces asymmetric policies for the `mock-` token prefix:
+  * `/api/admin/firebase-login` and `/firebase-totp-setup` use strict allow-lists (`env in {local, test}`).
+  * `/api/admin/firebase-totp-recover` and `/firebase-totp-verify` use deny-lists (`env == "production"` only).
+  * `_ensure_admin_authorized()` returns early without checking Firestore if `env != "production"`.
+* **Consequence:** If `ENV` is unset or misspelled, `config.py` defaults to `local`, allowing deny-list endpoints to accept `mock-*` tokens and mint admin JWTs with full permissions. Furthermore, `config.py` treats `ENV=prod` as production, but `admin_routes.py` checks literal `"production"`.
+* **Status:** ✅ REMEDIATED (2026-09-16 code re-verification) — All four `mock-` token sites (`admin_routes.py:205, 334, 393, 438`) now route through a shared fail-closed gate `_mock_token_allowed()` with a standardized `_reject_mock_token()` 403 (lines 185–194, annotated `ERR-S01 FIX`). Allow-list semantics: mock tokens strictly forbidden outside local/test envs.
+* **Residual (tracked as follow-up):** The 2 remaining items below were partially addressed by the same hardening wave, but the `_ensure_admin_authorized()` Firestore-early-return behavior and the `prod` vs `production` alias mismatch in `config.py` should be covered by a dedicated fail-closed regression test (`backend/tests/core/` gap — see Class Q follow-ups).
+
+### 9.2 `ERR-S02` (P1): Production CORS Failure & Idempotency Key Workaround
+* `frontend/src/services/apiClient.ts:262–279` hardcodes `IDEMPOTENCY_REQUIRED_PREFIXES` to avoid sending `idempotency-key` on unlisted routes because the deployed backend's CORS policy rejects OPTIONS requests with `400 Disallowed CORS headers`.
+* Starlette CORS configuration must explicitly include `idempotency-key` in `allow_headers`.
+
+---
+
+## 10. Class M: Governance, CI & Tooling Defects ("Gates That Don't Gate")
+
+| ID | Artifact | Defect | Impact | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **ERR-M01** | `scripts/find_stub_data.py` | Scans for only 20 literal regexes. Completely blind to `mock`, `fake`, `Math.random`, or canned responses. | Prints `[PASS] No stub patterns found` on `backend/` despite 1,157 stubs. | ❌ OPEN — re-confirmed 2026-09-16 (superseded functionally by `scripts/audit/system_defect_scan_2026_09_16.py`; still not hardened in-place) |
+| **ERR-M02** | `.github/workflows/ci.yml` | The stub-blocker gate is not wired into GitHub Actions CI at all. | Developers without local pre-commit hooks push stubs without blocking. | ❌ OPEN — re-confirmed 2026-09-16 via `findstr` over `ci.yml` (no `find_stub_data` / `feature_parity_sentinel` invocations) |
+| **ERR-M03** | `scripts/feature_parity_sentinel.py:729` | Crashes on Windows with `UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f50d'` (emoji). | Sentinel cannot be run locally on Windows development machines. | ❌ OPEN — re-confirmed 2026-09-16: `print("🔍 Scanning backend (AST)...")` still present at line 729; needs `sys.stdout.reconfigure(encoding="utf-8")` guard |
+| **ERR-M05** | Remote Refs | ~320 stale remote branches fetched locally. | Clutters branch discovery and git status. | ❌ OPEN |
+| **ERR-M08** | `.gitignore:479` | Blanket `*.txt` rule previously ignored audit evidence in `docs/audits/evidence/`. | Scoped negation rule `!docs/audits/evidence/**` added to keep audit evidence committed. | ✅ FIXED |
+
+---
+
+## 11. Class P: Dependency & Version Inconsistencies
+
+* **`ERR-P01`: Intra-Package Storybook Conflict:** `frontend/package.json` declares `"storybook": "^10.5.10"` alongside v8 addons (`@storybook/addon-essentials: ^8.6.14`, `@storybook/blocks: ^8.6.14`). `addon-essentials` was removed in Storybook 10.
+* **`ERR-P02`: React Router Major Drift:** `"react-router-dom": "^6.30.6"` prevents updating modern routing features and blocks Dependabot updates.
+
+---
+
+## 12. Class E: Test Debt & Skipped Test Cases (Formal Registry Summary)
+
+Source registry: `docs/SKIPPED_TESTS.md`. Total skipped test markers: **96 active** across 52 test files.
+
+* **28 Intentional Skips:** Live external infrastructure requiring credentials (live S3, live Stripe webhook, Cloudflare live purge, OS symlink probes).
+* **68 Deferred Ticket Skips (Actionable Debt):**
+  * **14 Configuration Fail-Fast Tests:** `test_settings_redis_url`, `test_settings_stripe_configuration`, `test_settings_encryption_key_not_empty`.
+  * **22 Model Router & Gateway Tests:** Stale mocks targeting refactored `services/llm/` surfaces; Qdrant mock attribute mismatches.
+  * **16 Security & Sandbox Boundary Tests:** `test_sandbox_root_validation`, `test_safe_vm_path_within_sandbox`, `test_god_mode_session_logs_ip_address`.
+  * **16 E2E Playwright Specs:** Awaiting mock backend database seeding.
+
+---
+
+## 13. Class F: Core Architectural Debt & Subsystem Duplication
+
+| ID | Subsystem | Flaw / Gap | Architectural Target | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **ERR-F01** | **Execution State Machine** | No canonical `Run` model. Execution tracking is split across `automation_execution`, `execution_log`, and `pending_tasks`. | **M1: Canonical Run Fabric** (Unified run state machine, budgeting, retry classification). | ❌ OPEN |
+| **ERR-F02** | **Memory Subsystem** | 15+ competing memory store implementations under `backend/memory/` (`chromadb`, `sqlite`, `hierarchical_tree`, `episodic`). | **M3: Memory Consolidation** (Retire duplicate stores; consolidate on `ai_memory` vector 384). | ❌ OPEN |
+| **ERR-F03** | **Context Assembly** | Unstructured prompt assembly with no token budgeting causes context bloat and provider rate limits. | **M2: Context Engine** (Smallest-sufficient-context assembly). | ❌ OPEN |
+| **ERR-F04** | **Frontend Major Upgrades** | Breaking changes blocked on `react-router-dom` (v6→v7), `react-i18next` (v15→v17), `@storybook` (v8→v10). | Dedicated frontend dependency upgrade sprint. | ❌ OPEN |
+
+---
+
+## Part C: Code-Level Defect Scan (2026-09-16)
+
+**Source:** `scripts/audit/system_defect_scan_2026_09_16.py` (AST-based, read-only) — full evidence at `docs/audits/evidence/2026-09-16/defect_scan_summary.txt` and `defect_scan_report.json`.  
+**Coverage:** 2,250 Python files + 842 TS/TSX files (git-tracked, vendor dirs excluded). **Syntax errors: 0** (clean), **hardcoded secret candidates: 0** (clean).
+
+### C.1 Silent Failure Handlers — `except: pass` (16 hits)
+
+These swallow exceptions with no logging, no metrics, no re-raise — the "Silent Failure" anti-pattern:
+
+| # | File:Line | Handler | Risk Note |
+| :-- | :-- | :-- | :-- |
+| 1 | `backend/api/routes/crawler_admin.py:80` | `Exception` | Default policy seed failure hidden; tenant sees empty policy list with no diagnostics. |
+| 2 | `backend/api/routes/deep_research.py:344` | `Exception` | Reasoning-stream emit failures dropped (intentional by comment — needs `logger.debug` at minimum). |
+| 3 | `backend/core/orchestration/cloud_sandbox_orchestrator.py:391` | `Exception` | `download_file` JSON parse failure silently falls through to raw-content path; may return empty bytes. |
+| 4 | `backend/memory/mcp_server.py:1218` | `Exception` | Memory-sidecar operation errors invisible to admin telemetry. |
+| 5 | `backend/services/integration_discovery.py:193` | `Exception` | Integration probe failures silently skipped; discovery results look healthy when partial. |
+| 6 | `.github/scripts/constitution/rules/base.py:50,67,70,91` | `Exception`/`SyntaxError` | Constitution rule engine self-suppresses parse/eval errors — a rule that crashes counts as "passed". |
+| 7 | `.github/scripts/constitution/rules/rel001_no_silent_failure.py:84,86` | `SyntaxError`/`Exception` | Ironic: the no-silent-failure rule itself swallows exceptions. |
+| 8 | `.github/scripts/constitution/rules/sec002_no_secret_hardcoding.py:85` | `Exception` | Secret-scanning rule errors silently ignored. |
+| 9 | `scripts/advanced_analysis/secret_rotation_reminder.py:282` | `(TimeoutExpired, FileNotFoundError, OSError)` | Rotation reminder failures invisible. |
+| 10 | `scripts/pre_merge_guard.py:707` | `json.JSONDecodeError` | Malformed guard-config silently treated as "no config". |
+| 11 | `backend/tests/core/queue/test_task_queue_enhanced.py:199` | `asyncio.CancelledError` | Swallowing `CancelledError` breaks cooperative cancellation semantics. |
+| 12 | `backend/tests/test_supreme_kernel.py:34` | `ValueError` | Test-side suppression masks real kernel contract violations. |
+
+**Remediation policy:** every site must be converted to `logger.warning(..., exc_info=True)` with a scoped reason, or re-raise. The `.github/scripts/constitution/rules/*` cluster is highest priority — governance tooling must not falsify rule outcomes.
+
+### C.2 Bare `except:` (1 hit)
+* `backend/examples/sample_buggy.py:106` — intentional fixture file (sample buggy code used by repair-flow demos). **No action** beyond keeping it excluded from production lints.
+
+### C.3 `NotImplementedError` Stubs (21 hits — must be wired or gated)
+
+| File | Symbols |
+| :-- | :-- |
+| `backend/adaptive_engine/resource_registry.py:123,126,129` | `restart`, `deploy`, `rollback` |
+| `backend/core/deployment/production_deploy.py:383,394,407,418,466` | `_deploy_to_production`, `_deploy_to_staging`, `_deploy_to_development`, `_deploy_to_generic`, `rollback_deployment` (✅ intentional per ERR-G02 fix — keep gated) |
+| `backend/core/orchestration/cloud_sandbox_orchestrator.py:271,276` | `_get_endpoint`, `_prepare_creation_payload` (missing provider branches → HTTP 500 on `provider="local"`, see §7.2) |
+| `backend/core/orchestration/swarm_agent_roles.py:17` | `run` (base role contract) |
+| `backend/core/plugins/experimental/{gmail,google_drive,notion,slack,telegram}_plugin.py` | `execute_tool` (5 plugins — see §7.3) |
+| *(remaining entries see `defect_scan_report.json` → `not_implemented`)* | |
+
+### C.4 TODO/FIXME/HACK/XXX Markers (67 hits across ~40 files)
+Top density: `backend/core/deployment/production_deploy.py` (7), `backend/tools/learning/*` (6), `backend/services/ide_trio/*` (5), `scripts/find_stub_data.py` (4). Full per-file distribution in evidence summary. **Policy:** triage into fix-tickets or convert to documented deferrals; XXX markers in security-adjacent files (`input_sanitizer.py:1`) get priority.
+
+### C.5 TypeScript Escape Hatches (237 hits across ~60 files)
+
+`@ts-ignore` / `@ts-expect-error` / `as any` / `: any` suppressions defeating strict typing:
+
+| File | Hits | File | Hits |
+| :-- | --: | :-- | --: |
+| `infrastructure/mcp-control-plane/src/adapters/github/external.ts` | 17 | `frontend/src/store/adminStore.ts` | 6 |
+| `infrastructure/mcp-control-plane/src/index.ts` | 13 | `tools/vscode-extension/src/utils/logger.ts` | 6 |
+| `tools/vscode-extension/src/handlers/CodeFlowHandler.ts` | 13 | `frontend/src/hooks/useAdminApi.ts` | 5 |
+| `packages/shared-services/src/services/SupremeAIService.ts` | 12 | `frontend/src/hooks/useAuth.ts` | 4 |
+| `tools/vscode-extension/src/services/AuthService.ts` | 8 | `infrastructure/mcp-control-plane/src/health/engine.ts` | 4 |
+
+**Remediation policy:** burn down top-10 files first (105 of 237 hits); replace `as any` with generated contract types from `packages/shared-types`. Note: `tsc --noEmit` passes today, so these are latent-robustness debt, not current compile breaks (contrast with ERR-F04 dependency pins).
+
+### C.6 Follow-Up Gaps Surfaced by This Scan
+* **ERR-S01 regression test missing:** no test asserts `_mock_token_allowed()` fail-closed behavior for `ENV=prod`/unset (see §9.1 residual).
+* **Constitution rule engine (§C.1 #6–8):** governance scripts fail-open — treat as P1.
+* `ERR-M02` synergy: wire the new `system_defect_scan_2026_09_16.py` into CI as a **reporting (non-blocking)** step so silent-failure counts trend monotonically downward.
+
+---
+
+## Part D: Historical Audit Archive
+
+> **Purpose:** Preserve traceability for point-in-time audits whose findings have been incorporated into the current register above. Do not treat these as current-state authorities; consult Part B for live status.
+
+### D.1 Full System Audit — 2026-09-14 (`FULL_SYSTEM_AUDIT_2026-09-14.md`)
+
+**Scope:** `main` @ `27deffa9` (all PRs #297–#306 merged), fresh clone, no local patches.
+
+**Verdict:** The system is production-viable. Every deterministic defect found is enumerated below with an exact fix recipe. No defect found sits on the live request path.
+
+#### Key Findings (F1–F11)
+
+| ID | Severity | Finding | Fix Recipe |
+| :-- | :-- | :-- | :-- |
+| F1 | P1 | `openpyxl` used by production code but never declared | Add `openpyxl = "^3.1.5"` to `[tool.poetry.dependencies]`, run `poetry lock --no-update` |
+| F2 | P1 | `sqlglot` used by test suite but not declared | Add `sqlglot` to dev dependency group + `poetry lock --no-update` |
+| F3 | P2 | Alembic has 3 heads (`mcp_gw_0001`, `a7b8c9d0e1f2`, `k5l6m7n8o9p0`) | One merge revision per pair of branchpoints; enforce `alembic heads \| wc -l == 1` in CI |
+| F4 | P2 | Import-contract drift in 11 dormant modules | Rename to real symbols or create missing base module when subsystem revived |
+| F5 | P2 | Order-dependent circular import: `verification` ↔ `runtime` | Make `verification/__init__.py` lazy or move `VerifierEngine` import into function scope |
+| F6 | P3 | Dead dev-artifact scripts with hardcoded Windows paths | Delete or move to `archive/` outside import tree |
+| F7 | P3 | Load-induced test flake in `tests/core` | Operational note: don't run heavy builds concurrently with suite on small CI runners |
+| F8 | P3 | Root `tests/` are unittest-only; pytest invocation fails | Document sys.path strategy |
+| F9 | P3 | `mcp-control-plane` test:unit doesn't exit without service | Add `process.exit(0)` at end of each script |
+| F10 | P1 (fixed) | `.venv` symlink tracked in git | Untracked symlink, added bare `.venv` pattern to `.gitignore` |
+| F11 | P3 | Frontend polish (3 eslint warnings, chunk size) | Tracked in existing P2 backlog |
+
+### D.2 Audit Report — 2026-09-10 (`AUDIT_REPORT_2026-09-10.md`)
+
+**Scope:** All 3,202 git-tracked files | Branch: `main` @ `6bc686f12c`
+
+#### Key Blocking Issues (Incorporated into Current Register)
+
+| ID | Severity | Finding | Current Status |
+| :-- | :-- | :-- | :-- |
+| — | 🔴 High | `backend/mypy.ini` crashes mypy on Windows (UTF-8 Bangla comment) | See ERR-P0x; not in current register — track separately |
+| — | 🔴 High | ~181 `undefined-name` bugs in `scripts/`, `tools/`, `packages/` | See ERR-M0x; CI does not gate these directories |
+| — | 🟠 Medium | Secret-transcript file tracked in repo (`Diagnosed deployment failures and orches.ini`) | **Action required:** Rotate Render keys, delete file |
+| — | 🟠 Medium | Coverage gates effectively disabled (`MIN_BACKEND_COVERAGE: 35`, `MIN_FRONTEND_COVERAGE: 9`) | See ERR-M0x; raise to backend ≥65%, frontend ≥40% |
+| — | 🟡 Medium | `respx` missing from local env (1 collection error) | See F1/F2 pattern; declare all test deps explicitly |
+| — | 🟡 Medium | 6 tests skipped because referenced modules no longer exist | See Class E; archive or restore missing modules |
+
+---
+
+## Part E: CI/CD Pipeline Optimization Summary
+
+**Source:** `CI_PIPELINE_OPTIMIZATION_ANALYSIS.md` (601 lines)  
+**Focus:** Maximize Intelligence, Minimize Free-Tier Waste
+
+### Key Recommendations
+
+#### Phase 1: Quick Wins (1–2 days, saves ~2–5 min per push)
+1. **De-duplicate Security Scanning** — Remove Trivy/trufflehog from `advanced-security-checks`; move advisory detectors to `scheduled-deep-audit`. Savings: ~3 min/push.
+2. **Move Heavy Tests to Scheduled Deep Audit** — Remove `mutation_testing`, `performance_benchmark`, `duplicate_logic_detector` from push/PR; keep only in nightly. Savings: ~5–10 min per feature branch.
+3. **Fix Trufflehog Base SHA Logic** — Use delta scanning (`base.sha` for PRs, `before/after` for pushes). Savings: 1–2 min/push.
+4. **Add Concurrency Bounds** — Prevent runaway queue stalling with `max-in-progress: 2`.
+
+#### Phase 2: Medium-term Wins (3–5 days, saves ~10–15 min weekly)
+1. **Intelligent Workflow Gating Based on Change Type** — Frontend CI should not wait for backend-tests when only frontend changed.
+2. **Layer Cache for Docker Builds** — Pin dependency layers before source copy; expect 8–12 min savings per publish job.
+3. **Conditional Scheduled Jobs** — Run maintenance tasks only when data has changed.
+
+#### Phase 3: Long-term (1–2 weeks)
+1. **Reusable Composite Actions** — Extract common steps (lint, test, security) into composite actions to reduce YAML duplication across 6 workflows.
+2. **Per-Job Timeout Granularity** — Set job-level `timeout-minutes` instead of workflow-level; dead jobs currently hold resources for full 45 min.
+3. **Artifact Deduplication** — Multiple workflows upload near-identical reports; consolidate into a single artifact namespace.
+
+---
+
+## Cross-References
+
+| Document | Relationship |
+| :--- | :--- |
+| `docs/audits/ANTIPATTERN_PLAYBOOK.md` | Lessons learned from actual bugs; complements Part A with self-inflicted patterns |
+| `docs/audits/SKIPPED_TESTS.md` | Formal registry of 96 active skipped tests (see Class E) |
+| `docs/audits/evidence/2026-09-15/` | Raw text outputs: stubs_frontend.txt, stubs_backend.txt, orphan_routes.txt, missing_calls.txt, frontend_calls.txt, backend_routes.txt |
+| `docs/audits/evidence/2026-09-16/` | Raw code-level defect scan: defect_scan_summary.txt, defect_scan_report.json |
+| `docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md` | Maps each defect class to architectural remediation targets |
+| `docs/plans/PLAN_LIFECYCLE_POLICY.md` | Governs how this register is updated and superseded |
+
+---
+
+## Archive Notice
+
+The following documents have been superseded by this canonical register and moved to `docs/archive/audits/`:
+
+| Archived Document | Reason |
+| :--- | :--- |
+| `ERROR_AND_MISMATCH_COMPENDIUM.md` | Content incorporated into Part A |
+| `ERROR_COMPENDIUM.md` (reference/) | Exact byte-for-byte duplicate of above; removed |
+| `SYSTEM_DEFECT_REGISTER_2026-09-15.md` | Content incorporated into Parts B & C; merge conflicts resolved |
+| `FULL_SYSTEM_AUDIT_2026-09-14.md` | Key findings preserved in Part D; point-in-time snapshot |
+| `AUDIT_REPORT_2026-09-10.md` | Key findings preserved in Part D; superseded by later audits |

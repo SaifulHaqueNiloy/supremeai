@@ -1,4 +1,3 @@
-
 from core.config import settings
 from core.logging_config import logger
 

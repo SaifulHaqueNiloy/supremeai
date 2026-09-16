@@ -47,7 +47,14 @@ class PreferenceUpdate(BaseModel):
 # an unknown-column error (latent 500) — they now flow through _extended too.
 _DB_COLUMNS = frozenset({"theme", "default_model", "max_tokens", "auto_save", "custom_shortcuts"})
 _EXTENDED_KEYS = frozenset(
-    {"verbosity", "preferred_frameworks", "preferred_language", "profile", "security", "notifications"}
+    {
+        "verbosity",
+        "preferred_frameworks",
+        "preferred_language",
+        "profile",
+        "security",
+        "notifications",
+    }
 )
 
 

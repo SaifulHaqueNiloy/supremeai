@@ -2,14 +2,14 @@
 
 **নথির সংস্করণ:** ১.০.০  
 **স্থিতি:** সক্রিয় মাস্টার রোডম্যাপ (Active Master Roadmap)  
-**উৎস রেফারেন্স:** `docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`  
+**উৎস রেফারেন্স:** `docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md`  
 **তারিখ:** ১৫ সেপ্টেম্বর, ২০২৬  
 
 ---
 
 ## ১. নির্বাহী মূল্যায়ন ও প্রেক্ষাপট (Executive Assessment)
 
-SupremeAI কোডবেস বর্তমানে `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`-এর সাথে **আংশিক সামঞ্জস্যপূর্ণ (Partially Aligned)**।
+SupremeAI কোডবেস বর্তমানে `architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md`-এর সাথে **আংশিক সামঞ্জস্যপূর্ণ (Partially Aligned)**।
 
 আমাদের সবচেয়ে শক্তিশালী ভিত্তি তৈরি হয়েছে **Phase 1: Canonical Run**-এ:
 - ক্যানোনিকাল রান (Canonical Run) এবং লাইফসাইকেল স্টেট মেশিন তৈরি আছে।

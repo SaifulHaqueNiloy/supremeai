@@ -87,7 +87,12 @@ def test_deploy_blueprint_writes_real_manifest(isolated_dirs) -> None:
 
 
 def test_deploy_blueprint_collision_409(isolated_dirs) -> None:
-    anyio.run(skills_module.deploy_blueprint, skills_module.BlueprintDeployRequest(name="Collide_Test"))
+    anyio.run(
+        skills_module.deploy_blueprint, skills_module.BlueprintDeployRequest(name="Collide_Test")
+    )
     with pytest.raises(HTTPException) as excinfo:
-        anyio.run(skills_module.deploy_blueprint, skills_module.BlueprintDeployRequest(name="Collide_Test"))
+        anyio.run(
+            skills_module.deploy_blueprint,
+            skills_module.BlueprintDeployRequest(name="Collide_Test"),
+        )
     assert excinfo.value.status_code == 409

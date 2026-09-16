@@ -137,7 +137,9 @@ async def install_skill(skill: str = ""):
     try:
         manifest = _manifest_payload(manifest_path)
     except json.JSONDecodeError as exc:
-        raise HTTPException(status_code=500, detail=f"Skill manifest '{skill}' is malformed: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Skill manifest '{skill}' is malformed: {exc}"
+        ) from exc
     version = str(manifest.get("version") or manifest.get("budget", {}).get("version") or "1")
     installed_at = datetime.now(UTC).isoformat()
     with _STATE_LOCK:
@@ -221,6 +223,8 @@ async def deploy_blueprint(payload: BlueprintDeployRequest):
     try:
         manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     except OSError as exc:
-        raise HTTPException(status_code=500, detail=f"Failed to write blueprint manifest: {exc}") from exc
+        raise HTTPException(
+            status_code=500, detail=f"Failed to write blueprint manifest: {exc}"
+        ) from exc
     logger.info(f"[skills] deployed Evolution Forge blueprint '{slug}' to the catalog")
     return {"status": "deployed", "skill_id": slug, "manifest": manifest}

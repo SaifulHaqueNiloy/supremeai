@@ -7,7 +7,7 @@ status: active
 owner_circle: C1 (Code & Quality) for M0; circle assignment per milestone below
 scope: execution order for the next planning horizon (M0–M9); no code changes in this PR
 depends_on:
-  - docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md (canonical, on main)
+  - docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md (canonical, on main)
   - docs/plans/PLATFORM_OSS_INTEGRATION_PLAN.md (registered in this PR)
   - docs/audits/FULL_SYSTEM_AUDIT_2026-09-14.md (merged via PR #308)
   - docs/plans/implementation_plan.md (master reconciled plan)
