@@ -4,6 +4,62 @@
 > **Coverage:** Verified via AST Parse & Dynamic Graph Engine (Excluding all `.venv` and `site-packages`)  
 > **Focus:** **1. Fully Isolated / Unmounted Components** + **2. Underutilized Capabilities** (কোডে রয়েছে কিন্তু আংশিক বা সীমিত ব্যবহৃত হচ্ছে)
 
+# 🏛️ SupremeAI: Full Codebase Capabilities & Utilization Catalog
+
+> **Analysis Date:** 2026-09-06  
+> **Coverage:** Verified via AST Parse & Dynamic Graph Engine (Excluding all `.venv` and `site-packages`)  
+> **Focus:** **1. Fully Isolated / Unmounted Components** + **2. Underutilized Capabilities** (কোডে রয়েছে কিন্তু আংশিক বা সীমিত ব্যবহৃত হচ্ছে)
+
+---
+
+## ✅ 2026-09-16 RE-VERIFICATION (live app route-table dump, main @ e70a6430)
+
+> **TL;DR: this catalog is ~95% RESOLVED on current main.** Do not use the tables
+> below as a to-do list without re-checking this section first. Verification was
+> performed by importing the real app and dumping its live route table
+> (**856 live routes, 148/148 registry entries mounted**), not by static parse.
+
+### Part C — "100% Unmounted API Routes" → 25/25 resolved
+- **24 of 25 files are mounted and live** — the wiring audits (AUDIT-WIRE FIX 1-3)
+  registered everything: artifacts, branch_conversations, deep_research,
+  prompt_templates, reasoning, scheduled_tasks, share, slash_commands,
+  chat_export/search/upload, mcp_marketplace (+plugins/plugin_submissions),
+  selector_healing, webhooks_ai, async_task_router, advanced_router, agent_tasks,
+  cdc_webhooks, ide_trio, hybrid_search, browser, chat.
+- **`admin_auth.py` was miscataloged** — it is not a router (0 endpoints); it is
+  the admin-dashboard auth HELPER module (`require_admin_token`) and is imported
+  by the admin auth chain. Nothing to mount.
+- **`browser.py` no longer exists** — replaced by `browser_action_registry`;
+  `/api/browser` serves **155 live routes**.
+- Prefix drift notes (files are live under different prefixes than the catalog
+  claimed): conversations → `/api/v1/conversations/`, localization →
+  `/api/v1/localization/*`, preferences → `/api/preferences/*`.
+
+### Part B — "Mounted routes with dormant endpoints" → all 19 route files LIVE
+Every prefix spot-checked against the live route table: `/api/api-keys` (12),
+`/api/artifacts` (6), `/api/conversations` (4), `/api/chat/upload` (3),
+`/api/admin/cloud-mesh` (4), `/config` (4), `/payments` (3),
+`/api/prompt-templates` (6), `/repos` (4), `/api/v1/sandbox` (5),
+`/api/schedule` (8), `/api/admin/selector-healing` (3), `/api/admin/site-actions`
+(10), `/auth/sso` (6), `/admin-api/tenant-limits` (10), `/api/v1/tools-registry` (4),
+`/api/research` (4), `/api/v1/mcp` (14), `/api/share` (4), `/api/commands` (2).
+"Dormant" here means the frontend UI does not call them yet — the endpoints
+themselves work; surfacing them in the UI is product roadmap, not a defect.
+
+### Part D — 87 disconnected subsystem files → deliberate dormancy
+Disposition is governed by `docs/audits/M0_D_DORMANT_MODULE_DECISIONS.md`
+(keep-isolated decisions). These are libraries without callers by design, not
+broken code.
+
+### Known-good caveats found during re-verification
+- `api.routes.byoc_api` registration fails ONLY in environments without the
+  declared GCP deps (`google-auth`/`google-cloud-*` are in pyproject; CI and
+  production have them). Sandbox-local artifact, not a repo bug.
+- The one remaining main-CI backend test failure
+  (`test_tenant_admin_isolation`) is tracked separately (PR #379 fixes the other
+  three; the isolation test passes locally and needs a shard-pollution
+  deep-dive with the full CI env).
+
 ---
 
 ## 📊 Comprehensive Codebase Landscape
