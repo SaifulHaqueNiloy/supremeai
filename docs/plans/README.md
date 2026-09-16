@@ -17,6 +17,7 @@ Use `implementation_plan.md` for global execution priorities and `UNIFIED_ECOSYS
 
 - [UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md](UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md) — Master Architecture & Canonical Baseline
 - [UNIFIED_NEXT_ROADMAP_2026-09-15.md](UNIFIED_NEXT_ROADMAP_2026-09-15.md) — Active Operational Execution Roadmap (M0–M9)
+- [HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md](HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md) — Head of Planning strategic memo v1: 7 Constitution-anchored levers (L1–L7) toward battlefields B1–B6, continuous planning cadence, 14-day + 90-day sprint commitments
 - [CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md](CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md) — CI/CD Execution Consolidation
 - [implementation_plan.md](implementation_plan.md) — Tactical Implementation Priorities
 - [vision_strategic_positioning.md](vision_strategic_positioning.md) — Competitive positioning, chosen battlefields, and phased execution strategy (renamed from MASTER_PLAN.md)
