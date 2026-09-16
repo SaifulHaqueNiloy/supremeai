@@ -403,30 +403,43 @@ export interface Proposal {
 export interface ProposalCreateRequest {
   kind: string
   title: string
-  summary?: string
+  /** Backend field is ``description`` (required) — ``summary`` never existed. */
+  description: string
   priority?: string
   risk_level?: string
+  dedup_key?: string | null
   payload?: Record<string, unknown>
+  evidence?: Record<string, unknown>[]
+  cost_estimate?: Record<string, unknown>
+  proposed_by?: string | null
   tenant_id?: string | null
-  requested_by?: string | null
 }
 
 export type ProposalDecision = 'APPROVED' | 'REJECTED' | 'DEFERRED'
 
+/**
+ * Canonical ApprovalWorkflow.decide request (ERR-H04 fix — the engine's
+ * ApprovalDecision model carries ``resolved_by`` + ``reason``).
+ */
 export interface ProposalDecisionRequest {
   decision: ProposalDecision
-  decided_by?: string
-  rationale?: string
+  resolved_by?: string
+  reason?: string
 }
 
+/**
+ * Canonical decision-memory row (ecosystem_decision_memory).
+ */
 export interface ApprovalDecisionRecord {
-  decision_id: string
+  memory_id: string
   proposal_id: string
+  kind: string
+  dedup_key: string | null
   decision: ProposalState | string
-  decided_by: string
-  rationale: string
-  correlation: Record<string, unknown>
-  decided_at: string
+  reason: string | null
+  scope: string | null
+  time: string
+  policy_generated: Record<string, unknown> | string
 }
 
 export interface ProposalListParams {
@@ -460,14 +473,23 @@ export type SourceCategory =
   | 'APPROVED_DATASET'
   | 'UNKNOWN'
 
+/**
+ * Canonical source row (ecosystem_sources table) — ERR-H04 fix.
+ */
 export interface Source {
   source_id: string
   url: string
+  domain: string
   category: SourceCategory | string
   state: SourceState | string
+  trust_score: number
+  risk_score: number
+  cost_score: number
   first_seen_at: string
   last_seen_at: string
   metadata: Record<string, unknown>
+  owner: string
+  tenant_id: string | null
 }
 
 export interface SourceListParams {
@@ -489,26 +511,33 @@ export interface SourceTransitionRequest {
 // Source policies
 // ---------------------------------------------------------------------------
 
+/**
+ * Canonical SourcePolicy (ROADMAP §8) — the engine model, verbatim.
+ */
 export interface SourcePolicy {
   policy_id: string
-  url_pattern: string
-  category: SourceCategory | string
-  state: SourceState | string
-  allowed_actions: string[]
-  source_weight: number
-  expires_at: string | null
+  name: string
+  scope: 'source' | 'category' | 'provider' | 'domain' | 'repository' | 'organization' | string
+  scope_value: string
+  decision: SourceState | string
+  reason: string | null
+  rate_limit_per_minute: number
+  crawl_budget_per_day: number
+  requires_approval: boolean
+  auto_policies_generated: string[]
   created_by: string
   created_at: string
-  updated_at: string
 }
 
 export interface PolicyCreateRequest {
-  url_pattern: string
-  category?: string
-  state?: string
-  allowed_actions?: string[]
-  source_weight?: number
-  expires_at?: string | null
+  name: string
+  scope?: string
+  scope_value: string
+  decision?: string
+  reason?: string | null
+  rate_limit_per_minute?: number
+  crawl_budget_per_day?: number
+  requires_approval?: boolean
 }
 
 export interface PolicyMatchResponse {
@@ -521,31 +550,41 @@ export interface PolicyMatchResponse {
 // Learned items
 // ---------------------------------------------------------------------------
 
+/**
+ * Canonical LearnedItem (ROADMAP §10/§56) — full provenance shape.
+ */
 export interface LearnedItem {
   item_id: string
   source_url: string
   source_id: string | null
-  category: SourceCategory | string
-  title: string
-  content: string
-  summary: string
-  embedding: number[]
-  value_score: number
-  reused_count: number
-  created_at: string
-  updated_at: string
-  pruned_at: string | null
+  source_type: SourceCategory | string
+  title: string | null
+  summary: string | null
+  content_hash: string | null
+  retrieved_at: string
+  source_version: string | null
+  provenance: Record<string, unknown>
+  confidence: number
+  cross_check_status: string
+  policy_decision: string
+  capabilities_affected: string[]
+  relevance: number
+  freshness: number
+  usage_count: number
+  duplicate_of: string | null
+  raw_blob_ref: string | null
 }
 
 export interface LearnedListParams {
-  category?: string
-  min_value?: number
+  source_type?: string
+  min_confidence?: number
+  min_relevance?: number
   limit?: number
 }
 
 export interface PruneLearnedRequest {
-  threshold?: number
-  max_age_days?: number
+  older_than_days?: number
+  min_relevance?: number
 }
 
 export interface PruneLearnedResponse {
@@ -574,38 +613,45 @@ export type LearningStage =
   | 'REJECTED'
   | 'ARCHIVED'
 
+/**
+ * Canonical LearningOpportunity (adaptive_engine.learning_loop).
+ */
 export interface LearningOpportunity {
   opportunity_id: string
+  requirement: string
   signal_id: string | null
-  capability_hint: string
-  gap_description: string
-  predicted_value: number
-  predicted_effort: number
-  stage: LearningStage | string
+  source_url: string | null
+  usefulness: string
+  feasibility: string
+  risk: string
+  cost: string
+  maintenance: string
+  reuse_existing_id: string | null
   proposal_id: string | null
-  correlation: Record<string, unknown>
+  stage: LearningStage | string
   created_at: string
   updated_at: string
-  archived_at: string | null
 }
 
 export interface OpportunityListParams {
   stage?: string
-  include_archived?: boolean
   limit?: number
 }
 
 export interface OpportunityCreateRequest {
-  capability_hint: string
-  gap_description?: string
+  requirement: string
   signal_id?: string | null
-  predicted_value?: number
-  predicted_effort?: number
+  source_url?: string | null
+  usefulness?: string
+  feasibility?: string
+  risk?: string
+  cost?: string
+  maintenance?: string
 }
 
 export interface OpportunityAdvanceRequest {
   to_stage: string
-  proposal_id?: string | null
+  note?: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -634,9 +680,18 @@ export interface Budget {
 }
 
 export interface GovDecisionListParams {
-  actor?: string
-  operation?: string
+  action?: string
   limit?: number
+}
+
+/**
+ * Row of the deployed admin user registry (load_users/save_users) —
+ * what GET /api/v1/auth/users actually returns (ERR-H04 fix).
+ */
+export interface AdminUserRecord {
+  username: string
+  role: string
+  permissions: string[]
 }
 
 // ---------------------------------------------------------------------------

@@ -433,3 +433,16 @@ When a new plan is added to `docs/`:
 7. reconcile it into this master plan
 
 This prevents plan sprawl from becoming an architecture problem.
+
+
+---
+
+## 13. Proposed Plan Candidates — Reconciliation Register (2026-09-17)
+
+Per the strengthened [PLAN_LIFECYCLE_POLICY.md](PLAN_LIFECYCLE_POLICY.md) (2026-09-17): a candidate list is not an execution queue (rule 10). The entries below are `proposed` candidates awaiting explicit founder approval; **none is executable** until one is approved as the single active plan (Gate 2/6).
+
+| Plan | Status | Scope (one line) | Resource delta | Reconciliation note |
+|---|---|---|---|---|
+| [PLAN_002 — Claude Code-style semantic context compaction](PLAN_002_CLAUDE_STYLE_CONTEXT_COMPACTION_2026-09-16.md) | proposed | Replace silent `deque(maxlen=50)` eviction in WS chat with summarization-based compaction on the existing zero-cost chain | 0 dep / 0 infra / 0 CI | Complementary to PLAN_001 (cache ≠ compaction); supports §1 discovery-first, §2 efficiency, §10 P1; Gate 0 evidence in plan Part 1.5 |
+| [PLAN_003 — Aider-style repo map (stdlib-ast)](PLAN_003_AIDER_STYLE_REPO_MAP_2026-09-17.md) | proposed | Give the Epistemic Probe real codebase vision: stdlib-ast symbol graph + pure-Python PageRank + budgeted render into CODER-domain probe input | 0 dep / 0 infra / 0 CI / 0 LLM | Implements first real basis of §1 discovery-first ("discover_reusable_implementation" is currently aspiration — grep-verified); complementary to PLAN_001/002 (different problem spaces) |
+| [PLAN_004 — Letta/ChatGPT-style write-time memory distillation](PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION_2026-09-17.md) | proposed | Replace the Eternal Brain's literal `content[:200]  # Placeholder` summary with LLM-distilled summary + structured facts on the existing facade, opt-in per call site, honest fallback | 0 dep / 0 infra / 0 CI / 0 schema | Implements Constitution #11 (Memory Must Compound) at the write path; complementary to PLAN_002 (in-session compaction ≠ persistent memory distillation); Gate 0 evidence in plan frontmatter (unified_memory.py L57–58, memory_service.py L316); kill-switch SUPREMEAI_MEMORY_DISTILL |

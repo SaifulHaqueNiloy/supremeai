@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from adaptive_engine._store import get_conn, jdump
+from adaptive_engine._store import get_conn, jdump, jload
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +204,46 @@ class GovernanceEngine:
             )
             self._record(f"budget_use:{kind.value}", decision, {kind.value: amount})
         return ok
+
+    def list_decisions(
+        self, *, action: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
+        """GO1 — recent authz decisions, newest first (admin contract)."""
+        clauses: list[str] = []
+        params: list[Any] = []
+        if action:
+            clauses.append("action = ?")
+            params.append(action)
+        params.append(limit)
+        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
+        with get_conn() as conn:
+            rows = conn.execute(
+                f"SELECT * FROM {self.TABLE} {where} ORDER BY created_at DESC LIMIT ?",
+                params,
+            ).fetchall()
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            d = dict(r)
+            d["allowed"] = bool(d.get("allowed"))
+            d["budget_check_passed"] = bool(d.get("budget_check_passed"))
+            d["requires_approval"] = bool(d.get("requires_approval"))
+            d["budget_used"] = jload(d.get("budget_used"), {})
+            d["remaining_budget"] = jload(d.get("remaining_budget"), {})
+            d["correlation"] = jload(d.get("correlation"), {})
+            out.append(d)
+        return out
+
+    def budget_summary(self) -> list[dict[str, Any]]:
+        """GO2 — current budget state per BudgetKind (admin contract)."""
+        return [
+            {
+                "kind": kind.value,
+                "limit": self.budgets._budget_for(kind),
+                "used": self.budgets.used.get(kind, 0.0),
+                "remaining": self.budgets.remaining(kind),
+            }
+            for kind in BudgetKind
+        ]
 
     def _record(self, action: str, d: RiskDecision, budget_used: dict[str, float]) -> None:
         with get_conn() as conn:

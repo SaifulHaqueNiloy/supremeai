@@ -2,9 +2,10 @@
 API Endpoints for Knowledge Base Interaction.
 """
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from adaptive_engine.learning_loop import EvolutionSignal, get_learning_loop
 from api.dependencies import get_current_user_token
 from core.knowledge_facade import ask_legacy
 from core.logging_config import logger
@@ -113,4 +114,137 @@ async def seed_knowledge(
         "status": "success",
         "seeded": seeded,
         "message": f"Seeded {seeded} knowledge documents",
+    }
+
+
+# ---------------------------------------------------------------------------
+# ERR-H05 — learning-loop endpoints (previously dead 404s for the shared
+# SupremeAIService client). Every signal is PERSISTED in the canonical
+# adaptive_engine learning-loop store (ecosystem_evolution_signals) —
+# real storage, real aggregation, nothing fabricated.
+# ---------------------------------------------------------------------------
+
+# বাংলা: client-এর LearningUpload.type union-এর সাথে সিঙ্ক করা সেট।
+_LEARNING_TYPES = {
+    "CODE_EDIT",
+    "ERROR_REPORT",
+    "SUGGESTION_FEEDBACK",
+    "CODE_ANALYSIS",
+    "CHAT_MESSAGE",
+}
+_LEARN_ROUTE_TYPES = {"CODE_EDIT", "CODE_ANALYSIS", "CHAT_MESSAGE"}
+_FAILURE_ROUTE_TYPES = {"ERROR_REPORT"}
+_FEEDBACK_ROUTE_TYPES = {"SUGGESTION_FEEDBACK"}
+
+
+class LearningUpload(BaseModel):
+    """Contract of ``packages/shared-services`` SupremeAIService.learningUpload."""
+
+    type: str = Field(min_length=1, max_length=64)
+    data: dict = Field(min_length=1)
+    sessionId: str = Field(min_length=1, max_length=128)
+    userId: str | None = Field(default=None, max_length=128)
+
+
+def _validate_learning_type(upload_type: str, allowed: set[str]) -> None:
+    if upload_type not in _LEARNING_TYPES:
+        raise HTTPException(400, f"unknown learning type: {upload_type}")
+    if upload_type not in allowed:
+        raise HTTPException(
+            400,
+            f"{upload_type} signals belong on a different knowledge endpoint "
+            f"(accepted here: {sorted(allowed)})",
+        )
+
+
+def _signal_description(upload_type: str, data: dict) -> str:
+    """Derive an honest description from the REAL payload — verbatim fields."""
+    if upload_type == "CODE_EDIT":
+        return f"Code edit in {data.get('filePath', 'unknown path')} ({data.get('language', 'unknown lang')})"
+    if upload_type == "ERROR_REPORT":
+        return f"{data.get('errorType', 'error')}: {data.get('errorMessage', 'no message')}"
+    if upload_type == "SUGGESTION_FEEDBACK":
+        verdict = "accepted" if data.get("accepted") else "rejected"
+        return f"Suggestion {verdict} (suggestionId={data.get('suggestionId', 'unknown')})"
+    if upload_type == "CODE_ANALYSIS":
+        return f"{data.get('language', 'unknown lang')} analysis of {data.get('filePath', 'unknown path')}"
+    return f"{upload_type} learning signal"
+
+
+def _record_learning_signal(upload_type: str, payload: LearningUpload) -> str:
+    """Persist the payload as an EvolutionSignal; returns the signal id."""
+    signal = EvolutionSignal(
+        kind=upload_type,
+        description=_signal_description(upload_type, payload.data),
+        evidence=[
+            {
+                "sessionId": payload.sessionId,
+                "userId": payload.userId,
+                "data": payload.data,
+            }
+        ],
+    )
+    recorded = get_learning_loop().record_signal(signal)
+    return recorded.signal_id
+
+
+@router.post("/knowledge/learn", tags=["Knowledge Base"])
+async def learn_knowledge(
+    request: LearningUpload,
+    user: dict = Depends(get_current_user_token),
+):
+    """Record a learning signal (code edits / analyses) in the learning loop."""
+    _validate_learning_type(request.type, _LEARN_ROUTE_TYPES)
+    signal_id = _record_learning_signal(request.type, request)
+    return {
+        "success": True,
+        "message": f"learning signal recorded ({signal_id})",
+    }
+
+
+@router.post("/knowledge/failure", tags=["Knowledge Base"])
+async def report_failure(
+    request: LearningUpload,
+    user: dict = Depends(get_current_user_token),
+):
+    """Record a failure/error report in the learning loop (real persistence)."""
+    _validate_learning_type(request.type, _FAILURE_ROUTE_TYPES)
+    signal_id = _record_learning_signal(request.type, request)
+    return {
+        "success": True,
+        "message": f"failure signal recorded ({signal_id})",
+    }
+
+
+@router.post("/knowledge/feedback", tags=["Knowledge Base"])
+async def record_feedback(
+    request: LearningUpload,
+    user: dict = Depends(get_current_user_token),
+):
+    """Record suggestion feedback in the learning loop (real persistence)."""
+    _validate_learning_type(request.type, _FEEDBACK_ROUTE_TYPES)
+    signal_id = _record_learning_signal(request.type, request)
+    return {
+        "success": True,
+        "message": f"feedback signal recorded ({signal_id})",
+    }
+
+
+@router.get("/knowledge/stats", tags=["Knowledge Base"])
+async def learning_stats(
+    limit: int = Query(default=20, ge=1, le=100),
+    user: dict = Depends(get_current_user_token),
+):
+    """Aggregate REAL learning-loop activity (no fabricated fallback data)."""
+    signals = get_learning_loop().list_signals(limit=limit)
+    return {
+        "recentActivity": [
+            {
+                "type": s.kind,
+                "message": s.description,
+                "timestamp": s.detected_at,
+            }
+            for s in signals
+        ],
+        "total": len(signals),
     }
