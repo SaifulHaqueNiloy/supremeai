@@ -1,3 +1,17 @@
+---
+id: unified-next-roadmap-2026-09-15
+subject: "SupremeAI — Reconciled Next Roadmap (Ecosystem + OSS Integration + Audit Evidence)"
+document_role: roadmap
+planning_authority: Planning Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI — Reconciled Next Roadmap (Ecosystem + OSS Integration + Audit Evidence)
 
 ```yaml

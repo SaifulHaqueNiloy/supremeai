@@ -2,6 +2,7 @@
 id: head-of-planning-claude-context-compaction-v1-2026-09-16
 title: "Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction (বর্তমান WebSocket Chat Path-এ, শূন্য নতুন Dependency, শূন্য নতুন Infra)"
 status: proposed
+document_role: implementation
 owner_circle: Memory Circle + C5 (Execution — LLM Gateway)
 scope: ONE complete plan, fully grounded in actual repo code (2026-09-16 fresh main clone, commit c812985), following the corrected planning discipline (small change to existing code, no new infra, no CI amplification, no academic benchmarks, realistic resource budget)
 depends_on:
@@ -19,14 +20,14 @@ implements:
   - No new subsystem, no new dependency, no new infra (Constitution #3 Reuse Before Creation)
 supersedes: []
 superseded_by: []
-source_of_truth: false (proposed candidate — tested code + contracts remain the reality; execution only after founder approval per Gate 2)
-last_verified: 2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260)
+source_of_truth: false  # proposed candidate — tested code + contracts remain the reality; execution only after founder approval per Gate 2
+last_verified: "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260)"
 code_evidence:
   - backend/api/routes/websocket_agent.py L469–532 (deque(maxlen=50), MEMLEAK-004 comment, messages_payload build, llm_gateway.acompletion call)
   - backend/core/prompt_handler.py L1–67 (Caveman-lite only; no semantic summarization anywhere in backend/ — grep verified 2026-09-16 & 2026-09-17)
   - backend/core/llm/llm_gateway/completion.py L183 (compress_prompt_messages applied per call), L245 (task_type already generic in dedup_key)
   - backend/services/dynamic_ai/local_fallback.py + backend/core/llm/provider_router.py (zero-cost chain for summarizer route)
-test_evidence: none yet — implementation PR must deliver backend/tests/routes/test_websocket_compaction.py (≥7 assertions: summary block placement, bounded deque, failure fallback, empty-summary fallback, pure-function behavior) per Part 5 acceptance criteria below
+test_evidence: "none yet — implementation PR must deliver backend/tests/routes/test_websocket_compaction.py (≥7 assertions: summary block placement, bounded deque, failure fallback, empty-summary fallback, pure-function behavior) per Part 5 acceptance criteria below"
 acceptance_criteria:
   - pytest backend/tests/routes/test_websocket_compaction.py → all PASS
   - existing backend test paths touched by the change show zero regression (local before/after run)
@@ -35,10 +36,10 @@ acceptance_criteria:
   - no new dependency in pyproject.toml diff; no infra/config change
 test_evidence_note: mocked-gateway tests prove contract behavior only (Gate 4); live WS session evidence is required before any completion claim (Gate 5)
 risk_and_rollback: single-commit docs→code revert path; no DB schema, no config, no data migration — `git revert` restores pre-plan behavior; summarizer failure degrades to today's dumb eviction with honest warning (Part 2 §2.6 risk table)
-baseline: (hypothesis — to be measured during execution PR) today's behavior: history silently truncated at 50 messages (25 turns); turn-1 facts unrecoverable past turn ~25; per-turn prompt token cost constant at maxlen=50
+baseline: "(hypothesis — to be measured during execution PR) today's behavior: history silently truncated at 50 messages (25 turns); turn-1 facts unrecoverable past turn ~25; per-turn prompt token cost constant at maxlen=50"
 measurement_method: (a) WS long-session script — ask turn-1 fact at turn 60, grade answer correctness; (b) gateway telemetry/Langfuse — compaction event count, summary latency, fallback rate; (c) process RSS before/after 100-turn session
 success_threshold: turn-1 fact correctly recalled at turn 60 in live session AND fallback rate <10% of compaction attempts AND RSS delta within ±10% of pre-change baseline (acceptance threshold — hypothesis until measured per Gate 5)
-plan_lifecycle: living — proposed candidate under the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). Single-plan execution discipline: PLAN_002 becomes the ONLY active execution plan if and when the founder approves it; meanwhile it is a reviewable candidate, not an executable instruction. Next candidates (#003 Aider-style repo map) remain reference-only scouts.
+plan_lifecycle: "living — proposed candidate under the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). Single-plan execution discipline: PLAN_002 becomes the ONLY active execution plan if and when the founder approves it; meanwhile it is a reviewable candidate, not an executable instruction. Next candidates (#003 Aider-style repo map) remain reference-only scouts."
 ---
 
 # Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction

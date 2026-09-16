@@ -2,8 +2,9 @@
 id: head-of-planning-letta-style-memory-distillation-v1-2026-09-17
 title: "Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation (বিদ্যমান Eternal Brain ফ্যাসাডে, শূন্য নতুন Dependency, শূন্য নতুন Infra)"
 status: proposed
+document_role: implementation
 owner_circle: Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway)
-scope: ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main, commit 37b05f4b), following the strengthened PLAN_LIFECYCLE_POLICY.md (2026-09-17) — all required metadata, Gates 0–6, labeled quantitative claims, explicit out-of-scope
+scope: "ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main, commit 37b05f4b), following the strengthened PLAN_LIFECYCLE_POLICY.md (2026-09-17) — all required metadata, Gates 0–6, labeled quantitative claims, explicit out-of-scope"
 depends_on:
   - backend/core/unified_memory.py (existing UnifiedMemoryInterface — Eternal Brain write/query facade, L27–121)
   - backend/services/memory_service.py (existing CascadeMemoryService — store_memory L298, query_context L496, _embed L218)
@@ -21,7 +22,7 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false
-last_verified: 2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below)
+last_verified: "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below)"
 code_evidence:
   - "backend/core/unified_memory.py L57–58: summary = content[:200]  # Placeholder ; structure = \"{}\"  # Placeholder (literal placeholder comments in the Eternal Brain write path)"
   - "backend/services/memory_service.py L316: embedding = self._embed(summary) — retrieval embedding is computed from the summary only; pg INSERT (L323–333) persists summary+embedding+metadata but NOT content or structure"
@@ -44,7 +45,7 @@ measurement_method:
   - "Offline, on-demand (never per-CI): seed ≥20 representative memory entries (syncguard-style JSON reports, browser-session payloads, API-endpoint-style notes); write each twice — legacy truncation vs distilled — into the degraded-mode SQLite path; run CascadeMemoryService.query_context with ≥10 natural-language seed queries; compare top-3 hit-rate between the two corpora; record per-query results in the plan's outcome evidence block"
 success_threshold:
   - "Acceptance threshold (hypothesis until measured): distilled top-3 hit-rate ≥ legacy top-3 hit-rate + 15 percentage points on the seed set; failure of this threshold ⇒ plan marked failed/blocked per Gate 6, no silent success"
-plan_lifecycle: living — single complete plan #004; proposed candidate awaiting explicit founder approval (Gate 2); single-plan execution discipline: this does NOT become active merely because it exists
+plan_lifecycle: "living — single complete plan #004; proposed candidate awaiting explicit founder approval (Gate 2); single-plan execution discipline: this does NOT become active merely because it exists"
 ---
 
 # Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation
