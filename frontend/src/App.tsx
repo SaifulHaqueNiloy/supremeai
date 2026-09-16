@@ -55,6 +55,7 @@ import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
 import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 import { FilesPage } from './pages/FilesPage';
+import { ProjectsPage } from './pages/ProjectsPage';
 import { MCPConnector } from './components/plugins/MCPConnector';
 
 // The public viewer is intentionally available before authentication: a shared URL is
@@ -189,7 +190,7 @@ const AppContent: React.FC = () => {
                   <ProfilePage />
                 </ProtectedRoute>
   } />
-  <Route path="/projects" element={<ProtectedRoute><WorkspaceModulePage module="projects" /></ProtectedRoute>} />
+  <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
   <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
   <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><AgentWorkspace /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/activity" element={<ProtectedRoute><WorkspaceModulePage module="activity" /></ProtectedRoute>} />
