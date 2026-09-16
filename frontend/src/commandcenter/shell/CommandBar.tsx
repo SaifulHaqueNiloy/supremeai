@@ -70,7 +70,7 @@ export function CommandBar({
       <button
         onClick={() => {
           setPaletteOpen(true);
-          onOpenPalette();
+          onOpenPalette?.();
         }}
         className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--sa-line)] hover:border-[#00f3ff]/40 transition-colors"
       >
