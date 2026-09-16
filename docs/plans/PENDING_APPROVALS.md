@@ -1,3 +1,17 @@
+---
+id: pending-approvals-register
+subject: "SupremeAI Pending Approvals Log"
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+canonical: true
+status: active
+evidence_state: verified
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Pending Approvals Log
 
 **Status:** active  

@@ -1,3 +1,17 @@
+---
+id: vision-strategic-positioning
+subject: "SupremeAI — The One-Man-Army Master Plan"
+document_role: roadmap
+planning_authority: Planning Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI — The One-Man-Army Master Plan
 
 **From current stage to production. How a single builder's system beats top AI models in their own strongest fields.**

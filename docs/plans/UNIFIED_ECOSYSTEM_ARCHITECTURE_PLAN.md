@@ -1,3 +1,17 @@
+---
+id: unified-ecosystem-architecture
+subject: "SupremeAI Unified Ecosystem Architecture — Master Plan"
+document_role: architecture
+planning_authority: Architecture Circle
+canonical: candidate
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Unified Ecosystem Architecture — Master Plan
 
 **Document Version:** 3.0.0  

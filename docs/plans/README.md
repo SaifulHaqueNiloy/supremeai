@@ -1,3 +1,17 @@
+---
+id: plans-navigation-catalog
+subject: "SupremeAI Living Architecture Plans Catalog"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+canonical: true
+status: active
+evidence_state: partial
+disposition: retain
+last_verified: 2026-09-17
+supersedes: []
+superseded_by: []
+---
+
 # SupremeAI Living Architecture Plans Catalog
 
 **Status:** `docs/plans/README.md` — Navigation layer  
