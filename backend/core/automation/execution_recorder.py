@@ -55,6 +55,131 @@ class ExecutionRecorder:
     করে। DB unavailable হলে graceful degradation — dispatch কখনো block হয় না।
     """
 
+    # ------------------------------------------------------------------
+    # Canonical Run bridge (M1-C, ERR-F01 wiring) — extend-not-replace.
+    # বাংলা: প্রতিটি automation dispatch এখন ক্যানোনিকাল runs টেবিলেও পর্যবেক্ষিত
+    # হয় (runs.bridges.observe_automation_run ব্যবহার করে) — একটাই execution
+    # contract। নীতি একই (Plan Section 10): run-fabric লেখা কখনো dispatch
+    # persistence-কে block করে না; ব্যর্থ হলে শুধু warning log। পুরনো DB-তে
+    # runs/run_events টেবিল না থাকলেও আচরণ অপরিবর্তিত থাকে।
+    # ------------------------------------------------------------------
+
+    _RUN_ACTOR = "automation-recorder"
+
+    async def _activate_run(self, session: Any, service: Any, run_id: Any) -> None:
+        """Walk the legal pre-execution path to RUNNING.
+
+        The strict state machine requires REQUESTED → POLICY_CHECKED →
+        PLANNED → RUNNING (no skip-ahead edges); automation dispatches are
+        pre-authorized by their policy layer, so the bridge stamps each
+        step and lands the run in RUNNING.
+        """
+        from runs.state_machine import PLANNED, POLICY_CHECKED, RUNNING
+
+        for state, note in (
+            (POLICY_CHECKED, "dispatch pre-authorized (automation policy layer)"),
+            (PLANNED, "dispatch recorded"),
+            (RUNNING, "dispatch started"),
+        ):
+            await service.transition(
+                session, run_id, state, actor=self._RUN_ACTOR, detail={"note": note}
+            )
+
+    async def _run_bridge_create(
+        self, session: Any, event: AutomationEvent, execution_id: str
+    ) -> None:
+        """Best-effort: observe this dispatch as a canonical Run (REQUESTED → RUNNING).
+
+        Runs in the SAME session AFTER the automation row is committed, so a
+        run-fabric failure can never roll back the authoritative record.
+        Idempotency key ``automation-obs:<event_id>`` keeps re-dispatched
+        events from duplicating runs (RunService dedups on the key).
+        """
+        try:
+            from runs.bridges import observe_automation_run
+            from runs.service import RunService
+
+            service = RunService()
+            run = await observe_automation_run(
+                session,
+                service,
+                user_id="system",  # automation dispatches are system-initiated
+                execution_id=execution_id,
+                workflow_key=event.workflow_key,
+                trace_id=_fit36(event.trace_id),
+                idempotency_key=f"automation-obs:{_fit36(event.event_id)}",
+            )
+            await self._activate_run(session, service, run.id)
+            await session.commit()
+            logger.debug(
+                f"🔗 ExecutionRecorder: canonical run {str(run.id)[:8]} observing "
+                f"event {event.event_id} (RUNNING)"
+            )
+        except Exception as e:
+            logger.warning(
+                f"⚠️ ExecutionRecorder.run-bridge (create) skipped: {e!r} — "
+                f"automation persistence unaffected"
+            )
+
+    async def _run_bridge_settle(
+        self, session: Any, execution_id: str, result: AutomationResult
+    ) -> None:
+        """Best-effort: settle the observing Run when the dispatch completes.
+
+        Mapping (AutomationStatus → run terminal state):
+        DELIVERED → SUCCEEDED, FAILED → FAILED (+error surface),
+        SKIPPED → CANCELLED (automation disabled/no provider).
+        """
+        try:
+            from sqlalchemy import select
+
+            from runs.models import Run
+            from runs.service import RunService
+            from runs.state_machine import CANCELLED, FAILED, SUCCEEDED
+
+            target = {
+                "DELIVERED": SUCCEEDED,
+                "FAILED": FAILED,
+                "SKIPPED": CANCELLED,
+            }.get(result.status.value.upper())
+            if target is None:
+                return
+            service = RunService()
+            run = (
+                await session.execute(
+                    select(Run)
+                    .where(Run.source_type == "automation", Run.source_ref == execution_id)
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+            if run is None:
+                logger.debug(
+                    f"🔗 ExecutionRecorder.run-bridge: no observing run for "
+                    f"execution {execution_id[:8]} (create step skipped?) — settle skipped"
+                )
+                return
+            detail: dict[str, Any] = {
+                "status": result.status.value,
+                "provider": result.provider,
+            }
+            if result.message:
+                detail["message"] = result.message[:512]
+            updated = await service.transition(
+                session, run.id, target, actor=self._RUN_ACTOR, detail=detail
+            )
+            if result.status.value.upper() == "FAILED" and result.message:
+                updated.error = result.message[:1024]
+            await session.commit()
+            logger.debug(
+                f"🔗 ExecutionRecorder: canonical run {str(run.id)[:8]} settled "
+                f"→ {target} for event {result.event_id}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"⚠️ ExecutionRecorder.run-bridge (settle) skipped: {e!r} — "
+                f"automation persistence unaffected"
+            )
+
     async def record_start(self, event: AutomationEvent) -> str | None:
         """
         dispatch শুরু হলে PENDING record তৈরি করে।
@@ -83,6 +208,9 @@ class ExecutionRecorder:
                     f"📋 ExecutionRecorder: PENDING record created for event {event.event_id} "
                     f"(execution_id={execution_id[:8]})"
                 )
+                # M1-C: observe the dispatch as a canonical Run (best-effort,
+                # AFTER the authoritative commit — see _run_bridge_create).
+                await self._run_bridge_create(session, event, execution_id)
                 return execution_id
         except Exception as e:
             # Plan Section 10: DB failure কখনো dispatch-কে block করে না
@@ -163,6 +291,9 @@ class ExecutionRecorder:
                     f"📋 ExecutionRecorder: record updated for event {event.event_id} "
                     f"(status={result.status.value}, duration={duration_ms}ms)"
                 )
+                # M1-C: settle the observing canonical Run (best-effort, AFTER
+                # the authoritative commit — see _run_bridge_settle).
+                await self._run_bridge_settle(session, execution_id, result)
         except Exception as e:
             # Plan Section 10: DB failure কখনো dispatch-কে block করে না
             logger.warning(
@@ -217,6 +348,9 @@ class ExecutionRecorder:
                     f"(execution_id={execution_id[:8]}, capability={record.capability}, "
                     f"status={record.status})"
                 )
+                # M1-C: the orchestration path lands with its final status in one
+                # step — observe the run and settle it to the mapped terminal state.
+                await self._run_bridge_finalize(session, record, execution_id)
                 return execution_id
         except Exception as e:
             # Plan Section 10: DB failure কখনো orchestration dispatch-কে block করে না
@@ -225,6 +359,56 @@ class ExecutionRecorder:
                 f"orchestration continues without durable persistence"
             )
             return None
+
+    async def _run_bridge_finalize(
+        self, session: Any, record: ExecutionRecord, execution_id: str
+    ) -> None:
+        """Best-effort: observe an orchestration ExecutionRecord as a settled Run.
+
+        Status mapping: failed → FAILED, skipped → CANCELLED, everything
+        else → SUCCEEDED (the record lands post-dispatch, so there is no
+        intermediate lifecycle to walk through).
+        """
+        try:
+            from runs.bridges import observe_automation_run
+            from runs.service import RunService
+            from runs.state_machine import CANCELLED, FAILED, SUCCEEDED
+
+            status = (record.status or "completed").strip().lower()
+            target = {
+                "failed": FAILED,
+                "skipped": CANCELLED,
+            }.get(status, SUCCEEDED)
+            service = RunService()
+            run = await observe_automation_run(
+                session,
+                service,
+                user_id=record.user_id or "system",
+                execution_id=execution_id,
+                workflow_key=f"orchestrator:{record.capability}",
+                trace_id=_fit36(record.correlation_id),
+                correlation_id=_fit36(record.correlation_id),
+                idempotency_key=f"orchestration-obs:{_fit36(record.correlation_id)}",
+            )
+            await self._activate_run(session, service, run.id)
+            detail: dict[str, Any] = {"orchestration_status": status}
+            if record.evidence:
+                detail["evidence_events"] = len(record.evidence)
+            updated = await service.transition(
+                session, run.id, target, actor=self._RUN_ACTOR, detail=detail
+            )
+            if target == FAILED:
+                updated.error = f"orchestration dispatch failed (status={status})"
+            await session.commit()
+            logger.debug(
+                f"🔗 ExecutionRecorder: canonical run {str(run.id)[:8]} settled "
+                f"→ {target} for orchestration {record.correlation_id}"
+            )
+        except Exception as e:
+            logger.warning(
+                f"⚠️ ExecutionRecorder.run-bridge (finalize) skipped: {e!r} — "
+                f"orchestration persistence unaffected"
+            )
 
 
 # Singleton instance
