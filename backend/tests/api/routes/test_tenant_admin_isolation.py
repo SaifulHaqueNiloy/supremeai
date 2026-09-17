@@ -306,12 +306,27 @@ class TestPlatformAdminIsolationWiring:
         Conftest env sets ALLOW_TEST_AUTH_BYPASS=1; the chain honors
         settings.allow_test_auth_bypass at request time, so the flag is
         patched off to exercise the REAL gate (owner AUDIT-SEC-9 lock).
+
+        CI hardening: some earlier tests in the CI group rebind/reload
+        core.config, so ``core.config.settings`` and the instance captured
+        by ``api.dependencies`` can diverge. Patch BOTH (same-object case
+        is a harmless no-op) and then LOUDLY assert the instance the
+        dependency chain actually reads refuses bypass — silent drift
+        becomes an explicit, self-explanatory failure instead of a
+        mysterious 200.
         """
-        from api.dependencies import get_current_platform_admin
+        import api.dependencies as _deps
         from api.routes.tenant_admin import router
         from core.config import settings
 
         monkeypatch.setattr(settings, "allow_test_auth_bypass", False, raising=False)
+        monkeypatch.setattr(_deps.settings, "allow_test_auth_bypass", False, raising=False)
+        assert _deps.settings.is_bypass_allowed is False, (
+            "bypass still active on the settings instance api.dependencies reads — "
+            f"core.config.settings is {id(settings)}, api.dependencies.settings is "
+            f"{id(_deps.settings)}; a test earlier in this session rebound the "
+            "module attribute and this gate must not silently weaken"
+        )
         bare = FastAPI()
         bare.include_router(router)
         async with AsyncClient(transport=ASGITransport(app=bare), base_url="http://test") as ac:

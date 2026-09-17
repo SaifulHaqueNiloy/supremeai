@@ -62,9 +62,12 @@ def parse_modules_list() -> tuple[dict[str, int], list[dict]]:
 
 def test_module_boundary_strictly_enforced():
     counts, modules = parse_modules_list()
-    # MODULES_LIST.md catalog after excluding non-production test/spec files
-    assert len(modules) in (194, 224), (
-        f"Expected cataloged modules to be 194 (production-only) or 224 (full boundary), got {len(modules)}"
+    # MODULES_LIST.md boundary. 2026-09-17: owner-approved deletion of the three
+    # dead zustand stores (chatStore/themeStore/useSupremeStore — commit 0aefa3b3)
+    # moved the production catalog 194 -> 191; 224 stays as the historical
+    # full-boundary tolerance so a future sanctioned restore is not a lie either.
+    assert len(modules) in (191, 224), (
+        f"Expected cataloged modules to be 191 (current production boundary) or 224 (historical full boundary), got {len(modules)}"
     )
 
 
