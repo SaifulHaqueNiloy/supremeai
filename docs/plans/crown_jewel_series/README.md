@@ -65,7 +65,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 06 | **Run Fabric সম্পূর্ণকরণ** (`backend/runs/`) | M1 code-complete কিন্তু ERR-F01 bridge pending — সর্বজনীন observability চুক্তি | ✅ **প্রকাশিত** — `MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP_2026-09-17.md` |
 | 07 | **Context Engine** (`backend/context_engine/`) | M2, সর্ব-উষ্ণ পথে সদ্য-ল্যান্ডেড; ≥30% token-হ্রাস লক্ষ্য (target) | ✅ **প্রকাশিত** — `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` |
 | 08 | **Scout / Deep Research** (`backend/scout/`) | সদ্য প্রোডাকশন-wired গবেষণা-চক্র | ✅ **প্রকাশিত** — `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` |
-| 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ⏳ কিউতে |
+| 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ✅ **প্রকাশিত** — `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` |
 | 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ⏳ কিউতে |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
@@ -84,7 +84,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 6 | 2026-09-17 | Run Fabric সম্পূর্ণকরণ | `MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 7 | 2026-09-17 | Context Engine | `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 8 | 2026-09-17 | Scout / Deep Research | `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
-| 9 | TBD | Dormant Tools সক্রিয়করণ | — | কিউতে |
+| 9 | 2026-09-17 | Dormant Tools সক্রিয়করণ | `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
+| 10 | TBD | Frontend Tier-S Wiring | — | কিউতে |
 
 ---
 
