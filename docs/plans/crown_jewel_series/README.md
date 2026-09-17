@@ -63,7 +63,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 04 | **Browser Automation Stack** (`backend/tools/browser/` + `backend/services/browser/` + `backend/browser/`) | এজেন্টের "হাত"; ERR-A03/A06 ফিক্স প্রোডাকশন-পথে প্রমাণিত | ✅ **প্রকাশিত** — `MODULE_04_BROWSER_AUTOMATION_POWER_UP_2026-09-17.md` |
 | 05 | **Self-Evolution & Learning Loop** (`backend/core/self_evolution/` + `backend/evolution/` + `backend/adaptive_engine/` + `backend/learning/`) | "Universal Self-Learning" ব্র্যান্ড-প্রতিশ্রুতি; বাস্তব কিন্তু মেমোরি-অনাহারে অচল | ✅ **প্রকাশিত** — `MODULE_05_SELF_EVOLUTION_POWER_UP_2026-09-17.md` |
 | 06 | **Run Fabric সম্পূর্ণকরণ** (`backend/runs/`) | M1 code-complete কিন্তু ERR-F01 bridge pending — সর্বজনীন observability চুক্তি | ✅ **প্রকাশিত** — `MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP_2026-09-17.md` |
-| 07 | **Context Engine** (`backend/context_engine/`) | M2, সর্ব-উষ্ণ পথে সদ্য-ল্যান্ডেড; ≥30% token-হ্রাস লক্ষ্য (target) | ⏳ কিউতে |
+| 07 | **Context Engine** (`backend/context_engine/`) | M2, সর্ব-উষ্ণ পথে সদ্য-ল্যান্ডেড; ≥30% token-হ্রাস লক্ষ্য (target) | ✅ **প্রকাশিত** — `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` |
 | 08 | **Scout / Deep Research** (`backend/scout/`) | সদ্য প্রোডাকশন-wired গবেষণা-চক্র | ⏳ কিউতে |
 | 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ⏳ কিউতে |
 | 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ⏳ কিউতে |
@@ -82,7 +82,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 4 | 2026-09-17 | Browser Automation Stack | `MODULE_04_BROWSER_AUTOMATION_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 5 | 2026-09-17 | Self-Evolution & Learning Loop | `MODULE_05_SELF_EVOLUTION_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 6 | 2026-09-17 | Run Fabric সম্পূর্ণকরণ | `MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
-| 7 | TBD | Context Engine | — | কিউতে |
+| 7 | 2026-09-17 | Context Engine | `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
+| 8 | TBD | Scout / Deep Research | — | কিউতে |
 
 ---
 
