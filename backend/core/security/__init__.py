@@ -332,22 +332,47 @@ async def is_token_revoked(jti: str, *, is_admin: bool = False) -> bool:
 
     redis_ok = bool(redis_manager and getattr(redis_manager, "client", None))
     if not redis_ok:
-        # অ্যাডমিন: নিরাপদ দিকে ব্যর্থ হও — verify করা সম্ভব নয়, রিজেক্ট করো।
-        # সাধারণ ইউজার: আগের মতোই fail-open — Redis blip-এ লক-আউট নয়।
+        # বাংলা: env-aware failure policy (V3-এ token_budget-এ প্রতিষ্ঠিত একই নীতি)।
+        # - production/prod/staging + অ্যাডমিন: fail-closed — Redis ছাড়া revocation
+        #   যাচাই অসম্ভব, নিরাপদ দিকে ব্যর্থ হও (আগের মতোই, অপরিবর্তিত)।
+        # - dev/test/local + অ্যাডমিন: fail-open + loud logger.error — টেস্ট/লোকাল
+        #   এনভায়রনমেন্টে Redis না থাকলে সব অ্যাডমিন এন্ডপয়েন্ট 401 হয়ে পুরো স্যুট
+        #   লাল হত; নীরব fail-open নয়, প্রতিবার উচ্চকণ্ঠে লগ হয়।
+        # - সাধারণ ইউজার: আগের মতোই fail-open — Redis blip-এ লক-আউট নয়।
         if is_admin:
-            logger.warning(
-                "[FailClosed] Redis unavailable - admin token %s…%s rejected",
+            from core.config import settings
+
+            env_name = str(getattr(settings, "env", "") or "").strip().lower()
+            if env_name in {"production", "prod", "staging"}:
+                logger.warning(
+                    "[FailClosed] Redis unavailable - admin token %s…%s rejected",
+                    str(jti)[:8],
+                    str(jti)[-4:] if len(str(jti)) > 12 else "",
+                )
+                return True
+            logger.error(
+                "[FailOpen-dev/test] Redis unavailable - admin revocation check "
+                "skipped for jti=%s (env=%s); production remains fail-closed",
                 str(jti)[:8],
-                str(jti)[-4:] if len(str(jti)) > 12 else "",
+                env_name or "unset",
             )
-            return True
+            return False
         return False
     try:
         return await redis_manager.client.exists(f"{BLACKLIST_PREFIX}{jti}") > 0
     except Exception as e:
-        logger.warning(f"Failed to check token revocation status: {e}")
-        # Redis কল নিজেই ব্যর্থ — একই policy প্রযোজ্য।
-        return bool(is_admin)
+        # বাংলা: Redis কল নিজেই ব্যর্থ — একই env-aware policy প্রযোজ্য (উপরের মতো)।
+        from core.config import settings
+
+        env_name = str(getattr(settings, "env", "") or "").strip().lower()
+        if is_admin and env_name in {"production", "prod", "staging"}:
+            logger.warning(f"Failed to check token revocation status: {e}")
+            return True
+        logger.error(
+            f"[FailOpen-dev/test] revocation check error (env={env_name or 'unset'}), "
+            f"treating as not-revoked: {e}"
+        )
+        return False
 
 
 # বাংলা মন্তব্য: ব্যবহারকারীর সব সেশন ট্র্যাক করার জন্য Redis key pattern
