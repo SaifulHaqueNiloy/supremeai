@@ -112,38 +112,22 @@ class WebFallbackAgent:
                 }
 
         except ImportError:
-            logger.warning(
-                "Playwright is not installed. Falling back to simulated headless runner."
+            # বাংলা মন্তব্য: Playwright না থাকলে আর ভুয়া "simulated" সফলতা রিটার্ন হয় না
+            # (audit B-05 fix, 2026-09-17) — সৎ ব্যর্থতা, কোনো fabricated স্টেপ/ডেটা নেই।
+            logger.error(
+                "Playwright is not installed — web fallback automation CANNOT run. "
+                "Returning honest failure instead of fabricated success."
             )
-            mock_steps = [
-                {
-                    "step": 1,
-                    "action": f"Navigate to {url} (Simulated)",
-                    "status": "completed",
-                },
-                {
-                    "step": 2,
-                    "action": "Perform login sequence (Simulated)",
-                    "status": "completed",
-                },
-                {
-                    "step": 3,
-                    "action": f"Perform task: {task.get('action')} (Simulated)",
-                    "status": "completed",
-                },
-                {
-                    "step": 4,
-                    "action": "Extract results from UI elements (Simulated)",
-                    "status": "completed",
-                },
-            ]
             return {
-                "success": True,
+                "success": False,
                 "tool": tool_name,
                 "url": url,
-                "steps_executed": mock_steps,
-                "result_summary": f"Task '{task.get('action')}' completed successfully (Simulated fallback).",
-                "scraped_data": "Simulated web automation response data.",
+                "steps_executed": steps_executed,
+                "error": (
+                    "Browser automation unavailable: the 'playwright' package is not "
+                    "installed in this environment. Install it (and its chromium binary) "
+                    "to enable web fallback automation."
+                ),
             }
         except Exception as exc:
             logger.error(f"Playwright execution failed: {exc}")
