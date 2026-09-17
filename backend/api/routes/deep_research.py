@@ -341,8 +341,12 @@ async def _run_research_pipeline(
                 from core.observability.reasoning_stream import emit_reasoning_step
 
                 emit_reasoning_step(session_id, step=step, content=f"{name}: {content}")
-            except Exception:  # reasoning never breaks research
-                pass
+            except Exception as emit_err:  # reasoning never breaks research
+                # বাংলা মন্তব্য: fail-open ইচ্ছাকৃত — টেলিমেট্রি ব্যর্থ হলেও গবেষণা
+                # চলবে, কিন্তু নীরব নয়: debug লগে কারণ রেখে দিচ্ছি যাতে ভাঙা
+                # reasoning-stream কেউ খেয়াল না করে বলে লুকিয়ে না যায়।
+                # (loguru: %-args/exc_info কাজ করে না — f-string বাধ্যতামূলক)
+                logger.debug(f"reasoning_stream emit failed (research continues): {emit_err}")
         if on_step:
             if callable(on_step):
                 on_step(step, name, content)

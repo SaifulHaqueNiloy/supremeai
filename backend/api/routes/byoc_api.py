@@ -132,7 +132,10 @@ async def deploy_container(
             if res.get("status") == "deployed":
                 job.status = "success"
                 job.finished_at = datetime.now(UTC)
-                job.service_url = f"https://byoc-skill-{payload.skill_name}-mock-url.a.run.app"
+                # বাংলা মন্তব্য: orchestrator এখন প্রকৃত terraform output-এর
+                # service_url ফেরত দেয় — বানানো mock URL কঠোরভাবে নিষিদ্ধ
+                # (false-assurance doctrine)। সৎ URL অথবা খালি স্ট্রিং, মাঝামাঝি নেই।
+                job.service_url = res.get("service_url") or ""
                 job.logs.append("✅ Cloud Run deployment finished successfully.")
             else:
                 job.status = "failed"
