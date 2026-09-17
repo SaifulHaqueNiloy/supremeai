@@ -23,6 +23,16 @@ interface RecentConversation {
   updated_at: string;
 }
 
+function formatRelativeTime(iso: string) {
+  const deltaMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.round(deltaMs / 60000);
+  if (!Number.isFinite(minutes) || minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+};
+
 export const UserDashboard: React.FC = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
@@ -78,10 +88,6 @@ export const UserDashboard: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchWorkspaceState();
-    fetchRecentConversations();
-  }, []);
 
   // FIX(recent-work): this section previously said "Nothing here yet" on a
   // hardcoded basis — it never asked the backend. It now lists the user's
@@ -91,7 +97,7 @@ export const UserDashboard: React.FC = () => {
     setRecentLoading(true);
     try {
       const data = await apiClient.get<RecentConversation[] | { data?: RecentConversation[] }>(
-        '/api/conversations',
+        '/api/v1/conversations/',
       );
       const rows = Array.isArray(data) ? data : (data?.data ?? []);
       setRecentConversations(rows.slice(0, 3));
@@ -102,16 +108,12 @@ export const UserDashboard: React.FC = () => {
       setRecentLoading(false);
     }
   };
+  useEffect(() => {
+    fetchWorkspaceState();
+    fetchRecentConversations();
+  }, []);
 
-  const formatRelativeTime = (iso: string) => {
-    const deltaMs = Date.now() - new Date(iso).getTime();
-    const minutes = Math.round(deltaMs / 60000);
-    if (!Number.isFinite(minutes) || minutes < 1) return 'just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.round(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.round(hours / 24)}d ago`;
-  };
+
 
   // Hybrid Progressive Disclosure:
   // Show server capabilities + local active modules (de-duplicated)

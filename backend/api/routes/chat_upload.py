@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 import uuid
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
