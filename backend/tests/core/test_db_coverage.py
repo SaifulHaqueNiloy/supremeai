@@ -104,21 +104,8 @@ async def test_db_session_context(monkeypatch):
 
 
 async def test_check_db_health_unhealthy(monkeypatch):
-    """Unhealthy contract — connect() failure inside check_db_health → healthy False.
-
-    বাংলা: আগের সংস্করণ শুধু ``engine = None`` করত — কিন্তু ``check_db_health``
-    lazy-init করে (``engine or get_engine()``), তাই CI-র postgres চলা থাকলে
-    get_engine সফলভাবে connect করে healthy=True হয়ে যেত (environment-dependent
-    টেস্ট)। get_engine-এর exception ফাংশনের try-এর বাইরে ঘটে, তাই stub engine-
-    এর connect() ব্যর্থ করানো হচ্ছে — আসল catch-পথটিই যাচাই হয়, deterministic।
-    """
-
-    class _UnconnectableEngine:
-        def connect(self):
-            raise RuntimeError("db unreachable (test stub)")
-
     monkeypatch.setattr(core_db, "engine", None)
-    monkeypatch.setattr(core_db, "get_engine", lambda: _UnconnectableEngine())
+    monkeypatch.setattr(core_db, "get_engine", lambda: None)
     result = await core_db.check_db_health()
     assert result["healthy"] is False
     assert "error" in result
