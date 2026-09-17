@@ -42,21 +42,11 @@ export function AutomationQueuePage() {
     apiClient
       .get<{ tasks: AutomationTask[] }>('/api/browser/tasks')
       .then((data) => {
-        // Injecting mock failure payload for Circuit_Open state to fulfill Phase 3 requirement
-        const list = (data.tasks || []).map(t => {
-           if (t.status.toUpperCase() === 'CIRCUIT_OPEN' && !t.failure_payload) {
-               return {
-                 ...t,
-                 failure_payload: {
-                   root_cause: "DOM Element Timeout",
-                   failed_log_tick: "tick_009_auth_wait",
-                   reset_eta_sec: 240,
-                   stack_trace: "Error: locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#nonexistent-btn')"
-                 }
-               };
-           }
-           return t;
-        });
+        // Audit F-02 fix (2026-09-17): the fabricated failure_payload injection
+        // was removed — the UI previously INVENTED a root cause ("DOM Element
+        // Timeout"), stack trace and reset ETA for any CIRCUIT_OPEN task.
+        // Real diagnostics render only when the backend actually provides them.
+        const list = data.tasks || [];
 
         setTasks(list);
         setError('');
@@ -184,7 +174,18 @@ export function AutomationQueuePage() {
                 </div>
               </div>
 
-              {/* Circuit Breaker Diagnostic Panel */}
+              {/* Circuit Breaker Diagnostic Panel — only with REAL backend payload.
+                  When the backend provides no failure_payload, show an honest
+                  unavailability notice instead of invented diagnostics (F-02). */}
+              {t.status.toUpperCase() === 'CIRCUIT_OPEN' && !t.failure_payload && (
+                <div className="border-t border-red-900/30 bg-red-950/10 p-4">
+                  <p className="text-xs text-gray-400">
+                    <span className="font-bold text-red-400 uppercase tracking-wider">Breaker tripped.</span>{' '}
+                    Detailed diagnostics (root cause, stack trace, reset ETA) are not provided by
+                    the backend for this task yet — no invented data is shown.
+                  </p>
+                </div>
+              )}
               {t.status.toUpperCase() === 'CIRCUIT_OPEN' && t.failure_payload && (
                 <div className="bg-red-950/20 border-t border-red-900/30 p-5 flex flex-col md:flex-row gap-6">
 

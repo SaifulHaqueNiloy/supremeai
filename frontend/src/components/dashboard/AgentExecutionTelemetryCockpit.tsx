@@ -15,7 +15,8 @@ interface AgentExecutionTelemetryCockpitProps {
 
 const AgentExecutionTelemetryCockpit: React.FC<AgentExecutionTelemetryCockpitProps> = ({ authToken }) => {
   const [activeTab, setActiveTab] = useState<'fileTree' | 'executionShell' | 'agentLog'>('fileTree');
-  const [files, setFiles] = useState<string[]>([]);
+  // Audit F-01 fix: file index stays empty until the file-index API is wired.
+  const [files] = useState<string[]>([]);
   const [shellHistory, setShellHistory] = useState<string[]>([]);
   const [agentLogs, setAgentLogs] = useState<AgentLogEntry[]>([]);
   const [currentCommand, setCurrentCommand] = useState('');
@@ -72,48 +73,24 @@ const AgentExecutionTelemetryCockpit: React.FC<AgentExecutionTelemetryCockpitPro
     };
   }, [authToken]);
 
-  // Mock file tree data
-  useEffect(() => {
-    setFiles([
-      'src/',
-      '  ├── components/',
-      '  │   ├── dashboard/',
-      '  │   │   ├── AgentExecutionTelemetryCockpit.tsx',
-      '  │   │   └── DashboardErrorBoundary.tsx',
-      '  │   └── admin/',
-      '  │       ├── UserManagement.tsx',
-      '  │       └── SystemHealth.tsx',
-      '  ├── store/',
-      '  │   └── useSupremeStore.ts',
-      '  └── services/',
-      '      └── realtime/',
-      '          └── WebSocketManager.ts',
-      'backend/',
-      '  ├── api/',
-      '  │   └── routes/',
-      '  │       ├── realtime_dashboard.py',
-      '  │       └── websocket_agent.py',
-      '  └── core/',
-      '      └── swarm_pubsub.py',
-      'scripts/',
-      '  └── colab_merge_pipeline.py',
-      'docs/',
-      '  └── FINAL_ROADMAP.md'
-    ]);
-  }, []);
-
+  // Audit F-01 fix (2026-09-17): the hardcoded mock file tree was removed —
+  // the workspace file-index API is not wired yet, so the File Explorer shows
+  // an honest empty state instead of a fabricated repository tree.
   const handleExecuteCommand = () => {
     if (!currentCommand.trim()) return;
 
+    // Audit F-01 fix: the shell previously SIMULATED execution with a
+    // setTimeout that always printed "Operation completed successfully." —
+    // a fake terminal on a live route. No backend command-execution channel
+    // is wired, so the honest response is an explicit unavailability notice;
+    // execution state stays untouched (never fake 'running'/'completed').
     setShellHistory(prev => [...prev, `$ ${currentCommand}`]);
-    setExecutionState('running');
-
-    // Simulate command execution
-    setTimeout(() => {
-      const output = `Command executed: ${currentCommand}\nOperation completed successfully.`;
-      setShellHistory(prev => [...prev, output]);
-      setExecutionState('completed');
-    }, 1500);
+    setShellHistory(prev => [
+      ...prev,
+      '[unavailable] Command execution is not wired to the backend yet. This cockpit '
+        + 'displays live telemetry only (Agent Log, execution state, agent state).',
+    ]);
+    setCurrentCommand('');
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -162,19 +139,29 @@ const AgentExecutionTelemetryCockpit: React.FC<AgentExecutionTelemetryCockpitPro
             <h2 className="font-semibold text-cyan-300">File Explorer</h2>
           </div>
           <div className="flex-1 overflow-y-auto p-2 bg-gray-850">
-            <ul className="text-sm">
-              {files.map((file, index) => (
-                <li
-                  key={index}
-                  className={`py-1 px-2 hover:bg-gray-750 rounded cursor-pointer ${
-                    file.trim().endsWith('.tsx') || file.trim().endsWith('.py') ? 'text-green-400' :
-                    file.trim().endsWith('/') ? 'text-blue-400 font-medium' : 'text-gray-300'
-                  }`}
-                >
-                  {file}
-                </li>
-              ))}
-            </ul>
+            {files.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                <p className="text-sm text-gray-400 font-medium">File index unavailable</p>
+                <p className="text-xs text-gray-500 mt-2 max-w-[220px]">
+                  The workspace file-index API is not wired to this cockpit yet, so no
+                  repository tree is shown (no mock data).
+                </p>
+              </div>
+            ) : (
+              <ul className="text-sm">
+                {files.map((file, index) => (
+                  <li
+                    key={index}
+                    className={`py-1 px-2 hover:bg-gray-750 rounded cursor-pointer ${
+                      file.trim().endsWith('.tsx') || file.trim().endsWith('.py') ? 'text-green-400' :
+                      file.trim().endsWith('/') ? 'text-blue-400 font-medium' : 'text-gray-300'
+                    }`}
+                  >
+                    {file}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 
@@ -202,7 +189,7 @@ const AgentExecutionTelemetryCockpit: React.FC<AgentExecutionTelemetryCockpitPro
                   value={currentCommand}
                   onChange={(e) => setCurrentCommand(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Enter command..."
+                  placeholder="Command execution not wired yet..."
                   className="flex-1 bg-gray-800 text-white px-2 py-1 rounded border border-gray-600 focus:outline-none focus:border-cyan-500"
                 />
                 <button
