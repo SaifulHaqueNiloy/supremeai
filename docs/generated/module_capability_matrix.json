@@ -23400,6 +23400,15 @@
       "path": "scripts/git/__init__.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/git/optional_poetry.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "mcp",
@@ -24279,5 +24288,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2800
+  "source_file_count": 2801
 }
