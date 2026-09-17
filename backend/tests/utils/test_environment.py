@@ -15,12 +15,13 @@ class TestIsTestEnvironment:
         finally:
             del os.environ["TESTING"]
 
-    def test_ci_does_not_enable_test_mode(self):
-        os.environ["CI"] = "true"
-        try:
-            assert is_test_environment() is False
-        finally:
-            del os.environ["CI"]
+    def test_ci_does_not_enable_test_mode(self, monkeypatch):
+        import sys
+
+        monkeypatch.delitem(sys.modules, "pytest", raising=False)
+        monkeypatch.delenv("TESTING", raising=False)
+        monkeypatch.setenv("CI", "true")
+        assert is_test_environment() is False
 
     def test_returns_false_in_production(self):
         os.environ["ENV"] = "production"

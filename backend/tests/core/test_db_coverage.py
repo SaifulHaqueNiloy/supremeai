@@ -103,8 +103,9 @@ async def test_db_session_context(monkeypatch):
         assert session is not None
 
 
-async def test_check_db_health_unhealthy():
-    core_db.engine = None  # module global not initialised
+async def test_check_db_health_unhealthy(monkeypatch):
+    monkeypatch.setattr(core_db, "engine", None)
+    monkeypatch.setattr(core_db, "get_engine", lambda: None)
     result = await core_db.check_db_health()
     assert result["healthy"] is False
     assert "error" in result
