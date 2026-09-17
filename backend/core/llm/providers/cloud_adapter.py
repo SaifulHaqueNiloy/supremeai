@@ -137,9 +137,7 @@ class CloudProviderAdapter(ModelProvider):
                     # PLAN-001: surface Anthropic cache telemetry (0 when absent).
                     # This usage dict is forwarded to Langfuse via trace_generation,
                     # so cache-hit metrics become observable with zero new infra.
-                    "cache_read_input_tokens": getattr(
-                        response.usage, "cache_read_input_tokens", 0
-                    )
+                    "cache_read_input_tokens": getattr(response.usage, "cache_read_input_tokens", 0)
                     or 0,
                     "cache_creation_input_tokens": getattr(
                         response.usage, "cache_creation_input_tokens", 0

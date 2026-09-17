@@ -25,11 +25,7 @@ class InMemoryFallbackLimiter:
     def _sweep_expired(self, now: float) -> None:
         if len(self._hits) <= self._MAX_KEYS:
             return
-        expired = [
-            k
-            for k, ts in self._hits.items()
-            if not ts or now - ts[-1] >= self.window
-        ]
+        expired = [k for k, ts in self._hits.items() if not ts or now - ts[-1] >= self.window]
         for k in expired:
             self._hits.pop(k, None)
 

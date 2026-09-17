@@ -192,7 +192,7 @@ async def test_anthropic_stream_path_marks_prefix(adapter, monkeypatch):
 
 
 async def test_usage_extracts_cache_metrics(adapter, monkeypatch):
-    stub = _wire(adapter, monkeypatch, _fake_response(cache_read=1200, cache_creation=350))
+    _wire(adapter, monkeypatch, _fake_response(cache_read=1200, cache_creation=350))
     result = await adapter.generate(
         model=CLAUDE_MODEL, messages=[{"role": "system", "content": SYSTEM_TEXT}]
     )

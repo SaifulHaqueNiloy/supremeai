@@ -29,7 +29,14 @@ class TestContainerOrchestrator:
         fake_outputs = [
             type("R", (), {"stdout": "init ok", "stderr": ""})(),
             type("R", (), {"stdout": "apply ok", "stderr": ""})(),
-            type("R", (), {"stdout": '{"service_url": {"value": "https://real-url.a.run.app"}}', "stderr": ""})(),
+            type(
+                "R",
+                (),
+                {
+                    "stdout": '{"service_url": {"value": "https://real-url.a.run.app"}}',
+                    "stderr": "",
+                },
+            )(),
         ]
 
         def _fake_run(*args, **kwargs):
