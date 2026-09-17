@@ -32,9 +32,10 @@ export const setApiConcurrency = (concurrency: number) => {
 let cachedToken: string | null = null;
 
 // বাংলা: authStore/adminStore থেকে টোকেন সেট/ক্লিয়ার হলে এই event ফায়ার হয়,
-// যাতে global-mounted SSE hook (useServerStream, ThemeSyncProvider) — যেগুলো
-// login page-এও mount থাকে — token আসা/যাওয়ার সাথে সাথে reactively
-// connect/disconnect করতে পারে, পুরো component tree remount না হয়েও।
+// যাতে App root-এ mount থাকা ThemeSyncProvider token আসা/যাওয়ার সাথে সাথে
+// reactively connect/disconnect করতে পারে, পুরো component tree remount না হয়েও।
+// সততা নোট (honesty fix): SSE hook useServerStream এই event listen করে, কিন্তু
+// তার কোনো runtime importer নেই — বর্তমানে unmounted/dead, global-mounted নয়।
 export const AUTH_CHANGED_EVENT = 'supremeai:auth-changed';
 
 export const updateTokenCache = (token: string | null) => {
