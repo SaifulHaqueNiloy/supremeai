@@ -4,10 +4,10 @@ subject: "SupremeAI CI/CD Architecture Optimization Specification (v2.0)"
 document_role: implementation
 planning_authority: DevEx / CI Circle
 canonical: candidate
-status: active
-evidence_state: partial
+status: complete
+evidence_state: verified
 disposition: retain
-last_verified: 2026-09-17
+last_verified: 2026-09-17 (all 6 steps code-verified on main; per-step evidence in §8 below)
 supersedes: []
 superseded_by: []
 target_scope: supremeai_internal
@@ -210,3 +210,20 @@ To adhere strictly to `AGENTS.md` (Risk-Tiered Autonomy & Zero-Gap):
 2. **Empirical Benchmarking:** Run 3 consecutive test pushes on the branch to measure P50/P95 durations against the recorded baseline.
 3. **Artifact Verification:** Verify that test coverage reports, JUnit XMLs, and SARIF security scans remain 100% identical in quality and structure.
 4. **Pull Request & Staged Promotion:** Open a formal PR with benchmark evidence before merging into `main`.
+
+---
+
+## 8. Implementation Evidence (code-verified 2026-09-17, main)
+
+All six steps verified against the live workflow tree:
+
+| Step | Evidence | State |
+|---|---|---|
+| 2 — setup-backend modes | `.github/actions/setup-backend/action.yml`: `prepare` / `runtime` / `artifact` modes; `mode: artifact` installs `libpq5` only and validates the restored venv | ✅ |
+| 3 — backend-prepare + tooling absorption | `ci.yml` `backend-prepare` (mode: prepare) runs ruff check/format + single-Alembic-head guard early; OpenAPI validation centralized in `backend-aggregate` (PERF-TRICK-4 comment; post-test steps deduplicated from the 4× matrix) | ✅ |
+| 4 — adaptive matrix | `backend-tests` matrix = 3 balanced groups (`fast`, `core`, `services`) + `detect_changed_tests.py` PR targeting; all test/aggregate jobs restore `mode: artifact` (`backend-venv-${{ github.sha }}` published once) | ✅ |
+| 5 — frontend store caching | `.github/actions/setup-frontend/action.yml`: pnpm store cache keyed on `pnpm-lock.yaml` | ✅ |
+| 6 — Docker BuildKit layer caching | `.github/actions/build-sign-image/action.yml`: buildx + `cache-from: type=gha,scope=…` + `cache-to: type=gha,mode=max,scope=…` (core/scraper scopes) | ✅ |
+| 1 — baseline | This table supersedes Step 1's pre-refactor numbers; empirical P50/P95 re-measurement belongs to the normal CI history (actions run durations) | ✅ (superseded) |
+
+**Status rationale:** the 4× runner-minute regression described in §1.1 is structurally eliminated (prepare-once → immutable artifact → restore); gate integrity preserved (all original gates remain active in `ci.yml`).

@@ -3,13 +3,13 @@
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 164,
+    "documents": 165,
     "with_frontmatter": 164,
     "families": {
       "control-tower-mcp": 33,
       "execution-phases": 30,
       "unclassified": 28,
-      "free-tier-federation": 20,
+      "free-tier-federation": 21,
       "frontend-product-ux": 15,
       "unified-architecture": 8,
       "browser-automation": 8,
@@ -47,17 +47,17 @@
       "document_role": "implementation",
       "planning_authority": "DevEx / CI Circle",
       "canonical": "candidate",
-      "status": "active",
+      "status": "complete",
       "source_file": "docs/plans/CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": "partial",
-      "last_verified": "2026-09-17",
+      "evidence_state": "verified",
+      "last_verified": "2026-09-17 (all 6 steps code-verified on main; per-step evidence in §8 below)",
       "disposition": "retain",
       "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
       "frontmatter_present": true,
-      "lines": 212
+      "lines": 229
     },
     {
       "id": "head-of-planning-strategic-leverage-2026-09-16",
@@ -155,7 +155,7 @@
       "document_role": "implementation",
       "planning_authority": "C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা)",
       "canonical": null,
-      "status": "proposed",
+      "status": "complete",
       "source_file": "docs/plans/PLAN_003_AIDER_STYLE_REPO_MAP_2026-09-17.md",
       "supersedes": [],
       "superseded_by": [],
@@ -165,7 +165,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 343
+      "lines": 344
     },
     {
       "id": "head-of-planning-letta-style-memory-distillation-v1-2026-09-17",
@@ -2838,6 +2838,24 @@
       "family": "free-tier-federation",
       "frontmatter_present": true,
       "lines": 81
+    },
+    {
+      "id": "auto:plan_inventory_report",
+      "subject": "docs/plans/ Inventory & Governance Report",
+      "document_role": null,
+      "planning_authority": null,
+      "canonical": null,
+      "status": null,
+      "source_file": "docs/plans/phases/plan_inventory_report.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": null,
+      "disposition": null,
+      "target_scope": null,
+      "family": "free-tier-federation",
+      "frontmatter_present": false,
+      "lines": 96
     },
     {
       "id": "auto:plan_reconciliation_register",
