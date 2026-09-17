@@ -101,7 +101,8 @@ export function ActionCard({ rawContent, onSaveToProject, onPreview }: ActionCar
           });
           if (res.ok) {
             const data = await res.json();
-            setActionStatus(`✅ ${data.message || 'Code deployed successfully!'}`);
+            // বাংলা মন্তব্য: সার্ভার মেসেজ না দিলে কৃত্রিম "deployed successfully" দাবি নিষিদ্ধ — শুধু নিরপেক্ষ সত্য (false-assurance doctrine)
+            setActionStatus(`✅ ${data.message || 'Action completed.'}`);
           } else {
             setActionStatus('❌ Deploy failed (unauthorized or server error).');
           }
