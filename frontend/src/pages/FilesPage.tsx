@@ -6,7 +6,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, FileImage, Trash2, UploadCloud } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 import { fileService, formatBytes, type StoredFile } from '../services/fileService';
 
