@@ -71,6 +71,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 12 | **Governed Skill Ecosystem** (`backend/skills/` + `backend/core/skill_manager.py` + রুট `skills/`) | তিন প্রতিযোগী বাস্তবায়ন, সব dormant — ERR-F02-প্যাটার্ন বীজে বন্ধ করার সবচেয়ে সস্তা মুহূর্ত; runtime-pip lightweight-লঙ্ঘন সংশোধন-প্রস্তাব | ✅ **প্রকাশিত** — `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` |
 | 13 | **Security Middleware Truth** (`backend/middleware/` + `backend/core/autonoguard_engine.py`) | anti-hacking middleware টেস্ট-কভারড কিন্তু মাউন্ট-বিহীন; tier/tenant-সীমা ইন-কোড; tenant fail-open ফলব্যাক-বিহীন — সুরক্ষা-সত্য-মানচিত্র | ✅ **প্রকাশিত** — `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` |
 | 14 | **User-Facing Capability Truth** (`voice_service.py` + `stream_voice_sse.py` + `backend/p2p/`) | জাল transcript/confidence/অডিও লাইভ-মাউন্টেড SSE-চেইনে (কোড-নোটই স্বীকারকৃত); বাস্তব MultilingualTTS সহ-অস্তিত্বশীল — V5 fake-metrics মতবাদের backend-সম্প্রসারণ | ✅ **প্রকাশিত** — `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` |
+| 15 | **Security Organ Deep** (`backend/core/security/**` + `backend/core/autonoguard_engine.py`) | ৯,৫৫৫-লাইনের অঙ্গে ~১১ সক্রিয় / ২ অর্ধ-নিদ্রা / ৮ dormant; লাইভ-গেট দুটি টেস্ট-বিহীন; **নতুন চুক্তি-প্রিমিয়ার**: Part 1 = গভীর ৩য়-পক্ষ বুদ্ধিমত্তা (OWASP GenAI Top-10 2025, NeMo rails-as-config, PromptGuard-২ প্রত্যাখ্যান, Spotlighting, garak, API-deception) — ডিসেপশন-ফিডব্যাক লুপ + rails-as-data | ✅ **প্রকাশিত** — `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -94,6 +95,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 12 | 2026-09-17 | Governed Skill Ecosystem (M9) | `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; তিন-বাস্তবায়ন কনসলিডেশন প্রস্তাব) |
 | 13 | 2026-09-17 | Security Middleware Truth | `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (মাউন্ট-সিদ্ধান্ত ফাউন্ডার-গেটেড) |
 | 14 | 2026-09-17 | User-Facing Capability Truth | `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (SSE re-point + সত্য-সেমান্টিকস) |
+| 15 | 2026-09-17 | Security Organ Deep (গভীর সুরক্ষা-অঙ্গ) | `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-G টেস্ট-প্রথম; ডিসেপশন-ফিডব্যাক লুপ; rails-as-data; PromptGuard প্রত্যাখ্যান-নথি) |
 
 ---
 
