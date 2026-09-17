@@ -1,7 +1,6 @@
-"""Context ingestion services package."""
+"""Context ingestion services package.
 
-# FIX: original used 'from backend.services.ingestion.context_collector import ...'
-# which only works when CWD is the project root. Use relative import.
-from .context_collector import DeveloperContextCollector, WorkspaceSnapshot
-
-__all__ = ["DeveloperContextCollector", "WorkspaceSnapshot"]
+বাংলা: L2 orphan-spine pass (2026-09-17)-এ dormant-chain
+``context_collector`` (M3/L4.1 decision table — ARCHIVE) মোছা হয়েছে।
+প্যাকেজটি future ingestion কাজের জন্য রাখা হয়েছে; বর্তমানে কোনো export নেই।
+"""
