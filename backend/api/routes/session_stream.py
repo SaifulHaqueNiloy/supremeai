@@ -74,11 +74,19 @@ async def stream_session(
 
 _session_message_buffers: dict[str, list[dict[str, str]]] = {}
 
+# Audit B-11 fix (2026-09-17): per-session buffers were capped at 50 msgs but
+# the SESSION KEYS themselves grew without limit unless the client POSTed the
+# save endpoint. Bounded now — oldest untouched session buffers are evicted.
+_MAX_SESSION_BUFFERS = 500
+
 
 def buffer_session_message(session_id: str, role: str, content: str) -> None:
     """Accumulate messages for a session (kept in memory, cleared on save)."""
     if session_id not in _session_message_buffers:
         _session_message_buffers[session_id] = []
+        while len(_session_message_buffers) > _MAX_SESSION_BUFFERS:
+            oldest_session = next(iter(_session_message_buffers))
+            _session_message_buffers.pop(oldest_session, None)
     _session_message_buffers[session_id].append({"role": role, "content": content})
     if len(_session_message_buffers[session_id]) > 50:
         _session_message_buffers[session_id] = _session_message_buffers[session_id][-50:]

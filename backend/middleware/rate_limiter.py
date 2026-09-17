@@ -11,10 +11,27 @@ from core.logging_config import logger
 class InMemoryFallbackLimiter:
     """Sliding-window rate limiter scoped per API key prefix as a fallback when Redis is down."""
 
+    # Audit B-11 fix (2026-09-17): keys of clients that stop calling were
+    # never deleted (only the CURRENT key got pruned) — slow growth during
+    # Redis outages. A bounded sweep now evicts expired keys once the map
+    # grows past the cap.
+    _MAX_KEYS = 1000
+
     def __init__(self, burst: int = 20, window: float = 60.0) -> None:
         self.burst = burst
         self.window = window
         self._hits: dict[str, list[float]] = {}
+
+    def _sweep_expired(self, now: float) -> None:
+        if len(self._hits) <= self._MAX_KEYS:
+            return
+        expired = [
+            k
+            for k, ts in self._hits.items()
+            if not ts or now - ts[-1] >= self.window
+        ]
+        for k in expired:
+            self._hits.pop(k, None)
 
     def _cleanup(self, key: str, now: float) -> None:
         # বাংলা মন্তব্ব্য: মেমোরি লিক এড়াতে যদি কোনো কী-তে নতুন কোনো হিট না থাকে, তবে ডিকশনারি থেকে কী-টি ডিলিট করা হচ্ছে।
@@ -26,6 +43,7 @@ class InMemoryFallbackLimiter:
     def is_allowed(self, key: str, limit: int = 6) -> bool:
         now = time.time()
         self._cleanup(key, now)
+        self._sweep_expired(now)
         hits = self._hits.setdefault(key, [])
         if len(hits) >= limit:
             return False

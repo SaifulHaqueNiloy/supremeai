@@ -26,6 +26,17 @@ router = APIRouter(prefix="/api/v1/pr-review", tags=["pr-review"])
 # বাংলা মন্তব্য: ইন-মেমরি রিভিউ স্ট্যাটাস স্টোর (পরবর্তীতে DB-তে পারসিস্ট করা যাবে)।
 _review_status: dict[str, dict[str, Any]] = {}
 
+# Audit B-11 fix (2026-09-17): bounded — prune oldest entries by timestamp.
+_MAX_REVIEW_STATUS_ENTRIES = 500
+
+
+def _prune_review_status() -> None:
+    if len(_review_status) <= _MAX_REVIEW_STATUS_ENTRIES:
+        return
+    by_age = sorted(_review_status.items(), key=lambda kv: kv[1].get("timestamp", 0))
+    for key, _ in by_age[: len(_review_status) - _MAX_REVIEW_STATUS_ENTRIES]:
+        _review_status.pop(key, None)
+
 
 class WebhookPayload(BaseModel):
     action: str | None = None
@@ -90,6 +101,7 @@ async def github_webhook(request: Request):
             "comments_count": len(result.get("comments", [])),
             "timestamp": time.time(),
         }
+        _prune_review_status()
         return {"status": "reviewed", "pr": status_key, "result": result}
     except Exception as e:
         logger.error(f"Webhook review failed: {e}")

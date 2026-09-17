@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import math
 import os
+from collections import OrderedDict
 
 from core.config import settings
 from core.logging_config import logger
@@ -23,9 +24,23 @@ _REMOTE_MODEL = settings.embedding_model
 _REMOTE_DIM = 384
 
 _encoder = None
-_embedding_cache: dict[str, list[float]] = {}
+
+# Audit B-09 fix (2026-09-17): the embedding cache used to be an unbounded
+# module-level dict (one entry per unique text, no eviction) — an OOM leak
+# vector on the 512MB Render container. It is now a bounded LRU.
+_EMBEDDING_CACHE_MAX = 2048
+_embedding_cache: OrderedDict[str, list[float]] = OrderedDict()
 _cache_hits = 0
 _cache_misses = 0
+
+
+def _cache_put(cache_key: str, vec: list[float]) -> list[float]:
+    """Store an embedding in the bounded LRU cache (audit B-09)."""
+    _embedding_cache[cache_key] = vec
+    _embedding_cache.move_to_end(cache_key)
+    while len(_embedding_cache) > _EMBEDDING_CACHE_MAX:
+        _embedding_cache.popitem(last=False)
+    return vec
 
 
 def get_cache_stats() -> dict[str, int]:
@@ -123,6 +138,7 @@ def embed_for_pgvector(text: str, pg_dim: int = _PG_DIM) -> list[float]:
     cache_key = f"{text}:{_PG_DIM}"
     if cache_key in _embedding_cache:
         _cache_hits += 1
+        _embedding_cache.move_to_end(cache_key)
         return _embedding_cache[cache_key].copy()
 
     _cache_misses += 1
@@ -130,7 +146,7 @@ def embed_for_pgvector(text: str, pg_dim: int = _PG_DIM) -> list[float]:
     # Zero-cost local path first.
     local_vec = local_embed(text)
     if local_vec is not None:
-        _embedding_cache[cache_key] = local_vec
+        _cache_put(cache_key, local_vec)
         return local_vec.copy()
 
     # Optional remote fallback. text-embedding-3-small supports reduced dimensions.
@@ -142,7 +158,7 @@ def embed_for_pgvector(text: str, pg_dim: int = _PG_DIM) -> list[float]:
         if len(vec) == _PG_DIM:
             if len(_embedding_cache) >= 5000:
                 _embedding_cache.clear()
-            _embedding_cache[cache_key] = vec
+            _cache_put(cache_key, vec)
             return vec.copy()
         logger.warning(f"[embeddings] remote provider returned {len(vec)} dims; expected {_PG_DIM}")
     except Exception as exc:
@@ -152,7 +168,7 @@ def embed_for_pgvector(text: str, pg_dim: int = _PG_DIM) -> list[float]:
     vec = hash_vectorize(text, size=_PG_DIM)
     if len(_embedding_cache) >= 5000:
         _embedding_cache.clear()
-    _embedding_cache[cache_key] = vec
+    _cache_put(cache_key, vec)
     return vec.copy()
 
 
