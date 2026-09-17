@@ -22456,7 +22456,9 @@
       "path": "scripts/ci/migration_safety_diff.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"
