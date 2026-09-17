@@ -159,13 +159,13 @@ P-G: প্রথম-ফ্লিট সক্রিয়করণ   → top-10
 
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
-- **P-A:** নতুন পাতলা tool-calling-লুপ মডিউল (core-এ) — schema (SUPREME_TOOLS-সুসংগত) → policy-gate (mcp_policy পুনঃব্যবহার) → executor (DockerSandbox/DB-agent) → ফল-প্রম্পট; ধাপ-সীমা (≤N) + প্রতি-সেশন টোকেন-বাজেট; flag `SUPREMEAI_AGENT_TOOLS=true` (default false); chat-orchestrator-এ হুক (M02 সীমানা অটুট — kernel-দরজা ভবিষ্যৎ)।
+- **P-A:** নতুন পাতলা tool-calling-লুপ মডিউল (core-এ) — schema (SUPREME_TOOLS-সুসংগত) → policy-gate (mcp_policy পুনঃব্যবহার) → executor (DockerSandbox/DB-agent) → ফল-প্রম্পট; ধাপ-সীমা ও প্রতি-সেশন টোকেন-বাজেট (**উভয়ই env/config-পঠিত — কোড-কনস্ট্যান্ট নয়**; zero-hardcode সংশোধন); flag `SUPREMEAI_AGENT_TOOLS=true` (default false); chat-orchestrator-এ হুক (M02 সীমানা অটুট — kernel-দরজা ভবিষ্যৎ)।
 - **P-B:** tools_registry-catalog-এ R-tier কলাম-মান (বিদ্যমান টেবিল); capability_activation-tenant-flags সাথে যুদ্ধ; প্রতি টুলের এন্ট্রি = {tier, tenant-default, audit}; নথি: সক্রিয়করণ-রানবুক।
-- **P-C:** mcp.json-এ ৩ server-নিবন্ধন (env-উপস্থিতি-শর্তায়িত); TOOL_PROVIDER_ACTION-এ এন্ট্রি; mcp_client.discover_tools-ফলব্যাক → বাস্তব discovery; runbook: key-provisioning।
-- **P-D:** audit_module_wiring.py — dotted-string-প্যাটার্ন যোগ + AST/entrypoint-reachability; CI-তে রিজেন-যাচাই (warn→gate ধাপে); MODULES_LIST রিজেন + পরিবর্তন-নথি।
+- **P-C:** mcp.json-এ ৩ server-নিবন্ধন (env-উপস্থিতি-শর্তায়িত) — **দর্শন-সংগতি শ্রেণিবিভাগ (এই পাস):** ide_trio = স্থানীয়/zero-cost → সাধারণ নিবন্ধনযোগ্য; neon (NEON_API_KEY) ও observability (SENTRY) = **তৃতীয়-পক্ষ key-নির্ভর পরিষেবা → নিবন্ধন-এন্ট্রি লিখিত হলেও default-off + ফাউন্ডার-সিদ্ধান্ত-গেটেড** (zero-cost দর্শন: key-অনুপস্থিতিতে আচরণ অপরিবর্তিত; কোনো নতুন খরচ-পথ নয়); mcp_client.discover_tools-ফলব্যাক → বাস্তব discovery (**ফলব্যাক-সংশোধন key-নির্ভর server ছাড়াই সম্পূর্ণ কাজ করবে**); runbook: key-provisioning (Part 3-5 অনুযায়ী সিদ্ধান্ত ফাউন্ডারের)।
+- **P-D:** audit_module_wiring.py — dotted-string-প্যাটার্ন যোগ + AST/entrypoint-reachability; CI-তে রিজেন-যাচাই (warn→gate ধাপে — **gate-পর্বে প্রবেশ কেবল শূন্য-false-positive drift-প্রমাণের পরে**, lint_plans-র Stage-2 চুক্তি-অনুরূপ — CI-বিচ্ছিন্নতা-সুরক্ষা); MODULES_LIST রিজেন + পরিবর্তন-নথি।
 - **P-E:** ৬ router-এর প্রতিটির সিদ্ধান্ত-নথি (FE-consumer প্রার্থী হলে Module 10-র সাথে সমন্বয়; নয়তো honest demount — routers.py-থেকে, deprecation-নোটসহ)।
 - **P-F:** deletion-candidate প্রত্যেকের zero-importer-প্রমাণ (P-D-র সংশোধিত audit দিয়েই) → অপসারণ + git-history-নোট; বাংলা-ধ্বংসকারী bandwidth_optimizer অগ্রাধিকার।
-- **P-G:** flag-gated জাগরণ — cot_reasoner (deterministic-reasoning tool হিসেবে P-A-লুপে), headless_agent_registry+parallel_executor (admin-route + M06 run_scope), mcp_observability (self-healing-উৎস) — প্রতিটি আলাদা PR, আলাদা রোলব্যাক।
+- **P-G:** flag-gated জাগরণ — cot_reasoner (deterministic-reasoning tool হিসেবে P-A-লুপে), headless_agent_registry+parallel_executor (admin-route + M06 run_scope), mcp_observability (self-healing-উৎস — **দর্শন-সংগতি সংশোধন: revival key-বিহীন-প্রথম — উৎস স্থানীয় error_event_bus/telemetry, SENTRY-সংযোগ optional env-শর্তায়িত; key-অনুপস্থিতিতেও সম্পূর্ণ কার্যকর**) — প্রতিটি আলাদা PR, আলাদা রোলব্যাক।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
@@ -227,6 +227,21 @@ P-G: প্রথম-ফ্লিট সক্রিয়করণ   → top-10
 - **Gate 5 (live):** প্রথম বাস্তব agent-tool-call পর্যবেক্ষণ (audit-log-প্রমাণ); admin-এ R-tier প্রবাহ; MODULES_LIST-রিজেন প্রমাণ; deletion-নথি-পর্যালোচনা।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; লুপ/নিবন্ধন flag-gated; deletion-আর্কাইভ git-history-পুনরুদ্ধারযোগ্য।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ⚠️ ছিল → ✅ **সংশোধিত** | P-C-র ৩ MCP server-এ neon/SENTRY key-নির্ভর তৃতীয়-পক্ষ পরিষেবা — এখন শ্রেণিবিভাগ: ide_trio সাধারণ, key-নির্ভররা default-off ফাউন্ডার-গেটেড; P-G-র mcp_observability key-বিহীন-প্রথম (স্থানীয় error_event_bus উৎস); আউট-অব-স্কোপ-5 (key-ক্রয় ফাউন্ডারের) অটুট |
+| Lightweight | ✅ সংগত | পাতলা লুপ + বিদ্যমান DockerSandbox/mcp_policy পুনঃব্যবহার; নতুন sandbox/টুল-লেখা নয় |
+| Fast & smooth | ✅ সংগত | flag default false → হট-পথ অপরিবর্তিত; P-D CI-gate শূন্য-false-positive-পরে (CI ভাঙবে না) |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-A-র ধাপ-সীমা/টোকেন-বাজেট env/config-পঠিত (§২.৪ সংশোধিত) |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `backend/tools/agent_tools.py` L212 SUPREME_TOOLS অটুট; `backend/tools/mcp/`-তে mcp_ide_trio.py ইত্যাদি বিদ্যমান (P-C প্রাসঙ্গিক)।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
