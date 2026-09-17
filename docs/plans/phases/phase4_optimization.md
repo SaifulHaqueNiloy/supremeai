@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-phase4_optimization
+subject: "Phase 4: Optimization"
+document_role: roadmap
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Phase 4: Optimization

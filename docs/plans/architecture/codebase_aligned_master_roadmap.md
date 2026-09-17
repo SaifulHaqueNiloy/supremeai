@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:codebase_aligned_master_roadmap
+subject: SupremeAI — Current Codebase-Aligned Master Roadmap
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI — Current Codebase-Aligned Master Roadmap

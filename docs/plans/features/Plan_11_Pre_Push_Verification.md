@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_11_Pre_Push_Verification
+subject: "Plan 11: Pre-Push & Pre-Commit Verification Guardrails"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 11: Pre-Push & Pre-Commit Verification Guardrails

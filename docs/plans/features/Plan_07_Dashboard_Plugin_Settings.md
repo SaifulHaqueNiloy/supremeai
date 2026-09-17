@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_07_Dashboard_Plugin_Settings
+subject: "Plan 7: Unified Dashboard & Dynamic Plugin/MCP Registry"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 7: Unified Dashboard & Dynamic Plugin/MCP Registry

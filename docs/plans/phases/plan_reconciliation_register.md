@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:plan_reconciliation_register
+subject: Plan Reconciliation Register
+document_role: roadmap
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan Reconciliation Register

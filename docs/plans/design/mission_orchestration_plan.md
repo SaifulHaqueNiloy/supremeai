@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-mission_orchestration_plan
+subject: "Implementation Plan: Strategic Mission Orchestration & UI Standardization"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Implementation Plan: Strategic Mission Orchestration & UI Standardization

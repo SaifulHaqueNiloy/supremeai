@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:comprehensive_172_files_reconciliation_master_plan
+subject: 🌐 SupremeAI — মহাপরিকল্পনা একত্রীকরণ ও সামগ্রিক অমীমাংসিত অডিট ও পূর্ণাঙ্গ বাস্তবায়ন পরিকল্পনা (Master Blueprint & Technical Implementation Plan)
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 🌐 SupremeAI — মহাপরিকল্পনা একত্রীকরণ ও সামগ্রিক অমীমাংসিত অডিট ও পূর্ণাঙ্গ বাস্তবায়ন পরিকল্পনা (Master Blueprint & Technical Implementation Plan)

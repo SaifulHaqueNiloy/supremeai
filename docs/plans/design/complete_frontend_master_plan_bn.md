@@ -1,5 +1,12 @@
 ---
 target_scope: customer_facing
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:complete_frontend_master_plan_bn
+subject: SupremeAI সম্পূর্ণ Frontend পরিকল্পনা
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI সম্পূর্ণ Frontend পরিকল্পনা

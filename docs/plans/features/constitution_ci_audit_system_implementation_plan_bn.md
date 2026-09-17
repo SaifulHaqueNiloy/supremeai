@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-constitution_ci_audit_system_implementation_plan_bn
+subject: "চূড়ান্ত বাস্তবায়ন পরিকল্পনা: সুপ্রীম এআই আর্কিটেকচার ও ইঞ্জিনিয়ারিং সংবিধান সিআই অডিট সিস্টেম (SupremeAI Constitution CI Audit Engine)"
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # চূড়ান্ত বাস্তবায়ন পরিকল্পনা: সুপ্রীম এআই আর্কিটেকচার ও ইঞ্জিনিয়ারিং সংবিধান সিআই অডিট সিস্টেম (SupremeAI Constitution CI Audit Engine)

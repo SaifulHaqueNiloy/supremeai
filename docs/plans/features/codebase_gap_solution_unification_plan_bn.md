@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:codebase_gap_solution_unification_plan_bn
+subject: সুপ্রিম এআই কোডবেস একত্রীকরণ পরিকল্পনা
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # সুপ্রিম এআই কোডবেস একত্রীকরণ পরিকল্পনা

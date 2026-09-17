@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_04_Intent_Analysis_Confirmation
+subject: "Plan 4: Intent Analysis & Human-in-the-Loop (HITL) Governance"
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 4: Intent Analysis & Human-in-the-Loop (HITL) Governance

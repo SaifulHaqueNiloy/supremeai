@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_03_Continuous_Learning
+subject: "Plan 3: Continuous Learning & Long-Term Memory (RAG + Episodic Graph)"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 3: Continuous Learning & Long-Term Memory (RAG + Episodic Graph)

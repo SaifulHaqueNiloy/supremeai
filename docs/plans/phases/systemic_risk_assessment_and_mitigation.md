@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:systemic_risk_assessment_and_mitigation
+subject: Risk Assessment
+document_role: roadmap
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Risk Assessment

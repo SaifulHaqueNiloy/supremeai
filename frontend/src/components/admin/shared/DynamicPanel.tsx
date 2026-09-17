@@ -48,10 +48,13 @@ export const DynamicPanel = () => {
               <span className="text-xs font-mono font-bold uppercase tracking-widest">System Health</span>
             </div>
             <ul className="list-disc pl-4 space-y-2 text-emerald-300 font-mono text-xs">
-              <li>API Latency: {metrics?.latency_p50_ms || 42}ms (p50)</li>
-              <li>Error Rate: {metrics?.error_rate || 0}%</li>
-              <li>RPS: {metrics?.requests_per_second || 12}</li>
-              <li>Active Providers: {metrics?.active_providers?.join(', ') || 'ollama'}</li>
+              {/* বাংলা: নীতি — ভুয়া ডিফল্ট নিষিদ্ধ (zero-hardcoded)। মেট্রিক না থাকলে
+                  বানোয়াট 42ms/12RPS/'ollama' নয়, স্পষ্ট '—' (ডেটা অনুপস্থিত) দেখাই।
+                  প্রকৃত মান থাকলে সেটিই রেন্ডার হয় (dynamic-first)। */}
+              <li>API Latency: {metrics?.latency_p50_ms != null ? `${metrics.latency_p50_ms}ms` : '—'} (p50)</li>
+              <li>Error Rate: {metrics?.error_rate != null ? `${metrics.error_rate}%` : '—'}</li>
+              <li>RPS: {metrics?.requests_per_second != null ? metrics.requests_per_second : '—'}</li>
+              <li>Active Providers: {metrics?.active_providers?.length ? metrics.active_providers.join(', ') : '—'}</li>
               {health && health.gcp && <li>GCP Region: {health.gcp.region} - {health.gcp.status}</li>}
             </ul>
           </div>

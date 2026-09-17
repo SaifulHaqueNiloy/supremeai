@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:kilo_ai_integration_backend_refactoring_plan
+subject: Kilo AI Integration and Backend Refactoring Plan
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Kilo AI Integration and Backend Refactoring Plan

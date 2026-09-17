@@ -60,7 +60,9 @@ async def require_admin_token(
                 # বাংলা: অ্যাডমিন নীতি fail-closed — যাচাই নিজেই ভাঙলে অনুমতি নয়,
                 # loud error + রিজেক্ট (নীরব fail-open নয়)।
                 logger.error(f"Admin revocation check FAILED (fail-closed reject) jti={jti}: {exc}")
-                raise HTTPException(status_code=401, detail="Token revocation check failed.") from exc
+                raise HTTPException(
+                    status_code=401, detail="Token revocation check failed."
+                ) from exc
 
         return decoded
     except HTTPException:

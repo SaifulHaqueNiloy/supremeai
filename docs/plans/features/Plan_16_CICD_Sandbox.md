@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_16_CICD_Sandbox
+subject: "Plan 16: Automated CI/CD Sandbox & Pre-Merge Gateways"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 16: Automated CI/CD Sandbox & Pre-Merge Gateways

@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:comprehensive_capabilities_and_lightweight_review
+subject: SupremeAI Plan Analysis — Deep Review
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 ## SupremeAI প্রোজেক্টের comprehensive রিভিউ — পাওয়রফুল / লাইটওয়েট / অন্যান্য ইমপ্রুভমেন্ট

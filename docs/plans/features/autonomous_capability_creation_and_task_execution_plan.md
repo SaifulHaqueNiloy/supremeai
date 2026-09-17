@@ -1,5 +1,12 @@
 ---
 target_scope: customer_facing
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:autonomous_capability_creation_and_task_execution_plan
+subject: SupremeAI — Autonomous Capability Creation & User Task Execution Master Plan
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI — Autonomous Capability Creation & User Task Execution Master Plan

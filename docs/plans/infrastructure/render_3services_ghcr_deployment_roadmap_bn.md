@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:render_3services_ghcr_deployment_roadmap_bn
+subject: SupremeAI — Current Codebase → 3 Render Services Deployment Roadmap
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI — Current Codebase → 3 Render Services Deployment Roadmap

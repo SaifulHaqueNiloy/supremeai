@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:dynamic_ai_architecture_v5_zero_downtime
+subject: 🔄 SupremeAI Dynamic AI Architecture v5.0
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 🔄 SupremeAI Dynamic AI Architecture v5.0

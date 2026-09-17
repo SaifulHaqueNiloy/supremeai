@@ -1,5 +1,12 @@
 ---
 target_scope: customer_facing
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:supremeai_2_product_ui_ux_completeness_master_plan
+subject: SUPREMEAI 2.0 — PRODUCT UI/UX + DASHBOARD COMPLETENESS MASTER PLAN
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SUPREMEAI 2.0 — PRODUCT UI/UX + DASHBOARD COMPLETENESS MASTER PLAN
