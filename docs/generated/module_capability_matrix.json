@@ -22150,6 +22150,15 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/ci/build_status_proof.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/ci/build_test_failure_trend.py"
     },
     {
@@ -22169,6 +22178,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/check_actions_pinning.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/check_any_budget.py"
     },
     {
       "capability_signals": [
@@ -22237,6 +22255,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/check_hardcoded_deployment_config.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/check_i18n_keys.py"
     },
     {
       "capability_signals": [],
@@ -22373,6 +22400,15 @@
       "path": "scripts/ci/generate_audit_summary.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/generate_changelog.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "memory"
@@ -22440,6 +22476,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/infisical_loader.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/knip_summarize.py"
     },
     {
       "capability_signals": [],
@@ -24234,5 +24279,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2795
+  "source_file_count": 2800
 }
