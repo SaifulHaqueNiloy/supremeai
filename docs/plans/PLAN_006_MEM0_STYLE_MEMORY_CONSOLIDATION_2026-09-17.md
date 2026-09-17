@@ -7,7 +7,7 @@ owner_circle: Memory Circle (backend/services/memory_service.py — CascadeMemor
 target_scope: supremeai_internal
 scope: "ONE complete plan, grounded in actual repo code on fresh main 4575104f (2026-09-17) — founder-implemented M3 canonical ai_memory store এবং PLAN-004 distilled write path-এর উপর একটি ছোট, deterministic, LLM-free write-lifecycle সংযোজন (similarity-gated dedup + update-on-conflict + importance wiring); PLAN_LIFECYCLE_POLICY.md (2026-09-17, target_scope taxonomy সহ) কঠোরভাবে অনুসরণ; Gates 0–6; quantitative claims labeled; explicit out-of-scope"
 depends_on:
-  - backend/services/memory_service.py (CascadeMemoryService — canonical M3 store service: store_memory L288–340 blind INSERT, _embed L208, _cosine_similarity L478, query_context L486, _query_via_pgvector_rpc L149, _MEMORY_ROW_CAP L52)
+  - backend/services/memory_service.py (CascadeMemoryService — canonical M3 store service: store_memory L287–339 blind INSERT, _embed L208, _cosine_similarity L477, query_context L485, _query_via_pgvector_rpc L149, _MEMORY_ROW_CAP L52)
   - backend/core/unified_memory.py (founder-implemented PLAN-004 distillation — store_long_term_memory_distilled L189, kill-switch SUPREMEAI_MEMORY_DISTILL L38–44) — এই প্ল্যানের upstream writer
   - backend/core/ai_memory/vector_store.py (L29 _coerce_uuid uuid5 deterministic dedup, L60 upsert_batch) — AutoRAG write path-এ বিদ্যমান upsert precedent
   - backend/core/memory/auto_rag_injector.py (TOP_K=5 L38, MAX_CHARS_PER_MEMORY=400 L39, MIN_RELEVANCE_SCORE=0.55 L41) — downstream recall consumer
@@ -24,10 +24,10 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false  # proposed candidate — tested code + contracts remain reality; execution only after explicit founder approval per Gate 2; single-plan execution discipline অনুসারে অনুমোদনের পর এটিই হবে একমাত্র active plan
-last_verified: "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L288–340 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L478, query_context L486, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds)"
+last_verified: "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed)"
 code_evidence:
-  - backend/services/memory_service.py L288–340 — store_memory(): pg path (L310–321) blind INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — একই summary আবার এলেও নতুন row; কোনো similarity probe নেই, কোনো UPDATE branch নেই, content/importance_score/updated_at কোনোটিই লেখা হয় না
-  - backend/services/memory_service.py L208 (_embed) + L478 (_cosine_similarity) + L486 (query_context) — dedup probe-এর প্রয়োজনীয় সব মেশিনারি এই একই ক্লাসে বিদ্যমান — নতুন কোনো dependency বা service লাগবে না
+  - backend/services/memory_service.py L287–339 — store_memory(): pg path (L309–320) blind INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — একই summary আবার এলেও নতুন row; কোনো similarity probe নেই, কোনো UPDATE branch নেই, content/importance_score/updated_at কোনোটিই লেখা হয় না
+  - backend/services/memory_service.py L208 (_embed) + L477 (_cosine_similarity) + L485 (query_context) — dedup probe-এর প্রয়োজনীয় সব মেশিনারি এই একই ক্লাসে বিদ্যমান — নতুন কোনো dependency বা service লাগবে না
   - backend/services/memory_service.py L52 — _MEMORY_ROW_CAP = 2000 + P0 fix comment (in-Python cosine ranking cap) — capped candidate-set প্যাটার্ন এই ফাইলেই প্রমাণিত; dedup probe একই নীতিতে capped হবে
   - backend/services/memory_service.py L149–188 — _query_via_pgvector_rpc (match_ai_memories RPC, similarity AS score) — scalable probe path প্রস্তুত; L159-এ নিজস্ব কমেন্টই স্বীকার করে "score-এর উপর কোনো থ্রেশহোল্ড ছিল না" — গ্যাপটি কোডে self-documented
   - backend/core/ai_memory/vector_store.py L29 (_coerce_uuid — uuid5 deterministic dedup) + L60 (upsert_batch) — একই রিপোর অন্য write path-এ upsert-dedupe semantics ইতিমধ্যে accepted pattern (Phase C fix, AI_MEMORY_PHASE_C_EXECUTION_EVIDENCE.md L37/L44) — অর্থাৎ দুই write path-এর row-identity semantics আজ inconsistent
@@ -68,7 +68,7 @@ plan_lifecycle: "living — proposed candidate under strengthened PLAN_LIFECYCLE
 
 ## বাংলা সারসংক্ষেপ
 
-SupremeAI-র স্থায়ী মেমোরি (Eternal Brain) এখন তিনটি ধাপ পেরিয়েছে: founder M3-এ canonical store হিসেবে Supabase `ai_memory` (vector 384) ঠিক করেছেন, আর PLAN-004 write-time distillation বাস্তবায়িত হয়েছে (4575104f) — অর্থাৎ মেমোরি **লেখার মান** এখন ভালো। কিন্তু মেমোরি **লেখার পরিচয় (identity)** আজও অনিয়ন্ত্রিত: `CascadeMemoryService.store_memory()` (memory_service.py L288–340) প্রতিটি store-কে অন্ধ INSERT করে — একই fact দশবার এলে দশটি আলাদা row, কোনো similarity probe নেই, কোনো UPDATE branch নেই। ফলে (১) সময়ের সাথে ai_memory অসীমভাবে স্ফীত হয়, (২) AutoRAGInjector-এর মাত্র ৫টি recall-স্লট (TOP_K=5) near-duplicate দিয়ে ভরে যায় — M2 Context Engine-এর কঠোর budget discipline-এর ঠিক বিপরীতে, (৩) canonical schema-র `importance_score` ও `updated_at` columns — যেগুলো এই কাজের জন্যই তৈরি — মূল write path কোনোদিন লেখেই না (dead columns)।
+SupremeAI-র স্থায়ী মেমোরি (Eternal Brain) এখন তিনটি ধাপ পেরিয়েছে: founder M3-এ canonical store হিসেবে Supabase `ai_memory` (vector 384) ঠিক করেছেন, আর PLAN-004 write-time distillation বাস্তবায়িত হয়েছে (4575104f) — অর্থাৎ মেমোরি **লেখার মান** এখন ভালো। কিন্তু মেমোরি **লেখার পরিচয় (identity)** আজও অনিয়ন্ত্রিত: `CascadeMemoryService.store_memory()` (memory_service.py L287–339) প্রতিটি store-কে অন্ধ INSERT করে — একই fact দশবার এলে দশটি আলাদা row, কোনো similarity probe নেই, কোনো UPDATE branch নেই। ফলে (১) সময়ের সাথে ai_memory অসীমভাবে স্ফীত হয়, (২) AutoRAGInjector-এর মাত্র ৫টি recall-স্লট (TOP_K=5) near-duplicate দিয়ে ভরে যায় — M2 Context Engine-এর কঠোর budget discipline-এর ঠিক বিপরীতে, (৩) canonical schema-র `importance_score` ও `updated_at` columns — যেগুলো এই কাজের জন্যই তৈরি — মূল write path কোনোদিন লেখেই না (dead columns)।
 
 প্রতিযোগীরা এই সমস্যাটি সমাধান করেছে: **mem0** প্রতিটি `add()` কলে deduplication ও conflict resolution চালায়; **ChatGPT** saved memories-কে deduplicated, updatable সেট হিসেবে রাখে; **Letta/MemGPT**-এর tiered memory-র পুরো প্রেমিসই হলো archival যেন unbounded duplicate-এ ভরে না যায়। এই প্ল্যান সেই প্যাটার্নের **deterministic, LLM-free, right-sized** ভার্সন: store-এর ঠিক আগে user-scoped top-5 similarity probe (একই ফাইলের বিদ্যমান `_embed` + `_cosine_similarity` + pgvector RPC দিয়ে), threshold-এর উপরে মিললে UPDATE (importance bump সহ), না মিললে INSERT — সবকিছু env kill-switch (SUPREMEAI_MEMORY_DEDUP) ও graceful fallback সহ। এতে নতুন dependency নেই, infra নেই, LLM-call নেই, schema migration নেই — শুধু বিদ্যমান মেশিনারির সঠিক ব্যবহার।
 
@@ -100,7 +100,7 @@ Constitution #11-এর পূর্ণতা: **PLAN_002 = in-session compactio
 
 | প্রতিযোগী | যা করে | SupremeAI আজ (4575104f-verified) | গ্যাপ |
 |---|---|---|---|
-| mem0 | প্রতিটি add()-এ dedup + conflict resolution | `store_memory` blind INSERT (L310–321) | ✋ **এই প্ল্যান** |
+| mem0 | প্রতিটি add()-এ dedup + conflict resolution | `store_memory` blind INSERT (L309–320) | ✋ **এই প্ল্যান** |
 | ChatGPT | updatable, deduplicated memory সেট | blind INSERT; dead importance/updated_at columns | ✋ **এই প্ল্যান** |
 | Letta/MemGPT | tiered memory + explicit write tools | canonical store একমাত্র (M3) + distillation (PLAN-004) | আংশিক — row-lifecycle নেই |
 | Claude Code | একক consolidated MEMORY.md | ভিন্ন মডেল (file-based) | প্রযোজ্য নয় |
@@ -123,7 +123,7 @@ Constitution #11-এর পূর্ণতা: **PLAN_002 = in-session compactio
 
 **Defect register cross-check:** ERR-F01–F04 ও full-recheck F/B আইটেমগুলোতে row-level memory dedup/lifecycle-এর কোনো বিদ্যমান বা পরিকল্পিত আইটেম নেই (grep-verified 2026-09-17) — subject সম্পূর্ণ unclaimed।
 
-**কি আছে / কি নাই-এর সংক্ষিপ্ত প্রমাণ:** বিস্তারিত নিচে §২.১/§২.২-তে; সারমর্ম: probe-এর সব মেশিনারি (`_embed` L208, `_cosine_similarity` L478, pgvector RPC L149, capped-scan প্যাটার্ন L52) একই ক্লাসে আছে, কিন্তু `store_memory` সেগুলো লেখার সময় ব্যবহারই করে না — এবং একই রিপোর অন্য write path (`vector_store.py` uuid5 upsert) প্রমাণ করে upsert semantics এই কোডবেসে already-accepted pattern।
+**কি আছে / কি নাই-এর সংক্ষিপ্ত প্রমাণ:** বিস্তারিত নিচে §২.১/§২.২-তে; সারমর্ম: probe-এর সব মেশিনারি (`_embed` L208, `_cosine_similarity` L477, pgvector RPC L149, capped-scan প্যাটার্ন L52) একই ক্লাসে আছে, কিন্তু `store_memory` সেগুলো লেখার সময় ব্যবহারই করে না — এবং একই রিপোর অন্য write path (`vector_store.py` uuid5 upsert) প্রমাণ করে upsert semantics এই কোডবেসে already-accepted pattern।
 
 ---
 
@@ -132,17 +132,17 @@ Constitution #11-এর পূর্ণতা: **PLAN_002 = in-session compactio
 ### ২.১ কি আছে (code-verified, fresh main 4575104f)
 
 1. **Canonical store + tri-path service:** `CascadeMemoryService` (memory_service.py) — pg (`_use_pg`), SQLite fallback, bounded in-process degraded buffer (P0) — তিন path-ই `store_memory`-তে গাঁথা।
-2. **Probe-এর সম্পূর্ণ মেশিনারি একই ক্লাসে:** `_embed` (L208), `_cosine_similarity` (L478), `query_context`-এর cosine ranking (L486+), pgvector RPC `_query_via_pgvector_rpc` (L149–188, `match_ai_memories`, `similarity AS score`)।
+2. **Probe-এর সম্পূর্ণ মেশিনারি একই ক্লাসে:** `_embed` (L208), `_cosine_similarity` (L477), `query_context`-এর cosine ranking (L485+), pgvector RPC `_query_via_pgvector_rpc` (L149–188, `match_ai_memories`, `similarity AS score`)।
 3. **Capped-scan প্যাটার্ন প্রমাণিত:** `_MEMORY_ROW_CAP = 2000` (L52) — P0 fix হিসেবেই in-Python scan cap করার নীতি এই ফাইলে গৃহীত।
 4. **Upsert precedent এই রিপোতেই:** `core/ai_memory/vector_store.py` `_coerce_uuid` (L29, uuid5 deterministic dedup) + `upsert_batch` (L60) — AutoRAG path Phase C fix-এ upsert-dedupe semantics প্রতিষ্ঠিত (AI_MEMORY_PHASE_C_EXECUTION_EVIDENCE.md L37/L44)।
 5. **Kill-switch প্যাটার্ন প্রতিষ্ঠিত:** PLAN-004-এর `SUPREMEAI_MEMORY_DISTILL` (unified_memory.py L38–44) — env-gated graceful fallback-এর founder-approved নমুনা।
 6. **Canonical schema ready:** `importance_score`, `updated_at`, `content` columns আছে (AI_MEMORY_SCHEMA_AUDIT.md L232; Alembic single-head contract) — লেখার অপেক্ষায়।
-7. **Recall consumer সংজ্ঞায়িত:** AutoRAGInjector — TOP_K=5, MIN_RELEVANCE_SCORE=0.55, MAX_CHARS_PER_MEMORY=400 (L38–44); `query_context` score-desc sort (L486+)।
+7. **Recall consumer সংজ্ঞায়িত:** AutoRAGInjector — TOP_K=5, MIN_RELEVANCE_SCORE=0.55, MAX_CHARS_PER_MEMORY=400 (L38–44); `query_context` score-desc sort (L485+)।
 
 ### ২.২ কি নাই
 
-1. `store_memory`-তে (L288–340) **কোনো similarity probe নেই** — একই summary হাজারবার এলে হাজারটি row।
-2. **কোনো UPDATE-on-similarity branch নেই** — pg path-এ কেবল INSERT (L310–321)।
+1. `store_memory`-তে (L287–339) **কোনো similarity probe নেই** — একই summary হাজারবার এলে হাজারটি row।
+2. **কোনো UPDATE-on-similarity branch নেই** — pg path-এ কেবল INSERT (L309–320)।
 3. **importance_score / updated_at লেখা হয় না** — INSERT কলাম-তালিকায় নেই → canonical contract-এর dead columns।
 4. **কোনো reinforcement/bump নেই** — recall হোক বা না হোক, মেমোরির গুরুত্ব কখনো পরিবর্তিত হয় না।
 5. **দুই write path-এর semantics inconsistent** — AutoRAG path (uuid5 upsert) বনাম Cascade path (blind INSERT)।
