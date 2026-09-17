@@ -39,6 +39,26 @@ def _clean_cache():
     _ADMIN_REVOCATION_CACHE.clear()
 
 
+@pytest.fixture(autouse=True)
+def _preserve_jwt_secret_cache():
+    # বাংলা (V5.1 রেগ্রেশন-ফিক্স): নিচের টেস্টগুলো settings.env সাময়িকভাবে
+    # "production" করে; ওই উইন্ডোতে settings.jwt_secret-এর production শাখা
+    # CI-র JWT_SECRET/SUPREMEAI_JWT_SECRET env পড়ে _jwt_secret_cache
+    # ওভাররাইট করে ফেলে — ফলে পরবর্তী টেস্ট ফাইলের আগে-ইস্যু-করা টোকেনগুলোর
+    # signature ভেঙে যায় (CI fast গ্রুপের ৫টি agent/api টেস্ট এভাবেই লাল হয়েছিল)।
+    # তাই ক্যাশ স্ন্যাপশট করে টেস্ট-শেষে হুবহু ফেরত দেওয়া হয়।
+    from core.config import settings
+
+    sentinel = object()
+    before = getattr(settings, "_jwt_secret_cache", sentinel)
+    yield
+    if before is sentinel:
+        if hasattr(settings, "_jwt_secret_cache"):
+            del settings._jwt_secret_cache  # pydantic extra attr — প্রপার্টিই সেট করে, তাই ডিলিটও নিরাপদ
+    else:
+        settings._jwt_secret_cache = before
+
+
 @pytest.mark.asyncio
 async def test_admin_fail_closed_when_redis_down():
     # বাংলা: production-এ নীতি অপরিবর্তিত — Redis ছাড়া অ্যাডমিন রিজেক্ট (fail-closed)।
@@ -109,14 +129,23 @@ def test_admin_cache_lru_bound():
 @pytest.mark.asyncio
 async def test_verify_token_async_admin_401_when_redis_down():
     # বাংলা: production fail-closed semantics — অ্যাডমিন টোকেন Redis ডাউনে 401।
+    # jwt_secret-এ PropertyMock: production উইন্ডোতেও decode যেন একই সিক্রেটে
+    # হয় (নইলে 401 আসে signature-mismatch থেকে — ভুল কারণে পাস হতো), এবং
+    # 401-এর উৎস যেন প্রকৃতই fail-closed revocation হয়।
+    from unittest.mock import PropertyMock
+
     from core.config import settings
 
     token = _make_admin_token()
+    real_secret = settings.jwt_secret
     with patch("core.cache.redis_manager.redis_manager", _FakeRedis(down=True)):
-        with patch.object(settings, "env", "production"):
-            with pytest.raises(HTTPException) as exc_info:
-                await verify_token_async(token)
-            assert exc_info.value.status_code == 401
+        with patch.object(
+            type(settings), "jwt_secret", new_callable=PropertyMock, return_value=real_secret
+        ):
+            with patch.object(settings, "env", "production"):
+                with pytest.raises(HTTPException) as exc_info:
+                    await verify_token_async(token)
+                assert exc_info.value.status_code == 401
 
 
 @pytest.mark.asyncio
