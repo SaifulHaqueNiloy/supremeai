@@ -206,7 +206,6 @@ class CascadeMemoryService:
             conn.commit()
 
     def _embed(self, text: str) -> list[float]:
-
         from core.embeddings import _PG_DIM, embed_for_pgvector
 
         try:

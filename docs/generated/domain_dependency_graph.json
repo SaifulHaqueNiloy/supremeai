@@ -302,7 +302,7 @@
     {
       "evidence": [
         {
-          "line": 6,
+          "line": 7,
           "path": "backend/byoc/container_orchestrator.py"
         }
       ],
@@ -482,7 +482,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 21,
           "path": "backend/core/llm/token_deductor.py"
         }
       ],
@@ -2102,7 +2102,7 @@
     {
       "evidence": [
         {
-          "line": 101,
+          "line": 109,
           "path": "backend/api/routes/session_stream.py"
         }
       ],
@@ -2312,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 905,
+          "line": 904,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -2412,7 +2412,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/core/embeddings.py"
         }
       ],
@@ -2452,7 +2452,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 22,
           "path": "backend/core/unified_memory.py"
         }
       ],
@@ -2474,16 +2474,6 @@
         {
           "line": 9,
           "path": "backend/memory/chromadb_store.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 13,
-          "path": "backend/memory/cloud_postgres_store.py"
         }
       ],
       "source": "knowledge",
@@ -2674,16 +2664,6 @@
         {
           "line": 442,
           "path": "backend/memory/supabase_store.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 10,
-          "path": "backend/memory/unified_db_manager.py"
         }
       ],
       "source": "knowledge",
@@ -2992,7 +2972,7 @@
     {
       "evidence": [
         {
-          "line": 199,
+          "line": 198,
           "path": "backend/api/routes/browser/_crown_jewel.py"
         }
       ],
@@ -3182,7 +3162,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 20,
           "path": "backend/api/routes/browser/_tasks.py"
         }
       ],
@@ -3192,7 +3172,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 23,
           "path": "backend/api/routes/browser/_tasks.py"
         }
       ],
@@ -3202,7 +3182,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/api/routes/browser/_tasks.py"
         }
       ],
@@ -3682,7 +3662,7 @@
     {
       "evidence": [
         {
-          "line": 28,
+          "line": 29,
           "path": "backend/api/routes/browser/_tasks.py"
         }
       ],

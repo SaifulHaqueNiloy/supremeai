@@ -19,7 +19,6 @@ from core.testing.qa_suite import (
     SecurityTester,
 )
 
-
 # ---------------------------------------------------------------------------
 # SecurityTester — no random verdicts, explicit unverified contract
 # ---------------------------------------------------------------------------
