@@ -75,6 +75,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 16 | **Billing & Metering Gateway** (`billing_api.py` + `services/billing/` + `cost_guard.py`) | চার্জিং-অর্ধ শিল্প-গ্রেড কিন্তু মিটারিং-অর্ধ বিচ্ছিন্ন (record_spend শূন্য-কলার → ড্যাশবোর্ড-স্থায়ী-$০); payments.py revenue-leak ট্র্যাপ; **মিটার-ফার্স্ট মতবাদ** — LiteLLM model-cost-map, OpenMeter প্যাটার্ন, ভেন্ডর-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` |
 | 17 | **HITL & Approval Chain** (`services/hitl/` + `approval_manager.py` + `hitl_admin.py`) | ৭টি প্রতিযোগী অনুমোদন-স্টেট-মেশিন, নির্বাহক-বিহীন 'approved', জাল OTP, ২ route-shadowing — **এক-সেতু-সাত-দরজা মতবাদ** + resume-URL টোকেন (n8n ধার), LangGraph/Temporal প্যাটার্ন-গ্রহণ-লাইব্রেরি-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` |
 | 18 | **Telegram Integration Organ** (`tools/social/telegram_bot/` + `telegram_security.py`) | প্রোডাকশনে বধির বট (webhook অনিবন্ধিত), secret-বিহীন spoofable ইনগ্রেস, হার্ডকোডেড-ও-মুদ্রিত admin chat_id, জাল KPI — **activation-gate মতবাদ** + প্রতিপক্ষের-অবকাঠামো-আমার-কিউ (retry-then-drop) | ✅ **প্রকাশিত** — `MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md` |
+| 19 | **i18n & Bengali-First Adapter** (`frontend/src/i18n/` + backend ভাষা-পথ) | সংস্কৃতিতে বাংলা-প্রথম মেশিনারিতে ইংরেজি-প্রথম: i18n-লুপ অর্ধ-খোলা (preferred_language লিখিত-অপঠিত), ৪ প্রতিদ্বন্দ্বী বাংলা-মডেল-ম্যাপ, BengaliNormalizer prompt-লোয়ারকেস, দাঁড়ি-অন্ধ truncation, PDF টোফু, NFC-শূন্য — **ভাষা-কর-হ্রাস মতবাদ** (~৫× টোকেন-ব্যয় গবেষণা-ভিত্তি) | ✅ **প্রকাশিত** — `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -102,6 +103,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 16 | 2026-09-17 | Billing & Metering Gateway | `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A এক-লাইন লুপ-বন্ধ; zero-cost সংবিধান-অটুট-শর্ত) |
 | 17 | 2026-09-17 | HITL & Approval Chain | `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (৭→১ store; resume-URL সেতু; জাল-OTP-অবসান) |
 | 18 | 2026-09-17 | Telegram Integration Organ | `MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A secret-gate পূর্বশর্ত; activation-gate founder-gated) |
+| 19 | 2026-09-17 | i18n & Bengali-First Adapter | `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-D একক bengali_text.py; L6-track সংগতি) |
 
 ---
 
