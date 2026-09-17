@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🔍 SupremeAI Admin Dashboard - Complete Gap Analysis Report
 
 **Repository:** `SaifulHaqueNiloy/supremeai`  

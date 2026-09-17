@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # UX Best Practices — SupremeAI
 
 ## Core Principles

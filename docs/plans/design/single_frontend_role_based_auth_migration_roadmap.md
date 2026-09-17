@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI — Single Frontend Role-Based Migration Roadmap
 
 **Version:** 1.0.0  

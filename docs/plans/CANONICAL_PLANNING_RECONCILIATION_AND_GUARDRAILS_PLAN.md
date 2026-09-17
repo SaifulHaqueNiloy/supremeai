@@ -23,6 +23,7 @@ superseded_by: []
 evidence_state: verified
 last_verified: 2026-09-17 (repository scan of docs/plans/ and backend/core/circles/)
 disposition: retain
+target_scope: supremeai_internal
 ---
 
 # Canonical Planning, Reconciliation, Evidence Lifecycle and Automated Guardrails

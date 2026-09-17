@@ -46,6 +46,7 @@ measurement_method:
 success_threshold:
   - "Acceptance threshold (hypothesis until measured): distilled top-3 hit-rate ≥ legacy top-3 hit-rate + 15 percentage points on the seed set; failure of this threshold ⇒ plan marked failed/blocked per Gate 6, no silent success"
 plan_lifecycle: "living — single complete plan #004; proposed candidate awaiting explicit founder approval (Gate 2); single-plan execution discipline: this does NOT become active merely because it exists"
+target_scope: supremeai_internal
 ---
 
 # Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation

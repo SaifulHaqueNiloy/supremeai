@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Admin Dashboard: Mission Command Plan
 
 ## Phase 1: Overview Tab Overhaul (Mission Command Center)

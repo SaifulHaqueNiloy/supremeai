@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # 🚀 SupremeAI: "Out-of-the-Box" Architectural Evolution Proposals
 
 Based on a deep scan of the SupremeAI 2.0 codebase (FastAPI, Redis Swarm, Adaptive Optimizer, MicroVM Sandbox), here is a strategic analysis of what **next-level (Phase 3+)** architectural changes can make the system faster, zero-cost, and exponentially more intelligent.

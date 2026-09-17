@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🏗️ Plan: Comprehensive Codebase Modularization & File Splitting Matrix
 
 ## 🎯 Goal Description

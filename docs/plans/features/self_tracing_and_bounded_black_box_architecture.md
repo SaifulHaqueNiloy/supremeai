@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Self-Tracing & Bounded Black-Box Architecture Implementation Plan
 
 Transforming the 1500+ file SupremeAI codebase from a manual-navigation labyrinth into an enterprise-grade **"Self-Tracing & Bounded Black-Box"** architecture.

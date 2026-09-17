@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI Evolution Roadmap: The Burj Khalifa Plan
 
 This implementation plan outlines the architecture and execution strategy to transform SupremeAI from a passive intelligence into a self-evolving, autonomous "Possibility Engine". The goal is to build the foundational pipelines that allow the AI to learn, build, and heal itself at $0 cost.

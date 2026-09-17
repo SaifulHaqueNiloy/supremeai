@@ -13,6 +13,7 @@ superseded_by: []
 related:
   - docs/plans/features/production_readiness_final_stretch_plan_bn.md
   - docs/plans/features/risk_remediation_and_hardening_execution_plan_bn.md
+target_scope: supremeai_internal
 ---
 
 # SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)

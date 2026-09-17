@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 5: Plan Compatibility & Blast-Radius Conflict Analysis
 **Status:** 🔄 **EVOLVED / ACTIVE IN MCP DEPENDENCY & BLAST-RADIUS ENGINE**  
 **Completion:** ~95% (MCP Dependency Graph + Rule Conflict Resolver)  

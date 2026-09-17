@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Q1 2026 Plan
 
 ## Focus Areas

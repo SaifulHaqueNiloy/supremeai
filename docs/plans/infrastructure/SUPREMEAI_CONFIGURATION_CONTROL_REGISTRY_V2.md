@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI 2.0 — Configuration, Third‑Party Service & Secret Control Registry
 
 **Document type:** Living operational checklist  

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI: Living, Self-Evolving Autonomous Intelligence
 ## চার দৃষ্টিকোণ ভিত্তিক সমন্বিত মহা-পরিকল্পনা (4-Perspective Master Synthesis)
 

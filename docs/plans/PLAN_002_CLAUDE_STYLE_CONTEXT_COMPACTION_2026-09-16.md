@@ -41,6 +41,7 @@ baseline: "(hypothesis — to be measured during execution PR) today's behavior:
 measurement_method: (a) WS long-session script — ask turn-1 fact at turn 60, grade answer correctness; (b) gateway telemetry/Langfuse — compaction event count, summary latency, fallback rate; (c) process RSS before/after 100-turn session
 success_threshold: turn-1 fact correctly recalled at turn 60 in live session AND fallback rate <10% of compaction attempts AND RSS delta within ±10% of pre-change baseline (acceptance threshold — hypothesis until measured per Gate 5)
 plan_lifecycle: "living — proposed candidate under the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). Single-plan execution discipline: PLAN_002 becomes the ONLY active execution plan if and when the founder approves it; meanwhile it is a reviewable candidate, not an executable instruction. Next candidates (#003 Aider-style repo map) remain reference-only scouts."
+target_scope: supremeai_internal
 ---
 
 # Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction

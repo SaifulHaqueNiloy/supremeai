@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Team Assignments
 
 ## Team Overview

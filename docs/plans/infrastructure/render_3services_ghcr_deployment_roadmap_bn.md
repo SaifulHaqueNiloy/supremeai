@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Current Codebase → 3 Render Services Deployment Roadmap
 ## বর্তমান `SaifulHaqueNiloy/supremeai` থেকে 3টি role-separated Render service এবং GHCR-based deployment
 

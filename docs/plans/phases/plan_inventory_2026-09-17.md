@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # docs/plans/ Inventory & Governance Report
 
 > Generated: 2026-09-16 by `scripts/governance/lint_plans.py` (report-only mode)  
@@ -75,4 +79,3 @@
 - [WARNING] versioned-filename     supremeai-work/docs/plans/infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
 - [WARNING] versioned-filename     supremeai-work/docs/plans/infrastructure/free_tier_federation_master_plan_v4.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
 - [WARNING] versioned-filename     supremeai-work/docs/plans/infrastructure/production_upgrade_implementation_plan_v2.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
-

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Remaining Render / Memory Fix Roadmap
 
 ## Confirmed fixed in repository

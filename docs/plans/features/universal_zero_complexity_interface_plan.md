@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # SupremeAI: Universal Zero-Complexity Interface — Final Corrected Plan
 ### All 14 corrections incorporated | Implementation-ready baseline
 

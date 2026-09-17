@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # SupremeAI — Autonomous Capability Creation & User Task Execution Master Plan
 
 ## 0. Core Vision

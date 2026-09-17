@@ -1,3 +1,6 @@
+---
+target_scope: supremeai_internal
+---
 
 # SupremeAI - GitHub Repository Analysis & Action Plan
 ## Repository: https://github.com/paykaribazaronline/supremeai

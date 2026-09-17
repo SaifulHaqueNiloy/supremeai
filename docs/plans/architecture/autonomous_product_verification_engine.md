@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Autonomous Product Verification Engine (Master Architecture Blueprint)
 **Document:** `docs/plans/architecture/autonomous_product_verification_engine.md`  
 **Status:** 🎯 **PROPOSED / ADOPTED BLUEPRINT**  

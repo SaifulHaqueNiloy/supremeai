@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 2: API Key & Secret Rotation System (Zero-Trust Vault)
 **Status:** 🔄 **EVOLVED / ACTIVE IN INFISICAL & MCP ARCHITECTURE**  
 **Completion:** ~95% (Infisical Vault + Control Plane Token Rotation)  

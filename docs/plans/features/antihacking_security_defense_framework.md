@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Anti-Hacking System Documentation
 
 ## Overview

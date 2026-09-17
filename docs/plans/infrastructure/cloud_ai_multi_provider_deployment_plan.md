@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🌐 SupremeAI Cloud AI Deployment Plan
 **Version:** 1.0 | **Target:** Unlimited AI Model Scaling
 

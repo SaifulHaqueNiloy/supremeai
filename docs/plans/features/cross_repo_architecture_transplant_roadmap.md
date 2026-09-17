@@ -1,8 +1,22 @@
+---
+id: cross-repo-architecture-transplant-roadmap
+subject: "Cross-Repo Architecture Transplant Roadmap"
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+target_scope: supremeai_internal
+canonical: candidate
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+---
 হ্যাঁ। এবার আমি এটাকে **“কি কি file copy করব”** হিসেবে না দেখে **“বর্তমান `SaifulHaqueNiloy/supremeai`-এর existing 3 backend implementation-এর উপর `paykaribazaronline/supremeai`-এর কোন architecture transplant করলে সবচেয়ে বেশি value পাব”**—এইভাবে roadmap করছি।
 
 একটা গুরুত্বপূর্ণ observation আগে: `paykaribazaronline/supremeai`-তে একটি আলাদা `backend/ecosystem/` implementation তৈরি হয়েছিল, যেখানে Capability Registry, Learning Loop, Source Governance, Approval Workflow, Resource Registry, Deployment/Health/Correlation, MCP এবং Task Engine একসাথে ছিল।  আপনার বর্তমান repo ইতিমধ্যে canonical Task Runtime, Verifier, Rate Limiter, Benchmark, Adaptive Optimizer এবং Performance Monitor-এর মতো production-side components wire করে।
 
 সুতরাং লক্ষ্য হবে **replace নয়, merge/transplant**।
+
+---
 
 # SupremeAI Cross-Repo Integration Roadmap
 

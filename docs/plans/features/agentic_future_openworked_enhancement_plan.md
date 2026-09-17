@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Implementation Plan - Future Agentic Architecture Enhancement (Phase 3 Prep)
 
 This document outlines a prospective implementation plan for incorporating lightweight, high-efficiency **Agentic Design Patterns** (inspired by concepts like `openworker` and Andrew Ng's agentic workflows) into SupremeAI's core execution engine during **Phase 3 (Agent & Engine Evolution)**. 

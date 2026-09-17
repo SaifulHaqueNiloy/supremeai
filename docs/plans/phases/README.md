@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Execution Phases & Milestones Index
 
 **Status Dashboard** — Last updated: 2026-09-17
