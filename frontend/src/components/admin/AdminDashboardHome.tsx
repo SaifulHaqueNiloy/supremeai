@@ -360,13 +360,10 @@ export const AdminDashboardHome: React.FC = () => {
                 </div>
               ))
             ) : (
-              <>
-                <div><span className="text-slate-400">[{currentTime}]</span> Model {modelId} deployed successfully.</div>
-                <div><span className="text-slate-400">[{currentTime}]</span> Active task queue synchronized.</div>
-                <div><span className="text-slate-400">[{currentTime}]</span> Node Alpha load average: {cpuPercent ?? 34}%.</div>
-                <div><span className="text-slate-400">[{currentTime}]</span> Connection established to Cloud Run.</div>
-                <div className="text-rose-400"><span className="text-slate-400">[{currentTime}]</span> WARNING: Node Flow latency peak {latencyMs ?? 120}ms.</div>
-              </>
+              /* বাংলা মন্তব্য: ইভেন্ট ফিড খালি হলে কৃত্রিম/নকল ইভেন্ট রেন্ডার কঠোরভাবে নিষিদ্ধ (false-assurance doctrine) — কোনো hardcoded fake metric নেই, শুধু সৎ খালি অবস্থা */
+              <div className="flex items-center justify-center py-8 text-center text-[10px] text-slate-500">
+                No live events yet — the feed populates as the system acts.
+              </div>
             )}
           </div>
         </div>
