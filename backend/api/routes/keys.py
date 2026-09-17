@@ -1,3 +1,5 @@
+import base64
+import hashlib
 import os
 import uuid
 
@@ -11,16 +13,26 @@ from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/keys", tags=["User Keys"])
 
-# Simple encryption setup for demo/development purposes
-# In production, use AWS KMS, HashiCorp Vault, or similar
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
-if not ENCRYPTION_KEY:
-    # Generate a temporary key if none provided (keys will be lost on restart)
-    ENCRYPTION_KEY = Fernet.generate_key().decode()
-try:
-    cipher_suite = Fernet(ENCRYPTION_KEY.encode())
-except Exception:
-    # Fallback to random if invalid key was provided in env
+# বাংলা (স্থায়িত্ব সংশোধন): আগে ENCRYPTION_KEY অ-ফার্নেট (non-base64) হলে বা না থাকলে
+# প্রতি রিস্টার্টে নতুন random Fernet key তৈরি হতো — ফলে /keys রুটে সংরক্ষিত ইউজার
+# API key গুলো প্রতিটি deploy-এর পর আর decrypt করা যেত না (silent data loss)।
+# এখন secure_credential_store.RotatingFernet ও byoc/cloud_connector.py-এর প্রতিষ্ঠিত
+# প্যাটার্ন অনুযায়ী sha256 → urlsafe-base64 দিয়ে ডেরাইভ করা হয় — একই সিক্রেট
+# থেকে সবসময় একই Fernet key, রিস্টার্টেও সংরক্ষিত ডেটা অক্ষত থাকে।
+_ENCRYPTION_SECRET = os.getenv("ENCRYPTION_KEY") or os.getenv("SUPREMEAI_CREDENTIAL_ENC_KEY")
+if _ENCRYPTION_SECRET:
+    try:
+        cipher_suite = Fernet(_ENCRYPTION_SECRET.encode())
+    except Exception:
+        # প্রতিষ্ঠিত ডেরাইভেশন প্যাটার্ন: arbitrary-strength সিক্রেট → বৈধ Fernet key
+        digest = hashlib.sha256(_ENCRYPTION_SECRET.encode()).digest()
+        cipher_suite = Fernet(base64.urlsafe_b64encode(digest))
+else:
+    # কোনো সিক্রেট না থাকলেই কেবল random fallback (keys restart-এ হারাবে — dev-only)
+    logger.warning(
+        "⚠️ ENCRYPTION_KEY/SUPREMEAI_CREDENTIAL_ENC_KEY missing — /keys encryption uses a "
+        "random key; stored keys will NOT survive restarts (dev-only behavior)."
+    )
     cipher_suite = Fernet(Fernet.generate_key())
 
 
