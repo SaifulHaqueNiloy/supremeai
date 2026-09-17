@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
 from brain.supreme_learning_engine import get_learning_engine
+from context_engine import ContextBlock, ContextEngine, Section
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
 from core.llm.llm_gateway import llm_gateway
@@ -136,15 +137,22 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
     # Cache miss - generate response from AI model with memory context
     logger.info("❌ CACHE MISS: Generating new response from AI model with memory recall")
     try:
+        # M2 Context Engine: memory/RAG ফ্যাক্ট এখন budgeted block হিসেবে যোগ হয়
+        # (আগে অবাধ্য concatenation হতো — ERR-F03 context bloat)
+        context_blocks: list[ContextBlock] = [
+            ContextBlock(section=Section.USER, text=payload.prompt, priority=0, block_id="user")
+        ]
+
         # Retrieve long-term memory facts for tenant/user context
-        memory_ctx = ""
         try:
             from memory.long_term_memory import LongTermMemory
 
             ltm = LongTermMemory(session_id=session_id or f"default_{db.tenant_id}")
             mem_facts = ltm.build_context()
             if mem_facts and mem_facts != "No memory available.":
-                memory_ctx = f"[Relevant Memory Context:\n{mem_facts}]\n\n"
+                context_blocks.append(
+                    ContextBlock(section=Section.MEMORY, text=mem_facts, priority=0, block_id="ltm")
+                )
         except Exception as mem_err:
             logger.debug(f"Memory retrieval bypassed: {mem_err}")
 
@@ -165,8 +173,15 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     content = metadata.get("content", r.get("summary", ""))
                     if content:
                         rag_facts.append(f"- {content}")
-                if rag_facts:
-                    memory_ctx += "[System Knowledge Base:\n" + "\n".join(rag_facts) + "]\n\n"
+                for idx, fact in enumerate(rag_facts):
+                    context_blocks.append(
+                        ContextBlock(
+                            section=Section.KNOWLEDGE,
+                            text=fact,
+                            priority=idx,
+                            block_id=f"kb:{idx}",
+                        )
+                    )
         except Exception as rag_err:
             logger.debug(f"RAG Retrieval bypassed: {rag_err}")
 
@@ -204,7 +219,13 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                 "governance": routing_decision.model_dump(mode="json"),
             }
 
-        enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
+        # M2 Context Engine: budgeted, smallest-sufficient-context prompt
+        assembled = ContextEngine().assemble(context_blocks)
+        enriched_prompt = assembled.prompt
+        logger.info(
+            f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
+            f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
+        )
 
         if await main_llm_circuit.should_attempt_external():
             try:
@@ -322,8 +343,10 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
 
     async def async_generator():
         try:
-            # Retrieve System Knowledge Base (Cold-Start RAG)
-            memory_ctx = ""
+            # M2 Context Engine blocks (ERR-F03: budgeted assembly)
+            context_blocks: list[ContextBlock] = [
+                ContextBlock(section=Section.USER, text=payload.prompt, priority=0, block_id="user")
+            ]
             try:
                 from services.memory_service import recall_memories
 
@@ -342,12 +365,25 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         content = metadata.get("content", r.get("summary", ""))
                         if content:
                             rag_facts.append(f"- {content}")
-                    if rag_facts:
-                        memory_ctx = "[System Knowledge Base:\n" + "\n".join(rag_facts) + "]\n\n"
+                    for idx, fact in enumerate(rag_facts):
+                        context_blocks.append(
+                            ContextBlock(
+                                section=Section.KNOWLEDGE,
+                                text=fact,
+                                priority=idx,
+                                block_id=f"kb:{idx}",
+                            )
+                        )
             except Exception as rag_err:
                 logger.debug(f"RAG Retrieval bypassed in stream: {rag_err}")
 
-            enriched_prompt = f"{memory_ctx}{payload.prompt}" if memory_ctx else payload.prompt
+            # M2 Context Engine: budgeted, smallest-sufficient-context prompt
+            assembled = ContextEngine().assemble(context_blocks)
+            enriched_prompt = assembled.prompt
+            logger.info(
+                f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
+                f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
+            )
 
             if await main_llm_circuit.should_attempt_external():
                 try:
