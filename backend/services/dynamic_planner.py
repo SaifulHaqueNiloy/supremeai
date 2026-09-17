@@ -12,8 +12,10 @@ from __future__ import annotations
 import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
+from core.llm.advanced_model_router import ExpertType
 from core.logging_config import logger
 from services.intent_deciphering import IntentAnalysis
 
@@ -115,12 +117,31 @@ class DynamicPlanningEngine:
         dag = TaskDAG(dag_id=dag_id, intent=intent)
 
         # 1. Epistemic Probing Node (Inspect environment & state before mutation)
+        # PLAN-003: CODER-domain probes get a real, budget-bounded repo map —
+        # non-CODER intents are byte-for-byte unchanged (explicit absence, not
+        # a fake map; indexer failure degrades honestly to today's behavior).
+        repo_map_text: str | None = None
+        if intent.domain == ExpertType.CODER.value:
+            try:
+                from core.code_indexer import CodeIndexer
+
+                repo_map_text = CodeIndexer.get_instance(
+                    root_dir=str(Path(__file__).resolve().parents[2])
+                ).render_repo_map(budget_chars=4000, goal=intent.ultimate_goal)
+            except Exception as exc:
+                logger.warning(
+                    f"[DynamicPlanner] repo map unavailable ({exc}); probe continues without it — honest degradation"
+                )
+
+        probe_params: dict[str, Any] = {"goal": intent.ultimate_goal, "domain": intent.domain}
+        if repo_map_text:
+            probe_params["repo_map"] = repo_map_text
         probe_node = TaskNode(
             id=f"{dag_id}_step1_probe",
             name="Epistemic State Probe",
             capability="probe_system_state",
             description=f"Inspect system state, relevant files, and contracts for: {intent.ultimate_goal}",
-            input_params={"goal": intent.ultimate_goal, "domain": intent.domain},
+            input_params=probe_params,
         )
         dag.add_node(probe_node)
 

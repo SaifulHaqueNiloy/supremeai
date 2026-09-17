@@ -1,7 +1,7 @@
 ---
 id: head-of-planning-aider-repo-map-v1-2026-09-17
 title: "Head of Planning — Plan #003: Aider-Style Repo Map (stdlib-ast, শূন্য নতুন Dependency) — DynamicPlanningEngine-এর Epistemic Probe-কে সত্যিকারের কোডবেস-দৃষ্টি দেওয়া"
-status: proposed
+status: complete
 document_role: implementation
 owner_circle: C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা)
 scope: "ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main 5155c27), following the corrected planning discipline AND the strengthened PLAN_LIFECYCLE_POLICY (2026-09-17): single-plan execution, Gate 0–6, quantitative-claim labeling, explicit out-of-scope"
@@ -21,7 +21,8 @@ implements:
   - নতুন subsystem নয় — বিদ্যমান indexer/embedding/planner প্যাটার্নের সংযোজন (Constitution #3)
 supersedes: []
 superseded_by: []
-source_of_truth: false (proposed candidate — tested code + contracts remain reality; execution only after explicit founder approval per Gate 2; single-plan execution discipline অনুসারে অনুমোদনের পর এটিই হবে একমাত্র active plan)
+source_of_truth: false
+implementation_evidence: "IMPLEMENTED 2026-09-17 on main — core/code_indexer.py (new, stdlib-only): CodeIndexer singleton (markdown_indexer pattern), bounded walk (_MAX_FILES=2000, _MAX_FILE_BYTES=100KB, _MAX_TOTAL_BYTES=64MB, _MAX_SYMBOLS=200k — the 512MB cap-guard; files_skipped_cap honest stat), top-level ast symbol extraction (Cls:/Def:), intra-package edge resolution (absolute dotted module → file-or-__init__ exists-check + relative-import sibling fallback — covers flat and nested packages, beyond plan sketch), pure-Python PageRank (20 iters, damp 0.85, dangling-mass-kept), render_repo_map budget-bounded with cosine goal-boost via existing core/embeddings (batch encode, boost capped ×1.5, graceful pure-rank fallback); services/dynamic_planner.py: CODER-domain Epistemic Probe input_params now carries repo_map (guard-protected try/except; non-CODER byte-identical; ExpertType+Path imports added); tests/core/test_code_indexer.py 9/9 (symbols, edges, PageRank ordering, budget, parse_failures, honest empty map, cap-guard, goal-boost no-crash, singleton); tests/services/test_dynamic_planner.py zero regression (6/6); live smoke Gate-5: backend self-index 1836 files, 0 parse_failures, 8953 symbols, 3213 edges, 12.7MB source, build 2.47s (<5s threshold), render 0.29s, map 3979/4000 chars, hub files present; CODER probe end-to-end repo_map injected / general probe unchanged (asserted)"
 last_verified: "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), all cited lines hold; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)"
 code_evidence:
   - backend/core/markdown_indexer.py L18–29 — MarkdownIndexer singleton + get_instance + EmbeddingEngine.get_instance pattern (এই প্ল্যানের CodeIndexer হুবহু এই প্যাটার্ন মেনে চলবে)
@@ -42,7 +43,7 @@ risk_and_rollback: wiring একটি guard-যুক্ত try/except ব্�
 baseline: "(hypothesis — execution PR-এ মাপা হবে) আজ: dev-task probe-এর কাছে কোনো কোডবেস সিম্বল-কনটেক্সট নেই; agent ফাইল-পাথ অনুমান করে বা বারবার read করে"
 measurement_method: (a) render_repo_map() সময় (time.perf_counter, backend নিজের উপর), (b) map আউটপুট সাইজ vs budget, (c) নমুনা dev-intent-এ map-এ প্রাসঙ্গিক ফাইল থাকল কি না (manual grade, 10-sample), (d) PageRank top-20-তে পরিচিত hub ফাইল (orchestrator.py, gateway.py জাতীয়) থাকল কি না
 success_threshold: backend-ওয়াইড index তৈরি ≤5s (acceptance threshold, Render 512MB container-সামঞ্জস্য) এবং 10-sample dev-intent গ্রেডে ≥7 স্যাম্পলে প্রাসঙ্গিক ফাইল map-এ উপস্থিত — উভয়ই hypothesis, Gate 5-এ measured result হবে
-plan_lifecycle: living — proposed candidate under strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). ফাউন্ডার একটি plan অনুমোদন করলে সেটিই একমাত্র active execution plan হবে; PLAN_002 (compaction) ও PLAN_003 (এই ডকুমেন্ট) পরস্পর-সম্পূরক প্রার্থী — কোনোটিই অনুমোদন-পূর্বে executable নয়
+plan_lifecycle: living — implemented 2026-09-17 on main (see implementation_evidence); single-plan discipline honored
 target_scope: supremeai_internal
 ---
 
