@@ -1,7 +1,7 @@
 ---
 id: head-of-planning-prompt-caching-v1-2026-09-16
 title: "Head of Planning — Plan #001: Anthropic Prompt Caching on Existing LiteLLM Gateway (Corrected Discipline, Single Complete Plan)"
-status: active
+status: complete
 document_role: implementation
 owner_circle: C5 (Execution — LLM Gateway)
 scope: ONE complete plan, fully grounded in actual repo code, following the corrected planning discipline (small change to existing code, no new infra, no CI amplification, no academic benchmarks, realistic resource budget)
@@ -19,7 +19,7 @@ implements:
   - No new subsystem, no new dependency, no new infra (Constitution #3 Reuse Before Creation)
 supersedes: []  # supersedes the 4 rejected ideas from HEAD_OF_PLANNING_LANDSCAPE_INTEL_v1 (Hetzner+OpenObserve, Modal nightly, promptfoo per-CI, GAIA/τ²-bench benchmarks) — none are repository files
 superseded_by: []
-last_verified: "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)"
+last_verified: "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py); IMPLEMENTED 2026-09-17 on main — cloud_adapter.py: _is_anthropic_family_model + _mark_anthropic_cache_blocks pure helpers, generate()/stream() wiring, usage dict surfaces cache_read_input_tokens / cache_creation_input_tokens (forwarded to Langfuse via existing trace_generation usage pass-through); tests/core/test_cloud_provider_cache.py 10/10 PASS; 70/70 across test_llm_gateway_completion + test_provider_router + new file (local CI-mock env, litellm stubbed at adapter boundary)"
 plan_lifecycle: living — single complete plan #001; founder reviews + approves → engineering PR → merge → THEN next plan
 target_scope: supremeai_internal
 ---
