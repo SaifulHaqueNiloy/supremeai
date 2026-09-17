@@ -16,6 +16,7 @@ depends_on:
   - "কলার-প্রমাণ: backend/core/security/api_key_middleware.py + backend/tools/api_gateway.py AsyncRateLimiter ব্যবহার করে (operational); backend/core/config_fields.py L151 enforce_anti_hacking Field + OTP_COOLDOWN_SECONDS alias-সহ (config-চালিত)"
   - "লেগেসি-ডক: docs/plans/features/antihacking_security_defense_framework.md (439 লাইন, status: historical, V5-মাইগ্রেটেড) — ৪-স্তর 'security-as-a-service' ফ্রেমওয়ার্ক দাবি; L348-352 অযাচাইকৃত SLA (uptime >99.9%, detection 99%/১মিনিট)"
   - "CI-বাস্তবতা: .github/workflows/dast-zap.yml (DAST) + audit-release.yml বিদ্যমান — নতুন সুরক্ষা-CI-গেট এই নীলনকশার পরিসরে নয়"
+  - "V5.1-প্রেসিডেন্ট (commit 177942c): backend/core/security/__init__.py is_token_revoked — env-aware fail-policy প্রতিষ্ঠিত (production/staging অ্যাডমিন fail-closed; dev/test fail-open + loud logger.error) → tenant-লিমিটারের fail-মোড-প্রস্তাবের (P-C) জন্য প্ল্যাটফর্ম-প্রতিষ্ঠিত নীতি-প্যাটার্ন"
 implements:
   - "সুরক্ষা-স্তরের সত্য-মানচিত্র: ৪ উপাদানের (anti_hacking middleware / autonoguard / rate_limiters / api_key_middleware) mount-state + caller-state টেবিল — 'security theater' বনাম প্রকৃত-সুরক্ষা পৃথকীকরণ"
   - "zero-hardcode সংশোধন-প্রস্তাব: tier-limits, tenant-সীমা/জানালা, OTP TTL, warn-ratio — সব env/config-চালিত"
@@ -96,7 +97,7 @@ acceptance_criteria:
 
 - **P-A মাউন্ট-সিদ্ধান্ত (ফাউন্ডার-গেটেড):** বিকল্প ১ — alert-only-ডিফল্টে মাউন্ট (admin-only বলে hot-path প্রভাব ন্যূনতম; বিদ্যমান টেস্ট প্রস্তুত); বিকল্প ২ — সুনির্দিষ্ট mothball (ডকুমেন্টেড, MODULES_LIST-সংগত)। দ্ব্যর্থহীনতাই লক্ষ্য।
 - **P-B zero-hardcode:** `_tier_limits` → config/env-চালিত (per-tier requests/window); tenant 100/60s → config; OTP-pending 300s → `SECURITY_OTP_PENDING_TTL` (ডিফল্ট 300 নথিভুক্ত); warn-ratio 0.8 → config।
-- **P-C tenant-resilience:** InMemoryFallbackLimiter-প্যাটার্ন পুনঃব্যবহার (বাউন্ডেড); fail-মোড (open/bounded-fallback) config-চালিত — ডিফল্ট আচরণ অপরিবর্তিত।
+- **P-C tenant-resilience:** InMemoryFallbackLimiter-প্যাটার্ন পুনঃব্যবহার (বাউন্ডেড); fail-মোড config-চালিত, V5.1-এর env-aware fail-policy-প্যাটার্ন অনুসরণ করে (production fail-closed/বাউন্ডেড-fallback; dev fail-open+loud log) — V3 token_budget ও V5.1 revocation-এ প্রতিষ্ঠিত একই নীতি-ধারা।
 - **P-D টেস্ট-একীকরণ:** দুই anti-hacking টেস্ট-ফাইল → এক ক্যানোনিকাল; মাউন্ট-সিদ্ধান্তের পথে প্রস্তুতি।
 - **P-E সত্য-মানচিত্র ডকুমেন্টেশন:** এই ডকুমেন্টের ২.১-টেবিল ধারায় mount-state রেকর্ড; ভবিষ্যৎ-পরিবর্তনে আপডেট-দায়।
 
