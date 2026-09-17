@@ -26,6 +26,7 @@ Bengali:
 """
 
 import asyncio
+import os
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -690,10 +691,12 @@ class QASuite:
 
     async def _run_integration_tests(self, target_url: str) -> dict[str, Any]:
         """Run integration tests."""
-        # Run integration tests
-        db_result = await self.integration_runner.test_database_integration(
-            "postgresql://localhost/test"
-        )
+        db_url = (
+            os.getenv("TEST_DATABASE_URL")
+            or os.getenv("DATABASE_URL")
+            or "postgresql://localhost/test"
+        )  # is_local()
+        db_result = await self.integration_runner.test_database_integration(db_url)
         api_result = await self.integration_runner.test_api_integration(target_url)
         cache_result = await self.integration_runner.test_cache_integration(
             "redis://<your-redis-url>"
