@@ -182,6 +182,16 @@
     {
       "evidence": [
         {
+          "line": 27,
+          "path": "backend/api/routes/admin_llm.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 37,
           "path": "backend/api/routes/living_brain.py"
         }
@@ -1592,6 +1602,16 @@
     {
       "evidence": [
         {
+          "line": 136,
+          "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 15,
           "path": "backend/models/automation_execution.py"
         }
@@ -1614,6 +1634,46 @@
         {
           "line": 9,
           "path": "backend/models/task_record.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 31,
+          "path": "backend/tests/core/automation/test_execution_recorder_run_bridge.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 33,
+          "path": "backend/tests/core/automation/test_execution_recorder_run_bridge.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 34,
+          "path": "backend/tests/core/automation/test_execution_recorder_run_bridge.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/tests/core/automation/test_execution_recorder_run_bridge.py"
         }
       ],
       "source": "execution",
@@ -1652,7 +1712,7 @@
     {
       "evidence": [
         {
-          "line": 65,
+          "line": 190,
           "path": "backend/core/automation/execution_recorder.py"
         }
       ],
@@ -1662,7 +1722,7 @@
     {
       "evidence": [
         {
-          "line": 113,
+          "line": 241,
           "path": "backend/core/automation/execution_recorder.py"
         }
       ],
@@ -1672,7 +1732,7 @@
     {
       "evidence": [
         {
-          "line": 189,
+          "line": 320,
           "path": "backend/core/automation/execution_recorder.py"
         }
       ],
@@ -2252,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 915,
+          "line": 905,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -2352,7 +2412,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 14,
           "path": "backend/core/embeddings.py"
         }
       ],
@@ -2662,7 +2722,7 @@
     {
       "evidence": [
         {
-          "line": 12,
+          "line": 13,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -3152,7 +3212,7 @@
     {
       "evidence": [
         {
-          "line": 29,
+          "line": 30,
           "path": "backend/api/routes/crawler_admin.py"
         }
       ],
@@ -3334,6 +3394,16 @@
         {
           "line": 27,
           "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/api/routes/crawler_admin.py"
         }
       ],
       "source": "research",

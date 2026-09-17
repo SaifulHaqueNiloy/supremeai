@@ -53,7 +53,6 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
-import { WorkspaceModulePage } from './pages/WorkspaceModulePage';
 import { RunsPage } from './pages/RunsPage';
 import { MarketplacePage } from './pages/MarketplacePage';
 import { ActivityPage } from './pages/ActivityPage';
