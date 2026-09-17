@@ -78,6 +78,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 19 | **i18n & Bengali-First Adapter** (`frontend/src/i18n/` + backend ভাষা-পথ) | সংস্কৃতিতে বাংলা-প্রথম মেশিনারিতে ইংরেজি-প্রথম: i18n-লুপ অর্ধ-খোলা (preferred_language লিখিত-অপঠিত), ৪ প্রতিদ্বন্দ্বী বাংলা-মডেল-ম্যাপ, BengaliNormalizer prompt-লোয়ারকেস, দাঁড়ি-অন্ধ truncation, PDF টোফু, NFC-শূন্য — **ভাষা-কর-হ্রাস মতবাদ** (~৫× টোকেন-ব্যয় গবেষণা-ভিত্তি) | ✅ **প্রকাশিত** — `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` |
 | 20 | **Notification & Delivery Organ** (`core/messaging/` + `services/email/` + in-app পথ) | ১৩ সমান্তরাল পাইপলাইন, ৪ জীবন্ত বাহক, ক্যানোনিকাল-ডিসপ্যাচার গ্রাহকহীন, জাল-'sent', mock-key লিটারেল, /ws/dashboard কখনো-অনারম্ভিত — **স্টোর-আগে-বাহক মতবাদ** (outbox ধার) | ✅ **প্রকাশিত** — `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` |
 | 21 | **Truth-Mirror Governance Script** (নকশা — `scripts/governance/` পরিবার) | প্রকৃতি-ব্যতিক্রম চক্র: সিরিজের ১৫+ false-assurance আবিষ্কার → rules-as-data সনাক্তকারীর বীজ-কর্পাস; সৎ-মক (fake_store) বনাম অসৎ-ফেব্রিকেশন (webhooks_ai) শ্রেণিবিন্যাস; **exclusion-ratchet** (arXiv) বেসলাইন; founder-gated নকশা — কোনো কোড এই ডকে নয় | ✅ **প্রকাশিত** — `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` |
+| 22 | **Scheduler & Cron Organ** (`scheduled_tasks.py` + `agent_supervisor.py` + startup লুপ) | চাকা-বিহীন গাড়ি: S10 নিখুঁত CRUD কিন্তু নির্বাহক-লুপ অনুপস্থিত (write-only schedule), placebo auto-healer, UTC-অন্ধ (Asia/Dhaka অদৃশ্য), ≥৬ প্রতিদ্বন্দ্বী প্রক্রিয়া — **supervisor-as-heartbeat মতবাদ** + last_run_at ক্যাচআপ (cron-গর্ত সচেতন), APScheduler প্রত্যাখ্যান-নথি | ✅ **প্রকাশিত** — `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -108,6 +109,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 19 | 2026-09-17 | i18n & Bengali-First Adapter | `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-D একক bengali_text.py; L6-track সংগতি) |
 | 20 | 2026-09-17 | Notification & Delivery Organ | `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-B ২-লাইন WS-জাগরণ; স্টোর-আগে-বাহক) |
 | 21 | 2026-09-17 | Truth-Mirror Governance (নকশা) | `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (নকশা-স্তর; নির্মাণ Gate 2-পরবর্তী) |
+| 22 | 2026-09-17 | Scheduler & Cron Organ | `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A স্পন্দন+ক্যাচআপ; TZ-সত্য Dhaka-প্রথম) |
 
 ---
 
