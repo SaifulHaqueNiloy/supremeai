@@ -691,12 +691,14 @@ class QASuite:
 
     async def _run_integration_tests(self, target_url: str) -> dict[str, Any]:
         """Run integration tests."""
-        db_url = (
-            os.getenv("TEST_DATABASE_URL")
-            or os.getenv("DATABASE_URL")
-            or "postgresql://localhost/test"
-        )  # is_local()
-        db_result = await self.integration_runner.test_database_integration(db_url)
+        db_url = os.getenv("TEST_DATABASE_URL") or os.getenv("DATABASE_URL")
+        if db_url:
+            db_result = await self.integration_runner.test_database_integration(db_url)
+        else:
+            logger.info(
+                "No TEST_DATABASE_URL configured for integration test; reporting unverified"
+            )
+            db_result = False
         api_result = await self.integration_runner.test_api_integration(target_url)
         cache_result = await self.integration_runner.test_cache_integration(
             "redis://<your-redis-url>"
