@@ -7,12 +7,12 @@ owner_circle: Memory Circle (backend/services/memory_service.py — CascadeMemor
 target_scope: supremeai_internal
 scope: "Crown Jewel Module Series-এর চক্র ১ — একটি মডিউল (Memory), একটি সম্পূর্ণ power-up নীলনকশা। কী আছে → কী নেই → কী করতে হবে → কীভাবে করব → বেনিফিট → ক্ষতি/ঝুঁকি (Gate 1 six-field) — fresh main 07604ad (2026-09-17) sed/grep-যাচাইকৃত কোড-প্রমাণে; PLAN_LIFECYCLE_POLICY.md কঠোর অনুসরণ; প্রতিটি ধাপে kill-switch; কোনো নতুন dependency/infra নয়"
 depends_on:
-  - backend/services/memory_service.py (CascadeMemoryService — canonical M3 store service: store_memory L288 blind INSERT, _embed L208, _cosine_similarity L478, query_context L486, _query_via_pgvector_rpc L149, _MEMORY_ROW_CAP=2000 L52)
+  - "backend/services/memory_service.py (CascadeMemoryService — canonical M3 store service: store_memory L288 blind INSERT, _embed L208, _cosine_similarity L478, query_context L486, _query_via_pgvector_rpc L149, _MEMORY_ROW_CAP=2000 L52)"
   - backend/core/unified_memory.py (founder-implemented PLAN-004 write-time distillation — store_long_term_memory_distilled L189, kill-switch SUPREMEAI_MEMORY_DISTILL L38–44)
   - backend/core/ai_memory/vector_store.py (L29 _coerce_uuid uuid5 deterministic dedup, L60 upsert_batch — বিদ্যমান upsert precedent)
   - backend/core/memory/auto_rag_injector.py (TOP_K=5 L38, MAX_CHARS_PER_MEMORY=400 L39, MIN_RELEVANCE_SCORE=0.55 L41 — downstream recall consumer)
   - backend/workers/synaptic_dream.py (memory-consolidation worker — কোড বিদ্যমান কিন্তু কোনো scheduler-এ wired নয়; backend/workers/celery_app.py 9-LN stub)
-  - backend/memory/ (15 store মডিউল: chromadb_store, cloud_postgres_store, episodic_memory, hierarchical_tree, long_term_memory, rag_pipeline, sliding_window, sqlite_store, summary_tree, supabase_store, mcp_server, unified_db_manager, checkpoint_resume, vector_store_config — 2026-09-17 fresh main 07604ad ls-verified)
+  - "backend/memory/ (15 store মডিউল: chromadb_store, cloud_postgres_store, episodic_memory, hierarchical_tree, long_term_memory, rag_pipeline, sliding_window, sqlite_store, summary_tree, supabase_store, mcp_server, unified_db_manager, checkpoint_resume, vector_store_config — 2026-09-17 fresh main 07604ad ls-verified)"
   - backend/integrations/mem0_adapter.py + backend/integrations/graphiti_adapter.py (flag-gated zero-cost capability borrows — 2026-09-17 ls-verified)
   - backend/agents/syncguard/syncguard_agent.py L86 + backend/api/routes/unified_memory_api.py L47/L56 (বাস্তব store callers)
   - backend/tests/memory/test_memory_pkg_integrity.py (মেমোরি প্যাকেজ-ইন্টিগ্রিটি টেস্ট বেসলাইন — 07604ad-এ যুক্ত)
@@ -24,23 +24,23 @@ depends_on:
   - README.md Constitution #1 (Eternal Brain), #3 (Reuse Before Creation), #5 (Verify Before Trust), #8 (Graceful Degradation), #11 (Memory Must Compound), #13 (No Silent Failure), #14 (Sustainable Cost)
 implements:
   - M3 consolidation blueprint-এর ধাপে ধাপে execution-পথ — 15+ প্রতিযোগী store → একক canonical write path (`MemoryStore` protocol-এর পিছনে Supabase ai_memory), যা `docs/plans/M3_MEMORY_STORE_CONSOLIDATION_DECISION_TABLE.md` ইতিমধ্যে pin করেছে কিন্তু এখনো শুরু হয়নি (deliberate — live Supabase env প্রয়োজন)
-  - L4 Memory Flywheel-এর পূর্ণ সক্রিয়করণ: write-time identity (PLAN_006) → nightly consolidation (synaptic_dream scheduling) → hybrid recall ranking → run-anchored writes → recall evaluation
-  - Constitution #11 "Memory Must Compound"-এর চতুর্থ স্তম্ভ: PLAN_002 = in-session compaction, PLAN_004 = write-time quality, PLAN_006 = write-time identity, **এই মডিউল-নীলনকশা = সিস্টেম-স্তরের একীকরণ ও চক্রবৃদ্ধি (flywheel)**
+  - "L4 Memory Flywheel-এর পূর্ণ সক্রিয়করণ: write-time identity (PLAN_006) → nightly consolidation (synaptic_dream scheduling) → hybrid recall ranking → run-anchored writes → recall evaluation"
+  - "Constitution #11 \"Memory Must Compound\"-এর চতুর্থ স্তম্ভ: PLAN_002 = in-session compaction, PLAN_004 = write-time quality, PLAN_006 = write-time identity, **এই মডিউল-নীলনকশা = সিস্টেম-স্তরের একীকরণ ও চক্রবৃদ্ধি (flywheel)**"
   - B4 battlefield (Memory)-কে "unmeasured" থেকে "measured"-এ নেওয়া — recall evaluation harness দিয়ে
 supersedes: []
 superseded_by: []
 source_of_truth: false  # proposed বিশ্লেষণ-নীলনকশা — tested code + contracts-ই reality; সম্পাদন শুধুই ফাউন্ডার অনুমোদনের পরে (Gate 2); প্রতিটি Phase আলাদা ছোট execution প্ল্যান হিসেবে অনুমোদিত হবে
 last_verified: "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)"
 code_evidence:
-  - backend/services/memory_service.py L288–340 — store_memory(): pg path blind INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — একই summary আবার এলেও নতুন row; কোনো similarity probe নেই, কোনো UPDATE branch নেই; content/importance_score/updated_at কোনোটিই লেখা হয় না
+  - "backend/services/memory_service.py L288–340 — store_memory(): pg path blind INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — একই summary আবার এলেও নতুন row; কোনো similarity probe নেই, কোনো UPDATE branch নেই; content/importance_score/updated_at কোনোটিই লেখা হয় না"
   - backend/services/memory_service.py L149–188 — _query_via_pgvector_rpc (match_ai_memories RPC) — scalable probe path প্রস্তুত; L52 — _MEMORY_ROW_CAP=2000 (in-Python cosine ranking cap — capped candidate-set pattern প্রমাণিত)
-  - backend/core/unified_memory.py L189–237 — store_long_term_memory_distilled: PLAN-004 distillation live (kill-switch SUPREMEAI_MEMORY_DISTILL L38–44) — লেখার মান ভালো, কিন্তু distilled variants-ও dedup ছাড়া জমে
+  - "backend/core/unified_memory.py L189–237 — store_long_term_memory_distilled: PLAN-004 distillation live (kill-switch SUPREMEAI_MEMORY_DISTILL L38–44) — লেখার মান ভালো, কিন্তু distilled variants-ও dedup ছাড়া জমে"
   - backend/core/memory/auto_rag_injector.py L38–44 — TOP_K=5, MAX_CHARS_PER_MEMORY=400, MIN_RELEVANCE_SCORE=0.55 — recall-এ মাত্র ৫টি context-স্লট; ranking শুধু relevance-ভিত্তিক — importance/recency অনুপস্থিত
   - backend/core/ai_memory/vector_store.py L29 (uuid5 deterministic dedup) + L60 (upsert_batch) — একই রিপোর অন্য write path-এ upsert-dedupe semantics accepted pattern
   - backend/memory/ — ১৫টি সমান্তরাল store মডিউল (chromadb_store.py, cloud_postgres_store.py, episodic_memory.py, hierarchical_tree.py, long_term_memory.py, rag_pipeline.py, sliding_window.py, sqlite_store.py, summary_tree.py, supabase_store.py, mcp_server.py, unified_db_manager.py, checkpoint_resume.py, vector_store_config.py) — একই দায়িত্বের একাধিক বাস্তবায়ন; ERR-F02-এর subject
   - backend/workers/synaptic_dream.py — memory-consolidation worker-এর কোড বিদ্যমান; কিন্তু backend/workers/celery_app.py 9-LN stub — কোনো প্রোডাকশন scheduler-এ wired নয়
   - backend/integrations/mem0_adapter.py + graphiti_adapter.py — বাইরের সেরা প্যাটার্নের সাথে ইতিমধ্যেই integration seam আছে (flag-gated)
-  - backend/agents/syncguard/syncguard_agent.py L86 + backend/api/routes/unified_memory_api.py L47/L56 — বাস্তব callers: repeated store দুই পথেই ঘটে
+  - "backend/agents/syncguard/syncguard_agent.py L86 + backend/api/routes/unified_memory_api.py L47/L56 — বাস্তব callers: repeated store দুই পথেই ঘটে"
   - backend/tests/memory/test_memory_pkg_integrity.py — 07604ad-এ যুক্ত ইন্টিগ্রিটি টেস্ট — consolidation-এর regression-বেসলাইন
   - docs/database/AI_MEMORY_SCHEMA_AUDIT.md L232 — canonical কলাম-তালিকায় importance_score ও updated_at আছে, কিন্তু store_memory-র INSERT কলাম-তালিকায় নেই → dead columns
 test_evidence: "none yet — প্রতিটি Phase-এর নিজস্ব execution প্ল্যান টেস্ট-চুক্তি সংজ্ঞায়িত করবে; সমষ্টিগত চুক্তি: (১) Phase A → PLAN_006-এর ৮টি নামাঙ্কিত টেস্ট-দৃশ্য; (২) Phase B → per-store adapter contract test + dual-write shadow parity test; (৩) Phase C → consolidation scheduler smoke + idempotency test; (৪) Phase D → hybrid ranking টেস্ট (kill-switch=false → আজকের ranking byte-সমতুল্য); (৫) Phase E → run_id propagation test; (৬) Phase F → eval fixture-এ measured recall@5; (৭) backend/tests/memory/ ও backend/tests/runs/ ট্রিতে zero regression"
