@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # Design Plans Index
 
 **Status Dashboard** — Last updated: 2026-09-17

@@ -1,3 +1,26 @@
+---
+id: plugin-to-agent-capability-lifecycle
+subject: Plugin to Agent Capability Lifecycle
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+target_scope: combined_ecosystem
+---
+---
+id: plugin-to-agent-capability-lifecycle
+subject: Plugin to Agent Capability Lifecycle
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+target_scope: combined_ecosystem
+---
+---
+id: plugin-to-agent-capability-lifecycle
+subject: Plugin to Agent Capability Lifecycle
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+---
 হ্যাঁ — আমি আপনার বর্তমান `SaifulHaqueNiloy/supremeai` codebase দেখে বলছি: **SupremeAI-তে এর ভিত্তি ইতিমধ্যেই আছে, কিন্তু ChatGPT-এর screenshot-এর মতো সত্যিকারের user-facing Plugin/Apps Marketplace এখনো নেই।**
 
 ![Image](https://images.openai.com/static-rsc-4/YsrdKJft2kYpgs3ibjA_kNQOHsDTHXqn4ohmsAE1U80JUVbAax0VpL0SeWAnm8xuhiC2m_nUU5P609wT-azJ2mZHep72V5BeuGVrTgwWqu2M4nPOG76hJFF4kqKINCV6pRXXFf6UXS-icmrOclEzNH5Ox2XuOwswyfX9u9SrAmiUiigA43GQKTSJX8TiNMz8?purpose=fullsize)
@@ -11,6 +34,10 @@
 ![Image](https://images.openai.com/static-rsc-4/YMKkSwgTVSqUjOj4mXqhaVhF-wQHBZ6ST4bloqQ_HVS6Mre-V0bKDYyZyBCKZBwfpqh-jNVISi0cOCw7Gdwq3chmAZmpiWrksPcA-VGjpNBMuPSDCF1pwrx1UBVh4FxChuzT6BNynoehfPt4rXa34MITuhDx_fkrBTNXcVBAdbEmvySg0uASGpWxpQiDRGNu?purpose=fullsize)
 
 ![Image](https://images.openai.com/static-rsc-4/5nyms0mUufx8atIPRf16l4_GaXW0uZG6hjBYCDvXfA5gVGQck_Es3JbNmRGezVO2Oy_siJ5EDbqKX1BztuISTtlWF3aykNq7KnkT-wp9L45QU4n1kNKej4MCP1A95GZeIRh4qFKcZbBUMYvwHdYq4WbaUWW212TFk_qkJ0u7pAp6W-sh2X_QVxQtc0ljycHI?purpose=fullsize)
+
+---
+target_scope: combined_ecosystem
+---
 
 ## বর্তমান অবস্থা
 

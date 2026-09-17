@@ -11,6 +11,7 @@ last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
 related: docs/plans/features/production_hardening_and_p1_p2_roadmap_2026_09_11.md
+target_scope: supremeai_internal
 ---
 
 # SupremeAI প্রকল্প: ঝুঁকি থেকে বাস্তব Fix Plan

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🎯 SuperAI Competitive Intelligence Playbook
 ## "Know Your Enemy, Steal Their Best, Exploit Their Weakness"
 

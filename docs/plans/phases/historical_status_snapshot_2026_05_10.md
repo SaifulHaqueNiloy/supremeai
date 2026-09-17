@@ -10,6 +10,7 @@ disposition: redirect
 last_verified: 2026-09-17
 supersedes: []
 superseded_by: [docs/archive/plans/phases/historical_status_snapshot_2026_05_10.md]
+target_scope: combined_ecosystem
 ---
 
 # ↪️ MOVED — Historical Status Snapshot (2026-05-10)

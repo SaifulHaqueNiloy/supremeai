@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # Plan 22: Environmental Simulator & Execution Sandbox
 **Status:** 🔄 **EVOLVED / ACTIVE IN SANDBOX & MCP HEALTH SWEEP**  
 **Completion:** ~90% (Dockerized Sandbox + Browser Subagent + Health Sweeps)  
@@ -1015,4 +1019,3 @@ Perfect: 6-8 sprints → 12-16 weeks total
 - Frontend team to build UI panel  
 
 **Value:** Users can test generated apps in a live environment **before** downloading APK → reduces support issues and increases confidence in generated code.
-

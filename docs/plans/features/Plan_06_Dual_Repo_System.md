@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 6: Unified Monorepo & Multi-Target Deployment Topology
 **Status:** 🔄 **EVOLVED / ACTIVE IN TURBOREPO & CLOUD TOPOLOGY**  
 **Completion:** ~98% (Turborepo + Docker + Multi-Cloud Staging)  

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Skill Requirements
 
 ## Backend Development Skills

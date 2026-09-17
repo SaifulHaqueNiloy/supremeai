@@ -13,6 +13,7 @@ superseded_by: []
 related:
   - docs/plans/features/runtime_dynamic_configuration_zero_hardcode_plan.md
   - docs/plans/architecture/vendor_independent_integration_architecture_plan.md
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Dynamic Configuration & Zero-Hardcode Roadmap

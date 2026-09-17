@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🆓 SuperAI Free-Tier Survival Guide
 ## Maximum Usage Optimization for Zero-Cost Operations
 

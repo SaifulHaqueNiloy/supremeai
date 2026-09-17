@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 7: Unified Dashboard & Dynamic Plugin/MCP Registry
 **Status:** 🔄 **EVOLVED / ACTIVE IN DASHBOARD & MCP REGISTRY**  
 **Completion:** ~95% (Health Dashboard + MCP Dynamic Client Registry)  

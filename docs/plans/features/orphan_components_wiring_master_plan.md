@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🔧 Crown Jewel Wiring Master Plan
 ### সব "এতিম" (orphan) কম্পোনেন্ট একসাথে জোড়া লাগানোর সম্পূর্ণ রোডম্যাপ
 

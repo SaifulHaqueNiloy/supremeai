@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Unified MCP Control Tower — Final Perfect Implementation Plan
 ### বর্তমান `implementation_plan(6).md` + আগের SupremeAI MCP architecture মিলিয়ে Production-Grade Master Plan
 

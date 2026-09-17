@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # 🌌 Architecture Plan: Self-Assembling Intelligence (Phase 2)
 
 আপনার ভিশনটি এখন ১০০% ক্লিয়ার! আপনি কোনো স্ট্যাটিক বা আগে থেকে লেখা এজেন্ট চান না—এমনকি লেজি-লোডেড (lazy-loaded) হলেও না। আপনি এমন একটি "Master Brain" বা **Self-Assembling Engine** তৈরি করতে চান যা যেকোনো কাজের জন্য **রিয়েল-টাইমে ওপেন সোর্স থেকে টুল কালেক্ট করবে অথবা নিজেই কোড জেনারেট করে তা চালাবে।** 

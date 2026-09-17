@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Design Theme Mockups
 
 Here are the visual mockups of how the Admin and User dashboards will look after implementing the proposed **Cyber/SupremeAI Brand Theme**.

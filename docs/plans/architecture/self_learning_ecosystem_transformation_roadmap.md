@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SUPREMEAI ECOSYSTEM TRANSFORMATION ROADMAP
 ## From the Current Autonomous Backend to a Self-Learning, Self-Improving, User-Serving, Centrally Managed Ecosystem
 
@@ -2128,4 +2132,3 @@ The transformation must preserve:
 - low maintenance burden
 
 The system may become more capable without becoming operationally unmanageable.
-

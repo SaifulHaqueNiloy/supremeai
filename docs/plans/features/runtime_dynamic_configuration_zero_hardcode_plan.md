@@ -11,6 +11,7 @@ last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
 related: docs/plans/architecture/dynamic_configuration_zero_hardcode_roadmap.md
+target_scope: combined_ecosystem
 ---
 
 # SupremeAI — Remaining Dynamic Configuration / Zero-Hardcode Implementation Plan

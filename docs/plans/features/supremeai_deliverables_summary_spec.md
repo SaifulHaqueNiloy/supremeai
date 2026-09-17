@@ -1,3 +1,6 @@
+---
+target_scope: combined_ecosystem
+---
 
 # SupremeAI - Repository Analysis: Deliverables Summary
 

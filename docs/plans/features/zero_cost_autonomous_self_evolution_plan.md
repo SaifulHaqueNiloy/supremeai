@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI — Self-Evolution & Zero-Cost Improvement Plan
 
 **Status:** Proposed implementation plan  

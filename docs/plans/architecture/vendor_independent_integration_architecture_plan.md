@@ -11,6 +11,7 @@ last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
 related: docs/plans/features/runtime_dynamic_configuration_zero_hardcode_plan.md
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Vendor-Independent Integration Implementation Plan

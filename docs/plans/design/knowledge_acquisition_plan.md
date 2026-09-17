@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Implementation Plan: Recursive Knowledge Acquisition System
 
 ## Objective

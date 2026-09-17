@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Dual-Channel Zero-Marginal-Cost Execution Engine: Browser Stealth Capabilities & Distributed P2P Worker Grid
 **Document:** `docs/plans/features/dual_channel_zero_cost_browser_and_distributed_worker.md`  
 **Status:** 🔄 **ACTIVE ARCHITECTURAL SPECIFICATION**  

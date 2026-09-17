@@ -1,6 +1,19 @@
+---
+id: federated-capability-circles-topology
+subject: "Federated Capability Circles Topology"
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+target_scope: supremeai_internal
+canonical: candidate
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+---
+
 হ্যাঁ—আপনার **multiple connected circles** ধারণাটি SupremeAI-এর জন্য একক বিশাল central circle-এর চেয়ে ভালো।
 
-## সঠিক architecture
+---
 
 এটাকে বলা যায়:
 

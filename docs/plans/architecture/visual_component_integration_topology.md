@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🎨 SupremeAI Component Integration Visual Map
 
 ## Complete System Architecture - Every Component Connected

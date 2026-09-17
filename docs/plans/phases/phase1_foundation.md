@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Phase 1: Foundation
 
 ## Duration

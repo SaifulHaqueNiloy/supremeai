@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 16: Automated CI/CD Sandbox & Pre-Merge Gateways
 **Status:** 🔄 **EVOLVED / ACTIVE IN GITHUB ACTIONS & MCP OBSERVABILITY**  
 **Completion:** ~98% (GitHub Actions Workflows + Pre-Commit Hooks + MCP Tools)  

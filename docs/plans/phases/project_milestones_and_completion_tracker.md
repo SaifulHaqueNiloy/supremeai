@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Milestone Tracker
 
 ## Project Milestones Overview

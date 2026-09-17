@@ -23,6 +23,7 @@ last_verified: 2026-09-16
 code_evidence: docs/audits/SYSTEM_DEFECT_REGISTER_2026-09-15.md (1,189-module walk; 707 backend routes; 236 frontend endpoints; 37 test suites)
 test_evidence: STATUS.md (2026-09-16, frontend 486/486 PASS; mission suite 5 missions / 12 tests green; pass^3 harness live in CI)
 plan_lifecycle: living — v1 issued 2026-09-16; future Head of Planning memos appended as dated siblings under docs/plans/HEAD_OF_PLANNING_*.md
+target_scope: supremeai_internal
 ---
 
 # Head of Planning — Strategic Leverage Memo v1

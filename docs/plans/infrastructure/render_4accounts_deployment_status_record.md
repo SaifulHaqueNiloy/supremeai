@@ -1,7 +1,24 @@
+---
+id: render-4accounts-deployment-status-record
+subject: Render 4-Account Deployment Status Record
+document_role: audit
+planning_authority: Infrastructure Circle
+status: historical
+target_scope: supremeai_internal
+---
+---
+id: render-4accounts-deployment-status-record
+subject: Render 4-Account Deployment Status Record
+document_role: audit
+planning_authority: Infrastructure Circle
+status: historical
+---
 Render ৪টি অ্যাকাউন্টের ৪টি সার্ভিসের সম্পূর্ণ লাইভ অডিট রিপোর্ট
 .env ফাইলে থাকা Render API Keys (RENDER_API_KEY_1, RENDER_API_KEY_2, RENDER_API_KEY_3, RENDER_API_KEY_4) ব্যবহার করে সরাসরি Render API থেকে ৪টি অ্যাকাউন্টের ৪টি মাইক্রোসার্ভিসের বর্তমান স্ট্যাটাস, সর্বশেষ সফল ডিপ্লয়মেন্ট এবং চলমান সমস্যাগুলোর পুঙ্খানুপুঙ্খ তালিকা প্রস্তুত করা হলো:
 
 ১. সার্ভিস ওভারভিউ ও সর্বশেষ সফল ডিপ্লয়মেন্ট (Last Successful Deploys)
+
+
 
 # অ্যাকাউন্ট ও ইমেইল সার্ভিস নাম ও Service ID বর্তমান স্ট্যাটাস সর্বশেষ সফল ডিপ্লয়মেন্ট (Last Success) সর্বশেষ ডিপ্লয়মেন্ট ও কমিট
 

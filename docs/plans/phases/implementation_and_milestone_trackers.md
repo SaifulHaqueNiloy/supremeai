@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Implementation Trackers — Consolidated Single Source
 
 > **Merged 2026-09-08** — Documentation Context Consolidation (Phase 9 of [`docs/architecture/SUPREMEAI_CONSOLIDATION_AND_CLEANUP_PLAN.md`](../architecture/SUPREMEAI_CONSOLIDATION_AND_CLEANUP_PLAN.md)).

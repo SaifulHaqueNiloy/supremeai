@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 1: Dynamic AI Agent System & Multi-Agent Discovery
 **Status:** 🔄 **EVOLVED / ACTIVE IN PYTHON MCP ARCHITECTURE**  
 **Completion:** ~90% (Active in MCP Control Plane & Backend Core)  
@@ -654,4 +658,3 @@ User Request
 
 **Document Status:** Ready for Implementation
 **Next Step:** Start with local models + 1-2 free APIs
-

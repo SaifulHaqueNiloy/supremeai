@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # ✅ SupremeAI - COMPLETE File Organization Action Plan
 
 ## 🎯 Master Checklist: Original Roadmap + New Findings Combined

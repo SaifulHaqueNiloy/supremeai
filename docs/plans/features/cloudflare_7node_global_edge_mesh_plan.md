@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Implementation Plan: Supreme-Cloudflare 7-Node Global Edge Mesh
 
 This plan establishes the **Supreme-Cloudflare 7-Node Global Edge Mesh**, orchestrating 7 Cloudflare accounts to unlock **700,000 edge requests/day, 70,000 daily AI neurons (DeepSeek R1 / Llama 3.3 serverless), 70GB R2 zero-egress storage, and 35 Million edge vector dimensions** at **$0 infrastructure cost**.
