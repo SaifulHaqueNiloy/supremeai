@@ -24,6 +24,10 @@ async def store_long_term_memory_endpoint(
     task_type: str = Query(..., description="Type of the task (e.g., System_Audit)"),
     content: str = Query(..., description="The content to store"),
     metadata: str | None = Query(None, description="Optional metadata as JSON string"),
+    distill: bool = Query(
+        False,
+        description="PLAN-004: opt-in write-time distillation (dense summary + structured facts); on failure falls back to legacy truncation",
+    ),
     user: dict = Depends(get_current_user_token),
 ):
     """
@@ -38,14 +42,25 @@ async def store_long_term_memory_endpoint(
         except json.JSONDecodeError:
             raise HTTPException(status_code=400, detail="Invalid JSON in metadata")
 
-    success = unified_memory.store_long_term_memory(
-        session_id=session_id,
-        agent_type=agent_type,
-        task_type=task_type,
-        content=content,
-        metadata=metadata_dict,
-        user_id=user.get("sub"),  # AUD-5.1: bind memory to the requesting user
-    )
+    # PLAN-004: opt-in distilled variant; default behavior unchanged.
+    if distill:
+        success = await unified_memory.store_long_term_memory_distilled(
+            session_id=session_id,
+            agent_type=agent_type,
+            task_type=task_type,
+            content=content,
+            metadata=metadata_dict,
+            user_id=user.get("sub"),  # AUD-5.1: bind memory to the requesting user
+        )
+    else:
+        success = unified_memory.store_long_term_memory(
+            session_id=session_id,
+            agent_type=agent_type,
+            task_type=task_type,
+            content=content,
+            metadata=metadata_dict,
+            user_id=user.get("sub"),  # AUD-5.1: bind memory to the requesting user
+        )
     if not success:
         raise HTTPException(status_code=500, detail="Failed to store memory")
     return {"message": "Long-term memory stored successfully", "session_id": session_id}
