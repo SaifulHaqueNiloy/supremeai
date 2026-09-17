@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from core.config import settings
-from storage.r2_storage_client import R2StorageClient
+from storage.r2_storage_client import R2StorageClient, StorageNotConfiguredError
 
 # বাংলা মন্তব্য: ক্লায়েন্টের জন্য প্রে-সাইনড আপলোড ইউআরএল জেনারেট করার এন্ডপয়েন্ট।
 
@@ -28,9 +28,19 @@ async def get_current_user():
 async def get_upload_url(request: UploadRequest, user=Depends(get_current_user)):
     safe_filename = f"{request.folder}/{user['id']}_{uuid.uuid4().hex}_{request.file_name}"
 
-    upload_url = storage_client.generate_presigned_upload_url(
-        object_name=safe_filename, file_type=request.file_type
-    )
+    try:
+        upload_url = storage_client.generate_presigned_upload_url(
+            object_name=safe_filename, file_type=request.file_type
+        )
+    except StorageNotConfiguredError as exc:
+        # বাংলা মন্তব্য: ভুয়া mock URL-এর বদলে সৎ 503 — স্টোরেজ কনফিগার নেই (audit B-01)।
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Object storage is not configured — uploads are unavailable. "
+                "Set R2_ACCOUNT_ID, R2_ACCESS_KEY and R2_SECRET_KEY."
+            ),
+        ) from exc
 
     if not upload_url:
         raise HTTPException(status_code=500, detail="Could not generate upload URL")
