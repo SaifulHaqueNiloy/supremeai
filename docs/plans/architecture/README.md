@@ -1,4 +1,9 @@
 ---
+id: architecture-plans-index-2026-09-17
+subject: "Architecture Plans Index — status dashboard and canonical plan catalog for docs/plans/architecture/"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: active
 target_scope: combined_ecosystem
 ---
 

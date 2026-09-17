@@ -16,7 +16,6 @@ from core.logging_config import logger
 # Authorization header না থাকলে exception না ছুঁড়ে httpOnly cookie
 # ফলব্যাক চেক করা যায় (auth.py-এর /auth/login যে cookie সেট করে)।
 security = HTTPBearer(auto_error=False)
-_in_memory_jwt_blacklist: set[str] = set()
 
 ACCESS_COOKIE_NAME = "supreme_access_token"
 
@@ -40,26 +39,28 @@ async def require_admin_token(
 
         jti = decoded.get("jti")
         if jti:
-            import core.services as app_mod
+            # বাংলা মন্তব্য (audit V3 B-V2-04 fix): আগে এখানে দুটি বিচ্ছিন্ন
+            # revocation-স্টোর ছিল — /logout (api/routes/auth.py) canonical
+            # core.security.revoke_token-এ লেখে (`jwt:blacklist:{jti}` + in-memory
+            # set + admin LRU), অথচ এই ফাংশন পড়ত অন্য কী-প্রিফিক্স
+            # (`jwt_blacklist:{jti}` — কোলন-বিন্যাস ভিন্ন!) + অন্য Redis ক্লায়েন্ট
+            # (app_mod.redis_queue) + কোথাও-না-লেখা `_in_memory_jwt_blacklist` —
+            # অর্থাৎ অ্যাডমিন টোকেন রিভোক ছিল ১০০% অকার্যকর (নীরব no-op)।
+            # এখন canonical `is_token_revoked(is_admin=True)` ব্যবহার হচ্ছে —
+            # এক-ই সত্যের উৎস; অ্যাডমিন-নীতি fail-closed (Redis ছাড়াও TTL-aware
+            # LRU ক্যাশে ইচ্ছাকৃত রিভোক ধরা পড়ে, ভেরিফাই-অযোগ্য হলে রিজেক্ট)।
+            from core.security import is_token_revoked
 
-            redis_queue = getattr(app_mod, "redis_queue", None)
-            if redis_queue and getattr(redis_queue, "configured", False):
-                # বাংলা: UpstashRedisQueue.get সিঙ্ক্রোনাস (httpx ক্লায়েন্ট) — async route-এ
-                # সরাসরি কল করলে event loop ব্লক হয়। asyncio.to_thread দিয়ে offload করা হলো।
-                try:
-                    blocked = await asyncio.to_thread(redis_queue.get, f"jwt_blacklist:{jti}")
-                    if blocked is not None:
-                        raise HTTPException(status_code=401, detail="Token has been revoked.")
-                except HTTPException:
-                    raise
-                except Exception as exc:
-                    logger.warning(f"Redis blacklist check failed for jti={jti}: {exc}")
-            else:
-                if jti in _in_memory_jwt_blacklist:
+            try:
+                if await is_token_revoked(str(jti), is_admin=True):
                     raise HTTPException(status_code=401, detail="Token has been revoked.")
-                logger.warning(
-                    "Redis not configured; falling back to in-memory JWT blacklist check."
-                )
+            except HTTPException:
+                raise
+            except Exception as exc:
+                # বাংলা: অ্যাডমিন নীতি fail-closed — যাচাই নিজেই ভাঙলে অনুমতি নয়,
+                # loud error + রিজেক্ট (নীরব fail-open নয়)।
+                logger.error(f"Admin revocation check FAILED (fail-closed reject) jti={jti}: {exc}")
+                raise HTTPException(status_code=401, detail="Token revocation check failed.") from exc
 
         return decoded
     except HTTPException:

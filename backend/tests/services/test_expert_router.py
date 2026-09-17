@@ -57,7 +57,28 @@ async def test_llm_gateway_moe_integration(monkeypatch):
     async def mock_route(prompt, **kwargs):
         return DummyResult()
 
-    monkeypatch.setattr(gateway._router, "route", mock_route)
+    # বাংলা মন্তব্য (B-V2-01 fix): production gateway আর নিজে থেকে MagicMock
+    # বানায় না (আগে unset router = ভুয়া Mock response) — টেস্ট নিজেই স্পষ্টভাবে
+    # mock router inject করছে (mock শুধু টেস্টেই থাকবে, production-এ নয়)।
+    from unittest.mock import MagicMock
+
+    gateway._router_obj = MagicMock()
+    monkeypatch.setattr(gateway._router_obj, "route", mock_route)
 
     res = await gateway.async_generate("Explain python list comprehension", use_moe=True)
     assert res["text"] == "Mocked Response"
+
+
+@pytest.mark.asyncio
+async def test_llm_gateway_async_generate_without_router_is_honest(monkeypatch):
+    """B-V2-01 (audit V3): router inject না থাকলে async_generate আর ভুয়া Mock
+    text ফেরত দেবে না — সৎ acompletion পাথে যাবে (এখানে acompletion mock করা)।"""
+    gateway = get_llm_gateway()
+    gateway._router_obj = None
+
+    async def fake_acompletion(*args, **kwargs):
+        return {"success": True, "text": "real-fallback", "content": "real-fallback"}
+
+    monkeypatch.setattr(gateway, "acompletion", fake_acompletion)
+    res = await gateway.async_generate("hello", use_moe=True)
+    assert res["text"] == "real-fallback"

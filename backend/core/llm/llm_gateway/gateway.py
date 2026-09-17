@@ -78,11 +78,12 @@ class LLMGateway(
 
     @property
     def _router(self):
-        if not hasattr(self, "_router_obj") or self._router_obj is None:
-            from unittest.mock import MagicMock
-
-            self._router_obj = MagicMock()
-        return self._router_obj
+        # বাংলা মন্তব্য (audit V3 B-V2-01 fix): আগে router unset থাকলে এখানে
+        # production-এ `MagicMock()` বানানো হতো — Mock-এর `.route` সবসময়
+        # non-None বলে async_generate-এর MoE শাখা সবসময় প্রবেশ করত, আর
+        # কলার "text"/"content" হিসেবে ভুয়া Mock অবজেক্ট পেত (আসল LLM ডাকই
+        # হতো না)। এখন unset মানে সৎ None — কলার নিজের সৎ fallback পাথে যায়।
+        return getattr(self, "_router_obj", None)
 
     @_router.setter
     def _router(self, val):
@@ -142,11 +143,14 @@ class LLMGateway(
 
     async def async_generate(self, prompt: str, use_moe: bool = False, **kwargs) -> dict[str, Any]:
         """Backward-compatible helper alias for acompletion & MoE integration."""
-        if (use_moe or getattr(self._router, "route", None) is not None) and hasattr(
-            self._router, "route"
-        ):
+        # বাংলা মন্তব্য (B-V2-01 fix): শুধুমাত্র সত্যিই inject করা router থাকলে MoE
+        # শাখা চলে; use_moe=True কিন্তু router না থাকলে loud warning-সহ সৎ
+        # acompletion fallback (নীরব ভান নয়)। route ব্যর্থ হলে warning-এ
+        # diagnostics হারানো হতো না (আগে debug লেভেলে swallow)।
+        router = self._router
+        if router is not None and hasattr(router, "route"):
             try:
-                route_res = await self._router.route(prompt, **kwargs)
+                route_res = await router.route(prompt, **kwargs)
                 if route_res is not None:
                     content = getattr(route_res, "content", str(route_res))
                     return {
@@ -159,7 +163,13 @@ class LLMGateway(
                         "cost": 0.0,
                     }
             except Exception as e:
-                logger.debug(f"[LLMGateway] MoE route fallback: {e}")
+                logger.warning(
+                    f"[LLMGateway] MoE route failed ({type(e).__name__}: {e}) — falling back to acompletion"
+                )
+        elif use_moe:
+            logger.warning(
+                "[LLMGateway] use_moe=True but no router injected — falling back to acompletion"
+            )
         res = await self.acompletion(prompt=prompt, **kwargs)
         if isinstance(res, dict):
             return res
