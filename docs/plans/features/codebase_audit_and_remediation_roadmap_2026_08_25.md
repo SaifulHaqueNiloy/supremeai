@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Codebase Audit & Roadmap (2026-08-25)
 
 Source: fresh zip snapshot (`supremeai-main`), 1534 Python files + 461 TS/TSX files, no `.git` history included.

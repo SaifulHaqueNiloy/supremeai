@@ -1,3 +1,18 @@
+---
+id: docker-build-troubleshooting-record
+subject: Docker Build Troubleshooting Record
+document_role: audit
+planning_authority: DevEx / CI Circle
+status: historical
+target_scope: supremeai_internal
+---
+---
+id: docker-build-troubleshooting-record
+subject: Docker Build Troubleshooting Record
+document_role: audit
+planning_authority: DevEx / CI Circle
+status: historical
+---
 Viewed task-423.log:1-293
 Viewed task-423.log:1-293
 Ran command: `docker images supremeai/backend:test`
@@ -270,6 +285,10 @@ Edited STATUS.md
 Viewed walkthrough.md:1-60
 Viewed walkthrough.md:55-76
 Edited walkthrough.md
+
+---
+target_scope: supremeai_internal
+---
 
 ### 🐳 Local Docker Multi-Container Environment Setup & Verification Complete
 

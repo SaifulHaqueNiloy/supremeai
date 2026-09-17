@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)
 
 > সোর্স: `STATUS.md`, `CHECKPOINT.md`, `AUDIT_REPORT_2026-09-10.md` এবং মেমোরিতে থাকা আগের কাজের ইতিহাস থেকে তৈরি।

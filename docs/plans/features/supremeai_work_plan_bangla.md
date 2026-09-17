@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI কাজের পরিকল্পনা (Bangla Work Plan)
 **তারিখ:** ২০২৬-০৫-১২ | **সংস্করণ:** ১.০
 

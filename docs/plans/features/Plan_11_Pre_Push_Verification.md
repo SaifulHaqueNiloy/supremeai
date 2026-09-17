@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 11: Pre-Push & Pre-Commit Verification Guardrails
 **Status:** 🔄 **EVOLVED / ACTIVE IN PRE-COMMIT HOOK & CI STATUS SENTINEL**  
 **Completion:** ~98% (Local Hook + GitHub Actions Pre-Merge Gate)  

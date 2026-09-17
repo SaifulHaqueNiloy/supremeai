@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Current Codebase-Aligned Master Roadmap
 
 **Repository:** `SaifulHaqueNiloy/supremeai`  

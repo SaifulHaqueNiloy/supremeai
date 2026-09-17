@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Master Architectural Plan: Realizing SupremeAI as a Living, Self-Evolving Autonomous Intelligence (v2.0)
 
 ## Goal Description

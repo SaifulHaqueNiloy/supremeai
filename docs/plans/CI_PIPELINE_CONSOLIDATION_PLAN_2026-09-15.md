@@ -10,6 +10,7 @@ disposition: retain
 last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
+target_scope: supremeai_internal
 ---
 
 # SupremeAI CI/CD Architecture Optimization Specification (v2.0)

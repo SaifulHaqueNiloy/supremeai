@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 8: Adaptive Response Depth & Risk-Aware Verification Scaling
 **Status:** 🔄 **EVOLVED / ACTIVE IN ADAPTIVE ENGINE & VERIFICATION**  
 **Completion:** ~95% (Risk-Tiered Routing + Cognitive Depth Scaling)  

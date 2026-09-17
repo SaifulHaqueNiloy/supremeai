@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI QA Engine — Complete Implementation Plan
 
 > **Document Purpose:** This is the single authoritative plan for building the SupremeAI Automated QA Engine. It explains **what** we want to build, **why** it matters, and **exactly how** to implement it — step by step — so that any contributor can pick it up and execute without ambiguity.

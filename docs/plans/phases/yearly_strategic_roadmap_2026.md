@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 2026 Yearly Plan
 
 ## Objectives

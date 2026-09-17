@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Phase 3: Integration
 
 ## Duration

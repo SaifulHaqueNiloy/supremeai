@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🧠 Implementation Plan: Dynamic AI Providers Hub
 
 This plan outlines the architecture for a fully dynamic, zero-hardcoded AI Provider management system. The goal is to move away from static model lists and implement a real-time, self-validating discovery engine.

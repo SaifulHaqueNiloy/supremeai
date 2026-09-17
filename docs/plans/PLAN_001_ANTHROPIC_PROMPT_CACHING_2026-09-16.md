@@ -21,6 +21,7 @@ supersedes: []  # supersedes the 4 rejected ideas from HEAD_OF_PLANNING_LANDSCAP
 superseded_by: []
 last_verified: "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)"
 plan_lifecycle: living — single complete plan #001; founder reviews + approves → engineering PR → merge → THEN next plan
+target_scope: supremeai_internal
 ---
 
 # Head of Planning — Plan #001: Anthropic Prompt Caching

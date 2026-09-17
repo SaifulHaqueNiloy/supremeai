@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 24: AI Agent Ecosystem Integration & MCP Standardization
 **Status:** 🔄 **EVOLVED / REALIZED IN MCP CONTROL TOWER & AGENT SKILLS**  
 **Completion:** ~95% (FastMCP Server + Federated Sub-Servers + Antigravity Skills)  

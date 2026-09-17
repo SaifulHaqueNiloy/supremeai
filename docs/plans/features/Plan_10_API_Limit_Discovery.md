@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 10: Dynamic API Limit Discovery & Rate-Limit Shield
 **Status:** 🔄 **EVOLVED / ACTIVE IN REDIS RATE-LIMITER & MCP ADAPTERS**  
 **Completion:** ~95% (Upstash Redis Throttling + Provider-Neutral Failover)  

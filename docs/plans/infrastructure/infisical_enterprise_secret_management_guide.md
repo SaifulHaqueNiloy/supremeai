@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🔐 SuperAI Infisical Setup Guide
 ## Enterprise-Grade Secret Management for Free-Tier Survival
 

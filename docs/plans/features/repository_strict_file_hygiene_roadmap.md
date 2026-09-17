@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🔥 SupremeAI Repository - STRICT File Organization Roadmap
 
 ## 📊 Current State Summary

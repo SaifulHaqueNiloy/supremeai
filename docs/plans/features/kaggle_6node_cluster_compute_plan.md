@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Implementation Plan: Supreme-Kaggle 6-Node Cluster (180 GPU Hours/Week)
 
 This updated plan details the design and deployment of the **Supreme-Kaggle 6-Node Cluster Ring**, orchestrating 6 Kaggle accounts to unlock **180 GPU hours per week** (surpassing the 168 hours in a week). This provides SupremeAI with a **24/7 non-stop, zero-downtime, $0-cost cloud AI compute engine** that combines real-time streaming inference with our Hybrid "Supreme-Forge" background processing matrix.

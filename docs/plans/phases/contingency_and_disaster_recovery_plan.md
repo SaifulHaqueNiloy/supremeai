@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Contingency Plans
 
 ## Overview

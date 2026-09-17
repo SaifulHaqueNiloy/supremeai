@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # SUPREMEAI 2.0 — PRODUCT UI/UX + DASHBOARD COMPLETENESS MASTER PLAN
 
 Version: 1.0

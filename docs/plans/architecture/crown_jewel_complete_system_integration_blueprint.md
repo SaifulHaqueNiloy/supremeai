@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🏆 SupremeAI Complete Component Integration Blueprint
 ## "প্রতিটি Component এক একটি Crown Jewel হবে - Full System Integration"
 

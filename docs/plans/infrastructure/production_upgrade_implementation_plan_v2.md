@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🚀 SupremeAI Production Upgrade Implementation Plan
 
 **সংস্করণ:** 2.0.0  

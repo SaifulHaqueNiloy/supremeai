@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Implementation Plan: Strategic Mission Orchestration & UI Standardization
 
 ## Objective

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Infrastructure Plans Index
 
 **Status Dashboard** — Last updated: 2026-09-17

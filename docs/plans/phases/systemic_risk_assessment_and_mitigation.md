@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Risk Assessment
 
 ## High Priority Risks

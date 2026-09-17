@@ -43,6 +43,7 @@ baseline: "(hypothesis — execution PR-এ মাপা হবে) আজ: dev-
 measurement_method: (a) render_repo_map() সময় (time.perf_counter, backend নিজের উপর), (b) map আউটপুট সাইজ vs budget, (c) নমুনা dev-intent-এ map-এ প্রাসঙ্গিক ফাইল থাকল কি না (manual grade, 10-sample), (d) PageRank top-20-তে পরিচিত hub ফাইল (orchestrator.py, gateway.py জাতীয়) থাকল কি না
 success_threshold: backend-ওয়াইড index তৈরি ≤5s (acceptance threshold, Render 512MB container-সামঞ্জস্য) এবং 10-sample dev-intent গ্রেডে ≥7 স্যাম্পলে প্রাসঙ্গিক ফাইল map-এ উপস্থিত — উভয়ই hypothesis, Gate 5-এ measured result হবে
 plan_lifecycle: living — proposed candidate under strengthened PLAN_LIFECYCLE_POLICY (2026-09-17). ফাউন্ডার একটি plan অনুমোদন করলে সেটিই একমাত্র active execution plan হবে; PLAN_002 (compaction) ও PLAN_003 (এই ডকুমেন্ট) পরস্পর-সম্পূরক প্রার্থী — কোনোটিই অনুমোদন-পূর্বে executable নয়
+target_scope: supremeai_internal
 ---
 
 # Head of Planning — Plan #003: Aider-Style Repo Map

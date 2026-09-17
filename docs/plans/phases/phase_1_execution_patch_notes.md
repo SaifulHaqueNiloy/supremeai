@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI মাস্টার প্ল্যান — ফেজ ১ কমপ্লিশন প্যাচ (Phase 1 Completion Patch)
 
 **Date:** 2026-09-13 · **Base:** `main @ c4d4ec4` · **Type:** feature + governance close-out

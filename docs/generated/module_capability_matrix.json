@@ -663,6 +663,15 @@
     },
     {
       "capability_signals": [
+        "capability"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/agents/research_assistant.py"
+    },
+    {
+      "capability_signals": [
         "health",
         "register"
       ],
@@ -1074,6 +1083,7 @@
         "browser",
         "capability",
         "dispatch",
+        "execute",
         "health",
         "mcp",
         "memory",
@@ -1347,7 +1357,10 @@
       "path": "backend/api/routes/agent_workspace.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability",
+        "execute"
+      ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
       "kind": "py",
@@ -1894,6 +1907,7 @@
     {
       "capability_signals": [
         "capability",
+        "memory",
         "register"
       ],
       "classification": "human_review",
@@ -2718,6 +2732,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "memory"
       ],
@@ -3064,7 +3079,8 @@
     },
     {
       "capability_signals": [
-        "health"
+        "health",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -3225,7 +3241,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "register"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
@@ -5256,7 +5273,8 @@
     },
     {
       "capability_signals": [
-        "dispatch"
+        "dispatch",
+        "register"
       ],
       "classification": "canonical",
       "entrypoints": [],
@@ -9126,6 +9144,13 @@
       "path": "backend/scripts/dev/update_imports.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/scripts/devops/__init__.py"
+    },
+    {
       "capability_signals": [
         "health"
       ],
@@ -9135,6 +9160,18 @@
       ],
       "kind": "py",
       "path": "backend/scripts/devops/ai_log_analyzer.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/scripts/devops/bug_prophet.py"
     },
     {
       "capability_signals": [
@@ -10100,6 +10137,13 @@
       "path": "backend/tests/agents/test_parallel_agent_executor.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/agents/test_research_assistant.py"
+    },
+    {
       "capability_signals": [
         "execute",
         "health"
@@ -10301,6 +10345,15 @@
     },
     {
       "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_agent_execute_contract.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "health"
       ],
@@ -10454,6 +10507,16 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_ecosystem_admin_contract.py"
+    },
+    {
+      "capability_signals": [
         "execute"
       ],
       "classification": "test",
@@ -10512,6 +10575,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/api/test_knowledge_learning_loop.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/api/test_module_operational_contracts.py"
     },
     {
@@ -10532,6 +10602,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_phase4_api_server.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_preferences_extended_prefs.py"
     },
     {
       "capability_signals": [],
@@ -10586,6 +10665,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_session_takeover.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_skills_routes.py"
     },
     {
       "capability_signals": [],
@@ -17407,6 +17493,16 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
+      "path": "frontend/src/components/customer/BrowserPreview.test.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
       "path": "frontend/src/components/customer/BrowserPreview.tsx"
     },
     {
@@ -19086,16 +19182,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/pages/user/plugins/PluginMarketplace.tsx"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/providers/MockSwarmProvider.tsx"
     },
     {
       "capability_signals": [
@@ -21690,6 +21776,15 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/audit/system_defect_scan_2026_09_16.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/audit_env_usage.py"
     },
     {
@@ -22940,18 +23035,6 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/devops/bug_prophet.py"
-    },
-    {
-      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -23134,7 +23217,10 @@
       "path": "scripts/feature_parity_sentinel.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"
@@ -24080,5 +24166,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2783
+  "source_file_count": 2792
 }

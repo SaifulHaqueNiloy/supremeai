@@ -9,6 +9,7 @@ canonical: true  # free-tier POLICY canonical (architecture lives in free_tier_f
 source_file: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
 supersedes: []  # referenced target free_tier_multi_service_scale_master_plan.md no longer exists in repository (historical)
 superseded_by: []
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Free-Tier Scaling Constitution & Compliance Policy
@@ -1209,4 +1210,3 @@ Per `AGENTS.md` and constitutional governance, earlier proposals must record the
   - Dynamic Redis-backed backpressure and job queuing.
   - Multi-tier caching (L1 in-memory + L2 edge/Redis) to eliminate duplicate compute.
   - Transparent failover to user-authorized external resources when local quotas are exhausted.
-

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 📁 `.kilo` ফোল্ডার — সম্পূর্ণ ব্যাখ্যা
 
 `.kilo` হলো **Kilo AI** ([kilo.ai](https://kilo.ai)) নামের একটি AI Coding Agent-এর কনফিগারেশন ও ওয়ার্কস্পেস ফোল্ডার।  

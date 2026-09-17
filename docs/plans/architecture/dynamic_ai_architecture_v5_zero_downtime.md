@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🔄 SupremeAI Dynamic AI Architecture v5.0
 ## "Zero-Downtain, Self-Healing, External-API-Independent" System
 

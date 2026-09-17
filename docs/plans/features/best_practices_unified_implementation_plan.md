@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # 🏗️ SupremeAI — Best Implementation Plan
 ## 4টি High-Value Feature (Codebase-Verified, Production-Ready)
 

@@ -10,6 +10,7 @@ source_file: docs/plans/features/free_tier_federation_master_plan_v4.1_missing_s
 supersedes: []  # referenced target free_tier_missing_services_integration_plan.md no longer exists in repository (historical)
 superseded_by: []
 related: docs/plans/infrastructure/free_tier_federation_master_plan_v4.md
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Free-Tier Federation Master Plan v4.1

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Self-Learning System — Current Implementation Status
 **Date:** 2026-04-27  
 **Source:** Based on `SupremeAI_Self_Learning_Documentation.docx` and repository analysis  
