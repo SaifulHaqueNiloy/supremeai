@@ -162,7 +162,7 @@ P-G: TaskRuntime↔runs ঐক্য  → TaskContract run-এর ভিতর�
 
 - **P-A:** নতুন পাতলা `run_scope()` context-manager (runs প্যাকেজে) — entry/exit-এ create/transition; chat.py, scheduled_tasks.py, tool-execution, missions-advance-পথে মোড়ানো; execution_recorder-প্যাটার্ন (best-effort, DB-ব্যর্থতায় চলতে-থাকা); flag `SUPREMEAI_RUN_FABRIC_UNIVERSAL=true` (default false)।
 - **P-B:** run_scope-সমাপ্তিতে (P-A-নির্মিত run-এ) record_usage — idempotency-key = attempt-id; দ্বি-গণনা-টেস্ট; gateway-পথে Module 03-র tenant_id-প্রচারের সাথে সামঞ্জস্য।
-- **P-C:** বিদ্যমান worker-প্যাটার্নে ১৫-মিনিট sweep: stale terminal-পূর্ব run → classify_failure→finalize; `.github/workflows/db-retention.yml`-এ runs(90d)/run_events(30d) prune — বিদ্যমান deletion-guard পুনঃব্যবহার।
+- **P-C:** বিদ্যমান worker-প্যাটার্নে stale-run sweep (interval **env-পঠিত — কোডে কোনো স্থির মিনিট-সংখ্যা নয়**; zero-hardcode সংশোধন; retention-দিনও env/config-চালিত, ডকুমেন্টে উদাহরণ-মাত্র): stale terminal-পূর্ব run → classify_failure→finalize; `.github/workflows/db-retention.yml`-এ runs/run_events prune — বিদ্যমান deletion-guard পুনঃব্যবহার।
 - **P-D:** `runService.ts` list/detail/events → `/api/v1/runs`; missions-ভিউ গৌণ-ট্যাব; route-audit টুলে নতুন consumer-নিবন্ধন।
 - **P-E:** AutomationDispatcher-এর সিদ্ধান্ত: scheduled-automation-পথে revive (bridge সক্রিয়) অথবা delete (register-দর্শন); দুই-সমাপ্তিই measured; bridge-লেখায় প্রকৃত user_id/tenant (P-A-প্রবাহিত)।
 - **P-F:** BudgetGuard.check_pre_execution gateway/tool পথে (flag `SUPREMEAI_RUN_BUDGETS=true`, default false, fail-open); check_run_budgets-ফল অ্যাডমিশন-সিদ্ধান্তে।
@@ -229,6 +229,21 @@ P-G: TaskRuntime↔runs ঐক্য  → TaskContract run-এর ভিতর�
 - **Gate 5 (live):** ২৪-ঘণ্টায় adoption-matrix ৮/৮ (target); usage-ফিড >0; stuck-run >7d শূন্য; /runs সত্য-উৎস পর্যবেক্ষিত।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema/data-loss path নেই; FE-উৎস-বদল একক revert-যোগ্য।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | পাতলা context-manager + বিদ্যমান worker/retention-workflow পুনঃব্যবহার; BudgetGuard flag default false fail-open; কোনো নতুন infra/পরিশোধিত পরিষেবা নয় |
+| Lightweight | ✅ সংগত | best-effort recording (DB-ব্যর্থতায় চলতে-থাকা); P-E wire-অথবা-delete দ্বি-সমাপ্তি |
+| Fast & smooth | ✅ সংগত | flag default false → হট-পথ অপরিবর্তিত; sweep ব্যাকগ্রাউন্ড-স্তরে |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-C-র "১৫-মিনিট sweep" ও স্থির retention-দিন উদাহরণ-মাত্র করে env/config-চালিত (§২.৪ সংশোধিত) |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `run_scope` backend-এ অনুপস্থিত (সত্যিই নতুন-প্রস্তাব); `BudgetGuard.check_pre_execution` বিদ্যমান (`backend/runtime/budget_guard.py` L19); TaskRuntime.execute_task বিদ্যমান।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
