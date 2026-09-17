@@ -1,11 +1,12 @@
-"""Task lifecycle endpoints: Neon-backed canonical versions first, then the
-legacy in-memory (TASKS/FINDINGS) duplicates that follow them in the original
-file — preserved verbatim INCLUDING their duplicate route registrations, since
-route registration order determines which handler wins at match time.
+"""Task lifecycle endpoints (Neon-backed canonical implementations).
 
-Split out of the former single-module api/routes/browser.py verbatim.
-``TASKS``/``FINDINGS`` live in THIS module; they are only ever mutated in
-place (item assignment / append / del), never rebound.
+Hygiene note (2026-09-17 cleanup): the legacy in-memory duplicate handlers
+(``TASKS``-backed POST /tasks/{id}/complete, /fail and DELETE /tasks/{id})
+that were shadowed by the Neon versions registered above them have been
+removed — they were dead code (first-registered route wins at match time)
+and carried an unreachable block after ``return``. Only ``FINDINGS`` remains
+in-process (bounded, see ``MAX_FINDINGS``) because it is the sole
+implementation of the findings endpoints.
 """
 
 import uuid
@@ -27,11 +28,13 @@ from core.neon_repository import (
 )
 from core.task_policy import evaluate_goal
 
-TASKS: dict[str, dict[str, Any]] = {}
 FINDINGS: list[dict[str, Any]] = []
 
 # বাংলা মন্তব্য: সার্কিট ব্রেকার থ্রেশোল্ড — টাস্ক এক্সিকিউশন ক্যাপ (৪৫ সেকেন্ড)
 EXECUTION_CAP_MS = 45000
+
+# বাংলা মন্তব্য: in-memory FINDINGS আনবাউন্ডেড বৃদ্ধি রোধ — সর্বশেষ ৫০০টি রাখা হয়
+MAX_FINDINGS = 500
 
 
 class GoalRequest(BaseModel):
@@ -156,35 +159,6 @@ async def delete_task(
     if not deleted:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"success": True}
-    TASKS[task_id]["status"] = "CIRCUIT_OPEN"
-    TASKS[task_id]["durationMs"] = EXECUTION_CAP_MS
-    return {"success": True, "status": "CIRCUIT_OPEN"}
-
-
-@router.post("/tasks/{id}/complete")
-def set_task_complete(task_id: str):
-    """বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করুন"""
-    if task_id not in TASKS:
-        raise HTTPException(status_code=404, detail="Task not found")
-    TASKS[task_id]["status"] = "SUCCESS"
-    return {"success": True, "status": "SUCCESS"}
-
-
-@router.post("/tasks/{id}/fail")
-def set_task_failed(task_id: str):
-    """বাংলা মন্তব্য: টাস্ক ব্যর্থ হলে কল করুন"""
-    if task_id not in TASKS:
-        raise HTTPException(status_code=404, detail="Task not found")
-    TASKS[task_id]["status"] = "FAILED"
-    return {"success": True, "status": "FAILED"}
-
-
-@router.delete("/tasks/{id}")
-def delete_task(task_id: str):
-    if task_id in TASKS:
-        del TASKS[task_id]
-        return {"success": True}
-    raise HTTPException(status_code=404, detail="Task not found")
 
 
 @router.get("/tasks/{id}/findings")
@@ -196,4 +170,6 @@ def get_findings(task_id: str):
 @router.post("/findings")
 def add_finding(finding: dict[str, Any]):
     FINDINGS.append(finding)
+    # বাংলা মন্তব্য: সর্বশেষ MAX_FINDINGS-টি ছাড়া বাকি ফেলে দিয়ে unbounded growth বন্ধ
+    del FINDINGS[:-MAX_FINDINGS]
     return finding

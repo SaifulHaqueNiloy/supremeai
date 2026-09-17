@@ -25,7 +25,6 @@ import httpx
 from fastapi import HTTPException, Response
 
 from api.routes.browser import router
-from api.routes.browser._tasks import TASKS
 
 # Page-context limits: keep prompts bounded (no unbounded context bloat).
 _MAX_CONTEXT_CHARS = 6000
@@ -314,15 +313,6 @@ def execute_step(task_id: str):
     Task lifecycle continues via the Neon-backed routes in _tasks.py
     (/tasks, /tasks/{id}/complete, /tasks/{id}/fail, /tasks/{id}/circuit-open).
     """
-    if task_id in TASKS:
-        # Known legacy task: the in-memory executor is gone either way.
-        raise HTTPException(
-            status_code=501,
-            detail=(
-                "The legacy in-memory task-step executor has been retired "
-                "(audit ERR-G05): it only returned fake progress. Use the "
-                "Neon-backed task lifecycle routes (/tasks, /tasks/{id}/complete, "
-                "/tasks/{id}/fail) or the missions engine instead."
-            ),
-        )
+    # বাংলা মন্তব্য: legacy TASKS ডিকশনারি কখনোই populate হতো না (২০২৬-০৯-১৭
+    # cleanup-এ সরানো হয়েছে) — তাই এই রুট সবসময় 404-ই দিত; আচরণ অপরিবর্তিত।
     raise HTTPException(status_code=404, detail="Task not found")

@@ -6,7 +6,7 @@
   ],
   "ignoreExportsUsedInFile": true,
   "rules": {
-    "files": "off",
+    "files": "warn",
     "exports": "warn",
     "types": "warn",
     "dependencies": "warn",

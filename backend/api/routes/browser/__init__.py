@@ -13,7 +13,7 @@ cohesive submodules. The public contract is unchanged:
   submodule imports below are intentionally ordered to reproduce the old
   file top-to-bottom), so OpenAPI output and route matching are identical;
 * ``tests/core/test_browser_credentials.py`` clears
-  ``CREDENTIALS`` / ``RECENT_ACTIVITIES`` / ``TASKS`` / ``FINDINGS`` through
+  ``CREDENTIALS`` / ``RECENT_ACTIVITIES`` / ``FINDINGS`` through
   this package namespace — the re-exported names are the SAME objects the
   endpoint modules use, so the in-place ``.clear()`` calls behave exactly
   as they did against the monolithic module.
@@ -227,7 +227,6 @@ from ._surf_controls import (  # noqa: F401,E402  (re-exports)
 from ._tasks import (  # noqa: F401,E402  (re-exports)
     EXECUTION_CAP_MS,
     FINDINGS,
-    TASKS,
     GoalRequest,
     TaskPreviewRequest,
     _set_task_status,
