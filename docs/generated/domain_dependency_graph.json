@@ -222,7 +222,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 19,
           "path": "backend/api/routes/webhooks_ai.py"
         }
       ],
@@ -774,6 +774,16 @@
         {
           "line": 20,
           "path": "backend/services/llm/providers.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 168,
+          "path": "backend/tests/missions/test_mission_failure_modes.py"
         }
       ],
       "source": "ai",
@@ -2382,7 +2392,7 @@
     {
       "evidence": [
         {
-          "line": 11,
+          "line": 15,
           "path": "backend/api/routes/knowledge.py"
         }
       ],
@@ -2882,7 +2892,7 @@
     {
       "evidence": [
         {
-          "line": 88,
+          "line": 91,
           "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
         }
       ],
@@ -2892,7 +2902,7 @@
     {
       "evidence": [
         {
-          "line": 89,
+          "line": 92,
           "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
         }
       ],

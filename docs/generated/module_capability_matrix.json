@@ -16664,20 +16664,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/DashboardErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/GlobalErrorBoundary.tsx"
     },
     {
@@ -18585,13 +18571,6 @@
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/core/ErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/core/stateManagement.ts"
     },
@@ -18881,13 +18860,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/lib/etag.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/lib/modelBranding.ts"
     },
     {
@@ -18896,17 +18868,6 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/lib/secureSse.ts"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "health",
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/supabase.client.ts"
     },
     {
       "capability_signals": [
@@ -24316,5 +24277,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2805
+  "source_file_count": 2800
 }
