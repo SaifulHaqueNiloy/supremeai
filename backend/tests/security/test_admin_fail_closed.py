@@ -1,12 +1,14 @@
 """
-Admin JWT fail-closed revocation tests (production-readiness plan, item 2).
+Admin JWT revocation policy tests — env-aware failure policy (V3 token_budget
+প্রিসিডেন্ট অনুসরণ; production-readiness plan, item 2)।
 
 নিশ্চিত করে:
-- Redis ডাউন (client None) + is_admin=True  → is_token_revoked = True (fail-CLOSED)
-- Redis ডাউন + is_admin=False               → is_token_revoked = False (fail-open)
-- Redis সুস্থ + blacklist-এ jti             → True
+- Redis ডাউন + is_admin=True + env=production → True (fail-CLOSED, অপরিবর্তিত)
+- Redis ডাউন + is_admin=True + env=dev/test   → False (fail-open) + loud log
+- Redis ডাউন + is_admin=False                 → False (fail-open)
+- Redis সুস্থ + blacklist-এ jti               → True
 - TTL-aware admin LRU cache: revoked admin jti Redis ছাড়াই ধরা পড়ে
-- verify_token_async: role=admin token Redis ডাউনে 401 দেয়
+- verify_token_async: role=admin + production + Redis ডাউনে 401 দেয়
 """
 
 from unittest.mock import AsyncMock, patch
@@ -39,8 +41,23 @@ def _clean_cache():
 
 @pytest.mark.asyncio
 async def test_admin_fail_closed_when_redis_down():
+    # বাংলা: production-এ নীতি অপরিবর্তিত — Redis ছাড়া অ্যাডমিন রিজেক্ট (fail-closed)।
+    from core.config import settings
+
     with patch("core.cache.redis_manager.redis_manager", _FakeRedis(down=True)):
-        assert await is_token_revoked("jti-admin-1", is_admin=True) is True
+        with patch.object(settings, "env", "production"):
+            assert await is_token_revoked("jti-admin-1", is_admin=True) is True
+
+
+@pytest.mark.asyncio
+async def test_admin_fail_open_dev_when_redis_down():
+    # বাংলা: V5 — dev/test-এ Redis না থাকলে fail-open (নীরব নয়, loud error লগে);
+    # নইলে Redis-হীন টেস্ট এনভায়রনমেন্টে সব অ্যাডমিন এন্ডপয়েন্ট 401 হয়ে যেত।
+    from core.config import settings
+
+    with patch("core.cache.redis_manager.redis_manager", _FakeRedis(down=True)):
+        with patch.object(settings, "env", "local"):
+            assert await is_token_revoked("jti-admin-dev", is_admin=True) is False
 
 
 @pytest.mark.asyncio
@@ -91,11 +108,15 @@ def test_admin_cache_lru_bound():
 
 @pytest.mark.asyncio
 async def test_verify_token_async_admin_401_when_redis_down():
+    # বাংলা: production fail-closed semantics — অ্যাডমিন টোকেন Redis ডাউনে 401।
+    from core.config import settings
+
     token = _make_admin_token()
     with patch("core.cache.redis_manager.redis_manager", _FakeRedis(down=True)):
-        with pytest.raises(HTTPException) as exc_info:
-            await verify_token_async(token)
-        assert exc_info.value.status_code == 401
+        with patch.object(settings, "env", "production"):
+            with pytest.raises(HTTPException) as exc_info:
+                await verify_token_async(token)
+            assert exc_info.value.status_code == 401
 
 
 @pytest.mark.asyncio
