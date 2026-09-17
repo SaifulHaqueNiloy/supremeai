@@ -91,7 +91,7 @@ Unbounded growth is the main free-tier risk (Supabase storage caps). Verified mi
 
 ## Frontend Local-First Mirror
 
-`frontend/src/store/localFirstDb.ts` maintains a Dexie/IndexedDB mirror — tables `chat_messages`, `conversations`, `user_preferences`, `sync_queue` — with Supabase background sync. The UI remains responsive during backend cold starts and queues mutations for later sync; the Supabase JS client (`lib/supabase.client.ts`) uses `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (RLS applies to anon access).
+`frontend/src/store/localFirstDb.ts` maintains a Dexie/IndexedDB mirror — tables `chat_messages`, `conversations`, `user_preferences`, `sync_queue` — with Supabase background sync. The UI remains responsive during backend cold starts and queues mutations for later sync; The former Supabase JS client (`lib/supabase.client.ts`) was removed in Task-14 Wave-2 (dead code, zero importers; @supabase/supabase-js purged from package.json).
 
 ## Conventions for New Models
 

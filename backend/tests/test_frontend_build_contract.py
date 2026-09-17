@@ -102,7 +102,6 @@ KNOWN_UNDECLARED: frozenset[str] = frozenset(
         "VITE_SCRAPER_URL",
         "VITE_SCRAPER_BACKEND",
         "VITE_SELF_HEALING",
-        "VITE_SUPABASE_ANON_KEY",
         "VITE_SUPABASE_URL",
         "VITE_USE_RELATIVE_PATH",
         "VITE_VERCEL_API_URL",
