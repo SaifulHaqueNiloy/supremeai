@@ -59,7 +59,7 @@ class CloudSandboxOrchestrator:
                 or getattr(settings, "environment", "") == "local"
                 or settings.is_local()
             ):
-                return "http://127.0.0.1"
+                return "http://127.0.0.1"  # is_local() — local-mode dry-run only, prod raises below
             raise ValueError("Local sandbox provider is not permitted in production environments")
         else:
             raise ValueError(f"Unsupported provider: {self.provider}")

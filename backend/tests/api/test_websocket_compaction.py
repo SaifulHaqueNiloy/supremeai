@@ -30,10 +30,14 @@ class StubGateway:
     """Minimal async gateway stand-in recording calls and returning canned results."""
 
     def __init__(self, result=None, error=None):
-        self.result = result if result is not None else {
-            "success": True,
-            "text": "User prefers FastAPI; decided to keep the Neon-backed task routes.",
-        }
+        self.result = (
+            result
+            if result is not None
+            else {
+                "success": True,
+                "text": "User prefers FastAPI; decided to keep the Neon-backed task routes.",
+            }
+        )
         self.error = error
         self.calls: list[dict] = []
 
@@ -154,9 +158,7 @@ async def test_compact_empty_summary_falls_back():
     history = _full_history()
     gateway = StubGateway(result={"success": True, "text": "   "})
     await ws_agent._compact_history(history, gateway, session_ref="sess-empty")
-    assert all(
-        not (isinstance(m, dict) and m.get("name") == "compacted_context") for m in history
-    )
+    assert all(not (isinstance(m, dict) and m.get("name") == "compacted_context") for m in history)
     assert len(history) == MAXLEN - MAXLEN // 2
 
 

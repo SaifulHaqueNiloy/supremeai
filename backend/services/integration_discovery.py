@@ -163,8 +163,7 @@ class IntegrationDiscoveryService:
                 # বাংলা: probe-এ unreachable host স্বাভাবিক — কিন্তু নীরব নয়;
                 # debug-এ কারণ রাখা হয় যাতে discovery ব্যর্থতা diagnosable থাকে।
                 logger.debug(
-                    f"_probe_mcp: {base_url}{path} handshake failed "
-                    f"({type(exc).__name__}: {exc})"
+                    f"_probe_mcp: {base_url}{path} handshake failed ({type(exc).__name__}: {exc})"
                 )
                 continue
         return None
@@ -199,10 +198,7 @@ class IntegrationDiscoveryService:
         except Exception as exc:
             # বাংলা: reachability probe ব্যর্থতা → None (ডিজাইনসিদ্ধ), কিন্তু
             # কারণ debug-এ রেখে দিচ্ছি — silent swallow False-Assurance বাড়ায়।
-            logger.debug(
-                f"_probe_webhook: {base_url} unreachable "
-                f"({type(exc).__name__}: {exc})"
-            )
+            logger.debug(f"_probe_webhook: {base_url} unreachable ({type(exc).__name__}: {exc})")
         return None
 
     @classmethod

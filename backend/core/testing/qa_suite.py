@@ -405,13 +405,17 @@ class SecurityTester:
             "SecurityTester.test_sql_injection has no real probe wired "
             f"(audit B-06) — returning UNVERIFIED result for {endpoint}"
         )
-        return self._unverified_result(endpoint=endpoint, param_name=param_name, payloads=[
-            "' OR '1'='1",
-            "'; DROP TABLE users; --",
-            "' UNION SELECT * FROM users --",
-            "admin'--",
-            "' OR 1=1--",
-        ])
+        return self._unverified_result(
+            endpoint=endpoint,
+            param_name=param_name,
+            payloads=[
+                "' OR '1'='1",
+                "'; DROP TABLE users; --",
+                "' UNION SELECT * FROM users --",
+                "admin'--",
+                "' OR 1=1--",
+            ],
+        )
 
     def test_xss(self, endpoint: str, param_name: str) -> dict[str, Any]:
         """Test for XSS vulnerabilities (currently UNVERIFIED)."""
@@ -419,13 +423,17 @@ class SecurityTester:
             f"SecurityTester.test_xss has no real probe wired (audit B-06) — "
             f"returning UNVERIFIED result for {endpoint}"
         )
-        return self._unverified_result(endpoint=endpoint, param_name=param_name, payloads=[
-            "<script>alert('XSS')</script>",
-            "<img src=x onerror=alert('XSS')>",
-            "javascript:alert('XSS')",
-            "<svg onload=alert('XSS')>",
-            "'><script>alert('XSS')</script>",
-        ])
+        return self._unverified_result(
+            endpoint=endpoint,
+            param_name=param_name,
+            payloads=[
+                "<script>alert('XSS')</script>",
+                "<img src=x onerror=alert('XSS')>",
+                "javascript:alert('XSS')",
+                "<svg onload=alert('XSS')>",
+                "'><script>alert('XSS')</script>",
+            ],
+        )
 
     def test_auth_bypass(self, auth_endpoint: str) -> dict[str, Any]:
         """Test for authentication bypass vulnerabilities (currently UNVERIFIED)."""
@@ -567,7 +575,9 @@ class ChaosEngineer:
         self.experiments = []
 
     @staticmethod
-    def _unverified_experiment(experiment: str, target_service: str, **fields: Any) -> dict[str, Any]:
+    def _unverified_experiment(
+        experiment: str, target_service: str, **fields: Any
+    ) -> dict[str, Any]:
         return {
             "experiment": experiment,
             "target": target_service,
