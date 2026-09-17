@@ -30,7 +30,7 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false  # proposed বিশ্লেষণ-নীলনকশা — tested code + contracts-ই reality; সম্পাদন শুধুই ফাউন্ডার অনুমোদনের পরে (Gate 2); প্রতিটি Phase আলাদা ছোট execution প্ল্যান হিসেবে অনুমোদিত হবে
-last_verified: "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)"
+last_verified: "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; দর্শন-সংগতি পুনঃযাচাই 2026-09-17 branch crown-jewel-v2 (base ed35eaf): proposal-স্তরে ৪-নীতি অডিট + মূল-যন্ত্রপাতি spot-check (store_memory blind INSERT অটুট, synaptic_dream unscheduled, periodic_task_scheduler interval_seconds প্রমাণিত); PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)"
 code_evidence:
   - "backend/services/memory_service.py L288–340 — store_memory(): pg path blind INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — একই summary আবার এলেও নতুন row; কোনো similarity probe নেই, কোনো UPDATE branch নেই; content/importance_score/updated_at কোনোটিই লেখা হয় না"
   - backend/services/memory_service.py L149–188 — _query_via_pgvector_rpc (match_ai_memories RPC) — scalable probe path প্রস্তুত; L52 — _MEMORY_ROW_CAP=2000 (in-Python cosine ranking cap — capped candidate-set pattern প্রমাণিত)
@@ -177,8 +177,8 @@ P-F: Recall evaluation harness          → measured recall@5 — B4 unmeasured 
 
 - **P-A:** PLAN_006 যথার্থ হিসেবে নিষ্পাদিত হবে — এই ডকুমেন্ট তার নতুন স্কোপ সংজ্ঞায়িত করে না।
 - **P-B:** `MemoryStore` Protocol (`backend/memory/protocol.py` — নতুন ছোট ফাইল, ৩ মেথড: store/query/health) → `backend/memory/supabase_store.py` canonical implementation → legacy store-দের `M3_MEMORY_STORE_CONSOLIDATION_DECISION_TABLE.md`-এর রায় অনুযায়ী adapter/archive। ধাপ: dual-write shadow → parity পরিমাপ → cutover → legacy read-only। `backend/core/orchestration/periodic_task_scheduler.py`-র মতো বিদ্যমান seam পুনঃব্যবহার। **কী টচ হবে না:** `CascadeMemoryService`-র সিগনেচার, AutoRAGInjector-র consumers, কোনো API route।
-- **P-C:** `backend/workers/synaptic_dream.py`-কে বিদ্যমান periodic scheduler-এ (nightly cadence) নিবন্ধন; idempotent consolidation (merge-only, কখনো DELETE নয়); ফল `docs/plans/` লগে সংখ্যাত। **কী টচ হবে না:** worker-এর consolidation-লজিক, কোনো নতুন queue-ভিত্তি।
-- **P-D:** `auto_rag_injector.py`-তে scoring branch: `score = w1·cosine + w2·importance + w3·recency` (weights env-tunable, default আজকের আচরণে সমতুল্য রাখা সম্ভব না হলে kill-switch SUPREMEAI_MEMORY_HYBRID_RANK=false → relevance-only)। **কী টচ হবে না:** TOP_K/MAX_CHARS, injector-এর public interface।
+- **P-C:** `backend/workers/synaptic_dream.py`-কে বিদ্যমান periodic scheduler-এ নিবন্ধন; idempotent consolidation (merge-only, কখনো DELETE নয়); ফল `docs/plans/` লগে সংখ্যাত। **Cadence হার্ডকোড নয় (zero-hardcode সংশোধন):** interval সম্পূর্ণ scheduler-config/env-চালিত (`backend/core/orchestration/periodic_task_scheduler.py`-র বিদ্যমান `interval_seconds` প্যাটার্ন, L36), ডিফল্ট-মান env-থেকে — কোডে কোনো স্থির সময়-সংখ্যা লেখা হবে না। **কী টচ হবে না:** worker-এর consolidation-লজিক, কোনো নতুন queue-ভিত্তি।
+- **P-D:** `auto_rag_injector.py`-তে scoring branch: `score = w1·cosine + w2·importance + w3·recency` (weights env-tunable, default আজকের আচরণে সমতুল্য রাখা সম্ভব না হলে kill-switch SUPREMEAI_MEMORY_HYBRID_RANK=false → relevance-only)। **Weights সম্পূর্ণ runtime-env-পঠিত — কোডে কোনো কনস্ট্যান্ট নয়** (zero-hardcode নীতি); env-অনুপস্থিতিতে fallback = legacy relevance-only আচরণ। **কী টচ হবে না:** TOP_K/MAX_CHARS, injector-এর public interface।
 - **P-E:** store path-এ `metadata["run_id"]` সংযোজন (JSONB — **কোনো schema migration নেই**); `backend/runs/` service থেকে run_id প্রবাহ; পাঠক-পথ optional (অনুপস্থিত run_id → আজকের আচরণ)।
 - **P-F:** `backend/tests/memory/eval/` fixture: নিয়ন্ত্রিত corpus → query সেট → recall@5 + duplicate-share মাপা; ফল PR-বডিতে measured হিসেবে প্রকাশ।
 
@@ -244,6 +244,21 @@ P-F: Recall evaluation harness          → measured recall@5 — B4 unmeasured 
 - **Gate 5 (live):** identical fact ×৩ store → ১ row; nightly consolidation রান-লগ; eval harness recall@5 সংখ্যা PR-এ প্রকাশ; run_id-যুক্ত নতুন row-শতাংশ।
 - **Gate 6:** প্রতিটি Phase তার নিজস্ব execution প্ল্যানে complete-হবে; এই নীলনকশা "complete" হবে যখন acceptance_criteria-র ছয়টি flywheel-সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase-এর নিজস্ব kill-switch (§২.৬/`risk_and_rollback`); সমষ্টিগত revert = সংশ্লিষ্ট Phase-commit-এর git revert — কোনো data-loss path নেই (merge-only, archive-only)।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+প্রতিষ্ঠাতা-নির্দেশিত চার মূল-দর্শনের (zero cost / lightweight / fast-smooth / zero-hardcode) আলোকে প্রকাশিত নীলনকশার proposal-স্তর অডিট:
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | 0 নতুন dependency/infra/LLM-call (Part 4 rule 3–5); free-tier 512MB-সচেতনতা (§২.৬-৪) |
+| Lightweight | ✅ সংগত | ছোট protocol-ফাইল + বিদ্যমান scheduler/worker পুনঃব্যবহার; 0 schema migration |
+| Fast & smooth | ✅ সংগত | recall হট-পথে ডিফল্ট আচরণ-অপরিবর্তিত; capped probe (`_MEMORY_ROW_CAP=2000`); kill-switch প্রতি Phase |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-C-র "nightly cadence" ও P-D-র weights আংশিক স্থির-ধারণা ছিল — এই পাসে দুটোই runtime-config/env-চালিত (§২.৪ সংশোধিত); মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `store_memory` blind INSERT অটুট, `synaptic_dream` এখনো unscheduled, scheduler `interval_seconds`-প্যাটার্ন প্রমাণিত |
+
+স্কোপ-সততা: এই পাস proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয় (original `last_verified`-র 07604ad-প্রমাণ অক্ষুণ্ণ)।
 
 ---
 
