@@ -157,7 +157,7 @@ plan_lifecycle: "living — Crown Jewel Module Series চক্র ৩-এর �
 3. **সৎ মডেল-উপাত্ত** — registry-তে ৬+ fabricated মডেল; `_resolve_registry_model` alias-প্যাচ; `PROVIDER_COST_MAP` ৯টি হাতে-টাইপ ধ্রুবক — vendor-true context-window/price নেই।
 4. **জীবন্ত routing-policy** — প্রতিটি chain-এর head retired; `task_overrides` অপঠিত; নীতি কোডে হার্ডকোডেড (flat 12s timeout, one-shot 429 retry)।
 5. **জীবন্ত provider-health** — `provider_router.py` সম্পূর্ণ অচল (caller শূন্য); সিদ্ধান্ত-পথে হার্ডকোডেড health; admin UI কাল্পনিক stats দেখায়।
-6. **সত্য-উত্তরের নিশ্চয়তা** — ৩টি false-assurance surface জীবিত (competitive_kit fabricated, gateway MagicMock-default, route_and_stream "Hello World") + model_router-এর production-ব্রাঞ্চে mock-শনাক্তকরণ।
+6. **সত্য-উত্তরের নিশ্চয়তা** — false-assurance surface: competitive_kit fabricated (এখন `backend/core/competitive_kit.py` L1359) ও route_and_stream "Hello World" (এখন `async_route_and_stream`) জীবিত; gateway MagicMock-default upstream V4-এ বন্ধ (a3fe8bb) + model_router-এর production-ব্রাঞ্চে mock-শনাক্তকরণ।
 7. **এক গেটওয়ে** — দ্বিতীয় জীবিত স্ট্যাক (llm_router 956 লাইন + providers.py 708 লাইন + HFSwarmRouter) — double breaker-namespace, বিচ্ছিন্ন fallback-আচরণ (trap #19)।
 
 ### ২.৩ কী করতে হবে (inference-spine সৎকরণের ৭ ধাপ)
@@ -177,9 +177,9 @@ P-G: এক-গেটওয়ে একীকরণ            → llm_router/M
 - **P-A:** `streaming.py`-এর `_stream_completion` loop-এর সমাপ্তিতে (final chunk-এ usage-সহ) `track_llm_call` কল — completion.py-র অনুরূপ টেলিমেট্রি-ব্লক পুনঃব্যবহার; **কী টচ হবে না:** stream-চাংক ফরম্যাট, SSE route-চুক্তি, ব্যবহারকারী-দৃশ্যমান কিছু।
 - **P-B:** ১৩ serving-route-এ `tenant_id` প্যারাম প্রচার (chat.py, task_workspace.py, reasoning.py, slash_commands.py, scheduled_tasks.py, deep_research.py…); `completion.py`-এ CostGuard চেকের পরে TokenDeductor pre-call চেক — Redis/Firestore অনুপস্থিতে fail-open + সতর্ক-লগ (#8 Graceful Degradation); flag `SUPREMEAI_GATEWAY_BUDGETS=true` (default false)।
 - **P-C:** `model_registry.py`-এর fabricated entry-গুলোর জায়গায় litellm-জ্ঞাত metadata (context window, price) — ফাইলটি DB-syncable ইতিমধ্যে; `_RETIRED_MODELS` auto-sync; `_resolve_registry_model` alias-স্তর deprecation-warning, অপসারণ শেষ ধাপে।
-- **P-D:** `routing_policy.json` পুনর্জন্ম — বর্তমান মডেল-চেইন (gemini-2.5-শ্রেণি, groq-70b-শ্রেণি, bynara/bai); `task_overrides` হয় RoutingMixin-এ পড়া হবে, নয় JSON থেকে মুছবে — দুই সমাপ্তির একটি; টেস্ট-সুরক্ষা: test_llm_gateway_completion.py-র chain-টেস্ট আপডেট।
-- **P-E:** `telemetry.py` `track_llm_call`-এর ভেতর থেকে `provider_router.record_result()` ফিড; স্টার্টআপে health-probe → `set_readiness()`; ফলাফল: admin UI বাস্তব latency/unavailable দেখাবে, scoring জীবন্ত উপাত্ত পাবে — অথবা সিদ্ধান্ত হলে 117-লাইন মুছে admin-কে টেলিমেট্রি-সোর্সে সরাসরি সংযোগ।
-- **P-F:** `competitive_kit.MultiLLMRouter._call_llm` → gateway-ডেলিগেশন অথবা ফাইল-অংশ অপসারণ (defect §7.2 এক-লাইন নিরাময়); `gateway.py` `_router` default `None` + explicit MoE injection (MagicMock আমদানি অপসারণ); `model_router.route_and_stream` fallback yield নয় — explicit exception; mock-শনাক্তকরণ ব্রাঞ্চ টেস্ট-ফাইলে সরিয়ে নেওয়া।
+- **P-D:** `routing_policy.json` পুনর্জন্ম — **প্রথমে canonical-ফাইল নির্ধারণ**: বর্তমান main-এ তিন কপি অসমসত (config/ + backend/config/ = এক বিষয়বস্তু, backend/core/config/ = ভিন্ন বিষয়বস্তু — md5-যাচাইকৃত 2026-09-17); একটিকে canonical করে বাকি দুটি redirect/অপসারণ অন্যথায় নীতি-দ্বৈততা স্থায়ী হয়। চেইন-পুনর্জন্ম **লাইভ registry থেকে derived** (zero-hardcode: কোনো হাতে-টাইপ মডেল-তালিকা নয় — P-C-র vendor-true registry-র availability থেকে চেইন আঁকা); `task_overrides` হয় RoutingMixin-এ পড়া হবে, নয় JSON থেকে মুছবে — দুই সমাপ্তির একটি; টেস্ট-সুরক্ষা: test_llm_gateway_completion.py-র chain-টেস্ট আপডেট।
+- **P-E:** **টেলিমেট্রি-ফিড-প্রথম** — `telemetry.py` `track_llm_call`-এর ভেতর থেকে `provider_router.record_result()` ফিড (zero extra call, zero boot-latency); ফলাফল: admin UI বাস্তব latency/unavailable দেখাবে, scoring জীবন্ত উপাত্ত পাবে। **স্টার্টআপ health-probe হলে সেটি flag-gated, default off** (fast-smooth/zero-cost সংশোধন: বুট-সময় প্রতি-provider probe = boot-latency + free-key quota খরচ — প্রয়োজনেই জাগবে, হার্ডকোড নয়) — অথবা সিদ্ধান্ত হলে 117-লাইন মুছে admin-কে টেলিমেট্রি-সোর্সে সরাসরি সংযোগ।
+- **P-F (V4-রেকনসিলিয়েশন, base `ed35eaf`):** `gateway.py`-র production-MagicMock **ইতিমধ্যেই upstream V4-ফিক্সে অপসারিত** (a3fe8bb, B-V2-01 — কেবল মন্তব্য অবশিষ্ট; এই আইটেম done-upstream হিসেবে চিহ্নিত)। অবশিষ্ট: (১) `backend/core/competitive_kit.py` (ফাইলটি services/ থেকে core/-এ সরেছে) `MultiLLMRouter._call_llm` L1359-র ফেব্রিকেটেড `"[Response from …]"` → gateway-ডেলিগেশন অথবা অংশ-অপসারণ; (২) `model_router.async_route_and_stream`-এর "Simple fallback generator" (`yield "Hello" + yield " World"`) এখনো জীবিত → explicit exception; (৩) mock-শনাক্তকরণ ব্রাঞ্চ টেস্ট-ফাইলে সরিয়ে নেওয়া।
 - **P-G:** ফ্যাসাড-প্রথম — `services/llm/llm_router.LLMRouter` ও `brain/model_router.ModelRouter`-এর সিগনেচার অপরিবর্তিত, ভেতরে gateway-ডেলিগেশন; 10+ caller ক্রমশ সরাসরি gateway-তে; `providers.py` হাতে-লেখা ক্লায়েন্ট + HFSwarmRouter retirement সবশেষে; register §12-র 22 skipped টেস্ট প্রথম লাভ; `migrate_llm_routers.py` validator প্রতি ধাপে চালু।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
@@ -243,6 +243,21 @@ P-G: এক-গেটওয়ে একীকরণ            → llm_router/M
 - **Gate 5 (live):** বাস্তব স্ট্রিম-কলের খরচ-রিপোর্টে উপস্থিতি; ২৪-ঘণ্টায় tenant-অ্যাট্রিবিউটেড কল >0; admin-প্যানেলে বাস্তব latency/unavailable-অনুপাত পর্যবেক্ষিত; fabricated-response গণনা শূন্য।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema/data-loss path নেই; P-G-র retirement ধাপ সবশেষ ও সবচেয়ে সাবধান — তারও revert-পথ: git revert একক commit।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত (P-E সংশোধিত) | নতুন gateway-product/dependency স্পষ্ট বাইরে (Part 3-1); P-E-র স্টার্টআপ-প্রোব আগে সর্বদা-চালু প্রস্তাব ছিল — এখন flag-gated default-off (free-key quota-রক্ষা); P-B fail-open + flag default false |
+| Lightweight | ✅ সংগত | বিদ্যমান litellm/LearningStore/Redis পুনঃব্যবহার; P-G facade-first — retirement-ই মূল কাজ |
+| Fast & smooth | ✅ সংগত | P-A কেবল final-chunk টেলিমেট্রি (প্রতি-চাংক overhead নয়); P-E boot-latency-বিহীন ক্রম |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-C ইতিমধ্যেই litellm-মেটাডেটা-চালিত; **নতুন আবিষ্কৃত**: routing_policy.json এখন ৩ কপি/২ বিষয়বস্তু (drift) — P-D-তে canonical-ফাইল + লাইভ-registry-derived চেইন সংযোজন (§২.৪ সংশোধিত) |
+
+Upstream-রেকনসিলিয়েশন (base `ed35eaf`): streaming.py grep=0 অটুট (P-A প্রাসঙ্গিক), completion.py L111 `if tenant_id:` অটুট (P-B প্রাসঙ্গিক), gateway-MagicMock বন্ধ (P-F আংশিক done-upstream), competitive_kit → `backend/core/` স্থানান্তরিত (পথ-হালনাগাদ), "Hello World" fallback জীবিত (`async_route_and_stream`)।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 

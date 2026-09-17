@@ -166,12 +166,12 @@ P-G: ইঞ্জিন-grounding + retirement → autonomous agent বাস্
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
 - **P-A:** `browser_session_manager.py` default allowed_actions-এ click/fill/type যোগ (অথবা per-session grant API); `_automation.py`-র advertise-set-এর সাথে সম্পূর্ণ মিল; SSRF gate + URL-permission অপরিবর্তিত; integration টেস্ট: navigate→click→fill→screenshot চেইন।
-- **P-B:** `session_takeover.py` L408 acquire-কে `session_manager`-সংযুক্ত করা (PlaywrightBrowserAgent-এ নতুন পাতলা method — বিদ্যমান manager-ডেলিগেশন); screencast `Page.startScreencast` CDP-তে (fps/quality cap); WS চুক্তি অপরিবর্তিত।
+- **P-B:** `session_takeover.py` L408 acquire-কে `session_manager`-সংযুক্ত করা (PlaywrightBrowserAgent-এ নতুন পাতলা method — বিদ্যমান manager-ডেলিগেশন); screencast `Page.startScreencast` CDP-তে (fps/quality cap — **cap-মান env-পঠিত, কোড-কনস্ট্যান্ট নয়**; per-session opt-in, default off); WS চুক্তি অপরিবর্তিত।
 - **P-C:** ধাপ ১: `browser_routes.py`-র ৪ shadowed-unique endpoint-এর কার্যক্রম canonical package-এ port; ধাপ ২: পুরনো path-এ deprecation-warning; ধাপ ৩: route-parity meta-test-সহ retirement — OpenAPI path-set প্রমাণসহ।
 - **P-D:** ৫ surface-এর প্রতিটিতে দুই-সমাপ্তির একটি: বাস্তব বাস্তবায়ন (যেমন vision-এ প্রকৃত image bytes পাঠানো) অথবা honest 501/422 + explicit error-body; `browser_action_registry`-র mock /test endpoint flag-গেটেড বা অপসারিত।
 - **P-E:** screenshots → বিদ্যমান objects-API প্যাটার্নে স্থায়ী সংরক্ষণ + gallery endpoint বাস্তব + chat-timeline-এ সংযুক্তি; storage-quota guard।
 - **P-F:** প্রতি browser-action-এ event (session_id/action/latency/সাফল্য) → বিদ্যমান error_event_bus + telemetry-মতবাদ (Module 03 প্যাটার্ন); কোনো নতুন infra নয়।
-- **P-G:** `AutonomousBrowserAgent.achieve` → বাস্তব session (playwright_manager) + goal-ভিত্তিক ধাপ; `browser_use_adapter` flag `SUPREMEAI_BROWSER_ENGINE=browser_use` (default builtin); `PlaywrightBrowserAgent`-এর type_text/read/fake-success সংশোধন; `mcp_tools`/`web_fallback_agent`/`services/browser` — wire অথবা delete সিদ্ধান্ত (register-দর্শনে)।
+- **P-G:** `AutonomousBrowserAgent.achieve` → বাস্তব session (playwright_manager) + goal-ভিত্তিক ধাপ (**ধাপ/টোকেন-বাজেট সীমা env-চালিত — কোনো স্থির সংখ্যা নয়; সীমা-শেষে honest ব্যর্থতা**, credit-burn-রক্ষা); `browser_use_adapter` flag `SUPREMEAI_BROWSER_ENGINE=browser_use` (default builtin — কোনো নতুন dependency/পরিশোধিত পরিষেবা নয়); `PlaywrightBrowserAgent`-এর type_text/read/fake-success সংশোধন; `mcp_tools`/`web_fallback_agent`/`services/browser` — wire অথবা delete সিদ্ধান্ত (register-দর্শনে)।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
@@ -234,6 +234,21 @@ P-G: ইঞ্জিন-grounding + retirement → autonomous agent বাস্
 - **Gate 5 (live):** বাস্তব সেশনে interactive সাফল্য-হার >95% (target); ২৪-ঘণ্টায় সফল takeover >0 হলে ব্যবহৃত; স্থায়ী artifact গণনা >0; fabricated-উত্তর শূন্য; per-action latency প্রকাশিত।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema/data-loss path নেই; router-retirement শেষ ও সবচেয়ে সাবধান ধাপ — revert-পথ git revert একক commit।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত (P-G শক্তিশালী) | কোনো নতুন ইঞ্জিন/পরিশোধিত পরিষেবা নয় — বিদ্যমান browser_use adapter flag-gated; P-G-র autonomous ধাপে env-চালিত ধাপ/টোকেন-বাজেট সীমা সংযোজন |
+| Lightweight | ✅ সংগত | বিদ্যমান session_manager/error_event_bus/objects-API পুনঃব্যবহার; ~900+ লাইন dormant/shadowed surface-এর wire-অথবা-delete |
+| Fast & smooth | ✅ সংগত (P-B সংশোধিত) | screencast default-off + per-session opt-in; হট-পথে কোনো নতুন বাধা নয়; P-C route-parity meta-test সহ ধাপে ধাপে |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-B-র fps/quality cap আগে স্থির-ধারণা ছিল — এখন env-পঠিত; P-G-র বাজেট-সীমাও env-চালিত (§২.৪ সংশোধিত) |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `backend/core/browser_session_manager.py` L30 allowed_actions tuple-এ navigate/screenshot/content/extract — click/fill/type অনুপস্থিত (P-A প্রাসঙ্গিক); `backend/api/routes/session_takeover.py` বিদ্যমান (P-B প্রাসঙ্গিক)।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 

@@ -62,7 +62,7 @@ measurement_method:
   - "(c) parity: shadow বনাম legacy dispatch ফল-সমতা শতাংশ"
   - "(d) regression: CI route-graph টেস্ট (tests/ root meta-tests) শূন্য-ব্যর্থতা"
 success_threshold: "kernel coverage → >90% নতুন dispatch (target); bridge-liveness → প্রতিদিন >0 (hard threshold: শূন্য মানে bridge এখনো dormant); parity → 100% sampled (hard); সব সংখ্যা measured-হওয়া পর্যন্ত hypothesis"
-plan_lifecycle: "living — Crown Jewel Module Series চক্র ২-এর প্রস্তাবিত নীলনকশা; single-plan discipline অটুট — কোনো Phase ফাউন্ডার-অনুমোদন-পূর্বে executable নয়"
+plan_lifecycle: "living — Crown Jewel Module Series চক্র ২-এর প্রস্তাবিত নীলনকশা; single-plan discipline অটুট — কোনো Phase ফাউন্ডার-অনুমোদন-পূর্বে executable নয়; দর্শন-সংগতি পুনঃযাচাই 2026-09-17 branch crown-jewel-v2 (base ed35eaf): proposal-স্তরে ৪-নীতি অডিট (P-A shadow→sampled/non-blocking সংশোধিত) + মূল-যন্ত্রপাতি spot-check (orchestrator.py 13-LN, resource_registry NotImplemented L123-129, dispatcher fallback অটুট)"
 ---
 
 # Crown Jewel Module Series — Module 02: Orchestration Core Power-Up
@@ -161,7 +161,7 @@ P-E: ERR-G04 fail-honest ফিক্স    → provider="local" explicit branch
 
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
-- **P-A:** dispatcher-এ dispatch-mode flag (SUPREMEAI_KERNEL_DOOR=shadow|enforce) — shadow-পর্বে দুই পথই চলে, ফল-সমতা লগে; enforce-পর্বে নতুন dispatch ডিফল্ট kernel-path; legacy fallback থাকে কিন্তু flag-gated। **কী টচ হবে না:** `KernelRequest/KernelResponse` সিগনেচার, কোনো route, কোনো এজেন্ট।
+- **P-A:** dispatcher-এ dispatch-mode flag (SUPREMEAI_KERNEL_DOOR=shadow|enforce) — enforce-পর্বে নতুন dispatch ডিফল্ট kernel-path; legacy fallback থাকে কিন্তু flag-gated। **Shadow হট-পথ ভার হবে না (fast-smooth সংশোধন):** shadow-পর্বে দুই পথ *প্রতি অনুরোধে* চলবে না — shadow-parity **sampling-চালিত** (sample-rate env-পঠিত, ডিফল্ট নিম্ন/বন্ধ; zero-hardcode), shadow-শাখা কখনো ব্যবহারকারী-উত্তর ব্লক করবে না (ফল-তুলনা async লগে); অর্থাৎ ব্যবহারকারীর বিলম্ব/খরচ অপরিবর্তিত। **কী টচ হবে না:** `KernelRequest/KernelResponse` সিগনেচার, কোনো route, কোনো এজেন্ট।
 - **P-B:** `backend/runs/bridges.py`-এর দুই writer-কে বাস্তব callers-এ wire (অটোমেশন/অর্কেস্ট্রেশন পথ); `backend/tests/runs/`-এ integration টেস্ট; retention `.github/workflows/db-retention.yml`-এ বিদ্যমান। **কী টচ হবে না:** state machine-এর 12-state চুক্তি।
 - **P-C:** assigner-stub → ModelRouter-নির্ভর governed assignment, flag SUPREMEAI_MISSIONS_LLM_ASSIGNER=true (default false); ব্যর্থতা → আজকের stub-আচরণ (Graceful Degradation #8)।
 - **P-D:** ধাপ ১: agent/master-cognitive-এ deprecation warning + kernel-পথে রিডাইরেক্ট; ধাপ ২: callers মাইগ্রেশন পরিমাপ; ধাপ ৩: shim অপসারণ — তবে কেবল baseline-N ratchet নীতিতে, শেষ ধাপে।
@@ -177,7 +177,7 @@ P-E: ERR-G04 fail-honest ফিক্স    → provider="local" explicit branch
 
 ### ২.৬ ক্ষতি/ঝুঁকি (সৎ, প্রশমন সহ)
 
-1. **721-route surface-এ regression:** সবচেয়ে বড় ঝুঁকি — প্রশমন: shadow-first, parity ১০০% ছাড়া cutover নয়, flag-off = আজকের আচরণ, প্রতি Phase স্বাধীন revert।
+1. **721-route surface-এ regression:** সবচেয়ে বড় ঝুঁকি — প্রশমন: shadow-first (sampled, non-blocking — §২.৪ P-A), parity ১০০% ছাড়া cutover নয়, flag-off = আজকের আচরণ, প্রতি Phase স্বাধীন revert।
 2. **দ্বিগুণ-লেখা খরচ (P-B):** execution_logs স্ফীতি — প্রশমন: বিদ্যমান retention workflow; row আকার সীমিত।
 3. **Retirement অকালে কিছু ভাঙা (P-D):** লুকানো caller — প্রশমন: warning-পর্বে caller-পরিমাপ, shim সবশেষে; প্রতিটি অপসারণে root-tests সূচি।
 4. **Kernel এক-বিন্দু-ব্যর্থতা ঝুঁকি:** সব দরজা এক হলে দরজা-ব্যর্থতা বড় দুর্ঘটনা — প্রশমন: dispatcher-এ ইতিমধ্যে circuit-breakers + legacy-fallback নকশায় আছে (`backend/core/kernel/dispatcher.py` docstring); flag-off চিরস্থায়ী escape।
@@ -227,6 +227,23 @@ P-E: ERR-G04 fail-honest ফিক্স    → provider="local" explicit branch
 - **Gate 5 (live):** বাস্তব কাজে kernel-coverage শতাংশ (লগড); ২৪-ঘণ্টায় execution_logs row >0; HITL transition পর্যবেক্ষিত; parity শতাংশ প্রকাশিত।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema/data-loss path নেই; shim অপসারণ শেষ ও সবচেয়ে সাবধান ধাপ — তারও revert-পথ: git revert একক commit।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+প্রতিষ্ঠাতা-নির্দেশিত চার মূল-দর্শনের আলোকে proposal-স্তর অডিট:
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | 0 নতুন dependency/infra; P-C assigner flag-gated default বন্ধ; কাজ বেশিরভাগ বিয়োগফল |
+| Lightweight | ✅ সংগত | নতুন framework আমদানি স্পষ্টভাবে বাইরে (Part 3-1); legacy-fallback seam পুনঃব্যবহার |
+| Fast & smooth | ⚠️ ছিল → ✅ **সংশোধিত** | P-A আগে প্রতি-অনুরোধে দ্বি-পথ (shadow) চালাত — হট-পথে দ্বিগুণ বিলম্ব/গণনা; এই পাসে sampled + non-blocking shadow (§২.৪ সংশোধিত) |
+| Zero hardcode | ✅ সংগত | সব mode/flag env-চালিত; sample-rate-ও env-পঠিত (এই পাসে স্পষ্ট); কোনো স্থির ম্যাজিক-সংখ্যা প্রস্তাব নেই |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `orchestrator.py` 13-LN shim অটুট; `resource_registry.py` L123–129 NotImplemented অটুট; dispatcher pre-FCC fallback অটুট।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
