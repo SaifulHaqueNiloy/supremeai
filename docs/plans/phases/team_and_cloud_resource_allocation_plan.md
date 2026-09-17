@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:team_and_cloud_resource_allocation_plan
+subject: Resource Allocation
+document_role: policy
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Resource Allocation

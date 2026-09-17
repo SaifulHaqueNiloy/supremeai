@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:render_mcp_server_reference_guide
+subject: Render MCP Server — Manage your Render resources from Claude Code, Codex, and Cursor.
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Render MCP Server — Manage your Render resources from Claude Code, Codex, and Cursor.

@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:kilo_coding_agent_workspace_reference
+subject: 📁 `.kilo` ফোল্ডার — সম্পূর্ণ ব্যাখ্যা
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 📁 `.kilo` ফোল্ডার — সম্পূর্ণ ব্যাখ্যা

@@ -1,5 +1,12 @@
 ---
 target_scope: customer_facing
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_22_Simulator_Controller_Perfection
+subject: "Plan 22: Environmental Simulator & Execution Sandbox"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 22: Environmental Simulator & Execution Sandbox

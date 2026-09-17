@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-burj_khalifa_4pillar_evolution_roadmap
+subject: "SupremeAI Evolution Roadmap: The Burj Khalifa Plan"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI Evolution Roadmap: The Burj Khalifa Plan

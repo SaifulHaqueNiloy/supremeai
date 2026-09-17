@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:supremeai_work_plan_bangla
+subject: SupremeAI কাজের পরিকল্পনা (Bangla Work Plan)
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI কাজের পরিকল্পনা (Bangla Work Plan)

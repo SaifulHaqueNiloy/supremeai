@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:evolution_patch_v3_implementation_plan
+subject: 🧬 SupremeAI Evolution Patch (v3.0) Implementation Plan
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 🧬 SupremeAI Evolution Patch (v3.0) Implementation Plan

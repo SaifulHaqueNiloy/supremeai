@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-self_assembling_need_supply_intelligence_plan
+subject: "🌌 Architecture Plan: Self-Assembling Intelligence (Phase 2)"
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 🌌 Architecture Plan: Self-Assembling Intelligence (Phase 2)

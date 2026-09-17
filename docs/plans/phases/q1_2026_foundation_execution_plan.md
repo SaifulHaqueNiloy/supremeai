@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:q1_2026_foundation_execution_plan
+subject: Q1 2026 Plan
+document_role: roadmap
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Q1 2026 Plan

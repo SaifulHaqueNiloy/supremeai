@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_09_Smart_Data_Storage
+subject: "Plan 9: Hybrid Polyglot Storage & Smart Caching"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 9: Hybrid Polyglot Storage & Smart Caching

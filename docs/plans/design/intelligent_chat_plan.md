@@ -1,5 +1,12 @@
 ---
 target_scope: customer_facing
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-intelligent_chat_plan
+subject: "Implementation Plan: Intelligent Chat & Contextual Memory System"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Implementation Plan: Intelligent Chat & Contextual Memory System

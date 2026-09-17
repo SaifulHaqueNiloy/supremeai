@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:full_integration_master_blueprint_bn
+subject: 🚀 SupremeAI — পূর্ণাঙ্গ একত্রীকরণ ও অবশিষ্ট পরিকল্পনা বাস্তবায়ন ব্লুপ্রিন্ট (Master Implementation Plan)
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # 🚀 SupremeAI — পূর্ণাঙ্গ একত্রীকরণ ও অবশিষ্ট পরিকল্পনা বাস্তবায়ন ব্লুপ্রিন্ট (Master Implementation Plan)

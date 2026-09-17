@@ -1,7 +1,7 @@
 ---
 id: customer-onboarding-flow
 subject: "Customer Onboarding Flow — Zero-Complexity First Experience"
-document_role: design
+document_role: architecture
 planning_authority: Customer Experience Circle + Frontend Face
 status: proposed
 target_scope: customer_facing

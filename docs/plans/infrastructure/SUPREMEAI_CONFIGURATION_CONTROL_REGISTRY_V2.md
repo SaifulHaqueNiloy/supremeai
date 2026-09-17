@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2
+subject: SupremeAI 2.0 — Configuration, Third‑Party Service & Secret Control Registry
+document_role: policy
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # SupremeAI 2.0 — Configuration, Third‑Party Service & Secret Control Registry

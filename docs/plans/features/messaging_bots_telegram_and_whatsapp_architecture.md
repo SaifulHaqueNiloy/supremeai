@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-messaging_bots_telegram_and_whatsapp_architecture
+subject: "Plan: The 3 Faces of SupremeAI — Unified Omnichannel Interaction Gateway (Web Dashboard, Telegram Bot & WhatsApp Bot)"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan: The 3 Faces of SupremeAI — Unified Omnichannel Interaction Gateway (Web Dashboard, Telegram Bot & WhatsApp Bot)

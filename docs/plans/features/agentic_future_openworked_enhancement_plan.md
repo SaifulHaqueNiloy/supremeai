@@ -1,5 +1,12 @@
 ---
 target_scope: supremeai_internal
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:agentic_future_openworked_enhancement_plan
+subject: Implementation Plan - Future Agentic Architecture Enhancement (Phase 3 Prep)
+document_role: implementation
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Implementation Plan - Future Agentic Architecture Enhancement (Phase 3 Prep)

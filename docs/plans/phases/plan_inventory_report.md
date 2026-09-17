@@ -1,3 +1,12 @@
+---
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto:plan_inventory_report
+subject: docs/plans/ Inventory & Governance Report
+document_role: roadmap
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+target_scope: supremeai_internal
+---
 # docs/plans/ Inventory & Governance Report
 
 > Generated: 2026-09-17 by `scripts/governance/lint_plans.py` (report-only mode)  

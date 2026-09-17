@@ -1,5 +1,12 @@
 ---
 target_scope: combined_ecosystem
+# [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
+id: auto-Plan_08_Adaptive_Response_Depth
+subject: "Plan 8: Adaptive Response Depth & Risk-Aware Verification Scaling"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+
 ---
 
 # Plan 8: Adaptive Response Depth & Risk-Aware Verification Scaling

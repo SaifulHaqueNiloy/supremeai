@@ -34,17 +34,16 @@ export const CostDashboard: React.FC = () => {
       try {
         const response = await apiClient.get<Record<string, unknown>>('/api/billing/analytics');
         const data = (response.data || {}) as Record<string, unknown>;
+        // বাংলা: zero-hardcoded নীতি — ব্যাকএন্ড ডেটা না থাকলে বানোয়াট $42.50 সেভ /
+        // 1280 cached query / 94.2% utilization দেখানো ছিল False-Assurance।
+        // এখন ?? দিয়ে শুধু null/undefined-এ নিরপেক্ষ 0 (খরচ নেই = 0 সৎ), প্রকৃত
+        // 0-ও সঠিকভাবে 0-ই দেখায়; breakdown খালি হলে UI খালি অবস্থাই দেখায়।
         setMetrics({
-          total_spent_usd: (data.total_spent as number) || 0.0,
-          total_saved_usd: (data.total_saved as number) || 42.5,
-          cached_queries: (data.cached_queries as number) || 1280,
-          free_tier_utilization_pct: (data.free_tier_pct as number) || 94.2,
-          provider_breakdown: (data.provider_breakdown as Record<string, number>) || {
-            Gemini: 0.0,
-            Groq: 0.0,
-            TogetherAI: 0.0,
-            Ollama: 0.0,
-          },
+          total_spent_usd: (data.total_spent as number) ?? 0,
+          total_saved_usd: (data.total_saved as number) ?? 0,
+          cached_queries: (data.cached_queries as number) ?? 0,
+          free_tier_utilization_pct: (data.free_tier_pct as number) ?? 0,
+          provider_breakdown: (data.provider_breakdown as Record<string, number>) ?? {},
         });
         setLoading(false);
       } catch (err: unknown) {
@@ -92,11 +91,15 @@ export const CostDashboard: React.FC = () => {
             const update = JSON.parse(event.data);
             setMetrics(prev => prev ? { ...prev, ...update } : update);
 
-            // Check thresholds
-            if (update.total >= (update.monthlyLimit || 100) * 0.8) {
+            // বাংলা: zero-hardcoded নীতি — limit অজানা হলে আগে hardcoded $100 ধরে
+            // ভুয়া "Approaching monthly limit" অ্যালার্ট ফেলত; এখন limit প্রকৃতই
+            // জানা না থাকলে threshold-চেক বাদ (অজানা limit থেকে কোনো ভুয়া সংকেত নয়)।
+            const monthlyLimit =
+              typeof update.monthlyLimit === 'number' ? update.monthlyLimit : null;
+            if (monthlyLimit != null && update.total >= monthlyLimit * 0.8) {
               eventBus.emit(Events.COST_THRESHOLD_REACHED, {
                 current: update.total,
-                limit: update.monthlyLimit || 100,
+                limit: monthlyLimit,
                 threshold: 80,
                 timestamp: Date.now(),
                 details: 'Approaching monthly limit'
