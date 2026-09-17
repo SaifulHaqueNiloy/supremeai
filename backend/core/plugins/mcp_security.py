@@ -1,9 +1,8 @@
 import ipaddress
 import logging
+import os
 import socket
 from urllib.parse import urlparse
-
-from core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +14,22 @@ class MCPSecurityGuard:
     - Prevents connecting to private IP ranges (10.x, 192.168.x, 172.16.x)
     - Enforces HTTPS for external connections in production
     """
+
+    @staticmethod
+    def _local_loopback_opt_in() -> bool:
+        # বাংলা মন্তব্য (audit V4, SSRF-guard ফিক্স): আগে loopback-ছাড় আনুমানিক
+        # হতো `settings.env == "local"` থেকে — কিন্তু settings সিঙ্গেলটন test-ইনফ্রায়
+        # pollute/reload হয়ে 'local' হয়ে যেত (pytest-এ SSRF গার্ড 127.0.0.1 পাস
+        # করিয়ে দিচ্ছিল), আর প্রোডাকশনে ENV ছাড়া reload হলেও একই ভাবে ভুলভাবে
+        # 'local' হয়ে গার্ড খুলে যেত। এখন ছাড় শুধুমাত্র **স্পষ্ট opt-in**
+        # SUPREMEAI_ALLOW_LOCAL_MCP=1 দিলেই — কোনো আনুমানিক অবস্থা নেই,
+        # fail-closed ডিফল্ট (SSRF-নিরাপদ)।
+        return os.getenv("SUPREMEAI_ALLOW_LOCAL_MCP", "").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
 
     @staticmethod
     def is_safe_url(url: str, enforce_https: bool = True) -> bool:
@@ -55,7 +70,7 @@ class MCPSecurityGuard:
                     or ip.is_multicast
                     or ip.is_link_local
                 ):
-                    if not (settings.env == "local" and ip.is_loopback):
+                    if not (ip.is_loopback and MCPSecurityGuard._local_loopback_opt_in()):
                         logger.warning("MCP Security: Denied private/reserved IP for %s", hostname)
                         return False
 
