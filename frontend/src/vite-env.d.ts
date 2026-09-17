@@ -10,6 +10,8 @@ interface ImportMetaEnv {
   readonly NEXT_PUBLIC_API_URL?: string;
   readonly NEXT_PUBLIC_DASHBOARD_WS_URL?: string;
   readonly VITE_DASHBOARD_WS_URL?: string;
+  readonly VITE_UPSTASH_REDIS_REST_URL?: string;
+  readonly VITE_UPSTASH_REDIS_REST_TOKEN?: string;
 }
 
 interface ImportMeta {

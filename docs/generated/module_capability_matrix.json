@@ -17244,6 +17244,17 @@
     },
     {
       "capability_signals": [
+        "browser",
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/components/admin/index.ts"
+    },
+    {
+      "capability_signals": [
         "health",
         "memory"
       ],
@@ -24244,5 +24255,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2797
+  "source_file_count": 2798
 }
