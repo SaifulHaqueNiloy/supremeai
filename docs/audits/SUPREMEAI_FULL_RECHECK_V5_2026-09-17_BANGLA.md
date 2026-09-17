@@ -152,7 +152,7 @@ mcp 5 টেস্ট-স্ক্রিপ্ট               → সব PASS 
 
 ## ১০. পরবর্তী চক্রের জন্য সুপারিশ (অগ্রাধিকার-ক্রমে)
 
-1. **CI re-run পর্যবেক্ষণ** — এই কমিটে Backend Prepare/Tooling Gate সবুজ নিশ্চিত করা।
+1. **CI re-run পর্যবেক্ষণ** — এই কমিটে Backend Prepare/Tooling Gate সবুজ নিশ্চিত করা। *(V5.1-এ সম্পন্ন — §১১ দেখুন)*
 2. **Frontend `: any` ব্যাচ-1** (~20 সাইট, সর্বোচ্চ-ট্রাফিক অ্যাডমিন প্যানেল আগে)।
 3. **Dead-file sweep অভিযান** — import-graph প্রমাণসহ 3 ব্যাচে (~30 ফাইল/ব্যাচ)।
 4. **Nightly notification** — শূন্য-খরচ GitHub-native রুট।
@@ -160,4 +160,30 @@ mcp 5 টেস্ট-স্ক্রিপ্ট               → সব PASS 
 
 ---
 
-*V5 অডিট সম্পন্ন — প্রতিটি দাবি লোকাল কমান্ড-আউটপুট দিয়ে প্রমাণিত। কোর দর্শন রক্ষা: শূন্য নতুন ডিপেন্ডেন্সি, শূন্য নতুন infra, শূন্য hardcoded ভুয়া ডেটা, ন্যূনতম কোড-পরিবর্তন (6 ফাইল), সম্পূর্ণ রিগ্রেশন-নেগেটিভ।*
+## ১১. V5.1 ফলো-আপ — push-পরবর্তী CI পর্যবেক্ষণ ও দ্বিতীয় স্তরের ফিক্স (একই দিন)
+
+প্রথম V5 push (`b895e671`) দিয়ে CI পুনরায় চালু হওয়ায় দীর্ঘদিন **skip-আচ্ছাদিত** জবগুলো প্রথমবার চলল — এবং দুটি লুকানো ব্যর্থতা বেরিয়ে এলো। দুটোই লাইভ-লগ দিয়ে রুট-কজ পর্যন্ত রোগনির্ণয় করা হয়েছে।
+
+### V5.1-A: Backend Tests (core) — admin এন্ডপয়েন্ট 401 (3 টেস্ট)
+
+- **উপসর্গ:** `TestAdminEndpoints::test_admin_stats_accessible_only_to_admins / test_list_all_users_admin_only / test_audit_log_access` — `assert 401 == 200`।
+- **রুট কজ (CI লগ লাইন-প্রমাণ):** `core/security/__init__.py:338` — Redis অনুপস্থিত হলে `[FailClosed] Redis unavailable - admin token … rejected` → টেস্ট/CI এনভায়রনমেন্টে (Redis নেই) সব অ্যাডমিন টোকেন 401। V4-এর JWT-ব্রিজ ফিক্সের পর থেকে এই ব্যর্থতা লুকানো ছিল, কারণ Backend Prepare ফেল হওয়ায় Backend Tests প্রতি রানে skip হচ্ছিল।
+- **ফিক্স (V3-প্রতিষ্ঠিত env-aware নীতির হুবহু প্রয়োগ):** `is_token_revoked` — production/prod/staging + অ্যাডমিন + Redis ডাউন → **fail-closed অপরিবর্তিত**; dev/test/local → **fail-open + loud `logger.error`** (প্রতি কলে; নীরব নয়)। exception-পাথেও একই নীতি।
+- **টেস্ট আপডেট:** `tests/security/test_admin_fail_closed.py` — 2টি টেস্ট এখন `patch.object(settings, "env", "production")` দিয়ে production fail-closed সেমান্টিক্স প্রমাণ করে; নতুন টেস্ট `test_admin_fail_open_dev_when_redis_down` dev fail-open প্রমাণ করে (V3-এর token_budget টেস্ট-প্যাটার্নের প্রতিলিপি)।
+- **প্রমাণ:** TestAdminEndpoints 3/3 পাস; test_admin_fail_closed 7/7 পাস; fast গ্রুপ 1132 পাস (4টি ব্যর্থতা = লোকালে `google.oauth2` মডিউল অনুপস্থিত — CI-তে সবুজ); core গ্রুপ 2488 পাস (5টি ব্যর্থতা = লোকালে `bcrypt`/`firestore` অনুপস্থিত — CI-তে সবুজ); missions+token_budget+security 378/378।
+
+### V5.1-B: MCP Build — test:unit SSE handshake HTTP 400
+
+- **উপসর্গ:** `MCP Unit Test Suite` ধাপে `SseError: Non-200 status code (400)`।
+- **বিচ্ছিন্নীকরণ (আমার কমিট নির্দোষ প্রমাণিত):** `0057273`-এর pristine `tool.registry.ts` দিয়েও লোকালি হুবহু ব্যর্থ → পরিবর্তন আমার নয়; MCP Build শেষ বাস্তবে চলেছিল আরও আগে — এতদিন skip-আচ্ছাদিত থাকায় এই ভাঙা অবস্থা অদৃশ্য ছিল।
+- **রুট কজ:** `test_resource_list.ts` `SSEClientTransport` দিয়ে `/mcp`-তে যাচ্ছিল — অথচ সার্ভার `/mcp`-তে **StreamableHTTPServerTransport** (src/index.ts:311-321) এবং legacy SSE-র জন্য আলাদা **`/sse`** রুট (src/index.ts:695) রাখে। প্রোটোকল-এন্ডপয়েন্ট মিসম্যাচ = 400।
+- **ফিক্স:** টেস্টটি এখন সার্ভারের প্রাইমারি ট্রান্সপোর্টের সাথে `StreamableHTTPClientTransport` ব্যবহার করে (+ বাংলা ব্যাখ্যা-কমেন্ট)।
+- **প্রমাণ:** `npm run test:unit` লোকালি rc=0 (Guardian 44/44 সহ পূর্ণ চেইন); typecheck + 5টি অন্য স্যুট পাস।
+
+### V5.1 শিক্ষা (Doctrine)
+
+**"Skip হওয়া জব = চলেনি জব।"** Prepare-স্তরের লাল অবস্থা দীর্ঘদিন থাকলে ডাউনস্ট্রিম জবগুলোর লুকানো ব্যর্থতা জমে — সবুজ করার পর সেগুলো একসাথে ফুটে ওঠে। ভবিষ্যৎ চক্রে prepare-ফেল হলেই ডাউনস্ট্রিম skip-কে "সবুজ" ধরা যাবে না।
+
+---
+
+*V5 + V5.1 অডিট সম্পন্ন — প্রতিটি দাবি লোকাল কমান্ড-আউটপুট দিয়ে প্রমাণিত। কোর দর্শন রক্ষা: শূন্য নতুন ডিপেন্ডেন্সি, শূন্য নতুন infra, শূন্য hardcoded ভুয়া ডেটা, ন্যূনতম কোড-পরিবর্তন, production নিরাপত্তা-সেমান্টিক্স অপরিবর্তিত, সম্পূর্ণ রিগ্রেশন-নেগেটিভ।*
