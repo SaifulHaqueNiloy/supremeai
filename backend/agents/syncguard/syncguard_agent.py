@@ -80,7 +80,10 @@ class SyncGuardAgent:
             )
 
         # Store the audit report in long-term memory
-        success = unified_memory.store_long_term_memory(
+        # PLAN-004: write-time distillation — the dense summary + structured
+        # facts replace the raw 200-char truncation; on any distiller failure
+        # the call falls back to the legacy path internally (memory never lost).
+        success = await unified_memory.store_long_term_memory_distilled(
             session_id=f"syncguard_audit_{audit_report['timestamp']}",  # Unique ID for this audit
             agent_type="SyncGuard",
             task_type="System_Audit",

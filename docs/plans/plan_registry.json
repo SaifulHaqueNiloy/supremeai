@@ -3,20 +3,21 @@
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 163,
-    "with_frontmatter": 162,
+    "documents": 164,
+    "with_frontmatter": 164,
     "families": {
-      "control-tower-mcp": 32,
+      "control-tower-mcp": 33,
       "execution-phases": 30,
       "unclassified": 28,
-      "free-tier-federation": 21,
+      "free-tier-federation": 20,
       "frontend-product-ux": 15,
-      "browser-automation": 8,
       "unified-architecture": 8,
+      "browser-automation": 8,
       "ci-cd-pipeline": 7,
       "intelligence-evolution": 5,
       "dynamic-configuration": 4,
       "production-readiness": 3,
+      "memory-data-lifecycle": 1,
       "security-defense": 1,
       "deployment-render": 1
     }
@@ -77,6 +78,24 @@
       "lines": 453
     },
     {
+      "id": "m3-memory-store-consolidation-decision-table",
+      "subject": "M3/L4.1 — Memory Store Consolidation: Keep / Merge / Archive Decision Table",
+      "document_role": "architecture",
+      "planning_authority": "Memory Circle",
+      "canonical": true,
+      "status": "active",
+      "source_file": "docs/plans/M3_MEMORY_STORE_CONSOLIDATION_DECISION_TABLE.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 75
+    },
+    {
       "id": "pending-approvals-register",
       "subject": "SupremeAI Pending Approvals Log",
       "document_role": "audit",
@@ -100,12 +119,12 @@
       "document_role": "implementation",
       "planning_authority": "C5 (Execution — LLM Gateway)",
       "canonical": null,
-      "status": "active",
+      "status": "complete",
       "source_file": "docs/plans/PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)",
+      "last_verified": "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py); IMPLEMENTED 2026-09-17 on main — cloud_adapter.py: _is_anthropic_family_model + _mark_anthropic_cache_blocks pure helpers, generate()/stream() wiring, usage dict surfaces cache_read_input_tokens / cache_creation_input_tokens (forwarded to Langfuse via existing trace_generation usage pass-through); tests/core/test_cloud_provider_cache.py 10/10 PASS; 70/70 across test_llm_gateway_completion + test_provider_router + new file (local CI-mock env, litellm stubbed at adapter boundary)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
@@ -118,12 +137,12 @@
       "document_role": "implementation",
       "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway)",
       "canonical": null,
-      "status": "proposed",
+      "status": "complete",
       "source_file": "docs/plans/PLAN_002_CLAUDE_STYLE_CONTEXT_COMPACTION_2026-09-16.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; re-verified 2026-09-17 on main b37f3f10 — `git diff 1f57055..b37f3f10 -- backend/api/routes/websocket_agent.py backend/core/prompt_handler.py backend/core/llm/llm_gateway/completion.py backend/core/llm/provider_router.py` is 0-diff across fixes #396–#417, deque(maxlen=50) sed-confirmed live at websocket_agent.py L474, prompt_handler.py L17/L57 and completion.py L183/L245 sed-confirmed; Gate 0 precision finding re-verified with exact line numbers — see sliding_window bullet below)",
+      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; re-verified 2026-09-17 on main b37f3f10 — `git diff 1f57055..b37f3f10 -- backend/api/routes/websocket_agent.py backend/core/prompt_handler.py backend/core/llm/llm_gateway/completion.py backend/core/llm/provider_router.py` is 0-diff across fixes #396–#417, deque(maxlen=50) sed-confirmed live at websocket_agent.py L474, prompt_handler.py L17/L57 and completion.py L183/L245 sed-confirmed; Gate 0 precision finding re-verified with exact line numbers — see sliding_window bullet below; re-verified 2026-09-17 on main 83084ee8 — evidence files 0-diff since b37f3f10 (c606e028..83084ee8), deque(maxlen=50) sed-confirmed live at L474; Gate 0 adjacency note: founder landed M2 Context Engine (e48daaf0 — backend/context_engine/, budgeted smallest-sufficient-context assembly via ContextBlock/Section/BudgetReport) wired into the HTTP chat route backend/api/routes/chat.py, NOT the WS path — complementary budgeted-context pattern; this plan's WS compaction scope remains unclaimed and unaffected); IMPLEMENTED 2026-09-17 on main — websocket_agent.py: _compact_history() + hooks before user/assistant append, deque(maxlen=50) MEMLEAK-004 fix intact, non-stream acompletion contract {'success','text','model','cost'} handled with 'content' fallback + 1400-char defensive summary cap; prompt_handler.py: COMPACTION_SYSTEM_PROMPT / build_compaction_messages (prior-summary merge) / estimate_messages_tokens; tests/api/test_websocket_compaction.py 11/11 PASS + test_websocket_agent.py 42/42 + test_prompt_handler.py 5/5 regression PASS (local CI-mock env); live 60+ turn WS Gate-5 evidence still pending)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
@@ -141,7 +160,7 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists)",
+      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), all cited lines hold; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "unclassified",
@@ -154,17 +173,35 @@
       "document_role": "implementation",
       "planning_authority": "Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway)",
       "canonical": null,
-      "status": "proposed",
+      "status": "complete",
       "source_file": "docs/plans/PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION_2026-09-17.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত)",
+      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), unified_memory.py L57–58 placeholder sed-confirmed; Gate 0 adjacency note: founder pinned M3 memory-consolidation blueprint (ERR-F02, defect register 2026-09-17) — canonical store হবে Supabase `ai_memory` (vector 384), যেখানে এই প্ল্যানের distilled summary লেখা হয় — সম্পূরক (complementary), কোনো conflict নেই; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 290
+      "lines": 291
+    },
+    {
+      "id": "head-of-planning-ws-compact-command-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #005: Claude Code-Style User-Controlled /compact Trigger (বিদ্যমান PLAN-002 Compaction মেশিনারির উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway) — PLAN_002-এর হুবহু মালিকানা, একই WS চ্যাট সাবসিস্টেম",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/PLAN_005_USER_CONTROLLED_COMPACT_TRIGGER_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 223
     },
     {
       "id": "plan-lifecycle-policy",
@@ -182,7 +219,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 369
+      "lines": 371
     },
     {
       "id": "plan-to-code-traceability-matrix",
@@ -198,7 +235,7 @@
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "memory-data-lifecycle",
       "frontmatter_present": true,
       "lines": 48
     },
@@ -254,7 +291,7 @@
       "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 398
+      "lines": 399
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
@@ -639,24 +676,6 @@
       "family": "unified-architecture",
       "frontmatter_present": true,
       "lines": 399
-    },
-    {
-      "id": "auto:audit_report",
-      "subject": "docs/plans/ Inventory & Governance Report",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
-      "source_file": "docs/plans/audit_report.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": null,
-      "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 104
     },
     {
       "id": "auto:README",
@@ -2276,7 +2295,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 463
+      "lines": 464
     },
     {
       "id": "auto:README",

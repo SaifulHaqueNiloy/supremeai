@@ -1,7 +1,7 @@
 ---
 id: head-of-planning-letta-style-memory-distillation-v1-2026-09-17
 title: "Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation (বিদ্যমান Eternal Brain ফ্যাসাডে, শূন্য নতুন Dependency, শূন্য নতুন Infra)"
-status: proposed
+status: complete
 document_role: implementation
 owner_circle: Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway)
 scope: "ONE complete plan, fully grounded in actual repo code (2026-09-17 fresh main, commit 37b05f4b), following the strengthened PLAN_LIFECYCLE_POLICY.md (2026-09-17) — all required metadata, Gates 0–6, labeled quantitative claims, explicit out-of-scope"
@@ -22,6 +22,7 @@ implements:
 supersedes: []
 superseded_by: []
 source_of_truth: false
+implementation_evidence: "IMPLEMENTED 2026-09-17 on main — core/unified_memory.py: MEMORY_DISTILL_ENV kill-switch read at CALL time via _memory_distill_enabled(), MEMORY_DISTILL_MIN_CONTENT_CHARS=400 cost gate, MEMORY_DISTILL_SYSTEM_PROMPT, pure _extract_json_object() (no exception escapes), async distill_content() (locked non-stream acompletion contract: {'success','text',...} — plan sketch's 'content' key corrected to 'text' during implementation), _store_long_term_with_summary() private override helper (public store_long_term_memory signature unchanged — 3 existing callers intact), store_long_term_memory_distilled() with metadata['distilled']=True + metadata['memory_structure'] provenance; agents/syncguard/syncguard_agent.py store call switched to distilled variant (async context); api/routes/unified_memory_api.py optional distill=false query flag (default legacy path); tests/memory/test_memory_distillation.py 13/13 (valid-JSON extract, no-JSON, non-dict, malformed; gateway success, gateway exception; distilled write w/ provenance, fallback-to-legacy-truncation w/ success=True, malformed-JSON summary-only, short-content skips distiller, SUPREMEAI_MEMORY_DISTILL=false kill-switch, honest False on backend failure); tests/memory/ tree 171/171; tests/security/test_cross_tenant_isolation.py 33/33"
 last_verified: "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), unified_memory.py L57–58 placeholder sed-confirmed; Gate 0 adjacency note: founder pinned M3 memory-consolidation blueprint (ERR-F02, defect register 2026-09-17) — canonical store হবে Supabase `ai_memory` (vector 384), যেখানে এই প্ল্যানের distilled summary লেখা হয় — সম্পূরক (complementary), কোনো conflict নেই; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)"
 code_evidence:
   - "backend/core/unified_memory.py L57–58: summary = content[:200]  # Placeholder ; structure = \"{}\"  # Placeholder (literal placeholder comments in the Eternal Brain write path)"
@@ -45,7 +46,7 @@ measurement_method:
   - "Offline, on-demand (never per-CI): seed ≥20 representative memory entries (syncguard-style JSON reports, browser-session payloads, API-endpoint-style notes); write each twice — legacy truncation vs distilled — into the degraded-mode SQLite path; run CascadeMemoryService.query_context with ≥10 natural-language seed queries; compare top-3 hit-rate between the two corpora; record per-query results in the plan's outcome evidence block"
 success_threshold:
   - "Acceptance threshold (hypothesis until measured): distilled top-3 hit-rate ≥ legacy top-3 hit-rate + 15 percentage points on the seed set; failure of this threshold ⇒ plan marked failed/blocked per Gate 6, no silent success"
-plan_lifecycle: "living — single complete plan #004; proposed candidate awaiting explicit founder approval (Gate 2); single-plan execution discipline: this does NOT become active merely because it exists"
+plan_lifecycle: "living — single complete plan #004; implemented 2026-09-17 on main (see last_verified); Gate-5 offline retrieval eval remains the recorded pending outcome measurement"
 target_scope: supremeai_internal
 ---
 
