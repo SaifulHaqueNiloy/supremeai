@@ -3,21 +3,20 @@
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 165,
-    "with_frontmatter": 164,
+    "documents": 169,
+    "with_frontmatter": 167,
     "families": {
-      "control-tower-mcp": 33,
+      "control-tower-mcp": 34,
       "execution-phases": 30,
-      "unclassified": 28,
-      "free-tier-federation": 21,
+      "unclassified": 29,
+      "free-tier-federation": 22,
       "frontend-product-ux": 15,
-      "unified-architecture": 8,
+      "unified-architecture": 10,
       "browser-automation": 8,
       "ci-cd-pipeline": 7,
       "intelligence-evolution": 5,
       "dynamic-configuration": 4,
       "production-readiness": 3,
-      "memory-data-lifecycle": 1,
       "security-defense": 1,
       "deployment-render": 1
     }
@@ -196,12 +195,30 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed)",
+      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 68cf886c — websocket_agent.py ও prompt_handler.py 2fbe7fcd-এর পর থেকে 0-diff (সব core citation অপরিবর্তিত: _compact_history L449–497, receive L559, payload parse L562–575, auto-guard L580, user append L582, assistant guard L611, [DONE] L615, COMPACTION_* L80–115); founder commit 1dea1fe2 (CI unblock) test_websocket_compaction.py-এ শুধু formatting change করেছে (StubGateway __init__ reformat + ১টি assert line-join — semantically identical, ১১টি টেস্ট অক্ষত, grep-verified); frontend [DONE] contract (useChat.ts L92, chatService.ts L72) 0-diff; সংশোধন (honesty fix): depends_on-এ deque(maxlen=50)-এর citation L554 ভুল ছিল — সঠিক লাইন L548, এবং WS chat loop রেঞ্জ L555–616 → L557–616 (while True L557) — উভয়ই এই commit-এই সংশোধিত); final-state re-verification 2026-09-17 on main 5bdda2e2 (rebase target — evidence 0-diff, transitivity note তখন শুধু commit message-এ ছিল) এবং main 71b55f8a (docs-only commit — evidence files 0-diff): deque(maxlen=50) L548, _compact_history L449, COMPACTION_SUMMARY_CHAR_CAP=1400 L91, ১১টি টেস্ট পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে (plan_registry নয়, commit message নয়)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
       "lines": 223
+    },
+    {
+      "id": "head-of-planning-memory-consolidation-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #006: mem0/ChatGPT-Style Write-Time Memory Consolidation (বিদ্যমান M3 Canonical ai_memory Store-এর উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle (backend/services/memory_service.py — CascadeMemoryService) — PLAN_004-এর হুবহু মালিকানা, একই memory সাবসিস্টেম",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed); final-state re-verification 2026-09-17 on main 5bdda2e2 + 71b55f8a (rebase + docs-only — evidence files 0-diff): store_memory L287, _cosine_similarity L477, query_context L485 পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 263
     },
     {
       "id": "plan-lifecycle-policy",
@@ -235,7 +252,7 @@
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "target_scope": "supremeai_internal",
-      "family": "memory-data-lifecycle",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
       "lines": 48
     },
@@ -291,7 +308,7 @@
       "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 399
+      "lines": 400
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
@@ -676,6 +693,60 @@
       "family": "unified-architecture",
       "frontmatter_present": true,
       "lines": 399
+    },
+    {
+      "id": "crown-jewel-module-01-memory-power-up-v1-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 01: Memory Subsystem Power-Up (মেমোরি সাবসিস্টেমকে প্ল্যাটফর্মের সবচেয়ে শক্তিশালী স্তম্ভে রূপান্তর — M3 একীকরণ + Memory Flywheel সক্রিয়করণের পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Memory Circle (backend/services/memory_service.py — CascadeMemoryService + backend/memory/ + backend/core/ai_memory/) — PLAN_004/PLAN_006-এর একই সাবসিস্টেম",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_01_MEMORY_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unified-architecture",
+      "frontmatter_present": true,
+      "lines": 254
+    },
+    {
+      "id": "auto:MODULE_02_ORCHESTRATION_CORE_POWER_UP_2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 02: Orchestration Core Power-Up",
+      "document_role": null,
+      "planning_authority": null,
+      "canonical": null,
+      "status": null,
+      "source_file": "docs/plans/crown_jewel_series/MODULE_02_ORCHESTRATION_CORE_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": null,
+      "disposition": null,
+      "target_scope": null,
+      "family": "free-tier-federation",
+      "frontmatter_present": false,
+      "lines": 237
+    },
+    {
+      "id": "crown-jewel-module-series-index",
+      "subject": "Crown Jewel Module Power-Up Series — চলমান প্রক্রিয়া সূচি (Continuous Process Index): এক চক্রে এক মডিউল, বিশ্লেষণ → ডকুমেন্ট → প্রকাশ → পরবর্তী মডিউল, অনন্তকাল",
+      "document_role": "roadmap",
+      "planning_authority": "Planning Circle / Head of Planning (docs/plans/ প্ল্যানিং কর্পাসের ধারাবাহিক মালিক)",
+      "canonical": true,
+      "status": "active",
+      "source_file": "docs/plans/crown_jewel_series/README.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "verified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
+      "family": "unified-architecture",
+      "frontmatter_present": true,
+      "lines": 92
     },
     {
       "id": "auto:README",
@@ -2295,7 +2366,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 464
+      "lines": 465
     },
     {
       "id": "auto:README",

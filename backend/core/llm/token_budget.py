@@ -210,6 +210,16 @@ class TokenBudgetManager:
                 import os
 
                 redis_url = os.environ.get("REDIS_URL", None)
+
+            # বাংলা মন্তব্য (audit V3, B-V2-03 fix, 2026-09-17): আগে placeholder
+            # URL `redis://<your-redis-url>` দিয়ে ক্লায়েন্ট বানানো হতো —
+            # Redis না থাকলে প্রতিটি call নীরবে exception → fail-open। এখন
+            # unconfigured অবস্থা স্পষ্টভাবে ধরা হয় এবং সৎ error ছোড়া হয়,
+            # যাতে কলার সিদ্ধান্ত (fail-closed/fail-open) env-অনুযায়ী হয়।
+            if not redis_url or "<your-redis-url>" in str(redis_url):
+                raise RuntimeError(
+                    "Redis URL not configured — per-user token budget check is UNAVAILABLE"
+                )
             self._redis = aioredis.from_url(redis_url, decode_responses=True)
         return self._redis
 
@@ -217,6 +227,10 @@ class TokenBudgetManager:
         """
         Check if the user has exceeded their daily token limit.
         Uses Redis to support multi-worker environments.
+
+        Failure policy (audit V3 / B-V2-03): budget check করা না গেলে
+        production/staging-এ fail-CLOSED (অনুমতি নেই), dev/test-এ fail-open
+        + loud log — কোনো অবস্থাতেই নীরব ভান নেই।
         """
         try:
             redis = await self._get_redis()
@@ -228,8 +242,24 @@ class TokenBudgetManager:
                 return False
             return True
         except Exception as e:
-            logger.error(f"Redis user budget check failed: {e}")
-            return True  # fail open
+            # বাংলা মন্তব্য (B-V2-03 fix): আগে সর্বদা `return True # fail open` —
+            # মানে Redis ছাড়া per-user দৈনিক quota কার্যত অসীম (unlimited
+            # spend)। এখন production/staging-এ অনুমতি অস্বীকার করা হয় (fail-
+            # closed), dev/test-এ অনুমতি + loud error log। সিদ্ধান্তটি
+            # token_deductor-এর বিদ্যমান env-policy-র সাথে সামঞ্জস্যপূর্ণ।
+            try:
+                from core.config import settings
+
+                current_env = str(getattr(settings, "env", "")).lower()
+            except Exception:
+                current_env = ""
+            logger.error(
+                f"User budget check UNAVAILABLE (env={current_env or 'unknown'}): "
+                f"{type(e).__name__}: {e}"
+            )
+            if current_env in {"production", "prod", "staging"}:
+                return False  # fail-closed: যাচাই ছাড়া spend অনুমোদিত নয়
+            return True  # dev/test: fail-open (উপরের error log-এ স্পষ্ট)
 
     async def record_user_usage(self, user_id: str, tokens: int) -> None:
         """

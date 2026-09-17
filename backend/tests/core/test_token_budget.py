@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 import pytest
 
 from core.llm.token_budget import (
@@ -161,14 +164,41 @@ class TestManagerContracts:
         mgr.prepare_prompt("x", provider="default")
         assert set(mgr.get_stats().keys()) == {"default"}
 
-    async def test_check_user_budget_fail_open_on_redis_error(self):
+    async def test_check_user_budget_env_aware_failure_policy(self):
+        """B-V2-03 (audit V3): Redis ভাঙলে সিদ্ধান্ত env-অনুযায়ী হওয়া চাই —
+        production/staging-এ fail-CLOSED, dev/test-এ fail-open + loud log।
+        আগে সব env-এ নীরব fail-open ছিল (unlimited-spend ঝুঁকি)।"""
         mgr = self._mgr()
 
         async def broken_redis():
             raise RuntimeError("redis down")
 
         mgr._get_redis = broken_redis
-        assert await mgr.check_user_budget("user-1") is True  # fail-open
+
+        # dev/test (ডিফল্ট) → fail-open
+        assert await mgr.check_user_budget("user-1") is True
+
+        # production → fail-closed
+        with patch("core.config.settings") as mock_settings:
+            mock_settings.env = "production"
+            assert await mgr.check_user_budget("user-2") is False
+
+        # staging → fail-closed
+        with patch("core.config.settings") as mock_settings:
+            mock_settings.env = "staging"
+            assert await mgr.check_user_budget("user-3") is False
+
+    async def test_check_user_budget_unconfigured_redis_honest_error(self):
+        """B-V2-03 (audit V3): placeholder/unset Redis URL-এ সৎ RuntimeError —
+        আগে `redis://<your-redis-url>` দিয়ে ক্লায়েন্ট বানিয়ে নীরব fail-open হতো।"""
+        mgr = self._mgr()
+        mgr._redis = None
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("REDIS_URL", None)
+            with patch("core.config.settings") as mock_settings:
+                mock_settings.redis_url = None
+                with pytest.raises(RuntimeError, match="Redis URL not configured"):
+                    await mgr._get_redis()
 
     async def test_check_user_budget_blocks_over_limit(self):
         mgr = self._mgr()
