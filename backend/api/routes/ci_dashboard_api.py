@@ -181,6 +181,8 @@ class WebhookPayload(BaseModel):
 # In-memory storage for demo purposes
 # In production, use PostgreSQL/MongoDB/Redis
 _ci_summaries_store: dict[int, CISummaryModel] = {}  # run_id -> summary
+# Audit B-11 fix (2026-09-17): bounded like _ci_history — prune oldest run_ids.
+_MAX_SUMMARY_ITEMS = 200
 _ci_history: list[dict[str, Any]] = []  # Ordered by timestamp (newest first)
 _max_history_items = 50
 
@@ -194,6 +196,15 @@ def _store_summary(summary: CISummaryModel):
 
     # Store by run_id
     _ci_summaries_store[summary.run_id] = summary
+
+    # Audit B-11: keep the store bounded — evict oldest runs by timestamp.
+    if len(_ci_summaries_store) > _MAX_SUMMARY_ITEMS:
+        oldest_ids = sorted(
+            _ci_summaries_store,
+            key=lambda rid: getattr(_ci_summaries_store[rid], "timestamp", None) or 0,
+        )
+        for rid in oldest_ids[: len(_ci_summaries_store) - _MAX_SUMMARY_ITEMS]:
+            _ci_summaries_store.pop(rid, None)
 
     # Add to history
     history_entry = {

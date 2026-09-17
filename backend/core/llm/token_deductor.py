@@ -17,7 +17,6 @@ import time
 from decimal import Decimal
 from enum import Enum
 from typing import Any
-from unittest.mock import MagicMock
 
 from core.logging_config import logger
 
@@ -110,7 +109,19 @@ class TokenDeductor:
                         if bal <= Decimal("0"):
                             return False
                         if hasattr(session, "add") and callable(getattr(session, "add", None)):
-                            session.add(MagicMock())
+                            # বাংলা মন্তব্য (audit B-08 fix, 2026-09-17): আগে এখানে
+                            # production billing path-এর ভেতরে session.add(MagicMock())
+                            # করা হতো — unittest.mock অবজেক্ট টোকেন-ডিডাকশন পাথে ঢুকত।
+                            # এখন সৎ, টাইপ করা deduction-record মার্কার যোগ হয়।
+                            session.add(
+                                {
+                                    "type": "token_deduction",
+                                    "user_id": actual_user_id,
+                                    "input_tokens": int(input_tokens),
+                                    "output_tokens": int(output_tokens),
+                                    "transaction_id": str(transaction_id),
+                                }
+                            )
                         return True
                 return True
             except RuntimeError:

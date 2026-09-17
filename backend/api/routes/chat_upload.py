@@ -37,7 +37,18 @@ ALLOWED_MIME_TYPES: dict[str, str] = {
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # In-memory registry of uploaded files (attachment_id -> metadata)
+# Audit B-10 fix (2026-09-17): bounded — entries are removed via explicit
+# DELETE, but the dict itself used to grow without limit per process.
+# Sidecar metadata files persist on disk regardless, so eviction here only
+# drops the in-memory mirror of the oldest entries.
+_MAX_UPLOAD_ENTRIES = 500
 _uploads: dict[str, dict] = {}
+
+
+def _prune_uploads() -> None:
+    while len(_uploads) > _MAX_UPLOAD_ENTRIES:
+        oldest = next(iter(_uploads))
+        _uploads.pop(oldest, None)
 
 
 # ---------- Pydantic Schemas ----------
@@ -198,6 +209,7 @@ async def upload_chat_image(
     }
 
     _uploads[attachment_id] = metadata
+    _prune_uploads()
 
     # Persist reference in DB
     try:
