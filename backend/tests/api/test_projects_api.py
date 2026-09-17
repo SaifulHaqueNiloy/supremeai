@@ -35,17 +35,23 @@ def _override_identity(app, sub: str) -> None:
 
 
 @pytest_asyncio.fixture(scope="module", autouse=True)
-async def ensure_projects_table(db_engine):
-    """Create ONLY the projects table.
+async def ensure_projects_table():
+    """Create ONLY the projects table — in the APP's actual engine.
 
-    বাংলা: শেয়ার্ড conftest `db_engine`-এর full-metadata create_all আসলে
-    fail করে (execution_logs → agent_sessions unresolved FK — agent_session
-    মডেল metadata-তে import হয় না), ফলে কোনো টেবিলই তৈরি হয় না। repo-র
-    প্রতিষ্ঠিত প্যাটার্ন (tests/runs/test_run_models.py,
-    tests/models/test_chat_attachment_metadata.py): নিজের টেবিলটাই স্কোপড
-    create_all-এ বানানো।
+    বাংলা: CI-তে `database.session`-এর app-engine Supabase/asyncpg engine
+    creation fail করলে in-memory SQLite fallback-এ পড়ে; তখন conftest-এর
+    db_engine-এ (Postgres) বানানো টেবিল app-এর সেশন দেখে না ("no such
+    table" — এই কারণেই টেস্টটি CI-তে fail করছিল)। তাই টেবিলটি app-এর নিজের
+    engine-এই বানানো হয় — যে ব্যাকএন্ডেই resolve হোক।
+
+    স্কোপড create_all প্যাটার্ন (tests/runs/test_run_models.py): full-metadata
+    create_all execution_logs → agent_sessions unresolved FK-এর কারণে fail করে।
     """
-    async with db_engine.begin() as conn:
+    from database import session as db_session
+
+    app_engine = getattr(db_session, "engine", None)
+    assert app_engine is not None, "App engine failed to initialize"
+    async with app_engine.begin() as conn:
         await conn.run_sync(
             lambda sync_conn: Base.metadata.create_all(sync_conn, tables=[Project.__table__])
         )
