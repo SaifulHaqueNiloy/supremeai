@@ -162,7 +162,7 @@ P-G: টেস্ট-সুরক্ষা-জাল       → প্রতি �
 - **P-D:** navigationRegistry.ts-এ /prompt-library-এন্ট্রি (এক-লাইন); workspaceFeatureRoutes-র guide-স্ট্রিং → সংশোধিত সংস্করণ `docs/`-linted-স্থানান্তর (ফাইল-বিলোপ নয়); phantom-রেফারেন্স-শুদ্ধি।
 - **P-E:** privacy-টেস্ট-প্রথম (cross-user access-নিষেধ pytest) → ShareListDialog (নতুন ছোট উপাদান) → /share পৃষ্ঠে সংযুক্তি; DELETE-নিশ্চিত-প্রবাহ।
 - **P-F:** নীতি-নথি (docs/plans/features-এ): সিদ্ধান্ত-টেবিল {zero-importer + duplicate + no-route → delete; প্রায়-প্রস্তুত + endpoint-লাইভ → wire; admin-অনুমোদন-শর্ত}; route-registry meta-test: প্রতিটি component-entry-point হয় রাউটেড, নয় নথিভুক্ত।
-- **P-G:** প্রতি Phase-এর সাথে e2e-smoke (Playwright); ১২-router pytest-কভারেজ (S1-privacy অগ্রাধিকার); knip warn→error (নথিভুক্ত ব্যতিক্রম-তালিকাসহ); S-06-ফিক্সচার-আনব্লক।
+- **P-G:** প্রতি Phase-এর সাথে e2e-smoke (Playwright); ১২-router pytest-কভারেজ (S1-privacy অগ্রাধিকার); knip warn→error (**error-মোডে প্রবেশ কেবল শূন্য-false-positive বেসলাইন-প্রমাণের পরে — CI-বিচ্ছিন্নতা-সুরক্ষা; ব্যতিক্রম-তালিকা data-file-এ, কোড-inline নয়**); S-06-ফিক্সচার-আনব্লক।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
@@ -225,6 +225,21 @@ P-G: টেস্ট-সুরক্ষা-জাল       → প্রতি �
 - **Gate 5 (live):** বাস্তব ব্যবহারে ৬-ফিচার-প্রবাহ e2e-সফল; S2/S3 endpoint-caller >0; /prompt-library নেভ-প্রবেশ; 'আমার শেয়ার' ক্রিয়াকলাপ পর্যবেক্ষিত।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; route-পরিবর্তন meta-test-সুরক্ষিত; guide-স্থানান্তর বিলোপ-বিহীন।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | ৬-ফিচার-এক-মাউন্ট = প্রায়-শূন্য নির্মাণ; ThinkingPanel flag default false (প্রতি-বার্তা-খরচ-সচেতন); নতুন পরিষেবা/dependency নয় |
+| Lightweight | ✅ সংগত | এক-লাইন route-এন্ট্রি, store-plumbing, ছোট উপাদান — বড় রিরাইট নয় |
+| Fast & smooth | ✅ সংগত (P-G সংশোধিত) | flag-gated mount + workspace-ফলব্যাক; knip error-মোড শূন্য-false-positive-পরে (CI ভাঙবে না) |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | knip ব্যতিক্রম-তালিকা data-file-এ (§২.৪ সংশোধিত) |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `frontend/src/config/` navigationRegistry বিদ্যমান; knip frontend/package.json-এ বিদ্যমান (P-G প্রাসঙ্গিক)।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
