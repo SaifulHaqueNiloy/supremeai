@@ -26,7 +26,6 @@ Bengali:
 """
 
 import asyncio
-import random
 import time
 from dataclasses import dataclass
 from datetime import datetime
@@ -314,23 +313,33 @@ class UnitTestGenerator:
 
 
 class IntegrationTestRunner:
-    """Runs integration tests between components."""
+    """Runs integration tests between components.
+
+    Audit B-06 fix (2026-09-17): the database/cache checks previously
+    simulated a connection (asyncio.sleep + always True) — fabricated
+    assurance. They now attempt REAL connections and honestly report
+    failure when the target is unreachable.
+    """
 
     def __init__(self):
         self.dependencies = {}
 
     async def test_database_integration(self, db_url: str) -> bool:
-        """Test database integration."""
+        """Test database integration with a REAL connection (SELECT 1)."""
         try:
-            # In a real implementation, you'd connect to the actual database
-            # For demo purposes, we'll simulate the connection
-            await asyncio.sleep(0.1)  # Simulate async database connection
+            import asyncpg
 
-            # Test basic operations
-            # Simulate successful connection and basic query
-            return True
+            async def _probe() -> bool:
+                conn = await asyncpg.connect(db_url, timeout=5)
+                try:
+                    await conn.fetchval("SELECT 1")
+                    return True
+                finally:
+                    await conn.close()
+
+            return await asyncio.wait_for(_probe(), timeout=8)
         except Exception as e:
-            logger.error(f"Database integration test failed: {e}")
+            logger.error(f"Database integration test failed (honest probe): {e}")
             return False
 
     async def test_api_integration(self, base_url: str) -> bool:
@@ -344,134 +353,95 @@ class IntegrationTestRunner:
             return False
 
     async def test_cache_integration(self, redis_url: str) -> bool:
-        """Test cache integration."""
+        """Test cache integration with a REAL Redis PING."""
         try:
-            # In a real implementation, you'd connect to Redis
-            # For demo purposes, we'll simulate the connection
-            await asyncio.sleep(0.05)  # Simulate async Redis operation
+            import redis.asyncio as aioredis
 
-            # Simulate successful connection and basic operation
-            return True
+            client = aioredis.from_url(
+                redis_url,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+            )
+            try:
+                return bool(await client.ping())
+            finally:
+                await client.aclose()
         except Exception as e:
-            logger.error(f"Cache integration test failed: {e}")
+            logger.error(f"Cache integration test failed (honest probe): {e}")
             return False
 
 
 class SecurityTester:
-    """Security testing tools."""
+    """Security testing tools.
+
+    Audit B-06 fix (2026-09-17): the check bodies previously returned RANDOM
+    vulnerability verdicts (`random.choice`) — fabricated results that could
+    both fake "secure" and fake "vulnerable". Until a real HTTP-probe
+    implementation is wired, every result is explicitly UNVERIFIED, and
+    consumers must not treat it as a security clearance.
+    """
 
     def __init__(self):
         self.vulnerabilities = []
 
+    @staticmethod
+    def _unverified_result(**fields: Any) -> dict[str, Any]:
+        result: dict[str, Any] = {
+            **fields,
+            "is_vulnerable": False,
+            "verified": False,
+            "status": "not_implemented",
+            "note": (
+                "Audit B-06: random/simulated security checks were removed. No real "
+                "probe is wired yet, so this result is UNVERIFIED and must not be "
+                "treated as a security clearance."
+            ),
+        }
+        return result
+
     def test_sql_injection(self, endpoint: str, param_name: str) -> dict[str, Any]:
-        """Test for SQL injection vulnerabilities."""
-        vulnerable_inputs = [
+        """Test for SQL injection vulnerabilities (currently UNVERIFIED)."""
+        logger.warning(
+            "SecurityTester.test_sql_injection has no real probe wired "
+            f"(audit B-06) — returning UNVERIFIED result for {endpoint}"
+        )
+        return self._unverified_result(endpoint=endpoint, param_name=param_name, payloads=[
             "' OR '1'='1",
             "'; DROP TABLE users; --",
             "' UNION SELECT * FROM users --",
             "admin'--",
             "' OR 1=1--",
-        ]
-
-        results: dict[str, Any] = {
-            "endpoint": endpoint,
-            "param_name": param_name,
-            "vulnerable_inputs": [],
-            "is_vulnerable": False,
-        }
-
-        for payload in vulnerable_inputs:
-            try:
-                # In a real implementation, you'd make actual requests
-                # For demo, we'll simulate the check
-                is_vulnerable = self._simulate_sql_injection_check(endpoint, param_name, payload)
-
-                if is_vulnerable:
-                    results["vulnerable_inputs"].append(payload)
-                    results["is_vulnerable"] = True
-            except Exception as e:
-                logger.error(f"Error testing SQL injection for {payload}: {e}")
-
-        return results
-
-    def _simulate_sql_injection_check(self, endpoint: str, param_name: str, payload: str) -> bool:
-        """Simulate SQL injection check."""
-        # In a real implementation, you'd make requests with payloads
-        # and analyze responses for signs of vulnerability
-        # For demo, we'll return a random result
-        return random.choice(
-            [True, False, False, False]
-        )  # Low probability of vulnerability in demo
+        ])
 
     def test_xss(self, endpoint: str, param_name: str) -> dict[str, Any]:
-        """Test for XSS vulnerabilities."""
-        xss_payloads = [
+        """Test for XSS vulnerabilities (currently UNVERIFIED)."""
+        logger.warning(
+            f"SecurityTester.test_xss has no real probe wired (audit B-06) — "
+            f"returning UNVERIFIED result for {endpoint}"
+        )
+        return self._unverified_result(endpoint=endpoint, param_name=param_name, payloads=[
             "<script>alert('XSS')</script>",
             "<img src=x onerror=alert('XSS')>",
             "javascript:alert('XSS')",
             "<svg onload=alert('XSS')>",
             "'><script>alert('XSS')</script>",
-        ]
-
-        results: dict[str, Any] = {
-            "endpoint": endpoint,
-            "param_name": param_name,
-            "xss_payloads": [],
-            "is_vulnerable": False,
-        }
-
-        for payload in xss_payloads:
-            try:
-                # Simulate XSS check
-                is_vulnerable = self._simulate_xss_check(endpoint, param_name, payload)
-
-                if is_vulnerable:
-                    results["xss_payloads"].append(payload)
-                    results["is_vulnerable"] = True
-            except Exception as e:
-                logger.error(f"Error testing XSS for {payload}: {e}")
-
-        return results
-
-    def _simulate_xss_check(self, endpoint: str, param_name: str, payload: str) -> bool:
-        """Simulate XSS check."""
-        # In a real implementation, you'd make requests with payloads
-        # and analyze responses for reflected content
-        # For demo, return random result
-        return random.choice([True, False, False, False])
+        ])
 
     def test_auth_bypass(self, auth_endpoint: str) -> dict[str, Any]:
-        """Test for authentication bypass vulnerabilities."""
-        results: dict[str, Any] = {
-            "endpoint": auth_endpoint,
-            "bypass_methods": [],
-            "is_vulnerable": False,
-        }
-
-        # Test various bypass techniques
-        bypass_techniques = [
-            "Missing authentication check",
-            "Weak session management",
-            "Authorization bypass",
-            "IDOR (Insecure Direct Object Reference)",
-        ]
-
-        for technique in bypass_techniques:
-            try:
-                is_vulnerable = self._simulate_auth_bypass_check(auth_endpoint, technique)
-
-                if is_vulnerable:
-                    results["bypass_methods"].append(technique)
-                    results["is_vulnerable"] = True
-            except Exception as e:
-                logger.error(f"Error testing auth bypass for {technique}: {e}")
-
-        return results
-
-    def _simulate_auth_bypass_check(self, endpoint: str, technique: str) -> bool:
-        """Simulate auth bypass check."""
-        # For demo, return random result
-        return random.choice([True, False, False])
+        """Test for authentication bypass vulnerabilities (currently UNVERIFIED)."""
+        logger.warning(
+            f"SecurityTester.test_auth_bypass has no real probe wired (audit B-06) — "
+            f"returning UNVERIFIED result for {auth_endpoint}"
+        )
+        return self._unverified_result(
+            endpoint=auth_endpoint,
+            bypass_techniques=[
+                "Missing authentication check",
+                "Weak session management",
+                "Authorization bypass",
+                "IDOR (Insecure Direct Object Reference)",
+            ],
+        )
 
 
 class PerformanceTester:
@@ -584,94 +554,73 @@ class PerformanceTester:
 
 
 class ChaosEngineer:
-    """Chaos engineering tools for resilience testing."""
+    """Chaos engineering tools for resilience testing.
+
+    Audit B-06 fix (2026-09-17): the experiments previously slept/busy-waited
+    locally and returned RANDOM `impact_observed` verdicts — fabricated
+    resilience claims. Real fault injection (toxiproxy/iptables against the
+    TARGET) is not wired yet, so results are explicitly UNVERIFIED and no
+    pointless sleeps or busy-waits run.
+    """
 
     def __init__(self):
         self.experiments = []
 
+    @staticmethod
+    def _unverified_experiment(experiment: str, target_service: str, **fields: Any) -> dict[str, Any]:
+        return {
+            "experiment": experiment,
+            "target": target_service,
+            **fields,
+            "status": "not_implemented",
+            "impact_observed": None,
+            "verified": False,
+            "note": (
+                "Audit B-06: simulated chaos experiments (random verdicts) were "
+                "removed. No real fault-injection against the target is wired yet, "
+                "so this result is UNVERIFIED."
+            ),
+        }
+
     async def inject_network_latency(
         self, target_service: str, latency_ms: int = 500, duration: int = 30
     ) -> dict[str, Any]:
-        """Inject network latency to test resilience."""
-        logger.info(f"Injecting {latency_ms}ms network latency to {target_service} for {duration}s")
-
-        # In a real implementation, you'd use tools like toxiproxy, iptables, etc.
-        # For demo, we'll simulate the effect
-        await asyncio.sleep(duration)
-
-        return {
-            "experiment": "network_latency_injection",
-            "target": target_service,
-            "latency_ms": latency_ms,
-            "duration": duration,
-            "status": "completed",
-            "impact_observed": random.choice([True, False]),  # Simulated result
-            "recovery_time": random.randint(5, 30),  # Simulated recovery time
-        }
+        """Inject network latency to test resilience (currently UNVERIFIED)."""
+        logger.warning(
+            f"ChaosEngineer.inject_network_latency has no real fault injection "
+            f"(audit B-06) — returning UNVERIFIED result for {target_service}"
+        )
+        return self._unverified_experiment(
+            "network_latency_injection", target_service, latency_ms=latency_ms, duration=duration
+        )
 
     async def inject_cpu_spikes(
         self, target_service: str, cpu_percent: int = 80, duration: int = 30
     ) -> dict[str, Any]:
-        """Inject CPU spikes to test resilience."""
-        logger.info(f"Injecting {cpu_percent}% CPU load to {target_service} for {duration}s")
+        """Inject CPU spikes to test resilience (currently UNVERIFIED).
 
-        # Simulate CPU spike by consuming CPU cycles
-        start_time = time.time()
-        while time.time() - start_time < duration:
-            # Busy wait to consume CPU
-            pass
-
-        return {
-            "experiment": "cpu_spike_injection",
-            "target": target_service,
-            "cpu_percent": cpu_percent,
-            "duration": duration,
-            "status": "completed",
-            "impact_observed": random.choice([True, False]),  # Simulated result
-            "recovery_time": random.randint(5, 30),  # Simulated recovery time
-        }
+        বাংলা মন্তব্য: আগে এখানে busy-wait দিয়ে নিজের event-loop ব্লক করা হত —
+        টার্গেটের কোনো ক্ষতি হতো না, শুধু নিজের সার্ভিস স্তব্ধ হতো।
+        """
+        logger.warning(
+            f"ChaosEngineer.inject_cpu_spikes has no real fault injection "
+            f"(audit B-06) — returning UNVERIFIED result for {target_service}"
+        )
+        return self._unverified_experiment(
+            "cpu_spike_injection", target_service, cpu_percent=cpu_percent, duration=duration
+        )
 
     async def inject_memory_pressure(
         self, target_service: str, memory_mb: int = 100, duration: int = 30
     ) -> dict[str, Any]:
-        """Inject memory pressure to test resilience."""
-        logger.info(f"Injecting {memory_mb}MB memory pressure to {target_service} for {duration}s")
-
-        # Simulate memory allocation
-        allocated_memory = []
-        chunk_size = 1024 * 1024  # 1MB chunks
-        chunks_needed = memory_mb
-
-        try:
-            for _ in range(chunks_needed):
-                # Allocate 1MB of memory
-                allocated_memory.append(bytearray(chunk_size))
-                await asyncio.sleep(0.01)  # Small delay to spread allocation
-
-            # Hold memory for duration
-            await asyncio.sleep(duration)
-
-            # Release memory
-            allocated_memory.clear()
-
-            return {
-                "experiment": "memory_pressure_injection",
-                "target": target_service,
-                "memory_mb": memory_mb,
-                "duration": duration,
-                "status": "completed",
-                "impact_observed": random.choice([True, False]),  # Simulated result
-                "recovery_time": random.randint(5, 30),  # Simulated recovery time
-            }
-        except MemoryError:
-            return {
-                "experiment": "memory_pressure_injection",
-                "target": target_service,
-                "memory_mb": memory_mb,
-                "duration": duration,
-                "status": "failed",
-                "error": "Insufficient memory to conduct experiment",
-            }
+        """Inject memory pressure to test resilience (currently UNVERIFIED)."""
+        logger.warning(
+            f"ChaosEngineer.inject_memory_pressure has no real fault injection "
+            f"(audit B-06) — returning UNVERIFIED result for {target_service}"
+        )
+        return self._unverified_experiment(
+            "memory_pressure_injection", target_service, memory_mb=memory_mb, duration=duration
+        )
 
 
 class QASuite:
@@ -710,38 +659,23 @@ class QASuite:
         return results
 
     async def _run_unit_tests(self) -> dict[str, Any]:
-        """Run unit tests."""
-        # For demo, we'll create mock unit tests
-        # In a real implementation, you'd discover and run actual unit tests
+        """Run unit tests.
 
-        # Create mock test cases
-        mock_test_cases = [
-            TestCase(
-                name="test_mock_function",
-                category=TestCategory.UNIT,
-                priority=TestPriority.CRITICAL,
-                description="Mock unit test",
-                test_function=lambda: True,
-                tags=["mock", "unit"],
-            ),
-            TestCase(
-                name="test_another_mock",
-                category=TestCategory.UNIT,
-                priority=TestPriority.HIGH,
-                description="Another mock unit test",
-                test_function=lambda: True,
-                tags=["mock", "unit"],
-            ),
-        ]
-
-        for tc in mock_test_cases:
-            self.unit_tests.add_test_case(tc)
-
-        results = self.unit_tests.run_tests(parallel=True)
-
+        Audit B-06 fix (2026-09-17): previously this registered always-passing
+        mock test cases (``lambda: True``) and reported pass_rate 1.0 —
+        fabricated assurance. No real unit-test discovery is wired yet, so the
+        honest result is an explicit UNVERIFIED report; run the real pytest
+        suite for verified unit-test evidence.
+        """
         return {
-            "results": [r.result.value for r in results],
-            "summary": self.unit_tests.get_summary(),
+            "results": [],
+            "summary": {"total": 0, "passed": 0, "failed": 0, "pass_rate": 0.0},
+            "verified": False,
+            "note": (
+                "Audit B-06: always-passing mock unit tests were removed. No real "
+                "unit-test discovery is wired into QASuite yet — this report is "
+                "UNVERIFIED. Use the pytest suite for verified results."
+            ),
         }
 
     async def _run_integration_tests(self, target_url: str) -> dict[str, Any]:
@@ -792,12 +726,24 @@ class QASuite:
             "sql_injection": sql_test_results,
             "xss": xss_test_results,
             "auth_bypass": auth_test_results,
-            "is_secure": not any(
-                [
-                    sql_test_results.get("is_vulnerable", False),
-                    xss_test_results.get("is_vulnerable", False),
-                    auth_test_results.get("is_vulnerable", False),
-                ]
+            # Audit B-06 fix: a suite can only be called "secure" when every
+            # check actually ran and verified. Unverified checks → is_secure
+            # False (never fabricate a security clearance).
+            "is_secure": (
+                all(
+                    [
+                        sql_test_results.get("verified", False),
+                        xss_test_results.get("verified", False),
+                        auth_test_results.get("verified", False),
+                    ]
+                )
+                and not any(
+                    [
+                        sql_test_results.get("is_vulnerable", False),
+                        xss_test_results.get("is_vulnerable", False),
+                        auth_test_results.get("is_vulnerable", False),
+                    ]
+                )
             ),
         }
 
@@ -811,12 +757,23 @@ class QASuite:
             "network_latency": latency_experiment,
             "cpu_spike": cpu_experiment,
             "memory_pressure": memory_experiment,
-            "system_resilient": all(
-                [
-                    not latency_experiment.get("impact_observed", True),
-                    not cpu_experiment.get("impact_observed", True),
-                    not memory_experiment.get("impact_observed", True),
-                ]
+            # Audit B-06 fix: "resilient" requires the experiments to have
+            # actually run. Unverified chaos experiments → False.
+            "system_resilient": (
+                all(
+                    [
+                        latency_experiment.get("verified", False),
+                        cpu_experiment.get("verified", False),
+                        memory_experiment.get("verified", False),
+                    ]
+                )
+                and all(
+                    [
+                        not latency_experiment.get("impact_observed", True),
+                        not cpu_experiment.get("impact_observed", True),
+                        not memory_experiment.get("impact_observed", True),
+                    ]
+                )
             ),
         }
 
