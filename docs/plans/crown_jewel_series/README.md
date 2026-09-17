@@ -66,7 +66,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 07 | **Context Engine** (`backend/context_engine/`) | M2, সর্ব-উষ্ণ পথে সদ্য-ল্যান্ডেড; ≥30% token-হ্রাস লক্ষ্য (target) | ✅ **প্রকাশিত** — `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` |
 | 08 | **Scout / Deep Research** (`backend/scout/`) | সদ্য প্রোডাকশন-wired গবেষণা-চক্র | ✅ **প্রকাশিত** — `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` |
 | 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ✅ **প্রকাশিত** — `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` |
-| 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ⏳ কিউতে |
+| 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ✅ **প্রকাশিত** — `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -85,7 +85,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 7 | 2026-09-17 | Context Engine | `MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 8 | 2026-09-17 | Scout / Deep Research | `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 9 | 2026-09-17 | Dormant Tools সক্রিয়করণ | `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
-| 10 | TBD | Frontend Tier-S Wiring | — | কিউতে |
+| 10 | 2026-09-17 | Frontend Tier-S Wiring | `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (সিরিজের প্রস্তাবিত দশ মডিউল সম্পূর্ণ; কিউ পুনঃর‍্যাঙ্ক চলমান-প্রক্রিয়ার অংশ) |
 
 ---
 
