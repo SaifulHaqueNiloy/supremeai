@@ -8,6 +8,11 @@ from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, s
 from core.automation.models import ExecutionEnvelope
 from core.llm.llm_gateway import llm_gateway
 from core.logging_config import logger
+from core.prompt_handler import (
+    COMPACTION_BLOCK_LABEL,
+    COMPACTION_SUMMARY_CHAR_CAP,
+    build_compaction_messages,
+)
 from core.queue.task_queue import task_queue
 from core.security import verify_token_async
 from database.supabase_client import SupabaseDB
@@ -432,6 +437,75 @@ class DistributedConnectionManager:
 manager = DistributedConnectionManager()
 
 
+# ============================================================================
+# PLAN-002: Claude Code-style semantic context compaction (2026-09-17)
+# ---------------------------------------------------------------------------
+# deque(maxlen=50) পূর্ণ হলে আগে যে মেসেজগুলো নিঃশব্দে ফেলে দেওয়া হতো (MEMLEAK-004
+# fix-এর পার্শ্ব-প্রভাব — ২৫ টার্ন পর অ্যামনেসিয়া, Constitution #13 লঙ্ঘন), এখন
+# সেগুলো বিদ্যমান zero-cost gateway chain দিয়ে সামারাইজ করে একটি লেবেলযুক্ত
+# compacted_context ব্লক হিসেবে হিস্ট্রির শুরুতে রাখা হয়। সামারাইজার fail করলে
+# আজকের dumb-eviction আচরণেই সৎ fallback (Constitution #8) — কোনো ভুয়া স্মৃতি নয়।
+# ============================================================================
+async def _compact_history(chat_history, llm_gateway_ref, session_ref: str) -> None:
+    """deque পূর্ণ হলে পুরনো অর্ধেক সামারাইজ করে একটি compact ব্লক হিসেবে রাখে।
+
+    Fail করলে honest warning + বর্তমান dumb-eviction আচরণ (graceful degradation) —
+    এই ফাংশন কখনোই exception ছুড়ে WS চ্যাট লুপ মৃত্যু ঘটাবে না।
+    """
+    maxlen = int(chat_history.maxlen or 50)
+    keep = maxlen // 2  # শেষ অর্ধেক মেসেজ অক্ষুণ্ণ থাকে
+    evict_count = min(maxlen - keep, len(chat_history))
+    evicted = [chat_history.popleft() for _ in range(evict_count)]
+    if not evicted:
+        return
+    try:
+        prior = next(
+            (
+                m.get("content")
+                for m in chat_history
+                if isinstance(m, dict)
+                and m.get("role") == "system"
+                and m.get("name") == "compacted_context"
+            ),
+            None,
+        )
+        result = await llm_gateway_ref.acompletion(
+            prompt=build_compaction_messages(evicted, prior),
+            task_type="summarization",
+        )
+        # Non-stream acompletion contract: {"success": True, "text": ...} —
+        # কিন্তু ভবিষ্যৎ শেপ-পরিবর্তন সহ্য করতে "content" fallback-ও রাখা হলো।
+        if isinstance(result, dict):
+            summary = str(result.get("text") or result.get("content") or "")
+        else:
+            summary = str(result or "")
+        if not summary.strip():
+            raise ValueError("empty compaction summary")
+        if len(summary) > COMPACTION_SUMMARY_CHAR_CAP:
+            # বাংলা মন্তব্য: defensive ক্যাপ — প্রম্পটে <=350 টোকেন বলা থাকলেও মডেল
+            # দীর্ঘ আউটপুট দিলে কনটেক্সট ব্লক bounded থাকবে (৫১২MB নিরাপত্তা)।
+            summary = summary[:COMPACTION_SUMMARY_CHAR_CAP]
+        logger.warning(
+            "🔄 [WS-COMPACTION] %d messages compacted into summary block for session=%s",
+            evict_count,
+            session_ref,
+        )
+        chat_history.appendleft(
+            {
+                "role": "system",
+                "name": "compacted_context",
+                "content": f"{COMPACTION_BLOCK_LABEL}\n{summary}",
+            }
+        )
+    except Exception as exc:  # graceful degradation — কখনোই WS লুপ মৃত্যু নয়
+        logger.warning(
+            "⚠️ [WS-COMPACTION] summary failed (%s); falling back to plain eviction "
+            "of %d messages — honest degradation, no fabricated memory.",
+            exc,
+            evict_count,
+        )
+
+
 @router.websocket("/chat")
 async def websocket_chat_endpoint(
     websocket: WebSocket,
@@ -501,6 +575,10 @@ async def websocket_chat_endpoint(
                 content_to_send = user_message
 
             try:
+                # PLAN-002 হুক: deque পূর্ণ হলে append নীরবে পুরনো মেসেজ ফেলে দেওয়ার
+                # আগে পুরনো অর্ধেক সামারাইজ করে compacted_context ব্লক বানানো হয়।
+                if len(chat_history) == chat_history.maxlen:
+                    await _compact_history(chat_history, llm_gateway, execution.execution_id)
                 chat_history.append({"role": "user", "content": content_to_send})
 
                 system_instructions = (
@@ -529,6 +607,9 @@ async def websocket_chat_endpoint(
                         response_content += chunk
                         await asyncio.sleep(0.01)
 
+                # PLAN-002 হুক: assistant মেসেজ append-এর আগেও একই কম্প্যাকশন গার্ড।
+                if len(chat_history) == chat_history.maxlen:
+                    await _compact_history(chat_history, llm_gateway, execution.execution_id)
                 chat_history.append({"role": "assistant", "content": response_content})
 
                 await websocket.send_text("[DONE]")
