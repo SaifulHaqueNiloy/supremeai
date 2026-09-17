@@ -73,6 +73,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 14 | **User-Facing Capability Truth** (`voice_service.py` + `stream_voice_sse.py` + `backend/p2p/`) | জাল transcript/confidence/অডিও লাইভ-মাউন্টেড SSE-চেইনে (কোড-নোটই স্বীকারকৃত); বাস্তব MultilingualTTS সহ-অস্তিত্বশীল — V5 fake-metrics মতবাদের backend-সম্প্রসারণ | ✅ **প্রকাশিত** — `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` |
 | 15 | **Security Organ Deep** (`backend/core/security/**` + `backend/core/autonoguard_engine.py`) | ৯,৫৫৫-লাইনের অঙ্গে ~১১ সক্রিয় / ২ অর্ধ-নিদ্রা / ৮ dormant; লাইভ-গেট দুটি টেস্ট-বিহীন; **নতুন চুক্তি-প্রিমিয়ার**: Part 1 = গভীর ৩য়-পক্ষ বুদ্ধিমত্তা (OWASP GenAI Top-10 2025, NeMo rails-as-config, PromptGuard-২ প্রত্যাখ্যান, Spotlighting, garak, API-deception) — ডিসেপশন-ফিডব্যাক লুপ + rails-as-data | ✅ **প্রকাশিত** — `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` |
 | 16 | **Billing & Metering Gateway** (`billing_api.py` + `services/billing/` + `cost_guard.py`) | চার্জিং-অর্ধ শিল্প-গ্রেড কিন্তু মিটারিং-অর্ধ বিচ্ছিন্ন (record_spend শূন্য-কলার → ড্যাশবোর্ড-স্থায়ী-$০); payments.py revenue-leak ট্র্যাপ; **মিটার-ফার্স্ট মতবাদ** — LiteLLM model-cost-map, OpenMeter প্যাটার্ন, ভেন্ডর-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` |
+| 17 | **HITL & Approval Chain** (`services/hitl/` + `approval_manager.py` + `hitl_admin.py`) | ৭টি প্রতিযোগী অনুমোদন-স্টেট-মেশিন, নির্বাহক-বিহীন 'approved', জাল OTP, ২ route-shadowing — **এক-সেতু-সাত-দরজা মতবাদ** + resume-URL টোকেন (n8n ধার), LangGraph/Temporal প্যাটার্ন-গ্রহণ-লাইব্রেরি-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -98,6 +99,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 14 | 2026-09-17 | User-Facing Capability Truth | `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (SSE re-point + সত্য-সেমান্টিকস) |
 | 15 | 2026-09-17 | Security Organ Deep (গভীর সুরক্ষা-অঙ্গ) | `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-G টেস্ট-প্রথম; ডিসেপশন-ফিডব্যাক লুপ; rails-as-data; PromptGuard প্রত্যাখ্যান-নথি) |
 | 16 | 2026-09-17 | Billing & Metering Gateway | `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A এক-লাইন লুপ-বন্ধ; zero-cost সংবিধান-অটুট-শর্ত) |
+| 17 | 2026-09-17 | HITL & Approval Chain | `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (৭→১ store; resume-URL সেতু; জাল-OTP-অবসান) |
 
 ---
 
