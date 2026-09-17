@@ -67,6 +67,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 08 | **Scout / Deep Research** (`backend/scout/`) | সদ্য প্রোডাকশন-wired গবেষণা-চক্র | ✅ **প্রকাশিত** — `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` |
 | 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ✅ **প্রকাশিত** — `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` |
 | 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ✅ **প্রকাশিত** — `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` |
+| 11 | **Architecture Intelligence** (M5 — স্ট্যাটিক-গ্রাফ অবকাঠামো) | ১৯৪-মডিউল রানটাইম-অডিট আছে, স্ট্যাটিক গ্রাফ/রুল/baseline-N শূন্য (greenfield rg-প্রমাণ) — অন্ধ-রিফ্যাক্টর শেষ-লিভার | ✅ **প্রকাশিত** — `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` |
+| 12 | **Governed Skill Ecosystem** (`backend/skills/` + `backend/core/skill_manager.py` + রুট `skills/`) | তিন প্রতিযোগী বাস্তবায়ন, সব dormant — ERR-F02-প্যাটার্ন বীজে বন্ধ করার সবচেয়ে সস্তা মুহূর্ত; runtime-pip lightweight-লঙ্ঘন সংশোধন-প্রস্তাব | ✅ **প্রকাশিত** — `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -86,6 +88,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 8 | 2026-09-17 | Scout / Deep Research | `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 9 | 2026-09-17 | Dormant Tools সক্রিয়করণ | `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 10 | 2026-09-17 | Frontend Tier-S Wiring | `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (সিরিজের প্রস্তাবিত দশ মডিউল সম্পূর্ণ; কিউ পুনঃর‍্যাঙ্ক চলমান-প্রক্রিয়ার অংশ) |
+| 11 | 2026-09-17 | Architecture Intelligence (M5) | `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; জন্ম থেকেই Part 5.5 দর্শন-অডিটসহ) |
+| 12 | 2026-09-17 | Governed Skill Ecosystem (M9) | `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; তিন-বাস্তবায়ন কনসলিডেশন প্রস্তাব) |
 
 ---
 
@@ -105,6 +109,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 08 Scout | stopwords কোড-inline প্রস্তাব; max_steps স্থির | data-file-লোডেড stopwords; max_steps env-ডিফল্ট |
 | 09 Dormant Tools | neon/SENTRY key-নির্ভর MCP সাধারণ-নিবন্ধন; mcp_observability SENTRY-নির্ভর revival; ধাপ-সীমা স্থির | key-নির্ভর server default-off ফাউন্ডার-গেটেড; revival key-বিহীন-প্রথম (স্থানীয় error_event_bus); সীমা env-চালিত; CI-gate শূন্য-false-positive-পরে |
 | 10 Frontend | knip warn→error CI-বিচ্ছিন্নতা-ঝুঁকি | error-মোড শূন্য-false-positive বেসলাইনের পরে; ব্যতিক্রম-তালিকা data-file |
+
+পরবর্তী-চক্র-নোট: চক্র ১১-১২ থেকে নতুন মডিউল-ডকুমেন্ট **জন্ম থেকেই** Part 5.5 দর্শন-অডিট-টেবিলসহ লেখা হয় — সংশোধন-রাউন্ডের প্রয়োজন নেই; প্রতিটি প্রস্তাব publish-পূর্বে চার-স্তম্ভ-ফিল্টারে ছাঁকা (zero cost / lightweight / fast smooth / zero hardcode)।
 
 প্রোটোকল-নোট (প্রতিষ্ঠাতা-নির্দেশ): এই রাউন্ড থেকে সিরিজ-সংশোধন **শাখা-একমাত্র** (`crown-jewel-v2`) — main অস্পৃশ্য; প্রতি push-পূর্বে pull; docs-only পরিবর্তন (কোড/CI-ওয়ার্কফ্লো স্পর্শ নয়) — merge-conflict-মুক্ত লক্ষ্যে unique-path + in-place living-plan সম্পাদনা। প্রতিটি সংশোধনের ভিত্তি-প্রমাণ base `ed35eaf`-এ spot-checkকৃত।
 
