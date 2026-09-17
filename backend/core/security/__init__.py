@@ -315,13 +315,17 @@ async def revoke_token(jti: str, exp: int | None = None, *, is_admin: bool = Fal
 async def is_token_revoked(jti: str, *, is_admin: bool = False) -> bool:
     """বাংলা মন্তব্য: টোকেন রিভোক করা হয়েছে কিনা Redis থেকে চেক করে।
 
-    Revocation-availability policy (production-readiness plan, item 2):
-    - ``is_admin=False`` (সাধারণ ইউজার): **fail-open** — Redis ডাউন থাকলে
+    Revocation-availability policy (production-readiness plan, item 2;
+    V5.1: env-aware — production fail-closed, dev/test fail-open + loud log):
+    - ``is_admin`` ফ্ল্যাগ False (সাধারণ ইউজার): **fail-open** — Redis ডাউন থাকলে
       ব্যবহারকারী লক-আউট হন না (Render free-tier cold start সহ্য করা যায়)।
-    - ``is_admin=True``  (অ্যাডমিন):      **fail-closed** — Redis ছাড়া
-      revocation ভেরিফাই করা সম্ভব নয়; অ্যাডমিন প্যানেল সাময়িকভাবে রিজেক্ট
-      হওয়াই নিরাপদ আচরণ। সর্বশেষ revoked admin JTI-গুলো TTL-aware LRU
+    - ``is_admin`` ফ্ল্যাগ True (অ্যাডমিন) + production/staging env: **fail-closed** —
+      Redis ছাড়া revocation ভেরিফাই করা সম্ভব নয়; অ্যাডমিন প্যানেল সাময়িকভাবে
+      রিজেক্ট হওয়াই নিরাপদ আচরণ। সর্বশেষ revoked admin JTI-গুলো TTL-aware LRU
       ক্যাশে থাকে, তাই ইচ্ছাকৃত রিভোক অ্যাডমিন-ও ধরা পড়ে।
+    - ``is_admin`` ফ্ল্যাগ True (অ্যাডমিন) + dev/test/local env: **fail-open** +
+      loud logger.error — Redis-হীন টেস্ট এনভায়রনমেন্টে সব অ্যাডমিন এন্ডপয়েন্ট
+      401 হয়ে স্যুট লাল হওয়া আটকায়; নীরব fail-open নয়, প্রতি কলে লগ হয়।
     """
     if jti in _IN_MEMORY_BLACKLIST:
         return True
