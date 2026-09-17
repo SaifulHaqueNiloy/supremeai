@@ -101,27 +101,29 @@ export function RealTimeMetricsPanel() {
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* বাংলা মন্তব্য: backend এখন অনুপলব্ধ মেট্রিক null পাঠায় (false-assurance
+            doctrine) — null-safe রেন্ডারিং বাধ্যতামূলক, নইলে .toLocaleString() ক্র্যাশ করে। */}
         <Kpi
           label="Requests/s"
-          value={metrics.requests_per_second.toLocaleString()}
+          value={metrics.requests_per_second != null ? metrics.requests_per_second.toLocaleString() : '—'}
           accent="#00f3ff"
           isSimple={isSimple}
         />
         <Kpi
           label="Latency P50"
-          value={`${metrics.latency_p50_ms} ms`}
+          value={metrics.latency_p50_ms != null ? `${metrics.latency_p50_ms} ms` : '—'}
           accent="#b5179e"
           isSimple={isSimple}
         />
         <Kpi
           label="Latency P95"
-          value={`${metrics.latency_p95_ms} ms`}
+          value={metrics.latency_p95_ms != null ? `${metrics.latency_p95_ms} ms` : '—'}
           accent="#ff9900"
           isSimple={isSimple}
         />
         <Kpi
           label="Error Rate"
-          value={`${(metrics.error_rate || 0).toFixed(4)}`}
+          value={metrics.error_rate != null ? `${metrics.error_rate.toFixed(4)}` : '—'}
           accent="#ff003c"
           isSimple={isSimple}
         />

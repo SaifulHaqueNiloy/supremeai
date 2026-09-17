@@ -28,9 +28,12 @@ def get_metrics():
         distribution = {"ollama": 100}
 
     # বাংলা মন্তব্য: psutil ব্যবহার করে সার্ভারের রিয়েল CPU এবং Memory ব্যবহারের পারসেন্টেজ সংগ্রহ করা হচ্ছে।
-    cpu_usage = 0.0
-    memory_usage = 0.0
-    gpu_usage = 0.0
+    # Wave-1 honesty fix: আগে psutil ব্যর্থ হলে ভুয়া fallback (15.2/40.5/22.4/45.2) আর
+    # "0.0 → 15.2" জাদু ছিল; GPU ছিল cpu*0.8+10 দিয়ে বানানো কল্পনা। এখন —
+    # রিয়েল ডেটা থাকলে রিয়েল মান, না থাকলে সৎ None (কখনো বানানো সংখ্যা নয়)।
+    cpu_usage: float | None = None
+    memory_usage: float | None = None
+    gpu_usage: float | None = None  # রিয়েল GPU সেন্সর নেই — কল্পনা করা নিষিদ্ধ
     try:
         import sys
 
@@ -38,38 +41,38 @@ def get_metrics():
         if psutil is None:
             import psutil
 
-        # বাংলা মন্তব্য: float() দিয়ে explicit conversion করা হচ্ছে — MagicMock বা None পেলে fallback ব্যবহার হবে।
         raw_cpu = psutil.cpu_percent(interval=None)
-        cpu_usage = float(raw_cpu) if raw_cpu is not None else 15.2
-        if cpu_usage == 0.0:
-            cpu_usage = 15.2
+        if raw_cpu is not None:
+            cpu_usage = float(raw_cpu)
         raw_mem = psutil.virtual_memory().percent
-        memory_usage = float(raw_mem) if raw_mem is not None else 40.5
-        if memory_usage == 0.0:
-            memory_usage = 40.5
-
-        # GPU Usage estimation: check if we can estimate or fallback to CPU load baseline
-        gpu_usage = min(90.0, float(cpu_usage * 0.8 + 10.0))
+        if raw_mem is not None:
+            memory_usage = float(raw_mem)
     except Exception as exc:
+        # বাংলা মন্তব্য: psutil ব্যর্থ হলে সৎ unknown (None) — ভুয়া fallback সংখ্যা নয়।
         logger.warning(f"Failed to fetch system metrics via psutil: {exc}")
-        cpu_usage = 22.4
-        memory_usage = 45.2
-        gpu_usage = 12.0
+        cpu_usage = None
+        memory_usage = None
 
+    # বাংলা মন্তব্য (Wave-1 honesty fix): requests_per_second / latency / error_rate /
+    # total_requests_24h / cost — এই সবগুলো আগে ১০০% hardcoded ভুয়া সংখ্যা ছিল
+    # (12, 180/320/650, 0.00, 124, 0.01, 7.20) যা প্রতি ২ সেকেন্ডে অ্যাডমিন
+    # ড্যাশবোর্ডে লাইভ স্ট্রিম হত। রিয়েল কাউন্টার/ট্রেসিং পাইপলাইন এখনো নেই বলে
+    # সৎ None — UI খালি ("—") দেখাবে, বানানো সংখ্যা নয়। key-গুলো রাখা হচ্ছে
+    # যাতে ফ্রন্টএন্ড কনজিউমার null-safe ভাবে খালি অবস্থা রেন্ডার করতে পারে।
     return {
-        "requests_per_second": 12,
-        "latency_p50_ms": 180,
-        "latency_p95_ms": 320,
-        "latency_p99_ms": 650,
-        "error_rate": 0.00,
-        "total_requests_24h": 124,
-        "cost_per_hour": 0.01,
-        "cost_projected_monthly": 7.20,
+        "requests_per_second": None,
+        "latency_p50_ms": None,
+        "latency_p95_ms": None,
+        "latency_p99_ms": None,
+        "error_rate": None,
+        "total_requests_24h": None,
+        "cost_per_hour": None,
+        "cost_projected_monthly": None,
         "active_providers": active_providers,
         "model_call_distribution": distribution,
-        "cpu_usage_percent": round(cpu_usage, 1),
-        "gpu_usage_percent": round(gpu_usage, 1),
-        "memory_usage_percent": round(memory_usage, 1),
+        "cpu_usage_percent": round(cpu_usage, 1) if cpu_usage is not None else None,
+        "gpu_usage_percent": round(gpu_usage, 1) if gpu_usage is not None else None,
+        "memory_usage_percent": round(memory_usage, 1) if memory_usage is not None else None,
     }
 
 

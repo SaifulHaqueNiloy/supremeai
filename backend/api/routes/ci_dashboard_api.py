@@ -45,6 +45,7 @@ CPU Impact: <2% when active, idle ~0%
 """
 
 import asyncio
+import hmac
 import json
 from datetime import datetime, timedelta
 from typing import Any
@@ -52,6 +53,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query, WebSocket
 from pydantic import BaseModel, Field
 
+from core.config import settings
 from core.logging_config import logger
 from core.security.ws_auth import authenticate_websocket
 
@@ -275,9 +277,23 @@ async def receive_ci_webhook(payload: WebhookPayload):
     Called by ci_summary_v2.py after generating summary.
     Expects X-CI-Webhook-Secret header for verification.
     """
-    # Verify secret (in real implementation, use proper HMAC verification)
-    expected_secret = os.environ.get("CI_WEBHOOK_SECRET", "")
-    if expected_secret and payload.secret != expected_secret:
+    # বাংলা মন্তব্য (Wave-1 security fix): তিনটি দুর্বলতা ঠিক করা হলো —
+    # (১) আগে secret unset থাকলে fail-open হতো (যেকোনো কলার CI ডেটা ঢোকাতে পারত),
+    # এখন n8n/cdc-র মতো কঠোর fail-closed: secret না থাকলে উঁচু লগ + 401;
+    # (২) আগে raw os.environ.get() ব্যবহার হতো যা Settings-এর Single Source of
+    # Truth bypass করত — এখন settings.ci_webhook_secret (config_secrets.py);
+    # (৩) আগে plain != তুলনা ছিল — timing attack এড়াতে constant-time compare।
+    expected_secret = settings.ci_webhook_secret
+    if not expected_secret:
+        logger.error(
+            "CI_WEBHOOK_SECRET is not configured! "
+            "Rejecting all CI hook submissions under fail-closed policy."
+        )
+        raise HTTPException(status_code=401, detail="CI webhook secret not configured")
+
+    provided_secret = str(payload.secret or "")
+    if not hmac.compare_digest(provided_secret.encode("utf-8"), expected_secret.encode("utf-8")):
+        logger.warning("CI hook submission rejected: invalid secret")
         raise HTTPException(status_code=401, detail="Invalid webhook secret")
 
     # Store the summary
@@ -726,7 +742,3 @@ async def clear_cache(
 def get_router() -> APIRouter:
     """Get the router for inclusion in main app."""
     return router
-
-
-# Import os for environment variables (at module level)
-import os
