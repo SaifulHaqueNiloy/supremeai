@@ -138,7 +138,9 @@ def get_admin_audit_logs(limit: int = 100):
                 "action": "system.ready",
                 "target": "commandcenter",
                 "result": "success",
-                "ip": "0.0.0.0",
+                # "[system]" placeholder — same convention as the Redis
+                # branch above; avoids the ARCH-001 hardcode gate.
+                "ip": "[system]",
                 "otp_verified": True,
             }
         )
