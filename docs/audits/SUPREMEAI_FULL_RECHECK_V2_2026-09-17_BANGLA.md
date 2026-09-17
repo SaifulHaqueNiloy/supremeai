@@ -179,3 +179,15 @@ target_scope: supremeai_internal
 3. প্রতিটি ধাপের পরে: `ruff check+format (0.13.1 pin)`, `pnpm build`, `python scripts/ci/generate_module_capability_matrix.py` regenerate — এই ৩টি এখন থেকে push-এর আগে লোকাল গেট।
 
 **সততার স্বীকারোক্তি:** এই অডিটের মূল্যায়নগুলো static analysis + নির্বাচিত টেস্ট রান + CI log-এর উপর ভিত্তি করে; সম্পূর্ণ backend suite (৩,২৬৯ handler) বা স্টেজিং runtime-প্রমাণ এই সেশনে চালানো হয়নি। `tests/runs` 112 বনাম দাবিকৃত 116 ইত্যাদি পার্থক্য parametrize-expansion-এ ব্যাখ্যযোগ্য — re-execute করা হয়নি।
+
+---
+
+## পার্ট ৮ — পরবর্তী ঘটনাপ্রবাহ (Addendum, একই দিনে সংযোজিত)
+
+ডকুমেন্ট প্রকাশের পরপরই লাইভ CI আরও ২টি latent ব্যর্থতা ফুটিয়ে তুলল — lint gate খুললেই যে টেস্টগুলো সপ্তাহব্যাপী চলেনি সেগুলোর স্তূপ থেকে ওঠা:
+
+1. **`test_all_operational_modules_exist_on_disk`** — owner-অনুমোদিত deletion `0aefa3b3` (chatStore/themeStore/useSupremeStore মৃত zustand store) MODULES_LIST.md ক্যাটালগে প্রতিফলিত হয়নি। **ঠিক (pushed `118236c7`)**: ৩ row বাদ, 224→191 contiguous renumber, summary count reconcile, boundary assertion `(191, 224)`।
+2. **`test_unauthenticated_request_rejected_without_bypass`** — CI fast group-এ 200 (local-এ pass) = cross-test state divergence (`core.config.settings` rebinding-জাতীয়)। **ঠিক (pushed `118236c7`)**: টেস্ট এখন দুই সম্ভাব্য settings instance-ই patch করে + dependency-visible instance-এ bypass বন্ধ আছে কিনা তা loudly assert করে — নীরব drift এখন self-explanatory failure।
+3. **Advanced contract gate-এর hardcode-scanner ব্যর্থতা** (`qa_suite.py` `os.getenv("DATABASE_URL")`) — আমাদের merged tree-তে remote-এর `bef15c3a` ইতিমধ্যে ঠিক করেছে; scanner পুনঃরান PASS (critical,high)।
+
+**শিক্ষা (Lesson):** lint-gate ভাঙা থাকায় backend টেস্ট স্যুট যতদিন চলেনি, ততদিন ২টি সত্যিকারের কন্ট্রাক্ট-ভাঙা চুপচাপ জমা হয়েছে। "CI green" দেখে সন্তুষ্ট হওয়া যাবে না — **gate নিজে চলছে কিনা** সেটাই আগের প্রশ্ন। এই নীলক্ষেতটাই পার্ট ১-এর false-assurance ঘটনার মূল শিক্ষা।
