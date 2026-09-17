@@ -163,7 +163,7 @@ P-G: মৃত-উপাদান সিদ্ধান্ত    → 4.9K-লা
 
 - **P-A:** `core/startup/agents.py:209` ডিফল্ট অপরিবর্তিত রেখে .env.example-এ `ENABLE_LEARNING_LOOP=true` + নথি; exploration গেট `get_adaptive_routing_enabled` সুইটেবল-ডিফল্ট true (sample-tier-এ কেবল); kill-switch অক্ষত; flag-off → আজকের আচরণ।
 - **P-B:** নতুন পাতলা apply-executor (শুধু retry-policy/fallback-reorder JSON-patch ভোকাবুলারি) — approve-endpoint-কে improvement_proposals-এ সংযুক্ত করা; CanaryManager-এ পাইপ; সাফল্যে `update_improvement_proposal_status(id,'PROMOTED')` + FitnessEngine পূর্ব/পর পরিমাপ; ব্যর্থতায় ROLLED_BACK; কার্যকোড-প্যাচ কখনোই ভোকাবুলারিতে নেই।
-- **P-C:** `_store.py`-র degradation-শাখায় pgvector-ব্যাকএন্ড প্রাথমিক, sqlite-ফাইল গৌণ, IN-MEMORY শেষ (Graceful Degradation ক্রম উল্টানো); বিদ্যমান স্কিমা অপরিবর্তিত; রিস্টার্ট-পরবর্তী cache-hit টেস্ট।
+- **P-C:** `_store.py`-র degradation-শাখায় pgvector-ব্যাকএন্ড প্রাথমিক, sqlite-ফাইল গৌণ, IN-MEMORY শেষ (Graceful Degradation ক্রম উল্টানো); বিদ্যমান স্কিমা অপরিবর্তিত; রিস্টার্ট-পরবর্তী cache-hit টেস্ট। **দর্শন-সংগতি সংশোধন (এই পাস):** (১) **রেকনসিলিয়েশন-বাধ্যতা** — `_store.py`-র নিজস্ব docstring "SQLite-only-by-design store" (P0 Task 9-c2) স্পষ্ট ডিজাইন-সিদ্ধান্ত; pgvector-প্রাথমিকতা সেই সিদ্ধান্তকে উল্টায়, তাই P-C-র execution-প্লানে Gate 0-তে এই দ্বন্দ্ব সুনির্দিষ্টভাবে উল্লেখ ও নিষ্পত্তি বাধ্যতামূলক (নীরব-উল্টোদিক নয়); (২) **flag-gated, default আজকের আচরণ** — পার্সিস্টেন্স-মোড env-পঠিত (pgvector|sqlite|memory), কোডে কোনো স্থির পছন্দ নয় (zero-hardcode); (৩) **হট-পথ latency-রক্ষা** — লেখা write-behind/ব্যাচড (বিদ্যমান bounded-deque + batch-flush প্যাটার্ন), পাঠ বাউন্ডেড — ব্যবহারকারী-দৃশ্যমান বিলম্ব শূন্য-লক্ষ্য (fast-smooth)।
 - **P-D:** `unified_learning.py` + ৪ deprecated wrapper deprecation-warning → callers বিদ্যমান লুপে → অপসারণ সবশেষে; CodeProposal/improvement_proposals একত্রীকরণ-নীলনকশা (পাঠ-মাইগ্রেশন); এক fitness-সত্য (FitnessEngine canonical)।
 - **P-E:** প্রতিটি surface-এ দুই-সমাপ্তির একটি: বাস্তব (forge persist বা 501; swarm-graph CapabilityRegistry-থেকে লাইভ; ×1.15 মুছে পরিমাপ-ভিত্তিক; approve→P-B-পথ) অথবা honest-error; §7.1 fakes-এর জায়গায় fitness_snapshots থেকে পরিমিত মান বা documented deferral।
 - **P-F:** `track_llm_call`-এ `skill_id` kwargs — forge-generated skill-পথে সেট; LearningLoopAgent skill_metrics (loop.py:213 fallback বদলে বাস্তব); forge-ফল → FitnessEngine auto-feed।
@@ -230,6 +230,21 @@ P-G: মৃত-উপাদান সিদ্ধান্ত    → 4.9K-লা
 - **Gate 5 (live):** প্রথম বাস্তব proposal-প্রয়োগ পর্যবেক্ষণ (পরিমাপ-পূর্ব/পর প্রকাশিত); ২৪-ঘণ্টায় লুপ-জাগরণ প্রমাণ; রিস্টার্ট-পরবর্তী cache-hit; fabricated শূন্য।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; apply-রোলব্যাক = এক-কমান্ড (রাষ্ট্র-পুনরুদ্ধার ভোকাবুলারির অংশ); pgvector-যোগ ডেটা-ক্ষতি-পথ নয়।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | pgvector বিদ্যমান supabase-এ (নতুন infra/dependency নয়); HITL canary + bounded apply — কোনো পরিশোধিত পরিষেবা নয় |
+| Lightweight | ✅ সংগত (P-C সংশোধিত) | 0 নতুন dependency; লুপ-অঙ্গ ইতিমধ্যেই শরীরে — সংযোগ-কাজ; P-C-তে বিদ্যমান batch-flush প্যাটার্নের পুনঃব্যবহার বাধ্যতামূলক করা হলো |
+| Fast & smooth | ⚠️ ছিল → ✅ **সংশোধিত** | P-C আগে pgvector-প্রাথমিক লেখা-পাঠ সরাসরি প্রস্তাব করত — হট-পথে network round-trip; এখন write-behind + bounded-read + default-অপরিবর্তিত (§২.৪ সংশোধিত) |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | persistence-মোড env-পঠিত (pgvector\|sqlite\|memory) — কোড-কনস্ট্যান্ট নয়; এবং `advanced_evolution_engine.py` L44-র `gain × 1.15` ম্যাজিক-সংখ্যা (false-assurance purge P-E তালিকাভুক্ত) সংশোধন-পথে measured-মানই থাকবে — নতুন কোনো ম্যাজিক-গুণক নয় |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `supabase_vector_backend.py` বিদ্যমান (adaptive_engine/); `ENABLE_LEARNING_LOOP` default false (`core/startup/agents.py` L209); `_store.py` degraded-mode docstring অটুট + **"SQLite-only-by-design" (P0 Task 9-c2) আবিষ্কৃত** — P-C-র Gate-0-রেকনসিলিয়েশন-বাধ্যতা সংযোজনের কারণ।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 

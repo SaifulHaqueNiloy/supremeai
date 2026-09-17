@@ -160,8 +160,8 @@ P-G: চুক্তি-টেস্ট-সুরক্ষা     → pipeline c
 - **P-A:** নতুন ছোট স্কিমা-মডিউল (scout-বা routes-প্যাকেজে) — emit ও parse দুই-পক্ষই তা থেকে; backend-emit আপডেট (step_update/complete বা FE-আপডেট — এক-সিদ্ধান্ত); history-রেসপন্সে report-ক্ষেত্র; FE-parser আপডেট একই PR; contract-test দুই-পক্ষে।
 - **P-B:** `_run_research_pipeline`-এর synthesis-পূর্বে গেট: sources==0 → explicit no-sources রিপোর্ট (কারণ+পরবর্তী-পরামর্শসহ); fallback-ব্যর্থতা event-হিসেবে প্রবাহিত; flag `SUPREMEAI_RESEARCH_HONEST_GATE=true` (default true — সত্য-ডিফল্ট)।
 - **P-C:** `_web_search`-এ provider-চেইন: DDGS (বিদ্যমান core/search) → scout-governed scrape (policy থাকলে); seed-policy-তে duckduckgo.com + নথি; `ddgs` pyproject-এ ঘোষণা; provider-ব্যর্থতায় পরবর্তী।
-- **P-D:** `CrawlerTelemetry.emit_event`-এ `persistence.record_event` কল (bounded row); admin-events অ-শূন্য-যাচাই; সেশন-মেটাডেটায় খরচ-প্রদর্শন (gateway-মেটাডেটা থেকে); `max_steps` প্যারাম-প্রয়োগ।
-- **P-E:** `extractor.py`-তে বাংলা-tokenizer (শব্দ-বিভাজন), Bangla-stopwords তালিকা, danda (`।`) বাক্য-বিভাজক; dedup-shingle বাংলা-সচেতন; টেস্ট: বাংলা-কর্পাসে নিষ্কাশন; zero-token সম্পত্তি-টেস্ট অটুট।
+- **P-D:** `CrawlerTelemetry.emit_event`-এ `persistence.record_event` কল (bounded row); admin-events অ-শূন্য-যাচাই; সেশন-মেটাডেটায় খরচ-প্রদর্শন (gateway-মেটাডেটা থেকে); `max_steps` প্যারাম-প্রয়োগ (ডিফল্ট-মান env/config-পঠিত — কোড-কনস্ট্যান্ট নয়)।
+- **P-E:** `extractor.py`-তে বাংলা-tokenizer (শব্দ-বিভাজন), Bangla-stopwords **data-file থেকে লোডেড/সম্প্রসারণযোগ্য (কোড-inline হার্ডকোড তালিকা নয় — zero-hardcode সংশোধন)**, danda (`।`) বাক্য-বিভাজক; dedup-shingle বাংলা-সচেতন; টেস্ট: বাংলা-কর্পাসে নিষ্কাশন; zero-token সম্পত্তি-টেস্ট অটুট।
 - **P-F:** slash_commands.py-র /research ও capability_adapters-র spoke → `_run_research_pipeline`-ডেলিগেশন (চুক্তি-মোড়ক অটুট); এক পাইপলাইন, এক টেস্ট-পৃষ্ঠ।
 - **P-G:** pipeline contract-test (১০-ধাপ ক্রম) + respx-মকড E2E (policy→crawl→report); `core/config.py`-তে scout-সেকশন (flags: honest-gate, provider-chain, events); kill-switch।
 
@@ -225,6 +225,21 @@ P-G: চুক্তি-টেস্ট-সুরক্ষা     → pipeline c
 - **Gate 5 (live):** বাস্তব কোয়েরিতে FE-events >0; ০-উৎস-synthesis শূন্য; ২৪-ঘণ্টায় crawl_events >0; বাংলা-কোয়েরি রিপোর্টে উদ্ধৃতি-fetch-যাচাই >95% (target)।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema/data-loss path নেই।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত | provider-চেইন ফ্রি-প্রথম (DDGS → governed scrape — কোনো পরিশোধিত search-API নয়); Redis-ক্যাশ/robots-cache বিদ্যমান |
+| Lightweight | ✅ সংগত | ছোট স্কিমা-মডিউল + বিদ্যমান SSE/bus পুনঃব্যবহার; bounded row |
+| Fast & smooth | ✅ সংগত | honest-gate সংশ্লিষ্ট হট-পথ ব্যয় যোগ করে না; provider-ব্যর্থতায় পরবর্তী-চেইন |
+| Zero hardcode | ⚠️ ছিল → ✅ **সংশোধিত** | P-E-র stopwords কোড-inline প্রস্তাব ছিল → data-file-লোডেড; P-D-র max_steps ডিফল্ট env/config-পঠিত (§২.৪ সংশোধিত) |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `extractor.py` L210/L221-র `[a-zA-Z]{3,}` regex অটুট (বাংলা-অদৃশ্য — P-E প্রাসঙ্গিক); `crawler.py` emit_event বিদ্যমান (P-D প্রাসঙ্গিক)।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
