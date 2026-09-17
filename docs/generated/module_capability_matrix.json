@@ -10680,6 +10680,7 @@
     {
       "capability_signals": [
         "execute",
+        "memory",
         "register"
       ],
       "classification": "test",
