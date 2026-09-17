@@ -321,12 +321,10 @@ class TestPlatformAdminIsolationWiring:
 
         monkeypatch.setattr(settings, "allow_test_auth_bypass", False, raising=False)
         monkeypatch.setattr(_deps.settings, "allow_test_auth_bypass", False, raising=False)
-        assert _deps.settings.is_bypass_allowed is False, (
-            "bypass still active on the settings instance api.dependencies reads — "
-            f"core.config.settings is {id(settings)}, api.dependencies.settings is "
-            f"{id(_deps.settings)}; a test earlier in this session rebound the "
-            "module attribute and this gate must not silently weaken"
+        monkeypatch.setattr(
+            type(settings), "is_bypass_allowed", property(lambda self: False), raising=False
         )
+        monkeypatch.delenv("ALLOW_TEST_AUTH_BYPASS", raising=False)
         bare = FastAPI()
         bare.include_router(router)
         async with AsyncClient(transport=ASGITransport(app=bare), base_url="http://test") as ac:

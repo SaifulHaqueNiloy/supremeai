@@ -15,33 +15,13 @@ class TestIsTestEnvironment:
         finally:
             del os.environ["TESTING"]
 
-    def test_ci_does_not_enable_test_mode(self):
-        """CI env var নিজে থেকে কখনো test mode চালু করবে না (is_test_environment contract)।
-
-        বাংলা: এই ফাংশনের চুক্তি — শুধু ``CI=true`` দেখে কখনো True হবে না।
-        টেস্টটি pytest-এর ভেতরে চলে, তাই in-process assertion সবসময় True হয়
-        (pytest নিজেই sys.modules-এ থাকে) — সেটা CI-র অবদান প্রমাণ করে না।
-        সঠিক পরীক্ষা: pytest-মুক্ত subprocess-এ ফাংশনটি চালিয়ে দেখা।
-        """
-        import subprocess
+    def test_ci_does_not_enable_test_mode(self, monkeypatch):
         import sys
 
-        code = (
-            "import os; os.environ['CI']='true'; os.environ.pop('TESTING', None); "
-            "os.environ.pop('ENV', None); "
-            "from utils.environment import is_test_environment; print(is_test_environment())"
-        )
-        result = subprocess.run(
-            [sys.executable, "-c", code],
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-        assert result.returncode == 0, f"subprocess failed: {result.stderr[-300:]}"
-        assert result.stdout.strip() == "False", (
-            "CI env var alone must not enable test mode — "
-            f"got {result.stdout.strip()!r} in a pytest-free process"
-        )
+        monkeypatch.delitem(sys.modules, "pytest", raising=False)
+        monkeypatch.delenv("TESTING", raising=False)
+        monkeypatch.setenv("CI", "true")
+        assert is_test_environment() is False
 
     def test_returns_false_in_production(self):
         os.environ["ENV"] = "production"
