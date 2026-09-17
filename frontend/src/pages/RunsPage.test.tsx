@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -169,6 +169,28 @@ describe('RunsPage (ERR-B04)', () => {
     expect(await screen.findByTestId('run-start-btn-r2')).toBeInTheDocument();
     expect(screen.getByTestId('run-cancel-btn-r3')).toBeInTheDocument();
     expect(screen.queryByTestId('run-retry-btn-r2')).not.toBeInTheDocument();
+  });
+
+  it('cancels a run only after the 2s hold-to-confirm gesture (Task-12)', async () => {
+    mockedService.listRuns.mockResolvedValue({
+      items: [{ ...failedRun, id: 'r3', state: 'running', failure_reason: null }],
+      count: 1,
+      skip: 0,
+      limit: 50,
+    });
+    renderPage();
+    const cancelBtn = await screen.findByTestId('run-cancel-btn-r3');
+
+    // বাংলা: এক ক্লিকে (pointerdown+pointerup) hold বাতিল হয় — cancel হবে না।
+    await userEvent.click(cancelBtn);
+    expect(mockedService.cancelRun).not.toHaveBeenCalled();
+
+    // বাংলা: pointerdown ধরে রাখা → ২ সেকেন্ডের fill transition শেষ (transitionEnd)
+    // → তখনই একবার cancelRun কল হবে (hold-to-confirm contract)।
+    fireEvent.pointerDown(cancelBtn);
+    fireEvent.transitionEnd(screen.getByTestId('run-cancel-btn-r3-fill'));
+    await waitFor(() => expect(mockedService.cancelRun).toHaveBeenCalledWith('r3'));
+    expect(mockedService.cancelRun).toHaveBeenCalledTimes(1);
   });
 
   it('shows an honest error state when loading fails', async () => {

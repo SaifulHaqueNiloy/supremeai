@@ -26,6 +26,13 @@ class KnowledgeQuestion(BaseModel):
     question: str = Field(min_length=1, max_length=4_000)
 
 
+def _manifest_dir():
+    """Skill manifest directory — module-level helper যাতে tests monkeypatch করতে পারে।"""
+    from pathlib import Path
+
+    return Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+
+
 def get_knowledge_qa_service() -> KnowledgeQAService:
     return KnowledgeQAService()
 
@@ -73,16 +80,34 @@ async def search_knowledge(
 ):
     """Search the knowledge base for relevant documents matching the query."""
     import json
-    from pathlib import Path
 
-    manifest_dir = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+    manifest_dir = _manifest_dir()
     results = []
     if manifest_dir.exists():
         for json_file in manifest_dir.glob("*.json"):
             try:
                 data = json.loads(json_file.read_text(encoding="utf-8"))
                 if request.question.lower() in json.dumps(data).lower():
-                    results.append(data)
+                    # বাংলা মন্তব্য: Task-12 orphan-wiring — আগে raw manifest dict ফেরত
+                    # যেত, কিন্তু frontend KnowledgePage id/title/content/source ফিল্ড
+                    # রেন্ডার করে; manifest-এ সেই key নেই বলে ফলাফল ফাঁকা কার্ড হতো।
+                    # এখন প্রতিটি ফিল্ড manifest থেকে dynamically derive করা হয় —
+                    # কোনো skill-নির্দিষ্ট শব্দ hardcoded নয়, অজানা shape-এও honest
+                    # fallback (file stem + JSON excerpt) কাজ করে।
+                    stem = json_file.stem
+                    content = json.dumps(data, ensure_ascii=False)
+                    results.append(
+                        {
+                            "id": data.get("skill_id") or data.get("id") or stem,
+                            "title": data.get("title")
+                            or data.get("name")
+                            or data.get("skill_id")
+                            or stem,
+                            "content": content[:400],
+                            "source": json_file.name,
+                            "score": None,
+                        }
+                    )
                     if len(results) >= limit:
                         break
             except Exception as e:
