@@ -16,6 +16,36 @@
 
 import { Redis } from '@upstash/redis';
 
+// ============================================================================
+// Audit F-05 fix (2026-09-17): the Redis client used to be instantiated at
+// MODULE SCOPE in browser code from non-VITE_-prefixed env vars (always
+// undefined) — a server-side Redis client shipped to the browser bundle that
+// could never connect. The client is now created LAZILY on first use and
+// only when actually configured; otherwise operations throw an honest error
+// (cachedFetch's catch falls back to a direct fetch — graceful, no fake
+// cache hits).
+// ============================================================================
+const UPSTASH_URL =
+  import.meta.env.VITE_UPSTASH_REDIS_REST_URL || import.meta.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN =
+  import.meta.env.VITE_UPSTASH_REDIS_REST_TOKEN || import.meta.env.UPSTASH_REDIS_REST_TOKEN;
+
+let redisInstance: Redis | null = null;
+
+function getRedis(): Redis {
+  if (!redisInstance) {
+    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
+      throw new Error(
+        '[cache.manager] Upstash Redis is not configured (VITE_UPSTASH_REDIS_REST_URL / ' +
+          'VITE_UPSTASH_REDIS_REST_TOKEN missing) — cache operations are unavailable. ' +
+          'Callers should fall back to a direct fetch.',
+      );
+    }
+    redisInstance = new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
+  }
+  return redisInstance;
+}
+
 // ✅ ENHANCED: Proper compression using Compression Streams API
 async function compress(data: string): Promise<string> {
   if (data.length < 1024) return data;  // Don't bother compressing small payloads
@@ -90,12 +120,6 @@ async function decompress(data: string): Promise<string> {
   return data;
 }
 
-// Initialize Redis client
-const redis = new Redis({
-  url: import.meta.env.UPSTASH_REDIS_REST_URL || import.meta.env.REDIS_URL,
-  token: import.meta.env.UPSTASH_REDIS_REST_TOKEN || import.meta.env.REDIS_TOKEN,
-});
-
 // Cache TTL constants (optimized for free tier)
 export const CACHE_TTL = {
   INSTANT: 60,         // 1 minute - Real-time data
@@ -158,7 +182,7 @@ export async function cachedFetch<T>(
     }
     
     // Try cache first (saves API calls AND Redis commands!)
-    const cached = await redis.get<string>(fullKey);
+    const cached = await getRedis().get<string>(fullKey);
     if (cached) {
       cacheStats.hits++;
       cacheStats.bytes_saved += cached.length;  // Avoided re-fetching this size
@@ -173,7 +197,7 @@ export async function cachedFetch<T>(
     // ✅ Store COMPRESSED data in cache (saves memory!)
     const serialized = JSON.stringify(data);
     const compressed = compressionEnabled ? await compress(serialized) : serialized;
-    await redis.set(fullKey, compressed, { ex: ttl });
+    await getRedis().set(fullKey, compressed, { ex: ttl });
     
     cacheStats.misses++;
     
@@ -188,7 +212,7 @@ export async function cachedFetch<T>(
 
 // Batch operations (saves command count!)
 export async function batchGet<T>(keys: string[]): Promise<(T | null)[]> {
-  const pipeline = redis.pipeline();
+  const pipeline = getRedis().pipeline();
   
   keys.forEach(key => pipeline.get(`superai:${key}`));
   
@@ -218,7 +242,7 @@ export async function prefetchCommonKeys(): Promise<void> {
   
   for (const key of commonKeys) {
     try {
-      const exists = await redis.exists(`superai:${key}`);
+      const exists = await getRedis().exists(`superai:${key}`);
       if (!exists) {
         // Trigger fetch (will be cached)
       }
@@ -246,9 +270,9 @@ export async function warmCacheFromPatterns(): Promise<void> {
 export async function invalidatePattern(pattern: string): Promise<void> {
   // Note: Upstash doesn't support KEYS in production
   // Use a different strategy: maintain a set of keys per pattern
-  const patternKeys = await redis.get<string[]>(`patterns:${pattern}`);
+  const patternKeys = await getRedis().get<string[]>(`patterns:${pattern}`);
   if (patternKeys && patternKeys.length > 0) {
-    const pipeline = redis.pipeline();
+    const pipeline = getRedis().pipeline();
     patternKeys.forEach(key => pipeline.del(`superai:${key}`));
     pipeline.del(`patterns:${pattern}`);
     await pipeline.exec();
@@ -264,4 +288,4 @@ export function trackRedisCommand(): boolean {
   return dailyCommandCount < MAX_DAILY_COMMANDS;
 }
 
-export default redis;
+export { getRedis as getRedisClient };
