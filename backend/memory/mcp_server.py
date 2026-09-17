@@ -1215,8 +1215,14 @@ async def main() -> None:
 
             _loguru.remove()
             _loguru.add(sys.stderr, level="WARNING")
-        except Exception:
-            pass
+        except Exception as exc:
+            # বাংলা: best-effort — loguru redirect ব্যর্থ হলে stdlib logging
+            # (stderr) থেকেই চলবে; কিন্তু কারণ debug-এ রাখা হয় যাতে নীরব
+            # ব্যর্থতা না মনে হয়। stdout অবশ্যই অপবিত্র করা যাবে না (MCP frames)।
+            logging.getLogger(__name__).debug(
+                f"loguru stderr redirect unavailable ({type(exc).__name__}: {exc}); "
+                f"continuing with stdlib logging"
+            )
     else:
         logging.basicConfig(
             level=logging.WARNING,

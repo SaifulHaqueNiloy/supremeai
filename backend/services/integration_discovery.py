@@ -159,7 +159,13 @@ class IntegrationDiscoveryService:
                         "capabilities": capabilities or ["mcp"],
                         "descriptor_path": path,
                     }
-            except Exception:
+            except Exception as exc:
+                # বাংলা: probe-এ unreachable host স্বাভাবিক — কিন্তু নীরব নয়;
+                # debug-এ কারণ রাখা হয় যাতে discovery ব্যর্থতা diagnosable থাকে।
+                logger.debug(
+                    f"_probe_mcp: {base_url}{path} handshake failed "
+                    f"({type(exc).__name__}: {exc})"
+                )
                 continue
         return None
 
@@ -190,8 +196,13 @@ class IntegrationDiscoveryService:
                     "name": cls._infer_name(base_url, "webhook", []),
                     "capabilities": ["http"],
                 }
-        except Exception:
-            pass
+        except Exception as exc:
+            # বাংলা: reachability probe ব্যর্থতা → None (ডিজাইনসিদ্ধ), কিন্তু
+            # কারণ debug-এ রেখে দিচ্ছি — silent swallow False-Assurance বাড়ায়।
+            logger.debug(
+                f"_probe_webhook: {base_url} unreachable "
+                f"({type(exc).__name__}: {exc})"
+            )
         return None
 
     @classmethod

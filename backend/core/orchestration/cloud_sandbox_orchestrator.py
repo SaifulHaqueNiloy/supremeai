@@ -398,8 +398,13 @@ class PersistentSandbox:
                 if isinstance(data, dict) and "content" in data:
                     val = data["content"]
                     return val.encode("utf-8") if isinstance(val, str) else bytes(val)
-            except Exception:
-                pass
+            except Exception as exc:
+                # বাংলা: JSON বডি না পারলে raw-bytes fallback — কিন্তু নীরবে নয়,
+                # diagnosable হতে হবে (False-Assurance doctrine: silent swallow নিষিদ্ধ)।
+                logger.debug(
+                    f"download_file: response body is not JSON "
+                    f"({type(exc).__name__}: {exc}); falling back to raw bytes"
+                )
         if hasattr(res, "content"):
             return (
                 res.content if isinstance(res.content, bytes) else str(res.content).encode("utf-8")
