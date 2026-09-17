@@ -155,18 +155,19 @@ class SupabaseDB:
                 self.client = create_client(self.url, self.key)
                 logger.info("Initialized Supabase Client")
             except Exception as e:
-                logger.warning(
-                    f"Supabase Client initialization failed: {e}. Falling back to Mock Supabase Client."
+                # বাংলা মন্তব্য: আগে এখানে ভুয়া হোস্ট https://mock.supabase.co-তে client বানানো হতো
+                # (audit B-02 fix, 2026-09-17) — সব DB অপারেশন নীরবে নেটওয়ার্ক-fail → None হতো।
+                # এখন সৎ degraded মোড: client=None, প্রতিটি মেথড আগেই এটা হ্যান্ডেল করে।
+                logger.error(
+                    f"Supabase Client initialization failed: {e}. Running DEGRADED "
+                    "(client=None) — DB operations will honestly return no data instead of "
+                    "silently hitting a fake host."
                 )
-                try:
-                    self.client = create_client("https://mock.supabase.co", "mock-key")
-                except Exception as mock_err:
-                    # বাংলা মন্তব্য: নেস্টেড এক্সেপশন শ্যাডোইং ফিক্স ও ক্লায়েন্ট ফেইলিউর লগ যোগ
-                    logger.error(f"Fallback mock Supabase Client creation failed: {mock_err}")
-                    self.client = None
+                self.client = None
         else:
             logger.warning(
-                "SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/mock mode."
+                "SUPABASE_URL or SUPABASE_KEY invalid/missing. Running in offline/degraded "
+                "mode (client=None) — DB operations will return None honestly."
             )
 
         # বাংলা মন্তব্য: RLS-protected backend-only/audit টেবিল (যেমন evolution_logs)-এ

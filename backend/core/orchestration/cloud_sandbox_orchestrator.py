@@ -131,12 +131,22 @@ class CloudSandboxOrchestrator:
         self, sandbox_id: str, command: str, timeout: int = 300
     ) -> dict[str, Any] | None:
         if not self.api_key:
-            logger.info(f"Dry-run: Running command '{command}' in sandbox {sandbox_id}")
+            # বাংলা মন্তব্য: আগে ভুয়া "COMPLETED, exitCode 0, Mock output" ফেরত হতো —
+            # mock flag উপেক্ষা করা caller সফল এক্সিকিউশন দেখত (audit B-07 fix,
+            # 2026-09-17)। এখন সৎ non-success স্টেটাস — কমান্ড আসলে চলেনি।
+            logger.warning(
+                f"Dry-run: command '{command}' NOT executed in sandbox {sandbox_id} — "
+                "provider credentials missing (audit B-07). Returning honest non-success."
+            )
             return {
-                "status": "COMPLETED",
-                "exitCode": 0,
-                "stdout": f"Mock output for execution of: {command}",
-                "stderr": "",
+                "status": "MOCK_NOT_EXECUTED",
+                "exitCode": None,
+                "stdout": "",
+                "stderr": (
+                    "Sandbox provider credentials are missing, so the command was NOT "
+                    "executed. Set the provider API key (e.g. RUNPOD_API_KEY) to enable "
+                    "real execution."
+                ),
                 "mock": True,
             }
 

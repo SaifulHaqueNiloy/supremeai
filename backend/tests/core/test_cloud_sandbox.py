@@ -59,9 +59,11 @@ class TestCloudSandboxOrchestrator:
         orchestrator = CloudSandboxOrchestrator(provider="runpod")
         result = await orchestrator.run_command("test-sandbox-id", "ls -la")
         assert result is not None
-        assert result["status"] == "COMPLETED"
-        assert result["exitCode"] == 0
-        assert "Mock output" in result["stdout"]
+        # audit B-07 fix: mock mode must NOT fake a successful execution.
+        assert result["status"] == "MOCK_NOT_EXECUTED"
+        assert result["exitCode"] is None
+        assert result["stdout"] == ""
+        assert "NOT" in result["stderr"]
         assert result["mock"] is True
 
     @pytest.mark.anyio
