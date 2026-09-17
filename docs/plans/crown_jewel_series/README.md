@@ -89,6 +89,27 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 
 ---
 
+## দর্শন-সংগতি পাস (Philosophy Alignment Round — branch `crown-jewel-v2`, base `ed35eaf`, 2026-09-17)
+
+প্রতিষ্ঠাতা-প্রতিক্রিয়া: প্রকাশিত নীলনকশাগুলোর কিছু প্রস্তাব প্ল্যাটফর্মের মূল-দর্শনের (zero cost / lightweight / fast-smooth / zero-hardcode) সাথে সম্পূর্ণ মেলে না। এই রাউন্ডে **দশটি প্রকাশিত ডকুমেন্টই শাখায় সংশোধিত** (living-plan doctrine — ফাইল-ক্লোন নয়, প্রতিটিতে Part 5.5 অডিট-টেবিল + §২.৪ সংশোধন):
+
+| মডিউল | মূল-দর্শন-লঙ্ঘন (চিহ্নিত) | সংশোধন |
+|---|---|---|
+| 01 Memory | P-C "nightly" স্থির cadence; P-D weights | cadence + weights runtime-env/config-চালিত |
+| 02 Orchestration | P-A প্রতি-অনুরোধে দ্বি-পথ shadow = হট-পথে দ্বিগুণ ব্যয় | sampled + non-blocking shadow, sample-rate env |
+| 03 LLM Gateway | স্টার্টআপ health-probe (boot-latency+quota); routing_policy ৩-কপি drift; V4-পরে পুরনো পথ-রেফারেন্স | telemetry-feed-প্রথম + probe flag-gated; canonical-ফাইল + লাইভ-registry-derived চেইন; V4-রেকনসিলিয়েশন (MagicMock done-upstream, competitive_kit পথ, Hello-World জীবিত) |
+| 04 Browser | screencast cap স্থির-ধারণা; autonomous ধাপে বাজেট-সীমা অনুপস্থিত | caps + ধাপ/টোকেন-বাজেট env-চালিত |
+| 05 Self-Evolution | pgvector-প্রাথমিক: hot-path network round-trip + in-code "SQLite-only-by-design" (P0) দ্বন্দ্ব-অরেকনসিলড | write-behind + bounded-read + persistence-মোড env; Gate-0 রেকনসিলিয়েশন-বাধ্যতা |
+| 06 Run Fabric | "১৫-মিনিট sweep" স্থির মান | interval + retention-দিন env/config-চালিত |
+| 07 Context Engine | (সবচেয়ে সংগত) report-লেখা অবাউন্ডেড ঝুঁকি | retention-বাউন্ডেড বাধ্যতামূলক |
+| 08 Scout | stopwords কোড-inline প্রস্তাব; max_steps স্থির | data-file-লোডেড stopwords; max_steps env-ডিফল্ট |
+| 09 Dormant Tools | neon/SENTRY key-নির্ভর MCP সাধারণ-নিবন্ধন; mcp_observability SENTRY-নির্ভর revival; ধাপ-সীমা স্থির | key-নির্ভর server default-off ফাউন্ডার-গেটেড; revival key-বিহীন-প্রথম (স্থানীয় error_event_bus); সীমা env-চালিত; CI-gate শূন্য-false-positive-পরে |
+| 10 Frontend | knip warn→error CI-বিচ্ছিন্নতা-ঝুঁকি | error-মোড শূন্য-false-positive বেসলাইনের পরে; ব্যতিক্রম-তালিকা data-file |
+
+প্রোটোকল-নোট (প্রতিষ্ঠাতা-নির্দেশ): এই রাউন্ড থেকে সিরিজ-সংশোধন **শাখা-একমাত্র** (`crown-jewel-v2`) — main অস্পৃশ্য; প্রতি push-পূর্বে pull; docs-only পরিবর্তন (কোড/CI-ওয়ার্কফ্লো স্পর্শ নয়) — merge-conflict-মুক্ত লক্ষ্যে unique-path + in-place living-plan সম্পাদনা। প্রতিটি সংশোধনের ভিত্তি-প্রমাণ base `ed35eaf`-এ spot-checkকৃত।
+
+---
+
 ## নতুন মডিউল-ডকুমেন্টের টেমপ্লেট চুক্তি (প্রতিটি চক্রে বাধ্যতামূলক)
 
 1. **ফাইলনেম:** `MODULE_<NN>_<MODULE_NAME>_POWER_UP_<YYYY-MM-DD>.md` — lint-নিষিদ্ধ প্যাটার্ন (`_v2`, `_final`, `_new` ইত্যাদি) নিষিদ্ধ।
