@@ -14,6 +14,7 @@ Video frame analysis pipeline that:
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import os
@@ -132,7 +133,34 @@ class VideoFrameExtractor:
         ]
 
         try:
-            subprocess.run(cmd, capture_output=True, check=True, timeout=120)
+            # বাংলা মন্তব্য (Wave-3 perf): আগে এখানে blocking subprocess.run() ছিল —
+            # ffmpeg extraction শেষ না হওয়া পর্যন্ত (সর্বোচ্চ ১২০ সেকেন্ড) ইভেন্ট লুপ
+            # সম্পূর্ণ ফ্রিজ হয়ে যেত, ফলে একই worker-এ চলা অন্য সব request থেমে যেত।
+            # তাই asyncio.create_subprocess_exec + await communicate() ব্যবহার করা
+            # হয়েছে — argument construction, output-dir handling, stderr capture ও
+            # logging আগের আচরণের হুবহু মতো।
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                _, stderr_data = await asyncio.wait_for(proc.communicate(), timeout=120)
+            except TimeoutError:
+                # বাংলা মন্তব্য: timeout হলে child ffmpeg-কে kill করতে হয় নইলে
+                # zombie প্রসেস রয়ে যায় (আগে subprocess.run-এর timeout এটা করত)।
+                try:
+                    proc.kill()
+                except ProcessLookupError as kill_err:
+                    # বাংলা মন্তব্য: প্রসেস ইতিমধ্যে বন্ধ হয়ে গেলে kill আর লাগে না —
+                    # সেটা silent swallow নয়, লাউড warning।
+                    logger.warning(f"ffmpeg already exited before kill: {kill_err}")
+                await proc.wait()
+                raise
+            if proc.returncode != 0:
+                # বাংলা মন্তব্য: subprocess.run(check=True) এর সমতুল্য — non-zero exit
+                # হলে CalledProcessError, যাতে নিচের logging/error path আগের মতোই থাকে।
+                raise subprocess.CalledProcessError(proc.returncode, cmd, stderr=stderr_data)
             return [str(p) for p in output_dir.glob("*.jpg")][:max_frames]
         except (subprocess.SubprocessError, TimeoutError) as e:
             logger.error(f"Frame extraction failed: {e}")

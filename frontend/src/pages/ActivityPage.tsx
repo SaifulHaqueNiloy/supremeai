@@ -5,7 +5,7 @@
 // owner-scoped mission লাইফসাইকেল টাইমলাইন রেন্ডার হয়: state badge, phase
 // progress, failure reason, repair count — সবই backend-সত্য।
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Ban,
   CheckCircle2,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { useListResource } from '../hooks/useListResource';
 import {
   activityService,
   MISSION_STATES,
@@ -57,32 +58,27 @@ function formatWhen(iso: string | null): string {
 }
 
 export function ActivityPage() {
-  const [events, setEvents] = useState<MissionActivity[]>([]);
   const [stateFilter, setStateFilter] = useState<MissionState | 'all'>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const loadEvents = useCallback(
-    async (state: MissionState | 'all') => {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        const res = await activityService.listActivity({
-          state: state === 'all' ? undefined : state,
+  // বাংলা (Wave 3 dedup): events/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে। state filter পেজ-লোকাল state — filter বদলালে
+  // নিচের effect নতুন filter-সহ fresh fetcher দিয়ে reload করে (limit 50 অপরিবর্তিত)।
+  const {
+    items: events,
+    isLoading,
+    loadError,
+    reload: loadEvents,
+  } = useListResource<MissionActivity>({
+    fetcher: async () =>
+      (
+        await activityService.listActivity({
+          state: stateFilter === 'all' ? undefined : stateFilter,
           limit: 50,
-        });
-        setEvents(res.items);
-      } catch (err) {
-        setLoadError(err instanceof Error ? err.message : 'Failed to load activity');
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [],
-  );
+        })
+      ).items,
+  });
 
   useEffect(() => {
-    void loadEvents(stateFilter);
+    void loadEvents();
   }, [loadEvents, stateFilter]);
 
   return (
@@ -102,7 +98,7 @@ export function ActivityPage() {
           <button
             type="button"
             data-testid="activity-refresh-btn"
-            onClick={() => void loadEvents(stateFilter)}
+            onClick={() => void loadEvents()}
             className="inline-flex items-center justify-center gap-2 rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-4 py-2.5 text-sm font-semibold transition hover:border-[var(--sa-primary)]"
           >
             <RefreshCw size={15} />
@@ -166,7 +162,7 @@ export function ActivityPage() {
               <span className="text-red-400">{loadError}</span>
               <button
                 type="button"
-                onClick={() => void loadEvents(stateFilter)}
+                onClick={() => void loadEvents()}
                 className="rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-3 py-1.5 font-medium transition hover:border-[var(--sa-primary)] sm:ml-auto"
               >
                 Try again

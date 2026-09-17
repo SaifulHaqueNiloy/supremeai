@@ -100,6 +100,34 @@ class TestKnowledgeSearch:
         assert item["id"] == "legacy_thing"
         assert item["title"] == "legacy_thing"
 
+    def test_search_cache_rebuilds_on_new_manifest_write(self, client, manifest_dir):
+        # বাংলা (Wave-3 perf): parsed manifest index এখন module-level cache-এ থাকে,
+        # key = directory mtime। এই টেস্ট mtime invalidation-ই lock করে — seed flow
+        # manifest WRITE করে, তাই blind TTL cache হলে fresh write অন্ধকারে থেকে যেত।
+        _write_manifest(manifest_dir, "alpha", {"skill_id": "alpha"})
+        res1 = client.post("/api/knowledge/search", json={"question": "alpha"})
+        assert res1.json()["total"] == 1  # cache populate হলো
+
+        # নতুন manifest write → dir mtime বদলায় → পরের request-এ সঙ্গে সঙ্গে দেখা যেতেই হবে
+        _write_manifest(manifest_dir, "beta", {"skill_id": "beta", "token": "fresh-seed-token"})
+        res2 = client.post("/api/knowledge/search", json={"question": "fresh-seed-token"})
+        assert res2.status_code == 200
+        assert res2.json()["total"] == 1
+        assert res2.json()["results"][0]["id"] == "beta"
+
+        # rebuild-এ পুরনো entry হারায় না — আগের manifest এখনও match করে
+        res3 = client.post("/api/knowledge/search", json={"question": "alpha"})
+        assert res3.json()["total"] == 1
+        assert res3.json()["results"][0]["id"] == "alpha"
+
+    def test_search_content_excerpt_is_400_chars(self, client, manifest_dir):
+        # বাংলা: cache-পূর্ব আচরণ — content সবসময় ৪০০ অক্ষরে কাটা; cache-পরবর্তীতেও same
+        _write_manifest(manifest_dir, "big", {"skill_id": "big", "pad": "x" * 2000})
+        res = client.post("/api/knowledge/search", json={"question": "big"})
+        assert res.status_code == 200
+        (item,) = res.json()["results"]
+        assert len(item["content"]) == 400
+
 
 class TestKnowledgeSeed:
     def test_seed_default_documents(self, client):
