@@ -6,8 +6,9 @@
 // দ্বারা validated retry (failed → repair) ও cancel অ্যাকশন।
 
 import { useCallback, useEffect, useState } from 'react';
-import { Ban, ChevronDown, ChevronRight, LifeBuoy, Play, RefreshCw } from 'lucide-react';
+import { ChevronDown, ChevronRight, LifeBuoy, Play, RefreshCw } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { HoldToKillButton } from '../components/swarm/HoldToKillButton';
 import {
   runService,
   type MissionRun,
@@ -252,16 +253,17 @@ export function RunsPage() {
                         </button>
                       )}
                       {actions.includes('cancel') && (
-                        <button
-                          type="button"
-                          data-testid={`run-cancel-btn-${run.id}`}
-                          onClick={() => void doAction(run, 'cancel')}
+                        /* বাংলা মন্তব্য: Task-12 ghost activation — cancel একটি irreversible
+                           অ্যাকশন (POST /api/v1/runs/{run_id}/cancel), তাই এক-ক্লিকের বদলে
+                           hold-to-confirm (২ সেকেন্ড) gesture ব্যবহার করা হলো। এটিই আগে
+                           অব্যবহৃত HoldToKillButton কম্পোনেন্টের প্রথম প্রকৃত ব্যবহার। */
+                        <HoldToKillButton
+                          testId={`run-cancel-btn-${run.id}`}
+                          label="Cancel"
+                          holdingLabel="Keep holding to cancel…"
                           disabled={actionBusyId === run.id}
-                          className="inline-flex items-center gap-1 rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-3 py-1.5 text-xs font-medium text-[var(--sa-ink-muted)] transition hover:border-red-400 hover:text-red-400 disabled:opacity-50"
-                        >
-                          <Ban size={13} />
-                          Cancel
-                        </button>
+                          onTrigger={() => void doAction(run, 'cancel')}
+                        />
                       )}
                     </div>
                   </div>

@@ -99,4 +99,16 @@ describe('application route smoke tests', () => {
     renderRoute('/does-not-exist');
     await waitFor(() => expect(screen.getByText(/Error 404/)).toBeInTheDocument());
   });
+
+  // বাংলা মন্তব্য: Task-12 ghost activation — KnowledgePage আগে কোনো route-এ
+  // mounted ছিল না; এখন /knowledge route প্রকৃত backend search/seed endpoint-এর
+  // সাথে wire করা হয়েছে। এই smoke test প্রমাণ করে route-টি সত্যিই reachable।
+  it('renders the knowledge route with real backend wiring (Task-12)', async () => {
+    renderRoute('/knowledge');
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { name: 'Knowledge' })).toBeInTheDocument(),
+    );
+    expect(screen.getByTestId('seed-knowledge-btn')).toBeInTheDocument();
+    expect(screen.getByTestId('knowledge-search-input')).toBeInTheDocument();
+  });
 });

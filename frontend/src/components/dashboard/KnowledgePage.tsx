@@ -24,10 +24,14 @@ export function KnowledgePage() {
     setLoading(true);
     setStatus('');
     try {
-      const res = await apiClient.get<KnowledgeResult[]>(
-        `/api/knowledge/search?query=${encodeURIComponent(query.trim())}&limit=10`
+      // বাংলা মন্তব্য: Task-12 orphan-wiring — ব্যাকএন্ড contract হলো POST
+      // /api/knowledge/search (body: {question}, query: limit)। আগে GET কল করা
+      // হতো বলে এন্ডপয়েন্টটি 405 দিত; এখন প্রকৃত কনট্র্যাক্ট অনুযায়ী POST করা হয়।
+      const res = await apiClient.post<{ results: KnowledgeResult[]; total: number }>(
+        '/api/knowledge/search?limit=10',
+        { question: query.trim() }
       );
-      setResults(Array.isArray(res) ? res : []);
+      setResults(Array.isArray(res?.results) ? res.results : []);
       setSearched(true);
     } catch (error) {
       setStatus(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

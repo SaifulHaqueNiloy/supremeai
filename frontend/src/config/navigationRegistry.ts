@@ -24,6 +24,7 @@ import {
   Network,
   ServerCog,
   BrainCircuit,
+  BookOpen,
   Shield,
   FileCheck2,
   AlertTriangle,
@@ -103,6 +104,10 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       // ইউজার শুধু সরাসরি URL দিয়ে পৌঁছাতে পারত। এখন implemented status-এ exposed।
       { id: 'nav-research', label: 'Deep Research', icon: Search, kind: 'route', path: '/research', contexts: ['user'], status: 'implemented', priority: 60 },
       { id: 'nav-scheduled-tasks', label: 'Scheduled Tasks', icon: Clock, kind: 'route', path: '/scheduled-tasks', contexts: ['user'], status: 'implemented', priority: 70 },
+      // বাংলা মন্তব্য: Task-12 ghost activation — KnowledgePage আগে dead ছিল; এখন
+      // /knowledge route + backend POST /api/knowledge/search|seed দুটিই real, তাই
+      // implemented স্ট্যাটাসে registry-তে exposed করা হলো (dead-link prevention মেনে)।
+      { id: 'nav-knowledge', label: 'Knowledge', icon: BookOpen, kind: 'route', path: '/knowledge', contexts: ['user'], status: 'implemented', priority: 80 },
     ],
   },
   {

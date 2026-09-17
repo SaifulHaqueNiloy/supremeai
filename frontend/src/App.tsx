@@ -44,6 +44,11 @@ const VaultPage = React.lazy(() => import("./components/dashboard/VaultPage").th
 const ConnectedPlatformsVault = React.lazy(() => import("./components/dashboard/ConnectedPlatformsVault"));
 const AutomationQueuePage = React.lazy(() => import("./components/dashboard/AutomationQueuePage").then(m => ({ default: m.AutomationQueuePage })));
 const LlmGatewayPage = React.lazy(() => import("./components/dashboard/LlmGatewayPage").then(m => ({ default: m.LlmGatewayPage })));
+// বাংলা মন্তব্য: Task-12 ghost activation — KnowledgePage ও Session Cockpit আগে
+// কোনো route-এ mounted ছিল না (dead files), এখন প্রকৃত backend endpoint-এর সাথে
+// wire করে reachable করা হলো (RESTORE-AND-WIRE প্যাটার্নের মতোই)।
+const KnowledgePage = React.lazy(() => import("./components/dashboard/KnowledgePage").then(m => ({ default: m.KnowledgePage })));
+const SessionDetailRoute = React.lazy(() => import("./pages/user/SessionDetailRoute").then(m => ({ default: m.SessionDetailRoute })));
 const TelemetryCockpitPage = React.lazy(() => import("./pages/user/TelemetryCockpitPage"));
 // AETHEL Command Center shell (restored sub-app; backend routes + e2e spec exist)
 const CommandCenterApp = React.lazy(() => import("./commandcenter/shell/CommandCenterApp").then(m => ({ default: m.CommandCenterApp })));
@@ -210,6 +215,11 @@ const AppContent: React.FC = () => {
   <Route path="/automation-queue" element={<ProtectedRoute><WorkspaceLayout><AutomationQueuePage /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/llm-gateway" element={<ProtectedRoute><WorkspaceLayout><LlmGatewayPage /></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/telemetry" element={<ProtectedRoute><WorkspaceLayout><TelemetryCockpitPage /></WorkspaceLayout></ProtectedRoute>} />
+  {/* বাংলা মন্তব্য: Task-12 activation — /knowledge পেজটি ব্যাকএন্ড POST /api/knowledge/search +
+      /api/knowledge/seed (দুটিই আগে orphan) ব্যবহার করে; /sessions/:sessionId ককপিটটি
+      ব্যাকএন্ডের প্রকৃত SSE স্ট্রিম GET /api/session/{id}/stream-এর সাথে wire করা। */}
+  <Route path="/knowledge" element={<ProtectedRoute><WorkspaceLayout><KnowledgePage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/sessions/:sessionId" element={<ProtectedRoute><SessionDetailRoute /></ProtectedRoute>} />
   <Route path="/commandcenter" element={<ProtectedRoute><React.Suspense fallback={null}><CommandCenterApp /></React.Suspense></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
   <Route path="/workspace" element={
