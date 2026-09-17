@@ -7,7 +7,7 @@ owner_circle: Kernel Circle (backend/core/kernel/ — SupremeKernel dispatcher +
 target_scope: supremeai_internal
 scope: "Crown Jewel Module Series-এর চক্র ২ — একটি মডিউল (Orchestration Core), একটি সম্পূর্ণ power-up নীলনকশা। কী আছে → কী নেই → কী করতে হবে → কীভাবে করব → বেনিফিট → ক্ষতি/ঝুঁকি (Gate 1 six-field) — fresh main 07604ad (2026-09-17) sed/head/grep-যাচাইকৃত কোড-প্রমাণে; PLAN_LIFECYCLE_POLICY.md কঠোর অনুসরণ; প্রতিটি ধাপে flag+kill-switch; 721-route surface-এ zero-regression লক্ষ্য"
 depends_on:
-  - backend/core/kernel/dispatcher.py (SupremeKernel Central Dispatcher — docstring-যাচাইকৃত: governed single-door entry facade, FCC federation routing Governance/Execution/Evolution/Infrastructure circles, legacy flat-registry fallback, policy+circuit breakers, distributed trace+audit)
+  - "backend/core/kernel/dispatcher.py (SupremeKernel Central Dispatcher — docstring-যাচাইকৃত: governed single-door entry facade, FCC federation routing Governance/Execution/Evolution/Infrastructure circles, legacy flat-registry fallback, policy+circuit breakers, distributed trace+audit)"
   - backend/core/kernel/interface.py (KernelRequest/KernelResponse/CircleScope চুক্তি)
   - backend/core/orchestration/swarm_orchestrator.py (class SwarmOrchestrator — DAG execution + tool synthesis — grep-verified 2026-09-17)
   - backend/core/orchestration/conversation_orchestrator.py (class ConversationOrchestrator L73, 422 লাইন — capability registry + policy gateway, live dispatch)
@@ -19,8 +19,8 @@ depends_on:
   - backend/core/agents/framework/crewai_agents.py (hand-rolled CrewAI-lookalike — ModelRouter-নির্ভর, no CrewAI dep) + langgraph_agent.py (pure rename shim)
   - backend/adaptive_engine/resource_registry.py (restart/deploy/rollback NotImplemented — defect register-রেকর্ডকৃত)
   - backend/core/orchestration/cloud_sandbox_orchestrator.py (ERR-G04 — provider="local" branch missing → HTTP 500)
-  - docs/audits/SUPREMEAI_CANONICAL_DEFECT_AND_FAILURE_REGISTER.md ERR-F01 (Run bridge: pending_tasks→HITL ও execution_logs writers test-only/dormant) + ERR-G04
-  - docs/plans/UNIFIED_NEXT_ROADMAP_2026-09-15.md (M1 Run fabric — code complete; sequencing: "Run before Context")
+  - "docs/audits/SUPREMEAI_CANONICAL_DEFECT_AND_FAILURE_REGISTER.md ERR-F01 (Run bridge: pending_tasks→HITL ও execution_logs writers test-only/dormant) + ERR-G04"
+  - "docs/plans/UNIFIED_NEXT_ROADMAP_2026-09-15.md (M1 Run fabric — code complete; sequencing: \"Run before Context\")"
   - README.md Constitution #5 (Verify Before Trust), #6 (Policy Before Power), #8 (Graceful Degradation), #10 (One System, Many Execution Surfaces), #12 (Least Privilege), #13 (No Silent Failure)
 implements:
   - SupremeKernel-কে *প্রয়োগগত* একমাত্র প্রবেশদ্বার করা — কোডে docstring-দাবি আছে (`backend/core/kernel/dispatcher.py`), প্রয়োগে ৪ প্রজন্ম orchestrator সহ-বিদ্যমান; এই নীলনকশা flag-নিয়ন্ত্রিত shadow→cutover→retirement সিঁড়ি দেয়
@@ -31,7 +31,7 @@ superseded_by: []
 source_of_truth: false  # proposed বিশ্লেষণ-নীলনকশা; সম্পাদন শুধুই ফাউন্ডার অনুমোদনের পরে (Gate 2); প্রতিটি Phase আলাদা ছোট execution প্ল্যান
 last_verified: "2026-09-17 (fresh main 07604ad: dispatcher.py head-30 পাঠ — single-door/FCC/legacy-fallback docstring স্বয়ং কোডে; swarm_orchestrator.py grep 'class SwarmOrchestrator' hit; conversation_orchestrator.py L73 class + wc 422; orchestrator.py wc 13; runs/ ও runs/tests ls-verified; crewai_agents.py/langgraph_agent.py agent-audit-রেকর্ডকৃত; resource_registry L123–129 ও cloud_sandbox provider-gap উৎস defect register — register স্বয়ং প্রাথমিক উৎস হিসেবে cited)"
 code_evidence:
-  - backend/core/kernel/dispatcher.py L1–30 — docstring নিজেই দাবি করে: "Governed Single-Door Entry Facade… Routes through the FCC federation… Falls back to the legacy flat registry" — অর্থাৎ single-door *নকশায়* আছে, fallback-পথেই পুরনো প্রজন্ম এখনো জীবিত
+  - "backend/core/kernel/dispatcher.py L1–30 — docstring নিজেই দাবি করে: \"Governed Single-Door Entry Facade… Routes through the FCC federation… Falls back to the legacy flat registry\" — অর্থাৎ single-door *নকশায়* আছে, fallback-পথেই পুরনো প্রজন্ম এখনো জীবিত"
   - backend/core/orchestration/orchestrator.py — 13 লাইনের shim (wc-verified) — পুরনো import-পথ ভাঙতে না দেওয়ার অবশেষ; ৪ প্রজন্ম সহ-বিদ্যমানতার প্রমাণ
   - backend/core/orchestration/swarm_orchestrator.py — class SwarmOrchestrator (grep-verified) — DAG execution + tool synthesis বাস্তব
   - backend/core/orchestration/conversation_orchestrator.py L73 — class ConversationOrchestrator, 422 লাইন — capability registry + policy gateway, live dispatch
