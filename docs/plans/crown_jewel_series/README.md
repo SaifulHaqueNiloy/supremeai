@@ -60,7 +60,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 01 | **Memory Subsystem** (`backend/memory/` + `backend/services/memory_service.py` + `backend/core/ai_memory/`) | ERR-F02 — একমাত্র OPEN foundational defect; 15+ প্রতিযোগী store; প্রতিটি self-learning দাবির ভিত্তি; কৌশল-নথির মতেই "single largest architectural obstacle to Phase 3" (`docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md`) | ✅ **প্রকাশিত** — `MODULE_01_MEMORY_POWER_UP_2026-09-17.md` |
 | 02 | **Orchestration Core** (`backend/core/kernel/` + `backend/core/orchestration/`) | SupremeKernel single-door আছে (`backend/core/kernel/dispatcher.py`) কিন্তু ৪ প্রজন্মের orchestrator সহ-বিদ্যমান (`backend/core/orchestration/orchestrator.py` 13-LN shim সহ); ERR-F01 Run-bridge অসম্পূর্ণ | ✅ **প্রকাশিত** — `MODULE_02_ORCHESTRATION_CORE_POWER_UP_2026-09-17.md` |
 | 03 | **LLM Gateway & Model Routing** (`backend/core/llm/` + `backend/services/llm/` + `backend/brain/model_router.py`) | সবকিছুর নিচে থাকা inference-spine; খরচ-ফ্রন্টিয়ার ও failover-এর মূল লিভার | ✅ **প্রকাশিত** — `MODULE_03_LLM_GATEWAY_POWER_UP_2026-09-17.md` |
-| 04 | **Browser Automation Stack** (`backend/tools/browser/` + `backend/services/browser/` + `backend/browser/`) | এজেন্টের "হাত"; ERR-A03/A06 ফিক্স প্রোডাকশন-পথে প্রমাণিত | ⏳ কিউতে |
+| 04 | **Browser Automation Stack** (`backend/tools/browser/` + `backend/services/browser/` + `backend/browser/`) | এজেন্টের "হাত"; ERR-A03/A06 ফিক্স প্রোডাকশন-পথে প্রমাণিত | ✅ **প্রকাশিত** — `MODULE_04_BROWSER_AUTOMATION_POWER_UP_2026-09-17.md` |
 | 05 | **Self-Evolution & Learning Loop** (`backend/core/self_evolution/` + `backend/evolution/` + `backend/adaptive_engine/` + `backend/learning/`) | "Universal Self-Learning" ব্র্যান্ড-প্রতিশ্রুতি; বাস্তব কিন্তু মেমোরি-অনাহারে অচল | ⏳ কিউতে |
 | 06 | **Run Fabric সম্পূর্ণকরণ** (`backend/runs/`) | M1 code-complete কিন্তু ERR-F01 bridge pending — সর্বজনীন observability চুক্তি | ⏳ কিউতে |
 | 07 | **Context Engine** (`backend/context_engine/`) | M2, সর্ব-উষ্ণ পথে সদ্য-ল্যান্ডেড; ≥30% token-হ্রাস লক্ষ্য (target) | ⏳ কিউতে |
@@ -79,7 +79,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 1 | 2026-09-17 | Memory Subsystem | `MODULE_01_MEMORY_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 2 | 2026-09-17 | Orchestration Core | `MODULE_02_ORCHESTRATION_CORE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 3 | 2026-09-17 | LLM Gateway & Model Routing | `MODULE_03_LLM_GATEWAY_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
-| 4 | TBD | Browser Automation Stack | — | কিউতে |
+| 4 | 2026-09-17 | Browser Automation Stack | `MODULE_04_BROWSER_AUTOMATION_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
+| 5 | TBD | Self-Evolution & Learning Loop | — | কিউতে |
 
 ---
 
