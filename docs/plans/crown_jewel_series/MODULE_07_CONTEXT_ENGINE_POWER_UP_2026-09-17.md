@@ -153,7 +153,7 @@ P-G: সততা-সংশোধন            → L190 silent-drop → report;
 
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
-- **P-A:** chat.py-র দুই কল-সাইটে report-detail স্থায়ী-লেখা (সংক্ষিপ্ত row: dropped/truncated/tokens); একক baseline-কর্পাস-স্ক্রিপ্ট (টেস্ট-নির্ধারিত) — before/after পুনঃগণনাযোগ্য; "≥30%" দাবি হয় measured, নয় README-সমন্বিত।
+- **P-A:** chat.py-র দুই কল-সাইটে report-detail স্থায়ী-লেখা (সংক্ষিপ্ত row: dropped/truncated/tokens — **স্থায়ী-ভলিউম বিদ্যমান retention-চক্রে বাউন্ডেড রাখা বাধ্যতামূলক, নতুন অবাউন্ডেড টেবিল নয়**); একক baseline-কর্পাস-স্ক্রিপ্ট (টেস্ট-নির্ধারিত) — before/after পুনঃগণনাযোগ্য; "≥30%" দাবি হয় measured, নয় README-সমন্বিত।
 - **P-B:** `backend/context/`-র tenant-filter/provenance/dedup/scope-scoring canonical engine-এ পোর্ট (চুক্তি অপরিবর্তিত); shadow-পর্বে পুরনো-বনাম-নতুন আউটপুট diff-রিপোর্ট; parity-গেটে কাটওভার; `backend/context/` হয় খালি-শেল-রিডাইরেক্ট, নয় স্পষ্ট-retired-নথি।
 - **P-C:** chat-পথে PLAN_002-র compact-আউটপুট (websocket_agent-থেকে সরাসরি নয় — একই compaction-ফাংশন শেয়ার) → HISTORY-blocks, priority=recency (টেস্টে বিদ্যমান সমর্থন)।
 - **P-D:** `stream_chat_sse`-এর enrichment engine-চুক্তিতে (auto_rag_injector হয় একটি source-adapter হয়ে যাবে); flag `SUPREMEAI_CONTEXT_UNIFIED_STREAM=true` (default false); shadow-তুলনা-পর্ব বাধ্যতামূলক (বৃহত্তম পৃষ্ঠ)।
@@ -222,6 +222,21 @@ P-G: সততা-সংশোধন            → L190 silent-drop → report;
 - **Gate 5 (live):** প্রতি-অনুরোধ budget-report প্রবাহ; baseline-তুলনায় হ্রাস-শতাংশ প্রকাশিত (অথবা দাবি-সমন্বিত); cache-hit-rate অ-হ্রাস; silent-drop শূন্য।
 - **Gate 6:** প্রতিটি Phase নিজস্ব execution প্ল্যানে complete; এই নীলনকশা complete যখন acceptance_criteria-র পাঁচটি সংজ্ঞা সবই evidence-সহ সত্য।
 - **Rollback:** প্রতিটি Phase = একক commit revert + flag-off; কোনো schema migration নেই; P-B/D-র কাটওভার-পূর্বে shadow-পর্ব সর্বদা রিভার্ট-নিরাপদ।
+
+---
+
+## Part 5.5 — দর্শন-সংগতি পাস (Philosophy Alignment Pass, 2026-09-17, branch `crown-jewel-v2`)
+
+| দর্শন | রায় | ভিত্তি |
+|---|---|---|
+| Zero cost | ✅ সংগত (P-A সংশোধিত) | পরিমাপ-হার্নেস টেস্ট-নির্ধারিত; report-লেখা retention-বাউন্ডেড (§২.৪ সংশোধিত — নতুন অবাউন্ডেড টেবিল নয়) |
+| Lightweight | ✅ সংগত | এক estimator-এ ঐক্য = ডুপ্লিকেট-যুক্তি অপসারণ; নতুন dependency শূন্য |
+| Fast & smooth | ✅ সংগত | flag default false; shadow-তুলনা local-compute (LLM-কল নয়); kill-switch → আজকের আচরণ |
+| Zero hardcode | ✅ সংগত | P-F SECTION_CAPS/budget settings-চালিতই এই নীলনকশার মূল-দাবি; P-E হার্ডকোডেড estimator-বিভেদ মুছে একটি Bengali-aware ফাংশনে ঐক্য |
+
+মূল-যন্ত্রপাতি spot-check (base `ed35eaf`): `backend/context_engine/` (engine.py, budget.py) বিদ্যমান; `token_budget.estimate_tokens` L73 বিদ্যমান; SECTION_CAPS engine-এ বিদ্যমান।
+
+স্কোপ-সততা: proposal-দর্শন অডিট + মূল-যন্ত্রপাতি spot-check; সম্পূর্ণ line-ref re-verification নয়।
 
 ---
 
