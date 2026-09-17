@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 3: Continuous Learning & Long-Term Memory (RAG + Episodic Graph)
 **Status:** 🔄 **EVOLVED / ACTIVE IN QDRANT & MEMORY GRAPH ARCHITECTURE**  
 **Completion:** ~98% (Qdrant Vector DB + Knowledge Graph + Task Feedback Loop)  

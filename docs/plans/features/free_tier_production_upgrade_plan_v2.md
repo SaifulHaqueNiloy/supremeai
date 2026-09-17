@@ -11,6 +11,7 @@ last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
 related: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+target_scope: supremeai_internal
 ---
 
 # 🚀 SupremeAI Free-Tier Production Upgrade Plan

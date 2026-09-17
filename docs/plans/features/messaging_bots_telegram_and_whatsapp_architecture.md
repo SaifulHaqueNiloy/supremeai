@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Plan: The 3 Faces of SupremeAI — Unified Omnichannel Interaction Gateway (Web Dashboard, Telegram Bot & WhatsApp Bot)
 **Document:** `docs/plans/features/messaging_bots_telegram_and_whatsapp_architecture.md`  
 **Status:** 🔄 **ACTIVE / IN PROGRESS** (Web & Telegram Live, WhatsApp Planned)  

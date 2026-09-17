@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Sprint Planning Template
 
 ## Sprint Overview

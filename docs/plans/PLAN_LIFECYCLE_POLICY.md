@@ -10,6 +10,7 @@ disposition: retain
 last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Plan Lifecycle Policy
@@ -68,6 +69,7 @@ planning_authority:   # owner circle (legacy key `owner_circle` is accepted as a
 canonical: true | false | candidate
 evidence_state: verified | partial | unverified
 disposition: retain | merge | archive | redirect | delete-approved
+target_scope: supremeai_internal | customer_facing | combined_ecosystem
 scope:
 depends_on:
 implements:
@@ -81,6 +83,17 @@ acceptance_criteria:
 risk_and_rollback:
 ```
 
+### 3-Tier Planning Scope Taxonomy (Rule #1 & Rule #7 Scope Separation)
+
+Every plan in `docs/plans/` MUST be classified into one of three operational scope layers:
+
+| Planning Scope Layer | YAML `target_scope` | সংজ্ঞার্থ ও বাউন্ডারি | প্রযোজ্যতা ও বিধিনিষেধ |
+|---|---|---|---|
+| **Layer 1: SupremeAI Platform / Internal Only** | `supremeai_internal` | সুপ্রিমএআই-এর নিজস্ব রিপোসিটরি, ব্যাকগ্রাউন্ড কম্পিউট আরবিট্রেজ, অ্যাডমিন ব্রাউজার অটোমেশন পুল, সেলফ-ইভোলিউশন ও ইন্টারনাল সিআই/সিডি। | **কাস্টমার প্রজেক্টে সম্পূর্ণ নিষিদ্ধ।** এটি কেবল সুপ্রিমএআই প্ল্যাটফর্মের নিজস্ব উন্নয়নের জন্য। |
+| **Layer 2: Customer / Tenant Projects Only** | `customer_facing` | শেষ-ব্যবহারকারী বা ক্লায়েন্ট প্রজেক্ট, টেন্যান্ট ওয়ার্কস্পেস, কাস্টমার এপিআই (`/api/v1/projects`), জিরো-পাসওয়ার্ড (Mode 3) এক্সপেরিয়েন্স। | **কাস্টমারদের জন্য নিবেদিত।** এখানে কোনো জটিল ব্রাউজার স্ক্র্যাপিং বা ইন্টারনাল জটিলতা থাকবে না। |
+| **Layer 3: Combined / Ecosystem Core** | `combined_ecosystem` | সার্বজনীন আর্কিটেকচারাল নীতি—যেমন ডায়নামিক রেজিস্ট্রি (Zero Hardcoding), MCP কন্ট্রোল টাওয়ার প্রোটোকল, নিরাপত্তা ও টেন্যান্ট আইসোলেশন। | **উভয় ক্ষেত্রে প্রযোজ্য।** প্ল্যাটফর্ম এবং কাস্টমার উভয় রানটাইমে এই নীতিগুলো অপরিবর্তনীয় থাকবে। |
+
+
 **Vocabulary authority (2026-09-17):** the status vocabulary and the registry
 field model above are canonically defined by
 [`CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md`](./CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md)
@@ -91,6 +104,8 @@ policy; `docs/plans/plan_registry.json` is its generated machine cache.
 
 Legacy schema (still valid, auto-normalized): `owner_circle:`
 
+```yaml
+owner_circle:
 scope:
 depends_on:
 implements:

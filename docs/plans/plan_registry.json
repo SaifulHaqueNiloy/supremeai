@@ -1,19 +1,19 @@
 {
-  "generated_at": "2026-09-16",
+  "generated_at": "2026-09-17",
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 157,
-    "with_frontmatter": 31,
+    "documents": 163,
+    "with_frontmatter": 162,
     "families": {
-      "control-tower-mcp": 33,
+      "control-tower-mcp": 32,
       "execution-phases": 30,
-      "unclassified": 23,
-      "free-tier-federation": 19,
+      "unclassified": 28,
+      "free-tier-federation": 21,
       "frontend-product-ux": 15,
-      "ci-cd-pipeline": 8,
+      "browser-automation": 8,
       "unified-architecture": 8,
-      "browser-automation": 7,
+      "ci-cd-pipeline": 7,
       "intelligence-evolution": 5,
       "dynamic-configuration": 4,
       "production-readiness": 3,
@@ -35,9 +35,10 @@
       "evidence_state": "verified",
       "last_verified": "2026-09-17 (repository scan of docs/plans/ and backend/core/circles/)",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 291
+      "lines": 292
     },
     {
       "id": "ci-pipeline-consolidation",
@@ -52,9 +53,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
       "frontmatter_present": true,
-      "lines": 211
+      "lines": 212
     },
     {
       "id": "head-of-planning-strategic-leverage-2026-09-16",
@@ -69,9 +71,10 @@
       "evidence_state": null,
       "last_verified": "2026-09-16",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
-      "lines": 452
+      "lines": 453
     },
     {
       "id": "pending-approvals-register",
@@ -86,9 +89,10 @@
       "evidence_state": "verified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 31
+      "lines": 32
     },
     {
       "id": "head-of-planning-prompt-caching-v1-2026-09-16",
@@ -103,9 +107,10 @@
       "evidence_state": null,
       "last_verified": "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py)",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 273
+      "lines": 274
     },
     {
       "id": "head-of-planning-claude-context-compaction-v1-2026-09-16",
@@ -118,11 +123,12 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260)",
+      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; re-verified 2026-09-17 on main b37f3f10 — `git diff 1f57055..b37f3f10 -- backend/api/routes/websocket_agent.py backend/core/prompt_handler.py backend/core/llm/llm_gateway/completion.py backend/core/llm/provider_router.py` is 0-diff across fixes #396–#417, deque(maxlen=50) sed-confirmed live at websocket_agent.py L474, prompt_handler.py L17/L57 and completion.py L183/L245 sed-confirmed; Gate 0 precision finding re-verified with exact line numbers — see sliding_window bullet below)",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 300
+      "lines": 302
     },
     {
       "id": "head-of-planning-aider-repo-map-v1-2026-09-17",
@@ -135,11 +141,12 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml)",
+      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists)",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 342
+      "lines": 343
     },
     {
       "id": "head-of-planning-letta-style-memory-distillation-v1-2026-09-17",
@@ -152,11 +159,12 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below)",
+      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত)",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 289
+      "lines": 290
     },
     {
       "id": "plan-lifecycle-policy",
@@ -171,9 +179,10 @@
       "evidence_state": "verified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 356
+      "lines": 369
     },
     {
       "id": "plan-to-code-traceability-matrix",
@@ -188,9 +197,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 47
+      "lines": 48
     },
     {
       "id": "platform-oss-integration",
@@ -205,9 +215,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
-      "lines": 1202
+      "lines": 1203
     },
     {
       "id": "pr-guardian-analysis",
@@ -222,9 +233,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 281
+      "lines": 282
     },
     {
       "id": "plans-navigation-catalog",
@@ -239,9 +251,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
-      "family": "control-tower-mcp",
+      "target_scope": "combined_ecosystem",
+      "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 162
+      "lines": 398
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
@@ -256,9 +269,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
-      "lines": 163
+      "lines": 164
     },
     {
       "id": "unified-ecosystem-architecture",
@@ -273,9 +287,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 1950
+      "lines": 1951
     },
     {
       "id": "unified-next-roadmap-2026-09-15",
@@ -290,9 +305,28 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 264
+      "lines": 265
+    },
+    {
+      "id": "external-agent-orchestration-layer-canonical-v3",
+      "subject": "SupremeAI Universal External Agent & Dynamic Execution Architecture (EAOL)",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Governance / Control Tower Circle",
+      "canonical": "candidate",
+      "status": "active",
+      "source_file": "docs/plans/architecture/EXTERNAL_AGENT_ORCHESTRATION_LAYER_PLAN.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "partial",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "combined_ecosystem",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 463
     },
     {
       "id": "auto:README",
@@ -307,9 +341,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "dynamic-configuration",
-      "frontmatter_present": false,
-      "lines": 72
+      "frontmatter_present": true,
+      "lines": 65
     },
     {
       "id": "supremeai-master-plan-canonical",
@@ -330,9 +365,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 1042
+      "lines": 1043
     },
     {
       "id": "auto:ai_model_comparative_matrix_bangla",
@@ -347,9 +383,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
-      "frontmatter_present": false,
-      "lines": 450
+      "frontmatter_present": true,
+      "lines": 454
     },
     {
       "id": "auto:autonomous_product_verification_engine",
@@ -364,9 +401,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 254
+      "frontmatter_present": true,
+      "lines": 258
     },
     {
       "id": "browser-automation-core",
@@ -381,9 +419,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "browser-automation",
       "frontmatter_present": true,
-      "lines": 206
+      "lines": 207
     },
     {
       "id": "auto:codebase_aligned_master_roadmap",
@@ -398,9 +437,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "production-readiness",
-      "frontmatter_present": false,
-      "lines": 807
+      "frontmatter_present": true,
+      "lines": 811
     },
     {
       "id": "auto:crown_jewel_complete_system_integration_blueprint",
@@ -415,9 +455,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
-      "frontmatter_present": false,
-      "lines": 823
+      "frontmatter_present": true,
+      "lines": 827
     },
     {
       "id": "auto:distributed_infrastructure_central_control_plane_plan",
@@ -432,9 +473,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 769
+      "frontmatter_present": true,
+      "lines": 773
     },
     {
       "id": "auto:dynamic_ai_architecture_v5_zero_downtime",
@@ -449,9 +491,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 2346
+      "frontmatter_present": true,
+      "lines": 2350
     },
     {
       "id": "dynamic-configuration-zero-hardcode-roadmap",
@@ -466,26 +509,28 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "dynamic-configuration",
       "frontmatter_present": true,
-      "lines": 1354
+      "lines": 1355
     },
     {
-      "id": "auto:federated_capability_circles_topology",
-      "subject": "federated_capability_circles_topology",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "id": "federated-capability-circles-topology",
+      "subject": "Federated Capability Circles Topology",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/architecture/federated_capability_circles_topology.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 219
+      "frontmatter_present": true,
+      "lines": 232
     },
     {
       "id": "auto:living_autonomous_intelligence_synthesis",
@@ -500,26 +545,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
-      "frontmatter_present": false,
-      "lines": 160
+      "frontmatter_present": true,
+      "lines": 164
     },
     {
-      "id": "auto:registry_control_in_pipeline_and_dashboard",
-      "subject": "Admin Dashboard-এ কেন ব্যবহার করা উচিত?",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "id": "registry-control-in-pipeline-and-dashboard",
+      "subject": "Registry Control in Pipeline and Dashboard",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/architecture/registry_control_in_pipeline_and_dashboard.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 416
+      "frontmatter_present": true,
+      "lines": 429
     },
     {
       "id": "auto:self_learning_ecosystem_transformation_roadmap",
@@ -534,9 +581,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 2131
+      "frontmatter_present": true,
+      "lines": 2134
     },
     {
       "id": "auto:unified_fastmcp_control_tower_multitenant_master_plan_bn",
@@ -551,9 +599,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 3695
+      "frontmatter_present": true,
+      "lines": 3699
     },
     {
       "id": "vendor-independent-integration-architecture",
@@ -568,9 +617,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
-      "lines": 1349
+      "lines": 1350
     },
     {
       "id": "auto:visual_component_integration_topology",
@@ -585,9 +635,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
+      "frontmatter_present": true,
+      "lines": 399
+    },
+    {
+      "id": "auto:audit_report",
+      "subject": "docs/plans/ Inventory & Governance Report",
+      "document_role": null,
+      "planning_authority": null,
+      "canonical": null,
+      "status": null,
+      "source_file": "docs/plans/audit_report.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": null,
+      "disposition": null,
+      "target_scope": null,
+      "family": "free-tier-federation",
       "frontmatter_present": false,
-      "lines": 395
+      "lines": 104
     },
     {
       "id": "auto:README",
@@ -602,9 +671,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 43
+      "frontmatter_present": true,
+      "lines": 47
     },
     {
       "id": "auto:admin_dashboard_plan",
@@ -619,9 +689,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 56
+      "frontmatter_present": true,
+      "lines": 60
     },
     {
       "id": "auto:admin_dashboard_visual_and_api_gap_analysis",
@@ -636,9 +707,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 670
+      "frontmatter_present": true,
+      "lines": 674
     },
     {
       "id": "auto:ai_providers_tab_plan",
@@ -653,9 +725,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "dynamic-configuration",
-      "frontmatter_present": false,
-      "lines": 56
+      "frontmatter_present": true,
+      "lines": 60
     },
     {
       "id": "auto:autonomous_ui_architect_agent_system_prompt",
@@ -670,9 +743,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 838
+      "frontmatter_present": true,
+      "lines": 842
     },
     {
       "id": "auto:complete_frontend_master_plan_bn",
@@ -687,9 +761,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 783
+      "frontmatter_present": true,
+      "lines": 787
+    },
+    {
+      "id": "customer-onboarding-flow",
+      "subject": "Customer Onboarding Flow — Zero-Complexity First Experience",
+      "document_role": null,
+      "planning_authority": "Customer Experience Circle + Frontend Face",
+      "canonical": "candidate",
+      "status": "proposed",
+      "source_file": "docs/plans/design/customer_onboarding_flow.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "customer_facing",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 101
     },
     {
       "id": "auto:dashboard_design_mockups",
@@ -704,9 +797,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 26
+      "frontmatter_present": true,
+      "lines": 30
     },
     {
       "id": "auto:dashboard_tab_design_plan",
@@ -721,9 +815,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 98
+      "frontmatter_present": true,
+      "lines": 102
     },
     {
       "id": "auto:intelligent_chat_plan",
@@ -738,9 +833,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 44
+      "frontmatter_present": true,
+      "lines": 48
     },
     {
       "id": "auto:knowledge_acquisition_plan",
@@ -755,9 +851,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 38
+      "frontmatter_present": true,
+      "lines": 42
     },
     {
       "id": "auto:mission_orchestration_plan",
@@ -772,9 +869,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 32
+      "frontmatter_present": true,
+      "lines": 36
     },
     {
       "id": "auto:single_frontend_role_based_auth_migration_roadmap",
@@ -789,9 +887,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 1312
+      "frontmatter_present": true,
+      "lines": 1316
     },
     {
       "id": "auto:supremeai_2_product_ui_ux_completeness_master_plan",
@@ -806,9 +905,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 1298
+      "frontmatter_present": true,
+      "lines": 1302
     },
     {
       "id": "auto:ux_ui_best_practices_and_interaction_guide",
@@ -823,9 +923,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 263
+      "frontmatter_present": true,
+      "lines": 267
     },
     {
       "id": "auto:Plan_01_Dynamic_AI_Agent_System",
@@ -840,9 +941,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 657
+      "frontmatter_present": true,
+      "lines": 660
     },
     {
       "id": "auto:Plan_02_API_Key_Rotation_System",
@@ -857,9 +959,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 170
+      "frontmatter_present": true,
+      "lines": 174
     },
     {
       "id": "auto:Plan_03_Continuous_Learning",
@@ -874,9 +977,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 217
+      "frontmatter_present": true,
+      "lines": 221
     },
     {
       "id": "auto:Plan_04_Intent_Analysis_Confirmation",
@@ -891,9 +995,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 168
+      "frontmatter_present": true,
+      "lines": 172
     },
     {
       "id": "auto:Plan_05_Plan_Compatibility_Analysis",
@@ -908,9 +1013,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 168
+      "frontmatter_present": true,
+      "lines": 172
     },
     {
       "id": "auto:Plan_06_Dual_Repo_System",
@@ -925,9 +1031,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 184
+      "frontmatter_present": true,
+      "lines": 188
     },
     {
       "id": "auto:Plan_07_Dashboard_Plugin_Settings",
@@ -942,9 +1049,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 201
+      "frontmatter_present": true,
+      "lines": 205
     },
     {
       "id": "auto:Plan_08_Adaptive_Response_Depth",
@@ -959,9 +1067,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 216
+      "frontmatter_present": true,
+      "lines": 220
     },
     {
       "id": "auto:Plan_09_Smart_Data_Storage",
@@ -976,9 +1085,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 237
+      "frontmatter_present": true,
+      "lines": 241
     },
     {
       "id": "auto:Plan_10_API_Limit_Discovery",
@@ -993,9 +1103,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 172
+      "frontmatter_present": true,
+      "lines": 176
     },
     {
       "id": "auto:Plan_11_Pre_Push_Verification",
@@ -1010,9 +1121,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 201
+      "frontmatter_present": true,
+      "lines": 205
     },
     {
       "id": "auto:Plan_16_CICD_Sandbox",
@@ -1027,9 +1139,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 214
+      "frontmatter_present": true,
+      "lines": 218
     },
     {
       "id": "auto:Plan_22_Simulator_Controller_Perfection",
@@ -1044,9 +1157,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 1018
+      "frontmatter_present": true,
+      "lines": 1021
     },
     {
       "id": "auto:Plan_23_Website_Reverse_Engineering_Master_Guide",
@@ -1061,9 +1175,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 663
+      "frontmatter_present": true,
+      "lines": 667
     },
     {
       "id": "auto:Plan_24_AI_Agent_Ecosystem_Integration",
@@ -1078,9 +1193,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 773
+      "frontmatter_present": true,
+      "lines": 777
     },
     {
       "id": "auto:README",
@@ -1095,9 +1211,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 78
+      "frontmatter_present": true,
+      "lines": 82
     },
     {
       "id": "auto:SUPREMEAI_REAL_INTELLIGENCE_EVOLUTION_PLAN",
@@ -1112,9 +1229,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
-      "frontmatter_present": false,
-      "lines": 159
+      "frontmatter_present": true,
+      "lines": 163
     },
     {
       "id": "auto:agentic_future_openworked_enhancement_plan",
@@ -1129,9 +1247,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 60
+      "frontmatter_present": true,
+      "lines": 64
     },
     {
       "id": "auto:antihacking_security_defense_framework",
@@ -1146,9 +1265,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "security-defense",
-      "frontmatter_present": false,
-      "lines": 429
+      "frontmatter_present": true,
+      "lines": 433
     },
     {
       "id": "auto:autonomous_capability_creation_and_task_execution_plan",
@@ -1163,9 +1283,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 1437
+      "frontmatter_present": true,
+      "lines": 1441
     },
     {
       "id": "auto:best_practices_unified_implementation_plan",
@@ -1180,9 +1301,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 502
+      "frontmatter_present": true,
+      "lines": 506
     },
     {
       "id": "auto:burj_khalifa_4pillar_evolution_roadmap",
@@ -1197,9 +1319,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 71
+      "frontmatter_present": true,
+      "lines": 75
     },
     {
       "id": "auto:ci_cd_warning_elimination_and_node_upgrade_plan",
@@ -1214,9 +1337,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 833
+      "frontmatter_present": true,
+      "lines": 836
     },
     {
       "id": "auto:cloudflare_7node_global_edge_mesh_plan",
@@ -1231,9 +1355,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 105
+      "frontmatter_present": true,
+      "lines": 109
     },
     {
       "id": "auto:codebase_audit_and_remediation_roadmap_2026_08_25",
@@ -1248,9 +1373,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 64
+      "frontmatter_present": true,
+      "lines": 68
     },
     {
       "id": "auto:codebase_gap_solution_unification_plan_bn",
@@ -1265,9 +1391,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 184
+      "frontmatter_present": true,
+      "lines": 188
     },
     {
       "id": "auto:codebase_modularization_and_splitting_matrix",
@@ -1282,9 +1409,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 199
+      "frontmatter_present": true,
+      "lines": 203
     },
     {
       "id": "auto:comprehensive_172_files_reconciliation_master_plan",
@@ -1299,9 +1427,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 311
+      "frontmatter_present": true,
+      "lines": 315
     },
     {
       "id": "auto:comprehensive_capabilities_and_lightweight_review",
@@ -1316,9 +1445,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 333
+      "frontmatter_present": true,
+      "lines": 337
     },
     {
       "id": "auto:constitution_ci_audit_system_implementation_plan_bn",
@@ -1333,26 +1463,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 200
+      "frontmatter_present": true,
+      "lines": 204
     },
     {
-      "id": "auto:cross_repo_architecture_transplant_roadmap",
-      "subject": "SupremeAI Cross-Repo Integration Roadmap",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "id": "cross-repo-architecture-transplant-roadmap",
+      "subject": "Cross-Repo Architecture Transplant Roadmap",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": "candidate",
+      "status": "active",
       "source_file": "docs/plans/features/cross_repo_architecture_transplant_roadmap.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 1070
+      "frontmatter_present": true,
+      "lines": 1084
     },
     {
       "id": "auto:curated_open_source_components_integration_plan",
@@ -1367,9 +1499,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 1481
+      "frontmatter_present": true,
+      "lines": 1485
+    },
+    {
+      "id": "customer-api-spec",
+      "subject": "Customer API Specification — /api/v1/projects & /api/v1/agent/task",
+      "document_role": "architecture",
+      "planning_authority": "Customer Experience Circle + C5 (Execution)",
+      "canonical": "candidate",
+      "status": "proposed",
+      "source_file": "docs/plans/features/customer_api_spec.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "customer_facing",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 134
     },
     {
       "id": "auto:dual_channel_zero_cost_browser_and_distributed_worker",
@@ -1384,9 +1535,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 143
+      "frontmatter_present": true,
+      "lines": 147
     },
     {
       "id": "auto:evolution_patch_v3_implementation_plan",
@@ -1401,9 +1553,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 40
+      "frontmatter_present": true,
+      "lines": 44
     },
     {
       "id": "auto:file_organization_and_cleanup_action_plan",
@@ -1418,9 +1571,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 308
+      "frontmatter_present": true,
+      "lines": 312
     },
     {
       "id": "free-tier-512mb-memory-pressure-remediation",
@@ -1435,9 +1589,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 607
+      "lines": 608
     },
     {
       "id": "free-tier-federation-v4.1-missing-services-analysis",
@@ -1452,9 +1607,10 @@
       "evidence_state": null,
       "last_verified": "2026-09-15",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 2150
+      "lines": 2151
     },
     {
       "id": "free-tier-production-upgrade",
@@ -1469,9 +1625,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 1544
+      "lines": 1545
     },
     {
       "id": "free-tier-scaling-constitution-and-compliance",
@@ -1486,6 +1643,7 @@
       "evidence_state": null,
       "last_verified": "2026-09-15",
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
       "lines": 1212
@@ -1503,9 +1661,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 196
+      "frontmatter_present": true,
+      "lines": 200
     },
     {
       "id": "auto:github_spec_kit_governance_layer_plan",
@@ -1520,9 +1679,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 1193
+      "frontmatter_present": true,
+      "lines": 1197
     },
     {
       "id": "auto:kaggle_6node_cluster_compute_plan",
@@ -1537,9 +1697,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 113
+      "frontmatter_present": true,
+      "lines": 117
     },
     {
       "id": "auto:kilo_ai_integration_backend_refactoring_plan",
@@ -1554,9 +1715,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 71
+      "frontmatter_present": true,
+      "lines": 75
     },
     {
       "id": "auto:kilo_coding_agent_workspace_reference",
@@ -1571,9 +1733,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 105
+      "frontmatter_present": true,
+      "lines": 109
     },
     {
       "id": "auto:living_autonomous_intelligence_master_plan",
@@ -1588,9 +1751,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
-      "frontmatter_present": false,
-      "lines": 131
+      "frontmatter_present": true,
+      "lines": 135
     },
     {
       "id": "auto:mcp_gateway_dynamic_hub_plan",
@@ -1605,9 +1769,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 6
+      "frontmatter_present": true,
+      "lines": 10
     },
     {
       "id": "auto:messaging_bots_telegram_and_whatsapp_architecture",
@@ -1622,9 +1787,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 103
+      "frontmatter_present": true,
+      "lines": 107
+    },
+    {
+      "id": "mode3-zero-password-experience",
+      "subject": "Mode 3 Zero-Password Customer Experience",
+      "document_role": "architecture",
+      "planning_authority": "Customer Experience Circle + Security Circle",
+      "canonical": "candidate",
+      "status": "proposed",
+      "source_file": "docs/plans/features/mode3_zero_password_experience.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "customer_facing",
+      "family": "browser-automation",
+      "frontmatter_present": true,
+      "lines": 94
     },
     {
       "id": "auto:n8n_workflow_automation_master_plan",
@@ -1639,9 +1823,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 1595
+      "frontmatter_present": true,
+      "lines": 1599
     },
     {
       "id": "auto:open_source_components_hardening_plan",
@@ -1656,9 +1841,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "production-readiness",
-      "frontmatter_present": false,
-      "lines": 1216
+      "frontmatter_present": true,
+      "lines": 1220
     },
     {
       "id": "auto:orphan_components_wiring_master_plan",
@@ -1673,9 +1859,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 258
+      "frontmatter_present": true,
+      "lines": 262
     },
     {
       "id": "auto:personal_mcp_gateway_multitenant_hub_plan",
@@ -1690,26 +1877,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 265
+      "frontmatter_present": true,
+      "lines": 269
     },
     {
-      "id": "auto:plugin_to_agent_capability_lifecycle",
-      "subject": "কিন্তু গুরুত্বপূর্ণ পার্থক্য ⚠️",
-      "document_role": null,
-      "planning_authority": null,
+      "id": "plugin-to-agent-capability-lifecycle",
+      "subject": "Plugin to Agent Capability Lifecycle",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
       "canonical": null,
-      "status": null,
+      "status": "active",
       "source_file": "docs/plans/features/plugin_to_agent_capability_lifecycle.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 552
+      "frontmatter_present": true,
+      "lines": 579
     },
     {
       "id": "production-hardening-p1-p2-roadmap",
@@ -1724,9 +1913,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 61
+      "lines": 62
     },
     {
       "id": "production-readiness-final-stretch",
@@ -1741,9 +1931,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "browser-automation",
       "frontmatter_present": true,
-      "lines": 243
+      "lines": 244
     },
     {
       "id": "auto:qa_engine_auto_checking_implementation_plan",
@@ -1758,9 +1949,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "browser-automation",
-      "frontmatter_present": false,
-      "lines": 1018
+      "frontmatter_present": true,
+      "lines": 1022
     },
     {
       "id": "auto:render_mcp_server_reference_guide",
@@ -1775,9 +1967,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 566
+      "frontmatter_present": true,
+      "lines": 570
     },
     {
       "id": "auto:repository_analysis_action_plan",
@@ -1792,9 +1985,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 2035
+      "frontmatter_present": true,
+      "lines": 2038
     },
     {
       "id": "auto:repository_strict_file_hygiene_roadmap",
@@ -1809,9 +2003,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 664
+      "frontmatter_present": true,
+      "lines": 668
     },
     {
       "id": "risk-remediation-hardening-execution",
@@ -1826,9 +2021,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 1324
+      "lines": 1325
     },
     {
       "id": "runtime-dynamic-configuration-zero-hardcode",
@@ -1843,9 +2039,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "combined_ecosystem",
       "family": "dynamic-configuration",
       "frontmatter_present": true,
-      "lines": 813
+      "lines": 814
     },
     {
       "id": "auto:self_assembling_need_supply_intelligence_plan",
@@ -1860,9 +2057,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 36
+      "frontmatter_present": true,
+      "lines": 40
     },
     {
       "id": "auto:self_learning_engine_status_report",
@@ -1877,9 +2075,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 487
+      "frontmatter_present": true,
+      "lines": 491
     },
     {
       "id": "auto:self_tracing_and_bounded_black_box_architecture",
@@ -1894,9 +2093,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 180
+      "frontmatter_present": true,
+      "lines": 184
     },
     {
       "id": "auto:superai_competitor_playbook",
@@ -1911,9 +2111,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 1114
+      "frontmatter_present": true,
+      "lines": 1118
     },
     {
       "id": "auto:supremeai_architectural_evolution_proposals",
@@ -1928,9 +2129,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 51
+      "frontmatter_present": true,
+      "lines": 55
     },
     {
       "id": "auto:supremeai_deliverables_summary_spec",
@@ -1945,9 +2147,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "unified-architecture",
-      "frontmatter_present": false,
-      "lines": 141
+      "frontmatter_present": true,
+      "lines": 144
     },
     {
       "id": "auto:supremeai_quick_start_onboarding_checklist",
@@ -1962,9 +2165,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 150
+      "frontmatter_present": true,
+      "lines": 153
     },
     {
       "id": "auto:supremeai_work_plan_bangla",
@@ -1979,9 +2183,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 91
+      "frontmatter_present": true,
+      "lines": 95
+    },
+    {
+      "id": "tenant-workspace-architecture",
+      "subject": "Tenant Workspace Architecture — Isolated Customer Environments",
+      "document_role": "architecture",
+      "planning_authority": "Customer Experience Circle + Data Circle (C3)",
+      "canonical": "candidate",
+      "status": "proposed",
+      "source_file": "docs/plans/features/tenant_workspace_architecture.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "unverified",
+      "last_verified": "2026-09-17",
+      "disposition": "retain",
+      "target_scope": "customer_facing",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 97
     },
     {
       "id": "auto:universal_zero_complexity_interface_plan",
@@ -1996,9 +2219,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "customer_facing",
       "family": "unified-architecture",
-      "frontmatter_present": false,
-      "lines": 550
+      "frontmatter_present": true,
+      "lines": 554
     },
     {
       "id": "auto:vscode_lm_multi_model_ide_support_plan",
@@ -2013,9 +2237,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 50
+      "frontmatter_present": true,
+      "lines": 54
     },
     {
       "id": "auto:zero_cost_autonomous_self_evolution_plan",
@@ -2030,9 +2255,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 1401
+      "frontmatter_present": true,
+      "lines": 1405
     },
     {
       "id": "implementation-plan-index",
@@ -2047,9 +2273,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 462
+      "lines": 463
     },
     {
       "id": "auto:README",
@@ -2064,9 +2291,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 54
+      "frontmatter_present": true,
+      "lines": 58
     },
     {
       "id": "auto:SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2",
@@ -2081,9 +2309,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 1145
+      "frontmatter_present": true,
+      "lines": 1149
     },
     {
       "id": "auto:ci_cd_render_build_runtime_optimization_plan_bn",
@@ -2098,9 +2327,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 597
+      "frontmatter_present": true,
+      "lines": 601
     },
     {
       "id": "auto:cloud_ai_multi_provider_deployment_plan",
@@ -2115,26 +2345,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 170
+      "frontmatter_present": true,
+      "lines": 174
     },
     {
-      "id": "auto:docker_build_troubleshooting_record",
-      "subject": "docker_build_troubleshooting_record",
-      "document_role": null,
-      "planning_authority": null,
+      "id": "docker-build-troubleshooting-record",
+      "subject": "Docker Build Troubleshooting Record",
+      "document_role": "audit",
+      "planning_authority": "DevEx / CI Circle",
       "canonical": null,
-      "status": null,
+      "status": "historical",
       "source_file": "docs/plans/infrastructure/docker_build_troubleshooting_record.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 403
+      "frontmatter_present": true,
+      "lines": 422
     },
     {
       "id": "free-tier-federation-master-plan-v4",
@@ -2149,9 +2381,10 @@
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 2171
+      "lines": 2172
     },
     {
       "id": "auto:free_tier_survival_and_resource_optimization_guide",
@@ -2166,9 +2399,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 670
+      "frontmatter_present": true,
+      "lines": 674
     },
     {
       "id": "auto:infisical_enterprise_secret_management_guide",
@@ -2183,9 +2417,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 922
+      "frontmatter_present": true,
+      "lines": 926
     },
     {
       "id": "auto:production_upgrade_implementation_plan_v2",
@@ -2200,9 +2435,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
-      "frontmatter_present": false,
-      "lines": 2839
+      "frontmatter_present": true,
+      "lines": 2843
     },
     {
       "id": "auto:render_3services_ghcr_deployment_roadmap_bn",
@@ -2217,26 +2453,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "deployment-render",
-      "frontmatter_present": false,
-      "lines": 1252
+      "frontmatter_present": true,
+      "lines": 1256
     },
     {
-      "id": "auto:render_4accounts_deployment_status_record",
-      "subject": "অ্যাকাউন্ট ও ইমেইল সার্ভিস নাম ও Service ID বর্তমান স্ট্যাটাস সর্বশেষ সফল ডিপ্লয়মেন্ট (Last Success) সর্বশেষ ডিপ্লয়মেন্ট ও কমিট",
-      "document_role": null,
-      "planning_authority": null,
+      "id": "render-4accounts-deployment-status-record",
+      "subject": "Render 4-Account Deployment Status Record",
+      "document_role": "audit",
+      "planning_authority": "Infrastructure Circle",
       "canonical": null,
-      "status": null,
+      "status": "historical",
       "source_file": "docs/plans/infrastructure/render_4accounts_deployment_status_record.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
-      "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 228
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 245
     },
     {
       "id": "auto:render_memory_leak_fix_roadmap",
@@ -2251,9 +2489,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 116
+      "frontmatter_present": true,
+      "lines": 120
     },
     {
       "id": "auto:render_production_runtime_error_cleanup_plan",
@@ -2268,26 +2507,28 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 887
+      "frontmatter_present": true,
+      "lines": 890
     },
     {
-      "id": "auto:supabase_database_schema_and_connection_management_plan",
-      "subject": "SupremeAI-এর জন্য Supabase A–Z Roadmap",
-      "document_role": null,
-      "planning_authority": null,
+      "id": "supabase-database-schema-and-connection-management-plan",
+      "subject": "Supabase Database Schema and Connection Management Plan",
+      "document_role": "architecture",
+      "planning_authority": "Data Circle (C3)",
       "canonical": null,
-      "status": null,
+      "status": "active",
       "source_file": "docs/plans/infrastructure/supabase_database_schema_and_connection_management_plan.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "production-readiness",
-      "frontmatter_present": false,
-      "lines": 669
+      "frontmatter_present": true,
+      "lines": 686
     },
     {
       "id": "auto:third_party_env_and_secrets_operational_checklist",
@@ -2302,9 +2543,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 717
+      "frontmatter_present": true,
+      "lines": 721
     },
     {
       "id": "auto:PRODUCTION_ROADMAP_2026-09-11",
@@ -2319,9 +2561,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 51
+      "frontmatter_present": true,
+      "lines": 55
     },
     {
       "id": "auto:README",
@@ -2336,9 +2579,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 66
+      "frontmatter_present": true,
+      "lines": 70
     },
     {
       "id": "auto:agent_and_engineer_skill_requirements",
@@ -2353,9 +2597,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 215
+      "frontmatter_present": true,
+      "lines": 219
     },
     {
       "id": "auto:agent_roles_and_team_assignments",
@@ -2370,9 +2615,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 143
+      "frontmatter_present": true,
+      "lines": 147
     },
     {
       "id": "auto:contingency_and_disaster_recovery_plan",
@@ -2387,9 +2633,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 348
+      "frontmatter_present": true,
+      "lines": 352
     },
     {
       "id": "auto:cross_module_dependency_matrix",
@@ -2404,9 +2651,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 181
+      "frontmatter_present": true,
+      "lines": 185
     },
     {
       "id": "auto:file_disposition_and_retention_list",
@@ -2421,26 +2669,30 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 46
+      "frontmatter_present": true,
+      "lines": 50
     },
     {
-      "id": "auto:historical_status_snapshot_2026_05_10",
-      "subject": "SupremeAI Current Status Report",
-      "document_role": null,
-      "planning_authority": null,
-      "canonical": null,
-      "status": null,
+      "id": "historical-status-snapshot-2026-05-10",
+      "subject": "SupremeAI Current Status Report (2026-05-10 snapshot) — REDIRECTED",
+      "document_role": "audit",
+      "planning_authority": "Architecture Governance / Planning Circle",
+      "canonical": false,
+      "status": "historical",
       "source_file": "docs/plans/phases/historical_status_snapshot_2026_05_10.md",
       "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "family": "ci-cd-pipeline",
-      "frontmatter_present": false,
-      "lines": 181
+      "superseded_by": [
+        "docs/archive/plans/phases/historical_status_snapshot_2026_05_10.md"
+      ],
+      "evidence_state": "verified",
+      "last_verified": "2026-09-17",
+      "disposition": "redirect",
+      "target_scope": "combined_ecosystem",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 28
     },
     {
       "id": "auto:implementation_and_milestone_trackers",
@@ -2455,9 +2707,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unified-architecture",
-      "frontmatter_present": false,
-      "lines": 178
+      "frontmatter_present": true,
+      "lines": 182
     },
     {
       "id": "auto:phase1_foundation",
@@ -2472,9 +2725,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 117
+      "frontmatter_present": true,
+      "lines": 121
     },
     {
       "id": "auto:phase2_development",
@@ -2489,9 +2743,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 140
+      "frontmatter_present": true,
+      "lines": 144
     },
     {
       "id": "auto:phase3_integration",
@@ -2506,9 +2761,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 142
+      "frontmatter_present": true,
+      "lines": 146
     },
     {
       "id": "auto:phase4_optimization",
@@ -2523,9 +2779,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "unclassified",
-      "frontmatter_present": false,
-      "lines": 180
+      "frontmatter_present": true,
+      "lines": 184
     },
     {
       "id": "auto:phase_1_execution_patch_notes",
@@ -2540,9 +2797,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 92
+      "frontmatter_present": true,
+      "lines": 96
     },
     {
       "id": "auto:plan_inventory_2026-09-17",
@@ -2557,9 +2815,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
-      "frontmatter_present": false,
-      "lines": 115
+      "frontmatter_present": true,
+      "lines": 81
     },
     {
       "id": "auto:plan_reconciliation_register",
@@ -2574,9 +2833,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
-      "frontmatter_present": false,
-      "lines": 56
+      "frontmatter_present": true,
+      "lines": 70
     },
     {
       "id": "auto:project_milestones_and_completion_tracker",
@@ -2591,9 +2851,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 161
+      "frontmatter_present": true,
+      "lines": 165
     },
     {
       "id": "auto:q1_2026_foundation_execution_plan",
@@ -2608,9 +2869,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 75
+      "frontmatter_present": true,
+      "lines": 79
     },
     {
       "id": "auto:sprint_planning_execution_template",
@@ -2625,9 +2887,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 82
+      "frontmatter_present": true,
+      "lines": 86
     },
     {
       "id": "auto:systemic_risk_assessment_and_mitigation",
@@ -2642,9 +2905,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "combined_ecosystem",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 182
+      "frontmatter_present": true,
+      "lines": 186
     },
     {
       "id": "auto:team_and_cloud_resource_allocation_plan",
@@ -2659,9 +2923,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
-      "frontmatter_present": false,
-      "lines": 134
+      "frontmatter_present": true,
+      "lines": 138
     },
     {
       "id": "auto:yearly_strategic_roadmap_2026",
@@ -2676,9 +2941,10 @@
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
+      "target_scope": "supremeai_internal",
       "family": "execution-phases",
-      "frontmatter_present": false,
-      "lines": 72
+      "frontmatter_present": true,
+      "lines": 76
     },
     {
       "id": "vision-strategic-positioning",
@@ -2693,9 +2959,10 @@
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
       "disposition": "retain",
+      "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 259
+      "lines": 260
     }
   ]
 }

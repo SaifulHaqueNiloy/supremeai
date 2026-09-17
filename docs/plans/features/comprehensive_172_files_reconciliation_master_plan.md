@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🌐 SupremeAI — মহাপরিকল্পনা একত্রীকরণ ও সামগ্রিক অমীমাংসিত অডিট ও পূর্ণাঙ্গ বাস্তবায়ন পরিকল্পনা (Master Blueprint & Technical Implementation Plan)
 ### (C:\Users\N\Downloads\New folder (6) এর ১৭২টি ফাইল, গোল্ড বেঞ্চমার্ক অ্যাকশন প্ল্যান ও লাইভ কোডবেস ভেরিফিকেশনের ভিত্তিতে প্রণীত)
 

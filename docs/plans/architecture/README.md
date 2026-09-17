@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Architecture Plans Index
 
 **Status Dashboard** — Last updated: 2026-09-17

@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Render Production Error & Warning Cleanup Plan
 
 **Repository:** `SaifulHaqueNiloy/supremeai`  
@@ -884,4 +888,3 @@ readiness reflects actual core dependency state
 ```
 
 > **Golden rule: A missing optional capability is not a failure. A broken promised capability is a failure.**
-

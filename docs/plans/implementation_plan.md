@@ -10,6 +10,7 @@ disposition: retain
 last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
+target_scope: supremeai_internal
 ---
 
 # docs/plans — Implementation Plan (Master, Reconciled)

@@ -1,6 +1,19 @@
+---
+id: registry-control-in-pipeline-and-dashboard
+subject: "Registry Control in Pipeline and Dashboard"
+document_role: architecture
+planning_authority: Architecture Circle
+status: active
+target_scope: supremeai_internal
+canonical: candidate
+evidence_state: unverified
+disposition: retain
+last_verified: 2026-09-17
+---
+
 হ্যাঁ—**AI Registry-কে শুধু একটি Markdown checklist হিসেবে রাখা উচিত নয়**। SupremeAI-এর architecture অনুযায়ী এটাকে পরে **machine-readable Configuration/Integration Registry** বানিয়ে GitHub pipeline + Admin Dashboard—দুই জায়গাতেই ব্যবহার করা সবচেয়ে শক্তিশালী design হবে।
 
-### আমার recommendation
+---
 
 **Single Source → GitHub pipeline → Admin Dashboard**
 

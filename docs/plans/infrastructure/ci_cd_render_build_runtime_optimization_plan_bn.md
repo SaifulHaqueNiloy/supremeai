@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI CI/CD + Render Build Runtime Optimization Plan
 
 ## 1. Current Run — Forensic Summary

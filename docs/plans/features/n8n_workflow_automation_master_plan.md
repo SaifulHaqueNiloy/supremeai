@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # SupremeAI + n8n Integration Master Plan
 
 **Project:** SupremeAI  

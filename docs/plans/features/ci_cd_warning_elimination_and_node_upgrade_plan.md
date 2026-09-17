@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Warning Elimination Implementation Plan
 
 **Repository:** `SaifulHaqueNiloy/supremeai`  
@@ -830,4 +834,3 @@ The implementation agent MUST:
 - run the relevant workflow/test after each phase;
 - produce a before/after warning inventory;
 - stop if a proposed dependency upgrade introduces a breaking change.
-

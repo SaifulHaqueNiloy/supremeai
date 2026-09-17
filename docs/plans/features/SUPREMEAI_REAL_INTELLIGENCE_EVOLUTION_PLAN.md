@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI Real Intelligence Evolution Plan: Self-Improving Cognitive Operating System
 
 > **Status:** APPROVED & ACTIVE ARCHITECTURE  

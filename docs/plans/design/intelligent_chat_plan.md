@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # Implementation Plan: Intelligent Chat & Contextual Memory System
 
 ## Objective

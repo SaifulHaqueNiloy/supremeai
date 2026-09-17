@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Architectural Analysis & Implementation Plan: Personal MCP Gateway & Multi-Tenant MCP Hub
 
 This document provides an in-depth architectural evaluation of the proposed **Personal MCP Gateway** design, reconciles it with SupremeAI's existing codebase and `MASTER_PLAN_BANGLA.md` (Battleground B6 & Phases 2–6), and presents a phased, production-grade implementation roadmap.

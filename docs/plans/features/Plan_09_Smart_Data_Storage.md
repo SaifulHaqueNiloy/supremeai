@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 9: Hybrid Polyglot Storage & Smart Caching
 **Status:** 🔄 **EVOLVED / ACTIVE IN SUPABASE + REDIS + QDRANT ARCHITECTURE**  
 **Completion:** ~95% (Postgres + Redis KV + Qdrant Vectors)  

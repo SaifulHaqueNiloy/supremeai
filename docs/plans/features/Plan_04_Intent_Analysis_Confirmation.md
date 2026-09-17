@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Plan 4: Intent Analysis & Human-in-the-Loop (HITL) Governance
 **Status:** 🔄 **EVOLVED / ACTIVE IN MCP POLICY & WORKFLOW ARCHITECTURE**  
 **Completion:** ~95% (Policy Preview/Approve Tools + Intent Decomposition)  

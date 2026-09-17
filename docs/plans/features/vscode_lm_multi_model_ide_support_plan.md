@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Integrate `vscode.lm` for In-built IDE Model Support
 
 This plan outlines the steps to allow the SupremeAI VS Code Extension to automatically detect and utilize free in-built AI models provided by the host IDE (such as Antigravity IDE or GitHub Copilot) via the official `vscode.lm` (Language Model) API.

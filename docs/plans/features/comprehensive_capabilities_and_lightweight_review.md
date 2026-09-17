@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 ## SupremeAI প্রোজেক্টের comprehensive রিভিউ — পাওয়রফুল / লাইটওয়েট / অন্যান্য ইমপ্রুভমেন্ট
 
 ---

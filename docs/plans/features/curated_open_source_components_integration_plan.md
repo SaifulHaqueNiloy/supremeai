@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI — Carefully Selected Open-Source Components
 ## Updated Implementation Plan — Post-Integration Audit
 

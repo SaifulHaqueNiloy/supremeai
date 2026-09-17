@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SUPREMEAI 2.0 — AUTONOMOUS UI/UX IMPLEMENTATION PROMPT
 
 You are the Principal Frontend Architect and Senior Product UI Engineer responsible for upgrading the existing SupremeAI frontend.

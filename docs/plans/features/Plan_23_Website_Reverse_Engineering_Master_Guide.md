@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # Plan 23: Website Reverse Engineering & Dynamic Connector Synthesis
 **Status:** 🔄 **EVOLVED / ACTIVE IN FIRECRAWL & BROWSER SUBAGENT ENGINE**  
 **Completion:** ~85% (Firecrawl Scrape + Playwright Browser Subagent + AST Connector Generator)  

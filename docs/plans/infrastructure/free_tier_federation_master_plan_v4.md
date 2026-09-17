@@ -13,6 +13,7 @@ superseded_by: []
 related:
   - docs/plans/features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md
   - docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
+target_scope: supremeai_internal
 ---
 
 # 🚀 SupremeAI Free-Tier Federation Master Plan v4.0

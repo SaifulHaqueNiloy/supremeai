@@ -1,3 +1,6 @@
+---
+target_scope: supremeai_internal
+---
 
 # SupremeAI - Quick Start Checklist
 

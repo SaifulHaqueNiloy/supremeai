@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # SupremeAI — GitHub Spec Kit Full Implementation Plan
 
 **Repository:** `SaifulHaqueNiloy/supremeai`

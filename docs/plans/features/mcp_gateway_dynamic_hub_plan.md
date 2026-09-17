@@ -1,3 +1,7 @@
+---
+target_scope: combined_ecosystem
+---
+
 # Consolidated & Merged Plan Reference: mcp_gateway_dynamic_hub_plan.md
 
 > [!NOTE]

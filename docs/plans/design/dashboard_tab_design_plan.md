@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # 🚀 SupremeAI Admin Dashboard (Overview Tab) — Design Plan
 
 > **Goal**: Transform the Overview tab into a premium "Mission Command" center with ultra-dense, real-time system monitoring.

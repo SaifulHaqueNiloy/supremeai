@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Third-Party Services & Environment / Secret Checklist
 
 **Purpose:** A single operational checklist for tracking every external/third-party service used by SupremeAI, which environment variables/secrets belong to each service, what is required vs optional, and what still needs to be verified in production.

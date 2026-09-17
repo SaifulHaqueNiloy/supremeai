@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Kilo AI Integration and Backend Refactoring Plan
 
 This plan has been updated based on your feedback. We will discard the "Trio Pipeline" concept and instead implement a **Swarm Intelligence / Collective AI Logic**, alongside the backend architecture refactoring.

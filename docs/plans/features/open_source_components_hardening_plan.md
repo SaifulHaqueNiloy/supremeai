@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Open-Source Integration
 # Remaining Tasks & Production Hardening Plan
 ## Post-Implementation Codebase Audit

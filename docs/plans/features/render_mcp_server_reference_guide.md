@@ -1,3 +1,7 @@
+---
+target_scope: supremeai_internal
+---
+
 # Render MCP Server — Manage your Render resources from Claude Code, Codex, and Cursor.
 
 Render's *Model Context Protocol* (*MCP*) server enables you to manage your Render infrastructure directly from compatible AI apps, such as Claude Code, Codex, and Cursor:

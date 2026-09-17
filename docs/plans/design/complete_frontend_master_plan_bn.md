@@ -1,3 +1,7 @@
+---
+target_scope: customer_facing
+---
+
 # SupremeAI সম্পূর্ণ Frontend পরিকল্পনা
 
 আমরা কোনো একটি AI service কপি করব না। বরং বিভিন্ন সফল পণ্যের ভালো interaction pattern নিয়ে SupremeAI-এর নিজস্ব identity তৈরি করব।

@@ -15,6 +15,7 @@ supersedes:
   - docs/archive/plans/architecture/master_plan_strategic_analysis_bn.md
   - docs/archive/plans/architecture/supremeai_project_complete_overview_bangla.md
 superseded_by: []
+target_scope: supremeai_internal
 ---
 
 # SupremeAI Master Plan & Strategic Vision — Canonical

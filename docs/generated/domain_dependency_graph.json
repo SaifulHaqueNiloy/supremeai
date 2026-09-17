@@ -2002,7 +2002,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 22,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2082,7 +2082,7 @@
     {
       "evidence": [
         {
-          "line": 16,
+          "line": 19,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2202,7 +2202,7 @@
     {
       "evidence": [
         {
-          "line": 18,
+          "line": 21,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2312,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 10,
+          "line": 11,
           "path": "backend/api/routes/knowledge.py"
         }
       ],
