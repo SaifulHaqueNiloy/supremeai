@@ -263,6 +263,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`PLAN_003_AIDER_STYLE_REPO_MAP_2026-09-17`](./PLAN_003_AIDER_STYLE_REPO_MAP_2026-09-17.md) | implementation | C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা) | supremeai_internal | unclassified |
 | [`PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION_2026-09-17`](./PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION_2026-09-17.md) | implementation | Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway) | supremeai_internal | free-tier-federation |
 | [`PLAN_005_USER_CONTROLLED_COMPACT_TRIGGER_2026-09-17`](./PLAN_005_USER_CONTROLLED_COMPACT_TRIGGER_2026-09-17.md) | implementation | Memory Circle + C5 (Execution — LLM Gateway) | supremeai_internal | free-tier-federation |
+| [`PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION_2026-09-17`](./PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION_2026-09-17.md) | implementation | Memory Circle (backend/services/memory_service.py — CascadeMemoryService) | supremeai_internal | free-tier-federation |
 
 ### ⛔ BLOCKED (1)
 
