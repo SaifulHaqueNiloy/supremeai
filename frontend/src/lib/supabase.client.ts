@@ -38,38 +38,57 @@ if (RAW_SERVICE_ROLE) {
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn(
-    '[supabase.client] Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — Supabase-backed features will be degraded.',
+    '[supabase.client] Missing VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY — Supabase-backed ' +
+      'features will throw a clear configuration error on first use (honest fail-closed, 2026-09-17) ' +
+      'instead of silently issuing requests against a placeholder URL that can never connect.',
   );
 }
 
+/**
+ * বাংলা মন্তব্য: env থাকলে সত্যিকারের client; না থাকলে ব্যবহারের সময় (import-এ নয়)
+ * স্পষ্ট, অ্যাকশনযোগ্য error ছোড়ে — আগের placeholder-URL fallback (F-17) নীরবে
+ * কোনোদিন connect করতে পারে না এমন client বানিয়ে ব্যর্থতা লুকিয়ে রাখত।
+ * এটি এই মডিউলের নিজস্ব supabaseAdmin guarded-proxy doctrine-ই অনুসরণ করে।
+ */
+function createGuardedClient(): SupabaseClient {
+  if (supabaseUrl && supabaseAnonKey) {
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true, // Reduce re-auth requests (saves MAU!)
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'supremai-auth-token',
+      },
+      global: {
+        headers: {
+          'x-application-name': 'superai-free-tier',
+          'x-priority': 'low', // Hint for connection pooler
+        },
+      },
+      db: {
+        schema: 'public',
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10, // Stay within free tier limits!
+        },
+      },
+    });
+  }
+  return new Proxy({} as SupabaseClient, {
+    get(_target, prop) {
+      throw new Error(
+        `[supabase.client] Supabase is not configured — blocked access to '${String(prop)}'. ` +
+          'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in the frontend env, or use the ' +
+          'backend API instead of the browser Supabase client.',
+      );
+    },
+  });
+}
+
 // Options optimized for free tier usage
-export const supabase: SupabaseClient = createClient(
-  supabaseUrl ?? 'https://placeholder-supabase.internal',
-  supabaseAnonKey ?? 'public-anon-key-placeholder',
-  {
-    auth: {
-      persistSession: true, // Reduce re-auth requests (saves MAU!)
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      storageKey: 'supremai-auth-token',
-    },
-    global: {
-      headers: {
-        'x-application-name': 'superai-free-tier',
-        'x-priority': 'low', // Hint for connection pooler
-      },
-    },
-    db: {
-      schema: 'public',
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10, // Stay within free tier limits!
-      },
-    },
-  },
-);
+export const supabase: SupabaseClient = createGuardedClient();
 
 // Server-side client with connection pooling awareness.
 // Guarded proxy: throws a clear error on first use when no service key exists

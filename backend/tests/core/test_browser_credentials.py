@@ -48,7 +48,7 @@ def reset_globals():
 
     browser_mod.CREDENTIALS.clear()
     browser_mod.RECENT_ACTIVITIES.clear()
-    browser_mod.TASKS.clear()
+    # TASKS সরানো হয়েছে (2026-09-17 cleanup) — legacy dict কখনো populate হতো না।
     browser_mod.FINDINGS.clear()
     try:
         yield
