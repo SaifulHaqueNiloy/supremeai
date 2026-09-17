@@ -69,6 +69,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ✅ **প্রকাশিত** — `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` |
 | 11 | **Architecture Intelligence** (M5 — স্ট্যাটিক-গ্রাফ অবকাঠামো) | ১৯৪-মডিউল রানটাইম-অডিট আছে, স্ট্যাটিক গ্রাফ/রুল/baseline-N শূন্য (greenfield rg-প্রমাণ) — অন্ধ-রিফ্যাক্টর শেষ-লিভার | ✅ **প্রকাশিত** — `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` |
 | 12 | **Governed Skill Ecosystem** (`backend/skills/` + `backend/core/skill_manager.py` + রুট `skills/`) | তিন প্রতিযোগী বাস্তবায়ন, সব dormant — ERR-F02-প্যাটার্ন বীজে বন্ধ করার সবচেয়ে সস্তা মুহূর্ত; runtime-pip lightweight-লঙ্ঘন সংশোধন-প্রস্তাব | ✅ **প্রকাশিত** — `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` |
+| 13 | **Security Middleware Truth** (`backend/middleware/` + `backend/core/autonoguard_engine.py`) | anti-hacking middleware টেস্ট-কভারড কিন্তু মাউন্ট-বিহীন; tier/tenant-সীমা ইন-কোড; tenant fail-open ফলব্যাক-বিহীন — সুরক্ষা-সত্য-মানচিত্র | ✅ **প্রকাশিত** — `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` |
+| 14 | **User-Facing Capability Truth** (`voice_service.py` + `stream_voice_sse.py` + `backend/p2p/`) | জাল transcript/confidence/অডিও লাইভ-মাউন্টেড SSE-চেইনে (কোড-নোটই স্বীকারকৃত); বাস্তব MultilingualTTS সহ-অস্তিত্বশীল — V5 fake-metrics মতবাদের backend-সম্প্রসারণ | ✅ **প্রকাশিত** — `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -90,6 +92,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 10 | 2026-09-17 | Frontend Tier-S Wiring | `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (সিরিজের প্রস্তাবিত দশ মডিউল সম্পূর্ণ; কিউ পুনঃর‍্যাঙ্ক চলমান-প্রক্রিয়ার অংশ) |
 | 11 | 2026-09-17 | Architecture Intelligence (M5) | `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; জন্ম থেকেই Part 5.5 দর্শন-অডিটসহ) |
 | 12 | 2026-09-17 | Governed Skill Ecosystem (M9) | `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; তিন-বাস্তবায়ন কনসলিডেশন প্রস্তাব) |
+| 13 | 2026-09-17 | Security Middleware Truth | `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (মাউন্ট-সিদ্ধান্ত ফাউন্ডার-গেটেড) |
+| 14 | 2026-09-17 | User-Facing Capability Truth | `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (SSE re-point + সত্য-সেমান্টিকস) |
 
 ---
 
