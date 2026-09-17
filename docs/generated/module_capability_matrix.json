@@ -10252,6 +10252,25 @@
       "path": "backend/tests/api/routes/test_connections.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_conversations_list.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_global_memory_stats.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10716,6 +10735,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_task_router.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_webhooks_ai.py"
     },
     {
       "capability_signals": [
@@ -12933,12 +12961,31 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/missions/test_mission_failure_modes.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/missions/test_mission_orchestration.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/missions/test_mission_seal_and_recovery.py"
     },
     {
       "capability_signals": [
@@ -18693,6 +18740,15 @@
       "path": "frontend/src/hooks/useIframeConsole.ts"
     },
     {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/hooks/useListResource.ts"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -19250,6 +19306,13 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "frontend/src/providers/useThemeSync.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/router/RouteBoundary.tsx"
     },
     {
       "capability_signals": [
@@ -24277,5 +24340,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2800
+  "source_file_count": 2807
 }
