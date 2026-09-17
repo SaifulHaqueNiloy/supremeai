@@ -5,10 +5,11 @@
 // (state filter সহ), per-run step observer (trace events), এবং state-machine
 // দ্বারা validated retry (failed → repair) ও cancel অ্যাকশন।
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronRight, LifeBuoy, Play, RefreshCw } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 import { HoldToKillButton } from '../components/swarm/HoldToKillButton';
+import { useListResource } from '../hooks/useListResource';
 import {
   runService,
   type MissionRun,
@@ -60,32 +61,23 @@ function availableActions(state: string): Array<'approve' | 'start' | 'retry' | 
 }
 
 export function RunsPage() {
-  const [runs, setRuns] = useState<MissionRun[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // বাংলা (Wave 3 dedup): runs/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে — পেজের বাকি সব state (trace observer, actions)
+  // আগের মতোই page-local। limit 50 contract অপরিবর্তিত।
+  const {
+    items: runs,
+    isLoading,
+    loadError,
+    reload: loadRuns,
+  } = useListResource<MissionRun>({
+    fetcher: async () => (await runService.listRuns({ limit: 50 })).items,
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [trace, setTrace] = useState<Record<string, TraceEvent[]>>({});
   const [traceLoadingId, setTraceLoadingId] = useState<string | null>(null);
   const [traceError, setTraceError] = useState<string | null>(null);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const loadRuns = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const res = await runService.listRuns({ limit: 50 });
-      setRuns(res.items);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load runs');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadRuns();
-  }, [loadRuns]);
 
   const toggleTrace = async (run: MissionRun) => {
     if (expandedId === run.id) {

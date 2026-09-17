@@ -377,13 +377,28 @@ async def memory_stats(
     _ensure_supabase()
 
     try:
+        # বাংলা মন্তব্য (Wave-3 perf): আগে প্রতি request-এ ai_memory-র প্রতিটি row
+        # (id, metadata, created_at) পুরোটা ডাউনলোড করে Python-এ len()/লুপ চালিয়ে
+        # ৩টা সংখ্যা বের করা হতো — ইউজারের মেমোরি যত বড়, নেটওয়ার্ক + payload তত
+        # নষ্ট (full-scan অপচয়)। এখন total সংখ্যাটা PostgREST-এর server-side
+        # `count=exact` header থেকে আসে (same single query, আলাদা round-trip নেই),
+        # আর row fetch-এ শুধু দরকারি দুটি কলাম (metadata, created_at) নামানো হয় —
+        # পুরনো কোডের `id` কলামটা কোথাও ব্যবহৃতই হতো না। by_type/last_updated
+        # প্রতি-row metadata ছাড়া সার্ভারে aggregate করা সম্ভব নয় (PostgREST-এ
+        # JSON group-by নেই, RPC/DB function বানানো এই cycle-এর স্কোপে নেই),
+        # তাই contract ঠিক রেখে সবচেয়ে ছোট fetch-ই honest সমাধান।
         resp = (
             await supabase_db.client.table("ai_memory")
-            .select("id, metadata, created_at")
+            .select("metadata, created_at", count="exact")
             .eq("user_id", user_id)
             .execute()
         )
         rows = resp.data or []
+
+        # বাংলা মন্তব্য: server-side exact count পেলে সেটাই সত্যি; কোনো কারণে
+        # transport count echo না করলে (None) len(rows) একই সংখ্যা দেয় — এটা
+        # fabricated fallback নয়, deterministic একই মান।
+        total_memories = resp.count if resp.count is not None else len(rows)
 
         by_type: dict[str, int] = {}
         last_updated: str | None = None
@@ -406,7 +421,7 @@ async def memory_stats(
                     last_updated = ts
 
         return MemoryStatsResponse(
-            total_memories=len(rows),
+            total_memories=total_memories,
             by_type=by_type,
             last_updated=last_updated,
         )

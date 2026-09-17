@@ -57,13 +57,20 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
-import GuestChatPage, { ModelsPage, PublicInfoPage, PricingPage } from './pages/PublicPages';
-import { RunsPage } from './pages/RunsPage';
-import { MarketplacePage } from './pages/MarketplacePage';
-import { ActivityPage } from './pages/ActivityPage';
-import { FilesPage } from './pages/FilesPage';
-import { ProjectsPage } from './pages/ProjectsPage';
-import { MCPConnector } from './components/plugins/MCPConnector';
+import { RouteBoundary } from './router/RouteBoundary';
+
+// বাংলা মন্তব্য (Wave 3): বাকি ১০টি eager page import-ও React.lazy করা হলো —
+// ২৬টি lazy page-এর মতোই একই top-level Suspense-এর নিচে চলে, main chunk ছোট থাকে।
+const GuestChatPage = React.lazy(() => import("./pages/PublicPages"));
+const ModelsPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.ModelsPage })));
+const PublicInfoPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.PublicInfoPage })));
+const PricingPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.PricingPage })));
+const RunsPage = React.lazy(() => import("./pages/RunsPage"));
+const MarketplacePage = React.lazy(() => import("./pages/MarketplacePage"));
+const ActivityPage = React.lazy(() => import("./pages/ActivityPage"));
+const FilesPage = React.lazy(() => import("./pages/FilesPage"));
+const ProjectsPage = React.lazy(() => import("./pages/ProjectsPage"));
+const MCPConnector = React.lazy(() => import("./components/plugins/MCPConnector").then(m => ({ default: m.MCPConnector })));
 
 // The public viewer is intentionally available before authentication: a shared URL is
 // enough to read data. Authentication and role checks remain for private workspaces;
@@ -113,65 +120,69 @@ const AppContent: React.FC = () => {
               {/* GUEST STATE */}
               <Route path="/login" element={
                 <GuestRoute>
-                  <LoginPage />
+                  <RouteBoundary>
+                    <LoginPage />
+                  </RouteBoundary>
                 </GuestRoute>
               } />
               <Route path="/register" element={
                 <GuestRoute>
-                  <RegisterPage />
+                  <RouteBoundary>
+                    <RegisterPage />
+                  </RouteBoundary>
                 </GuestRoute>
               } />
               {/* Public funnel: guest chat first, then progressive auth when value is clear. */}
-              <Route path="/" element={<GuestChatPage />} />
+              <Route path="/" element={<RouteBoundary><GuestChatPage /></RouteBoundary>} />
               {/* Public viewer path: shared URLs should work without forcing a normal viewer through login. */}
-              <Route path="/viewer" element={<MCPConnector />} />
-              <Route path="/features" element={<PublicInfoPage kind="/features" />} />
-              <Route path="/models" element={<ModelsPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/docs" element={<PublicInfoPage kind="/docs" />} />
-              <Route path="/about" element={<PublicInfoPage kind="/about" />} />
-              <Route path="/contact" element={<PublicInfoPage kind="/contact" />} />
+              <Route path="/viewer" element={<RouteBoundary><MCPConnector /></RouteBoundary>} />
+              <Route path="/features" element={<RouteBoundary><PublicInfoPage kind="/features" /></RouteBoundary>} />
+              <Route path="/models" element={<RouteBoundary><ModelsPage /></RouteBoundary>} />
+              <Route path="/pricing" element={<RouteBoundary><PricingPage /></RouteBoundary>} />
+              <Route path="/docs" element={<RouteBoundary><PublicInfoPage kind="/docs" /></RouteBoundary>} />
+              <Route path="/about" element={<RouteBoundary><PublicInfoPage kind="/about" /></RouteBoundary>} />
+              <Route path="/contact" element={<RouteBoundary><PublicInfoPage kind="/contact" /></RouteBoundary>} />
 
               {/* AUTHENTICATED USER STATE */}
               <Route path="/workspace/agent" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <AgentWorkspace />
+                    <RouteBoundary><AgentWorkspace /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/workspace/ide" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <IdeWorkspace />
+                    <RouteBoundary><IdeWorkspace /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/integrations" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <IntegrationsManager />
+                    <RouteBoundary><IntegrationsManager /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/architect-tower" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <SystemHealthDashboard />
+                    <RouteBoundary><SystemHealthDashboard /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/swarm" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <SwarmMap />
+                    <RouteBoundary><SwarmMap /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
               <Route path="/evolution-forge" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <SwarmArchitect />
+                    <RouteBoundary><SwarmArchitect /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
@@ -179,7 +190,7 @@ const AppContent: React.FC = () => {
               <Route path="/skills-catalog" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <SkillCatalog />
+                    <RouteBoundary><SkillCatalog /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
@@ -187,45 +198,49 @@ const AppContent: React.FC = () => {
                 <ProtectedRoute>
                   <RoleGuard requiredRole="user">
                     <PermissionGuard requiredPermission="billing.read">
-                      <BillingPage />
+                      <RouteBoundary>
+                        <BillingPage />
+                      </RouteBoundary>
                     </PermissionGuard>
                   </RoleGuard>
                 </ProtectedRoute>
               } />
               <Route path="/profile" element={
                 <ProtectedRoute>
-                  <ProfilePage />
+                  <RouteBoundary><ProfilePage /></RouteBoundary>
                 </ProtectedRoute>
-  } />
-  <Route path="/projects" element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
-  <Route path="/files" element={<ProtectedRoute><FilesPage /></ProtectedRoute>} />
-  <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><AgentWorkspace /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/activity" element={<ProtectedRoute><ActivityPage /></ProtectedRoute>} />
-  <Route path="/marketplace" element={<ProtectedRoute><MarketplacePage /></ProtectedRoute>} />
-  <Route path="/runs" element={<ProtectedRoute><RunsPage /></ProtectedRoute>} />
-  <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><CostDashboard /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><DeepResearchPanel /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/scheduled-tasks" element={<ProtectedRoute><WorkspaceLayout><ScheduledTasksPanel /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/memory" element={<ProtectedRoute><WorkspaceLayout><MemoryPanel /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/settings" element={<ProtectedRoute><WorkspaceLayout><RealSettingsPage /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/settings/api-keys" element={<ProtectedRoute><WorkspaceLayout><SecretsPage /></WorkspaceLayout></ProtectedRoute>} />
+              } />
+  <Route path="/projects" element={<ProtectedRoute><RouteBoundary><ProjectsPage /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/files" element={<ProtectedRoute><RouteBoundary><FilesPage /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/agents" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><AgentWorkspace /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/activity" element={<ProtectedRoute><RouteBoundary><ActivityPage /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/marketplace" element={<ProtectedRoute><RouteBoundary><MarketplacePage /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/runs" element={<ProtectedRoute><RouteBoundary><RunsPage /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><CostDashboard /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><DeepResearchPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/scheduled-tasks" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><ScheduledTasksPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/memory" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><MemoryPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/settings" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><RealSettingsPage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/settings/api-keys" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><SecretsPage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
   {/* RESTORE-AND-WIRE (2026-09-14): restored capability pages, now reachable */}
-  <Route path="/vault" element={<ProtectedRoute><WorkspaceLayout><VaultPage /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/platform-vault" element={<ProtectedRoute><WorkspaceLayout><ConnectedPlatformsVault /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/automation-queue" element={<ProtectedRoute><WorkspaceLayout><AutomationQueuePage /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/llm-gateway" element={<ProtectedRoute><WorkspaceLayout><LlmGatewayPage /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/telemetry" element={<ProtectedRoute><WorkspaceLayout><TelemetryCockpitPage /></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/vault" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><VaultPage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/platform-vault" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><ConnectedPlatformsVault /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/automation-queue" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><AutomationQueuePage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/llm-gateway" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><LlmGatewayPage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/telemetry" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><TelemetryCockpitPage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: Task-12 activation — /knowledge পেজটি ব্যাকএন্ড POST /api/knowledge/search +
       /api/knowledge/seed (দুটিই আগে orphan) ব্যবহার করে; /sessions/:sessionId ককপিটটি
       ব্যাকএন্ডের প্রকৃত SSE স্ট্রিম GET /api/session/{id}/stream-এর সাথে wire করা। */}
-  <Route path="/knowledge" element={<ProtectedRoute><WorkspaceLayout><KnowledgePage /></WorkspaceLayout></ProtectedRoute>} />
-  <Route path="/sessions/:sessionId" element={<ProtectedRoute><SessionDetailRoute /></ProtectedRoute>} />
-  <Route path="/commandcenter" element={<ProtectedRoute><React.Suspense fallback={null}><CommandCenterApp /></React.Suspense></ProtectedRoute>} />
+  <Route path="/knowledge" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><KnowledgePage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  <Route path="/sessions/:sessionId" element={<ProtectedRoute><RouteBoundary><SessionDetailRoute /></RouteBoundary></ProtectedRoute>} />
+  <Route path="/commandcenter" element={<ProtectedRoute><React.Suspense fallback={null}><RouteBoundary><CommandCenterApp /></RouteBoundary></React.Suspense></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}
   <Route path="/workspace" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    {legacyWorkspace}
+                    <RouteBoundary>
+                      {legacyWorkspace}
+                    </RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
@@ -233,7 +248,7 @@ const AppContent: React.FC = () => {
               <Route path="/workspace/live" element={
                 <ProtectedRoute>
                   <WorkspaceLayout>
-                    <AIStudio />
+                    <RouteBoundary><AIStudio /></RouteBoundary>
                   </WorkspaceLayout>
                 </ProtectedRoute>
               } />
@@ -245,18 +260,20 @@ const AppContent: React.FC = () => {
               <Route path="/admin/*" element={
                 <ProtectedRoute>
                   <RoleGuard requiredRole="admin">
-                    <AdminShell />
+                    <RouteBoundary>
+                      <AdminShell />
+                    </RouteBoundary>
                   </RoleGuard>
                 </ProtectedRoute>
               } />
 
                 {/* ═══ Tier-S Feature Routes ═══ */}
                 {workspaceFeatureRoutes.map((r, i) => (
-                  <Route key={`tier-s-${i}`} path={r.path!} element={r.element} />
+                  <Route key={`tier-s-${i}`} path={r.path!} element={<RouteBoundary>{r.element}</RouteBoundary>} />
                 ))}
 
               {/* Catch-all 404 Route */}
-              <Route path="*" element={<ErrorPage code={404} />} />
+              <Route path="*" element={<RouteBoundary><ErrorPage code={404} /></RouteBoundary>} />
             </Routes>
           </React.Suspense>
       </GlobalConfigInitializer>

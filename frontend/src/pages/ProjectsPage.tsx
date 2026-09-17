@@ -4,10 +4,11 @@
 // করত না। এখন real backend (/api/v1/projects)-এর সাথে যুক্ত: create modal,
 // listing, rename এবং delete — loading/error/empty state সহ।
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ArrowRight, FolderKanban, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { useListResource } from '../hooks/useListResource';
 import {
   projectService,
   type ProjectSpace,
@@ -29,9 +30,17 @@ function formatCreatedDate(iso: string | null): string {
 }
 
 export function ProjectsPage() {
-  const [projects, setProjects] = useState<ProjectSpace[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // বাংলা (Wave 3 dedup): projects/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে; setItems দিয়ে delete-এর optimistic filter আগের মতোই।
+  const {
+    items: projects,
+    isLoading,
+    loadError,
+    reload: loadProjects,
+    setItems: setProjects,
+  } = useListResource<ProjectSpace>({
+    fetcher: async () => (await projectService.listProjects()).items,
+  });
   const [modal, setModal] = useState<ModalMode>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -39,23 +48,6 @@ export function ProjectsPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-
-  const loadProjects = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const res = await projectService.listProjects();
-      setProjects(res.items);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load projects');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadProjects();
-  }, [loadProjects]);
 
   const openCreateModal = () => {
     setName('');

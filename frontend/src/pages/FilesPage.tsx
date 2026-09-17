@@ -4,9 +4,10 @@
 // 2026-09-15)। এখন real dropzone + explorer, ব্যাকএন্ড `/api/chat/upload`
 // (upload / list / serve / delete) কনট্র্যাক্টে যুক্ত।
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ArrowRight, FileImage, Trash2, UploadCloud } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { useListResource } from '../hooks/useListResource';
 import { fileService, formatBytes, type StoredFile } from '../services/fileService';
 
 const ACCEPTED_MIME =
@@ -25,31 +26,22 @@ function formatUploadedDate(iso: string): string {
 }
 
 export function FilesPage() {
-  const [files, setFiles] = useState<StoredFile[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // বাংলা (Wave 3 dedup): files/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে; setItems দিয়ে delete-এর optimistic filter আগের মতোই।
+  const {
+    items: files,
+    isLoading,
+    loadError,
+    reload: loadFiles,
+    setItems: setFiles,
+  } = useListResource<StoredFile>({
+    fetcher: async () => (await fileService.listFiles()).items,
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const loadFiles = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const res = await fileService.listFiles();
-      setFiles(res.items);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load files');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadFiles();
-  }, [loadFiles]);
 
   const handleFiles = useCallback(
     async (selected: FileList | null) => {
