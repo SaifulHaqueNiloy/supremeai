@@ -2731,15 +2731,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/api/routes/workspace_feature_routes_shim.py"
-    },
-    {
-      "capability_signals": [
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/api/routes/workspaces_route.py"
     },
     {
@@ -16715,13 +16706,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/SupremeComponents.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/SwarmMap.tsx"
     },
     {
@@ -18360,13 +18344,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/ui/EmptyState.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/ui/GlassUiPrimitives.tsx"
     },
     {
       "capability_signals": [],
@@ -24255,5 +24232,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2798
+  "source_file_count": 2795
 }
