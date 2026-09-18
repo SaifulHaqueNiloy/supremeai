@@ -454,7 +454,7 @@ jobs:
   # -----------------------------------------------------------------
   # Jobs 1.5–1.8: Advanced Pre-Merge Checks (reusable workflow)
   # -----------------------------------------------------------------
-  # বাংলা মন্তব্য (PERF-TRICK-2 & TRICK-3): 
+  # বাংলা মন্তব্য (PERF-TRICK-2 & TRICK-3):
   # পূর্বে `registry` নামক আলাদা ৩ মিনিটের একটি উবুন্টু ভিএম জব এখানে স্বতন্ত্রভাবে চলত।
   # সেই রেজিস্ট্রি চেকগুলো (validate_config_registry, check_config_contract, check_hardcoded_deployment_config)
   # এখন সরাসরি `ci-advanced-checks.yml`-এর সাথে কনসোলিডেট করা হয়েছে������� ফলে আলাদা রানার বুট করার প্রয়োজন নেই।
@@ -982,6 +982,13 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           working-directory: ./frontend
 
+      # (Task 14-b) pnpm audit honesty gate — verified exit 0 today (0 high/critical;
+      # 4 low + 16 moderate advisories exist in dompurify/qs but stay below the gate
+      # threshold, reported in the Task-14-b work record). Any future high/critical
+      # advisory in prod deps fails this job. No || true — CI is the authority.
+      - name: Production dependency audit (fail on high/critical)
+        run: pnpm audit --prod --audit-level high
+
       - name: Single-frontend gates (A/D) — portal-split regression check
         run: python3 ../scripts/ci/check_single_frontend.py
 
@@ -990,6 +997,11 @@ jobs:
 
       - name: Lint check
         run: pnpm exec eslint src/ --ext .ts,.tsx --max-warnings=5
+
+      # বাংলা (V8): ': any' burn-down ratchet — baseline (any_budget.json) থেকে বাড়লেই লাল,
+      # কমলে pass ও baseline-শক্ত করার পরামর্শ। কোনো কিছু হঠাৎ ভাঙে না, অথচ ডেট বাড়ে না
+      - name: ': any burn-down ratchet'
+        run: python3 ../scripts/ci/check_any_budget.py --src src --baseline any_budget.json
 
       - name: Build bounded quality and cost evidence
         run: python3 ../scripts/ci/build_quality_evidence.py --output ../ci-reports/quality-evidence.json
@@ -1103,11 +1115,19 @@ jobs:
           name: frontend-dist
           path: frontend/dist/
 
-      - name: Debug backend URL secrets (masked)
+      - name: Debug backend URL secrets (masked, length+shape only)
+        env:
+          BACKEND_URL_VALUE: ${{ secrets.BACKEND_URL || vars.BACKEND_URL || secrets.USER_BACKEND_URL || vars.USER_BACKEND_URL }}
         run: |
           echo "BACKEND_URL set via secrets: ${{ secrets.BACKEND_URL != '' }}"
           echo "BACKEND_URL set via vars:    ${{ vars.BACKEND_URL != '' }}"
           echo "USER_BACKEND_URL fallback set: ${{ secrets.USER_BACKEND_URL != '' || vars.USER_BACKEND_URL != '' }}"
+          # বাংলা: মান লিক করা নিষিদ্ধ — শুধু length ও shape প্রমাণ দেখানো হয়
+          # (length/sha কোনোটিই secret নয়, কিন্তু কোন মান কার্যকর হয়েছে তা নির্ণয়
+          # করা যায় — 2026-09-18 incident-এর ডায়াগনস্টিক)।
+          echo "BACKEND_URL effective length: ${#BACKEND_URL_VALUE}"
+          echo "BACKEND_URL has path component: $([[ "$BACKEND_URL_VALUE" =~ https://[^/]+/[^/]+ ]] && echo yes || echo no)"
+          echo "BACKEND_URL sha256 prefix: $(printf '%s' "$BACKEND_URL_VALUE" | sha256sum | cut -c1-8)"
 
       - name: Generate firebase.json from template
         run: python3 scripts/deploy/generate_firebase_config.py
@@ -1285,6 +1305,8 @@ jobs:
       - docker
       - mcp-build
       - production-deploy
+      - post-deploy-smoke
+      - staging-deploy
       - vercel-deploy-preflight
     permissions:
       actions: read
@@ -1331,6 +1353,45 @@ jobs:
             ci-reports/test-failure-trend.json
           if-no-files-found: ignore
 
+      - name: 🚦 Deployment Truth (zero false-assurance)
+        if: always()
+        env:
+          PROD_RESULT: ${{ needs.production-deploy.result }}
+          POST_SMOKE_RESULT: ${{ needs.post-deploy-smoke.result }}
+          STAGING_RESULT: ${{ needs.staging-deploy.result }}
+          DOCKER_RESULT: ${{ needs.docker.result }}
+          MCP_RESULT: ${{ needs.mcp-build.result }}
+        run: |
+          # বাংলা: সবুজ pipeline ≠ প্রোডাকশন ডিপ্লয় হয়েছে — এই ব্লক সত্যটা
+          # summary-তে স্পষ্ট লেখে (V10 doc-truth রাউন্ড; আগে skipped হলে নীরব ছিল)।
+          {
+            echo "### 🚦 Deployment Truth"
+            echo "- Docker Publish: \`$DOCKER_RESULT\`"
+            echo "- MCP Build: \`$MCP_RESULT\`"
+            echo "- Production Deploy: \`$PROD_RESULT\`"
+            echo "- Post-Deploy Canary: \`$POST_SMOKE_RESULT\`"
+            echo "- Staging Deployment: \`$STAGING_RESULT\`"
+            if [ "$PROD_RESULT" = "success" ]; then
+              echo "- ➡️ Production services were deployed this run."
+              if [ "$POST_SMOKE_RESULT" = "success" ]; then
+                echo "- ✅ Post-deploy canary verified the live path."
+              elif [ "$POST_SMOKE_RESULT" = "failure" ]; then
+                echo "- ❌ Post-deploy canary FAILED against production — rollback decision required (runbooks: \`scripts/deploy\` + \`docs/runbooks\`)."
+              else
+                echo "- 🟡 Post-deploy canary \`$POST_SMOKE_RESULT\` — live path NOT verified by canary (PRODUCTION_URL unset → UNVERIFIED)."
+              fi
+            elif [ "$PROD_RESULT" = "failure" ]; then
+              echo "- ❌ Production deploy FAILED — production was NOT updated. Runbooks: \`scripts/deploy\` + \`docs/runbooks\`."
+            else
+              echo "- 🟡 Production Deploy SKIPPED — live production path was NOT exercised by this run. A green pipeline does NOT mean production was deployed or verified."
+              echo "- 🟡 Continuous live proof: scheduled \`QA — Live Production Smoke\` (fail-closed until \`vars.PRODUCTION_URL\` is configured)."
+            fi
+            if [ "$STAGING_RESULT" = "skipped" ] || [ -z "$STAGING_RESULT" ]; then
+              echo "- 🟡 Staging SKIPPED — capability flag-gated (\`vars.STAGING_ENABLED\` unset); staging path UNVERIFIED by design until owner configures it."
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: 🛡️ Surface Advanced Pre-Merge Audit Details
         if: always() && needs.advanced-checks.result != 'skipped'
         continue-on-error: true
@@ -1358,6 +1419,21 @@ jobs:
   staging-deploy:
     name: 🚀 Staging Deployment
     needs: [qa-contract, build, deploy-frontend, production-deploy]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # বাংলা: staging ক্যাপাবিলিটি পতাকা-গেটেড — vars.STAGING_ENABLED না থাকলে skip
+    # (staging service/secrets প্রতিষ্ঠিত না হওয়া পর্যন্ত স্থায়ী লাল নয়; summary-তে
+    # Deployment Truth ব্লক UNVERIFIED স্পষ্ট বলবে — নীরব ভুয়া পাস নয়)।
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.STAGING_ENABLED == 'true'
     uses: ./.github/workflows/staging-deploy.yml
+    secrets: inherit
+
+  # -----------------------------------------------------------------
+  # Post-deploy canary — প্রথমবার সত্যিকারে সংযুক্ত (আগে workflow_run ট্রিগার
+  # "Production Deploy" নামের স্বতন্ত্র run-এর অপেক্ষায় ছিল, কিন্তু workflow_call
+  # কখনোই স্বতন্ত্র run তৈরি করে না → canary স্থাপত্যগতভাবে মৃত ছিল, ০ run)।
+  # -----------------------------------------------------------------
+  post-deploy-smoke:
+    name: QA — Post-Deploy Smoke
+    needs: [production-deploy]
+    if: always() && needs.production-deploy.result == 'success' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/09-post-deploy-smoke.yml
     secrets: inherit

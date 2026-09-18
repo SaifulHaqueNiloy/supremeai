@@ -143,20 +143,33 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
-        // FIX (final-test ci-fixes): react + react-dom অবশ্যই একটাই chunk-এ থাকতে হবে
-        // এবং সেই chunk অন্য কোনো vendor chunk-কে import করবে না। আগে react জোরপূর্বক
-        // vendor-ui-তে (framer-motion/lucide/recharts) আর react-dom অনাকাঙ্ক্ষিতভাবে
-        // vendor-flow-তে (@xyflow/react graph-এ) গিয়ে পড়ছিল → vendor-ui ⇄ vendor-flow
-        // circular import → react-এর CJS factory (requireReact) vendor-ui-এর module body
-        // চলার আগেই vendor-flow থেকে call হয়ে "Cannot set properties of undefined
-        // (setting 'Activity')" boot crash দিচ্ছিল → পুরো অ্যাপ "Loading SupremeAI..."
-        // splash-এ আটকে যেত (E2E "home loads KPI tiles" failure-এর আসল কারণ)।
-        // react/react-dom/scheduler একসাথে + zero outgoing vendor imports = অন্তত
-        // react চক্রমুক্ত ও সবসময় প্রথমে initialize হয়।
-        'vendor-react': ['react', 'react-dom', 'scheduler'],
-        'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
-        'vendor-flow': ['@xyflow/react'],
-        'vendor-query': ['@tanstack/react-query'],
+        // FIX (honesty, Task 14-b): নিচের vendor map টি আগে output-এর সরাসরি key হিসেবে
+        // বসানো ছিল — manualChunks কী ছাড়া = rollup চুপচাপ ignore করত (silent no-op),
+        // ফলে কোনো vendor chunk তৈরিই হতো না (862KB monolithic main)।
+        // আরও প্রমাণিত (probe build): object form (manualChunks: {...})-ও react ধরতে
+        // পারে না — Vite-এর commonjs plugin react/react-dom/scheduler এর module id-তে
+        // ?commonjs-* query suffix জোড়ে, ফলে vendor-react খালি (1 byte) থেকে যায় আর
+        // react main chunk-এই থেকে যায় (sourcemap দিয়ে যাচাইকৃত)। তাই object নয়,
+        // precise path-segment function form — bucket বিভাজন নিচের map-এর অর্থই বহন করে।
+        manualChunks(id: string) {
+          // FIX (final-test ci-fixes): react + react-dom অবশ্যই একটাই chunk-এ থাকতে হবে
+          // এবং সেই chunk অন্য কোনো vendor chunk-কে import করবে না। আগে react জোরপূর্বক
+          // vendor-ui-তে (framer-motion/lucide/recharts) আর react-dom অনাকাঙ্ক্ষিতভাবে
+          // vendor-flow-তে (@xyflow/react graph-এ) গিয়ে পড়ছিল → vendor-ui ⇄ vendor-flow
+          // circular import → react-এর CJS factory (requireReact) vendor-ui-এর module body
+          // চলার আগেই vendor-flow থেকে call হয়ে "Cannot set properties of undefined
+          // (setting 'Activity')" boot crash দিচ্ছিল → পুরো অ্যাপ "Loading SupremeAI..."
+          // splash-এ আটকে যেত (E2E "home loads KPI tiles" failure-এর আসল কারণ)।
+          // react/react-dom/scheduler একসাথে + zero outgoing vendor imports = অন্তত
+          // react চক্রমুক্ত ও সবসময় প্রথমে initialize হয়।
+          // (segment-exact regex: node_modules/react/ মেলে কিন্তু lucide-react/
+          // @monaco-editor/react/ @xyflow/react/ মেলে না — ভুল bucket-এ react যেতে পারে না)
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'vendor-react'
+          if (/[\\/]node_modules[\\/](framer-motion|lucide-react|recharts)[\\/]/.test(id)) return 'vendor-ui'
+          if (/[\\/]node_modules[\\/]@xyflow[\\/]/.test(id)) return 'vendor-flow'
+          if (/[\\/]node_modules[\\/]@tanstack[\\/]react-query[\\/]/.test(id)) return 'vendor-query'
+          return undefined
+        },
       },
     },
     chunkSizeWarningLimit: 600,

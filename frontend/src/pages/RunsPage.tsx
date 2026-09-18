@@ -5,9 +5,11 @@
 // (state filter সহ), per-run step observer (trace events), এবং state-machine
 // দ্বারা validated retry (failed → repair) ও cancel অ্যাকশন।
 
-import { useCallback, useEffect, useState } from 'react';
-import { Ban, ChevronDown, ChevronRight, LifeBuoy, Play, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, ChevronRight, LifeBuoy, Play, RefreshCw } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { HoldToKillButton } from '../components/swarm/HoldToKillButton';
+import { useListResource } from '../hooks/useListResource';
 import {
   runService,
   type MissionRun,
@@ -59,32 +61,23 @@ function availableActions(state: string): Array<'approve' | 'start' | 'retry' | 
 }
 
 export function RunsPage() {
-  const [runs, setRuns] = useState<MissionRun[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  // বাংলা (Wave 3 dedup): runs/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে — পেজের বাকি সব state (trace observer, actions)
+  // আগের মতোই page-local। limit 50 contract অপরিবর্তিত।
+  const {
+    items: runs,
+    isLoading,
+    loadError,
+    reload: loadRuns,
+  } = useListResource<MissionRun>({
+    fetcher: async () => (await runService.listRuns({ limit: 50 })).items,
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [trace, setTrace] = useState<Record<string, TraceEvent[]>>({});
   const [traceLoadingId, setTraceLoadingId] = useState<string | null>(null);
   const [traceError, setTraceError] = useState<string | null>(null);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-
-  const loadRuns = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const res = await runService.listRuns({ limit: 50 });
-      setRuns(res.items);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load runs');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadRuns();
-  }, [loadRuns]);
 
   const toggleTrace = async (run: MissionRun) => {
     if (expandedId === run.id) {
@@ -252,16 +245,17 @@ export function RunsPage() {
                         </button>
                       )}
                       {actions.includes('cancel') && (
-                        <button
-                          type="button"
-                          data-testid={`run-cancel-btn-${run.id}`}
-                          onClick={() => void doAction(run, 'cancel')}
+                        /* বাংলা মন্তব্য: Task-12 ghost activation — cancel একটি irreversible
+                           অ্যাকশন (POST /api/v1/runs/{run_id}/cancel), তাই এক-ক্লিকের বদলে
+                           hold-to-confirm (২ সেকেন্ড) gesture ব্যবহার করা হলো। এটিই আগে
+                           অব্যবহৃত HoldToKillButton কম্পোনেন্টের প্রথম প্রকৃত ব্যবহার। */
+                        <HoldToKillButton
+                          testId={`run-cancel-btn-${run.id}`}
+                          label="Cancel"
+                          holdingLabel="Keep holding to cancel…"
                           disabled={actionBusyId === run.id}
-                          className="inline-flex items-center gap-1 rounded-[var(--sa-radius-sm)] border border-[var(--sa-border)] px-3 py-1.5 text-xs font-medium text-[var(--sa-ink-muted)] transition hover:border-red-400 hover:text-red-400 disabled:opacity-50"
-                        >
-                          <Ban size={13} />
-                          Cancel
-                        </button>
+                          onTrigger={() => void doAction(run, 'cancel')}
+                        />
                       )}
                     </div>
                   </div>

@@ -161,6 +161,11 @@ def test_github_missing_signature_rejected():
     assert verify_github(b"{}", None, SECRET) is False
 
 
-def test_github_no_secret_pins_dev_skip():
-    """Unconfigured secret skips verification (dev mode) — pinned behavior."""
-    assert verify_github(b"{}", None, None) is True
+def test_github_no_secret_fails_closed():
+    """CONTRACT UPDATE (Wave-1 security): unconfigured secret rejects the hook.
+
+    বাংলা মন্তব্য: আগে dev-mode নামে fail-open ছিল (secret None → True) —
+    এখন n8n/cdc-র মতোই কঠোর fail-closed।
+    """
+    assert verify_github(b"{}", None, None) is False
+    assert verify_github(b"{}", "sha256=deadbeef", None) is False

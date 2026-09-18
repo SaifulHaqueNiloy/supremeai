@@ -265,7 +265,10 @@ class TestGetMetrics:
         assert "gemini" in result["active_providers"]
         assert "groq" in result["active_providers"]
         assert "deepseek" in result["active_providers"]
-        assert result["cpu_usage_percent"] >= 0
+        # বাংলা মন্তব্য: Wave-1 honesty fix-এর পরে psutil ব্যর্থ হলে মান সৎ None —
+        # তাই এখানে "রিয়েল মান বা None" দুটোই গ্রহণযোগ্য (ভুয়া fallback আর নেই)।
+        cpu_val = result["cpu_usage_percent"]
+        assert cpu_val is None or cpu_val >= 0
 
     def test_metrics_no_keys(self, monkeypatch):
         """No API keys → falls back to ollama."""
@@ -277,7 +280,7 @@ class TestGetMetrics:
         assert result["model_call_distribution"] == {"ollama": 100}
 
     def test_metrics_psutil_failure(self, monkeypatch):
-        """psutil fails → uses fallback values."""
+        """psutil fails → honest None values (Wave-1: no fabricated fallbacks)."""
         from core.config import settings
 
         monkeypatch.setattr(
@@ -291,9 +294,16 @@ class TestGetMetrics:
         fake_psutil.cpu_percent.side_effect = RuntimeError("psutil broken")
         with patch.dict(sys.modules, {"psutil": fake_psutil}):
             result = get_metrics()
-        assert result["cpu_usage_percent"] == 22.4
-        assert result["memory_usage_percent"] == 45.2
-        assert result["gpu_usage_percent"] == 12.0
+        # CONTRACT UPDATE (Wave-1 honesty fix): আগে ভুয়া fallback (22.4/45.2/12.0)
+        # ছিল — এখন psutil ব্যর্থ হলে সৎ None এবং GPU-র কল্পনাও বাদ।
+        assert result["cpu_usage_percent"] is None
+        assert result["memory_usage_percent"] is None
+        assert result["gpu_usage_percent"] is None
+        # সাথে ভুয়া throughput/latency/cost সংখ্যাগুলোও সৎ None
+        assert result["requests_per_second"] is None
+        assert result["latency_p50_ms"] is None
+        assert result["total_requests_24h"] is None
+        assert result["cost_per_hour"] is None
 
 
 # ── get_providers ──────────────────────────────────────────────────────

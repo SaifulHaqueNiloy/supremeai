@@ -6,9 +6,10 @@
 // backend কনট্র্যাক্টের ওপরে user-facing marketplace: catalog + search +
 // category filters + install/uninstall।
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Download, RefreshCw, Search, Sparkles } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
+import { useListResource } from '../hooks/useListResource';
 import {
   fetchSkillCatalog,
   getStatusBadge,
@@ -20,35 +21,29 @@ import {
 } from '../services/skillsService';
 
 export function MarketplacePage() {
-  const [skills, setSkills] = useState<SkillManifest[]>([]);
   const [installedIds, setInstalledIds] = useState<Set<string>>(new Set());
   const [category, setCategory] = useState<string>('all');
   const [query, setQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
-
-  const loadCatalog = useCallback(async () => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
+  // বাংলা (Wave 3 dedup): skills/isLoading/loadError + load + useEffect ক্লাস্টারটি
+  // এখন useListResource হুকে। fetcher-এর ভেতরে installed-set sync করা হয় —
+  // এটি ক্যাটালগ load-এরই অংশ (catalog + installed একসাথে আসে), তাই page-local।
+  const {
+    items: skills,
+    isLoading,
+    loadError,
+    reload: loadCatalog,
+  } = useListResource<SkillManifest>({
+    fetcher: async () => {
       const [catalog, installed] = await Promise.all([
         fetchSkillCatalog(),
         listInstalledSkills().catch(() => [] as SkillManifest[]),
       ]);
-      setSkills(catalog.skills);
       setInstalledIds(new Set(installed.map((s) => s.skill_id)));
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load marketplace');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadCatalog();
-  }, [loadCatalog]);
+      return catalog.skills;
+    },
+  });
 
   const categories = useMemo(() => {
     const set = new Set(skills.map((s) => s.category).filter(Boolean));
@@ -70,23 +65,16 @@ export function MarketplacePage() {
     return list;
   }, [skills, category, query]);
 
-  const runServerSearch = async () => {
-    // Delegate to the backend keyword search (server-side contract).
-    setIsLoading(true);
-    setLoadError(null);
-    try {
+  const runServerSearch = () => {
+    // বাংলা: server-side keyword search (backend contract)। আগের মতোই ফলাফল
+    // ক্যাটালগ *replace* করে না — search-only hits merge হয়। hook-এর override
+    // closure বর্তমান items পায়, তাই stale-state ছাড়াই merge সম্ভব।
+    void loadCatalog(async (current) => {
       const results = await searchSkills(query.trim());
-      setSkills((prev) => {
-        // Merge: keep catalog entries, add search-only hits.
-        const byId = new Map(prev.map((s) => [s.skill_id, s]));
-        for (const s of results) if (!byId.has(s.skill_id)) byId.set(s.skill_id, s);
-        return Array.from(byId.values());
-      });
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Search failed');
-    } finally {
-      setIsLoading(false);
-    }
+      const byId = new Map(current.map((s) => [s.skill_id, s]));
+      for (const s of results) if (!byId.has(s.skill_id)) byId.set(s.skill_id, s);
+      return Array.from(byId.values());
+    });
   };
 
   const handleInstall = async (skill: SkillManifest) => {

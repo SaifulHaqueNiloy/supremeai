@@ -711,8 +711,11 @@ def force_utf8_streams(stdout=None, stderr=None) -> None:
     for _stream in (stdout if stdout is not None else sys.stdout, stderr if stderr is not None else sys.stderr):
         try:
             _stream.reconfigure(encoding="utf-8", errors="replace")
-        except (AttributeError, OSError):
-            pass
+        except (AttributeError, OSError) as exc:
+            # বাংলা নোট: reconfigure-অসমর্থ স্ট্রিম ইচ্ছাকৃতভাবে skip করা হয় (rare
+            # wrappers — crash করা ঠিক নয়), তবে REL-001/REL-002 অনুযায়ী এটা
+            # নীরব থাকবে না — stderr-এ দৃশ্যমান warning দেওয়া হয়।
+            print(f"[WARN] stream {_stream!r} not reconfigurable: {exc}", file=sys.stderr)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -789,7 +792,16 @@ def main(argv: list[str] | None = None) -> int:
 
     print(human_report(findings, known, new, resolved, len(mounted_routes), len(api_calls)))
 
-    baseline_meta = {"path": str(args.baseline.relative_to(ROOT))}
+    # বাংলা নোট: --baseline যখন relative পাথ হিসেবে আসে (যেমন scheduled-deep-audit
+    # থেকে "scripts/feature_parity_baseline.json"), তখন absolute ROOT-এর বিপরীতে
+    # relative_to() কল করলে ValueError-এ ক্র্যাশ করে — গত ৩ দিনের nightly failure-এর
+    # মূল কারণ এটাই। resolve() দিয়ে normalize + নিরাপদ fallback, আউটপুট আগের মতোই
+    # repo-relative থাকে।
+    try:
+        baseline_display = str(args.baseline.resolve().relative_to(ROOT))
+    except ValueError:
+        baseline_display = str(args.baseline)
+    baseline_meta = {"path": baseline_display}
     report = {
         "schema_version": "1.0",
         "stats": {
@@ -810,9 +822,14 @@ def main(argv: list[str] | None = None) -> int:
         "all_findings": findings,
     }
     if args.json:
+        # বাংলা নোট: scheduled-deep-audit runner-এ ci-reports/ ডিরেক্টরি আগে থেকে
+        # থাকে না — write_text সরাসরি FileNotFoundError দিত (Heavy Analysis-এর
+        # দ্বিতীয় failure স্তর)। parent mkdir নিশ্চিত করে নিলে যেকোনো cwd থেকে নিরাপদ।
+        args.json.parent.mkdir(parents=True, exist_ok=True)
         args.json.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"  📄 JSON report → {args.json}")
     if args.markdown:
+        args.markdown.parent.mkdir(parents=True, exist_ok=True)
         args.markdown.write_text(
             markdown_report(findings, known, new, resolved, baseline_meta), encoding="utf-8"
         )

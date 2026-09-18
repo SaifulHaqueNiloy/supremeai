@@ -704,6 +704,17 @@ class SettingsSecretsMixin:
         val = self._get_cached_secret("N8N_WEBHOOK_SECRET")
         return SecretStr(val) if val else SecretStr("")
 
+    # বাংলা মন্তব্য (Wave-1 security): Telegram ও GitHub-এর incoming হুক যাচাইয়ের
+    # সিক্রেট — আগে কোনো settings ফিল্ড ছিল না বলে এন্ডপয়েন্টগুলো fail-open ছিল।
+    # এখন lazy property হিসেবে vault/env থেকে পড়া হয় (শূন্য হলে caller fail-closed)।
+    @property
+    def telegram_webhook_secret(self) -> str:
+        return self._get_cached_secret("TELEGRAM_WEBHOOK_SECRET")
+
+    @property
+    def github_webhook_secret(self) -> str:
+        return self._get_cached_secret("GITHUB_WEBHOOK_SECRET")
+
     @property
     def appwrite_api_key(self) -> SecretStr:
         val = self._get_cached_secret("APPWRITE_API_KEY")

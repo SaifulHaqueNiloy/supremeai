@@ -1,0 +1,171 @@
+# CI Doctor — CI ব্যর্থতার স্বয়ংক্রিয় সৎ-প্রতিক্রিয়া (V8)
+#
+# বাংলা মন্তব্য: এই workflow দুটি কাজ করে —
+#   ১) main-এ CI লাল হলে একটি tracking issue খোলে/আপডেট করে (কোন job কেন ফেল —
+#      লাইভ jobs API থেকে, কোনো অনুমান নয়) — আগে অনুপস্থিত "নীরব লাল" ফাঁক বন্ধ করে।
+#   ২) ব্যর্থতার কারণ যদি শুধু generated evidence drift হয় (V7-এ ২ বার ঘটেছে),
+#      তবে ৫টি generator চালিয়ে শুধুমাত্র docs/generated/ ফাইল সহ একটি
+#      "[skip ci]" কমিট দিয়ে push করে — মানুষের হাত লাগে না, লুপ-নিরাপদ।
+#   সব সবুজ হলে ট্র্যাকড ইস্যুগুলো অটো-বন্ধ হয়।
+#
+# দর্শন: zero cost (GitHub-native gh CLI), lightweight (এক job), zero-hardcode
+# (failed job তালিকা live API থেকে; drift শুধু generator-এর প্রকৃত আউটপুট থেকে)।
+
+name: CI Doctor
+
+on:
+  workflow_run:
+    # বাংলা: workflow_run-এর জন্য হুবহু name ম্যাচ বাধ্যতামূলক — তাই তালিকার প্রতিটি
+    # নাম সংশ্লিষ্ট ফাইলের `name:` ফিল্ডের সাথে অক্ষরে-অক্ষরে মিলতে হবে (V10 Task-14-e)।
+    # শিডিউল-চালিত workflow-গুলোর ব্যর্থতা আগে সম্পূর্ণ নীরব ছিল — কেউ দেখতই না।
+    # সতর্কতা: "Scheduled Deep Audit" নামটি আগে কখনোই ম্যাচ করত না — প্রকৃত নাম
+    # "🔧 Scheduled Deep Audit & Maintenance" (নীরব-ব্যর্থতা বাগ, এখানেই সংশোধিত)।
+    workflows:
+      - "CI Pipeline"
+      - "🔧 Scheduled Deep Audit & Maintenance"
+      - "🤖 Manual Maintenance & Auto-Fix"
+      - "DB Retention Prune"
+      - "Audit & Official Release Center"
+      - "QA — E2E Customer Suite"
+      - "Constitution Governance"
+      - "DAST Gate (OWASP ZAP)"
+      # বাংলা: লাইভ প্রোডাকশন প্রোব — এটি লাল হলে প্রোডাকশন পাথ ভাঙা/অযাচাইকৃত,
+      # নীরব থাকা প্রশ্রয় দেওয়া যাবে না (V10 doc-truth রাউন্ড)।
+      - "QA — Live Production Smoke"
+      # বাংলা: post-deploy canary এখন workflow_dispatch দিয়েও চলে — ব্যর্থতা নীরব থাকবে না।
+      - "QA — Post-Deploy Smoke"
+    types: [completed]
+
+permissions:
+  contents: write
+  issues: write
+  actions: read
+
+concurrency:
+  group: ci-doctor
+  cancel-in-progress: false
+
+jobs:
+  doctor:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.head_branch == 'main' }}
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Collect failure facts (live jobs API — অনুমান নয়, প্রমাণ)
+        id: facts
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          {
+            echo 'failed_jobs<<EOF'
+            gh api "repos/${{ github.repository }}/actions/runs/${RUN_ID}/jobs" \
+              --jq '.jobs[] | select(.conclusion=="failure") | "- \(.name)"' || echo "- (jobs API unreachable)"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Open/update honest tracking issue on failure
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const title = "🔴 CI failed on main — auto-tracked by CI Doctor";
+            const failedJobs = `${{ steps.facts.outputs.failed_jobs }}`.trim() || "- (তালিকা পাওয়া যায়নি)";
+            const runUrl = `${{ github.event.workflow_run.html_url }}`;
+            const wfName = `${{ github.event.workflow_run.name }}`;
+            const body = [
+              "স্বয়ংক্রিয়ভাবে তৈরি — main-এ CI ব্যর্থ হয়েছে (live jobs API থেকে, অনুমান নয়):",
+              "",
+              `**ব্যর্থ workflow:** ${wfName}`,
+              "**ব্যর্থ job:**",
+              failedJobs,
+              "",
+              `**রান/লগ:** ${runUrl}`,
+              "",
+              "বাংলা: যদি ব্যর্থতার কারণ শুধু generated-evidence drift হয়, তাহলে CI Doctor",
+              "নিজেই পরের ধাপে regen করে push করবে ([skip ci]) — হাত লাগবে না।",
+              "অন্য কারণ হলে এই ইস্যু মানুষের তদন্তের জন্য; পরের সবুজ রানে auto-close হবে।",
+            ].join("\n");
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: "open", labels: "ci-doctor",
+            });
+            const match = existing.data.find(i => i.title === title);
+            if (match) {
+              await github.rest.issues.update({ owner: context.repo.owner, repo: context.repo.repo, issue_number: match.number, body });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ["ci-doctor", "maintenance"],
+              });
+            }
+
+      - name: Regenerate evidence (drift-only auto-fix)
+        id: regen
+        if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+        run: |
+          set -uo pipefail
+          python scripts/ci/generate_route_inventory.py
+          python scripts/ci/generate_route_graph.py
+          python scripts/ci/generate_topology_mermaid.py
+          python scripts/ci/generate_module_capability_matrix.py
+          python scripts/ci/generate_domain_dependency_graph.py
+          # বাংলা: STATUS.md দাবি-যাচাইকারী generator — ব্যর্থ হলে auto-fix হবে না
+          # (দাবি সংশোধন মানুষের কাজ), কিন্তু ::error দিয়ে দৃশ্যমান হবে — নীরব নয়।
+          python scripts/ci/generate_status_proof.py || echo "::error::generate_status_proof FAILED — STATUS.md claim drift; not auto-fixable (human fix required)"
+          # বাংলা: শুধু docs/generated/ বদলেছে তখনই auto-fix — অন্য কিছু বদলালে মানুষের হাতে
+          if git diff --quiet -- docs/generated/; then
+            echo "drift=none" >> "$GITHUB_OUTPUT"
+            echo "কোনো evidence drift নেই — ব্যর্থতার কারণ অন্য (ইস্যুতে ট্র্যাকড)"
+          else
+            OTHER=$(git status --porcelain | grep -v "^ M docs/generated/" | grep -v "^M  docs/generated/" | grep -v "^?? docs/generated/" || true)
+            if [ -n "$OTHER" ]; then
+              echo "drift=mixed" >> "$GITHUB_OUTPUT"
+              echo "::warning::docs/generated ছাড়াও অন্য পরিবর্তন আছে — নিরাপত্তার্থে auto-push বাদ"
+            else
+              echo "drift=clean" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Push regenerated evidence ([skip ci] — লুপ-নিরাপদ)
+        if: ${{ steps.regen.outputs.drift == 'clean' }}
+        run: |
+          git config user.name "SupremeAI-CIDoctor"
+          git config user.email "cidoctor@supremeai.dev"
+          git add docs/generated/
+          git commit -m "[skip ci] chore(ci-evidence): auto-regen — drift detected by CI Doctor"
+          git pull --rebase origin main
+          git push origin main
+          echo "✅ evidence auto-fixed; CI নতুন রান ট্রিগার হবে না ([skip ci])"
+
+      - name: Auto-close tracked issues on green
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: "open", labels: "ci-doctor",
+            });
+            for (const issue of existing.data) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: "✅ পরবর্তী CI রান সবুজ হয়েছে — স্বয়ংক্রিয়ভাবে বন্ধ করা হলো।",
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: "closed",
+              });
+            }
