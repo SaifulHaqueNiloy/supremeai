@@ -131,11 +131,13 @@ class AntiHackingContextMiddleware(BaseHTTPMiddleware):
                     await send_otp(admin_id, code, signal)
                     request.state.security_otp_pending = True
 
-                    # বাংলা মন্তব্য: ওটিপি কোড ৫ মিনিটের জন্য Redis-এ রাখা হচ্ছে যাচাইয়ের জন্য
+                    # বাংলা মন্তব্য: ওটিপি কোড যাচাইয়ের জন্য Redis-এ রাখা হচ্ছে
+                    # (M13 P-B: TTL এখন config-চালিত — SECURITY_OTP_PENDING_TTL,
+                    # ডিফল্ট 300s অপরিবর্তিত)।
                     await redis_manager.set_cache(
                         f"security:otp_pending:{admin_id}",
                         json.dumps({"code": code, "signal": signal}),
-                        ex_seconds=300,
+                        ex_seconds=settings.security_otp_pending_ttl,
                     )
 
                     if settings.enforce_anti_hacking:

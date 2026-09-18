@@ -82,11 +82,13 @@ class AsyncRateLimiter:
         self._fallback_limiter = InMemoryFallbackLimiter()
 
         # Enhanced rate limiting tiers
+        # M13 P-B (zero-hardcode): tier-সীমা এখন config-চালিত — ডিফল্ট অপরিবর্তিত
+        # (free 60 / pro 600 / premium 1200 / enterprise 6000 প্রতি window)।
         self._tier_limits = {
-            "free": {"requests": 60, "window": 60},  # 60 req per minute
-            "pro": {"requests": 600, "window": 60},  # 600 req per minute
-            "premium": {"requests": 1200, "window": 60},  # 1200 req per minute
-            "enterprise": {"requests": 6000, "window": 60},  # 6000 req per minute
+            "free": {"requests": settings.rate_limit_tier_free, "window": settings.rate_limit_tier_window_seconds},
+            "pro": {"requests": settings.rate_limit_tier_pro, "window": settings.rate_limit_tier_window_seconds},
+            "premium": {"requests": settings.rate_limit_tier_premium, "window": settings.rate_limit_tier_window_seconds},
+            "enterprise": {"requests": settings.rate_limit_tier_enterprise, "window": settings.rate_limit_tier_window_seconds},
         }
 
     async def _get_redis(self):
@@ -111,9 +113,9 @@ class AsyncRateLimiter:
         if not self._rate_limit_enabled or os.getenv("TESTING") == "true":
             return True
 
-        # Fallback values if not specified
-        limit = limit or 100
-        window = window or 60
+        # M13 P-B: ডিফল্ট limit/window এখন config-চালিত (ডিফল্ট অপরিবর্তিত 100/60)।
+        limit = limit or settings.rate_limit_default_limit
+        window = window or settings.rate_limit_default_window
 
         try:
             client = await self._get_redis()
@@ -141,8 +143,8 @@ class AsyncRateLimiter:
             count = results[2]  # result of zcard
             is_allowed = count <= limit
 
-            # Log near-limit cases for monitoring
-            if count > limit * 0.8:
+            # Log near-limit cases for monitoring (M13 P-B: ratio config-চালিত)
+            if count > limit * settings.rate_limit_warn_ratio:
                 logger.warning(f"Rate limit approaching for {key}: {count}/{limit}")
 
             return is_allowed

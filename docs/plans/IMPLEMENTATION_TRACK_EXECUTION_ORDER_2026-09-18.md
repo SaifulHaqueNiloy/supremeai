@@ -78,7 +78,7 @@ Issue #453 Tier-1-এর ১ নম্বরে থাকা **Supreme Teleport-
 
 **Wave 3 — সত্য-স্তর (cheap governance credibility): আংশিক — M05 P-A সম্পন্ন (bf315947 + দ্বিতীয় অর্ধ):**
 - **M05 P-A:** ✅ ENABLE_LEARNING_LOOP ডিফল্ট true (শূন্য-খরচ লুপ, HITL-only apply) + .env.example দৃশ্যমানতা। **দ্বিতীয় অর্ধ (2026-09-18):** ✅ exploration গেট সুইটেবল-ডিফল্ট true (`get_adaptive_routing_enabled` — শূন্য-অতিরিক্ত-খরচ চেইন-লেজ অন্বেষণ) + sample-tier guardrail (`exploration_candidate` কেবল normal-tier ≥50-observation প্রমাণে যায়; cautious/insufficient কখনো নয়) + kill-switch অক্ষত (false = আজকের আচরণ) + অজানা-মান fail-closed।
-- **M13 (S):** বাকি — middleware truth-map, hardcoded limits → config, tenant limiter bounded fail-mode।
+- **M13 (S):** ✅ সম্পন্ন (2026-09-18) — P-B zero-hardcode: `_tier_limits`/tenant 100-60s/OTP-pending 300s/warn-ratio 0.8/acquire ডিফল্ট-সব config-চালিত (ডিফল্ট অপরিবর্তিত, আচরণ-নিরপেক্ষ); P-C tenant-resilience: `TENANT_RATE_LIMIT_FAIL_MODE` config (open=ডিফল্ট আজকের আচরণ / fallback=বাউন্ডেড InMemoryFallbackLimiter-প্যাটার্ন / closed=429 fail-closed) — V5.1 env-aware fail-policy ধারা; অজানা-মান loud-open (নীরব পছন্দ নিষিদ্ধ)। middleware truth-map নিজে প্ল্যান-নথিতে ক্যানোনিকাল; P-A মাউন্ট-সিদ্ধান্ত founder-gated (ফাউন্ডার সিদ্ধান্তের অপেক্ষায়)।
 - **M14 (S):** বাকি — ভুয়া STT/TTS success semantics প্রত্যাহার, zero-cost Web Speech first।
 
 **Wave 4 — ভারী গঠন (তখনই যখন Wave 2-এর ভিত দাঁড়িয়েছে):**
