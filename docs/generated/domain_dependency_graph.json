@@ -2322,7 +2322,7 @@
     {
       "evidence": [
         {
-          "line": 8,
+          "line": 9,
           "path": "backend/memory/long_term_memory.py"
         }
       ],
@@ -2362,7 +2362,7 @@
     {
       "evidence": [
         {
-          "line": 9,
+          "line": 10,
           "path": "backend/memory/long_term_memory.py"
         }
       ],
@@ -2512,7 +2512,7 @@
     {
       "evidence": [
         {
-          "line": 5,
+          "line": 6,
           "path": "backend/memory/long_term_memory.py"
         }
       ],
@@ -2582,7 +2582,7 @@
     {
       "evidence": [
         {
-          "line": 95,
+          "line": 99,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2592,7 +2592,7 @@
     {
       "evidence": [
         {
-          "line": 144,
+          "line": 148,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2602,7 +2602,7 @@
     {
       "evidence": [
         {
-          "line": 149,
+          "line": 153,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2612,7 +2612,7 @@
     {
       "evidence": [
         {
-          "line": 157,
+          "line": 161,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2622,7 +2622,7 @@
     {
       "evidence": [
         {
-          "line": 229,
+          "line": 221,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2632,7 +2632,7 @@
     {
       "evidence": [
         {
-          "line": 242,
+          "line": 312,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2642,7 +2642,7 @@
     {
       "evidence": [
         {
-          "line": 248,
+          "line": 363,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2652,7 +2652,7 @@
     {
       "evidence": [
         {
-          "line": 310,
+          "line": 391,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2662,27 +2662,7 @@
     {
       "evidence": [
         {
-          "line": 361,
-          "path": "backend/memory/supabase_store.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 389,
-          "path": "backend/memory/supabase_store.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 442,
+          "line": 444,
           "path": "backend/memory/supabase_store.py"
         }
       ],
