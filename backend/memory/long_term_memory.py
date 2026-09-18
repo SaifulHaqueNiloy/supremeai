@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from core.logging_config import logger
 
 try:
-    from brain.model_router import ModelRouter
+    from brain.model_router import ModelRouter  # kept for other potential usages
     from database.supabase_client import db
 
     _DEPENDENCIES_AVAILABLE = True
@@ -13,31 +14,45 @@ except ImportError:
     _DEPENDENCIES_AVAILABLE = False
 
 
-class MemoryManager:
+async def _run_embed(embed_fn, text: str) -> list[float]:
+    """Run a synchronous embedding function in the default thread executor.
+
+    embed_for_pgvector is a blocking I/O call (httpx.Client for CF Workers AI).
+    Wrapping it via run_in_executor prevents it from blocking the event loop
+    while still keeping the async interface clean.
     """
-    Manages the agent's long-term memory using a vector database.
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, embed_fn, text)
+
+
+class MemoryManager:
+    """Manages the agent's long-term memory using a vector database.
+
+    Issue #443 fix: the original implementation called
+    ``self.model_router.get_embedding()`` which does not exist on ModelRouter
+    (AttributeError at runtime).  Embedding is now handled by the canonical
+    ``core.embeddings.embed_for_pgvector`` provider chain (local ST →
+    Cloudflare Workers AI → improved hash fallback).
     """
 
     def __init__(self):
         if not _DEPENDENCIES_AVAILABLE:
             raise ImportError("MemoryManager requires Supabase client and ModelRouter.")
-        self.model_router = ModelRouter()
         self.db_client = db.client
         logger.info("Initialized MemoryManager.")
 
     async def add_memory(self, learning: str, url: str, metadata: dict[str, Any] | None = None):
-        """
-        Adds a new learning to the long-term memory.
-        """
-        logger.info(f"Adding new memory: '{learning}' from {url}")
-        # 1. Generate a real embedding for the learning text
-        embedding_response = await self.model_router.get_embedding(learning)
-        if not embedding_response.get("success"):
-            logger.error("Failed to generate embedding for memory.")
-            return
-        embedding = embedding_response["embedding"]
+        """Adds a new learning to the long-term memory."""
+        from core.embeddings import embed_for_pgvector
 
-        # 2. Store in Supabase 'agent_memories' table
+        logger.info(f"Adding new memory: '{learning}' from {url}")
+        try:
+            embedding = await _run_embed(embed_for_pgvector, learning)
+        except Exception as exc:
+            logger.error("Failed to generate embedding for memory: %s", exc)
+            return
+
+        # Store in Supabase 'agent_memories' table
         await (
             await self.db_client.table("agent_memories")
             .insert(
@@ -52,18 +67,17 @@ class MemoryManager:
         )
 
     async def retrieve_relevant_memories(self, query: str, top_k: int = 3) -> list[str]:
-        """
-        Retrieves the most relevant memories for a given query.
-        """
-        logger.info(f"Retrieving memories relevant to: '{query}'")
-        # 1. Generate a real embedding for the query
-        embedding_response = await self.model_router.get_embedding(query)
-        if not embedding_response.get("success"):
-            logger.error("Failed to generate embedding for memory retrieval.")
-            return []
-        query_embedding = embedding_response["embedding"]
+        """Retrieves the most relevant memories for a given query."""
+        from core.embeddings import embed_for_pgvector
 
-        # 2. Call a Supabase RPC function to perform vector similarity search
+        logger.info(f"Retrieving memories relevant to: '{query}'")
+        try:
+            query_embedding = await _run_embed(embed_for_pgvector, query)
+        except Exception as exc:
+            logger.error("Failed to generate embedding for memory retrieval: %s", exc)
+            return []
+
+        # Call a Supabase RPC function to perform vector similarity search
         result = await self.db_client.rpc(
             "match_memories",
             {
