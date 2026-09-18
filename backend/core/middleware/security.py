@@ -134,6 +134,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         # বাংলা: EMERGENCY fallback state — প্রতি ইনস্ট্যান্সে আলাদা (per-process)।
         self._request_log: dict[str, list[float]] = {}
         self._fallback_warned = False
+        # Issue #437 (log-storm dampener): warn at most once per 5 minutes while
+        # Redis is unavailable (quota exhaustion persisted for the whole month in
+        # the Upstash incident and this middleware produced 42–51% of all log lines).
+        self._last_fallback_warning = 0.0
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         client_ip = self._get_client_ip(request)
@@ -255,11 +259,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
                 await add_pipe.execute()
                 return True
             except Exception as exc:  # noqa: BLE001 — degrade to memory, never 500
-                logger.warning(
-                    f"Security rate limiter Redis failed ({exc}) — EMERGENCY in-memory "
-                    "fallback active (per-instance, NOT aggregate-safe across instances)"
-                )
+                redis_manager.report_failure(exc)
                 self._fallback_warned = True
+                now_mono = time.monotonic()
+                if now_mono - self._last_fallback_warning >= 300.0:
+                    self._last_fallback_warning = now_mono
+                    logger.warning(
+                        f"Security rate limiter Redis failed ({exc}) — EMERGENCY in-memory "
+                        "fallback active (per-instance, NOT aggregate-safe across instances)"
+                    )
 
         # 2) EMERGENCY in-memory fallback (per-instance)
         # বাংলা: await বাধ্যতামূলক — না করলে coroutine অবজেক্ট truthy হয়ে
