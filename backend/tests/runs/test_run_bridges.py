@@ -30,6 +30,7 @@ from runs.bridges import (
     observe_automation_run,
     observe_mcp_run,
     observe_mission_run,
+    observe_task_run,
     observe_tool_run,
 )
 from runs.models import Run, RunEvent
@@ -265,3 +266,39 @@ class TestUnifiedView:
             (await db_session.execute(select(Run.run_type).order_by(Run.run_type))).scalars().all()
         )
         assert types == ["automation", "mcp", "mission", "tool"]
+
+
+class TestTaskBridgeM02PB:
+    """M02 P-B (ERR-F01): scheduled-task execution observed as a canonical run.
+
+    বাংলা: sweep-এর প্রকৃত নির্বাহ এখন Run fabric-এ দেখা যায় — M05/M06/M17-এর
+    run-তথ্য-খোঁজার প্রবেশদ্বার।
+    """
+
+    @pytest.mark.asyncio
+    async def test_task_run_carries_scheduled_task_anchor(self, db_session):
+        task_id = str(uuid.uuid4())
+        run = await observe_task_run(
+            db_session,
+            RunService(),
+            task_id=task_id,
+            user_id="user-9",
+            title="Scheduled task: nightly report",
+            idempotency_key=f"scheduled-task:{task_id}:2026-09-18T00:00:00+00:00",
+        )
+        assert run.run_type == "agent"
+        assert run.source_type == "scheduled_task"
+        assert run.source_ref == task_id
+        assert run.status == "requested"
+
+    @pytest.mark.asyncio
+    async def test_task_run_idempotent_per_attempt_key(self, db_session):
+        task_id = str(uuid.uuid4())
+        key = f"scheduled-task:{task_id}:t1"
+        r1 = await observe_task_run(
+            db_session, RunService(), task_id=task_id, user_id="u", idempotency_key=key
+        )
+        r2 = await observe_task_run(
+            db_session, RunService(), task_id=task_id, user_id="u", idempotency_key=key
+        )
+        assert r1.id == r2.id

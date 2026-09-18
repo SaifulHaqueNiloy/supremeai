@@ -136,6 +136,68 @@ async def _claim_task(client: Any, task_id: str, prev_last_run: Any, now_iso: st
     return bool(resp.data)
 
 
+async def _start_run_observation(
+    task: dict[str, Any], idempotency_key: str
+) -> dict[str, Any] | None:
+    """টাস্ক-নির্বাহকে Run fabric-এ নিবন্ধন (M02 P-B/ERR-F01) — REQUESTED→…→RUNNING।
+
+    বাংলা: পর্যবেক্ষণ-স্তর ব্যর্থ হলে টাস্ক-নির্বাহ আটকাবে না (observability
+    secondary) — তবে কখনো নীরব নয়: লাউড loguru সতর্কতা + None ফেরত। ভুয়া
+    'run তৈরি হয়েছে' দাবি নেই।
+    """
+    try:
+        from database.session import get_db_session_context
+        from runs.api import run_service as fabric_service
+        from runs.bridges import observe_task_run
+        from runs.state_machine import PLANNED, POLICY_CHECKED, RUNNING
+
+        async with get_db_session_context() as session:
+            run = await observe_task_run(
+                session,
+                fabric_service,
+                task_id=str(task.get("id", "")),
+                user_id=str(task.get("user_id", "")),
+                title=f"Scheduled task: {task.get('title', '')}"[:200],
+                idempotency_key=idempotency_key,
+            )
+            for next_state in (POLICY_CHECKED, PLANNED, RUNNING):
+                await fabric_service.transition(
+                    session, run.id, next_state, actor="scheduled-task-sweep"
+                )
+            await session.commit()
+            return {"run_id": str(run.id)}
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        logger.warning(f"📅 Run-fabric observation start failed for task {task.get('id')}: {exc}")
+        return None
+
+
+async def _finish_run_observation(
+    observation: dict[str, Any], terminal_state: str, detail: dict[str, Any]
+) -> None:
+    """রানকে terminal-অবস্থায় সীল করা — ব্যর্থতাও লাউড-লগ, কখনো নীরব নয়।"""
+    try:
+        from database.session import get_db_session_context
+        from runs.api import run_service as fabric_service
+
+        async with get_db_session_context() as session:
+            await fabric_service.transition(
+                session,
+                observation["run_id"],
+                terminal_state,
+                actor="scheduled-task-sweep",
+                detail=detail,
+            )
+            await session.commit()
+    except asyncio.CancelledError:
+        raise
+    except Exception as exc:
+        logger.warning(
+            f"📅 Run-fabric observation finish failed (run {observation.get('run_id')}): {exc}"
+        )
+
+
 async def sweep_due_tasks_once(now: datetime | None = None) -> dict[str, Any]:
     """একটি পূর্ণ sweep-চক্র — active টাস্ক পড়ে, due গুলো CAS-দাবি করে নির্বাহ করে।
 
@@ -232,18 +294,33 @@ async def sweep_due_tasks_once(now: datetime | None = None) -> dict[str, Any]:
             stats["claimed_by_other"] += 1
             continue
 
+        # বাংলা (M02 P-B): প্রকৃত নির্বাহ Run fabric-এ পর্যবেক্ষিত হয় —
+        # idempotency-key দাবি-টাইমস্ট্যাম্প বাঁধা, প্রতি-চেষ্টায় স্বতন্ত্র রান।
+        observation = await _start_run_observation(task, f"scheduled-task:{task['id']}:{now_iso}")
+
         try:
             result = await execute_task_and_record(task, str(task.get("user_id", "")))
         except asyncio.CancelledError:
+            if observation:
+                await _finish_run_observation(observation, "failed", {"reason": "sweep cancelled"})
             raise
         except Exception as exec_exc:
             # বাংলা: শেয়ার্ড পথের বাইরে ব্যর্থতা (যেমন DB-লেখা নিজেই ভাঙল) — নীরব গিলে
-            # ফেলা মানে ভুয়া "সব ঠিক আছে"; সৎ লগ + failed-গণনা, পরের চক্র stale-পুনর্গ্রহ।
+            # ফেলা মানে ভুয়া "সব ঠিক আছে"; সৎ লগ + failed-গণনা, রানও সৎভাবে failed।
             logger.error(f"📅 Sweep execution crashed for task {task.get('id')}: {exec_exc}")
             stats["failed"] += 1
+            if observation:
+                await _finish_run_observation(
+                    observation, "failed", {"reason": str(exec_exc)[:200]}
+                )
             continue
 
-        if result.get("status") == "success":
+        terminal = "succeeded" if result.get("status") == "success" else "failed"
+        if observation:
+            await _finish_run_observation(
+                observation, terminal, {"execution_status": result.get("status")}
+            )
+        if terminal == "succeeded":
             stats["executed"] += 1
         else:
             stats["failed"] += 1
