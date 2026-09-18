@@ -3613,6 +3613,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/cache/rate_limit_atomic.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "health",
         "memory"
@@ -5416,7 +5425,6 @@
     {
       "capability_signals": [
         "dispatch",
-        "execute",
         "memory",
         "register"
       ],
@@ -6120,7 +6128,6 @@
       "capability_signals": [
         "browser",
         "dispatch",
-        "execute",
         "health",
         "memory",
         "register"
@@ -6310,9 +6317,7 @@
       "path": "backend/core/security/__init__.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -8018,7 +8023,6 @@
     },
     {
       "capability_signals": [
-        "execute",
         "memory"
       ],
       "classification": "human_review",
@@ -8027,9 +8031,7 @@
       "path": "backend/middleware/rate_limiter.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -9604,7 +9606,7 @@
     },
     {
       "capability_signals": [
-        "memory"
+        "execute"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -12533,7 +12535,6 @@
     },
     {
       "capability_signals": [
-        "execute",
         "memory"
       ],
       "classification": "test",
@@ -14524,6 +14525,15 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/unit_light/test_async_rate_limiter_lua.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/unit_light/test_core_skills.py"
     },
     {
@@ -14608,9 +14618,7 @@
       "path": "backend/tests/unit_light/test_search.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
@@ -24518,5 +24526,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2826
+  "source_file_count": 2828
 }
