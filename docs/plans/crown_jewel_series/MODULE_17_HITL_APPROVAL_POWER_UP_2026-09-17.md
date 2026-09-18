@@ -110,7 +110,11 @@ acceptance_criteria:
 - **P-D**: একক-store মতবাদ — pending_tasks ক্যানোনিকাল; HITLEngine/governance_agent-পথ শিমে; adaptive-workflow ecosystem-ভাগ প্রসারিত-সহিত; dual-read→cutover
 - **P-E**: resume-URL সেতু (n8n-ধার) — স্বাক্ষরিত one-click approve/deny URL; SSE-গ্রাহক ApprovalQueue-তে; Telegram inline-keyboard approve-কলব্যাক (admin_handlers-এ এক-হ্যান্ডলার); সব ঐচ্ছিক-বাহক, এক-টোকেন
 - **P-F**: /hitl/ledger/verify readback + init-ফর্ক-সংশোধন (নীরব index-রিসেট অবসান) — tamper-evidence প্রমাণযোগ্য
-- **P-G**: TTL sweep + expired-টার্মিনাল (auto-deny, env-চালিত) + rails-as-data নীতি-ফাইল (TTL/roles/mandatory-set/cooldown/threshold/four-eyes-ঐচ্ছিক)
+- **P-G (TTL sweep, নীতি-ফাইল ও প্রস্তাব সংরক্ষণ ডকট্রিন)**: 
+  - rails-as-data নীতি-ফাইল (TTL/roles/mandatory-set/cooldown/threshold/four-eyes-ঐচ্ছিক)।
+  - **AGENTS.md Section 3 মান্যতা — Approval timeout is not automatic rejection of good ideas:**
+    - মানুষের অনুপস্থিতি বা টাইমআউটের কারণে গুরুত্বপূর্ণ কোনো উন্নয়নমূলক আইডিয়া বা টাস্ক যাতে চিরতরে হারিয়ে না যায়, সিস্টেম স্বয়ংক্রিয়ভাবে তার প্রস্তাব, এভিডেন্স, টেস্ট রেজাল্ট এবং পরবর্তী প্রস্তাবিত পদক্ষেপ একটি টেকসই আর্কাইভে (`expired_proposals_archive`) সংরক্ষণ করবে।
+    - উচ্চ-ঝুঁকির ক্ষেত্রে টাইমআউটে আনঅথোরাইজড এক্সিকিউশন স্টপ থাকবে (Fail-Safe), কিন্তু মূল্যবান কাজ সাইলেন্টলি ড্রপ না হয়ে অ্যাডমিন ফিরে আসা পর্যন্ত সংরক্ষিত থাকবে।
 - **P-H**: frontend-সত্য — status-স্ট্রিং-চুক্তি সংশোধন; জাল-OTP সত্য-যাচাই বা সৎ-অপসারণ (V5-মতবাদ); HITLModal/HumanInTheLoopProtocol নিয়তি-সিদ্ধান্ত (জাল-audit-trail-বিশিষ্ট ক্লায়েন্ট-ফেব্রিকেটর প্রথম-অপসারণ-প্রার্থী)
 
 ### ২.৪ কীভাবে করব
@@ -121,6 +125,7 @@ acceptance_criteria:
 
 - প্রথমবারের মতো **সম্পূর্ণ** অনুমোদন-চক্র: চাওয়া → জানানো → এক-ক্লিক সিদ্ধান্ত → সত্যিকারের চালানো
 - অনুমোদক-মুক্তি: পোলিং-নয়, বার্তা-মানুষে-যায় (মোবাইল/টেলিগ্রাম-প্রথম বাস্তবতা)
+- টাইমআউটে মূল্যবান প্রপোজাল ও টেস্ট এভিডেন্স সংরক্ষণ — সময় নষ্ট বন্ধ (P-G)
 - চির-PENDING-অবসান → গভর্নেন্স-মেট্রিক (সিদ্ধান্ত-লেটেন্সি পরিমাপযোগ্য)
 - tamper-evidence দাবি ↔ প্রমাণ একরেখায়; জাল-নিয়ন্ত্রণ-অবসান
 - ৭-মেশিনের রক্ষণ-বোঝা → ১ (কম-কোড, কম-বাগ-পৃষ্ঠ)
