@@ -162,6 +162,9 @@ async def test_abort_admin_calls_real_cancel_service(bot_handler, monkeypatch):
 
         return SimpleNamespace(status="cancelled")
 
+    # বাংলা: full-suite-এ অন্য টেস্টের env-লিকে is_admin অনিশ্চিত হয় — এখানে বাঁধন।
+    monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "7804133572")
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     monkeypatch.setattr("database.session.get_db_session_context", fake_ctx)
     import runs.api as runs_api_mod
 
@@ -200,6 +203,8 @@ async def test_abort_unknown_run_reports_honestly(bot_handler, monkeypatch):
     async def fake_cancel(session, run_id, **kwargs):
         raise RunNotFound(f"run {run_id!r} not found")
 
+    monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "7804133572")
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     monkeypatch.setattr("database.session.get_db_session_context", fake_ctx)
     import runs.api as runs_api_mod
 
@@ -219,7 +224,9 @@ async def test_abort_unknown_run_reports_honestly(bot_handler, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_abort_without_run_id_shows_usage(bot_handler):
+async def test_abort_without_run_id_shows_usage(bot_handler, monkeypatch):
+    monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "7804133572")
+    monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
     update = {
         "message": {
             "chat": {"id": 7804133572},
