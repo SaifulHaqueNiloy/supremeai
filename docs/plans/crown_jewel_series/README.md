@@ -79,6 +79,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 20 | **Notification & Delivery Organ** (`core/messaging/` + `services/email/` + in-app পথ) | ১৩ সমান্তরাল পাইপলাইন, ৪ জীবন্ত বাহক, ক্যানোনিকাল-ডিসপ্যাচার গ্রাহকহীন, জাল-'sent', mock-key লিটারেল, /ws/dashboard কখনো-অনারম্ভিত — **স্টোর-আগে-বাহক মতবাদ** (outbox ধার) | ✅ **প্রকাশিত** — `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` |
 | 21 | **Truth-Mirror Governance Script** (নকশা — `scripts/governance/` পরিবার) | প্রকৃতি-ব্যতিক্রম চক্র: সিরিজের ১৫+ false-assurance আবিষ্কার → rules-as-data সনাক্তকারীর বীজ-কর্পাস; সৎ-মক (fake_store) বনাম অসৎ-ফেব্রিকেশন (webhooks_ai) শ্রেণিবিন্যাস; **exclusion-ratchet** (arXiv) বেসলাইন; founder-gated নকশা — কোনো কোড এই ডকে নয় | ✅ **প্রকাশিত** — `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` |
 | 22 | **Scheduler & Cron Organ** (`scheduled_tasks.py` + `agent_supervisor.py` + startup লুপ) | চাকা-বিহীন গাড়ি: S10 নিখুঁত CRUD কিন্তু নির্বাহক-লুপ অনুপস্থিত (write-only schedule), placebo auto-healer, UTC-অন্ধ (Asia/Dhaka অদৃশ্য), ≥৬ প্রতিদ্বন্দ্বী প্রক্রিয়া — **supervisor-as-heartbeat মতবাদ** + last_run_at ক্যাচআপ (cron-গর্ত সচেতন), APScheduler প্রত্যাখ্যান-নথি | ✅ **প্রকাশিত** — `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` |
+| 23 | **Knowledge-Base & Docs Organ** (`core/knowledge_*` + `api/routes/knowledge.py` + importer×২ + `knowledge/` কর্পাস + apps/docs) | শূন্য-তাক লাইব্রেরি: দুই পরিণত আমদানি-মেশিন কখনো চলেনি (শূন্য CI/caller), governed QA প্রতি-কলে 500 (মৃত-কোড governance-ব্লক, runtime-repro), ৮ সমান্তরাল স্টোরে শূন্য প্রোডাকশন-লেখক, ১২১ বাংলা-এন্ট্রি তাক-বন্দি, জাল-'seeded'/'Qdrant' — **retrieval-proof মতবাদ** (যা উদ্ধার করা যায় না, তা জানা নেই) + RAGAS/semantic-chunking/Qdrant/model-swap প্রত্যাখ্যান-নথি | ✅ **প্রকাশিত** — `MODULE_23_KNOWLEDGE_BASE_DOCS_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -110,6 +111,7 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 20 | 2026-09-17 | Notification & Delivery Organ | `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-B ২-লাইন WS-জাগরণ; স্টোর-আগে-বাহক) |
 | 21 | 2026-09-17 | Truth-Mirror Governance (নকশা) | `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (নকশা-স্তর; নির্মাণ Gate 2-পরবর্তী) |
 | 22 | 2026-09-17 | Scheduler & Cron Organ | `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A স্পন্দন+ক্যাচআপ; TZ-সত্য Dhaka-প্রথম) |
+| 23 | 2026-09-17 | Knowledge-Base & Docs Organ | `MODULE_23_KNOWLEDGE_BASE_DOCS_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A দরজা-খোলা ৩-লাইন+টেস্ট; P-C বই-কনভয় adapter; retrieval-proof goldset gate) |
 
 ---
 
