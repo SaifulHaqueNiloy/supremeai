@@ -15,11 +15,14 @@ verify_token_async পথ অপরিবর্তিত; এখানে কে
 
 import asyncio
 import json
+import logging
 from typing import Any
 
 import pytest
 
 from api.routes.realtime_dashboard import DashboardWebSocketManager
+
+logger = logging.getLogger(__name__)
 
 
 class FakeWebSocket:
@@ -73,8 +76,8 @@ async def manager_with_event(monkeypatch):
         manager.subscription_task.cancel()
         try:
             await manager.subscription_task
-        except asyncio.CancelledError:
-            pass
+        except asyncio.CancelledError as exc:
+            logger.debug(f"Subscription task cancelled cleanly: {exc}")
 
 
 async def _wait_until(predicate, timeout: float = 3.0) -> bool:

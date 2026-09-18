@@ -32,7 +32,7 @@ async def test_supreme_kernel_dispatch_registered_mock():
     try:
         kernel.registry.register_handler("test.mock_action", mock_handler)
     except ValueError:
-        pass  # Already registered
+        kernel.registry.handlers["test.mock_action"] = mock_handler
 
     req = KernelRequest(
         target_circle=CircleScope.EXECUTION,
