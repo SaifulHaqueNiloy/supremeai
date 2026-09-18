@@ -158,15 +158,20 @@ P-G: সততা-সংশোধন            → L190 silent-drop → report;
 - **P-C:** chat-পথে PLAN_002-র compact-আউটপুট (websocket_agent-থেকে সরাসরি নয় — একই compaction-ফাংশন শেয়ার) → HISTORY-blocks, priority=recency (টেস্টে বিদ্যমান সমর্থন)।
 - **P-D:** `stream_chat_sse`-এর enrichment engine-চুক্তিতে (auto_rag_injector হয় একটি source-adapter হয়ে যাবে); flag `SUPREMEAI_CONTEXT_UNIFIED_STREAM=true` (default false); shadow-তুলনা-পর্ব বাধ্যতামূলক (বৃহত্তম পৃষ্ঠ)।
 - **P-E:** `token_budget.estimate_tokens`-এ Bengali-factor (engine-র যুক্তি সরানো); engine এটি import করবে; প্রভাবিত can_fit/budget-টেস্ট আপডেট; বাংলা-কর্পাসে হিসাব-তুলনা নথি।
-- **P-F:** SECTION_CAPS/DEFAULT_INPUT_BUDGET settings-চালিত; kill-switch `SUPREMEAI_CONTEXT_ENGINE=off` → আজকের raw-prompt আচরণ; per-tenant budget override (gateway-র tenant-চাবির সাথে সামঞ্জস্য)।
+- **P-F (Config, kill-switch ও Gateway ডাইনামিক উইন্ডো কাপলিং):**
+  - SECTION_CAPS/DEFAULT_INPUT_BUDGET settings-চালিত; kill-switch `SUPREMEAI_CONTEXT_ENGINE=off` → আজকের raw-prompt আচরণ।
+  - **মডেল-সচেতন ডাইনামিক উইন্ডো:** Module 03 Gateway-র ভেন্ডর-সত্য রেজিস্ট্রি থেকে টার্গেট মডেলের কনটেক্সট লিমিট (যেমন Groq 8k বনাম Claude/Flash 1M) স্বয়ংক্রিয়ভাবে পড়ে প্রম্পট প্যাকিং অ্যাডাপ্ট করা (আউট-অব-বাউন্ডস ট্রাঙ্কেশন রোধ)।
+  - **ক্যাশ-সচেতন প্রিফিক্স স্টেবিলিটি (Prompt Cache-Aware Packing):** সিস্টেম প্রম্পট ও টুল ডেফিনিশনগুলোকে সবসময় প্রম্পটের শুরুতে স্ট্যাটিক ও অপরিবর্তিত রাখা, যাতে Anthropic/OpenAI প্রম্পট ক্যাশিং ৫০-৯০% ইনপুট টোকেন কস্ট কমায়।
 - **P-G:** L190-এ বাদ-পড়া SYSTEM-block report.dropped-এ (চুপচাপ নয়); L165 truncation-gate সংশোধন (multi-user-block); relevance-v1: recall_memories-র similarity-স্কোর → block-priority (নতুন মডেল নয়)।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **দাবি→প্রমাণ:** "≥30% token-হ্রাস" প্রথমবার measured — বিক্রয়/নথি/বিশ্বাস তিনটিতেই সত্য; না হলে দাবি সমন্বিত (সংস্কৃতি-লাভ তবু)।
-2. **খরচ-সাশ্রয় প্রসার:** streaming (বৃহত্তম পৃষ্ঠ) engine-এ ঢুকলে হ্রাস-সুবিধা পুরো ট্রাফিকে (hypothesis: বর্তমান 2/13 → 13/13)।
-3. **বাংলা-সত্য (P-E):** বাংলা-ভারী প্রম্পটে বাজেট-হিসাব সঠিক — ভুল-অনুমানে ট্রাঙ্কেশন-দুর্ঘটনা হ্রাস।
-4. **নিরাপদ বিকাশ-ভিত্তি (P-F):** kill-switch+config = পরীক্ষা-সাহস; per-tenant = ভবিষ্যৎ বাণিজ্যিক-স্তরের পূর্বশর্ত।
+2. **প্রম্পট ক্যাশিং সাশ্রয় (P-F):** প্রিফিক্স-স্ট্যাবল প্যাকিংয়ের ফলে Anthropic/OpenAI ক্যাশ হিট বেড়ে ইনপুট খরচ ৫০-৯০% কমে।
+3. **মডেল কনটেক্সট মিসম্যাচ শূন্য (P-F):** ছোট উইন্ডোর মডেলে বড় প্রম্পট পাঠিয়ে 400 ContextLengthExceededError ক্র্যাশ স্থায়ীভাবে বন্ধ।
+4. **খরচ-সাশ্রয় প্রসার:** streaming (বৃহত্তম পৃষ্ঠ) engine-এ ঢুকলে হ্রাস-সুবিধা পুরো ট্রাফিকে (hypothesis: বর্তমান 2/13 → 13/13)।
+5. **বাংলা-সত্য (P-E):** বাংলা-ভারী প্রম্পটে বাজেট-হিসাব সঠিক — ভুল-অনুমানে ট্রাঙ্কেশন-দুর্ঘটনা হ্রাস।
+6. **নিরাপদ বিকাশ-ভিত্তি (P-F):** kill-switch+config = পরীক্ষা-সাহস; per-tenant = ভবিষ্যৎ বাণিজ্যিক-স্তরের পূর্বশর্ত।
 5. **M2-exit সত্য (P-B/D):** রোডম্যাপ-প্রতিশ্রুতি পূরণ; dormant 727-লাইন সম্পদ অবশেষে কাজে।
 6. **সততা-সংস্কৃতি (P-G):** বাদ-পড়া কখনো অদৃশ্য নয় — ডিবাগিং-সময় হ্রাস।
 
