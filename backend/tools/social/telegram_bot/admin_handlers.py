@@ -207,3 +207,56 @@ class AdminHandlersMixin:
         except Exception as exc:
             logger.exception("On-demand backup error")
             await self.send_message(chat_id, f"❌ Backup failed: <code>{exc}</code>")
+
+    async def _handle_abort(self, chat_id: int | str, run_id: str) -> None:
+        """``/abort <run_id>`` — বাস্তব রান-ক্যান্সেলেশন (M18 P-I, issue #453 Wave-1)।
+
+        বাংলা মন্তব্য: এটি runs state machine-এর প্রকৃত ``run_service.cancel`` পথে
+        যায় — ভুয়া সাফল্য-বার্তা নেই। Fail-closed: কমান্ড admin-only (updates.py
+        গেট), অজানা run_id বা state-machine বাধায় সৎ ব্যর্থতা-বার্তা যায়।
+        সীমা-সত্য: Run Fabric-এর গভীর CancellationToken প্রপাগেশন M02-এর মালিকানা —
+        এখানে রান-স্তরের ক্যান্সেলেশন ট্রিগার হয়, ইন-ফ্লাইট এজেন্ট-টাস্ক মৃত্যু M02
+        P-B সম্পন্ন হলেই পূর্ণ হবে (প্রগতি লগে নথি)।
+        """
+        run_id = (run_id or "").strip()
+        if not run_id:
+            await self.send_message(
+                chat_id,
+                "🛑 <b>ব্যবহার:</b> <code>/abort &lt;run_id&gt;</code>\n"
+                "<i>run_id সহ কমান্ড পাঠান — যেমন /abort 9b7f…</i>",
+            )
+            return
+
+        try:
+            from database.session import get_db_session_context
+            from runs.api import run_service  # বাংলা: singleton এখানেই সংজ্ঞায়িত
+            from runs.service import RunNotFound
+            from runs.state_machine import IllegalTransition
+
+            async with get_db_session_context() as session:
+                updated = await run_service.cancel(
+                    session,
+                    run_id,
+                    actor=f"telegram:admin:{chat_id}",
+                    reason="telegram /abort command",
+                )
+                await session.commit()
+            # বাংলা: cancel idempotent — ইতোমধ্যে terminal হলে প্রথম ফলাফলই থাকে;
+            # আমরা বাস্তব অবস্থাই জানাই, ফেক 'বাতিল সফল' দাবি নয়।
+            await self.send_message(
+                chat_id,
+                f"🛑 Run <code>{run_id}</code> — বর্তমান অবস্থা: <code>{updated.status}</code>",
+            )
+        except RunNotFound:
+            # বাংলা: অজানা run_id — সৎ ব্যর্থতা; কোনো ফেক কনফার্মেশন নয়।
+            await self.send_message(chat_id, f"❌ Run <code>{run_id}</code> খুঁজে পাওয়া যায়নি।")
+        except IllegalTransition as exc:
+            await self.send_message(
+                chat_id,
+                f"⚠️ Run <code>{run_id}</code> ক্যান্সেলযোগ্য অবস্থায় নেই: <code>{exc}</code>",
+            )
+        except Exception as exc:
+            # বাংলা: অপ্রত্যাশিত ব্যর্থতা (DB/সেশন) — লাউড-লগ + সৎ ব্যর্থতা-বার্তা;
+            # নীরব পাস মানে ব্যবহারকারী ভুয়া 'সফল' ধরে নেবে।
+            logger.error(f"Telegram /abort failed for run {run_id}: {exc}")
+            await self.send_message(chat_id, f"❌ Abort ব্যর্থ হয়েছে: <code>{str(exc)[:200]}</code>")

@@ -261,6 +261,15 @@ class UpdatesMixin:
             await self._handle_telemetry(chat_id)
             return
 
+        if command == "/abort":
+            # বাংলা (M18 P-I): রান-ক্যান্সেলেশন বিপজ্জনক অপারেশন — admin-only
+            # fail-closed গেট; অন্য কেউ run বাতিল করতে পারবে না।
+            if not self.is_admin(chat_id):
+                await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
+            else:
+                await self._handle_abort(chat_id, text[len("/abort") :].strip())
+            return
+
         if command == "/quick":
             await self._handle_quick_actions(chat_id)
             return

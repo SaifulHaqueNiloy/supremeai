@@ -96,7 +96,50 @@ class ConversationsMixin:
             await self.send_message(chat_id, "⚠️ MCP client action failed.")
 
     async def _handle_telemetry(self, chat_id: int | str) -> None:
-        """Render Live Swarm Telemetry & KPIs."""
+        """Render LIVE telemetry — প্রতিটি সংখ্যা সিস্টেম থেকে পড়া (M18 P-C/P-I)।
+
+        বাংলা মন্তব্য: আগে এখানে hardcoded জাল KPI ছিল (38ms latency, 142 tasks,
+        99.99% uptime) — কিছুই বাস্তব পড়া হতো না। এখন দুটি বাস্তব সোর্স পড়া হয়:
+        ১) AgentSupervisor-এর লাইভ agent-health (একই প্রসেস), ২) runs টেবিলে সচল
+        রান সংখ্যা (DB কাউন্ট)। যেটি পড়া যায় না, সেটি 'unavailable' — বানানো নয়।
+        """
+        lines = ["📊 <b>SupremeAI 2.0 | Live Telemetry</b>", ""]
+
+        # ১) Supervised agents (in-process, সরাসরি সত্য-উৎস)
+        try:
+            from core.agent_supervisor import agent_supervisor
+
+            health = agent_supervisor.get_health() or {}
+            if health and "error" not in health:
+                lines.append("<b>🤖 Supervised Agents:</b>")
+                for name, info in sorted(health.items()):
+                    uptime_s = int(info.get("uptime", 0) or 0)
+                    lines.append(
+                        f"• <code>{name}</code> — {info.get('status', 'unknown')}, "
+                        f"uptime {uptime_s}s, restarts {info.get('restart_count', 0)}"
+                    )
+            else:
+                # বাংলা: supervisor চালু না থাকলে ভুয়া স্বাস্থ্য-তালিকা নয় — সৎ জানানো।
+                lines.append("🤖 Supervised Agents: unavailable (supervisor not running)")
+        except Exception as exc:
+            # বাংলা: supervisor-পাঠ ব্যর্থ হলে সৎভাবে unavailable — বানানো সংখ্যা নয়।
+            logger.warning(f"Telemetry agent-health read failed: {exc}")
+            lines.append("🤖 Supervised Agents: unavailable (read error)")
+
+        # ২) সচল রান সংখ্যা (বাস্তব DB কাউন্ট)
+        try:
+            active = await self._live_active_run_count()
+            lines.append("")
+            lines.append(f"🏃 <b>Active Runs:</b> {active}")
+        except Exception as exc:
+            # বাংলা: DB-পাঠ ব্যর্থ = বাস্তব সমস্যা — সৎ unavailable, ফেক '০' নয়।
+            logger.warning(f"Telemetry active-runs read failed: {exc}")
+            lines.append("")
+            lines.append("🏃 <b>Active Runs:</b> unavailable (database read failed)")
+
+        lines.append("")
+        lines.append("<i>প্রতিটি মান এই মুহূর্তের বাস্তব পাঠ — cached/বানানো নয়।</i>")
+
         keyboard = {
             "inline_keyboard": [
                 [{"text": "🔄 Refresh Telemetry", "callback_data": "quick_telemetry"}],
@@ -109,7 +152,25 @@ class ConversationsMixin:
                 [{"text": "🔙 Main Menu", "callback_data": "user_main_menu"}],
             ]
         }
-        await self.send_message(chat_id, self.COMMANDS["/telemetry"], reply_markup=keyboard)
+        await self.send_message(chat_id, "\n".join(lines), reply_markup=keyboard)
+
+    async def _live_active_run_count(self) -> int:
+        """runs টেবিলে terminal-অ-অবস্থায় থাকা রানের বাস্তব সংখ্যা।
+
+        বাংলা: telegram webhook একই backend প্রসেসে চলে, তাই সরাসরি DB পাঠ
+        সম্ভব — কোনো বাইরের HTTP কল বা ফেক সংখ্যা লাগে না।
+        """
+        from sqlalchemy import func, select
+
+        from database.session import get_db_session_context
+        from runs.models import Run
+        from runs.state_machine import TERMINAL_STATES
+
+        async with get_db_session_context() as session:
+            result = await session.execute(
+                select(func.count()).select_from(Run).where(Run.status.notin_(TERMINAL_STATES))
+            )
+            return int(result.scalar() or 0)
 
     async def _handle_quick_actions(self, chat_id: int | str) -> None:
         """Display 1-click Quick Actions keyboard."""
@@ -118,14 +179,17 @@ class ConversationsMixin:
         )
 
     async def _handle_quick_self_healer(self, chat_id: int | str) -> None:
-        """Trigger autonomous Self-Healer diagnosis routine."""
+        """Self-Healer quick action — সৎ নির্দেশক (M18 P-C: জাল diagnosis অবসান)।
+
+        বাংলা মন্তব্য: আগে এখানে বানানো ফলাফল ছিল ('100% HEALTHY', '0 active
+        errors') — কোনো diagnosis চলতই না। ভুয়া অটো-ডায়াগনোসিস সাইকেল এখনো
+        বাস্তবায়িত হয়নি, তাই ভুয়া দাবির বদলে বাস্তব পাঠের কমান্ডে নির্দেশ করা হয়।
+        """
         healer_text = (
-            "⚡ <b>Self-Healer Autonomous Diagnosis Active</b>\n\n"
-            "• 🔍 <b>Health & Exception Bus:</b> <code>100% HEALTHY (0 active errors)</code>\n"
-            "• 🧬 <b>AST & Dynamic Dependencies:</b> <code>Clean (0 broken imports)</code>\n"
-            "• 🩺 <b>Database & Redis Fallbacks:</b> <code>Operational</code>\n"
-            "• 🛡️ <b>Memory Leaks & Threads:</b> <code>Optimized (38ms latency target)</code>\n\n"
-            "✅ <i>All 52 Crown Jewel modules operating at peak fitness.</i>"
+            "⚡ <b>Self-Healer</b>\n\n"
+            "স্বয়ংক্রিয় diagnosis-সাইকেল এখনো বাস্তবায়িত হয়নি — ভুয়া ফলাফল দেখানো হয় না।\n\n"
+            "বাস্তব স্বাস্থ্য-পাঠের জন্য: /sys_status (admin)\n"
+            "বাস্তব agent-health ও সচল রান দেখতে: /telemetry"
         )
         keyboard = {
             "inline_keyboard": [
