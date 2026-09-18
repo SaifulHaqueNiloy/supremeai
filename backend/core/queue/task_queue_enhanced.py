@@ -617,9 +617,7 @@ try:
         # টেস্ট-কালেকশন/বুট বিপর্যস্ত। সৎ বিকল্প: ImportError-এ রূপ দিলে নিচের
         # loud-stub পথেই যায় — ব্রোকার-অনুপস্থিতি স্পষ্ট সতর্কতায় ঘোষিত হয়,
         # কেউ চুপচাপ localhost-ব্রোকারে পাঠাতেও পারে না (গার্ডের মূল উদ্দেশ্য অটুট)।
-        raise ImportError(
-            "Celery worker disabled: redis_url is required in non-local environments"
-        )
+        raise ImportError("Celery worker disabled: redis_url is required in non-local environments")
 
     celery_app = _Celery(
         "supremeai",
