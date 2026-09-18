@@ -88,7 +88,7 @@ class SecureRedisManager:
         # On a quota-exhaustion trip the manager FAILS OVER to the next pool
         # instead of dropping all consumers to in-memory fallbacks — N
         # accounts ⇒ N× monthly quota, zero code change for consumers.
-        self._urls = self._collect_federation_urls()
+        self._urls: list[str] = []  # resolved lazily at first connect (vault-aware)
         self._active = 0
         self._tripped: set[int] = set()
         # Quota circuit-breaker state (issue #437). While open,
@@ -99,6 +99,23 @@ class SecureRedisManager:
         self._quota_open_until = 0.0
         self._quota_trips = 0
         self._quota_announced = False
+
+    @staticmethod
+    def _resolve_secret(key: str) -> str:
+        """Resolve a secret from process env first, then the Infisical vault.
+
+        বাংলা: 12-factor — প্রথমে os.getenv, না পেলে config_secrets-এর
+        vault-aware cache (bulk লোড হয়ে গেলে কোনো নেটওয়ার্ক কল নেই)।
+        """
+        val = (os.getenv(key) or "").strip()
+        if val:
+            return val
+        try:
+            from ..config import settings
+
+            return (settings._get_cached_secret(key) or "").strip()
+        except Exception:  # noqa: BLE001 — resolver must never break init
+            return ""
 
     def _collect_federation_urls(self) -> list[str]:
         """Primary + sibling account URLs (deduped, memory:// excluded).
@@ -113,10 +130,10 @@ class SecureRedisManager:
         if primary and "memory://" not in primary:
             urls.append(primary)
         for key in self._FEDERATION_ENV_KEYS:
-            val = (os.getenv(key) or "").strip()
+            val = self._resolve_secret(key)
             if val and "memory://" not in val and val not in urls:
                 urls.append(val)
-        for val in (os.getenv("REDIS_FEDERATION_URLS") or "").split(","):
+        for val in self._resolve_secret("REDIS_FEDERATION_URLS").split(","):
             val = val.strip()
             if val and "memory://" not in val and val not in urls:
                 urls.append(val)
@@ -253,6 +270,9 @@ class SecureRedisManager:
             # scheme — both the plain and the mangled-normalized form — so every
             # consumer engages its own in-memory fallback. Real redis URLs are
             # completely unaffected.
+            # Issue #460: resolve the federation pool lazily at connect time —
+            # sibling URLs may live in the Infisical vault, not just os.environ.
+            self._urls = self._collect_federation_urls()
             if not self._urls:
                 if self.url and "memory://" in self.url:
                     logger.info(
