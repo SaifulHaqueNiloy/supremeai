@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from core.llm.llm_gateway.errors import GatewayUnavailableError
 from core.logging_config import logger
 
 try:
@@ -1351,12 +1352,35 @@ class MultiLLMRouter:
             return "llama-3.1-70b"  # Best available
 
     async def _call_llm(self, provider: str, model: str, prompt: str) -> str:
-        """Call LLM API (placeholder - implement with actual SDK)"""
-        # In production, replace with actual API calls
-        await asyncio.sleep(0.1)  # Simulate network delay
+        """Call the REAL LLM gateway (M03 P1: fabricated response removed).
 
-        # Return simulated response
-        return f"[Response from {provider}/{model}] Processed your {len(prompt)} char prompt."
+        বাংলা মন্তব্য: আগে এখানে বানানো উত্তর ছিল —
+        ``f"[Response from {provider}/{model}] …"`` — একটি স্লিপ-কল দিয়ে। এটি
+        False-Assurance ছিল: কলার ভুয়া সাফল্য পেত। এখন প্রকৃত গেটওয়ে
+        ``llm_gateway.acompletion``-এ ডেলিগেট করা হয়; গেটওয়ে ব্যর্থ হলে
+        স্ট্রাকচার্ড :class:`GatewayUnavailableError` — কখনো বানানো টেক্সট নয়।
+        """
+        try:
+            from core.llm.llm_gateway import llm_gateway
+
+            resp = await llm_gateway.acompletion(
+                prompt=prompt,
+                task_type="competitive_route",
+                stream=False,
+            )
+            text = resp.get("text") if isinstance(resp, dict) else str(resp)
+            if not text:
+                # বাংলা: খালি উত্তরও একটি সৎ ব্যর্থতা — ফেক প্লেসহোল্ডার নয়।
+                raise GatewayUnavailableError(f"Gateway returned empty text for {provider}/{model}")
+            return text
+        except GatewayUnavailableError:
+            raise
+        except Exception as exc:
+            # বাংলা: গেটওয়ে/provider অপ্রাপ্যতা স্ট্রাকচার্ড এররে স্বচ্ছ হয় —
+            # নীরব পাস বা বানানো fallback নয়।
+            raise GatewayUnavailableError(
+                f"LLM gateway unavailable for {provider}/{model}: {exc}"
+            ) from exc
 
     def _calculate_cost(self, provider: str, prompt: str, response: str) -> float:
         """Calculate cost for this request"""
