@@ -56,11 +56,15 @@ class DashboardWebSocketManager:
             "connected_at": asyncio.get_event_loop().time(),
         }
         logger.info(f"📈 Dashboard WebSocket connected for user {user_auth.get('sub', 'unknown')}")
-        return True
 
-        # Start subscription task if not already running
+        # M20 P-B FIX (২-লাইন বাগ): subscription-task start আগে `return True`-এর পরে
+        # ছিল — অর্থাৎ মৃত-কোড; broadcast_to_clients() কখনোই শুরুই হতো না এবং
+        # /ws/dashboard গ্রাহকরা SwarmPubSub-এর কোনো ইভেন্ট পেত না। এখন return-এর
+        # আগেই task শুরু হয় (connect একবারেই এক task; done() গার্ডে ডুপ্লিকেট নয়)।
         if self.subscription_task is None or self.subscription_task.done():
             self.subscription_task = asyncio.create_task(self.broadcast_to_clients())
+
+        return True
 
     def disconnect(self, websocket: WebSocket):
         """Remove WebSocket connection."""
@@ -130,7 +134,11 @@ class DashboardWebSocketManager:
     def _get_event_channel(self, event_type: str) -> str:
         """Map event types to channels for filtering."""
         # Metrics events
+        # M20 P-B: SYSTEM_METRICS (core/telemetry/system_telemetry.py:38 broadcast)
+        # আগে কোনো channel-এ পড়ত না → "misc.events"-এ হারিয়ে যেত; এখন
+        # metrics.update-এ ম্যাপ করা হলো যেন dashboard গ্রাহকরা লাইভ মেট্রিকস পায়।
         if event_type.startswith("metrics.") or event_type in [
+            "SYSTEM_METRICS",
             "cpu_usage",
             "memory_usage",
             "active_agents",
