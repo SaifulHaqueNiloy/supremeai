@@ -17,7 +17,10 @@ target_scope: supremeai_internal
 **Version:** 1.0 — September 2026
 **Purpose:** Combine legitimate free/no-cost service tiers to maximize SupremeAI capacity while keeping the architecture policy-safe, observable, replaceable, and ready for paid escalation.
 
-## 0. Executive Decision
+## 0. Executive Decision: Timeless Infrastructure Invariant
+
+> **Universal Law (User-Intent & Infrastructure Agnostic):**
+> This policy governs resource execution whether running on zero-cost free tiers, user-owned private servers, local silicon, or enterprise cloud. The timeless invariant is: **Zero-Waste, Provider-Agnostic, User-Loyal.** Free-tier is only the lower-bound optimization baseline. When the user provides self-hosted bare metal or private servers, the architecture seamlessly routes to those resources with zero architectural rework.
 
 SupremeAI should **not** build a “free cloud supercomputer” by multiplying provider quotas through many accounts.
 

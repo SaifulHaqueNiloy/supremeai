@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hmac
 
 # বাংলা মন্তব্য: ওএস মডিউল ইম্পোর্ট করা হলো যাতে os.environ ঠিকমত কাজ করে
 import os
@@ -302,14 +303,62 @@ class TelegramBotCore:
             with contextlib.suppress(Exception):
                 loop.close()
 
-    def is_admin(self, chat_id: int | str) -> bool:
-        """Check if Telegram chat ID belongs to the system administrator."""
-        admin_id = str(
-            os.environ.get("ADMIN_TELEGRAM_CHAT_ID")
-            or os.environ.get("TELEGRAM_CHAT_ID")
-            or "7804133572"
-        ).strip()
-        return str(chat_id) == admin_id or str(chat_id) == "7804133572"
+    # ── Admin identity (fail-closed, env/vault only — zero hardcode) ──
+
+    _admin_gate_warned: ClassVar[bool] = False
+
+    def _configured_admin_ids(self) -> set[str]:
+        """Return configured admin identities from settings/vault + env only.
+
+        বাংলা মন্তব্য (P-B admin-identity truth): আগে এই ফাইলে একটি হার্ডকোড করা
+        ব্যক্তিগত admin chat-ID ফলব্যাক ছিল — ফলে env দিয়ে তা প্রত্যাহার করা
+        অসম্ভব ছিল এবং কিছু কনফিগার না থাকলেও সেই এক ব্যক্তি স্বয়ংক্রিয়ভাবে
+        admin হয়ে যেত (fail-open)। এখন কোনো হার্ডকোড নেই: কিছু কনফিগার না
+        থাকলে কেউ admin নয়। একাধিক আইডি কমা/সেমিকোলন দিয়ে দেওয়া যায়।
+        """
+        raw_candidates: list[str] = []
+        try:
+            raw_candidates.append(str(getattr(settings, "admin_telegram_chat_id", "") or ""))
+        except Exception as exc:
+            # বাংলা মন্তব্য: settings lookup ব্যর্থ হলেও fail-closed — env চেক চলবে।
+            logger.warning(f"Admin identity: settings lookup failed (env fallback): {exc}")
+        raw_candidates.append(os.environ.get("ADMIN_TELEGRAM_CHAT_ID", ""))
+        # Legacy fallback: TELEGRAM_CHAT_ID ইতিহাসগতভাবে alert-gateway হিসেবে ব্যবহৃত।
+        raw_candidates.append(os.environ.get("TELEGRAM_CHAT_ID", ""))
+
+        admin_ids: set[str] = set()
+        for raw in raw_candidates:
+            for part in str(raw).replace(";", ",").split(","):
+                candidate = part.strip()
+                if candidate:
+                    admin_ids.add(candidate)
+        return admin_ids
+
+    def is_admin(self, chat_id: int | str, user_id: int | str | None = None) -> bool:
+        """Check whether the *sender* of this update is the configured administrator.
+
+        ``user_id`` (Telegram ``from.id``) is authoritative when supplied, because
+        in group chats ``chat_id`` identifies the group — not the human — so a
+        chat_id-only check would let any group member pass the admin gate.
+        Fails closed (deny) when no admin identity is configured.
+        """
+        admin_ids = self._configured_admin_ids()
+        if not admin_ids:
+            if not TelegramBotCore._admin_gate_warned:
+                TelegramBotCore._admin_gate_warned = True
+                logger.warning(
+                    "Telegram admin gate is FAIL-CLOSED: ADMIN_TELEGRAM_CHAT_ID is not "
+                    "configured — every admin operation will be denied until it is set."
+                )
+            return False
+
+        sender = str(user_id).strip() if user_id is not None else str(chat_id).strip()
+        if not sender:
+            return False
+        return any(
+            hmac.compare_digest(sender.encode("utf-8"), admin_id.encode("utf-8"))
+            for admin_id in admin_ids
+        )
 
 
 class TelegramBotHandler(
