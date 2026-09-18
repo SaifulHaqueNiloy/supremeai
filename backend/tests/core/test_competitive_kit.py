@@ -31,6 +31,21 @@ from datetime import datetime, timedelta
 import pytest
 
 import core.competitive_kit as ck
+
+
+@pytest.fixture
+def fake_gateway_llm(monkeypatch):
+    """বাংলা (M03 P1): রাউটিং/ক্যাশ/usage লজিক যাচাইয়ের জন্য নিয়ন্ত্রিত গেটওয়ে —
+    ৮-শব্দের অপরিবর্তনীয় উত্তর যাতে পুরনো token-গণিত চুক্তি বজায় থাকে।"""
+
+    async def fake_acompletion(**kwargs):
+        return {"text": "one two three four five six seven eight"}
+
+    import core.llm.llm_gateway as _gw_mod
+
+    monkeypatch.setattr(_gw_mod.llm_gateway, "acompletion", fake_acompletion)
+
+
 from core.competitive_kit import (
     PERSONALITIES,
     SAFETY_CONFIGS,
@@ -737,7 +752,7 @@ def test_provider_catalog_free_vs_paid():
         assert provider.max_context_tokens > 0
 
 
-async def test_route_request_free_provider_then_cache_hit():
+async def test_route_request_free_provider_then_cache_hit(fake_gateway_llm):
     router = MultiLLMRouter()
     first = await router.route_request("hello world", task_type="qa")
     assert first["provider"] == "gemini"  # prefer_free → first free provider
@@ -753,7 +768,7 @@ async def test_route_request_free_provider_then_cache_hit():
     assert router.usage_tracker["gemini"]["count"] == 1  # cache hits do not re-count
 
 
-async def test_route_request_auto_task_detection():
+async def test_route_request_auto_task_detection(fake_gateway_llm):
     router = MultiLLMRouter()
     result = await router.route_request("Please debug this function", task_type="auto")
     assert result["model"] == "gemini-2.5-pro"  # coding → pro tier even on gemini
@@ -801,10 +816,36 @@ def test_select_model_matrix():
     assert router._select_model(providers["groq"], "coding") == "llama-3.1-70b"
 
 
-async def test_call_llm_is_simulated_stub():
+async def test_call_llm_delegates_to_real_gateway(monkeypatch):
+    """M03 P1: বানানো "[Response from …]" অবসান — _call_llm এখন প্রকৃত গেটওয়ে ডেলিগেট করে।"""
     router = MultiLLMRouter()
+    seen = {}
+
+    async def fake_acompletion(**kwargs):
+        seen.update(kwargs)
+        return {"text": "gateway ground truth"}
+
+    import core.llm.llm_gateway as _gw_mod
+
+    monkeypatch.setattr(_gw_mod.llm_gateway, "acompletion", fake_acompletion)
     response = await router._call_llm("gemini", "gemini-2.5-flash", "abcd")
-    assert response == "[Response from gemini/gemini-2.5-flash] Processed your 4 char prompt."
+    assert response == "gateway ground truth"
+    assert seen["task_type"] == "competitive_route"
+
+
+async def test_call_llm_raises_structured_error_when_gateway_down(monkeypatch):
+    from core.llm.llm_gateway.errors import GatewayUnavailableError
+
+    router = MultiLLMRouter()
+
+    async def broken(**kwargs):
+        raise RuntimeError("network down")
+
+    import core.llm.llm_gateway as _gw_mod
+
+    monkeypatch.setattr(_gw_mod.llm_gateway, "acompletion", broken)
+    with pytest.raises(GatewayUnavailableError):
+        await router._call_llm("gemini", "gemini-2.5-flash", "abcd")
 
 
 def test_calculate_cost_uses_provider_rate():
@@ -826,7 +867,7 @@ def test_usage_stats_empty_router():
     assert stats["cache_hit_rate"] == 0
 
 
-async def test_usage_stats_after_traffic():
+async def test_usage_stats_after_traffic(fake_gateway_llm):
     router = MultiLLMRouter()
     await router.route_request("prompt one", task_type="qa")
     await router.route_request("prompt two", task_type="qa")
@@ -841,7 +882,7 @@ async def test_usage_stats_after_traffic():
     assert stats["savings_vs_openai_only"] == 0.0
 
 
-async def test_route_request_paid_provider_tracks_cost():
+async def test_route_request_paid_provider_tracks_cost(fake_gateway_llm):
     router = MultiLLMRouter()
     result = await router.route_request("write code now", task_type="auto", prefer_free=False)
     assert result["provider"] == "openai"
@@ -855,7 +896,7 @@ async def test_route_request_paid_provider_tracks_cost():
     assert router.usage_tracker["openai"]["count"] == 1
 
 
-async def test_cache_eviction_trims_oldest_entries():
+async def test_cache_eviction_trims_oldest_entries(fake_gateway_llm):
     router = MultiLLMRouter()
     for i in range(1000):
         router.cache[f"k{i}"] = ("resp", "prov")
@@ -869,7 +910,7 @@ async def test_cache_eviction_trims_oldest_entries():
 # ───────────────────────── 7. Demo + CLI entry points ─────────────────────────
 
 
-async def test_demonstration_runs_end_to_end():
+async def test_demonstration_runs_end_to_end(fake_gateway_llm):
     await demonstrate_competitive_advantages()  # smoke: every component exercised
 
 
@@ -878,7 +919,7 @@ def _run_cli(monkeypatch, *argv):
     runpy.run_path(ck.__file__, run_name="__main__")
 
 
-def test_cli_demo_entry_point(monkeypatch):
+def test_cli_demo_entry_point(monkeypatch, fake_gateway_llm):
     _run_cli(monkeypatch, "--demo")
 
 
