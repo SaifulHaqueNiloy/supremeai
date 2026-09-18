@@ -8845,6 +8845,16 @@
       "path": "backend/runs/state_machine.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/runs/stategraph.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -12361,6 +12371,16 @@
       "path": "backend/tests/core/test_rbac.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_reasoning_orchestrator.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12542,6 +12562,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_startup_validator.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_stategraph.py"
     },
     {
       "capability_signals": [
@@ -24392,5 +24421,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2812
+  "source_file_count": 2815
 }
