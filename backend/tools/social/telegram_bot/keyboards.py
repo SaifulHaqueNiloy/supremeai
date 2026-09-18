@@ -111,8 +111,10 @@ class KeyboardsMixin:
             ]
         }
 
-    def _quick_actions_keyboard(self, chat_id: int | str | None = None) -> dict[str, Any]:
-        """Dynamic keyboard based on user role."""
-        if chat_id and self.is_admin(chat_id):
+    def _quick_actions_keyboard(
+        self, chat_id: int | str | None = None, user_id: int | str | None = None
+    ) -> dict[str, Any]:
+        """Dynamic keyboard based on user role (sender-aware admin gate)."""
+        if chat_id and self.is_admin(chat_id, user_id):
             return self._admin_keyboard()
         return self._user_keyboard()

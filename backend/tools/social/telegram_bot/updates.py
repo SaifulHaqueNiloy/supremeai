@@ -26,6 +26,8 @@ class UpdatesMixin:
             callback_id = callback_query["id"]
             data = callback_query.get("data", "")
             chat_id = callback_query.get("message", {}).get("chat", {}).get("id")
+            # বাংলা মন্তব্য (P-B): admin গেটে chat_id নয় — পাঠকের from.id authoritative
+            sender_id = callback_query.get("from", {}).get("id")
             await self.answer_callback_query(callback_id)
 
             if chat_id and data:
@@ -96,12 +98,12 @@ class UpdatesMixin:
                     await self.send_message(
                         chat_id,
                         self.COMMANDS["/help"],
-                        reply_markup=self._quick_actions_keyboard(chat_id),
+                        reply_markup=self._quick_actions_keyboard(chat_id, sender_id),
                     )
 
                 # ── Admin Dashboard Callbacks ─────────────────────────
                 elif data.startswith("admin_") or data in ("cmd_status", "cmd_backup", "cmd_rules"):
-                    if not self.is_admin(chat_id):
+                    if not self.is_admin(chat_id, sender_id):
                         await self.send_message(
                             chat_id,
                             "🔒 <i>This operation is restricted to SupremeAI Administrators.</i>",
@@ -120,13 +122,13 @@ class UpdatesMixin:
                         elif data == "admin_security":
                             await self._handle_admin_security(chat_id)
                         elif data == "admin_mcp_clients":
-                            await self._handle_mcp_clients(chat_id)
+                            await self._handle_mcp_clients(chat_id, sender_id)
                         elif data in ("admin_rules", "cmd_rules"):
                             await self._handle_admin_rules(chat_id)
                         elif data.startswith("mcp_approve_"):
-                            await self._handle_mcp_action(chat_id, data, "approve")
+                            await self._handle_mcp_action(chat_id, data, "approve", sender_id)
                         elif data.startswith("mcp_role_"):
-                            await self._handle_mcp_action(chat_id, data, "role")
+                            await self._handle_mcp_action(chat_id, data, "role", sender_id)
                         elif data == "admin_main_menu":
                             await self.send_message(
                                 chat_id,
@@ -183,7 +185,7 @@ class UpdatesMixin:
         # ── Step C: Critical / Destructive Instruction Interceptor ────
         is_crit, action_type, action_desc = security_guard.detect_critical_action(text)
         if is_crit:
-            if not self.is_admin(chat_id):
+            if not self.is_admin(chat_id, user_id):
                 await self.send_message(
                     chat_id,
                     "🔒 <b>Access Denied:</b> This destructive/privileged system instruction is restricted to System Administrators.",
@@ -207,7 +209,7 @@ class UpdatesMixin:
         # ── Step D: Standard Command Handling ─────────────────────────
         if command:
             if command in ("/start", "/help"):
-                if self.is_admin(chat_id):
+                if self.is_admin(chat_id, user_id):
                     welcome_text = (
                         "🔱 <b>SupremeAI 2.0 | Admin Command Center</b>\n\n"
                         "স্বাগতম অ্যাডমিন! আপনি সম্পূর্ণ ক্লাউড আর্কিটেকচার, ব্যাকআপ ও মেমোরি কন্ট্রোল করতে পারেন।\n\n"
@@ -253,10 +255,10 @@ class UpdatesMixin:
                 return
 
         if command == "/mcp_clients":
-            if not self.is_admin(chat_id):
+            if not self.is_admin(chat_id, user_id):
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
-                await self._handle_mcp_clients(chat_id)
+                await self._handle_mcp_clients(chat_id, user_id)
         if command == "/telemetry":
             await self._handle_telemetry(chat_id)
             return
@@ -275,14 +277,14 @@ class UpdatesMixin:
             return
 
         if command in ("/status", "/sys_status"):
-            if not self.is_admin(chat_id):
+            if not self.is_admin(chat_id, user_id):
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
                 await self._handle_status(chat_id)
             return
 
         if command == "/backup_now":
-            if not self.is_admin(chat_id):
+            if not self.is_admin(chat_id, user_id):
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
                 await self._handle_backup_now(chat_id)
@@ -294,7 +296,7 @@ class UpdatesMixin:
 
         reply = self.COMMANDS.get(command)
         if reply:
-            if command in ("/admin", "/rules") and not self.is_admin(chat_id):
+            if command in ("/admin", "/rules") and not self.is_admin(chat_id, user_id):
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
                 await self.send_message(chat_id, reply)
