@@ -267,11 +267,14 @@ class TestPlatformAdminIsolationWiring:
     def test_tenants_router_nested_into_primary(self):
         """Verify tenants_router is nested via include_router.
 
-        FastAPI stores included routers as _IncludedRouter sentinels in
-        router.routes (no .path attribute until mounted on an app).  We
-        therefore check: (a) tenants_router.prefix is correct, and (b) at
-        least one non-APIRoute entry exists in router.routes — the unmistakable
-        fingerprint of an include_router() call.
+        FastAPI behavior is version-dependent here: some versions retain
+        include_router() results as _IncludedRouter sentinels in
+        router.routes (no .path attribute until mounted on an app); others
+        expand them eagerly into APIRoute objects carrying the concatenated
+        prefix. We accept BOTH fingerprints — (a) a sentinel entry (checked
+        by class name so subclassing cannot fool it), OR (b) an expanded
+        APIRoute whose path embeds the tenants prefix. Either one is the
+        unmistakable fingerprint of an include_router() call.
         """
         from fastapi.routing import APIRoute as _APIRoute
 
@@ -280,10 +283,18 @@ class TestPlatformAdminIsolationWiring:
         assert tenants_router.prefix == "/admin-api/tenants", (
             "tenants_router prefix must be /admin-api/tenants"
         )
-        included_sentinels = [r for r in router.routes if not isinstance(r, _APIRoute)]
-        assert included_sentinels, (
+        has_sentinel = any(
+            type(r).__name__ in {"_IncludedRouter", "IncludedRouter"} for r in router.routes
+        )
+        expanded_nested = [
+            r
+            for r in router.routes
+            if isinstance(r, _APIRoute)
+            and getattr(r, "path", "").endswith(f"{tenants_router.prefix}/{{tenant_id}}/reset")
+        ]
+        assert has_sentinel or expanded_nested, (
             "tenants_router must be included into the primary router "
-            "(no _IncludedRouter found in router.routes)"
+            "(no _IncludedRouter sentinel and no expanded nested route found)"
         )
 
     def test_reset_dual_primary_route_registration(self):
