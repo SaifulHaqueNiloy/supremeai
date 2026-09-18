@@ -308,19 +308,18 @@ class TestPlatformAdminIsolationWiring:
         eventual fix flips it deliberately. Decision item filed in PR body.
 
         Implementation note: FastAPI only expands nested include_router() paths
-        when the outer router is mounted on a FastAPI app.  We therefore mount
-        on a throwaway app before asserting, instead of iterating router.routes
-        directly (which yields unexpanded _IncludedRouter sentinels).
+        into the OpenAPI schema. We therefore inspect bare.openapi()["paths"]
+        instead of bare.routes directly (which retains unexpanded _IncludedRouter
+        sentinels in modern FastAPI).
         """
         from fastapi import FastAPI
-        from fastapi.routing import APIRoute as _APIRoute
 
         from api.routes.tenant_admin import router
 
         bare = FastAPI()
         bare.include_router(router)
         doubled = "/admin-api/tenant-limits/admin-api/tenants/{tenant_id}/reset"
-        assert any(r.path == doubled for r in bare.routes if isinstance(r, _APIRoute)), (
+        assert doubled in bare.openapi()["paths"], (
             f"nested tenants router path changed: expected {doubled} in registry"
         )
 
