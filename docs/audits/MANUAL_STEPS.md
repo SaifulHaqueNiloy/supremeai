@@ -18,7 +18,7 @@
 | 4 | Memory-engine runtime | Tower host | Tower has no Python/`uv` runtime → `memory_*` tools return ENOENT (console is local-first, unaffected) |
 | 5 | Backend tenant-admin isolation test deep-dive | Needs CI postgres env | `test_unauthenticated_request_rejected_without_bypass` fails only in conftest context (passes standalone) |
 | 6 | ~~Reset or Upgrade Upstash Redis Quota (Issue #437)~~ **✅ RESOLVED (2026-09-19)** | Upstash Dashboard → Database Console | Provisioned 5-Node Distributed Upstash Federation Pool (2.5M ops/mo across 5 isolated accounts with eviction enabled in ap-southeast-1). All credentials verified live & synced into Infisical prod vault + .env. Tracked in Issue #460. |
-| 7 | ~~Rotate `OPENROUTER_API_KEY` (Issue #438)~~ **✅ RESOLVED (2026-09-19)** | Infisical Vault / Render Environment Dashboard | Provisioned Dual-Node OpenRouter Federation (Primary & Secondary keys verified live with 200 OK across auth & live chat completions; 100 free reqs/day pool); synced into .env. Resolves Issue #438. |
+| 7 | ~~Rotate `OPENROUTER_API_KEY` (Issue #438)~~ **✅ RESOLVED (2026-09-19)** | Infisical Vault / Render Environment Dashboard | Provisioned active OpenRouter API Key (auth/key endpoint & live chat completions verified with 200 OK); synced into .env. Resolves Issue #438. |
 | 8 | ~~Provision Cloud Sandbox Provider Key (`E2B_API_KEY` / `RUNPOD_API_KEY`) (Issue #448)~~ **✅ RESOLVED (2026-09-19)** | Infisical Vault / Render Environment Dashboard | Provisioned Dual-Node E2B Cloud Sandbox Federation (Primary & Secondary keys verified live with 200 OK on sandboxes endpoint); synced into .env. Resolves Issue #448. |
 
 ## Historical audit remediation steps (2026-08-30, patch v4 era)
