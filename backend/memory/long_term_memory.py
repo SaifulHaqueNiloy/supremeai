@@ -52,9 +52,14 @@ class MemoryManager:
             logger.error("Failed to generate embedding for memory: %s", exc)
             return
 
-        # Store in Supabase 'agent_memories' table
-        await (
-            await self.db_client.table("agent_memories")
+        # Store in Supabase 'agent_memories' table.
+        # Issue #443 fix: supabase-py v2's client is SYNC — ``await ...execute()``
+        # raised TypeError (object APIResponse can't be used in 'await') on every
+        # call, so browser-agent learnings were never persisted.  Run the
+        # blocking PostgREST chain in a worker thread (same pattern as
+        # services/memory_service.py save_memory).
+        await asyncio.to_thread(
+            lambda: self.db_client.table("agent_memories")
             .insert(
                 {
                     "content": learning,
@@ -78,14 +83,17 @@ class MemoryManager:
             return []
 
         # Call a Supabase RPC function to perform vector similarity search
-        result = await self.db_client.rpc(
-            "match_memories",
-            {
-                "query_embedding": query_embedding,
-                "match_threshold": 0.75,
-                "match_count": top_k,
-            },
-        ).execute()
+        # (issue #443 fix: sync client must not be awaited — use to_thread).
+        result = await asyncio.to_thread(
+            lambda: self.db_client.rpc(
+                "match_memories",
+                {
+                    "query_embedding": query_embedding,
+                    "match_threshold": 0.75,
+                    "match_count": top_k,
+                },
+            ).execute()
+        )
 
         memories = [item["content"] for item in result.data] if result.data else []
         logger.info(f"Retrieved {len(memories)} relevant memories.")

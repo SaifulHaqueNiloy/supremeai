@@ -71,10 +71,25 @@ class VectorDatabaseClient:
         """
         Retrieves past experiences from the CascadeMemoryService.
         """
-        query_text = vector if isinstance(vector, str) else ""  # type: ignore[assignment]
+        # Issue #443 fix: the old code silently degraded any non-str payload
+        # (e.g. the documented list[float] vectors) to "" and returned [] at
+        # DEBUG level — a lying contract.  Be loud about the mismatch instead.
+        if isinstance(vector, list):
+            logger.warning(
+                "find_similar_experiences() received a %d-dim vector payload; this "
+                "method only supports text queries (issue #443) — returning empty "
+                "LOUDLY instead of the old silent [].",
+                len(vector),
+            )
+            return []
+
+        query_text = vector.strip() if isinstance(vector, str) else ""
 
         if not query_text:
-            logger.debug("find_similar_experiences(): no query text available, returning empty.")
+            logger.warning(
+                "find_similar_experiences(): empty/blank query text — returning "
+                "empty (issue #443: was silent DEBUG-level before)."
+            )
             return []
 
         try:

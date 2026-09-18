@@ -7,6 +7,7 @@ and long-term learning capabilities.
 
 import hashlib
 import json
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -39,11 +40,25 @@ class ContextManager:
     def __init__(self):
         self.logger = get_logger(__name__)
 
-        # Initialize Qdrant client for vector storage
+        # Initialize Qdrant client for vector storage.
+        # Issue #443 fix: settings has NO QDRANT_URL/QDRANT_PORT fields (the old
+        # direct attribute access raised AttributeError on every init, caught by
+        # the except below, permanently degrading to Redis-only).  Read the
+        # optional config the same way error_remediation.py does: safe getattr
+        # with env-var fallback, so a provisioned QDRANT_URL actually activates
+        # vector storage instead of silently never working.
         try:
-            self.vector_client = QdrantClient(
-                url=settings.QDRANT_URL or "localhost", port=settings.QDRANT_PORT or 6333
+            qdrant_url = (
+                getattr(settings, "qdrant_url", "") or os.getenv("QDRANT_URL", "")
             )
+            qdrant_port = int(
+                getattr(settings, "qdrant_port", 0)
+                or os.getenv("QDRANT_PORT", "6333")
+                or 6333
+            )
+            if not qdrant_url:
+                raise ValueError("QDRANT_URL not configured — vector storage disabled")
+            self.vector_client = QdrantClient(url=qdrant_url, port=qdrant_port)
         except Exception as e:
             self.logger.warning(f"Qdrant client initialization failed: {e}")
             self.vector_client = None
