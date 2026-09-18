@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-09-17",
+  "generated_at": "2026-09-18",
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 177,
-    "with_frontmatter": 177,
+    "documents": 190,
+    "with_frontmatter": 190,
     "families": {
-      "control-tower-mcp": 38,
+      "control-tower-mcp": 41,
+      "unclassified": 34,
       "execution-phases": 30,
-      "unclassified": 29,
-      "free-tier-federation": 22,
+      "free-tier-federation": 26,
       "frontend-product-ux": 16,
       "unified-architecture": 11,
       "browser-automation": 9,
       "ci-cd-pipeline": 7,
       "intelligence-evolution": 6,
-      "dynamic-configuration": 4,
+      "dynamic-configuration": 5,
       "production-readiness": 3,
       "security-defense": 1,
       "deployment-render": 1
@@ -425,6 +425,24 @@
       "lines": 1043
     },
     {
+      "id": "supreme-teleport-multi-device-remote-control-tower-plan",
+      "subject": "Supreme Teleport: Multi-Device Remote Control Tower Plan — Control Your Multiple Devices & Local AI Agents from Far",
+      "document_role": "architecture",
+      "planning_authority": "Central Control Hub / MCP Circle",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/architecture/SUPREME_TELEPORT_MULTI_DEVICE_REMOTE_CONTROL_PLAN_2026-09-18.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-18",
+      "disposition": null,
+      "target_scope": "combined_ecosystem",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 195
+    },
+    {
       "id": "auto:ai_model_comparative_matrix_bangla",
       "subject": "SupremeAI vs প্রধান AI মডেলগুলোর তুলনা (Bengali)",
       "document_role": "architecture",
@@ -705,12 +723,12 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)",
+      "last_verified": "2026-09-17 (fresh main 07604ad code-read: memory_service.py store_memory L288 sed-verified, _MEMORY_ROW_CAP=2000 L52 sed-verified; unified_memory.py kill-switch L38–44 sed-verified; backend/memory/ 15 ফাইল ls-verified — 07604ad hygiene commit এই ফোল্ডার স্পর্শ করেছে কিন্তু store_memory/distillation evidence-ফাইলগুলো 0-diff; workers/synaptic_dream.py বিদ্যমান, celery_app.py 9-LN stub; core/kernel/dispatcher.py + core/orchestration/swarm_orchestrator.py স্পর্শ হয়নি; দর্শন-সংগতি পুনঃযাচাই 2026-09-17 branch crown-jewel-v2 (base ed35eaf): proposal-স্তরে ৪-নীতি অডিট + মূল-যন্ত্রপাতি spot-check (store_memory blind INSERT অটুট, synaptic_dream unscheduled, periodic_task_scheduler interval_seconds প্রমাণিত); PLAN_006-এর sed-verified লাইন-রেফারেন্সগুলো (auto_rag_injector L38–44, vector_store L29/L60, schema audit L232) উত্তরাধিকারসূত্রে গৃহীত — ওই ফাইলগুলো 07604ad-এ 0-diff)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 254
+      "lines": 269
     },
     {
       "id": "crown-jewel-module-02-orchestration-core-power-up-v1-2026-09-17",
@@ -728,7 +746,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 237
+      "lines": 254
     },
     {
       "id": "crown-jewel-module-03-llm-gateway-power-up-v1-2026-09-17",
@@ -746,7 +764,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 254
+      "lines": 269
     },
     {
       "id": "crown-jewel-module-04-browser-automation-power-up-v1-2026-09-17",
@@ -764,7 +782,7 @@
       "target_scope": "supremeai_internal",
       "family": "browser-automation",
       "frontmatter_present": true,
-      "lines": 244
+      "lines": 259
     },
     {
       "id": "crown-jewel-module-05-self-evolution-power-up-v1-2026-09-17",
@@ -782,7 +800,7 @@
       "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
       "frontmatter_present": true,
-      "lines": 240
+      "lines": 255
     },
     {
       "id": "crown-jewel-module-06-run-fabric-completion-power-up-v1-2026-09-17",
@@ -800,7 +818,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 239
+      "lines": 254
     },
     {
       "id": "crown-jewel-module-07-context-engine-power-up-v1-2026-09-17",
@@ -818,7 +836,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 232
+      "lines": 247
     },
     {
       "id": "crown-jewel-module-08-scout-deep-research-power-up-v1-2026-09-17",
@@ -836,7 +854,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 235
+      "lines": 250
     },
     {
       "id": "crown-jewel-module-09-dormant-tools-activation-power-up-v1-2026-09-17",
@@ -854,7 +872,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 237
+      "lines": 252
     },
     {
       "id": "crown-jewel-module-10-frontend-tier-s-wiring-power-up-v1-2026-09-17",
@@ -872,7 +890,223 @@
       "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
       "frontmatter_present": true,
-      "lines": 236
+      "lines": 251
+    },
+    {
+      "id": "crown-jewel-module-11-architecture-intelligence-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 11: Architecture Intelligence Power-Up (১৯৪-মডিউলের প্ল্যাটফর্মে স্ট্যাটিক-ডিপেন্ডেন্সি-গ্রাফ + বাউন্ডারি-রুল + baseline-N নীতি — 'অন্ধ-রিফ্যাক্টর' সমস্যার পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Infrastructure Circle (backend/ + frontend/ স্ট্যাটিক-গ্রাফ, scripts/governance/ প্রেসিডেন্ট, .github/workflows/ ফাউন্ডার-গেটেড প্রস্তাব)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base ed35eaf: pydeps/dependency-cruiser/madge-grep শূন্য; architecture-rules.yml অনুপস্থিত; .github/workflows/ ১৯-ফাইল গণনা; MODULES_LIST.md হেডার-স্ট্যাট ১২৬/৩/৬১/১/০; lint_plans.py প্রেসিডেন্ট-যাচাই)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 175
+    },
+    {
+      "id": "crown-jewel-module-12-skill-ecosystem-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 12: Governed Skill Ecosystem Power-Up (তিনটি প্রতিযোগী স্কিল-বাস্তবায়নের কনসলিডেশন + manifest-চালিত গভর্ন্যান্স — 'তৃতীয় ERR-F02' প্রতিরোধের পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/skills/ + backend/core/skill_manager.py + skills/ (রিপো-রুট) — তিন-বাস্তবায়ন একীকরণ-স্তর)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base ed35eaf: ৩-বাস্তবায়ন wc/ls গণনা; installer.py L3/L30/L73/L140-175 স্পট-চেক; manifest-স্কিমা cat-যাচাই; dormant caller-grep শূন্য; root skills/ ৬০৩-লাইন wc)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 178
+    },
+    {
+      "id": "crown-jewel-module-13-security-middleware-truth-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 13: Security Middleware Truth Power-Up (সুরক্ষা-মিডলওয়্যার স্ট্যাকের সত্য-মানচিত্র — মাউন্ট-বিহীন anti-hacking, config-বন্দি না-হওয়া সীমা, fail-open টেন্যান্ট-লিমিটার — পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/middleware/ + backend/core/autonoguard_engine.py + backend/core/security/ — সুরক্ষা-স্তরের সত্যায়ন-স্তর)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base b895e67: anti_hacking.py 158-লাইন পূর্ণপাঠ; rate_limiter.py/tenant_rate_limiter.py পূর্ণপাঠ; app.py L28 mount-grep; autonoguard হেডার+কলার-grep; config_fields L151; লেগেসি-ডক L348-352)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "dynamic-configuration",
+      "frontmatter_present": true,
+      "lines": 171
+    },
+    {
+      "id": "crown-jewel-module-14-user-facing-capability-truth-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 14: User-Facing Capability Truth Power-Up (ভয়েস-স্টাব-চেইন লাইভ-মাউন্টেড + P2P ক্রেডিট-স্টাব — 'নকল-সফলতা' প্রত্যাহার ও সত্য-ক্ষমতা-সেমান্টিকসের পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Interface Circle + Governance Circle (backend/services/voice_service.py + backend/api/routes/stream_voice_sse.py + backend/p2p/ + backend/api/routes/voice.py — ইউজার-মুখী ক্ষমতা-সত্য-স্তর)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base b895e67: voice_service.py 53-লাইন পূর্ণপাঠ; routers.py L176-214 মাউন্ট-টেবিল; stream_voice_sse.py হেডার+নোট; voice.py 65-লাইন পাঠ; p2p 47-লাইন পূর্ণপাঠ; কলার-grep)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 169
+    },
+    {
+      "id": "crown-jewel-module-15-security-organ-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 15: Security Organ Deep Power-Up (গভীর সুরক্ষা-অঙ্গ: ৯,৫৫৫-লাইনের অঙ্গে অর্ধেক ডরম্যান্ট, লাইভ-গেট দুটি টেস্ট-বিহীন, ডিসেপশন-ফিডব্যাক লুপ বিচ্ছিন্ন — ৩য়-পক্ষ বুদ্ধিমত্তা-সমৃদ্ধ পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/core/autonoguard_engine.py + backend/core/security/** — গভীর সুরক্ষা-অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 678e817: autonoguard_engine L37-48+L335, app_builder L119-123/L424-433, security/__init__ L321-323, guardian_ai L428+L235-242, middleware/security L52, endpoints_security L16-60, honeypot-mount, ৯,৫৫৫-লাইন wc-census; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 187
+    },
+    {
+      "id": "crown-jewel-module-16-billing-metering-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 16: Billing & Metering Gateway Power-Up (বিলিং-মিটারিং গেটওয়ে: ভাঙা টেলিমেট্রি-লুপ, রেভিনিউ-লিক ওয়েবহুক-ট্র্যাপ, দ্বৈত চেকআউট — মিটার-ফার্স্ট মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/api/routes/billing_api.py + backend/services/billing/ + backend/core/cost_guard.py — বিলিং-মিটারিং অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 41fd9181: billing_api পূর্ণ-কাঠামো-পাঠ, payments.py L124-135, realtime_dashboard L264-292, cost_guard L32-36/L59-63/L113/L155, pricing_tiers.json, .env.example L511 vs config_secrets.py L682, scripts-billing grep, BillingPage/CostDashboard পাথ-যাচাই; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 186
+    },
+    {
+      "id": "crown-jewel-module-17-hitl-approval-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 17: HITL & Approval Chain Power-Up (মানব-অনুমোদন চেইন: ৭টি প্রতিযোগী স্টেট-মেশিন, নির্বাহক-বিহীন 'approved', জাল OTP — 'এক-সেতু-সাত-দরজা' মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/services/hitl/ + backend/api/routes/approval_manager.py + hitl_admin.py — মানব-অনুমোদন অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 7492f54e: hitl engine/ledger পূর্ণপাঠ, approval_manager L55/L58-96/L89-91/L138-179, hitl_admin পূর্ণপাঠ, routers.py L150/L152/L270/L314, pending_tasks L22/L410, ApprovalQueue/HITLModal grep, telegram admin_handlers grep; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 180
+    },
+    {
+      "id": "crown-jewel-module-18-telegram-organ-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 18: Telegram Integration Organ Power-Up (টেলিগ্রাম-অঙ্গ: প্রোডাকশনে বধির বট, হার্ডকোডেড-ও-মুদ্রিত admin chat_id, secret-বিহীন spoofable webhook — activation-gate মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/tools/social/telegram_bot/ + telegram_security.py — ব্যবহারকারী-মুখী মেসেজিং অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 5cfbbc06: handler/updates/conversations/admin_handlers/runtime/ai_engine পূর্ণপাঠ, secret-token grep-শূন্য, auth_middleware L129-134, config_secrets L692-698, ৪-instance grep; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত core.telegram.org-প্রাথমিক)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 181
+    },
+    {
+      "id": "crown-jewel-module-19-i18n-bengali-adapter-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 19: i18n & Bengali-First Adapter Power-Up (i18n ও বাংলা-অ্যাডাপ্টার: সংস্কৃতিতে বাংলা-প্রথম, মেশিনারিতে ইংরেজি-প্রথম — ভাষা-কর-হ্রাস মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (frontend/src/i18n/ + backend ভাষা-পথ — বাংলা-অ্যাডাপ্টার অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 33815131: i18n-স্ট্যাক ৩১৬ লাইন পূর্ণপাঠ, token_budget L80-91/L115-127, providers L668-704, ৪-ম্যাপ তুলনা, embeddings L132, chat_export L136-217, index.css L1/L489, unicodedata grep, ২৫২-ফাইল বাংলা-গণনা; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 182
+    },
+    {
+      "id": "crown-jewel-module-20-notification-delivery-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 20: Notification & Delivery Organ Power-Up (নোটিফিকেশন-ডেলিভারি অঙ্গ: ১৩টি সমান্তরাল পাইপলাইন, মাত্র ৪টি জীবন্ত বাহক, জাল-'sent' প্রতারণা — 'স্টোর-আগে-বাহক' মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/core/messaging/ + backend/services/email/ + in-app alert পথ — নোটিফিকেশন-ডেলিভারি অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 8e2e32e8: service/adapters/event_bus/otp_router/email_service পূর্ণপাঠ, realtime_dashboard L44-63/L295-334, webhooks_ai L33-60, admin.py L390-431, AdminAlertsTab পাথ-যাচাই, ১৩-পাইপলাইন গণনা; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 180
+    },
+    {
+      "id": "crown-jewel-module-21-truth-mirror-governance-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 21: Truth-Mirror Governance Script Power-Up (সত্য-আয়না গভর্নেন্স: সিরিজের ১৫+ false-assurance আবিষ্কারকে ডেটা-নিয়মে রূপান্তর — সৎ-মক বনাম অসৎ-ফেব্রিকেশন শ্রেণিবিন্যাস, exclusion-ratchet বেসলাইন, founder-gated নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (scripts/governance/ + সিরিজ-প্রমাণ-কর্পাস — সত্য-আয়না টুল)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 93465fc1: fake_store.py পূর্ণপাঠ, webhooks_ai L33-60, detector-তালিকা ls+grep, ci.yml L147, audit-release.yml L281, backend/frontend census-grep; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 172
+    },
+    {
+      "id": "crown-jewel-module-22-scheduler-organ-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 22: Scheduler & Cron Organ Power-Up (শিডিউলার-অঙ্গ: চাকা-বিহীন গাড়ি — S10 নিখুঁত CRUD, অথচ নির্বাহক-লুপ অনুপস্থিত; placebo auto-healer; UTC-অন্ধ সময় — supervisor-as-heartbeat মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/api/routes/scheduled_tasks.py + backend/core/agent_supervisor.py + startup লুপ — শিডিউলার-অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 4cfd21c9: scheduled_tasks কাঠামো-পাঠ, agent_supervisor/startup-agents/maintenance/learning-store পূর্ণপাঠ, auto_healer L415, periodic_task_scheduler tick-grep, cron-yaml গণনা, TZ-grep, S10-ফ্রন্টএন্ড চুক্তি; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 182
     },
     {
       "id": "crown-jewel-module-series-index",
@@ -890,7 +1124,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 99
+      "lines": 146
     },
     {
       "id": "auto:README",

@@ -6,7 +6,7 @@ owner_circle: "Central Control Hub / MCP Circle"
 status: proposed
 target_scope: combined_ecosystem
 last_verified: 2026-09-18
-supersedes: [bi-directional-2way-mcp-server-control-tower-plan]
+supersedes: []
 superseded_by: []
 ---
 
