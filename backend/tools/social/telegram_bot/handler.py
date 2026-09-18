@@ -59,20 +59,18 @@ class TelegramBotCore:
             "ড্যাশবোর্ডের মতো ১-ক্লিকে যেকোনো উচ্চ ক্ষমতাসম্পন্ন অপারেশন পরিচালনা করুন:"
         ),
         "/telemetry": (
-            "📊 <b>SupremeAI 2.0 | Live Swarm Telemetry</b>\n\n"
-            "• ⚡ <b>Inference Latency:</b> <code>38ms</code> (optimized)\n"
-            "• 🚀 <b>Swarm Velocity:</b> <code>142 Tasks Completed (+18%)</code>\n"
-            "• 🧠 <b>Crown Jewel Memory:</b> <code>52 Knowledge Cards (100% Recalled)</code>\n"
-            "• 📁 <b>Canonical Master Docs:</b> <code>8 Pillars Active (docs/)</code>\n"
-            "• 🌐 <b>Cluster Health:</b> <code>99.99% Uptime (Swarm Online ◉)</code>\n"
-            "• 🛡️ <b>AutonoGuard Security:</b> <code>Zero Cost & Enforced</code>\n\n"
-            "<i>Refreshed in real-time from SupremeAI Living Engine.</i>"
+            "📊 <b>SupremeAI 2.0 | Live Telemetry</b>\n\n"
+            "এই কমান্ড প্রতিবার সিস্টেম থেকে বাস্তব ডেটা পড়ে দেখায় "
+            "(supervised agent health + সচল রান সংখ্যা)।\n"
+            "<i>যে ডেটা পাওয়া যায় না, সেটি সৎভাবে 'unavailable' দেখানো হয় — "
+            "বানানো সংখ্যা কখনো নয়।</i>"
         ),
         "/help": (
             "📖 <b>SupremeAI Commands:</b>\n\n"
             "✨ /app — Launch SupremeAI Studio Mini App in Telegram\n"
             "⚡ /quick — Dashboard Quick Actions keyboard\n"
-            "📊 /telemetry — Real-time Swarm KPIs & 38ms latency stats\n"
+            "📊 /telemetry — Live system health & run telemetry (real reads)\n"
+            "🛑 /abort &lt;run_id&gt; — Admin: cancel a running run instantly\n"
             "📚 /kb &lt;query&gt; — Search 52 Crown Jewel cards & 8 Master Docs\n"
             "💬 /session — Multi-session chat switcher\n"
             "⚡ /sys_status — Real-time infrastructure & health monitor\n"
@@ -82,7 +80,7 @@ class TelegramBotCore:
             "🔐 /admin — Admin operations & vault controls\n\n"
             "<i>Or just ask any question to chat with SupremeAI!</i>"
         ),
-        "/admin": "🔐 <b>Admin Operations:</b>\n/backup_now — Run immediate encrypted backup\n/sys_status — Cluster telemetry\n/rules — AI Directives\n/telemetry — Swarm metrics\n/mcp_clients — Approve MCP clients and change roles",
+        "/admin": "🔐 <b>Admin Operations:</b>\n/backup_now — Run immediate encrypted backup\n/sys_status — Cluster telemetry\n/abort &lt;run_id&gt; — Cancel a running run\n/rules — AI Directives\n/telemetry — Live metrics\n/mcp_clients — Approve MCP clients and change roles",
         "/rules": "📜 <b>Constitutional Rules:</b> 5 directions (North, South, East, West, Center) enforce Zero Infrastructure Cost & Brand Exclusivity.",
     }
 
