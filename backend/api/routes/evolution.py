@@ -260,16 +260,34 @@ class QuarantineRequest(BaseModel):
 
 @router.get("/swarm-graph")
 async def get_swarm_graph():
-    # ⚡ Simulated dynamic graph state for prototype
-    current_state = {
-        "nodes": [
-            {"id": "agent-1", "label": "Code-Optimizer", "type": "agent"},
-            {"id": "skill-2", "label": "FastAPI Refactor", "type": "skill"},
-        ],
-        "edges": [{"source": "agent-1", "target": "skill-2", "relationship": "teaches"}],
-    }
+    """Real swarm topology (issue #446 honest-telemetry fix).
 
-    return current_state
+    Nodes come from the live agent_supervisor health map (same truth-source as
+    /api/v1/health/agents).  Edges are an honest empty list — no real
+    edge/relationship telemetry source exists yet, and the previous hardcoded
+    prototype graph ("Code-Optimizer teaches FastAPI Refactor") was pure
+    simulation feeding the Swarm Map UI.
+    """
+    from core.agent_supervisor import agent_supervisor
+
+    health = agent_supervisor.get_health() or {}
+    nodes = [
+        {
+            "id": agent_id,
+            "label": agent_id,
+            "type": "agent",
+            "status": (info or {}).get("status", "unknown")
+            if isinstance(info, dict)
+            else "unknown",
+        }
+        for agent_id, info in health.items()
+    ]
+    return {
+        "nodes": nodes,
+        "edges": [],
+        "source": "agent_supervisor",
+        "simulated": False,
+    }
 
 
 @router.post("/quarantine")
