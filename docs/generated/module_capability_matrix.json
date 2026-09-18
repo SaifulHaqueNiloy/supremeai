@@ -4984,6 +4984,20 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/llm/llm_gateway/context.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/errors.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/llm/llm_gateway/gateway.py"
     },
     {
@@ -5024,6 +5038,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/llm/llm_gateway/routing.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/llm/llm_gateway/spend_meter.py"
     },
     {
       "capability_signals": [],
@@ -6234,6 +6255,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/rules_mutator.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/scheduled_task_sweep.py"
     },
     {
       "capability_signals": [],
@@ -9086,6 +9116,15 @@
         "main"
       ],
       "kind": "py",
+      "path": "backend/scripts/adapt_coldstart_knowledge.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "backend/scripts/audit_import_walk.py"
     },
     {
@@ -10151,7 +10190,8 @@
     },
     {
       "capability_signals": [
-        "browser"
+        "browser",
+        "health"
       ],
       "classification": "test",
       "entrypoints": [],
@@ -10653,6 +10693,16 @@
       "path": "backend/tests/api/test_projects_api.py"
     },
     {
+      "capability_signals": [
+        "memory",
+        "realtime"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_realtime_dashboard_ws.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10679,6 +10729,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_router_mount_hygiene.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_scheduled_task_sweep.py"
     },
     {
       "capability_signals": [
@@ -13195,6 +13255,13 @@
       "path": "backend/tests/scout_tests/test_web_crawler_agent.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/scripts/test_adapt_coldstart_knowledge.py"
+    },
+    {
       "capability_signals": [
         "execute",
         "memory"
@@ -13235,6 +13302,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/scripts/test_coverage_quality_gate.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/scripts/test_gateway_contract_m03.py"
     },
     {
       "capability_signals": [],
@@ -22317,6 +22391,17 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/check_gateway_bypass.py"
+    },
+    {
+      "capability_signals": [
         "mcp"
       ],
       "classification": "human_review",
@@ -24371,5 +24456,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2810
+  "source_file_count": 2820
 }
