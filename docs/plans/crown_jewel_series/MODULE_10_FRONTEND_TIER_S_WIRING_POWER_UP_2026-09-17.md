@@ -255,3 +255,25 @@ P-G: টেস্ট-সুরক্ষা-জাল       → প্রতি �
 - **এরপর কী (continuous process চলমান):** কিউ পুনঃর‍্যাঙ্ক হবে Gate 5-পরিমাপ ও ফাউন্ডার-অগ্রাধিকারে — নতুন প্রার্থী: mission-control (apps/) গভীর-বিশ্লেষণ, SSE/websocket-অবকাঠামা, billing-gateway স্তর, i18n/বাংলা-অ্যাডাপ্টার, অথবা প্রকাশিত দশটির যে-কোনো মডিউলের Phase-স্তর execution-নীলনকশা (proposed → approved → সম্পাদন)।
 - **শৃঙ্খলা-অটুট:** single-plan execution — একসময়ে একটাই Phase সম্পাদনে; এই সিরিজ বিশ্লেষণ-পাইপলাইন, সম্পাদন-পাইপলাইন নয়।
 - সূচি ও কিউ: `crown_jewel_series/README.md`।
+
+---
+
+## Part 7 — প্রগ্রেস লগ (Execution Started — 2026-09-18, issue #453 Wave 1)
+
+**P-A আংশিক বাস্তবায়ন (base `4ac43642`):**
+- ChatInterface host প্রথমবার মাউন্টেড: `/chat` রুট (ProtectedRoute + WorkspaceLayout) +
+  navigation registry-তে `nav-chat` (simple viewer-ও দেখবে) + `nav-prompt-library` nav truth।
+- ভুয়া `"current_conv"` প্লেসহোল্ডার (৩টি) সরিয়ে ক্লায়েন্ট-জেনারেটেড সত্য `conversation_id` —
+  প্রতিটি orchestration payload-এ যায়, পরের কলে স্থায়ী থাকে; কথোপকথনের আগে share/export
+  বাটন সৎভাবে disabled ("Start a conversation first")।
+- S2 ThinkingPanel + S3 ArtifactsPanel ChatInterface-এ মাউন্ট (store-driven, toolbar toggle);
+  orchestration `data.reasoning_steps`/`data.artifacts` টাইপ-গার্ড দিয়ে গ্রহণ — ফিল্ড না এলে
+  কিছুই বানানো হয় না।
+- Integration guide-এর ভুয়া প্যাথ সংশোধিত (tierSStore/tierSRoutes/server.py-র অস্বাস্থ্যকর
+  নির্দেশনা → প্রকৃত workspaceUiStateStore/workspaceFeatureRoutes/routers.py সত্য)।
+
+**প্রমাণ:** নতুন চুক্তি-টেস্ট `frontend/src/components/chat/ChatInterface.test.tsx` (৫টি);
+frontend vitest 527→**532 (102 files)**; tsc `-p tsconfig.app.json` 0 errors; missions 62/62।
+
+**বাকি (P-A সম্পূর্ণ হতে):** guide-string-এর বাকি দাবির re-verification; S2/S3-এর backend
+`data.*` ফিল্ড চুক্তি যখন M03/M02 সরবরাহ করবে তখন e2e; knip zero-false-positive baseline।
