@@ -203,10 +203,14 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ LearningStore failed to start: {exc}")
 
-    # Analyze layer: env-gated periodic aggregate→snapshot→propose agent.
+    # Analyze layer: periodic aggregate→snapshot→propose agent.
     # Proposals are NEVER auto-applied (plan §10.3) — HITL/admin review only.
+    # বাংলা (M05 P-A, issue #453 Wave-3): সুরক্ষিত ডিফল্ট-উল্টো — "সেলফ-লার্নিং
+    # প্ল্যাটফর্ম" দাবির সাথে বাস্তবতা মেলাতে ডিফল্ট এখন true। লুপটি শূন্য-খরচ
+    # (নিজস্ব docstring: pure reads/aggregates, কোনো LLM কল নেই) এবং proposal
+    # কখনো auto-apply হয় না, তাই ডিফল্ট-চালুতে খরচ/ঝুঁকি নেই।
     try:
-        if os.getenv("ENABLE_LEARNING_LOOP", "false").lower() == "true":
+        if os.getenv("ENABLE_LEARNING_LOOP", "true").lower() == "true":
             from core.learning.loop import get_learning_loop_agent
 
             _learning_agent = get_learning_loop_agent()
