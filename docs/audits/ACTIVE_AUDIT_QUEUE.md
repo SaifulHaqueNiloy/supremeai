@@ -16,6 +16,7 @@
 | 5 | GAP-005 | Compute | `scripts/compute/` | Headless GPU dispatcher script for user-directed compute | `[OPEN]` | 2026-09-18 |
 | 6 | GAP-006 | Config | **OWNER ACTION REQUIRED** | `PRODUCTION_URL` repo variable not set — QA Live Smoke always fail-closed. Run: `gh variable set PRODUCTION_URL --body "https://supremeai-primary-node.onrender.com" -R SaifulHaqueNiloy/supremeai` (PAT lacks Actions:write — must be owner) | `[BLOCKED:OWNER]` | 2026-09-19 |
 | 7 | GAP-007 | Memory | `backend/memory/ai_memory` rows | Existing hash-vector rows in ai_memory need re-embedding after CLOUDFLARE_API_TOKEN is set. Run: `REINDEX_DRY_RUN=true python scripts/maintenance/reindex_ai_memory_embeddings.py` then without dry-run. | `[PENDING:CF-TOKEN]` | 2026-09-19 |
+| 8 | GAP-008 | Orchestration | `backend/runs/stategraph.py` & `backend/brain/` | Micro StateGraph Engine + Real ReAct Tool Calling & Checkpoint Binding (Self-healing cyclic workflow replacing stubs) | `[RESOLVED]` | 2026-09-19 |
 
 ---
 
