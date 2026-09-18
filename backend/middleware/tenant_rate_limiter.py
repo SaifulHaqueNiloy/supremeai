@@ -2,11 +2,25 @@
 """Upstash / Redis atomics-based tenant rate limiter middleware.
 
 বাংলা মন্তব্য: ডিস্ট্রিবিউটেড টেন্যান্ট রেট লিমিটিং। race condition রোধ করতে Redis pipeline/incr পরমাণু (atomic) অপারেশন ব্যবহার করা হয়েছে।
+
+M13 (P-B + P-C): সীমা/জানালা config-চালিত (TENANT_RATE_LIMIT_MAX_HITS /
+TENANT_RATE_LIMIT_WINDOW_SECONDS — ডিফল্ট অপরিবর্তিত 100/60); Redis-বিভ্রাটে
+fail-মোড config-চালিত (TENANT_RATE_LIMIT_FAIL_MODE): "open" (ডিফল্ট = আজকের
+আচরণ, loud লগসহ) | "fallback" (বাউন্ডেড ইন-মেমরি sliding window — per-instance,
+aggregate-safe নয়, লাউড লগ) | "closed" (429 — কঠোর পরিবেশে fail-closed)।
+নীতি-প্যাটার্ন: V5.1 is_token_revoked env-aware fail-policy।
 """
 
 from fastapi import HTTPException, Request
 
+from core.config import settings
 from core.logging_config import logger
+
+# M13 P-C: Redis-বিভ্রাটে fallback ব্যবহারের জন্য বাউন্ডেড ইন-মেমরি limiter
+# (InMemoryFallbackLimiter-প্যাটার্ন পুনঃব্যবহার) — "fallback" মোডে কেবল।
+from middleware.rate_limiter import InMemoryFallbackLimiter
+
+_tenant_fallback_limiter = InMemoryFallbackLimiter(burst=100, window=60.0)
 
 
 def _rate_limit_identity(request: Request) -> str:
@@ -28,16 +42,62 @@ def _rate_limit_identity(request: Request) -> str:
     return f"ip:{client_ip}"
 
 
+def _resolve_fail_mode() -> str:
+    """Config fail-মোড সৎ-সংকল্প — অজানা মান fail-closed নয়, 'open'-এ পড়ে না;
+    অজানা মান = loud 'open' + সতর্কবার্তা (নীরব পছন্দ নিষিদ্ধ)।"""
+    mode = (settings.tenant_rate_limit_fail_mode or "").strip().lower()
+    if mode in {"open", "fallback", "closed"}:
+        return mode
+    logger.warning(
+        f"⚠️ Unknown TENANT_RATE_LIMIT_FAIL_MODE={settings.tenant_rate_limit_fail_mode!r} "
+        f"— treating as 'open' (loud, not silent)."
+    )
+    return "open"
+
+
+def _degraded_response(identity: str, mode: str) -> None:
+    """Redis-অনুপস্থিতিতে fail-মোড অনুযায়ী সিদ্ধান্ত — কোনো নীরব শাখা নেই।"""
+    if mode == "closed":
+        # M13 P-C: fail-closed — কঠোর পরিবেশে Redis ছাড়া টেন্যান্ট-সীমা
+        # অনুপস্থিত থাকা = পুরো গেট অর্থহীন; তাই স্পষ্ট 429।
+        logger.critical(
+            f"🚨 Tenant rate limiter Redis unavailable and fail-mode='closed' — "
+            f"rejecting {identity} (fail-closed policy)."
+        )
+        raise HTTPException(
+            status_code=429,
+            detail="Rate limiter unavailable — request rejected (fail-closed policy).",
+        )
+    if mode == "fallback":
+        allowed = _tenant_fallback_limiter.is_allowed(
+            identity, settings.tenant_rate_limit_max_hits
+        )
+        logger.warning(
+            f"⚠️ Tenant rate limiter Redis unavailable — bounded in-memory fallback "
+            f"active for {identity} (per-instance, NOT aggregate-safe). allowed={allowed}"
+        )
+        if not allowed:
+            raise HTTPException(
+                status_code=429, detail="Too Many Requests. Rate limit exceeded."
+            )
+        return
+    # mode == "open" (ডিফল্ট): আজকের আচরণ — loud লগ + bypass।
+    logger.warning(
+        f"⚠️ Tenant rate limiter Redis unavailable — failing OPEN for {identity} "
+        f"(TENANT_RATE_LIMIT_FAIL_MODE=open). Set 'fallback'/'closed' to enforce."
+    )
+    return
+
+
 async def enforce_tenant_rate_limit(request: Request):
     """Upstash / Redis atomic sliding window rate limiting guard."""
     identity = _rate_limit_identity(request)
+    fail_mode = _resolve_fail_mode()
 
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):
-        logger.warning(
-            "⚠️ Redis manager unavailable. Bypassing rate limiter gateway for resilience."
-        )
+        _degraded_response(identity, fail_mode)
         return
 
     cache_key = f"rate_limit:{identity}"
@@ -45,15 +105,16 @@ async def enforce_tenant_rate_limit(request: Request):
     try:
         pipe = redis_manager.client.pipeline()
         pipe.incr(cache_key)
-        pipe.expire(cache_key, 60)
+        pipe.expire(cache_key, settings.tenant_rate_limit_window_seconds)
         results = await pipe.execute()
         current_hits = results[0]
 
-        if current_hits > 100:
+        if current_hits > settings.tenant_rate_limit_max_hits:
             logger.critical(f"🚨 Rate Limit Exceeded for {identity} ({current_hits} hits)!")
             raise HTTPException(status_code=429, detail="Too Many Requests. Rate limit exceeded.")
     except HTTPException:
         raise
     except Exception as exc:
-        logger.warning(f"⚠️ Rate limiter error: {exc}. Failing open for resilience.")
+        logger.warning(f"⚠️ Rate limiter error: {exc}. Applying fail-mode '{fail_mode}'.")
+        _degraded_response(identity, fail_mode)
         return

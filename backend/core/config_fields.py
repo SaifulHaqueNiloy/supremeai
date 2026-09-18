@@ -268,6 +268,43 @@ class SettingsFieldsMixin:
     security_caution_log_ttl: int = Field(
         default=86400, validation_alias="SECURITY_CAUTION_LOG_TTL"
     )
+    # বাংলা মন্তব্য (M13 P-B zero-hardcode): OTP-pending এর Redis TTL — আগে
+    # anti_hacking.py-তে ইন-কোড 300 স্থির ছিল (ডিফল্ট অপরিবর্তিত)।
+    security_otp_pending_ttl: int = Field(default=300, validation_alias="SECURITY_OTP_PENDING_TTL")
+    # বাংলা মন্তব্য (M13 P-B): tier-ভিত্তিক API রেট-সীমা — আগে rate_limiter.py-র
+    # ইন-কোড _tier_limits dict-এ আটকে ছিল (tier-মূল্য বদলাতে কোড-ডিপ্লয় লাগত)।
+    rate_limit_tier_free: int = Field(default=60, validation_alias="RATE_LIMIT_TIER_FREE")
+    rate_limit_tier_pro: int = Field(default=600, validation_alias="RATE_LIMIT_TIER_PRO")
+    rate_limit_tier_premium: int = Field(default=1200, validation_alias="RATE_LIMIT_TIER_PREMIUM")
+    rate_limit_tier_enterprise: int = Field(
+        default=6000, validation_alias="RATE_LIMIT_TIER_ENTERPRISE"
+    )
+    rate_limit_tier_window_seconds: int = Field(
+        default=60, validation_alias="RATE_LIMIT_TIER_WINDOW_SECONDS"
+    )
+    # বাংলা মন্তব্য (M13 P-B): acquire() কলার limit/window না দিলে এই ডিফল্ট
+    # (আগে ফাংশন-বডিতে স্থির 100/60)।
+    rate_limit_default_limit: int = Field(default=100, validation_alias="RATE_LIMIT_DEFAULT_LIMIT")
+    rate_limit_default_window: int = Field(
+        default=60, validation_alias="RATE_LIMIT_DEFAULT_WINDOW"
+    )
+    # বাংলা মন্তব্য (M13 P-B): near-limit warning ratio — আগে 0.8 স্থির।
+    rate_limit_warn_ratio: float = Field(default=0.8, validation_alias="RATE_LIMIT_WARN_RATIO")
+    # বাংলা মন্তব্য (M13 P-B): টেন্যান্ট রেট-সীমা — আগে tenant_rate_limiter.py-তে
+    # স্থির 100 hits / 60s।
+    tenant_rate_limit_max_hits: int = Field(
+        default=100, validation_alias="TENANT_RATE_LIMIT_MAX_HITS"
+    )
+    tenant_rate_limit_window_seconds: int = Field(
+        default=60, validation_alias="TENANT_RATE_LIMIT_WINDOW_SECONDS"
+    )
+    # বাংলা মন্তব্য (M13 P-C): Redis-বিভ্রাটে টেন্যান্ট-লিমিটারের fail-মোড —
+    # V5.1 env-aware fail-policy ধারা। "open" (ডিফল্ট = আজকের আচরণ, নীরব
+    # বাইপাস নয় — loud লগ বিদ্যমান) | "fallback" (বাউন্ডেড ইন-মেমরি sliding
+    # window, per-instance) | "closed" (429 — কঠোর পরিবেশে)।
+    tenant_rate_limit_fail_mode: str = Field(
+        default="open", validation_alias="TENANT_RATE_LIMIT_FAIL_MODE"
+    )
     admin_emails: str | list[str] = Field(default_factory=list, validation_alias="ADMIN_EMAILS")
     admin_enforce_totp: bool = Field(default=True, validation_alias="ADMIN_ENFORCE_TOTP")
     admin_authorized: bool = Field(default=False, validation_alias="ADMIN_AUTHORIZED")
