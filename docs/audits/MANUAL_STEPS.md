@@ -91,9 +91,9 @@ scratch DB, boot, run a conversation round-trip + memory recall) and log the res
 
 | # | Item | Why manual |
 |---|------|-----------|
-| 7.1 | Wire **real canary traffic splitting** for `AutoSkillCreator` deployments via `CanaryRolloutController` (Render has no native traffic split on free tier — needs a header/%-routing approach at the edge). | Needs infra decision |
-| 7.2 | Repoint or delete the dead `core/resilience/rollback_monitor.py` (targets Cloud Run revisions) to Render image rollback. | Needs Render API integration test |
-| 7.3 | Decide whether `/api/v1/evolution/forge` should require a human approval step before `SkillInstaller` (currently auto-promotes; AST+benchmark+sandbox gates pass, but ADR-0002 mandates HITL). | Product/security decision |
+| 7.1 | ~~Wire **real canary traffic splitting** for `AutoSkillCreator` deployments via `CanaryRolloutController`~~ **✅ RESOLVED (2026-09-19)** — Implemented `should_route()` and `route_request()` in `evolution/canary_manager.py` with deterministic client hash-bucketing (sticky sessions), `X-Canary` header overrides (`true`/`false`/`proposal_id`), and GET `/api/v1/evolution/canary/{proposal_id}/route`. | Resolved |
+| 7.2 | ~~Repoint or delete the dead `core/resilience/rollback_monitor.py`~~ **✅ RESOLVED (2026-09-19)** — Dead Cloud Run monitor removed and superseded by `core/resilience/safety_rollback_manager.py` (gzip checkpoints, SHA-256 integrity verification, auto-rollback). | Resolved |
+| 7.3 | ~~Decide whether `/api/v1/evolution/forge` should require a human approval step~~ **✅ RESOLVED (2026-09-19)** — Verified `AutoSkillCreator` suspends newly generated skills via `HITLEngine.suspend_for_approval()` returning `status: "pending_approval"` (ADR-0002 compliance enforced; no autonomous installation without admin promotion). | Resolved |
 | 7.4 | ~~Sweep remaining routes returning `str(e)` to clients~~ **✅ DONE in patch v2 (2026-08-30)** — `keys.py`, `conversations.py` (x3, HTTPException pass-through preserves ownership 404), `preferences.py`, `admin.py` now return generic 500s with `correlation_id` (uuid) and log full detail server-side via `logger.exception`. No further action. | ~~Code sweep~~ resolved |
 | 7.5 | Move HITL/audit records to append-only storage (e.g. DB table + hash chain; `cryptographic_ledger.py` already provides the chaining logic) instead of 30-day Redis retention. | Storage design decision |
 | 7.6 | Firebase-admin retirement plan (Firestore tenant path + backup tooling are the last consumers). | Architecture decision |
