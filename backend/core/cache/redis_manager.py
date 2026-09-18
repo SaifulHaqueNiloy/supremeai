@@ -214,8 +214,8 @@ class SecureRedisManager:
         if aclose is not None:
             try:
                 asyncio.get_running_loop().create_task(aclose())
-            except RuntimeError:
-                pass
+            except RuntimeError as loop_err:
+                logger.debug("No running loop to background close old Redis pool: %s", loop_err)
         logger.critical(
             "🔥 Redis federation pool %d/%d QUOTA EXHAUSTED (%s) — failed over to "
             "pool %d/%d. Consumers keep running on real Redis (no in-memory "
@@ -241,8 +241,8 @@ class SecureRedisManager:
         if old_client is not None:
             try:
                 await old_client.aclose()
-            except Exception:  # noqa: BLE001 — probe reset must never raise
-                pass
+            except Exception as close_err:  # noqa: BLE001 — probe reset must never raise
+                logger.debug("Error closing old Redis client during reset: %s", close_err)
         await self._ensure_connected()
 
     async def _ensure_connected(self) -> None:
