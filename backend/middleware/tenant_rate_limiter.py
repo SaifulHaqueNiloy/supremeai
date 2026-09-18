@@ -40,7 +40,11 @@ async def enforce_tenant_rate_limit(request: Request):
         )
         return
 
-    cache_key = f"rate_limit:{identity}"
+    # Issue #460: dedicated namespace. The old "rate_limit:{identity}" name
+    # collides with AsyncRateLimiter's ZSET keys ("rate_limit:ip:{ip}") —
+    # a counter INCR against a ZSET is WRONGTYPE, so the two limiters used
+    # to fight over the same keys.
+    cache_key = f"tenant_rl:{identity}"
 
     try:
         # Issue #460: single atomic EVAL (1 billable op) instead of the
