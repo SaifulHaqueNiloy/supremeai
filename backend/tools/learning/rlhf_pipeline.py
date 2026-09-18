@@ -153,6 +153,17 @@ class RLHFPipeline:
 
             trainer = ModelTrainer()
             res = await trainer.trigger_lora_finetune(dataset_path, base_model)
+            # Issue #440 fix: the delegation previously rewrapped EVERY result
+            # as "success" — propagating the local-simulation fake.  Propagate
+            # the honest status instead.
+            if res.get("status") != "success":
+                return {
+                    "status": res.get("status", "error"),
+                    "method": "model_trainer_delegation",
+                    "message": res.get(
+                        "message", "ModelTrainer could not start the DPO/LoRA job"
+                    ),
+                }
             return {
                 "status": "success",
                 "method": "model_trainer_delegation",

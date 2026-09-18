@@ -428,6 +428,18 @@ class SettingsSecretsMixin:
         return keys
 
     @property
+    def runpod_api_key(self) -> str:
+        """RunPod training/inference key (issue #440 fix).
+
+        tools/learning/model_trainer.py auto-detection referenced
+        ``settings.runpod_api_key`` which did not exist — the provider could
+        never be selected and every request silently fell through to the fake
+        "local" path.  Surface the vault-backed value here so real training
+        providers activate when the key is provisioned.
+        """
+        return self._get_cached_secret("RUNPOD_API_KEY")
+
+    @property
     def discord_bot_token(self) -> str:
         try:
             return self._get_cached_secret("DISCORD_BOT_TOKEN")
