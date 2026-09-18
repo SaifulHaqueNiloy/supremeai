@@ -82,9 +82,7 @@ async def _quick_reason(prompt: str, tenant_id: str = "anonymous") -> ReasoningR
             ],
             # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — reasoning-খরচ টেন্যান্টে
             # অ্যাট্রিবিউটেড (আগে অদৃশ্য ছিল)।
-            context=InferenceContext(
-                tenant_id=tenant_id, task_type="reasoning", stream=False
-            ),
+            context=InferenceContext(tenant_id=tenant_id, task_type="reasoning", stream=False),
         )
 
         text = response.get("text", "") if isinstance(response, dict) else str(response)

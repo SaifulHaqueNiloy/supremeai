@@ -125,9 +125,7 @@ class TestAcompletionContextContract:
             raise _Stop()
 
         gw.cache = SimpleNamespaceCache(_fake_cache_query)
-        ctx = InferenceContext(
-            prompt="context payload", tenant_id="t1", task_type="research"
-        )
+        ctx = InferenceContext(prompt="context payload", tenant_id="t1", task_type="research")
         with pytest.raises(_Stop):
             await gw.acompletion(prompt="arg payload", context=ctx)
         assert captured["prompt"] == "context payload"
