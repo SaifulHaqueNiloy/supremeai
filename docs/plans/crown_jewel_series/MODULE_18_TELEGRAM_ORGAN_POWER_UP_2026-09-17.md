@@ -113,16 +113,20 @@ acceptance_criteria:
 - **P-F**: transport-স্বাস্থ্য — 429 retry_after-সম্মান + 4096-chunk + শেয়ার্ড AsyncClient + ৪→১ lazy handler-provider; fire-and-forget ব্যর্থতায় loud-log
 - **P-G**: orchestrator-সেতু-সত্য — বাস্তব processor-inject বা মৃত-ফলব্যাক অপসারণ (ERR-F02 zero-caller-প্রমাণ)
 - **P-H**: বার্তা-ক্যাটালগ ডেটা-ফাইল (EN+BN কী-গঠিত) + /session-সত্য (বাস্তবায়ন বা পুনঃলেবেল) — চক্র ১৯ i18n-ভিত্তি
+- **P-I**: জরুরি HITL ইন্টারঅ্যাকশন ও রান ক্যান্সেলেশন কন্ট্রোল (High-Urgency HITL Bridge & CancellationToken Telegram Abort):
+  - Module 17 HITL অ্যালার্টের সাথে টেলিগ্রাম ইনলাইন কীবোর্ড ইন্টিগ্রেশন (অনুমোদন বা বাতিলের ওয়ান-ক্লিক বাটন)।
+  - `/abort <run_id>` টেলিগ্রাম কমান্ড যা তাৎক্ষণিকভাবে Run Fabric ও LLM Gateway-তে `CancellationToken` ট্রিগার করবে এবং রানিং এজেন্টের ইন-ফ্লাইট টাস্ক হত্যা করবে।
 
 ### ২.৪ কীভাবে করব
 
-ক্রম P-A→P-B→P-C→P-D→P-F→P-G→P-E→P-H (P-E পূর্বশর্ত-পরেই); প্রতিটি P = আলাদা ছোট execution-প্ল্যান (Gate 2-পরবর্তী); P-A-তে secret-অমিল-টেস্ট-প্রথম; P-B-তে env-absence = কোনো-admin (fail-closed); P-F-এ rate-limit-মান data-file; P-H-এ ক্যাটালগ-লোড-fail→last-known-good; সব env V5.1-সংগত
+ক্রম P-A→P-B→P-C→P-D→P-F→P-G→P-E→P-H→P-I (P-E ও P-I পূর্বশর্ত-পরেই); প্রতিটি P = আলাদা ছোট execution-প্ল্যান (Gate 2-পরবর্তী); P-A-তে secret-অমিল-টেস্ট-প্রথম; P-B-তে env-absence = কোনো-admin (fail-closed); P-F-এ rate-limit-মান data-file; P-H-এ ক্যাটালগ-লোড-fail→last-known-good; সব env V5.1-সংগত
 
 ### ২.৫ বেনিফিট
 
 - টেলিগ্রাম-চ্যানেল প্রথমবার সৎভাবে সক্রিয়যোগ্য — spoof-অসম্ভব ইনগ্রেসে
 - বাংলা-প্রথম ব্যবহারকারীর মুখ্য-চ্যানেল সুস্থ: বন্যায় বার্তা-হারানি, cold-start-পরেও সমন্বিত
 - অনুমোদন-মোবাইল-মুক্তি (Module-17 সেতুর প্রধান-বাহক জীবন্ত)
+- তাৎক্ষণিক ইমার্জেন্সি কিল-সুইচ: মোবাইল থেকেই রানঅ্যাওয়ে এজেন্টের কাজ(`/abort`) বাতিল করার ক্ষমতা।
 - রক্ষণ-পৃষ্ঠ ৪→১ instance; জাল-KPI শূন্য (V6-সংবিধান-সম্পূর্ণ)
 - চক্র ১৯-এর i18n-ক্যাটালগ-ভিত্তি স্থাপিত
 
