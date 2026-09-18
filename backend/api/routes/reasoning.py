@@ -16,6 +16,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 from engine.debate_engine import ConsensusOrchestrator, Proposal
 from engine.tree_of_thought import TreeOfThoughtReasoner
@@ -58,7 +59,7 @@ class ReasoningResponse(BaseModel):
     mode: str
 
 
-async def _quick_reason(prompt: str) -> ReasoningResponse:
+async def _quick_reason(prompt: str, tenant_id: str = "anonymous") -> ReasoningResponse:
     """Perform a single LLM call asking for step-by-step reasoning."""
     from core.llm.llm_gateway import llm_gateway
 
@@ -79,8 +80,11 @@ async def _quick_reason(prompt: str) -> ReasoningResponse:
                 {"role": "system", "content": system_msg},
                 {"role": "user", "content": prompt},
             ],
-            task_type="reasoning",
-            stream=False,
+            # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — reasoning-খরচ টেন্যান্টে
+            # অ্যাট্রিবিউটেড (আগে অদৃশ্য ছিল)।
+            context=InferenceContext(
+                tenant_id=tenant_id, task_type="reasoning", stream=False
+            ),
         )
 
         text = response.get("text", "") if isinstance(response, dict) else str(response)
@@ -206,7 +210,10 @@ async def _debate_reason(prompt: str) -> ReasoningResponse:
 
 
 @router.post("/think", response_model=ReasoningResponse)
-async def think(payload: ReasoningRequest):
+async def think(
+    payload: ReasoningRequest,
+    token_payload: dict = Depends(get_current_user_token),
+):
     """Run a reasoning process on the given prompt.
 
     Supports three modes:
@@ -217,19 +224,29 @@ async def think(payload: ReasoningRequest):
     logger.info(f"Reasoning request: mode={payload.mode}, prompt='{payload.prompt[:80]}...'")
 
     try:
+        # M03 P0-পূর্ণাংশ: token-থেকে টেন্যান্ট সত্য — context-এ যায়।
+        tenant_id = str(
+            token_payload.get("tenant_id")
+            or token_payload.get("org_id")
+            or token_payload.get("sub")
+            or "anonymous"
+        )
         if payload.mode == ReasoningMode.TREE_OF_THOUGHT:
             return await _tree_of_thought_reason(payload.prompt)
         elif payload.mode == ReasoningMode.DEBATE:
             return await _debate_reason(payload.prompt)
         else:
-            return await _quick_reason(payload.prompt)
+            return await _quick_reason(payload.prompt, tenant_id=tenant_id)
     except Exception as e:
         logger.error(f"Reasoning failed: {e}")
         raise HTTPException(status_code=500, detail=f"Reasoning engine error: {e}") from e
 
 
 @router.post("/think/stream")
-async def think_stream(payload: ReasoningRequest):
+async def think_stream(
+    payload: ReasoningRequest,
+    token_payload: dict = Depends(get_current_user_token),
+):
     """Stream reasoning steps as Server-Sent Events.
 
     Each reasoning step is emitted as:
@@ -301,7 +318,16 @@ async def think_stream(payload: ReasoningRequest):
 
             else:
                 # Quick mode: stream step-by-step
-                result = await _quick_reason(payload.prompt)
+                # M03 P0-পূর্ণাংশ: টেন্যান্ট context streaming পথেও যায়।
+                result = await _quick_reason(
+                    payload.prompt,
+                    tenant_id=str(
+                        token_payload.get("tenant_id")
+                        or token_payload.get("org_id")
+                        or token_payload.get("sub")
+                        or "anonymous"
+                    ),
+                )
 
                 for idx, step in enumerate(result.reasoning_steps, start=1):
                     event_data = {

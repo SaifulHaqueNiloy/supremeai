@@ -41,6 +41,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, model_validator
 
 from core.llm.llm_gateway import llm_gateway
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 from core.memory.auto_rag_injector import auto_rag_injector
 from core.security import verify_token_async
@@ -274,8 +275,13 @@ class SafeSSEGenerator:
         try:
             response_stream = await llm_gateway.acompletion(
                 prompt=self.prompt,
-                task_type=self.task_type,
-                stream=True,
+                # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — SSE stream-ও টেন্যান্টে
+                # অ্যাট্রিবিউটেড (user_id fallback = সৎ অজানা নয়, প্রমাণিত পরিচয়)।
+                context=InferenceContext(
+                    tenant_id=self.tenant_id or self.user_id or "anonymous",
+                    task_type=self.task_type,
+                    stream=True,
+                ),
             )
 
             # Defensive validation of stream object
@@ -320,8 +326,13 @@ class SafeSSEGenerator:
         try:
             response = await llm_gateway.acompletion(
                 prompt=self.prompt,
-                task_type=self.task_type,
-                stream=False,
+                # M03 P0-পূর্ণাংশ: fallback-পথেও context বাধ্যতামূলক — attribution
+                # parity স্ট্রিমিং-পথের সাথে।
+                context=InferenceContext(
+                    tenant_id=self.tenant_id or self.user_id or "anonymous",
+                    task_type=self.task_type,
+                    stream=False,
+                ),
             )
 
             # Extract text from various response formats

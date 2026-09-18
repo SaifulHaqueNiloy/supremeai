@@ -162,12 +162,17 @@ async def _llm_call(prompt: str, user_id: str, task_type: str = "deep_research")
     """Invoke the LLM gateway and extract the text response."""
     try:
         from core.llm.llm_gateway import llm_gateway
+        from core.llm.llm_gateway.context import InferenceContext
 
         resp = await llm_gateway.acompletion(
             prompt=prompt,
-            task_type=task_type,
-            tenant_id=user_id,
-            stream=False,
+            # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — deep-research খরচ
+            # টেন্যান্ট user_id-তে অ্যাট্রিবিউটেড হয়।
+            context=InferenceContext(
+                tenant_id=str(user_id) if user_id else "anonymous",
+                task_type=task_type,
+                stream=False,
+            ),
             timeout=30.0,
         )
         if isinstance(resp, dict):
