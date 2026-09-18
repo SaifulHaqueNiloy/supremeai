@@ -121,7 +121,21 @@ class APIKeyAuthMiddleware(BaseHTTPMiddleware):
         # IP-based sliding window rate limiter check
         # বাংলা: X-Forwarded-For স্পুফিং-সহনশীল IP এক্সট্র্যাকশন ব্যবহার করা হলো।
         client_ip = _extract_client_ip(request)
-        if not await self.limiter.acquire(f"ip:{client_ip}", limit=100, window=60):
+        # Issue #460 dedup: ONE IP evaluation per request across the whole
+        # middleware stack. RequestValidationMiddleware reuses this verdict
+        # whenever its effective (limit, window) matches, instead of every
+        # request paying for two separate Redis rate-limit evaluations.
+        verdict = getattr(request.state, "rate_limit_ip_verdict", None)
+        if verdict is None:
+            allowed = await self.limiter.acquire(f"ip:{client_ip}", limit=100, window=60)
+            request.state.rate_limit_ip_verdict = {
+                "allowed": allowed,
+                "limit": 100,
+                "window": 60,
+            }
+        else:
+            allowed = verdict["allowed"]
+        if not allowed:
             logger.warning(f"IP rate limit exceeded: {client_ip}")
             return JSONResponse(status_code=429, content={"detail": "IP rate limit exceeded"})
 

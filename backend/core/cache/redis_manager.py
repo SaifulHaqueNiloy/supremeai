@@ -66,6 +66,16 @@ _REDIS_QUOTA_COOLDOWNS = (900.0, 1800.0, 3600.0, 3600.0)
 
 
 class SecureRedisManager:
+    # Issue #460 (Pillar 2): sibling free-tier account URLs, consulted in
+    # order after the primary. With the current vault this yields a
+    # 5-account federation pool ⇒ 5 × 500k = 2.5M ops/month at zero cost.
+    _FEDERATION_ENV_KEYS = (
+        "REDIS_SECONDARY_URL",
+        "REDIS_TERTIARY_URL",
+        "REDIS_QUATERNARY_URL",
+        "REDIS_QUINARY_URL",
+    )
+
     def __init__(self):
         from ..config import settings  # Fixed import path
 
@@ -73,6 +83,14 @@ class SecureRedisManager:
         self._client = None
         self._initialized = False
         self._init_lock = asyncio.Lock()
+        # Multi-account federation pool (issue #460, Pillar 2). Primary URL
+        # first, then every sibling free-tier account discovered in the env.
+        # On a quota-exhaustion trip the manager FAILS OVER to the next pool
+        # instead of dropping all consumers to in-memory fallbacks — N
+        # accounts ⇒ N× monthly quota, zero code change for consumers.
+        self._urls = self._collect_federation_urls()
+        self._active = 0
+        self._tripped: set[int] = set()
         # Quota circuit-breaker state (issue #437). While open,
         # get_client_async() returns None and every consumer engages its own
         # documented in-memory fallback — the same fail-closed contract as the
@@ -81,6 +99,28 @@ class SecureRedisManager:
         self._quota_open_until = 0.0
         self._quota_trips = 0
         self._quota_announced = False
+
+    def _collect_federation_urls(self) -> list[str]:
+        """Primary + sibling account URLs (deduped, memory:// excluded).
+
+        বাংলা: প্রাইমারি REDIS_URL ছাড়াও REDIS_{SECONDARY,TERTIARY,QUATERNARY,
+        QUINARY}_URL এবং REDIS_FEDERATION_URLS (comma-separated) থেকে
+        ফেডারেশন পুল তৈরি হয়। memory:// স্কিম বাদ — সেটা কনজিউমারের নিজস্ব
+        in-memory fallback চুক্তি।
+        """
+        urls: list[str] = []
+        primary = self.url
+        if primary and "memory://" not in primary:
+            urls.append(primary)
+        for key in self._FEDERATION_ENV_KEYS:
+            val = (os.getenv(key) or "").strip()
+            if val and "memory://" not in val and val not in urls:
+                urls.append(val)
+        for val in (os.getenv("REDIS_FEDERATION_URLS") or "").split(","):
+            val = val.strip()
+            if val and "memory://" not in val and val not in urls:
+                urls.append(val)
+        return urls
 
     @staticmethod
     def _is_quota_error(exc: BaseException) -> bool:
@@ -105,6 +145,10 @@ class SecureRedisManager:
             return
         if self.quota_breaker_open:
             return  # already tripped; nothing new to announce
+        # Issue #460 (Pillar 2): try to fail over to the next federation pool
+        # BEFORE degrading every consumer to in-memory fallbacks.
+        if self._try_failover(exc):
+            return
         cooldown = _REDIS_QUOTA_COOLDOWNS[min(self._quota_trips, len(_REDIS_QUOTA_COOLDOWNS) - 1)]
         self._quota_trips += 1
         self._quota_open_until = time.monotonic() + cooldown
@@ -126,6 +170,63 @@ class SecureRedisManager:
                 cooldown,
                 self._quota_trips,
             )
+
+    def _try_failover(self, exc: BaseException) -> bool:
+        """Rotate to the next untripped federation pool on quota exhaustion.
+
+        বাংলা: বর্তমান অ্যাকাউন্টের কোটা শেষ হলে পরের পুলে failover করে —
+        সব পুল শেষ না হলে কনজিউমাররা কখনোই in-memory fallback-এ যায় না।
+        Returns True when a healthy next pool took over.
+        """
+        if len(self._urls) <= 1 or not self._initialized:
+            return False
+        failed_index = self._active
+        self._tripped.add(failed_index)
+        nxt = next((i for i in range(len(self._urls)) if i not in self._tripped), None)
+        if nxt is None:
+            return False  # every pool exhausted → caller opens the breaker
+        old_client = self._client
+        self._active = nxt
+        self._client = None
+        self._initialized = False  # rebuild against the new pool on next use
+        # The new pool has fresh quota — reset breaker state for it.
+        self._quota_trips = 0
+        self._quota_open_until = 0.0
+        # Drop the old pool's sockets without blocking the caller.
+        aclose = getattr(old_client, "aclose", None)
+        if aclose is not None:
+            try:
+                asyncio.get_running_loop().create_task(aclose())
+            except RuntimeError:
+                pass
+        logger.critical(
+            "🔥 Redis federation pool %d/%d QUOTA EXHAUSTED (%s) — failed over to "
+            "pool %d/%d. Consumers keep running on real Redis (no in-memory "
+            "degradation). %d pool(s) remain.",
+            failed_index + 1,
+            len(self._urls),
+            str(exc)[:120],
+            nxt + 1,
+            len(self._urls),
+            len(self._urls) - len(self._tripped),
+        )
+        return True
+
+    async def _reset_federation_probe(self) -> None:
+        """Half-open reset: every pool tripped + cooldown expired → probe cycle
+        restarts cleanly at pool 1. বাংলা: সব পুল শেষ হয়ে কুলডাউন শেষ হলে
+        আবার পুল ১ থেকে প্রোব শুরু হয়।"""
+        old_client = self._client
+        self._tripped.clear()
+        self._active = 0
+        self._client = None
+        self._initialized = False
+        if old_client is not None:
+            try:
+                await old_client.aclose()
+            except Exception:  # noqa: BLE001 — probe reset must never raise
+                pass
+        await self._ensure_connected()
 
     async def _ensure_connected(self) -> None:
         """Async-safe Redis connection initialization with locking.
@@ -152,29 +253,42 @@ class SecureRedisManager:
             # scheme — both the plain and the mangled-normalized form — so every
             # consumer engages its own in-memory fallback. Real redis URLs are
             # completely unaffected.
-            if self.url and "memory://" in self.url:
-                logger.info(
-                    "REDIS_URL memory:// in-memory fallback active — SecureRedisManager "
-                    "stays fail-closed (no TCP client); consumers use their documented "
-                    "in-memory fallbacks."
-                )
+            if not self._urls:
+                if self.url and "memory://" in self.url:
+                    logger.info(
+                        "REDIS_URL memory:// in-memory fallback active — SecureRedisManager "
+                        "stays fail-closed (no TCP client); consumers use their documented "
+                        "in-memory fallbacks."
+                    )
+                else:
+                    logger.critical(
+                        "🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state."
+                    )
                 self._initialized = True
                 return
-            if self.url and aioredis is not None:
+            if aioredis is not None:
                 pool = aioredis.ConnectionPool.from_url(
-                    self.url,
+                    self._urls[self._active],
                     max_connections=20,
                     socket_keepalive=True,
                     socket_connect_timeout=5.0,
                     decode_responses=True,
                 )
                 self._client = aioredis.Redis(connection_pool=pool)
-                logger.info(
-                    "⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20)."
-                )
+                if len(self._urls) > 1:
+                    logger.info(
+                        "⚡ Serverless Redis federation pool %d/%d active with Connection Pool "
+                        "(limit=20) — issue #460 multi-account failover enabled.",
+                        self._active + 1,
+                        len(self._urls),
+                    )
+                else:
+                    logger.info(
+                        "⚡ Serverless Upstash Redis REST Provider Active with Connection Pool (limit=20)."
+                    )
             else:
                 logger.critical(
-                    "🔥 CRITICAL: Serverless Redis Endpoint Missing! System entering Fail-Closed state."
+                    "🔥 CRITICAL: redis.asyncio unavailable! System entering Fail-Closed state."
                 )
             self._initialized = True
 
@@ -190,6 +304,14 @@ class SecureRedisManager:
         # no network round-trips against a quota-exhausted provider.
         if self._client is not None and self.quota_breaker_open:
             return None
+        # Issue #460 half-open probe: every pool tripped and the cooldown has
+        # now expired → restart a clean probe cycle at pool 1.
+        if (
+            self._tripped
+            and len(self._tripped) >= len(self._urls)
+            and not self.quota_breaker_open
+        ):
+            await self._reset_federation_probe()
         return self._client
 
     @property
@@ -220,6 +342,8 @@ class SecureRedisManager:
             await self._client.aclose()
             self._client = None
             self._initialized = False
+        self._active = 0
+        self._tripped.clear()
 
     async def set(self, key: str, value: str, ex: int | None = None) -> bool:
         client = await self.get_client_async()
