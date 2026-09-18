@@ -801,10 +801,22 @@ def test_select_model_matrix():
     assert router._select_model(providers["groq"], "coding") == "llama-3.1-70b"
 
 
+@pytest.fixture(autouse=True)
+def mock_gateway_for_competitive_kit(monkeypatch):
+    """Hermetic unit test seam: mock llm_gateway.acompletion for competitive router tests."""
+
+    async def fake_acompletion(prompt, task_type="competitive_route", stream=False, **kwargs):
+        return {"text": f"simulated provider response text for {len(prompt)} char prompt"}
+
+    import core.llm.llm_gateway as gw_mod
+
+    monkeypatch.setattr(gw_mod.llm_gateway, "acompletion", fake_acompletion)
+
+
 async def test_call_llm_is_simulated_stub():
     router = MultiLLMRouter()
     response = await router._call_llm("gemini", "gemini-2.5-flash", "abcd")
-    assert response == "[Response from gemini/gemini-2.5-flash] Processed your 4 char prompt."
+    assert response == "simulated provider response text for 4 char prompt"
 
 
 def test_calculate_cost_uses_provider_rate():

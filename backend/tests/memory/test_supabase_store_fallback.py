@@ -473,7 +473,7 @@ def test_generate_embedding_primary_path(store, monkeypatch):
 
     monkeypatch.setattr(emb, "embed_for_pgvector", lambda text, pg_dim: [0.5] * pg_dim)
     result = store._generate_embedding("hello")
-    assert result == [0.5] * 1536
+    assert result == [0.5] * 384
     assert store.get_stats()["embeddings_generated"] == 1
 
 
