@@ -1,7 +1,7 @@
 ---
 id: head-of-planning-strategic-leverage-2026-09-16
 title: "Head of Planning — Strategic Leverage Memo v1 (Constitution-Anchored Path to 'One of the Best AI Models')"
-status: active
+status: historical
 document_role: roadmap
 owner_circle: C1 (Code & Quality) and cross-circle (C2/C3/C5/C6) per lever
 scope: planning-department strategic memo; identifies highest-leverage next moves toward battlefield wins B1–B6 without violating the Constitution; no code changes in this document
@@ -18,7 +18,7 @@ implements:
   - Reinforces: vision_strategic_positioning.md (Phase 2 Reliability Moat, Phase 3 Own Model v1)
   - Operationalizes: README Constitution principles #1, #3, #5, #9, #10, #11, #13, #14
 supersedes: []
-superseded_by: []
+superseded_by: docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE.md
 last_verified: 2026-09-16
 code_evidence: docs/audits/SYSTEM_DEFECT_REGISTER_2026-09-15.md (1,189-module walk; 707 backend routes; 236 frontend endpoints; 37 test suites)
 test_evidence: STATUS.md (2026-09-16, frontend 486/486 PASS; mission suite 5 missions / 12 tests green; pass^3 harness live in CI)

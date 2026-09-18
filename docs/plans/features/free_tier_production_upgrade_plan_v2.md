@@ -4,12 +4,12 @@ subject: "🚀 SupremeAI Free-Tier Production Upgrade Plan"
 document_role: implementation
 planning_authority: Infrastructure Circle
 canonical: false
-status: active
+status: historical
 evidence_state: unverified
-disposition: retain
+disposition: archive
 last_verified: 2026-09-17
 supersedes: []
-superseded_by: []
+superseded_by: [docs/plans/features/free_tier_512mb_memory_pressure_remediation_plan.md]
 related: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
 target_scope: supremeai_internal
 ---

@@ -3,13 +3,13 @@ id: roadmap-ecosystem-architecture-bn
 subject: "SupremeAI একীভূত ইকোসিস্টেম আর্কিটেকচার — মাস্টার রোডম্যাপ ও বাস্তবায়ন পরিকল্পনা"
 document_role: roadmap
 planning_authority: Architecture Circle
-canonical: candidate
-status: active
+canonical: false
+status: historical
 evidence_state: unverified
-disposition: retain
+disposition: archive
 last_verified: 2026-09-17
 supersedes: []
-superseded_by: []
+superseded_by: [docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md]
 target_scope: supremeai_internal
 ---
 
