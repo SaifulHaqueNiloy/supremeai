@@ -45,8 +45,6 @@ target_scope: supremeai_internal
 
 ## Instructions
 
-## Instructions
-
 - Tier 3 (High-Risk) autonomous remediations MUST log here before proceeding.
 - Tier 2 (Medium-Risk) changes may optionally log here for human visibility.
 - When admin approves, execute the exact CLI/UI command and update the task status to `APPROVED` or `REJECTED`.
