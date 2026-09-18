@@ -68,7 +68,9 @@ async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     fake_cache = FakeCache(value=None)
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
 
-    async def mock_acompletion(prompt, task_type, stream):
+    async def mock_acompletion(
+        prompt, task_type, stream, tenant_id=None
+    ):  # M16 P-A: tenant_id এখন propagate হয়
         if prompt == "raise-error":
             raise RuntimeError("boom")
         return {"text": f"generated:{prompt}"}
@@ -96,7 +98,9 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
     fake_cache = FakeCache(value=None)
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
 
-    async def mock_acompletion(prompt, task_type, stream):
+    async def mock_acompletion(
+        prompt, task_type, stream, tenant_id=None
+    ):  # M16 P-A: tenant_id এখন propagate হয়
         raise RuntimeError("boom")
 
     async def mock_recall_memories(*args, **kwargs):
@@ -119,7 +123,9 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
 
 @pytest.mark.asyncio
 async def test_stream_chat_yields_sse_chunks(monkeypatch):
-    async def mock_acompletion(prompt, task_type, stream):
+    async def mock_acompletion(
+        prompt, task_type, stream, tenant_id=None
+    ):  # M16 P-A: tenant_id এখন propagate হয়
         class Response:
             async def __aiter__(self):
                 yield "chunk-one"

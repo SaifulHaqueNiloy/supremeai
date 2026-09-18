@@ -42,6 +42,7 @@ from ...prompt_handler import (
 )
 from ..interfaces import ExecutionMode
 from .registry import _provider_key_pool, _resolve_litellm_target
+from .spend_meter import settle_gateway_spend
 
 
 def get_firestore_db(*args: Any, **kwargs: Any):
@@ -65,6 +66,7 @@ class CompletionMixin:
         model: str | None = None,
         provider: str | None = None,
         tenant_id: str | None = None,
+        tier: str | None = None,
         **kwargs,
     ) -> Any:
         """বাংলা মন্তব্ব: Main async completion interface।"""
@@ -229,7 +231,17 @@ class CompletionMixin:
                 logger.debug(f"[LLMGateway] TokenJuice skipped: {_juice_err}")
 
         if stream:
-            return self._stream_completion(messages_payload, call_chain, timeout)
+            # M16 P-A: streaming-এও একই accounting অর্থবোধ — tenant/tier context
+            # generator-এ পাঠানো হচ্ছে যেন stream শেষে বাস্তব usage থেকে খরচ
+            # meter হয় (non-streaming-এর সাথে parity)।
+            return self._stream_completion(
+                messages_payload,
+                call_chain,
+                timeout,
+                tenant_id=tenant_id,
+                tier=tier,
+                task_type=task_type,
+            )
 
         # Sprint 5 (§13.3): single-flight request coalescing — identical
         # in-flight requests share one upstream call. Flag-gated (default off);
@@ -417,6 +429,18 @@ class CompletionMixin:
                         "model": current_model,
                         "cost": cost,
                     }
+                    # M16 P-A: বাস্তব খরচ meter — successful call-এর provider usage
+                    # থেকে record_spend ফিড (ড্যাশবোর্ডের চিরস্থায়ী $0-র অবসান)।
+                    # metering ব্যর্থ হলেও inference ফলাফল অক্ষত থাকে।
+                    await settle_gateway_spend(
+                        tenant_id=tenant_id,
+                        tier=tier,
+                        model=current_model,
+                        task_type=task_type,
+                        path="completion",
+                        usage=response.get("usage"),
+                        actual_cost=cost,
+                    )
                     # Issue #438: a successful call proves the key is healthy —
                     # reset any auth-error cooldown escalation for it.
                     try:
@@ -488,6 +512,17 @@ class CompletionMixin:
                                 logger.warning(
                                     "[LLMGateway] retry telemetry record failed: %s", exc
                                 )
+                            # M16 P-A: 429-retry-ও একটি বাস্তব successful call — একই
+                            # accounting অর্থবোধে খরচ meter হবে (parity)।
+                            await settle_gateway_spend(
+                                tenant_id=tenant_id,
+                                tier=tier,
+                                model=current_model,
+                                task_type=task_type,
+                                path="completion-429-retry",
+                                usage=response.get("usage"),
+                                actual_cost=response.get("cost"),
+                            )
                             return {
                                 "success": True,
                                 "text": response["choices"][0]["message"]["content"],

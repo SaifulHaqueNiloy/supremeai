@@ -113,8 +113,8 @@ class StubGateway(CompletionMixin):
     async def _handle_rate_limit_error(self, model, exc):
         return await self._rate_limit_handler(model, exc)
 
-    def _stream_completion(self, messages_payload, call_chain, timeout):
-        self.stream_calls.append((messages_payload, call_chain, timeout))
+    def _stream_completion(self, messages_payload, call_chain, timeout, **spend_context):
+        self.stream_calls.append((messages_payload, call_chain, timeout, spend_context))
         return "STREAM-SENTINEL"
 
 
@@ -209,7 +209,9 @@ async def test_stream_bypasses_cache_and_returns_stream_gen():
     result = await gw.acompletion(prompt="hi", stream=True)
     assert result == "STREAM-SENTINEL"
     gw.cache.query_similar.assert_not_awaited()
-    messages, chain, timeout = gw.stream_calls[0]
+    messages, chain, timeout, spend_context = gw.stream_calls[0]
+    # M16 P-A: streaming generator-এ tenant/tier context পৌঁছায় কিনা চুক্তি-পিন।
+    assert spend_context == {"tenant_id": None, "tier": None, "task_type": "general"}
     assert messages[0]["content"] == "hi"
     assert chain == gw._chain
     assert timeout == 12.0
@@ -999,3 +1001,218 @@ async def test_tier0_and_cost_guard_combined_flow(monkeypatch):
     assert result["success"] is True
     assert StubCostGuard.instances[-1].check_budget.await_count == 1
     gw.cloud_adapter.generate.assert_awaited_once()
+
+
+# --------------------------------------------------------------------------- #
+# M16 P-A — বাস্তব খরচ meter (spend feed → CostGuard.record_spend)
+# --------------------------------------------------------------------------- #
+from core.config import settings as _real_settings  # noqa: E402 — appended section import
+from core.llm.llm_gateway import spend_meter as spend_meter_mod  # noqa: E402
+
+
+class RecordingCostGuard:
+    """Stand-in for the CostGuard singleton — captures record_spend calls."""
+
+    def __init__(self):
+        self.calls: list[tuple[str, str, float]] = []
+
+    async def record_spend(self, tenant_id: str, tier: str, actual_cost: float) -> None:
+        self.calls.append((tenant_id, tier, actual_cost))
+
+
+@pytest.fixture
+def spend_recorder(monkeypatch):
+    """Patch the meter's CostGuard resolver + a fixed meter rate for hermetic math."""
+    guard = RecordingCostGuard()
+    monkeypatch.setattr(spend_meter_mod, "get_cost_guard", lambda: guard)
+    monkeypatch.setattr(_real_settings, "llm_cost_per_token", 2e-05)
+    return guard
+
+
+@pytest.mark.asyncio
+async def test_successful_call_meters_provider_usage_spend(spend_recorder):
+    """M16 P-A: successful cloud call → usage×rate recorded under the tenant."""
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(
+        return_value=make_response(cost=0.0, usage={"prompt_tokens": 100, "completion_tokens": 50})
+    )
+
+    result = await gw.acompletion(prompt="hi", tenant_id="tenant-1")
+
+    assert result["success"] is True
+    assert spend_recorder.calls == [("tenant-1", "unknown", pytest.approx(150 * 2e-05))]
+
+
+@pytest.mark.asyncio
+async def test_spend_feed_respects_explicit_tier(spend_recorder):
+    """M16 P-A: caller-declared tier is used verbatim (no invented tier)."""
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(
+        return_value=make_response(cost=0.0, usage={"prompt_tokens": 10, "completion_tokens": 5})
+    )
+
+    await gw.acompletion(prompt="hi", tenant_id="tenant-1", tier="premium")
+
+    assert spend_recorder.calls == [("tenant-1", "premium", pytest.approx(15 * 2e-05))]
+
+
+@pytest.mark.asyncio
+async def test_spend_feed_without_tenant_is_skipped_but_visible(spend_recorder, caplog):
+    """No tenant → nothing recorded (can't attribute), gap must stay visible."""
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(
+        return_value=make_response(cost=0.0, usage={"prompt_tokens": 10, "completion_tokens": 5})
+    )
+
+    result = await gw.acompletion(prompt="hi")
+
+    assert result["success"] is True
+    assert spend_recorder.calls == []
+
+
+@pytest.mark.asyncio
+async def test_spend_feed_without_usage_records_nothing(spend_recorder):
+    """No usage and zero cost from provider → never fabricate a spend."""
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(return_value=make_response(cost=0.0, usage=None))
+
+    result = await gw.acompletion(prompt="hi", tenant_id="tenant-1")
+
+    assert result["success"] is True
+    assert spend_recorder.calls == []
+
+
+@pytest.mark.asyncio
+async def test_spend_feed_uses_provider_cost_when_no_usage(spend_recorder):
+    """When the provider reports an actual cost but no usage dict, meter that cost."""
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(return_value=make_response(cost=0.25, usage=None))
+
+    await gw.acompletion(prompt="hi", tenant_id="tenant-1")
+
+    assert spend_recorder.calls == [("tenant-1", "unknown", pytest.approx(0.25))]
+
+
+@pytest.mark.asyncio
+async def test_spend_feed_failure_never_breaks_inference(spend_recorder):
+    """Metering failure is loud but must not fail the user's completion."""
+
+    async def _boom(*args, **kwargs):
+        raise RuntimeError("redis down")
+
+    spend_recorder.record_spend = _boom  # type: ignore[method-assign]
+    gw = make_gateway()
+    gw.cloud_adapter.generate = AsyncMock(
+        return_value=make_response(cost=0.0, usage={"prompt_tokens": 5, "completion_tokens": 5})
+    )
+
+    result = await gw.acompletion(prompt="hi", tenant_id="tenant-1")
+
+    assert result["success"] is True
+    assert result["text"] == make_response()["choices"][0]["message"]["content"]
+
+
+@pytest.mark.asyncio
+async def test_streaming_spend_parity_with_usage_chunk(spend_recorder):
+    """Streaming: usage on the final empty-choices chunk meters the same semantics."""
+    from core.llm.llm_gateway.streaming import StreamingMixin
+
+    class StreamStubGateway(StreamingMixin):
+        def _ensure_litellm_ready(self) -> None:
+            pass
+
+        def _get_or_create_circuit_breaker(self, model):
+            return RecordingBreaker()
+
+        async def _get_api_key_for_model(self, model):
+            return "sk-resolved"
+
+    gw = StreamStubGateway()
+
+    class FakeLitellm:
+        @staticmethod
+        async def acompletion(**kwargs):
+            async def _gen():
+                yield SimpleNamespace(
+                    choices=[SimpleNamespace(delta=SimpleNamespace(content="hello "))]
+                )
+                yield SimpleNamespace(choices=[SimpleNamespace(delta=SimpleNamespace(content="!"))])
+                # Final usage-only chunk (empty choices) — the IndexError trap.
+                yield SimpleNamespace(
+                    choices=[],
+                    usage=SimpleNamespace(prompt_tokens=200, completion_tokens=100),
+                )
+
+            return _gen()
+
+    monkeypatch_litellm = SimpleNamespace(acompletion=FakeLitellm.acompletion)
+
+    import sys
+
+    real_litellm = sys.modules.get("litellm")
+    sys.modules["litellm"] = monkeypatch_litellm  # type: ignore[assignment]
+    try:
+        chunks = []
+        async for piece in gw._stream_completion(
+            [{"role": "user", "content": "hi"}],
+            ["prov/model-a"],
+            12.0,
+            tenant_id="tenant-9",
+            task_type="chat",
+        ):
+            chunks.append(piece)
+    finally:
+        if real_litellm is not None:
+            sys.modules["litellm"] = real_litellm
+
+    assert "".join(chunks) == "hello !"
+    assert spend_recorder.calls == [("tenant-9", "unknown", pytest.approx(300 * 2e-05))]
+
+
+@pytest.mark.asyncio
+async def test_streaming_without_usage_records_nothing(spend_recorder):
+    """Streaming without provider usage → no fabricated spend (gap is logged)."""
+    from core.llm.llm_gateway.streaming import StreamingMixin
+
+    class StreamStubGateway(StreamingMixin):
+        def _ensure_litellm_ready(self) -> None:
+            pass
+
+        def _get_or_create_circuit_breaker(self, model):
+            return RecordingBreaker()
+
+        async def _get_api_key_for_model(self, model):
+            return "sk-resolved"
+
+    gw = StreamStubGateway()
+
+    class FakeLitellm:
+        @staticmethod
+        async def acompletion(**kwargs):
+            async def _gen():
+                yield SimpleNamespace(
+                    choices=[SimpleNamespace(delta=SimpleNamespace(content="data only"))]
+                )
+
+            return _gen()
+
+    import sys
+
+    real_litellm = sys.modules.get("litellm")
+    sys.modules["litellm"] = SimpleNamespace(acompletion=FakeLitellm.acompletion)  # type: ignore[assignment]
+    try:
+        chunks = [
+            piece
+            async for piece in gw._stream_completion(
+                [{"role": "user", "content": "hi"}],
+                ["prov/model-a"],
+                12.0,
+                tenant_id="tenant-9",
+            )
+        ]
+    finally:
+        if real_litellm is not None:
+            sys.modules["litellm"] = real_litellm
+
+    assert chunks == ["data only"]
+    assert spend_recorder.calls == []
