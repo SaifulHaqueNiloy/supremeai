@@ -37,6 +37,34 @@ except ImportError:
     _redis_circuit_breaker = MockCircuitBreaker()
 
 
+# Quota-exhaustion signatures observed from Upstash free tier (Round-13 incident:
+# 500000/500000 monthly commands exhausted → every command returned
+# "max request limit exceeded" and 42–51% of boot log lines were per-request
+# fallback warnings across all consumers). Matching is lowercased substring
+# against the exception message; deliberately avoids bare "429"/"402" numeric
+# matches to prevent false positives from key names embedded in error strings.
+_REDIS_QUOTA_SIGNATURES = (
+    "max request limit exceeded",
+    "max requests limit exceeded",
+    "request limit exceeded",
+    "monthly request limit",
+    "monthly limit",
+    "quota exceeded",
+    "quota exhausted",
+    "limit exceeded",
+    "too many requests",
+    "payment required",
+    "upgrade your plan",
+    "subscription",
+)
+
+# Breaker cooldown schedule (seconds) indexed by consecutive trip count:
+# first trip 15min → 30min → 1h → cap 1h. Quota exhaustion persists until
+# monthly reset or plan upgrade, so probing must stay rare; half-open probes
+# happen naturally when the cooldown expires and a consumer retries.
+_REDIS_QUOTA_COOLDOWNS = (900.0, 1800.0, 3600.0, 3600.0)
+
+
 class SecureRedisManager:
     def __init__(self):
         from ..config import settings  # Fixed import path
@@ -45,6 +73,59 @@ class SecureRedisManager:
         self._client = None
         self._initialized = False
         self._init_lock = asyncio.Lock()
+        # Quota circuit-breaker state (issue #437). While open,
+        # get_client_async() returns None and every consumer engages its own
+        # documented in-memory fallback — the same fail-closed contract as the
+        # "memory://" scheme below. Zero network round-trips are attempted
+        # against a quota-exhausted provider while the breaker is open.
+        self._quota_open_until = 0.0
+        self._quota_trips = 0
+        self._quota_announced = False
+
+    @staticmethod
+    def _is_quota_error(exc: BaseException) -> bool:
+        """Classify an exception as provider quota exhaustion."""
+        message = str(exc).lower()
+        return any(sig in message for sig in _REDIS_QUOTA_SIGNATURES)
+
+    @property
+    def quota_breaker_open(self) -> bool:
+        """True while the quota circuit breaker is tripped (no Redis attempts)."""
+        return time.monotonic() < self._quota_open_until
+
+    def report_failure(self, exc: BaseException) -> None:
+        """Report a Redis operation failure for quota-breaker classification.
+
+        বাংলা: Redis কনজিউমাররা (rate limiter, security middleware, cache)
+        নিজেরা exception ধরে fallback-এ চলে যায় — এই মেথড সেই failure গুলো
+        ব্রেকারকে জানায় যাতে quota-exhausted provider-এর বিরুদ্ধে প্রতি
+        রিকোয়েস্টে অপ্রয়োজনীয় network round-trip ও log-storm বন্ধ হয়।
+        """
+        if not self._is_quota_error(exc):
+            return
+        if self.quota_breaker_open:
+            return  # already tripped; nothing new to announce
+        cooldown = _REDIS_QUOTA_COOLDOWNS[min(self._quota_trips, len(_REDIS_QUOTA_COOLDOWNS) - 1)]
+        self._quota_trips += 1
+        self._quota_open_until = time.monotonic() + cooldown
+        if not self._quota_announced:
+            self._quota_announced = True
+            logger.critical(
+                "🔥 Redis provider QUOTA EXHAUSTED (%s) — quota circuit breaker OPEN for "
+                "%.0fs. All Redis consumers now run on their documented in-memory "
+                "fallbacks (per-instance, NOT aggregate-safe). Zero further commands "
+                "will be attempted until the probe window. Fix: upgrade the Redis "
+                "plan or wait for quota reset.",
+                str(exc)[:160],
+                cooldown,
+            )
+        else:
+            logger.warning(
+                "Redis quota breaker re-tripped (%s) — cooldown %.0fs (trip #%d).",
+                str(exc)[:160],
+                cooldown,
+                self._quota_trips,
+            )
 
     async def _ensure_connected(self) -> None:
         """Async-safe Redis connection initialization with locking.
@@ -104,6 +185,11 @@ class SecureRedisManager:
         সকল মডিউলের উচিত এই মেথড ব্যবহার করা, `.client` প্রপার্টি না।
         """
         await self._ensure_connected()
+        # Quota breaker (issue #437): while tripped, hand back None so every
+        # consumer engages its own documented in-memory fallback immediately —
+        # no network round-trips against a quota-exhausted provider.
+        if self._client is not None and self.quota_breaker_open:
+            return None
         return self._client
 
     @property
@@ -143,6 +229,7 @@ class SecureRedisManager:
             await client.set(key, value, ex=ex)
             return True
         except Exception as exc:
+            self.report_failure(exc)
             logger.error(f"Redis SET error: {exc}")
             return False
 
@@ -157,6 +244,7 @@ class SecureRedisManager:
         try:
             return await client.get(key)
         except Exception as exc:
+            self.report_failure(exc)
             logger.error(f"Redis GET error: {exc}")
             return None
 
@@ -172,6 +260,7 @@ class SecureRedisManager:
             await client.delete(key)
             return True
         except Exception as exc:
+            self.report_failure(exc)
             logger.error(f"Redis DELETE error: {exc}")
             return False
 
@@ -199,10 +288,15 @@ class SecureRedisManager:
         """
         client = await self.get_client_async()
         if client:
-            val = await client.incrbyfloat(key, amount)
-            if ex_seconds:
-                await client.expire(key, ex_seconds)
-            return float(val)
+            try:
+                val = await client.incrbyfloat(key, amount)
+                if ex_seconds:
+                    await client.expire(key, ex_seconds)
+                return float(val)
+            except Exception as exc:
+                self.report_failure(exc)
+                logger.error(f"Redis INCRBYFLOAT error: {exc}")
+                return 0.0
         return 0.0
 
 
@@ -228,6 +322,7 @@ class _AcquireIdempotencyLockContext:
             try:
                 self.acquired = await client.set(self.key, "locked", nx=True, ex=self.ttl)
             except Exception as exc:
+                redis_manager.report_failure(exc)
                 logger.error(f"Failed to set idempotency lock in Redis: {exc}")
                 self.acquired = False
         if not self.acquired and self.fail_closed:
