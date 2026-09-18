@@ -273,6 +273,9 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     {"path": "api.routes.evolution", "prefix": "/api/v1", "is_admin": True, "is_critical": False},
+    # Issue #446: SSE bridge the EvolutionForge DebateOverlay has always called
+    # (router module declares its own /api/v1/swarm prefix).
+    {"path": "api.routes.swarm_stream", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.agent_breeding",
         "prefix": "/api/v1",
