@@ -58,28 +58,28 @@ Issue #453 Tier-1-এর ১ নম্বরে থাকা **Supreme Teleport-
 
 ## ৪. ওয়েভ-ভিত্তিক এক্সিকিউশন অর্ডার (benefit-per-effort × dependency)
 
-**Wave 1 — দৃশ্যমান জয় (built-but-unwired জমাগুলো ফেরত চালু):**
-- **M10 P-A/P-B (Frontend Tier-S)** ✅ *শুরু হয়েছে (2026-09-18):* ChatInterface host মাউন্ট (`/chat` রুট +
+**Wave 1 — দৃশ্যমান জয় (built-but-unwired জমাগুলো ফেরত চালু): ✅ সম্পন্ন (2026-09-18, commits 15ec3bc2/07991802/1a78db30/39bde84f):**
+- **M10 P-A/P-B (Frontend Tier-S)** ✅: ChatInterface host মাউন্ট (`/chat` রুট +
   nav), ভুয়া `"current_conv"` প্লেসহোল্ডার সত্য ক্লায়েন্ট conversation_id দিয়ে প্রতিস্থাপন
   (backend ConversationCommand ক্লায়েন্ট-সরবরাহকৃত id গ্রহণ করে — `gateway_center.py:79`),
   S2 ThinkingPanel + S3 ArtifactsPanel মাউন্ট, `/prompt-library` nav truth, integration-guide
   প্যাথ-সত্য সংশোধন। টেস্ট: ৫টি নতুন চুক্তি-টেস্ট, frontend 532/532।
-- **M16 P-A:** gateway বা chat path-এ এক-লাইন `record_spend` ফিড → ড্যাশবোর্ডের চিরস্থায়ী $0 সত্য হয়।
-- **M20 P-B:** `/ws/dashboard` subscription-task-এর ২-লাইন বাগ ফিক্স।
-- **M22 P-A:** AgentSupervisor heartbeat-এ due-task sweep (S10 store ready, executor নেই)।
-- **M18 P-I:** `/abort <run_id>` → runs cancellation path; fake `/telemetry` KPI সরিয়ে লাইভ রিড।
+- **M16 P-A:** ✅ gateway/chat path-এ `record_spend` ফিড (spend_meter.py — streaming parity সহ) → ড্যাশবোর্ডের চিরস্থায়ী $0 সত্য হয়।
+- **M20 P-B:** ✅ `/ws/dashboard` subscription-task জীবনচক্র ফিক্স।
+- **M22 P-A:** ✅ due-task sweep (core/scheduled_task_sweep.py) — CAS দাবি + stale-পুনর্গ্রহ + restart-ক্যাচআপ; custom-cron সৎ-অসমর্থন (P-A সীমা); ১৭ টেস্ট।
+- **M18 P-I:** ✅ `/abort <run_id>` (admin-only, প্রকৃত run_service.cancel) + ভুয়া /telemetry KPI → লাইভ পাঠ (supervisor health + সচল রান); CancellationToken গভীর-প্রপাগেশন M02 মালিকানায়।
 
-**Wave 2 — ব্যাকবোন (unlocks ~১০ মডিউল):**
-- **M03 P0–P2:** InferenceContext চুক্তি, streaming/non-streaming কস্ট-টেলিমেট্রি প্যারিটি,
-  tenant/cost enforcement ১৩টি বাইপাস রুট বন্ধ, fabricated model name পরিষ্কার।
-- **M02 P-B (ERR-F01):** run-bridge writers production-wired (M05/M06/M17 খুঁজে পাবে)।
-- **M23 P-A/P-C:** `POST /api/knowledge/ask`-এর প্রতি-কল 500 বন্ধ (৩-লাইন ফিক্স) + format-adapter
-  convoy → ১২১ বাংলা এন্ট্রি retrieval-এ আসে।
+**Wave 2 — ব্যাকবোন: ✅ সম্পন্ন (2026-09-18, commits bd0ab63a/3cba9cbe/0fcc1058/62fd5942):**
+- **M23 P-A/P-C:** ✅ governance `__init__`-এ পুনরুত্থান (প্রতি-কলে 500 অবসান + case-mismatch 403 ফিক্স); coldstart→importer adapter — ১৩২-এন্ট্রি validate-clean (১১৮ বাংলা উত্তর), HITL draft-গেট, importer secret-scanner precision-ফিক্স।
+- **M02 P-B (ERR-F01):** ✅ observe_task_run bridge + sweep-বাস্তব integration (রান REQUESTED→RUNNING→terminal সিল; observation-ব্যর্থে নির্বাহ-অব্যাহত, লাউড-লগ)।
+- **M03 P0+P1+P2:** ✅ InferenceContext চুক্তি (context.py), স্ট্রাকচার্ড এরর ডোমেইন (errors.py), competitive_kit ভুয়া "[Response from …]" → গেটওয়ে-ডেলিগেশন, model_router "Hello World" → স্ট্রাকচার্ড এরর + সৎ SSE error-event, zero-bypass downward-ratchet গেট (বেসলাইন 0); streaming cost-parity M16 P-A-র সাথে ল্যান্ডেড। বাকি: ১৩-রুট বাধ্যতামূলক context-passing (P0 পূর্ণাংশ)।
 
-**Wave 3 — সত্য-স্তর (cheap governance credibility):**
-- **M13 (S):** middleware truth-map, hardcoded limits → config, tenant limiter bounded fail-mode।
-- **M14 (S):** ভুয়া STT/TTS success semantics প্রত্যাহার, zero-cost Web Speech first।
-- **M05 P-A:** ভুয়া evolution সারফেস পরিষ্কার + apply-executor।
+**Wave 2 পরবর্তী নোট:** উপরের ফিক্সগুলোতে vitest 532/532 (102 files), missions 62/62, STATUS_PROOF PASS অটুট — বেসলাইন পরিবর্তন হয়নি।
+
+**Wave 3 — সত্য-স্তর (cheap governance credibility): আংশিক — M05 P-A প্রথম অর্ধ সম্পন্ন (bf315947):**
+- **M05 P-A:** ✅ ENABLE_LEARNING_LOOP ডিফল্ট true (শূন্য-খরচ লুপ, HITL-only apply) + .env.example দৃশ্যমানতা। বাকি অর্ধ: exploration গেট sample-tier guardrail।
+- **M13 (S):** বাকি — middleware truth-map, hardcoded limits → config, tenant limiter bounded fail-mode।
+- **M14 (S):** বাকি — ভুয়া STT/TTS success semantics প্রত্যাহার, zero-cost Web Speech first।
 
 **Wave 4 — ভারী গঠন (তখনই যখন Wave 2-এর ভিত দাঁড়িয়েছে):**
 - M01 memory consolidation, M06 ৮/৮ RunType adoption, M07 context budget, M08 SSE চুক্তি ফিক্স,

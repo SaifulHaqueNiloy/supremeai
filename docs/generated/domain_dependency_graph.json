@@ -272,7 +272,7 @@
     {
       "evidence": [
         {
-          "line": 30,
+          "line": 31,
           "path": "backend/brain/model_router.py"
         }
       ],
@@ -442,7 +442,17 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 23,
+          "path": "backend/core/llm/llm_gateway/spend_meter.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 18,
           "path": "backend/core/llm/llm_gateway/streaming.py"
         }
       ],
@@ -1622,6 +1632,16 @@
     {
       "evidence": [
         {
+          "line": 230,
+          "path": "backend/core/scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 15,
           "path": "backend/models/automation_execution.py"
         }
@@ -1644,6 +1664,56 @@
         {
           "line": 9,
           "path": "backend/models/task_record.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 361,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 380,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 381,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 382,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 427,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
         }
       ],
       "source": "execution",
@@ -1744,6 +1814,36 @@
         {
           "line": 320,
           "path": "backend/core/automation/execution_recorder.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 149,
+          "path": "backend/core/scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 181,
+          "path": "backend/core/scheduled_task_sweep.py"
+        }
+      ],
+      "source": "execution",
+      "target": "identity"
+    },
+    {
+      "evidence": [
+        {
+          "line": 452,
+          "path": "backend/tests/api/test_scheduled_task_sweep.py"
         }
       ],
       "source": "execution",
@@ -1924,6 +2024,16 @@
         {
           "line": 3,
           "path": "backend/core/queue/task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 30,
+          "path": "backend/core/scheduled_task_sweep.py"
         }
       ],
       "source": "execution",
