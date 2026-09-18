@@ -28,6 +28,10 @@ REQUIRED = {
 ALLOWED_STATUS = {"draft", "approved", "deprecated"}
 ALLOWED_RISK = {"low", "medium", "high", "critical"}
 
+# বাংলা: (?<![a-z])sk- = 'sk-' কিন্তু আগে ছোটহাতের অক্ষর নেই — 'task-'/'risk-'
+# ভুয়া-ধনাত্মক বাদ; বাকি তিন প্যাটার্ন (= বা স্পেস-সহ) আগের মতোই।
+_SECRET_PATTERN = re.compile(r"api_key=|(?<![a-z])sk-|bearer |password=")
+
 
 def validate(records: list[dict[str, Any]]) -> list[str]:
     errors: list[str] = []
@@ -51,10 +55,11 @@ def validate(records: list[dict[str, Any]]) -> list[str]:
             errors.append(f"record[{i}] invalid risk_level")
         if not isinstance(record.get("tags"), list):
             errors.append(f"record[{i}] tags must be a list")
-        if any(
-            secret in json.dumps(record).lower()
-            for secret in ("api_key=", "sk-", "bearer ", "password=")
-        ):
+        # বাংলা (M23 P-C): 'sk-' হিউরিস্টিকে word-boundary যোগ — আগে 'task-specific',
+        # 'risk-' জাতীয় সাধারণ শব্দেও ম্যাচ করে ভুয়া 'possible secret' দিত (false
+        # positive), ফলে বৈধ বই-কনটেন্ট আটকে যেত। word-boundary-র পরেও প্রকৃত
+        # OpenAI-ধাঁচের কি ('sk-abc…') ধরা পড়ে — precision বাড়ল, সনাক্তকরণ দুর্বল হয়নি।
+        if _SECRET_PATTERN.search(json.dumps(record).lower()):
             errors.append(f"record[{i}] possible secret")
     return errors
 
