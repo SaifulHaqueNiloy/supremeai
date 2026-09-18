@@ -38,9 +38,7 @@ async def swarm_stream() -> StreamingResponse:
         try:
             while True:
                 try:
-                    raw = await asyncio.wait_for(
-                        source.__anext__(), timeout=_PING_INTERVAL_SECONDS
-                    )
+                    raw = await asyncio.wait_for(source.__anext__(), timeout=_PING_INTERVAL_SECONDS)
                     yield f"data: {raw}\n\n"
                 except TimeoutError:
                     yield ": ping\n\n"

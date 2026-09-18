@@ -48,13 +48,9 @@ class ContextManager:
         # with env-var fallback, so a provisioned QDRANT_URL actually activates
         # vector storage instead of silently never working.
         try:
-            qdrant_url = (
-                getattr(settings, "qdrant_url", "") or os.getenv("QDRANT_URL", "")
-            )
+            qdrant_url = getattr(settings, "qdrant_url", "") or os.getenv("QDRANT_URL", "")
             qdrant_port = int(
-                getattr(settings, "qdrant_port", 0)
-                or os.getenv("QDRANT_PORT", "6333")
-                or 6333
+                getattr(settings, "qdrant_port", 0) or os.getenv("QDRANT_PORT", "6333") or 6333
             )
             if not qdrant_url:
                 raise ValueError("QDRANT_URL not configured — vector storage disabled")

@@ -59,16 +59,18 @@ class MemoryManager:
         # blocking PostgREST chain in a worker thread (same pattern as
         # services/memory_service.py save_memory).
         await asyncio.to_thread(
-            lambda: self.db_client.table("agent_memories")
-            .insert(
-                {
-                    "content": learning,
-                    "embedding": embedding,
-                    "source_url": url,
-                    "metadata": metadata or {},
-                }
+            lambda: (
+                self.db_client.table("agent_memories")
+                .insert(
+                    {
+                        "content": learning,
+                        "embedding": embedding,
+                        "source_url": url,
+                        "metadata": metadata or {},
+                    }
+                )
+                .execute()
             )
-            .execute()
         )
 
     async def retrieve_relevant_memories(self, query: str, top_k: int = 3) -> list[str]:

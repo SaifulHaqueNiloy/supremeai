@@ -144,9 +144,9 @@ class ModelTrainer:
                             if output.get("loss") is not None:
                                 result["loss"] = output["loss"]
                             if output.get("checkpoint_path") or output.get("checkpoint"):
-                                result["checkpoint_path"] = (
-                                    output.get("checkpoint_path") or output.get("checkpoint")
-                                )
+                                result["checkpoint_path"] = output.get(
+                                    "checkpoint_path"
+                                ) or output.get("checkpoint")
                             if output.get("epochs_trained") is not None:
                                 result["epochs_trained"] = output["epochs_trained"]
                             return result
