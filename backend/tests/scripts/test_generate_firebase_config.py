@@ -56,9 +56,7 @@ def _template(
     return json.dumps(doc)
 
 
-def _run_generate(
-    monkeypatch, tmp_path: Path, template: str | None, env_url: str | None = None
-):
+def _run_generate(monkeypatch, tmp_path: Path, template: str | None, env_url: str | None = None):
     monkeypatch.chdir(tmp_path)
     if template is not None:
         (tmp_path / "firebase.template.json").write_text(template, encoding="utf-8")
@@ -166,9 +164,7 @@ def test_invalid_json_exits(monkeypatch, tmp_path):
     ["/api/**", "/api/v1/**", "/admin-api/**"],
     ids=["api", "api-v1", "admin-api"],
 )
-def test_external_url_rewrite_destination_rejected(
-    monkeypatch, tmp_path, source, capsys
-):
+def test_external_url_rewrite_destination_rejected(monkeypatch, tmp_path, source, capsys):
     """An absolute-URL rewrite destination is an impossible proxy — reject it.
 
     বাংলা: Firebase Hosting external-origin proxy করে না; এমন এন্ট্রি থাকা
