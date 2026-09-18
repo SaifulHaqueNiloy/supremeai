@@ -17,3 +17,5 @@
 | #456 | UPDATED | 8 fix commits pushed; stub scanner 18→17 (kaggle placeholder gone); remaining are pre-existing unrelated modules |
 
 **Verification:** every touched python file py_compile-clean; kernel template compile-validated (197 lines); stub scanner delta verified; CI tracked post-push; production untouched (all fixes deploy via normal CI/CD on green).
+
+> Round 16 addendum: closeout state-check fixed (gh returns OPEN uppercase).
