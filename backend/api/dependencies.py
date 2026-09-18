@@ -311,12 +311,34 @@ async def verify_idempotency(request: Request) -> None:
         request.scope["send"] = release_lock_on_response
 
 
+def require_api_key_scope(required_scope: str):
+    """Dependency that enforces a specific scope on the authenticated API key (Issue 7.8)."""
+
+    async def _scope_checker(request: Request) -> dict:
+        api_key_info = getattr(request.state, "api_key", None)
+        if not api_key_info:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="API Key required",
+            )
+        scopes = api_key_info.get("scopes") or []
+        if "*" in scopes or required_scope in scopes:
+            return api_key_info
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Forbidden: API key lacks required scope '{required_scope}'",
+        )
+
+    return _scope_checker
+
+
 __all__ = [
     "get_current_admin",
     "get_current_tenant",
     "get_current_user_token",
     "get_fitness_engine",
     "get_tenant_db",
+    "require_api_key_scope",
     "verify_autonomous_agent_token",
     "verify_idempotency",
 ]
