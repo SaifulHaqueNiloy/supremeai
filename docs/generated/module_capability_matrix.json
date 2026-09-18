@@ -13377,6 +13377,15 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/security/test_telegram_admin_identity.py"
+    },
+    {
+      "capability_signals": [
         "mcp",
         "register"
       ],
@@ -23654,6 +23663,18 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/maintenance/reindex_ai_memory_embeddings.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "mcp"
       ],
@@ -24371,5 +24392,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2810
+  "source_file_count": 2812
 }
