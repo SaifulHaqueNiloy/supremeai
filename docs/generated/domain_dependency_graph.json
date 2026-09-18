@@ -1772,6 +1772,16 @@
     {
       "evidence": [
         {
+          "line": 57,
+          "path": "backend/workers/synaptic_dream.py"
+        }
+      ],
+      "source": "execution",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 10,
           "path": "backend/api/routes/execution_policies.py"
         }
@@ -2102,7 +2112,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 18,
           "path": "backend/workers/synaptic_dream.py"
         }
       ],
@@ -2482,7 +2492,7 @@
     {
       "evidence": [
         {
-          "line": 51,
+          "line": 53,
           "path": "backend/skills/core_knowledge_qa.py"
         }
       ],
@@ -3412,7 +3422,7 @@
     {
       "evidence": [
         {
-          "line": 296,
+          "line": 278,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3422,7 +3432,7 @@
     {
       "evidence": [
         {
-          "line": 532,
+          "line": 544,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3512,7 +3522,7 @@
     {
       "evidence": [
         {
-          "line": 341,
+          "line": 323,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
