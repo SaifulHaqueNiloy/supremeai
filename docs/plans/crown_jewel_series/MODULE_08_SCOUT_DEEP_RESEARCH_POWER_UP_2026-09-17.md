@@ -160,19 +160,25 @@ P-G: চুক্তি-টেস্ট-সুরক্ষা     → pipeline c
 - **P-A:** নতুন ছোট স্কিমা-মডিউল (scout-বা routes-প্যাকেজে) — emit ও parse দুই-পক্ষই তা থেকে; backend-emit আপডেট (step_update/complete বা FE-আপডেট — এক-সিদ্ধান্ত); history-রেসপন্সে report-ক্ষেত্র; FE-parser আপডেট একই PR; contract-test দুই-পক্ষে।
 - **P-B:** `_run_research_pipeline`-এর synthesis-পূর্বে গেট: sources==0 → explicit no-sources রিপোর্ট (কারণ+পরবর্তী-পরামর্শসহ); fallback-ব্যর্থতা event-হিসেবে প্রবাহিত; flag `SUPREMEAI_RESEARCH_HONEST_GATE=true` (default true — সত্য-ডিফল্ট)।
 - **P-C:** `_web_search`-এ provider-চেইন: DDGS (বিদ্যমান core/search) → scout-governed scrape (policy থাকলে); seed-policy-তে duckduckgo.com + নথি; `ddgs` pyproject-এ ঘোষণা; provider-ব্যর্থতায় পরবর্তী।
-- **P-D:** `CrawlerTelemetry.emit_event`-এ `persistence.record_event` কল (bounded row); admin-events অ-শূন্য-যাচাই; সেশন-মেটাডেটায় খরচ-প্রদর্শন (gateway-মেটাডেটা থেকে); `max_steps` প্যারাম-প্রয়োগ (ডিফল্ট-মান env/config-পঠিত — কোড-কনস্ট্যান্ট নয়)।
+- **P-D (পর্যবেক্ষণ-জাগরণ, জিরো-বাইপাস ইনফারেন্স ও প্রি-কল বাজেট রিজার্ভেশন):**
+  - `CrawlerTelemetry.emit_event`-এ `persistence.record_event` কল (bounded row); admin-events অ-শূন্য-যাচাই।
+  - **Zero-Bypass Binding:** Scout-এর প্রতিটি সিন্থেসিস ও সামারাইজেশন কল Module 03 LLM Gateway-র `InferenceContext(task_type='deep_research', budget_scope='user_interactive')` দিয়ে পরিচালিত হবে।
+  - **টোকেন ও ক্রলিং বাজেট রিজার্ভেশন:** একটি গভীর গবেষণায় যাতে রানঅ্যাওয়ে স্ক্র্যাপিং ও হাজার হাজার টোকেন খরচ না হয়, সেজন্য টাস্ক শুরুর আগেই প্রি-কল লেভেলে একটি নির্দিষ্ট বাজেট লিজ (`BudgetReservation`) রিজার্ভ করা হবে; বাজেট সীমা শেষ হলে অতিরিক্ত ক্রল স্বয়ংক্রিয়ভাবে বন্ধ হয়ে সারসংক্ষেপ তৈরি হবে।
+  - `max_steps` ও `max_pages` প্যারাম-প্রয়োগ (ডিফল্ট-মান env/config-পঠিত — কোড-কনস্ট্যান্ট নয়)।
 - **P-E:** `extractor.py`-তে বাংলা-tokenizer (শব্দ-বিভাজন), Bangla-stopwords **data-file থেকে লোডেড/সম্প্রসারণযোগ্য (কোড-inline হার্ডকোড তালিকা নয় — zero-hardcode সংশোধন)**, danda (`।`) বাক্য-বিভাজক; dedup-shingle বাংলা-সচেতন; টেস্ট: বাংলা-কর্পাসে নিষ্কাশন; zero-token সম্পত্তি-টেস্ট অটুট।
-- **P-F:** slash_commands.py-র /research ও capability_adapters-র spoke → `_run_research_pipeline`-ডেলিগেশন (চুক্তি-মোড়ক অটুট); এক পাইপলাইন, এক টেস্ট-পৃষ্ঠ।
+- **P-F (তিন-পৃষ্ঠ ঐক্য ও টেকসই আর্টিফ্যাক্ট স্টোরেজ):**
+  - slash_commands.py-র /research ও capability_adapters-র spoke → `_run_research_pipeline`-ডেলিগেশন (চুক্তি-মোড়ক অটুট); এক পাইপলাইন, এক টেস্ট-পৃষ্ঠ।
+  - গবেষণার চূড়ান্ত রিপোর্টটি ক্লিকযোগ্য সোর্স ও মেটাডেটা সহ অবজেক্ট স্টোরেজে স্থায়ী আর্টিফ্যাক্ট হিসেবে সেভ হবে এবং ইউজারের চ্যাট টাইমলাইনে যুক্ত হবে।
 - **P-G:** pipeline contract-test (১০-ধাপ ক্রম) + respx-মকড E2E (policy→crawl→report); `core/config.py`-তে scout-সেকশন (flags: honest-gate, provider-chain, events); kill-switch।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **পতাকাবাহী জাগরণ (P-A):** /research পৃষ্ঠা প্রথমবার জীবন্ত — ধাপ-প্রবাহ+রিপোর্ট; ব্যবহারকারী-আস্থার প্রথম-সেকেন্ড।
 2. **গবেষণা-বিশ্বাস (P-B):** "রিপোর্ট" মানেই উৎস-সমর্থিত — fabrication-পৃষ্ঠ শূন্য; উদ্ধৃতি-সত্য >95% (target)।
-3. **কাজ-করা provider (P-C):** allowlist-প্রতিবন্ধক শেষ; প্রথম কোয়েরি থেকেই ফল; বহু-provider-পথ খোলা।
-4. **পর্যবেক্ষণ ও নিয়ন্ত্রণ (P-D/G):** admin-events জীবন্ত, খরচ দৃশ্যমান, ধাপ-সংখ্যা বাস্তব — অপারেটর-আস্থা।
-5. **মূল-বাজার ভাষা (P-E):** বাংলা-গবেষণা প্রথমশ্রেণির — পণ্যের নিজস্ব পরিচয়ের সাথে সামঞ্জস্য।
-6. **এক-পণ্য-এক-মান (P-F/G):** ৩ পৃষ্ঠ → ১ পাইপলাইন; টেস্ট-সুরক্ষা ভবিষ্যৎ-রিগ্রেশন বন্ধ।
+3. **রানঅ্যাওয়ে খরচ প্রতিরোধ (P-D):** গেটওয়ের প্রি-কল বাজেট রিজার্ভেশন ও ক্রল লিমিটের ফলে গভীর গবেষণায় অনাকাঙ্ক্ষিত বিল হওয়ার ঝুঁকি শূন্য।
+4. **টেকসই রিপোর্ট আর্টিফ্যাক্ট (P-F):** ব্যবহারকারী যেকোনো সময় তার পূর্ববর্তী গবেষণার পূর্ণাঙ্গ তথ্য ও সোর্স লিংক রিভিজিট করতে পারবেন।
+5. **কাজ-করা provider (P-C):** allowlist-প্রতিবন্ধক শেষ; প্রথম কোয়েরি থেকেই ফল; বহু-provider-পথ খোলা।
+6. **মূল-বাজার ভাষা (P-E):** বাংলা-গবেষণা প্রথমশ্রেণির — পণ্যের নিজস্ব পরিচয়ের সাথে সামঞ্জস্য।
 
 ### ২.৬ ক্ষতি/ঝুঁকি (সৎ, প্রশমন সহ)
 

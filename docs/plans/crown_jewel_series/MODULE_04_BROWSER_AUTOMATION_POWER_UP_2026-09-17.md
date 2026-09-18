@@ -170,14 +170,21 @@ P-G: ইঞ্জিন-grounding + retirement → autonomous agent বাস্
 - **P-C:** ধাপ ১: `browser_routes.py`-র ৪ shadowed-unique endpoint-এর কার্যক্রম canonical package-এ port; ধাপ ২: পুরনো path-এ deprecation-warning; ধাপ ৩: route-parity meta-test-সহ retirement — OpenAPI path-set প্রমাণসহ।
 - **P-D:** ৫ surface-এর প্রতিটিতে দুই-সমাপ্তির একটি: বাস্তব বাস্তবায়ন (যেমন vision-এ প্রকৃত image bytes পাঠানো) অথবা honest 501/422 + explicit error-body; `browser_action_registry`-র mock /test endpoint flag-গেটেড বা অপসারিত।
 - **P-E:** screenshots → বিদ্যমান objects-API প্যাটার্নে স্থায়ী সংরক্ষণ + gallery endpoint বাস্তব + chat-timeline-এ সংযুক্তি; storage-quota guard।
-- **P-F:** প্রতি browser-action-এ event (session_id/action/latency/সাফল্য) → বিদ্যমান error_event_bus + telemetry-মতবাদ (Module 03 প্যাটার্ন); কোনো নতুন infra নয়।
-- **P-G:** `AutonomousBrowserAgent.achieve` → বাস্তব session (playwright_manager) + goal-ভিত্তিক ধাপ (**ধাপ/টোকেন-বাজেট সীমা env-চালিত — কোনো স্থির সংখ্যা নয়; সীমা-শেষে honest ব্যর্থতা**, credit-burn-রক্ষা); `browser_use_adapter` flag `SUPREMEAI_BROWSER_ENGINE=browser_use` (default builtin — কোনো নতুন dependency/পরিশোধিত পরিষেবা নয়); `PlaywrightBrowserAgent`-এর type_text/read/fake-success সংশোধন; `mcp_tools`/`web_fallback_agent`/`services/browser` — wire অথবা delete সিদ্ধান্ত (register-দর্শনে)।
+- **P-F (Observability ও জিরো-বাইপাস ইনফারেন্স বাউন্ডারি):**
+  - প্রতি browser-action-এ event (session_id/action/latency/সাফল্য) → বিদ্যমান error_event_bus + telemetry-মতবাদ (Module 03 প্যাটার্ন)।
+  - **Zero-Bypass Rule:** ব্রাউজার এজেন্ট কোনোভাবেই সরাসরি কোনো এআই প্রোভাইডার কল করতে পারবে না; ভিশন বা অ্যাকশন ডিসিশনের প্রতিটি কল Module 03-এর ক্যানোনিকাল `InferenceContext(tenant_id, run_id, task_type='browser_vision')`-এর মাধ্যমে গেটওয়ে বাজেট গার্ড পেরিয়ে এক্সিকিউট হতে হবে।
+- **P-G (ইঞ্জিন-গ্রাউন্ডিং, স্যান্ডবক্স আইসোলেশন ও রিমোট টেলিপোর্ট সিঙ্ক):**
+  - `AutonomousBrowserAgent.achieve` → বাস্তব session (playwright_manager) + goal-ভিত্তিক ধাপ (ধাপ/টোকেন-বাজেট সীমা env-চালিত; সীমা-শেষে honest ব্যর্থতা)।
+  - **ক্লাউড স্যান্ডবক্স আইসোলেশন:** ব্রাউজার প্রসেসগুলো কনটেইনারের মেমোরি ক্র্যাশ (OOM) এড়াতে স্ট্রিক্ট মেমোরি লিমিট (Max 1GB per session) ও পেজ কনকারেন্সি সেমাফোর দিয়ে আইসোলেটেড থাকবে।
+  - **Supreme Teleport ইন্টিগ্রেশন:** ব্যবহারকারী চাইলে `SUPREME_TELEPORT` রিমোট কন্ট্রোল আর্কিটেকচারের মাধ্যমে মোবাইল বা দূরবর্তী ডিভাইস থেকে সরাসরি লাইভ ব্রাউজার সেশন দেখতে ও টেকওভার করতে পারবেন।
+  - `PlaywrightBrowserAgent`-এর type_text/read/fake-success সংশোধন; `mcp_tools`/`web_fallback_agent`/`services/browser` — wire অথবা delete সিদ্ধান্ত।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **পণ্য-প্রতিশ্রুতি সত্য:** "এজেন্ট ব্রাউজ করতে পারে" দাবি প্রথমবার প্রোডাকশন-সত্য — interactive API 0% → কার্যকর।
-2. **HITL-স্তম্ভ খোলা (P-B):** মানুষ-হস্তক্ষেপ live-view সহ বাস্তব — বিশ্বাসযোগ্যতার সবচেয়ে বড় বিক্রয়-বিন্দু।
-3. **গবেষণা-মান বৃদ্ধি:** deep-research fallback hardcoded লুপ থেকে goal-ভিত্তিক হলে Scout-চক্রের ফল-মান বাড়ে (Module 08-র সাথে সিনার্জি)।
+2. **HITL ও রিমোট টেলিপোর্ট স্তম্ভ (P-B/G):** মানুষ-হস্তক্ষেপ live-view সহ বাস্তব — মোবাইল বা দূরবর্তী যেকোনো ডিভাইস থেকে ব্রাউজার কন্ট্রোল প্ল্যাটফর্মের অন্যতম প্রধান আকর্ষণ।
+3. **জিরো-বাইপাস খরচ নিরাপত্তা (P-F):** ব্রাউজারের ভিশন মডেল কলগুলো গেটওয়ের বাজেট রিজার্ভেশনের আওতায় থাকায় ব্রাউজার লুপে রানঅ্যাওয়ে কস্টের ঝুঁকি শূন্য।
+4. **গবেষণা-মান বৃদ্ধি:** deep-research fallback hardcoded লুপ থেকে goal-ভিত্তিক হলে Scout-চক্রের ফল-মান বাড়ে (Module 08-র সাথে সিনার্জি)।
 4. **আস্থা-পুনরুদ্ধার (P-D):** ৫ মিথ্যা-surface শূন্য — Constitution #5/#13 browser-অঙ্গনে সত্য; ERR-পরিবারের ধারাবাহিকতা।
 5. **দৃশ্যমান মূল্য (P-E/F):** স্থায়ী artifact + per-action জবাবদিহি — ব্যবহারকারী দেখবে "এজেন্ট কী করল, কোথায় থামল"।
 6. **রক্ষণ-বোঝা হ্রাস (P-C/G):** ~900+ লাইন dormant/shadowed surface-এর সিদ্ধান্ত-স্পষ্টতা।
