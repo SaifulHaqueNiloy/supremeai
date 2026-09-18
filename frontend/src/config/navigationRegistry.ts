@@ -13,6 +13,8 @@
 import {
   Home,
   MessageSquare,
+  MessagesSquare,
+  Library,
   Cpu,
   Box,
   Plug,
@@ -95,6 +97,9 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     contexts: ['user'],
     items: [
       { id: 'nav-home', label: 'Home', icon: Home, kind: 'route', path: '/workspace', contexts: ['user'], status: 'implemented', priority: 10 },
+      // M10 (issue #453) বাংলা: Tier-S ChatInterface host — /chat রুটে মাউন্ট করা
+      // হয়েছে; share/export/search/slash/branch ফিচারগুলোর প্রথম লাইভ হোম।
+      { id: 'nav-chat', label: 'Chat', icon: MessagesSquare, kind: 'route', path: '/chat', contexts: ['user'], status: 'implemented', priority: 15 },
       { id: 'nav-ai-studio', label: 'AI Studio', icon: MessageSquare, kind: 'route', path: '/workspace/live', contexts: ['user'], status: 'implemented', priority: 20 },
       { id: 'nav-agents', label: 'Agents', icon: Cpu, kind: 'route', path: '/workspace/agent', contexts: ['user'], status: 'implemented', priority: 30 },
       // Planned features — routes not yet implemented; rendered হয় না (dead-link prevention)।
@@ -108,6 +113,9 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       // /knowledge route + backend POST /api/knowledge/search|seed দুটিই real, তাই
       // implemented স্ট্যাটাসে registry-তে exposed করা হলো (dead-link prevention মেনে)।
       { id: 'nav-knowledge', label: 'Knowledge', icon: BookOpen, kind: 'route', path: '/knowledge', contexts: ['user'], status: 'implemented', priority: 80 },
+      // M10 (issue #453) বাংলা: /prompt-library রুট ও পেজ বহুদিন ছিল, কিন্তু nav
+      // entry ছিল না — navigation truth ফাঁক বন্ধ হলো।
+      { id: 'nav-prompt-library', label: 'Prompt Library', icon: Library, kind: 'route', path: '/prompt-library', contexts: ['user'], status: 'implemented', priority: 85 },
     ],
   },
   {
@@ -227,6 +235,10 @@ export interface NavFilterOptions {
 // become part of the viewer mental model without an explicit product requirement.
 const SIMPLE_VIEWER_ENTRY_IDS = new Set([
   'nav-home',
+  // M10 (issue #453) বাংলা: Chat ও Prompt Library মূল ইউজার ফিচার — simple viewer
+  // nav-এও দৃশ্যমান হওয়া উচিত।
+  'nav-chat',
+  'nav-prompt-library',
   'nav-integrations',
   'nav-profile',
   'nav-settings',
