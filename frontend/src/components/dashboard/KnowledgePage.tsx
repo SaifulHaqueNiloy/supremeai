@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Search, BookOpen, Database, Loader2 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
+import { useListResource } from '../../hooks/useListResource';
 
 interface KnowledgeResult {
   id: string;
@@ -13,27 +14,40 @@ interface KnowledgeResult {
 
 export function KnowledgePage() {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<KnowledgeResult[]>([]);
   const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [status, setStatus] = useState('');
 
+  // বাংলা (Wave 3 dedup): results/loading + search lifecycle এখন useListResource-এ।
+  // এটি user-triggered search page — mount-এ auto-load হয় না, তাই immediate: false;
+  // search-ই এই পেজের list load। fetcher প্রতি render-এ fresh query বন্দী করে।
+  const {
+    items: results,
+    isLoading: loading,
+    loadError,
+    reload: searchKnowledge,
+    clearError,
+  } = useListResource<KnowledgeResult>({
+    fetcher: async () => {
+      // বাংলা মন্তব্য: Task-12 orphan-wiring — ব্যাকএন্ড contract হলো POST
+      // /api/knowledge/search (body: {question}, query: limit)। আগে GET কল করা
+      // হতো বলে এন্ডপয়েন্টটি 405 দিত; এখন প্রকৃত কনট্র্যাক্ট অনুযায়ী POST করা হয়।
+      const res = await apiClient.post<{ results: KnowledgeResult[]; total: number }>(
+        '/api/knowledge/search?limit=10',
+        { question: query.trim() }
+      );
+      return Array.isArray(res?.results) ? res.results : [];
+    },
+    immediate: false,
+  });
+
   const handleSearch = async () => {
     if (!query.trim() || loading) return;
-    setLoading(true);
     setStatus('');
-    try {
-      const res = await apiClient.get<KnowledgeResult[]>(
-        `/api/knowledge/search?query=${encodeURIComponent(query.trim())}&limit=10`
-      );
-      setResults(Array.isArray(res) ? res : []);
-      setSearched(true);
-    } catch (error) {
-      setStatus(`Search failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
-    }
+    // বাংলা: reload() boolean রিটার্ন করে — শুধু সফল search-এই খালি-ফলাফল
+    // state দেখানো হবে (ব্যর্থ হলে error message-ই সত্য)।
+    const ok = await searchKnowledge();
+    if (ok) setSearched(true);
   };
 
   // বাংলা মন্তব্য: নলেজ বেস ইনডেক্স/সিড করার হ্যান্ডলার
@@ -41,6 +55,9 @@ export function KnowledgePage() {
     if (seeding) return;
     setSeeding(true);
     setStatus('');
+    // বাংলা: seed শুরুর সময় পুরোনো search error মুছে ফেলা হয় — এক লাইনের
+    // status channel-এ seed-এর ফলাফলই দৃশ্যমান থাকবে (আগের behavior)।
+    clearError();
     try {
       await apiClient.post('/api/knowledge/seed');
       setStatus('Knowledge base seeded successfully.');
@@ -50,6 +67,8 @@ export function KnowledgePage() {
       setSeeding(false);
     }
   };
+
+  const displayStatus = loadError ? `Search failed: ${loadError}` : status;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
@@ -91,7 +110,7 @@ export function KnowledgePage() {
         </button>
       </div>
 
-      {status && <p className="text-xs text-slate-400 mb-4">{status}</p>}
+      {displayStatus && <p className="text-xs text-slate-400 mb-4">{displayStatus}</p>}
 
       {searched && results.length === 0 && !loading && (
         <p className="text-sm text-slate-400 text-center py-8">No results found.</p>

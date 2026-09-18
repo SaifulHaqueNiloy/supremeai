@@ -2,6 +2,10 @@
 API Endpoints for Knowledge Base Interaction.
 """
 
+import json
+from pathlib import Path
+from typing import NamedTuple
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
@@ -24,6 +28,62 @@ class KnowledgeQuestion(BaseModel):
     """Request contract for the governed company knowledge-base skill."""
 
     question: str = Field(min_length=1, max_length=4_000)
+
+
+def _manifest_dir():
+    """Skill manifest directory — module-level helper যাতে tests monkeypatch করতে পারে।"""
+    return Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+
+
+# ---------------------------------------------------------------------------
+# বাংলা মন্তব্য (Wave-3 perf): Task-12-এর পর এই endpoint হট — আগে প্রতিটি search
+# request-এ সব manifest JSON re-glob + re-parse + re-serialize হতো, যা প্রতি
+# কলে বিশুদ্ধ নষ্ট কাজ। তাই parsed index একটি single-slot module-level cache-এ
+# রাখা হলো, key = (directory path, directory mtime)। mtime বদলালেই সাথে সাথে
+# rebuild হয় — তাই seed/test flow-তে fresh write সঙ্গে সঙ্গে দেখা যায় (blind TTL
+# cache-এ যেমন stale থেকে যেত, তেমন নয়)। মন্তব্য: mtime check একটি stat() কল —
+# এটা re-parse-এর চেয়ে অনেক সস্তা।
+# ---------------------------------------------------------------------------
+
+
+class _ManifestEntry(NamedTuple):
+    """Pre-derived search fields for one manifest file (parsed once per mtime)."""
+
+    name: str
+    match_text: str  # json.dumps(data).lower() — matching semantics আগের মতোই (ensure_ascii=True)
+    id: str
+    title: str
+    content: str  # json.dumps(data, ensure_ascii=False)[:400]
+
+
+_manifest_cache_key: tuple[str, float] | None = None
+_manifest_cache_entries: list[_ManifestEntry] = []
+
+
+def _build_manifest_index(manifest_dir: Path) -> list[_ManifestEntry]:
+    """Glob + parse every manifest once; malformed files are skipped LOUDLY."""
+    entries: list[_ManifestEntry] = []
+    for json_file in manifest_dir.glob("*.json"):
+        try:
+            data = json.loads(json_file.read_text(encoding="utf-8"))
+        except Exception as e:
+            # বাংলা মন্তব্য: আগে এখানে exception সম্পূর্ণ silent-এ swallow হতো —
+            # কোনো manifest file corrupt/malformed হলে debug করা কঠিন হতো।
+            logger.warning(
+                f"[knowledge-search] Skipping malformed manifest '{json_file.name}': {e}"
+            )
+            continue
+        stem = json_file.stem
+        entries.append(
+            _ManifestEntry(
+                name=json_file.name,
+                match_text=json.dumps(data).lower(),
+                id=data.get("skill_id") or data.get("id") or stem,
+                title=data.get("title") or data.get("name") or data.get("skill_id") or stem,
+                content=json.dumps(data, ensure_ascii=False)[:400],
+            )
+        )
+    return entries
 
 
 def get_knowledge_qa_service() -> KnowledgeQAService:
@@ -72,26 +132,44 @@ async def search_knowledge(
     user: dict = Depends(get_current_user_token),
 ):
     """Search the knowledge base for relevant documents matching the query."""
-    import json
-    from pathlib import Path
+    global _manifest_cache_key, _manifest_cache_entries
 
-    manifest_dir = Path(__file__).resolve().parent.parent.parent / "skills" / "manifests"
+    manifest_dir = _manifest_dir()
     results = []
     if manifest_dir.exists():
-        for json_file in manifest_dir.glob("*.json"):
-            try:
-                data = json.loads(json_file.read_text(encoding="utf-8"))
-                if request.question.lower() in json.dumps(data).lower():
-                    results.append(data)
-                    if len(results) >= limit:
-                        break
-            except Exception as e:
-                # বাংলা মন্তব্য: আগে এখানে exception সম্পূর্ণ silent-এ swallow হতো —
-                # কোনো manifest file corrupt/malformed হলে debug করা কঠিন হতো।
-                logger.warning(
-                    f"[knowledge-search] Skipping malformed manifest '{json_file.name}': {e}"
+        try:
+            cache_key = (str(manifest_dir), manifest_dir.stat().st_mtime)
+        except OSError as e:
+            # বাংলা মন্তব্য: exists() ও stat()-এর মাঝে dir মুছে গেলে honest empty ফেরত —
+            # আগেও missing dir-এ glob নীরবে খালি দিত; পার্থক্য শুধু এখন লাউড warning।
+            logger.warning(f"[knowledge-search] manifest dir stat failed ({manifest_dir}): {e}")
+            return {"results": [], "total": 0, "query": request.question}
+
+        if cache_key != _manifest_cache_key:
+            # বাংলা মন্তব্য: mtime বদলেছে (নতুন/বদলানো manifest) — সঙ্গে সঙ্গে rebuild,
+            # ফলে seed বা নতুন manifest write করা মাত্রই পরের request-এ দেখা যায়।
+            _manifest_cache_entries = _build_manifest_index(manifest_dir)
+            _manifest_cache_key = cache_key
+
+        # বাংলা মন্তব্য: Task-12 orphan-wiring — আগে raw manifest dict ফেরত যেত,
+        # কিন্তু frontend KnowledgePage id/title/content/source ফিল্ড রেন্ডার করে;
+        # প্রতিটি ফিল্ড manifest থেকে dynamically derive করা হয় — কোনো
+        # skill-নির্দিষ্ট শব্দ hardcoded নয়, অজানা shape-এও honest fallback
+        # (file stem + JSON excerpt) কাজ করে।
+        question_lower = request.question.lower()
+        for entry in _manifest_cache_entries:
+            if question_lower in entry.match_text:
+                results.append(
+                    {
+                        "id": entry.id,
+                        "title": entry.title,
+                        "content": entry.content,
+                        "source": entry.name,
+                        "score": None,
+                    }
                 )
-                continue
+                if len(results) >= limit:
+                    break
     return {"results": results, "total": len(results), "query": request.question}
 
 

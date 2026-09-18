@@ -12,6 +12,33 @@
 
 > **SupremeAI is not a chatbot that happens to have many tools.** It is being built as a governed, model-agnostic task-execution system whose long-term purpose is to solve real user problems by discovering, composing, reusing and—when genuinely necessary—creating capabilities. The same machinery is intended to operate, test, repair, learn from and safely improve SupremeAI itself.
 
+## Run It
+
+Every command below is the real one used by devs and CI — no shortcuts, no fake flags.
+
+```bash
+# 1) Environment — copy the 546-line template, fill in what your features need
+cp .env.example .env
+
+# 2) Backend — FastAPI behind Uvicorn (entry: backend/main.py, env-driven boot,
+#    hot-reload in local env; port comes from PORT / settings, compose maps 8080)
+cd backend && poetry install && poetry run python main.py
+
+# 3) Frontend — pnpm workspace (install once at repo root), then Vite dev server
+pnpm install && cd frontend && pnpm dev
+
+#    ...or the container path. `core` + `frontend` always start; profiles add more:
+#      --profile local → redis + postgres      --profile full → + worker, scraper, mcp
+docker compose --profile local up --build
+```
+
+Test suites (same entry points CI uses):
+
+```bash
+cd backend  && poetry run pytest tests/missions   # mission tests
+cd frontend && pnpm test                          # vitest run (whole suite)
+```
+
 ## The Core Idea — Capability Before Construction
 
 The most important architectural rule is simple:
@@ -937,6 +964,24 @@ In its strongest form:
 ```
 
 **That compounding capability graph—not the number of individual services—is the real product.**
+
+---
+
+---
+
+## Developer Automation Setup (one command — V8)
+
+বাংলা: push-এর আগেই CI-লালের সব পরিচিত কারণ (formatter drift, generated-evidence drift, mission regression) ধরতে local hooks ইনস্টল করুন — এক কমান্ড:
+
+```bash
+bash scripts/setup-git-hooks.sh && pre-commit install --hook-type pre-commit
+```
+
+- `git commit` → fast static gates (ruff, gitleaks, yaml/json sanity)
+- `git push` → CI-Parity Matrix (ruff format, 5× generator evidence-drift auto-regen, mission suite on protected pushes)
+- এক push-এর জন্য bypass: `SKIP_CI_PARITY=1 git push` (সতর্কতার সাথে)
+
+CI-side automation: CI Doctor (failure → honest issue + drift-only auto-fix), nightly STATUS_PROOF, weekly hygiene report (changelog + knip + i18n) — সব GitHub-native, শূন্য বাড়তি খরচ।
 
 ---
 

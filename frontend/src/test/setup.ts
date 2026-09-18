@@ -24,7 +24,7 @@ Object.defineProperty(global, 'localStorage', {
 
 class EventSourceMock {
   onopen: (() => void) | null = null;
-   
+
   onmessage: ((event: any) => void) | null = null;
   onerror: (() => void) | null = null;
   close = vi.fn();
@@ -38,8 +38,10 @@ Object.defineProperty(global, 'EventSource', {
   writable: true,
 });
 
-// বাংলা মন্তব্য: কিছু component (যেমন ThemeSyncProvider, useServerStream) mount হওয়ার সাথে সাথেই
-// fetch/SSE কল করে। যেসব টেস্ট ফাইল নিজে global.fetch mock করে না (যেমন App.test.tsx), সেখানে
+// বাংলা মন্তব্য: কিছু component (যেমন App root-এ mounted ThemeSyncProvider) mount হওয়ার সাথে সাথেই
+// fetch কল করে। সততা নোট (honesty fix): SSE hook useServerStream এখন unmounted/dead
+// (কোনো runtime importer নেই), তাই mount-কালীন SSE কল আসলে ঘটে না। যেসব টেস্ট ফাইল
+// নিজে global.fetch mock করে না (যেমন App.test.tsx), সেখানে
 // jsdom-এর AbortController-এর signal, Node-এর undici fetch-এর instanceof AbortSignal চেকে ফেল করে —
 // "RequestInit: Expected signal (...) to be an instance of AbortSignal" এই error থ্রো করে এবং
 // টেস্ট শেষ হওয়ার পরেও promise settle হওয়ায় "Unhandled Rejection" হিসেবে ধরা পড়ে (CI job fail করে)।

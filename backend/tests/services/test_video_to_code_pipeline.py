@@ -1,9 +1,14 @@
 """
 Tests for services/video_to_code_pipeline.py
 Focus: constants, format detection, and fallback behaviour.
+Wave-3 perf: ffmpeg extraction now runs via async subprocess (event-loop safe).
 """
 
 from __future__ import annotations
+
+import asyncio
+import subprocess
+from typing import Any
 
 import pytest
 
@@ -63,3 +68,115 @@ async def test_extract_frames_fallback_when_no_ffmpeg(tmp_path, monkeypatch):
     video.write_bytes(b"fake")
     frames = await extractor.extract_frames(str(video), max_frames=3)
     assert isinstance(frames, list)
+
+
+# ---------------------------------------------------------------------------
+# Wave-3 perf — blocking subprocess.run() ইভেন্ট লুপ ফ্রিজ করত, তাই
+# extract_frames এখন asyncio.create_subprocess_exec + await communicate() চালায়।
+# এই টেস্টগুলো নতুন async পাথের আচরণ-contract lock করে (argument construction,
+# error capture, timeout kill) — বাস্তব ffmpeg ছাড়াই, fake proc দিয়ে।
+# ---------------------------------------------------------------------------
+
+
+class _FakeProc:
+    def __init__(self, returncode: int = 0, communicate_result: tuple = (b"", b"")) -> None:
+        self.returncode = returncode
+        self._communicate_result = communicate_result
+        self.killed = False
+
+    async def communicate(self) -> tuple:
+        return self._communicate_result
+
+    def kill(self) -> None:
+        self.killed = True
+
+    async def wait(self) -> int:
+        return 0
+
+
+def _video_file(tmp_path) -> str:
+    video = tmp_path / "vid.mp4"
+    video.write_bytes(b"fake")
+    return str(video)
+
+
+@pytest.mark.anyio
+async def test_extract_frames_runs_ffmpeg_via_async_subprocess(tmp_path, monkeypatch):
+    extractor = VideoFrameExtractor()
+    monkeypatch.setattr(extractor, "_check_ffmpeg", lambda: True)
+
+    captured: dict[str, Any] = {}
+
+    async def fake_exec(*args, **kwargs):
+        captured["args"] = args
+        captured["kwargs"] = kwargs
+        return _FakeProc(returncode=0)
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+
+    video = _video_file(tmp_path)
+    out_dir = tmp_path / "frames_vid"  # আগের মতোই output-dir naming (frames_<stem>)
+    out_dir.mkdir()
+    (out_dir / "frame_000.jpg").write_bytes(b"jpg0")
+
+    frames = await extractor.extract_frames(str(video), max_frames=3)
+    assert frames == [str(out_dir / "frame_000.jpg")]
+    assert captured["args"][0] == "ffmpeg"
+    assert f"fps=1/{FRAME_INTERVAL_SECONDS}" in captured["args"]
+    assert "-vframes" in captured["args"]
+
+
+@pytest.mark.anyio
+async def test_extract_frames_nonzero_exit_returns_empty_list(tmp_path, monkeypatch):
+    # বাংলা: check=True-এর সমতুল্য — non-zero exit-এ error path (log + [])
+    extractor = VideoFrameExtractor()
+    monkeypatch.setattr(extractor, "_check_ffmpeg", lambda: True)
+
+    async def fake_exec(*args, **kwargs):
+        return _FakeProc(returncode=1, communicate_result=(b"", b"decode failure"))
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    assert await extractor.extract_frames(_video_file(tmp_path), max_frames=2) == []
+
+
+@pytest.mark.anyio
+async def test_extract_frames_timeout_kills_child_process(tmp_path, monkeypatch):
+    # বাংলা: timeout-এ আগে subprocess.run নিজেই child মারত — এখন আমরা করি, নইলে zombie
+    extractor = VideoFrameExtractor()
+    monkeypatch.setattr(extractor, "_check_ffmpeg", lambda: True)
+
+    proc_holder: dict[str, _FakeProc] = {}
+
+    class _TimeoutProc(_FakeProc):
+        async def communicate(self):
+            raise TimeoutError  # asyncio.wait_for-ও এই builtin TimeoutError-ই তোলে (py3.11+)
+
+    async def fake_exec(*args, **kwargs):
+        proc = _TimeoutProc()
+        proc_holder["proc"] = proc
+        return proc
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    assert await extractor.extract_frames(_video_file(tmp_path), max_frames=2) == []
+    assert proc_holder["proc"].killed is True
+
+
+@pytest.mark.anyio
+async def test_extract_frames_file_not_found_propagates(tmp_path, monkeypatch):
+    # বাংলা: আগের subprocess.run-ও FileNotFoundError ধরত না (check-এর পরে ffmpeg গায়েব
+    # হলে) — নতুন async পাথেও সেই semantics অক্ষুণ্ণ, catch তালিকা একই রাখা হয়েছে
+    extractor = VideoFrameExtractor()
+    monkeypatch.setattr(extractor, "_check_ffmpeg", lambda: True)
+
+    async def fake_exec(*args, **kwargs):
+        raise FileNotFoundError("ffmpeg vanished")
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
+    with pytest.raises(FileNotFoundError):
+        await extractor.extract_frames(_video_file(tmp_path), max_frames=2)
+
+
+def test_called_process_error_is_subprocess_error():
+    # বাংলা: নতুন কোডে raise করা CalledProcessError বাইরের except-এ ধরা পড়ে —
+    # এই অ্যাসারশন সেই সম্পর্কটা ভবিষ্যতে ভাঙা থেকে রক্ষা করে
+    assert issubclass(subprocess.CalledProcessError, subprocess.SubprocessError)

@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from core.logging_config import logger
@@ -25,6 +25,15 @@ def _internal_error(e: Exception) -> HTTPException:
 
 router = APIRouter(prefix="/conversations", tags=["User Conversations"])
 
+# বাংলা মন্তব্য (Wave-3 perf): GET /conversations/ আগে .limit() ছাড়া ইউজারের সব
+# conversation একবারে নামাত, অথচ একমাত্র caller (frontend UserDashboard) প্রথম ৩টা
+# client-side slice করে — বাকিটা নেটওয়ার্ক ট্রাফিক হিসেবে বিশুদ্ধ অপচয়। Cap দুটি
+# magic number নয় — module constant হিসেবে রাখা হলো যাতে owner সহজে টিউন করতে পারে;
+# list আগে থেকেই updated_at desc (recent-first) order-এ আসে, তাই প্রথম N-টাই সবচেয়ে
+# সাম্প্রতিক।
+DEFAULT_CONVERSATIONS_LIMIT = 50
+MAX_CONVERSATIONS_LIMIT = 100
+
 
 class ConversationResponse(BaseModel):
     id: str
@@ -48,7 +57,15 @@ class MessageResponse(BaseModel):
 
 
 @router.get("/", response_model=list[ConversationResponse])
-async def list_conversations(user: dict = Depends(verify_token_dependency)):
+async def list_conversations(
+    limit: int = Query(
+        default=DEFAULT_CONVERSATIONS_LIMIT,
+        ge=1,
+        le=MAX_CONVERSATIONS_LIMIT,
+        description="Maximum conversations to return (recent-first).",
+    ),
+    user: dict = Depends(verify_token_dependency),
+):
     user_id = user.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -60,6 +77,7 @@ async def list_conversations(user: dict = Depends(verify_token_dependency)):
             .select("*")
             .eq("user_id", user_id)
             .order("updated_at", desc=True)
+            .limit(limit)
             .execute()
         )
         return [ConversationResponse(**row) for row in response.data]

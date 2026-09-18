@@ -19,6 +19,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from core.config import settings
 from core.logging_config import logger
 
 router = APIRouter(prefix="/api/v1/pr-review", tags=["pr-review"])
@@ -45,10 +46,18 @@ class WebhookPayload(BaseModel):
 
 
 def _verify_signature(payload: bytes, signature: str | None, secret: str | None) -> bool:
-    """GitHub webhook signature যাচাই করে (HMAC-SHA256)।"""
+    """GitHub হুক সিগনেচার যাচাই করে (HMAC-SHA256)।"""
+    # বাংলা মন্তব্য (Wave-1 security fix): secret কনফিগার না থাকলে আগে fail-open ছিল
+    # (dev-mode স্কিপ করে True ফেরত দিত) — ফলে সিগনেচারহীন যেকোনো রিকোয়েস্ট
+    # PR-রিভিউ ট্রিগার করত। এখন n8n/cdc-র মতোই কঠোর fail-closed: উঁচু লগ + প্রত্যাখ্যান।
     if not secret:
-        return True  # বাংলা মন্তব্য: secret কনফিগ না থাকলে স্কিপ করা হচ্ছে (dev mode)।
+        logger.error(
+            "GITHUB_WEBHOOK_SECRET is not configured! "
+            "Rejecting all GitHub hook requests under fail-closed policy."
+        )
+        return False
     if not signature:
+        logger.warning("GitHub hook rejected: missing X-Hub-Signature-256 header")
         return False
     expected = hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     provided = signature.replace("sha256=", "")
@@ -58,11 +67,12 @@ def _verify_signature(payload: bytes, signature: str | None, secret: str | None)
 @router.post("/webhook")
 async def github_webhook(request: Request):
     """GitHub থেকে PR webhook রিসিভ করে অটো-রিভিউ ট্রিগার করে।"""
-    from core.config import settings
-
     body = await request.body()
     signature = request.headers.get("X-Hub-Signature-256")
-    secret = getattr(settings, "github_webhook_secret", None)
+    # বাংলা মন্তব্য: settings.github_webhook_secret (config_secrets.py-র নতুন lazy
+    # property) — আগে এই অ্যাট্রিবিউট ছিলই না বলে getattr সবসময় None দিত এবং
+    # ভেরিফিকেশন সবসময় স্কিপ হয়ে যেত (silently fail-open)।
+    secret = settings.github_webhook_secret
 
     if not _verify_signature(body, signature, secret):
         raise HTTPException(status_code=401, detail="Invalid webhook signature")
