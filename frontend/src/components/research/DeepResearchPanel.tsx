@@ -15,6 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
+import { getApiBaseUrl } from '../../utils/api';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -52,11 +53,20 @@ interface ResearchHistoryItem {
 }
 
 interface ResearchStreamEvent {
-  type: 'step_update' | 'progress' | 'complete' | 'error';
-  step?: ResearchStep;
+  // Frontend-internal contract names (kept for backward compatibility)…
+  type: 'step_update' | 'progress' | 'complete' | 'error'
+    // …plus the REAL backend SSE contract (issue #452 mismatch fix):
+    // deep_research.py emits {"type":"step",step:int,name,content},
+    // {"type":"report",content:report,...} and {"type":"error",content}.
+    | 'step'
+    | 'report';
+  step?: ResearchStep | number;
   steps?: ResearchStep[];
   report?: ResearchReport;
   error?: string;
+  // raw backend fields
+  name?: string;
+  content?: unknown;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -165,7 +175,10 @@ export default function DeepResearchPanel() {
 
     try {
       const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
-      const baseUrl = window.location.origin;
+      // Issue #452 fix: window.location.origin breaks whenever the API lives on
+      // a different origin than the frontend — use the canonical base URL
+      // helper like every other panel.
+      const baseUrl = getApiBaseUrl();
 
       const response = await fetch(`${baseUrl}/api/research/deep/stream`, {
         method: 'POST',
@@ -200,6 +213,9 @@ export default function DeepResearchPanel() {
           if (line.startsWith('data: ')) {
             try {
               const event: ResearchStreamEvent = JSON.parse(line.slice(6));
+              // Issue #452 fix: accept the backend's REAL SSE contract
+              // ("step"/"report") alongside the legacy names — before this,
+              // live steps and the final report NEVER rendered.
               if (event.type === 'step_update' && event.step) {
                 setSteps((prev) => {
                   const exists = prev.findIndex((s) => s.step_number === event.step!.step_number);
@@ -210,15 +226,52 @@ export default function DeepResearchPanel() {
                   }
                   return [...prev, event.step!].sort((a, b) => a.step_number - b.step_number);
                 });
-              } else if (event.type === 'complete' && event.report) {
-                setReport(event.report);
+              } else if (event.type === 'step' && typeof event.step === 'number') {
+                const backendStep: ResearchStep = {
+                  step_number: event.step,
+                  name: event.name || `Step ${event.step}`,
+                  status: 'done',
+                  content_preview: typeof event.content === 'string' ? event.content : '',
+                };
+                setSteps((prev) => {
+                  const exists = prev.findIndex((s) => s.step_number === backendStep.step_number);
+                  if (exists >= 0) {
+                    const updated = [...prev];
+                    updated[exists] = backendStep;
+                    return updated;
+                  }
+                  return [...prev, backendStep].sort((a, b) => a.step_number - b.step_number);
+                });
+              } else if ((event.type === 'complete' || event.type === 'report') && (event.report || event.content)) {
+                const raw = (event.report || event.content) as Record<string, unknown>;
+                // Backend report shape: {title, sections:[{title,content,...}],
+                // sources:[{title,url,snippet}], summary} — map to the
+                // frontend ResearchReport contract.
+                const sections = Array.isArray(raw.sections)
+                  ? (raw.sections as Array<Record<string, unknown>>).map((s) => ({
+                      heading: String(s.heading ?? s.title ?? ''),
+                      content: String(s.content ?? ''),
+                    }))
+                  : [];
+                const sources = Array.isArray(raw.sources)
+                  ? (raw.sources as Array<Record<string, unknown>>).map((s) => ({
+                      title: String(s.title ?? ''),
+                      url: String(s.url ?? ''),
+                    }))
+                  : [];
+                setReport({
+                  title: String(raw.title ?? 'Research Report'),
+                  sections,
+                  sources,
+                  summary: String(raw.summary ?? ''),
+                });
                 setSteps((prev) =>
                   prev.map((s) => (s.status !== 'error' ? { ...s, status: 'done' as const } : s))
                 );
                 globalShowToastRef.current('success', 'Research completed!');
               } else if (event.type === 'error') {
-                setError(event.error || 'Research failed unexpectedly');
-                globalShowToastRef.current('error', event.error || 'Research failed');
+                setError(event.error || (typeof event.content === 'string' ? event.content : '') || 'Research failed unexpectedly');
+                globalShowToastRef.current('error', event.error || (typeof event.content === 'string' ? event.content : '') || 'Research failed');
               }
             } catch {
               // Non-JSON SSE line, skip
