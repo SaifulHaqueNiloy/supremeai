@@ -1,20 +1,23 @@
 """Fail-closed contract tests for scripts/deploy/generate_firebase_config.py.
 
-BACKGROUND (zero-hardcode reconciliation): the generator used to treat a
-missing ``/api/**`` rewrite as a WARNING-only condition. A hosting site that
-silently drops its API rewrite ships a SPA whose backend calls 404 at the
-edge — the exact class of silent-config failure the zero-hardcode plan
-forbids. The generator is now fail-closed:
+BACKGROUND (2026-09-18 live incident, False-Assurance doctrine): the generator
+used to REQUIRE three API rewrites (/api/**, /api/v1/**, /admin-api/**) whose
+destinations pointed at the backend origin. Deep verification against real
+production proved that contract was architecturally impossible: Firebase
+Hosting rewrites only proxy to local files / Cloud Functions / Cloud Run —
+official docs define rewrite `destination` as "a local file that must exist",
+and external-origin proxying silently 404s every /api/* path at the edge while
+looking fully configured. The repo's own frontend (utils/api.ts) already calls
+the API origin directly with CORS. The generator's contract is now:
 
-1. All three required API rewrites (/api/**, /api/v1/**, /admin-api/**)
-   must exist on every hosting site.
-2. Rewrite destinations must share the canonical BACKEND_URL origin
-   (foreign destinations rejected).
-3. Destinations must pass source-prefix proof (/api/** must route into
-   {origin}/api/..., not into a sibling path).
-4. The SPA fallback (** -> /index.html) must exist verbatim.
-5. All previous fail-fast checks (missing template/env, unresolved
-   placeholders, invalid JSON) are preserved.
+1. The SPA fallback (** -> /index.html) must exist on every hosting site.
+2. Any rewrite destination that is an absolute URL is a lying artifact —
+   fail-closed rejection (external proxying is unsupported).
+3. BACKEND_URL is optional (placeholder-free template), but if set and it
+   points at a Firebase Hosting domain (*.web.app / *.firebaseapp.com),
+   that is a hosting-site-as-API-origin misconfiguration — fail-closed.
+4. All previous fail-fast checks (missing template, unresolved placeholders,
+   invalid JSON) are preserved; generation is deterministic.
 """
 
 from __future__ import annotations
@@ -37,18 +40,12 @@ BACKEND_URL = "https://api.example.com"
 
 def _template(
     *,
-    sources: tuple[str, ...] = ("/admin-api/**", "/api/v1/**", "/api/**", "**"),
+    sources: tuple[str, ...] = ("**",),
     destinations: dict[str, str] | None = None,
     spa_destination: str = "/index.html",
     shape: str = "list",
 ) -> str:
-    default_dests = {
-        "/admin-api/**": f"{BACKEND_URL}/admin-api/**",
-        "/api/v1/**": f"{BACKEND_URL}/api/v1/**",
-        "/api/**": f"{BACKEND_URL}/api/**",
-        "**": spa_destination,
-    }
-    dests = {**default_dests, **(destinations or {})}
+    dests = {"**": spa_destination, **(destinations or {})}
     rewrites = [{"source": s, "destination": dests[s]} for s in sources if s in dests]
     site = {
         "target": "user",
@@ -59,22 +56,19 @@ def _template(
     return json.dumps(doc)
 
 
-def _run_generate(
-    monkeypatch, tmp_path: Path, template: str | None, env_url: str | None = BACKEND_URL
-):
+def _run_generate(monkeypatch, tmp_path: Path, template: str | None, env_url: str | None = None):
     monkeypatch.chdir(tmp_path)
     if template is not None:
         (tmp_path / "firebase.template.json").write_text(template, encoding="utf-8")
-    if env_url is None:
-        for var in (
-            "BACKEND_URL",
-            "VITE_BACKEND_URL",
-            "VITE_API_URL",
-            "USER_BACKEND_URL",
-            "VITE_USER_BACKEND",
-        ):
-            monkeypatch.delenv(var, raising=False)
-    else:
+    for var in (
+        "BACKEND_URL",
+        "VITE_BACKEND_URL",
+        "VITE_API_URL",
+        "USER_BACKEND_URL",
+        "VITE_USER_BACKEND",
+    ):
+        monkeypatch.delenv(var, raising=False)
+    if env_url is not None:
         monkeypatch.setenv("BACKEND_URL", env_url)
     gen.generate_firebase_config()
 
@@ -97,14 +91,17 @@ def test_real_repo_template_passes_end_to_end(monkeypatch, tmp_path):
     sites = produced["hosting"]
     assert {s["target"] for s in sites} == {"user", "admin"}
     for site in sites:
+        # বাংলা: চুক্তি — কেবল SPA fallback; কোনো /api rewrite নেই (অসম্ভব স্তর)।
         srcs = {rw["source"] for rw in site["rewrites"]}
-        assert {"/api/**", "/api/v1/**", "/admin-api/**", "**"} <= srcs
+        assert srcs == {"**"}
+        assert site["rewrites"][0]["destination"] == "/index.html"
 
 
 def test_minimal_valid_template_generates_output(monkeypatch, tmp_path):
     _run_generate(monkeypatch, tmp_path, _template())
     produced = json.loads((tmp_path / "firebase.json").read_text(encoding="utf-8"))
-    assert produced["hosting"][0]["rewrites"][0]["destination"] == f"{BACKEND_URL}/admin-api/**"
+    rewrites = produced["hosting"][0]["rewrites"]
+    assert rewrites == [{"source": "**", "destination": "/index.html"}]
 
 
 def test_generation_is_deterministic(monkeypatch, tmp_path):
@@ -115,20 +112,25 @@ def test_generation_is_deterministic(monkeypatch, tmp_path):
     assert (tmp_path / "firebase.json").read_bytes() == first
 
 
+def test_generation_works_without_backend_url(monkeypatch, tmp_path):
+    """Placeholder-free template: BACKEND_URL absence must not fail the deploy.
+
+    বাংলা: পুরোনো চুক্তিতে BACKEND_URL ছিল আবশ্যক (rewrite substitution-এর জন্য);
+    নতুন SPA-fallback-only চুক্তিতে placeholder নেই — env ছাড়াই deterministic
+    আউটপুট হবে। এটি সততার প্রমাণ: অপ্রয়োজনীয় কনফিগ আর বাধ্যতামূলক নয়।
+    """
+    _run_generate(monkeypatch, tmp_path, _template(), env_url=None)
+    assert (tmp_path / "firebase.json").exists()
+
+
 def test_dict_hosting_shape_still_validated(monkeypatch, tmp_path):
     _run_generate(monkeypatch, tmp_path, _template(shape="dict"))
     assert (tmp_path / "firebase.json").exists()
 
 
 # ---------------------------------------------------------------------------
-# Environment / template fail-fast (pre-existing contract, still enforced)
+# Template fail-fast (pre-existing contract, still enforced)
 # ---------------------------------------------------------------------------
-
-
-def test_missing_backend_url_exits(monkeypatch, tmp_path):
-    with pytest.raises(SystemExit) as exc:
-        _run_generate(monkeypatch, tmp_path, _template(), env_url=None)
-    assert exc.value.code == 1
 
 
 def test_missing_template_exits(monkeypatch, tmp_path):
@@ -147,60 +149,56 @@ def test_unresolved_placeholders_exits(monkeypatch, tmp_path):
 def test_invalid_json_exits(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "firebase.template.json").write_text("{not json", encoding="utf-8")
-    monkeypatch.setenv("BACKEND_URL", BACKEND_URL)
     with pytest.raises(SystemExit) as exc:
         gen.generate_firebase_config()
     assert exc.value.code == 1
 
 
-def test_relative_backend_url_rejected(monkeypatch, tmp_path):
-    with pytest.raises(SystemExit) as exc:
-        _run_generate(monkeypatch, tmp_path, _template(), env_url="api.example.com")
-    assert exc.value.code == 1
-
-
 # ---------------------------------------------------------------------------
-# Rewrite contract (NEW fail-closed behaviour — was WARNING-only)
+# Rewrite honesty contract (2026-09-18 incident — fail-closed)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
-    "missing",
+    "source",
     ["/api/**", "/api/v1/**", "/admin-api/**"],
     ids=["api", "api-v1", "admin-api"],
 )
-def test_missing_required_rewrite_fails_closed(monkeypatch, tmp_path, missing, capsys):
-    remaining = tuple(s for s in ("/admin-api/**", "/api/v1/**", "/api/**") if s != missing)
-    template = _template(sources=(*remaining, "**"))
-    with pytest.raises(SystemExit) as exc:
-        _run_generate(monkeypatch, tmp_path, template)
-    assert exc.value.code == 1
-    out = capsys.readouterr().out
-    assert f"missing required rewrite {missing}" in out
+def test_external_url_rewrite_destination_rejected(monkeypatch, tmp_path, source, capsys):
+    """An absolute-URL rewrite destination is an impossible proxy — reject it.
 
-
-def test_foreign_destination_origin_rejected(monkeypatch, tmp_path, capsys):
+    বাংলা: Firebase Hosting external-origin proxy করে না; এমন এন্ট্রি থাকা
+    মানে configured দেখায় কিন্তু প্রতিটি ম্যাচিং পাথে নীরবে 404 দেয়
+    (2026-09-18 লাইভ ইনসিডেন্ট) — তাই fail-closed।
+    """
     template = _template(
-        destinations={"/api/**": "https://evil.example.com/api/**"},
+        sources=(source, "**"),
+        destinations={source: f"{BACKEND_URL}{source}"},
     )
     with pytest.raises(SystemExit) as exc:
         _run_generate(monkeypatch, tmp_path, template)
     assert exc.value.code == 1
-    assert "foreign destination rejected" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "absolute URL" in out
+    assert "not supported by Firebase Hosting rewrites" in out
 
 
-def test_source_prefix_proof_violation_rejected(monkeypatch, tmp_path, capsys):
-    # /api/** routed into /admin-api/... on the correct origin: origin matches,
-    # but the destination path breaks the source-prefix proof.
-    template = _template(destinations={"/api/**": f"{BACKEND_URL}/admin-api/**"})
-    with pytest.raises(SystemExit) as exc:
-        _run_generate(monkeypatch, tmp_path, template)
-    assert exc.value.code == 1
-    assert "source-prefix proof failed" in capsys.readouterr().out
+def test_hosting_domain_backend_url_rejected(monkeypatch, tmp_path, capsys):
+    """BACKEND_URL pointing at a hosting site is never an API origin.
+
+    বাংলা: Hosting ডোমেন API origin নয় — এই ভুল মান নীরবে ডিপ্লয় হতে
+    পারবে না (2026-09-18 ইনসিডেন্ট: secret একটি Hosting ডোমেনে পয়েন্ট করা ছিল)।
+    """
+    for host in ("supremeai-a.web.app", "supremeai-a.firebaseapp.com"):
+        with pytest.raises(SystemExit) as exc:
+            _run_generate(monkeypatch, tmp_path, _template(), env_url=f"https://{host}")
+        assert exc.value.code == 1, host
+        out = capsys.readouterr().out
+        assert "Firebase Hosting domain" in out
 
 
 def test_missing_spa_fallback_rejected(monkeypatch, tmp_path, capsys):
-    template = _template(sources=("/admin-api/**", "/api/v1/**", "/api/**"))
+    template = _template(sources=())
     with pytest.raises(SystemExit) as exc:
         _run_generate(monkeypatch, tmp_path, template)
     assert exc.value.code == 1
