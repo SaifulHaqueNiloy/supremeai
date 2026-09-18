@@ -49,24 +49,27 @@ code_evidence:
 test_evidence: "none yet — প্রতিটি Phase-এর execution প্ল্যান সংজ্ঞায়িত করবে; সমষ্টিগত চুক্তি: (১) streaming-vs-nonstream telemetry-parity টেস্ট (একই প্রম্পট, দুই পথ, সমান খরচ-পার্থক্য 0%), (২) tenant-প্রচার integration টেস্ট (chat.py→gateway→CostGuard পর্যবেক্ষণ), (৩) বিদ্যমান 17 টেস্ট-ফাইল (~3,111 LOC: test_llm_gateway_completion.py 1,001, test_llm_router.py 355, test_model_router_unit.py 150, test_llm_gateway_consolidation.py 247) zero regression, (৪) flag-off → byte-সমতুল্য আজকের আচরণ; register §12-র 22 skipped টেস্ট consolidation-এ প্রথম লাভ"
 acceptance_criteria:
   - "প্রতিটি Phase আলাদা ছোট execution প্ল্যান হিসেবে Gate 0–6 পাস"
-  - "Streaming-সমতা সংজ্ঞা: stream=True কলও track_llm_call + Langfuse + খরচ-এন্ট্রি উৎপন্ন করে — non-stream-এর সাথে প্রমাণিত parity"
-  - "খরচ-নীতি সংজ্ঞা: প্রধান serving routes (chat/task_workspace/reasoning/scheduled_tasks/deep_research) tenant_id প্রচার করে; gateway প্রি-কল TokenDeductor চেক করে — trap #16 কাঠামোগতভাবে বন্ধ"
-  - "সত্য-উপাত্ত সংজ্ঞা: model_registry-তে শূন্য fabricated মডেল-নাম; routing_policy.json-এ শূন্য retired-head; admin UI provider-stats বাস্তব পরিমাপ-ভিত্তিক"
+  - "InferenceContext চুক্তি: একক ক্যানোনিকাল কনটেক্সট (tenant_id, user_id, request_id, run_id, task_type, budget_scope, source) প্রধান ১৩ serving route-এ বাধ্যতামূলক"
+  - "Zero-Bypass চুক্তি: 'No LLM call may bypass the inference accounting boundary' — সিআই স্ট্যাটিক অ্যানালাইসিস গেট পাস"
+  - "Streaming-সমতা সংজ্ঞা: stream=True কলও একই একাউন্টিং সোর্স থেকে track_llm_call + Langfuse + খরচ-এন্ট্রি উৎপন্ন করে এবং discrepancy নির্ধারিত সহনশীলতার (tolerance) মধ্যে থাকে"
+  - "বাজেট-নীতি সংজ্ঞা: Pre-call BudgetReservation লিজ + Post-call UsageSettlement প্রয়োগ; Bounded Fail-Open ম্যাট্রিক্স (আউটেজে low-cost অনুমোদিত, expensive ব্লকড) — রেস-কন্ডিশন ও runaway-cost শূন্য"
+  - "সত্য-উপাত্ত সংজ্ঞা: model_registry-তে শূন্য fabricated মডেল-নাম; routing_policy.json-এ শূন্য retired-head; ফেক-সাকসেস শূন্য (স্ট্রাকচার্ড এরর দ্বারা প্রতিস্থাপিত); admin UI provider-stats বাস্তব পরিমাপ-ভিত্তিক"
   - "721-route surface-এ zero regression — প্রতিটি Phase-এর PR-এ CI প্রমাণ; নতুন dependency শূন্য; কোনো route মুছে না যায়"
-test_evidence_note: "Gate 4-এ parity ও tenant-propagation integration টেস্ট; Gate 5-এ live — বাস্তব স্ট্রিম-কলের খরচ-পার্থক্য 0% পর্যবেক্ষণ + admin-প্যানেলে বাস্তব latency; completion claim-এর আগে বাধ্যতামূলক"
+test_evidence_note: "Gate 4-এ parity, concurrency budget reservation (100 simultaneous calls), এবং failure matrix টেস্ট; Gate 5-এ live — বাস্তব স্ট্রিম-কলের খরচ ও unattributed_cost = 0 পর্যবেক্ষণ; completion claim-এর আগে বাধ্যতামূলক"
 risk_and_rollback:
-  - "সবচেয়ে বড় ঝুঁকি: প্রধান serving-path-এ খরচ-চেক যোগ → latency/ব্যবহার-ভাঙা — প্রশমন: TokenDeductor চেক fail-open (Redis না থাকলে অনুমতি + সতর্ক-লগ), flag-off = আজকের আচরণ; Graceful Degradation #8"
+  - "সবচেয়ে বড় ঝুঁকি: প্রধান serving-path-এ খরচ-চেক যোগ → latency/ব্যবহার-ভাঙা — প্রশমন: Bounded Fail-Open নীতি (রেডিস বা বাজেট আউটেজে Groq/Gemini Flash-এর মতো লো-কস্ট মডেল Allow, কিন্তু দামি মডেল Blocked; অজ্ঞাত টেন্যান্ট Rejected), flag-off = আজকের নিরাপদ আচরণ"
+  - "কনকারেন্সি ঝুঁকি: একযোগে একাধিক কল একই ব্যালেন্স দেখে ওভার-স্পেন্ড করা — প্রশমন: BudgetReservation লিজ (Atomic Redis lease with TTL) + Post-call UsageSettlement"
   - "Fabricated registry অপসারণে নির্ভরশীল কোড ভাঙা (_resolve_registry_model alias-স্তর) — প্রশমন: প্রথমে vendor-true metadata ঢোকানো, alias-স্তর deprecation-পর্ব, অপসারণ শেষ ধাপ; test_model_registry_readiness.py আপডেট"
   - "Consolidation (P-G)-এ 10+ llm_router caller-ভাঙা — প্রশমন: ফ্যাসাড-প্রথম (llm_router/ModelRouter অপরিবর্তিত সিগনেচার, ভেতরে gateway-ডেলিগেশন), caller-মাইগ্রেশন পরিমিত; register §12-র 22 skipped টেস্ট প্রথম লাভ"
   - "Streaming-এ telemetry যোগে per-chunk ওভারহেড — প্রশমন: telemetry কেবল final chunk-এ (usage-সহ), প্রতি-চাংক নয়; বিদ্যমান http_client disconnect-aware relay অটুট"
   - "Rollback: প্রতিটি Phase = একক commit revert + flag; কোনো schema migration নেই; competitive_kit purge-এ কেবল ডিলিট-অথবা-ওয়্যার দুই সমাপ্তি"
 baseline: "(hypothesis — Phase PR-এ মাপা হবে) আজ: স্ট্রিমিং-ট্রাফিকের কত শতাংশ খরচ-হিসাবে অদৃশ্য — অপরিমিত (০ উল্লেখ দেখে ১০০%-এর কাছে hypothesis); tenant_id-প্রচারকৃত serving-route = 0/13; fabricated registry-entry = 6+; retired-head chain = 4/4 complexity-rule; admin UI-তে বাস্তব latency দেখানো provider = 0"
 measurement_method:
-  - "(a) streaming-parity: একই প্রম্পট stream বনাম non-stream — উভয়ে track_llm_call row উৎপন্ন করে কি না, খরচ-ব্যবধান %"
-  - "(b) budget-coverage: tenant_id-প্রচারকৃত serving-route গণনা (লক্ষ্য 13/13) + gateway-পথে TokenDeductor কল-হার"
-  - "(c) truth-পরিমাপ: registry-তে fabricated-entry গণনা (লক্ষ্য 0), retired-head chain গণনা (লক্ষ্য 0), admin-UI বাস্তব-latency provider গণনা"
-  - "(d) regression: CI-তে backend sharded tests + 17 gateway/router টেস্ট-ফাইল শূন্য-ব্যর্থতা; route-graph meta-tests পাস"
-success_threshold: "streaming parity → 100% (hard); budget coverage → 13/13 serving-route (target); fabricated entries → 0 (hard); retired-head → 0 (hard); parity/regression → শূন্য-ব্যর্থতা (hard); সব সংখ্যা measured-হওয়া পর্যন্ত hypothesis"
+  - "(a) streaming-parity: একই প্রম্পট stream বনাম non-stream — উভয়ে track_llm_call row উৎপন্ন করে কি না, খরচ-ব্যবধান সহনশীলতার মধ্যে কি না"
+  - "(b) budget-coverage: InferenceContext-প্রচারকৃত serving-route গণনা (লক্ষ্য 13/13) + BudgetReservation লিজ কল-হার"
+  - "(c) truth-পরিমাপ: registry-তে fabricated-entry গণনা (লক্ষ্য 0), retired-head chain গণনা (লক্ষ্য 0), unattributed_cost গণনা (লক্ষ্য 0), fake_success গণনা (লক্ষ্য 0)"
+  - "(d) regression: CI-তে backend sharded tests + 17 gateway/router টেস্ট-ফাইল শূন্য-ব্যর্থতা; route-graph meta-tests পাস; zero-bypass gate পাস"
+success_threshold: "streaming parity → tolerance within 1% (hard); budget coverage → 13/13 serving-route (target); unattributed_cost → 0 (hard); fake_success_responses → 0 (hard); budget_race_violations → 0 (hard); fabricated entries → 0 (hard); retired-head → 0 (hard); parity/regression → শূন্য-ব্যর্থতা (hard); সব সংখ্যা measured-হওয়া পর্যন্ত hypothesis"
 plan_lifecycle: "living — Crown Jewel Module Series চক্র ৩-এর প্রস্তাবিত নীলনকশা; single-plan discipline অটুট — কোনো Phase ফাউন্ডার-অনুমোদন-পূর্বে executable নয়"
 ---
 
@@ -133,6 +136,27 @@ plan_lifecycle: "living — Crown Jewel Module Series চক্র ৩-এর �
 
 **গ্রেপ-যাচাই:** fresh main 6ef6550-এ কোনো বিদ্যমান ডকুমেন্ট streaming-telemetry-সমতা, gateway-স্তর খরচ-প্রয়োগ, vendor-true registry বা দ্বিতীয়-স্ট্যাক (llm_router) একীকরণ-সিঁড়ির execution-নীলনকশা দেয় না — সম্পূর্ণ unclaimed (`docs/plans/` recursive grep, 2026-09-17; `backend/scripts/migrate_llm_routers.py` migration-validator কেবল পার্টনার-স্ক্রিপ্ট, নীলনকশা নয়)।
 
+### ১.৫.১ ক্যানোনিকাল ইনফারেন্স চুক্তি (`InferenceContext`) ও Zero-Bypass Inference Boundary
+
+SupremeAI-তে বিচ্ছিন্নভাবে স্ট্রিং `tenant_id` পাস করার ভঙ্গুরতা দূর করতে একটি একক ক্যানোনিকাল ডেটাক্লাস প্রণয়ন বাধ্যতামূলক:
+
+```python
+@dataclass(frozen=True)
+class InferenceContext:
+    tenant_id: str
+    user_id: str
+    request_id: str
+    run_id: Optional[str] = None
+    task_type: str = "general"
+    budget_scope: str = "default"  # 'system_critical', 'user_interactive', 'background_eval'
+    source_component: str = "unknown"
+```
+
+#### Zero-Bypass Inference Boundary ডকট্রিন:
+1. **একক প্রবেশদ্বার:** কোনো মডিউল, এজেন্ট, টুল বা ব্যাকগ্রাউন্ড টাস্ক সরাসরি কোনো প্রোভাইডার ক্লায়েন্ট (যেমন `litellm.acompletion` বা raw `httpx`) সরাসরি কল করতে পারবে না।
+2. **বাধ্যতামূলক কনটেক্সট:** প্রতিটি কল অবশ্যই একটি সম্পূর্ণ `InferenceContext` ধারণ করবে; কনটেক্সটবিহীন কল গেটওয়ে বাউন্ডারিতেই রিজেক্টেড হবে।
+3. **সিআই স্ট্যাটিক অ্যানালাইসিস গেট (`check_inference_boundary.py`):** কোডবেসে সরাসরি প্রোভাইডার অ্যাডাপ্টার বা র-এপিআই ইমপোর্ট/কল ডিটেক্ট হলে পিআর বিল্ড ও সিআই ব্যর্থ হবে।
+
 ---
 
 ## Part 2 — Six-Field Complete Plan
@@ -160,84 +184,123 @@ plan_lifecycle: "living — Crown Jewel Module Series চক্র ৩-এর �
 6. **সত্য-উত্তরের নিশ্চয়তা** — false-assurance surface: competitive_kit fabricated (এখন `backend/core/competitive_kit.py` L1359) ও route_and_stream "Hello World" (এখন `async_route_and_stream`) জীবিত; gateway MagicMock-default upstream V4-এ বন্ধ (a3fe8bb) + model_router-এর production-ব্রাঞ্চে mock-শনাক্তকরণ।
 7. **এক গেটওয়ে** — দ্বিতীয় জীবিত স্ট্যাক (llm_router 956 লাইন + providers.py 708 লাইন + HFSwarmRouter) — double breaker-namespace, বিচ্ছিন্ন fallback-আচরণ (trap #19)।
 
-### ২.৩ কী করতে হবে (inference-spine সৎকরণের ৭ ধাপ)
+### ২.৩ কী করতে হবে (Phased Engineering Blueprint: P0 থেকে P7)
 
 ```text
-P-A: Streaming observability-সমতা  → streaming loop-এ track_llm_call + final-chunk usage খরচ
-P-B: Tenant-প্রচার + gateway-বাজেট  → 13 serving-route tenant_id → TokenDeductor pre-call চেক (fail-open)
-P-C: Vendor-true model registry    → fabricated অপসারণ, litellm-metadata, alias-স্তর deprecation
-P-D: routing_policy পুনর্জন্ম      → retired-head অপসারণ + task_overrides সংযোগ অথবা অপসারণ
-P-E: প্রাণ ফেরানো provider-health  → record_result টেলিমেট্রি-ফিড + স্টার্টআপ probe; নয়তো অপসারণ
-P-F: False-assurance purge         → competitive_kit সৎ-বা-অপসারণ, MagicMock-default শূন্য, "Hello World" → raise
-P-G: এক-গেটওয়ে একীকরণ            → llm_router/ModelRouter ফ্যাসাড-বাহুল্য, caller-মাইগ্রেশন, হাতে-লেখা provider retirement
+P0: ক্যানোনিকাল কনট্রাক্ট ও জিরো-বাইপাস গেট (InferenceContext baseline + CI Bypass-Check)
+P1: মিথ্যা-আশ্বাসের অবলুপ্তি ও স্ট্রাকচার্ড এরর (False-Assurance Purge + Structured Failure)
+P2: স্ট্রিমিং অবজারভেবিলিটি সমতা (Streaming Telemetry & Cost Accounting Parity)
+P3: বাউন্ডেড ফেইল-ওপেন ও বাজেট রিজার্ভেশন/সেটেলমেন্ট (Bounded Fail-Open + Atomic Budget Lease)
+P4: ভেন্ডর-সত্য রেজিস্ট্রি ও ক্যাপাবিলিটি পলিসি (Vendor-True Registry + Dynamic Capability Policy)
+P5: মাল্টি-ফ্যাক্টর হেলথ ও লাইভ টেলিমেট্রি ফিড (Passive Health Feed + Flag-Gated Opt-In Probes)
+P6: স্ট্যাবিলাইজেশন, বেঞ্চমার্ক ও কনকারেন্সি টেস্ট (100 Simultaneous Race-Free Verification)
+P7: সিঙ্গেল গেটওয়ে কনসোলিডেশন ও রিটায়ারমেন্ট (Facade-First Delegation + Dead Code Removal)
 ```
 
-### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
+### ২.৪ কীভাবে করব (ফাইল-স্তরের সুনির্দিষ্ট বাস্তবায়ন কৌশল)
 
-- **P-A:** `streaming.py`-এর `_stream_completion` loop-এর সমাপ্তিতে (final chunk-এ usage-সহ) `track_llm_call` কল — completion.py-র অনুরূপ টেলিমেট্রি-ব্লক পুনঃব্যবহার; **কী টচ হবে না:** stream-চাংক ফরম্যাট, SSE route-চুক্তি, ব্যবহারকারী-দৃশ্যমান কিছু।
-- **P-B:** ১৩ serving-route-এ `tenant_id` প্যারাম প্রচার (chat.py, task_workspace.py, reasoning.py, slash_commands.py, scheduled_tasks.py, deep_research.py…); `completion.py`-এ CostGuard চেকের পরে TokenDeductor pre-call চেক — Redis/Firestore অনুপস্থিতে fail-open + সতর্ক-লগ (#8 Graceful Degradation); flag `SUPREMEAI_GATEWAY_BUDGETS=true` (default false)।
-- **P-C:** `model_registry.py`-এর fabricated entry-গুলোর জায়গায় litellm-জ্ঞাত metadata (context window, price) — ফাইলটি DB-syncable ইতিমধ্যে; `_RETIRED_MODELS` auto-sync; `_resolve_registry_model` alias-স্তর deprecation-warning, অপসারণ শেষ ধাপে।
-- **P-D:** `routing_policy.json` পুনর্জন্ম — **প্রথমে canonical-ফাইল নির্ধারণ**: বর্তমান main-এ তিন কপি অসমসত (config/ + backend/config/ = এক বিষয়বস্তু, backend/core/config/ = ভিন্ন বিষয়বস্তু — md5-যাচাইকৃত 2026-09-17); একটিকে canonical করে বাকি দুটি redirect/অপসারণ অন্যথায় নীতি-দ্বৈততা স্থায়ী হয়। চেইন-পুনর্জন্ম **লাইভ registry থেকে derived** (zero-hardcode: কোনো হাতে-টাইপ মডেল-তালিকা নয় — P-C-র vendor-true registry-র availability থেকে চেইন আঁকা); `task_overrides` হয় RoutingMixin-এ পড়া হবে, নয় JSON থেকে মুছবে — দুই সমাপ্তির একটি; টেস্ট-সুরক্ষা: test_llm_gateway_completion.py-র chain-টেস্ট আপডেট।
-- **P-E:** **টেলিমেট্রি-ফিড-প্রথম** — `telemetry.py` `track_llm_call`-এর ভেতর থেকে `provider_router.record_result()` ফিড (zero extra call, zero boot-latency); ফলাফল: admin UI বাস্তব latency/unavailable দেখাবে, scoring জীবন্ত উপাত্ত পাবে। **স্টার্টআপ health-probe হলে সেটি flag-gated, default off** (fast-smooth/zero-cost সংশোধন: বুট-সময় প্রতি-provider probe = boot-latency + free-key quota খরচ — প্রয়োজনেই জাগবে, হার্ডকোড নয়) — অথবা সিদ্ধান্ত হলে 117-লাইন মুছে admin-কে টেলিমেট্রি-সোর্সে সরাসরি সংযোগ।
-- **P-F (V4-রেকনসিলিয়েশন, base `ed35eaf`):** `gateway.py`-র production-MagicMock **ইতিমধ্যেই upstream V4-ফিক্সে অপসারিত** (a3fe8bb, B-V2-01 — কেবল মন্তব্য অবশিষ্ট; এই আইটেম done-upstream হিসেবে চিহ্নিত)। অবশিষ্ট: (১) `backend/core/competitive_kit.py` (ফাইলটি services/ থেকে core/-এ সরেছে) `MultiLLMRouter._call_llm` L1359-র ফেব্রিকেটেড `"[Response from …]"` → gateway-ডেলিগেশন অথবা অংশ-অপসারণ; (২) `model_router.async_route_and_stream`-এর "Simple fallback generator" (`yield "Hello" + yield " World"`) এখনো জীবিত → explicit exception; (৩) mock-শনাক্তকরণ ব্রাঞ্চ টেস্ট-ফাইলে সরিয়ে নেওয়া।
-- **P-G:** ফ্যাসাড-প্রথম — `services/llm/llm_router.LLMRouter` ও `brain/model_router.ModelRouter`-এর সিগনেচার অপরিবর্তিত, ভেতরে gateway-ডেলিগেশন; 10+ caller ক্রমশ সরাসরি gateway-তে; `providers.py` হাতে-লেখা ক্লায়েন্ট + HFSwarmRouter retirement সবশেষে; register §12-র 22 skipped টেস্ট প্রথম লাভ; `migrate_llm_routers.py` validator প্রতি ধাপে চালু।
+- **P0 — Contract Baseline & Zero-Bypass CI Gate:**
+  - `backend/core/llm/llm_gateway/context.py`-এ ক্যানোনিকাল `InferenceContext` সংজ্ঞায়িত করা।
+  - ১৩টি মূল serving route-এ (`chat.py`, `task_workspace.py`, `reasoning.py`, ইত্যাদি) ক্যানোনিকাল কনটেক্সট পাসিং বাধ্যতামূলক করা।
+  - CI স্ট্যাটিক অ্যানালাইসিস স্ক্রিপ্ট যোগ করা যা সরাসরি প্রোভাইডার ক্লায়েন্ট কল সনাক্ত করে গেটওয়ে বাইপাস রোধ করবে।
 
-### ২.৪.১ ক্লাউড বনাম লোকাল ইনফারেন্স নীতি: Ollama কীভাবে কাজ করবে? (Production Parity vs Client-Side Mesh Doctrine)
+- **P1 — False-Assurance Purge & Structured Failure Handling (P-F):**
+  - `backend/core/competitive_kit.py` L1359-এর ফেব্রিকেটেড `"[Response from …]"` সম্পূর্ণ অপসারণ করে গেটওয়ে ডেলিগেশনে আনা।
+  - `model_router.async_route_and_stream`-এর "Hello World" ফালব্যাক বন্ধ করে সুনির্দিষ্ট এরর টাইপ রেইজ করা।
+  - এরর হ্যান্ডলিং হবে কঠোর কিন্তু ইউজার-ফ্রেন্ডলি: আনহ্যান্ডেলড ক্র্যাশের বদলে স্ট্রাকচার্ড এরর ডোমেইন (`GatewayExhaustionError`, `ProviderUnavailableError` with retry-after header) রিটার্ন করা।
+
+- **P2 — Streaming Observability Parity (P-A):**
+  - `streaming.py`-এর `_stream_completion` লুপের শেষ প্রান্তে (final chunk-এ টোকেন usage আসার সাথে সাথে) `track_llm_call` কল সংযুক্ত করা।
+  - নন-স্ট্রিমিং ও স্ট্রিমিং-এর মধ্যে টেলিমেট্রি, ল্যাংফিউজ ট্রেসিং ও খরচ অ্যাট্রিবিউশনের ব্যবধান <১% টলারেন্সে নামিয়ে আনা।
+  - প্রতি-চাঙ্কে কোনো এক্সট্রা নেটওয়ার্ক কল বা ওভারহেড থাকবে না; কেবল ফাইনাল চাঙ্কে সিঙ্ক সম্পন্ন হবে।
+
+- **P3 — Bounded Fail-Open & Budget Reservation/Settlement (P-B):**
+  - **Bounded Fail-Open ম্যাট্রিক্স:** রেডিস বা বাজেট ডাটাবেজ সাময়িক ডাউন হলে সব ট্রাফিকের জন্য ঢালাও ফেইল-ওপেন বিপজ্জনক (রানঅ্যাওয়ে কস্টের ঝুঁকি)। তাই বাউন্ডেড ম্যাট্রিক্স প্রযোজ্য:
+    - *Groq, Gemini Flash, DeepSeek V3 (ফ্রি / অতি-সস্তা):* Allow with Warning (ব্যবসা নিরবচ্ছিন্ন থাকবে)।
+    - *Claude 3.5 Sonnet, GPT-4o (ব্যয়বহুল মডেল):* Strictly Blocked (আউট-অব-বাজেট প্রতিরোধ)।
+    - *অজ্ঞাত / আনঅথেনটিকেটেড টেন্যান্ট:* Strictly Blocked।
+  - **Pre-call BudgetReservation + Post-call UsageSettlement:**
+    - একযোগে ১০০টি কনকারেন্ট রিকোয়েস্ট একই ব্যালেন্স দেখে ওভার-স্পেন্ড করার রেস কন্ডিশন রোধ করতে প্রি-কল লেভেলে একটি অ্যাটমিক Redis লিজ (TTL: ৬০ সেকেন্ড) বরাদ্দ হবে।
+    - ইনফারেন্স শেষ হলে পোস্ট-কল সেটেলমেন্টের মাধ্যমে প্রকৃত টোকেন খরচ অ্যাডজাস্ট হবে এবং অবশিষ্ট রিজার্ভেশন রিলিজ হবে।
+
+- **P4 — Vendor-True Model Registry & Capability-Driven Policy (P-C & P-D):**
+  - `model_registry.py`-এর ফেব্রিকেটেড নামগুলো ("gpt-5.5", "claude-opus-4.7") অপসারণ করে `litellm` ভেন্ডর-সত্য মেটাডেটা (context window, input/output cost, capability flags) দিয়ে প্রতিস্থাপন।
+  - ডুপ্লিকেট `routing_policy.json` ফাইলগুলোকে একত্রিত করে একক ক্যানোনিকাল ফাইল নির্ধারণ।
+  - হার্ডকোডেড চেইনের পরিবর্তে মডেলের লাইভ ক্যাপাবিলিটি (`tool_use`, `reasoning`, `vision`, `context_length`) অনুযায়ী ডাইনামিক ফিল্টারিং ও রুট নির্বাচন।
+
+- **P5 — Multi-Factor Provider Health & Live Telemetry Feed (P-E):**
+  - কোনো অতিরিক্ত পোলিং বা বুট-ল্যাটেন্সি তৈরি না করে `telemetry.py` `track_llm_call` থেকে সরাসরি `provider_router.record_result()` ফিড করা (EWMA latency, 429/5xx error rates)।
+  - স্টার্টআপ অ্যাক্টিভ প্রোব ডিফল্টে বন্ধ (ফ্ল্যাগ-গেটেড opt-in) থাকবে যাতে কোনো ফ্রি-টিয়ার কোটা অপচয় না হয়।
+
+- **P6 — Stabilization, Benchmark & Concurrency Gate:**
+  - সিআই-তে ১০০টি সিমুলেটেড কনকারেন্ট রিকোয়েস্ট পাঠিয়ে বাজেট রিজার্ভেশনের রেস-কন্ডিশন ফ্রি আচরণ পরীক্ষা করা।
+  - স্ট্রিমিং ও নন-স্ট্রিমিং প্যারিটি টেস্টে শূন্য খরচ-ব্যবধান নিশ্চিত করা।
+
+- **P7 — Single Gateway Consolidation & Legacy Retirement (P-G):**
+  - ফ্যাসাড-ফার্স্ট পদ্ধতি: `services/llm/llm_router.LLMRouter` এবং `brain/model_router.ModelRouter`-এর পাবলিক ইন্টারফেস অপরিবর্তিত রেখে ভেতরের কল গেটওয়েতে ডেলিগেট করা।
+  - ধীরে ধীরে কলারদের মাইগ্রেট করে ডুপ্লিকেট `providers.py` (৭০৮ লাইন) এবং অচল কোড নিরাপদভাবে রিটায়ার করা।
+
+### ২.৪.১ ক্লাউড বনাম লোকাল ইনফারেন্স নীতি: ৩-টায়ার রিয়েলিজম ম্যাট্রিক্স (3-Tier GPU Realism Matrix)
 
 > **প্রতিষ্ঠাতা-প্রশ্ন ও আর্কিটেকচারাল নীতি:** *"SupremeAI-র মূল নীতি অনুযায়ী কোনো ব্যক্তিগত লোকাল পিসিকে ক্লাউড প্রোডাকশন সার্ভার হিসেবে ব্যবহার করা নিষিদ্ধ (AGENTS.md Section 1: Production Parity Rule) — তাহলে প্রোডাকশনে Ollama বা লোকাল মডেল কীভাবে কাজ করবে এবং কীভাবে খরচ ৮০% কমাবে?"*
 
-SupremeAI-র আর্কিটেকচারে Ollama তিনটি সুনির্দিষ্ট ও নিরাপদ স্তরে পরিচালিত হয়:
+SupremeAI ইনফারেন্সকে ৩টি স্পষ্ট ও বাস্তবসম্মত টায়ারে বিভক্ত করে পরিচালনা করে:
 
-1. **ক্লাউড ডেডিকেটেড জিপিইউ কন্টেইনার (Cloud-Hosted Ollama / RunPod / Private VPS):**
-   - প্রোডাকশনে Ollama কোনো ডেভেলপারের ব্যক্তিগত বাসার ল্যাপটপে চলে না।
-   - এটি ক্লাউডে একটি ডেডিকেটেড কম খরচের GPU সার্ভারে (যেমন RunPod, Modal, বা Hetzner/Vast.ai কন্টেইনার) সেলফ-হোস্টেড হিসেবে চলে।
-   - সেন্ট্রাল রেন্ডার ব্যাকএন্ড এনভায়রনমেন্ট ভেরিয়েবল `OLLAMA_URL` (যেমন `https://gpu.internal.supremeai.dev:11434`) দিয়ে এর সাথে যোগাযোগ করে। ফলে ক্লাউড সার্ভার কোনো ব্যবহারকারীর ব্যক্তিগত লোকাল মেশিনের ওপর নির্ভরশীল থাকে না।
+| টায়ার | ভূমিকা ও পরিবেশ | সমর্থিত রানটাইম | SLA ও অপারেশনাল গ্যারান্টি |
+|---|---|---|---|
+| **Tier 1: Production Managed Cloud** | ২৪/৭ প্রোডাকশন ক্লাউড সার্ভিস | Groq, Gemini Flash, DeepSeek API, Claude | **৯৯.৯% আপটাইম SLA**; সম্পূর্ণ ক্লাউড-প্যারিটি; শূন্য ক্লায়েন্ট ডিপেনডেন্সি |
+| **Tier 2: Dedicated Cloud GPU** | প্রাইভেট এন্টারপ্রাইজ ভিপিএস | RunPod, Modal, Hetzner VPS with vLLM/Ollama | ডেডিকেটেড সেলফ-হোস্টেড ইনফারেন্স; এন্টারপ্রাইজ প্রাইভেসি |
+| **Tier 3: Dev/Test & Evaluation Lab** | সিন্থেটিক ডেটা, টেস্টিং ও অফলাইন আইডিই | ৬-ক্যাগল ফেইলওভার পুল, Colab T4, লোকাল ওলামা সাইডকার | **জিরো প্রোডাকশন SLA**; টেস্ট, বেঞ্চমার্কিং ও অফলাইন এক্সিলারেশনের জন্য ১০০% ফ্রি |
 
-2. **ক্লায়েন্ট সাইডকার ও অফলাইন মোড (Client Mesh — লোকাল পিসি সার্ভার নয়, ক্লায়েন্ট!):**
-   - আমাদের **Supreme Teleport** ও লোকাল আইডিই এক্সটেনশন (Antigravity, Cursor, Cline) আর্কিটেকচারে লোকাল পিসি হলো *ক্লায়েন্ট* (Client), সার্ভার নয়।
-   - ব্যবহারকারী যখন নিজের পাওয়ারফুল পিসিতে সরাসরি কোড করেন, তখন ক্লাউড সার্ভারের ওপর চাপ ও এপিআই খরচ এড়াতে লোকাল সাইডকার সরাসরি মেশিনের নিজস্ব Ollama রানটাইম (`http://127.0.0.1:11434`, `PSI-004: offline_mode.py`) ব্যবহার করে প্রাইভেট ইনফারেন্স চালায়।
-
-3. **ক্লাউড ফ্রি ও আল্ট্রা-লো-কস্ট ফলব্যাক (Groq / DeepSeek / Gemini Flash):**
-   - ক্লাউড প্রোডাকশনে যদি কোনো সেলফ-হোস্টেড GPU না থাকে (`OLLAMA_URL` কনফিগার না থাকলে), Gateway স্বয়ংক্রিয়ভাবে Ollama স্কিপ করে ক্লাউডের ফ্রি ও কম খরচের প্রোভাইডারে ট্রাফিক রাউট করে:
+1. **টায়ার ১ — প্রোডাকশন ক্লাউড ইনফারেন্স (Enterprise Managed Cloud):**
+   - প্রোডাকশনে লাইভ ইউজার ট্রাফিক কখনো কোনো ডেভেলপার বা ইউজারের পার্সোনাল পিসির ওপর নির্ভর করে না।
+   - সেন্ট্রাল ব্যাকএন্ড সরাসরি হাই-স্পিড কম খরচের ক্লাউড এপিআই দিয়ে পরিচালিত হয়:
      - সিনট্যাক্স, লিটার ও ফরম্যাটিং -> **Groq Llama-3 / Mixtral (ফ্রি / ০ ডলার)**
      - সাধারণ চ্যাট ও সামারি -> **Gemini 2.0 Flash (ফ্রি টিয়ার)**
-     - রুটিন কোডিং ও রিফ্যাক্টরিং -> **DeepSeek V3 (প্রতি ১ মিলিয়ন টোকেন মাত্র $0.14)**
-     - কেবল জটিল আর্কিটেকচারাল চিন্তার জন্য -> **Claude 3.5 Sonnet / GPT-4o**
-   - এর ফলে দামি মডেলের অযাচিত ব্যবহার বন্ধ হয়ে সামগ্রিক এপিআই বিল **৮০% পর্যন্ত কমে যায়** — কোনো ইউজারের লোকাল মেশিনের ওপর নির্ভর না করেই।
+     - রুটিন কোডিং ও রিফ্যাক্টরিং -> **DeepSeek V3 (প্রতি ১ মিলিয়ন টোকেন মাত্র $0.14)**
+     - কেবল জটিল আর্কিটেকচারাল প্ল্যানিং -> **Claude 3.5 Sonnet / GPT-4o**
+   - এই স্মার্ট রাউটিংয়ের মাধ্যমে প্রোডাকশনে কোনো আনরিলায়েবল সার্ভার ছাড়াই সার্বিক এপিআই খরচ **৮০% পর্যন্ত কমে যায়**।
 
-### ২.৪.২ ক্লাউডে সম্পূর্ণ ফ্রিতে ডেডিকেটেড GPU / Ollama ব্যবহারের কৌশল (Zero-Cost Cloud GPU Blueprint)
+2. **টায়ার ২ — সেলফ-হোস্টেড ডেডিকেটেড জিপিইউ (Private VPS / RunPod):**
+   - এন্টারপ্রাইজ গ্রাহক বা প্রাইভেট ডিপ্লয়মেন্টে ডেডিকেটেড ক্লাউড GPU কন্টেইনারে `vLLM` বা `Ollama` চলে।
+   - সেন্ট্রাল ব্যাকএন্ড এনভায়রনমেন্ট ভেরিয়েবল `OLLAMA_URL` দিয়ে সিকিউর প্রাইভেট নেটওয়ার্কে এর সাথে যোগাযোগ করে।
 
-প্রোডাকশন বা স্টেজিং পরিবেশে কোনো অর্থ বা ক্রেডিট কার্ড খরচ না করে ক্লাউডে ফ্রি GPU রানার ও ওপেন-সোর্স মডেল চালানোর জন্য ৫টি কার্যকর কৌশল:
+3. **টায়ার ৩ — ক্লায়েন্ট সাইডকার ও অফলাইন মোড (Client Mesh — লোকাল পিসি সার্ভার নয়, ক্লায়েন্ট!):**
+   - আমাদের **Supreme Teleport** ও আইডিই এক্সটেনশনে (Antigravity, Cursor, Cline) লোকাল পিসি হলো *ক্লায়েন্ট*, সার্ভার নয়।
+   - ব্যবহারকারী যখন নিজের মেশিনে কোড করেন, তখন ক্লাউড সার্ভারের ওপর চাপ ও খরচ কমাতে লোকাল সাইডকার সরাসরি মেশিনের নিজস্ব Ollama রানটাইম (`http://127.0.0.1:11434`, `offline_mode.py`) ব্যবহার করে ইনফারেন্স চালায়।
+
+### ২.৪.২ ক্লাউডে সম্পূর্ণ ফ্রিতে ডেডিকেটেড GPU ব্যবহারের কৌশল (Zero-Cost Cloud GPU Blueprint)
+
+ডেভেলপমেন্ট, ইভ্যালুয়েশন ল্যাব ও স্মোক-টেস্টিং পরিবেশে কোনো অর্থ বা ক্রেডিট কার্ড খরচ না করে ক্লাউড GPU ও ওপেন-সোর্স মডেল চালানোর জন্য ৫টি কার্যকর কৌশল:
 
 1. **Google Colab + Cloudflare Tunnel (ফ্রি ১৫ জিবি Nvidia T4 GPU):**
-   - **সুবিধা:** Google Colab-এ ফ্রিতে ১৫ জিবি VRAM সমৃদ্ধ Nvidia T4 GPU পাওয়া যায়।
-   - **কৌশল:** Colab নোটবুকে ব্যাকগ্রাউন্ডে `ollama serve` এবং `cloudflared tunnel` চালু করলে একটি পাবলিক HTTPS টানেল URL (যেমন `https://xxxx.trycloudflare.com`) পাওয়া যায়।
-   - **সংযুক্তি:** এই টানেল URL-টি সুপ্রিমএআই গেটওয়ের `OLLAMA_URL` এনভায়রনমেন্ট ভেরিয়েবলে দিলেই ক্লাউড রেন্ডার সরাসরি ফ্রি GPU থেকে DeepSeek বা Qwen Coder রান করতে পারে।
-   - **সীমা:** প্রতি সেশনে একটানা ১২ ঘণ্টা পর্যন্ত কার্যকর; ডেভেলপমেন্ট ও স্মোক টেস্টিংয়ের জন্য আদর্শ।
+   - Colab নোটবুকে ব্যাকগ্রাউন্ডে `ollama serve` এবং `cloudflared tunnel` চালু করে পাবলিক HTTPS টানেল URL তৈরি করা।
+   - এই টানেল URL-টি ডেভ গেটওয়ের `OLLAMA_URL` এনভায়রনমেন্ট ভেরিয়েবলে দিয়ে স্মোক-টেস্টিং ও মডেল ইভ্যালুয়েশন চালানো যায় (প্রতি সেশন ১২ ঘণ্টা পর্যন্ত)।
 
 2. **Kaggle Notebooks (সপ্তাহে ৩০ ঘণ্টা নিশ্চিত ফ্রি GPU):**
-   - **সুবিধা:** Kaggle প্রতি সপ্তাহে ৩০ ঘণ্টা বিনামূল্যে Nvidia P100 (16GB VRAM) বা Dual T4 GPU প্রদান করে।
-   - **কৌশল:** Colab-এর মতোই Kaggle কার্নেলে ব্যাকগ্রাউন্ডে Ollama ও Cloudflare টানেল চালিয়ে অনেক বেশি স্ট্যাবল সেশনে দীর্ঘস্থায়ী ব্যাচ প্রসেসিং ও টেস্ট রান করা যায়।
+   - Kaggle প্রতি সপ্তাহে ৩০ ঘণ্টা বিনামূল্যে Nvidia P100 (16GB VRAM) বা Dual T4 GPU প্রদান করে।
+   - ব্যাকগ্রাউন্ডে Ollama ও Cloudflare টানেল চালিয়ে দীর্ঘস্থায়ী টেস্ট রান ও ল্যাব বেঞ্চমার্কিং করা যায়।
 
 3. **Hugging Face Spaces (২৪/৭ পার্মানেন্ট ফ্রি হোস্টিং):**
-   - **সুবিধা:** এটি সেশন বন্ধ হয় না; দিনরাত ২৪ ঘণ্টা সচল থাকে।
-   - **কৌশল:** একটি ফ্রি Docker Space তৈরি করে হালকা কিন্তু দক্ষ কোডিং মডেল (যেমন `Qwen2.5-Coder-1.5B/3B` বা `Llama-3.2-3B`) ডিপ্লয় করে রাখলে একটি স্থায়ী পাবলিক এন্ডপয়েন্ট (`https://username-ollama.hf.space`) তৈরি হয়।
+   - ফ্রি Docker Space-এ হালকা কোডিং মডেল (যেমন `Qwen2.5-Coder-1.5B/3B` বা `Llama-3.2-3B`) ডিপ্লয় করে ২৪/৭ সক্রিয় পাবলিক এন্ডপয়েন্ট তৈরি করা যায়।
 
 4. **Cloudflare Workers AI (জিরো-মেইনটেন্যান্স ফ্রি এজ জিপিইউ):**
-   - **সুবিধা:** কোনো ডকার কন্টেইনার বা টানেল চালানো ছাড়াই ক্লাউডফ্লেয়ারের গ্লোবাল GPU নেটওয়ার্কে সরাসরি ইনফারেন্স।
-   - **কোটা:** প্রতিদিন **১০,০০০ নিউরন ফ্রিতে** পাওয়া যায়।
-   - **মডেল:** Llama 3.3 70B, DeepSeek R1 Distill, Qwen 2.5 Coder বিল্ট-ইন থাকে এবং REST API দিয়ে নিমেষেই কানেক্ট হয়।
+   - প্রতিদিন **১০,০০০ নিউরন ফ্রিতে** পাওয়া যায়; Llama 3.3 70B, DeepSeek R1 Distill, Qwen 2.5 Coder সরাসরি REST API দিয়ে কল করা যায়।
 
 5. **Groq ও Cerebras ফ্রি ক্লাউড এপিআই (ওলামার চেয়েও ১০× দ্রুত ও ০ খরচ):**
    - কোনো সেলফ-হোস্টেড GPU কনটেইনার ম্যানেজ করার ঝামেলা ছাড়াই Groq (প্রতি সেকেন্ডে ৩০০-৫০০ টোকেন) এবং Cerebras (সেকেন্ডে ১,৮০০ টোকেন)-এর জেনেরাস ফ্রি টায়ার দিয়ে Llama-3 ও DeepSeek পরিচালনা করা যায়।
 
-### ২.৪.৩ ৬-ক্যাগল অ্যাকাউন্ট ফেইলওভার পুল: ২৪/৭ নিরবচ্ছিন্ন ফ্রি GPU ক্লাস্টার (6x Kaggle Failover Pool Architecture)
+### ২.৪.৩ ৬-ক্যাগল অ্যাকাউন্ট ফেইলওভার পুল: ল্যাব ও ইভ্যালুয়েশনের ২৪/৭ ফ্রি GPU ক্লাস্টার (6x Kaggle Failover Pool Architecture)
 
-> **প্রতিষ্ঠাতা-পরিকল্পনা ও গাণিতিক সুবিধা:**  
+> **ল্যাব স্কেলিং ও গাণিতিক ভিত্তি:**  
 > ১টি Kaggle অ্যাকাউন্ট প্রতি সপ্তাহে দেয় **৩০ ঘণ্টা ফ্রি GPU** (Nvidia P100 / Dual T4, 16GB VRAM)।  
 > ৬টি Kaggle অ্যাকাউন্ট = **৬ × ৩০ = ১৮০ ঘণ্টা প্রতি সপ্তাহে!**  
 > অথচ ১ সপ্তাহে মোট সময় = **২৪ × ৭ = ১৬৮ ঘণ্টা**।  
-> অর্থাৎ, **১৮০ ঘণ্টা > ১৬৮ ঘণ্টা** — ৬টি অ্যাকাউন্ট রোটেশন ও ফেইলওভার করে ৩৬৫ দিন ২৪/৭ সম্পূর্ণ ফ্রিতে হাই-এন্ড ডেডিকেটেড ক্লাউড GPU ক্লাস্টার চালানো সম্ভব!
+> অর্থাৎ, **১৮০ ঘণ্টা > ১৬৮ ঘণ্টা** — ৬টি অ্যাকাউন্ট রোটেশন ও ফেইলওভার করে ৩৬৫ দিন সম্পূর্ণ ফ্রিতে হাই-এন্ড ডেডিকেটেড ক্লাউড GPU ল্যাব চালানো সম্ভব।
+
+#### অপারেশনাল বাউন্ডারি ও প্রোডাকশন রিয়েলিজম গার্ড:
+- **ল্যাব ও ইভ্যালুয়েশন পরিধি:** এই ৬-ক্যাগল পুলটি কঠোরভাবে **টায়ার ৩ (Dev/Test & Evaluation Lab)**-এর অন্তর্ভুক্ত। এটি সিন্থেটিক ডেটাসেট তৈরি, টেস্ট স্যুট এক্সিকিউশন এবং মডেল ফাইন-টিউনিং ইভ্যালুয়েশনের জন্য একটি অনন্য জিরো-কস্ট অ্যাসেট।
+- **প্রোডাকশন আইসোলেশন:** প্রোডাকশন ইউজার-ফেসিং ট্রাফিকের জন্য এটি কখনোই প্রাথমিক ডিপেনডেন্সি হিসেবে ব্যবহৃত হবে না (সেশন রিস্টার্ট ও ক্লাউডফ্লেয়ার টানেল ড্রপআউটের কারণে)। প্রোডাকশন সবসময় টায়ার ১ (Groq / Flash / DeepSeek) দ্বারা সুরক্ষিত থাকবে।
 
 #### আর্কিটেকচারাল ইমপ্লিমেন্টেশন ও ফেইলওভার মেকানিজম:
 1. **অ্যাকাউন্ট পুলিং ও টানেল রেজিস্ট্রি (`KaggleEndpointPool`):**
@@ -256,8 +319,8 @@ SupremeAI-র আর্কিটেকচারে Ollama তিনটি সু
    - ক্যাগলে একটি সেশন একটানা ৯ থেকে ১২ ঘণ্টা চলে। গেটওয়ের `resilience.py` নোড ১-এর সেশন শেষ হওয়া বা কোটা পূর্ণ হওয়া মাত্রই **<৫০০ মিলি-সেকেন্ডে নোড ২-এ ট্রাফিক ফেইলওভার** করবে।
 3. **জিরো ডাউনটাইম শিডিউলিং (Supervisor Auto-Trigger):**
    - আমাদের `Module 22 (Scheduler Organ)`-এর মাধ্যমে নোডগুলোর স্টার্ট-টাইম শিডিউল করা থাকবে, যাতে একটি নোডের সেশন শেষ হওয়ার আগেই পরবর্তী নোডটি বুট হয়ে রেডি থাকে (Overlapping Canary Handover)।
-4. **চূড়ান্ত ফলব্যাক (Cloudflare / Groq Fail-Safe):**
-   - যদি সাময়িকভাবে কোনো ক্যাগল নোড অফলাইনে থাকে, তবে গেটওয়ে কোনো ক্র্যাশ না ঘটিয়ে সাথে সাথে ক্লাউডফ্লেয়ার Workers AI বা Groq-এ সুইচ করবে — ব্যবহারকারী কোনো ল্যাগ বা বিরতি টের পাবেন না।
+4. **টায়ার ১ ফেইল-সেফ (Cloudflare / Groq Fallback):**
+   - কোনো কারণে ক্যাগল ক্লাস্টারের সব টানেল অফলাইনে গেলে কোনো ল্যাব টেস্ট যাতে আটকে না যায়, গেটওয়ে স্বয়ংক্রিয়ভাবে ক্লাউডফ্লেয়ার Workers AI বা Groq-এ ফেইলওভার করবে।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
