@@ -14598,10 +14598,10 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Admin Telegram Control** | [`backend/tools/social/telegram_bot.py`](file:///f:/supremeai/backend/tools/social/telegram_bot.py#L310-L325) | `is_admin(chat_id)` checks `ADMIN_TELEGRAM_CHAT_ID`, `TELEGRAM_CHAT_ID`, or `"7804133572"` | Only the platform root admin gets the administrative dashboard, `/sys_status`, `/backup_now`, and `/admin`. |
-| **Critical Command Approval** | [`backend/tools/social/telegram_bot.py`](file:///f:/supremeai/backend/tools/social/telegram_bot.py) | `not self.is_admin(chat_id)` rejects critical actions with "Access Denied" | Customers managing their projects via Telegram cannot approve critical actions via TOTP 2FA. |
+| **Admin Telegram Control** | [`backend/tools/social/telegram_bot/handler.py`](file:///f:/supremeai/backend/tools/social/telegram_bot/handler.py#L307-L363) | `is_admin(chat_id, user_id)` resolves admin identities from vault/env only (`ADMIN_TELEGRAM_CHAT_ID` + legacy `TELEGRAM_CHAT_ID`), fail-closed, zero hardcode | Only configured admin identities get the administrative dashboard, `/sys_status`, `/backup_now`, and `/admin`. |
+| **Critical Command Approval** | [`backend/tools/social/telegram_bot/updates.py`](file:///f:/supremeai/backend/tools/social/telegram_bot/updates.py) | `not self.is_admin(chat_id, user_id)` rejects critical actions with "Access Denied" | Customers managing their projects via Telegram cannot approve critical actions via TOTP 2FA. |
 
-- **Root Cause & Code Reality:** In `telegram_bot.py`, admin status is determined strictly by comparing `chat_id` against static environment variables or hardcoded `"7804133572"`. There is no link between Telegram accounts and tenant project ownership.
+- **Root Cause & Code Reality:** In `backend/tools/social/telegram_bot/handler.py`, admin status now resolves from vault/env only (`ADMIN_TELEGRAM_CHAT_ID` + legacy `TELEGRAM_CHAT_ID`), **fails closed** when unconfigured, and is compared against the *sender's* `from.id` (group-chat safe); the hardcoded personal chat ID and its unrevocable duplicate check were removed in Crown Jewel Module 18 §P-B (`backend/tools/social/telegram_bot/handler.py`; tests `backend/tests/security/test_telegram_admin_identity.py`). Remaining gap: there is still no link between Telegram accounts and tenant project ownership.
 
 ---
 
