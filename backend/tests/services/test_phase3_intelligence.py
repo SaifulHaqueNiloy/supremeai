@@ -50,7 +50,8 @@ async def test_voice_service(monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
     monkeypatch.setattr(settings, "groq_api_key", "", raising=False)
-    monkeypatch.setattr(settings, "elevenlabs_api_key", "", raising=False)
+    # NOTE: Settings has no elevenlabs_api_key field — voice_service reads it
+    # via getattr(..., default) so clearing the env var alone is sufficient.
     # Block the edge-tts import (keyless real TTS) so the fallback is honest.
     monkeypatch.setitem(sys.modules, "edge_tts", None)
 
