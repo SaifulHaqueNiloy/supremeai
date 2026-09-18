@@ -256,37 +256,19 @@ async def _web_search(query: str, user_id: str = "") -> list[dict[str, str]]:
     if results:
         return results
 
-    try:
-        from browser.autonomous_browser import AutonomousBrowserAgent
-
-        agent = AutonomousBrowserAgent()
-        search_prompt = (
-            f"Search the web for: {query}\n\n"
-            f"Return a JSON array of results, each with 'title', 'url', and 'snippet' fields. "
-            f"Return at least 5 results if possible. Return ONLY the JSON array, no other text."
+    # Issue #447 fix: the old fallback here launched AutonomousBrowserAgent,
+    # whose _decide_action ignores the goal entirely (hardcoded 3-step tour of
+    # supremeai.dev) and whose navigate action never touches a browser — it
+    # could only ever return a fabricated summary that failed JSON parsing
+    # anyway.  Zero real sources is an honest outcome; a fake-looking report
+    # is not.  Scout stays strictly CrawlPolicy-gated.
+    if not results:
+        logger.warning(
+            "Web search yielded no results for '%s' (scout policy-gated or "
+            "unavailable) — returning no sources honestly (issue #447; the "
+            "scripted fake-browser fallback was removed).",
+            query[:60],
         )
-        resp = await agent.achieve(search_prompt)
-        raw_text = resp.get("result", "") or resp.get("text", "") or str(resp)
-
-        # Attempt to parse JSON array from response
-        # Try to extract JSON from markdown code blocks or raw text
-        import re
-
-        json_match = re.search(r"\[.*\]", raw_text, re.DOTALL)
-        if json_match:
-            parsed = json.loads(json_match.group())
-            for item in parsed:
-                if isinstance(item, dict) and item.get("url"):
-                    results.append(
-                        {
-                            "title": item.get("title", ""),
-                            "url": item.get("url", ""),
-                            "snippet": item.get("snippet", ""),
-                            "source": "browser",
-                        }
-                    )
-    except Exception as exc:
-        logger.warning(f"Web search failed for '{query[:60]}': {exc}")
     return results
 
 
@@ -468,23 +450,41 @@ async def _run_research_pipeline(
         f"- [{s.get('title', 'Untitled')}] {s.get('snippet', '')}" for s in all_sources[:20]
     )
     synthesis = ""
-    try:
-        synth_prompt = (
-            f"Research question: {refined}\n\n"
-            f"All findings:\n{all_findings_text[:5000]}\n\n"
-            "Synthesize all findings into a coherent, well-structured analysis. "
-            "Include key insights, patterns, and important details. "
-            "Reference sources by their title in brackets when relevant."
+    if not all_sources:
+        # Issue #447 fix: zero real sources = nothing to synthesize. The old
+        # path still prompted the LLM, which happily authored a coherent-looking
+        # analysis (and downstream, "citations") from empty findings.
+        synthesis = (
+            "No web sources could be retrieved for this research request: the "
+            "scout crawler is CrawlPolicy-gated and no active policy exists for "
+            "this tenant (issue #447 honest-mode)."
         )
-        synthesis = await _llm_call(synth_prompt, user_id, task_type="deep_research_synthesis")
-    except Exception as exc:
-        logger.warning(f"Synthesis failed: {exc}")
-        synthesis = "Synthesis generation failed. See sources for raw findings."
-    await emit(
-        8,
-        "Synthesizing findings",
-        f"Synthesized {len(all_sources)} sources into a coherent analysis.",
-    )
+        await emit(
+            8,
+            "No sources available",
+            "Zero real sources retrieved — synthesis skipped (honest mode).",
+        )
+    else:
+        try:
+            synth_prompt = (
+                f"Research question: {refined}\n\n"
+                f"All findings:\n{all_findings_text[:5000]}\n\n"
+                "Synthesize all findings into a coherent, well-structured analysis. "
+                "Include key insights, patterns, and important details. "
+                "Reference sources by their title in brackets when relevant. "
+                "Only cite sources that appear in the findings list; if the "
+                "findings do not cover some aspect, say so explicitly instead "
+                "of inventing information."
+            )
+            synthesis = await _llm_call(synth_prompt, user_id, task_type="deep_research_synthesis")
+        except Exception as exc:
+            logger.warning(f"Synthesis failed: {exc}")
+            synthesis = "Synthesis generation failed. See sources for raw findings."
+        await emit(
+            8,
+            "Synthesizing findings",
+            f"Synthesized {len(all_sources)} sources into a coherent analysis.",
+        )
 
     # --- Step 9: Generate structured report with citations ---
     report_dict: dict[str, Any] = {
@@ -496,36 +496,48 @@ async def _run_research_pipeline(
         ],
         "summary": "",
     }
-    try:
-        report_prompt = (
-            f"Create a structured research report on: {refined}\n\n"
-            f"Synthesized analysis:\n{synthesis[:4000]}\n\n"
-            f"Available sources (use titles for citations):\n{all_findings_text[:4000]}\n\n"
-            "Return a JSON object with this exact structure:\n"
-            '{"title": "...", "summary": "2-3 sentence summary", '
-            '"sections": [{"title": "Section Title", "content": "Section content with [Source Title] citations", '
-            '"sources": ["Source Title 1", "Source Title 2"]}], '
-            '"sources": [{"title": "...", "url": "...", "snippet": "..."}]}\n\n'
-            "Return ONLY the JSON object, no other text."
-        )
-        raw_report = await _llm_call(report_prompt, user_id, task_type="deep_research_report")
-        json_match = re.search(r"\{.*\}", raw_report, re.DOTALL)
-        if json_match:
-            parsed = json.loads(json_match.group())
-            if isinstance(parsed, dict):
-                report_dict = {
-                    "title": parsed.get("title", refined),
-                    "sections": parsed.get("sections", []),
-                    "sources": parsed.get("sources", report_dict["sources"]),
-                    "summary": parsed.get("summary", ""),
-                }
-    except Exception as exc:
-        logger.warning(f"Structured report generation failed: {exc}")
+    if not all_sources:
+        # Issue #447 fix: honest no-source report — never a cited-looking fake.
+        report_dict["sections"] = [
+            {"title": "No Sources Retrieved", "content": synthesis, "sources": []}
+        ]
         report_dict["summary"] = (
-            synthesis[:1000] if synthesis else "Report generation encountered an error."
+            "No live web sources could be gathered for this query. Configure a "
+            "tenant CrawlPolicy (scout) to enable live research."
         )
-        report_dict["sections"] = [{"title": "Findings", "content": synthesis, "sources": []}]
-    await emit(9, "Generating structured report", f"Report titled: {report_dict['title']}")
+        report_dict["no_web_sources"] = True
+        await emit(9, "Generating structured report", "No-source honest report generated.")
+    else:
+        try:
+            report_prompt = (
+                f"Create a structured research report on: {refined}\n\n"
+                f"Synthesized analysis:\n{synthesis[:4000]}\n\n"
+                f"Available sources (use titles for citations):\n{all_findings_text[:4000]}\n\n"
+                "Return a JSON object with this exact structure:\n"
+                '{"title": "...", "summary": "2-3 sentence summary", '
+                '"sections": [{"title": "Section Title", "content": "Section content with [Source Title] citations", '
+                '"sources": ["Source Title 1", "Source Title 2"]}], '
+                '"sources": [{"title": "...", "url": "...", "snippet": "..."}]}\n\n'
+                "Return ONLY the JSON object, no other text."
+            )
+            raw_report = await _llm_call(report_prompt, user_id, task_type="deep_research_report")
+            json_match = re.search(r"\{.*\}", raw_report, re.DOTALL)
+            if json_match:
+                parsed = json.loads(json_match.group())
+                if isinstance(parsed, dict):
+                    report_dict = {
+                        "title": parsed.get("title", refined),
+                        "sections": parsed.get("sections", []),
+                        "sources": parsed.get("sources", report_dict["sources"]),
+                        "summary": parsed.get("summary", ""),
+                    }
+        except Exception as exc:
+            logger.warning(f"Structured report generation failed: {exc}")
+            report_dict["summary"] = (
+                synthesis[:1000] if synthesis else "Report generation encountered an error."
+            )
+            report_dict["sections"] = [{"title": "Findings", "content": synthesis, "sources": []}]
+        await emit(9, "Generating structured report", f"Report titled: {report_dict['title']}")
 
     # --- Step 10: Store results in memory ---
     try:

@@ -4,9 +4,10 @@ Receives job completion notifications from Kaggle kernels.
 """
 
 import json
+import secrets
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException
 from pydantic import BaseModel
 
 from core.kaggle_orchestrator import KaggleOrchestrator, KaggleTaskType
@@ -27,12 +28,20 @@ class KaggleCallbackRequest(BaseModel):
 
 
 @router.post("/callback")
-async def kaggle_callback(request: KaggleCallbackRequest, background_tasks: BackgroundTasks):
+async def kaggle_callback(
+    request: KaggleCallbackRequest,
+    background_tasks: BackgroundTasks,
+    x_callback_token: str | None = Header(default=None, alias="X-Callback-Token"),
+):
     """
     Receive job completion notification from Kaggle.
 
     This endpoint is called by Kaggle kernels when they finish execution.
     It updates job status and processes results.
+
+    Issue #439: the path is public-path-exempt (kernels cannot hold a JWT —
+    the old setup 401'd every real callback) but is TOKEN-authenticated with
+    the per-job callback token; forged completions are rejected.
     """
     logger.info(f"📥 Kaggle callback received: job_id={request.job_id}, status={request.status}")
 
@@ -40,6 +49,14 @@ async def kaggle_callback(request: KaggleCallbackRequest, background_tasks: Back
         orchestrator = KaggleOrchestrator.get_instance()
         if not orchestrator.redis_client:
             raise HTTPException(status_code=503, detail="Redis connection unavailable")
+
+        expected_token = await orchestrator.get_callback_token(request.job_id)
+        if (
+            not expected_token
+            or not x_callback_token
+            or not secrets.compare_digest(x_callback_token, expected_token)
+        ):
+            raise HTTPException(status_code=401, detail="Invalid or missing callback token")
 
         job_key = f"kaggle:job:{request.job_id}"
 
