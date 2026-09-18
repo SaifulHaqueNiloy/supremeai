@@ -153,10 +153,12 @@ def exploration_candidate(
     """§8.2: return ONE alternative candidate for limited measurement.
 
     Deterministic (no RNG in request path): the best-scoring candidate whose
-    tier is not "insufficient" and that is NOT the current leader. Callers
-    decide probabilistically whether to use it (bounded epsilon).
+    evidence is adequate (sample_tier == "normal", M05 P-A sample-tier
+    guardrail — cautious/insufficient evidence never explores) and that is
+    NOT the current leader. Callers decide probabilistically whether to use
+    it (bounded epsilon).
     """
-    measured = [s for s in scores if s.sample_tier != "insufficient" and s.score > 0.0]
+    measured = [s for s in scores if s.sample_tier == "normal" and s.score > 0.0]
     if len(measured) < 2:
         return None
     leader = measured[0]
@@ -167,8 +169,21 @@ def exploration_candidate(
 
 
 def get_adaptive_routing_enabled() -> bool:
-    """Gateway flag: adaptive chain-tail exploration (default OFF)."""
-    return (os.getenv("ENABLE_ADAPTIVE_ROUTING", "") or "").strip().lower() == "true"
+    """Gateway flag: adaptive chain-tail exploration (M05 P-A দ্বিতীয় অর্ধ)।
+
+    বাংলা মন্তব্য: সুইটেবল-ডিফল্ট true — exploration শূন্য-অতিরিক্ত-খরচ
+    (চেইন-লেজে ১ candidate, normal-tier evidence-কেবল)। kill-switch অক্ষত:
+    ENABLE_ADAPTIVE_ROUTING=false → flag-off = আজকের আচরণ (গেট OFF)।
+    অজানা-মান fail-closed (নীরব সক্রিয় নয়)।
+    """
+    raw = (os.getenv("ENABLE_ADAPTIVE_ROUTING", "") or "").strip().lower()
+    if raw == "false":
+        return False  # সুস্পষ্ট kill-switch
+    if raw == "true":
+        return True
+    if raw == "":
+        return True  # সুইটেবল-ডিফল্ট: bounded exploration খোলা
+    return False  # অজানা-মান → fail-closed
 
 
 # In-process snapshot refreshed by the LearningLoopAgent (no network in
