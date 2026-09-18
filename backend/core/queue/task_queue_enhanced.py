@@ -612,7 +612,14 @@ try:
         settings, "redis_url", "redis://localhost:6379/0" if settings.env == "local" else None
     )
     if not _broker_url:
-        raise ValueError("redis_url is required in non-local environments")
+        # বাংলা (CI-ফিক্স, রান 35386684478): redis_url অনুপস্থিতে ValueError ছুড়লে
+        # except ImportError পথ বাইপাস করে মডিউল-ইমপোর্ট নিজেই মরে — পুরো
+        # টেস্ট-কালেকশন/বুট বিপর্যস্ত। সৎ বিকল্প: ImportError-এ রূপ দিলে নিচের
+        # loud-stub পথেই যায় — ব্রোকার-অনুপস্থিতি স্পষ্ট সতর্কতায় ঘোষিত হয়,
+        # কেউ চুপচাপ localhost-ব্রোকারে পাঠাতেও পারে না (গার্ডের মূল উদ্দেশ্য অটুট)।
+        raise ImportError(
+            "Celery worker disabled: redis_url is required in non-local environments"
+        )
 
     celery_app = _Celery(
         "supremeai",
