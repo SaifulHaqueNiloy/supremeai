@@ -27,6 +27,7 @@ from typing import Any
 
 from core.config import settings
 from core.llm.llm_gateway import get_llm_gateway
+from core.llm.llm_gateway.errors import ProviderUnavailableError
 from core.logging_config import logger
 from core.performance_enhancer import get_performance_optimizer
 
@@ -401,9 +402,12 @@ class ModelRouter:
         if hasattr(self, "_stream_ollama") and callable(self._stream_ollama):
             yield from self._stream_ollama(prompt, "qwen")
         else:
-            # Simple fallback generator
-            yield "Hello"
-            yield " World"
+            # বাংলা মন্তব্য (M03 P1): আগে এখানে বানানো "Hello"/" World" চাংক যেত —
+            # ব্যবহারকারী ভুয়া সাফল্য পেত। এখন স্ট্রাকচার্ড এরর — caller (stream.py)
+            # সৎ SSE error-event দেয়, বানানো টোকেন কখনো নয়।
+            raise ProviderUnavailableError(
+                "No streaming provider available (gateway stream + ollama unavailable)"
+            )
 
     def _call_openrouter(self, prompt, model):
         # বাংলা মন্তব্ব: টেস্ট কেসে monkeypatch করার সুবিধার্থে ডামি মেথড ডিফাইন করা হয়েছে
