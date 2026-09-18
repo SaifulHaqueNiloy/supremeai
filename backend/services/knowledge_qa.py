@@ -52,27 +52,36 @@ class KnowledgeQAService:
         self._audit_logger = audit_logger
         self.manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    @property
-    def audit_logger(self) -> AuditLogger:
-        if self._audit_logger is None:
-            self._audit_logger = AuditLogger()
-        return self._audit_logger
-        # বাংলা মন্তব্য: manifest দুটো ফর্ম্যাট সাপোর্ট করে:
-        # ১. {"governance": {"allowed_roles": [...], ...}} — nested (new format)
-        # ২. {"allowed_roles": [...], "allowed_data": {...}, ...} — flat (current manifest format)
-        # KeyError এড়াতে defensive fallback যোগ করা হয়েছে
+        # বাংলা মন্তব্য (M23 P-A): governance-ব্লকের পুনরুত্থান — আগে এই normalization
+        # কোডটি ভুলভাবে audit_logger property-র return-এর পরে মৃত-অঞ্চলে আটকে ছিল,
+        # ফলে self.governance কখনোই সেট হতো না এবং /knowledge/ask প্রতি-কলে
+        # AttributeError→500 দিত। manifest-ই permission-এর source-of-truth।
+        # দুই ফর্ম্যাট সাপোর্টেড:
+        # ১. {"governance": {...}} — nested (new format)
+        # ২. flat manifest — normalize to governance shape
+        # সতর্কতা: allowed_roles তুলনা lowercase-এ হয় (_authorize-এ role.lower()),
+        # তাই manifest-এর case-বিশিষ্ট রোলও (যেমন 'Standard_User') এখানেই
+        # lowercase-করা হয় — নইলে সব বৈধ ব্যবহারকারী ভুলভাবে 403 পেত।
         if "governance" in self.manifest:
             self.governance = self.manifest["governance"]
         else:
             # flat manifest — normalize to governance shape
             self.governance = {
-                "allowed_roles": self.manifest.get("allowed_roles", []),
+                "allowed_roles": [
+                    str(role).lower() for role in self.manifest.get("allowed_roles", [])
+                ],
                 "allowed_data": self.manifest.get("allowed_data", []),
                 "tools_allowed": self.manifest.get("tools_allowed", []),
                 "human_approval_points": self.manifest.get("human_approval_points", {}),
                 "budget": self.manifest.get("budget", {}),
                 "audit_logging": self.manifest.get("audit_logging", []),
             }
+
+    @property
+    def audit_logger(self) -> AuditLogger:
+        if self._audit_logger is None:
+            self._audit_logger = AuditLogger()
+        return self._audit_logger
 
     def _authorize(self, user: dict[str, Any]) -> tuple[str, str]:
         tenant_id = str(user.get("tenant_id") or user.get("sub") or "")
@@ -112,6 +121,7 @@ class KnowledgeQAService:
             return False
 
         allowed_roles = metadata.get("allowed_roles", self.governance.get("allowed_roles", []))
+        # বাংলা: তুলনা সবসময় lowercase-এ — manifest case যা-ই হোক।
         return role in {str(item).lower() for item in allowed_roles}
 
     def retrieve(
