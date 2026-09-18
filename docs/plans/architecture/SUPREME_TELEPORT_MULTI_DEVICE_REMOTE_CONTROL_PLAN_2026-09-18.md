@@ -3,11 +3,16 @@ id: supreme-teleport-multi-device-remote-control-tower-plan
 subject: "Supreme Teleport: Multi-Device Remote Control Tower Plan — Control Your Multiple Devices & Local AI Agents from Far"
 document_role: architecture
 owner_circle: "Central Control Hub / MCP Circle"
+planning_authority: "Planning Circle / Head of Planning (docs/plans/ প্ল্যানিং কর্পাসের সাথে reconciliation আবশ্যক)"
 status: proposed
 target_scope: combined_ecosystem
+canonical: false
+evidence_state: unverified
+disposition: retain
 last_verified: 2026-09-18
 supersedes: []
 superseded_by: []
+source_of_truth: false
 ---
 
 # 🌐 Supreme Teleport: Multi-Device Remote Control Tower Plan
@@ -83,7 +88,7 @@ Model Context Protocol (MCP) স্ট্যান্ডার্ড স্প�
    * লোকাল IDE কাজটি শেষ করে `task_report` টুলের মাধ্যমে ফলাফল পুশ করে।
 
 ### ৩.২ কন্ট্রোল টাওয়ারে নতুন মেথড ও টুলস (Tower Extensions)
-[`infrastructure/mcp-control-plane/src/index.ts`](file:///f:/supremeai/infrastructure/mcp-control-plane/src/index.ts)-এ নিচের ক্ষমতাগুলো যুক্ত হবে:
+[`infrastructure/mcp-control-plane/src/index.ts`](infrastructure/mcp-control-plane/src/index.ts)-এ নিচের ক্ষমতাগুলো যুক্ত হবে:
 
 * **`task_dispatch` (Tool):**
   * `target`: `client_id` (যেমন: `antigravity-local`, `cline-node`, বা `all`)
@@ -193,3 +198,30 @@ Model Context Protocol (MCP) স্ট্যান্ডার্ড স্প�
 4. **প্রাইভেট ও নিরাপদ (Zero Port Forwarding):**  
    কোনো পাবলিক আইপি বা পোর্ট খোলার ঝুঁকি নেই। আউটবাউন্ড সিকিউর টানেল ও গভর্নড অটোনমি (95/5 রুল) দিয়ে পরিচালিত।
 
+
+---
+
+## Gate যাচাই-মানদণ্ড (Acceptance Gates — 2026-09-18 retrofit)
+
+> বাংলা মন্তব্য (issue #453 Gate-0 reconciliation): এই প্ল্যানটিই সিরিজের একমাত্র গেট-বিহীন
+> প্ল্যান ছিল। কোনো checkbox "implemented" হবে না যতক্ষণ না নিচের গেটগুলো CI-প্রমাণিত হয়।
+> এটি M18+M17+M06+M04-এর composition — ওগুলোর ভিত ছাড়া বাস্তবায়ন শুরু নিষিদ্ধ।
+
+**Gate T-0 — পূর্বশর্ত (Prerequisite):**
+- M18 Telegram webhook fail-closed প্রমাণিত; M17 resume-URL carrier লাইভ; M06 `run_scope()`
+  `/abort`-কে traceability দেয়। (প্রমাণ: সংশ্লিষ্ট মডিউলের CI-green টেস্ট।)
+
+**Gate T-1 — Tower Dispatcher:**
+- `infrastructure/mcp-control-plane`-এ `task_dispatch` + `client heartbeat presence` লাইভ;
+- client_id ছাড়া dispatch 422 দেয় (fail-closed); bearer token ছাড়া রেজিস্ট্রে প্রবেশ 401;
+- চুক্তি-টেস্ট: tower↔client হ্যান্ডশেক + presence timeout।
+
+**Gate T-2 — Local Sidecar:**
+- সাইডকার শুধুমাত্র outbound tunnel খোলে (zero port forwarding — netstat/CI প্রমাণ);
+- `task_report` ছাড়া ফলাফল কোথাও দেখা যায় না; ভুয়া সাফল্য ইভেন্ট = ০;
+- চুক্তি-টেস্ট: dispatch→execute→report এন্ড-টু-এন্ড, বাতিল (`/abort <run_id>`) প্রচার।
+
+**Gate T-3 — Phone-First UI:**
+- Telegram `/devices`, `/task`, `/abort` লাইভ; ড্যাশবোর্ড device-তালিকা শুধু রেজিস্ট্রি-সত্য
+  ডিভাইস দেখায় (মক ডিভাইস নিষিদ্ধ);
+- চুক্তি-টেস্ট: প্রতিটি কমান্ডের happy + unauthorized path; dual-driven (customer + admin) ভিউ।
