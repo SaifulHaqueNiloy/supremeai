@@ -4,12 +4,12 @@ subject: "SupremeAI — Reconciled Next Roadmap (Ecosystem + OSS Integration + A
 document_role: roadmap
 planning_authority: Planning Circle
 canonical: candidate
-status: active
+status: historical
 evidence_state: partial
-disposition: retain
+disposition: archive
 last_verified: 2026-09-17
 supersedes: []
-superseded_by: []
+superseded_by: [docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE.md]
 target_scope: supremeai_internal
 ---
 

@@ -4299,6 +4299,7 @@
     },
     {
       "capability_signals": [
+        "capability",
         "memory"
       ],
       "classification": "human_review",
@@ -9722,7 +9723,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "health"
       ],
       "classification": "canonical",
       "entrypoints": [],
@@ -19163,7 +19165,6 @@
       "capability_signals": [
         "browser",
         "execute",
-        "health",
         "register"
       ],
       "classification": "human_review",
