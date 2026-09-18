@@ -148,8 +148,9 @@ plan_lifecycle: "living — Crown Jewel Module Series চক্র ২-এর �
 3. **Missions assigner:** documented stub (auto-agent-v1, LLM-call নেই)।
 4. **ERR-G04:** `cloud_sandbox_orchestrator.py`-এ provider="local" শাখা অনুপস্থিত → HTTP 500।
 5. **resource_registry বাস্তবায়ন:** restart/deploy/rollback NotImplemented (`backend/adaptive_engine/resource_registry.py` L123–129, register-উৎস)।
+6. **ক্যানসেলেশন প্রোপাগেশনের অভাব:** ইউজার কাজ ক্যানসেল করলে ব্যাকগ্রাউন্ডে ইন-ফ্লাইট এলএলএম কল চলতে থাকে এবং টোকেন অপচয় ঘটে।
 
-### ২.৩ কী করতে হবে (মেরুদণ্ড-একীকরণের ৫ ধাপ)
+### ২.৩ কী করতে হবে (মেরুদণ্ড-একীকরণের ৭ ধাপ)
 
 ```text
 P-A: Kernel single-door প্রয়োগে   → shadow-mode parity → flag-cutover → legacy path flag-gated
@@ -157,6 +158,8 @@ P-B: ERR-F01 সেতু সম্পূর্ণ         → pending_tasks→H
 P-C: Missions assigner আধুনিকীকরণ → governed LLM assignment, flag-এর পিছনে
 P-D: চার-প্রজন্ম retirement সিঁড়ি  → deprecation warning → path-consolidation → shim অপসারণ (সবশেষে)
 P-E: ERR-G04 fail-honest ফিক্স    → provider="local" explicit branch
+P-F: রান-লেভেল ক্যানসেলেশন ও টাইমআউট প্রোপাগেশন → CancellationToken দিয়ে ইন-ফ্লাইট LLM কল ইনস্ট্যান্ট টার্মিনেট
+P-G: ডুয়াল-ড্রাইভেন গভর্নেন্স ও বাজেট কাপলিং → Admin Mission Control বনাম Customer Scope + বাজেট এক্সহস্টেশনে অটো-পজ
 ```
 
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
@@ -166,22 +169,31 @@ P-E: ERR-G04 fail-honest ফিক্স    → provider="local" explicit branch
 - **P-C:** assigner-stub → ModelRouter-নির্ভর governed assignment, flag SUPREMEAI_MISSIONS_LLM_ASSIGNER=true (default false); ব্যর্থতা → আজকের stub-আচরণ (Graceful Degradation #8)।
 - **P-D:** ধাপ ১: agent/master-cognitive-এ deprecation warning + kernel-পথে রিডাইরেক্ট; ধাপ ২: callers মাইগ্রেশন পরিমাপ; ধাপ ৩: shim অপসারণ — তবে কেবল baseline-N ratchet নীতিতে, শেষ ধাপে।
 - **P-E:** provider="local" শাখায় প্রথমে fail-honest explicit error (NotImplemented-রিপোর্ট, কোনো 500 নয়), পরে আলাদা অনুমোদনে বাস্তব বাস্তবায়ন — defect register-র এক-লাইন নিরাময়।
+- **P-F (রান-লেভেল ক্যানসেলেশন ও টাইমআউট প্রোপাগেশন):**
+  - কার্নেল ডিসপ্যাচে প্রতিটি রানের জন্য একটি অ্যাসিঙ্ক `CancellationToken` বাইন্ড করা।
+  - ইউজার রিকোয়েস্ট ক্যানসেল করলে বা রান টাইমআউট হলে কার্নেল সাথে সাথে সিগন্যাল পাঠিয়ে চাইল্ড সাব-টাস্ক এবং Module 03 LLM Gateway-র সক্রিয় HTTP কানেকশন অবলুপ্ত করবে, যা অপচয় হওয়া টোকেন কস্ট শূন্যে নামিয়ে আনবে।
+- **P-G (ডুয়াল-ড্রাইভেন গভর্নেন্স ও বাজেট কাপলিং):**
+  - `AGENTS.md Rule 7` অনুসারে কার্নেল ডিসপ্যাচার `admin_override` বনাম `customer_user` রিকোয়েস্ট পৃথক স্কোপ ও কঠোর RBAC চেক দিয়ে প্রসেস করবে।
+  - Module 03 Gateway-র বাজেট এক্সহস্ট হলে কার্নেল স্টেট মেশিন রানকে ক্র্যাশ না করিয়ে স্বয়ংক্রিয়ভাবে `PAUSED_BUDGET_EXHAUSTED` স্টেটে নেবে এবং গ্রাহককে বাজেট টপ-আপ বা HITL অনুমোদনের অপশন দেবে।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **এক দরজা = এক সত্য:** প্রতিটি dispatch-এর policy/audit/trace অভিন্ন — Constitution #6 "Policy Before Power" প্রয়োগে সত্য হয়।
 2. **পর্যবেক্ষণযোগ্যতা পূর্ণ (P-B):** বাস্তব কাজের execution_logs + HITL — "কী হলো, কেন থামলো" প্রশ্নের উত্তর কোডে-স্থায়িত; Run fabric-এর মান ১০০% বাস্তবায়িত।
-3. **রচনাযোগ্যতা বাড়ে:** নতুন প্রতিটি ক্ষমতা kernel-প্রিমিটিভে সস্তায় সংযুক্ত — ৪ প্রজন্মের কোনটা কোথায় তা-জানা-প্রয়োজনীয়তা মরে।
-4. **Module 01-এর সাথে সিনার্জি:** মেমোরি-লেখাও এক দরজা দিয়ে গেলে run-anchored traceability (Module 01 P-E) স্বয়ংক্রিয় সস্তা।
-5. **কোড-হ্রাস:** retirement-পর্বে সমান্তরাল বাস্তবায়নের রক্ষণ-বোঝা কমে (hypothesis — পরিমিত হবে অপসারিত-লাইন-গণনায়)।
+3. **রানঅ্যাওয়ে টোকেন কস্ট প্রতিরোধ (P-F):** ক্যানসেলেশন ও টাইমআউট প্রোপাগেশনের কারণে বাতিল হওয়া কাজের পেছনে আর কোনো ক্লাউড মডেল বিল হবে না।
+4. **ডুয়াল-ড্রাইভেন নিরাপত্তা (P-G):** অ্যাডমিন পূর্ণ টেলিমেট্রি দেখবে, আর গ্রাহক পাবে নিরাপদ আইসোলেটেড এক্সপেরিয়েন্স।
+5. **রচনাযোগ্যতা বাড়ে:** নতুন প্রতিটি ক্ষমতা kernel-প্রিমিটিভে সস্তায় সংযুক্ত — ৪ প্রজন্মের কোনটা কোথায় তা-জানা-প্রয়োজনীয়তা মরে।
+6. **Module 01-এর সাথে সিনার্জি:** মেমোরি-লেখাও এক দরজা দিয়ে গেলে run-anchored traceability (Module 01 P-E) স্বয়ংক্রিয় সস্তা।
+7. **কোড-হ্রাস:** retirement-পর্বে সমান্তরাল বাস্তবায়নের রক্ষণ-বোঝা কমে (hypothesis — পরিমিত হবে অপসারিত-লাইন-গণনায়)।
 
 ### ২.৬ ক্ষতি/ঝুঁকি (সৎ, প্রশমন সহ)
 
 1. **721-route surface-এ regression:** সবচেয়ে বড় ঝুঁকি — প্রশমন: shadow-first (sampled, non-blocking — §২.৪ P-A), parity ১০০% ছাড়া cutover নয়, flag-off = আজকের আচরণ, প্রতি Phase স্বাধীন revert।
 2. **দ্বিগুণ-লেখা খরচ (P-B):** execution_logs স্ফীতি — প্রশমন: বিদ্যমান retention workflow; row আকার সীমিত।
-3. **Retirement অকালে কিছু ভাঙা (P-D):** লুকানো caller — প্রশমন: warning-পর্বে caller-পরিমাপ, shim সবশেষে; প্রতিটি অপসারণে root-tests সূচি।
-4. **Kernel এক-বিন্দু-ব্যর্থতা ঝুঁকি:** সব দরজা এক হলে দরজা-ব্যর্থতা বড় দুর্ঘটনা — প্রশমন: dispatcher-এ ইতিমধ্যে circuit-breakers + legacy-fallback নকশায় আছে (`backend/core/kernel/dispatcher.py` docstring); flag-off চিরস্থায়ী escape।
-5. **পরিসর-ঝুঁকি:** kernel-refactor-এর ঘুরপথে নতুন ফিচার-লোভ — প্রশমন: এই নীলনকশায় কোনো নতুন ফিচার নেই; শুধু একীকরণ; প্রতিটি Phase আলাদা Gate 0–6।
+3. **ক্যানসেলেশন রেইস কন্ডিশন (P-F):** টাস্ক সমাপ্তির মুহূর্তে ক্যানসেল সিগন্যাল আসা — প্রশমন: ডিটারমিনিস্টিক লক ও টার্মিনাল স্টেট প্রোটেকশন (`assert_transition`)।
+4. **Retirement অকালে কিছু ভাঙা (P-D):** লুকানো caller — প্রশমন: warning-পর্বে caller-পরিমাপ, shim সবশেষে; প্রতিটি অপসারণে root-tests সূচি।
+5. **Kernel এক-বিন্দু-ব্যর্থতা ঝুঁকি:** সব দরজা এক হলে দরজা-ব্যর্থতা বড় দুর্ঘটনা — প্রশমন: dispatcher-এ ইতিমধ্যে circuit-breakers + legacy-fallback নকশায় আছে (`backend/core/kernel/dispatcher.py` docstring); flag-off চিরস্থায়ী escape।
+6. **পরিসর-ঝুঁকি:** kernel-refactor-এর ঘুরপথে নতুন ফিচার-লোভ — প্রশমন: এই নীলনকশায় কোনো নতুন ফিচার নেই; শুধু একীকরণ; প্রতিটি Phase আলাদা Gate 0–6।
 
 ---
 

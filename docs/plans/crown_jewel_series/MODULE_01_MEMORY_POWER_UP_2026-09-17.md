@@ -161,16 +161,18 @@ SupremeAI-র সবচেয়ে দামি সম্পদ তার স�
 5. **Scheduled consolidation** — synaptic_dream কোনো scheduler-এ নেই; retention/TTL নীতি নেই।
 6. **Run-anchored traceability** — memory row থেকে তাকে জন্ম-দেওয়া task/run-এ যাওয়ার পথ নেই।
 7. **Recall evaluation** — B4 "unmeasured" (`docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md` §3)।
+8. **ক্লাউড বিভ্রাটে লোকাল রেজিলিয়েন্সের অভাব** — Supabase pgvector সাময়িক ডাউন বা স্লো (>২৫০০ms) হলে মেমোরি রাইট ক্র্যাশ করে বা সাইলেন্টলি ড্রপ হয়।
 
-### ২.৩ কী করতে হবে (flywheel-এর ৬ ধাপ)
+### ২.৩ কী করতে হবে (flywheel-এর ৭ ধাপ)
 
 ```text
 P-A: Write-time identity (PLAN_006)     → একই fact = ১ row, importance জীবন্ত
 P-B: একক canonical write path (M3)      → MemoryStore protocol-এর পিছনে ai_memory; legacy = adapter
 P-C: রাত্রিক consolidation scheduling   → synaptic_dream-কে periodic scheduler-এ wire
 P-D: Hybrid recall ranking              → cosine × importance × recency, env-tunable, kill-switch-যুক্ত
-P-E: Run-anchored traceability          → metadata.run_id (JSONB — migration নেই)
-P-F: Recall evaluation harness          → measured recall@5 — B4 unmeasured → measured
+P-E: ক্যানোনিকাল InferenceContext ও রান-ট্রেসেবিলিটি → metadata.run_id + request_id (Module 03 Gateway-র সাথে সিঙ্ক)
+P-F: বাউন্ডেড ফেইল-ওপেন ও লোকাল ক্যাশ রেজিলিয়েন্স   → Supabase আউটেজে SQLite/Disk ফলব্যাক বাফার + রিকানেক্ট সিঙ্ক
+P-G: Recall evaluation harness          → measured recall@5 — B4 unmeasured → measured
 ```
 
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
@@ -179,24 +181,34 @@ P-F: Recall evaluation harness          → measured recall@5 — B4 unmeasured 
 - **P-B:** `MemoryStore` Protocol (`backend/memory/protocol.py` — নতুন ছোট ফাইল, ৩ মেথড: store/query/health) → `backend/memory/supabase_store.py` canonical implementation → legacy store-দের `M3_MEMORY_STORE_CONSOLIDATION_DECISION_TABLE.md`-এর রায় অনুযায়ী adapter/archive। ধাপ: dual-write shadow → parity পরিমাপ → cutover → legacy read-only। `backend/core/orchestration/periodic_task_scheduler.py`-র মতো বিদ্যমান seam পুনঃব্যবহার। **কী টচ হবে না:** `CascadeMemoryService`-র সিগনেচার, AutoRAGInjector-র consumers, কোনো API route।
 - **P-C:** `backend/workers/synaptic_dream.py`-কে বিদ্যমান periodic scheduler-এ নিবন্ধন; idempotent consolidation (merge-only, কখনো DELETE নয়); ফল `docs/plans/` লগে সংখ্যাত। **Cadence হার্ডকোড নয় (zero-hardcode সংশোধন):** interval সম্পূর্ণ scheduler-config/env-চালিত (`backend/core/orchestration/periodic_task_scheduler.py`-র বিদ্যমান `interval_seconds` প্যাটার্ন, L36), ডিফল্ট-মান env-থেকে — কোডে কোনো স্থির সময়-সংখ্যা লেখা হবে না। **কী টচ হবে না:** worker-এর consolidation-লজিক, কোনো নতুন queue-ভিত্তি।
 - **P-D:** `auto_rag_injector.py`-তে scoring branch: `score = w1·cosine + w2·importance + w3·recency` (weights env-tunable, default আজকের আচরণে সমতুল্য রাখা সম্ভব না হলে kill-switch SUPREMEAI_MEMORY_HYBRID_RANK=false → relevance-only)। **Weights সম্পূর্ণ runtime-env-পঠিত — কোডে কোনো কনস্ট্যান্ট নয়** (zero-hardcode নীতি); env-অনুপস্থিতিতে fallback = legacy relevance-only আচরণ। **কী টচ হবে না:** TOP_K/MAX_CHARS, injector-এর public interface।
-- **P-E:** store path-এ `metadata["run_id"]` সংযোজন (JSONB — **কোনো schema migration নেই**); `backend/runs/` service থেকে run_id প্রবাহ; পাঠক-পথ optional (অনুপস্থিত run_id → আজকের আচরণ)।
-- **P-F:** `backend/tests/memory/eval/` fixture: নিয়ন্ত্রিত corpus → query সেট → recall@5 + duplicate-share মাপা; ফল PR-বডিতে measured হিসেবে প্রকাশ।
+- **P-E (InferenceContext ও Run-Anchored Traceability):**
+  - মেমোরি স্টোর এবং রিকল পাথে Module 03 LLM Gateway-র ক্যানোনিকাল `InferenceContext(tenant_id, user_id, request_id, run_id, task_type)` সরাসরি বাইন্ড করা।
+  - `metadata["run_id"]` এবং `metadata["request_id"]` JSONB মেটাডেটাতে সংরক্ষিত থাকবে (কোনো ডাটাবেজ স্কিমা মাইগ্রেশন ছাড়াই)।
+  - কারেন্ট রানের শর্ট-টার্ম কনটেক্সট বুস্ট করতে রিকল র‍্যাংকিংয়ে `run_id` ম্যাচিংয়ের জন্য ডায়নামিক প্রক্সিমিটি বোনাস প্রযোজ্য হবে।
+- **P-F (বাউন্ডেড ফেইল-ওপেন ও লোকাল ক্যাশ রেজিলিয়েন্স):**
+  - Supabase pgvector বা ক্লাউড নেটওয়ার্ক ডাউন হলে বা ল্যাটেন্সি থ্রেশহোল্ড (>২৫০০ms) পার হলে কোনো মেমোরি অপারেশন ক্র্যাশ করবে না।
+  - সিস্টেম স্বয়ংক্রিয়ভাবে লোকাল SQLite বাফার স্টোরে (`backend/memory/sqlite_store.py`) ফলব্যাক করবে (Bounded Fail-Open)।
+  - নেটওয়ার্ক পুনরুদ্ধার হওয়া মাত্রই ব্যাকগ্রাউন্ড টাস্ক লোকাল বাফার থেকে ক্লাউড Supabase-এ সিঙ্ক ও ডিডুপ্লিকেশন সম্পন্ন করবে (`sync_on_reconnect`)।
+  - **কঠোর টেন্যান্ট আইসোলেশন:** প্রতিটি ভেক্টর প্রোব এবং রিকলে ডাটাবেজ ও লোকাল উভয় স্তরেই `tenant_id` এবং `user_id` স্কোপ বাধ্যতামূলক, যাতে কোনো ক্রস-টেন্যান্ট তথ্য লিক অসম্ভব হয়।
+- **P-G:** `backend/tests/memory/eval/` fixture: নিয়ন্ত্রিত corpus → query সেট → recall@5 + duplicate-share মাপা; ফল PR-বডিতে measured হিসেবে প্রকাশ।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **মেমোরি চক্রবৃদ্ধি করে** (Constitution #11): dedup + consolidation একই fact-এর পুনরাবৃত্তি থামায় — store ছোট, recall ধারালো।
 2. **Token-অর্থনীতি (hypothesis):** ৫টি দুর্লভ recall-স্লটে duplicate শূন্য → প্রতি আলাপে কার্যকর context-মান বাড়ে — M2 Context Engine-এর budget discipline-এর সরাসরি সহায়ক।
-3. **Self-learning অবরুদ্ধ-অবস্থা থেকে মুক্ত:** evolution/learning মডিউলগুলো একটি স্বাস্থ্যকর একক store থেকে পড়বে — ১৫-স্টোরের বিশৃঙ্খলায় নয়।
-4. **Phase 3-পথ খোলা:** L4-এর মতেই এটি own-model যুগের বৃহত্তম স্থাপত্য-অন্তরায় নিরস্ত্র হবে।
-5. **পরিমাপযোগ্যতা:** B4 প্রথমবার measured — "ভালো হয়েছে বলে মনে হচ্ছে" থেকে "recall@5 X% → Y%"।
+3. **জিরো-ক্র্যাশ মেমোরি আর্কিটেকচার (P-F):** ক্লাউড ডাটাবেজ সাময়িক ডাউন হলেও লোকাল বাফার ক্যাশের কারণে এজেন্টের মেমোরি পাইপলাইন শতভাগ সচল থাকে।
+4. **সম্পূর্ণ ট্রেসেবিলিটি (P-E):** প্ল্যাটফর্মের প্রতিটি জ্ঞান কোন রানের কোন এআই কল থেকে এসেছে তা Gateway `InferenceContext`-এর সাথে ১০০% সংযুক্ত।
+5. **Phase 3-পথ খোলা:** L4-এর মতেই এটি own-model যুগের বৃহত্তম স্থাপত্য-অন্তরায় নিরস্ত্র হবে।
+6. **পরিমাপযোগ্যতা:** B4 প্রথমবার measured — "ভালো হয়েছে বলে মনে হচ্ছে" থেকে "recall@5 X% → Y%"।
 
 ### ২.৬ ক্ষতি/ঝুঁকি (সৎ, প্রশমন সহ)
 
 1. **Dual-write drift (P-B):** shadow-পর্বে দুই store ভিন্ন হতে পারে — প্রশমন: parity টেস্ট + cutover শুধু 100% parity-তে; kill-switch প্রতি store-এ।
-2. **Consolidation ভুল-positive merge (P-C):** ভিন্ন fact ভুলে মিশতে পারে — প্রশমন: merge-only (কখনো DELETE নয়), merge-history metadata-য়, threshold conservative; ভুল merge-ও তথ্য-লস নয়।
+2. **Consolidation ভুল-positive merge (P-C):** ভিন্ন fact ভুল করে মিশতে পারে — প্রশমন: merge-only (কখনো DELETE নয়), merge-history metadata-য়, threshold conservative; ভুল merge-ও তথ্য-লস নয়।
 3. **Hybrid ranking regression (P-D):** ওজন ভুল হলে recall খারাপ হতে পারে — প্রশমন: default = আজকের আচরণ; weights env-tunable; P-F harness-এ A/B পরিমাপ-পূর্বে default পরিবর্তন নয়।
-4. **Supabase free-tier চাপ:** embedding-স্টোরেজ বাড়তে পারে (hypothesis) — প্রশমন: dedup/consolidation নিজেই row-সংখ্যা কমায়; 512MB-প্ল্যানের সাথে reconciliation।
-5. **পরিসর-ঝুঁকি:** ৬ Phase = ৬ সুযোগ scope-creep-এর — প্রশমন: প্রতিটি Phase আলাদা Gate 0–6 execution প্ল্যান; এই নীলনকশা নিজে কোনো কোড লেখে না।
+4. **লোকাল বাফার সিঙ্ক কনফ্লিক্ট (P-F):** লোকাল থেকে ক্লাউডে সিঙ্কের সময় কনফ্লিক্ট — প্রশমন: ڈیٹারমিনিস্টিক `uuid5` ডিডুপ্লিকেশন এবং টাইমস্ট্যাম্প-বেসড লাস্ট-রাইট-উইনস (LWW) লজিক।
+5. **Supabase free-tier চাপ:** embedding-স্টোরেজ বাড়তে পারে (hypothesis) — প্রশমন: dedup/consolidation নিজেই row-সংখ্যা কমায়; 512MB-প্ল্যানের সাথে reconciliation।
+6. **পরিসর-ঝুঁকি:** ৭ Phase = ৭ সুযোগ scope-creep-এর — প্রশমন: প্রতিটি Phase আলাদা Gate 0–6 execution প্ল্যান; এই নীলনকশা নিজে কোনো কোড লেখে না।
 
 ---
 

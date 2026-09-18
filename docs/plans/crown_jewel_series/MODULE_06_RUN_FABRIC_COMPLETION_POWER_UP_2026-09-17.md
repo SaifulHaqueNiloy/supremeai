@@ -161,21 +161,32 @@ P-G: TaskRuntime↔runs ঐক্য  → TaskContract run-এর ভিতর�
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
 - **P-A:** নতুন পাতলা `run_scope()` context-manager (runs প্যাকেজে) — entry/exit-এ create/transition; chat.py, scheduled_tasks.py, tool-execution, missions-advance-পথে মোড়ানো; execution_recorder-প্যাটার্ন (best-effort, DB-ব্যর্থতায় চলতে-থাকা); flag `SUPREMEAI_RUN_FABRIC_UNIVERSAL=true` (default false)।
-- **P-B:** run_scope-সমাপ্তিতে (P-A-নির্মিত run-এ) record_usage — idempotency-key = attempt-id; দ্বি-গণনা-টেস্ট; gateway-পথে Module 03-র tenant_id-প্রচারের সাথে সামঞ্জস্য।
+- **P-B (Gateway UsageSettlement ও রান-লেভেল কস্ট রোলআপ):**
+  - run_scope-সমাপ্তিতে (P-A-নির্মিত run-এ) record_usage কল হবে।
+  - এটি সরাসরি Module 03 LLM Gateway-র `UsageSettlement` এবং `InferenceContext(run_id=...)`-এর সাথে সিঙ্ক হবে — ফলে একটি রানের অধীনে যতগুলো চাইল্ড এজেন্ট বা টুল কল হয়েছে, তাদের সমষ্টিগত টোকেন ও রিয়েল-ডলার খরচ স্বয়ংক্রিয়ভাবে সংশ্লিষ্ট `Run` রেকর্ডে রোল-আপ হয়ে সংরক্ষিত হবে।
+  - idempotency-key = attempt-id; ডুপ্লিকেট কাউন্টিং শূন্য রাখার জন্য স্ট্রিক্ট টেস্ট-পিন থাকবে।
 - **P-C:** বিদ্যমান worker-প্যাটার্নে stale-run sweep (interval **env-পঠিত — কোডে কোনো স্থির মিনিট-সংখ্যা নয়**; zero-hardcode সংশোধন; retention-দিনও env/config-চালিত, ডকুমেন্টে উদাহরণ-মাত্র): stale terminal-পূর্ব run → classify_failure→finalize; `.github/workflows/db-retention.yml`-এ runs/run_events prune — বিদ্যমান deletion-guard পুনঃব্যবহার।
-- **P-D:** `runService.ts` list/detail/events → `/api/v1/runs`; missions-ভিউ গৌণ-ট্যাব; route-audit টুলে নতুন consumer-নিবন্ধন।
+- **P-D (ডুয়াল-ড্রাইভেন সত্য /runs ড্যাশবোর্ড):**
+  - `runService.ts` list/detail/events → `/api/v1/runs`-এ পরিচালিত হবে।
+  - `AGENTS.md Rule 7` অনুসারে ডুয়াল ভিউ চালু হবে:
+    - *Customer Experience:* সাধারণ প্রগ্রেস বার, হিউম্যান-রিডেবল স্ট্যাটাস ও প্রগ্রেসিভ ডিসক্লোজার (সহজ ও দ্রুত)।
+    - *Admin Mission Command:* সম্পূর্ণ সাব-টাস্ক DAG, ল্যাটেন্সি হিটম্যাপ, Gateway টোকেন ব্রেকডাউন ও HITL ওভাররাইড প্যানেল।
 - **P-E:** AutomationDispatcher-এর সিদ্ধান্ত: scheduled-automation-পথে revive (bridge সক্রিয়) অথবা delete (register-দর্শন); দুই-সমাপ্তিই measured; bridge-লেখায় প্রকৃত user_id/tenant (P-A-প্রবাহিত)।
 - **P-F:** BudgetGuard.check_pre_execution gateway/tool পথে (flag `SUPREMEAI_RUN_BUDGETS=true`, default false, fail-open); check_run_budgets-ফল অ্যাডমিশন-সিদ্ধান্তে।
-- **P-G:** TaskRuntime.execute_task-কে run-ভিতরে চালানো (run_id-সহ trace); L58 ফেব্রিকেটেড আউটপুট → explicit error-ফল (fail-honest); planner-LLM আপগ্রেড flag `SUPREMEAI_RUNTIME_LLM_PLANNER=true` (default false — hardcoded ৩-ধাপ অটুট fallback)।
+- **P-G (TaskRuntime ঐক্য ও ক্যানসেলেশন প্রোপাগেশন):**
+  - TaskRuntime.execute_task-কে run-এর ভিতরে চালানো (run_id-সহ trace)।
+  - L58 ফেব্রিকেটেড আউটপুট → explicit error-ফল (fail-honest)।
+  - যখন কোনো রান ক্যানসেল হবে (`/api/v1/runs/{id}/cancel` বা ইউআই বাটন থেকে), তখন `CancellationToken` দিয়ে ব্যাকগ্রাউন্ডের সব সাব-টাস্ক ও গেটওয়ে এপিআই কল সাথে সাথে টার্মিনেট হবে।
 
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **"কী হলো কোথায়" প্রশ্নের এক-উত্তর:** প্ল্যাটফর্মের প্রতিটি কাজ এক তালিকায় — সমর্থন-খরচ হ্রাস, বিশ্বাসযোগ্যতা বৃদ্ধি (hypothesis)।
-2. **বাজেট-প্রথম আচরণ (P-B/F):** খরচ-সীমা প্রথমবার অ্যাডমিশন-স্তরে — Module 03-র gateway-বাজেটের পরিপূরক স্তম্ভ; runaway-cost দ্বি-তালা।
-3. **সত্য-ড্যাশবোর্ড (P-D):** ব্যবহারকারীর /runs পৃষ্ঠা প্রথমবার আসল — false-assurance পর্যুগ; missions-ভিত্তিক বিভ্রম শেষ।
-4. **পরিচ্ছন্ন জীবনচক্র (P-C):** FINALIZE-সম্পূর্ণ অডিট-লক + retention — DB-স্বাস্থ্য।
-5. **Module 05-সিনার্জি:** run-anchored execution-উপাত্ত learning-স্রোতকে সমৃদ্ধ করে — শেখা প্রস্তাবগুলো run-প্রমাণসহ।
-6. **সত্য-runtime (P-G):** মিথ্যা-সাফল্য শূন্য — Constitution #13 runtime-অঙ্গনে।
+2. **রান-লেভেল নির্ভুল বিলিং ও কস্ট ট্র্যাকিং (P-B):** প্রতিটি রানের নিখুঁত টোকেন ও ডলার খরচ Gateway `UsageSettlement` থেকে সরাসরি রানের গায়ে যুক্ত থাকবে।
+3. **তাত্ক্ষণিক ক্যানসেলেশন ও অপচয় বন্ধ (P-G):** রান ক্যানসেল হলে ব্যাকগ্রাউন্ডের সব প্রসেস একযোগে বন্ধ হয়ে ক্লাউড রিসোর্স বাঁচাবে।
+4. **ডুয়াল-ড্রাইভেন স্বচ্ছতা (P-D):** কাস্টমার পাবেন সহজ-সুন্দর আউটকাম, আর অ্যাডমিন পাবেন মিশন-কন্ট্রোল গ্রেড টেলিমেট্রি।
+5. **পরিচ্ছন্ন জীবনচক্র (P-C):** FINALIZE-সম্পূর্ণ অডিট-লক + retention — DB-স্বাস্থ্য।
+6. **Module 05-সিনার্জি:** run-anchored execution-উপাত্ত learning-স্রোতকে সমৃদ্ধ করে — শেখা প্রস্তাবগুলো run-প্রমাণসহ।
+7. **সত্য-runtime (P-G):** মিথ্যা-সাফল্য শূন্য — Constitution #13 runtime-অঙ্গনে।
 
 ### ২.৬ ক্ষতি/ঝুঁকি (সৎ, প্রশমন সহ)
 
