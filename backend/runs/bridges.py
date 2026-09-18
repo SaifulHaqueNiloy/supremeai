@@ -38,6 +38,8 @@ SOURCE_MISSION = "mission"
 SOURCE_TOOL = "tool"
 SOURCE_MCP = "mcp"
 SOURCE_AUTOMATION = "automation"
+#: M02 P-B (ERR-F01): scheduled-task execution observed as a canonical run.
+SOURCE_SCHEDULED_TASK = "scheduled_task"
 
 
 async def observe_mission_run(
@@ -159,6 +161,36 @@ async def observe_automation_run(
         source_ref=execution_id,
         trace_id=trace_id,
         correlation_id=correlation_id,
+        idempotency_key=idempotency_key,
+        **budget_limits,
+    )
+
+
+async def observe_task_run(
+    session: AsyncSession,
+    service: RunService,
+    *,
+    task_id: str,
+    user_id: str,
+    title: str | None = None,
+    idempotency_key: str | None = None,
+    **budget_limits: Any,
+) -> Run:
+    """Observe one scheduled-task execution as its canonical run (M02 P-B).
+
+    বাংলা মন্তব্য: ERR-F01 সেতু-সত্য — scheduled_tasks-এর প্রকৃত নির্বাহ (M22 P-A
+    sweep পথ) এখন Run fabric-এ পর্যবেক্ষণযোগ্য; M05/M06/M17-এর run-তথ্য-খোঁজা
+    এখান থেকেই মেলে। scheduled_tasks row-ই তার সাবসিস্টেমের authority — রান শুধু
+    পর্যবেক্ষণ/বাজেট-রেকর্ড (extend, not replace)। run_type="agent" (একজন agent
+    prompt নির্বাহ করে), source_ref=task_id, source_type=scheduled_task।
+    """
+    return await service.create_run(
+        session,
+        run_type="agent",
+        user_id=user_id,
+        title=title or f"scheduled-task:{task_id}",
+        source_type=SOURCE_SCHEDULED_TASK,
+        source_ref=str(task_id),
         idempotency_key=idempotency_key,
         **budget_limits,
     )

@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import uuid
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -363,3 +364,109 @@ async def test_sweep_reports_db_unavailable_honestly(monkeypatch: pytest.MonkeyP
     stats = await sweep_due_tasks_once()
     assert stats["db_available"] is False
     assert stats["executed"] == 0
+
+
+# ---------------------------------------------------------------------------
+# M02 P-B (ERR-F01) — sweep নির্বাহ বাস্তব Run fabric-এ পর্যবেক্ষিত
+# ---------------------------------------------------------------------------
+
+
+def _make_sqlite_runs_ctx(monkeypatch):
+    """বাস্তব RunService-এর সাথে in-memory sqlite runs fabric — integration সত্য।"""
+    from sqlalchemy import event as sa_event
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+    from sqlalchemy.pool import StaticPool
+
+    from missions.models import Mission, MissionTraceEvent
+    from models.base import Base
+    from runs.models import Run, RunEvent
+
+    engine = create_async_engine(
+        "sqlite+aiosqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    @sa_event.listens_for(engine.sync_engine, "connect")
+    def _fk(dbapi_conn, _record):
+        cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
+
+    maker_holder = {}
+
+    @asynccontextmanager
+    async def fake_ctx():
+        if not maker_holder:
+            async with engine.begin() as conn:
+                await conn.run_sync(
+                    lambda sc: Base.metadata.create_all(
+                        sc,
+                        tables=[
+                            Mission.__table__,
+                            MissionTraceEvent.__table__,
+                            Run.__table__,
+                            RunEvent.__table__,
+                        ],
+                    )
+                )
+            maker_holder["maker"] = async_sessionmaker(
+                engine, expire_on_commit=False, class_=AsyncSession
+            )
+        async with maker_holder["maker"]() as session:
+            yield session
+
+    monkeypatch.setattr("database.session.get_db_session_context", fake_ctx)
+    return engine, maker_holder
+
+
+@pytest.mark.asyncio
+async def test_sweep_execution_observed_as_run_in_real_fabric(fake_db, fast_llm, monkeypatch):
+    from sqlalchemy import select
+
+    from runs.models import Run
+
+    engine, _holder = _make_sqlite_runs_ctx(monkeypatch)
+    now = datetime.now(UTC)
+    fake_db.store["scheduled_tasks"] = [
+        _task_row(schedule_type="once", scheduled_time=_iso(now - timedelta(minutes=5)))
+    ]
+    task_id = fake_db.store["scheduled_tasks"][0]["id"]
+
+    stats = await sweep_due_tasks_once(now=now)
+    assert stats["executed"] == 1
+
+    # একই context-factory ব্যবহার করে রান-সারি পড়া
+    ctx = await _current_ctx()
+    async with ctx() as session:
+        rows = (await session.execute(select(Run).where(Run.source_ref == task_id))).scalars().all()
+        assert len(rows) == 1
+        run = rows[0]
+        assert run.run_type == "agent"
+        assert run.source_type == "scheduled_task"
+        assert run.status == "succeeded"
+        assert run.started_at is not None and run.terminal_at is not None
+
+
+async def _current_ctx():
+    import database.session as db_session_mod
+
+    return db_session_mod.get_db_session_context
+
+
+@pytest.mark.asyncio
+async def test_run_observation_failure_does_not_block_execution(fake_db, fast_llm, monkeypatch):
+    """বাংলা: observability ব্যর্থ হলেও টাস্ক চলে — কিন্তু লাউড-লগ, নীরব নয়।"""
+
+    @asynccontextmanager
+    async def broken_ctx():
+        raise RuntimeError("runs fabric unavailable")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr("database.session.get_db_session_context", broken_ctx)
+    now = datetime.now(UTC)
+    fake_db.store["scheduled_tasks"] = [
+        _task_row(schedule_type="once", scheduled_time=_iso(now - timedelta(minutes=5)))
+    ]
+    stats = await sweep_due_tasks_once(now=now)
+    assert stats["executed"] == 1  # টাস্ক বাস্তবেই চলেছে
