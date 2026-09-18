@@ -43,11 +43,11 @@ async def enforce_tenant_rate_limit(request: Request):
     cache_key = f"rate_limit:{identity}"
 
     try:
-        pipe = redis_manager.client.pipeline()
-        pipe.incr(cache_key)
-        pipe.expire(cache_key, 60)
-        results = await pipe.execute()
-        current_hits = results[0]
+        # Issue #460: single atomic EVAL (1 billable op) instead of the
+        # INCR+EXPIRE 2-command pipeline.
+        from core.cache.rate_limit_atomic import atomic_window_incr
+
+        current_hits = await atomic_window_incr(redis_manager.client, cache_key, 60)
 
         if current_hits > 100:
             logger.critical(f"🚨 Rate Limit Exceeded for {identity} ({current_hits} hits)!")
