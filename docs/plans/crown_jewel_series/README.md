@@ -67,6 +67,18 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 08 | **Scout / Deep Research** (`backend/scout/`) | সদ্য প্রোডাকশন-wired গবেষণা-চক্র | ✅ **প্রকাশিত** — `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` |
 | 09 | **Dormant Tools সক্রিয়করণ** (`backend/tools/` — 44 dormant) | বৃহত্তম অব্যবহৃত ক্ষমতা-ভাণ্ডার; `docs/plans/features/orphan_components_wiring_master_plan.md` মতবাদ | ✅ **প্রকাশিত** — `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` |
 | 10 | **Frontend Tier-S Wiring** (`frontend/` S1–S12) | কম্পোনেন্ট আছে, ওয়্যারিং pending — instant feature-completion | ✅ **প্রকাশিত** — `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` |
+| 11 | **Architecture Intelligence** (M5 — স্ট্যাটিক-গ্রাফ অবকাঠামো) | ১৯৪-মডিউল রানটাইম-অডিট আছে, স্ট্যাটিক গ্রাফ/রুল/baseline-N শূন্য (greenfield rg-প্রমাণ) — অন্ধ-রিফ্যাক্টর শেষ-লিভার | ✅ **প্রকাশিত** — `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` |
+| 12 | **Governed Skill Ecosystem** (`backend/skills/` + `backend/core/skill_manager.py` + রুট `skills/`) | তিন প্রতিযোগী বাস্তবায়ন, সব dormant — ERR-F02-প্যাটার্ন বীজে বন্ধ করার সবচেয়ে সস্তা মুহূর্ত; runtime-pip lightweight-লঙ্ঘন সংশোধন-প্রস্তাব | ✅ **প্রকাশিত** — `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` |
+| 13 | **Security Middleware Truth** (`backend/middleware/` + `backend/core/autonoguard_engine.py`) | anti-hacking middleware টেস্ট-কভারড কিন্তু মাউন্ট-বিহীন; tier/tenant-সীমা ইন-কোড; tenant fail-open ফলব্যাক-বিহীন — সুরক্ষা-সত্য-মানচিত্র | ✅ **প্রকাশিত** — `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` |
+| 14 | **User-Facing Capability Truth** (`voice_service.py` + `stream_voice_sse.py` + `backend/p2p/`) | জাল transcript/confidence/অডিও লাইভ-মাউন্টেড SSE-চেইনে (কোড-নোটই স্বীকারকৃত); বাস্তব MultilingualTTS সহ-অস্তিত্বশীল — V5 fake-metrics মতবাদের backend-সম্প্রসারণ | ✅ **প্রকাশিত** — `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` |
+| 15 | **Security Organ Deep** (`backend/core/security/**` + `backend/core/autonoguard_engine.py`) | ৯,৫৫৫-লাইনের অঙ্গে ~১১ সক্রিয় / ২ অর্ধ-নিদ্রা / ৮ dormant; লাইভ-গেট দুটি টেস্ট-বিহীন; **নতুন চুক্তি-প্রিমিয়ার**: Part 1 = গভীর ৩য়-পক্ষ বুদ্ধিমত্তা (OWASP GenAI Top-10 2025, NeMo rails-as-config, PromptGuard-২ প্রত্যাখ্যান, Spotlighting, garak, API-deception) — ডিসেপশন-ফিডব্যাক লুপ + rails-as-data | ✅ **প্রকাশিত** — `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` |
+| 16 | **Billing & Metering Gateway** (`billing_api.py` + `services/billing/` + `cost_guard.py`) | চার্জিং-অর্ধ শিল্প-গ্রেড কিন্তু মিটারিং-অর্ধ বিচ্ছিন্ন (record_spend শূন্য-কলার → ড্যাশবোর্ড-স্থায়ী-$০); payments.py revenue-leak ট্র্যাপ; **মিটার-ফার্স্ট মতবাদ** — LiteLLM model-cost-map, OpenMeter প্যাটার্ন, ভেন্ডর-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` |
+| 17 | **HITL & Approval Chain** (`services/hitl/` + `approval_manager.py` + `hitl_admin.py`) | ৭টি প্রতিযোগী অনুমোদন-স্টেট-মেশিন, নির্বাহক-বিহীন 'approved', জাল OTP, ২ route-shadowing — **এক-সেতু-সাত-দরজা মতবাদ** + resume-URL টোকেন (n8n ধার), LangGraph/Temporal প্যাটার্ন-গ্রহণ-লাইব্রেরি-প্রত্যাখ্যান | ✅ **প্রকাশিত** — `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` |
+| 18 | **Telegram Integration Organ** (`tools/social/telegram_bot/` + `telegram_security.py`) | প্রোডাকশনে বধির বট (webhook অনিবন্ধিত), secret-বিহীন spoofable ইনগ্রেস, হার্ডকোডেড-ও-মুদ্রিত admin chat_id, জাল KPI — **activation-gate মতবাদ** + প্রতিপক্ষের-অবকাঠামো-আমার-কিউ (retry-then-drop) | ✅ **প্রকাশিত** — `MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md` |
+| 19 | **i18n & Bengali-First Adapter** (`frontend/src/i18n/` + backend ভাষা-পথ) | সংস্কৃতিতে বাংলা-প্রথম মেশিনারিতে ইংরেজি-প্রথম: i18n-লুপ অর্ধ-খোলা (preferred_language লিখিত-অপঠিত), ৪ প্রতিদ্বন্দ্বী বাংলা-মডেল-ম্যাপ, BengaliNormalizer prompt-লোয়ারকেস, দাঁড়ি-অন্ধ truncation, PDF টোফু, NFC-শূন্য — **ভাষা-কর-হ্রাস মতবাদ** (~৫× টোকেন-ব্যয় গবেষণা-ভিত্তি) | ✅ **প্রকাশিত** — `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` |
+| 20 | **Notification & Delivery Organ** (`core/messaging/` + `services/email/` + in-app পথ) | ১৩ সমান্তরাল পাইপলাইন, ৪ জীবন্ত বাহক, ক্যানোনিকাল-ডিসপ্যাচার গ্রাহকহীন, জাল-'sent', mock-key লিটারেল, /ws/dashboard কখনো-অনারম্ভিত — **স্টোর-আগে-বাহক মতবাদ** (outbox ধার) | ✅ **প্রকাশিত** — `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` |
+| 21 | **Truth-Mirror Governance Script** (নকশা — `scripts/governance/` পরিবার) | প্রকৃতি-ব্যতিক্রম চক্র: সিরিজের ১৫+ false-assurance আবিষ্কার → rules-as-data সনাক্তকারীর বীজ-কর্পাস; সৎ-মক (fake_store) বনাম অসৎ-ফেব্রিকেশন (webhooks_ai) শ্রেণিবিন্যাস; **exclusion-ratchet** (arXiv) বেসলাইন; founder-gated নকশা — কোনো কোড এই ডকে নয় | ✅ **প্রকাশিত** — `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` |
+| 22 | **Scheduler & Cron Organ** (`scheduled_tasks.py` + `agent_supervisor.py` + startup লুপ) | চাকা-বিহীন গাড়ি: S10 নিখুঁত CRUD কিন্তু নির্বাহক-লুপ অনুপস্থিত (write-only schedule), placebo auto-healer, UTC-অন্ধ (Asia/Dhaka অদৃশ্য), ≥৬ প্রতিদ্বন্দ্বী প্রক্রিয়া — **supervisor-as-heartbeat মতবাদ** + last_run_at ক্যাচআপ (cron-গর্ত সচেতন), APScheduler প্রত্যাখ্যান-নথি | ✅ **প্রকাশিত** — `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` |
 
 কিউ পুনঃর‍্যাঙ্ক হতে পারে: প্রতিটি চক্রের পরিমাপ-ফল (Gate 5) কিউ-অর্ডার বদলাতে পারে। এটাই চলমান প্রক্রিয়ার শেখা-অংশ।
 
@@ -86,6 +98,18 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 8 | 2026-09-17 | Scout / Deep Research | `MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 9 | 2026-09-17 | Dormant Tools সক্রিয়করণ | `MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ |
 | 10 | 2026-09-17 | Frontend Tier-S Wiring | `MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (সিরিজের প্রস্তাবিত দশ মডিউল সম্পূর্ণ; কিউ পুনঃর‍্যাঙ্ক চলমান-প্রক্রিয়ার অংশ) |
+| 11 | 2026-09-17 | Architecture Intelligence (M5) | `MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; জন্ম থেকেই Part 5.5 দর্শন-অডিটসহ) |
+| 12 | 2026-09-17 | Governed Skill Ecosystem (M9) | `MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (branch `crown-jewel-v2`; তিন-বাস্তবায়ন কনসলিডেশন প্রস্তাব) |
+| 13 | 2026-09-17 | Security Middleware Truth | `MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (মাউন্ট-সিদ্ধান্ত ফাউন্ডার-গেটেড) |
+| 14 | 2026-09-17 | User-Facing Capability Truth | `MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (SSE re-point + সত্য-সেমান্টিকস) |
+| 15 | 2026-09-17 | Security Organ Deep (গভীর সুরক্ষা-অঙ্গ) | `MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-G টেস্ট-প্রথম; ডিসেপশন-ফিডব্যাক লুপ; rails-as-data; PromptGuard প্রত্যাখ্যান-নথি) |
+| 16 | 2026-09-17 | Billing & Metering Gateway | `MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A এক-লাইন লুপ-বন্ধ; zero-cost সংবিধান-অটুট-শর্ত) |
+| 17 | 2026-09-17 | HITL & Approval Chain | `MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (৭→১ store; resume-URL সেতু; জাল-OTP-অবসান) |
+| 18 | 2026-09-17 | Telegram Integration Organ | `MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A secret-gate পূর্বশর্ত; activation-gate founder-gated) |
+| 19 | 2026-09-17 | i18n & Bengali-First Adapter | `MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-D একক bengali_text.py; L6-track সংগতি) |
+| 20 | 2026-09-17 | Notification & Delivery Organ | `MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-B ২-লাইন WS-জাগরণ; স্টোর-আগে-বাহক) |
+| 21 | 2026-09-17 | Truth-Mirror Governance (নকশা) | `MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (নকশা-স্তর; নির্মাণ Gate 2-পরবর্তী) |
+| 22 | 2026-09-17 | Scheduler & Cron Organ | `MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md` | proposed — ফাউন্ডার রিভিউ অপেক্ষমাণ (P-A স্পন্দন+ক্যাচআপ; TZ-সত্য Dhaka-প্রথম) |
 
 ---
 
@@ -105,6 +129,8 @@ SupremeAI-র প্রতিটি মডিউল একসাথে "crown je
 | 08 Scout | stopwords কোড-inline প্রস্তাব; max_steps স্থির | data-file-লোডেড stopwords; max_steps env-ডিফল্ট |
 | 09 Dormant Tools | neon/SENTRY key-নির্ভর MCP সাধারণ-নিবন্ধন; mcp_observability SENTRY-নির্ভর revival; ধাপ-সীমা স্থির | key-নির্ভর server default-off ফাউন্ডার-গেটেড; revival key-বিহীন-প্রথম (স্থানীয় error_event_bus); সীমা env-চালিত; CI-gate শূন্য-false-positive-পরে |
 | 10 Frontend | knip warn→error CI-বিচ্ছিন্নতা-ঝুঁকি | error-মোড শূন্য-false-positive বেসলাইনের পরে; ব্যতিক্রম-তালিকা data-file |
+
+পরবর্তী-চক্র-নোট: চক্র ১১-১২ থেকে নতুন মডিউল-ডকুমেন্ট **জন্ম থেকেই** Part 5.5 দর্শন-অডিট-টেবিলসহ লেখা হয় — সংশোধন-রাউন্ডের প্রয়োজন নেই; প্রতিটি প্রস্তাব publish-পূর্বে চার-স্তম্ভ-ফিল্টারে ছাঁকা (zero cost / lightweight / fast smooth / zero hardcode)।
 
 প্রোটোকল-নোট (প্রতিষ্ঠাতা-নির্দেশ): এই রাউন্ড থেকে সিরিজ-সংশোধন **শাখা-একমাত্র** (`crown-jewel-v2`) — main অস্পৃশ্য; প্রতি push-পূর্বে pull; docs-only পরিবর্তন (কোড/CI-ওয়ার্কফ্লো স্পর্শ নয়) — merge-conflict-মুক্ত লক্ষ্যে unique-path + in-place living-plan সম্পাদনা। প্রতিটি সংশোধনের ভিত্তি-প্রমাণ base `ed35eaf`-এ spot-checkকৃত।
 
