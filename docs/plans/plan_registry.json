@@ -3,15 +3,15 @@
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 185,
-    "with_frontmatter": 184,
+    "documents": 186,
+    "with_frontmatter": 185,
     "families": {
-      "control-tower-mcp": 41,
-      "unclassified": 33,
+      "control-tower-mcp": 44,
+      "unclassified": 30,
       "execution-phases": 28,
       "free-tier-federation": 25,
       "frontend-product-ux": 16,
-      "unified-architecture": 10,
+      "unified-architecture": 11,
       "browser-automation": 9,
       "ci-cd-pipeline": 7,
       "intelligence-evolution": 6,
@@ -59,6 +59,24 @@
       "lines": 34
     },
     {
+      "id": "implementation-track-execution-order",
+      "subject": "Issue #453 Implementation Track — প্রমাণ-ভিত্তিক এক্সিকিউশন অর্ডার: ২৩ মডিউলের কোড-সত্য রিকনসিলিয়েশন, মালিকানা ডি-ডুপ্লিকেশন এবং ওয়েভ-ভিত্তিক বাস্তবায়ন ক্রম",
+      "document_role": "roadmap",
+      "planning_authority": "Planning Circle / Head of Planning (docs/plans/ প্ল্যানিং কর্পাসের ধারাবাহিক মালিক)",
+      "canonical": true,
+      "status": "active",
+      "source_file": "docs/plans/IMPLEMENTATION_TRACK_EXECUTION_ORDER_2026-09-18.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "verified",
+      "last_verified": "2026-09-18",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 105
+    },
+    {
       "id": "m3-memory-store-consolidation-decision-table",
       "subject": "M3/L4.1 — Memory Store Consolidation: Keep / Merge / Archive Decision Table",
       "document_role": "architecture",
@@ -90,9 +108,9 @@
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 32
+      "lines": 51
     },
     {
       "id": "plan-lifecycle-policy",
@@ -182,7 +200,7 @@
       "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 400
+      "lines": 403
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
@@ -299,18 +317,18 @@
       "subject": "Supreme Teleport: Multi-Device Remote Control Tower Plan — Control Your Multiple Devices & Local AI Agents from Far",
       "document_role": "architecture",
       "planning_authority": "Central Control Hub / MCP Circle",
-      "canonical": null,
+      "canonical": false,
       "status": "proposed",
       "source_file": "docs/plans/architecture/SUPREME_TELEPORT_MULTI_DEVICE_REMOTE_CONTROL_PLAN.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
+      "evidence_state": "unverified",
       "last_verified": "2026-09-18",
-      "disposition": null,
+      "disposition": "retain",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 195
+      "lines": 227
     },
     {
       "id": "auto:ai_model_comparative_matrix_bangla",
@@ -760,7 +778,7 @@
       "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
       "frontmatter_present": true,
-      "lines": 257
+      "lines": 279
     },
     {
       "id": "crown-jewel-module-11-architecture-intelligence-power-up-2026-09-17",
@@ -904,7 +922,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 185
+      "lines": 199
     },
     {
       "id": "crown-jewel-module-19-i18n-bengali-adapter-power-up-2026-09-17",
@@ -1645,12 +1663,12 @@
       "lines": 674
     },
     {
-      "id": "auto-Plan_24_AI_Agent_Ecosystem_Integration",
-      "subject": "Plan 24: AI Agent Ecosystem Integration & MCP Standardization",
-      "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "id": "canonical-plan-24-omnichannel-mcp-agent-ecosystem",
+      "subject": "Plan 24 (Canonical Master): SupremeAI Omnichannel MCP Agent Ecosystem & Remote Control Plane",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "active",
       "source_file": "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md",
       "supersedes": [],
       "superseded_by": [],
@@ -1660,7 +1678,7 @@
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 784
+      "lines": 182
     },
     {
       "id": "auto:README",
@@ -2132,21 +2150,23 @@
     },
     {
       "id": "auto:kilo_ai_integration_backend_refactoring_plan",
-      "subject": "Kilo AI Integration and Backend Refactoring Plan",
+      "subject": "Consolidated & Merged Plan Reference: kilo_ai_integration_backend_refactoring_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/kilo_ai_integration_backend_refactoring_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 82
+      "lines": 21
     },
     {
       "id": "auto:kilo_coding_agent_workspace_reference",
@@ -2190,35 +2210,39 @@
       "document_role": "implementation",
       "planning_authority": "Architecture Governance / Planning Circle",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/mcp_gateway_dynamic_hub_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 17
+      "lines": 20
     },
     {
       "id": "auto-messaging_bots_telegram_and_whatsapp_architecture",
-      "subject": "Plan: The 3 Faces of SupremeAI — Unified Omnichannel Interaction Gateway (Web Dashboard, Telegram Bot & WhatsApp Bot)",
+      "subject": "Consolidated & Merged Plan Reference: messaging_bots_telegram_and_whatsapp_architecture.md",
       "document_role": "architecture",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/messaging_bots_telegram_and_whatsapp_architecture.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
+      "disposition": "redirect",
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 114
+      "lines": 21
     },
     {
       "id": "mode3-zero-password-experience",
@@ -2294,21 +2318,23 @@
     },
     {
       "id": "auto-personal_mcp_gateway_multitenant_hub_plan",
-      "subject": "Architectural Analysis & Implementation Plan: Personal MCP Gateway & Multi-Tenant MCP Hub",
+      "subject": "Consolidated & Merged Plan Reference: personal_mcp_gateway_multitenant_hub_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/personal_mcp_gateway_multitenant_hub_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 276
+      "lines": 21
     },
     {
       "id": "plugin-to-agent-capability-lifecycle",
@@ -2636,21 +2662,23 @@
     },
     {
       "id": "auto:vscode_lm_multi_model_ide_support_plan",
-      "subject": "Integrate `vscode.lm` for In-built IDE Model Support",
+      "subject": "Consolidated & Merged Plan Reference: vscode_lm_multi_model_ide_support_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/vscode_lm_multi_model_ide_support_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 61
+      "lines": 21
     },
     {
       "id": "auto:zero_cost_autonomous_self_evolution_plan",
@@ -3208,7 +3236,7 @@
       "target_scope": null,
       "family": "free-tier-federation",
       "frontmatter_present": false,
-      "lines": 62
+      "lines": 57
     },
     {
       "id": "auto:plan_reconciliation_register",

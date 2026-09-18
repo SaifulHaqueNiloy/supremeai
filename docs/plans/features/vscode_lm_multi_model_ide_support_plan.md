@@ -4,8 +4,10 @@ id: auto:vscode_lm_multi_model_ide_support_plan
 subject: "Consolidated & Merged Plan Reference: vscode_lm_multi_model_ide_support_plan.md"
 document_role: implementation
 planning_authority: Architecture Governance / Central Control Tower & Circle C5
-status: consolidated
-canonical_target: "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+status: superseded
+disposition: redirect
+superseded_by:
+  - "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
 last_updated: 2026-09-19
 ---
 

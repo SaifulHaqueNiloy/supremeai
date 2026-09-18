@@ -101,7 +101,7 @@ class AdminHandlersMixin:
             "🤖 <b>SupremeAI 2.0 AI Brain & Multi-Agent Matrix</b>\n\n"
             "• 🧠 <b>Primary Model:</b> Google Gemini 2.5 Flash (Ultra-fast)\n"
             "• ⚡ <b>Fallback Engine:</b> Groq (Qwen 2.5 / GPT-OSS 120B)\n"
-            "• 🔄 <b>Orchestrator:</b> LangGraph + SupremeOrchestrator\n"
+            "• 🔄 <b>Orchestrator:</b> Native StateGraph + SupremeOrchestrator\n"
             "• 📚 <b>Long-Term Memory:</b> PostgreSQL pgvector (`ai_memory`)\n"
             "• 💰 <b>Operational Cost:</b> 100% Free-Tier ($0 Budget Optimization)\n\n"
             "<i>সিস্টেম সম্পূর্ণ অটোনোমাস এবং চ্যাটের সাথে রিয়েল-টাইমে কানেক্টেড।</i>"

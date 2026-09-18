@@ -4,8 +4,10 @@ id: auto-personal_mcp_gateway_multitenant_hub_plan
 subject: "Consolidated & Merged Plan Reference: personal_mcp_gateway_multitenant_hub_plan.md"
 document_role: implementation
 planning_authority: Architecture Governance / Central Control Tower & Circle C5
-status: consolidated
-canonical_target: "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+status: superseded
+disposition: redirect
+superseded_by:
+  - "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
 last_updated: 2026-09-19
 ---
 
