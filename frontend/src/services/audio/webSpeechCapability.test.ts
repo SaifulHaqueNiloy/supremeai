@@ -8,14 +8,15 @@ import { detectWebSpeechCapability } from './webSpeechCapability';
 
 describe('detectWebSpeechCapability', () => {
   const originalWindow = globalThis.window;
+  const globalObj = globalThis as unknown as Record<string, unknown>;
 
   afterEach(() => {
-    (globalThis as any).window = originalWindow;
+    globalObj.window = originalWindow;
     vi.restoreAllMocks();
   });
 
   it('reports unsupported when speechSynthesis is absent', () => {
-    (globalThis as any).window = {} as Window;
+    globalObj.window = {} as Window;
     const cap = detectWebSpeechCapability();
     expect(cap.ttsSupported).toBe(false);
     expect(cap.sttSupported).toBe(false);
@@ -24,7 +25,7 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('reports tts-only support honestly', () => {
-    (globalThis as any).window = {
+    globalObj.window = {
       speechSynthesis: {},
       SpeechSynthesisUtterance: function mockUtterance(this: Record<string, unknown>) {},
     } as unknown as Window;
@@ -35,7 +36,7 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('reports both supported with empty reason', () => {
-    (globalThis as any).window = {
+    globalObj.window = {
       speechSynthesis: {},
       SpeechSynthesisUtterance: function mockUtterance(this: Record<string, unknown>) {},
       SpeechRecognition: function mockRecognition(this: Record<string, unknown>) {},
@@ -47,7 +48,7 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('never throws in undefined window context', () => {
-    (globalThis as any).window = undefined;
+    globalObj.window = undefined;
     expect(() => detectWebSpeechCapability()).not.toThrow();
     expect(detectWebSpeechCapability().ttsSupported).toBe(false);
   });
@@ -55,14 +56,15 @@ describe('detectWebSpeechCapability', () => {
 
 describe('AudioPlaybackService fail-safe', () => {
   const originalWindow = globalThis.window;
+  const globalObj = globalThis as unknown as Record<string, unknown>;
 
   afterEach(() => {
-    (globalThis as any).window = originalWindow;
+    globalObj.window = originalWindow;
     vi.restoreAllMocks();
   });
 
   it('constructor does not crash and play() honestly fails without speechSynthesis', () => {
-    (globalThis as any).window = {} as Window;
+    globalObj.window = {} as Window;
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const svc = new AudioPlaybackService();
@@ -72,7 +74,7 @@ describe('AudioPlaybackService fail-safe', () => {
   });
 
   it('getAnalyser returns null safely when AudioContext absent', () => {
-    (globalThis as any).window = {} as Window;
+    globalObj.window = {} as Window;
     const svc = new AudioPlaybackService();
     expect(svc.getAnalyser()).toBeNull();
   });
