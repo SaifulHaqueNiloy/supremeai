@@ -36,15 +36,45 @@ class SandboxService:
         return sandbox_id
 
     def execute(self, sandbox_id: str, code: str) -> dict[str, Any]:
-        """Execute code in a sandbox (synchronous helper wrapper)."""
+        """Execute code in a sandbox (synchronous helper wrapper).
+
+        Issue #446/#448 doctrine (real work or loud failure, never fabricated
+        success): the old implementation returned a fabricated
+        ``status: SUCCESS`` with fake stdout without executing anything.
+        Real execution lives in :meth:`execute_in_docker` (requires a Docker
+        daemon); this wrapper now reports an honest NOT_EXECUTED result and
+        never claims success it did not earn.
+        """
         sandbox = self.active_sandboxes.get(sandbox_id)
         if not sandbox:
             return {"status": "FAILED", "error": "Sandbox not found"}
+        if self.client is None:
+            logger.warning(
+                "SandboxService.execute refused: Docker daemon unavailable — "
+                "code was NOT executed (honest failure, issue #446)."
+            )
+            return {
+                "status": "NOT_EXECUTED",
+                "error": "SANDBOX_RUNTIME_UNAVAILABLE",
+                "message": (
+                    "No Docker runtime is available on this instance, so the code "
+                    "was not executed. Use execute_in_docker() on a Docker-capable "
+                    "host or configure a remote sandbox provider."
+                ),
+                "sandbox_id": sandbox_id,
+            }
+        logger.warning(
+            "SandboxService.execute is a metadata-only wrapper and does not run "
+            "code — use execute_in_docker() for real execution (issue #446)."
+        )
         return {
-            "status": "SUCCESS",
-            "stdout": f"Executed code in sandbox {sandbox_id}",
-            "stderr": "",
-            "execution_time_ms": 10,
+            "status": "NOT_EXECUTED",
+            "error": "MOCK_NOT_EXECUTED",
+            "message": (
+                "This wrapper never executes code. Real execution requires "
+                "execute_in_docker() with a healthy Docker daemon."
+            ),
+            "sandbox_id": sandbox_id,
         }
 
     def destroy(self, sandbox_id: str) -> bool:

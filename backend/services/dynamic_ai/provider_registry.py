@@ -340,7 +340,17 @@ class ProviderRegistry:
             await self._check_provider_availability(config)
 
     async def _check_provider_availability(self, config: ProviderConfig):
-        """Check if a provider's API key is valid and working"""
+        """Check if a provider's API key is valid and working
+
+        Issue #438: auth rejections (401/403) from the key-validation endpoint are
+        DEFINITIVE proof the key is invalid — they now disable the provider
+        PERMANENTLY (with an actionable error message) instead of cycling through
+        DISABLED_TEMPORARY every refresh interval, which re-probed the dead key
+        every 5 minutes and logged 401s forever. refresh_status() already skips
+        DISABLED_PERMANENT providers, so the probe storm stops after the first
+        definitive rejection. Network errors and other HTTP codes keep the old
+        transient-friendly behavior.
+        """
 
         # Skip if permanently disabled
         if config.status == ProviderStatus.DISABLED_PERMANENT:
@@ -354,10 +364,13 @@ class ProviderRegistry:
 
         # Quick validation call (lightweight endpoint)
         try:
-            # Different validation methods per provider
-            is_valid = await self._validate_api_key(config)
+            # Different validation methods per provider.
+            # Contract (issue #438): _validate_api_key returns the provider's HTTP
+            # status code, or None when there is no provider-specific probe
+            # (unknown provider — assume valid if a key exists).
+            status_code = await self._validate_api_key(config)
 
-            if is_valid:
+            if status_code is None or status_code == 200:
                 # Determine status based on recent performance
                 if config.success_rate >= 80:
                     config.status = ProviderStatus.ACTIVE
@@ -365,9 +378,24 @@ class ProviderRegistry:
                     config.status = ProviderStatus.DEGRADED
                 else:
                     config.status = ProviderStatus.DEGRADED  # Give it a chance to recover
+            elif status_code in (401, 403):
+                # Definitive auth rejection — the key is invalid. Stop probing it.
+                config.status = ProviderStatus.DISABLED_PERMANENT
+                config.last_error = (
+                    f"API key rejected ({status_code}) — rotate {config.api_key_env_var} "
+                    "in the vault/env and restart to re-enable this provider"
+                )
+                config.last_error_time = time.time()
+                logger.error(
+                    "⛔ Provider %s DISABLED PERMANENTLY: API key rejected with HTTP %s. "
+                    "Fix: rotate %s. (No further probes until restart.)",
+                    config.provider_id,
+                    status_code,
+                    config.api_key_env_var,
+                )
             else:
                 config.status = ProviderStatus.DISABLED_TEMPORARY
-                config.last_error = "API key validation failed"
+                config.last_error = f"API key validation failed (HTTP {status_code})"
                 config.last_error_time = time.time()
 
         except Exception as e:
@@ -375,10 +403,16 @@ class ProviderRegistry:
             config.last_error_time = time.time()
             # Don't change status on network errors (might be transient)
 
-    async def _validate_api_key(self, config: ProviderConfig) -> bool:
+    async def _validate_api_key(self, config: ProviderConfig) -> int | None:
         """
-        Validate API key without making expensive calls
-        Returns True if key appears valid
+        Validate API key without making expensive calls.
+
+        Returns the provider's HTTP status code for the lightweight probe
+        endpoint, or None when no provider-specific probe exists (unknown
+        provider — treated as valid when a key is present).
+
+        বাংলা: হালকা এন্ডপয়েন্ট দিয়ে কী ভ্যালিডেশন — HTTP স্ট্যাটাস কোড রিটার্ন করে
+        যাতে ৪০১/৪০৩ (কী অবৈধ) ও অন্যান্য ত্রুটি আলাদা করা যায় (issue #438)।
         """
         from utils.http_client import create_async_client
 
@@ -390,7 +424,7 @@ class ProviderRegistry:
                     f"{config.base_url}/models?key={config.api_key}",
                     headers={"Content-Type": "application/json"},
                 )
-                return resp.status_code == 200
+                return resp.status_code
 
         elif config.provider_id in ["openai", "deepseek", "moonshot", "together", "nvidia", "groq"]:
             # OpenAI-compatible: Try models list
@@ -402,7 +436,7 @@ class ProviderRegistry:
                         "Content-Type": "application/json",
                     },
                 )
-                return resp.status_code == 200
+                return resp.status_code
 
         elif config.provider_id == "huggingface":
             # HF: Simple authenticated request
@@ -410,7 +444,7 @@ class ProviderRegistry:
                 resp = await client.get(
                     f"{config.base_url}", headers={"Authorization": f"Bearer {config.api_key}"}
                 )
-                return resp.status_code == 200
+                return resp.status_code
 
         elif config.provider_id == "openrouter":
             # OpenRouter: Check credits/key validity
@@ -419,10 +453,10 @@ class ProviderRegistry:
                     "https://openrouter.ai/api/v1/auth/key",
                     headers={"Authorization": f"Bearer {config.api_key}"},
                 )
-                return resp.status_code == 200
+                return resp.status_code
 
         # Unknown provider - assume valid if key exists
-        return config.api_key is not None
+        return None
 
     def get_provider(self, provider_id: str) -> ProviderConfig | None:
         """Get provider by ID"""
@@ -475,6 +509,22 @@ class ProviderRegistry:
             config.consecutive_failures += 1
             config.last_error = error
             config.last_error_time = time.time()
+
+            # Issue #438: a request-time 401/403 is definitive auth evidence —
+            # disable permanently immediately instead of burning through the
+            # 3→temporary / 10→permanent ladder (each intermediate step kept
+            # re-probing the dead key every refresh interval).
+            error_lower = str(error).lower()
+            if "api error 401" in error_lower or "api error 403" in error_lower:
+                config.status = ProviderStatus.DISABLED_PERMANENT
+                logger.error(
+                    "⛔ Provider %s DISABLED PERMANENTLY after auth error (401/403) at "
+                    "request time. Fix: rotate its API key, then restart or call "
+                    "enable_provider(). Error: %s",
+                    provider_id,
+                    str(error)[:160],
+                )
+                return
 
             # Auto-degrade after consecutive failures
             if config.consecutive_failures >= 3:

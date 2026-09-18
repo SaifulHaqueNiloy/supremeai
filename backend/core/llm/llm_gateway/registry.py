@@ -63,11 +63,20 @@ class _ProviderKeyPool:
          healthy key instead of hammering the broken one.
     """
 
-    _COOLDOWNS = {401: 300.0, 403: 300.0, 429: 60.0}
+    # Cooldown for transient errors (429) — short by design.
+    _COOLDOWN_RATE_LIMIT = 60.0
+    # Issue #438: escalating cooldown for DEFINITIVE auth errors (401/403).
+    # The old flat 300s cooldown meant a permanently-invalid key (observed:
+    # OpenRouter key 401 Unauthorized on every probe) was retried every 5
+    # minutes forever, producing an endless 401 log stream. Now each
+    # consecutive auth failure per (provider, key) escalates:
+    #   5min → 1h → 24h (cap). A successful call resets the escalation.
+    _AUTH_COOLDOWN_ESCALATION = (300.0, 3600.0, 86400.0)
 
     def __init__(self) -> None:
         self._idx: dict[str, int] = {}
         self._cooldown_until: dict[tuple[str, str], float] = {}
+        self._auth_fail_counts: dict[tuple[str, str], int] = {}
         self._lock = asyncio.Lock()
 
     @staticmethod
@@ -105,9 +114,24 @@ class _ProviderKeyPool:
     async def mark_error(self, provider: str, key: str | None, status: int) -> None:
         if not key:
             return
-        ttl = self._COOLDOWNS.get(status)
-        if ttl:
-            self._cooldown_until[(provider, key)] = time.monotonic() + ttl
+        if status in (401, 403):
+            # Definitive auth error — escalate the cooldown per consecutive failure
+            pool_key = (provider, key)
+            attempt = self._auth_fail_counts.get(pool_key, 0) + 1
+            self._auth_fail_counts[pool_key] = attempt
+            idx = min(attempt - 1, len(self._AUTH_COOLDOWN_ESCALATION) - 1)
+            ttl = self._AUTH_COOLDOWN_ESCALATION[idx]
+            self._cooldown_until[pool_key] = time.monotonic() + ttl
+            return
+        if status == 429:
+            self._cooldown_until[(provider, key)] = time.monotonic() + self._COOLDOWN_RATE_LIMIT
+
+    async def mark_success(self, provider: str, key: str | None) -> None:
+        """Reset auth-failure escalation for a key after a successful call."""
+        if not key:
+            return
+        self._auth_fail_counts.pop((provider, key), None)
+        self._cooldown_until.pop((provider, key), None)
 
 
 _provider_key_pool = _ProviderKeyPool()
