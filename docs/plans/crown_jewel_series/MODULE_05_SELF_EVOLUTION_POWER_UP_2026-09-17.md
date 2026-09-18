@@ -162,7 +162,12 @@ P-G: মৃত-উপাদান সিদ্ধান্ত    → 4.9K-লা
 ### ২.৪ কীভাবে করব (ফাইল-স্তরের দিক-নির্দেশ, প্রতিটি Phase আলাদা execution প্ল্যান)
 
 - **P-A:** `core/startup/agents.py:209` ডিফল্ট অপরিবর্তিত রেখে .env.example-এ `ENABLE_LEARNING_LOOP=true` + নথি; exploration গেট `get_adaptive_routing_enabled` সুইটেবল-ডিফল্ট true (sample-tier-এ কেবল); kill-switch অক্ষত; flag-off → আজকের আচরণ।
-- **P-B:** নতুন পাতলা apply-executor (শুধু retry-policy/fallback-reorder JSON-patch ভোকাবুলারি) — approve-endpoint-কে improvement_proposals-এ সংযুক্ত করা; CanaryManager-এ পাইপ; সাফল্যে `update_improvement_proposal_status(id,'PROMOTED')` + FitnessEngine পূর্ব/পর পরিমাপ; ব্যর্থতায় ROLLED_BACK; কার্যকোড-প্যাচ কখনোই ভোকাবুলারিতে নেই।
+- **P-B (AGENTS.md Section 3 মান্যতা: এভিডেন্স-গেটেড গভর্নড অটোনমি ও ক্যানারি পাইপলাইন):**
+  - **Self-Evolution Pipeline:** `Observation → Hypothesis → Risk Classification → Isolated GitHub Experiment → Automated Tests → Benchmark Comparison → Canary Rollout → Telemetry Check → Promote/Rollback`।
+  - **রিস্ক-টায়ার্ড অটোনমি:**
+    - *Low-risk (ডকুমেন্টেশন, টেস্ট অপ্টিমাইজেশন, মেমোরি বেঞ্চমার্ক):* পলিসি অনুযায়ী সম্পূর্ণ স্বয়ংক্রিয় এভিডেন্স গেট পাস হলে প্রমোশন।
+    - *Medium/High-risk (রাউটিং নীতি, আর্কিটেকচার, সিকিউরিটি):* কঠোর এভিডেন্স ও বেঞ্চমার্ক কম্প্যারিজন ছাড়া কোনো চেঞ্জ প্রমোট হবে না; রোলব্যাক ট্রেইল সর্বদা সংরক্ষিত থাকবে।
+  - নতুন পাতলা apply-executor (JSON-patch ভোকাবুলারি: retry-policy/fallback-reorder); CanaryManager-এ পাইপ; সাফল্যে `update_improvement_proposal_status(id,'PROMOTED')` + FitnessEngine পূর্ব/পর পরিমাপ; ব্যর্থতায় ROLLED_BACK।
 - **P-C:** `_store.py`-র degradation-শাখায় pgvector-ব্যাকএন্ড প্রাথমিক, sqlite-ফাইল গৌণ, IN-MEMORY শেষ (Graceful Degradation ক্রম উল্টানো); বিদ্যমান স্কিমা অপরিবর্তিত; রিস্টার্ট-পরবর্তী cache-hit টেস্ট। **দর্শন-সংগতি সংশোধন (এই পাস):** (১) **রেকনসিলিয়েশন-বাধ্যতা** — `_store.py`-র নিজস্ব docstring "SQLite-only-by-design store" (P0 Task 9-c2) স্পষ্ট ডিজাইন-সিদ্ধান্ত; pgvector-প্রাথমিকতা সেই সিদ্ধান্তকে উল্টায়, তাই P-C-র execution-প্লানে Gate 0-তে এই দ্বন্দ্ব সুনির্দিষ্টভাবে উল্লেখ ও নিষ্পত্তি বাধ্যতামূলক (নীরব-উল্টোদিক নয়); (২) **flag-gated, default আজকের আচরণ** — পার্সিস্টেন্স-মোড env-পঠিত (pgvector|sqlite|memory), কোডে কোনো স্থির পছন্দ নয় (zero-hardcode); (৩) **হট-পথ latency-রক্ষা** — লেখা write-behind/ব্যাচড (বিদ্যমান bounded-deque + batch-flush প্যাটার্ন), পাঠ বাউন্ডেড — ব্যবহারকারী-দৃশ্যমান বিলম্ব শূন্য-লক্ষ্য (fast-smooth)।
 - **P-D:** `unified_learning.py` + ৪ deprecated wrapper deprecation-warning → callers বিদ্যমান লুপে → অপসারণ সবশেষে; CodeProposal/improvement_proposals একত্রীকরণ-নীলনকশা (পাঠ-মাইগ্রেশন); এক fitness-সত্য (FitnessEngine canonical)।
 - **P-E:** প্রতিটি surface-এ দুই-সমাপ্তির একটি: বাস্তব (forge persist বা 501; swarm-graph CapabilityRegistry-থেকে লাইভ; ×1.15 মুছে পরিমাপ-ভিত্তিক; approve→P-B-পথ) অথবা honest-error; §7.1 fakes-এর জায়গায় fitness_snapshots থেকে পরিমিত মান বা documented deferral।
@@ -172,9 +177,10 @@ P-G: মৃত-উপাদান সিদ্ধান্ত    → 4.9K-লা
 ### ২.৫ বেনিফিট (সবই hypothesis — Gate 5-এ measured হবে)
 
 1. **ব্র্যান্ড-প্রতিশ্রুতি সত্য:** "Self-Learning" প্রথমবার এন্ড-টু-এন্ড প্রমাণযোগ্য — proposal→পরিমাপকৃত আচরণ-পরিবর্তন; Constitution #11 আচরণে সত্য।
-2. **পরিমাপ-বিহীন → পরিমাপকৃত:** লুপ-জাগরণে প্রতিদিন রোলআপ+প্রস্তাব — ফাউন্ডার দেখবেন "সিস্টেম কী শিখল" (হিউম্যান-রিডেবল প্রস্তাব-স্ট্রিম)।
-3. **স্থায়িত্ব-লাভ (P-C):** রিস্টার্ট-পরও semantic-cache ও অভিজ্ঞতা টিকবে — খরচ-সাশ্রয় ও ধারাবাহিক মান (hypothesis: cache-hit-rate উল্লেখযোগ্য বৃদ্ধি)।
-4. **নিরাপত্তা-মডেল প্রমাণ:** সংকুচিত ভোকাবুলারি+canary = বিশ্বকে দেখানোর মতো নিরাপদ self-improvement-গল্প — বিক্রয়-বিন্দু।
+2. **এভিডেন্স-গেটেড অটোনমি (P-B):** কোনো অন্ধ সেলফ-মডিফিকেশন নয়; প্রতিটি পরিবর্তন টেস্ট, বেঞ্চমার্ক এবং ক্যানারি এভিডেন্স দ্বারা সুরক্ষিত।
+3. **পরিমাপ-বিহীন → পরিমাপকৃত:** লুপ-জাগরণে প্রতিদিন রোলআপ+প্রস্তাব — ফাউন্ডার দেখবেন "সিস্টেম কী শিখল" (হিউম্যান-রিডেবল প্রস্তাব-স্ট্রিম)।
+4. **স্থায়িত্ব-লাভ (P-C):** রিস্টার্ট-পরও semantic-cache ও অভিজ্ঞতা টিকবে — খরচ-সাশ্রয় ও ধারাবাহিক মান (hypothesis: cache-hit-rate উল্লেখযোগ্য বৃদ্ধি)।
+5. **নিরাপত্তা-মডেল প্রমাণ:** সংকুচিত ভোকাবুলারি+canary = বিশ্বকে দেখানোর মতো নিরাপদ self-improvement-গল্প — বিক্রয়-বিন্দু।
 5. **আস্থা (P-E):** evolution-পণ্যের মিথ্যা শূন্য — L3-দর্শনের সমাপ্তি।
 6. **রক্ষণ-হ্রাস (P-D/G):** ~5.6K+ লাইন মৃত/ডুপ্লিকেট-লুপের সিদ্ধান্ত-স্পষ্টতা।
 
