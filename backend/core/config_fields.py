@@ -285,9 +285,7 @@ class SettingsFieldsMixin:
     # বাংলা মন্তব্য (M13 P-B): acquire() কলার limit/window না দিলে এই ডিফল্ট
     # (আগে ফাংশন-বডিতে স্থির 100/60)।
     rate_limit_default_limit: int = Field(default=100, validation_alias="RATE_LIMIT_DEFAULT_LIMIT")
-    rate_limit_default_window: int = Field(
-        default=60, validation_alias="RATE_LIMIT_DEFAULT_WINDOW"
-    )
+    rate_limit_default_window: int = Field(default=60, validation_alias="RATE_LIMIT_DEFAULT_WINDOW")
     # বাংলা মন্তব্য (M13 P-B): near-limit warning ratio — আগে 0.8 স্থির।
     rate_limit_warn_ratio: float = Field(default=0.8, validation_alias="RATE_LIMIT_WARN_RATIO")
     # বাংলা মন্তব্য (M13 P-B): টেন্যান্ট রেট-সীমা — আগে tenant_rate_limiter.py-তে

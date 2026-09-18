@@ -261,11 +261,7 @@ Provide a helpful, detailed answer based on the available information.""",
         result = await llm_gateway.acompletion(
             prompt=prompt,
             context=InferenceContext(
-                tenant_id=str(
-                    admin_user.get("tenant_id")
-                    or admin_user.get("sub")
-                    or "anonymous"
-                ),
+                tenant_id=str(admin_user.get("tenant_id") or admin_user.get("sub") or "anonymous"),
                 task_type="browser_ai_action",
                 stream=False,
             ),

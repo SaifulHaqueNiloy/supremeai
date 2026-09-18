@@ -1542,8 +1542,28 @@
     {
       "evidence": [
         {
+          "line": 188,
+          "path": "backend/api/routes/scheduled_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 28,
           "path": "backend/api/routes/task.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/api/routes/task_workspace.py"
         }
       ],
       "source": "execution",
@@ -1612,7 +1632,7 @@
     {
       "evidence": [
         {
-          "line": 82,
+          "line": 90,
           "path": "backend/api/routes/task_workspace.py"
         }
       ],
@@ -1922,7 +1942,7 @@
     {
       "evidence": [
         {
-          "line": 6,
+          "line": 7,
           "path": "backend/api/routes/task_workspace.py"
         }
       ],
@@ -3102,6 +3122,26 @@
     {
       "evidence": [
         {
+          "line": 27,
+          "path": "backend/api/routes/browser_routes.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 165,
+          "path": "backend/api/routes/deep_research.py"
+        }
+      ],
+      "source": "research",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 13,
           "path": "backend/browser/autonomous_browser.py"
         }
@@ -3332,7 +3372,7 @@
     {
       "evidence": [
         {
-          "line": 198,
+          "line": 203,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3392,7 +3432,7 @@
     {
       "evidence": [
         {
-          "line": 637,
+          "line": 649,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3402,7 +3442,7 @@
     {
       "evidence": [
         {
-          "line": 692,
+          "line": 704,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3412,7 +3452,7 @@
     {
       "evidence": [
         {
-          "line": 837,
+          "line": 849,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3422,7 +3462,7 @@
     {
       "evidence": [
         {
-          "line": 278,
+          "line": 283,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3432,7 +3472,7 @@
     {
       "evidence": [
         {
-          "line": 544,
+          "line": 549,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3492,7 +3532,7 @@
     {
       "evidence": [
         {
-          "line": 27,
+          "line": 28,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3522,7 +3562,7 @@
     {
       "evidence": [
         {
-          "line": 323,
+          "line": 328,
           "path": "backend/api/routes/deep_research.py"
         }
       ],
@@ -3792,7 +3832,7 @@
     {
       "evidence": [
         {
-          "line": 49,
+          "line": 50,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3802,7 +3842,7 @@
     {
       "evidence": [
         {
-          "line": 338,
+          "line": 350,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3812,7 +3852,7 @@
     {
       "evidence": [
         {
-          "line": 814,
+          "line": 826,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3822,7 +3862,7 @@
     {
       "evidence": [
         {
-          "line": 815,
+          "line": 827,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],

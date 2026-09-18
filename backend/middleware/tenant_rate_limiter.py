@@ -69,17 +69,13 @@ def _degraded_response(identity: str, mode: str) -> None:
             detail="Rate limiter unavailable — request rejected (fail-closed policy).",
         )
     if mode == "fallback":
-        allowed = _tenant_fallback_limiter.is_allowed(
-            identity, settings.tenant_rate_limit_max_hits
-        )
+        allowed = _tenant_fallback_limiter.is_allowed(identity, settings.tenant_rate_limit_max_hits)
         logger.warning(
             f"⚠️ Tenant rate limiter Redis unavailable — bounded in-memory fallback "
             f"active for {identity} (per-instance, NOT aggregate-safe). allowed={allowed}"
         )
         if not allowed:
-            raise HTTPException(
-                status_code=429, detail="Too Many Requests. Rate limit exceeded."
-            )
+            raise HTTPException(status_code=429, detail="Too Many Requests. Rate limit exceeded.")
         return
     # mode == "open" (ডিফল্ট): আজকের আচরণ — loud লগ + bypass।
     logger.warning(

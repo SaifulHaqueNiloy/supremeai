@@ -25,9 +25,6 @@ from core.error_bus import with_error_bus
 from core.llm.telemetry import track_llm_call
 from core.logging_config import logger
 
-from .context import InferenceContext
-from .errors import GatewayError
-
 from ...config import settings  # Fixed import path - using relative import
 from ...cost_guard import CostGuard  # Fixed import path - using relative import
 from ...health.self_healer import (
@@ -44,6 +41,8 @@ from ...prompt_handler import (
     normalize_prompt,  # Fixed import path - using relative import
 )
 from ..interfaces import ExecutionMode
+from .context import InferenceContext
+from .errors import GatewayError
 from .registry import _provider_key_pool, _resolve_litellm_target
 from .spend_meter import settle_gateway_spend
 
@@ -106,9 +105,7 @@ class CompletionMixin:
                 tenant_id = context.tenant_id
             if context.tier:
                 tier = context.tier
-            logger.info(
-                f"[LLMGateway] inference-context: {context.to_log_fields()}"
-            )
+            logger.info(f"[LLMGateway] inference-context: {context.to_log_fields()}")
 
         if messages is not None and prompt is None:
             prompt = messages

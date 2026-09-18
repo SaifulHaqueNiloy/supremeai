@@ -85,10 +85,22 @@ class AsyncRateLimiter:
         # M13 P-B (zero-hardcode): tier-সীমা এখন config-চালিত — ডিফল্ট অপরিবর্তিত
         # (free 60 / pro 600 / premium 1200 / enterprise 6000 প্রতি window)।
         self._tier_limits = {
-            "free": {"requests": settings.rate_limit_tier_free, "window": settings.rate_limit_tier_window_seconds},
-            "pro": {"requests": settings.rate_limit_tier_pro, "window": settings.rate_limit_tier_window_seconds},
-            "premium": {"requests": settings.rate_limit_tier_premium, "window": settings.rate_limit_tier_window_seconds},
-            "enterprise": {"requests": settings.rate_limit_tier_enterprise, "window": settings.rate_limit_tier_window_seconds},
+            "free": {
+                "requests": settings.rate_limit_tier_free,
+                "window": settings.rate_limit_tier_window_seconds,
+            },
+            "pro": {
+                "requests": settings.rate_limit_tier_pro,
+                "window": settings.rate_limit_tier_window_seconds,
+            },
+            "premium": {
+                "requests": settings.rate_limit_tier_premium,
+                "window": settings.rate_limit_tier_window_seconds,
+            },
+            "enterprise": {
+                "requests": settings.rate_limit_tier_enterprise,
+                "window": settings.rate_limit_tier_window_seconds,
+            },
         }
 
     async def _get_redis(self):
