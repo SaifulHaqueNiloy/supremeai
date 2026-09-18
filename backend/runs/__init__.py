@@ -41,6 +41,15 @@ from runs.state_machine import (
     assert_transition,
     is_terminal,
 )
+from runs.stategraph import (
+    END,
+    START,
+    CompiledGraph,
+    NodeExecutionError,
+    RecursionLimitExceeded,
+    StateGraph,
+    StateGraphError,
+)
 
 __all__ = [
     "Run",
@@ -65,4 +74,12 @@ __all__ = [
     "IllegalTransition",
     "assert_transition",
     "is_terminal",
+    # stategraph
+    "StateGraph",
+    "CompiledGraph",
+    "StateGraphError",
+    "RecursionLimitExceeded",
+    "NodeExecutionError",
+    "END",
+    "START",
 ]

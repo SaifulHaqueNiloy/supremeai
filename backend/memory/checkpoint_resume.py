@@ -27,3 +27,16 @@ class CheckpointResume:
 
     def clear(self, task_id: str):
         return self.manager.clear(task_id)
+
+    def save_graph_state(self, run_id: str, node: str, state: dict, step_index: int = 0):
+        """Save graph execution snapshot keyed by run_id and active node."""
+        snapshot = dict(state)
+        snapshot["__current_node__"] = node
+        return self.save(task_id=run_id, step_index=step_index, state=snapshot)
+
+    def load_graph_state(self, run_id: str) -> dict | None:
+        """Load graph execution snapshot for a given run_id."""
+        res = self.load(task_id=run_id)
+        if not res:
+            return None
+        return res.get("state")
