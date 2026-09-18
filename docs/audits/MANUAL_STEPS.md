@@ -17,7 +17,7 @@
 | 3 | Set `CLOUDFLARE_API_TOKEN` | Render → mcp-tower → Environment | Edge health is `unconfigured` (not probeable) without it |
 | 4 | Memory-engine runtime | Tower host | Tower has no Python/`uv` runtime → `memory_*` tools return ENOENT (console is local-first, unaffected) |
 | 5 | Backend tenant-admin isolation test deep-dive | Needs CI postgres env | `test_unauthenticated_request_rejected_without_bypass` fails only in conftest context (passes standalone) |
-| 6 | ~~Reset or Upgrade Upstash Redis Quota (Issue #437)~~ **✅ RESOLVED (2026-09-19)** | Upstash Dashboard → Database Console | Re-provisioned fresh database with eviction enabled; updated in Infisical prod vault, .env, and verified live with PING/SET/GET. Quota restored to 500k. |
+| 6 | ~~Reset or Upgrade Upstash Redis Quota (Issue #437)~~ **✅ RESOLVED (2026-09-19)** | Upstash Dashboard → Database Console | Provisioned 5-Node Distributed Upstash Federation Pool (2.5M ops/mo across 5 isolated accounts with eviction enabled in ap-southeast-1). All credentials verified live & synced into Infisical prod vault + .env. Tracked in Issue #460. |
 | 7 | Rotate `OPENROUTER_API_KEY` (Issue #438) | Infisical Vault / Render Environment Dashboard | Key returned 401 Unauthorized; provider quarantined by escalating cooldown until a valid key is provisioned |
 | 8 | Provision Cloud Sandbox Provider Key (`E2B_API_KEY` / `RUNPOD_API_KEY`) (Issue #448) | Infisical Vault / Render Environment Dashboard | Sandbox API fails closed (503) without local docker in prod; requires cloud sandbox key for live execution |
 
