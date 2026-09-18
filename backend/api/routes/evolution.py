@@ -416,18 +416,57 @@ async def approve_proposal(
 
 
 # 🛑 ZERO-GAP: Swarm Forge API Endpoints
-# বাংলা মন্তব্য: ফ্রন্টএন্ড EvolutionForge পেজের সেভ এবং এক্সিকিউট রিকোয়েস্ট হ্যান্ডেল করার জন্য এন্ডপয়েন্ট যোগ করা হলো।
+# বাংলা মন্তব্য: ফ্রন্টএন্ড EvolutionForge পেজের সেভ এবং এক্সিকিউট রিকোয়েস্ট হ্যান্ডেল করার জন্য এন্ডপয়েন্ট যোগ করা হলো।
+
+# Issue #446: blueprint persistence root. The old save endpoint returned a
+# fabricated success WITHOUT writing anything anywhere (flow_id was just a
+# timestamp; execute accepted any id and also fabricated success). Blueprints
+# are now really persisted under data/swarm_blueprints/ as JSON files.
+_BLUEPRINT_DIR = Path("data") / "swarm_blueprints"
+
+
+def _blueprint_path(flow_id: str) -> Path:
+    """Sanitized on-disk path for a blueprint id (id is validated, not trusted)."""
+    safe = "".join(ch for ch in flow_id if ch.isalnum() or ch in "-_")
+    if not safe or safe != flow_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid flow_id format (allowed: alphanumerics, dash, underscore)",
+        )
+    return _BLUEPRINT_DIR / f"{safe}.json"
+
+
 @router.post("/swarm/forge")
 async def save_swarm_blueprint(payload: dict):
     """
-    Save swarm blueprint configuration.
+    Save swarm blueprint configuration to persistent storage (real, not fabricated).
+
+    বাংলা: ব্লুপ্রিন্ট এখন সত্যিই data/swarm_blueprints/ ফোল্ডারে JSON হিসেবে
+    সেভ হয় — আগে কোনো সেভই হত না, শুধু ফাঁকি সাকসেস রিটার্ন হত (issue #446)।
     """
-    logger.info(f"Saving swarm blueprint: {payload.get('name')}")
-    # বাংলা: আপাতত সাকসেস রেসপন্স রিটার্ন করছি
+    name = str(payload.get("name") or "").strip()
+    if not name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Blueprint 'name' is required",
+        )
+    _BLUEPRINT_DIR.mkdir(parents=True, exist_ok=True)
+    flow_id = f"flow_{int(time.time() * 1000)}_{secrets.token_hex(3)}"
+    record = {
+        "flow_id": flow_id,
+        "name": name,
+        "saved_at": datetime.now(UTC).isoformat(),
+        "blueprint": payload,
+    }
+    path = _blueprint_path(flow_id)
+    path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    logger.info(f"Swarm blueprint persisted: {flow_id} ({name}) -> {path}")
     return {
         "status": "success",
-        "message": "Swarm blueprint saved successfully",
-        "flow_id": "flow_" + str(int(time.time())),
+        "message": "Swarm blueprint saved to persistent storage",
+        "flow_id": flow_id,
+        "persisted": True,
+        "path": str(path),
     }
 
 
@@ -435,12 +474,40 @@ async def save_swarm_blueprint(payload: dict):
 async def execute_swarm_blueprint(flow_id: str, payload: dict | None = None):
     """
     Trigger execution of a saved swarm blueprint.
+
+    বাংলা: ব্লুপ্রিন্ট লোড ও ভ্যালিডেশন সত্যিই হয়; কিন্তু এক্সিকিউশন ইঞ্জিন
+    এখনো ইমপ্লিমেন্ট হয়নি — তাই এটি সৎভাবে 501 NOT_IMPLEMENTED রিটার্ন করে।
+    আগের "executed successfully" ছিল সম্পূর্ণ বানানো (issue #446)।
     """
-    logger.info(f"Executing swarm blueprint flow: {flow_id}")
-    return {
-        "status": "success",
-        "message": f"Swarm blueprint flow {flow_id} executed successfully",
-    }
+    path = _blueprint_path(flow_id)
+    if not path.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Swarm blueprint '{flow_id}' not found. Save it first via POST /swarm/forge.",
+        )
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Saved blueprint '{flow_id}' is unreadable: {exc}",
+        ) from exc
+
+    # The blueprint is real and validated; the execution engine is not built yet.
+    # Loud, honest 501 — never a fabricated "executed successfully".
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail={
+            "error": "SWARM_EXECUTION_NOT_IMPLEMENTED",
+            "message": (
+                "The blueprint was loaded and validated, but the swarm execution "
+                "engine has not been implemented yet — nothing was executed. "
+                "Track: GitHub issue #446."
+            ),
+            "flow_id": flow_id,
+            "blueprint_name": record.get("name"),
+        },
+    )
 
 
 # --- Extended Breeder & Oracle Routes ---

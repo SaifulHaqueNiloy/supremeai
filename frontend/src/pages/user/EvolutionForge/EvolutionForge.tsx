@@ -65,6 +65,7 @@ const EvolutionForgeCanvas = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [lastFlowId, setLastFlowId] = useState<string | null>(null);
   const [isDebateOpen, setIsDebateOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [debateLogs, setDebateLogs] = useState<any[]>([]);
@@ -234,9 +235,20 @@ const EvolutionForgeCanvas = () => {
       setIsSaving(true);
       const payload = buildForgePayload(`Swarm_${Date.now()}`, toObject());
 
-      await apiClient.post('/api/v1/swarm/forge', payload);
+      // Issue #446: real persistence endpoint (the old '/api/v1/swarm/forge' path never existed -> 404).
+      const saved = await apiClient.post<{ flow_id?: string; persisted?: boolean }>(
+        '/api/v1/evolution/swarm/forge',
+        payload,
+      );
+      const flowId = saved?.flow_id ?? null;
+      setLastFlowId(flowId);
 
-      showToast('success', 'Swarm blueprint saved successfully! 🚀');
+      showToast(
+        'success',
+        flowId
+          ? `Swarm blueprint saved (id: ${flowId}) ✅`
+          : 'Swarm blueprint saved ✅',
+      );
 
       if (payload.nodes && payload.nodes.length > 0) {
         eventBus.emit(Events.SKILL_AUTO_CREATED, {
@@ -265,20 +277,27 @@ const EvolutionForgeCanvas = () => {
       return;
     }
 
+    if (!lastFlowId) {
+      showToast('error', 'Save the blueprint first — execution needs a saved flow id.');
+      return;
+    }
+
     try {
       setIsExecuting(true);
-      const payload = buildForgePayload(`Swarm_${Date.now()}`, toObject());
-
-      await apiClient.post('/api/v1/evolution/forge', {
-        ...payload,
-        action: 'execute',
-      });
-
-      showToast('success', 'Swarm execution started successfully! 🚀 Check Swarm Health Dashboard for live telemetry.');
+      // Issue #446: real execute endpoint. Backend validates the saved blueprint;
+      // if the execution engine is not yet implemented it answers with an honest
+      // 501 SWARM_EXECUTION_NOT_IMPLEMENTED instead of a fabricated success.
+      await apiClient.post(`/api/v1/evolution/swarm/forge/${encodeURIComponent(lastFlowId)}/execute`);
+      showToast('success', 'Swarm execution started! 🚀');
     } catch (error: unknown) {
       console.error('Execution failed', error);
-      const err = error as { response?: { data?: { detail?: string } }; message?: string };
-      showToast('error', `Failed to execute swarm: ${err?.response?.data?.detail || err?.message || 'Unknown error'}`);
+      const err = error as { response?: { data?: { detail?: string | { message?: string } } }; message?: string };
+      const detail = err?.response?.data?.detail;
+      const msg =
+        typeof detail === 'string'
+          ? detail
+          : detail?.message || err?.message || 'Unknown error';
+      showToast('error', `Swarm execution unavailable: ${msg}`);
     } finally {
       setIsExecuting(false);
     }
