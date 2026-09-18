@@ -417,5 +417,24 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ ai_memory retention agent failed to start: {exc}")
 
+    # Agent: Scheduled-task sweep (M22 P-A, issue #453 Wave 1) — S10-store-এর
+    # জমানো due টাস্ক বাস্তবে চালানোর executor-লুপ।
+    # বাংলা: S11 Scheduled Tasks ব্যবহারকারী-মুখী ফিচার — ব্যবহারকারী "টাস্ক চলবেই"
+    # বোঝেন; তাই এটি env-gated নয় (env-gate = ভুয়া ফিচার-প্রতিশ্রুতি)। DB অনুপস্থিতে
+    # লুপ সৎভাবে idle থাকে (throttled সতর্কতা), বাকি agent-দের ব্যর্থ করে না।
+    try:
+        from core.scheduled_task_sweep import run_due_task_sweep_loop
+
+        await agent_supervisor.start_agent(
+            "scheduled-task-sweep",
+            run_due_task_sweep_loop,
+            health_check_interval=300,
+            max_restarts=5,
+            restart_delay=10.0,
+        )
+        logger.info("✅ Scheduled-task sweep agent started (due-task execution loop).")
+    except Exception as exc:
+        logger.warning(f"⚠️ Scheduled-task sweep failed to start: {exc}")
+
     # Start the agent health monitor
     await agent_supervisor.start_monitor(check_interval=30)

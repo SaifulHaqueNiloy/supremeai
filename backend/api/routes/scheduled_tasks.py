@@ -199,6 +199,99 @@ async def _execute_task_prompt(prompt: str, user_id: str) -> str:
         raise RuntimeError(f"LLM execution failed: {exc}") from exc
 
 
+async def execute_task_and_record(task: dict[str, Any], user_id: str) -> dict[str, Any]:
+    """Execute a task's prompt through the manual-run safe path and record the outcome.
+
+    বাংলা মন্তব্য (M22 P-A): manual-run endpoint আর AgentSupervisor due-sweep একই
+    নির্বাহ-পথ ভাগ করে — execution record তৈরি → LLM নির্বাহ → ফল সৎভাবে লেখা
+    (সফলতা/ব্যর্থতা + প্রকৃত error টেক্সট) → last_run_* আপডেট → conversation
+    append। কোনো ব্যর্থতা নীরবে গিলে ফেলা হয় না; error টেক্সট ডাটাবেজেই থাকে।
+    """
+    task_id = task["id"]
+
+    # Create execution record
+    now = datetime.now(UTC).isoformat()
+    exec_row = {
+        "task_id": task_id,
+        "status": "running",
+        "started_at": now,
+    }
+    exec_resp = await supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
+    exec_id = exec_resp.data[0]["id"] if exec_resp.data else str(uuid.uuid4())
+
+    # Execute prompt — failures are recorded honestly, never swallowed
+    result_text = ""
+    status = "success"
+    error_text = None
+    try:
+        result_text = await _execute_task_prompt(task["prompt"], user_id)
+    except Exception as run_exc:
+        status = "failed"
+        error_text = str(run_exc)
+        logger.error(f"Task {task_id} execution failed: {run_exc}")
+
+    completed_at = datetime.now(UTC).isoformat()
+
+    # Update execution record
+    await (
+        supabase_db.client.table("scheduled_task_executions")
+        .update(
+            {
+                "status": status,
+                "result": result_text[:5000] if result_text else None,
+                "error": error_text[:2000] if error_text else None,
+                "completed_at": completed_at,
+            }
+        )
+        .eq("id", exec_id)
+        .execute()
+    )
+
+    # Update task's last_run fields
+    await (
+        supabase_db.client.table("scheduled_tasks")
+        .update(
+            {
+                "last_run_at": completed_at,
+                "last_run_status": status,
+                "updated_at": completed_at,
+            }
+        )
+        .eq("id", task_id)
+        .execute()
+    )
+
+    # Optionally append result as a message to the linked conversation
+    if task.get("conversation_id") and result_text:
+        try:
+            await (
+                supabase_db.client.table("messages")
+                .insert(
+                    {
+                        "conversation_id": task["conversation_id"],
+                        "role": "assistant",
+                        "content": f"[Scheduled Task: {task['title']}]\n\n{result_text}",
+                    }
+                )
+                .execute()
+            )
+        except Exception as msg_exc:
+            # বাংলা মন্তব্য: conversation-append ঐচ্ছিক পরিণতি — মূল নির্বাহ-ফল
+            # ইতোমধ্যেই execution record-এ সৎভাবে সংরক্ষিত; এখানে ব্যর্থতা চিৎকার
+            # করে লগ হয় কিন্তু নির্বাহ-ফলাফল পাল্টায় না।
+            logger.warning(f"Failed to append task result to conversation: {msg_exc}")
+
+    return {
+        "execution_id": exec_id,
+        "task_id": task_id,
+        "status": status,
+        "result": result_text[:2000] if result_text else None,
+        "error": error_text,
+        "started_at": now,
+        "completed_at": completed_at,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -495,86 +588,9 @@ async def run_scheduled_task(
             raise HTTPException(status_code=404, detail="Scheduled task not found.")
         task = task_resp.data[0]
 
-        # Create execution record
-        now = datetime.now(UTC).isoformat()
-        exec_row = {
-            "task_id": task_id,
-            "status": "running",
-            "started_at": now,
-        }
-        exec_resp = (
-            await supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
-        )
-        exec_id = exec_resp.data[0]["id"] if exec_resp.data else str(uuid.uuid4())
-
-        # Execute prompt
-        result_text = ""
-        status = "success"
-        error_text = None
-        try:
-            result_text = await _execute_task_prompt(task["prompt"], user_id)
-        except Exception as run_exc:
-            status = "failed"
-            error_text = str(run_exc)
-            logger.error(f"Task {task_id} execution failed: {run_exc}")
-
-        completed_at = datetime.now(UTC).isoformat()
-
-        # Update execution record
-        await (
-            supabase_db.client.table("scheduled_task_executions")
-            .update(
-                {
-                    "status": status,
-                    "result": result_text[:5000] if result_text else None,
-                    "error": error_text[:2000] if error_text else None,
-                    "completed_at": completed_at,
-                }
-            )
-            .eq("id", exec_id)
-            .execute()
-        )
-
-        # Update task's last_run fields
-        await (
-            supabase_db.client.table("scheduled_tasks")
-            .update(
-                {
-                    "last_run_at": completed_at,
-                    "last_run_status": status,
-                    "updated_at": completed_at,
-                }
-            )
-            .eq("id", task_id)
-            .execute()
-        )
-
-        # Optionally append result as a message to the linked conversation
-        if task.get("conversation_id") and result_text:
-            try:
-                await (
-                    supabase_db.client.table("messages")
-                    .insert(
-                        {
-                            "conversation_id": task["conversation_id"],
-                            "role": "assistant",
-                            "content": f"[Scheduled Task: {task['title']}]\n\n{result_text}",
-                        }
-                    )
-                    .execute()
-                )
-            except Exception as msg_exc:
-                logger.warning(f"Failed to append task result to conversation: {msg_exc}")
-
-        return {
-            "execution_id": exec_id,
-            "task_id": task_id,
-            "status": status,
-            "result": result_text[:2000] if result_text else None,
-            "error": error_text,
-            "started_at": now,
-            "completed_at": completed_at,
-        }
+        # M22 P-A: manual-run ও due-sweep এখন একই শেয়ার্ড নির্বাহ-পথ ব্যবহার করে —
+        # ফলে ইতিহাস-রেকর্ড, last_run_* এবং conversation-append-এর অর্থ দুই পথে এক।
+        return await execute_task_and_record(task, user_id)
     except HTTPException:
         raise
     except Exception as exc:
