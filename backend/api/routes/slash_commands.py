@@ -17,6 +17,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from api.deps import get_current_user_token
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 
 router = APIRouter(
@@ -263,7 +264,13 @@ async def _handle_research(args: dict[str, Any], user_id: str) -> dict[str, Any]
             f"actionable insights, and recommended next steps."
         )
 
-        response = await llm_gateway.acompletion(prompt=prompt, task_type="research", stream=False)
+        # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — user_id টেন্যান্ট অ্যাট্রিবিউশন।
+        response = await llm_gateway.acompletion(
+            prompt=prompt,
+            context=InferenceContext(
+                tenant_id=user_id or "anonymous", task_type="research", stream=False
+            ),
+        )
         summary = response.get("text", "") if isinstance(response, dict) else str(response)
     except Exception as e:
         logger.warning(f"LLM research synthesis failed: {e}")
@@ -328,7 +335,11 @@ async def _handle_summarize(args: dict[str, Any], user_id: str) -> dict[str, Any
             f"decisions made, and any action items:\n\n{conversation_text}"
         )
         response = await llm_gateway.acompletion(
-            prompt=prompt, task_type="summarization", stream=False
+            prompt=prompt,
+            # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — সৎ অ্যাট্রিবিউশন।
+            context=InferenceContext(
+                tenant_id=user_id or "anonymous", task_type="summarization", stream=False
+            ),
         )
         summary = response.get("text", "") if isinstance(response, dict) else str(response)
     except Exception as e:
@@ -391,7 +402,11 @@ async def _handle_translate(args: dict[str, Any], user_id: str) -> dict[str, Any
             f"Only provide the translated text, nothing else:\n\n{text}"
         )
         response = await llm_gateway.acompletion(
-            prompt=prompt, task_type="translation", stream=False
+            prompt=prompt,
+            # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — সৎ অ্যাট্রিবিউশন।
+            context=InferenceContext(
+                tenant_id=user_id or "anonymous", task_type="translation", stream=False
+            ),
         )
         translated = response.get("text", "") if isinstance(response, dict) else str(response)
     except Exception as e:

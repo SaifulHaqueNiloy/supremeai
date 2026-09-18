@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query, Request, WebSocket, WebSocketDisconnect, s
 
 from core.automation.models import ExecutionEnvelope
 from core.llm.llm_gateway import llm_gateway
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 from core.prompt_handler import (
     COMPACTION_BLOCK_LABEL,
@@ -60,7 +61,14 @@ JSON:"""
 
         try:
             response = await llm_gateway.acompletion(
-                prompt=analysis_prompt, task_type="analysis", stream=False
+                # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — preference-analysis
+                # খরচও টেন্যান্টে অ্যাট্রিবিউটেড।
+                prompt=analysis_prompt,
+                context=InferenceContext(
+                    tenant_id=str(user_id) if user_id else "anonymous",
+                    task_type="analysis",
+                    stream=False,
+                ),
             )
             text = response.get("text", "{}") if isinstance(response, dict) else str(response)
 
@@ -597,7 +605,14 @@ async def websocket_chat_endpoint(
                 ]
 
                 response_stream = await llm_gateway.acompletion(
-                    prompt=messages_payload, task_type="chat", stream=True
+                    prompt=messages_payload,
+                    # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — ws-চ্যাট স্ট্রিমও
+                    # টেন্যান্টে অ্যাট্রিবিউটেড (auth গেট tenant গ্যারান্টি দেয়)।
+                    context=InferenceContext(
+                        tenant_id=str(tenant_id or user_id or "anonymous"),
+                        task_type="chat",
+                        stream=True,
+                    ),
                 )
 
                 response_content = ""

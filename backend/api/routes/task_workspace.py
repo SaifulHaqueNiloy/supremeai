@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_user_token
 from core.llm.llm_gateway import llm_gateway
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 
 router = APIRouter(prefix="/workspace/task", tags=["Supreme Workspace Tasks"])
@@ -71,7 +72,14 @@ async def execute_task(
         # ৩. Generate AI Response
         # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
         response = await llm_gateway.acompletion(
-            prompt=messages_payload, task_type=payload.task_type, stream=False
+            prompt=messages_payload,
+            # M03 P0-পূর্ণাংশ: InferenceContext বাধ্যতামূলক — token 'sub' টেন্যান্ট
+            # অ্যাট্রিবিউশন (আগে কোনো tenant_id যেত না → CostGuard বাইপাসড)।
+            context=InferenceContext(
+                tenant_id=str(_tenant_id),
+                task_type=payload.task_type,
+                stream=False,
+            ),
         )
         result_text = response.get("text", "") if isinstance(response, dict) else str(response)
 

@@ -25,6 +25,9 @@ from core.error_bus import with_error_bus
 from core.llm.telemetry import track_llm_call
 from core.logging_config import logger
 
+from .context import InferenceContext
+from .errors import GatewayError
+
 from ...config import settings  # Fixed import path - using relative import
 from ...cost_guard import CostGuard  # Fixed import path - using relative import
 from ...health.self_healer import (
@@ -67,14 +70,45 @@ class CompletionMixin:
         provider: str | None = None,
         tenant_id: str | None = None,
         tier: str | None = None,
+        context: InferenceContext | None = None,
         **kwargs,
     ) -> Any:
-        """বাংলা মন্তব্ব: Main async completion interface।"""
+        """বাংলা মন্তব্ব: Main async completion interface।
+
+        M03 P0-পূর্ণাংশ: serving route-গুলো ``context=InferenceContext(...)``
+        বাধ্যতামূলকভাবে পাস করে (scripts/ci/check_gateway_context.py ratchet) —
+        টেন্যান্ট/টাস্ক/টিয়ার/ট্রেস অ্যাট্রিবিউশন এখন এক-কাঠামোয় আসে, ফলে
+        CostGuard-বাইপাসড অদৃশ্য-খরচ পথ কাঠামোগতভাবে বন্ধ।
+        """
         import asyncio
 
         self._ensure_litellm_ready()
 
         import litellm  # lazy import
+
+        # বাংলা মন্তব্য: context এলে সেটিই একক-সত্যের উৎস — attribution-যাচাই
+        # ব্যর্থ হলে fail-closed লাউড এরর (নীরব অজানা-টেন্যান্ট খরচ নিষিদ্ধ)।
+        if context is not None:
+            attribution_errors = context.validate_attribution()
+            if attribution_errors:
+                raise GatewayError(
+                    f"InferenceContext attribution contract violation: {attribution_errors}"
+                )
+            if context.prompt is not None:
+                prompt = context.prompt
+            elif context.messages is not None:
+                messages = list(context.messages)
+                if prompt is None:
+                    prompt = messages
+            task_type = context.task_type
+            stream = context.stream
+            if context.tenant_id and context.tenant_id != "anonymous":
+                tenant_id = context.tenant_id
+            if context.tier:
+                tier = context.tier
+            logger.info(
+                f"[LLMGateway] inference-context: {context.to_log_fields()}"
+            )
 
         if messages is not None and prompt is None:
             prompt = messages

@@ -9,6 +9,7 @@ from context_engine import ContextBlock, ContextEngine, Section
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
 from core.llm.llm_gateway import llm_gateway
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 from core.orchestration.conversation_orchestrator import (
     ConversationCommand,
@@ -235,9 +236,13 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                 # খরচ অদৃশ্য থাকত)।
                 response = await llm_gateway.acompletion(
                     prompt=enriched_prompt,
-                    task_type="chat",
-                    stream=False,
-                    tenant_id=str(db.tenant_id) if db.tenant_id else None,
+                    # M03 P0-পূর্ণাংশ: InferenceContext বাধ্যতামূলক — টেন্যান্ট/
+                    # টাস্ক অ্যাট্রিবিউশন এক-কাঠামোয় (M16 P-A spend feed এই পথেই)।
+                    context=InferenceContext(
+                        tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
+                        task_type="chat",
+                        stream=False,
+                    ),
                 )
                 await main_llm_circuit.record_success()
                 response_text = (
@@ -398,9 +403,13 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                     # পথের সাথে একই metering parity।
                     response_stream = await llm_gateway.acompletion(
                         prompt=enriched_prompt,
-                        task_type="chat",
-                        stream=True,
-                        tenant_id=str(db.tenant_id) if db.tenant_id else None,
+                        # M03 P0-পূর্ণাংশ: streaming পথেও context বাধ্যতামূলক —
+                        # non-streaming-এর সাথে একই attribution parity।
+                        context=InferenceContext(
+                            tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
+                            task_type="chat",
+                            stream=True,
+                        ),
                     )
 
                     import json

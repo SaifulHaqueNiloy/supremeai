@@ -65,6 +65,25 @@ class InferenceContext:
             errors.append("max_latency_seconds must be positive")
         return errors
 
+    def validate_attribution(self) -> list[str]:
+        """M03 P0-পূর্ণাংশ: attribution-only ব্যবহারের যাচাই (payload ঐচ্ছিক)।
+
+        বাংলা মন্তব্য: ১৩ serving route context-কে খরচ-অ্যাট্রিবিউশন বাহক হিসেবে
+        পাস করে — প্রম্পট-পেলোড সাধারণত কল-আর্গে থাকে। তাই payload-নিয়ম
+        (prompt/messages ঠিক-একটি) এখানে প্রযোজ্য নয়; কেবল অ্যাট্রিবিউশন-সত্য
+        যাচাই হয়। টেন্যান্ট ফাঁকা = চুক্তি-লঙ্ঘন (সৎ-অজানা হলে "anonymous"।)
+        """
+        errors: list[str] = []
+        if not self.tenant_id:
+            errors.append("tenant_id must be non-empty (use 'anonymous' for honest-unknown)")
+        if not self.task_type:
+            errors.append("task_type must be non-empty")
+        if self.max_cost_usd is not None and self.max_cost_usd < 0:
+            errors.append("max_cost_usd must be non-negative")
+        if self.max_latency_seconds is not None and self.max_latency_seconds <= 0:
+            errors.append("max_latency_seconds must be positive")
+        return errors
+
     def to_log_fields(self) -> dict[str, Any]:
         """টেলিমেট্রি-লগের জন্য নিরাপদ ক্ষেত্র — প্রম্পট কনটেন্ট কখনো যায় না।"""
         return {

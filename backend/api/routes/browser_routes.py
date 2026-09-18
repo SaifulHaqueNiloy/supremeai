@@ -24,6 +24,7 @@ from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
 from core.config_cache import config_cache
+from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
 
 # SECURITY FIX (AUDIT-SEC-2, CRITICAL): আগে এই রাউটারে কোনো auth guard ছিল না —
@@ -143,7 +144,10 @@ class BrowseSessionResponse(BaseModel):
 
 
 @router.post("/ai-action", response_model=AIActionResponse)
-async def browser_ai_action(req: AIActionRequest):
+async def browser_ai_action(
+    req: AIActionRequest,
+    admin_user: dict = Depends(get_current_admin),
+):
     """
     Real AI analysis of browsed pages.
 
@@ -251,8 +255,20 @@ Provide a helpful, detailed answer based on the available information.""",
         prompt = prompts.get(req.action, prompts["summarize"])
 
         # Call LLM Gateway
-        result = await llm_gateway.complete(
+        # M03 P0-পূর্ণাংশ + লেটেন্ট-বাগ ফিক্স: গেটওয়েতে `complete()` মেথড
+        # নেই-ই — এই কল রানটাইমে AttributeError দিত (নীরব 500)। এখন সত্য
+        # চুক্তি acompletion + InferenceContext (admin পরিচয় অ্যাট্রিবিউটেড)।
+        result = await llm_gateway.acompletion(
             prompt=prompt,
+            context=InferenceContext(
+                tenant_id=str(
+                    admin_user.get("tenant_id")
+                    or admin_user.get("sub")
+                    or "anonymous"
+                ),
+                task_type="browser_ai_action",
+                stream=False,
+            ),
             max_tokens=config_cache.get("browser_routes_max_tokens", 800),
             temperature=config_cache.get(
                 "browser_routes_temperature", 0.3
