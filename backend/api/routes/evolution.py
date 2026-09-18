@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -123,6 +123,34 @@ async def record_canary_observation(
     except Exception as exc:
         logger.error(f"canary observation failed: {exc}")
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/canary/{proposal_id}/route")
+async def evaluate_canary_route(
+    proposal_id: str,
+    request: Request,
+    client_id: str | None = None,
+):
+    """Evaluate if caller should route to canary or baseline for proposal_id.
+
+    Supports 'X-Canary' header override (true/false) and sticky client_id hashing.
+    """
+    from evolution.canary_manager import get_canary_controller
+
+    controller = get_canary_controller()
+    headers_dict = dict(request.headers)
+    is_canary = controller.route_request(
+        proposal_id=proposal_id,
+        headers=headers_dict,
+        client_id=client_id,
+    )
+    trial = controller.active_canaries.get(proposal_id)
+    return {
+        "proposal_id": proposal_id,
+        "is_canary": is_canary,
+        "active": trial is not None,
+        "sample_ratio": trial.sample_ratio if trial else 0.0,
+    }
 
 
 @router.get("/metrics")
