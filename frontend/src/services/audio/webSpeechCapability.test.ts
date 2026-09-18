@@ -2,7 +2,7 @@
 // M14 P-C (issue #453): Web Speech capability-detection চুক্তি —
 // সৎ-সেমান্টিকস: অসমর্থন স্পষ্ট ঘোষিত, কখনো নীরব অনুমান নয়।
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AudioPlaybackService } from './AudioPlaybackService';
 import { detectWebSpeechCapability } from './webSpeechCapability';
 
@@ -10,13 +10,11 @@ describe('detectWebSpeechCapability', () => {
   const originalWindow = globalThis.window;
 
   afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = originalWindow;
     vi.restoreAllMocks();
   });
 
   it('reports unsupported when speechSynthesis is absent', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = {} as Window;
     const cap = detectWebSpeechCapability();
     expect(cap.ttsSupported).toBe(false);
@@ -26,7 +24,6 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('reports tts-only support honestly', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = {
       speechSynthesis: {},
       SpeechSynthesisUtterance: function mockUtterance(this: Record<string, unknown>) {},
@@ -38,7 +35,6 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('reports both supported with empty reason', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = {
       speechSynthesis: {},
       SpeechSynthesisUtterance: function mockUtterance(this: Record<string, unknown>) {},
@@ -51,7 +47,6 @@ describe('detectWebSpeechCapability', () => {
   });
 
   it('never throws in undefined window context', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = undefined;
     expect(() => detectWebSpeechCapability()).not.toThrow();
     expect(detectWebSpeechCapability().ttsSupported).toBe(false);
@@ -62,13 +57,11 @@ describe('AudioPlaybackService fail-safe', () => {
   const originalWindow = globalThis.window;
 
   afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = originalWindow;
     vi.restoreAllMocks();
   });
 
   it('constructor does not crash and play() honestly fails without speechSynthesis', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = {} as Window;
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -79,7 +72,6 @@ describe('AudioPlaybackService fail-safe', () => {
   });
 
   it('getAnalyser returns null safely when AudioContext absent', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (globalThis as any).window = {} as Window;
     const svc = new AudioPlaybackService();
     expect(svc.getAnalyser()).toBeNull();
