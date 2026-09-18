@@ -186,8 +186,8 @@ class AsyncRateLimiter:
                         if count > limit * 0.8:
                             logger.warning(f"Rate limit approaching for {key}: {count}/{limit}")
                         return is_allowed
-                except (AttributeError, TypeError):
-                    pass  # Fall through to pipeline if mock doesn't support async eval
+                except (AttributeError, TypeError) as exc:
+                    logger.debug("Redis eval not supported (%s); falling back to pipeline", exc)
 
             # 2. Fallback path: Pipeline execution
             pipe = client.pipeline()
