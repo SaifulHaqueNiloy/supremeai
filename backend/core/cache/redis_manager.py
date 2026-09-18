@@ -326,11 +326,7 @@ class SecureRedisManager:
             return None
         # Issue #460 half-open probe: every pool tripped and the cooldown has
         # now expired → restart a clean probe cycle at pool 1.
-        if (
-            self._tripped
-            and len(self._tripped) >= len(self._urls)
-            and not self.quota_breaker_open
-        ):
+        if self._tripped and len(self._tripped) >= len(self._urls) and not self.quota_breaker_open:
             await self._reset_federation_probe()
         return self._client
 
