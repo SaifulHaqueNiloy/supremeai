@@ -8033,27 +8033,6 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/middleware/tenant_rate_limiter.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/middleware/tenant_rate_limiter.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
         "memory"
       ],
       "classification": "human_review",
@@ -24606,5 +24585,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2836
+  "source_file_count": 2834
 }
