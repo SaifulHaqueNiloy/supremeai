@@ -9,7 +9,8 @@ from tools.social.telegram_security import security_guard
 
 
 @pytest.fixture
-def bot_handler():
+def bot_handler(monkeypatch):
+    monkeypatch.setenv("ADMIN_TELEGRAM_CHAT_ID", "7804133572")
     handler = TelegramBotHandler()
     handler.bot_token = "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"
     handler.send_message = AsyncMock(return_value=True)
