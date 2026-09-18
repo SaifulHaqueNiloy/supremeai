@@ -183,3 +183,17 @@ acceptance_criteria:
 - **চক্র ১৯-প্রার্থী**: i18n/বাংলা-অ্যাডাপ্টার অঙ্গ (P-H ক্যাটালগ-ভিত্তির উপরে; LLM-পথ-বাদে ক্যাটালগ-প্রথম) — ৩য়-পক্ষ-প্রস্তুতি: ICU MessageFormat, plural/gender rules for bn, unicode-normalization (NFC), date/number bn-লোকেল
 - **চক্র ২০-প্রার্থী**: notification/delivery-অঙ্গ (email_agent + core/messaging dispatcher + tower-notify) — ৩য়-পক্ষ: outbox-প্যাটার্ন, SMTP-free রেল (resend-ফ্রি-টিয়ার-বনাম smtp)
 - কিউ-পুনঃর‍্যাঙ্ক: Gate 5-পরিমাপে; প্রতিটি চক্র ৩য়-পক্ষ-গবেষণা-চুক্তি বহাল
+## Part 7 — বাস্তবায়ন প্রমাণ (Implementation Evidence, dated — living-plan sync)
+
+> ২০২৬-০৯-১৯-এ fresh `main` (`52fa97da`) থেকে কোড-যাচাইকৃত; নিচের প্রতিটি দাবি ফাইল/টেস্ট-প্রমাণসহ, কোনোটি পরিকল্পনা-থেকে-অনুমিত নয়।
+
+| প্রস্তাব | প্রকৃত অবস্থা (2026-09-19) | প্রমাণ |
+|---|---|---|
+| **P-A** webhook secret-টোকেন যাচাই | ✅ **আগেই বাস্তবায়িত** (Wave-1) — plan-এর "grep-শূন্য" দাবি এখন বাসি | `backend/tools/social/telegram_bot/router.py` — fail-closed + `hmac.compare_digest`, `/health` honest (identity-লিক বন্ধ) |
+| **P-B** admin-পরিচয়-সত্য | ✅ **বাস্তবায়িত 2026-09-19** | `handler.py` `_configured_admin_ids()` + `is_admin(chat_id, user_id)` (env/vault-শুধু, fail-closed, `from.id`-authoritative); `updates.py` callback-এ `sender_id`; `keyboards.py`/`conversations.py` sender-aware; `admin_handlers.py`-এ হার্ডকোড-ID মুদ্রণ বন্ধ; টেস্ট `backend/tests/security/test_telegram_admin_identity.py` (12/12 PASS) |
+| **P-C** telemetry-সত্য | ❌ **এখনো খোলা** — জাল KPI বর্তমান | `handler.py` `COMMANDS["/telemetry"]` ("38ms", "142 Tasks", "99.99% Uptime") ও `/quick` self-healer/audit-এর fabricated ফিগার (`conversations.py`) |
+| **P-D/P-E/P-F/P-G/P-H/P-I** | ⬜ শুরু হয়নি | — (P-I-এর `/abort <run_id>` এখনো অস্তিত্বহীন; `cancel_run` API বিদ্যমান → ভবিষ্যতের সেতু) |
+
+**পরবর্তী atomic লক্ষ্য (সুপারিশ):** **P-C (telemetry-সত্য)** — একই মডিউলে, স্পষ্টভাবে সীমিত (স্ট্রিং/ডেটা), Four-Pillar-অনুসারী, এবং বর্তমানের সবচেয়ে বড় honesty-ঋণ: `/telemetry` ব্যবহারকারীকে বানানো মেট্রিক দেখায়। বাস্তবায়ন-বিকল্প: বাস্তব `/api/v1/health/*`/cost-পাঠ, অথবা সৎ "not measured"।
+
+**P-B-এর অস্তিত্ব-ঝুঁকি (সৎ ঘোষণা):** gate এখন fail-closed — প্রোডাকশনে `ADMIN_TELEGRAM_CHAT_ID` সেট না থাকলে কেউ admin নয়। `.env`/`.env.example`/`.env.clean`-এ কী বর্তমান (স্থানীয় প্রমাণ), কিন্তু Render-এর runtime-env এই সেশনে যাচাই করা সম্ভব হয়নি (control-tower provider অনুপলব্ধ) → মানব-অনুমোদন-আইটেম `docs/plans/PENDING_APPROVALS.md` §TASK-002।
