@@ -216,7 +216,9 @@ async def execute_task_and_record(task: dict[str, Any], user_id: str) -> dict[st
         "status": "running",
         "started_at": now,
     }
-    exec_resp = await supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
+    exec_resp = (
+        await supabase_db.client.table("scheduled_task_executions").insert(exec_row).execute()
+    )
     exec_id = exec_resp.data[0]["id"] if exec_resp.data else str(uuid.uuid4())
 
     # Execute prompt — failures are recorded honestly, never swallowed
