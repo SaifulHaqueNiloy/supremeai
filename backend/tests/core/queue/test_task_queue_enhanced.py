@@ -17,6 +17,7 @@ import asyncio
 
 import pytest
 
+from core.logging_config import logger
 from core.queue.task_queue_enhanced import (
     EnhancedTaskQueue,
     QueueBackend,
@@ -196,8 +197,8 @@ class TestCancellation:
             placeholder_worker.cancel()
             try:
                 await placeholder_worker
-            except asyncio.CancelledError:
-                pass
+            except asyncio.CancelledError as exc:
+                logger.debug(f"Worker cancelled cleanly: {exc}")
             await queue.shutdown()
 
 

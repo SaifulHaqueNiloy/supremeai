@@ -61,6 +61,27 @@ class InMemoryFallbackLimiter:
         return True
 
 
+_SLIDING_WINDOW_LUA = """
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+local member = ARGV[4]
+
+local clear_before = now - window
+redis.call('ZREMRANGEBYSCORE', key, 0, clear_before)
+local current_requests = redis.call('ZCARD', key)
+
+if current_requests < limit then
+    redis.call('ZADD', key, now, member)
+    redis.call('EXPIRE', key, math.ceil(window))
+    return {1, current_requests + 1}
+else
+    return {0, current_requests}
+end
+"""
+
+
 class AsyncRateLimiter:
     """
     Async Redis rate limiter using centralized redis_manager.
@@ -120,6 +141,9 @@ class AsyncRateLimiter:
     async def acquire(self, key: str, limit: int | None = None, window: int | None = None) -> bool:
         """Redis-based sliding window rate limiting with fail-closed behavior.
 
+        Issue #460 optimization: Uses atomic single-op Lua script on Upstash Redis,
+        reducing command quota usage by 75% compared to multi-command pipelines.
+
         বাংলা মন্তব্ব্য: Redis-ভিত্তিক sliding window রেট লিমিটিং।
         """
         if not self._rate_limit_enabled or os.getenv("TESTING") == "true":
@@ -139,13 +163,34 @@ class AsyncRateLimiter:
                 return self._fallback_limiter.is_allowed(key, limit)
 
             now = time.time()
-            # Ensure unique member for zadd to handle identical timestamps
             import secrets
 
             member = f"{now}_{secrets.token_hex(4)}"
-
-            pipe = client.pipeline()
             zset_key = f"rate_limit:{key}"
+
+            # 1. Primary path: Atomic Lua Script (Issue #460 - Upstash quota optimization: 1 op vs 4 ops)
+            if hasattr(client, "eval"):
+                try:
+                    res = await client.eval(
+                        _SLIDING_WINDOW_LUA,
+                        1,
+                        zset_key,
+                        str(now),
+                        str(window),
+                        str(limit),
+                        member,
+                    )
+                    if isinstance(res, (list, tuple)) and len(res) >= 2:
+                        is_allowed = bool(res[0])
+                        count = int(res[1])
+                        if count > limit * 0.8:
+                            logger.warning(f"Rate limit approaching for {key}: {count}/{limit}")
+                        return is_allowed
+                except (AttributeError, TypeError):
+                    pass  # Fall through to pipeline if mock doesn't support async eval
+
+            # 2. Fallback path: Pipeline execution
+            pipe = client.pipeline()
             pipe.zadd(zset_key, {member: now})
             pipe.zremrangebyscore(zset_key, 0, now - window)
             pipe.zcard(zset_key)

@@ -26,11 +26,11 @@ async def enforce_api_key_rate_limit(
     window_key = f"{API_KEY_LIMIT_PREFIX}{api_key_hash[:16]}:{current_minute}"
 
     try:
-        pipe = redis_manager.client.pipeline()
-        pipe.incr(window_key)
-        pipe.expire(window_key, 120)  # 2 minute TTL window safety
-        results = await pipe.execute()
-        current_count = results[0]
+        # Issue #460: single atomic EVAL (1 billable op) instead of the
+        # INCR+EXPIRE 2-command pipeline.
+        from core.cache.rate_limit_atomic import atomic_window_incr
+
+        current_count = await atomic_window_incr(redis_manager.client, window_key, 120)
 
         if current_count > max_requests:
             logger.warning(

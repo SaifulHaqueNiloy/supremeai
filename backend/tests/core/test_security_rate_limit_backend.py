@@ -2,6 +2,8 @@
 
 বাংলা: RequestValidationMiddleware._check_rate_limit এখন Redis-authoritative;
 Redis না থাকলে per-instance in-memory EMERGENCY fallback (WARNING লগসহ)।
+Issue #460 update: Redis path এখন একক atomic EVAL (১ billable op) — পুরনো
+দুই-ফেজ ৪-কমান্ড pipeline নয়।
 """
 
 import time
@@ -18,47 +20,23 @@ from core.middleware.security import RequestValidationMiddleware
 redis_manager_module = import_module("core.cache.redis_manager")
 
 
-class _FakePipeline:
-    """Pipeline stub: execute() returns queued results for the fake zset."""
-
-    def __init__(self, fake, count_after_prune: int | None = None):
-        self._fake = fake
-        self._count_after_prune = count_after_prune
-        self._ops: list[str] = []
-
-    def zremrangebyscore(self, *_a, **_k):
-        self._ops.append("prune")
-
-    def zcard(self, *_a, **_k):
-        self._ops.append("count")
-
-    def zadd(self, *_a, **_k):
-        self._ops.append("add")
-
-    def expire(self, *_a, **_k):
-        self._ops.append("expire")
-
-    async def execute(self):
-        if "count" in self._ops and "add" not in self._ops:
-            # check phase: [prune result, count]
-            return [None, self._count_after_prune]
-        return [None, None]  # add phase: [add result, expire result]
-
-
 class _FakeRedis:
-    """Minimal redis client stub. `counts` maps zset key -> next reported count."""
+    """Minimal redis client stub exposing the atomic EVAL contract (#460).
 
-    def __init__(self, counts: dict[str, int] | None = None):
-        self.counts = counts or {}
-        self.added: list[str] = []
+    `eval` returns the window count that the rate-limit Lua script would
+    produce; `window_counts` maps counter key -> reported count.
+    """
 
-    def pipeline(self, transaction: bool = True):  # noqa: ARG002
-        key = getattr(self, "_current_key", None)
-        return _FakePipeline(self, self.counts.get(key, 0))
+    def __init__(self, window_counts: dict[str, int] | None = None):
+        self.window_counts = window_counts or {}
+        self.eval_calls: list[tuple] = []
 
-    # helper used by tests to point the stub at a zset key
-    def _prime(self, zset_key: str):
-        self._current_key = zset_key
+    async def eval(self, script, numkeys, key, window, *args):  # noqa: ARG002
+        self.eval_calls.append((key, window))
+        return self.window_counts.get(key, 0)
+
+    def _prime(self, counter_key: str, count: int):
+        self.window_counts[counter_key] = count
 
 
 @pytest.fixture
@@ -84,22 +62,19 @@ def fake_redis(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_redis_authoritative_allows_under_limit(mw, fake_redis):
-    def _pipeline(self, transaction=True):  # noqa: ARG001
-        return _FakePipeline(fake_redis, 0)
-
-    fake_redis.pipeline = _pipeline.__get__(fake_redis)
     allowed = await mw._check_rate_limit("1.2.3.4", "/api/v1/anything")
     assert allowed is True
+    # Exactly ONE billable op per evaluation (issue #460)
+    assert len(fake_redis.eval_calls) == 1
+    key, window = fake_redis.eval_calls[0]
+    assert key == "security_rate_limit:1.2.3.4"
+    assert window == 60
 
 
 @pytest.mark.asyncio
-async def test_redis_authoritative_rejects_at_limit(mw, fake_redis):
-    state = {"count": 100}  # default limit is 100/min → count >= limit rejects
-
-    def _pipeline(self, transaction=True):  # noqa: ARG001
-        return _FakePipeline(fake_redis, state["count"])
-
-    fake_redis.pipeline = _pipeline.__get__(fake_redis)
+async def test_redis_authoritative_rejects_over_limit(mw, fake_redis):
+    # default limit is 100/min → count 101 breaches
+    fake_redis._prime("security_rate_limit:1.2.3.4", 101)
     allowed = await mw._check_rate_limit("1.2.3.4", "/api/v1/anything")
     assert allowed is False
 
@@ -108,13 +83,14 @@ async def test_redis_authoritative_rejects_at_limit(mw, fake_redis):
 async def test_critical_path_limit_override(mw, fake_redis):
     """Login path uses 5/600 limit, not the default 100/60."""
 
-    def _pipeline(self, transaction=True):  # noqa: ARG001
-        return _FakePipeline(fake_redis, 5)
-
-    fake_redis.pipeline = _pipeline.__get__(fake_redis)
     allowed = await mw._check_rate_limit("9.9.9.9", "/api/v1/auth/login")
-    # count=5 >= limit=5 → rejected
-    assert allowed is False
+    assert allowed is True  # count 0 → allowed
+    key, window = fake_redis.eval_calls[0]
+    assert key == "security_rate_limit:9.9.9.9:/api/v1/auth/login"
+    assert window == 600
+
+    fake_redis._prime("security_rate_limit:9.9.9.9:/api/v1/auth/login", 6)
+    assert await mw._check_rate_limit("9.9.9.9", "/api/v1/auth/login") is False
 
 
 @pytest.mark.asyncio
