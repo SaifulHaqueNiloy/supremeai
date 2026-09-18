@@ -45,6 +45,25 @@ router = APIRouter(
 # বাংলা মন্তব্য: অ্যাপ্লিকেশন-স্কোপ স্যান্ডবক্স ম্যানেজার (singleton)।
 _sandbox_manager: Any = None
 
+# Issue #448: log the "no sandbox provider configured" CRITICAL only once per
+# process instead of on every request (production /api/v1/sandbox/* used to
+# surface as a wall of ValueError-driven 500s).
+_sandbox_unavailable_announced = False
+
+
+def _sandbox_unavailable_detail() -> dict[str, str]:
+    """Honest, actionable 503 payload for every sandbox endpoint."""
+    return {
+        "error": "SANDBOX_UNAVAILABLE",
+        "message": (
+            "No sandbox provider is configured on this deployment. The 'local' "
+            "provider is a development dry-run only and is refused in production. "
+            "Configure a real provider (E2B / RUNPOD sandbox credentials) to "
+            "enable this feature."
+        ),
+    }
+
+
 # SECURITY FIX: sandbox_id -> owner (JWT 'sub') mapping. প্রসেস-রিস্টার্টে ম্যাপ
 # রিসেট হয়; এটি in-memory ownership রেজিস্ট্রি — persistent store পরে যোগ করা যাবে।
 _OWNERSHIP: dict[str, str] = {}
@@ -54,15 +73,42 @@ _MAX_SANDBOXES_PER_USER = 5
 
 
 def _get_manager():
-    """CloudSandboxOrchestrator ম্যানেজার লেজি-লোড করা হচ্ছে।"""
-    global _sandbox_manager
+    """CloudSandboxOrchestrator ম্যানেজার লেজি-লোড করা হচ্ছে।
+
+    Issue #448: construction previously raised ValueError("Local sandbox
+    provider is not permitted in production environments") on every request in
+    non-local deployments, surfacing as HTTP 500 across the whole
+    /api/v1/sandbox/* surface. Now returns None when no usable provider is
+    configured; routes translate that into an honest 503 SANDBOX_UNAVAILABLE.
+    """
+    global _sandbox_manager, _sandbox_unavailable_announced
     if _sandbox_manager is None:
         # FIX (AUDIT-SEC-7): আগে অসম্ভর মডিউল/ক্লাস (tools.cloud_sandbox_orchestrator.
         # PersistentSandbox) import করা হত। প্রকৃত ক্যানোনিকাল ক্লাস এটি।
         from core.orchestration.cloud_sandbox_orchestrator import CloudSandboxOrchestrator
 
-        _sandbox_manager = CloudSandboxOrchestrator(provider="local")
+        try:
+            _sandbox_manager = CloudSandboxOrchestrator(provider="local")
+        except ValueError as exc:
+            if not _sandbox_unavailable_announced:
+                _sandbox_unavailable_announced = True
+                from core.logging_config import logger
+
+                logger.critical(
+                    "Sandbox API unavailable: %s. Configure a real sandbox provider "
+                    "(E2B/RUNPOD) — returning honest 503 for all /api/v1/sandbox/* calls.",
+                    exc,
+                )
+            return None
     return _sandbox_manager
+
+
+def _require_manager():
+    """Raise an honest 503 when no sandbox provider is configured (issue #448)."""
+    manager = _get_manager()
+    if manager is None:
+        raise HTTPException(status_code=503, detail=_sandbox_unavailable_detail())
+    return manager
 
 
 def _current_user(payload: dict = Depends(get_current_user_token)) -> str:
@@ -102,7 +148,7 @@ async def create_sandbox(
             detail=f"Sandbox quota reached ({_MAX_SANDBOXES_PER_USER}); destroy one first",
         )
     try:
-        manager = _get_manager()
+        manager = _require_manager()
         session = await manager.create_sandbox(req.spec or {})
         if not session or not isinstance(session, dict) or not session.get("id"):
             raise HTTPException(status_code=502, detail="Sandbox provider did not return a session")
@@ -126,7 +172,7 @@ async def execute_command(
 ) -> dict[str, Any]:
     """স্যান্ডবক্স সেশনে একটি কমান্ড রান করে (শুধু owner)।"""
     _require_owned(sandbox_id, owner)
-    manager = _get_manager()
+    manager = _require_manager()
     result = await manager.run_command(sandbox_id, req.command, timeout=req.timeout)
     if result is None:
         raise HTTPException(status_code=502, detail="Sandbox command execution failed")
@@ -147,7 +193,7 @@ async def stream_logs(
     stdout/stderr লাইন-বাই-লাইন SSE হিসেবে স্ট্রিম করা হচ্ছে।
     """
     _require_owned(sandbox_id, owner)
-    manager = _get_manager()
+    manager = _require_manager()
 
     async def event_generator():
         # বাংলা মন্তব্য: ক্লায়েন্ট ডিসকানেক্ট করলে স্ট্রিম বন্ধ করা হচ্ছে।
@@ -174,7 +220,7 @@ async def stream_logs(
 async def destroy_sandbox(sandbox_id: str, owner: str = Depends(_current_user)) -> dict[str, Any]:
     """স্যান্ডবক্স সেশন ও তার ভলিউম মুছে ফেলে (শুধু owner)।"""
     _require_owned(sandbox_id, owner)
-    manager = _get_manager()
+    manager = _require_manager()
     success = await manager.destroy_sandbox(sandbox_id)
     if not success:
         raise HTTPException(
@@ -192,7 +238,7 @@ async def list_sandboxes(owner: str = Depends(_current_user)) -> dict[str, Any]:
     SECURITY FIX: আগে সব ইউজারের সব sandbox id ফেরত দিত (info leak) —
     এখন শুধু requester-এর মালিকানাধীন সেশনগুলো।
     """
-    manager = _get_manager()
+    manager = _require_manager()
     sessions: list[dict[str, Any]] = []
     active = getattr(manager, "_active_sandboxes", {}) or {}
     for sid in _OWNERSHIP:

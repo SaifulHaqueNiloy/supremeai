@@ -417,6 +417,14 @@ class CompletionMixin:
                         "model": current_model,
                         "cost": cost,
                     }
+                    # Issue #438: a successful call proves the key is healthy —
+                    # reset any auth-error cooldown escalation for it.
+                    try:
+                        await _provider_key_pool.mark_success(provider_name, api_key)
+                    except Exception as pool_exc:
+                        logger.warning(
+                            f"[LLMGateway] key-pool mark_success failed for {provider_name}: {pool_exc}"
+                        )
                     if _is_leader and _coalescer is not None and _dedup_k:
                         with contextlib.suppress(Exception):
                             _coalescer.publish_success(_dedup_k, _result)

@@ -53,18 +53,31 @@ async def _voice_event_stream(user_id: str, text: str, lang: str) -> AsyncIterat
         result = await _get_voice_service().text_to_speech(text, lang=lang)
 
         if result.get("status") != "success":
-            err = json.dumps({"error": result.get("error", "TTS failed"), "user_id": user_id})
+            # Issue #445: emit an honest error event — never placeholder/fake
+            # RIFF WAV bytes. Covers both provider errors and the explicit
+            # TTS_NOT_CONFIGURED unavailable status from VoiceService.
+            err = json.dumps(
+                {
+                    "error": result.get("error") or result.get("reason") or "TTS failed",
+                    "reason": result.get("reason") or result.get("error") or "TTS failed",
+                    "message": result.get("message", ""),
+                    "user_id": user_id,
+                }
+            )
             yield f"event: error\ndata: {err}\n\n"
             return
 
-        # NOTE: VoiceService currently returns a dummy placeholder audio
-        # (RIFF....WAVEfmt ....data....). When the real TTS provider is wired
-        # in voice_service.py, this SSE endpoint will automatically stream
-        # real audio. For now we emit the placeholder + metadata so the
-        # frontend can show that the pipeline works end-to-end.
-        audio_bytes = b"RIFF....WAVEfmt ....data...."  # placeholder
-        if "audio_bytes" in result:
-            audio_bytes = result["audio_bytes"]
+        audio_bytes = result.get("audio_bytes")
+        if not audio_bytes:
+            err = json.dumps(
+                {
+                    "error": "TTS_NO_AUDIO",
+                    "message": "TTS provider returned no audio bytes.",
+                    "user_id": user_id,
+                }
+            )
+            yield f"event: error\ndata: {err}\n\n"
+            return
 
         encoded = base64.b64encode(audio_bytes).decode("ascii")
         payload = json.dumps(
