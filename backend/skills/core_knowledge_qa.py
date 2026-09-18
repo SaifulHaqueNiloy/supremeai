@@ -32,7 +32,9 @@ def _generate_embedding(text: str) -> list[float] | None:
     try:
         from core.embeddings import embed_for_pgvector
 
-        return embed_for_pgvector(text, pg_dim=1536)
+        # ai_memory/pgvector contract is vector(384); requesting 1536 only
+        # spams the normalization warning on every call (issue #443 cleanup).
+        return embed_for_pgvector(text)
     except Exception as exc:
         logger.warning(f"Embedding generation failed: {exc}")
         return None

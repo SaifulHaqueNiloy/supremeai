@@ -605,5 +605,67 @@ for _sig in (signal.SIGTERM, signal.SIGINT):
 
 _spawn_celery()
 
+
+def _start_kaggle_dispatcher() -> None:
+    """Issue #439: run the Kaggle job dispatcher loop on the worker node.
+
+    Previously get_next_job()/dispatch_job_to_kaggle() had ZERO callers — jobs
+    submitted through the API sat in Redis forever.  This daemon thread owns an
+    asyncio loop that pops queued jobs, selects a quota-available account, and
+    pushes REAL kernels to Kaggle; results arrive via the token-authenticated
+    callback.  Env-gated so primary/scraper nodes never dispatch.
+    """
+    if os.getenv("ENABLE_KAGGLE_DISPATCHER", "true").lower() != "true":
+        logger.info("[kaggle-dispatcher] disabled via ENABLE_KAGGLE_DISPATCHER")
+        return
+    if ROLE != "worker":
+        return
+
+    def _loop() -> None:
+        try:
+            from core.kaggle_orchestrator import KaggleOrchestrator
+
+            orchestrator = KaggleOrchestrator.get_instance()
+        except Exception as exc:
+            logger.warning(f"[kaggle-dispatcher] orchestrator unavailable, not starting: {exc}")
+            return
+        if not orchestrator.accounts or not orchestrator.redis_client:
+            logger.info("[kaggle-dispatcher] no kaggle accounts or redis — dispatcher idle")
+            return
+
+        async def _run() -> None:
+            logger.info(
+                f"[kaggle-dispatcher] started with {len(orchestrator.accounts)} account(s)"
+            )
+            while True:
+                try:
+                    job = await orchestrator.get_next_job()
+                    if job is None:
+                        await asyncio.sleep(10)
+                        continue
+                    account = await orchestrator.select_account_for_job(job)
+                    if account is None:
+                        await asyncio.sleep(30)
+                        continue
+                    await orchestrator.dispatch_job_to_kaggle(job, account)
+                    await asyncio.sleep(2)
+                except asyncio.CancelledError:
+                    return
+                except Exception as exc:
+                    logger.error(f"[kaggle-dispatcher] loop error: {exc}")
+                    await asyncio.sleep(15)
+
+        try:
+            asyncio.run(_run())
+        except Exception as exc:
+            logger.warning(f"[kaggle-dispatcher] stopped: {exc}")
+
+    import threading
+
+    threading.Thread(target=_loop, name="kaggle-dispatcher", daemon=True).start()
+
+
+_start_kaggle_dispatcher()
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT)

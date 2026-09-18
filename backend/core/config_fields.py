@@ -296,6 +296,11 @@ class SettingsFieldsMixin:
             # access-token middleware — otherwise token refresh is unreachable
             # (always 401) and clients can never renew sessions.
             "/api/v1/auth/refresh",
+            # Issue #439: Kaggle kernels complete jobs by POSTing to this
+            # callback; they cannot hold a JWT, so the path is auth-exempt but
+            # guarded by the per-job callback token (kaggle.py enforces it
+            # with secrets.compare_digest — forged completions are rejected).
+            "/api/v1/kaggle/callback",
             "/actuator",
             "/api/admin/firebase-auth",
             "/api/admin/firebase-login",

@@ -8,6 +8,7 @@ import { UnifiedChatBubble } from './UnifiedChatBubble';
 import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
+import { getApiBaseUrl } from '../../utils/api';
 import { BrainCircuit, Download, FileCode2, Volume2, VolumeX, Share2 } from 'lucide-react';
 
 import { ShareDialog } from '../share/ShareDialog';
@@ -96,6 +97,57 @@ export const ChatInterface: React.FC = () => {
       setInput(chatData.content);  // Pre-fill with browser URL/context
     }
   });
+
+  // Issue #452 fix: the voice toggle previously emitted TTS_GENERATED into
+  // the void — no component anywhere subscribed to 'tts:generated', so
+  // "voice responses" did nothing for user chat.  Deliver it for real:
+  // fetch the backend's streaming TTS endpoint (ElevenLabs → edge-tts chain,
+  // honest failure when no provider is configured) with the auth header —
+  // an <audio src> cannot send Authorization headers — and play the blob.
+  useEventBus(
+    Events.TTS_GENERATED,
+    async (payload: unknown) => {
+      const data = payload as { text?: string } | undefined;
+      const text = (data?.text || '').trim();
+      if (!text) return;
+      try {
+        const token =
+          localStorage.getItem('supremeai_auth_token') ||
+          localStorage.getItem('supreme_admin_jwt');
+        const res = await fetch(
+          `${getApiBaseUrl()}/api/voice/stream_audio?text=${encodeURIComponent(text.slice(0, 1000))}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        );
+        if (!res.ok) {
+          addMessage({
+            role: 'system',
+            content: `[VOICE] Voice response unavailable (HTTP ${res.status}) — the TTS provider may not be configured.`,
+          });
+          return;
+        }
+        const blob = await res.blob();
+        if (!blob.size) {
+          addMessage({
+            role: 'system',
+            content: '[VOICE] Voice synthesis returned no audio — TTS provider unavailable.',
+          });
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onerror = () => URL.revokeObjectURL(url);
+        await audio.play();
+      } catch (err) {
+        console.error('[voice] TTS playback failed:', err);
+        addMessage({
+          role: 'system',
+          content: '[VOICE] Voice playback failed — see console for details.',
+        });
+      }
+    },
+    []
+  );
 
   // S6: Keyboard Shortcut - Cmd+K for Chat Search
   useEffect(() => {
