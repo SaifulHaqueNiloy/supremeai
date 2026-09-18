@@ -111,9 +111,7 @@ async def runtime_capabilities(user: dict = Depends(get_current_user_token)) -> 
         importable = import_available(module)
         # LOW_MEMORY_MODE deliberately refuses the local encoder even when the
         # package is installed (core/embeddings.py gates it off).
-        available = importable and not (
-            module == "sentence_transformers" and low_memory_mode
-        )
+        available = importable and not (module == "sentence_transformers" and low_memory_mode)
         features.append(
             {
                 "feature": feature,

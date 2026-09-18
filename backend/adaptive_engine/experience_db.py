@@ -105,9 +105,7 @@ class ExperienceDatabase:
                             "Supabase pgvector backend ACTIVE (persistent, no SQLite)"
                         )
                 except Exception as exc:
-                    logger.warning(
-                        f"SupabaseVectorBackend init in degraded mode failed: {exc}"
-                    )
+                    logger.warning(f"SupabaseVectorBackend init in degraded mode failed: {exc}")
             if self.supabase_backend is None:
                 _warn_degraded_once()
             return
@@ -502,9 +500,7 @@ class ExperienceDatabase:
                 return self._map_supabase_hits(results)
             except Exception as e:
                 self.vector_backend_degraded = True
-                logger.error(
-                    f"find_similar() degraded pgvector query failed: {e}"
-                )
+                logger.error(f"find_similar() degraded pgvector query failed: {e}")
                 return []
         embedding = self._embed(query)
         if not embedding:

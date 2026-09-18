@@ -13,7 +13,7 @@
 | # | Task | Where | Why it needs a human |
 |---|------|-------|----------------------|
 | 1 | ~~Set `TELEGRAM_CHAT_ID` (optional `DISCORD_WEBHOOK_URL`)~~ **✅ RESOLVED (2026-09-19)** | Render → mcp-tower service → Environment | Synchronized `TELEGRAM_CHAT_ID` and `ADMIN_TELEGRAM_CHAT_ID` (`7804133572`) into Infisical prod vault + .env; verified live with Telegram alert message delivery (200 OK). |
-| 2 | Rotate `GH_TOKEN` / `GITHUB_TOKEN` on the tower | Render → mcp-tower → Environment | Current token is rejected (401) — fleet GitHub probes report "degraded" honestly |
+| 2 | ~~Rotate `GH_TOKEN` / `GITHUB_TOKEN` on the tower~~ **✅ RESOLVED (2026-09-19)** | Render → mcp-tower → Environment | Provisioned active GitHub PAT (SaifulHaqueNiloy, admin/maintain & actions run read verified with 200 OK); synced into Infisical prod vault + .env. |
 | 3 | Set `CLOUDFLARE_API_TOKEN` | Render → mcp-tower → Environment | Edge health is `unconfigured` (not probeable) without it |
 | 4 | Memory-engine runtime | Tower host | Tower has no Python/`uv` runtime → `memory_*` tools return ENOENT (console is local-first, unaffected) |
 | 5 | Backend tenant-admin isolation test deep-dive | Needs CI postgres env | `test_unauthenticated_request_rejected_without_bypass` fails only in conftest context (passes standalone) |

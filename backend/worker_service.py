@@ -634,9 +634,7 @@ def _start_kaggle_dispatcher() -> None:
             return
 
         async def _run() -> None:
-            logger.info(
-                f"[kaggle-dispatcher] started with {len(orchestrator.accounts)} account(s)"
-            )
+            logger.info(f"[kaggle-dispatcher] started with {len(orchestrator.accounts)} account(s)")
             while True:
                 try:
                     job = await orchestrator.get_next_job()

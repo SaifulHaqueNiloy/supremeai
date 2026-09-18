@@ -160,9 +160,7 @@ class RLHFPipeline:
                 return {
                     "status": res.get("status", "error"),
                     "method": "model_trainer_delegation",
-                    "message": res.get(
-                        "message", "ModelTrainer could not start the DPO/LoRA job"
-                    ),
+                    "message": res.get("message", "ModelTrainer could not start the DPO/LoRA job"),
                 }
             return {
                 "status": "success",
