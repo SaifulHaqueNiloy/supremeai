@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 from typing import Any
 
 from core.logging_config import logger
@@ -14,10 +16,24 @@ class ReasoningOrchestrator:
         long_term_memory: LongTermMemory | None = None,
         cot_reasoner: ChainOfThoughtReasoner | None = None,
         episodic_memory: EpisodicMemory | None = None,
+        model_router: Any | None = None,
     ) -> None:
         self.long_term_memory = long_term_memory or LongTermMemory()
         self.cot_reasoner = cot_reasoner or ChainOfThoughtReasoner(max_iterations=2)
         self.episodic_memory = episodic_memory or EpisodicMemory()
+        self._model_router = model_router
+
+    @property
+    def model_router(self) -> Any:
+        if self._model_router is None:
+            try:
+                from brain.model_router import ModelRouter
+
+                self._model_router = ModelRouter()
+            except Exception as exc:
+                logger.warning(f"Could not initialize ModelRouter: {exc}")
+                self._model_router = None
+        return self._model_router
 
     def plan(self, task_description: str, context: str | None = None) -> dict[str, Any]:
         lowered = (task_description or "").lower()
@@ -127,11 +143,77 @@ class ReasoningOrchestrator:
         context: dict[str, Any] | None = None,
         tools: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Decide next action for autonomous agents."""
+        """Decide next action for autonomous agents using a true ReAct reasoning loop."""
+        available_tools: dict[str, str] = {}
+        if tools:
+            for t in tools:
+                available_tools[t] = f"Tool identifier: {t}"
+        else:
+            try:
+                from tools.agent_tools import SUPREME_TOOLS
+
+                for fn in SUPREME_TOOLS:
+                    doc = (fn.__doc__ or "").strip().split("\n")[0]
+                    available_tools[fn.__name__] = doc or fn.__name__
+            except Exception as exc:
+                logger.debug(f"Could not load SUPREME_TOOLS: {exc}")
+
+        tool_specs = "\n".join(f"- {name}: {desc}" for name, desc in available_tools.items())
+        context_str = json.dumps(context, ensure_ascii=False) if context else "None"
+
+        prompt = (
+            f"You are the SupremeAI reasoning orchestrator.\n"
+            f"Task: {task}\n"
+            f"Context: {context_str}\n"
+            f"Available Tools:\n{tool_specs}\n- done: Task is completed or no further tool is required.\n\n"
+            f"Respond with a single raw JSON object matching this schema:\n"
+            f'{{"thought": "reasoning about current state", "tool": "tool_name_or_done", "args": {{}}, "reasoning": "summary"}}\n'
+        )
+
+        if self.model_router is not None:
+            try:
+                res = await self.model_router.async_route_and_generate(
+                    prompt=prompt,
+                    task_type="reasoning",
+                    max_cost=0.01,
+                )
+                if res and res.get("success") and res.get("text"):
+                    raw_text = res["text"].strip()
+                    if "```" in raw_text:
+                        raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text, flags=re.MULTILINE)
+                        raw_text = re.sub(r"\s*```$", "", raw_text, flags=re.MULTILINE).strip()
+                    data = json.loads(raw_text)
+                    if isinstance(data, dict) and "tool" in data:
+                        chosen_tool = data.get("tool", "done")
+                        return {
+                            "tool": chosen_tool,
+                            "args": data.get("args", {}),
+                            "thought": data.get("thought", ""),
+                            "reasoning": data.get(
+                                "reasoning", f"Selected '{chosen_tool}' via ReAct loop"
+                            ),
+                            "source": "llm_react",
+                        }
+            except Exception as exc:
+                logger.debug(f"ReAct LLM decision skipped or failed: {exc}")
+
+        # Deterministic fallback based on task semantics (Strict False-Assurance Ban)
+        lowered = (task or "").lower()
+        if any(w in lowered for w in ["health", "status", "cpu", "ram", "memory", "ping"]):
+            selected_tool = "check_system_health"
+        elif any(w in lowered for w in ["search", "query", "find", "database", "select"]):
+            selected_tool = "search_database"
+        elif any(w in lowered for w in ["code", "execute", "python", "calc", "run"]):
+            selected_tool = "execute_python_code"
+        else:
+            selected_tool = "done"
+
         return {
-            "tool": "smart_click" if "click" in task.lower() else "done",
+            "tool": selected_tool,
             "args": {"target": task},
-            "reasoning": f"Determined optimal step for '{task}'",
+            "thought": f"Assessed task requirements for '{task}'",
+            "reasoning": f"Deterministic routing: selected '{selected_tool}' based on task semantics",
+            "source": "deterministic_fallback",
         }
 
     async def synthesize(
@@ -139,12 +221,52 @@ class ReasoningOrchestrator:
         task: str,
         findings: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        """Synthesize multi-agent swarm exploration findings."""
+        """Synthesize multi-agent swarm exploration findings into an actionable consensus."""
+        if not findings:
+            return {
+                "task": task,
+                "total_findings": 0,
+                "summary": "No findings provided to synthesize.",
+                "consolidated": [],
+                "source": "empty",
+            }
+
+        findings_json = json.dumps(findings, indent=2, ensure_ascii=False)
+        prompt = (
+            f"You are the SupremeAI consensus synthesizer.\n"
+            f"Task: {task}\n"
+            f"Agent Findings ({len(findings)} reports):\n{findings_json}\n\n"
+            f"Synthesize these findings into a concise, actionable summary highlighting key consensus, anomalies, and recommended next steps."
+        )
+
+        summary_text = ""
+        is_llm = False
+        if self.model_router is not None:
+            try:
+                res = await self.model_router.async_route_and_generate(
+                    prompt=prompt,
+                    task_type="reasoning",
+                    max_cost=0.01,
+                )
+                if res and res.get("success") and res.get("text"):
+                    summary_text = res["text"].strip()
+                    is_llm = True
+            except Exception as exc:
+                logger.debug(f"LLM synthesis unavailable: {exc}")
+
+        if not summary_text:
+            outcomes = [f.get("outcome") or f.get("status") or "recorded" for f in findings]
+            summary_text = (
+                f"Consolidated {len(findings)} agent findings for '{task}'. "
+                f"Recorded outcomes: {', '.join(sorted(set(str(o) for o in outcomes)))}."
+            )
+
         return {
             "task": task,
             "total_findings": len(findings),
-            "summary": f"Successfully synthesized {len(findings)} agent reports.",
+            "summary": summary_text,
             "consolidated": findings,
+            "source": "llm_consensus" if is_llm else "deterministic_summary",
         }
 
     async def execute_decomposed_tasks(self, task_graph: dict[str, Any]) -> dict[str, Any]:

@@ -101,7 +101,7 @@ class AdminHandlersMixin:
             "🤖 <b>SupremeAI 2.0 AI Brain & Multi-Agent Matrix</b>\n\n"
             "• 🧠 <b>Primary Model:</b> Google Gemini 2.5 Flash (Ultra-fast)\n"
             "• ⚡ <b>Fallback Engine:</b> Groq (Qwen 2.5 / GPT-OSS 120B)\n"
-            "• 🔄 <b>Orchestrator:</b> LangGraph + SupremeOrchestrator\n"
+            "• 🔄 <b>Orchestrator:</b> Native StateGraph + SupremeOrchestrator\n"
             "• 📚 <b>Long-Term Memory:</b> PostgreSQL pgvector (`ai_memory`)\n"
             "• 💰 <b>Operational Cost:</b> 100% Free-Tier ($0 Budget Optimization)\n\n"
             "<i>সিস্টেম সম্পূর্ণ অটোনোমাস এবং চ্যাটের সাথে রিয়েল-টাইমে কানেক্টেড।</i>"
@@ -146,12 +146,21 @@ class AdminHandlersMixin:
         await self.send_message(chat_id, text, reply_markup=keyboard)
 
     async def _handle_admin_security(self, chat_id: int | str) -> None:
+        # বাংলা মন্তব্য (P-B admin-identity truth): আগে এখানে হার্ডকোড করা admin
+        # chat_id মুদ্রিত হতো (information disclosure + ভুয়া "Verified" দাবি)।
+        # এখন শুধু সৎ configured/not-configured অবস্থা — কোনো আইডি প্রকাশ নয়।
+        admin_ids = self._configured_admin_ids()
+        admin_identity_state = (
+            f"{len(admin_ids)} configured (vault/env, fail-closed gate)"
+            if admin_ids
+            else "NOT CONFIGURED — admin gate is fail-closed"
+        )
         text = (
             "🛡️ <b>SupremeAI Security & AutonoGuard Center</b>\n\n"
             "• 🔐 <b>2FA Engine:</b> RFC 6238 TOTP (Google Authenticator)\n"
             "• 🚫 <b>Anti-Tampering:</b> Prompt Injection & Jailbreak Blocker Active\n"
             "• 🛑 <b>Critical Interceptor:</b> Destructive DB/Key actions locked behind 2FA\n"
-            "• 👤 <b>Admin Identity:</b> Telegram ID <code>7804133572</code> (Verified System Admin)\n\n"
+            f"• 👤 <b>Admin Identity:</b> <code>{admin_identity_state}</code>\n\n"
             "<i>আপনার সিস্টেম সম্পূর্ণ সুরক্ষিত ও ফল্ট-টলারেন্ট।</i>"
         )
         keyboard = {

@@ -46,30 +46,33 @@ To prevent mixing internal platform policies with customer workflows, all plans 
 
 ## 🗺️ PLAN STATUS DASHBOARD
 
-### ACTIVE ARCHITECTURE
+### ACTIVE CANONICAL ARCHITECTURE (SINGLE SOURCES OF TRUTH)
 
-| Plan | Status | Path |
-|------|--------|------|
-| **Browser Automation** | active | `architecture/browser_automation.md` ⭐ NEW |
-| **Master Plan** | active | `architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md` |
-| **Unified FastMCP Control Tower** | active | `architecture/unified_fastmcp_control_tower_multitenant_master_plan_bn.md` ⭐ |
-| **Control Plane** | active | `architecture/distributed_infrastructure_central_control_plane_plan.md` |
+| Capability Domain | Canonical Master Plan | Real Runtime Codebase | Status |
+|---|---|---|:---:|
+| **Omnichannel FastMCP & IDE Control** | [Plan 24: Omnichannel MCP & Remote Control](features/Plan_24_AI_Agent_Ecosystem_Integration.md) ⭐ | `infrastructure/mcp-control-plane/` & `backend/agents/ide/` | `active` |
+| **StateGraph & Run Fabric** | [Module 02: Orchestration Core](crown_jewel_series/MODULE_02_ORCHESTRATION_CORE_POWER_UP.md) | `backend/runs/stategraph.py` & `runs/service.py` | `active` |
+| **Polyglot Data & Smart Storage** | [Plan 09: Hybrid Polyglot Storage](features/Plan_09_Smart_Data_Storage.md) | `backend/database/` & Supabase/Redis/Qdrant | `active` |
+| **Memory Store Consolidation** | [M3 Decision Table](M3_MEMORY_STORE_CONSOLIDATION_DECISION_TABLE.md) | `services/memory_service.py` (`ai_memory`) | `active` |
+| **Write-Time Memory Consolidation**| [Plan 006: Mem0-Style Consolidation](features/PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION.md) | `core/unified_memory.py` | `active` |
+| **Browser Automation & Sandbox** | [Browser Automation Architecture](architecture/browser_automation.md) ⭐ | `tools/browser/` & Docker Sandbox | `active` |
+| **HITL & Telegram Admin Terminal** | [Module 18: Telegram Organ Power-Up](crown_jewel_series/MODULE_18_TELEGRAM_ORGAN_POWER_UP.md) | `tools/social/telegram_bot/` & TOTP 2FA | `active` |
+| **AST Code Context & Repo Map** | [Plan 003: Aider-Style Repo Map](features/PLAN_003_AIDER_STYLE_REPO_MAP.md) | `backend/context/` & Tree-Sitter | `active` |
 
-### IN PROGRESS
+---
 
-| Plan | Status | Progress |
-|------|--------|----------|
-| AI Model Comparative Matrix | in_progress | Language coverage |
-| Verification Engine | in_progress | L1-L3 testing |
-| Codebase Modularization | in_progress | 3/5 modules split |
+### CONSOLIDATED POINTERS (MERGED TO ELIMINATE FILE SPRAWL)
 
-### PROPOSED / REFERENCE
+> [!NOTE]
+> Per `MASTER_KICKOFF_PROMPT.md` Section 2, the following fragmented documents have been permanently merged into their respective canonical master plans to prevent duplicate file sprawl:
 
-| Plan | Status | Next Review |
-|------|--------|-------------|
-| [Antihacking Security Framework](features/antihacking_security_defense_framework.md) | proposed | Security Circle |
-| [Living Autonomous Intelligence](architecture/living_autonomous_intelligence_synthesis.md) | proposed | AI Evolution |
-| Q1 2026 Foundation Execution | proposed | Q1 Sprint |
+| Fragmented Plan Document | Merged Into Canonical Plan | Rationale & Real Context |
+|---|---|---|
+| `features/personal_mcp_gateway_multitenant_hub_plan.md` | [Plan 24](features/Plan_24_AI_Agent_Ecosystem_Integration.md) | Multi-tenant token issue & vanity routing consolidated into Plan 24. |
+| `features/messaging_bots_telegram_and_whatsapp_architecture.md` | [Plan 24](features/Plan_24_AI_Agent_Ecosystem_Integration.md) | 3-Faces omnichannel gateway unified into Plan 24. |
+| `features/mcp_gateway_dynamic_hub_plan.md` | [Plan 24](features/Plan_24_AI_Agent_Ecosystem_Integration.md) | Legacy stub merged into Plan 24. |
+| `features/kilo_ai_integration_backend_refactoring_plan.md` | [Plan 24](features/Plan_24_AI_Agent_Ecosystem_Integration.md) | Kilo Code CLI and IDE swarm logic unified into Plan 24. |
+| `features/vscode_lm_multi_model_ide_support_plan.md` | [Plan 24](features/Plan_24_AI_Agent_Ecosystem_Integration.md) | VS Code LM API fallback unified into Plan 24. |
 
 ---
 
@@ -228,7 +231,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 |---|---|---|---|---|
 | [`CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN`](./CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md) | policy | Architecture Governance / Planning Circle | supremeai_internal | unclassified |
 | [`CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15`](./CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md) | implementation | DevEx / CI Circle | supremeai_internal | ci-cd-pipeline |
-| [`HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16`](./HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md) | roadmap | C1 (Code & Quality) and cross-circle (C2/C3/C5/C6) per lever | supremeai_internal | execution-phases |
+| [`HEAD_OF_PLANNING_STRATEGIC_LEVERAGE`](./HEAD_OF_PLANNING_STRATEGIC_LEVERAGE.md) | roadmap | C1 (Code & Quality) and cross-circle (C2/C3/C5/C6) per lever | supremeai_internal | execution-phases |
 | [`PENDING_APPROVALS`](./PENDING_APPROVALS.md) | audit | Architecture Governance / Planning Circle | supremeai_internal | unclassified |
 | [`PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16`](./PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16.md) | implementation | C5 (Execution — LLM Gateway) | supremeai_internal | control-tower-mcp |
 | [`PLAN_LIFECYCLE_POLICY`](./PLAN_LIFECYCLE_POLICY.md) | policy | Architecture Governance / Planning Circle | supremeai_internal | unclassified |
@@ -397,4 +400,4 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`team_and_cloud_resource_allocation_plan`](./phases/team_and_cloud_resource_allocation_plan.md) | — | — | supremeai_internal | frontend-product-ux |
 | [`yearly_strategic_roadmap_2026`](./phases/yearly_strategic_roadmap_2026.md) | — | — | supremeai_internal | execution-phases |
 
-<!-- END GENERATED PLAN CATALOG -->
+<!-- END GENERATED PLAN CATALOG -->                      

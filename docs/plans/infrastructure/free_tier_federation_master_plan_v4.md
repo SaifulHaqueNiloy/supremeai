@@ -18,6 +18,7 @@ target_scope: supremeai_internal
 
 # 🚀 SupremeAI Free-Tier Federation Master Plan v4.0
 ## "Maximum Benefit from Every Free Service" Edition
+> **Timeless Infrastructure Invariant:** এই ফেডারেশন প্ল্যানটি জিরো-খরচের জন্য ফ্রি-টিয়ারকে বেসলাইন হিসেবে ব্যবহার করে। তবে ইউজারের নিজস্ব সার্ভার, ডেডিকেটেড ক্লাস্টার বা অন-প্রিমিস হার্ডওয়্যার থাকলে আর্কিটেকচার কোনো পরিবর্তন ছাড়াই স্বয়ংক্রিয়ভাবে ইউজারের অবকাঠামোতে পরিচালিত হবে (User-Intent First, Zero Lock-In)।
 
 **তারিখ:** 2026-08-24  
 **ভাষা:** Bengali (বাংলা) + English  

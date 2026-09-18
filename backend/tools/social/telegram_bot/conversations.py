@@ -20,9 +20,11 @@ from core.logging_config import logger
 class ConversationsMixin:
     """Conversation-flow mixin for :class:`TelegramBotHandler`."""
 
-    async def _handle_mcp_clients(self, chat_id: int | str) -> None:
+    async def _handle_mcp_clients(
+        self, chat_id: int | str, user_id: int | str | None = None
+    ) -> None:
         """Show pending MCP clients and provide approve/role controls to the admin."""
-        if not self.is_admin(chat_id):
+        if not self.is_admin(chat_id, user_id):
             await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             return
         base_url = os.environ.get("MCP_CONTROL_PLANE_URL", "").rstrip("/")
@@ -65,8 +67,10 @@ class ConversationsMixin:
             logger.error(f"MCP client listing failed: {exc}")
             await self.send_message(chat_id, "⚠️ MCP client list পাওয়া যায়নি।")
 
-    async def _handle_mcp_action(self, chat_id: int | str, data: str, action: str) -> None:
-        if not self.is_admin(chat_id):
+    async def _handle_mcp_action(
+        self, chat_id: int | str, data: str, action: str, user_id: int | str | None = None
+    ) -> None:
+        if not self.is_admin(chat_id, user_id):
             await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             return
         base_url = os.environ.get("MCP_CONTROL_PLANE_URL", "").rstrip("/")

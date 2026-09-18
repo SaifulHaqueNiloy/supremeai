@@ -78,10 +78,14 @@ class SupabaseStore(SQLiteMemoryStore):
             return False
 
     def _verify_pgvector_schema(self, client) -> bool:
-        """Verify that pgvector schema and RPC functions exist."""
+        """Verify that pgvector schema and RPC functions exist.
+
+        Issue #442 fix: ai_memory.embedding is vector(384), not vector(1536).
+        The test vector must match the actual schema dimension.
+        """
         try:
-            # Test the match_learned_facts RPC function
-            test_embedding = [0.0] * 1536
+            # Test the match_learned_facts RPC function — 384-dim per ai_memory schema
+            test_embedding = [0.0] * 384
             client.rpc(
                 "match_learned_facts",
                 {
@@ -206,55 +210,51 @@ class SupabaseStore(SQLiteMemoryStore):
         return self.get_session_messages(session_id)
 
     def _generate_embedding(self, text: str) -> list[float] | None:
-        # Generate embeddings for pgvector semantic search
-        self._stats["embeddings_generated"] += 1
+        """Generate a 384-dimensional embedding for pgvector storage.
 
+        Issue #442 fix: ai_memory.embedding is vector(384). The old
+        implementation requested pg_dim=1536 which triggered a warning in
+        embed_for_pgvector and returned a 384-dim vector anyway — but it
+        also silenced real errors with 'Ignored exception' log messages.
+        All exceptions are now logged with their actual cause.
+        """
+        from core.logging_config import logger
+
+        self._stats["embeddings_generated"] += 1
         try:
             from core.embeddings import embed_for_pgvector
 
-            return embed_for_pgvector(text, pg_dim=1536)
-        except Exception as e:
-            # Try alternative embedding methods
-            try:
-                # Fallback 1: sentence-transformers local
-                from sentence_transformers import SentenceTransformer
+            # 384 = exact ai_memory.embedding schema dimension (issue #442)
+            return embed_for_pgvector(text, pg_dim=384)
+        except Exception as primary_exc:
+            logger.warning(
+                "[supabase_store] embed_for_pgvector failed (%s): %s",
+                type(primary_exc).__name__,
+                primary_exc,
+            )
 
-                model = SentenceTransformer("all-MiniLM-L6-v2")
-                embedding = model.encode(text, normalize_embeddings=True)
-                # Pad to 1536 dimensions for pgvector compatibility
-                if len(embedding) < 1536:
-                    embedding = list(embedding) + [0.0] * (1536 - len(embedding))
-                return embedding[:1536]
-            except Exception:
-                from core.logging_config import logger
+        # Graceful fallback: sentence-transformers (only if available)
+        try:
+            from sentence_transformers import SentenceTransformer
 
-                logger.warning("Ignored exception")
+            model = SentenceTransformer("all-MiniLM-L6-v2")
+            embedding = model.encode(text, normalize_embeddings=True).tolist()
+            if len(embedding) == 384:
+                return embedding
+            logger.warning(
+                "[supabase_store] sentence-transformers returned %d dims; expected 384",
+                len(embedding),
+            )
+        except Exception as st_exc:
+            logger.debug("[supabase_store] sentence-transformers unavailable: %s", st_exc)
 
-            try:
-                # Fallback 2: LiteLLM with OpenAI
-                import litellm
-
-                from core.config import settings
-
-                response = litellm.embedding(model=settings.embedding_model, input=text)
-                return response.data[0]["embedding"]
-            except Exception:
-                from core.logging_config import logger
-
-                logger.warning("Ignored exception")
-
-            # All methods failed
-            try:
-                from core.logging_config import logger
-
-                logger.error(f"Embedding generation failed: {e}")
-            except asyncio.CancelledError:
-                raise
-            except Exception as e:
-                import logging
-
-                logging.getLogger(__name__).exception(f"Silenced error: {e}")
-            return None
+        # All embedding paths failed — caller must handle None gracefully
+        logger.error(
+            "[supabase_store] All embedding paths exhausted for text '%.60s...'; "
+            "storing without embedding (pgvector recall will degrade).",
+            text,
+        )
+        return None
 
     def _save_learned_fact_sqlite(self, fact_id: str, fact: dict) -> None:
         # বাংলা মন্তব্য: SQLite-এ ফ্যাক্ট লেখার একমাত্র জায়গা — Supabase পাথ এবং fallback পাথ উভয়েই এটাই ব্যবহার করে

@@ -1,15 +1,15 @@
 {
-  "generated_at": "2026-09-18",
+  "generated_at": "2026-09-19",
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 190,
-    "with_frontmatter": 190,
+    "documents": 186,
+    "with_frontmatter": 185,
     "families": {
-      "control-tower-mcp": 41,
-      "unclassified": 34,
-      "execution-phases": 30,
-      "free-tier-federation": 26,
+      "control-tower-mcp": 44,
+      "unclassified": 30,
+      "execution-phases": 28,
+      "free-tier-federation": 25,
       "frontend-product-ux": 16,
       "unified-architecture": 11,
       "browser-automation": 9,
@@ -41,40 +41,40 @@
       "lines": 292
     },
     {
-      "id": "ci-pipeline-consolidation",
-      "subject": "SupremeAI CI/CD Architecture Optimization Specification (v2.0)",
-      "document_role": "implementation",
-      "planning_authority": "DevEx / CI Circle",
-      "canonical": "candidate",
-      "status": "complete",
-      "source_file": "docs/plans/CI_PIPELINE_CONSOLIDATION_PLAN_2026-09-15.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": "verified",
-      "last_verified": "2026-09-17 (all 6 steps code-verified on main; per-step evidence in §8 below)",
-      "disposition": "retain",
-      "target_scope": "supremeai_internal",
-      "family": "ci-cd-pipeline",
-      "frontmatter_present": true,
-      "lines": 229
-    },
-    {
-      "id": "head-of-planning-strategic-leverage-2026-09-16",
-      "subject": "Head of Planning — Strategic Leverage Memo v1 (Constitution-Anchored Path to 'One of the Best AI Models')",
+      "id": "head-of-planning-strategic-leverage",
+      "subject": "Strategic Leverage Master Directive (Timeless Living Plan)",
       "document_role": "roadmap",
-      "planning_authority": "C1 (Code & Quality) and cross-circle (C2/C3/C5/C6) per lever",
+      "planning_authority": "Architecture Governance / Planning Circle",
       "canonical": null,
       "status": "active",
-      "source_file": "docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE_2026-09-16.md",
+      "source_file": "docs/plans/HEAD_OF_PLANNING_STRATEGIC_LEVERAGE.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-16",
+      "last_verified": "2026-09-18",
       "disposition": null,
       "target_scope": "supremeai_internal",
-      "family": "execution-phases",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 453
+      "lines": 34
+    },
+    {
+      "id": "implementation-track-execution-order",
+      "subject": "Issue #453 Implementation Track — প্রমাণ-ভিত্তিক এক্সিকিউশন অর্ডার: ২৩ মডিউলের কোড-সত্য রিকনসিলিয়েশন, মালিকানা ডি-ডুপ্লিকেশন এবং ওয়েভ-ভিত্তিক বাস্তবায়ন ক্রম",
+      "document_role": "roadmap",
+      "planning_authority": "Planning Circle / Head of Planning (docs/plans/ প্ল্যানিং কর্পাসের ধারাবাহিক মালিক)",
+      "canonical": true,
+      "status": "active",
+      "source_file": "docs/plans/IMPLEMENTATION_TRACK_EXECUTION_ORDER_2026-09-18.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "verified",
+      "last_verified": "2026-09-18",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 105
     },
     {
       "id": "m3-memory-store-consolidation-decision-table",
@@ -108,117 +108,9 @@
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 32
-    },
-    {
-      "id": "head-of-planning-prompt-caching-v1-2026-09-16",
-      "subject": "Head of Planning — Plan #001: Anthropic Prompt Caching on Existing LiteLLM Gateway (Corrected Discipline, Single Complete Plan)",
-      "document_role": "implementation",
-      "planning_authority": "C5 (Execution — LLM Gateway)",
-      "canonical": null,
-      "status": "complete",
-      "source_file": "docs/plans/PLAN_001_ANTHROPIC_PROMPT_CACHING_2026-09-16.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py); IMPLEMENTED 2026-09-17 on main — cloud_adapter.py: _is_anthropic_family_model + _mark_anthropic_cache_blocks pure helpers, generate()/stream() wiring, usage dict surfaces cache_read_input_tokens / cache_creation_input_tokens (forwarded to Langfuse via existing trace_generation usage pass-through); tests/core/test_cloud_provider_cache.py 10/10 PASS; 70/70 across test_llm_gateway_completion + test_provider_router + new file (local CI-mock env, litellm stubbed at adapter boundary)",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "control-tower-mcp",
-      "frontmatter_present": true,
-      "lines": 274
-    },
-    {
-      "id": "head-of-planning-claude-context-compaction-v1-2026-09-16",
-      "subject": "Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction (বর্তমান WebSocket Chat Path-এ, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
-      "document_role": "implementation",
-      "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway)",
-      "canonical": null,
-      "status": "complete",
-      "source_file": "docs/plans/PLAN_002_CLAUDE_STYLE_CONTEXT_COMPACTION_2026-09-16.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; re-verified 2026-09-17 on main b37f3f10 — `git diff 1f57055..b37f3f10 -- backend/api/routes/websocket_agent.py backend/core/prompt_handler.py backend/core/llm/llm_gateway/completion.py backend/core/llm/provider_router.py` is 0-diff across fixes #396–#417, deque(maxlen=50) sed-confirmed live at websocket_agent.py L474, prompt_handler.py L17/L57 and completion.py L183/L245 sed-confirmed; Gate 0 precision finding re-verified with exact line numbers — see sliding_window bullet below; re-verified 2026-09-17 on main 83084ee8 — evidence files 0-diff since b37f3f10 (c606e028..83084ee8), deque(maxlen=50) sed-confirmed live at L474; Gate 0 adjacency note: founder landed M2 Context Engine (e48daaf0 — backend/context_engine/, budgeted smallest-sufficient-context assembly via ContextBlock/Section/BudgetReport) wired into the HTTP chat route backend/api/routes/chat.py, NOT the WS path — complementary budgeted-context pattern; this plan's WS compaction scope remains unclaimed and unaffected); IMPLEMENTED 2026-09-17 on main — websocket_agent.py: _compact_history() + hooks before user/assistant append, deque(maxlen=50) MEMLEAK-004 fix intact, non-stream acompletion contract {'success','text','model','cost'} handled with 'content' fallback + 1400-char defensive summary cap; prompt_handler.py: COMPACTION_SYSTEM_PROMPT / build_compaction_messages (prior-summary merge) / estimate_messages_tokens; tests/api/test_websocket_compaction.py 11/11 PASS + test_websocket_agent.py 42/42 + test_prompt_handler.py 5/5 regression PASS (local CI-mock env); live 60+ turn WS Gate-5 evidence still pending)",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 302
-    },
-    {
-      "id": "head-of-planning-aider-repo-map-v1-2026-09-17",
-      "subject": "Head of Planning — Plan #003: Aider-Style Repo Map (stdlib-ast, শূন্য নতুন Dependency) — DynamicPlanningEngine-এর Epistemic Probe-কে সত্যিকারের কোডবেস-দৃষ্টি দেওয়া",
-      "document_role": "implementation",
-      "planning_authority": "C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা)",
-      "canonical": null,
-      "status": "complete",
-      "source_file": "docs/plans/PLAN_003_AIDER_STYLE_REPO_MAP_2026-09-17.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), all cited lines hold; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 344
-    },
-    {
-      "id": "head-of-planning-letta-style-memory-distillation-v1-2026-09-17",
-      "subject": "Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation (বিদ্যমান Eternal Brain ফ্যাসাডে, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
-      "document_role": "implementation",
-      "planning_authority": "Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway)",
-      "canonical": null,
-      "status": "complete",
-      "source_file": "docs/plans/PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION_2026-09-17.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), unified_memory.py L57–58 placeholder sed-confirmed; Gate 0 adjacency note: founder pinned M3 memory-consolidation blueprint (ERR-F02, defect register 2026-09-17) — canonical store হবে Supabase `ai_memory` (vector 384), যেখানে এই প্ল্যানের distilled summary লেখা হয় — সম্পূরক (complementary), কোনো conflict নেই; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 291
-    },
-    {
-      "id": "head-of-planning-ws-compact-command-v1-2026-09-17",
-      "subject": "Head of Planning — Plan #005: Claude Code-Style User-Controlled /compact Trigger (বিদ্যমান PLAN-002 Compaction মেশিনারির উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
-      "document_role": "implementation",
-      "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway) — PLAN_002-এর হুবহু মালিকানা, একই WS চ্যাট সাবসিস্টেম",
-      "canonical": null,
-      "status": "proposed",
-      "source_file": "docs/plans/PLAN_005_USER_CONTROLLED_COMPACT_TRIGGER_2026-09-17.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 68cf886c — websocket_agent.py ও prompt_handler.py 2fbe7fcd-এর পর থেকে 0-diff (সব core citation অপরিবর্তিত: _compact_history L449–497, receive L559, payload parse L562–575, auto-guard L580, user append L582, assistant guard L611, [DONE] L615, COMPACTION_* L80–115); founder commit 1dea1fe2 (CI unblock) test_websocket_compaction.py-এ শুধু formatting change করেছে (StubGateway __init__ reformat + ১টি assert line-join — semantically identical, ১১টি টেস্ট অক্ষত, grep-verified); frontend [DONE] contract (useChat.ts L92, chatService.ts L72) 0-diff; সংশোধন (honesty fix): depends_on-এ deque(maxlen=50)-এর citation L554 ভুল ছিল — সঠিক লাইন L548, এবং WS chat loop রেঞ্জ L555–616 → L557–616 (while True L557) — উভয়ই এই commit-এই সংশোধিত); final-state re-verification 2026-09-17 on main 5bdda2e2 (rebase target — evidence 0-diff, transitivity note তখন শুধু commit message-এ ছিল) এবং main 71b55f8a (docs-only commit — evidence files 0-diff): deque(maxlen=50) L548, _compact_history L449, COMPACTION_SUMMARY_CHAR_CAP=1400 L91, ১১টি টেস্ট পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে (plan_registry নয়, commit message নয়)",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "control-tower-mcp",
-      "frontmatter_present": true,
-      "lines": 223
-    },
-    {
-      "id": "head-of-planning-memory-consolidation-v1-2026-09-17",
-      "subject": "Head of Planning — Plan #006: mem0/ChatGPT-Style Write-Time Memory Consolidation (বিদ্যমান M3 Canonical ai_memory Store-এর উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
-      "document_role": "implementation",
-      "planning_authority": "Memory Circle (backend/services/memory_service.py — CascadeMemoryService) — PLAN_004-এর হুবহু মালিকানা, একই memory সাবসিস্টেম",
-      "canonical": null,
-      "status": "proposed",
-      "source_file": "docs/plans/PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION_2026-09-17.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed); final-state re-verification 2026-09-17 on main 5bdda2e2 + 71b55f8a (rebase + docs-only — evidence files 0-diff): store_memory L287, _cosine_similarity L477, query_context L485 পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে",
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 263
+      "lines": 51
     },
     {
       "id": "plan-lifecycle-policy",
@@ -308,21 +200,23 @@
       "target_scope": "combined_ecosystem",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 400
+      "lines": 403
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
       "subject": "SupremeAI একীভূত ইকোসিস্টেম আর্কিটেকচার — মাস্টার রোডম্যাপ ও বাস্তবায়ন পরিকল্পনা",
       "document_role": "roadmap",
       "planning_authority": "Architecture Circle",
-      "canonical": "candidate",
-      "status": "active",
+      "canonical": false,
+      "status": "historical",
       "source_file": "docs/plans/ROADMAP_ECOSYSTEM_ARCHITECTURE_BN.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md"
+      ],
       "evidence_state": "unverified",
       "last_verified": "2026-09-17",
-      "disposition": "retain",
+      "disposition": "archive",
       "target_scope": "supremeai_internal",
       "family": "execution-phases",
       "frontmatter_present": true,
@@ -347,22 +241,22 @@
       "lines": 1951
     },
     {
-      "id": "unified-next-roadmap-2026-09-15",
-      "subject": "SupremeAI — Reconciled Next Roadmap (Ecosystem + OSS Integration + Audit Evidence)",
-      "document_role": "roadmap",
-      "planning_authority": "Planning Circle",
-      "canonical": "candidate",
+      "id": "enterprise-multitenant-architecture",
+      "subject": "SupremeAI Enterprise Multi-Tenant & Dual-Driven Architecture (Timeless Standard)",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Circle",
+      "canonical": true,
       "status": "active",
-      "source_file": "docs/plans/UNIFIED_NEXT_ROADMAP_2026-09-15.md",
+      "source_file": "docs/plans/architecture/ENTERPRISE_MULTITENANT_ARCHITECTURE.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": "partial",
-      "last_verified": "2026-09-17",
+      "evidence_state": "verified",
+      "last_verified": "2026-09-18",
       "disposition": "retain",
-      "target_scope": "supremeai_internal",
-      "family": "unified-architecture",
+      "target_scope": "combined_ecosystem",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 265
+      "lines": 84
     },
     {
       "id": "external-agent-orchestration-layer-canonical-v3",
@@ -408,13 +302,7 @@
       "canonical": true,
       "status": "active",
       "source_file": "docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md",
-      "supersedes": [
-        "docs/archive/plans/architecture/MASTER_PLAN_BANGLA.md",
-        "docs/archive/plans/architecture/supremeai_master_blueprint_bangla.md",
-        "docs/archive/plans/architecture/ROADMAP_BANGLA.md",
-        "docs/archive/plans/architecture/master_plan_strategic_analysis_bn.md",
-        "docs/archive/plans/architecture/supremeai_project_complete_overview_bangla.md"
-      ],
+      "supersedes": [],
       "superseded_by": [],
       "evidence_state": "partial",
       "last_verified": "2026-09-17",
@@ -422,25 +310,25 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 1043
+      "lines": 1038
     },
     {
       "id": "supreme-teleport-multi-device-remote-control-tower-plan",
       "subject": "Supreme Teleport: Multi-Device Remote Control Tower Plan — Control Your Multiple Devices & Local AI Agents from Far",
       "document_role": "architecture",
       "planning_authority": "Central Control Hub / MCP Circle",
-      "canonical": null,
+      "canonical": false,
       "status": "proposed",
-      "source_file": "docs/plans/architecture/SUPREME_TELEPORT_MULTI_DEVICE_REMOTE_CONTROL_PLAN_2026-09-18.md",
+      "source_file": "docs/plans/architecture/SUPREME_TELEPORT_MULTI_DEVICE_REMOTE_CONTROL_PLAN.md",
       "supersedes": [],
       "superseded_by": [],
-      "evidence_state": null,
+      "evidence_state": "unverified",
       "last_verified": "2026-09-18",
-      "disposition": null,
+      "disposition": "retain",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 195
+      "lines": 227
     },
     {
       "id": "auto:ai_model_comparative_matrix_bangla",
@@ -719,7 +607,7 @@
       "planning_authority": "Memory Circle (backend/services/memory_service.py — CascadeMemoryService + backend/memory/ + backend/core/ai_memory/) — PLAN_004/PLAN_006-এর একই সাবসিস্টেম",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_01_MEMORY_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_01_MEMORY_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -728,7 +616,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 269
+      "lines": 281
     },
     {
       "id": "crown-jewel-module-02-orchestration-core-power-up-v1-2026-09-17",
@@ -737,7 +625,7 @@
       "planning_authority": "Kernel Circle (backend/core/kernel/ — SupremeKernel dispatcher + backend/core/orchestration/ + backend/runs/ + backend/runtime/)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_02_ORCHESTRATION_CORE_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_02_ORCHESTRATION_CORE_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -746,7 +634,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 254
+      "lines": 266
     },
     {
       "id": "crown-jewel-module-03-llm-gateway-power-up-v1-2026-09-17",
@@ -755,7 +643,7 @@
       "planning_authority": "Gateway Circle (backend/core/llm/ — llm_gateway/ + providers/ + telemetry.py + free_tier_tracker.py + backend/brain/model_router.py + backend/services/llm/ + backend/api/routes/admin_llm.py)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_03_LLM_GATEWAY_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_03_LLM_GATEWAY_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -764,7 +652,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 269
+      "lines": 409
     },
     {
       "id": "crown-jewel-module-04-browser-automation-power-up-v1-2026-09-17",
@@ -773,7 +661,7 @@
       "planning_authority": "Browser Circle (backend/tools/browser/ + backend/browser/ + backend/api/routes/browser/ + backend/api/routes/browser_routes.py + backend/api/routes/session_takeover.py + backend/core/browser_session_manager.py + backend/core/playwright_manager.py + backend/services/scraper/)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_04_BROWSER_AUTOMATION_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_04_BROWSER_AUTOMATION_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -782,7 +670,7 @@
       "target_scope": "supremeai_internal",
       "family": "browser-automation",
       "frontmatter_present": true,
-      "lines": 259
+      "lines": 266
     },
     {
       "id": "crown-jewel-module-05-self-evolution-power-up-v1-2026-09-17",
@@ -791,7 +679,7 @@
       "planning_authority": "Evolution Circle (backend/core/learning/ + backend/core/self_evolution/ + backend/evolution/ + backend/adaptive_engine/ + backend/learning/ + backend/api/routes/evolution.py + backend/core/startup/agents.py-লার্নিং-অংশ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_05_SELF_EVOLUTION_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_05_SELF_EVOLUTION_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -800,7 +688,7 @@
       "target_scope": "supremeai_internal",
       "family": "intelligence-evolution",
       "frontmatter_present": true,
-      "lines": 255
+      "lines": 261
     },
     {
       "id": "crown-jewel-module-06-run-fabric-completion-power-up-v1-2026-09-17",
@@ -809,7 +697,7 @@
       "planning_authority": "Run Circle (backend/runs/ + backend/missions/ + backend/runtime/ + frontend runService সংযোগ-স্তর)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_06_RUN_FABRIC_COMPLETION_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -818,7 +706,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 254
+      "lines": 265
     },
     {
       "id": "crown-jewel-module-07-context-engine-power-up-v1-2026-09-17",
@@ -827,7 +715,7 @@
       "planning_authority": "Context Circle (backend/context_engine/ + backend/context/ + backend/api/routes/chat.py-assembly-অংশ + backend/core/memory/auto_rag_injector.py-সংযোগ-বিন্দু)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_07_CONTEXT_ENGINE_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_07_CONTEXT_ENGINE_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -836,7 +724,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 247
+      "lines": 252
     },
     {
       "id": "crown-jewel-module-08-scout-deep-research-power-up-v1-2026-09-17",
@@ -845,7 +733,7 @@
       "planning_authority": "Scout Circle (backend/scout/ + backend/api/routes/deep_research.py + backend/api/routes/crawler_admin.py + backend/agents/research_assistant.py + frontend DeepResearchPanel-সংযোগ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_08_SCOUT_DEEP_RESEARCH_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -854,7 +742,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 250
+      "lines": 256
     },
     {
       "id": "crown-jewel-module-09-dormant-tools-activation-power-up-v1-2026-09-17",
@@ -863,7 +751,7 @@
       "planning_authority": "Tools Circle (backend/tools/ + backend/tools/mcp/ + backend/core/mcp_policy.py + backend/core/capability_gateway.py + backend/core/capability_activation.py + scripts/audit_module_wiring.py + backend/api/routes/tools_registry.py)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_09_DORMANT_TOOLS_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_09_DORMANT_TOOLS_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -872,7 +760,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 252
+      "lines": 257
     },
     {
       "id": "crown-jewel-module-10-frontend-tier-s-wiring-power-up-v1-2026-09-17",
@@ -881,7 +769,7 @@
       "planning_authority": "Interface Circle (frontend/src/components/ S1–S12 + frontend/src/routes/workspaceFeatureRoutes.tsx + frontend/src/App.tsx + backend Tier-S routers-সংযোগ-স্তর)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_10_FRONTEND_TIER_S_WIRING_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -890,7 +778,7 @@
       "target_scope": "supremeai_internal",
       "family": "frontend-product-ux",
       "frontmatter_present": true,
-      "lines": 251
+      "lines": 279
     },
     {
       "id": "crown-jewel-module-11-architecture-intelligence-power-up-2026-09-17",
@@ -899,7 +787,7 @@
       "planning_authority": "Infrastructure Circle (backend/ + frontend/ স্ট্যাটিক-গ্রাফ, scripts/governance/ প্রেসিডেন্ট, .github/workflows/ ফাউন্ডার-গেটেড প্রস্তাব)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_11_ARCHITECTURE_INTELLIGENCE_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -908,7 +796,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 175
+      "lines": 179
     },
     {
       "id": "crown-jewel-module-12-skill-ecosystem-power-up-2026-09-17",
@@ -917,7 +805,7 @@
       "planning_authority": "Governance Circle (backend/skills/ + backend/core/skill_manager.py + skills/ (রিপো-রুট) — তিন-বাস্তবায়ন একীকরণ-স্তর)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_12_SKILL_ECOSYSTEM_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_12_SKILL_ECOSYSTEM_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -926,7 +814,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 178
+      "lines": 183
     },
     {
       "id": "crown-jewel-module-13-security-middleware-truth-power-up-2026-09-17",
@@ -935,7 +823,7 @@
       "planning_authority": "Governance Circle (backend/middleware/ + backend/core/autonoguard_engine.py + backend/core/security/ — সুরক্ষা-স্তরের সত্যায়ন-স্তর)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_13_SECURITY_MIDDLEWARE_TRUTH_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -944,7 +832,7 @@
       "target_scope": "supremeai_internal",
       "family": "dynamic-configuration",
       "frontmatter_present": true,
-      "lines": 171
+      "lines": 175
     },
     {
       "id": "crown-jewel-module-14-user-facing-capability-truth-power-up-2026-09-17",
@@ -953,7 +841,7 @@
       "planning_authority": "Interface Circle + Governance Circle (backend/services/voice_service.py + backend/api/routes/stream_voice_sse.py + backend/p2p/ + backend/api/routes/voice.py — ইউজার-মুখী ক্ষমতা-সত্য-স্তর)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_14_USER_FACING_CAPABILITY_TRUTH_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -962,7 +850,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 169
+      "lines": 172
     },
     {
       "id": "crown-jewel-module-15-security-organ-power-up-2026-09-17",
@@ -971,7 +859,7 @@
       "planning_authority": "Governance Circle (backend/core/autonoguard_engine.py + backend/core/security/** — গভীর সুরক্ষা-অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_15_SECURITY_ORGAN_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_15_SECURITY_ORGAN_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -980,7 +868,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 187
+      "lines": 191
     },
     {
       "id": "crown-jewel-module-16-billing-metering-power-up-2026-09-17",
@@ -989,7 +877,7 @@
       "planning_authority": "Governance Circle (backend/api/routes/billing_api.py + backend/services/billing/ + backend/core/cost_guard.py — বিলিং-মিটারিং অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_16_BILLING_METERING_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_16_BILLING_METERING_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -998,7 +886,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 186
+      "lines": 195
     },
     {
       "id": "crown-jewel-module-17-hitl-approval-power-up-2026-09-17",
@@ -1007,7 +895,7 @@
       "planning_authority": "Governance Circle (backend/services/hitl/ + backend/api/routes/approval_manager.py + hitl_admin.py — মানব-অনুমোদন অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_17_HITL_APPROVAL_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_17_HITL_APPROVAL_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1016,7 +904,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 180
+      "lines": 185
     },
     {
       "id": "crown-jewel-module-18-telegram-organ-power-up-2026-09-17",
@@ -1025,7 +913,7 @@
       "planning_authority": "Governance Circle (backend/tools/social/telegram_bot/ + telegram_security.py — ব্যবহারকারী-মুখী মেসেজিং অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_18_TELEGRAM_ORGAN_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_18_TELEGRAM_ORGAN_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1034,7 +922,7 @@
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 181
+      "lines": 199
     },
     {
       "id": "crown-jewel-module-19-i18n-bengali-adapter-power-up-2026-09-17",
@@ -1043,7 +931,7 @@
       "planning_authority": "Governance Circle (frontend/src/i18n/ + backend ভাষা-পথ — বাংলা-অ্যাডাপ্টার অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_19_I18N_BENGALI_ADAPTER_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1052,7 +940,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 182
+      "lines": 186
     },
     {
       "id": "crown-jewel-module-20-notification-delivery-power-up-2026-09-17",
@@ -1061,7 +949,7 @@
       "planning_authority": "Governance Circle (backend/core/messaging/ + backend/services/email/ + in-app alert পথ — নোটিফিকেশন-ডেলিভারি অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_20_NOTIFICATION_DELIVERY_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_20_NOTIFICATION_DELIVERY_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1070,7 +958,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 180
+      "lines": 185
     },
     {
       "id": "crown-jewel-module-21-truth-mirror-governance-power-up-2026-09-17",
@@ -1079,7 +967,7 @@
       "planning_authority": "Governance Circle (scripts/governance/ + সিরিজ-প্রমাণ-কর্পাস — সত্য-আয়না টুল)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_21_TRUTH_MIRROR_GOVERNANCE_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1088,7 +976,7 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 172
+      "lines": 177
     },
     {
       "id": "crown-jewel-module-22-scheduler-organ-power-up-2026-09-17",
@@ -1097,7 +985,7 @@
       "planning_authority": "Governance Circle (backend/api/routes/scheduled_tasks.py + backend/core/agent_supervisor.py + startup লুপ — শিডিউলার-অঙ্গ)",
       "canonical": null,
       "status": "proposed",
-      "source_file": "docs/plans/crown_jewel_series/MODULE_22_SCHEDULER_ORGAN_POWER_UP_2026-09-17.md",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_22_SCHEDULER_ORGAN_POWER_UP.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
@@ -1106,7 +994,25 @@
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 182
+      "lines": 187
+    },
+    {
+      "id": "crown-jewel-module-23-knowledge-base-docs-power-up-2026-09-17",
+      "subject": "Crown Jewel Module Series — Module 23: Knowledge-Base & Docs Organ Power-Up (জ্ঞানভাণ্ডার-অঙ্গ: শূন্য-তাক লাইব্রেরি — দুই পরিণত আমদানি-মেশিন অথচ একটিও বই আসেনি; পাঠকের দরজা প্রতি-কলে 500; ১২১ বাংলা-তথ্য তাক-বন্দি — retrieval-proof মতবাদে পূর্ণাঙ্গ নীলনকশা, বাংলা)",
+      "document_role": "architecture",
+      "planning_authority": "Governance Circle (backend/core/knowledge_* + backend/api/routes/knowledge.py + backend/scripts/import_knowledge_base.py + backend/scripts/db/ingest_knowledge.py + knowledge/ data-কর্পাস — জ্ঞানভাণ্ডার-অঙ্গ)",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/crown_jewel_series/MODULE_23_KNOWLEDGE_BASE_DOCS_POWER_UP.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (branch crown-jewel-v2 base 1b698ee6: knowledge_qa.py পূর্ণপাঠ+runtime-repro (AttributeError repro), knowledge.py/import_knowledge_base.py/ingest_knowledge.py/sync_knowledge.py পূর্ণপাঠ, ৮-store grep-গণনা, coldstart/goldset JSON পার্স (132/91), embeddings.py-মাত্রা-পাঠ, frontend KnowledgePage/knowledge-graph/apps-docs চুক্তি, plans-overlap grep; ৩য়-পক্ষ দাবি 2026-02-17 ওয়েব-সার্চে তারিখ-চিহ্নিত)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 199
     },
     {
       "id": "crown-jewel-module-series-index",
@@ -1124,7 +1030,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 146
+      "lines": 148
     },
     {
       "id": "auto:README",
@@ -1397,6 +1303,114 @@
       "lines": 274
     },
     {
+      "id": "head-of-planning-prompt-caching-v1-2026-09-16",
+      "subject": "Head of Planning — Plan #001: Anthropic Prompt Caching on Existing LiteLLM Gateway (Corrected Discipline, Single Complete Plan)",
+      "document_role": "implementation",
+      "planning_authority": "C5 (Execution — LLM Gateway)",
+      "canonical": null,
+      "status": "complete",
+      "source_file": "docs/plans/features/PLAN_001_ANTHROPIC_PROMPT_CACHING.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-16 (code-read: gateway.py, cloud_adapter.py, provider_router.py); IMPLEMENTED 2026-09-17 on main — cloud_adapter.py: _is_anthropic_family_model + _mark_anthropic_cache_blocks pure helpers, generate()/stream() wiring, usage dict surfaces cache_read_input_tokens / cache_creation_input_tokens (forwarded to Langfuse via existing trace_generation usage pass-through); tests/core/test_cloud_provider_cache.py 10/10 PASS; 70/70 across test_llm_gateway_completion + test_provider_router + new file (local CI-mock env, litellm stubbed at adapter boundary)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 274
+    },
+    {
+      "id": "head-of-planning-claude-context-compaction-v1-2026-09-16",
+      "subject": "Head of Planning — Plan #002: Claude Code-Style Semantic Context Compaction (বর্তমান WebSocket Chat Path-এ, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway)",
+      "canonical": null,
+      "status": "complete",
+      "source_file": "docs/plans/features/PLAN_002_CLAUDE_STYLE_CONTEXT_COMPACTION.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (re-verified on fresh main 5155c27 after strengthened PLAN_LIFECYCLE_POLICY; re-verified again 2026-09-17 on main 1f570558 — `git diff 5155c27..1f570558 -- backend/` empty and deque(maxlen=50) confirmed at websocket_agent.py L474, prompt_handler.py estimate_tokens L17 / compress_prompt_messages L57 unchanged; code-read: websocket_agent.py L469–532, prompt_handler.py L1–67, completion.py L178–260; re-verified 2026-09-17 on main b37f3f10 — `git diff 1f57055..b37f3f10 -- backend/api/routes/websocket_agent.py backend/core/prompt_handler.py backend/core/llm/llm_gateway/completion.py backend/core/llm/provider_router.py` is 0-diff across fixes #396–#417, deque(maxlen=50) sed-confirmed live at websocket_agent.py L474, prompt_handler.py L17/L57 and completion.py L183/L245 sed-confirmed; Gate 0 precision finding re-verified with exact line numbers — see sliding_window bullet below; re-verified 2026-09-17 on main 83084ee8 — evidence files 0-diff since b37f3f10 (c606e028..83084ee8), deque(maxlen=50) sed-confirmed live at L474; Gate 0 adjacency note: founder landed M2 Context Engine (e48daaf0 — backend/context_engine/, budgeted smallest-sufficient-context assembly via ContextBlock/Section/BudgetReport) wired into the HTTP chat route backend/api/routes/chat.py, NOT the WS path — complementary budgeted-context pattern; this plan's WS compaction scope remains unclaimed and unaffected); IMPLEMENTED 2026-09-17 on main — websocket_agent.py: _compact_history() + hooks before user/assistant append, deque(maxlen=50) MEMLEAK-004 fix intact, non-stream acompletion contract {'success','text','model','cost'} handled with 'content' fallback + 1400-char defensive summary cap; prompt_handler.py: COMPACTION_SYSTEM_PROMPT / build_compaction_messages (prior-summary merge) / estimate_messages_tokens; tests/api/test_websocket_compaction.py 11/11 PASS + test_websocket_agent.py 42/42 + test_prompt_handler.py 5/5 regression PASS (local CI-mock env); live 60+ turn WS Gate-5 evidence still pending)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 302
+    },
+    {
+      "id": "head-of-planning-aider-repo-map-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #003: Aider-Style Repo Map (stdlib-ast, শূন্য নতুন Dependency) — DynamicPlanningEngine-এর Epistemic Probe-কে সত্যিকারের কোডবেস-দৃষ্টি দেওয়া",
+      "document_role": "implementation",
+      "planning_authority": "C5 (Execution — LLM Gateway) + Task Circle (backend/services/dynamic_planner.py মালিকানা)",
+      "canonical": null,
+      "status": "complete",
+      "source_file": "docs/plans/features/PLAN_003_AIDER_STYLE_REPO_MAP.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 5155c27 code-read: markdown_indexer.py L18–29, embeddings.py L18–66, dynamic_planner.py L108–124, advanced_model_router.py L137–162, intent_deciphering.py L87–101; backend py-file count = 1819; grep-verified no existing CodeIndexer; tree_sitter imported in style_learner.py L56 but NOT declared in pyproject.toml); re-verified 2026-09-17 on main b37f3f10 — embeddings.py drifted via eb589909 (hash_vectorize → process-stable blake2b _stable_hash — evidence STRENGTHENED: fallback embedding now deterministic across workers/restarts), new lines: _LOCAL_MODEL_NAME L19, get_local_encoder L36, _stable_hash L50, hash_vectorize L62–81; markdown_indexer.py / dynamic_planner.py / advanced_model_router.py / intent_deciphering.py / style_learner.py all 0-diff and line-confirmed; backend py-file count now 1827; grep re-confirmed no CodeIndexer exists); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), all cited lines hold; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 344
+    },
+    {
+      "id": "head-of-planning-letta-style-memory-distillation-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #004: Letta/ChatGPT-Style Write-Time Memory Distillation (বিদ্যমান Eternal Brain ফ্যাসাডে, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle (backend/core/circles/centers/memory_center.py) + C5 (Execution — LLM Gateway)",
+      "canonical": null,
+      "status": "complete",
+      "source_file": "docs/plans/features/PLAN_004_LETTA_STYLE_MEMORY_DISTILLATION.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (code-read on fresh main 37b05f4b, re-verified on main 1f570558 — `git diff 37b05f4b..1f570558 -- backend/ frontend/ apps/ packages/` is empty, code identical; unified_memory.py L27–121, memory_service.py L218/L298–348/L496–530, syncguard_agent.py L35–95, unified_memory_api.py L21–41, embeddings.py L1–66; web citations dated below); re-verified 2026-09-17 on main b37f3f10 — memory_service.py drifted via eb589909 (local hash_vectorize copy now delegates to canonical core.embeddings blake2b implementation; net −10 lines → symbol lines shifted), updated lines: _embed L208, store_memory L288, `embedding = self._embed(summary)` L306, pg INSERT INTO ai_memory L312–321, query_context L486; unified_memory.py L57–58 placeholder, syncguard_agent.py L83–90 store call, unified_memory_api.py L21–41 endpoint — সব sed-confirmed অপরিবর্তিত); re-verified 2026-09-17 on main 83084ee8 — all evidence files 0-diff since b37f3f10 (c606e028..83084ee8), unified_memory.py L57–58 placeholder sed-confirmed; Gate 0 adjacency note: founder pinned M3 memory-consolidation blueprint (ERR-F02, defect register 2026-09-17) — canonical store হবে Supabase `ai_memory` (vector 384), যেখানে এই প্ল্যানের distilled summary লেখা হয় — সম্পূরক (complementary), কোনো conflict নেই; target_scope: supremeai_internal recorded per founder 3-tier taxonomy (ab0f7d51)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "free-tier-federation",
+      "frontmatter_present": true,
+      "lines": 291
+    },
+    {
+      "id": "head-of-planning-ws-compact-command-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #005: Claude Code-Style User-Controlled /compact Trigger (বিদ্যমান PLAN-002 Compaction মেশিনারির উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle + C5 (Execution — LLM Gateway) — PLAN_002-এর হুবহু মালিকানা, একই WS চ্যাট সাবসিস্টেম",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/features/PLAN_005_USER_CONTROLLED_COMPACT_TRIGGER.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 68cf886c — websocket_agent.py ও prompt_handler.py 2fbe7fcd-এর পর থেকে 0-diff (সব core citation অপরিবর্তিত: _compact_history L449–497, receive L559, payload parse L562–575, auto-guard L580, user append L582, assistant guard L611, [DONE] L615, COMPACTION_* L80–115); founder commit 1dea1fe2 (CI unblock) test_websocket_compaction.py-এ শুধু formatting change করেছে (StubGateway __init__ reformat + ১টি assert line-join — semantically identical, ১১টি টেস্ট অক্ষত, grep-verified); frontend [DONE] contract (useChat.ts L92, chatService.ts L72) 0-diff; সংশোধন (honesty fix): depends_on-এ deque(maxlen=50)-এর citation L554 ভুল ছিল — সঠিক লাইন L548, এবং WS chat loop রেঞ্জ L555–616 → L557–616 (while True L557) — উভয়ই এই commit-এই সংশোধিত); final-state re-verification 2026-09-17 on main 5bdda2e2 (rebase target — evidence 0-diff, transitivity note তখন শুধু commit message-এ ছিল) এবং main 71b55f8a (docs-only commit — evidence files 0-diff): deque(maxlen=50) L548, _compact_history L449, COMPACTION_SUMMARY_CHAR_CAP=1400 L91, ১১টি টেস্ট পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে (plan_registry নয়, commit message নয়)",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 223
+    },
+    {
+      "id": "head-of-planning-memory-consolidation-v1-2026-09-17",
+      "subject": "Head of Planning — Plan #006: mem0/ChatGPT-Style Write-Time Memory Consolidation (বিদ্যমান M3 Canonical ai_memory Store-এর উপর, শূন্য নতুন Dependency, শূন্য নতুন Infra)",
+      "document_role": "implementation",
+      "planning_authority": "Memory Circle (backend/services/memory_service.py — CascadeMemoryService) — PLAN_004-এর হুবহু মালিকানা, একই memory সাবসিস্টেম",
+      "canonical": null,
+      "status": "proposed",
+      "source_file": "docs/plans/features/PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed); final-state re-verification 2026-09-17 on main 5bdda2e2 + 71b55f8a (rebase + docs-only — evidence files 0-diff): store_memory L287, _cosine_similarity L477, query_context L485 পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "unclassified",
+      "frontmatter_present": true,
+      "lines": 263
+    },
+    {
       "id": "auto-Plan_01_Dynamic_AI_Agent_System",
       "subject": "Plan 1: Dynamic AI Agent System & Multi-Agent Discovery",
       "document_role": "architecture",
@@ -1649,12 +1663,12 @@
       "lines": 674
     },
     {
-      "id": "auto-Plan_24_AI_Agent_Ecosystem_Integration",
-      "subject": "Plan 24: AI Agent Ecosystem Integration & MCP Standardization",
-      "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "id": "canonical-plan-24-omnichannel-mcp-agent-ecosystem",
+      "subject": "Plan 24 (Canonical Master): SupremeAI Omnichannel MCP Agent Ecosystem & Remote Control Plane",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "active",
       "source_file": "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md",
       "supersedes": [],
       "superseded_by": [],
@@ -1664,7 +1678,7 @@
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 784
+      "lines": 182
     },
     {
       "id": "auto:README",
@@ -1827,24 +1841,6 @@
       "family": "unclassified",
       "frontmatter_present": true,
       "lines": 116
-    },
-    {
-      "id": "auto:codebase_audit_and_remediation_roadmap_2026_08_25",
-      "subject": "SupremeAI — Codebase Audit & Roadmap (2026-08-25)",
-      "document_role": "audit",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "historical",
-      "source_file": "docs/plans/features/codebase_audit_and_remediation_roadmap_2026_08_25.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 75
     },
     {
       "id": "auto:codebase_gap_solution_unification_plan_bn",
@@ -2081,24 +2077,6 @@
       "lines": 2151
     },
     {
-      "id": "free-tier-production-upgrade",
-      "subject": "🚀 SupremeAI Free-Tier Production Upgrade Plan",
-      "document_role": "implementation",
-      "planning_authority": "Infrastructure Circle",
-      "canonical": false,
-      "status": "active",
-      "source_file": "docs/plans/features/free_tier_production_upgrade_plan_v2.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": "unverified",
-      "last_verified": "2026-09-17",
-      "disposition": "retain",
-      "target_scope": "supremeai_internal",
-      "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 1545
-    },
-    {
       "id": "free-tier-scaling-constitution-and-compliance",
       "subject": "SupremeAI Free-Tier Scaling Constitution & Compliance Policy",
       "document_role": "policy",
@@ -2112,9 +2090,9 @@
       "last_verified": "2026-09-15",
       "disposition": null,
       "target_scope": "supremeai_internal",
-      "family": "execution-phases",
+      "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 1212
+      "lines": 1215
     },
     {
       "id": "auto:full_integration_master_blueprint_bn",
@@ -2172,21 +2150,23 @@
     },
     {
       "id": "auto:kilo_ai_integration_backend_refactoring_plan",
-      "subject": "Kilo AI Integration and Backend Refactoring Plan",
+      "subject": "Consolidated & Merged Plan Reference: kilo_ai_integration_backend_refactoring_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/kilo_ai_integration_backend_refactoring_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 82
+      "lines": 21
     },
     {
       "id": "auto:kilo_coding_agent_workspace_reference",
@@ -2230,35 +2210,39 @@
       "document_role": "implementation",
       "planning_authority": "Architecture Governance / Planning Circle",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/mcp_gateway_dynamic_hub_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 17
+      "lines": 20
     },
     {
       "id": "auto-messaging_bots_telegram_and_whatsapp_architecture",
-      "subject": "Plan: The 3 Faces of SupremeAI — Unified Omnichannel Interaction Gateway (Web Dashboard, Telegram Bot & WhatsApp Bot)",
+      "subject": "Consolidated & Merged Plan Reference: messaging_bots_telegram_and_whatsapp_architecture.md",
       "document_role": "architecture",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/messaging_bots_telegram_and_whatsapp_architecture.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
+      "disposition": "redirect",
+      "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 114
+      "lines": 21
     },
     {
       "id": "mode3-zero-password-experience",
@@ -2334,21 +2318,23 @@
     },
     {
       "id": "auto-personal_mcp_gateway_multitenant_hub_plan",
-      "subject": "Architectural Analysis & Implementation Plan: Personal MCP Gateway & Multi-Tenant MCP Hub",
+      "subject": "Consolidated & Merged Plan Reference: personal_mcp_gateway_multitenant_hub_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/personal_mcp_gateway_multitenant_hub_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "combined_ecosystem",
       "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 276
+      "lines": 21
     },
     {
       "id": "plugin-to-agent-capability-lifecycle",
@@ -2367,24 +2353,6 @@
       "family": "unclassified",
       "frontmatter_present": true,
       "lines": 579
-    },
-    {
-      "id": "production-hardening-p1-p2-roadmap",
-      "subject": "SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)",
-      "document_role": "roadmap",
-      "planning_authority": "Architecture Circle",
-      "canonical": "candidate",
-      "status": "active",
-      "source_file": "docs/plans/features/production_hardening_and_p1_p2_roadmap_2026_09_11.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": "partial",
-      "last_verified": "2026-09-17",
-      "disposition": "retain",
-      "target_scope": "supremeai_internal",
-      "family": "control-tower-mcp",
-      "frontmatter_present": true,
-      "lines": 62
     },
     {
       "id": "production-readiness-final-stretch",
@@ -2694,21 +2662,23 @@
     },
     {
       "id": "auto:vscode_lm_multi_model_ide_support_plan",
-      "subject": "Integrate `vscode.lm` for In-built IDE Model Support",
+      "subject": "Consolidated & Merged Plan Reference: vscode_lm_multi_model_ide_support_plan.md",
       "document_role": "implementation",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "planning_authority": "Architecture Governance / Central Control Tower & Circle C5",
       "canonical": null,
-      "status": "historical",
+      "status": "superseded",
       "source_file": "docs/plans/features/vscode_lm_multi_model_ide_support_plan.md",
       "supersedes": [],
-      "superseded_by": [],
+      "superseded_by": [
+        "docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md"
+      ],
       "evidence_state": null,
       "last_verified": null,
-      "disposition": null,
+      "disposition": "redirect",
       "target_scope": "supremeai_internal",
-      "family": "unclassified",
+      "family": "control-tower-mcp",
       "frontmatter_present": true,
-      "lines": 61
+      "lines": 21
     },
     {
       "id": "auto:zero_cost_autonomous_self_evolution_plan",
@@ -2745,6 +2715,24 @@
       "family": "free-tier-federation",
       "frontmatter_present": true,
       "lines": 465
+    },
+    {
+      "id": "ci-cd-pipeline-architecture",
+      "subject": "SupremeAI Production CI/CD Pipeline Architecture & Optimization Specification",
+      "document_role": "architecture",
+      "planning_authority": "DevEx / CI Circle",
+      "canonical": null,
+      "status": "active",
+      "source_file": "docs/plans/infrastructure/CI_CD_PIPELINE_ARCHITECTURE.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": "2026-09-19",
+      "disposition": null,
+      "target_scope": "supremeai_internal",
+      "family": "ci-cd-pipeline",
+      "frontmatter_present": true,
+      "lines": 106
     },
     {
       "id": "auto:README",
@@ -2852,7 +2840,7 @@
       "target_scope": "supremeai_internal",
       "family": "free-tier-federation",
       "frontmatter_present": true,
-      "lines": 2172
+      "lines": 2173
     },
     {
       "id": "auto:free_tier_survival_and_resource_optimization_guide",
@@ -3017,24 +3005,6 @@
       "lines": 728
     },
     {
-      "id": "auto:PRODUCTION_ROADMAP_2026-09-11",
-      "subject": "SupremeAI — প্রোডাকশন রোডম্যাপ (২০২৬-০৯-১১)",
-      "document_role": "roadmap",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "historical",
-      "source_file": "docs/plans/phases/PRODUCTION_ROADMAP_2026-09-11.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "control-tower-mcp",
-      "frontmatter_present": true,
-      "lines": 62
-    },
-    {
       "id": "auto:README",
       "subject": "Execution Phases & Milestones Index",
       "document_role": "policy",
@@ -3141,26 +3111,6 @@
       "family": "execution-phases",
       "frontmatter_present": true,
       "lines": 57
-    },
-    {
-      "id": "historical-status-snapshot-2026-05-10",
-      "subject": "SupremeAI Current Status Report (2026-05-10 snapshot) — REDIRECTED",
-      "document_role": "audit",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": false,
-      "status": "historical",
-      "source_file": "docs/plans/phases/historical_status_snapshot_2026_05_10.md",
-      "supersedes": [],
-      "superseded_by": [
-        "docs/archive/plans/phases/historical_status_snapshot_2026_05_10.md"
-      ],
-      "evidence_state": "verified",
-      "last_verified": "2026-09-17",
-      "disposition": "redirect",
-      "target_scope": "combined_ecosystem",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 28
     },
     {
       "id": "auto:implementation_and_milestone_trackers",
@@ -3271,40 +3221,22 @@
       "lines": 103
     },
     {
-      "id": "auto:plan_inventory_2026-09-17",
-      "subject": "docs/plans/ Inventory & Governance Report",
-      "document_role": "roadmap",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "historical",
-      "source_file": "docs/plans/phases/plan_inventory_2026-09-17.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 88
-    },
-    {
       "id": "auto:plan_inventory_report",
       "subject": "docs/plans/ Inventory & Governance Report",
-      "document_role": "roadmap",
-      "planning_authority": "Architecture Governance / Planning Circle",
+      "document_role": null,
+      "planning_authority": null,
       "canonical": null,
-      "status": "historical",
+      "status": null,
       "source_file": "docs/plans/phases/plan_inventory_report.md",
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
       "last_verified": null,
       "disposition": null,
-      "target_scope": "supremeai_internal",
+      "target_scope": null,
       "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 105
+      "frontmatter_present": false,
+      "lines": 57
     },
     {
       "id": "auto:plan_reconciliation_register",
