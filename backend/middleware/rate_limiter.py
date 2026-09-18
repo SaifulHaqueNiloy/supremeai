@@ -7,6 +7,20 @@ from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.logging_config import logger
 
+# Issue #437 (log-storm dampener): under provider quota exhaustion every request
+# used to log a fallback warning (42–51% of all boot log lines during the
+# Upstash incident). Warn at most once per 5 minutes per process instead.
+_FALLBACK_WARN_INTERVAL = 300.0
+_last_fallback_warn: float = 0.0
+
+
+def _warn_fallback_throttled(message: str) -> None:
+    global _last_fallback_warn
+    now = time.monotonic()
+    if now - _last_fallback_warn >= _FALLBACK_WARN_INTERVAL:
+        _last_fallback_warn = now
+        logger.warning(message)
+
 
 class InMemoryFallbackLimiter:
     """Sliding-window rate limiter scoped per API key prefix as a fallback when Redis is down."""
@@ -104,8 +118,9 @@ class AsyncRateLimiter:
         try:
             client = await self._get_redis()
             if client is None:
-                logger.warning(
-                    f"Rate limiter Redis unavailable. Falling back to in-memory sliding window for {key}."
+                _warn_fallback_throttled(
+                    f"Rate limiter Redis unavailable — in-memory sliding window fallback active "
+                    f"(per-instance, NOT aggregate-safe). Last key: {key}."
                 )
                 return self._fallback_limiter.is_allowed(key, limit)
 
@@ -132,7 +147,9 @@ class AsyncRateLimiter:
 
             return is_allowed
         except Exception as e:
-            logger.warning(
-                f"Rate limiter Redis operation failed ({e}). Falling back to in-memory sliding window for {key}."
+            redis_manager.report_failure(e)
+            _warn_fallback_throttled(
+                f"Rate limiter Redis operation failed ({e}) — in-memory sliding window fallback "
+                f"active (per-instance, NOT aggregate-safe). Last key: {key}."
             )
             return self._fallback_limiter.is_allowed(key, limit)
