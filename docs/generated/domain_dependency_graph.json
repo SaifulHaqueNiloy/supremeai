@@ -2092,6 +2092,16 @@
     {
       "evidence": [
         {
+          "line": 20,
+          "path": "backend/tests/core/queue/test_task_queue_enhanced.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 17,
           "path": "backend/workers/chaos_worker.py"
         }
