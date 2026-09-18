@@ -230,8 +230,14 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
         if await main_llm_circuit.should_attempt_external():
             try:
                 # বাংলা মন্তব্য: সরাসরি গুগল নেটিভ ক্লায়েন্ট কল না করে ইউনিভার্সাল llm_gateway ব্যবহার করে এপিআই কল করা হচ্ছে
+                # M16 P-A: tenant_id propagate — এই পথ যেন CostGuard-এর একই
+                # spend feed-এ ভিড়ে যায় (আগে এটি metering-bypass ছিল; ড্যাশবোর্ডে
+                # খরচ অদৃশ্য থাকত)।
                 response = await llm_gateway.acompletion(
-                    prompt=enriched_prompt, task_type="chat", stream=False
+                    prompt=enriched_prompt,
+                    task_type="chat",
+                    stream=False,
+                    tenant_id=str(db.tenant_id) if db.tenant_id else None,
                 )
                 await main_llm_circuit.record_success()
                 response_text = (
@@ -388,8 +394,13 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
             if await main_llm_circuit.should_attempt_external():
                 try:
                     # বাংলা: ইউনিভার্সাল llm_gateway ব্যবহার করে স্ট্রিমিং সম্পন্ন করা হচ্ছে
+                    # M16 P-A: streaming পথেও tenant_id propagate — non-streaming
+                    # পথের সাথে একই metering parity।
                     response_stream = await llm_gateway.acompletion(
-                        prompt=enriched_prompt, task_type="chat", stream=True
+                        prompt=enriched_prompt,
+                        task_type="chat",
+                        stream=True,
+                        tenant_id=str(db.tenant_id) if db.tenant_id else None,
                     )
 
                     import json
