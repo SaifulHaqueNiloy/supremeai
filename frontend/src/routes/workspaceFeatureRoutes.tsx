@@ -90,20 +90,12 @@ connect them.
   STEP 2 — Backend Router Registration
 =========================================================================
 
-Open backend/api/routers.py and add ONE entry to the ALL_ROUTERS list.
-Do NOT add individual Tier-S router entries — use the centralised registry:
-
-  # Add this single line to ALL_ROUTERS in backend/api/routers.py:
-  {"path": "api.routes.tier_s_routes", "prefix": "", "is_admin": False, "is_critical": False},
-
-Then open backend/api/server.py and call register_tier_s_routes after
-the existing router registration block:
-
-  from api.routes.tier_s_routes import register_tier_s_routes
-  # ... after register_all_routers(app) or wherever routers are mounted ...
-  register_tier_s_routes(app)
-
-This single call mounts all 12 routers at their designated prefixes.
+All 12 Tier-S routers are ALREADY registered individually in
+backend/api/routers.py (share, reasoning, artifacts, chat_upload,
+slash_commands, chat_search, chat_export, global_memory,
+prompt_templates, branch_conversations, scheduled_tasks,
+deep_research). No action needed — do NOT invent a second registry
+(single source of truth: api/routers.py ALL_ROUTERS).
 
 =========================================================================
   STEP 3 — Frontend Route Integration (App.tsx)
@@ -113,7 +105,7 @@ Open frontend/src/App.tsx and make the following changes:
 
 --- 3a. Add the import at the top (with other lazy imports) ---
 
-  import { tierSUserRoutes } from './routes/tierSRoutes';
+  import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 
 --- 3b. Inside the USER PORTAL <Routes> block ---
 
@@ -121,7 +113,7 @@ Open frontend/src/App.tsx and make the following changes:
   must come first because <Route path="*" /> matches everything:
 
   {/* ═══ Tier-S Feature Routes ═══ */}
-  {tierSUserRoutes.map((r, i) => <Route key={i} path={r.path!} element={r.element} />)}
+  {workspaceFeatureRoutes.map((r, i) => <Route key={i} path={r.path!} element={r.element} />)}
 
   {/* Catch-all 404 Route — keep this LAST */}
   <Route path="*" element={<ErrorPage code={404} />} />
@@ -139,11 +131,11 @@ Open frontend/src/components/chat/ChatInterface.tsx.
   import { ThinkingPanel } from '../reasoning/ThinkingPanel';
   import { ArtifactsPanel } from '../artifacts/ArtifactsPanel';
   import { ImageUploadButton } from './ImageUploadButton';
-  import { ExportMenu } from '../export/ExportMenu';
+  import ExportMenu from '../export/ExportMenu';
   import BranchButton from '../branch/BranchButton';
   import { SlashCommandMenu } from '../commands/SlashCommandMenu';
   import { ChatSearchDialog } from '../search/ChatSearchDialog';
-  import { useTierSStore } from '../../store/tierSStore';
+  import { useTierSStore } from '../../store/workspaceUiStateStore';
 
 --- 4b. Inside the component body, destructure store values ---
 
@@ -331,8 +323,8 @@ Then attach this handler to your textarea:
     frontend/src/pages/PromptTemplatePage.tsx
 
   Frontend store & routes (2):
-    frontend/src/store/tierSStore.ts
-    frontend/src/routes/tierSRoutes.tsx    (this file)
+    frontend/src/store/workspaceUiStateStore.ts
+    frontend/src/routes/workspaceFeatureRoutes.tsx    (this file)
 
 =========================================================================
 `;

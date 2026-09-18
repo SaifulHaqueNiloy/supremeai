@@ -8,7 +8,7 @@ import { UnifiedChatBubble } from './UnifiedChatBubble';
 import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
-import { Volume2, VolumeX, Share2 } from 'lucide-react';
+import { BrainCircuit, Download, FileCode2, Volume2, VolumeX, Share2 } from 'lucide-react';
 
 import { ShareDialog } from '../share/ShareDialog';
 import { ImageUploadButton } from './ImageUploadButton';
@@ -16,7 +16,38 @@ import ExportMenu from '../export/ExportMenu';
 import BranchButton from '../branch/BranchButton';
 import { SlashCommandMenu } from '../commands/SlashCommandMenu';
 import { ChatSearchDialog } from '../search/ChatSearchDialog';
-import { useTierSStore } from '../../store/workspaceUiStateStore';
+import { ThinkingPanel } from '../reasoning/ThinkingPanel';
+import { ArtifactsPanel } from '../artifacts/ArtifactsPanel';
+import type { CapabilityExecutionResult } from '../../services/controlPlane';
+import {
+  useTierSStore,
+  type Artifact as WorkspaceArtifact,
+  type ReasoningStep,
+} from '../../store/workspaceUiStateStore';
+
+// M10 (issue #453) বাংলা: backend orchestration response-এ চুক্তি-অনুযায়ী ফিল্ড
+// এলে সেগুলোই S2/S3 স্টোরে যাবে — টাইপ-গার্ড ছাড়া কিছুই গ্রহণ করা হবে না।
+// ফিল্ড অনুপস্থিত থাকলে কিছুই বানানো হয় না (false-assurance doctrine)।
+function isReasoningStep(value: unknown): value is ReasoningStep {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as ReasoningStep).content === 'string'
+  );
+}
+
+function isWorkspaceArtifact(value: unknown): value is WorkspaceArtifact {
+  const candidate = value as WorkspaceArtifact;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof candidate.id === 'string' &&
+    typeof candidate.title === 'string' &&
+    typeof candidate.content === 'string' &&
+    typeof candidate.version === 'number' &&
+    ['html', 'react', 'svg', 'mermaid', 'code'].includes(candidate.artifact_type)
+  );
+}
 
 export const ChatInterface: React.FC = () => {
   const { chatHistory, addMessage, isOrchestrating, triggerOrchestration } = useStore();
@@ -24,11 +55,23 @@ export const ChatInterface: React.FC = () => {
     shareDialogOpen, shareConversationId, closeShareDialog, openShareDialog,
     slashMenuOpen, closeSlashMenu, slashFilter, slashPosition, openSlashMenu,
     searchDialogOpen, closeSearchDialog, openSearchDialog,
+    // S2: Reasoning
+    reasoningSteps, isThinking, showReasoning, toggleReasoning, setReasoningSteps,
+    // S3: Artifacts
+    artifacts, activeArtifactId, artifactsPanelOpen,
+    addArtifact, selectArtifact, toggleArtifactsPanel, setArtifactsPanelOpen,
   } = useTierSStore();
 
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  // M10 (issue #453) বাংলা: "current_conv" নকল প্লেসহোল্ডারের বদলে সত্যিকার
+  // conversation identity। ক্লায়েন্ট UUID তৈরি করে প্রতিটি orchestration
+  // payload-এ conversation_id হিসেবে পাঠায় — backend ConversationCommand
+  // ক্লায়েন্ট-সরবরাহকৃত conversation_id গ্রহণ করে (gateway_center.py:79)।
+  // কথোপকথন শুরুর আগে share/export/branch সৎভাবে disabled থাকে — কোনো ভুয়া
+  // id কখনো পাঠানো হয় না।
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -89,6 +132,11 @@ export const ChatInterface: React.FC = () => {
     const userMessage = input.trim();
     setInput('');
 
+    // M10 বাংলা: প্রথম মেসেজেই স্থায়ী conversation identity তৈরি হয় এবং
+    // পরের প্রতিটি কলে একই id বজায় থাকে।
+    const activeConversationId = conversationId ?? crypto.randomUUID();
+    if (!conversationId) setConversationId(activeConversationId);
+
     // Add user message
     addMessage({ role: 'user', content: userMessage });
 
@@ -110,16 +158,34 @@ export const ChatInterface: React.FC = () => {
         source: 'chat',
         payload: {
           prompt: userMessage,
+          conversation_id: activeConversationId,
           metadata: { idempotency_key: crypto.randomUUID() },
         },
       });
 
-      const assistantResponse = response.response || response.error || JSON.stringify(response);
+      const responseMap = response as CapabilityExecutionResult;
+      const assistantResponse =
+        (typeof responseMap.response === 'string' && responseMap.response) ||
+        (typeof responseMap.error === 'string' && responseMap.error) ||
+        JSON.stringify(responseMap);
       // Add assistant response
       addMessage({
         role: 'assistant',
         content: assistantResponse
       });
+
+      // M10 বাংলা: চুক্তি-অনুযায়ী ফিল্ড এলেই S2/S3 স্টোর সত্য তথ্যে ভরা হয়।
+      // CapabilityExecutionResult.data (unknown) হলো এক্সটেনশন পয়েন্ট —
+      // টাইপ-গার্ড পাস না করলে কিছুই গ্রহণ করা হয় না।
+      const data = responseMap.data as Record<string, unknown> | undefined;
+      if (data && Array.isArray(data.reasoning_steps)) {
+        setReasoningSteps(data.reasoning_steps.filter(isReasoningStep));
+      }
+      if (data && Array.isArray(data.artifacts)) {
+        for (const artifact of data.artifacts) {
+          if (isWorkspaceArtifact(artifact)) addArtifact(artifact);
+        }
+      }
 
       // Request TTS if voice enabled
       if (voiceEnabled && assistantResponse) {
@@ -149,17 +215,58 @@ export const ChatInterface: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* Toolbar area */}
       <div className="flex justify-end p-2 border-b border-slate-800 gap-2 items-center">
-        {/* S1: Share Button */}
-        <button 
-          onClick={() => openShareDialog("current_conv")}
-          className="p-2 rounded-lg transition-colors text-slate-400 hover:bg-slate-800"
-          title="Share Conversation"
+        {/* S1: Share Button — conversation শুরুর আগে সৎভাবে disabled (M10) */}
+        <button
+          onClick={() => {
+            if (conversationId) openShareDialog(conversationId);
+          }}
+          disabled={!conversationId}
+          className={`p-2 rounded-lg transition-colors ${
+            conversationId
+              ? 'text-slate-400 hover:bg-slate-800'
+              : 'text-slate-600 cursor-not-allowed opacity-60'
+          }`}
+          title={conversationId ? 'Share Conversation' : 'Start a conversation first'}
         >
           <Share2 size={18} />
         </button>
 
-        {/* S7: Export Menu */}
-        <ExportMenu conversationId="current_conv" />
+        {/* S7: Export Menu — conversation না থাকলে সৎ disabled placeholder */}
+        {conversationId ? (
+          <ExportMenu conversationId={conversationId} />
+        ) : (
+          <button
+            disabled
+            className="p-2 rounded-lg transition-colors text-slate-600 cursor-not-allowed opacity-60"
+            title="Start a conversation first"
+          >
+            <Download size={18} />
+          </button>
+        )}
+
+        {/* S2: Reasoning panel toggle */}
+        <button
+          onClick={toggleReasoning}
+          aria-pressed={showReasoning}
+          className={`p-2 rounded-lg transition-colors ${
+            showReasoning ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800'
+          }`}
+          title="Toggle reasoning panel"
+        >
+          <BrainCircuit size={18} />
+        </button>
+
+        {/* S3: Artifacts panel toggle */}
+        <button
+          onClick={toggleArtifactsPanel}
+          aria-pressed={artifactsPanelOpen}
+          className={`p-2 rounded-lg transition-colors ${
+            artifactsPanelOpen ? 'bg-slate-800 text-white' : 'text-slate-400 hover:bg-slate-800'
+          }`}
+          title="Toggle artifacts panel"
+        >
+          <FileCode2 size={18} />
+        </button>
 
         <button
           onClick={() => {
@@ -176,37 +283,60 @@ export const ChatInterface: React.FC = () => {
         </button>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {chatHistory.map((msg) => (
-          <div key={msg.id} className="relative group">
-            <UnifiedChatBubble
-              text={msg.content}
-              sender={msg.role === 'user' ? 'user' : 'system'}
-              timestamp={msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
-            />
-            
-            {/* S11: Branch Button */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <BranchButton
-                conversationId="current_conv"
-                messageId={msg.id ?? `message-${msg.timestamp ?? 'unknown'}`}
-                onBranchCreated={(newId) => { void newId; }}
+      {/* Messages Area + S3 Artifacts side panel */}
+      <div className="flex flex-1 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {chatHistory.map((msg) => (
+            <div key={msg.id} className="relative group">
+              <UnifiedChatBubble
+                text={msg.content}
+                sender={msg.role === 'user' ? 'user' : 'system'}
+                timestamp={msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
               />
-            </div>
 
-            {voiceEnabled && msg.role === 'assistant' && 'audioUrl' in msg && typeof (msg as { audioUrl?: unknown }).audioUrl === 'string' && (
-              <audio 
-                controls 
-                src={(msg as { audioUrl: string }).audioUrl} 
-                className="mt-2"
-                preload="none"
-              />
-            )}
+              {/* S11: Branch Button — সত্যিকার conversation_id থাকলেই রেন্ডার হয় */}
+              {conversationId && (
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <BranchButton
+                    conversationId={conversationId}
+                    messageId={msg.id ?? `message-${msg.timestamp ?? 'unknown'}`}
+                    onBranchCreated={(newId) => { void newId; }}
+                  />
+                </div>
+              )}
+
+              {voiceEnabled && msg.role === 'assistant' && 'audioUrl' in msg && typeof (msg as { audioUrl?: unknown }).audioUrl === 'string' && (
+                <audio
+                  controls
+                  src={(msg as { audioUrl: string }).audioUrl}
+                  className="mt-2"
+                  preload="none"
+                />
+              )}
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {artifactsPanelOpen && (
+          <div className="w-80 shrink-0 border-l border-slate-800" data-testid="artifacts-panel-container">
+            <ArtifactsPanel
+              artifacts={artifacts}
+              activeArtifactId={activeArtifactId ?? undefined}
+              onSelect={(artifact) => selectArtifact(artifact.id)}
+              onClose={() => setArtifactsPanelOpen(false)}
+              onNew={() => selectArtifact(null)}
+            />
           </div>
-        ))}
-        <div ref={messagesEndRef} />
+        )}
       </div>
+
+      {/* S2: Reasoning panel — thinking চলছে বা ধাপ থাকলেই দেখা যায় */}
+      {showReasoning && (isThinking || reasoningSteps.length > 0) && (
+        <div className="px-4 pb-2" data-testid="thinking-panel-container">
+          <ThinkingPanel steps={reasoningSteps} isThinking={isThinking} />
+        </div>
+      )}
 
       {/* Input Area */}
       <div className="p-4 border-t border-slate-800">

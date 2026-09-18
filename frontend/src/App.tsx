@@ -32,6 +32,9 @@ const CostDashboard = React.lazy(() => import("./pages/user/CostDashboard").then
 const ProfilePage = React.lazy(() => import("./pages/ProfilePage"));
 const ErrorPage = React.lazy(() => import("./pages/ErrorPage"));
 const DeepResearchPanel = React.lazy(() => import("./components/research/DeepResearchPanel"));
+// M10 (issue #453): Tier-S ChatInterface host — previously exported but mounted
+// NOWHERE. /chat gives the S1/S4/S5/S6/S7/S11 features a real home.
+const ChatInterface = React.lazy(() => import("./components/chat/ChatInterface").then(m => ({ default: m.ChatInterface })));
 const ScheduledTasksPanel = React.lazy(() => import("./components/schedule/ScheduledTasksPanel"));
 const MemoryPanel = React.lazy(() => import("./components/memory/MemoryPanel"));
 const SecretsPage = React.lazy(() => import("./components/dashboard/SecretsPage").then(m => ({ default: m.SecretsPage })));
@@ -217,6 +220,9 @@ const AppContent: React.FC = () => {
   <Route path="/marketplace" element={<ProtectedRoute><RouteBoundary><MarketplacePage /></RouteBoundary></ProtectedRoute>} />
   <Route path="/runs" element={<ProtectedRoute><RouteBoundary><RunsPage /></RouteBoundary></ProtectedRoute>} />
   <Route path="/usage" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><CostDashboard /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  {/* M10 (issue #453) বাংলা: Tier-S চ্যাট হোস্ট মাউন্ট — share/export/search/slash
+      ফিচারগুলো এখন প্রথমবারের মতো লাইভ রুটে পৌঁছাল। */}
+  <Route path="/chat" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><ChatInterface /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/research" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><DeepResearchPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/scheduled-tasks" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><ScheduledTasksPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
   <Route path="/memory" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><MemoryPanel /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
