@@ -2432,7 +2432,7 @@
     {
       "evidence": [
         {
-          "line": 15,
+          "line": 30,
           "path": "backend/core/embeddings.py"
         }
       ],
