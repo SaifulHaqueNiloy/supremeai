@@ -85,7 +85,31 @@ class ExperienceDatabase:
             self.qdrant_collection = "experience"
             self.vector_backend_degraded = True
             self.supabase_backend: Any = None
-            _warn_degraded_once()
+            # Issue #441 fix: the old gate returned here BEFORE the Supabase
+            # pgvector backend was ever constructed — but pgvector needs NO
+            # SQLite and NO local disk, so refusing the SQLite fallback must
+            # not kill the persistent remote store. Bring pgvector up; only
+            # when it is unavailable too do we stay a true pass-through.
+            if os.getenv("USE_SUPABASE_VECTOR", "true").lower() == "true":
+                try:
+                    from adaptive_engine.supabase_vector_backend import (
+                        SupabaseVectorBackend,
+                    )
+
+                    backend = SupabaseVectorBackend()
+                    if backend.is_available:
+                        self.supabase_backend = backend
+                        self.vector_backend_degraded = False
+                        logger.info(
+                            "✅ ExperienceDatabase local-storage-degraded mode: "
+                            "Supabase pgvector backend ACTIVE (persistent, no SQLite)"
+                        )
+                except Exception as exc:
+                    logger.warning(
+                        f"SupabaseVectorBackend init in degraded mode failed: {exc}"
+                    )
+            if self.supabase_backend is None:
+                _warn_degraded_once()
             return
 
         if not db_path:
@@ -268,8 +292,36 @@ class ExperienceDatabase:
     def record_experience(self, exp: Experience) -> int:
         # P0: pass-through degraded mode — writes no-op with a WARN (never crash).
         if getattr(self, "_degraded_no_store", False):
-            _warn_degraded_once()
-            return 0
+            # Issue #441 fix: with the pgvector backend alive, writes PERSIST to
+            # Supabase instead of being DROPPED (semantic cache stays real).
+            backend = getattr(self, "supabase_backend", None)
+            if backend is None:
+                _warn_degraded_once()
+                return 0
+            request_text = exp.request or ""
+            embedding = self._embed(request_text)
+            if not embedding:
+                logger.warning(
+                    "[ExperienceDB] degraded-mode write: embedding unavailable — "
+                    "experience not persisted (no vector space to store it in)."
+                )
+                return 0
+            import uuid as _uuid
+
+            ok = backend.upsert(
+                exp_id=f"degraded-{_uuid.uuid4().hex}",
+                text=request_text,
+                embedding=embedding,
+                result=exp.result or "success",
+                response_text=exp.generated_code or exp.action_taken or "",
+                user_id=exp.user_id or "",
+            )
+            if not ok:
+                logger.warning(
+                    "[ExperienceDB] degraded-mode pgvector upsert failed — write dropped."
+                )
+                return 0
+            return 1  # persisted via pgvector (synthetic id)
         timestamp = (
             exp.timestamp
             or __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
@@ -432,7 +484,28 @@ class ExperienceDatabase:
     ) -> list[dict[str, Any]]:
         # P0: pass-through degraded mode — "no matches" (semantic cache miss).
         if getattr(self, "_degraded_no_store", False):
-            return []
+            # Issue #441 fix: with the pgvector backend alive, degraded-mode
+            # queries hit the persistent remote store instead of always []
+            # (semantic cache gets real hits, not cache-miss-only).
+            backend = getattr(self, "supabase_backend", None)
+            if backend is None:
+                return []
+            embedding = self._embed(query)
+            if not embedding:
+                return []
+            try:
+                results = backend.query(
+                    query_embedding=embedding,
+                    limit=limit,
+                    threshold=threshold,
+                )
+                return self._map_supabase_hits(results)
+            except Exception as e:
+                self.vector_backend_degraded = True
+                logger.error(
+                    f"find_similar() degraded pgvector query failed: {e}"
+                )
+                return []
         embedding = self._embed(query)
         if not embedding:
             return []
@@ -446,21 +519,7 @@ class ExperienceDatabase:
                     threshold=threshold,
                 )
                 if results:
-                    # Normalize to existing schema (source/id/score/meta/response/text)
-                    hits: list[dict[str, Any]] = []
-                    for row in results:
-                        meta = row.get("metadata", {}) or {}
-                        hits.append(
-                            {
-                                "source": "supabase_pgvector",
-                                "id": row.get("id"),
-                                "score": float(row.get("similarity", 0.0)),
-                                "meta": meta,
-                                "response": meta.get("response", ""),
-                                "text": row.get("content", ""),
-                            }
-                        )
-                    return hits
+                    return self._map_supabase_hits(results)
                 # Supabase returned empty — fall through to ChromaDB/Qdrant
                 # (could be because no experiences stored yet, or Supabase unreachable)
             except Exception as e:
@@ -526,6 +585,24 @@ class ExperienceDatabase:
             self.vector_backend_degraded = True
             logger.error(
                 f"find_similar() query failed (returning empty, but this is a DEGRADED state, not 'no matches'): {e}"
+            )
+        return hits
+
+    @staticmethod
+    def _map_supabase_hits(results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Normalize Supabase pgvector rows to the existing hit schema."""
+        hits: list[dict[str, Any]] = []
+        for row in results:
+            meta = row.get("metadata", {}) or {}
+            hits.append(
+                {
+                    "source": "supabase_pgvector",
+                    "id": row.get("id"),
+                    "score": float(row.get("similarity", 0.0)),
+                    "meta": meta,
+                    "response": meta.get("response", ""),
+                    "text": row.get("content", ""),
+                }
             )
         return hits
 
