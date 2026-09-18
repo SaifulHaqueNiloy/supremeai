@@ -2632,7 +2632,7 @@
     {
       "evidence": [
         {
-          "line": 312,
+          "line": 310,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2642,7 +2642,7 @@
     {
       "evidence": [
         {
-          "line": 363,
+          "line": 361,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2652,7 +2652,7 @@
     {
       "evidence": [
         {
-          "line": 391,
+          "line": 389,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2662,7 +2662,7 @@
     {
       "evidence": [
         {
-          "line": 444,
+          "line": 442,
           "path": "backend/memory/supabase_store.py"
         }
       ],
