@@ -90,11 +90,37 @@ def test_exploration_candidate_returns_alternative() -> None:
     assert exploration_candidate(scores[:1]) is None
 
 
-def test_adaptive_routing_flag_default_off(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_adaptive_routing_flag_switchable_default_true(monkeypatch: pytest.MonkeyPatch) -> None:
+    # M05 P-A দ্বিতীয় অর্ধ: সুইটেবল-ডিফল্ট true; kill-switch অক্ষত; অজানা-মান
+    # fail-closed।
     monkeypatch.delenv("ENABLE_ADAPTIVE_ROUTING", raising=False)
-    assert get_adaptive_routing_enabled() is False
+    assert get_adaptive_routing_enabled() is True  # default: bounded খোলা
     monkeypatch.setenv("ENABLE_ADAPTIVE_ROUTING", "true")
     assert get_adaptive_routing_enabled() is True
+    monkeypatch.setenv("ENABLE_ADAPTIVE_ROUTING", "false")  # kill-switch
+    assert get_adaptive_routing_enabled() is False
+    monkeypatch.setenv("ENABLE_ADAPTIVE_ROUTING", "garbage")  # fail-closed
+    assert get_adaptive_routing_enabled() is False
+
+
+def test_exploration_candidate_never_explores_on_thin_evidence() -> None:
+    # M05 P-A sample-tier guardrail: cautious/insufficient প্রমাণ কখনো
+    # exploration-এ যায় না — কেবল normal-tier (≥50 observation)।
+    scores = refresh_score_snapshot(
+        [
+            _metric_row("lead_c", "lead_c/m1", requests=30, successes=29),  # cautious
+            _metric_row("alt_c", "alt_c/m1", requests=20, successes=18),  # cautious
+        ]
+    )
+    assert exploration_candidate(scores) is None  # পাতলা প্রমাণে নীরব অন্বেষণ নয়
+
+    mixed = refresh_score_snapshot(
+        [
+            _metric_row("tiny", "tiny/m1", requests=5, successes=5),  # insufficient
+            _metric_row("solid", "solid/m1", requests=100, successes=92),  # normal
+        ]
+    )
+    assert exploration_candidate(mixed) is None  # <2 normal-tier → অন্বেষণ অসম্ভব
 
 
 # ------------------------------------------------------------- dedup

@@ -76,8 +76,8 @@ Issue #453 Tier-1-এর ১ নম্বরে থাকা **Supreme Teleport-
 
 **Wave 2 পরবর্তী নোট:** উপরের ফিক্সগুলোতে vitest 532/532 (102 files), missions 62/62, STATUS_PROOF PASS অটুট — বেসলাইন পরিবর্তন হয়নি।
 
-**Wave 3 — সত্য-স্তর (cheap governance credibility): আংশিক — M05 P-A প্রথম অর্ধ সম্পন্ন (bf315947):**
-- **M05 P-A:** ✅ ENABLE_LEARNING_LOOP ডিফল্ট true (শূন্য-খরচ লুপ, HITL-only apply) + .env.example দৃশ্যমানতা। বাকি অর্ধ: exploration গেট sample-tier guardrail।
+**Wave 3 — সত্য-স্তর (cheap governance credibility): আংশিক — M05 P-A সম্পন্ন (bf315947 + দ্বিতীয় অর্ধ):**
+- **M05 P-A:** ✅ ENABLE_LEARNING_LOOP ডিফল্ট true (শূন্য-খরচ লুপ, HITL-only apply) + .env.example দৃশ্যমানতা। **দ্বিতীয় অর্ধ (2026-09-18):** ✅ exploration গেট সুইটেবল-ডিফল্ট true (`get_adaptive_routing_enabled` — শূন্য-অতিরিক্ত-খরচ চেইন-লেজ অন্বেষণ) + sample-tier guardrail (`exploration_candidate` কেবল normal-tier ≥50-observation প্রমাণে যায়; cautious/insufficient কখনো নয়) + kill-switch অক্ষত (false = আজকের আচরণ) + অজানা-মান fail-closed।
 - **M13 (S):** বাকি — middleware truth-map, hardcoded limits → config, tenant limiter bounded fail-mode।
 - **M14 (S):** বাকি — ভুয়া STT/TTS success semantics প্রত্যাহার, zero-cost Web Speech first।
 
