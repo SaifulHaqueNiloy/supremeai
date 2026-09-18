@@ -217,14 +217,17 @@ export default function DeepResearchPanel() {
               // ("step"/"report") alongside the legacy names — before this,
               // live steps and the final report NEVER rendered.
               if (event.type === 'step_update' && event.step) {
+                // TS-narrowing: এই শাখায় step সর্বদা ResearchStep-আকৃতি (number
+                // শাখাটি 'step' টাইপের জন্য) — typecheck বাগ f32cc25b-এ ভেদ।
+                const stepObject = event.step as ResearchStep;
                 setSteps((prev) => {
-                  const exists = prev.findIndex((s) => s.step_number === event.step!.step_number);
+                  const exists = prev.findIndex((s) => s.step_number === stepObject.step_number);
                   if (exists >= 0) {
                     const updated = [...prev];
-                    updated[exists] = event.step!;
+                    updated[exists] = stepObject;
                     return updated;
                   }
-                  return [...prev, event.step!].sort((a, b) => a.step_number - b.step_number);
+                  return [...prev, stepObject].sort((a, b) => a.step_number - b.step_number);
                 });
               } else if (event.type === 'step' && typeof event.step === 'number') {
                 const backendStep: ResearchStep = {

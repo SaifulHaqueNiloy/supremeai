@@ -9,6 +9,7 @@ import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
 import { getApiBaseUrl } from '../../utils/api';
+import { AudioPlaybackService } from '../../services/audio/AudioPlaybackService';
 import { BrainCircuit, Download, FileCode2, Volume2, VolumeX, Share2 } from 'lucide-react';
 
 import { ShareDialog } from '../share/ShareDialog';
@@ -66,6 +67,11 @@ export const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  // M14 P-C: zero-cost ব্রাউজার-TTS playback (capability-detection সহ)।
+  const playbackRef = useRef<AudioPlaybackService | null>(null);
+  useEffect(() => {
+    playbackRef.current = new AudioPlaybackService();
+  }, []);
   // M10 (issue #453) বাংলা: "current_conv" নকল প্লেসহোল্ডারের বদলে সত্যিকার
   // conversation identity। ক্লায়েন্ট UUID তৈরি করে প্রতিটি orchestration
   // payload-এ conversation_id হিসেবে পাঠায় — backend ConversationCommand
@@ -101,15 +107,23 @@ export const ChatInterface: React.FC = () => {
   // Issue #452 fix: the voice toggle previously emitted TTS_GENERATED into
   // the void — no component anywhere subscribed to 'tts:generated', so
   // "voice responses" did nothing for user chat.  Deliver it for real:
-  // fetch the backend's streaming TTS endpoint (ElevenLabs → edge-tts chain,
-  // honest failure when no provider is configured) with the auth header —
-  // an <audio src> cannot send Authorization headers — and play the blob.
+  // M14 P-C zero-cost first-path: browser speechSynthesis (কী-বিহীন, backend
+  // ব্যয় শূন্য) উপলব্ধ হলে সেটাই প্রথম-পছন্দ; অনুপস্থিত হলে backend-এর
+  // streaming TTS endpoint (ElevenLabs → edge-tts chain, honest failure)।
+  // কোনোটাই সম্ভব না হলে স্পষ্ট অসমর্থন-বার্তা — ভাঙা-বোতাম নয়।
   useEventBus(
     Events.TTS_GENERATED,
     async (payload: unknown) => {
       const data = payload as { text?: string } | undefined;
       const text = (data?.text || '').trim();
       if (!text) return;
+
+      // ১) শূন্য-ব্যয় ব্রাউজার TTS (capability-detection প্রমাণসহ)
+      if (playbackRef.current?.ttsSupported && playbackRef.current.play(text)) {
+        return;
+      }
+
+      // ২) fallback: backend TTS (auth header সহ fetch + blob playback)
       try {
         const token =
           localStorage.getItem('supremeai_auth_token') ||
