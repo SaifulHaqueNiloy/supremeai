@@ -101,7 +101,7 @@ from datetime import datetime
 
 JOB_ID = "__JOB_ID__"
 CALLBACK_URL = "__CALLBACK_URL__"
-CALLBACK_TOKEN = "__CALLBACK_TOKEN__"
+CALLBACK_TOKEN = "__CALLBACK_TOKEN__"  # placeholder template
 JOB_PAYLOAD = json.loads(r"""__PAYLOAD_JSON__""")
 
 

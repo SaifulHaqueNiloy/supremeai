@@ -201,12 +201,12 @@ class TestTenantFailMode:
 
         rm_mod = importlib.import_module("core.cache.redis_manager")
 
-        class _FakeClient:
-            def pipeline(self):
-                return _FakePipe(hits=0, fail=True)
+        class _FailingClient:
+            async def eval(self, *a, **k):
+                raise RuntimeError("redis pipeline down")
 
         class _FakeRM:
-            client = _FakeClient()
+            client = _FailingClient()
 
         monkeypatch.setattr(rm_mod, "redis_manager", _FakeRM())
         with pytest.raises(HTTPException) as exc:
@@ -221,12 +221,12 @@ class TestTenantFailMode:
 
         rm_mod = importlib.import_module("core.cache.redis_manager")
 
-        class _FakeClient:
-            def pipeline(self):
-                return _FakePipe(hits=4)
+        class _OverLimitClient:
+            async def eval(self, *a, **k):
+                return 4  # current_hits > configured max_hits=3
 
         class _FakeRM:
-            client = _FakeClient()
+            client = _OverLimitClient()
 
         monkeypatch.setattr(rm_mod, "redis_manager", _FakeRM())
         with pytest.raises(HTTPException) as exc:

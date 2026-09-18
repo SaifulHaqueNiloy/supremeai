@@ -217,42 +217,26 @@ class RateLimiter:
             return self._fallback_is_allowed(key, limit, window)
 
         try:
+            # Issue #460 (Pillar 1): single atomic EVAL (1 billable op).
+            # The old two-phase check/add pipelines cost 4 billable commands
+            # per request. The Lua script preserves both P2 guarantees:
+            # no window extension on retries (EXPIRE only on first INCR) and
+            # no refill-then-pass behavior (attempts are counted, not just
+            # accepted requests — retry storms stay throttled).
+            from core.cache.rate_limit_atomic import atomic_window_incr
+
             now = time.time()
-
-            # FIX (P2, review 2026-09-12): two-phase sliding window. The old
-            # single pipeline added the request to the window EVEN WHEN
-            # REJECTING it — every retry refilled the zset and reset the key
-            # expiry, so a client that hit the limit stayed blocked for as
-            # long as it kept retrying (self-amplifying 429 loop).
-            check_pipe = redis.pipeline(transaction=True)
-            check_pipe.zremrangebyscore(key, 0, now - window)
-            check_pipe.zcard(key)
-            check_results = await check_pipe.execute()
-            current_count = check_results[1]
-
-            remaining = max(0, limit - current_count)
-            reset_time = now + window
-
-            if current_count >= limit:
-                return False, {
-                    "remaining": 0,
-                    "reset": reset_time,
-                    "current": current_count,
-                    "limit": limit,
-                }
-
-            # Allowed — NOW record the request and set expiry.
-            add_pipe = redis.pipeline(transaction=True)
-            add_pipe.zadd(key, {str(now): now})
-            add_pipe.expire(key, window)
-            await add_pipe.execute()
-
-            return True, {
-                "remaining": remaining,
-                "reset": reset_time,
-                "current": current_count,
+            count = await atomic_window_incr(redis, str(key), window)
+            metadata = {
+                "remaining": max(0, limit - count),
+                "reset": now + window,
+                "current": count,
                 "limit": limit,
             }
+
+            if count > limit:
+                return False, metadata
+            return True, metadata
 
         except Exception as e:
             logger.error(f"Rate limit check error: {e}")

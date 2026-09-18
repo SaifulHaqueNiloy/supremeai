@@ -96,14 +96,21 @@ async def enforce_tenant_rate_limit(request: Request):
         _degraded_response(identity, fail_mode)
         return
 
-    cache_key = f"rate_limit:{identity}"
+    # Issue #460: dedicated namespace. The old "rate_limit:{identity}" name
+    # collides with AsyncRateLimiter's ZSET keys ("rate_limit:ip:{ip}") —
+    # a counter INCR against a ZSET is WRONGTYPE, so the two limiters used
+    # to fight over the same keys.
+    cache_key = f"tenant_rl:{identity}"
 
     try:
-        pipe = redis_manager.client.pipeline()
-        pipe.incr(cache_key)
-        pipe.expire(cache_key, settings.tenant_rate_limit_window_seconds)
-        results = await pipe.execute()
-        current_hits = results[0]
+        # Issue #460: single atomic EVAL (1 billable op) instead of the
+        # INCR+EXPIRE 2-command pipeline.
+        # M13 P-B (union-merge): window config-চালিত — hardcode 60 নয়।
+        from core.cache.rate_limit_atomic import atomic_window_incr
+
+        current_hits = await atomic_window_incr(
+            redis_manager.client, cache_key, settings.tenant_rate_limit_window_seconds
+        )
 
         if current_hits > settings.tenant_rate_limit_max_hits:
             logger.critical(f"🚨 Rate Limit Exceeded for {identity} ({current_hits} hits)!")

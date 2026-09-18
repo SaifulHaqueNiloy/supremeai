@@ -6,8 +6,11 @@ verify_admin_session_fail_closed ব্যবহার হবে (JWT ভিত�
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
@@ -45,8 +48,10 @@ async def _verify_admin(request: Request) -> dict:
                 "role": "admin",
                 "subject": str(payload.get("sub") or payload.get("email") or "jwt"),
             }
-    except HTTPException:
-        pass  # fall through to the static ops token
+    except HTTPException as exc:
+        logger.debug(
+            "JWT admin token check failed (%s); falling through to static token fallback", exc
+        )
     static_token = os.getenv("ADMIN_TOKEN", "")
     auth = request.headers.get("Authorization", "")
     if static_token and auth == f"Bearer {static_token}":

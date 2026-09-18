@@ -164,12 +164,32 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             or bool(os.getenv("PYTEST_CURRENT_TEST"))
             or os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "false"
         )
-        if not is_testing and not await self._check_rate_limit(client_ip, request.url.path):
-            return Response(
-                status_code=429,
-                content=b'{"error": "Too many requests"}',
-                media_type="application/json",
+        if not is_testing:
+            # Issue #460 dedup: APIKeyAuthMiddleware (outermost) already
+            # evaluated this request's IP verdict at the same (limit, window)
+            # — reuse it instead of double-billing a second Redis evaluation.
+            eff_limit, eff_window = self._effective_limits(request.url.path)
+            verdict = getattr(request.state, "rate_limit_ip_verdict", None)
+            shared = (
+                verdict is not None
+                and verdict.get("limit") == eff_limit
+                and verdict.get("window") == eff_window
             )
+            if shared:
+                allowed = verdict["allowed"]
+            else:
+                allowed = await self._check_rate_limit(client_ip, request.url.path)
+                request.state.rate_limit_ip_verdict = {
+                    "allowed": allowed,
+                    "limit": eff_limit,
+                    "window": eff_window,
+                }
+            if not allowed:
+                return Response(
+                    status_code=429,
+                    content=b'{"error": "Too many requests"}',
+                    media_type="application/json",
+                )
 
         # Scan for SQL injection in query params
         query_string = str(request.query_params)
@@ -207,11 +227,18 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
         return get_client_ip(request)
 
+    def _effective_limits(self, path: str) -> tuple[int, int]:
+        """Resolve (limit, window) for a path — default or critical-path override."""
+        for critical_path, config in self.SIMPLE_RATE_LIMITS.items():
+            if path.startswith(critical_path):
+                return int(config["requests"]), int(config["window"])
+        return self.RATE_LIMIT, self.RATE_WINDOW
+
     async def _check_rate_limit(self, client_ip: str, path: str) -> bool:
         """Rate limit check — Redis-authoritative with emergency fallback.
 
-        বাংলা: দুই-ফেজ sliding window (prune+count, তারপর allow হলে add) —
-        reject-এ zset refill হয় না (self-amplifying 429 loop bug এড়াতে,
+        বাংলা: একক atomic EVAL (issue #460) — INCR+EXPIRE ১টি op-এ হয়, retry
+        দিয়ে window বাড়ানো যায় না (self-amplifying 429 loop bug এড়াতে,
         core/rate_limit.py-এর P2 fix-এর সাথে consistent)।
         """
         # Determine applicable limits
@@ -239,25 +266,15 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
 
         if client is not None:
             try:
-                import secrets
+                # Issue #460 (Pillar 1): single atomic EVAL (1 billable op).
+                # Old two-phase prune+count then add+expire = 4 billable
+                # commands per request. EXPIRE only lands on the first INCR,
+                # so retries can never extend the window (P2 guarantee kept).
+                from core.cache.rate_limit_atomic import atomic_window_incr
 
-                now = time.time()
-                member = f"{now}_{secrets.token_hex(4)}"
-                zset_key = f"security_rate_limit:{tracking_key}"
-
-                check_pipe = client.pipeline(transaction=True)
-                check_pipe.zremrangebyscore(zset_key, 0, now - window)
-                check_pipe.zcard(zset_key)
-                count = (await check_pipe.execute())[1]
-
-                if count >= limit:
-                    return False
-
-                add_pipe = client.pipeline(transaction=True)
-                add_pipe.zadd(zset_key, {member: now})
-                add_pipe.expire(zset_key, window)
-                await add_pipe.execute()
-                return True
+                rl_key = f"security_rate_limit:{tracking_key}"
+                count = await atomic_window_incr(client, rl_key, window)
+                return count <= limit
             except Exception as exc:  # noqa: BLE001 — degrade to memory, never 500
                 redis_manager.report_failure(exc)
                 self._fallback_warned = True

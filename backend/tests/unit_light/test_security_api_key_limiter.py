@@ -21,24 +21,20 @@ async def test_fail_open_when_redis_unavailable():
 
 @pytest.mark.asyncio
 async def test_under_limit_passes():
-    pipe = MagicMock()
-    pipe.execute = AsyncMock(return_value=[5])
+    # Issue #460 contract: ONE billable atomic EVAL per evaluation.
     client = MagicMock()
-    client.pipeline = MagicMock(return_value=pipe)
+    client.eval = AsyncMock(return_value=5)
     manager = MagicMock()
     manager.client = client
     with patch("core.cache.redis_manager.redis_manager", manager):
         await enforce_api_key_rate_limit("abc123hash", max_requests=10)
-    pipe.incr.assert_called_once()
-    pipe.expire.assert_called_once()
+    client.eval.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_over_limit_raises_429():
-    pipe = MagicMock()
-    pipe.execute = AsyncMock(return_value=[11])
     client = MagicMock()
-    client.pipeline = MagicMock(return_value=pipe)
+    client.eval = AsyncMock(return_value=11)
     manager = MagicMock()
     manager.client = client
     with patch("core.cache.redis_manager.redis_manager", manager):
@@ -49,14 +45,14 @@ async def test_over_limit_raises_429():
 
 @pytest.mark.asyncio
 async def test_unexpected_redis_error_fails_open():
+    client = MagicMock()
+    client.eval = AsyncMock(side_effect=Exception("redis boom"))
     manager = MagicMock()
-    manager.client = MagicMock()
-    manager.client.pipeline = MagicMock(side_effect=Exception("redis boom"))
+    manager.client = client
     with patch("core.cache.redis_manager.redis_manager", manager):
         await enforce_api_key_rate_limit("abc123hash")
 
 
 def test_constants_are_sane():
     assert API_KEY_LIMIT_PREFIX.startswith("apikey:rate:")
-    assert isinstance(DEFAULT_MAX_REQUESTS_PER_MINUTE, int)
     assert DEFAULT_MAX_REQUESTS_PER_MINUTE > 0
