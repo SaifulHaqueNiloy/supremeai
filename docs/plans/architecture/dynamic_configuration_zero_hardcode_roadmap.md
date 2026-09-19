@@ -93,7 +93,7 @@ deployment/build scripts
     → may contain service-specific assumptions
 ```
 
-`firebase.json` currently contains a concrete `supremeai-backend-docker.onrender.com` destination, while the current live backend discussed for production is `supremeai-backend-v2.onrender.com`. fileciteturn105file0
+`firebase.json` currently contains a concrete `<render-backend-host>` destination, while the current live backend discussed for production is `<render-backend-host>`. fileciteturn105file0
 
 The frontend API client is already designed around build-time environment variables, but it also contains hostname-based routing and development fallbacks that need to be audited for production consistency. fileciteturn101file0
 
@@ -667,8 +667,8 @@ hardcoded fallback Render service names
 especially:
 
 ```text
-supremeai-backend-v2.onrender.com
-supremeai-backend-docker.onrender.com
+<render-backend-host>
+<render-backend-host>
 ```
 
 from code/scripts where they represent deployment-specific configuration.

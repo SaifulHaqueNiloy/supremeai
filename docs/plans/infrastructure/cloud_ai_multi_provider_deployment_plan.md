@@ -152,7 +152,7 @@ CMD ["ollama", "serve"]
 ### Step 3: Environment Variables
 ```yaml
 HF_API_KEY: your-huggingface-key
-RENDER_TINYLLAMA_URL: https://tinyllama.onrender.com
+RENDER_TINYLLAMA_URL: https://<tinyllama-url>
 FLY_API_KEY: your-fly-key
 KOYEB_API_KEY: your-koyeb-key
 ```

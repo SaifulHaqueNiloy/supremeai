@@ -129,8 +129,8 @@ xterm, electron, storybook — যদি কেবলমাত্র admin dashb
 
 | # | ইস্যু | ফিক্স |
 |---|---|---|
-| 10 | **`SCRAPER_SERVICE_URL` hardcoded** — `render.yaml` line 27: `https://supremeai-scraper.onrender.com`। `scraper-ci.yml`-এ deploy trigger নেই (REAL_TESTING_LOG line 5)। | Cloudflare Worker-এ binding sync + CI deploy trigger fix। |
-| 11 | **`.env.example` line 18** — `ALLOWED_HOSTS=supremeai-backend.onrender.com,supremeai-admin.onrender.com`। কিন্তু `supremeai-admin.onrender.com` SUSPENDED (project memory: admin-build-backend-host)। | `.env.example` + `render.yaml` এ `supremeai-backend-docker.onrender.com` ব্যবহার করুন। |
+| 10 | **`SCRAPER_SERVICE_URL` hardcoded** — `render.yaml` line 27: `https://<render-scraper-url>`। `scraper-ci.yml`-এ deploy trigger নেই (REAL_TESTING_LOG line 5)। | Cloudflare Worker-এ binding sync + CI deploy trigger fix। |
+| 11 | **`.env.example` line 18** — `ALLOWED_HOSTS=<render-backend-host>,<render-admin-host>`। কিন্তু `<render-admin-host>` SUSPENDED (project memory: admin-build-backend-host)। | `.env.example` + `render.yaml` এ `<render-backend-host>` ব্যবহার করুন। |
 
 #### 4.5 পারফর্ম্যান্স
 
@@ -147,7 +147,7 @@ xterm, electron, storybook — যদি কেবলমাত্র admin dashb
 |---|---|---|---|
 | **P0** | Admin dashboard tab wire-up (System Alerts, Threats, Users, Config, Backups) | S | 80% ব্যবহারকারী "dashboard ভাঙা" বলে ভাবে; backend endpoints প্রস্তুত |
 | **P0** | psycopg2 → psycopg3 migration + PyJWT full migration | M | Security + async pgvector native |
-| **P0** | `supremeai-admin.onrender.com` dead URL fix (render.yaml + .env.example) | S | Suspended domain causing CORS errors |
+| **P0** | `<render-admin-host>` dead URL fix (render.yaml + .env.example) | S | Suspended domain causing CORS errors |
 | **P1** | LiteLLM gateway integration with router.py | M | Unified provider routing + Redis cache + cost tracking |
 | **P1** | Merge 10+ CI workflows into 2-3 logical workflows | M | Maintenance overhead কমে |
 | **P1** | Frontend test coverage (vitest + component tests) | L | Regression protection |
@@ -185,7 +185,7 @@ xterm, electron, storybook — যদি কেবলমাত্র admin dashb
 | ✅ | `python-jose` deprecated, `PyJWT` migration partial | LESSONS_LEARNED confirm করে না, কিন্তু `pyproject.toml`-এ both coexist করে |
 | ✅ | Electron deps এখনো frontend-এ আছে | `fix_electron.cjs` root-এ আছে + `fix_pkg.cjs` — cleanup incomplete |
 | ✅ | 10+ CI workflow merge দরকার | `.github/` এ files count confirmed |
-| ✅ | `supremeai-admin.onrender.com` dead URL | CHECKPOINT.md তে explicitly mentioned as suspended |
+| ✅ | `<render-admin-host>` dead URL | CHECKPOINT.md তে explicitly mentioned as suspended |
 | ✅ | Duplicate hooks (`useDashboardData` vs `useAdminApi`) | Root-এ `scratch`, `fix_*.py`, `fix_*.cjs` files — duplicate work pattern দেখা যাচ্ছে |
 | ✅ | LiteLLM gateway আছে কিন্তু router.py তে integrate নেই | LESSONS_LEARNED 2026-08-17 confirm করে: "LiteLLMGateway... Redis cache + Langfuse" added কিন্তু router integration pending |
 | ✅ | `.gitignore *.txt` masking issue | LESSONS_LEARNED 2026-08-17: "requirements.txt" bug — FIXED already |
@@ -297,9 +297,9 @@ CHECKPOINT এবং LESSONS_LEARNED দেখে আমার analysis:
 
 ### E. `ALLOWED_HOSTS` Dead Domain Fix — এটা আমার কাছে Highest P0
 ```
-.env.example → ALLOWED_HOSTS=supremeai-backend.onrender.com,supremeai-admin.onrender.com
+.env.example → ALLOWED_HOSTS=<render-backend-host>,<render-admin-host>
 ```
-`supremeai-admin.onrender.com` SUSPENDED — এটা CORS error cause করছে সব request-এ। এটা 2 মিনিটের fix, maximum impact।
+`<render-admin-host>` SUSPENDED — এটা CORS error cause করছে সব request-এ। এটা 2 মিনিটের fix, maximum impact।
 
 ---
 

@@ -1,6 +1,6 @@
 """reconcile task_history schema + document production baseline drift
 
-Applied directly to production (project xtvkltzmberxekoamala) and mirrored
+Applied directly to production (project <project-ref>) and mirrored
 here for version control / future environments (staging, local, CI).
 
 Background: CloudPostgresStore.save_task() INSERTs into
