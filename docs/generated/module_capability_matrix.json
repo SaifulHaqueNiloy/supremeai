@@ -6341,6 +6341,15 @@
     },
     {
       "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/secret_policy.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
@@ -19023,6 +19032,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
+      "path": "frontend/src/contexts/ThemeProvider.test.tsx"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
       "path": "frontend/src/contexts/ThemeProvider.tsx"
     },
     {
@@ -19868,6 +19884,7 @@
     {
       "capability_signals": [
         "execute",
+        "memory",
         "register"
       ],
       "classification": "human_review",
@@ -20229,7 +20246,21 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
+      "path": "frontend/src/services/tokenStorage.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
       "path": "frontend/src/shared/supremeShared.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "frontend/src/store/adminSessionPersistence.test.ts"
     },
     {
       "capability_signals": [],
@@ -20260,6 +20291,7 @@
     {
       "capability_signals": [
         "browser",
+        "memory",
         "register"
       ],
       "classification": "human_review",
@@ -20664,7 +20696,10 @@
       "path": "frontend/src/utils/secureWebSocket.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health",
+        "mcp"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -20754,6 +20789,15 @@
       "entrypoints": [],
       "kind": "js",
       "path": "infrastructure/cloudflare_worker.js"
+    },
+    {
+      "capability_signals": [],
+      "classification": "adapter",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "infrastructure/mcp-control-plane/scripts/runtime/infisical_bootstrap.py"
     },
     {
       "capability_signals": [],
@@ -24932,5 +24976,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2871
+  "source_file_count": 2876
 }
