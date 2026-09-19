@@ -57,6 +57,41 @@ async def app_lifespan(app):
 
     setup_silent_catcher()
 
+    # Issue #451: capture the main loop (sync store callers bridge through
+    # it) and hydrate every durable state store from Redis before serving.
+    import asyncio as _asyncio
+
+    from core import state_store as _state_store
+
+    _state_store.set_main_loop(_asyncio.get_running_loop())
+    try:
+        hydrated = await _state_store.hydrate_all()
+        logger.info("Durable state stores hydrated: %d record(s)", hydrated)
+        # Feature-level hydrations that read the mirror into live objects.
+        try:
+            from core.social_growth import social_growth_circle
+
+            social_growth_circle.hydrate()
+        except Exception as sg_err:
+            logger.warning("social_growth hydrate skipped: %s", sg_err)
+        try:
+            from tools.learning.style_learner import _learner as style_learner_singleton
+
+            style_learner_singleton.hydrate()
+        except Exception as sl_err:
+            logger.debug("style_learner hydrate skipped: %s", sl_err)
+        try:
+            # Issue #451: previously-persisted KnowledgeNodes are reloaded so
+            # "learned knowledge" survives restarts (was `_persist() == pass`).
+            from core.unified_learning import get_learning_engine
+
+            await get_learning_engine().load_persisted()
+        except Exception as ul_err:
+            logger.debug("unified_learning load_persisted skipped: %s", ul_err)
+        _state_store.log_banner()
+    except Exception as ss_err:
+        logger.warning("Durable state store hydration failed (mirror-only mode): %s", ss_err)
+
     # Record system startup
     await metrics_collector.set_gauge("system_startup_time", time.time())
 
