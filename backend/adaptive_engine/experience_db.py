@@ -45,6 +45,29 @@ def _warn_degraded_once() -> None:
         )
 
 
+# Issue #441: one-time LOUD boot warning for the degraded self-learning memory
+# stack. Mirrors the "🚨 BOOT-TIME WARNING" style of core/config_validation.py
+# (merged PR #716 pattern): the fail-closed policy above is correct, but the
+# degraded state must be visible at boot, not discovered from missing data.
+_low_memory_boot_warned = False
+
+
+def _warn_low_memory_learning_degraded_once() -> None:
+    """Issue #441: announce ONCE per process that learning features are degraded."""
+    global _low_memory_boot_warned
+    if not _low_memory_boot_warned:
+        _low_memory_boot_warned = True
+        logger.warning(
+            "🚨 BOOT-TIME WARNING: LOW_MEMORY_MODE=true — the self-learning experience "
+            "store is DEGRADED: ExperienceDatabase runs as a pass-through in production "
+            "(local SQLite/ChromaDB/Qdrant/SentenceTransformer all disabled; experience "
+            "writes and semantic recall persist only while the Supabase pgvector backend "
+            "is available). Learning-platform features are degraded — see "
+            "docs/operations/LEARNING_PLATFORM_ENABLEMENT.md (issue #441) before "
+            "enabling learning agents."
+        )
+
+
 @dataclass
 class Experience:
     id: int | None = None
@@ -76,6 +99,10 @@ class ExperienceDatabase:
         self._degraded_no_store = False
         if db_path is None and not sqlite_fallback_allowed("experience_db"):
             self._degraded_no_store = True
+            # Issue #441: one-time loud boot warning — under LOW_MEMORY_MODE the
+            # learning features backed by this store are degraded (see runbook).
+            if LOW_MEMORY_MODE:
+                _warn_low_memory_learning_degraded_once()
             self.db_path = Path(":memory:")
             self.encoder = None
             self.chroma_collection: Any = None
