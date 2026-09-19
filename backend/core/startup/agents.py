@@ -461,9 +461,7 @@ async def start_background_services(app):
             )
             logger.info("✅ Synaptic Dream agent started (memory consolidation cycle).")
         else:
-            logger.info(
-                "ℹ️ Synaptic Dream agent disabled (set ENABLE_SYNAPTIC_DREAM=true)."
-            )
+            logger.info("ℹ️ Synaptic Dream agent disabled (set ENABLE_SYNAPTIC_DREAM=true).")
     except Exception as exc:
         logger.warning(f"⚠️ Synaptic Dream agent failed to start: {exc}")
 
