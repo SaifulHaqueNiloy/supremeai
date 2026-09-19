@@ -7,6 +7,7 @@ import { Shield } from "lucide-react";
 import type { AdminSubTab, ChatMessage } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
 import { useTheme } from "../../contexts/useTheme";
+import { getAdminJwtRole, readAdminJwtClaims } from "../../auth/identity";
 
 export function AdminShell() {
   const {
@@ -65,14 +66,24 @@ export function AdminShell() {
   const consoleTheme: 'dark' | 'light' = theme === 'light' ? 'light' : 'dark';
 
   useEffect(() => {
-    if (!adminAuthenticated) return;
+    if (!adminAuthenticated) {
+      // 🛡️ ISSUE #495: মাউন্টে যদি valid unexpired admin JWT থাকে, তা অবিলম্বে re-authenticate করবে
+      const role = getAdminJwtRole();
+      if (role === 'admin') {
+        useAdminStore.setState({ adminAuthenticated: true, adminRole: 'admin' });
+      } else {
+        const claims = readAdminJwtClaims();
+        if (claims && typeof claims.exp === 'number' && claims.exp * 1000 <= Date.now()) {
+          useAdminStore.setState({ adminError: 'Your admin session has expired. Please sign in again.' });
+        }
+      }
+      return;
+    }
 
     if (adminRole !== 'admin') {
       if (import.meta.env.DEV) console.warn("RBAC: User is not an admin.");
     }
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [adminAuthenticated]);
+  }, [adminAuthenticated, adminRole]);
 
   const handleAdminOtpVerify = () => {
     handleAdminLogin();

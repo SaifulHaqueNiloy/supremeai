@@ -52,8 +52,27 @@ export const clearAuthToken = (): void => {
   if (typeof window !== 'undefined') {
     try {
       localStorage.removeItem('supremeai_auth_token');
-      sessionStorage.removeItem('supreme_admin_jwt');
       localStorage.removeItem('adminToken'); // বাংলা: legacy duplicate key — migration sweep
+
+      // 🛡️ ISSUE #495: ব্যবহারকারী টোকেন শেষ হলে বা ব্যাকগ্রাউন্ড কল ফেইল করলে সচল admin JWT মোছা যাবে না।
+      // শুধুমাত্র যদি admin টোকেনটি স্পষ্টভাবে মেয়াদোত্তীর্ণ হয়, তবেই এটি পরিষ্কার করা হবে।
+      const adminToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+      if (adminToken) {
+        try {
+          const part = adminToken.split('.')[1];
+          if (part) {
+            const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
+            const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+            if (typeof payload?.exp === 'number' && payload.exp * 1000 <= Date.now()) {
+              sessionStorage.removeItem('supreme_admin_jwt');
+              localStorage.removeItem('supreme_admin_jwt');
+            }
+          }
+        } catch {
+          sessionStorage.removeItem('supreme_admin_jwt');
+          localStorage.removeItem('supreme_admin_jwt');
+        }
+      }
     } catch (e) {
       // বাংলা: localStorage অনুপস্থিত (incognito / SSR) — নীরবে বাদ দেওয়া।
       console.warn("Failed to clear local storage", e);

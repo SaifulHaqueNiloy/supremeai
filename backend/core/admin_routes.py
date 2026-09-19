@@ -552,6 +552,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
         "sub": uid,
         "uid": uid,
         "role": "admin",
+        "type": "access",
         "exp": now + 3600 * expiry_hours,
         "iat": now,
         "jti": uuid.uuid4().hex,
