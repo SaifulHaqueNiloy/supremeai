@@ -180,6 +180,7 @@ const handleResponse = async (res: Response) => {
       // এটাই ছিল TOTP ভেরিফাই সফল হওয়ার পরপরই ড্যাশবোর্ড থেকে auto-logout হওয়ার মূল কারণ।
       // তাই নন-ক্রিটিক্যাল/ব্যাকগ্রাউন্ড এন্ডপয়েন্ট থেকে 401 এলে টোকেন ক্লিয়ার করা হবে না।
       const SESSION_VALIDATION_PATHS = [
+        '/api/v1/auth/me',
         '/api/v1/auth/logout',
       ];
       const isSessionValidation = SESSION_VALIDATION_PATHS.some((p) => res.url?.includes(p));

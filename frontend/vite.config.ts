@@ -82,16 +82,13 @@ const buildInfoPlugin = () => {
   }
 }
 
-const PROXY_TARGET = USER_BACKEND || (process.env.CI ? '' : 'https://supremeai-primary-node.onrender.com')
-const ADMIN_PROXY_TARGET = ADMIN_BACKEND || PROXY_TARGET
-
 const devProxy: Record<string, { target: string; changeOrigin: boolean }> = {}
-if (PROXY_TARGET) {
-  devProxy['/api'] = { target: PROXY_TARGET, changeOrigin: true }
-  devProxy['/auth'] = { target: PROXY_TARGET, changeOrigin: true }
+if (USER_BACKEND) {
+  devProxy['/api'] = { target: USER_BACKEND, changeOrigin: true }
+  devProxy['/auth'] = { target: USER_BACKEND, changeOrigin: true }
 }
-if (ADMIN_PROXY_TARGET) {
-  devProxy['/admin-api'] = { target: ADMIN_PROXY_TARGET, changeOrigin: true }
+if (ADMIN_BACKEND || USER_BACKEND) {
+  devProxy['/admin-api'] = { target: ADMIN_BACKEND || USER_BACKEND, changeOrigin: true }
 }
 
 // https://vite.dev/config/
