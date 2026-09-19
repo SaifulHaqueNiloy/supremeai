@@ -19,7 +19,18 @@ depends_on: str | Sequence[str] | None = None
 
 
 def _table_exists(table_name: str) -> bool:
-    """Return whether an optional table exists on the current database."""
+    """Return whether an optional table exists on the current database.
+
+    Issue #478: offline mode (``alembic upgrade --sql``) has no live
+    connection — inspection is impossible on the MockConnection. The CI
+    migration gate verifies the FULL chain offline, so optional-table
+    guards must degrade to ``True`` there (emitting unconditional DDL in
+    the generated plan is correct: the live run still guards).
+    """
+    from alembic import context
+
+    if context.is_offline_mode:
+        return True
     return inspect(op.get_bind()).has_table(table_name)
 
 

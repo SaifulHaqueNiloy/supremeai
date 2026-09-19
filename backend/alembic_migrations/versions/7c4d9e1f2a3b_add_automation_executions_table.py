@@ -27,10 +27,20 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
+def _existing_tables_offline_safe(bind) -> set[str]:
+    """Issue #478: offline mode cannot inspect (MockConnection) — degrade to
+    empty set so the generated SQL plan unconditionally contains the DDL;
+    the live run still guards with the real inspector."""
+    from alembic import context
+
+    if context.is_offline_mode:
+        return set()
+    return set(sa.inspect(bind).get_table_names())
+
+
 def upgrade() -> None:
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = inspector.get_table_names()
+    existing_tables = _existing_tables_offline_safe(bind)
 
     if "automation_executions" not in existing_tables:
         op.create_table(

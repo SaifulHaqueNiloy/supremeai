@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from alembic import context as _alembic_context
 from alembic import op
 import sqlalchemy as sa
 
@@ -31,8 +32,12 @@ depends_on: str | tuple[str, ...] = None
 def upgrade() -> None:
     """Drop the dead performance_metrics table if it exists."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = inspector.get_table_names()
+    # Issue #478: offline mode cannot reflect a MockConnection — treat the
+    # table as absent in the generated plan; the live run still reflects.
+    if _alembic_context.is_offline_mode:
+        existing_tables: list[str] = []
+    else:
+        existing_tables = sa.inspect(bind).get_table_names()
 
     if "performance_metrics" in existing_tables:
         op.drop_table("performance_metrics")
