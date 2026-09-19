@@ -1,4 +1,4 @@
-# tests/test_core_rate_limiter.py
+# tests/test_core_rate_limiter.py  # 472-xdist-experiment
 """Tests for rate limiting and async rate limiter functionality."""
 
 import pytest
