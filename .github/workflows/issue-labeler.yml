@@ -28,7 +28,7 @@ permissions:
 # Multiple dispatches in quick succession (the agent batches label+comment+close)
 # would otherwise race on the same issue.
 concurrency:
-  group: issue-labeler-\${{ github.event.inputs.issue_number }}
+  group: issue-labeler-${{ github.event.inputs.issue_number }}
   cancel-in-progress: false
 
 jobs:
