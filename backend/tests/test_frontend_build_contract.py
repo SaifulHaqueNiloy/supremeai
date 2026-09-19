@@ -79,41 +79,10 @@ def _env_example_vite_lines() -> dict[str, str]:
 #: runtime behaviour relies on the `||` fallback chains in utils/api.ts, so they work,
 #: but TypeScript autocompletion/typing is blind to them. Owner may close them by adding
 #: `readonly <VAR>?: string;` declarations; this set may only SHRINK.
-KNOWN_UNDECLARED: frozenset[str] = frozenset(
-    {
-        "VITE_ADMIN_BACKEND",
-        "VITE_ADMIN_FRONTEND_URL",
-        "VITE_API_CONCURRENCY",
-        "VITE_API_TIMEOUT_MS",
-        "VITE_CIRCUIT_FAILURE_THRESHOLD",
-        "VITE_CIRCUIT_RECOVERY_MS",
-        "VITE_COST_GUARD",
-        "VITE_DEFAULT_ADMIN_EMAIL",
-        "VITE_EDGE_WORKER_URL",
-        "VITE_FIREBASE_AUTH_URL",
-        "VITE_FIRESTORE_URL",
-        "VITE_GITHUB_API_URL",
-        "VITE_INFISICAL_URL",
-        "VITE_KROGGER_URL",
-        "VITE_MAX_CONCURRENCY",
-        "VITE_MAX_RETRIES",
-        "VITE_MCP_CONTROL_PLANE_URL",
-        "VITE_SCRAPER_SERVICE_URL",
-        "VITE_SCRAPER_URL",
-        "VITE_SCRAPER_BACKEND",
-        "VITE_SELF_HEALING",
-        "VITE_SUPABASE_URL",
-        "VITE_USE_RELATIVE_PATH",
-        "VITE_VERCEL_API_URL",
-        "VITE_WS_BASE_URL",
-        "VITE_FIREBASE_API_KEY",
-        "VITE_FIREBASE_APP_ID",
-        "VITE_FIREBASE_AUTH_DOMAIN",
-        "VITE_FIREBASE_MESSAGING_SENDER_ID",
-        "VITE_FIREBASE_PROJECT_ID",
-        "VITE_FIREBASE_STORAGE_BUCKET",
-    }
-)
+KNOWN_UNDECLARED: frozenset[str] = frozenset()
+#: 2026-09-19 (issue #554 / FE-12, PR #658): every previously-undocumented
+#: VITE_* read gained an explicit ``vite-env.d.ts`` declaration, so the
+#: baseline shrank to empty — the contract's intended end state.
 
 
 # ---------------------------------------------------------------------------

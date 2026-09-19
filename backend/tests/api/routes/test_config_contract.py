@@ -82,7 +82,11 @@ class TestConfigValidationReportContract(unittest.TestCase):
 
         # Issue #567 (BE-16): operators still on the legacy JWT_SECRET name
         # get a deprecation warning, not a false "missing required var" error.
-        with patch.dict(os.environ, {"SUPREMEAI_JWT_SECRET": "", "JWT_SECRET": "legacy-secret-value"}, clear=False):
+        with patch.dict(
+            os.environ,
+            {"SUPREMEAI_JWT_SECRET": "", "JWT_SECRET": "legacy-secret-value"},
+            clear=False,
+        ):
             report = build_config_validation_report(env="test")
         error_names = {c.name for c in report.errors}
         self.assertNotIn("SUPREMEAI_JWT_SECRET", error_names)

@@ -402,9 +402,7 @@ class ProductionSecretVault:
             # sets decide. NOTE: an env var explicitly set to "" is treated as
             # missing (empty value is never a valid secret).
             if secret_id in OPTIONAL_SECRETS:
-                logger.info(
-                    f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping."
-                )
+                logger.info(f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping.")
                 env_fallback = default if default is not None else ""
             elif default is None and secret_id in HARD_REQUIRED_SECRETS:
                 logger.critical(

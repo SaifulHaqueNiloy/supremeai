@@ -185,9 +185,7 @@ class TestMissionConfigHonesty:
         monkeypatch.delenv("JWT_SECRET", raising=False)
         report = build_config_validation_report(env="test")
         assert report.ok is False
-        assert any(
-            c.name == "SUPREMEAI_JWT_SECRET" and c.status == "error" for c in report.errors
-        )
+        assert any(c.name == "SUPREMEAI_JWT_SECRET" and c.status == "error" for c in report.errors)
         assert report.errors[0].fix_suggestion  # সৎ রিপোর্ট = ফিক্স পথসহ
 
     def test_wildcard_cors_never_survives_resolution(self, monkeypatch):

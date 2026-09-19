@@ -124,11 +124,18 @@ class TestJWTAlgorithmConfusion:
     def test_production_weak_secret_is_fatal(self):
         """config_secrets must refuse boot when the JWT secret is missing/short."""
         src = _source_of("core/config_secrets.py")
-        assert re.search(r"len\s*\(\s*secret\s*\)\s*<\s*64", src), (
-            "production JWT secret length guard missing"
-        )
+        # Issue #542/#567: the floor is centralized in core/secret_policy.py
+        # (JWT_SECRET_MIN_LENGTH = 64) and config_secrets enforces it via the
+        # constant instead of a hardcoded literal.
+        assert re.search(
+            r"len\s*\(\s*secret\s*\)\s*<\s*JWT_SECRET_MIN_LENGTH", src
+        ), "production JWT secret length guard missing"
         assert "RuntimeError" in src, "production must fail closed on weak secret"
-        assert 'os.getenv("SUPREMEAI_JWT_SECRET")' in src or 'os.getenv("JWT_SECRET")' in src
+        assert "resolve_jwt_secret_env" in src, "canonical env resolver must be consulted"
+        policy_src = _source_of("core/secret_policy.py")
+        assert re.search(r"JWT_SECRET_MIN_LENGTH\s*(:\s*int)?\s*=\s*64", policy_src), (
+            "JWT secret floor must stay at 64 bytes"
+        )
 
 
 # ===========================================================================

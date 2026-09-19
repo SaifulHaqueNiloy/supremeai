@@ -78,9 +78,7 @@ def test_is_blocked_ip_helper():
 
 
 def test_is_safe_url_resolved_blocks_private_resolution(monkeypatch):
-    monkeypatch.setattr(
-        "services.scraper.security.resolve_hostname", lambda host: ["10.1.2.3"]
-    )
+    monkeypatch.setattr("services.scraper.security.resolve_hostname", lambda host: ["10.1.2.3"])
     assert is_safe_url_resolved("https://example.com") is False
 
 
