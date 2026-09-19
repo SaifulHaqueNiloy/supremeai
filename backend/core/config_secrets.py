@@ -53,13 +53,6 @@ class SettingsSecretsMixin:
         "SUPREMEAI_ADMIN_PASSWORD_HASH",
         "CI_WEBHOOK_SECRET",
         "SUPREMEAI_API_KEY",
-        "GEMINI_API_KEY",
-        "GROQ_API_KEY",
-        "OPENAI_API_KEY",
-        "OPENROUTER_API_KEY",
-        "DEEPSEEK_API_KEY",
-        "HF_API_KEY",
-        "NVIDIA_API_KEY",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -396,6 +389,40 @@ class SettingsSecretsMixin:
     @bai_api_key.setter
     def bai_api_key(self, value: str) -> None:
         self._set_cached_secret("BAI_API_KEY", value)
+
+    # Issue #466: dynamic provider pool ($0..N) — vault-backed lazy properties so
+    # ModelRouter provider detection sees Infisical-loaded keys, not just env vars.
+    @property
+    def mistral_api_key(self) -> str:
+        return self._get_cached_secret("MISTRAL_API_KEY")
+
+    @mistral_api_key.setter
+    def mistral_api_key(self, value: str) -> None:
+        self._set_cached_secret("MISTRAL_API_KEY", value)
+
+    @property
+    def anthropic_api_key(self) -> str:
+        return self._get_cached_secret("ANTHROPIC_API_KEY")
+
+    @anthropic_api_key.setter
+    def anthropic_api_key(self, value: str) -> None:
+        self._set_cached_secret("ANTHROPIC_API_KEY", value)
+
+    @property
+    def cohere_api_key(self) -> str:
+        return self._get_cached_secret("COHERE_API_KEY")
+
+    @cohere_api_key.setter
+    def cohere_api_key(self, value: str) -> None:
+        self._set_cached_secret("COHERE_API_KEY", value)
+
+    @property
+    def together_api_key(self) -> str:
+        return self._get_cached_secret("TOGETHER_API_KEY")
+
+    @together_api_key.setter
+    def together_api_key(self, value: str) -> None:
+        self._set_cached_secret("TOGETHER_API_KEY", value)
 
     @property
     def firecrawl_api_key(self) -> str:

@@ -65,10 +65,11 @@ class VoiceService:
         self, audio_bytes: bytes, filename: str = "input.wav"
     ) -> dict[str, Any]:
         """
-        Transcribe raw audio bytes to text via Groq Whisper (real provider call).
+        Transcribe raw audio bytes via the dynamic STT provider cascade.
 
-        বাংলা: আসল Whisper কল (Groq) — কী না থাকলে সৎ "unavailable"; কোনো
-        বানানো ট্রান্সক্রিপ্ট নয় (issue #445)।
+        বাংলা: ডায়নামিক ক্যাসকেড (Groq -> OpenAI -> HuggingFace) — যেকোনো একটি কী
+        থাকলে সেটি দিয়ে আসল কল; প্রোভাইডার এরর দিলে পরবর্তীতে অটো-সুইচ; কোনো কী না
+        থাকলে সৎ "unavailable"; কোনো বানানো ট্রান্সক্রিপ্ট নয় (issue #445, #466)।
         """
         global _stt_unavailable_announced
         try:
@@ -80,14 +81,37 @@ class VoiceService:
                     "message": "No audio bytes were provided for transcription.",
                 }
 
+            # Dynamic STT provider discovery ($0..N) — vendor-agnostic cascade
+            # (Groq -> OpenAI -> HuggingFace). Provider errors auto-switch to the
+            # next configured provider (Issue #466 fallback chain).
+            provider_chain: list[tuple[str, str]] = []
             groq_key = os.getenv("GROQ_API_KEY") or getattr(_get_settings(), "groq_api_key", "")
-            if not groq_key:
+            if groq_key:
+                provider_chain.append(("groq", groq_key))
+            openai_key = os.getenv("OPENAI_API_KEY") or getattr(
+                _get_settings(), "openai_api_key", ""
+            )
+            if openai_key:
+                provider_chain.append(("openai", openai_key))
+            gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+            if gemini_key:
+                provider_chain.append(("gemini", gemini_key))
+            hf_key = (
+                os.getenv("HUGGINGFACE_API_KEY")
+                or os.getenv("HF_API_KEY")
+                or getattr(_get_settings(), "hf_api_key", "")
+            )
+            if hf_key:
+                provider_chain.append(("huggingface", hf_key))
+
+            # N = 0: Zero keys configured — Honest, graceful degradation (Issue #445, #466)
+            if not provider_chain:
                 if not _stt_unavailable_announced:
                     _stt_unavailable_announced = True
                     logger.warning(
-                        "Speech-to-text UNAVAILABLE: GROQ_API_KEY missing — returning "
-                        "honest 'unavailable' status instead of a placeholder transcript "
-                        "(issue #445)."
+                        "Speech-to-text UNAVAILABLE: No STT provider key configured "
+                        "(Groq, OpenAI, Gemini, HF) — returning honest 'unavailable' "
+                        "status instead of a placeholder transcript."
                     )
                 return {
                     "status": "unavailable",
@@ -95,14 +119,42 @@ class VoiceService:
                     "transcript": "",
                     "message": (
                         "No speech-to-text provider is configured on this deployment "
-                        "(GROQ_API_KEY missing), so the audio was NOT transcribed."
+                        "(awaiting GROQ_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, or "
+                        "HF_API_KEY), so the audio was NOT transcribed."
                     ),
                 }
 
-            return await self._transcribe_with_groq(audio_bytes, filename, groq_key)
+            # Fallback chain: attempt each configured provider in priority order;
+            # only a provider-level error (bad key, 5xx, quota) advances the chain.
+            _stt_handlers = {
+                "groq": self._transcribe_with_groq,
+                "openai": self._transcribe_with_openai,
+                "gemini": self._transcribe_with_gemini,
+                "huggingface": self._transcribe_with_huggingface,
+            }
+            last_error: dict[str, Any] | None = None
+            for provider_name, provider_key in provider_chain:
+                result = await _stt_handlers[provider_name](audio_bytes, filename, provider_key)
+                if result.get("status") == "success":
+                    return result
+                last_error = result
+                logger.warning(
+                    "STT provider '%s' failed (error=%s) — auto-switching to the next configured provider.",
+                    provider_name,
+                    result.get("error", "unknown"),
+                )
+            return last_error or {
+                "status": "error",
+                "transcript": "",
+                "error": "STT_PROVIDER_ERROR",
+                "message": "All configured STT providers failed.",
+            }
         except Exception as e:
             logger.error(f"STT Transcription failed: {e}")
             return {"status": "error", "transcript": "", "error": str(e)}
+
+    # Alias for caller ergonomics
+    transcribe = speech_to_text
 
     async def _transcribe_with_groq(
         self, audio_bytes: bytes, filename: str, api_key: str
@@ -142,13 +194,192 @@ class VoiceService:
             }
 
         logger.info(
-            "STT transcription completed (%d bytes audio, %dms)", len(audio_bytes), latency_ms
+            "STT transcription completed via Groq (%d bytes audio, %dms)",
+            len(audio_bytes),
+            latency_ms,
         )
         return {
             "status": "success",
             "transcript": transcript,
-            "language": None,  # provider-determined; not fabricated
+            "language": None,
             "model": "whisper-large-v3",
+            "latency_ms": latency_ms,
+        }
+
+    async def _transcribe_with_openai(
+        self, audio_bytes: bytes, filename: str, api_key: str
+    ) -> dict[str, Any]:
+        """Real OpenAI Whisper API call (dynamic fallback)."""
+        import httpx
+
+        url = "https://api.openai.com/v1/audio/transcriptions"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        mime = _sniff_audio_mime(filename)
+
+        files = {"file": (filename or "input.wav", audio_bytes, mime)}
+        data = {"model": "whisper-1", "response_format": "json"}
+
+        started = time.monotonic()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, headers=headers, files=files, data=data)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code != 200:
+            logger.error(
+                "OpenAI STT failed: HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "STT_PROVIDER_ERROR",
+                "provider_status": response.status_code,
+                "message": response.text[:300],
+            }
+
+        transcript = (response.json() or {}).get("text", "")
+        if not transcript:
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "EMPTY_TRANSCRIPT",
+                "message": "STT provider returned an empty transcript.",
+            }
+
+        logger.info(
+            "STT transcription completed via OpenAI (%d bytes audio, %dms)",
+            len(audio_bytes),
+            latency_ms,
+        )
+        return {
+            "status": "success",
+            "transcript": transcript,
+            "language": None,
+            "model": "whisper-1",
+            "latency_ms": latency_ms,
+        }
+
+    async def _transcribe_with_gemini(
+        self, audio_bytes: bytes, filename: str, api_key: str
+    ) -> dict[str, Any]:
+        """Real Gemini audio transcription call (Issue #466 cascade position 3)."""
+        import base64
+
+        import httpx
+
+        model_name = "gemini-2.0-flash"
+        mime = _sniff_audio_mime(filename)
+        audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
+        url = (
+            "https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{model_name}:generateContent?key={api_key}"
+        )
+        payload = {
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "inline_data": {
+                                "mime_type": mime,
+                                "data": audio_b64,
+                            }
+                        },
+                        {
+                            "text": (
+                                "Transcribe this audio exactly. Reply with the "
+                                "transcript text only, nothing else."
+                            )
+                        },
+                    ]
+                }
+            ]
+        }
+
+        started = time.monotonic()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, json=payload)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code != 200:
+            logger.error(
+                "Gemini STT failed: HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "STT_PROVIDER_ERROR",
+                "provider_status": response.status_code,
+                "message": response.text[:300],
+            }
+
+        data = response.json() or {}
+        parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        transcript = (parts[0].get("text", "") if parts else "").strip()
+        if not transcript:
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "EMPTY_TRANSCRIPT",
+                "message": "STT provider returned an empty transcript.",
+            }
+
+        logger.info(
+            "STT transcription completed via Gemini (%d bytes audio, %dms)",
+            len(audio_bytes),
+            latency_ms,
+        )
+        return {
+            "status": "success",
+            "transcript": transcript,
+            "language": None,
+            "model": model_name,
+            "latency_ms": latency_ms,
+        }
+
+    async def _transcribe_with_huggingface(
+        self, audio_bytes: bytes, filename: str, api_key: str
+    ) -> dict[str, Any]:
+        """Real Hugging Face Whisper inference API call (dynamic fallback)."""
+        import httpx
+
+        url = "https://api-inference.huggingface.co/models/openai/whisper-large-v3"
+        headers = {"Authorization": f"Bearer {api_key}"}
+
+        started = time.monotonic()
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(url, headers=headers, content=audio_bytes)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        if response.status_code != 200:
+            logger.error(
+                "HuggingFace STT failed: HTTP %s: %s", response.status_code, response.text[:200]
+            )
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "STT_PROVIDER_ERROR",
+                "provider_status": response.status_code,
+                "message": response.text[:300],
+            }
+
+        transcript = (response.json() or {}).get("text", "")
+        if not transcript:
+            return {
+                "status": "error",
+                "transcript": "",
+                "error": "EMPTY_TRANSCRIPT",
+                "message": "STT provider returned an empty transcript.",
+            }
+
+        logger.info(
+            "STT transcription completed via HuggingFace (%d bytes audio, %dms)",
+            len(audio_bytes),
+            latency_ms,
+        )
+        return {
+            "status": "success",
+            "transcript": transcript,
+            "language": None,
+            "model": "hf/whisper-large-v3",
             "latency_ms": latency_ms,
         }
 
@@ -261,3 +492,17 @@ class VoiceService:
             "mime_type": "audio/mpeg",
             "voice": voice_id,
         }
+
+
+# ── Module-level singleton factory (Issue #466) ──────────────────────────────
+# বাংলা: websocket_voice.py-সহ সব কলার get_voice_service() দিয়ে একটিই shared
+# VoiceService instance পাবে — per-call নতুন instance তৈরির অপচয় এড়াতে।
+_voice_service_singleton: VoiceService | None = None
+
+
+def get_voice_service() -> VoiceService:
+    """Return the shared VoiceService instance (vendor-agnostic STT/TTS facade)."""
+    global _voice_service_singleton
+    if _voice_service_singleton is None:
+        _voice_service_singleton = VoiceService()
+    return _voice_service_singleton
