@@ -97,7 +97,11 @@ _liveness_status: bool = True
 #     network hop on miss and burn federation quota to avoid a DB query —
 #     health is single-node state by definition.
 # ─────────────────────────────────────────────────────────────────────────────
-_HEALTH_CACHE_TTL_SECONDS = 10.0
+# Issue #468: 15s TTL matches the fleet-monitor probe cadence — every probe
+# is served from cache instead of each paying the DB SELECT + pool checkout
+# (~100-180ms documented cost). Trade-off: a DB outage takes ≤15s to reflect
+# here (still well within Render's health-check policy).
+_HEALTH_CACHE_TTL_SECONDS = 15.0
 _health_cache_payload: dict[str, Any] | None = None
 _health_cache_monotonic: float = 0.0
 _health_cache_status_code: int = 200
