@@ -28,6 +28,9 @@ class TaskType(enum.StrEnum):
     SKILL_GENERATION = "SKILL_GENERATION"
     VPN_SWITCH = "VPN_SWITCH"
     AUTO_EVOLUTION_PATCH = "AUTO_EVOLUTION_PATCH"
+    # M17 P-D (seven→one): HITLEngine suspend-র canonical mirror —
+    # দ্বৈত-লেখা পর্বে উভয় store-ই সত্য; cutover-এর পরে pending_tasks-ই একমাত্র।
+    HITL_SUSPENSION = "HITL_SUSPENSION"
 
 
 class TaskStatus(enum.StrEnum):
@@ -251,6 +254,16 @@ def get_task(task_id: str) -> PendingTask | None:
     conn = _get_conn()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM pending_tasks WHERE task_id = ?", (task_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return row_to_task(row) if row else None
+
+
+def get_task_by_idempotency(idempotency_key: str) -> PendingTask | None:
+    """Fetch a task by its unique idempotency key (M17 P-D mirror lookup)."""
+    conn = _get_conn()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM pending_tasks WHERE idempotency_key = ?", (idempotency_key,))
     row = cursor.fetchone()
     conn.close()
     return row_to_task(row) if row else None

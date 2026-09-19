@@ -13854,6 +13854,15 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_hitl_canonical_mirror.py"
+    },
+    {
+      "capability_signals": [
         "dispatch",
         "execute"
       ],
@@ -24856,5 +24865,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2863
+  "source_file_count": 2864
 }
