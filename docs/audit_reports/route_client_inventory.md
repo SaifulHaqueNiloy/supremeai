@@ -2,23 +2,25 @@
 
 > Generator: `scripts/ci/generate_route_client_inventory.py` — issue #480 / GAP-001. Do not edit by hand; assumptions live inside the JSON header.
 
-- backend routes scanned: **536**
+- backend routes scanned: **555**
 - unique frontend `/api/...` refs: **169**
-- matched (frontend-reachable): **268**
-- orphan backend routes: **268** (115 route families)
+- matched (frontend-reachable): **283**
+- orphan backend routes: **272** (116 route families)
 
 ## Orphan classifications (heuristic — owners must ratify)
 
 | classification | count | next action |
 |---|---|---|
-| `unclassified-orphan` | 222 | triage: user-facing wiring vs intentional API-only |
-| `internal` | 40 | document as internal; verify not publicly reachable |
+| `internal` | 41 | document as internal; verify not publicly reachable |
+| `unclassified-orphan` | 225 | triage: user-facing wiring vs intentional API-only |
 | `admin-only` | 6 | wire into admin UI or document as admin-API |
 
 ## Top orphan families
 
 | family | orphan routes |
 |---|---|
+| `/api/v1/gcp` | 3 |
+| `/api/v1/skills` | 3 |
 | `/api/v1/router` | 1 |
 | `/api/v1/meta-ai` | 8 |
 | `/api/v1/analytics` | 3 |
@@ -37,7 +39,5 @@
 | `/api/byoc/credentials` | 1 |
 | `/api/byoc/deploy` | 1 |
 | `/api/byoc/status` | 1 |
-| `/api/v1/cache` | 1 |
-| `/api/v1/cdc` | 2 |
 
 Full detail: `docs/audit_reports/route_client_inventory.json`.

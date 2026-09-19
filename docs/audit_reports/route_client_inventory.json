@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 536,
+    "backend_routes": 555,
     "frontend_unique_refs": 169,
-    "matched": 268,
-    "orphan_routes": 268
+    "matched": 283,
+    "orphan_routes": 272
   },
   "orphan_by_family": {
     "/api/v1/admin-api": 25,
@@ -29,6 +29,8 @@
     "/api/v1/repos": 4,
     "/api/v1/stream": 4,
     "/api/v1/tools-registry": 4,
+    "/api/v1/gcp": 3,
+    "/api/v1/skills": 3,
     "/api/v1/analytics": 3,
     "/api/conversations/:param": 3,
     "/api/v1/circles": 3,
@@ -57,7 +59,6 @@
     "/api/simulator/profile": 2,
     "/api/simulator/install": 2,
     "/api/simulator/admin": 2,
-    "/api/v1/skills": 2,
     "/api/chat/stream": 2,
     "/api/v1/unified-memory": 2,
     "/api/v1/metrics": 2,
@@ -129,11 +130,39 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 222,
-    "internal": 40,
+    "unclassified-orphan": 225,
+    "internal": 41,
     "admin-only": 6
   },
   "orphans": [
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/gcp/health",
+      "resolved": "/api/v1/gcp/health",
+      "classification": "internal"
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/gcp/verification-queue/stats",
+      "resolved": "/api/v1/gcp/verification-queue/stats",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/gcp/pubsub/stats",
+      "resolved": "/api/v1/gcp/pubsub/stats",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/skills",
+      "resolved": "/api/v1/skills",
+      "classification": "unclassified-orphan"
+    },
     {
       "file": "backend/api/routes/advanced_router.py",
       "method": "POST",
@@ -2398,6 +2427,169 @@
       "frontend": [
         "frontend/src/components/dashboard/LlmGatewayPage.tsx",
         "frontend/src/components/dashboard/LlmGatewayPage.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/firebase-login",
+      "resolved": "/api/admin/firebase-login",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/services/authService.test.ts",
+        "frontend/src/services/authService.ts",
+        "frontend/src/utils/api.test.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/firebase-totp-setup",
+      "resolved": "/api/admin/firebase-totp-setup",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/services/authService.test.ts",
+        "frontend/src/services/authService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/firebase-totp-recover",
+      "resolved": "/api/admin/firebase-totp-recover",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/services/authService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/firebase-totp-verify",
+      "resolved": "/api/admin/firebase-totp-verify",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/services/authService.test.ts",
+        "frontend/src/services/authService.test.ts",
+        "frontend/src/services/authService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/trusted-browsers",
+      "resolved": "/api/v1/admin/trusted-browsers",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/dashboard/SettingsPage.tsx",
+        "frontend/src/components/dashboard/SettingsPage.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "DELETE",
+      "declared": "/admin/trusted-browsers/{browser_id}",
+      "resolved": "/api/v1/admin/trusted-browsers/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/dashboard/SettingsPage.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "DELETE",
+      "declared": "/admin/trusted-browsers",
+      "resolved": "/api/v1/admin/trusted-browsers",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/dashboard/SettingsPage.tsx",
+        "frontend/src/components/dashboard/SettingsPage.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/cloud-distribution",
+      "resolved": "/api/v1/admin/cloud-distribution",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/free-tier-status",
+      "resolved": "/api/v1/admin/free-tier-status",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/free-tier-status/{provider}",
+      "resolved": "/api/v1/admin/free-tier-status/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/admin/free-tier-pause/{provider}",
+      "resolved": "/api/v1/admin/free-tier-pause/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/admin/free-tier-override/{provider}",
+      "resolved": "/api/v1/admin/free-tier-override/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/token-budget-stats",
+      "resolved": "/api/v1/admin/token-budget-stats",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/admin/rules",
+      "resolved": "/api/v1/admin/rules",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/hooks/useAdminApi.ts",
+        "frontend/src/hooks/useAdminApi.ts",
+        "frontend/src/pages/admin/AdminShell.tsx",
+        "frontend/src/pages/admin/AdminShell.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/admin/rules",
+      "resolved": "/api/v1/admin/rules",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/hooks/useAdminApi.ts",
+        "frontend/src/hooks/useAdminApi.ts",
+        "frontend/src/pages/admin/AdminShell.tsx",
+        "frontend/src/pages/admin/AdminShell.tsx"
       ]
     },
     {

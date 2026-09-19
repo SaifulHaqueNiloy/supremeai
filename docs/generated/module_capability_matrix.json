@@ -22435,6 +22435,26 @@
       "path": "scripts/apply_plan_renames.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/audit/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/audit/generate_route_consumer_inventory.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "register"
@@ -25037,5 +25057,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2882
+  "source_file_count": 2884
 }
