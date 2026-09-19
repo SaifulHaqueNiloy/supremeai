@@ -437,7 +437,15 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
             # actually emits.
             "Idempotency-Key",
         ],
-        expose_headers=["Content-Length", "X-Pagination-Total"],
+        # Issue #685 (Domain 15): expose the tracing headers so the browser JS
+        # (frontend apiClient handleResponse) can read the correlation id the
+        # backend assigned/echoed and attach it to client-side error reports.
+        expose_headers=[
+            "Content-Length",
+            "X-Pagination-Total",
+            "X-Request-ID",
+            "X-Correlation-ID",
+        ],
     )
 
     # বাংলা মন্তব্ব্য: canonical browser session/action routes
@@ -486,6 +494,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         """Handle unhandled exceptions with proper response and circuit breaker awareness."""
 
         from core.circuit_breaker import CIRCUITS
+        from core.request_context import get_correlation_id
         from core.resilience.circuit_breaker import CircuitBreakerState, normalize_circuit_state
 
         status_code = getattr(exc, "status_code", 500)
@@ -504,6 +513,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
                 "error": "Internal Server Error",
                 "detail": "An unexpected error occurred on the server.",
             }
+
+        # Issue #685 (Domain 15): surface the request's correlation id in EVERY
+        # unhandled-error payload so a user-reported failure can be matched to
+        # the exact structured-log stream (same id the apiClient reads back via
+        # the X-Request-ID response header).
+        error_response["correlation_id"] = (
+            getattr(request.state, "correlation_id", None) or get_correlation_id() or None
+        )
 
         if hasattr(exc, "to_dict"):
             error_response.update(exc.to_dict())

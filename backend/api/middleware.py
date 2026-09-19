@@ -35,7 +35,17 @@ class SupremeContextMiddleware(BaseHTTPMiddleware):
 
     @with_error_bus("dispatch")
     async def dispatch(self, request: Request, call_next):
-        correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        # Issue #685 (Domain 15): accept the standard ``X-Request-ID`` header
+        # (sent by the canonical frontend apiClient) as a fallback so the id
+        # contextualized into every log line below is the SAME id the client
+        # generated — not a second, unrelated UUID. Precedence:
+        # X-Correlation-ID → X-Request-ID → fresh UUID (mirrored in
+        # core/request_context.py and RequestIdMiddleware).
+        correlation_id = (
+            request.headers.get("X-Correlation-ID")
+            or request.headers.get("X-Request-ID")
+            or str(uuid.uuid4())
+        )
         request.state.correlation_id = correlation_id
         start_time = time.time()
 
@@ -133,7 +143,17 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
     """Inject X-Request-ID into every response for distributed tracing."""
 
     async def dispatch(self, request: Request, call_next):
-        request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+        # Issue #685 (Domain 15): single-ID guarantee. SupremeContextMiddleware
+        # runs OUTSIDE this middleware and has already resolved the request's
+        # correlation id (X-Correlation-ID → X-Request-ID → fresh UUID), so
+        # reuse it when the client did not send X-Request-ID itself. Result:
+        # X-Request-ID and X-Correlation-ID response headers always carry ONE
+        # id per request, matching the id in the structured logs.
+        request_id = (
+            request.headers.get("X-Request-ID")
+            or getattr(request.state, "correlation_id", None)
+            or str(uuid.uuid4())
+        )
         request.state.request_id = request_id
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id

@@ -22,7 +22,19 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next):
-        corr_id = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
+        # Issue #685 (Domain 15): honor the standard ``X-Request-ID`` header the
+        # canonical frontend HTTP client (frontend/src/services/apiClient.ts)
+        # sends on every call. Precedence: X-Correlation-ID → X-Request-ID →
+        # id already established by an outer middleware (SupremeContext sets
+        # request.state.correlation_id before this innermost layer runs) →
+        # fresh UUID. This keeps the contextvar — and therefore every log line
+        # that binds it — equal to the id echoed in the response headers.
+        corr_id = (
+            request.headers.get("X-Correlation-ID")
+            or request.headers.get("X-Request-ID")
+            or getattr(request.state, "correlation_id", None)
+            or str(uuid.uuid4())
+        )
         token = correlation_id_var.set(corr_id)
         request.state.correlation_id = corr_id
         try:

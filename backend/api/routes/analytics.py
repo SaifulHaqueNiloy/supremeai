@@ -6,10 +6,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 from tools.analytics.churn_prophet import ChurnProphet
 from tools.analytics.insight_mage import InsightMage
 
@@ -44,10 +45,18 @@ def get_churn_prophet() -> ChurnProphet:
 @router.post("/report")
 async def generate_report(
     payload: ReportRequest,
+    request: Request,
     admin: dict[str, Any] = Depends(get_current_admin),
     mage: InsightMage = Depends(get_insight_mage),
 ):
     """Generate an analytics report for the authenticated tenant."""
+    # Issue #685 (Domain 15): high-traffic router correlation logging.
+    logger.info(
+        "[analytics.report] type=%s source=%s correlation_id=%s",
+        payload.report_type,
+        payload.data_source,
+        getattr(request.state, "correlation_id", ""),
+    )
     tenant_id = str(admin.get("tenant_id") or admin.get("org_id") or "").strip()
     if not tenant_id:
         raise HTTPException(
@@ -69,9 +78,16 @@ async def generate_report(
 @router.post("/predict-churn")
 async def predict_churn(
     payload: ChurnRequest,
+    request: Request,
     prophet: ChurnProphet = Depends(get_churn_prophet),
 ):
     """Predict user churn risk and recommend retention actions."""
+    # Issue #685 (Domain 15): high-traffic router correlation logging.
+    logger.info(
+        "[analytics.predict_churn] user_id=%s correlation_id=%s",
+        payload.user_id,
+        getattr(request.state, "correlation_id", ""),
+    )
     # বাংলা মন্তব্য: ইউজারের একটিভিটি দেখে চুরন রিস্ক স্কোর বের করার এন্ডপয়েন্ট
     result = await prophet.predict_churn(
         user_id=payload.user_id,
