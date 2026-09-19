@@ -1,5 +1,6 @@
 import pytest
 
+from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from core.intelligence.swarm_consensus import SwarmConsensusEngine
 from tools.ephemeral_synthesizer import (
     EphemeralToolSynthesizer,
@@ -24,7 +25,10 @@ async def test_swarm_consensus_execution():
 
 
 @pytest.mark.asyncio
-async def test_ephemeral_synthesizer_safe_execution():
+async def test_ephemeral_synthesizer_safe_execution(monkeypatch):
+    # Issue #704: in-process exec is fail-closed by default; this coverage
+    # test exercises the explicitly-enabled (local dev) path.
+    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
     synthesizer = EphemeralToolSynthesizer()
     safe_code = """
 def run(x: int, y: int) -> int:
@@ -41,7 +45,9 @@ def run(x: int, y: int) -> int:
 
 
 @pytest.mark.asyncio
-async def test_ephemeral_synthesizer_blocks_dangerous_code():
+async def test_ephemeral_synthesizer_blocks_dangerous_code(monkeypatch):
+    # Reach the AST gate (not the #704 codegen gate) for this coverage test.
+    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
     synthesizer = EphemeralToolSynthesizer()
     dangerous_code = """
 import os

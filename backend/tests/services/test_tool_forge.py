@@ -1,6 +1,7 @@
 # backend/tests/services/test_tool_forge.py
 import pytest
 
+from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from services.tool_forge import (
     SecurityViolationError,
     ToolForgeError,
@@ -9,7 +10,10 @@ from services.tool_forge import (
 )
 
 
-def test_tool_forge_safe_tool_synthesis_and_execution():
+def test_tool_forge_safe_tool_synthesis_and_execution(monkeypatch):
+    # Issue #704: in-process exec is fail-closed by default; this coverage
+    # test exercises the explicitly-enabled (local dev) path.
+    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
     service = ToolForgeService()
     spec = ToolSpec(
         name="calculate_discount",
