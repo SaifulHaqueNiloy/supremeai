@@ -6,6 +6,7 @@
 # Listener failure → DLQ — silent drop সম্পূর্ণ নিষিদ্ধ।
 
 import asyncio
+import os
 import threading
 from collections import defaultdict
 from collections.abc import Callable
@@ -37,6 +38,23 @@ class ErrorSeverity(StrEnum):
     LOW = "LOW"
 
 
+def _error_context_env() -> str:
+    """Env tag for error context — never crashes.
+
+    Issue #601 real-boot probes: during ``core.config`` initialization the
+    partially-initialized module has no ``settings`` yet, and this
+    default_factory runs while the error bus reports a boot-time failure.
+    An error-bus metadata lookup must never turn a caught exception into a
+    different crash, so degrade to the raw environment variable.
+    """
+    try:
+        from core.config import settings
+
+        return getattr(settings, "env", "unknown")
+    except Exception:
+        return os.getenv("ENV", "unknown")
+
+
 class ErrorContext(BaseModel):
     """
     বাংলা মন্তব্য: প্রতিটি error event-এ এই structured context থাকবে।
@@ -50,9 +68,7 @@ class ErrorContext(BaseModel):
     task_id: str | None = None
     request_id: str | None = None
     # বাংলা মন্তব্য: কোন env-এ ঘটলো — staging vs production আলাদাভাবে alert হবে
-    env: str = Field(
-        default_factory=lambda: getattr(__import__("core.config").config.settings, "env", "unknown")
-    )
+    env: str = Field(default_factory=_error_context_env)
     system_state: dict[str, Any] = Field(default_factory=dict)
     extra: dict[str, Any] = Field(default_factory=dict)
 
