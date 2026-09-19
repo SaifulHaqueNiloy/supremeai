@@ -71,6 +71,44 @@ _start_time = time.time()
 _checks: list[HealthCheck] = []
 _liveness_status: bool = True
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Issue #468 (item 3 — honest health-result TTL cache):
+#
+# Every /health request previously re-ran ALL registered checks — the
+# database probe (SELECT 1 incl. pool checkout) costs ~100-180ms, which
+# made the primary node's health response ~190-250ms server-side and put
+# a redundant query load on Supabase every time any monitor poller,
+# dashboard, or synthetic probe looked at the node.
+#
+# Cache semantics (deliberately conservative — this is a HEALTH gate, so
+# freshness is a safety property, not just a performance one):
+#   - ONLY fully-HEALTHY (HTTP 200) results are cached. Any degraded or
+#     unhealthy outcome bypasses the cache entirely, so incident detection
+#     and recovery are never delayed by the cache (failure → next request
+#     re-runs the real checks).
+#   - TTL is short (10s) — bounded staleness, far below typical monitor
+#     intervals; also advertised via Cache-Control so shared caches behave
+#     the same way.
+#   - Hits are HONEST: ``cache_hit: true`` + ``cache_age_seconds`` tell the
+#     consumer the data is served from the TTL window (never a fake
+#     fresh-looking payload).
+#   - In-process (per node), NOT Redis: a Redis-backed cache would add a
+#     network hop on miss and burn federation quota to avoid a DB query —
+#     health is single-node state by definition.
+# ─────────────────────────────────────────────────────────────────────────────
+_HEALTH_CACHE_TTL_SECONDS = 10.0
+_health_cache_payload: dict[str, Any] | None = None
+_health_cache_monotonic: float = 0.0
+_health_cache_status_code: int = 200
+
+
+def reset_health_cache() -> None:
+    """Clear the health TTL cache (test isolation + manual invalidation)."""
+    global _health_cache_payload, _health_cache_monotonic, _health_cache_status_code
+    _health_cache_payload = None
+    _health_cache_monotonic = 0.0
+    _health_cache_status_code = 200
+
 
 def register_check(
     name: str,
@@ -138,8 +176,31 @@ def _compute_overall(results: list[HealthResult]) -> HealthStatus:
 @router.get("")
 @router.get("/full")
 async def get_full_health(response: Response) -> dict[str, Any]:
-    """Full health check — runs ALL registered checks."""
+    """Full health check — runs ALL registered checks.
+
+    Served from a 10s TTL cache when the previous outcome was fully HEALTHY
+    (#468): check failures bypass the cache so incident detection is never
+    delayed. Cache hits are labeled honestly (``cache_hit`` /
+    ``cache_age_seconds``).
+    """
+    global _health_cache_payload, _health_cache_monotonic, _health_cache_status_code
+
     import os
+
+    now_monotonic = time.monotonic()
+    if (
+        _health_cache_payload is not None
+        and (now_monotonic - _health_cache_monotonic) < _HEALTH_CACHE_TTL_SECONDS
+    ):
+        response.status_code = _health_cache_status_code
+        response.headers["Cache-Control"] = (
+            f"public, max-age={int(_HEALTH_CACHE_TTL_SECONDS)}, "
+            f"stale-while-revalidate={int(_HEALTH_CACHE_TTL_SECONDS * 2)}"
+        )
+        payload = dict(_health_cache_payload)
+        payload["cache_hit"] = True
+        payload["cache_age_seconds"] = round(now_monotonic - _health_cache_monotonic, 2)
+        return payload
 
     results = [_run_check(check) for check in _checks]
     results = await asyncio.gather(*results)
@@ -168,6 +229,21 @@ async def get_full_health(response: Response) -> dict[str, Any]:
 
     status_code = 200 if overall == HealthStatus.HEALTHY else 503
     response.status_code = status_code
+    response.headers["Cache-Control"] = (
+        f"public, max-age={int(_HEALTH_CACHE_TTL_SECONDS)}, "
+        f"stale-while-revalidate={int(_HEALTH_CACHE_TTL_SECONDS * 2)}"
+    )
+
+    # Only cache healthy outcomes (see cache-semantics note above).
+    if status_code == 200:
+        _health_cache_payload = dict(payload)
+        _health_cache_monotonic = now_monotonic
+        _health_cache_status_code = status_code
+    else:
+        _health_cache_payload = None
+
+    payload["cache_hit"] = False
+    payload["cache_age_seconds"] = 0.0
     return payload
 
 
