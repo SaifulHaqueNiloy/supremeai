@@ -210,3 +210,43 @@ def execute_python_code(code: str) -> str:
 # সব টুলের তালিকা — AI-কে দেওয়া হবে
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SUPREME_TOOLS = [search_database, check_system_health, execute_python_code]
+
+
+# ── M09 P-G first-fleet (issue #453 Wave 4) ────────────────────────────────
+# বাংলা: ৪৪ dormant টুলের মধ্যে প্রথম জাগরণ — cot_reasoner-এর সৎ-
+# deterministic অংশ (sympy যাচাই)। কোড-নির্বাহ নয়, পার্শ্বপ্রতিক্রিয়া-শূন্য
+# গণনা — তাই নীতিতে R0। জাগরণ flag-gated: SUPREMEAI_TOOL_FLEET=false =
+# আজকের আচরণ (registry-তে ৩টি বেস টুল)।
+def cot_verify_math(expression: str, claimed_result: str) -> str:
+    """Verify a claimed mathematical result symbolically (deterministic, R0).
+
+    বাংলা: LLM-এর দাবি-করা গাণিতিক ফল sympy দিয়ে সত্য-যাচাই —
+    hallucinated arithmetic ধরার governed প্রথম-ফ্লিট টুল।
+    """
+    from tools.code.cot_reasoner import verify_symbolic_math
+
+    result = verify_symbolic_math(str(expression), str(claimed_result))
+    verdict = "VERIFIED" if result.get("is_verified") else "REFUTED"
+    return f"[{verdict}] {result}"
+
+
+FLEET_TOOLS = [cot_verify_math]
+
+
+def fleet_enabled() -> bool:
+    """Flag-gate: ``SUPREMEAI_TOOL_FLEET=true`` হলেই কেবল সত্য (default OFF)।"""
+    import os
+
+    return os.environ.get("SUPREMEAI_TOOL_FLEET", "").strip().lower() == "true"
+
+
+def governed_tools() -> list:
+    """Flag-aware governed registry — base SUPREME_TOOLS + fleet (flag-on)।
+
+    বাংলা: flag-off-এ রিটার্ন SUPREME_TOOLS-এর হুবহু প্রতিলিপি —
+    আজকের আচরণ byte-সমতুল্য; অজানা অবস্থায় কোনো টুল নীরবে ঢোকে না।
+    """
+    tools_list = list(SUPREME_TOOLS)
+    if fleet_enabled():
+        tools_list.extend(FLEET_TOOLS)
+    return tools_list
