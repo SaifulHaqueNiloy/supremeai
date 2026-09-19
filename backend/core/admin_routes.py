@@ -107,16 +107,18 @@ async def _issue_trusted_browser(uid: str, email: str, response: Response) -> No
         _TRUSTED_BROWSER_TTL,
         json.dumps({"token_key": _trusted_browser_key(token), **metadata}),
     )
+    env_name = str(getattr(settings, "env", "local") or "").lower()
+    # Issue #709 (item 4): Secure cookie for production AND staging — not just
+    # production. SameSite=None requires the Secure attribute, so it follows the
+    # same env set; local HTTP development keeps the cookie lax/insecure.
+    secure_env = env_name in ("production", "prod", "staging")
     response.set_cookie(
         _TRUSTED_BROWSER_COOKIE,
         token,
         max_age=_TRUSTED_BROWSER_TTL,
         httponly=True,
-        secure=getattr(settings, "env", "local").lower() == "production",
-        # The admin portal and API are commonly on different origins in production.
-        # SameSite=None is required for credentialed cross-origin fetches; local HTTP
-        # development keeps the cookie usable without the Secure requirement.
-        samesite="none" if getattr(settings, "env", "local").lower() == "production" else "lax",
+        secure=secure_env,
+        samesite="none" if secure_env else "lax",
         path="/",
     )
 

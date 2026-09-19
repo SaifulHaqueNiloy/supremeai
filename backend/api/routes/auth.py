@@ -55,7 +55,10 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str 
     """
     import secrets
 
-    secure = settings.env == "production"
+    # Issue #709 (item 4): Secure cookies for production AND staging — not just
+    # production. Only local dev (and the pytest ENV=test harness) keeps
+    # Secure=False so plain-HTTP development/testing keeps working.
+    secure = (settings.env or "").lower() in ("production", "prod", "staging")
     response.set_cookie(
         key=ACCESS_COOKIE_NAME,
         value=access_token,
