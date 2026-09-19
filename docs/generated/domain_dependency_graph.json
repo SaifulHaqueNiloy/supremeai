@@ -3712,7 +3712,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 20,
           "path": "backend/services/scraper/web_scraper.py"
         }
       ],
@@ -3952,7 +3952,7 @@
     {
       "evidence": [
         {
-          "line": 21,
+          "line": 28,
           "path": "backend/services/scraper/web_scraper.py"
         }
       ],
