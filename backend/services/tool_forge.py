@@ -5,6 +5,14 @@ Dynamic on-the-fly Python tool synthesis with zero-RCE AST isolation:
 - Verifies synthesized Python code using ASTSandboxScanner before execution.
 - Blocks dangerous primitives (os, subprocess, eval, exec, socket, dunder traversal).
 - Executes verified tools in an ephemeral restricted execution namespace.
+
+Issue #704 (fail-closed codegen gate): the restricted-namespace ``exec()`` in
+``execute_tool`` is NOT a security sandbox. By default
+(``SUPREMEAI_ALLOW_INPROCESS_CODEGEN`` unset — all prod/staging) it refuses to
+execute and raises ``ToolForgeError`` (the caller's existing error convention;
+``services/living_engine.py`` steps run under self-healing which handles it).
+The exec path only runs when the gate is explicitly enabled (local development
+only), with a loud one-time warning emitted at import/boot when it is.
 """
 
 from __future__ import annotations
@@ -14,7 +22,17 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from core.logging_config import logger
+from core.security.codegen_gate import (
+    denied_reason,
+    inprocess_codegen_enabled,
+    warn_inprocess_codegen_boot,
+)
 from core.security.scanning.ast_scanner import ASTSandboxScanner
+
+# Issue #704: loud one-time boot warning when the in-process exec escape hatch
+# is explicitly enabled (local development only).
+if inprocess_codegen_enabled():
+    warn_inprocess_codegen_boot("ToolForgeService.execute_tool")
 
 
 class ToolForgeError(Exception):
@@ -141,6 +159,16 @@ class ToolForgeService:
         """Executes a forged tool in a restricted sandbox namespace."""
         if not tool.is_safe or not tool.compiled_code:
             raise SecurityViolationError(f"Tool '{tool.spec.name}' is unverified or unsafe.")
+
+        # Issue #704 fail-closed gate: refuse in-process exec of LLM-generated
+        # code unless explicitly enabled (SUPREMEAI_ALLOW_INPROCESS_CODEGEN).
+        # ToolForgeError matches this service's existing failure convention.
+        if not inprocess_codegen_enabled():
+            logger.warning(
+                f"[ToolForge] Blocked in-process exec for '{tool.spec.name}': "
+                f"{denied_reason('ToolForgeService.execute_tool')}"
+            )
+            raise ToolForgeError(denied_reason("ToolForgeService.execute_tool"))
 
         # Restricted execution scope
         sandbox_globals = {
