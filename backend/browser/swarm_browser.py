@@ -21,7 +21,26 @@ class SwarmBrowser:
         self.reasoner = ReasoningOrchestrator.get_instance()
 
     async def explore(self, site: str, sub_goals: list[str]) -> dict[str, Any]:
-        """Deploy parallel agent swarm to explore sub-goals simultaneously and synthesize findings."""
+        """Deploy parallel agent swarm to explore sub-goals simultaneously and synthesize findings.
+
+        বাংলা (M06 P-A ৮/৮ RunType adoption): swarm-explore ক্যানোনিকাল
+        ``run_type="browser"`` রান হিসেবেও পর্যবেক্ষিত (flag-gated, best-effort);
+        প্রতিটি sub-agent-এর ব্যর্থতা ইতিমধ্যে result-এ সৎ-রেকর্ডেড — synthesize
+        ব্যর্থতা ছাড়া রান failed হয় না।
+        """
+        from runs.run_scope import observe_run
+
+        async with observe_run(
+            run_type="browser",
+            title=f"swarm:{site[:80]}",
+            source_type="browser",
+            source_ref=site,
+        ):
+            result = await self._explore_impl(site, sub_goals)
+            return result
+
+    async def _explore_impl(self, site: str, sub_goals: list[str]) -> dict[str, Any]:
+        """Original explore body — run-observation wrapper-এর ভিতরে চলে।"""
         logger.info(f"[SwarmBrowser] Deploying {len(sub_goals)} parallel agents for site: {site}")
 
         tasks = []

@@ -15,6 +15,26 @@ class LocalCodeExecutor:
         self.docker_sandbox = DockerSandbox() if use_docker else None
 
     async def execute_local_code(self, code: str, timeout_seconds: int = 30) -> dict:
+        """Execute code via Docker sandbox (or secure host fallback in dev).
+
+        বাংলা (M06 P-A ৮/৮ RunType adoption): প্রতিটি code-নির্বাহ ক্যানোনিকাল
+        ``run_type="code"`` রান হিসেবেও পর্যবেক্ষিত (flag-gated, best-effort);
+        production security-refusal সহ ``success=False``-ই রান-ব্যর্থতার সত্য।
+        """
+        from runs.run_scope import observe_run
+
+        async with observe_run(
+            run_type="code",
+            title=f"code:{code[:60]!r}",
+            source_type="code",
+        ) as run_ctx:
+            result = await self._execute_local_code_impl(code, timeout_seconds)
+            if run_ctx is not None and result.get("success") is False:
+                run_ctx.finish("failed")
+            return result
+
+    async def _execute_local_code_impl(self, code: str, timeout_seconds: int = 30) -> dict:
+        """Original execute_local_code body — run-observation wrapper-এর ভিতরে চলে।"""
         env = getattr(settings, "env", "development").lower()
 
         if self.use_docker and self.docker_sandbox:

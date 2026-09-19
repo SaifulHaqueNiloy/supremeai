@@ -64,7 +64,29 @@ async def execute_tool_decision(decision: dict[str, Any]) -> dict[str, Any]:
     বাংলা: রিটার্ন-চুক্তি — ``{"tool", "executed": bool, "status", ...}``;
     ``executed=True`` মানে টুল সত্যিই চলেছে এবং ``observation`` এ প্রকৃত
     আউটপুট; বাকি সব ক্ষেত্রে স্পষ্ট কারণ।
+
+    M06 P-A (৮/৮ RunType adoption): প্রতিটি গভর্নড টুল-নির্বাহ ক্যানোনিকাল
+    ``run_type="tool"`` রান হিসেবেও পর্যবেক্ষিত (flag-gated, best-effort —
+    রান-ফ্যাব্রিক ব্যর্থতা টুল-নির্বাহ কখনো ব্লক করে না)।
     """
+    from runs.run_scope import observe_run
+
+    tool_name = str((decision or {}).get("tool", "done"))
+    async with observe_run(
+        run_type="tool",
+        title=f"tool:{tool_name}",
+        source_type="tool",
+        source_ref=tool_name,
+    ) as run_ctx:
+        result = await _execute_tool_decision_gated(decision)
+        if run_ctx is not None:
+            # বাংলা: বাস্তব ব্যর্থতা কেবল execution-error; gate-refusal (disabled/
+            # unknown/policy_blocked) নির্বাহ-অনুপস্থিতি — সেটি failed নয়।
+            run_ctx.finish("failed" if result.get("status") == "error" else "succeeded")
+        return result
+
+
+async def _execute_tool_decision_gated(decision: dict[str, Any]) -> dict[str, Any]:
     tool = str((decision or {}).get("tool", "done"))
     base: dict[str, Any] = {
         "tool": tool,
