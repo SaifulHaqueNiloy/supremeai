@@ -8,8 +8,9 @@
 #      "[skip ci]" কমিট দিয়ে push করে — মানুষের হাত লাগে না, লুপ-নিরাপদ।
 #   সব সবুজ হলে ট্র্যাকড ইস্যুগুলো অটো-বন্ধ হয়।
 #
-# দর্শন: zero cost (GitHub-native gh CLI), lightweight (এক job), zero-hardcode
-# (failed job তালিকা live API থেকে; drift শুধু generator-এর প্রকৃত আউটপুট থেকে)।
+# CI-11: permissions জব-লেভেলে scoped — doctor জব (issue/API read-write) আর
+# push-regen জব (শুধু contents:write, main-এ auto-push) আলাদা টোকেন স্কোপে
+# চলে; টপ-লেভেল permissions ব্লক নেই।
 
 name: CI Doctor
 
@@ -36,12 +37,6 @@ on:
       - "QA — Post-Deploy Smoke"
     types: [completed]
 
-permissions:
-  contents: write
-  issues: write
-  actions: read
-  checks: read
-
 concurrency:
   group: ci-doctor
   cancel-in-progress: false
@@ -51,6 +46,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: ${{ github.event.workflow_run.head_branch == 'main' }}
+    # CI-11: ন্যূনতম স্কোপ — এই জব টোকেনের contents:write নেই; push আলাদা
+    # push-regen জবে (contents:write only)।
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+      checks: read
+    outputs:
+      drift: ${{ steps.regen.outputs.drift }}
     steps:
       - name: Checkout latest main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -140,30 +144,13 @@ jobs:
             fi
           fi
 
-      - name: Push regenerated evidence ([skip ci] — লুপ-নিরাপদ)
+      - name: Upload regenerated evidence for scoped push job
         if: ${{ steps.regen.outputs.drift == 'clean' }}
-        # Issue #474: auto-regen কমিট নয়েজ ক্যাপ — শেষ auto-regen কমিটের পর
-        # ন্যূনতম CI_DOCTOR_REGEN_THROTTLE_SECONDS (default 21600 = ৬ ঘণ্টা)
-        # না গেলে push থ্রটল হয়। drift হারায় না: পরের scheduled doctor রান
-        # উইন্ডো খুললেই সেটাই কমিট করে। [skip ci] থাকায় কোনো লুপ-চাপ নেই।
-        run: |
-          git config user.name "SupremeAI-CIDoctor"
-          git config user.email "cidoctor@supremeai.dev"
-          THROTTLE="${CI_DOCTOR_REGEN_THROTTLE_SECONDS:-21600}"
-          LAST=$(git log --grep='auto-regen' -1 --format=%ct || echo 0)
-          NOW=$(date +%s)
-          AGE=$((NOW - ${LAST:-0}))
-          if [ "${LAST:-0}" -gt 0 ] && [ "$AGE" -lt "$THROTTLE" ]; then
-            REMAIN=$(( (THROTTLE - AGE) / 60 + 1 ))
-            echo "⏳ evidence drift শনাক্ত হয়েছে কিন্তু auto-regen থ্রটল হয়েছে (শেষ regen মাত্র ${AGE}s আগে; উইন্ডো ${THROTTLE}s) — ~${REMAIN} মিনিট পরের scheduled doctor রান এটি পিক-আপ করবে (issue #474 commit-noise cap)।"
-            echo "::notice::CI Doctor evidence regen throttled — drift stays visible in the next scheduled window (issue #474)"
-            exit 0
-          fi
-          git add docs/generated/
-          git commit -m "[skip ci] chore(ci-evidence): auto-regen — drift detected by CI Doctor"
-          git pull --rebase origin main
-          git push origin main
-          echo "✅ evidence auto-fixed; CI নতুন রান ট্রিগার হবে না ([skip ci])"
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ci-doctor-generated-evidence
+          path: docs/generated/
+          retention-days: 3
 
       - name: Auto-close tracked failure issues on green
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -329,3 +316,56 @@ jobs:
               });
               console.log(`Created new warning ledger issue #${created.data.number}`);
             }
+
+  push-regen:
+    name: Push Regenerated Evidence ([skip ci] — loop-safe)
+    needs: doctor
+    if: ${{ needs.doctor.outputs.drift == 'clean' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # CI-11: এই জবই একমাত্র main-এ লেখে — তাই এর টোকেনে শুধু contents:write;
+    # issues/actions/checks অন্য কোনো জবের টোকেনে নেই।
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Replace docs/generated with regenerated evidence
+        run: |
+          # Regenerated আউটপুটই ground truth — generator কোনো ফাইল মুছলে সেটাও
+          # কমিট হয় (artifact-এ না থাকলেও), তাই ডিরেক্টরি আগে খালি করা হয়।
+          rm -rf docs/generated
+          mkdir -p docs/generated
+
+      - name: Restore regenerated evidence
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: ci-doctor-generated-evidence
+          path: docs/generated
+
+      - name: Push regenerated evidence ([skip ci] — লুপ-নিরাপদ)
+        # Issue #474: auto-regen কমিট নয়েজ ক্যাপ — শেষ auto-regen কমিটের পর
+        # ন্যূনতম CI_DOCTOR_REGEN_THROTTLE_SECONDS (default 21600 = ৬ ঘণ্টা)
+        # না গেলে push থ্রটল হয়। drift হারায় না: পরের scheduled doctor রান
+        # উইন্ডো খুললেই সেটাই কমিট করে। [skip ci] থাকায় কোনো লুপ-চাপ নেই।
+        run: |
+          git config user.name "SupremeAI-CIDoctor"
+          git config user.email "cidoctor@supremeai.dev"
+          THROTTLE="${CI_DOCTOR_REGEN_THROTTLE_SECONDS:-21600}"
+          LAST=$(git log --grep='auto-regen' -1 --format=%ct || echo 0)
+          NOW=$(date +%s)
+          AGE=$((NOW - ${LAST:-0}))
+          if [ "${LAST:-0}" -gt 0 ] && [ "$AGE" -lt "$THROTTLE" ]; then
+            REMAIN=$(( (THROTTLE - AGE) / 60 + 1 ))
+            echo "⏳ evidence drift শনাক্ত হয়েছে কিন্তু auto-regen থ্রটল হয়েছে (শেষ regen মাত্র ${AGE}s আগে; উইন্ডো ${THROTTLE}s) — ~${REMAIN} মিনিট পরের scheduled doctor রান এটি পিক-আপ করবে (issue #474 commit-noise cap)।"
+            echo "::notice::CI Doctor evidence regen throttled — drift stays visible in the next scheduled window (issue #474)"
+            exit 0
+          fi
+          git add -A docs/generated/
+          git commit -m "[skip ci] chore(ci-evidence): auto-regen — drift detected by CI Doctor"
+          git pull --rebase origin main
+          git push origin main
+          echo "✅ evidence auto-fixed; CI নতুন রান ট্রিগার হবে না ([skip ci])"
