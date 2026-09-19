@@ -3,80 +3,21 @@
 // 🔬 Evolution v3.0: Enhanced API client with Retry + Circuit Breaker
 // বাংলা মন্ত্য: Portal-ভিত্তিক একক backend নির্ধারণ — কোনো cross-portal failover নয়।
 
-/**
- * 🔬 Circuit Breaker States for Frontend
- * CLOSED → Normal, OPEN → Failing, HALF_OPEN → Testing
- */
-type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
-
-interface CircuitBreakerConfig {
-  name: string;
-  failureThreshold: number;   // Failures before OPEN
-  recoveryTimeoutMs: number;  // ms before HALF_OPEN attempt
-}
-
-class FrontendCircuitBreaker {
-  private state: CircuitState = 'CLOSED';
-  private failures = 0;
-  private lastFailureTime = 0;
-  private readonly config: CircuitBreakerConfig;
-
-  constructor(config: CircuitBreakerConfig) {
-    this.config = config;
-  }
-
-  async execute<T>(fn: () => Promise<T>): Promise<T> {
-    // Check if we should try recovery
-    if (this.state === 'OPEN') {
-      const elapsed = Date.now() - this.lastFailureTime;
-      if (elapsed >= this.config.recoveryTimeoutMs) {
-        this.state = 'HALF_OPEN';
-      } else {
-        throw new Error(`Circuit '${this.config.name}' is OPEN. Retry in ~${Math.ceil((this.config.recoveryTimeoutMs - elapsed) / 1000)}s`);
-      }
-    }
-
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch (error) {
-      this.onFailure();
-      throw error;
-    }
-  }
-
-  private onSuccess(): void {
-    this.failures = 0;
-    if (this.state === 'HALF_OPEN') {
-      this.state = 'CLOSED';
-    }
-  }
-
-  private onFailure(): void {
-    this.failures++;
-    this.lastFailureTime = Date.now();
-    if (this.failures >= this.config.failureThreshold) {
-      this.state = 'OPEN';
-      console.warn(`⚡ Circuit '${this.config.name}' opened after ${this.failures} failures`);
-    }
-  }
-
-  getState(): CircuitState { return this.state; }
-  getRecoveryTimeMs(): number {
-    if (this.state !== 'OPEN') return 0;
-    return Math.max(0, this.config.recoveryTimeoutMs - (Date.now() - this.lastFailureTime));
-  }
-}
+// DRY Phase 1-B5: the private FrontendCircuitBreaker copy lived here while the
+// identical implementation was single-sourced into @supremeai/core-infrastructure
+// (CircuitBreaker, Phase 1-B3). Frontend now consumes the shared primitive —
+// exports below keep the same shapes (`circuits`, `CircuitState`) so every
+// consumer stays source-compatible.
+import { CircuitBreaker, type CircuitState } from '@supremeai/core-infrastructure';
 
 // Pre-configured circuits
-const apiCircuit = new FrontendCircuitBreaker({
+const apiCircuit = new CircuitBreaker({
   name: 'api_backend',
   failureThreshold: parseInt(import.meta.env.VITE_CIRCUIT_FAILURE_THRESHOLD || '5'),
   recoveryTimeoutMs: parseInt(import.meta.env.VITE_CIRCUIT_RECOVERY_MS || '30000'),
 });
 
-const wsCircuit = new FrontendCircuitBreaker({
+const wsCircuit = new CircuitBreaker({
   name: 'websocket',
   failureThreshold: 3,
   recoveryTimeoutMs: 15000,
