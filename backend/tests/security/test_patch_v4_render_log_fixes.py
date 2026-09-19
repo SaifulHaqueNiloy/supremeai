@@ -115,7 +115,7 @@ def test_pooled_pg_execute_ddl_not_decorated_with_error_bus():
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FIX 2: hitl_admin router imports get_tenant_db from the correct module
+# FIX 2: hitl_admin router resolves its store through the canonical path
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -132,16 +132,37 @@ def test_hitl_admin_router_imports_resolve():
 
 
 def test_hitl_admin_router_uses_api_deps_get_tenant_db():
-    """hitl_admin must import get_tenant_db from api.deps, not core.tenant_db."""
+    """hitl_admin store resolution must stay fail-closed, never tenant_db shim.
+
+    বাংলা (M17 P-C চুক্তি-আপডেট, 2026-09-19): পুরনো PATCH-v4 চুক্তি ছিল
+    "hitl_admin অবশ্যই `from api.deps import get_tenant_db` করবে"। M17 P-C
+    সৎ-সেমান্টিকস ফিক্স সেই চুক্তি সচেতনভাবে বদলেছে — `get_tenant_db`-এর
+    TenantAwareFirestore HITLEngine-এর স্টোর-চুক্তি (`.client` + `.collection()`)
+    ভাঙত, ফলে প্রতিটি অপারেশন নীরবে খালি [] কিউ দেখাত (fake-empty queue,
+    production bug)। এখন চুক্তি:
+      1. `core.tenant_db` shim নিষিদ্থ (আগের মতোই — ImportError উৎস);
+      2. কাঁচা গ্লোবাল Firestore ক্লায়েন্ট সরাসরি resolve হয়;
+      3. ক্লায়েন্ট অনুপস্থিতে fail-closed 503 — কখনো নীরব [] নয়।
+    পুরনো assertion ফিরিয়ে আনলে M17 P-C-র আসল বাগ-ফিক্স রিগ্রেশন হবে।
+    """
     import api.routes.hitl_admin as hitl_admin
 
     src = inspect.getsource(hitl_admin)
-    assert "from api.deps import get_tenant_db" in src, (
-        "hitl_admin must import get_tenant_db from api.deps (PATCH v4). "
-        "Found source does not contain the expected import line."
-    )
     assert "from core.tenant_db import" not in src, (
         "hitl_admin must NOT import from core.tenant_db — that shim doesn't expose get_tenant_db."
+    )
+    assert "get_firestore_client" in src, (
+        "hitl_admin must resolve the raw global Firestore client (M17 P-C "
+        "store contract: HITLEngine wants `.client` + `.collection()` on a "
+        "raw client, not TenantAwareFirestore)."
+    )
+    assert "_ClientShim" in src and "HITLEngine" in src, (
+        "hitl_admin must build HITLEngine over the client shim — silently "
+        "returning [] on a broken store is the bug M17 P-C removed."
+    )
+    assert "503" in src, (
+        "hitl_admin must fail-closed with HTTP 503 when the Firestore "
+        "client is unavailable — never a silent empty queue."
     )
 
 
