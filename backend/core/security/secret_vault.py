@@ -79,6 +79,9 @@ OPTIONAL_SECRETS: set[str] = {
     # real-boot probes caught this before a deploy did).
     "STRIPE_API_KEY",
     "STRIPE_WEBHOOK_SECRET",
+    # validate_all warns ("Production missing config vars: CI_WEBHOOK_SECRET.
+    # Running in degraded zero-cost mode") and continues - warn-optional.
+    "CI_WEBHOOK_SECRET",
 }
 # Infra-critical secrets whose absence aborts boot — kept as a separate set so
 # they get the CRITICAL log + alert event before the fail-closed raise.
