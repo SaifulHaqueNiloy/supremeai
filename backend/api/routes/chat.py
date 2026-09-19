@@ -9,6 +9,11 @@ from context_engine import ContextBlock, ContextEngine, Section
 from context_engine.budget import context_engine_enabled
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
+from core.i18n.language_directive import (
+    build_language_directive,
+    language_loop_enabled,
+    resolve_preferred_language,
+)
 from core.llm.llm_gateway import llm_gateway
 from core.llm.llm_gateway.context import InferenceContext
 from core.logging_config import logger
@@ -186,6 +191,23 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     )
         except Exception as rag_err:
             logger.debug(f"RAG Retrieval bypassed: {rag_err}")
+
+        # M19 P-C: ভাষা-লুপ বন্ধ — সংরক্ষিত preferred_language এখন মডেলের কাছে
+        # পৌঁছায় (system-directive block)। পছন্দ-অনুপস্থিত/en → কোনো block নেই
+        # (আজকের আচরণ)। kill-switch SUPREMEAI_LANGUAGE_LOOP=off।
+        if language_loop_enabled():
+            _lang_directive = build_language_directive(
+                await resolve_preferred_language(db.tenant_id)
+            )
+            if _lang_directive:
+                context_blocks.append(
+                    ContextBlock(
+                        section=Section.SYSTEM,
+                        text=_lang_directive,
+                        priority=0,
+                        block_id="lang-directive",
+                    )
+                )
 
         # Governed Intelligence Routing check
         from core.intelligence import IntelligenceRouter, VerificationEngine, synaptic_memory
@@ -397,6 +419,22 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         )
             except Exception as rag_err:
                 logger.debug(f"RAG Retrieval bypassed in stream: {rag_err}")
+
+            # M19 P-C: ভাষা-লুপ বন্ধ (SSE-পথ) — বিস্তারিত উপরের get_completion-এ।
+            # বাংলা: এটি নেস্টেড async_generator — identity এখানে db.tenant_id।
+            if language_loop_enabled():
+                _lang_directive = build_language_directive(
+                    await resolve_preferred_language(db.tenant_id)
+                )
+                if _lang_directive:
+                    context_blocks.append(
+                        ContextBlock(
+                            section=Section.SYSTEM,
+                            text=_lang_directive,
+                            priority=0,
+                            block_id="lang-directive",
+                        )
+                    )
 
             # M2 Context Engine: budgeted, smallest-sufficient-context prompt
             # বাংলা (M07 P-F): kill-switch SUPREMEAI_CONTEXT_ENGINE=off → raw-prompt
