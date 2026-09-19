@@ -334,8 +334,10 @@ jobs:
           SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET }}
-          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+          # CI-12: ENCRYPTION_KEY generated at runtime (run block) — no committed
+          # secret-shaped literal to trip trufflehog/gitleaks.
         run: |
+          export ENCRYPTION_KEY="$(openssl rand -base64 32)"
           VENV_PYTHON=$(cd backend && poetry env info --path)/bin/python
           $VENV_PYTHON scripts/generate_openapi.py
 
@@ -457,8 +459,10 @@ jobs:
           SUPABASE_DATABASE_URL: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET }}
-          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
+          # CI-12: ENCRYPTION_KEY generated at runtime (run block) — no committed
+          # secret-shaped literal to trip trufflehog/gitleaks.
         run: |
+          export ENCRYPTION_KEY="$(openssl rand -base64 32)"
           mkdir -p ../docs/autogen
           if poetry run erdantic models -o ../docs/autogen/db_schema.png || poetry run python -m erdantic models -o ../docs/autogen/db_schema.png; then
             echo "✅ Database schema diagram generated" >> "$GITHUB_STEP_SUMMARY"
@@ -524,7 +528,9 @@ jobs:
       - name: Start Backend Server
         working-directory: backend
         env:
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY || 'CwE60g_bA67m-mock-encryption-key-padded-len=' }}
+          # CI-12: fallback when the secret is unset is generated at runtime in
+          # the run block — no committed secret-shaped literal.
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           SUPREMEAI_API_URL: http://127.0.0.1:8000
           SUPABASE_URL: "https://mock-health-check.supabase.co"
           SUPABASE_KEY: "mock_key"
@@ -534,6 +540,7 @@ jobs:
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET }}
         # ইউভিকর্ন সার্ভার লগে রিডাইরেক্ট করে ৬০ সেকেন্ডের টাইমআউট ফেইলসাফ যোগ করা হয়েছে
         run: |
+          export ENCRYPTION_KEY="${ENCRYPTION_KEY:-$(openssl rand -base64 32)}"
           poetry run uvicorn main:app --host 127.0.0.1 --port 8000 > ../uvicorn.log 2>&1 &
           echo $! > ../uvicorn.pid
           pnpm exec wait-on http://127.0.0.1:8000/health --timeout 60000 || {
@@ -763,8 +770,11 @@ jobs:
           SUPABASE_DATABASE_URL_POOLER: "postgresql+asyncpg://mock:mock@localhost:5432/mock_db"
           SUPREMEAI_JWT_SECRET: ${{ secrets.SUPREMEAI_JWT_SECRET }}
           CI: "true"
-          ENCRYPTION_KEY: "CwE60g_bA67m-mock-encryption-key-padded-len="
-        run: poetry run python ../scripts/generate_api_health_report.py >> $GITHUB_STEP_SUMMARY
+          # CI-12: ENCRYPTION_KEY generated at runtime (run block) — no committed
+          # secret-shaped literal to trip trufflehog/gitleaks.
+        run: |
+          export ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          poetry run python ../scripts/generate_api_health_report.py >> $GITHUB_STEP_SUMMARY
 
   infisical-vault-synthetic-check:
     name: "🔐 Infisical RAW vault contract check (#434 weekly)"

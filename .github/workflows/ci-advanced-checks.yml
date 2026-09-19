@@ -81,8 +81,10 @@ jobs:
           TESTING: "1"
           ENV: test
           PRE_COMMIT: "1"
-          ENCRYPTION_KEY: TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD=
+          # CI-12: ENCRYPTION_KEY generated at runtime below — no committed
+          # secret-shaped literal to trip trufflehog/gitleaks.
         run: |
+          export ENCRYPTION_KEY="$(openssl rand -base64 32)"
           python scripts/ci/validate_route_registry.py
           python -m unittest discover -s tests -p 'test_route_inventory.py' -v
           python -m unittest discover -s tests -p 'test_route_graph.py' -v

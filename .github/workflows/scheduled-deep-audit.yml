@@ -131,13 +131,16 @@ jobs:
         id: full_audit
         shell: bash
         env:
-          SUPREMEAI_JWT_SECRET: "dummy-secret-32-chars-long-123456"
+          # CI-12: secret-shaped dummies (JWT/service-role) are generated at
+          # runtime in the run block below instead of committed literals that
+          # trip this workflow's own trufflehog/gitleaks scans.
           SUPABASE_DATABASE_URL_WRITER: "postgresql://dummy:pass@localhost:5432/db"
           SUPABASE_URL: "https://dummy.supabase.co"
-          SUPABASE_SERVICE_ROLE_KEY: "dummy-service-role-key"
           REDIS_URL: "redis://localhost:6379/0"
           SUPREMEAI_BASE_URL: ${{ secrets.SUPREMEAI_BASE_URL }}
         run: |
+          export SUPREMEAI_JWT_SECRET="$(openssl rand -hex 32)"
+          export SUPABASE_SERVICE_ROLE_KEY="$(openssl rand -hex 32)"
           chmod +x scripts/ci-full-audit.sh
           ./scripts/ci-full-audit.sh
 

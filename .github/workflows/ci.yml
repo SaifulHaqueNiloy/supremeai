@@ -794,8 +794,8 @@ jobs:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/supremeai_test
           REDIS_URL: redis://localhost:6379/0
           ENV: test
-          JWT_SECRET: test-secret-key-for-ci-minimum-32-chars-padding-for-length
-          SUPREMEAI_JWT_SECRET: test-supremeai-jwt-secret-key-for-ci-minimum-64-chars-padding-1234
+          # CI-12: JWT secrets are generated at runtime (run block below) instead
+          # of committing secret-shaped literals that trip trufflehog/gitleaks.
           ALLOW_TEST_AUTH_BYPASS: "true"
           USER_CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
           ADMIN_CORS_ORIGINS: http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
@@ -816,6 +816,8 @@ jobs:
         # matrix groups. NOTE: never put "#" comments inside this run block —
         # after a "\" line-continuation they truncate the pytest command.
         run: |
+          export JWT_SECRET="$(openssl rand -hex 32)"
+          export SUPREMEAI_JWT_SECRET="$(openssl rand -hex 32)"
           echo "pytest parallelism flags: $XDIST_FLAG"
           poetry run pytest $TEST_TARGETS \
             $XDIST_FLAG \
@@ -1142,10 +1144,13 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: "mock-supabase-service-role-key"
           OPENAI_API_KEY: "sk-mock-openai-api-key"
           ENV: test
+          # CI-12: no secret-shaped literals committed; JWT secrets are exported
+          # at runtime in the run block below (openssl rand).
           BACKEND_URL: ${{ env.BACKEND_URL || secrets.BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
-          JWT_SECRET: test-secret-key-for-ci-minimum-32-chars-padding-for-length
-          SUPREMEAI_JWT_SECRET: test-supremeai-jwt-secret-key-for-ci-minimum-64-chars-padding-1234
-        run: poetry run python ../scripts/ci/verify_canonical_startup.py
+        run: |
+          export JWT_SECRET="$(openssl rand -hex 32)"
+          export SUPREMEAI_JWT_SECRET="$(openssl rand -hex 32)"
+          poetry run python ../scripts/ci/verify_canonical_startup.py
 
       - name: Verify Supabase / PostgreSQL pgvector Extension
         working-directory: ./backend
