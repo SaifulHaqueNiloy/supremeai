@@ -34,7 +34,16 @@ class CapabilityPolicy:
     sandbox: SandboxMode = SandboxMode.READ_ONLY
 
 
-_RISK_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+# Issue #684 (H-04): single canonical severity ladder for the low/medium/high/
+# critical vocabulary. This was previously redefined per module with drifting
+# integer scales (core.security.tool_gateway.RISK_LEVELS, local severity_order
+# maps in the secret scanner and digital twin — some ranking critical=3, others
+# critical=4), so a numeric comparison against one module's constant silently
+# mismatched another's. Rank ascending: higher == more severe. Modules that need
+# an extra tier (e.g. "info") derive from this mapping instead of redefining it.
+SEVERITY_LEVELS: dict[str, int] = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+
+_RISK_ORDER = SEVERITY_LEVELS
 
 
 def authorize(
@@ -67,6 +76,7 @@ def validate_workspace_path(root: Path, requested: Path) -> Path:
 __all__ = [
     "Actor",
     "CapabilityPolicy",
+    "SEVERITY_LEVELS",
     "PolicyDenied",
     "SandboxMode",
     "authorize",

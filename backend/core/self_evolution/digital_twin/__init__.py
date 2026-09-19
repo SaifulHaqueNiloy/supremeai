@@ -10,6 +10,7 @@ Bengali:
 টপোলজি ম্যাপিং, ইম্প্যাক্ট সিমুলেশন এবং রিমেডিয়েশন ক্ষমতা একীকরণ করে
 """
 
+from core.contracts.security_policy import SEVERITY_LEVELS
 from core.logging_config import logger
 
 from .remediation_engine import (
@@ -137,7 +138,10 @@ class DigitalTwinWorldModel:
     def _assess_risk(self, failure_sim: SimulationResult, traffic_sim: SimulationResult) -> str:
         """Assess overall risk based on simulations."""
         # Combine impact levels
-        impact_scores = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+        # Issue #684 (H-04): 1-based impact ranks derived from the canonical
+        # severity ladder (core.contracts.security_policy.SEVERITY_LEVELS) —
+        # identical values to the previous inline map, single-sourced now.
+        impact_scores = {name: rank + 1 for name, rank in SEVERITY_LEVELS.items()}
 
         failure_score = impact_scores.get(failure_sim.predicted_impact, 1)
         traffic_score = impact_scores.get(traffic_sim.predicted_impact, 1)
