@@ -44,7 +44,7 @@ Total Modules: **194**
 | 30 | Specialized Tool Subsystem | tools/knowledge | 🟢 Operational | 21 callers (backend/api/routes/admin_dashboard/__init__.py, ...) | 10 tests (frontend/src/commandcenter/data/hooks.ts, ...) | unassigned | retain |
 | 31 | Specialized Tool Subsystem | tools/knowledge_squeezer | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
 | 32 | Specialized Tool Subsystem | tools/solution_synthesizer | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
-| 33 | Specialized Tool Subsystem | tools/vscode-extension | 🟢 Operational | backend/core/app.py | None | unassigned | retain |
+| 33 | Specialized Tool Subsystem | tools/vscode-extension | 🟢 Operational | backend/app.py | None | unassigned | retain |
 | 34 | MCP Server / Tool | backend/tools/mcp/mcp_cloud_deploy.py | 🟢 Operational | backend/tools/__init__.py | None | unassigned | retain |
 | 35 | MCP Server / Tool | backend/tools/mcp/mcp_github_cicd.py | 🟢 Operational | backend/tools/__init__.py | None | unassigned | retain |
 | 36 | MCP Server / Tool | backend/tools/mcp/mcp_ide_trio.py | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |

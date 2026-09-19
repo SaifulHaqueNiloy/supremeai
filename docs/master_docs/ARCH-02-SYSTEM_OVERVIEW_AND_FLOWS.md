@@ -113,7 +113,7 @@ Workspace membership (`pnpm-workspace.yaml`): `packages/*`, `frontend`, `tools/v
 
 ## Backend Assembly: Request Lifecycle
 
-The app is built entirely in code — no decorators spread across files. `backend/core/app.py` calls `create_app()` from `core/app_builder.py`, then layers on memory-aware middleware, welcome/aggregated-health routes, the admin router, `register_all_routers(app)` (central registry in `api/routers.py`) and the Tier-S feature routes.
+The app is built entirely in code — no decorators spread across files. `backend/app.py` (moved from `backend/core/app.py` per issue #683 Section 1; `core/app.py` now re-exports the singleton) calls `create_app()` from `core/app_builder.py`, then layers on memory-aware middleware, the aggregated-health route, `register_all_routers(app)` (central registry in `api/routers.py`, which also mounts the admin router `api.routes.admin_routes`) and the Tier-S feature routes (registered individually in the same registry).
 
 **Middleware chain (16 layers, outermost last):** `CORSMiddleware` → `ResponseStandardizationMiddleware` → `RateLimitMiddleware` → `IdempotencyMiddleware` → `ChaosInjectorMiddleware` → `HoneypotMiddleware` → `AutonoGuardMiddleware` → `APIKeyAuthMiddleware` → `AuthMiddleware` → `ObservabilityMiddleware` → `TenantExtractionMiddleware` → `SupremeContextMiddleware` → `TrustedOriginMiddleware` → `RequestValidationMiddleware` (SQLi/XSS) → `SecurityHeadersMiddleware` → `RequestIdMiddleware` → `GZipMiddleware` → `RequestContextMiddleware`.
 

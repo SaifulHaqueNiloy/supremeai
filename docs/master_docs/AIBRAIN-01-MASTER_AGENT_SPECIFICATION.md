@@ -1972,7 +1972,7 @@ Open-source the "Eternal Brain" memory system:
 | `package.json` | Root manifest | ~100 |
 | `backend/pyproject.toml` | Python deps + config | ~350 |
 | `backend/core/config.py` | Settings management | ~150 |
-| `backend/core/app.py` | FastAPI entry point | ~25 |
+| `backend/app.py` | FastAPI app assembly (moved from `backend/core/app.py`, #683; `core/app.py` re-exports) | ~65 |
 | `.gitleaks.toml` | Secret scanning rules | ~50 |
 | `.pre-commit-config.yaml` | Pre-commit hooks | ~400 |
 
