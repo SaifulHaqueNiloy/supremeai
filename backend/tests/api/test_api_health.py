@@ -21,6 +21,12 @@ class TestHealthEndpoint:
         dummy_check = HealthCheck(name="database", check_fn=lambda: True, critical=True)
         _checks.append(dummy_check)
         try:
+            # #468 TTL cache: a previous test's healthy outcome may still be
+            # inside the 10s window — reset so the simulated failure runs the
+            # real check path (failures are NEVER cached, see contract test).
+            from core.health_routes import reset_health_cache
+
+            reset_health_cache()
             with patch("core.health_routes._run_check") as mock_check:
                 mock_result = HealthResult(
                     name="database",
@@ -66,8 +72,14 @@ class TestHealthEndpoint:
                 assert response.status_code == 503
                 data = response.json()
                 assert data["status"] == "unhealthy"
+                # Contract lock (#468): the unhealthy outcome must NOT have
+                # been cached — incident detection is never served stale.
+                assert data["cache_hit"] is False
         finally:
             _checks.remove(dummy_check)
+            from core.health_routes import reset_health_cache as _rh
+
+            _rh()
 
     @pytest.mark.unit
     async def test_readiness_probe(self, client):
