@@ -25,11 +25,30 @@ const UNIFIED_BACKEND = normalizeBackendUrl(process.env.VITE_API_URL) || normali
 const USER_BACKEND = UNIFIED_BACKEND
 const ADMIN_BACKEND = normalizeBackendUrl(process.env.VITE_ADMIN_BACKEND) || UNIFIED_BACKEND
 
-// A frontend viewer build must still be publishable without a backend env var.
-// Public MCP URLs are supplied by the user at runtime; admin/API features can
-// report their missing connection when used instead of blocking the whole build.
+// A frontend viewer build must still be publishable without a backend env var
+// ONLY when the bundle is pinned to relative API paths (Docker sets
+// VITE_USE_RELATIVE_PATH=true). Public MCP URLs are supplied by the user at
+// runtime; admin/API features can report their missing connection when used
+// instead of blocking the whole build.
+// FIX(FE-07): a bare console.warn let Vercel ship a production bundle with
+// USER_BACKEND_URL='' — every apiClient call then hit the vercel.json
+// /(.*) catch-all rewrite, got index.html instead of JSON and the app
+// white-screened, and the CI verifier only ran after deploy. Fail the build
+// instead when neither a backend URL nor the relative-path escape hatch is set.
+if (
+  process.env.NODE_ENV === 'production' &&
+  !UNIFIED_BACKEND &&
+  process.env.VITE_USE_RELATIVE_PATH !== 'true'
+) {
+  throw new Error(
+    '[build-contract] Production build has no backend URL (set VITE_API_URL / ' +
+      'VITE_BACKEND_URL / VITE_USER_BACKEND in the deploy environment) and ' +
+      'VITE_USE_RELATIVE_PATH is not "true". A bundle baked without either ' +
+      'would ship degraded viewer mode and white-screen on every API call.',
+  )
+}
 if (process.env.NODE_ENV === 'production' && !UNIFIED_BACKEND) {
-  console.warn('No backend URL configured; building public viewer mode.')
+  console.warn('No backend URL configured; building public viewer mode (relative /api paths).')
 }
 
 // P0 build-contract (production sign-off): a LOOPBACK backend baked into a
