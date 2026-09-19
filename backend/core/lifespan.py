@@ -220,7 +220,10 @@ async def app_lifespan(app):
         # Issue #478: a skipped migration/bootstrap must never count as silent
         # success in production — make it CRITICAL-visible (crash remains off
         # the table: the readiness schema gate owns the fail-closed decision).
-        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {"production", "prod"}:
+        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {
+            "production",
+            "prod",
+        }:
             logger.critical(
                 f"Supabase schema bootstrap timed out after {timeout_val}s in PRODUCTION "
                 "— schema drift possible; readiness schema gate will report missing tables. "
@@ -231,7 +234,10 @@ async def app_lifespan(app):
                 f"Supabase schema bootstrap timed out after {timeout_val}s — continuing without full schema init."
             )
     except Exception as exc:
-        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {"production", "prod"}:
+        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {
+            "production",
+            "prod",
+        }:
             logger.critical(
                 "Supabase bootstrap failed on startup in PRODUCTION: "
                 f"{type(exc).__name__} (details suppressed) — readiness schema gate will verify tables."
