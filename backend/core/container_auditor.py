@@ -155,7 +155,3 @@ class ContainerAuditor:
 if __name__ == "__main__":
     auditor = ContainerAuditor()
     asyncio.run(auditor.audit_cycle())
-
-
-def audit_container_resources():
-    pass
