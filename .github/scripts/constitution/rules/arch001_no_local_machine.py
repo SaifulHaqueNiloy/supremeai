@@ -53,6 +53,13 @@ class NoLocalMachineRule(BaseRule):
             if name_l.startswith("route_client_inventory") or name_l == "module_capability_matrix.json":
                 continue
 
+            # Detection/security tooling *declares* hostile patterns for a living
+            # (the regression scanner's regexes, the auditor's own rules). Their
+            # localhost literals are match patterns, never connection targets.
+            path_str = str(file_path)
+            if path_str.startswith(("scripts/quality/", ".github/scripts/constitution/")):
+                continue
+
             findings.extend(self._check_file(file_path))
 
         return findings
@@ -81,6 +88,9 @@ class NoLocalMachineRule(BaseRule):
             # cloud-agnostic binding (the opposite of a localhost dependency —
             # it is how a server says "accept connections on any interface").
             r"default\s*=\s*[\"']0\.0\.0\.0[\"']",
+            # Origin/host membership GUARDS (`"localhost" in origin`) REJECT
+            # loopback targets — enforcement, not a fallback.
+            r"[\"'](?:localhost|127\.0\.0\.1)[\"']\s+in\s+",
         ]
 
         matches = self._find_in_file(file_path, localhost_pattern, exclude_patterns)

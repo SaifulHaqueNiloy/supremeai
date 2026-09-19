@@ -599,10 +599,11 @@ class SettingsSecretsMixin:
             if not secret:
                 try:
                     secret = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
-                except SecretNotFoundError:
-                    # BE-13 fail-closed vault: a missing secret must still
-                    # surface as the actionable JWT boot error below, not the
-                    # generic vault message (test_security_regression).
+                except RuntimeError:
+                    # BE-13 fail-closed vault raises RuntimeError (not
+                    # SecretNotFoundError) for a missing non-optional secret.
+                    # Still fail-closed — but surface the actionable JWT boot
+                    # error below (test_security_regression contract).
                     secret = ""
             if not secret or len(secret) < JWT_SECRET_MIN_LENGTH:
                 raise RuntimeError(
