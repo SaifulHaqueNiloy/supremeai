@@ -26,7 +26,8 @@ class UpstashRedisQueue:
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                 timeout=self.timeout,
             )
-            if (self.rest_url and self.token) or (hasattr(settings, "upstash_redis_rest_pool") and settings.upstash_redis_rest_pool)
+            if (self.rest_url and self.token)
+            or (hasattr(settings, "upstash_redis_rest_pool") and settings.upstash_redis_rest_pool)
             else None
         )
         self._active_pool_idx = 0
@@ -43,7 +44,11 @@ class UpstashRedisQueue:
 
         # Issue #754 (MA-04): multi-account federation failover across all 5 Upstash instances
         pool = getattr(settings, "upstash_redis_rest_pool", [])
-        endpoints = pool if pool else ([(self.rest_url, self.token)] if (self.rest_url and self.token) else [])
+        endpoints = (
+            pool
+            if pool
+            else ([(self.rest_url, self.token)] if (self.rest_url and self.token) else [])
+        )
         if not endpoints:
             raise RuntimeError("No configured Upstash Redis REST endpoints available")
 

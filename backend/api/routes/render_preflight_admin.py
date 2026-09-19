@@ -112,9 +112,10 @@ async def get_multi_account_health(
     """
     import os
     import time
+
     from core.config import settings
-    from core.routing.cloudflare_edge_pool import cloudflare_edge_pool
     from core.llm.llm_gateway.registry import _provider_key_pool
+    from core.routing.cloudflare_edge_pool import cloudflare_edge_pool
 
     # 1. Render health
     render_health = RenderAccountService.get_status_overview()
@@ -122,40 +123,50 @@ async def get_multi_account_health(
     # 2. Cloudflare Edge Federation
     cf_nodes = []
     for node in cloudflare_edge_pool.nodes:
-        cf_nodes.append({
-            "role": node.role,
-            "account_id": f"{node.account_id[:6]}...{node.account_id[-4:]}" if len(node.account_id) > 10 else (node.account_id or "configured"),
-            "worker_url": node.worker_url,
-            "is_active": node.is_active,
-        })
+        cf_nodes.append(
+            {
+                "role": node.role,
+                "account_id": f"{node.account_id[:6]}...{node.account_id[-4:]}"
+                if len(node.account_id) > 10
+                else (node.account_id or "configured"),
+                "worker_url": node.worker_url,
+                "is_active": node.is_active,
+            }
+        )
 
     # 3. Upstash Redis REST Pool
     upstash_pool = []
     rest_pool = getattr(settings, "upstash_redis_rest_pool", [])
     for idx, (u, t) in enumerate(rest_pool, 1):
-        upstash_pool.append({
-            "account_index": idx,
-            "url": u,
-            "token_configured": bool(t),
-            "status": "active",
-        })
+        upstash_pool.append(
+            {
+                "account_index": idx,
+                "url": u,
+                "token_configured": bool(t),
+                "status": "active",
+            }
+        )
 
     # 4. LLM Provider Key Pools & Cooling
     llm_pools: dict[str, Any] = {}
     providers = ["gemini", "openai", "groq", "mistral", "deepseek", "bynara", "bai", "v0"]
     now = time.monotonic()
     for prov in providers:
-        raw_key = getattr(settings, f"{prov}_api_key", None) or os.getenv(f"{prov.upper()}_API_KEY") or ""
+        raw_key = (
+            getattr(settings, f"{prov}_api_key", None) or os.getenv(f"{prov.upper()}_API_KEY") or ""
+        )
         keys = _provider_key_pool._keys_for(raw_key, provider=prov)
         key_statuses = []
         for k in keys:
             cooling_until = _provider_key_pool._cooldown_until.get((prov, k), 0.0)
             is_cooling = cooling_until > now
-            key_statuses.append({
-                "masked": f"{k[:4]}...{k[-4:]}" if len(k) > 8 else "***",
-                "cooling": is_cooling,
-                "cooldown_remaining_sec": max(0, int(cooling_until - now)) if is_cooling else 0,
-            })
+            key_statuses.append(
+                {
+                    "masked": f"{k[:4]}...{k[-4:]}" if len(k) > 8 else "***",
+                    "cooling": is_cooling,
+                    "cooldown_remaining_sec": max(0, int(cooling_until - now)) if is_cooling else 0,
+                }
+            )
         llm_pools[prov] = {
             "total_keys": len(keys),
             "healthy_keys": sum(1 for ks in key_statuses if not ks["cooling"]),

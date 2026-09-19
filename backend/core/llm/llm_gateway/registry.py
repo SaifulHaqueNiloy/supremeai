@@ -34,6 +34,7 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "bynara": "bynara_api_key",
     "bai": "bai_api_key",
     "v0": "v0_api_key",
+    "mistral": "mistral_api_key",
 }
 
 # Provider → OpenAI-compatible base URL. When a model's provider appears here,
