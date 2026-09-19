@@ -8,6 +8,7 @@ import { PanelLeft, PanelLeftClose } from 'lucide-react';
 import { getNavigationForContext, type NavEntry } from '../../config/navigationRegistry';
 import { useAuthStore } from '../../store/authStore';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
+import { getCanonicalRole } from '../../auth/identity';
 
 export interface RoleAwareNavRailProps {
   context: 'user' | 'admin';
@@ -25,7 +26,9 @@ export function RoleAwareNavRail({ context, collapsed, activeActionId, onAction,
   const role = useAuthStore((state) => state.role);
   const permissions = useAuthStore((state) => state.permissions);
   const enabledModules = useWorkspaceSettings((state) => state.enabledModules);
-  const groups = getNavigationForContext(context, { role, permissions }).map((group) => ({
+  // 🛡️ ISSUE #496: অ্যাডমিন কনটেক্সটে সর্বদাই 'admin' রোল সক্রিয় থাকবে যাতে সব সাবট্যাব অপরিবর্তিত থাকে
+  const effectiveRole = context === 'admin' ? 'admin' : (role || getCanonicalRole());
+  const groups = getNavigationForContext(context, { role: effectiveRole, permissions }).map((group) => ({
     ...group,
     items: group.items.filter((item) => item.id !== 'nav-ide' || enabledModules.includes('code')),
   })).filter((group) => group.items.length > 0);
