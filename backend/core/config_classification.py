@@ -1731,13 +1731,6 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
-        "RENDER_API_KEY_BACKUP",
-        frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
-        frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
-        frozenset({"backend"}),
-        description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
-    ),
-    ConfigSpec(
         "RESEND_API_KEY",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.VAULT, ConfigSource.ENV}),

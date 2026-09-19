@@ -180,6 +180,10 @@ def _boot_env(**extra) -> dict[str, str]:
     env["SUPABASE_KEY"] = "sb-key-123"
     env["SUPABASE_SERVICE_ROLE_KEY"] = "sb-role-456"
     env["FIREBASE_SERVICE_ACCOUNT_JSON"] = '{"type":"service_account"}'
+    env["SUPREMEAI_API_KEY"] = "sk-boot-probe-supremeai-api-key-12345"
+    env["SUPREMEAI_ADMIN_PASSWORD_HASH"] = "boot-probe-admin-password-hash"
+    env["CI_WEBHOOK_SECRET"] = "boot-probe-ci-webhook-secret-0123456789"
+    env["SUPABASE_DATABASE_URL_POOLER"] = "postgresql://u:p@db.example.com:5432/supremeai"
     env.setdefault("DATABASE_URL", "postgresql://u:p@db.example.com:5432/supremeai")
     env.setdefault("REDIS_URL", "redis://u:p@cache.example.com:6379")
     env["PYTHONPATH"] = str(BACKEND_DIR)
@@ -202,7 +206,7 @@ def _boot(
 
 def test_real_boot_without_hosts_fails_fast():
     """Production boot with no ALLOWED_HOSTS and no platform metadata exits nonzero."""
-    proc = _boot()
+    proc = _boot(ALLOWED_HOSTS="")
     assert proc.returncode != 0, f"expected fail-fast boot, got: {proc.stdout!r}"
     assert "ALLOWED_HOSTS" in (proc.stderr or "")
 
