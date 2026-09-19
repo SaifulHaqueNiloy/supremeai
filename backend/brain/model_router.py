@@ -21,6 +21,7 @@
 import asyncio
 import inspect
 import json
+import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
@@ -45,6 +46,12 @@ try:
     from core.llm.free_tier_tracker import get_tracker
 except ImportError:
     get_tracker = None  # type: ignore[misc,assignment]
+
+
+# বাংলা: মূল get_llm_gateway রেফারেন্স সংরক্ষণ — টেস্টে gateway mock করা হলে
+# (brain.model_router.get_llm_gateway patch) zero-key graceful branch স্কিপ হবে,
+# যাতে mocked-gateway টেস্টগুলো আগের মতোই তাদের mock কে hit করতে পারে (Issue #466)।
+_ORIGINAL_GET_LLM_GATEWAY = get_llm_gateway
 
 
 def run_async_as_sync(coro):
@@ -216,35 +223,62 @@ class ModelRouter:
         # hf/nvidia-এর মতো অন্য কোনো provider একাই কনফিগার করা থাকলেও ভুলভাবে
         # "No LLM provider configured" error দিয়ে reject করত। এতে "কোনো নির্দিষ্ট AI-এর উপর
         # নির্ভরশীল না থাকা, যা পাওয়া যায় তাই ব্যবহার করা" — এই মূল ডিজাইন প্ল্যান ভাঙত।
+        # বাংলা: ডাইনামিক প্রোভাইডার পুল রেজোলিউশন ($0..N) — কোনো ভেন্ডর লক-ইন নেই (Issue #466)
         _configured_providers = {
-            "gemini": bool(settings.gemini_api_key),
-            "openrouter": bool(settings.openrouter_api_key),
-            "groq": bool(settings.groq_api_key),
-            "deepseek": bool(settings.deepseek_api_key),
-            "openai": bool(settings.openai_api_key),
-            "hf": bool(getattr(settings, "hf_api_key", "")),
-            "nvidia": bool(getattr(settings, "nvidia_api_key", "")),
+            "gemini": bool(
+                getattr(settings, "gemini_api_key", None) or os.getenv("GEMINI_API_KEY")
+            ),
+            "openrouter": bool(
+                getattr(settings, "openrouter_api_key", None) or os.getenv("OPENROUTER_API_KEY")
+            ),
+            "openai": bool(
+                getattr(settings, "openai_api_key", None) or os.getenv("OPENAI_API_KEY")
+            ),
+            "mistral": bool(
+                getattr(settings, "mistral_api_key", None) or os.getenv("MISTRAL_API_KEY")
+            ),
+            "groq": bool(getattr(settings, "groq_api_key", None) or os.getenv("GROQ_API_KEY")),
+            "anthropic": bool(
+                getattr(settings, "anthropic_api_key", None) or os.getenv("ANTHROPIC_API_KEY")
+            ),
+            "deepseek": bool(
+                getattr(settings, "deepseek_api_key", None) or os.getenv("DEEPSEEK_API_KEY")
+            ),
+            "cohere": bool(
+                getattr(settings, "cohere_api_key", None) or os.getenv("COHERE_API_KEY")
+            ),
+            "bynara": bool(
+                getattr(settings, "bynara_api_key", None) or os.getenv("BYNARA_API_KEY")
+            ),
+            "bai": bool(getattr(settings, "bai_api_key", None) or os.getenv("BAI_API_KEY")),
+            "together": bool(
+                getattr(settings, "together_api_key", None) or os.getenv("TOGETHER_API_KEY")
+            ),
+            "hf": bool(
+                getattr(settings, "hf_api_key", "")
+                or os.getenv("HUGGINGFACE_API_KEY")
+                or os.getenv("HF_API_KEY")
+            ),
+            "nvidia": bool(getattr(settings, "nvidia_api_key", "") or os.getenv("NVIDIA_API_KEY")),
+            "ollama": bool(os.getenv("OLLAMA_API_KEY") or os.getenv("OLLAMA_BASE_URL")),
         }
-        if not any(_configured_providers.values()) and "pytest" not in sys.modules:
-            # We don't force fallback just because pytest is running,
-            # so that mocked LLMGateway can be hit during testing.
-            error_msg = "No LLM provider configured: none of gemini/openrouter/groq/deepseek/openai/hf/nvidia keys are set."
-            logger.error(f"[ModelRouter] {error_msg}")
-            # Track the configuration error
-            await self.performance_optimizer.handle_failure(
-                error_type="CONFIGURATION_ERROR",
-                error_message=error_msg,
-                context={
-                    "task_type": task_type,
-                    "providers_configured": _configured_providers,
-                    "dependency_tree": ["model_router", "llm_gateway"],
-                },
+        # বাংলা: আগের `"pytest" not in sys.modules` গার্ডটি টেস্টে আসল gateway-তে
+        # নেটওয়ার্ক কল চালাত (হ্যাং/ফ্লেকি)। এখন mock-aware: gateway প্যাচ করা না
+        # থাকলে zero-key graceful response সবসময় ফেরত যাবে — নেটওয়ার্ক কল ছাড়াই
+        # নির্ধারিত আচরণ (Issue #466 Case 1: N = 0 → clean graceful response)।
+        gateway_mocked = get_llm_gateway is not _ORIGINAL_GET_LLM_GATEWAY
+        if not any(_configured_providers.values()) and not gateway_mocked:
+            message = (
+                "SupremeAI 2.0 is active and awaiting an AI provider key. "
+                "Any supported provider (OpenAI, Gemini, OpenRouter, Mistral, Groq, Anthropic, DeepSeek, Ollama, etc.) "
+                "configured in the environment will automatically activate dynamic intelligence capabilities."
             )
+            logger.info(f"[ModelRouter] Zero keys mode active: {message}")
             return {
                 "success": False,
                 "model": None,
-                "text": "",
-                "error": error_msg,
+                "text": message,
+                "error": "AWAITING_AI_PROVIDER_KEY",
                 "cost": 0.0,
             }
 

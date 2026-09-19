@@ -57,28 +57,28 @@ class VoiceConnectionManager:
 manager = VoiceConnectionManager()
 
 
-async def process_audio_with_groq(audio_bytes: bytes) -> str:
+async def process_audio_dynamically(audio_bytes: bytes) -> str:
     """
-    Sends the audio buffer to Groq's Whisper API for ultra-fast STT.
+    Sends audio buffer to dynamic VoiceService cascade (Groq -> OpenAI -> HF -> Graceful degradation).
+    Vendor-agnostic STT (Issue #466).
     """
-    if not settings.groq_api_key:
-        return "Error: GROQ_API_KEY is missing."
+    try:
+        from services.voice_service import get_voice_service
 
-    url = "https://api.groq.com/openai/v1/audio/transcriptions"
-    headers = {"Authorization": f"Bearer {settings.groq_api_key}"}
+        voice = get_voice_service()
+        res = await voice.speech_to_text(audio_bytes, filename="audio.webm")
+        if res.get("status") == "success":
+            return res.get("transcript", "")
+        if res.get("status") == "unavailable":
+            return res.get("message", "Speech-to-text is awaiting AI provider key configuration.")
+        return res.get("message", "Unable to process audio.")
+    except Exception as e:
+        logger.error(f"❌ [Dynamic STT Error]: {e}")
+        return f"Error processing audio: {e!s}"
 
-    files = {"file": ("audio.webm", audio_bytes, "audio/webm")}
-    data = {"model": "whisper-large-v3", "response_format": "json"}
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
-            response = await client.post(url, headers=headers, files=files, data=data, timeout=10.0)
-            response.raise_for_status()
-            result = response.json()
-            return result.get("text", "")
-        except Exception as e:
-            logger.info(f"❌ [Groq STT Error]: {e}")
-            return f"Error processing audio: {e!s}"
+# Backward-compatibility alias
+process_audio_with_groq = process_audio_dynamically
 
 
 async def handle_intent(transcript: str, websocket: WebSocket, start_time: float, user_id: str):
@@ -160,11 +160,11 @@ async def websocket_voice_endpoint(
                             await websocket.send_json({"error": "Empty audio buffer"})
                             continue
 
-                        # 1. Process STT using Groq
+                        # 1. Process STT using Dynamic VoiceService
                         logger.info(
                             f"🎙️ [WS] Processing audio buffer ({len(audio_buffer)} bytes)..."
                         )
-                        transcript = await process_audio_with_groq(bytes(audio_buffer))
+                        transcript = await process_audio_dynamically(bytes(audio_buffer))
                         logger.info(f"🗣️ [User Voice]: {transcript}")
 
                         # Clear buffer for next recording
