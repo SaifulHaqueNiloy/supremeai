@@ -79,7 +79,6 @@ The following services/infrastructure are explicitly represented in the current 
 - `RENDER_PRIMARY_SVC_ID`
 - `RENDER_BACKEND_SVC_ID`
 - `RENDER_API_KEY_BACKUP` — optional backup service.
-- `RENDER_BACKUP_SVC_ID` — optional backup service.
 - `RENDER_DEPLOY_HOOK_URL` — optional webhook deploy path.
 
 **Operational priority:** Render runtime service does not normally need its own Render API key; deployment automation does.
