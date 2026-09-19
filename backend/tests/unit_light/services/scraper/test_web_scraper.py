@@ -14,6 +14,52 @@ def test_fetch_page_blocks_ssrf():
     assert result["url"] == "http://127.0.0.1:8080/secret"  # is_local()
 
 
+def test_fetch_page_blocks_unsafe_resolved_ip():
+    """Issue #511: the resolved-IP gate must run before the first request."""
+    with (
+        patch("services.scraper.web_scraper.is_safe_url", return_value=True),
+        patch("services.scraper.web_scraper.is_safe_url_resolved", return_value=False),
+        patch("services.scraper.web_scraper.httpx.get") as mock_get,
+    ):
+        result = WebScraper().fetch_page("http://rebinding.example/")
+
+    assert result["success"] is False
+    assert "SSRF" in result["error"]
+    mock_get.assert_not_called()
+
+
+def test_fetch_page_blocks_redirect_to_internal_target():
+    """Issue #511: redirects are followed manually and re-validated per hop."""
+    redirect_calls = []
+
+    class RedirectResponse:
+        status_code = 302
+        headers = {"location": "http://169.254.169.254/latest/meta-data/"}
+        text = ""
+
+        @staticmethod
+        def raise_for_status():
+            return None
+
+    def fake_get(url, **kwargs):
+        redirect_calls.append(url)
+        return RedirectResponse()
+
+    with (
+        patch(
+            "services.scraper.web_scraper.is_safe_url",
+            side_effect=lambda u: "169.254" not in u,
+        ),
+        patch("services.scraper.web_scraper.is_safe_url_resolved", return_value=True),
+        patch("services.scraper.web_scraper.httpx.get", side_effect=fake_get),
+    ):
+        result = WebScraper().fetch_page("http://attacker.example/redir")
+
+    assert result["success"] is False
+    assert "SSRF" in result["error"]
+    assert redirect_calls == ["http://attacker.example/redir"]  # metadata hop never requested
+
+
 def test_fetch_page_parses_html_successfully():
     class _FakeResponse:
         status_code = 200
@@ -28,6 +74,7 @@ def test_fetch_page_parses_html_successfully():
 
     with (
         patch("services.scraper.web_scraper.is_safe_url", return_value=True),
+        patch("services.scraper.web_scraper.is_safe_url_resolved", return_value=True),
         patch("services.scraper.web_scraper.httpx.get", return_value=_FakeResponse()),
     ):
         result = WebScraper().fetch_page("https://example.com")
@@ -42,6 +89,7 @@ def test_fetch_page_parses_html_successfully():
 def test_fetch_page_handles_request_error():
     with (
         patch("services.scraper.web_scraper.is_safe_url", return_value=True),
+        patch("services.scraper.web_scraper.is_safe_url_resolved", return_value=True),
         patch(
             "services.scraper.web_scraper.httpx.get",
             side_effect=httpx.RequestError("connection refused"),
