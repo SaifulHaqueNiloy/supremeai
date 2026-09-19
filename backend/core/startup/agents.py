@@ -440,5 +440,32 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ Scheduled-task sweep failed to start: {exc}")
 
+    # Agent: Synaptic Dream — memory consolidation/prune স্পন্দন (M01 P-C,
+    # issue #453 Wave 4)। বাংলা: worker-টি নির্মিত ছিল কিন্তু কোনো scheduler-এ
+    # wired নয় — plan-এর "scheduled consolidation নেই" অনুপস্থিতি এখানে নিরাময়।
+    # শূন্য-খরচ লুপ (দিনে একবার বাউন্ডেড Supabase প্রুন) তাই M05 P-A প্যাটার্নে
+    # ডিফল্ট true + kill-switch (ENABLE_SYNAPTIC_DREAM=false = আজকের আচরণ)।
+    # store-অনুপস্থিতে লুপ সৎভাবে idle থাকে (throttled সতর্কতা), বাকি agent
+    # ব্যর্থ করে না। ai-memory-retention RPC-র সাথে overlap নয় — সেটি SQL-পার্শ্ব
+    # fn_ai_memory_retention_cleanup, এটি Python-পার্শ্ব সৎ-কাউন্ট dream চক্র।
+    try:
+        if os.getenv("ENABLE_SYNAPTIC_DREAM", "true").lower() == "true":
+            from workers.synaptic_dream import run_synaptic_dream_loop
+
+            await agent_supervisor.start_agent(
+                "synaptic-dream",
+                run_synaptic_dream_loop,
+                health_check_interval=3600,
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info("✅ Synaptic Dream agent started (memory consolidation cycle).")
+        else:
+            logger.info(
+                "ℹ️ Synaptic Dream agent disabled (set ENABLE_SYNAPTIC_DREAM=true)."
+            )
+    except Exception as exc:
+        logger.warning(f"⚠️ Synaptic Dream agent failed to start: {exc}")
+
     # Start the agent health monitor
     await agent_supervisor.start_monitor(check_interval=30)
