@@ -12,20 +12,27 @@ from core.logging_config import logger
 class GraphService:
     def __init__(self):
         # বাংলা মন্তব্য: Neo4j Aura (ফ্রি টিয়ার) এর ক্রেডেনশিয়াল
-        self.uri = getattr(settings, "neo4j_uri", "bolt://localhost:7687")  # is_local()
-        self.user = getattr(settings, "neo4j_user", "neo4j")
+        # BE-14 (issue #546): settings আর localhost/'neo4j' default দেয় না —
+        # unconfigured হলে খালি মান আসে, এবং নিচের fail-closed চেক dry-run-এ যায়।
+        self.uri = getattr(settings, "neo4j_uri", "") or ""
+        self.user = getattr(settings, "neo4j_user", "") or ""
         self.password = getattr(settings, "neo4j_password", None)
 
         # বাংলা মন্তব্য: যদি পাসওয়ার্ড না থাকে, অথবা টেস্ট এনভায়রনমেন্টে মক সিক্রেট থাকে (যেমন: 'mock_NEO4J_URI'), তবে ড্রাই-রান মোড চালু হবে।
+        # BE-14 (issue #546): fail-closed — NEO4J_URI/NEO4J_USER ছাড়া আর
+        # localhost/'neo4j' অনুমান করা হয় না; configure না থাকলে dry-run।
         self.dry_run = (
             not self.password
+            or not self.uri
+            or not self.user
             or self.uri.startswith("mock_")
             or (isinstance(self.password, str) and self.password.startswith("mock_"))
         )
 
         if self.dry_run:
             logger.warning(
-                "NEO4J_PASSWORD missing or mock credentials detected. GraphService will run in dry-run/mock mode."
+                "NEO4J_URI/NEO4J_USER/NEO4J_PASSWORD missing or mock credentials detected. "
+                "GraphService will run in dry-run/mock mode (no implicit localhost fallback, BE-14)."
             )
             self.driver = None
         else:
