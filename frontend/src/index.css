@@ -35,8 +35,11 @@
   --color-node-text: var(--node-text);
   --color-node-border: var(--node-border);
   --color-chat-bg: var(--chat-bg);
-  --color-chat-input-bg: var(--chat-input-bg);
-  --color-waveform-bg: var(--waveform-bg);
+  --color-text: var(--foreground);
+  --color-secondary: var(--text-secondary);
+  --color-border: var(--border-color);
+  --color-card: var(--card-bg);
+  --color-panel: var(--panel-bg);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -114,9 +117,100 @@
 
 
 /* ═══════════════════════════════════════════════════════
+   THEME 2: SKY LIGHT — আধুনিক ও পরিচ্ছন্ন লাইট থিম
+   ═══════════════════════════════════════════════════════ */
+:root[data-theme="light"],
+html.light,
+.light,
+body.light {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --neon-blue: #0284C7;
+  --neon-purple: #7C3AED;
+  --cyber-gray: #64748B;
+  --success: #16A34A;
+  --danger: #DC2626;
+  --warning: #D97706;
+  --info: #0284C7;
+  --card-bg: #FFFFFF;
+  --card-border: #E2E8F0;
+  --sidebar-bg: #FFFFFF;
+  --tabbar-bg: #F1F5F9;
+  --border-color: #E2E8F0;
+  --card-text: #475569;
+  --card-title-text: #0F172A;
+  --alert-bg: rgba(0, 0, 0, 0.03);
+  --input-bg: #FFFFFF;
+  --input-border: #CBD5E1;
+  --panel-bg: #FFFFFF;
+
+  --bg-main: #F8FAFC;
+  --text-main: #0F172A;
+  --text-secondary: #64748B;
+  --bg-panel: #FFFFFF;
+  --bg-cell: #F1F5F9;
+  --border-accent: #E2E8F0;
+  --accent-primary: #0284C7;
+  --accent-secondary: #0EA5E9;
+  --node-bg: #FFFFFF;
+  --node-text: #0F172A;
+  --node-border: #CBD5E1;
+  --chat-bg: #FFFFFF;
+  --chat-input-bg: #F1F5F9;
+  --waveform-bg: #F1F5F9;
+}
+
+/* ═══════════════════════════════════════════════════════
+   THEME 3: SUNSET EMBER — উষ্ণ সূর্যাস্ত ও গোধূলি থিম
+   ═══════════════════════════════════════════════════════ */
+:root[data-theme="sunset"],
+html.sunset,
+.sunset,
+body.sunset {
+  --background: #0D0807;
+  --foreground: #FFF7ED;
+  --neon-blue: #F97316;
+  --neon-purple: #E11D48;
+  --cyber-gray: #78716C;
+  --success: #10B981;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --info: #F97316;
+  --card-bg: #1C120C;
+  --card-border: rgba(249, 115, 22, 0.15);
+  --sidebar-bg: #140B06;
+  --tabbar-bg: #24140C;
+  --border-color: rgba(249, 115, 22, 0.15);
+  --card-text: #FED7AA;
+  --card-title-text: #FFF7ED;
+  --alert-bg: rgba(249, 115, 22, 0.05);
+  --input-bg: #140B06;
+  --input-border: rgba(249, 115, 22, 0.25);
+  --panel-bg: #1C120C;
+
+  --bg-main: #0D0807;
+  --text-main: #FFF7ED;
+  --text-secondary: #FB923C;
+  --bg-panel: #1C120C;
+  --bg-cell: #24140C;
+  --border-accent: rgba(249, 115, 22, 0.25);
+  --accent-primary: #F97316;
+  --accent-secondary: #FB923C;
+  --node-bg: #1C120C;
+  --node-text: #FFF7ED;
+  --node-border: rgba(249, 115, 22, 0.3);
+  --chat-bg: #1C120C;
+  --chat-input-bg: #140B06;
+  --waveform-bg: #24140C;
+}
+
+/* ═══════════════════════════════════════════════════════
    THEME 4: EMERALD MATRIX — সবুজ হ্যাকার ম্যাট্রিক্স থিম
    ═══════════════════════════════════════════════════════ */
-.matrix {
+:root[data-theme="matrix"],
+html.matrix,
+.matrix,
+body.matrix {
   --background: #020a02;
   --foreground: #d1fae5;
   --neon-blue: #10b981;
@@ -174,38 +268,7 @@ body.dark {
     radial-gradient(circle at 90% 80%, rgba(188, 19, 254, 0.05) 0%, transparent 40%);
 }
 
-/* Sky Blue — অ্যানিমেটেড ক্লাউড ব্যাকগ্রাউন্ড */
-:root[data-theme="light"],
-.light,
-body.light {
-  --background: #f5f7fb;
-  --foreground: #172033;
-  --card-bg: #ffffff;
-  --card-border: #dbe3ef;
-  --sidebar-bg: #ffffff;
-  --tabbar-bg: #eef3f8;
-  --border-color: #dbe3ef;
-  --card-text: #56657a;
-  --card-title-text: #172033;
-  --input-bg: #ffffff;
-  --input-border: #cbd6e4;
-  --panel-bg: #ffffff;
-  --bg-main: #f5f7fb;
-  --text-main: #172033;
-  --text-secondary: #56657a;
-  --bg-panel: #ffffff;
-  --bg-cell: #eef3f8;
-  --border-accent: #dbe3ef;
-  --accent-primary: #087f8c;
-  --accent-secondary: #0e7490;
-  --node-bg: #ffffff;
-  --node-text: #172033;
-  --node-border: #cbd6e4;
-  --chat-bg: #ffffff;
-  --chat-input-bg: #f8fafc;
-  --waveform-bg: #eef3f8;
-  background: #f5f7fb;
-}
+
 
 body.light::before,
 body.light::after {

@@ -146,24 +146,24 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
-      <h1 className="text-lg font-semibold text-white mb-1">Settings</h1>
-      <p className="text-xs text-slate-400 mb-6">Manage your workspace preferences.</p>
+      <h1 className="text-lg font-semibold text-text mb-1">Settings</h1>
+      <p className="text-xs text-secondary mb-6">Manage your workspace preferences.</p>
 
       <div className="flex flex-col gap-5">
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5">
-          <h2 className="text-sm font-medium text-white mb-3">Appearance</h2>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h2 className="text-sm font-medium text-text mb-3">Appearance</h2>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-slate-300">Theme</p>
-              <p className="text-[11px] text-slate-400">Switch between light and dark mode.</p>
+              <p className="text-xs text-text">Theme</p>
+              <p className="text-[11px] text-secondary">Switch between dark, light, sunset, and matrix themes.</p>
             </div>
             <button
               data-testid="settings-theme-toggle"
+              type="button"
               onClick={() => {
                 toggleTheme();
-                setPrefs((p) => ({ ...p, theme: theme === 'dark' ? 'light' : 'dark' }));
               }}
-              className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-200 hover:bg-white/[0.05] transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-border text-xs text-text hover:opacity-80 transition-opacity capitalize"
             >
               {theme === 'dark' ? 'Switch to Light' : 'Switch to Dark'}
             </button>
