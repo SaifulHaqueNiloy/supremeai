@@ -26,6 +26,11 @@ import threading
 from typing import Any
 
 from core.logging_config import logger
+from core.security.codegen_gate import (
+    denied_reason,
+    inprocess_codegen_enabled,
+    warn_inprocess_codegen_boot,
+)
 
 
 def _get_llm_gateway():
@@ -43,6 +48,11 @@ def _get_llm_gateway():
 from core.mcp_client import MCPRegistryClient
 from core.skills.base import BaseSkill
 from tools.code.fuzz_sandbox import SecurityError, run_sandbox_ast_check
+
+# Issue #682: loud one-time boot warning when the in-process exec escape hatch
+# is explicitly enabled (local development only).
+if inprocess_codegen_enabled():
+    warn_inprocess_codegen_boot("SkillManager.get_skill")
 
 
 class SkillManager:
@@ -95,6 +105,26 @@ class SkillManager:
             data = json.loads(res)
             if "rows" in data and len(data["rows"]) > 0:
                 code_content = data["rows"][0]["code"]
+
+                # --- নিরাপত্তা গেট ০ (issue #682): fail-closed codegen gate ---
+                # The `skills` table's `code` column
+                # holds arbitrary Python source — a compromised service-role key,
+                # a future marketplace-submit feature, or downstream SQL injection
+                # that writes one row would otherwise get in-process RCE. The AST
+                # check and restricted builtins below are NOT a security boundary
+                # (issue #704 precedent), so by default
+                # (SUPREMEAI_ALLOW_INPROCESS_CODEGEN unset — all prod/staging)
+                # nothing is executed: the skill is rejected with this module's
+                # existing ValueError convention and the caller falls back.
+                if not inprocess_codegen_enabled():
+                    logger.warning(
+                        f"[SkillManager] Blocked in-process skill exec for "
+                        f"'{skill_name}': {denied_reason('SkillManager.get_skill')}"
+                    )
+                    raise ValueError(
+                        f"Skill '{skill_name}' was not loaded: "
+                        f"{denied_reason('SkillManager.get_skill')}"
+                    )
 
                 # --- নিরাপত্তা গেট ১: AST-স্তরের স্ট্যাটিক ভেটিং ---
                 # আগে DB থেকে আসা কোড কোনো যাচাই ছাড়াই সরাসরি `exec(code, globals().copy(), ...)`

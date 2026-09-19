@@ -6,6 +6,16 @@ environment for dynamic Python code.
 Only a curated whitelist of built‑ins is exposed; everything else (e.g.
 ``open``, ``__import__``) is blocked. The function returns the locals dictionary
 so callers can retrieve a ``result`` variable if they set one.
+
+Issue #682 (fail-closed codegen gate): ``run_restricted`` executes dynamically
+supplied source — the CoT reasoner feeds it model-generated thought code
+(``tools.code.cot_reasoner.safe_execute``). RestrictedPython / AST whitelisting
+is NOT a security boundary, so in-process exec here is **fail-closed by
+default**: with ``SUPREMEAI_ALLOW_INPROCESS_CODEGEN`` unset (the
+production/staging default) nothing is executed and the call site's existing
+``(False, error_message)`` convention is returned with a structured denial.
+The exec path only runs when the gate is explicitly enabled (local development
+only), matching the #704 gate pattern in ``core/security/codegen_gate.py``.
 """
 
 import ast
@@ -22,6 +32,16 @@ except ImportError:
     default_globals = {}
 
 from core.logging_config import logger
+from core.security.codegen_gate import (
+    denied_reason,
+    inprocess_codegen_enabled,
+    warn_inprocess_codegen_boot,
+)
+
+# Issue #682: loud one-time boot warning when the in-process exec escape hatch
+# is explicitly enabled (local development only).
+if inprocess_codegen_enabled():
+    warn_inprocess_codegen_boot("tools.code.safe_executor.run_restricted")
 
 # Define a minimal safe builtins whitelist. Adjust as needed for the
 # application – currently only ``range`` and ``len`` are allowed because the
@@ -149,6 +169,14 @@ def run_restricted(
         A tuple containing a success flag and either the locals dictionary
         on success or an error message string on failure.
     """
+    # Issue #682 fail-closed gate: refuse in-process exec of dynamically
+    # supplied code unless explicitly enabled (SUPREMEAI_ALLOW_INPROCESS_CODEGEN).
+    # Returns the file's existing (False, error_message) failure convention.
+    if not inprocess_codegen_enabled():
+        error_message = denied_reason("tools.code.safe_executor.run_restricted")
+        logger.error(error_message)
+        return False, error_message
+
     if locals_ is None:
         locals_ = {}
 
