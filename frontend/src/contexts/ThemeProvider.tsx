@@ -52,11 +52,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   useEffect(() => {
-    // বাংলা মন্তব্য: HTML root এলিমেন্টে থিম ক্লাস অ্যাড করা হচ্ছে
+    // বাংলা মন্তব্য: HTML root ও body এলিমেন্টে থিম ক্লাস অ্যাড করা হচ্ছে
     const root = window.document.documentElement;
-    root.classList.remove('light', 'dark', 'sunset', 'matrix');
+    const body = window.document.body;
+    const classes = ['light', 'dark', 'sunset', 'matrix'];
+    root.classList.remove(...classes);
     root.classList.add(theme);
     root.setAttribute('data-theme', theme);
+    if (body) {
+      body.classList.remove(...classes);
+      body.classList.add(theme);
+      body.setAttribute('data-theme', theme);
+    }
   }, [theme]);
 
   const toggleTheme = () => {

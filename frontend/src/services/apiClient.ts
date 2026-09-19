@@ -76,7 +76,7 @@ export const clearAuthToken = (): void => {
 // admin token (supreme_admin_jwt) থাকলে তা প্রিফার করি, নচেৎ ইউজার token (supremeai_auth_token)।
 export const getRawToken = (): string | null => {
   if (typeof window === 'undefined') return cachedToken;
-  const admin = sessionStorage.getItem('supreme_admin_jwt');
+  const admin = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
   if (admin) return admin;
   const user = localStorage.getItem('supremeai_auth_token');
   if (user) return user;
@@ -102,12 +102,12 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
 
   // 🟢 Sprint 5: Backend API Integration
   if (cachedToken === null) {
-    cachedToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
+    cachedToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
   }
 
   // 🔥 ফিক্স: admin-api endpoint গুলো admin-role JWT (`supreme_admin_jwt`) চায়।
   // admin dashboard ব্যবহার করলে admin token-ই Bearer হিসেবে পাঠানো হবে (প্রিফারেন্স), নচেৎ ইউজার token।
-  const adminToken = sessionStorage.getItem('supreme_admin_jwt');
+  const adminToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
   const effectiveToken = adminToken || cachedToken;
 
   if (effectiveToken) {
@@ -180,12 +180,11 @@ const handleResponse = async (res: Response) => {
       // এটাই ছিল TOTP ভেরিফাই সফল হওয়ার পরপরই ড্যাশবোর্ড থেকে auto-logout হওয়ার মূল কারণ।
       // তাই নন-ক্রিটিক্যাল/ব্যাকগ্রাউন্ড এন্ডপয়েন্ট থেকে 401 এলে টোকেন ক্লিয়ার করা হবে না।
       const SESSION_VALIDATION_PATHS = [
-        '/api/v1/auth/me',
         '/api/v1/auth/logout',
       ];
       const isSessionValidation = SESSION_VALIDATION_PATHS.some((p) => res.url?.includes(p));
       // A failed background or feature request must not destroy a valid login.
-      // Only the auth session endpoints can prove that the persisted token is invalid.
+      // Only an explicit logout or confirmed termination should clear auth tokens.
       if ((res.status === 401 || res.status === 403) && isSessionValidation) {
         clearAuthToken();
       }

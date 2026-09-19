@@ -82,17 +82,18 @@ const buildInfoPlugin = () => {
   }
 }
 
+const DEFAULT_PROXY_BACKEND = 'https://supremeai-primary-node.onrender.com'
 const devProxy = {
   '/api': {
-    target: USER_BACKEND,
+    target: USER_BACKEND || DEFAULT_PROXY_BACKEND,
     changeOrigin: true
   },
   '/admin-api': {
-    target: ADMIN_BACKEND || USER_BACKEND,
+    target: ADMIN_BACKEND || USER_BACKEND || DEFAULT_PROXY_BACKEND,
     changeOrigin: true
   },
   '/auth': {
-    target: USER_BACKEND,
+    target: USER_BACKEND || DEFAULT_PROXY_BACKEND,
     changeOrigin: true
   }
 }
