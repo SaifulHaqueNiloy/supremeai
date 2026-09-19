@@ -124,9 +124,7 @@ def resolve_dream_interval() -> int:
     """
     try:
         return int(
-            os.getenv(
-                "SYNAPTIC_DREAM_INTERVAL_SECONDS", str(DEFAULT_DREAM_INTERVAL_SECONDS)
-            )
+            os.getenv("SYNAPTIC_DREAM_INTERVAL_SECONDS", str(DEFAULT_DREAM_INTERVAL_SECONDS))
         )
     except ValueError:
         # বাংলা: অবৈধ env-মান — ডিফল্টে ফিরছি, লাউড-লগ ছাড়া নয়।
@@ -161,9 +159,7 @@ async def run_synaptic_dream_loop() -> None:
             elif report.status != "completed":
                 now_mono = time.monotonic()
                 if now_mono - last_warn_monotonic > _WARN_THROTTLE_SECONDS:
-                    logger.warning(
-                        f"⚠️ SynapticDream চক্র অসম্পূর্ণ (পরের চক্রে পুনরায়): {report.status}"
-                    )
+                    logger.warning(f"⚠️ SynapticDream চক্র অসম্পূর্ণ (পরের চক্রে পুনরায়): {report.status}")
                     last_warn_monotonic = now_mono
             else:
                 logger.info(
