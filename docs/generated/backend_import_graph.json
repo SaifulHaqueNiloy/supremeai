@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3215,
+  "edge_count": 3220,
   "edges": [
     {
       "from": "adapters",
@@ -8556,12 +8556,24 @@
       "to": "core.logging_config"
     },
     {
+      "from": "services.hitl.dispatch",
+      "to": "core.code_validator"
+    },
+    {
+      "from": "services.hitl.dispatch",
+      "to": "core.logging_config"
+    },
+    {
       "from": "services.hitl.engine",
       "to": "core.logging_config"
     },
     {
       "from": "services.hitl.engine",
       "to": "database.tenant_db"
+    },
+    {
+      "from": "services.hitl.engine",
+      "to": "services.hitl.dispatch"
     },
     {
       "from": "services.hitl.engine",
@@ -11152,6 +11164,14 @@
       "to": "core.app"
     },
     {
+      "from": "tests.services.test_hitl_dispatch",
+      "to": "services.hitl.dispatch"
+    },
+    {
+      "from": "tests.services.test_hitl_dispatch",
+      "to": "services.hitl.engine"
+    },
+    {
       "from": "tests.services.test_integration_layer",
       "to": "core.integration_layer"
     },
@@ -12864,7 +12884,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1865,
+  "module_count": 1867,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13964,6 +13984,7 @@
     "services.email.email_service",
     "services.escrow_service",
     "services.hitl",
+    "services.hitl.dispatch",
     "services.hitl.engine",
     "services.hitl.hitl_ledger",
     "services.ide_trio",
@@ -14437,6 +14458,7 @@
     "tests.services.test_graph_service",
     "tests.services.test_health_monitor",
     "tests.services.test_health_monitor_routes",
+    "tests.services.test_hitl_dispatch",
     "tests.services.test_integration_layer",
     "tests.services.test_intent_deciphering",
     "tests.services.test_intent_router",
