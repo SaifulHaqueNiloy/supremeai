@@ -1304,6 +1304,17 @@
       "path": "backend/api/routes/admin_llm.py"
     },
     {
+      "capability_signals": [
+        "browser",
+        "health",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_routes.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -2251,7 +2262,6 @@
     {
       "capability_signals": [
         "execute",
-        "health",
         "realtime"
       ],
       "classification": "human_review",
@@ -2778,6 +2788,18 @@
       "path": "backend/api/v1/telemetry.py"
     },
     {
+      "capability_signals": [
+        "health",
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/app.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -3160,17 +3182,6 @@
       "path": "backend/core/admin_god.py"
     },
     {
-      "capability_signals": [
-        "browser",
-        "health",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/admin_routes.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -3368,12 +3379,7 @@
       "path": "backend/core/ai_memory/vector_store.py"
     },
     {
-      "capability_signals": [
-        "health",
-        "mcp",
-        "memory",
-        "register"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -5535,6 +5541,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/observability/log_batcher.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/observability/metrics_registry.py"
     },
     {
       "capability_signals": [
@@ -20932,7 +20947,9 @@
       "path": "infrastructure/mcp-control-plane/src/adapters/github/index.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "adapter",
       "entrypoints": [],
       "kind": "ts",
@@ -25005,5 +25022,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2879
+  "source_file_count": 2881
 }

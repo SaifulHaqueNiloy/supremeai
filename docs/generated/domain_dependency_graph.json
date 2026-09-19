@@ -3062,7 +3062,7 @@
     {
       "evidence": [
         {
-          "line": 187,
+          "line": 191,
           "path": "backend/core/observability/observability_middleware.py"
         }
       ],
@@ -3102,7 +3102,7 @@
     {
       "evidence": [
         {
-          "line": 11,
+          "line": 24,
           "path": "backend/api/routes/metrics.py"
         }
       ],
@@ -4674,6 +4674,16 @@
         {
           "line": 24,
           "path": "backend/core/security/autonoguard_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 28,
+          "path": "backend/core/security/codegen_gate.py"
         }
       ],
       "source": "security",
