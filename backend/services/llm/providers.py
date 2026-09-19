@@ -34,6 +34,8 @@ class Provider(StrEnum):
     HUGGINGFACE_SPACE = "hf_space"
     OPENAI = "openai"  # বাংলা মন্তব্য: OpenAI প্রোভাইডার সাপোর্টের জন্য যোগ করা হয়েছে
     GROQ = "groq"
+    BYNARA = "bynara"
+    BAI = "bai"
 
 
 @dataclass
@@ -662,6 +664,148 @@ class GroqProvider(BaseOpenAICompatibleProvider):
             return resp.status_code == 200
         except Exception as exc:
             logger.debug(f"GroqProvider health check failed: {exc}")
+            return False
+
+
+class BynaraProvider(BaseOpenAICompatibleProvider):
+    """Bynara Router - Zero-cost OpenAI-compatible inference with Agnes, Laguna, StepFun."""
+
+    name = Provider.BYNARA
+
+    def __init__(self) -> None:
+        raw_key = getattr(settings, "bynara_api_key", None)
+        self.api_key = (
+            str(raw_key)
+            if raw_key is not None and not isinstance(raw_key, str)
+            else (raw_key or "")
+        )
+        self.base_url = "https://router.bynara.id/v1"
+        self.model = "agnes-2.5-flash"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        self.client = get_client(base_url=self.base_url, headers=headers)
+
+    @circuit_breaker(name="bynara", failure_threshold=3, recovery_timeout=30)
+    @timed(name="bynara_chat")
+    async def chat(
+        self, prompt: str, system_prompt: str | None = None, model: str | None = None
+    ) -> str:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": model or self.model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+        }
+
+        resp = await self.client.post("/chat/completions", json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+    async def stream_chat(
+        self, prompt: str, system_prompt: str | None = None, model: str | None = None
+    ):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": model or self.model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+            "stream": True,
+        }
+        async for chunk in self._stream_completion(payload):
+            yield chunk
+
+    async def health_check(self) -> bool:
+        if not self.api_key:
+            return False
+        try:
+            resp = await self.client.get("/models", timeout=5.0)
+            return resp.status_code == 200
+        except Exception as exc:
+            logger.debug(f"BynaraProvider health check failed: {exc}")
+            return False
+
+
+class BAIProvider(BaseOpenAICompatibleProvider):
+    """b.ai Router - Zero-cost OpenAI-compatible inference with Qwen 3.8 and MiMo."""
+
+    name = Provider.BAI
+
+    def __init__(self) -> None:
+        raw_key = getattr(settings, "bai_api_key", None)
+        self.api_key = (
+            str(raw_key)
+            if raw_key is not None and not isinstance(raw_key, str)
+            else (raw_key or "")
+        )
+        self.base_url = "https://api.b.ai/v1"
+        self.model = "qwen3.8-flash"
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+        self.client = get_client(base_url=self.base_url, headers=headers)
+
+    @circuit_breaker(name="bai", failure_threshold=3, recovery_timeout=60)
+    @timed(name="bai_chat")
+    async def chat(
+        self, prompt: str, system_prompt: str | None = None, model: str | None = None
+    ) -> str:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": model or self.model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+        }
+
+        resp = await self.client.post("/chat/completions", json=payload)
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+
+    async def stream_chat(
+        self, prompt: str, system_prompt: str | None = None, model: str | None = None
+    ):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": model or self.model,
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 4096,
+            "stream": True,
+        }
+        async for chunk in self._stream_completion(payload):
+            yield chunk
+
+    async def health_check(self) -> bool:
+        if not self.api_key:
+            return False
+        try:
+            resp = await self.client.get("/models", timeout=5.0)
+            return resp.status_code == 200
+        except Exception as exc:
+            logger.debug(f"BAIProvider health check failed: {exc}")
             return False
 
 

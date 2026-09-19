@@ -38,7 +38,9 @@ from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
 from services.dynamic_ai.orchestrator import get_ai_orchestrator
 from services.llm.providers import (
+    BAIProvider,
     BengaliNormalizer,
+    BynaraProvider,
     DeepSeekProvider,
     GeminiProvider,
     HuggingFaceSpaceProvider,
@@ -121,6 +123,20 @@ PROVIDER_CAPABILITIES: dict[Provider, list[TaskType]] = {
         TaskType.CODE,
         TaskType.SUMMARIZE,
     ],
+    Provider.BYNARA: [
+        TaskType.CHAT,
+        TaskType.CODE,
+        TaskType.BENGALI,
+        TaskType.SUMMARIZE,
+        TaskType.TRANSLATE,
+        TaskType.CLASSIFY,
+    ],
+    Provider.BAI: [
+        TaskType.CHAT,
+        TaskType.CODE,
+        TaskType.SUMMARIZE,
+        TaskType.CLASSIFY,
+    ],
 }
 
 # Cost per 1K tokens (input, output) — USD - Cinem রুলস: Zero Cost Policy
@@ -131,6 +147,8 @@ PROVIDER_COSTS: dict[Provider, tuple[float, float]] = {
     Provider.GEMINI: (0.0005, 0.0015),  # Google free tier
     Provider.OLLAMA: (0.0, 0.0),  # Local Ollama is free
     Provider.HUGGINGFACE_SPACE: (0.0, 0.0),  # Free HuggingFace Space
+    Provider.BYNARA: (0.0, 0.0),  # Free Tier Router
+    Provider.BAI: (0.0, 0.0),  # Free Tier Router
 }
 
 
@@ -138,6 +156,8 @@ PROVIDER_COSTS: dict[Provider, tuple[float, float]] = {
 # বাংলা মন্তব্য: টেস্ট পাসের সুবিধার্থে ওলামা ব্যাকএন্ডের ফলব্যাক চেইনে ফেরত আনা হলো (তবে প্রোডাকশনে এটি অফ থাকবে)
 FALLBACK_CHAINS: dict[TaskType, list[Provider]] = {
     TaskType.CHAT: [
+        Provider.BYNARA,
+        Provider.BAI,
         Provider.MOONSHOT,
         Provider.HUGGINGFACE_SPACE,  # Added HuggingFace Space as priority provider
         Provider.DEEPSEEK,
@@ -145,30 +165,38 @@ FALLBACK_CHAINS: dict[TaskType, list[Provider]] = {
         Provider.OLLAMA,
     ],
     TaskType.CODE: [
+        Provider.BYNARA,
+        Provider.BAI,
         Provider.DEEPSEEK,
         Provider.HUGGINGFACE_SPACE,
         Provider.GEMINI,
         Provider.OLLAMA,
     ],
     TaskType.BENGALI: [
+        Provider.BYNARA,
         Provider.MOONSHOT,
         Provider.HUGGINGFACE_SPACE,
         Provider.GEMINI,
         Provider.OLLAMA,
     ],
     TaskType.SUMMARIZE: [
+        Provider.BYNARA,
+        Provider.BAI,
         Provider.DEEPSEEK,
         Provider.MOONSHOT,
         Provider.HUGGINGFACE_SPACE,
         Provider.OLLAMA,
     ],
     TaskType.TRANSLATE: [
+        Provider.BYNARA,
         Provider.MOONSHOT,
         Provider.GEMINI,
         Provider.HUGGINGFACE_SPACE,
         Provider.OLLAMA,
     ],
     TaskType.CLASSIFY: [
+        Provider.BYNARA,
+        Provider.BAI,
         Provider.DEEPSEEK,
         Provider.MOONSHOT,
         Provider.HUGGINGFACE_SPACE,
@@ -212,13 +240,13 @@ class RouteResult:
     fallback_used: bool = False
 
 
-# ── Provider Interface ────────────────────────────────────────────────────────
+# ── Provider Interface ────────────────────────────────────────────────
 
 
-# ── Concrete Providers ────────────────────────────────────────────────────────
+# ── Concrete Providers ────────────────────────────────────────────────
 
 
-# ── Bengali Text Utilities ────────────────────────────────────────────────────
+# ── Bengali Text Utilities ────────────────────────────────────────────────
 
 
 # ── Unified Router ────────────────────────────────────────────────────────────
@@ -237,6 +265,8 @@ class LLMRouter:
         # automatically পরবর্তী available provider-এ route করে।
         # design goal: zero single-provider dependency.
         _candidate_providers: dict[Provider, LLMProvider] = {
+            Provider.BYNARA: BynaraProvider(),
+            Provider.BAI: BAIProvider(),
             Provider.MOONSHOT: MoonshotProvider(),
             Provider.DEEPSEEK: DeepSeekProvider(),
             Provider.TOGETHER: TogetherProvider(),
