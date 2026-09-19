@@ -58,13 +58,19 @@ class UIComponent:
 
 @dataclass(frozen=True)
 class CodeGenerationResult:
-    """Result of video-to-code generation."""
+    """Result of video-to-code generation.
+
+    Issue #449: ``error`` is set when generation produced an error-marker
+    instead of real code, so callers can report honest failure — the old
+    contract advertised ``status: success`` on error output.
+    """
 
     component_tree: list[UIComponent]
     generated_code: str
     framework: str
     styling: str  # tailwind, css-modules, styled-components
     confidence: float
+    error: str | None = None
 
 
 # ── Constants ────────────────────────────────────────────────────────────────
@@ -111,8 +117,14 @@ class VideoFrameExtractor:
             List of paths to extracted frame images.
         """
         if not self._check_ffmpeg():
-            logger.warning("ffmpeg not available, using fallback")
-            return await self._fallback_extract(video_path, max_frames)
+            # Issue #449 honest-failure: the old "fallback" passed the VIDEO
+            # FILE ITSELF to the vision model as an "image" — guaranteed
+            # garbage output advertised as success. Refuse loudly instead.
+            raise RuntimeError(
+                "ffmpeg is not available on this deployment — video frame "
+                "extraction is impossible. Install ffmpeg (or use the "
+                "ci-docker image which bundles it) to enable video-to-code."
+            )
 
         output_dir = Path(video_path).parent / f"frames_{Path(video_path).stem}"
         output_dir.mkdir(exist_ok=True)
@@ -164,16 +176,18 @@ class VideoFrameExtractor:
             return [str(p) for p in output_dir.glob("*.jpg")][:max_frames]
         except (subprocess.SubprocessError, TimeoutError) as e:
             logger.error(f"Frame extraction failed: {e}")
-            return []
+            raise RuntimeError(f"Frame extraction failed: {e}") from e
 
     async def _fallback_extract(self, video_path: str, max_frames: int) -> list[str]:
+        """REMOVED (issue #449): the video-file-as-image fallback was dishonest.
+
+        extract_frames() now raises a clear error when ffmpeg is unavailable
+        instead of passing the raw video file to the vision model.
         """
-        Fallback: extract only first frame or a single representative image.
-        Used when ffmpeg is unavailable.
-        """
-        # For fallback, we just use the video thumbnail or first frame
-        # This is a simplified approach
-        return [video_path]  # Pass through to vision analysis
+        raise RuntimeError(
+            "_fallback_extract removed (issue #449): it fed the raw video file "
+            "to the vision model as an 'image'. Install ffmpeg instead."
+        )
 
 
 class FrameAnalyzer:
@@ -391,6 +405,7 @@ class VideoToCodePipeline:
             framework=framework,
             styling=styling,
             confidence=0.8 if all_components else 0.4,
+            error=code.startswith("// Error generating code") or None,
         )
 
 
@@ -428,6 +443,17 @@ async def process_video(
 
     try:
         result = await get_video_pipeline().process(tmp_path, framework, styling)
+        # Issue #449 honest-failure: an error-marker "code" or an error field
+        # must NOT be advertised as success.
+        if result.error or result.generated_code.startswith("// Error generating code"):
+            raise HTTPException(
+                status_code=502,
+                detail={
+                    "status": "failed",
+                    "error": "VIDEO_CODE_GENERATION_FAILED",
+                    "detail": result.generated_code[:300],
+                },
+            )
         return {
             "status": "success",
             "framework": result.framework,
@@ -436,5 +462,17 @@ async def process_video(
             "code": result.generated_code,
             "confidence": result.confidence,
         }
+    except HTTPException:
+        raise
+    except RuntimeError as e:
+        # ffmpeg missing / frame extraction failed — honest 503, not success.
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "failed",
+                "error": "VIDEO_PIPELINE_UNAVAILABLE",
+                "detail": str(e)[:300],
+            },
+        ) from e
     finally:
         os.unlink(tmp_path)

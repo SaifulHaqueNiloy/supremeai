@@ -1,5 +1,6 @@
 import ast
 import asyncio
+import hashlib
 import json
 import math
 import os
@@ -12,6 +13,7 @@ from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
 from core.embeddings import hash_vectorize as _canonical_hash_vectorize
 from core.logging_config import logger
 from core.persistence import pooled_pg
+from core.state_store import durable_state
 
 # Using core.embeddings for 1536-dim embeddings to prevent zero-padding mismatch
 HAS_SENTENCE_TRANSFORMERS = False
@@ -129,10 +131,15 @@ class CascadeMemoryService:
                 self.db_path = None
                 self._degraded_memory = True
                 self._memory_rows = InMemoryRing()
+                # Issue #451: degraded ring now MIRRORS to the durable state
+                # store — a deploy/restart no longer silently erases memories.
+                self._state = durable_state("cascade_memory")
+                self._degraded_hydrated = False
                 logger.critical(
                     "[P0] CascadeMemoryService degraded IN-PROCESS ONLY: SQLite fallback "
-                    "refused in production and Postgres unavailable — memories are kept in a "
-                    "bounded memory buffer (5000 entries) and are LOST on restart. Set "
+                    "refused in production and Postgres unavailable — memories are kept in "
+                    "a bounded buffer mirrored to Redis state store (issue #451); rows "
+                    "written before this fix are still lost. Set "
                     "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite fallback."
                 )
             else:
@@ -148,6 +155,27 @@ class CascadeMemoryService:
         # Production-readiness plan, item 4b: pgvector RPC availability probe
         # (lazy, cached). None = not probed yet; True/False after first probe.
         self._pgvector_rpc: bool | None = None
+
+    # ── issue #451: durable mirror helpers (degraded mode only) ──────
+    @staticmethod
+    def _state_key(file_path: str) -> str:
+        # identifier may contain ':' / whitespace — hash it; the value keeps
+        # the original file_path so hydration can rebuild the ring.
+        return hashlib.sha1(file_path.encode()).hexdigest()[:16]
+
+    def _hydrate_degraded(self) -> None:
+        """Load durable rows into the ring once per process (best-effort)."""
+        if self._degraded_hydrated or self._memory_rows is None:
+            return
+        self._degraded_hydrated = True
+        try:
+            existing = {r.get("file_path") for r in self._memory_rows.snapshot()}
+            for data in self._state.mirror_items().values():
+                fp = data.get("file_path")
+                if fp and fp not in existing:
+                    self._memory_rows.append(data)
+        except Exception as exc:
+            logger.warning("CascadeMemoryService: durable hydrate failed: %s", exc)
 
     # ═══════════════════════════════════════════════════════════════════
     # pgvector RPC support (production-readiness plan, item 4b)
@@ -376,17 +404,22 @@ class CascadeMemoryService:
             return
 
         if self._degraded_memory:
-            # P0: bounded in-process buffer (upsert semantics on file_path key).
+            # P0: bounded in-process buffer (upsert semantics on file_path key)
+            # + issue #451 durable mirror so restarts stop erasing memories.
+            self._hydrate_degraded()
             self._memory_rows.remove_matching(lambda r: r.get("file_path") == file_path)
-            self._memory_rows.append(
-                {
-                    "file_path": file_path,
-                    "content": content,
-                    "summary": summary,
-                    "structure": structure,
-                    "embedding": embedding_str,
-                }
-            )
+            row = {
+                "file_path": file_path,
+                "content": content,
+                "summary": summary,
+                "structure": structure,
+                "embedding": embedding_str,
+            }
+            self._memory_rows.append(row)
+            try:
+                self._state.set(self._state_key(file_path), row)
+            except Exception as exc:
+                logger.warning("CascadeMemoryService: durable mirror write failed: %s", exc)
             return
 
         with sqlite3.connect(self.db_path) as conn:

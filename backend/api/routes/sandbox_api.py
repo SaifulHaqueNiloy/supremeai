@@ -37,6 +37,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from api.dependencies import get_current_user_token
+from core.state_store import durable_state
 
 router = APIRouter(
     prefix="/api/v1/sandbox", tags=["sandbox"], dependencies=[Depends(get_current_user_token)]
@@ -64,9 +65,12 @@ def _sandbox_unavailable_detail() -> dict[str, str]:
     }
 
 
-# SECURITY FIX: sandbox_id -> owner (JWT 'sub') mapping. প্রসেস-রিস্টার্টে ম্যাপ
-# রিসেট হয়; এটি in-memory ownership রেজিস্ট্রি — persistent store পরে যোগ করা যাবে।
+# SECURITY FIX: sandbox_id -> owner (JWT 'sub') mapping. Issue #451: the map
+# now ALSO mirrors to the durable state store (Redis federation) — ownership
+# survives process restarts, so a stale sandbox can no longer be claimed by a
+# different user after a deploy. Mirror hydrates at boot (lifespan).
 _OWNERSHIP: dict[str, str] = {}
+_ownership_state = durable_state("sandbox_ownership")
 
 # SECURITY FIX: প্রতি ইউজারের sandbox কোটা — রিসোর্স এক্সহসশন রোধে।
 _MAX_SANDBOXES_PER_USER = 5
@@ -154,6 +158,7 @@ async def create_sandbox(
             raise HTTPException(status_code=502, detail="Sandbox provider did not return a session")
         sandbox_id = str(session["id"])
         _OWNERSHIP[sandbox_id] = owner
+        await _ownership_state.set_async(sandbox_id, owner)
         return {
             "status": "success",
             "session_id": sandbox_id,
@@ -228,6 +233,7 @@ async def destroy_sandbox(sandbox_id: str, owner: str = Depends(_current_user)) 
             detail=f"Sandbox {sandbox_id} not found or already destroyed",
         )
     _OWNERSHIP.pop(sandbox_id, None)
+    await _ownership_state.delete_async(sandbox_id)
     return {"status": "success", "destroyed": sandbox_id}
 
 
