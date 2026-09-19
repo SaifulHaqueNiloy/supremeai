@@ -63,7 +63,10 @@ def _decision_error_response(exc: Exception) -> HTTPException:
 def _actor_id(current_admin: dict) -> str:
     """Approver identity from the verified token (never the request body) (#481)."""
     return str(
-        current_admin.get("user_id") or current_admin.get("sub") or current_admin.get("email") or "admin"
+        current_admin.get("user_id")
+        or current_admin.get("sub")
+        or current_admin.get("email")
+        or "admin"
     )
 
 

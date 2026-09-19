@@ -370,25 +370,27 @@ class HITLEngine:
         mirrored under ``hitl:<record_id>`` always provides true CAS).
         """
         txn_factory = getattr(self.db.client, "transaction", None)
-        if callable(txn_factory):
-            self._cas_transition(
-                txn_factory,
-                doc_ref,
-                record_id,
-                admin_user_id,
-                tenant_id,
-                target_status,
-                extra_fields,
-            )
-        else:
-            try:
+        try:
+            if callable(txn_factory):
+                self._cas_transition(
+                    txn_factory,
+                    doc_ref,
+                    record_id,
+                    admin_user_id,
+                    tenant_id,
+                    target_status,
+                    extra_fields,
+                )
+            else:
                 self._assert_decisionable(record, record_id, admin_user_id, tenant_id)
-            except ApprovalExpiredError:
-                self._mark_expired(doc_ref, record_id, admin_user_id, record.get("expires_at"))
-                raise
-            doc_ref.update(
-                {**extra_fields, "status": target_status, "updated_at": _utc_now_iso()}
-            )
+                doc_ref.update(
+                    {**extra_fields, "status": target_status, "updated_at": _utc_now_iso()}
+                )
+        except ApprovalExpiredError:
+            # Single expiry path for BOTH store kinds: land the deterministic
+            # `expired` terminal state + ledger + canonical mirror, then raise.
+            self._mark_expired(doc_ref, record_id, admin_user_id, record.get("expires_at"))
+            raise
 
         self._mirror_to_canonical_resolve(record_id, target_status, admin_user_id)
 
@@ -413,25 +415,18 @@ class HITLEngine:
         target_status: str,
         extra_fields: dict[str, Any],
     ) -> None:
-        """Atomic CAS flip inside a store transaction (Firestore protocol) (#481)."""
+        """Atomic CAS flip inside a store transaction (Firestore protocol) (#481).
+
+        Raises (without committing anything) when the transactional snapshot
+        fails any guard — including expiry, which the caller lands via
+        :meth:`_mark_expired` on a single code path shared with non-CAS stores.
+        """
         txn = txn_factory()
         snapshot = txn.get(doc_ref)
         if not snapshot.exists:
             raise ValueError(f"Pending approval record {record_id} not found.")
         live = snapshot.to_dict() or {}
-        try:
-            self._assert_decisionable(live, record_id, admin_user_id, tenant_id)
-        except ApprovalExpiredError:
-            txn.update(
-                doc_ref,
-                {
-                    "status": STATUS_EXPIRED,
-                    "expired_at": _utc_now_iso(),
-                    "updated_at": _utc_now_iso(),
-                },
-            )
-            txn.commit()
-            raise
+        self._assert_decisionable(live, record_id, admin_user_id, tenant_id)
         txn.update(doc_ref, {**extra_fields, "status": target_status, "updated_at": _utc_now_iso()})
         try:
             txn.commit()
