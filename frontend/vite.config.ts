@@ -167,7 +167,11 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600,
-    sourcemap: 'hidden',
+    // FIX(FE-03): 'hidden' only strips the //# sourceMappingURL comment — the
+    // .map files were still emitted and uploaded by Vercel, leaking original
+    // TS/TSX source to anyone fetching /assets/*.js.map. Disable sourcemaps
+    // for production builds entirely; defense-in-depth via .vercelignore.
+    sourcemap: false,
   },
   envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
 })
