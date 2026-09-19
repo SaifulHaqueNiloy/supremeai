@@ -1142,10 +1142,15 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: "mock-supabase-service-role-key"
           OPENAI_API_KEY: "sk-mock-openai-api-key"
           ENV: test
-          BACKEND_URL: ${{ env.BACKEND_URL || secrets.BACKEND_URL || 'https://supremeai-backend.onrender.com' }}
+          # CI-08: no hardcoded production fallback. BACKEND_URL must come from
+          # the environment (secrets.BACKEND_URL); the step fails closed below
+          # when it is unset instead of silently targeting prod.
+          BACKEND_URL: ${{ env.BACKEND_URL || secrets.BACKEND_URL }}
           JWT_SECRET: test-secret-key-for-ci-minimum-32-chars-padding-for-length
           SUPREMEAI_JWT_SECRET: test-supremeai-jwt-secret-key-for-ci-minimum-64-chars-padding-1234
-        run: poetry run python ../scripts/ci/verify_canonical_startup.py
+        run: |
+          test -n "$BACKEND_URL" || { echo "BACKEND_URL is required (set secrets.BACKEND_URL or vars.BACKEND_URL); refusing to run with an implicit default" >&2; exit 2; }
+          poetry run python ../scripts/ci/verify_canonical_startup.py
 
       - name: Verify Supabase / PostgreSQL pgvector Extension
         working-directory: ./backend
