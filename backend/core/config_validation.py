@@ -15,6 +15,7 @@ from pydantic import (
     model_validator,
 )
 
+from core.config_fields import parse_origin_list
 from core.logging_config import logger
 from core.secret_policy import JWT_SECRET_DEPRECATED_ENV, JWT_SECRET_ENV
 
@@ -104,16 +105,8 @@ class SettingsValidationMixin:
     @classmethod
     def parse_comma_separated_list(cls, v):
         if isinstance(v, str):
-            if v.strip() == "":
-                return []
-            if "[" in v and "]" in v:
-                try:
-                    parsed = json.loads(v)
-                    if isinstance(parsed, list):
-                        return [str(x) for x in parsed]
-                except Exception as e:
-                    logger.debug(f"JSON parsing failed for admin_emails: {e}")
-            return [i.strip() for i in v.split(",") if i.strip()]
+            # Issue #684 (CORS DRY): shared origin/list parser (single copy).
+            return parse_origin_list(v)
         return v
 
     @field_validator("env")
@@ -444,13 +437,8 @@ class SettingsValidationMixin:
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         if isinstance(v, str):
-            v = v.strip()
-            if not v:
-                return []
-            try:
-                return json.loads(v)
-            except json.JSONDecodeError:
-                return [o.strip() for o in v.split(",") if o.strip()]
+            # Issue #684 (CORS DRY): shared origin/list parser (single copy).
+            return parse_origin_list(v)
         return v or []
 
     @field_validator("user_cors_origins", "admin_cors_origins", mode="after")
@@ -474,16 +462,9 @@ class SettingsValidationMixin:
 
     @classmethod
     def parse_cors_origins_helper(cls, value: Any, info: Any = None) -> list[str]:
-        if isinstance(value, list):
-            return value
-        if not value or not str(value).strip():
-            return []
-        if str(value).startswith("["):
-            try:
-                return json.loads(value)
-            except (json.JSONDecodeError, ValueError) as _cors_parse_err:
-                logger.debug(f"CORS parse fallback to comma-split: {_cors_parse_err}")
-        return [x.strip() for x in str(value).split(",") if x.strip()]
+        # Issue #684 (CORS DRY): shared origin/list parser (single copy).
+        # Falsy values keep the historical [] result instead of passing through.
+        return parse_origin_list(value) if value else []
 
     @classmethod
     def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:

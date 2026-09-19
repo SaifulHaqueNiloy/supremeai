@@ -39,10 +39,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from core.contracts.security_policy import SEVERITY_LEVELS
 from core.logging_config import logger
 
-# Risk ladder: lower number == more sensitive.
-RISK_LEVELS = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+# Issue #684 (H-04): severity ranking now comes from the single canonical
+# ladder in core.contracts.security_policy (ascending: higher == more severe).
+# The previous local copy (with a stale "lower number == more sensitive"
+# comment that contradicted its own values) was removed.
 
 # Role required per risk level (AUD-3.3): only admins may invoke high/critical tools.
 _ROLE_REQUIRED_BY_RISK = {"high": "admin", "critical": "admin"}
@@ -135,7 +138,7 @@ class ToolPolicyGateway:
     # -- registration -------------------------------------------------------
     def register_tool(self, tool_name: str, risk: str) -> None:
         """Classify a tool's risk level (audited at startup/plugin load)."""
-        if risk not in RISK_LEVELS:
+        if risk not in SEVERITY_LEVELS:
             raise ValueError(f"Unknown risk level '{risk}' for tool {tool_name}")
         self._risk_registry[tool_name] = risk
 
@@ -143,10 +146,10 @@ class ToolPolicyGateway:
         registered_risk = self._risk_registry.get(tool_name)
         if registered_risk is None:
             return "high"  # fail-closed default for unclassified tools
-        if declared_risk not in RISK_LEVELS:
+        if declared_risk not in SEVERITY_LEVELS:
             return registered_risk
         # Callers may refine a classification upward, never downgrade it.
-        return max((registered_risk, declared_risk), key=RISK_LEVELS.__getitem__)
+        return max((registered_risk, declared_risk), key=SEVERITY_LEVELS.__getitem__)
 
     # -- the canonical decision ---------------------------------------------
     async def evaluate(

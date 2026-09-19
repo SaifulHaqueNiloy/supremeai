@@ -22,11 +22,44 @@ T = TypeVar("T")
 
 
 class CircuitBreakerState(StrEnum):
-    """Circuit breaker states."""
+    """Circuit breaker states.
+
+    Issue #684 (H-05): this enum is the CANONICAL breaker-state vocabulary.
+    Other breaker implementations historically spelled the same states as
+    "open"/"closed"/"half_open" (core.circuit_breaker.CircuitState — whose
+    lowercase values are persisted to Redis and exposed via API payloads),
+    "HALF-OPEN" with a hyphen (predictive breaker), or raw string literals
+    (auto-healer, redis client, chaos worker). Do NOT introduce new state
+    literals: reuse these members, and route any externally-produced state
+    string through normalize_circuit_state() before comparing.
+    """
 
     CLOSED = "CLOSED"  # Normal operation — requests pass through
     OPEN = "OPEN"  # Failing — requests are rejected immediately
     HALF_OPEN = "HALF_OPEN"  # Testing — limited requests allowed
+
+
+def normalize_circuit_state(value: Any) -> CircuitBreakerState:
+    """Normalize any externally-produced breaker-state representation to the canonical enum.
+
+    Issue #684 (H-05): breaker state strings reached the codebase in several
+    casings/spellings ("open", "OPEN", "half-open", "HALF_OPEN", ...). Old
+    serialized values (Redis ``circuit_breaker:<name>:state`` keys written by
+    RedisCircuitBreaker, cached API payloads) must keep comparing correctly,
+    so readers normalize instead of producers rewriting history. Case- and
+    separator-insensitive; unknown values fall back to CLOSED with a warning
+    (this helper is for status reporting/comparison, not a request gate).
+    """
+    if isinstance(value, CircuitBreakerState):
+        return value
+    text = str(value or "").strip().upper().replace("-", "_")
+    try:
+        return CircuitBreakerState(text)
+    except ValueError:
+        logger.warning(
+            f"Unknown circuit breaker state {value!r}; normalizing to {CircuitBreakerState.CLOSED.value}"
+        )
+        return CircuitBreakerState.CLOSED
 
 
 class CircuitBreakerOpenError(RuntimeError):

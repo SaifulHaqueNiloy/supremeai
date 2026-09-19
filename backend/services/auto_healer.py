@@ -30,6 +30,7 @@ from typing import Any, Optional
 
 from core.health.proactive_healer import get_proactive_healer
 from core.logging_config import logger
+from core.resilience.circuit_breaker import CircuitBreakerState
 
 proactive_healer_instance = get_proactive_healer()
 
@@ -266,7 +267,8 @@ class CircuitBreaker:
 
         self.failure_count = 0
         self.success_count = 0
-        self.state = "CLOSED"
+        # Issue #684 (H-05): canonical breaker-state enum instead of raw literals.
+        self.state = CircuitBreakerState.CLOSED
         self.last_failure_time: float | None = None
         self.half_open_calls = 0
 
@@ -274,22 +276,22 @@ class CircuitBreaker:
 
     def can_execute(self) -> bool:
         """Check if request should be allowed through"""
-        if self.state == "CLOSED":
+        if self.state == CircuitBreakerState.CLOSED:
             return True
 
-        if self.state == "OPEN":
+        if self.state == CircuitBreakerState.OPEN:
             # Check if we should try half-open
             if (
                 self.last_failure_time
                 and (time.time() - self.last_failure_time) > self.recovery_timeout
             ):
-                self.state = "HALF_OPEN"
+                self.state = CircuitBreakerState.HALF_OPEN
                 self.half_open_calls = 0
                 logger.info(f"CircuitBreaker '{self.name}' -> HALF_OPEN")
                 return True
             return False
 
-        if self.state == "HALF_OPEN":
+        if self.state == CircuitBreakerState.HALF_OPEN:
             if self.half_open_calls < self.half_open_max_calls:
                 self.half_open_calls += 1
                 return True
@@ -299,10 +301,10 @@ class CircuitBreaker:
 
     def record_success(self) -> None:
         """Record successful execution"""
-        if self.state == "HALF_OPEN":
+        if self.state == CircuitBreakerState.HALF_OPEN:
             self.success_count += 1
             if self.success_count >= self.half_open_max_calls:
-                self.state = "CLOSED"
+                self.state = CircuitBreakerState.CLOSED
                 self.failure_count = 0
                 self.success_count = 0
                 logger.info(f"CircuitBreaker '{self.name}' -> CLOSED (recovered)")
@@ -315,13 +317,13 @@ class CircuitBreaker:
         self.last_failure_time = time.time()
         self.success_count = 0
 
-        if self.state == "HALF_OPEN":
-            self.state = "OPEN"
+        if self.state == CircuitBreakerState.HALF_OPEN:
+            self.state = CircuitBreakerState.OPEN
             logger.warning(f"CircuitBreaker '{self.name}' -> OPEN (half-open test failed)")
         elif self.failure_count >= self.failure_threshold:
             old_state = self.state
-            self.state = "OPEN"
-            if old_state != "OPEN":
+            self.state = CircuitBreakerState.OPEN
+            if old_state != CircuitBreakerState.OPEN:
                 logger.warning(
                     f"CircuitBreaker '{self.name}' -> OPEN ({self.failure_count} failures)"
                 )

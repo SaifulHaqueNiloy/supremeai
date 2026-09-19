@@ -15,6 +15,7 @@ import httpx
 
 from core.error_bus import with_error_bus
 from core.logging_config import logger
+from core.resilience.circuit_breaker import CircuitBreakerState
 from utils.firestore_helpers import get_firestore_db
 
 try:
@@ -55,24 +56,25 @@ class CircuitBreaker:
         self.failure_threshold = failure_threshold
         self.cooldown_seconds = cooldown_seconds
         self.consecutive_failures = 0
-        self.state = "closed"  # "closed", "open", "half_open"
+        # Issue #684 (H-05): canonical breaker-state enum instead of raw literals.
+        self.state = CircuitBreakerState.CLOSED
         self.cooldown_until: float | None = None
 
     def is_available(self) -> bool:
-        if self.state == "open":
+        if self.state == CircuitBreakerState.OPEN:
             if self.cooldown_until and time.time() < self.cooldown_until:
                 return False
-            self.state = "half_open"
+            self.state = CircuitBreakerState.HALF_OPEN
         return True
 
     def record_success(self) -> None:
         self.consecutive_failures = 0
-        self.state = "closed"
+        self.state = CircuitBreakerState.CLOSED
 
     def record_failure(self) -> None:
         self.consecutive_failures += 1
         if self.consecutive_failures >= self.failure_threshold:
-            self.state = "open"
+            self.state = CircuitBreakerState.OPEN
             self.cooldown_until = time.time() + self.cooldown_seconds
 
 

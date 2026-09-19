@@ -28,6 +28,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from core.contracts.security_policy import SEVERITY_LEVELS
 from core.logging_config import logger
 
 # বাংলা মন্তব্য: উইন্ডোজ টার্মিনালে ইউনিকোড/ইমোজি আউটপুট সাপোর্ট করার জন্য এনকোডিং কনফিগার করা হলো।
@@ -404,7 +405,10 @@ class SecretHunter:
             findings = validated_findings
 
         # Filter by minimum severity
-        severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1, "info": 0}
+        # Issue #684 (H-04): ranks derived from the canonical severity ladder
+        # (+1 offsets the extra "info" tier below "low") — identical values to
+        # the previous local map, but now impossible to drift from the canon.
+        severity_order = {"info": 0, **{name: rank + 1 for name, rank in SEVERITY_LEVELS.items()}}
         min_level = severity_order.get(min_severity, 2)
         findings = [f for f in findings if severity_order.get(f.severity, 0) >= min_level]
 
