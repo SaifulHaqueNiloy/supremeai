@@ -77,7 +77,8 @@ def file_stealer():
         service.forge_tool(spec, malicious_code)
 
 
-def test_tool_forge_execution_runtime_error_handled():
+def test_tool_forge_execution_runtime_error_handled(monkeypatch):
+    monkeypatch.setenv("SUPREMEAI_ALLOW_INPROCESS_CODEGEN", "true")
     service = ToolForgeService()
     spec = ToolSpec(name="zero_division_tool", description="Divides by zero")
 
