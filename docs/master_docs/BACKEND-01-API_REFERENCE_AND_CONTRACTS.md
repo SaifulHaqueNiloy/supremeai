@@ -336,14 +336,28 @@ GET    /api/v1/memory/export             # Export memories
 
 #### HITL Engine (`/hitl`)
 ```bash
-GET    /api/v1/hitl/approvals            # List pending approvals
-GET    /api/v1/hitl/approvals/{id}       # Get approval detail
-POST   /api/v1/hitl/approvals/{id}/approve    # Approve request
-POST   /api/v1/hitl/approvals/{id}/reject     # Reject request
-POST   /api/v1/hitl/approvals/{id}/escalate   # Escalate request
-GET    /api/v1/hitl/my-approvals         # My pending reviews
-GET    /api/v1/hitl/stats                # HITL statistics
+GET    /api/v1/hitl/pending               # List pending approvals (unexpired only) — hitl_admin
+POST   /api/v1/hitl/approve/{record_id}   # Approve + dispatch executor (exact-once)
+POST   /api/v1/hitl/reject/{record_id}    # Reject request
+POST   /api/v1/hitl/cancel/{task_id}      # Authoritative cancellation (approval_manager, S1)
+WS     /api/v1/hitl/ws/hitl               # HITL notification WebSocket (admin-token handshake)
 ```
+
+The same paths are also registered by `api/routes/approval_manager.py` against the
+canonical `pending_tasks` store (S1); mount order makes `hitl_admin` (S2, Firestore
+`pending_approvals`) the owner — ownership is pinned by
+`backend/tests/api/test_hitl_route_ownership.py`.
+
+**Approve-execution semantics (canonical contract: `docs/security/HITL_APPROVAL_CONTRACT.md`, #481):**
+
+- State machine (S2): `pending_approval → approved | rejected | expired`; terminal states
+  absorb every further transition. (S1 store: `PENDING → APPROVED/REJECTED/CANCELLED → EXECUTED`.)
+- Approve resolves a dispatch executor BEFORE the status flip (unknown target → `400`,
+  record stays pending) and executes exactly once after the flip; a duplicate/replayed
+  approve returns `409` and never re-executes; expired approvals return `410`; an
+  unauthorized approver (empty actor / tenant mismatch) returns `403`; execution failure
+  keeps the approval but records `execution_status=failed` + `execution_error` and returns
+  `500`. Default decision window: 24h.
 
 #### Tool Execution (`/tools`)
 ```bash

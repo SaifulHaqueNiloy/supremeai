@@ -16,13 +16,58 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
-from services.hitl.engine import HITLEngine
+from services.hitl.dispatch import ApprovalDispatchError
+from services.hitl.engine import (
+    ApprovalExpiredError,
+    ApprovalNotAuthorizedError,
+    HITLEngine,
+    HITLStateError,
+)
 
 router = APIRouter()
 
 
 class RejectionRequest(BaseModel):
     reason: str
+
+
+def _decision_error_response(exc: Exception) -> HTTPException:
+    """#481 deterministic error mapping (mirrors approval_manager conventions).
+
+    403 unauthorized actor/tenant · 404 unknown record · 409 already decided
+    (duplicate/replay/CAS race) · 410 expired · 400 fail-closed dispatch ·
+    500 execution failure after the approval committed (loud, never faked).
+    """
+    if isinstance(exc, ApprovalExpiredError):
+        return HTTPException(status_code=status.HTTP_410_GONE, detail=str(exc))
+    if isinstance(exc, ApprovalNotAuthorizedError):
+        return HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    if isinstance(exc, ApprovalDispatchError):
+        return HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+    if isinstance(exc, HITLStateError):
+        return HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
+    if isinstance(exc, ValueError):
+        if "not found" in str(exc):
+            return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        # post-approval executor failure (validation etc.) — loud 500
+        return HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Approval decision recorded; execution failed",
+        )
+    return HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Approval decision recorded; execution failed",
+    )
+
+
+def _actor_id(current_admin: dict) -> str:
+    """Approver identity from the verified token (never the request body) (#481)."""
+    return str(
+        current_admin.get("user_id")
+        or current_admin.get("sub")
+        or current_admin.get("email")
+        or "admin"
+    )
 
 
 def _hitl_engine() -> HITLEngine:
@@ -73,17 +118,22 @@ async def approve_pending_action(
     current_admin: dict = Depends(get_current_admin),
 ):
     """
-    Approve a pending action.
+    Approve a pending action and dispatch its executor (#481 contract).
+
+    Errors: 403 unauthorized · 404 unknown record · 409 already decided ·
+    410 expired · 400 unknown target · 500 execution failure.
     """
     engine = _hitl_engine()
     try:
         record = engine.approve(
-            admin_user_id=current_admin.get("user_id", "admin"), record_id=record_id
+            admin_user_id=_actor_id(current_admin),
+            record_id=record_id,
+            tenant_id=current_admin.get("tenant_id"),
         )
 
         return {"status": "success", "message": f"Record {record_id} approved.", "record": record}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise _decision_error_response(e) from e
 
 
 @router.post("/reject/{record_id}", dependencies=[Depends(get_current_admin)])
@@ -93,15 +143,16 @@ async def reject_pending_action(
     current_admin: dict = Depends(get_current_admin),
 ):
     """
-    Reject a pending action.
+    Reject a pending action (#481 contract; same error mapping as approve).
     """
     engine = _hitl_engine()
     try:
         record = engine.reject(
-            admin_user_id=current_admin.get("user_id", "admin"),
+            admin_user_id=_actor_id(current_admin),
             record_id=record_id,
             reason=payload.reason,
+            tenant_id=current_admin.get("tenant_id"),
         )
         return {"status": "success", "message": f"Record {record_id} rejected.", "record": record}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise _decision_error_response(e) from e
