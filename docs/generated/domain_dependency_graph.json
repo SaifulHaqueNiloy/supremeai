@@ -272,7 +272,7 @@
     {
       "evidence": [
         {
-          "line": 31,
+          "line": 32,
           "path": "backend/brain/model_router.py"
         }
       ],
@@ -882,7 +882,7 @@
     {
       "evidence": [
         {
-          "line": 15,
+          "line": 12,
           "path": "backend/tools/social/telegram_bot/ai_engine.py"
         }
       ],
