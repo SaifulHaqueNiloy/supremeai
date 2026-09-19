@@ -81,7 +81,7 @@ Core stack: `fastapi ^0.136.0`, `uvicorn[standard] ^0.51.0`, `pydantic ^2.10.0`,
 
 ## Observability
 
-- **Sentry** initialized in `app_builder._init_sentry` (boot failures + runtime errors).
+- **Sentry** initialized via `monitoring.init_observability` (Issue #566: single init path, one sample rate).
 - **OpenTelemetry**: `FastAPIInstrumentor.instrument_app(app)` with OTLP gRPC exporter.
 - **Prometheus**: `GET /metrics` registered when `MONITORING_DETAILED`; scrape config in `infrastructure/monitoring/prometheus/`.
 - **Langfuse** on every LLM call through the gateway; **PostHog** product analytics.
