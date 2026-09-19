@@ -68,6 +68,7 @@ class SettingsSecretsMixin:
         state = self._get_private_state()
         if state["_secrets_batch_loaded"]:
             return
+
         cached = state["_cached_secrets"]
 
         import time
@@ -197,6 +198,21 @@ class SettingsSecretsMixin:
                         )
 
         state["_secrets_batch_loaded"] = True
+
+    async def apreload_secrets(self) -> None:
+        """Preload all core secrets off the event-loop thread (BE-12, issue #544).
+
+        বাংলা: `_ensure_secrets_loaded()`-এর ভেতরের Infisical HTTP fetch ও
+        retry backoff (`time.sleep`) সিঙ্ক্রোনাস — সরাসরি lifespan-এ কল করলে
+        event loop freeze করত (BE-12)। এই async wrapper পুরো ব্যাচ লোডকে
+        `asyncio.to_thread`-এ সরিয়ে নেয়; এরপর lifespan/request path-এর সব
+        sync property access (`supabase_database_url`, `redis_url`,
+        `jwt_secret` …) শুধু মেমরি-ক্যাশ পড়ে — কোনো network/sleep নেই।
+
+        Call this ONCE at the top of the lifespan startup, before any
+        component reads a secret-backed property.
+        """
+        await asyncio.to_thread(self._ensure_secrets_loaded)
 
     def _get_cached_secret(self, key: str) -> str:
         """Get cached secret with explicit empty vs not-found handling.
