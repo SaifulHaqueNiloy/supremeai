@@ -479,8 +479,16 @@ class SettingsFieldsMixin:
         default=60, validation_alias="HEALTH_CHECK_INTERVAL_SECONDS"
     )
     skill_timeout_seconds: int = Field(default=30, validation_alias="SKILL_TIMEOUT_SECONDS")
+    # Issue #513 (BE-07): default True — a production deploy missing REDIS_URL
+    # must fail fast instead of silently degrading security invariants
+    # (rate-limiting falls back to per-instance in-memory, token revocation
+    # becomes fail-open for non-admin tokens, idempotency keys per-instance).
+    # Operators explicitly opt out only for single-instance prod deploys via
+    # REDIS_REQUIRED_FOR_PRODUCTION=false. Dev/test are unaffected: the
+    # consumer (startup/services.py::_init_redis) only enforces this in
+    # env=production.
     redis_required_for_production: bool = Field(
-        default=False, validation_alias="REDIS_REQUIRED_FOR_PRODUCTION"
+        default=True, validation_alias="REDIS_REQUIRED_FOR_PRODUCTION"
     )
 
     # ── Self-Healing Config — env-driven ────────────────────────────────────

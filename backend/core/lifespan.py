@@ -167,6 +167,17 @@ async def app_lifespan(app):
     try:
         await initialize_independent_services(app)
     except Exception as e:
+        # Issue #513 (BE-07): init handlers swallow everything they can degrade
+        # internally — only failures they deliberately let escape (e.g. the
+        # production-critical "Redis is required for production" RuntimeError)
+        # reach this point. In production those must BLOCK boot (fail-fast),
+        # not be downgraded to a log line; outside production keep the
+        # degraded-mode convenience.
+        if settings.env == "production":
+            logger.critical(
+                f"🔥 initialize_independent_services failed in production — aborting boot: {e}"
+            )
+            raise
         logger.error(f"initialize_independent_services failed (continuing in degraded mode): {e}")
         error_event_bus.emit(
             ErrorEvent(
