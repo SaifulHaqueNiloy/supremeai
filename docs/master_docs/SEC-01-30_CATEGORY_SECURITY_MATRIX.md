@@ -632,7 +632,7 @@ All side-effecting tool executions MUST pass `ToolPolicyGateway.enforce()` /
 | 5 | Skill code execution | `core/skill_manager.py::get_skill` (`exec`) | AST vetting + locked builtins + DB-registered skills only |
 | 6 | Synthesized tool execution | `services/tool_forge.py::ToolForgeService.execute_tool` | AST sandbox scan; **gateway enforcement pending (see §4)** |
 | 7 | Ephemeral sandbox execution | `agents/ephemeral_executor.py` | Docker/microVM sandbox + path-traversal guard (currently no live production caller) |
-| 8 | HITL-approved side effects | `POST /api/v1/hitl/approve/{id}` → `api/routes/approval_manager.py` | `verify_admin_session_fail_closed` + atomic PENDING-only state machine + payload hash + audit events |
+| 8 | HITL-approved side effects | `POST /api/v1/hitl/approve/{id}` → `api/routes/hitl_admin.py` (S2) + `api/routes/approval_manager.py` (S1) | Admin-token RBAC (`get_current_admin` / `get_project_admin`) + atomic PENDING-only state machine + payload hash + expiry (24h TTL, expired → 410) + duplicate/replay rejection (409) + tenant-scoped CAS + append-only hash-chain audit — canonical contract: `docs/security/HITL_APPROVAL_CONTRACT.md` (#481) |
 | 9 | Browser automation | `api/routes/browser.py` | Router JWT + `require_admin_token` on credentials/scrape/browse/extract/URL-permission decisions |
 | 10 | HTTP edge (all routes) | `core/app_builder.py` middleware stack | AuthMiddleware (fail-closed, public-path allowlist) → API key auth → AutonoGuard → idempotency (per-credential scoped) → rate limit |
 
