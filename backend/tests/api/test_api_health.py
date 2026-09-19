@@ -45,6 +45,19 @@ class TestHealthEndpoint:
         finally:
             _checks.remove(dummy_check)
 
+    # #468 TTL cache: the module-level health cache persists across tests
+    # (a previous test's HEALTHY outcome may legitimately sit inside its 10s
+    # window). Reset around every test in this class so failure-simulation
+    # tests observe the real check path — and lock the safety contract that
+    # unhealthy outcomes are never cached.
+    @pytest.fixture(autouse=True)
+    def _reset_health_ttl_cache(self):
+        from core.health_routes import reset_health_cache
+
+        reset_health_cache()
+        yield
+        reset_health_cache()
+
     @pytest.mark.unit
     async def test_health_returns_503_when_unhealthy(self, client):
         """Health endpoint returns 503 when critical check fails."""
