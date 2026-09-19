@@ -95,6 +95,7 @@ class SettingsSecretsMixin:
                     "nvidia": "NVIDIA_API_KEY",
                     "openrouter": "OPENROUTER_API_KEY",
                     "huggingface": "HF_API_KEY",
+                    "mistral": "MISTRAL_API_KEY",
                 },
                 "DATABASE_CONFIG": {
                     "pooler_url": "SUPABASE_DATABASE_URL_POOLER",
