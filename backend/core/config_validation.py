@@ -15,7 +15,6 @@ from pydantic import (
     model_validator,
 )
 
-from core.config_fields import parse_origin_list
 from core.logging_config import logger
 from core.secret_policy import JWT_SECRET_DEPRECATED_ENV, JWT_SECRET_ENV
 
@@ -105,8 +104,16 @@ class SettingsValidationMixin:
     @classmethod
     def parse_comma_separated_list(cls, v):
         if isinstance(v, str):
-            # Issue #684 (CORS DRY): shared origin/list parser (single copy).
-            return parse_origin_list(v)
+            if v.strip() == "":
+                return []
+            if "[" in v and "]" in v:
+                try:
+                    parsed = json.loads(v)
+                    if isinstance(parsed, list):
+                        return [str(x) for x in parsed]
+                except Exception as e:
+                    logger.debug(f"JSON parsing failed for admin_emails: {e}")
+            return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
     @field_validator("env")
@@ -193,21 +200,6 @@ class SettingsValidationMixin:
                 "equal to SUPREMEAI_DOCS_PASSWORD). Fail-fast triggered — the internal "
                 "admin API stays locked without it."
             )
-
-        # Issue #709 (item 6): visibility for the public dev fallback docs
-        # password. The fail-closed policies above already block production/
-        # staging misuse; this WARNING only makes the fallback's activation
-        # loud for every non-local/dev environment (e.g. misconfigured boxes)
-        # so a silent public-password gate can never go unnoticed.
-        if (self.env or "").lower() not in ("local", "dev", "development"):
-            pwd = self.docs_password.get_secret_value() if self.docs_password else ""
-            if pwd.lower() in self.DOCS_DEV_FALLBACK_PASSWORDS:
-                logger.warning(
-                    "🚨 BOOT-TIME WARNING: SUPREMEAI_DOCS_PASSWORD is unset — the PUBLIC dev "
-                    f"fallback 'dev_password_only' is active while ENV='{self.env}'. "
-                    "Anyone who reads the public repo knows this password. Set a strong "
-                    "SUPREMEAI_DOCS_PASSWORD (>= 12 chars) before relying on the docs/auth gate."
-                )
 
         if self.env in {"production", "staging"}:
             _LLM_CRITICAL_KEYS = [
@@ -437,8 +429,13 @@ class SettingsValidationMixin:
     @classmethod
     def parse_cors_origins(cls, v, info: ValidationInfo):
         if isinstance(v, str):
-            # Issue #684 (CORS DRY): shared origin/list parser (single copy).
-            return parse_origin_list(v)
+            v = v.strip()
+            if not v:
+                return []
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return [o.strip() for o in v.split(",") if o.strip()]
         return v or []
 
     @field_validator("user_cors_origins", "admin_cors_origins", mode="after")
@@ -462,9 +459,16 @@ class SettingsValidationMixin:
 
     @classmethod
     def parse_cors_origins_helper(cls, value: Any, info: Any = None) -> list[str]:
-        # Issue #684 (CORS DRY): shared origin/list parser (single copy).
-        # Falsy values keep the historical [] result instead of passing through.
-        return parse_origin_list(value) if value else []
+        if isinstance(value, list):
+            return value
+        if not value or not str(value).strip():
+            return []
+        if str(value).startswith("["):
+            try:
+                return json.loads(value)
+            except (json.JSONDecodeError, ValueError) as _cors_parse_err:
+                logger.debug(f"CORS parse fallback to comma-split: {_cors_parse_err}")
+        return [x.strip() for x in str(value).split(",") if x.strip()]
 
     @classmethod
     def validate_cors_origins_helper(cls, value: list[str], info: Any = None) -> list[str]:
