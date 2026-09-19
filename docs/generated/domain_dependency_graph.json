@@ -2482,7 +2482,7 @@
     {
       "evidence": [
         {
-          "line": 1027,
+          "line": 1060,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -2852,7 +2852,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 14,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -3534,6 +3534,16 @@
         {
           "line": 21,
           "path": "backend/api/routes/browser/_scraping.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 46,
+          "path": "backend/api/routes/browser/_session_store.py"
         }
       ],
       "source": "research",

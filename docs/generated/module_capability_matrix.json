@@ -2391,8 +2391,7 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "memory"
+        "execute"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -6872,7 +6871,9 @@
       "path": "backend/core/skills/integrations.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -6924,6 +6925,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/startup_validator.py"
+    },
+    {
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/state_store.py"
     },
     {
       "capability_signals": [],
@@ -12698,6 +12709,13 @@
       "path": "backend/tests/core/test_startup_validator.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_state_store.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -15514,7 +15532,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -24697,5 +24716,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2847
+  "source_file_count": 2849
 }

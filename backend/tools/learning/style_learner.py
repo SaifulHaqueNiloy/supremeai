@@ -20,6 +20,11 @@ class StyleLearner:
     def __init__(self):
         self.indexer = None
         self.learned_styles: dict[str, Any] = {}
+        # Issue #451: durable mirror — learned styles survive restarts and
+        # hydrate back into memory at boot (Supabase remains the slow path).
+        from core.state_store import durable_state
+
+        self._state = durable_state("style_profiles")
         logger.info("Initialized StyleLearner")
 
     def _get_indexer(self):
@@ -205,6 +210,8 @@ class StyleLearner:
         guidelines = self._default_guidelines()
         guidelines["ast_patterns"] = ast_patterns
         self.learned_styles[repo_path] = guidelines
+        # Issue #451: default guidelines were previously never persisted at all.
+        await self._persist_style(repo_path, guidelines)
         return guidelines
 
     async def generate_with_style(self, prompt: str, user_id: str) -> dict[str, Any]:
@@ -233,6 +240,19 @@ class StyleLearner:
 
     async def _persist_style(self, repo_path: str, style: dict[str, Any]) -> None:
         """Persist learned style to Supabase or local fallback."""
+        # Issue #451: durable state mirror FIRST (1 Redis op, always fresh for
+        # boot hydration), then Supabase (authoritative) / file fallback.
+        try:
+            import hashlib
+
+            from core.state_store import durable_state as _ds
+
+            await _ds("style_profiles").set_async(
+                hashlib.sha1(repo_path.encode()).hexdigest()[:16],
+                {"__rp__": repo_path, "style": style},
+            )
+        except Exception as mirror_err:
+            logger.debug(f"[StyleLearner] state-store mirror failed: {mirror_err}")
         try:
             from database.supabase_client import db
 
@@ -261,6 +281,17 @@ class StyleLearner:
                 json.dump(style, f, indent=2)
         except Exception as e:
             logger.debug(f"Style persist fallback failed: {e}")
+
+    def hydrate(self) -> None:
+        """Issue #451: reload learned styles from the durable state mirror."""
+        try:
+            for data in self._state.mirror_items().values():
+                repo_path = data.get("__rp__")
+                style = data.get("style")
+                if repo_path and isinstance(style, dict):
+                    self.learned_styles.setdefault(repo_path, style)
+        except Exception as hydrate_err:
+            logger.warning(f"[StyleLearner] hydrate failed: {hydrate_err}")
 
     def _default_guidelines(self) -> dict[str, Any]:
         return {
