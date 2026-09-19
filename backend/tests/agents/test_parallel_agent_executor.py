@@ -168,6 +168,36 @@ async def test_agent_dag_scheduler_cyclic_dependency_handling():
 
     result = await scheduler.execute_dag(graph)
     assert "order" in result
-    # Cyclic dependency should force remaining nodes and complete
-    assert result["nodes"]["node_a"]["status"] == "success"
-    assert result["nodes"]["node_b"]["status"] == "success"
+    # #686: cyclic dependency is now REJECTED, not force-executed.
+    assert result["rejected"] == ["node_a", "node_b"]
+    assert result["nodes"]["node_a"]["status"] == "error"
+    assert result["nodes"]["node_b"]["status"] == "error"
+    assert "cyclic" in result["nodes"]["node_a"]["error"]
+    assert result["voted_best"] is None
+
+
+@pytest.mark.anyio
+async def test_agent_dag_scheduler_depth_cap(monkeypatch):
+    from tools.parallel_agent_executor import AgentDAGScheduler, DAGNode
+
+    scheduler = AgentDAGScheduler(max_concurrent_tasks=5)
+    monkeypatch.setenv("SUPREMEAI_AGENT_DAG_MAX_DEPTH", "2")
+
+    async def simple_task():
+        return "ok"
+
+    # a -> b -> c -> d chain: 4 levels, cap 2 -> c and d rejected before execution
+    graph = {
+        "a": DAGNode("a", simple_task),
+        "b": DAGNode("b", simple_task, depends_on=["a"]),
+        "c": DAGNode("c", simple_task, depends_on=["b"]),
+        "d": DAGNode("d", simple_task, depends_on=["c"]),
+    }
+
+    result = await scheduler.execute_dag(graph)
+    assert result["rejected"] == ["c", "d"]
+    assert result["nodes"]["a"]["status"] == "success"
+    assert result["nodes"]["b"]["status"] == "success"
+    assert result["nodes"]["c"]["status"] == "error"
+    assert result["nodes"]["d"]["status"] == "error"
+    assert "depth" in result["nodes"]["d"]["error"]

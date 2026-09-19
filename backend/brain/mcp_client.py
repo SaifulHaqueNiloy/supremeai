@@ -1,3 +1,13 @@
+"""Spawned-process MCP client for external MCP servers (headless agent fleet).
+
+#686: ``MCPClient.call_tool`` is the single execution choke point for tools
+dispatched to spawned external MCP servers (``tools/parallel_agent_executor.py``
+and ``core/circles/centers/mcp_center.py`` both go through it). Tool requests
+against servers listed in ``core/mcp_allowlist.py`` are now checked against that
+server's ``allowed_tools`` at EXECUTION time — the allowlist previously had no
+runtime consumer at all (neither registration- nor execution-time enforcement).
+"""
+
 import json
 import signal
 import subprocess
@@ -5,6 +15,7 @@ import time
 from typing import Any
 
 from core.logging_config import logger
+from core.mcp_allowlist import MCPAllowlist, get_mcp_servers
 
 DEFAULT_TIMEOUT = 30
 
@@ -96,6 +107,33 @@ class MCPClient:
     def call_tool(
         self, name: str, arguments: dict[str, Any], timeout: int = DEFAULT_TIMEOUT
     ) -> dict[str, Any]:
+        """Execute a tool on the spawned MCP server.
+
+        #686: execution-time allowlist gate. For servers that ARE part of
+        ``core/mcp_allowlist.py`` (github, slack, filesystem, gemini-cli, …),
+        the requested tool must be in that server's ``allowed_tools`` list —
+        checked here at dispatch time, fail-closed. Servers outside the
+        allowlist (first-party stdio servers wired via
+        ``core/circles/centers/mcp_center.py``) keep their own governance
+        layers (approval-gated ``mcp.invoke``, ``tool_policy_gateway``,
+        ``core/mcp_policy.py``) and are deliberately not blanket-denied here.
+        """
+        if self.server_name in get_mcp_servers():
+            verdict = MCPAllowlist.allowed_tools(self.server_name, [name])
+            if not verdict.get("allowed"):
+                denied = verdict.get("denied", [name])
+                logger.warning(
+                    f"MCP allowlist denied tool '{name}' on server '{self.server_name}' "
+                    f"(allowed tools: {verdict.get('allowed_tools', [])})"
+                )
+                return {
+                    "error": (
+                        f"Tool '{name}' is not in the MCP allowlist for server "
+                        f"'{self.server_name}'"
+                    ),
+                    "denied": denied,
+                    "allowlist_denied": True,
+                }
         if not self.connect():
             return {"error": "Server not connected"}
         request = {
