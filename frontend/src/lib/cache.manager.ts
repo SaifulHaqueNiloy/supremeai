@@ -14,7 +14,13 @@
  * - This manager helps you MAXIMIZE usage!
  */
 
-import { Redis } from '@upstash/redis';
+// Issue #685 (Section 1, bundle): ``@upstash/redis`` is a server-side Redis
+// SDK. The static value import used to pull the whole SDK into every web chunk
+// that reached this module. It is now TYPE-ONLY at the top and the runtime
+// class is loaded via dynamic import() inside getRedis() on first use — the
+// SDK never enters any initial/route chunk unless Redis is actually
+// configured and used.
+import type { Redis } from '@upstash/redis';
 
 // ============================================================================
 // Audit F-05 fix (2026-09-17): the Redis client used to be instantiated at
@@ -32,7 +38,7 @@ const UPSTASH_TOKEN =
 
 let redisInstance: Redis | null = null;
 
-function getRedis(): Redis {
+async function getRedis(): Promise<Redis> {
   if (!redisInstance) {
     if (!UPSTASH_URL || !UPSTASH_TOKEN) {
       throw new Error(
@@ -41,7 +47,10 @@ function getRedis(): Redis {
           'Callers should fall back to a direct fetch.',
       );
     }
-    redisInstance = new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
+    // Issue #685: lazy dynamic import — keeps the SDK out of the static
+    // module graph (verified: no static '@upstash/redis' value import remains).
+    const { Redis: UpstashRedis } = await import('@upstash/redis');
+    redisInstance = new UpstashRedis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
   }
   return redisInstance;
 }
@@ -181,8 +190,9 @@ export async function cachedFetch<T>(
       console.warn('⚠️ Approaching daily Redis command limit! Consider increasing TTL.');
     }
     
+    const redis = await getRedis();
     // Try cache first (saves API calls AND Redis commands!)
-    const cached = await getRedis().get<string>(fullKey);
+    const cached = await redis.get<string>(fullKey);
     if (cached) {
       cacheStats.hits++;
       cacheStats.bytes_saved += cached.length;  // Avoided re-fetching this size
@@ -197,7 +207,7 @@ export async function cachedFetch<T>(
     // ✅ Store COMPRESSED data in cache (saves memory!)
     const serialized = JSON.stringify(data);
     const compressed = compressionEnabled ? await compress(serialized) : serialized;
-    await getRedis().set(fullKey, compressed, { ex: ttl });
+    await redis.set(fullKey, compressed, { ex: ttl });
     
     cacheStats.misses++;
     
@@ -212,7 +222,7 @@ export async function cachedFetch<T>(
 
 // Batch operations (saves command count!)
 export async function batchGet<T>(keys: string[]): Promise<(T | null)[]> {
-  const pipeline = getRedis().pipeline();
+  const pipeline = (await getRedis()).pipeline();
   
   keys.forEach(key => pipeline.get(`superai:${key}`));
   
@@ -242,7 +252,8 @@ export async function prefetchCommonKeys(): Promise<void> {
   
   for (const key of commonKeys) {
     try {
-      const exists = await getRedis().exists(`superai:${key}`);
+      const redis = await getRedis();
+      const exists = await redis.exists(`superai:${key}`);
       if (!exists) {
         // Trigger fetch (will be cached)
       }
@@ -270,9 +281,10 @@ export async function warmCacheFromPatterns(): Promise<void> {
 export async function invalidatePattern(pattern: string): Promise<void> {
   // Note: Upstash doesn't support KEYS in production
   // Use a different strategy: maintain a set of keys per pattern
-  const patternKeys = await getRedis().get<string[]>(`patterns:${pattern}`);
+  const redis = await getRedis();
+  const patternKeys = await redis.get<string[]>(`patterns:${pattern}`);
   if (patternKeys && patternKeys.length > 0) {
-    const pipeline = getRedis().pipeline();
+    const pipeline = redis.pipeline();
     patternKeys.forEach(key => pipeline.del(`superai:${key}`));
     pipeline.del(`patterns:${pattern}`);
     await pipeline.exec();

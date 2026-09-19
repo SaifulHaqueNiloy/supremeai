@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from api.dependencies import verify_autonomous_agent_token
 from core.error_bus import with_error_bus
+from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 router = APIRouter(prefix="/api/v1/agents", tags=["Autonomous Agents"])
@@ -78,6 +79,16 @@ async def execute_agent_task(
     এটি সরাসরি লজিক এক্সিকিউট না করে সার্ভিসের কাছে কাজ ডেলিগেট করবে।
     """
     correlation_id = getattr(request.state, "correlation_id", "unknown")
+
+    # Issue #685 (Domain 15): explicit correlation-aware log for this
+    # high-traffic execution surface (the id is also auto-injected into every
+    # loguru record by SupremeContextMiddleware's contextualize scope).
+    logger.info(
+        "[agent.execute] task_id=%s auto_execute=%s correlation_id=%s",
+        payload.task_id,
+        payload.auto_execute,
+        correlation_id,
+    )
 
     try:
         from fastapi.concurrency import run_in_threadpool

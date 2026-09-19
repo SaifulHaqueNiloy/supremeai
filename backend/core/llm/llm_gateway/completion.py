@@ -17,6 +17,7 @@ import asyncio
 import contextlib
 import json
 import random
+from dataclasses import replace
 from typing import Any
 
 import httpx
@@ -93,6 +94,19 @@ class CompletionMixin:
                 raise GatewayError(
                     f"InferenceContext attribution contract violation: {attribution_errors}"
                 )
+            # Issue #685 (Domain 15): propagate the request correlation id into
+            # the inference context via the EXISTING context hook — no new
+            # provider-SDK params. When the serving route did not set one,
+            # default to the id the tracing middleware established
+            # (X-Request-ID / X-Correlation-ID), so the gateway's
+            # ``to_log_fields()`` telemetry line and durable learning events
+            # carry the same id as the API request logs.
+            if context.correlation_id is None:
+                from core.request_context import get_correlation_id
+
+                _corr_id = get_correlation_id()
+                if _corr_id:
+                    context = replace(context, correlation_id=_corr_id)
             if context.prompt is not None:
                 prompt = context.prompt
             elif context.messages is not None:
@@ -373,6 +387,16 @@ class CompletionMixin:
                 api_key = _byok_api_key or await self._get_api_key_for_model(current_model)
                 session_id = kwargs.pop("session_id", "") or str(tenant_id or "")
                 provider_name = current_model.split("/")[0] if "/" in current_model else "unknown"
+                # Issue #685 (Domain 15): thread the request correlation id into
+                # the telemetry record's EXISTING ``request_id`` field — it is
+                # already merged by track_llm_call and flows into both the JSON
+                # telemetry log line and the durable learning_events sink.
+                if context is not None and context.correlation_id:
+                    _request_id: str | None = context.correlation_id
+                else:
+                    from core.request_context import get_correlation_id
+
+                    _request_id = get_correlation_id() or None
                 async with track_llm_call(
                     session_id=session_id,
                     provider=provider_name,
@@ -381,6 +405,7 @@ class CompletionMixin:
                     metadata={
                         "fallback_count": _chain_index,
                         "estimated_tokens": _estimated_tokens,
+                        "request_id": _request_id,
                     },
                 ) as rec:
                     rec.estimated_tokens = _estimated_tokens

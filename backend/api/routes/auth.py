@@ -261,6 +261,10 @@ class RefreshRequest(BaseModel):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest, request: Request, response: Response):
+    # Issue #685 (Domain 15): the id assigned by the tracing middleware —
+    # included in the audit log lines below so auth failures are joinable
+    # with the request's structured-log stream.
+    correlation_id = getattr(request.state, "correlation_id", "")
     if not db.client:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -276,7 +280,10 @@ async def login(body: LoginRequest, request: Request, response: Response):
         )
         if not res.user:
             # বাংলা: auth ফেইলিওরে generic message — internal detail লিক করছি না।
-            logger.warning(f"Login failed for email={body.username!r}: no user returned")
+            logger.warning(
+                f"Login failed for email={body.username!r}: no user returned "
+                f"(correlation_id={correlation_id})"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
             )
@@ -336,14 +343,19 @@ async def login(body: LoginRequest, request: Request, response: Response):
         raise
     except Exception as e:
         if AuthApiError is not None and isinstance(e, AuthApiError):
-            logger.warning(f"Authentication rejected for email={body.username!r}: {e.message}")
+            logger.warning(
+                f"Authentication rejected for email={body.username!r}: {e.message} "
+                f"(correlation_id={correlation_id})"
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=e.message or "Invalid credentials",
             ) from e
         # বাংলা: অন্য কোনো exception (network, DB, Supabase internal) — ক্লায়েন্টকে
         # generic বার্তা দেখাচ্ছি, কিন্তু server-side এ পূর্ণ stack লগ করছি।
-        logger.exception(f"Unexpected login error for email={body.username!r}")
+        logger.exception(
+            f"Unexpected login error for email={body.username!r} (correlation_id={correlation_id})"
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login service temporarily unavailable. Please try again.",

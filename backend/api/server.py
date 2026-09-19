@@ -139,6 +139,14 @@ app.add_middleware(
         # makes every such browser preflight fail with 400.
         "Idempotency-Key",
     ],
+    # Issue #685 (Domain 15): keep in sync with app_builder.py — expose the
+    # tracing headers so the browser JS can read the correlation id.
+    expose_headers=[
+        "Content-Length",
+        "X-Pagination-Total",
+        "X-Request-ID",
+        "X-Correlation-ID",
+    ],
 )
 
 app.add_middleware(GlobalRateLimiterMiddleware, limit=100, window=60)
