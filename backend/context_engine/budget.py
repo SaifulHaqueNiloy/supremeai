@@ -32,21 +32,6 @@ SECTION_CAPS: dict[str, float] = {
 }
 
 
-def resolve_input_budget(provider: str | None = None) -> int:
-    """Resolve the per-request input token budget.
-
-    বাংলা: provider জানা থাকলে ``core.llm.token_budget.PROVIDER_TOKEN_BUDGETS``
-    থেকে তার ``max_input_tokens``; না হলে :data:`DEFAULT_INPUT_BUDGET`।
-    """
-    if provider:
-        from core.llm.token_budget import PROVIDER_TOKEN_BUDGETS
-
-        entry = PROVIDER_TOKEN_BUDGETS.get(str(provider).lower())
-        if entry and entry.get("max_input_tokens"):
-            return int(entry["max_input_tokens"])
-    return DEFAULT_INPUT_BUDGET
-
-
 def estimate_tokens(text: str) -> int:
     """Estimate the token count of ``text`` — M07 P-E single-owner delegation.
 
