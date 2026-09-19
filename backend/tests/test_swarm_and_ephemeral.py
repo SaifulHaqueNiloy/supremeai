@@ -1,7 +1,7 @@
 import pytest
 
-from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from core.intelligence.swarm_consensus import SwarmConsensusEngine
+from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from tools.ephemeral_synthesizer import (
     EphemeralToolSynthesizer,
     validate_ephemeral_code_ast,
