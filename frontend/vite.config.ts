@@ -1,9 +1,13 @@
 import { defineConfig, loadEnv } from 'vite'
-
-// Load environment variables so the config guard can read them from .env.local
-Object.assign(process.env, loadEnv(process.env.NODE_ENV || 'development', process.cwd(), ''))
 import fs from 'fs'
 import path from 'path'
+
+// The workspace starts Vite from frontend/, while v0 injects project env vars
+// into the monorepo root. Load that root env explicitly so preview builds and
+// the dev proxy use the configured backend instead of silently falling back to
+// localhost-relative /api requests.
+const projectRoot = path.resolve(process.cwd(), '..')
+Object.assign(process.env, loadEnv(process.env.NODE_ENV || 'development', projectRoot, ''))
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
