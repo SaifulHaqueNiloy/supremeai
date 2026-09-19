@@ -264,6 +264,18 @@ class AgentDAGScheduler:
         )
         logger.info("Initialized AgentDAGScheduler (dependency-aware scheduling)")
 
+    # #686: bounded agent-invocation chains — see execute_dag/_topological_sort.
+    DEFAULT_CHAIN_MAX_DEPTH = 16
+
+    def _chain_max_depth(self) -> int:
+        """#686: configurable bound on dependency-chain depth per single run."""
+        raw = os.environ.get("SUPREMEAI_AGENT_DAG_MAX_DEPTH", "")
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            return self.DEFAULT_CHAIN_MAX_DEPTH
+        return value if value > 0 else self.DEFAULT_CHAIN_MAX_DEPTH
+
     async def broadcast_state(self, channel: str, state: dict[str, Any]) -> None:
         """একটি চ্যানেলে এজেন্টের শেয়ার্ড স্টেট পাবলিশ করে।"""
         if self.redis_client is None:
@@ -310,9 +322,37 @@ class AgentDAGScheduler:
         ডিপেন্ডেন্সি অনুযায়ী টপোলজিক্যাল অর্ডারে DAG এক্সিকিউট করে।
 
         task_graph: {node_name: DAGNode}
+
+        #686 invocation-chain guards: nodes caught in a dependency cycle, and
+        nodes deeper than SUPREMEAI_AGENT_DAG_MAX_DEPTH levels, are rejected
+        BEFORE execution and surface as ``status="error"`` results — a cycle
+        used to be force-executed in a final level, which let it actually run.
         """
-        ordered = self._topological_sort(task_graph)
-        aggregated: dict[str, Any] = {"nodes": {}, "order": ordered}
+        ordered, cyclic_nodes = self._topological_sort(task_graph)
+
+        rejected: dict[str, str] = {}
+        max_depth = self._chain_max_depth()
+        if len(ordered) > max_depth:
+            overflow = [name for level in ordered[max_depth:] for name in level]
+            logger.error(
+                f"Agent DAG chain depth {len(ordered)} exceeds "
+                f"SUPREMEAI_AGENT_DAG_MAX_DEPTH ({max_depth}); rejecting nodes: {overflow}"
+            )
+            for name in overflow:
+                rejected[name] = (
+                    f"agent invocation chain depth {len(ordered)} exceeds "
+                    f"SUPREMEAI_AGENT_DAG_MAX_DEPTH ({max_depth})"
+                )
+            ordered = ordered[:max_depth]
+
+        for name in cyclic_nodes:
+            rejected[name] = "cyclic dependency detected in agent invocation chain"
+
+        aggregated: dict[str, Any] = {
+            "nodes": {},
+            "order": ordered,
+            "rejected": sorted(rejected),
+        }
 
         for level in ordered:
             # বাংলা মন্তব্য: একই লেভেলের নোডগুলো সমান্তরালে (parallel) চালানো হচ্ছে।
@@ -327,13 +367,33 @@ class AgentDAGScheduler:
                     {"node": name, "status": "completed", "result": results.get(name)},
                 )
 
+        # #686: rejected nodes never execute — they surface as error results so
+        # callers observe the guard instead of a silently-run cycle.
+        for name in sorted(rejected):
+            reason = rejected[name]
+            task_graph[name].result = {
+                "agent": name,
+                "status": "error",
+                "error": f"Rejected before execution: {reason}",
+            }
+            aggregated["nodes"][name] = task_graph[name].result
+            await self.broadcast_state(
+                "supremeai:dag:updates",
+                {"node": name, "status": "rejected", "reason": reason},
+            )
+
         aggregated["voted_best"] = self._aggregate_with_voting(
             [n.result for n in task_graph.values()]
         )
         return aggregated
 
-    def _topological_sort(self, task_graph: dict[str, DAGNode]) -> list[list[str]]:
-        """স্তরভিত্তিক (level-based) টপোলজিক্যাল সর্ট — প্রতিটি স্তর সমান্তরালে চালানো যায়।"""
+    def _topological_sort(self, task_graph: dict[str, DAGNode]) -> tuple[list[list[str]], list[str]]:
+        """স্তরভিত্তিক (level-based) টপোলজিক্যাল সর্ট — প্রতিটি স্তর সমান্তরালে চালানো যায়।
+
+        #686: returns ``(levels, cyclic_nodes)``. Nodes caught in a dependency
+        cycle are returned in the second element and are NEVER executed —
+        previously they were force-appended to a final level and ran anyway.
+        """
         in_degree = dict.fromkeys(task_graph, 0)
         for name, node in task_graph.items():
             for dep in node.depends_on:
@@ -347,11 +407,14 @@ class AgentDAGScheduler:
         while remaining:
             current_level = [n for n, d in remaining.items() if d == 0 and n not in completed]
             if not current_level:
-                # বাংলা মন্তব্য: সাইক্লিক ডিপেন্ডেন্সি থাকলে বাকিগুলো সরাসরি যোগ করা হচ্ছে।
-                logger.warning(
-                    "Cyclic dependency detected in DAG; forcing remaining nodes into final level."
+                # বাংলা মন্তব্য (#686): সাইক্লিক ডিপেন্ডেন্সি আর জোর করে চালানো হয় না —
+                # চক্রে আটকে থাকা নোডগুলো প্রত্যাখ্যাত (rejected) হয়।
+                cyclic = sorted(remaining.keys())
+                logger.error(
+                    "Cyclic dependency detected in agent DAG; rejecting nodes "
+                    f"without execution: {cyclic}"
                 )
-                current_level = list(remaining.keys())
+                return levels, cyclic
             for n in current_level:
                 completed.add(n)
                 del remaining[n]
@@ -362,7 +425,7 @@ class AgentDAGScheduler:
                             remaining[name] -= 1
             levels.append(current_level)
 
-        return levels
+        return levels, []
 
     def _aggregate_with_voting(self, results: list[dict[str, Any] | None]) -> dict[str, Any] | None:
         """একাধিক এজেন্টের আউটপুট থেকে ভোটিং দিয়ে সেরাটি বাছাই করে।"""

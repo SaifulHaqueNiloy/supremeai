@@ -2880,6 +2880,8 @@
     },
     {
       "capability_signals": [
+        "dispatch",
+        "execute",
         "mcp",
         "register"
       ],
