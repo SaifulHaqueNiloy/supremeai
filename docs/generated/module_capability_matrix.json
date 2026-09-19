@@ -24750,6 +24750,17 @@
       "path": "scripts/security/auto_find_blindspots.py"
     },
     {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/security/auto_repair_cloudflare_vault.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -24785,6 +24796,24 @@
         "main"
       ],
       "kind": "py",
+      "path": "scripts/security/delete_vault_duplicate_render_keys.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/security/delete_vault_stale_keys.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
       "path": "scripts/security/find_dead_code.py"
     },
     {
@@ -24802,6 +24831,17 @@
       ],
       "kind": "py",
       "path": "scripts/security/idor_runtime_matrix.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/security/repair_and_federate_cloudflare.py"
     },
     {
       "capability_signals": [
@@ -25064,5 +25104,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2885
+  "source_file_count": 2889
 }
