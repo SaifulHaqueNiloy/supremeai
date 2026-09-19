@@ -9,6 +9,7 @@ import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
 import { getApiBaseUrl } from '../../utils/api';
+import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { AudioPlaybackService } from '../../services/audio/AudioPlaybackService';
 import { BrainCircuit, Download, FileCode2, Volume2, VolumeX, Share2 } from 'lucide-react';
 
@@ -125,9 +126,10 @@ export const ChatInterface: React.FC = () => {
 
       // ২) fallback: backend TTS (auth header সহ fetch + blob playback)
       try {
+        // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
         const token =
-          localStorage.getItem('supremeai_auth_token') ||
-          localStorage.getItem('supreme_admin_jwt');
+          getUserToken() ||
+          getAdminToken();
         const res = await fetch(
           `${getApiBaseUrl()}/api/voice/stream_audio?text=${encodeURIComponent(text.slice(0, 1000))}`,
           { headers: token ? { Authorization: `Bearer ${token}` } : undefined }

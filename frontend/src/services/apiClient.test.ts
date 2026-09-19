@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { apiClient, setApiConcurrency, pathRequiresIdempotencyKey } from './apiClient';
+import { apiClient, setApiConcurrency, pathRequiresIdempotencyKey, updateTokenCache } from './apiClient';
 
 // Mock getApiBaseUrl
 vi.mock('../utils/api', () => ({
@@ -21,6 +21,11 @@ describe('apiClient', () => {
     vi.clearAllMocks();
     global.fetch = vi.fn();
     setApiConcurrency(3);
+    // Issue #521: tokens live in sessionStorage — reset both tiers + the
+    // module-level in-memory cache for test isolation.
+    localStorage.clear();
+    sessionStorage.clear();
+    updateTokenCache(null);
   });
 
   it('should include credentials and process successful response', async () => {
@@ -53,7 +58,8 @@ describe('apiClient', () => {
   });
 
   it('does not clear the persisted login for a feature endpoint 401', async () => {
-    localStorage.setItem('supremeai_auth_token', 'persisted-token');
+    // Issue #521 (FE-04): the canonical token location is now sessionStorage.
+    sessionStorage.setItem('supremeai_auth_token', 'persisted-token');
 
     // ERR-A05 fixture fix (defect register 2026-09-15): use a REAL backend feature route
     // (GET /api/agents/ exists in backend/api/routes/agents.py) instead of the phantom
@@ -67,11 +73,11 @@ describe('apiClient', () => {
     });
 
     await expect(apiClient.get('/api/agents/')).rejects.toThrow('Unauthorized');
-    expect(localStorage.getItem('supremeai_auth_token')).toBe('persisted-token');
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBe('persisted-token');
   });
 
   it('clears the persisted login when auth validation returns 401', async () => {
-    localStorage.setItem('supremeai_auth_token', 'expired-token');
+    sessionStorage.setItem('supremeai_auth_token', 'expired-token');
      
     (global.fetch as any).mockResolvedValueOnce({
       ok: false,
@@ -81,7 +87,7 @@ describe('apiClient', () => {
     });
 
     await expect(apiClient.get('/api/v1/auth/me')).rejects.toThrow('Unauthorized');
-    expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBeNull();
   });
 
   it('should throw ApiError with status 429 on rate limit', async () => {

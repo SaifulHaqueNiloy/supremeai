@@ -5,7 +5,7 @@
  * ব্যবহারের জন্য এখানে একবার initialize করা হয়।
  *
  * বাংলা নোট:
- * - Token Provider: `supremeai_auth_token` (localStorage) থেকে token নেয়
+ * - Token Provider: services/tokenStorage (sessionStorage, Issue #521) থেকে token নেয়
  * - Backend URL: frontend-এর `BACKEND_URL` কনফিগ ব্যবহার করে
  * - SecretStorage: Electron adapter-এর localStorage-implementation
  */
@@ -23,6 +23,7 @@ import {
 } from '@supremeai/shared-services';
 import { getApiBaseUrl } from '../utils/api';
 import { getAuthHeaders } from './apiClient';
+import { getAdminToken, getUserToken } from './tokenStorage';
 
 // ---------- Platform ----------
 const platform = createElectronPlatform();
@@ -37,10 +38,8 @@ class LocalStorageTokenProvider {
   getToken(): string | null {
     try {
       // Admin token প্রিফারেন্স (admin portal-এ), নাহলে user token
-      return (
-        localStorage.getItem('supreme_admin_jwt') ||
-        localStorage.getItem('supremeai_auth_token')
-      );
+      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept)
+      return getAdminToken() || getUserToken();
     } catch (storageError) {
       console.warn('[v0] Auth token storage is unavailable', storageError);
       return null;

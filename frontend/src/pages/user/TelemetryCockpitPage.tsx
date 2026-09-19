@@ -5,11 +5,12 @@
 // keep it in sync via the auth-changed event.
 import React, { useEffect, useState } from 'react';
 import AgentExecutionTelemetryCockpit from '../../components/dashboard/AgentExecutionTelemetryCockpit';
-
-const TOKEN_KEY = 'supremeai_auth_token';
+import { getUserToken } from '../../services/tokenStorage';
 
 const readToken = (): string =>
-  (typeof localStorage !== 'undefined' && localStorage.getItem(TOKEN_KEY)) || '';
+  // Issue #521 (FE-04): canonical token via tokenStorage — sessionStorage-first,
+  // legacy localStorage entries migrated/swept on read.
+  getUserToken() || '';
 
 export const TelemetryCockpitPage: React.FC = () => {
   const [authToken, setAuthToken] = useState<string>(readToken);

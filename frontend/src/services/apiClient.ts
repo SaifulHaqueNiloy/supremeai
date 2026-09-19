@@ -5,6 +5,7 @@
 
 import { getApiBaseUrl } from '../utils/api';
 import { getDeviceFingerprint } from '../utils/deviceFingerprint';
+import { clearAdminToken, clearUserToken, getAdminToken, getUserToken } from './tokenStorage';
 import PQueue from 'p-queue';
 
 // বাংলা মন্তব্য: কাস্টম এরর ক্লাস — status প্রপার্টি দিয়ে React Query retry ফাংশন সঠিকভাবে 401/403/429 চিহ্নিত করতে পারে
@@ -51,12 +52,14 @@ export const clearAuthToken = (): void => {
   cachedToken = null;
   if (typeof window !== 'undefined') {
     try {
-      localStorage.removeItem('supremeai_auth_token');
+      // Issue #521 (FE-04): tokenStorage sweep — sessionStorage primary,
+      // legacy localStorage entries removed too.
+      clearUserToken();
       localStorage.removeItem('adminToken'); // বাংলা: legacy duplicate key — migration sweep
 
       // 🛡️ ISSUE #495: ব্যবহারকারী টোকেন শেষ হলে বা ব্যাকগ্রাউন্ড কল ফেইল করলে সচল admin JWT মোছা যাবে না।
       // শুধুমাত্র যদি admin টোকেনটি স্পষ্টভাবে মেয়াদোত্তীর্ণ হয়, তবেই এটি পরিষ্কার করা হবে।
-      const adminToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+      const adminToken = getAdminToken();
       if (adminToken) {
         try {
           const part = adminToken.split('.')[1];
@@ -64,13 +67,11 @@ export const clearAuthToken = (): void => {
             const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
             const payload = JSON.parse(decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')));
             if (typeof payload?.exp === 'number' && payload.exp * 1000 <= Date.now()) {
-              sessionStorage.removeItem('supreme_admin_jwt');
-              localStorage.removeItem('supreme_admin_jwt');
+              clearAdminToken();
             }
           }
         } catch {
-          sessionStorage.removeItem('supreme_admin_jwt');
-          localStorage.removeItem('supreme_admin_jwt');
+          clearAdminToken();
         }
       }
     } catch (e) {
@@ -95,9 +96,10 @@ export const clearAuthToken = (): void => {
 // admin token (supreme_admin_jwt) থাকলে তা প্রিফার করি, নচেৎ ইউজার token (supremeai_auth_token)।
 export const getRawToken = (): string | null => {
   if (typeof window === 'undefined') return cachedToken;
-  const admin = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+  // Issue #521: tokenStorage reads (sessionStorage first, legacy localStorage swept).
+  const admin = getAdminToken();
   if (admin) return admin;
-  const user = localStorage.getItem('supremeai_auth_token');
+  const user = getUserToken();
   if (user) return user;
   return cachedToken;
 };
@@ -121,12 +123,13 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
 
   // 🟢 Sprint 5: Backend API Integration
   if (cachedToken === null) {
-    cachedToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supremeai_auth_token') || '';
+    // Issue #521: tokenStorage reads (sessionStorage first, legacy localStorage swept).
+    cachedToken = getAdminToken() || getUserToken() || '';
   }
 
   // 🔥 ফিক্স: admin-api endpoint গুলো admin-role JWT (`supreme_admin_jwt`) চায়।
   // admin dashboard ব্যবহার করলে admin token-ই Bearer হিসেবে পাঠানো হবে (প্রিফারেন্স), নচেৎ ইউজার token।
-  const adminToken = sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+  const adminToken = getAdminToken();
   const effectiveToken = adminToken || cachedToken;
 
   if (effectiveToken) {

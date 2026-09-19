@@ -1,4 +1,5 @@
 import { getWebSocketBaseUrl } from '../../utils/api';
+import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { BaseWebSocketManager, type BaseWebSocketManagerOptions, type WsStatus } from '@supremeai/shared-services';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -54,8 +55,8 @@ export class WebSocketManager extends BaseWebSocketManager {
   protected onOpen(event: Event): void {
     super.onOpen(event);
     // Send auth frame as the very first message — never in the URL.
-    const rawToken = localStorage.getItem('supreme_admin_jwt') ||
-      localStorage.getItem('supremeai_auth_token');
+    // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+    const rawToken = getAdminToken() || getUserToken();
     if (rawToken) {
       this.send(JSON.stringify({ type: 'auth', token: rawToken }));
     }
