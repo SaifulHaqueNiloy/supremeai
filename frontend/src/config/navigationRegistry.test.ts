@@ -24,4 +24,34 @@ describe('canonical navigation registry', () => {
     expect(getImplementedRoutePaths()).not.toContain('/swarm');
     expect(getImplementedRoutePaths()).toContain('/workspace');
   });
+
+  it('exposes full administrative capabilities in admin context while keeping user context simplified', () => {
+    const adminGroups = getNavigationForContext('admin');
+    const adminGroupIds = adminGroups.map((g) => g.id);
+    expect(adminGroupIds).toEqual(
+      expect.arrayContaining(['admin-operations', 'admin-security', 'admin-governance', 'admin-core'])
+    );
+
+    const adminActionIds = adminGroups
+      .flatMap((g) => g.items)
+      .filter((i) => i.kind === 'action')
+      .map((i) => (i as { actionId: string }).actionId);
+
+    // High impact operational capabilities
+    expect(adminActionIds).toContain('overview');
+    expect(adminActionIds).toContain('topology');
+    expect(adminActionIds).toContain('telemetry');
+    expect(adminActionIds).toContain('automation-queue');
+    expect(adminActionIds).toContain('platform-vault');
+    expect(adminActionIds).toContain('llm-gateway');
+    expect(adminActionIds).toContain('security');
+    expect(adminActionIds).toContain('tenants-rbac');
+    expect(adminActionIds).toContain('finops');
+    expect(adminActionIds).toContain('command-center');
+
+    // Customer workspace must not contain any administrative action items
+    const userItems = getNavigationForContext('user').flatMap((g) => g.items);
+    expect(userItems.some((i) => i.kind === 'action')).toBe(false);
+    expect(userItems.some((i) => i.id.startsWith('admin-'))).toBe(false);
+  });
 });

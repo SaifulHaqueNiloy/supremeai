@@ -141,11 +141,11 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
       )}
 
       {adminAuthorized && context === 'user' && (
-        <div className="hidden lg:flex items-center gap-2 rounded-full border border-accent-primary/30 bg-accent-primary/10 px-3 py-1 text-[11px] font-mono text-accent-primary">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent-primary" aria-hidden="true" />
-          Admin preview mode
-          <button type="button" onClick={() => navigate('/admin')} className="font-semibold underline underline-offset-2 hover:text-text">
-            Return to admin
+        <div className="flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[11px] font-mono text-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.15)]">
+          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+          <span className="hidden sm:inline">Customer Preview Mode</span>
+          <button type="button" onClick={() => navigate('/admin')} className="font-semibold underline underline-offset-2 hover:text-white ml-1">
+            Return to Admin &rarr;
           </button>
         </div>
       )}
