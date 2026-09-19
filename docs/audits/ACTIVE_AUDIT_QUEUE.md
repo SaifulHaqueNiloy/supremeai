@@ -9,7 +9,7 @@
 
 | # | ID | Category | Target Path / Scope | Issue / Gap Description | Status | Added Date |
 |---|---|---|---|---|---|---|
-| 1 | GAP-001 | Wiring | `frontend/src/services/controlPlane.ts` | 57 orphan backend route families need frontend UI wiring | `[OPEN]` | 2026-09-18 |
+| 1 | GAP-001 | Wiring | `frontend/src/services/controlPlane.ts` | 57 orphan backend route families need frontend UI wiring. **STATUS (2026-09-19, issue #480 steps 1-2+5):** generated route→frontend-consumer inventory + classification now exists — `docs/generated/route_consumer_inventory.json` / `.md` (generator `scripts/audit/generate_route_consumer_inventory.py`; allowlist `scripts/audit/api_only_routes.txt`; CI orphan gate `tests/test_route_consumer_contract.py` in ci-advanced-checks.yml). Current scan: 799 routes → 173 user-facing, 320 admin-only, 37 internal, 269 intentionally-API-only across 156 allowlisted families (the actionable wiring debt — owner to prune as wiring lands), 0 unclassified orphans. Steps 3-4 (wiring / deprecation of the 156 families) remain open. | `[OPEN]` | 2026-09-18 |
 | 2 | GAP-002 | Context | `backend/context/repo_map.py` | Aider-style AST repo-map generator needs implementation | `[OPEN]` | 2026-09-18 |
 | 3 | GAP-003 | Memory | `backend/memory/` | 15 fragmented stores need consolidation into canonical 3-tier | `[OPEN]` | 2026-09-18 |
 | 4 | GAP-004 | Reliability | `tests/missions/` | Nightly mission suite needs expansion from 5 to 20 missions | `[OPEN]` | 2026-09-18 |
