@@ -31,6 +31,10 @@ import { GuardrailsPage } from '../../dashboard/GuardrailsPage';
 import { HealingLogPanel } from '../../dashboard/HealingLogPanel';
 import { SiteActionsPage } from '../../dashboard/SiteActionsPage';
 import { LibrarianQueue } from '../LibrarianQueue';
+import { TelemetryCockpitPage } from '../../../pages/user/TelemetryCockpitPage';
+import { AutomationQueuePage } from '../../dashboard/AutomationQueuePage';
+import ConnectedPlatformsVault from '../../dashboard/ConnectedPlatformsVault';
+import { LlmGatewayPage } from '../../dashboard/LlmGatewayPage';
 import { X } from 'lucide-react';
 
 interface SubTabContentProps {
@@ -87,6 +91,10 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'finops': CostAuditor,
   'rca-intelligence': ThreatDetection,
   'configuration': ConfigEditor,
+  'telemetry': TelemetryCockpitPage,
+  'automation-queue': AutomationQueuePage,
+  'platform-vault': ConnectedPlatformsVault,
+  'llm-gateway': LlmGatewayPage,
   
   // Keep legacy for fallback or command center
   'command-center': CommandCenter,

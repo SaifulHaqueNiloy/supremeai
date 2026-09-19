@@ -61,8 +61,8 @@ export interface SystemAlert {
   resolved_at: string | null;
 }
 
-// বাংলা মন্তব্য: অ্যাডমিন সাবট্যাব ইউনিয়নে 'interactive-chat' ও 'alerts' যোগ করা হলো
-export type AdminSubTab = 'overview' | 'topology' | 'service-explorer' | 'agents-swarm' | 'security' | 'audit' | 'incidents' | 'approvals' | 'guardrails' | 'healing' | 'site-actions' | 'librarian' | 'deployments' | 'reliability' | 'recovery' | 'tenants-rbac' | 'finops' | 'rca-intelligence' | 'configuration' | 'command-center' | 'dashboard' | 'sandbox' | 'logs' | 'costs' | 'health' | 'users' | 'config' | 'model-router' | 'skills' | 'memory' | 'cloud' | 'observability' | 'threats' | 'rules' | 'cicd' | 'github' | 'backups' | 'rate-limits';
+// বাংলা মন্তব্য: অ্যাডমিন সাবট্যাব ইউনিয়নে 'interactive-chat', 'alerts', 'telemetry', 'automation-queue', 'platform-vault' ও 'llm-gateway' যোগ করা হলো
+export type AdminSubTab = 'overview' | 'topology' | 'service-explorer' | 'agents-swarm' | 'security' | 'audit' | 'incidents' | 'approvals' | 'guardrails' | 'healing' | 'site-actions' | 'librarian' | 'deployments' | 'reliability' | 'recovery' | 'tenants-rbac' | 'finops' | 'rca-intelligence' | 'configuration' | 'command-center' | 'telemetry' | 'automation-queue' | 'platform-vault' | 'llm-gateway' | 'dashboard' | 'sandbox' | 'logs' | 'costs' | 'health' | 'users' | 'config' | 'model-router' | 'skills' | 'memory' | 'cloud' | 'observability' | 'threats' | 'rules' | 'cicd' | 'github' | 'backups' | 'rate-limits';
 
 export interface CIReport {
   id: number;

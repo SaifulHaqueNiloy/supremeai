@@ -169,8 +169,10 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     items: [
       { id: 'admin-nav-overview', label: 'Overview', icon: Activity, kind: 'action', actionId: 'overview', contexts: ['admin'], status: 'implemented', priority: 10 },
       { id: 'admin-nav-topology', label: 'Topology', icon: Network, kind: 'action', actionId: 'topology', contexts: ['admin'], status: 'implemented', priority: 20 },
+      { id: 'admin-nav-telemetry', label: 'Telemetry Cockpit', icon: Activity, kind: 'action', actionId: 'telemetry', contexts: ['admin'], status: 'implemented', priority: 25 },
       { id: 'admin-nav-service-explorer', label: 'Service Explorer', icon: ServerCog, kind: 'action', actionId: 'service-explorer', contexts: ['admin'], status: 'implemented', priority: 30 },
       { id: 'admin-nav-agents-swarm', label: 'Agents / Swarm', icon: BrainCircuit, kind: 'action', actionId: 'agents-swarm', contexts: ['admin'], status: 'implemented', priority: 40 },
+      { id: 'admin-nav-automation-queue', label: 'Automation Queue', icon: Clock, kind: 'action', actionId: 'automation-queue', contexts: ['admin'], status: 'implemented', priority: 45 },
       { id: 'admin-nav-deployments', label: 'Deployments', icon: GitMerge, kind: 'action', actionId: 'deployments', contexts: ['admin'], status: 'implemented', priority: 50 },
       { id: 'admin-nav-site-actions', label: 'Site Actions', icon: Terminal, kind: 'action', actionId: 'site-actions', contexts: ['admin'], status: 'implemented', priority: 60 },
     ],
@@ -197,6 +199,8 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
     items: [
       { id: 'admin-nav-tenants-rbac', label: 'Tenants / RBAC', icon: Users, kind: 'action', actionId: 'tenants-rbac', contexts: ['admin'], status: 'implemented', priority: 10 },
       { id: 'admin-nav-finops', label: 'FinOps', icon: DollarSign, kind: 'action', actionId: 'finops', contexts: ['admin'], status: 'implemented', priority: 20 },
+      { id: 'admin-nav-platform-vault', label: 'Platform Vault', icon: KeyRound, kind: 'action', actionId: 'platform-vault', contexts: ['admin'], status: 'implemented', priority: 25 },
+      { id: 'admin-nav-llm-gateway', label: 'LLM Gateway', icon: BrainCircuit, kind: 'action', actionId: 'llm-gateway', contexts: ['admin'], status: 'implemented', priority: 28 },
       { id: 'admin-nav-rca-intelligence', label: 'RCA / Intelligence', icon: Search, kind: 'action', actionId: 'rca-intelligence', contexts: ['admin'], status: 'implemented', priority: 30 },
       { id: 'admin-nav-librarian', label: 'Librarian Queue', icon: FileCheck2, kind: 'action', actionId: 'librarian', contexts: ['admin'], status: 'implemented', priority: 35 },
       { id: 'admin-nav-configuration', label: 'Configuration', icon: Wrench, kind: 'action', actionId: 'configuration', contexts: ['admin'], status: 'implemented', priority: 40 },
