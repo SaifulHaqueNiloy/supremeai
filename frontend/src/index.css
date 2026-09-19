@@ -85,30 +85,30 @@
    SURFACES (70% Minimal, 20% Glass)
    ═══════════════════════════════════════════════════════ */
 .surface-0 {
-  background-color: #06070B;
+  background-color: var(--bg-main, #06070B);
 }
 
 .surface-1 {
-  background-color: #0B0F17;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--card-bg, #0B0F17);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 }
 
 .surface-2 {
-  background-color: rgba(11, 15, 23, 0.7);
+  background-color: var(--tabbar-bg, rgba(11, 15, 23, 0.7));
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
 }
 
 .surface-3 {
-  background-color: rgba(17, 23, 34, 0.8);
+  background-color: var(--panel-bg, rgba(17, 23, 34, 0.8));
   backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 .surface-4 {
-  background-color: #111722;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: var(--bg-cell, #111722);
+  border: 1px solid var(--border-accent, rgba(255, 255, 255, 0.15));
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
 }
 
@@ -175,6 +175,8 @@ body.dark {
 }
 
 /* Sky Blue — অ্যানিমেটেড ক্লাউড ব্যাকগ্রাউন্ড */
+:root[data-theme="light"],
+.light,
 body.light {
   --background: #f5f7fb;
   --foreground: #172033;
