@@ -212,7 +212,23 @@ class ProductionSecretVault:
                         logger.warning(
                             f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}"
                         )
-                        time.sleep(sleep_time)
+                        # BE-12 (issue #544): a blocking time.sleep() on the
+                        # event-loop thread freezes every concurrent request
+                        # and the liveness probe for the whole backoff. Only
+                        # sleep when we are on a plain worker thread (scripts,
+                        # thread pools); when a running loop is detected on
+                        # this thread, skip the sync backoff and retry
+                        # immediately — async paths must go through
+                        # fetch_secret_async / apreload_secrets instead.
+                        try:
+                            asyncio.get_running_loop()
+                        except RuntimeError:
+                            time.sleep(sleep_time)
+                        else:
+                            logger.warning(
+                                f"fetch_secret({secret_id}): sync backoff skipped on "
+                                "event-loop thread (BE-12); retrying immediately."
+                            )
                     else:
                         raise exc from exc
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
