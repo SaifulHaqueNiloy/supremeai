@@ -76,6 +76,41 @@ async def test_task_routes_require_worker_auth(worker_app, monkeypatch):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("env_value", [None, "", "prod", "production", "staging"])
+async def test_bypass_denied_unless_env_explicitly_non_production(
+    worker_app, monkeypatch, env_value
+):
+    """Issue #512: unset/empty ENV must be treated as production (fail-closed).
+
+    ALLOW_TEST_AUTH_BYPASS=true alone must NOT bypass worker auth — ENV has to
+    be explicitly one of the non-production values (dev/development/test/local).
+    """
+    monkeypatch.setenv("ALLOW_TEST_AUTH_BYPASS", "true")
+    monkeypatch.setenv("WORKER_AUTH_TOKEN", "test-worker-token")
+    if env_value is None:
+        monkeypatch.delenv("ENV", raising=False)
+    else:
+        monkeypatch.setenv("ENV", env_value)
+    transport = ASGITransport(app=worker_app)
+    async with AsyncClient(transport=transport, base_url="http://worker") as client:
+        response = await client.get("/tasks/missing")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_bypass_allowed_for_explicit_dev_env(worker_app, monkeypatch):
+    """Issue #512: bypass still works when ENV is explicitly non-production."""
+    monkeypatch.setenv("ALLOW_TEST_AUTH_BYPASS", "true")
+    monkeypatch.setenv("ENV", "test")
+    transport = ASGITransport(app=worker_app)
+    async with AsyncClient(transport=transport, base_url="http://worker") as client:
+        response = await client.get("/tasks/missing")
+
+    assert response.status_code == 404  # auth passed, route 404s
+
+
+@pytest.mark.asyncio
 async def test_task_routes_accept_valid_worker_auth(worker_app, monkeypatch):
     monkeypatch.delenv("ALLOW_TEST_AUTH_BYPASS", raising=False)
     monkeypatch.setenv("WORKER_AUTH_TOKEN", "test-worker-token")

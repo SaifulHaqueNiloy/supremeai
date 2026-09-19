@@ -123,10 +123,17 @@ def _verify_worker_auth(request: Request) -> None:
     secrets must never double as credentials. Only dedicated worker tokens
     (WORKER_AUTH_TOKEN / INTERNAL_API_KEY / SUPREMEAI_API_KEY) are accepted now.
     """
-    # Allow testing bypass only if explicitly enabled in non-prod
+    # Allow testing bypass only if explicitly enabled AND ENV is EXPLICITLY a
+    # non-production value (Issue #512 / BE-06). Fail-closed: unset/empty ENV
+    # is treated as production. The old check `os.getenv("ENV") != "production"`
+    # let the bypass through when ENV was unset ("" != "production") or set to
+    # "prod", so a leaked ALLOW_TEST_AUTH_BYPASS=true from a CI base image
+    # fully bypassed worker auth in production.
+    bypass_env_allowlist = ("dev", "development", "test", "local")
+    env_value = (os.getenv("ENV") or "").strip().lower()
     if (
         os.getenv("ALLOW_TEST_AUTH_BYPASS", "").lower() in ("true", "1")
-        and os.getenv("ENV") != "production"
+        and env_value in bypass_env_allowlist
     ):
         return
 
