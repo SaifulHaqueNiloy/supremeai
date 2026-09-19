@@ -107,8 +107,9 @@ async def test_process_video_reports_honest_failure_on_error_marker(tmp_path, mo
 
     monkeypatch.setattr(pipeline, "process", fake_process)
 
-    from services.video_to_code_pipeline import process_video  # noqa: F811
     from unittest.mock import AsyncMock
+
+    from services.video_to_code_pipeline import process_video  # noqa: F811
 
     upload = AsyncMock()
     upload.content_type = "video/mp4"

@@ -8,9 +8,9 @@ silently erases user session history. Reads are served from the mirror
 (zero billable Redis ops); mutations cost 1 op each.
 """
 
+import hashlib
 from datetime import UTC, datetime
 from typing import Any
-import hashlib
 
 from fastapi import HTTPException
 from pydantic import BaseModel

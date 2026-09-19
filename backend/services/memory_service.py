@@ -12,8 +12,8 @@ from core.config import settings
 from core.degraded_mode import InMemoryRing, sqlite_fallback_allowed
 from core.embeddings import hash_vectorize as _canonical_hash_vectorize
 from core.logging_config import logger
-from core.state_store import durable_state
 from core.persistence import pooled_pg
+from core.state_store import durable_state
 
 # Using core.embeddings for 1536-dim embeddings to prevent zero-padding mismatch
 HAS_SENTENCE_TRANSFORMERS = False
@@ -133,9 +133,7 @@ class CascadeMemoryService:
             return
         self._degraded_hydrated = True
         try:
-            existing = {
-                r.get("file_path") for r in self._memory_rows.snapshot()
-            }
+            existing = {r.get("file_path") for r in self._memory_rows.snapshot()}
             for data in self._state.mirror_items().values():
                 fp = data.get("file_path")
                 if fp and fp not in existing:
@@ -363,12 +361,12 @@ class CascadeMemoryService:
             self._hydrate_degraded()
             self._memory_rows.remove_matching(lambda r: r.get("file_path") == file_path)
             row = {
-                    "file_path": file_path,
-                    "content": content,
-                    "summary": summary,
-                    "structure": structure,
-                    "embedding": embedding_str,
-                }
+                "file_path": file_path,
+                "content": content,
+                "summary": summary,
+                "structure": structure,
+                "embedding": embedding_str,
+            }
             self._memory_rows.append(row)
             try:
                 self._state.set(self._state_key(file_path), row)

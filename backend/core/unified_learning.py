@@ -634,7 +634,9 @@ class UnifiedLearningEngine:
                         confidence=data.get("confidence", 0.5),
                         usage_count=data.get("usage_count", 0),
                         success_count=data.get("success_count", 0),
-                        learning_type=LearningType(data.get("learning_type", "pattern_recognition")),
+                        learning_type=LearningType(
+                            data.get("learning_type", "pattern_recognition")
+                        ),
                         tags=list(data.get("tags") or []),
                         created_at=datetime.fromisoformat(data["created_at"])
                         if isinstance(data.get("created_at"), str)
