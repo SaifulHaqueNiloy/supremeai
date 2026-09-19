@@ -115,7 +115,7 @@ The authoritative machine-readable contract is the checked-in **`backend/openapi
 | `GET /metrics` | Prometheus (when `MONITORING_DETAILED`) |
 | `GET /api/v1/openapi.json` | OpenAPI schema |
 | `GET /health/aggregated` | `health_checker.check_all()` — DB + memory + circuit breakers |
-| `GET /admin/free-tier-status` | Free-tier resource posture (from `core/admin_routes.py`) |
+| `GET /admin/free-tier-status` | Free-tier resource posture (from `api/routes/admin_routes.py`) |
 
 ## Auth (`api/routes/auth.py`, prefix `/api/v1/auth`)
 
@@ -184,7 +184,7 @@ Representative panels → endpoints mapping lives in `frontend/src/components/ad
 
 ## Core Admin Routes (boot-mounted)
 
-From `core/admin_routes.py`: `POST /api/admin/firebase-login`, `GET /admin/free-tier-status`, plus platform ops endpoints. Memory-aware middleware (`core/memory_manager.py`) protects the process under free-tier pressure.
+From `api/routes/admin_routes.py` (moved out of `core/` per issue #683 Section 1): `POST /api/admin/firebase-login`, `GET /admin/free-tier-status`, plus platform ops endpoints. Memory-aware middleware (`core/memory_manager.py`) protects the process under free-tier pressure.
 
 ## Cross-Cutting Response & Error Contract
 

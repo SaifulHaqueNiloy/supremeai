@@ -1,14 +1,37 @@
-from typing import Any
-
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Request
 
 from api.dependencies import get_current_admin
 from core.config import settings
 from core.logging_config import logger
 
-# শেয়ার্ড ইউটিলিটি — Firestore ইনিশিয়ালাইজেশন কেন্দ্রীভূত
-from utils.firestore_helpers import get_firestore_db
+# Issue #683 Section 1 (inward layer violation): the recording functions, the
+# Prometheus collectors and the SupremeMetricsEngine latency-history engine
+# moved to core/observability/metrics_registry.py — core (the ASGI
+# observability middleware) must never import api. This module re-exports them
+# (the allowed api → core direction) so existing importers — the lazy
+# `from api.routes.metrics import metrics_engine` in
+# core/maintenance_pipeline.py, patch("api.routes.metrics.metrics_engine") in
+# tests — keep resolving to the same singletons.
+from core.observability.metrics_registry import (
+    _PROMETHEUS_AVAILABLE,
+    SupremeMetricsEngine,
+    metrics_engine,
+    record_error,
+    record_model_call,
+    record_request,
+    record_request_duration,
+)
 from workers.chaos_worker import NightlyChaosAuditor
+
+__all__ = [
+    "_PROMETHEUS_AVAILABLE",
+    "SupremeMetricsEngine",
+    "metrics_engine",
+    "record_error",
+    "record_model_call",
+    "record_request",
+    "record_request_duration",
+]
 
 router = APIRouter(
     prefix="/api/admin/metrics",
@@ -16,62 +39,6 @@ router = APIRouter(
     dependencies=[Depends(get_current_admin)],
 )
 auditor = NightlyChaosAuditor()
-
-
-class SupremeMetricsEngine:
-    def __init__(self):
-        # রিফ্যাক্টর: সরাসরি firestore.Client() এর বদলে শেয়ার্ড হেল্পার ব্যবহার
-        self.db = get_firestore_db()
-        # বাংলা মন্তব্য: P95 ল্যাটেন্সি রিয়াল-টাইম ট্র্যাকিং করার জন্য একটি সার্কুলার বাফারের মতো লিস্ট।
-        # এটি মেমোরিতে শেষ ১০০০টি রিকোয়েস্টের ল্যাটেন্সি ট্র্যাক করে।
-        self.latency_history: list[float] = []
-
-    async def calculate_system_roi(self) -> dict[str, Any]:
-        """সিস্টেমের সেভ করা কস্ট এবং ব্লক করা অ্যাটাকের রিয়াল-টাইম ম্যাট্রিক্স ক্যালকুলেটর"""
-        try:
-            # ১. সিমান্টিক ক্যাশ হিট কাউন্ট (Gemini/OpenRouter Token Saved)
-            cache_ref = self.db.collection("supreme_semantic_cache")
-            cache_docs = cache_ref.stream()
-
-            total_saved_requests = 0
-            # এভারেজ এন্টারপ্রাইজ এলএলএম কল কস্ট (ধরে নিলাম $0.015 প্রতি ১০০০ টোকেন ও রিকোয়েস্ট)
-            ESTIMATED_COST_PER_REQUEST = 0.015
-
-            for _ in cache_docs:
-                total_saved_requests += 1
-
-            total_billing_saved = total_saved_requests * ESTIMATED_COST_PER_REQUEST
-
-            # ২. আইডেমপোটেন্সি ইঞ্জিন দ্বারা ব্লক করা ডাবল-সাবমিশন এবং ক্র্যাশ কাউন্ট
-            lock_ref = self.db.collection("idempotency_locks")
-            # শুধুমাত্র সাকসেসফুলি ব্লক হওয়া ডুপ্লিকেট রিকোয়েস্ট ফিল্টার
-            blocked_docs = lock_ref.where("status", "==", "completed").stream()
-
-            total_duplicate_blocked = 0
-            for _ in blocked_docs:
-                total_duplicate_blocked += 1
-
-            # ৩. ওএস রানটাইম এনভায়রনমেন্ট ডাটা এক্সট্রাকশন
-            return {
-                "status": "HEALTHY",
-                "environment": getattr(settings, "env", "production"),
-                "financial_metrics": {
-                    "total_semantic_cache_hits": total_saved_requests,
-                    "estimated_usd_saved": round(total_billing_saved, 4),
-                    "api_cost_reduction_ratio": ("90%" if total_saved_requests > 0 else "0%"),
-                },
-                "security_metrics": {
-                    "duplicate_executions_prevented": total_duplicate_blocked,
-                    "server_oom_crashes_avoided": total_duplicate_blocked,
-                    "sandbox_violations_logged": 0,  # AST ব্লকার ট্র্যাক
-                },
-            }
-        except Exception as e:
-            logger.error(f"❌ Failed to aggregate cloud run metrics: {e!s}")
-            return {"status": "DEGRADED", "error": str(e)}
-
-
-metrics_engine = SupremeMetricsEngine()
 
 
 @router.get("/dashboard", operation_id="supreme_admin_metrics_dashboard")
@@ -126,97 +93,9 @@ async def trigger_nightly_chaos(background_tasks: BackgroundTasks, x_chaos_key: 
     }
 
 
-# Prometheus client instrumentation logic restored for ObservabilityMiddleware compatibility
-try:
-    from prometheus_client import REGISTRY, Counter, Histogram
-
-    def _safe_counter(name, documentation, labelnames):
-        if name in REGISTRY._names_to_collectors:
-            return REGISTRY._names_to_collectors[name]
-        return Counter(name, documentation, labelnames)
-
-    def _safe_histogram(name, documentation, labelnames, buckets):
-        if name in REGISTRY._names_to_collectors:
-            return REGISTRY._names_to_collectors[name]
-        return Histogram(name, documentation, labelnames, buckets=buckets)
-
-    http_requests_total = _safe_counter(
-        "http_requests_total",
-        "Total HTTP requests",
-        ["method", "endpoint", "status"],
-    )
-    request_duration_seconds = _safe_histogram(
-        "request_duration_seconds",
-        "HTTP request duration in seconds",
-        ["method", "endpoint"],
-        buckets=[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
-    )
-    error_total = _safe_counter(
-        "error_total",
-        "Total errors by type",
-        ["error_type", "endpoint"],
-    )
-    model_calls_total = _safe_counter(
-        "supremeai_model_calls_total",
-        "Model API calls",
-        ["provider", "model"],
-    )
-    supremeai_requests_total = _safe_counter(
-        "supremeai_requests_total",
-        "Total requests",
-        ["method", "endpoint"],
-    )
-    supremeai_response_seconds = _safe_histogram(
-        "supremeai_response_seconds",
-        "Response time",
-        ["method", "endpoint"],
-        buckets=[0.01, 0.05, 0.1, 0.5, 1, 2, 5, 10],
-    )
-    _PROMETHEUS_AVAILABLE = True
-except ImportError:
-    _PROMETHEUS_AVAILABLE = False
-
-
-def record_request(method: str, path: str, status: int) -> None:
-    if _PROMETHEUS_AVAILABLE:
-        try:
-            http_requests_total.labels(method=method, endpoint=path, status=str(status)).inc()
-            supremeai_requests_total.labels(method=method, endpoint=path).inc()
-        except Exception as exc:
-            logger.debug(f"Failed to record request metrics: {exc}")
-
-
-def record_error(error_type: str, endpoint: str) -> None:
-    if _PROMETHEUS_AVAILABLE:
-        try:
-            error_total.labels(error_type=error_type, endpoint=endpoint).inc()
-        except Exception as exc:
-            logger.exception(f"Failed to record error metric: {exc}")
-
-
-def record_request_duration(method: str, path: str, duration: float) -> None:
-    # বাংলা মন্তব্য: metrics_engine-এর রিয়াল ল্যাটেন্সি ট্র্যাকিং লিস্টে ডাটা পুশ করা।
-    try:
-        metrics_engine.latency_history.append(duration)
-        if len(metrics_engine.latency_history) > 1000:
-            metrics_engine.latency_history.pop(0)
-    except Exception as exc:
-        logger.debug(f"Failed to record local latency log: {exc}")
-
-    if _PROMETHEUS_AVAILABLE:
-        try:
-            request_duration_seconds.labels(method=method, endpoint=path).observe(duration)
-            supremeai_response_seconds.labels(method=method, endpoint=path).observe(duration)
-        except Exception as exc:
-            logger.debug(f"Failed to record request duration metrics: {exc}")
-
-
-def record_model_call(provider: str, model: str) -> None:
-    if _PROMETHEUS_AVAILABLE:
-        try:
-            model_calls_total.labels(provider=provider, model=model).inc()
-        except Exception as exc:
-            logger.exception(f"Failed to record model call metric: {exc}")
+# Prometheus client instrumentation + record_* functions live in
+# core/observability/metrics_registry.py (re-exported above) so the ASGI
+# observability middleware can record metrics without importing api.
 
 
 # বাংলা মন্তব্ত: AUDIT-018 ফিক্স — Studio Client-এর sujon/index.tsx-এর
@@ -253,7 +132,7 @@ async def get_realtime_metrics():
 
 if _PROMETHEUS_AVAILABLE:
     from fastapi.responses import PlainTextResponse
-    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+    from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
 
     @router.get("", response_class=PlainTextResponse, tags=["infrastructure-metrics"])
     async def get_prometheus_metrics():

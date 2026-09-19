@@ -4,8 +4,12 @@ import os
 import time
 import uuid
 
-from api.routes.metrics import record_error, record_request, record_request_duration
 from core.logging_config import logger
+from core.observability.metrics_registry import (
+    record_error,
+    record_request,
+    record_request_duration,
+)
 from core.observability.telemetry import trace_span
 
 
