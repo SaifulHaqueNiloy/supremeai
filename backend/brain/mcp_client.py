@@ -128,8 +128,7 @@ class MCPClient:
                 )
                 return {
                     "error": (
-                        f"Tool '{name}' is not in the MCP allowlist for server "
-                        f"'{self.server_name}'"
+                        f"Tool '{name}' is not in the MCP allowlist for server '{self.server_name}'"
                     ),
                     "denied": denied,
                     "allowlist_denied": True,

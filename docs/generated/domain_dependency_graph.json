@@ -262,7 +262,7 @@
     {
       "evidence": [
         {
-          "line": 7,
+          "line": 17,
           "path": "backend/brain/mcp_client.py"
         }
       ],
@@ -372,7 +372,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/core/llm/llm_gateway/completion.py"
         }
       ],
@@ -382,7 +382,7 @@
     {
       "evidence": [
         {
-          "line": 26,
+          "line": 27,
           "path": "backend/core/llm/llm_gateway/completion.py"
         }
       ],
@@ -1902,6 +1902,26 @@
     {
       "evidence": [
         {
+          "line": 14,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 6,
+          "path": "backend/api/routes/async_task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/api/routes/execution_policies.py"
         }
@@ -2152,7 +2172,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/api/routes/agent_tasks.py"
         }
       ],
@@ -3192,7 +3212,7 @@
     {
       "evidence": [
         {
-          "line": 114,
+          "line": 115,
           "path": "backend/integrations/browser_use_adapter.py"
         }
       ],
@@ -3672,7 +3692,7 @@
     {
       "evidence": [
         {
-          "line": 34,
+          "line": 35,
           "path": "backend/integrations/browser_use_adapter.py"
         }
       ],
@@ -4192,7 +4212,7 @@
     {
       "evidence": [
         {
-          "line": 164,
+          "line": 179,
           "path": "backend/tests/security/test_hitl_state_machine.py"
         }
       ],
@@ -4812,7 +4832,7 @@
     {
       "evidence": [
         {
-          "line": 31,
+          "line": 32,
           "path": "backend/core/security/scanning/secret_scanner.py"
         }
       ],
@@ -4872,7 +4892,7 @@
     {
       "evidence": [
         {
-          "line": 42,
+          "line": 43,
           "path": "backend/core/security/tool_gateway.py"
         }
       ],

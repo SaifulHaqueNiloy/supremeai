@@ -387,7 +387,9 @@ class AgentDAGScheduler:
         )
         return aggregated
 
-    def _topological_sort(self, task_graph: dict[str, DAGNode]) -> tuple[list[list[str]], list[str]]:
+    def _topological_sort(
+        self, task_graph: dict[str, DAGNode]
+    ) -> tuple[list[list[str]], list[str]]:
         """স্তরভিত্তিক (level-based) টপোলজিক্যাল সর্ট — প্রতিটি স্তর সমান্তরালে চালানো যায়।
 
         #686: returns ``(levels, cyclic_nodes)``. Nodes caught in a dependency
