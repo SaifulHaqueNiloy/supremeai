@@ -69,9 +69,14 @@ def _init_sentry() -> None:
             logger.warning("⚠️ Sentry DSN not configured, error tracking disabled")
     except ImportError:
         logger.warning("⚠️ Sentry SDK not installed, error tracking disabled")
+    except ValueError as e:
+        # Malformed SENTRY_DSN must never crash API boot (Issue #509 / BE-03):
+        # observability is best-effort — log prominently and continue without it.
+        logger.error(f"❌ Sentry disabled due to configuration error: {e}")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize Sentry: {e}")
-        raise
+        # sentry_sdk.init() or integration wiring failed — degrade gracefully
+        # instead of taking down the whole service at import time.
+        logger.error(f"❌ Failed to initialize Sentry, continuing WITHOUT it: {e}")
 
 
 # বাংলা মন্তব্ব্য: স্টার্টআপ অডিট ও লগিং — টেস্ট এক্সক্লুডেড
