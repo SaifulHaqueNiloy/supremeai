@@ -155,6 +155,21 @@ def test_concurrent_decisions_single_winner(task_payload):
         update_task_status(task.task_id, TaskStatus.REJECTED, "admin-2")
 
 
+def test_cross_tenant_decision_rejected(task_payload):
+    """#481: the CAS transition is tenant-scoped — a foreign tenant's decision loses."""
+    task = create_pending_task(
+        TaskType.SKILL_GENERATION, task_payload, created_by="alice", tenant_id="tenant-a"
+    )
+    with pytest.raises(TaskAlreadyResolvedError):
+        update_task_status(task.task_id, TaskStatus.APPROVED, "admin-2", tenant_id="tenant-b")
+    # fail-closed: the record is still decidable by its owning tenant
+    assert get_task(task.task_id).status == TaskStatus.PENDING
+    resolved = update_task_status(
+        task.task_id, TaskStatus.APPROVED, "admin-1", tenant_id="tenant-a"
+    )
+    assert resolved.status == TaskStatus.APPROVED
+
+
 def test_unknown_task_returns_none():
     assert update_task_status("no-such-task", TaskStatus.APPROVED, "admin") is None
 
