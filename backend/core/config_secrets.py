@@ -546,11 +546,17 @@ class SettingsSecretsMixin:
 
     @property
     def neo4j_uri(self) -> str:
-        return self._get_cached_secret("NEO4J_URI") or "bolt://localhost:7687"  # is_local()
+        # BE-14 (issue #546): no localhost fallback — an enabled-but-unconfigured
+        # Neo4j path must not silently target bolt://localhost:7687 inside the
+        # container (nothing is listening there, and a stray service could be).
+        # Callers fail-closed (dry-run) on empty values.
+        return self._get_cached_secret("NEO4J_URI")
 
     @property
     def neo4j_user(self) -> str:
-        return self._get_cached_secret("NEO4J_USER") or "neo4j"
+        # BE-14 (issue #546): no implicit "neo4j" default user — Neo4j must be
+        # configured explicitly via NEO4J_USER.
+        return self._get_cached_secret("NEO4J_USER")
 
     @property
     def neo4j_password(self) -> str:
