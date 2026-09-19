@@ -2482,7 +2482,7 @@
     {
       "evidence": [
         {
-          "line": 939,
+          "line": 937,
           "path": "backend/services/memory_service.py"
         }
       ],
