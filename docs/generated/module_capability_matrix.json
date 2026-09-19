@@ -6323,6 +6323,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/routing/cloudflare_edge_pool.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/rules_mutator.py"
     },
     {
@@ -25057,5 +25064,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2884
+  "source_file_count": 2885
 }
