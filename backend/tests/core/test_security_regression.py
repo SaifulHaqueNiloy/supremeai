@@ -27,7 +27,27 @@ async def test_production_jwt_secret_required():
             mock_get_secret_vault.return_value.fetch_secret.return_value = ""
             with pytest.raises(RuntimeError) as excinfo:
                 _ = Settings().jwt_secret
-    assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo.value)
+    assert any(
+        msg in str(excinfo.value)
+        for msg in (
+            "Production JWT secret must be set and >= 64 bytes",
+            "SUPREMEAI_JWT_SECRET",
+        )
+    )
+
+    # Explicitly test short secret triggers the length-validation RuntimeError
+    with patch.dict(
+        os.environ,
+        {
+            "ENV": "production",
+            "ALLOW_TEST_AUTH_BYPASS": "false",
+            "ALLOWED_HOSTS": "api.supremeai.com",
+            "SUPREMEAI_JWT_SECRET": "too-short-secret",
+        },
+    ):
+        with pytest.raises(RuntimeError) as excinfo_short:
+            _ = Settings().jwt_secret
+        assert "Production JWT secret must be set and >= 64 bytes" in str(excinfo_short.value)
 
 
 def test_auth_middleware_rejects_invalid_api_token():
