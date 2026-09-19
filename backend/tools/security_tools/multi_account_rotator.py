@@ -21,9 +21,22 @@ from core.config_cache import config_cache
 from core.logging_config import logger
 from core.utils.time_utils import utc_now
 
-# Security: Allowed providers whitelist
+# Security: Allowed providers whitelist (Issue #776 / MA-11: synchronized with vault providers)
 ALLOWED_PROVIDERS = frozenset(
-    ["groq", "deepseek", "google_ai_studio", "openai", "anthropic", "cohere"]
+    [
+        "groq",
+        "deepseek",
+        "gemini",
+        "google_ai_studio",
+        "openai",
+        "anthropic",
+        "cohere",
+        "mistral",
+        "openrouter",
+        "hf",
+        "huggingface",
+        "nvidia",
+    ]
 )
 
 
