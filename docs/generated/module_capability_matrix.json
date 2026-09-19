@@ -13499,6 +13499,16 @@
       "path": "backend/tests/scripts/test_import_knowledge_base_rollback.py"
     },
     {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/scripts/test_plan_backend_test_groups.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -22910,6 +22920,18 @@
       "path": "scripts/ci/mission_passk.py"
     },
     {
+      "capability_signals": [
+        "dispatch",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/plan_backend_test_groups.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -24716,5 +24738,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2849
+  "source_file_count": 2851
 }

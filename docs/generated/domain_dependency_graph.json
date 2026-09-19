@@ -4132,7 +4132,7 @@
     {
       "evidence": [
         {
-          "line": 197,
+          "line": 218,
           "path": "backend/tests/security/test_patch_v4_render_log_fixes.py"
         }
       ],
@@ -4142,7 +4142,7 @@
     {
       "evidence": [
         {
-          "line": 211,
+          "line": 232,
           "path": "backend/tests/security/test_patch_v4_render_log_fixes.py"
         }
       ],
