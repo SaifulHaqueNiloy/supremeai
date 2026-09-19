@@ -78,20 +78,18 @@ def estimate_tokens(text: str) -> int:
     English text: ~4 chars/token
     Code: ~3.5 chars/token (more tokens per char due to punctuation)
     CJK: ~2 chars/token
+    Bengali: ~2 chars/token (blended per-script — M19 P-D single owner
+    ``core.i18n.bengali_text``; বাংলা প্রম্পটে পুরনো flat 4.0 অনুমান
+    প্রায় ২ গুণ under-count করত — quota-ভাঙার ঝুঁকি)
     """
     if not text:
         return 0
 
-    # Heuristic: detect code blocks → lower chars/token ratio
-    if "```" in text or "def " in text or "class " in text:
-        ratio = 3.5
-    # CJK unicode range detection
-    elif any("\u4e00" <= c <= "\u9fff" for c in text[:100]):
-        ratio = 2.0
-    else:
-        ratio = _CHARS_PER_TOKEN
+    # M19 P-D: বাংলা-অংশ blended ওজন একক মালিক মডিউলে — কোড/CJK শাখা
+    # সেখানেও বিদ্যমান অনুপাতে সংরক্ষিত।
+    from core.i18n.bengali_text import estimate_tokens_bengali_aware
 
-    return max(1, int(len(text) / ratio))
+    return estimate_tokens_bengali_aware(text)
 
 
 def truncate_to_token_limit(text: str, max_tokens: int, from_end: bool = False) -> str:
@@ -109,15 +107,16 @@ def truncate_to_token_limit(text: str, max_tokens: int, from_end: bool = False) 
 
     if from_end:
         truncated = text[-target_chars:]
-        # Trim to first sentence boundary
-        match = re.search(r"[.!?\n]", truncated)
+        # Trim to first sentence boundary (।/॥ = বাংলা বাক্যশেষ — M19 P-D)
+        match = re.search(r"[.!?।॥\n]", truncated)
         if match:
             truncated = truncated[match.start() + 1 :]
         return truncated.strip()
     else:
         truncated = text[:target_chars]
         # Trim to last sentence boundary; fall back to hard cut if none found
-        match = re.search(r"[.!?\n](?=[^.!?\n]*$)", truncated)
+        # (।/॥ = বাংলা বাক্যশেষ — M19 P-D: ডাঁড়ি-মাঝে কাটা বাক্য-অর্থ ভাঙত)
+        match = re.search(r"[.!?।॥\n](?=[^.!?\u0964\u0965\n]*$)", truncated)
         if match:
             truncated = truncated[: match.start() + 1]
         return truncated.strip()

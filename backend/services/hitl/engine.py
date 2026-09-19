@@ -14,6 +14,15 @@ class HITLEngine:
     """
 
     def __init__(self, db: TenantAwareFirestore):
+        # বাংলা (M17 P-C, fail-closed): আগে db-শূন্য/বিকৃত স্টোরে নীরবভাবে
+        # নির্মিত হতো এবং প্রথম অপারেশনে AttributeError → নীরব []/ব্যর্থতা।
+        # এখন স্টোর-চুক্তি স্পষ্ট: ব্যবহারযোগ্য `.client` ছাড়া HITLEngine গড়াই
+        # নিষিদ্ধ — অনুপস্থিত স্টোর নির্মাণেই লাউড-ব্যর্থ হয়, ভান নেই।
+        if db is None or getattr(db, "client", None) is None:
+            raise RuntimeError(
+                "HITLEngine requires a durable store exposing a usable `.client` "
+                "— refusing to construct without one (fail-closed, M17 P-C)"
+            )
         self.db = db
         self.collection_name = "pending_approvals"
         self.ledger = HITLAuditLedger(db=self.db)
@@ -55,6 +64,10 @@ class HITLEngine:
     def get_pending_approvals(self) -> list[dict[str, Any]]:
         """
         Retrieve all pending approvals.
+
+        বাংলা (M17 P-C): আগে স্টোর-ত্রুটিতে নীরবে [] ফেরত দিত — admin কিউ
+        ফাঁকা দেখিয়ে ভান করত যে কিছুই অনুমোদনের অপেক্ষায় নেই। এখন ত্রুটি
+        লাউড RuntimeError — রুট স্তরে 500 হয়ে স্পষ্ট হবে, কখনো ভান নয়।
         """
         try:
             ref = self.db.client.collection(self.collection_name)
@@ -62,8 +75,8 @@ class HITLEngine:
             docs = list(query.stream())
             return [doc.to_dict() for doc in docs]
         except Exception as e:
-            logger.error(f"?[HITLEngine] Failed to fetch pending approvals: {e}")
-            return []
+            logger.error(f"[HITLEngine] Failed to fetch pending approvals: {e}")
+            raise RuntimeError(f"HITL queue is UNAVAILABLE (store read failed): {e}") from e
 
     def get_pending_approval(self, record_id: str) -> dict[str, Any] | None:
         """

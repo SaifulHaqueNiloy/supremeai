@@ -17,6 +17,7 @@ import {
 import { apiClient } from '../../services/apiClient';
 import { getApiBaseUrl } from '../../utils/api';
 import { globalShowToastRef } from '../../contexts/ToastContext';
+import { parseResearchSseLine } from './researchEventContract';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -50,23 +51,6 @@ interface ResearchHistoryItem {
   status: 'completed' | 'failed' | 'running';
   created_at: string;
   report?: ResearchReport;
-}
-
-interface ResearchStreamEvent {
-  // Frontend-internal contract names (kept for backward compatibility)…
-  type: 'step_update' | 'progress' | 'complete' | 'error'
-    // …plus the REAL backend SSE contract (issue #452 mismatch fix):
-    // deep_research.py emits {"type":"step",step:int,name,content},
-    // {"type":"report",content:report,...} and {"type":"error",content}.
-    | 'step'
-    | 'report';
-  step?: ResearchStep | number;
-  steps?: ResearchStep[];
-  report?: ResearchReport;
-  error?: string;
-  // raw backend fields
-  name?: string;
-  content?: unknown;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -210,75 +194,42 @@ export default function DeepResearchPanel() {
         buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const event: ResearchStreamEvent = JSON.parse(line.slice(6));
-              // Issue #452 fix: accept the backend's REAL SSE contract
-              // ("step"/"report") alongside the legacy names — before this,
-              // live steps and the final report NEVER rendered.
-              if (event.type === 'step_update' && event.step) {
-                // TS-narrowing: এই শাখায় step সর্বদা ResearchStep-আকৃতি (number
-                // শাখাটি 'step' টাইপের জন্য) — typecheck বাগ f32cc25b-এ ভেদ।
-                const stepObject = event.step as ResearchStep;
-                setSteps((prev) => {
-                  const exists = prev.findIndex((s) => s.step_number === stepObject.step_number);
-                  if (exists >= 0) {
-                    const updated = [...prev];
-                    updated[exists] = stepObject;
-                    return updated;
-                  }
-                  return [...prev, stepObject].sort((a, b) => a.step_number - b.step_number);
-                });
-              } else if (event.type === 'step' && typeof event.step === 'number') {
-                const backendStep: ResearchStep = {
-                  step_number: event.step,
-                  name: event.name || `Step ${event.step}`,
-                  status: 'done',
-                  content_preview: typeof event.content === 'string' ? event.content : '',
-                };
-                setSteps((prev) => {
-                  const exists = prev.findIndex((s) => s.step_number === backendStep.step_number);
-                  if (exists >= 0) {
-                    const updated = [...prev];
-                    updated[exists] = backendStep;
-                    return updated;
-                  }
-                  return [...prev, backendStep].sort((a, b) => a.step_number - b.step_number);
-                });
-              } else if ((event.type === 'complete' || event.type === 'report') && (event.report || event.content)) {
-                const raw = (event.report || event.content) as Record<string, unknown>;
-                // Backend report shape: {title, sections:[{title,content,...}],
-                // sources:[{title,url,snippet}], summary} — map to the
-                // frontend ResearchReport contract.
-                const sections = Array.isArray(raw.sections)
-                  ? (raw.sections as Array<Record<string, unknown>>).map((s) => ({
-                      heading: String(s.heading ?? s.title ?? ''),
-                      content: String(s.content ?? ''),
-                    }))
-                  : [];
-                const sources = Array.isArray(raw.sources)
-                  ? (raw.sources as Array<Record<string, unknown>>).map((s) => ({
-                      title: String(s.title ?? ''),
-                      url: String(s.url ?? ''),
-                    }))
-                  : [];
-                setReport({
-                  title: String(raw.title ?? 'Research Report'),
-                  sections,
-                  sources,
-                  summary: String(raw.summary ?? ''),
-                });
-                setSteps((prev) =>
-                  prev.map((s) => (s.status !== 'error' ? { ...s, status: 'done' as const } : s))
-                );
-                globalShowToastRef.current('success', 'Research completed!');
-              } else if (event.type === 'error') {
-                setError(event.error || (typeof event.content === 'string' ? event.content : '') || 'Research failed unexpectedly');
-                globalShowToastRef.current('error', event.error || (typeof event.content === 'string' ? event.content : '') || 'Research failed');
+          // M08 P-A: SSE parsing lives in researchEventContract.ts — the
+          // single source of truth shared with the backend contract test
+          // (backend/tests/api/test_deep_research_contract.py). মৃত
+          // legacy নাম-শাখা ("step_update"/"complete") বাদ — প্রকৃত ব্যাকএন্ড
+          // কখনো সেগুলো পাঠায় না (issue #452 পোস্ট-ফিক্স চুক্তি)।
+          const parsed = parseResearchSseLine(line);
+          if (parsed.kind === 'step') {
+            const backendStep: ResearchStep = {
+              step_number: parsed.step.step_number,
+              name: parsed.step.name,
+              status: 'done',
+              content_preview: parsed.step.content_preview,
+            };
+            setSteps((prev) => {
+              const exists = prev.findIndex((s) => s.step_number === backendStep.step_number);
+              if (exists >= 0) {
+                const updated = [...prev];
+                updated[exists] = backendStep;
+                return updated;
               }
-            } catch {
-              // Non-JSON SSE line, skip
-            }
+              return [...prev, backendStep].sort((a, b) => a.step_number - b.step_number);
+            });
+          } else if (parsed.kind === 'report') {
+            setReport({
+              title: parsed.report.title,
+              sections: parsed.report.sections,
+              sources: parsed.report.sources,
+              summary: parsed.report.summary,
+            });
+            setSteps((prev) =>
+              prev.map((s) => (s.status !== 'error' ? { ...s, status: 'done' as const } : s))
+            );
+            globalShowToastRef.current('success', 'Research completed!');
+          } else if (parsed.kind === 'error') {
+            setError(parsed.message);
+            globalShowToastRef.current('error', parsed.message);
           }
         }
       }

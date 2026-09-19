@@ -10,6 +10,7 @@ from typing import Any
 
 from core.automation.execution_recorder import execution_recorder
 from core.automation.models import ExecutionEnvelope
+from core.logging_config import logger
 from core.security.tool_gateway import ToolPolicyGateway, tool_policy_gateway
 
 
@@ -122,13 +123,50 @@ class ConversationOrchestrator:
         Delegates to the inner dispatch logic and then persists the canonical
         ExecutionRecord durably (best-effort). DB unavailability never blocks
         the dispatch — persistence is fire-and-forget with graceful degradation.
+
+        বাংলা (M06 P-A): ডিসপ্যাচটি এখন ক্যানোনিকাল run হিসেবেও পর্যবেক্ষিত —
+        ``runs.run_scope.run_scope`` (flag-gated: SUPREMEAI_RUN_FABRIC_UNIVERSAL,
+        default OFF = আজকের আচরণ)। run-fabric ব্যর্থতা ডিসপ্যাচ কখনো ব্লক করে না।
         """
-        result = await self._dispatch(command)
+        result = await self._observe_dispatch(command)
         if result.execution is not None:
             # Durable truth record bridge (Board TODO: "Persist ExecutionRecord
             # durably"). ExecutionRecorder swallows DB errors and continues.
             await execution_recorder.persist_execution(result.execution)
         return result
+
+    async def _observe_dispatch(self, command: ConversationCommand) -> OrchestrationResult:
+        """Wrap one dispatch in a canonical run (M06 P-A, best-effort, flag-gated)."""
+        try:
+            from database.session import get_db_session_context
+            from runs.run_scope import run_scope
+            from runs.service import RunService
+        except Exception as exc:
+            # বাংলা: import-স্তরের অনুপস্থিতিও লাউড warning — নীরব ভান নয়।
+            logger.warning(f"⚠️ run-scope unavailable, dispatching unobserved: {exc!r}")
+            return await self._dispatch(command)
+
+        try:
+            async with get_db_session_context() as session:
+                async with run_scope(
+                    session,
+                    RunService(),
+                    run_type="agent",
+                    user_id=str(command.user_id or "system"),
+                    title=f"conversation:{command.conversation_id}",
+                    source_type="conversation",
+                    source_ref=str(command.conversation_id) if command.conversation_id else None,
+                    correlation_id=str(command.metadata.get("correlation_id") or ""),
+                ) as run_ctx:
+                    result = await self._dispatch(command)
+                    if run_ctx is not None:
+                        # OrchestrationResult.status-ই সত্য — failed হলে run-ও failed।
+                        run_ctx.finish("failed" if str(result.status) == "failed" else "succeeded")
+                return result
+        except Exception as exc:
+            # বাংলা: session/run_scope নিজস্ব ব্যর্থতা কখনো ডিসপ্যাচ ব্লক করবে না।
+            logger.warning(f"⚠️ run-scope dispatch-bridge skipped: {exc!r} — dispatch unaffected")
+            return await self._dispatch(command)
 
     async def _dispatch(self, command: ConversationCommand) -> OrchestrationResult:
         correlation_id = str(command.metadata.get("correlation_id") or f"corr_{uuid.uuid4().hex}")

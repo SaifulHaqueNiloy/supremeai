@@ -216,6 +216,30 @@ class ReasoningOrchestrator:
             "source": "deterministic_fallback",
         }
 
+    async def decide_and_execute(
+        self,
+        task: str,
+        context: dict[str, Any] | None = None,
+        tools: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """M09 P-A: decide() + governed execution — ReAct-লুপের অনুপস্থিত অর্ধেক।
+
+        বাংলা: সিদ্ধান্ত এখানেই শেষ নয় — নির্বাচিত টুল ``core.tool_loop``
+        (ফ্ল্যাগ + রেজিস্ট্রি + পলিসি গেট) পার হয়ে সত্যিই চলে এবং
+        ``observation``-এ প্রকৃত ফল ফেরত আসে। ফ্ল্যাগ-অফ বা পলিসি-ব্লকে
+        সৎ অবস্থা থাকে, কোনো ভান নয়।
+        """
+        decision = await self.decide(task, context=context, tools=tools)
+
+        from core.tool_loop import execute_tool_decision
+
+        outcome = await execute_tool_decision(decision)
+        return {
+            "task": task,
+            "decision": decision,
+            "outcome": outcome,
+        }
+
     async def synthesize(
         self,
         task: str,

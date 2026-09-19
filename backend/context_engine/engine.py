@@ -4,8 +4,8 @@
 যথেষ্ট, তার বেশি কখনোই পাঠানো হয় না। অ্যালগরিদম (সম্পূর্ণ deterministic,
 কোনো I/O নেই — টেস্টযোগ্য):
 
-1. user block-গুলো সর্বদা রাখা হয় (hard reserve, বাজেটের ৫০%-এর বেশি হলে
-   নতুনতম user block hard-truncate হয়);
+1. user block-গুলো সর্বদা রাখা হয় (hard reserve, যেকোনো user block বাজেটের
+   ৫০%-এর বেশি হলে সেটি hard-truncate হয় — রিপোর্টে স্পষ্ট);
 2. system block cap-এ রাখা হয় (বাজেটের ২৫%);
 3. বাকি জায়গায় memory → knowledge → history ক্রমে priority-ভিত্তিক
    best-fit greedy fill (বড় ব্লক না ঢুকলে ছোটগুলো এখনো ঢুকতে পারে);
@@ -156,13 +156,15 @@ class ContextEngine:
         kept_by_section: dict[Section, list[ContextBlock]] = {s: [] for s in SECTION_ORDER}
         used = 0
 
-        # 1) USER — hard reserve. Never dropped; newest user block truncates
-        #    only when it alone would exceed half the budget.
+        # 1) USER — hard reserve. Never dropped; any user block that alone
+        #    exceeds half the budget is hard-truncated (P-G honesty: the
+        #    truncation is always reported — নীরব বাজেট-উল্লঙ্ঘন নিষিদ্ধ),
+        #    regardless of arrival order.
         user_blocks = sorted(by_section.get(Section.USER, []), key=lambda b: b.priority)
         user_cap = int(budget * 0.50)
         for b in user_blocks:
             t = b.tokens
-            if t > user_cap and used == 0:
+            if t > user_cap:
                 trimmed = _truncate_to_tokens(b.text, user_cap)
                 kept_by_section[Section.USER].append(
                     ContextBlock(Section.USER, trimmed, b.priority, b.block_id)
@@ -174,7 +176,15 @@ class ContextEngine:
                 used += t
 
         # 2) SYSTEM — capped (a runaway system prompt must not crowd out the user).
-        for b in sorted(by_section.get(Section.SYSTEM, []), key=lambda b: b.priority):
+        #    "One system block is the contract" — অতিরিক্ত system block ফেলে
+        #    দেওয়া হয়, কিন্তু drop-টি রিপোর্টে স্পষ্ট থাকে (নীরব বর্জন নিষিদ্ধ)।
+        system_blocks = sorted(by_section.get(Section.SYSTEM, []), key=lambda b: b.priority)
+        for i, b in enumerate(system_blocks):
+            if i > 0:
+                report.dropped.append(
+                    b.block_id or f"{Section.SYSTEM.value}#{b.priority}"
+                )
+                continue
             sys_cap = int(budget * SECTION_CAPS["system"])
             t = b.tokens
             if t <= sys_cap:
@@ -187,7 +197,6 @@ class ContextEngine:
                 )
                 used += estimate_tokens(trimmed)
                 report.truncated_sections.append(Section.SYSTEM.value)
-            break  # one system block is the contract
 
         # 3) Best-fit greedy fill for the droppable sections.
         for section in (Section.MEMORY, Section.KNOWLEDGE, Section.HISTORY):

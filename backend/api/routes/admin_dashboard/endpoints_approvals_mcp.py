@@ -1,7 +1,11 @@
 """MCP control-tower approvals bridge
-(GET/POST /admin-api/approvals — the second, MCP-based /approvals pair from
-the legacy module; it shadowed the pending-task pair as a module attribute and
-registers after it, exactly as before the split)."""
+(GET/POST /admin-api/approvals/mcp — M17 P-A route-ownership fix: আগে এই
+জোড়া ক্যানোনিকাল pending-task pair-এর একই path দখল করে shadow করত
+(import-order-এ আগে নিবন্ধিত হওয়ায় first-match জিতে যেত) — ফলে
+MCP-unconfigured অবস্থায় admin-approvals GET নীরবে খালি [] ফেরত দিত
+(fake-empty queue)। এখন এটি নিজস্ব distinct path-এ থাকে — ক্যানোনিকাল
+pending-task view (endpoints_command) /admin-api/approvals-এর মালিক।
+"""
 
 import os
 
@@ -12,8 +16,8 @@ from api.routes.admin_dashboard._models import ApprovalActionPayload
 from core.logging_config import logger
 
 
-@router.get("/approvals")
-async def get_commandcenter_approvals():
+@router.get("/approvals/mcp")
+async def get_commandcenter_approvals_mcp():
     """Fetches real-time pending & historical approvals from MCP Control Tower."""
     mcp_url = os.getenv("RENDER_MCP_URL") or os.getenv("MCP_URL")
     if not mcp_url:
@@ -37,8 +41,8 @@ async def get_commandcenter_approvals():
     return []
 
 
-@router.post("/approvals")
-async def resolve_commandcenter_approval(payload: ApprovalActionPayload):
+@router.post("/approvals/mcp")
+async def resolve_commandcenter_approval_mcp(payload: ApprovalActionPayload):
     """Approves or rejects a Human-In-The-Loop request directly from the Admin Dashboard."""
     mcp_url = os.getenv("RENDER_MCP_URL") or os.getenv("MCP_URL")
     if not mcp_url:

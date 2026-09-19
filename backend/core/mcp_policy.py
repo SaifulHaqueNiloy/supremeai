@@ -76,6 +76,15 @@ class RiskEngine:
             if action == "delete_repo":
                 return "R6"
 
+        if provider == "agent_tools":
+            # M09 P-A: এজেন্ট-নিজস্ব টুল-শ্রেণি — read/health নিরাপদ (R0),
+            # sandbox-যাচাইকৃত অতিথি-কোডও মানব-অনুমোদন ছাড়া চলবে না (R5)।
+            if action in ("execute", "execute_code"):
+                return "R5"
+            if action in ("health", "search", "read", "status"):
+                return "R0"
+            return "R3"
+
         if provider == "memory":
             if action in ("delete", "clear", "drop"):
                 return "R2"
@@ -115,6 +124,12 @@ class PolicyEngine:
 # Each MCP tool is mapped to a (provider, action) pair for risk evaluation.
 
 TOOL_PROVIDER_ACTION: dict[str, tuple[str, str]] = {
+    # ── Agent core tools (M09 P-A — governed ReAct execution) ──
+    # এই ৩টি SUPREME_TOOLS-এর প্রবেশ: read-শাখা R0 (auto-allow),
+    # অতিথি-কোড নির্বাহ R5 (সর্বদা human approval লাগবে)।
+    "search_database": ("agent_tools", "search"),
+    "check_system_health": ("agent_tools", "health"),
+    "execute_python_code": ("agent_tools", "execute"),
     # Memory MCP — Knowledge Graph
     "create_entities": ("memory", "create"),
     "create_relations": ("memory", "create"),

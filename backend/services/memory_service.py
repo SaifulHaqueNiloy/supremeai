@@ -4,7 +4,7 @@ import json
 import math
 import os
 import sqlite3
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Any
 
 from core.config import settings
@@ -50,6 +50,42 @@ _PG_SCHEMA = """
 # JSON embeddings) inside the event loop — seconds of stall under load.
 # pgvector RPC (match_ai_memory) is the scalable path; this caps the worst case.
 _MEMORY_ROW_CAP = 2000
+
+
+def memory_dedup_enabled() -> bool:
+    """PLAN_006 P-A kill-switch — ``SUPREMEAI_MEMORY_DEDUP`` (ডিফল্ট true)।
+
+    বাংলা: শূন্য-অতিরিক্ত-খরচ কনসোলিডেশন (M05 P-A-র মতো zero-cost default-ON);
+    ``false`` দিলে আজকের blind-INSERT আচরণ (কিল-সুইচ রোলব্যাক)। অজানা মানে
+    ডিফল্ট + loud warning — নীরব পছন্দ নিষিদ্ধ।
+    """
+    raw = os.environ.get("SUPREMEAI_MEMORY_DEDUP", "").strip().lower()
+    if raw in ("", "true"):
+        return True
+    if raw == "false":
+        return False
+    logger.warning(f"SUPREMEAI_MEMORY_DEDUP={raw!r} অজানা মান — ডিফল্ট true ব্যবহৃত")
+    return True
+
+
+def _dedup_similarity_threshold() -> float:
+    """Env-চালিত সদৃশতা-সীমা (``SUPREMEAI_MEMORY_DEDUP_THRESHOLD``, ডিফল্ট 0.92)।
+
+    বাংলা: high-precision সীমা — ভুল মার্জ মেমোরি-অর্থ ভাঙে; অবৈধ env-মানে
+    ডিফল্ট + loud warning।
+    """
+    raw = os.environ.get("SUPREMEAI_MEMORY_DEDUP_THRESHOLD", "").strip()
+    if not raw:
+        return 0.92
+    try:
+        value = float(raw)
+    except ValueError:
+        logger.warning(f"SUPREMEAI_MEMORY_DEDUP_THRESHOLD={raw!r} অবৈধ — ডিফল্ট 0.92 ব্যবহৃত")
+        return 0.92
+    if not 0.0 < value <= 1.0:
+        logger.warning(f"SUPREMEAI_MEMORY_DEDUP_THRESHOLD={raw!r} সীমার-বাইরে (0,1] — ডিফল্ট ব্যবহৃত")
+        return 0.92
+    return value
 
 
 class CascadeMemoryService:
@@ -307,6 +343,18 @@ class CascadeMemoryService:
 
         if self._use_pg:
             try:
+                # PLAN_006 P-A (M01): similarity-gated consolidation — একই তথ্য
+                # = একটি সারি। সদৃশ হলে UPDATE (summary refresh + metadata-
+                # importance bump); সদৃশ না হলে/dedup অফ হলে/probe ব্যর্থ হলে
+                # আজকের blind INSERT (আচরণ-নিরপেক্ষ ফলব্যাক)।
+                if memory_dedup_enabled() and self._consolidate_into_existing(
+                    summary=summary,
+                    embedding=embedding,
+                    session_id=session_id,
+                    user_id=user_id,
+                    metadata=metadata,
+                ):
+                    return
                 # Insert into ai_memory table
                 pooled_pg.execute(
                     """
@@ -359,6 +407,81 @@ class CascadeMemoryService:
                 (file_path, content, summary, structure, embedding_str),
             )
             conn.commit()
+
+    def _consolidate_into_existing(
+        self,
+        *,
+        summary: str,
+        embedding: list[float],
+        session_id: str,
+        user_id: str | None,
+        metadata: dict[str, Any] | None,
+    ) -> bool:
+        """PLAN_006 P-A: similarity-gated consolidation probe (zero schema change)।
+
+        বাংলা: ``(user_id, session_id)``-স্কোপড সারিগুলোর সাথে কসাইন-সদৃশতা
+        পরীক্ষা — সীমার উপরে হলে বিদ্যমান সারি UPDATE হয় (summary/embedding
+        রিফ্রেশ + metadata-ভিত্তিক importance bump; নতুন কলাম নয়)। tenant
+        isolation-অক্ষুণ্ণ: স্কোপ-শূন্য লেখায় dedup অচেষ্টিত — সরাসরি blind
+        INSERT-পথ (False)। probe/update ব্যর্থতা = False (আজকের আচরণ)।
+        """
+        if not (user_id and session_id):
+            return False
+        threshold = _dedup_similarity_threshold()
+        try:
+            rows = pooled_pg.query_dicts(
+                "SELECT id, summary, embedding, metadata FROM ai_memory "
+                "WHERE user_id = %s AND session_id = %s "
+                f"ORDER BY created_at DESC LIMIT {_MEMORY_ROW_CAP}",
+                (user_id, session_id),
+            )
+        except Exception as exc:
+            logger.warning(f"store_memory dedup probe failed — falling back to insert: {exc}")
+            return False
+
+        best_id: Any = None
+        best_score = 0.0
+        best_row: dict[str, Any] | None = None
+        for row in rows or []:
+            try:
+                stored_vector = json.loads(row.get("embedding") or "[]")
+                score = self._cosine_similarity(embedding, stored_vector)
+            except Exception:
+                continue  # বিকৃত embedding-সারি প্রার্থী নয় — অন্যান্য সারি দেখা চলছে
+            if score > best_score:
+                best_id, best_score, best_row = row.get("id"), score, row
+
+        if best_id is None or best_score < threshold:
+            return False
+
+        try:
+            try:
+                existing_meta = json.loads(best_row.get("metadata") or "{}") if best_row else {}
+                if not isinstance(existing_meta, dict):
+                    existing_meta = {}
+            except Exception:
+                existing_meta = {}
+            merged_meta: dict[str, Any] = {**existing_meta, **(metadata or {})}
+            consolidation = dict(merged_meta.get("consolidation") or {})
+            consolidation["count"] = int(consolidation.get("count") or 1) + 1
+            consolidation["last_consolidated_at"] = datetime.now(UTC).isoformat()
+            merged_meta["consolidation"] = consolidation
+            merged_meta["importance_score"] = min(
+                1.0, float(merged_meta.get("importance_score") or 0.5) + 0.1
+            )
+
+            pooled_pg.execute(
+                "UPDATE ai_memory SET summary = %s, embedding = %s, metadata = %s WHERE id = %s",
+                (summary, json.dumps(embedding), json.dumps(merged_meta), best_id),
+            )
+            logger.info(
+                f"CascadeMemoryService.store_memory: consolidated duplicate "
+                f"(id={best_id}, cosine={best_score:.3f} ≥ {threshold}) into existing row"
+            )
+            return True
+        except Exception as exc:
+            logger.warning(f"store_memory dedup update failed — falling back to insert: {exc}")
+            return False
 
     def retrieve_memories(
         self, session_id: str | None = None, user_id: str | None = None
