@@ -5,7 +5,7 @@ NOTE ON DRIFT: production's recorded alembic_version was found to be
 This means `alembic upgrade head` cannot safely run against production until
 a baseline-reconciliation migration is authored (see audit notes). The two
 DDL changes below were verified against the live production schema
-(project xtvkltzmberxekoamala) before being applied directly, and are
+(project <project-ref>) before being applied directly, and are
 captured here only so the change is tracked in version control. Do NOT
 run `alembic upgrade` against production with this file until the
 baseline reconciliation migration exists and `alembic stamp` has been
