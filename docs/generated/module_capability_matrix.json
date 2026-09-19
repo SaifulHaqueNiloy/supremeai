@@ -23005,6 +23005,18 @@
     },
     {
       "capability_signals": [
+        "health",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/generate_route_client_inventory.py"
+    },
+    {
+      "capability_signals": [
         "capability"
       ],
       "classification": "human_review",
@@ -24920,5 +24932,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2870
+  "source_file_count": 2871
 }
